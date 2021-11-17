@@ -1,4 +1,5 @@
 import { BigNumberish } from '@ethersproject/bignumber';
+import { Network } from './constants/network';
 
 export enum PoolSpecialization {
   GeneralPool = 0,
@@ -53,3 +54,8 @@ export type PoolBalanceOp = {
   token: string;
   amount: BigNumberish;
 };
+
+export type ConfigSdk = {
+  network: Network;
+  rpcUrl: string;
+}

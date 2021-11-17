@@ -1,10 +1,14 @@
 import dotenv from 'dotenv';
-import { BalancerSDK, Network, SwapType, BatchSwapStep } from '../src/index';
+import { BalancerSDK, Network, SwapType, BatchSwapStep, ConfigSdk } from '../src/index';
 
 dotenv.config();
 
 async function runQueryBatchSwap() {
-    const balancer = new BalancerSDK(Network.MAINNET, `https://kovan.infura.io/v3/${process.env.INFURA}`);
+    const config: ConfigSdk = {
+        network: Network.MAINNET,
+        rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`
+    } 
+    const balancer = new BalancerSDK(config);
 
     const swapType = SwapType.SwapExactOut;
     const swaps: BatchSwapStep[] = [
@@ -38,9 +42,9 @@ async function runQueryBatchSwap() {
         '0x13512979ade267ab5100878e2e0f485b568328a4',
     ];
 
-    const deltas = await balancer.swap.queryBatchSwap(swapType, swaps, assets);
+    const deltas = await balancer.swaps.queryBatchSwap(swapType, swaps, assets);
     console.log(deltas.toString());
 }
 
-// ts-node balancer-js/examples/queryBatchSwap.ts
+// ts-node ./examples/queryBatchSwap.ts
 runQueryBatchSwap();
