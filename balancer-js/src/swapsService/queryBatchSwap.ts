@@ -91,6 +91,64 @@ export async function queryBatchSwapTokensIn(
 }
 
 /*
+Uses SOR to create and query a batchSwap for a single token in > multiple tokens out.
+For example can be used to exit staBal3 to DAI/USDC/USDT.
+*/
+export async function queryBatchSwapTokensOut(
+    sor: SOR,
+    vaultContract: Contract,
+    tokenIn: string,
+    amountsIn: BigNumberish[],
+    tokensOut: string[],
+    fetchPools: boolean
+): Promise<{ amountTokensOut: string[]; swaps: BatchSwapStep[]; assets: string[] }> {
+
+    if (fetchPools)
+        await sor.fetchPools([], false);
+
+    const swaps: BatchSwapStep[][] = [];
+    const assetArray: string[][] = [];
+    // get path information for each tokenOut
+    for (let i = 0; i < tokensOut.length; i++) {
+        const swap = await getSorSwapInfo(
+            tokenIn,
+            tokensOut[i],
+            SwapType.SwapExactIn,
+            amountsIn[i].toString(),
+            sor
+        );
+        swaps.push(swap.swaps);
+        assetArray.push(swap.tokenAddresses);
+    }
+
+    // Join swaps and assets together correctly
+    const batchedSwaps = batchSwaps(assetArray, swaps);
+    const amountTokensOut = Array(tokensOut.length).fill('0');
+    try {
+        // Onchain query
+        const deltas = await queryBatchSwap(
+            vaultContract,
+            SwapType.SwapExactIn,
+            batchedSwaps.swaps,
+            batchedSwaps.assets
+        );
+
+        tokensOut.forEach((t, i) => {
+            const amount = deltas[batchedSwaps.assets.indexOf(t.toLowerCase())];
+            if (amount) amountTokensOut[i] = amount.toString();
+        });
+    } catch (err) {
+        console.error(`queryBatchSwapTokensOut error: ${err}`);
+    }
+
+    return {
+        amountTokensOut,
+        swaps: batchedSwaps.swaps,
+        assets: batchedSwaps.assets,
+    };
+}
+
+/*
 Use SOR to get swapInfo for tokenIn>tokenOut.
 SwapInfos.swaps has path information.
 */

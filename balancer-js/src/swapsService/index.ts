@@ -6,7 +6,7 @@ import { SOR } from 'sor-linear';
 import { ConfigSdk } from '../types';
 import { Network } from '../constants/network';
 import { SwapType, BatchSwapStep } from './types';
-import { queryBatchSwap, queryBatchSwapTokensIn } from './queryBatchSwap';
+import { queryBatchSwap, queryBatchSwapTokensIn, queryBatchSwapTokensOut } from './queryBatchSwap';
 import { balancerVault } from '../constants/contracts';
 
 import vaultAbi from '../abi/Vault.json';
@@ -74,6 +74,35 @@ export class SwapsService {
             tokensIn,
             amountsIn,
             tokenOut,
+            fetchPools
+        );
+    }
+
+    /**
+     * Uses SOR to create and query a batchSwap for multiple tokens in > single tokenOut.
+     * @param tokenIn - addresses of asset in.
+     * @param amountsIn - amount of tokenIn for corresponding tokenOut.
+     * @param tokensOut - array of addresses of assets out.
+     * @param fetchPools - if true SOR will fetch updated pool info from Subgraph.
+     * @returns Returns array of amounts for each tokenOut along with swap and asset info that can be submitted to a batchSwap call.
+     */
+    async queryBatchSwapTokensOut(
+        tokenIn: string,
+        amountsIn: BigNumberish[],
+        tokensOut: string[],
+        fetchPools: boolean = true
+    ): Promise<{ amountTokensOut: string[]; swaps: BatchSwapStep[]; assets: string[] }> {
+
+        // TO DO - Pull in a ContractsService and use this to pass Vault to queryBatchSwap.
+        const provider = new JsonRpcProvider(this.rpcUrl);
+        const vaultContract = new Contract(balancerVault, vaultAbi, provider);
+
+        return await queryBatchSwapTokensOut(
+            this.sor,
+            vaultContract,
+            tokenIn,
+            amountsIn,
+            tokensOut,
             fetchPools
         );
     }
