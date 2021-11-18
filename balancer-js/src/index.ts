@@ -6,4 +6,5 @@ export * from './types';
 export * from './swapsService/index';
 export * from './swapsService/types';
 export * from './constants/network';
+export * from './constants/subgraph';
 export * from './sdk';

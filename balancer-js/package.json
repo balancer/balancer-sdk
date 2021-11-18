@@ -53,7 +53,8 @@
     "@ethersproject/abstract-signer": "^5.5.0",
     "@ethersproject/contracts": "^5.5.0",
     "@ethersproject/providers": "^5.5.0",
-    "ethers": "^5.5.1"
+    "ethers": "^5.5.1",
+    "sor-linear": "github:balancer-labs/balancer-sor#john/linear-package"
   },
   "peerDependencies": {
     "@ethersproject/abi": "^5.4.0",

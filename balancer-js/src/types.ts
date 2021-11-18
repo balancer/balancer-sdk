@@ -58,4 +58,5 @@ export type PoolBalanceOp = {
 export type ConfigSdk = {
   network: Network;
   rpcUrl: string;
+  subgraphUrl: string;
 }
