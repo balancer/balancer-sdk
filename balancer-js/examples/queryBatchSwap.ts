@@ -1,12 +1,13 @@
 import dotenv from 'dotenv';
-import { BalancerSDK, Network, SwapType, BatchSwapStep, ConfigSdk } from '../src/index';
+import { BalancerSDK, Network, SwapType, BatchSwapStep, ConfigSdk, SUBGRAPH_URLS } from '../src/index';
 
 dotenv.config();
 
 async function runQueryBatchSwap() {
     const config: ConfigSdk = {
         network: Network.MAINNET,
-        rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`
+        rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+        subgraphUrl: SUBGRAPH_URLS[Network.MAINNET]
     } 
     const balancer = new BalancerSDK(config);
 

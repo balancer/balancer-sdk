@@ -10,6 +10,10 @@ export class BalancerSDK {
     constructor(config: ConfigSdk, swapService = SwapsService) {
         this.network = config.network;
         this.rpcUrl = config.rpcUrl;
-        this.swaps = new swapService(config);
+        this.swaps = new swapService({ 
+            network: this.network,
+            rpcUrl: this.rpcUrl,
+            subgraphUrl: config.subgraphUrl
+        });
     }
 }

@@ -48,6 +48,45 @@ swaps.queryBatchSwap((
 
 [Example](./examples/queryBatchSwap.ts)
 
+### queryBatchSwapTokensIn
+
+Uses SOR to create and query a batchSwap for multiple tokens in > single tokenOut. For example can be used to join staBal3 with DAI/USDC/USDT.
+
+@param tokensIn - array of addresses of assets in.
+@param amountsIn - array of amounts for tokens in.
+@param tokenOut - asset out.
+@param fetchPools - if true SOR will fetch updated pool info from Subgraph.
+@returns Returns amount of tokenOut along with swap and asset info that can be submitted to a batchSwap call.
+```js
+swaps.queryBatchSwapTokensIn(
+    tokensIn: string[],
+    amountsIn: BigNumberish[],
+    tokenOut: string,
+    fetchPools: boolean = true
+): Promise<{ amountTokenOut: BigNumberish; swaps: BatchSwapStep[]; assets: string[] }> 
+```
+
+[Example](./examples/queryBatchSwapTokensIn.ts)
+
+### queryBatchSwapTokensOut
+
+Uses SOR to create and query a batchSwap for multiple tokens in > single tokenOut. For example can be used to join staBal3 with DAI/USDC/USDT.
+
+@param tokenIn - addresses of asset in.
+@param amountsIn - amount of tokenIn for corresponding tokenOut.
+@param tokensOut - array of addresses of assets out.
+@param fetchPools - if true SOR will fetch updated pool info from Subgraph.
+@returns Returns array of amounts for each tokenOut along with swap and asset info that can be submitted to a batchSwap call.
+```js
+swaps.queryBatchSwapTokensOut(
+    tokenIn: string,
+    amountsIn: BigNumberish[],
+    tokensOut: string[],
+    fetchPools: boolean = true
+): Promise<{ amountTokenOut: BigNumberish; swaps: BatchSwapStep[]; assets: string[] }> 
+```
+
+[Example](./examples/queryBatchSwapTokensOut.ts)
 
 ## Licensing
 
