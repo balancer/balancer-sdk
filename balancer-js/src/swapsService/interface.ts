@@ -2,13 +2,13 @@ import { BigNumberish } from '@ethersproject/bignumber';
 import { SwapType } from './types';
 
 export interface SwapsServiceInterface {
-    querySwap(input: QuerySwapInput): Promise<BatchSwap>;
+    querySimpleSwap(input: QuerySimpleSwapInput): Promise<BatchSwap>;
     queryBatchSwap(input: QueryBatchSwapInput): Promise<BatchSwap>;
 
     executeSwap(input: BatchSwap): Promise<void>;
 }
 
-interface QuerySwapInput {
+interface QuerySimpleSwapInput {
     tokenIn: string;
     tokenOut: string;
     swapType: SwapType;
