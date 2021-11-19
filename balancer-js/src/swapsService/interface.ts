@@ -2,10 +2,11 @@ import { BigNumberish } from '@ethersproject/bignumber';
 import { SwapType } from './types';
 
 export interface SwapsServiceInterface {
-    querySimpleSwap(input: QuerySimpleSwapInput): Promise<BatchSwap>;
-    queryBatchSwap(input: QueryBatchSwapInput): Promise<BatchSwap>;
+    querySimpleSwap(input: QuerySimpleSwapInput): Promise<QuerySimpleSwapResponse>;
+    queryBatchSwap(input: QueryBatchSwapInput): Promise<QueryBatchSwapResponse>;
 
-    executeSwap(input: BatchSwap): Promise<void>;
+    executeSimpleSwap(input: QuerySimpleSwapResponse): Promise<void>;
+    executeBatchSwap(input: QueryBatchSwapResponse): Promise<void>;
 }
 
 interface QuerySimpleSwapInput {
@@ -49,6 +50,14 @@ interface QueryBatchSwapInputRouteStep {
     tokenIn: string;
     tokenOut: string;
     poolId: string;
+}
+
+interface QuerySimpleSwapResponse {
+    routes: BatchSwapRoute[];
+}
+
+interface QueryBatchSwapResponse {
+    swaps: BatchSwap[];
 }
 
 export interface BatchSwap {
