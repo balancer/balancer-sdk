@@ -1,12 +1,14 @@
 import { BigNumberish } from '@ethersproject/bignumber';
-import { SwapType } from './types';
+import { BatchSwapStep, FundManagement, SwapType } from './types';
 
 export interface SwapsServiceInterface {
     querySimpleSwap(input: QuerySimpleSwapInput): Promise<QuerySimpleSwapResponse>;
     queryBatchSwap(input: QueryBatchSwapInput): Promise<QueryBatchSwapResponse>;
 
-    executeSimpleSwap(input: QuerySimpleSwapResponse): Promise<void>;
-    executeBatchSwap(input: QueryBatchSwapResponse): Promise<void>;
+    //The purpose of the encode functions is to make it as easy as possible to take the query response
+    //and convert it to the data needed for the contract call
+    encodeSimpleSwap(input: QuerySimpleSwapResponse): Promise<EncodeSwapResponse>;
+    encodeBatchSwap(input: QueryBatchSwapResponse): Promise<EncodeSwapResponse>;
 }
 
 interface QuerySimpleSwapInput {
@@ -18,7 +20,7 @@ interface QuerySimpleSwapInput {
 }
 
 interface QueryBatchSwapInput {
-    swaps: (QueryBatchSwapInputSwap | QueryBatchSwapInputSwapWithRoutes)[];
+    swaps: (QueryBatchSwapInputSwap | QueryBatchSwapInputSwapWithRoute)[];
     fetchPools?: boolean;
 }
 
@@ -31,14 +33,8 @@ interface QueryBatchSwapInputSwap {
 }
 
 //the advanced case, here we let the user define the path
-interface QueryBatchSwapInputSwapWithRoutes {
+interface QueryBatchSwapInputSwapWithRoute {
     swapType: SwapType;
-    tokenIn: string;
-    tokenOut: string;
-    routes: QueryBatchSwapInputRoute[];
-}
-
-interface QueryBatchSwapInputRoute {
     tokenIn: string;
     tokenOut: string;
     amount: BigNumberish;
@@ -80,4 +76,12 @@ export interface BatchSwapRouteStep {
     tokenOutAmount: BigNumberish;
     poolId: string;
     userData: string;
+}
+
+export interface EncodeSwapResponse {
+    vaultAddress: string;
+    vaultAbi: any;
+    action: 'batchSwap';
+    //TODO: not sure BigNumberish is the right type here
+    params: [SwapType, BatchSwapStep[], string[], FundManagement, BigNumberish[], BigNumberish];
 }
