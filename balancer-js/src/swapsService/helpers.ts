@@ -30,19 +30,19 @@ export function getLimitsForSlippage(
     // For a multihop the intermediate tokens should be 0
     const limits: BigNumber[] = new Array(assets.length).fill(Zero);
 
-    const slippageAmount = BigNumber.from(slippage).add(WeiPerEther);
-
     assets.forEach((token, i) => {
         tokensIn.forEach((tokenIn, j) => {
             if(isSameAddress(token, tokenIn)){
-                // For SwapExactOut slippage is on tokenIn
+                // For SwapExactOut slippage is on tokenIn, i.e. amtIn + slippage
+                const slippageAmount = BigNumber.from(slippage).add(WeiPerEther);
                 limits[i] = swapType === SwapType.SwapExactOut ? limits[i].add(BigNumber.from(amountsTokenIn[j]).mul(slippageAmount).div(WeiPerEther)) : limits[i].add(amountsTokenIn[j]);
             }
         })
 
         tokensOut.forEach((tokenOut, j) => {
             if (isSameAddress(token, tokenOut)){ 
-                // For SwapExactIn slippage is on tokenOut
+                // For SwapExactIn slippage is on tokenOut, i.e. amtOut - slippage
+                const slippageAmount = WeiPerEther.sub(BigNumber.from(slippage));
                 limits[i] = swapType === SwapType.SwapExactIn ? limits[i].add(BigNumber.from(amountsTokenOut[j]).mul(slippageAmount).div(WeiPerEther)) : limits[i].add(amountsTokenOut[j]);
             }
         })

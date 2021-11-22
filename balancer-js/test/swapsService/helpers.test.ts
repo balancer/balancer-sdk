@@ -47,9 +47,9 @@ describe('swaps service helpers', () => {
                 );
                 expect(limits[0].toString()).to.eq('300000000000000000');
                 expect(limits[1].toString()).to.eq('0');
-                expect(limits[2].toString()).to.eq('-90452970436191853');
+                expect(limits[2].toString()).to.eq('-81838401823221200');
                 expect(limits[3].toString()).to.eq('0');
-                expect(limits[4].toString()).to.eq('-104279');
+                expect(limits[4].toString()).to.eq('-94348');
             });
         })
 
@@ -59,8 +59,8 @@ describe('swaps service helpers', () => {
                     ['0x21ff756ca0cfcc5fff488ad67babadffee0c4149', '0x21ff756ca0cfcc5fff488ad67babadffee0c4149', '0x21ff756ca0cfcc5fff488ad67babadffee0c4149'],
                     ['0x4811a7bb9061a46753486e5e84b3cd3d668fb596', '0x0fbddc06a4720408a2f5eb78e62bc31ac6e2a3c4', '0xe8191aacfcdb32260cda25830dc6c9342142f310'],
                     SwapType.SwapExactOut,
-                    ['-86145686129706527', '0', '-99314'],
                     ['100000000000000000', '100000000000000000', '100000000000000000'],
+                    ['-86145686129706527', '0', '-99314'],
                     [
                         '0x21ff756ca0cfcc5fff488ad67babadffee0c4149',
                         '0xcd32a460b6fecd053582e43b07ed6e2c04e15369',
@@ -82,8 +82,8 @@ describe('swaps service helpers', () => {
                     ['0x21ff756ca0cfcc5fff488ad67babadffee0c4149', '0x21ff756ca0cfcc5fff488ad67babadffee0c4149', '0x21ff756ca0cfcc5fff488ad67babadffee0c4149'],
                     ['0x4811a7bb9061a46753486e5e84b3cd3d668fb596', '0x0fbddc06a4720408a2f5eb78e62bc31ac6e2a3c4', '0xe8191aacfcdb32260cda25830dc6c9342142f310'],
                     SwapType.SwapExactOut,
-                    ['-86145686129706527', '0', '-99314'],
                     ['100000000000000000', '100000000000000000', '100000000000000000'],
+                    ['-86145686129706527', '0', '-99314'],
                     [
                         '0x21ff756ca0cfcc5fff488ad67babadffee0c4149',
                         '0xcd32a460b6fecd053582e43b07ed6e2c04e15369',
