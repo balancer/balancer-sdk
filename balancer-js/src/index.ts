@@ -5,6 +5,7 @@ export * from './utils';
 export * from './types';
 export * from './swapsService/index';
 export * from './swapsService/types';
+export * from './swapsService/helpers';
 export * from './constants/network';
 export * from './constants/subgraph';
 export * from './sdk';

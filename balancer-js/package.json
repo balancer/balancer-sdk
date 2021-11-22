@@ -31,6 +31,7 @@
     "@rollup/plugin-typescript": "^8.2.1",
     "@typechain/ethers-v5": "^7.0.1",
     "@types/chai": "^4.2.12",
+    "@types/lodash": "^4.14.177",
     "@types/mocha": "^8.0.3",
     "@types/node": "^15.12.4",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
@@ -54,6 +55,7 @@
     "@ethersproject/contracts": "^5.5.0",
     "@ethersproject/providers": "^5.5.0",
     "ethers": "^5.5.1",
+    "lodash": "^4.17.21",
     "sor-linear": "github:balancer-labs/balancer-sor#john/linear-package"
   },
   "peerDependencies": {
