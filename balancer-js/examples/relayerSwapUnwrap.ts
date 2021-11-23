@@ -12,6 +12,11 @@ import balancerRelayerAbi from '../src/abi/BalancerRelayer.json';
 
 dotenv.config();
 
+/*
+Example showing how to exit bb-a-USDC to stables via Relayer.
+User must approve relayer
+Vault must have approvals for tokens
+*/
 async function runRelayerSwapUnwrap() {
     const config: ConfigSdk = {
         network: Network.KOVAN,
@@ -20,24 +25,19 @@ async function runRelayerSwapUnwrap() {
     } 
 
     const balancer = new BalancerSDK(config);
-
-    // Approve relayer by sender
-    // Vault must have approvals
     
     const provider = new JsonRpcProvider(config.rpcUrl);
     const key: any = process.env.TRADER_KEY;
     const relayerAddress = '0x3C255DE4a73Dd251A33dac2ab927002C964Eb2cB';
     const wallet = new Wallet(key, provider);
-
     const funds: FundManagement = {
         sender: wallet.address,
-        recipient: relayerAddress, // Not relayer is recipient of swaps
+        recipient: relayerAddress, // Note relayer is recipient of swaps
         fromInternalBalance: false,
         toInternalBalance: false,
     };
 
-    // TO DO - Make this return a tx info type
-    const multicalls = await balancer.swapUnwrapExactIn(
+    const txInfo = await balancer.relayer.swapUnwrapExactIn(
         [STABAL3PHANTOM.address, STABAL3PHANTOM.address, STABAL3PHANTOM.address],
         [parseFixed('1', 16), parseFixed('1', 16), parseFixed('1', 16)],
         [WRAPPED_AAVE_DAI.address, WRAPPED_AAVE_USDC.address, WRAPPED_AAVE_USDT.address],
@@ -46,10 +46,9 @@ async function runRelayerSwapUnwrap() {
     );
 
     const relayerContract = new Contract(relayerAddress, balancerRelayerAbi, provider);
-    const tx = await relayerContract.connect(wallet).multicall(multicalls, { 
+    const tx = await relayerContract.connect(wallet)[txInfo.function](txInfo.params, {
         value: '0',
         // gasLimit: '200000',
-        // overRides['gasPrice'] = '20000000000';
     });
     console.log(tx); 
 }
