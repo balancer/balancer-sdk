@@ -1,5 +1,7 @@
 import { BigNumberish } from '@ethersproject/bignumber';
 
+//TODO: having the queries resolve to a promise may not be performant enough (ie: the frontend percentage slider)
+//TODO: Alternatively, we could have some sort of `init` factory function that handles all of the async loading for the session.
 export interface PoolService {
     /**
      * Allow the input of any number of pool tokens, return the expected
@@ -18,8 +20,6 @@ export interface PoolService {
      */
     encodeJoin(input: EncodeJoinInput): Promise<void>;
 
-    //TODO: having the queries resolve to a promise may not be performant enough (ie: the frontend percentage slider)
-    //TODO: Alternatively, we could pass the Pool in already resolved, or somehow cache the Pool in the SDK for some period of time.
     /**
      * Return the balanced token amounts received for bptAmount in
      */
