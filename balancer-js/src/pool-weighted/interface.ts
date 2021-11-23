@@ -20,7 +20,13 @@ export interface PoolService {
 
     //TODO: having the queries resolve to a promise may not be performant enough (ie: the frontend percentage slider)
     //TODO: Alternatively, we could pass the Pool in already resolved, or somehow cache the Pool in the SDK for some period of time.
+    /**
+     * Return the balanced token amounts received for bptAmount in
+     */
     queryBalancedExit(poolId: string, bptAmount: BigNumberish): Promise<QueryBalancedExitOutput>;
+    /**
+     * Return the single token amount received for bptAmount in
+     */
     querySingleTokenExit(
         poolId: string,
         bptAmount: BigNumberish,
