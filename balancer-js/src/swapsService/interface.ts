@@ -49,6 +49,10 @@ interface QueryBatchSwapInputRouteStep {
 }
 
 interface QuerySimpleSwapResponse {
+    tokenIn: string;
+    tokenInAmount: BigNumberish;
+    tokenOut: string;
+    tokenOutAmount: BigNumberish;
     routes: BatchSwapRoute[];
 }
 
