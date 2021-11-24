@@ -41,6 +41,7 @@ async function runRelayerSwapUnwrap() {
         [STABAL3PHANTOM.address, STABAL3PHANTOM.address, STABAL3PHANTOM.address],
         [parseFixed('1', 16), parseFixed('1', 16), parseFixed('1', 16)],
         [WRAPPED_AAVE_DAI.address, WRAPPED_AAVE_USDC.address, WRAPPED_AAVE_USDT.address],
+        ['1151626718944406465', '1007040195062713031', '1000680737603270490'],
         funds,
         '50000000000000000' // Slippage 5%
     );

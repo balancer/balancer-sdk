@@ -1,6 +1,6 @@
 import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Interface } from '@ethersproject/abi';
-import { MaxUint256 } from '@ethersproject/constants';
+import { MaxUint256, WeiPerEther } from '@ethersproject/constants';
 
 import { SwapsService } from '../swapsService';
 import { EncodeBatchSwapInput, EncodeUnwrapAaveStaticTokenInput, OutputReference } from './types';
@@ -60,15 +60,16 @@ export class RelayerService {
      * @param tokensIn - array to token addresses for swapping as tokens in.
      * @param amountsIn - amounts to be swapped for each token in.
      * @param wrappedTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
+     * @param rates - The rate used to convert wrappedToken to underlying.
      * @param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
      * @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
-     * @returns TO DO
+     * @returns Transaction data with calldata. Outputs.amountsOut has final amounts out of unwrapped tokens.
      */
     async swapUnwrapExactIn(
         tokensIn: string[],
         amountsIn: BigNumberish[],
         wrappedTokens: string[],
-        // TO DO - Add rates? Where do we get those from?
+        rates: BigNumberish[],
         funds: FundManagement,
         slippage: BigNumberish
     ): Promise<TransactionData> {
@@ -78,7 +79,9 @@ export class RelayerService {
             tokensIn[0], // TO DO - Make this param an array
             amountsIn,
             wrappedTokens,
-        )
+        );
+
+        const amountsUnwrapped = queryResult.amountTokensOut.map((amountWrapped, i) => BigNumber.from(amountWrapped).abs().mul(rates[i]).div(WeiPerEther));
 
         // Gets limits array for tokensIn>wrappedTokens based on input slippage
         const limits = SwapsService.getLimitsForSlippage(
@@ -133,11 +136,12 @@ export class RelayerService {
             outputReferences: outputReferences
         });
 
-        // TO DO - How to get return amount? We have amountTokensOut would need to multiply by rate?
-        // TO DO - Return Tx Info? { contract: ?, function: 'multicall', params: [encodedBatchSwap, ...unwrapCalls], outputs?: { extras?: amountOut}}
         return {
             function: 'multicall',
-            params: [encodedBatchSwap, ...unwrapCalls]
+            params: [encodedBatchSwap, ...unwrapCalls],
+            outputs: {
+                amountsOut: amountsUnwrapped
+            }
         };
     }
 }
