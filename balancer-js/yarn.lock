@@ -2088,7 +2088,7 @@ slice-ansi@^4.0.0:
 
 "sor-linear@github:balancer-labs/balancer-sor#john/linear-package":
   version "2.0.0-beta.6"
-  resolved "https://codeload.github.com/balancer-labs/balancer-sor/tar.gz/516e8a6c44171959f651946908d916d1effc18e1"
+  resolved "https://codeload.github.com/balancer-labs/balancer-sor/tar.gz/79c09b803bf9dc5df41f1ce48be3d0356471b77f"
   dependencies:
     "@georgeroman/balancer-v2-pools" "^0.0.7"
     isomorphic-fetch "^2.2.1"
