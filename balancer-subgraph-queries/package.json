@@ -1,0 +1,43 @@
+{
+    "name": "@balancer-labs/sdk",
+    "version": "1.0.0",
+    "description": "Queries for interacting with the Balancer Subgraph V2",
+    "license": "GPL-3.0-only",
+    "homepage": "https://github.com/balancer-labs/balancer-sdk/balancer-js#readme",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/balancer-labs/balancer-sdk",
+        "directory": "balancer-subgraph-queries"
+    },
+    "bugs": {
+        "url": "https://github.com/balancer-labs/balancer-sdk/issues"
+    },
+    "main": "dist/index.js",
+    "module": "dist/index.esm.js",
+    "browser": "dist/index.umd.js",
+    "typings": "dist/index.d.ts",
+    "files": [
+        "dist/"
+    ],
+    "scripts": {
+        "lint": "eslint ./src --ext .ts --max-warnings 0",
+        "generate": "graphql-codegen --config codegen.yml -r dotenv/config"
+    },
+    "dependencies": {
+        "axios": "^0.24.0",
+        "dotenv": "^10.0.0",
+        "graphql": "^15.6.1",
+        "graphql-request": "^3.5.0"
+    },
+    "devDependencies": {
+        "@graphql-codegen/add": "^3.1.0",
+        "@graphql-codegen/cli": "^2.3.0",
+        "@graphql-codegen/introspection": "^2.1.0",
+        "@graphql-codegen/schema-ast": "^2.4.0",
+        "@graphql-codegen/typescript": "2.4.0",
+        "@graphql-codegen/typescript-document-nodes": "^2.2.0",
+        "@graphql-codegen/typescript-graphql-request": "^4.3.0",
+        "@graphql-codegen/typescript-operations": "^2.2.0",
+        "@graphql-codegen/typescript-resolvers": "2.4.1"
+    }
+}

@@ -1,0 +1,152 @@
+
+query BalancerPools(
+    $skip: Int
+    $first: Int
+    $orderBy: Pool_orderBy
+    $orderDirection: OrderDirection
+    $where: Pool_filter
+    $block: Block_height
+) {
+    pools(skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block) {
+        ...BalancerPool
+    }
+}
+
+query BalancerPool($id: ID!, $block: Block_height) {
+    pool(id: $id, block: $block) {
+        ...BalancerPool
+    }
+}
+
+fragment BalancerPool on Pool {
+    id
+    address
+    poolType
+    symbol
+    name
+    swapFee
+    totalWeight
+    totalSwapVolume
+    totalSwapFee
+    totalLiquidity
+    totalShares
+    swapsCount
+    holdersCount
+
+    tokens(first: 1000) {
+        ...BalancerPoolToken
+    }
+}
+
+fragment BalancerPoolToken on PoolToken {
+    id
+    symbol
+    name
+    decimals
+    address
+    balance
+    invested
+    weight
+    priceRate
+}
+
+query BalancerPoolHistoricalLiquidities(
+    $skip: Int
+    $first: Int
+    $orderBy: PoolHistoricalLiquidity_orderBy
+    $orderDirection: OrderDirection
+    $where: PoolHistoricalLiquidity_filter
+    $block: Block_height
+) {
+    poolHistoricalLiquidities(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        id
+        poolId {
+            id
+        }
+        poolTotalShares
+        poolLiquidity
+        poolShareValue
+        pricingAsset
+        block
+    }
+}
+
+query BalancerPoolSnapshots(
+    $skip: Int
+    $first: Int
+    $orderBy: PoolSnapshot_orderBy
+    $orderDirection: OrderDirection
+    $where: PoolSnapshot_filter
+    $block: Block_height
+) {
+    poolSnapshots(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...BalancerPoolSnapshot
+    }
+}
+
+fragment BalancerPoolSnapshot on PoolSnapshot {
+    id
+    pool {
+        id
+    }
+    totalShares
+    swapVolume
+    swapFees
+    timestamp
+}
+
+
+query BalancerJoinExits(
+    $skip: Int
+    $first: Int
+    $orderBy: JoinExit_orderBy
+    $orderDirection: OrderDirection
+    $where: JoinExit_filter
+    $block: Block_height
+) {
+    joinExits(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...BalancerJoinExit
+    }
+}
+
+fragment BalancerJoinExit on JoinExit {
+    amounts
+    id
+    sender
+    timestamp
+    tx
+    type
+    user {
+        id
+    }
+    pool {
+        id
+        tokensList
+    }
+}
