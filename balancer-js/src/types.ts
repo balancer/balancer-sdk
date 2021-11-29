@@ -1,5 +1,7 @@
 import { BigNumberish } from '@ethersproject/bignumber';
 import { Network } from './constants/network';
+import { Contract } from '@ethersproject/contracts';
+
 
 export enum PoolSpecialization {
   GeneralPool = 0,
@@ -59,4 +61,11 @@ export type ConfigSdk = {
   network: Network;
   rpcUrl: string;
   subgraphUrl: string;
+}
+
+export interface TransactionData {
+  contract?: Contract;
+  function: string;
+  params: string [];
+  outputs ?: any;
 }

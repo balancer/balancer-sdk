@@ -8,6 +8,7 @@ import { Network } from '../constants/network';
 import { SwapType, BatchSwapStep } from './types';
 import { queryBatchSwap, queryBatchSwapTokensIn, queryBatchSwapTokensOut } from './queryBatchSwap';
 import { balancerVault } from '../constants/contracts';
+import { getLimitsForSlippage } from './helpers';
 
 import vaultAbi from '../abi/Vault.json';
 
@@ -21,6 +22,27 @@ export class SwapsService {
         this.rpcUrl = config.rpcUrl;
         const provider = new JsonRpcProvider(this.rpcUrl);
         this.sor = new SOR(provider, this.network, config.subgraphUrl);
+    }
+
+    static getLimitsForSlippage(
+        tokensIn: string[],
+        tokensOut: string[],
+        swapType: SwapType,
+        amountsTokenIn: BigNumberish[],
+        amountsTokenOut: BigNumberish[],
+        assets: string[],
+        slippage: BigNumberish
+    ): BigNumberish[] {
+        // TO DO - Check best way to do this?
+        return getLimitsForSlippage(
+            tokensIn,
+            tokensOut,
+            swapType,
+            amountsTokenIn,
+            amountsTokenOut,
+            assets,
+            slippage
+        );
     }
 
     /**
