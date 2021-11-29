@@ -35,17 +35,17 @@ export async function queryBatchSwap(
 }
 
 /*
-Uses SOR to create and query a batchSwap for multiple tokens in > single tokenOut.
-For example can be used to join staBal3 with DAI/USDC/USDT.
+Uses SOR to create a batchSwap which is then queried onChain.
 */
-export async function queryBatchSwapTokensIn(
+export async function queryBatchSwapWithSor(
     sor: SOR,
     vaultContract: Contract,
     tokensIn: string[],
-    amountsIn: BigNumberish[],
-    tokenOut: string,
+    tokensOut: string[],
+    swapType: SwapType,
+    amounts: BigNumberish[],
     fetchPools: boolean
-): Promise<{ amountTokenOut: BigNumberish; swaps: BatchSwapStep[]; assets: string[] }> {
+): Promise<{ returnAmounts: BigNumberish[]; swaps: BatchSwapStep[]; assets: string[] }> {
 
     if(fetchPools)
         await sor.fetchPools([], false);
@@ -56,9 +56,9 @@ export async function queryBatchSwapTokensIn(
     for (let i = 0; i < tokensIn.length; i++) {
         const swap = await getSorSwapInfo(
             tokensIn[i],
-            tokenOut,
-            SwapType.SwapExactIn,
-            amountsIn[i].toString(),
+            tokensOut[i],
+            swapType,
+            amounts[i].toString(),
             sor
         );
         swaps.push(swap.swaps);
@@ -68,81 +68,24 @@ export async function queryBatchSwapTokensIn(
     // Join swaps and assets together correctly
     const batchedSwaps = batchSwaps(assetArray, swaps);
 
-    let amountTokenOut: BigNumberish = Zero;
+    const returnTokens = swapType === SwapType.SwapExactIn ? tokensOut : tokensIn;
+    const returnAmounts: BigNumberish[] = Array(returnTokens.length).fill(Zero);
     try {
         // Onchain query
         const deltas = await queryBatchSwap(
             vaultContract,
-            SwapType.SwapExactIn,
+            swapType,
             batchedSwaps.swaps,
             batchedSwaps.assets
         );
-        amountTokenOut =
-            deltas[batchedSwaps.assets.indexOf(tokenOut.toLowerCase())] ?? '0';
+
+        returnTokens.forEach((t, i) => returnAmounts[i] = deltas[batchedSwaps.assets.indexOf(t.toLowerCase())] ?? Zero)
     } catch (err) {
         console.error(`queryBatchSwapTokensIn error: ${err}`);
     }
 
     return {
-        amountTokenOut,
-        swaps: batchedSwaps.swaps,
-        assets: batchedSwaps.assets,
-    };
-}
-
-/*
-Uses SOR to create and query a batchSwap for a single token in > multiple tokens out.
-For example can be used to exit staBal3 to DAI/USDC/USDT.
-*/
-export async function queryBatchSwapTokensOut(
-    sor: SOR,
-    vaultContract: Contract,
-    tokenIn: string,
-    amountsIn: BigNumberish[],
-    tokensOut: string[],
-    fetchPools: boolean
-): Promise<{ amountTokensOut: string[]; swaps: BatchSwapStep[]; assets: string[] }> {
-
-    if (fetchPools)
-        await sor.fetchPools([], false);
-
-    const swaps: BatchSwapStep[][] = [];
-    const assetArray: string[][] = [];
-    // get path information for each tokenOut
-    for (let i = 0; i < tokensOut.length; i++) {
-        const swap = await getSorSwapInfo(
-            tokenIn,
-            tokensOut[i],
-            SwapType.SwapExactIn,
-            amountsIn[i].toString(),
-            sor
-        );
-        swaps.push(swap.swaps);
-        assetArray.push(swap.tokenAddresses);
-    }
-
-    // Join swaps and assets together correctly
-    const batchedSwaps = batchSwaps(assetArray, swaps);
-    const amountTokensOut = Array(tokensOut.length).fill('0');
-    try {
-        // Onchain query
-        const deltas = await queryBatchSwap(
-            vaultContract,
-            SwapType.SwapExactIn,
-            batchedSwaps.swaps,
-            batchedSwaps.assets
-        );
-
-        tokensOut.forEach((t, i) => {
-            const amount = deltas[batchedSwaps.assets.indexOf(t.toLowerCase())];
-            if (amount) amountTokensOut[i] = amount.toString();
-        });
-    } catch (err) {
-        console.error(`queryBatchSwapTokensOut error: ${err}`);
-    }
-
-    return {
-        amountTokensOut,
+        returnAmounts,
         swaps: batchedSwaps.swaps,
         assets: batchedSwaps.assets,
     };
@@ -176,7 +119,7 @@ function batchSwaps(
     assetArray: string[][],
     swaps: BatchSwapStep[][]
 ): { swaps: BatchSwapStep[]; assets: string[] } {
-    // assest addresses without duplicates
+    // asset addresses without duplicates
     const newAssetArray = [...new Set(assetArray.flat())];
 
     // Update indices of each swap to use new asset array

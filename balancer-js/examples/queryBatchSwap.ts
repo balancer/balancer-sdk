@@ -43,7 +43,7 @@ async function runQueryBatchSwap() {
         '0x13512979ade267ab5100878e2e0f485b568328a4',
     ];
 
-    const deltas = await balancer.swaps.queryBatchSwap(swapType, swaps, assets);
+    const deltas = await balancer.swaps.queryBatchSwap({kind: swapType, swaps, assets});
     console.log(deltas.toString());
 }
 
