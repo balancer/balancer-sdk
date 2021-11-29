@@ -44,3 +44,11 @@ export type BatchSwap = {
     limits: BigNumberish[];
     deadline: BigNumberish;
 };
+
+export interface QueryWithSor {
+    tokensIn: string[];
+    tokensOut: string[];
+    swapType: SwapType;
+    amounts: BigNumberish[];
+    fetchPools: boolean;
+}

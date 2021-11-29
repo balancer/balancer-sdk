@@ -75,13 +75,15 @@ export class RelayerService {
     ): Promise<TransactionData> {
 
         // Use swapsService to get swap info for tokensIn>wrappedTokens
-        const queryResult = await this.swapsService.queryBatchSwapTokensOut(
-            tokensIn[0], // TO DO - Make this param an array
-            amountsIn,
-            wrappedTokens,
-        );
+        const queryResult = await this.swapsService.queryBatchSwapWithSor({
+            tokensIn,
+            tokensOut: wrappedTokens,
+            swapType: SwapType.SwapExactIn,
+            amounts: amountsIn,
+            fetchPools: true
+        });
 
-        const amountsUnwrapped = queryResult.amountTokensOut.map((amountWrapped, i) => BigNumber.from(amountWrapped).abs().mul(rates[i]).div(WeiPerEther));
+        const amountsUnwrapped = queryResult.returnAmounts.map((amountWrapped, i) => BigNumber.from(amountWrapped).abs().mul(rates[i]).div(WeiPerEther));
 
         // Gets limits array for tokensIn>wrappedTokens based on input slippage
         const limits = SwapsService.getLimitsForSlippage(
@@ -89,7 +91,7 @@ export class RelayerService {
             wrappedTokens, // tokensOut
             SwapType.SwapExactIn,
             amountsIn,  // tokensIn amounts
-            queryResult.amountTokensOut, // tokensOut amounts
+            queryResult.returnAmounts, // tokensOut amounts
             queryResult.assets,
             slippage
         );
