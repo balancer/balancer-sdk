@@ -26,7 +26,8 @@
     "lint": "eslint ./src --ext .ts --max-warnings 0"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^19.0.0",
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.0.0",
     "@rollup/plugin-typescript": "^8.2.1",
     "@typechain/ethers-v5": "^7.0.1",
