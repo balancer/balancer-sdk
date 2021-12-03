@@ -22,7 +22,7 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "test": "mocha --extension test.ts -r ts-node/register --recursive",
+    "test": "TS_NODE_PROJECT='tsconfig.testing.json' mocha --extension test.ts -r ts-node/register --recursive",
     "lint": "eslint ./src --ext .ts --max-warnings 0"
   },
   "devDependencies": {
