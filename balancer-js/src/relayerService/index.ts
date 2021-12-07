@@ -8,8 +8,9 @@ import {
     EncodeUnwrapAaveStaticTokenInput,
     OutputReference,
     EncodeExitPoolInput,
+    ExitAndBatchSwapInput,
 } from './types';
-import { TransactionData } from '../types';
+import { TransactionData, ExitPoolRequest } from '../types';
 import { SwapType, FundManagement, BatchSwapStep } from '../swapsService/types';
 
 import relayerLibraryAbi from '../abi/VaultActions.json';
@@ -79,22 +80,32 @@ export class RelayerService {
     }
 
     /**
-     * swapUnwrapAaveStaticExactIn Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable.
-     * @param exitPoolInput - TO DO.
-     * @param finalTokensOut - array contains the addresses of the final tokens out.
-     * @param funds - Funding info for swap. Note - fromInternalBalance should be true as exitPool is moved to internal balance before swap.
+     * exitPoolAndBatchSwap Chains poolExit with batchSwap to final tokens.
+     * @param {ExitAndBatchSwapInput} params
+     * @param {string} exiter - Address used to exit pool.
+     * @param {string} swapRecipient - Address that receives final tokens.
+     * @param {string} poolId - Id of pool being exited.
+     * @param {string[]} exitTokens - Array containing addresses of tokens to receive after exiting pool. (must have the same length and order as the array returned by `getPoolTokens`.)
+     * @param {string} userData - Encoded exitPool data.
+     * @param {string[]} minExitAmountsOut - Minimum amounts of exitTokens to receive when exiting pool.
+     * @param {string[]} finalTokensOut - Array containing the addresses of the final tokens out.
      * @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
      * @returns Transaction data with calldata. Outputs.amountsOut has amounts of finalTokensOut returned.
      */
     async exitPoolAndBatchSwap(
-        exitPoolInput: EncodeExitPoolInput,
-        finalTokensOut: string[],
-        funds: FundManagement,
-        slippage: BigNumberish
+        params: ExitAndBatchSwapInput
     ): Promise<TransactionData> {
+        // Creates exitPool request with exit to internal balance to save gas for following swaps
+        const exitPoolRequest: ExitPoolRequest = {
+            assets: params.exitTokens,
+            minAmountsOut: params.minExitAmountsOut,
+            userData: params.userData,
+            toInternalBalance: true,
+        };
+
         // Output of exit is used as input to swaps
         const outputReferences: OutputReference[] = [];
-        exitPoolInput.exitPoolRequest.assets.forEach((asset, i) => {
+        exitPoolRequest.assets.forEach((asset, i) => {
             const key = RelayerService.toChainedReference(i);
             outputReferences.push({
                 index: i,
@@ -102,7 +113,14 @@ export class RelayerService {
             });
         });
 
-        exitPoolInput.outputReferences = outputReferences;
+        const exitPoolInput: EncodeExitPoolInput = {
+            poolId: params.poolId,
+            poolKind: 0, // This will always be 0 to match supported Relayer types
+            sender: params.exiter,
+            recipient: params.exiter,
+            outputReferences: outputReferences,
+            exitPoolRequest,
+        };
 
         // Useful for debugging issues with incorrect amounts/limits
         // const tempAmts = exitPoolInput.exitPoolRequest.minAmountsOut;
@@ -111,12 +129,10 @@ export class RelayerService {
 
         const exitEncoded = RelayerService.encodeExitPool(exitPoolInput);
 
-        // Need to create swaps: queryBatchSwapWithSor
-        // Swaps with outputs of exit
-        // Use swapsService to get swap info for tokensIn>wrappedTokens
+        // Use swapsService to get swap info for exitTokens>finalTokens
         const queryResult = await this.swapsService.queryBatchSwapWithSor({
             tokensIn: exitPoolInput.exitPoolRequest.assets,
-            tokensOut: finalTokensOut,
+            tokensOut: params.finalTokensOut,
             swapType: SwapType.SwapExactIn,
             amounts: exitPoolInput.exitPoolRequest.minAmountsOut, // tempAmts
             fetchPools: true,
@@ -131,15 +147,24 @@ export class RelayerService {
 
         // const tempDeltas = ['10096980', '0', '0', '10199896999999482390', '0']; // Useful for debug
 
-        // Gets limits array for tokensIn>wrappedTokens based on input slippage
+        // Gets limits array based on input slippage
+        // Can cause issues for exitExactBPTInForTokensOut if minAmountsOut is innacurate as this is use to get swap amounts
         const limits = SwapsService.getLimitsForSlippage(
             exitPoolInput.exitPoolRequest.assets, // tokensIn
-            finalTokensOut, // tokensOut
+            params.finalTokensOut, // tokensOut
             SwapType.SwapExactIn,
             queryResult.deltas, // tempDeltas // Useful for debug
             queryResult.assets,
-            slippage
+            params.slippage
         );
+
+        // Creates fund management using internal balance as source of tokens
+        const funds: FundManagement = {
+            sender: params.exiter,
+            recipient: params.swapRecipient,
+            fromInternalBalance: true,
+            toInternalBalance: false,
+        };
 
         const encodedBatchSwap = RelayerService.encodeBatchSwap({
             swapType: SwapType.SwapExactIn,

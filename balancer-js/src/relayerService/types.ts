@@ -36,3 +36,14 @@ export interface EncodeUnwrapAaveStaticTokenInput {
     toUnderlying: boolean;
     outputReferences: BigNumberish;
 }
+
+export interface ExitAndBatchSwapInput {
+    exiter: string;
+    swapRecipient: string;
+    poolId: string;
+    exitTokens: string[];
+    userData: string;
+    minExitAmountsOut: string[];
+    finalTokensOut: string[];
+    slippage: string;
+}
