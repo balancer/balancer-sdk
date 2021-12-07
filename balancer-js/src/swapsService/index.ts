@@ -28,8 +28,7 @@ export class SwapsService {
         tokensIn: string[],
         tokensOut: string[],
         swapType: SwapType,
-        amountsTokenIn: BigNumberish[],
-        amountsTokenOut: BigNumberish[],
+        deltas: BigNumberish[],
         assets: string[],
         slippage: BigNumberish
     ): BigNumberish[] {
@@ -38,8 +37,7 @@ export class SwapsService {
             tokensIn,
             tokensOut,
             swapType,
-            amountsTokenIn,
-            amountsTokenOut,
+            deltas,
             assets,
             slippage
         );
@@ -79,7 +77,7 @@ export class SwapsService {
      * @param queryWithSor.fetchPools - If true SOR will fetch updated pool info from Subgraph.
      * @returns Returns amount of tokens swaps along with swap and asset info that can be submitted to a batchSwap call.
      */
-    async queryBatchSwapWithSor(queryWithSor: QueryWithSor): Promise<{ returnAmounts: BigNumberish[]; swaps: BatchSwapStep[]; assets: string[] }> {
+    async queryBatchSwapWithSor(queryWithSor: QueryWithSor): Promise<{ returnAmounts: BigNumberish[]; swaps: BatchSwapStep[]; assets: string[]; deltas: BigNumberish[] }> {
 
         // TO DO - Pull in a ContractsService and use this to pass Vault to queryBatchSwap.
         const provider = new JsonRpcProvider(this.rpcUrl);
