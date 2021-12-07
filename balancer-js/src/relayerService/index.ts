@@ -133,8 +133,7 @@ export class RelayerService {
             exitPoolInput.exitPoolRequest.assets, // tokensIn
             finalTokensOut, // tokensOut
             SwapType.SwapExactIn,
-            exitPoolInput.exitPoolRequest.minAmountsOut, // tokensIn amounts WILL THIS CAUSE ISSUES??
-            queryResult.returnAmounts, // tokensOut amounts - TO DO - Handle case when all swaps are going to same token i.e. staBal3
+            queryResult.deltas,
             queryResult.assets,
             slippage
         );
@@ -196,8 +195,7 @@ export class RelayerService {
             tokensIn, // tokensIn
             aaveStaticTokens, // tokensOut
             SwapType.SwapExactIn,
-            amountsIn, // tokensIn amounts
-            queryResult.returnAmounts, // tokensOut amounts
+            queryResult.deltas,
             queryResult.assets,
             slippage
         );
@@ -264,8 +262,7 @@ export class RelayerService {
             tokensIn, // tokensIn
             aaveStaticTokens, // tokensOut
             SwapType.SwapExactOut,
-            queryResult.returnAmounts, // tokensIn amounts
-            amountsWrapped, // tokensOut amounts
+            queryResult.deltas,
             queryResult.assets,
             slippage
         );

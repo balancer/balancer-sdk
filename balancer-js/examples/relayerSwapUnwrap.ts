@@ -54,6 +54,9 @@ async function runRelayerSwapUnwrapExactIn() {
         '50000000000000000' // Slippage 5%
     );
 
+    console.log(`Amounts Out:`);
+    console.log(txInfo.outputs.amountsOut.toString());
+
     const relayerContract = new Contract(relayerAddress, balancerRelayerAbi, provider);
     const tx = await relayerContract.connect(wallet)[txInfo.function](txInfo.params, {
         value: '0',
@@ -116,6 +119,6 @@ async function runRelayerSwapUnwrapExactOut() {
     console.log(tx);
 }
 
-// ts-node ./examples/relayerSwapUnwrap.ts
-runRelayerSwapUnwrapExactOut();
-// runRelayerSwapUnwrapExactIn();
+// TS_NODE_PROJECT='tsconfig.testing.json' ts-node ./examples/relayerSwapUnwrap.ts
+// runRelayerSwapUnwrapExactOut();
+runRelayerSwapUnwrapExactIn();

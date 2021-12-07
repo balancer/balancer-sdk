@@ -25,6 +25,7 @@ async function runQueryBatchSwapWithSor() {
     console.log(`\n******* stables > BPT ExactIn`);
     console.log(queryResult.swaps);
     console.log(queryResult.assets);
+    console.log(queryResult.deltas.toString());
     console.log(queryResult.returnAmounts.toString()); 
 
     // Example showing how to exit bb-a-usd pool by swapping BPT > stables
@@ -38,6 +39,7 @@ async function runQueryBatchSwapWithSor() {
     console.log(`\n******* BPT > stables ExactIn`);
     console.log(queryResult.swaps);
     console.log(queryResult.assets);
+    console.log(queryResult.deltas.toString());
     console.log(queryResult.returnAmounts.toString());
 
     queryResult = await balancer.swaps.queryBatchSwapWithSor({
@@ -50,8 +52,9 @@ async function runQueryBatchSwapWithSor() {
     console.log(`\n******* BPT > stables Exact Out`);
     console.log(queryResult.swaps);
     console.log(queryResult.assets);
+    console.log(queryResult.deltas.toString());
     console.log(queryResult.returnAmounts.toString());
 }
 
-// ts-node ./examples/queryBatchSwapWithSor.ts
+// TS_NODE_PROJECT='tsconfig.testing.json' ts-node ./examples/queryBatchSwapWithSor.ts
 runQueryBatchSwapWithSor();

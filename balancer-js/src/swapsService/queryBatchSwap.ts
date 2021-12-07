@@ -30,7 +30,7 @@ export async function queryBatchSwap(
     try {
         return await vaultContract.queryBatchSwap(swapType, swaps, assets, funds);
     } catch (err) {
-        throw `queryBatchSwap call error`;
+        throw `queryBatchSwap call error: ${err}`;
     }
 }
 
@@ -45,7 +45,7 @@ export async function queryBatchSwapWithSor(
     swapType: SwapType,
     amounts: BigNumberish[],
     fetchPools: boolean
-): Promise<{ returnAmounts: BigNumberish[]; swaps: BatchSwapStep[]; assets: string[] }> {
+): Promise<{ returnAmounts: BigNumberish[]; swaps: BatchSwapStep[]; assets: string[], deltas: BigNumberish[] }> {
 
     if(fetchPools)
         await sor.fetchPools([], false);
@@ -70,9 +70,10 @@ export async function queryBatchSwapWithSor(
 
     const returnTokens = swapType === SwapType.SwapExactIn ? tokensOut : tokensIn;
     const returnAmounts: BigNumberish[] = Array(returnTokens.length).fill(Zero);
+    let deltas: BigNumberish[] = Array(batchedSwaps.assets.length).fill(Zero);
     try {
         // Onchain query
-        const deltas = await queryBatchSwap(
+        deltas = await queryBatchSwap(
             vaultContract,
             swapType,
             batchedSwaps.swaps,
@@ -88,6 +89,7 @@ export async function queryBatchSwapWithSor(
         returnAmounts,
         swaps: batchedSwaps.swaps,
         assets: batchedSwaps.assets,
+        deltas
     };
 }
 
