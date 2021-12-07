@@ -82,7 +82,7 @@ export class RelayerService {
      * swapUnwrapAaveStaticExactIn Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable.
      * @param exitPoolInput - TO DO.
      * @param finalTokensOut - array contains the addresses of the final tokens out.
-     * @param funds - Funding info for swap. Note - TO DO recipient should be relayer and sender should be caller.
+     * @param funds - Funding info for swap. Note - fromInternalBalance should be true as exitPool is moved to internal balance before swap.
      * @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
      * @returns Transaction data with calldata. Outputs.amountsOut has amounts of finalTokensOut returned.
      */
@@ -104,11 +104,12 @@ export class RelayerService {
 
         exitPoolInput.outputReferences = outputReferences;
 
-        console.log(`ExitPool:`);
-        // console.log(exitPoolInput);
-        console.log('ENCODINZg');
+        // Useful for debugging issues with incorrect amounts/limits
+        // const tempAmts = exitPoolInput.exitPoolRequest.minAmountsOut;
+        // exitPoolInput.exitPoolRequest.minAmountsOut =
+        //     exitPoolInput.exitPoolRequest.minAmountsOut.map(() => '0');
+
         const exitEncoded = RelayerService.encodeExitPool(exitPoolInput);
-        console.log('DONE');
 
         // Need to create swaps: queryBatchSwapWithSor
         // Swaps with outputs of exit
@@ -117,29 +118,28 @@ export class RelayerService {
             tokensIn: exitPoolInput.exitPoolRequest.assets,
             tokensOut: finalTokensOut,
             swapType: SwapType.SwapExactIn,
-            amounts: exitPoolInput.exitPoolRequest.minAmountsOut,
+            amounts: exitPoolInput.exitPoolRequest.minAmountsOut, // tempAmts
             fetchPools: true,
         });
 
-        console.log(`SWAPS:`);
-        console.log(queryResult.swaps);
-        console.log(queryResult.assets);
-        console.log(queryResult.returnAmounts.toString());
+        // Update swap amounts with ref outputs from exitPool
+        queryResult.swaps.forEach((swap) => {
+            const token = queryResult.assets[swap.assetInIndex];
+            const index = exitPoolInput.exitPoolRequest.assets.indexOf(token);
+            if (index !== -1) swap.amount = outputReferences[index].key; // RelayerService.toChainedReference(index);
+        });
 
-        // TO DO - Swap amounts need updated with OutputRefs?
+        // const tempDeltas = ['10096980', '0', '0', '10199896999999482390', '0']; // Useful for debug
 
         // Gets limits array for tokensIn>wrappedTokens based on input slippage
         const limits = SwapsService.getLimitsForSlippage(
             exitPoolInput.exitPoolRequest.assets, // tokensIn
             finalTokensOut, // tokensOut
             SwapType.SwapExactIn,
-            queryResult.deltas,
+            queryResult.deltas, // tempDeltas // Useful for debug
             queryResult.assets,
             slippage
         );
-
-        console.log(`!!!!!!! LIMITS:`);
-        console.log(limits.toString());
 
         const encodedBatchSwap = RelayerService.encodeBatchSwap({
             swapType: SwapType.SwapExactIn,
@@ -149,7 +149,7 @@ export class RelayerService {
             limits: limits.map((l) => l.toString()),
             deadline: MaxUint256,
             value: '0',
-            outputReferences: [], // TO DO ???
+            outputReferences: [],
         });
 
         // Return amounts from swap
