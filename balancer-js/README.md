@@ -132,6 +132,28 @@ async relayer.swapUnwrapAaveStaticExactOut(
 
 [Example](./examples/relayerSwapUnwrap.ts)
 
+### exitPoolAndBatchSwap
+
+Chains poolExit with batchSwap to final tokens.
+
+@param {ExitAndBatchSwapInput} params
+@param {string} exiter - Address used to exit pool.
+@param {string} swapRecipient - Address that receives final tokens.
+@param {string} poolId - Id of pool being exited.
+@param {string[]} exitTokens - Array containing addresses of tokens to receive after exiting pool. (must have the same length and order as the array returned by `getPoolTokens`.)
+@param {string} userData - Encoded exitPool data.
+@param {string[]} minExitAmountsOut - Minimum amounts of exitTokens to receive when exiting pool.
+@param {string[]} finalTokensOut - Array containing the addresses of the final tokens out.
+ @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+@returns Transaction data with calldata. Outputs.amountsOut has amounts of finalTokensOut returned.
+```js
+async relayer.exitPoolAndBatchSwap(
+    params: ExitAndBatchSwapInput
+): Promise<TransactionData>
+```
+
+[Example](./examples/relayerExitPoolAndBatchSwap.ts)
+
 ## Licensing
 
 [GNU General Public License Version 3 (GPL v3)](../../LICENSE).
