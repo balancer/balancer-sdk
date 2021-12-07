@@ -88,8 +88,7 @@ export class RelayerService {
             tokensIn,  // tokensIn
             aaveStaticTokens, // tokensOut
             SwapType.SwapExactIn,
-            amountsIn,  // tokensIn amounts
-            queryResult.returnAmounts, // tokensOut amounts
+            queryResult.deltas,
             queryResult.assets,
             slippage
         );
@@ -149,8 +148,7 @@ export class RelayerService {
             tokensIn,  // tokensIn
             aaveStaticTokens, // tokensOut
             SwapType.SwapExactOut,
-            queryResult.returnAmounts,  // tokensIn amounts
-            amountsWrapped, // tokensOut amounts
+            queryResult.deltas,
             queryResult.assets,
             slippage
         );
