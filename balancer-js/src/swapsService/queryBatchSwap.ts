@@ -2,7 +2,7 @@ import { BigNumberish } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 import { AddressZero, Zero } from '@ethersproject/constants';
 import { SOR, SwapTypes, SwapInfo } from 'sor-linear';
-import { SwapType, BatchSwapStep, FundManagement } from './types';
+import { SwapType, BatchSwapStep, FundManagement, QueryWithSorInput, QueryWithSorOutput } from './types';
 
 /*
  * queryBatchSwap simulates a call to `batchSwap`, returning an array of Vault asset deltas. Calls to `swap` cannot be
@@ -44,28 +44,19 @@ Uses SOR to create a batchSwap which is then queried onChain.
 export async function queryBatchSwapWithSor(
     sor: SOR,
     vaultContract: Contract,
-    tokensIn: string[],
-    tokensOut: string[],
-    swapType: SwapType,
-    amounts: BigNumberish[],
-    fetchPools: boolean
-): Promise<{
-    returnAmounts: BigNumberish[];
-    swaps: BatchSwapStep[];
-    assets: string[];
-    deltas: BigNumberish[];
-}> {
-    if (fetchPools) await sor.fetchPools([], false);
+    queryWithSor: QueryWithSorInput
+): Promise<QueryWithSorOutput> {
+    if (queryWithSor.fetchPools) await sor.fetchPools([], false);
 
     const swaps: BatchSwapStep[][] = [];
     const assetArray: string[][] = [];
     // get path information for each tokenIn
-    for (let i = 0; i < tokensIn.length; i++) {
+    for (let i = 0; i < queryWithSor.tokensIn.length; i++) {
         const swap = await getSorSwapInfo(
-            tokensIn[i],
-            tokensOut[i],
-            swapType,
-            amounts[i].toString(),
+            queryWithSor.tokensIn[i],
+            queryWithSor.tokensOut[i],
+            queryWithSor.swapType,
+            queryWithSor.amounts[i].toString(),
             sor
         );
         swaps.push(swap.swaps);
@@ -76,14 +67,14 @@ export async function queryBatchSwapWithSor(
     const batchedSwaps = batchSwaps(assetArray, swaps);
 
     const returnTokens =
-        swapType === SwapType.SwapExactIn ? tokensOut : tokensIn;
-    const returnAmounts: BigNumberish[] = Array(returnTokens.length).fill(Zero);
+        queryWithSor.swapType === SwapType.SwapExactIn ? queryWithSor.tokensOut : queryWithSor.tokensIn;
+    const returnAmounts: string[] = Array(returnTokens.length).fill(Zero);
     let deltas: BigNumberish[] = Array(batchedSwaps.assets.length).fill(Zero);
     try {
         // Onchain query
         deltas = await queryBatchSwap(
             vaultContract,
-            swapType,
+            queryWithSor.swapType,
             batchedSwaps.swaps,
             batchedSwaps.assets
         );
@@ -91,8 +82,8 @@ export async function queryBatchSwapWithSor(
         returnTokens.forEach(
             (t, i) =>
                 (returnAmounts[i] =
-                    deltas[batchedSwaps.assets.indexOf(t.toLowerCase())] ??
-                    Zero)
+                    deltas[batchedSwaps.assets.indexOf(t.toLowerCase())].toString() ??
+                    Zero.toString())
         );
     } catch (err) {
         console.error(`queryBatchSwapTokensIn error: ${err}`);
@@ -102,7 +93,7 @@ export async function queryBatchSwapWithSor(
         returnAmounts,
         swaps: batchedSwaps.swaps,
         assets: batchedSwaps.assets,
-        deltas,
+        deltas: deltas.map(d => d.toString()),
     };
 }
 

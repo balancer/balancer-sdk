@@ -142,7 +142,7 @@ export class RelayerService {
         queryResult.swaps.forEach((swap) => {
             const token = queryResult.assets[swap.assetInIndex];
             const index = exitPoolInput.exitPoolRequest.assets.indexOf(token);
-            if (index !== -1) swap.amount = outputReferences[index].key; // RelayerService.toChainedReference(index);
+            if (index !== -1) swap.amount = outputReferences[index].key.toString(); // RelayerService.toChainedReference(index);
         });
 
         // const tempDeltas = ['10096980', '0', '0', '10199896999999482390', '0']; // Useful for debug
@@ -201,7 +201,7 @@ export class RelayerService {
     async swapUnwrapAaveStaticExactIn(
         tokensIn: string[],
         aaveStaticTokens: string[],
-        amountsIn: BigNumberish[],
+        amountsIn: string[],
         rates: BigNumberish[],
         funds: FundManagement,
         slippage: BigNumberish
@@ -269,8 +269,8 @@ export class RelayerService {
         funds: FundManagement,
         slippage: BigNumberish
     ): Promise<TransactionData> {
-        const amountsWrapped = amountsUnwrapped.map((amountWrapped, i) =>
-            BigNumber.from(amountWrapped).mul(WeiPerEther).div(rates[i])
+        const amountsWrapped = amountsUnwrapped.map((amountInwrapped, i) =>
+            BigNumber.from(amountInwrapped).mul(WeiPerEther).div(rates[i]).toString()
         );
 
         // Use swapsService to get swap info for tokensIn>wrappedTokens

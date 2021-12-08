@@ -19,7 +19,7 @@ async function runQueryBatchSwapWithSor() {
         tokensIn: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
         tokensOut: [STABAL3PHANTOM.address, STABAL3PHANTOM.address, STABAL3PHANTOM.address],
         swapType: SwapType.SwapExactIn,
-        amounts: [parseFixed('100', 18), parseFixed('100', 6), parseFixed('100', 6)],
+        amounts: [parseFixed('100', 18).toString(), parseFixed('100', 6).toString(), parseFixed('100', 6).toString()],
         fetchPools: true
     });
     console.log(`\n******* stables > BPT ExactIn`);
@@ -33,7 +33,7 @@ async function runQueryBatchSwapWithSor() {
         tokensIn: [STABAL3PHANTOM.address, STABAL3PHANTOM.address, STABAL3PHANTOM.address],
         tokensOut: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
         swapType: SwapType.SwapExactIn,
-        amounts: [parseFixed('1', 18), parseFixed('1', 18), parseFixed('1', 18)],
+        amounts: [parseFixed('1', 18).toString(), parseFixed('1', 18).toString(), parseFixed('1', 18).toString()],
         fetchPools: true
     });
     console.log(`\n******* BPT > stables ExactIn`);
@@ -46,7 +46,7 @@ async function runQueryBatchSwapWithSor() {
         tokensIn: [STABAL3PHANTOM.address, STABAL3PHANTOM.address, STABAL3PHANTOM.address],
         tokensOut: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
         swapType: SwapType.SwapExactOut,
-        amounts: queryResult.returnAmounts.map(amt => BigNumber.from(amt).abs()),
+        amounts: queryResult.returnAmounts.map(amt => BigNumber.from(amt).abs().toString()),
         fetchPools: true
     });
     console.log(`\n******* BPT > stables Exact Out`);

@@ -32,7 +32,7 @@ export type BatchSwapStep = {
     poolId: string;
     assetInIndex: number;
     assetOutIndex: number;
-    amount: BigNumberish;
+    amount: string;
     userData: string;
 };
 
@@ -45,10 +45,17 @@ export type BatchSwap = {
     deadline: BigNumberish;
 };
 
-export interface QueryWithSor {
+export interface QueryWithSorInput {
     tokensIn: string[];
     tokensOut: string[];
     swapType: SwapType;
-    amounts: BigNumberish[];
+    amounts: string[];
     fetchPools: boolean;
+}
+
+export interface QueryWithSorOutput {
+    returnAmounts: string[];
+    swaps: BatchSwapStep[];
+    assets: string[];
+    deltas: string[];
 }
