@@ -53,8 +53,9 @@ export class SwapsService {
      * Vault, and negative amounts represent tokens (or ETH) sent by the Vault. Each delta corresponds to the asset at
      * the same index in the `assets` array.
      */
-    async queryBatchSwap(batchSwap: Pick<BatchSwap, 'kind' | 'swaps' | 'assets'>): Promise<BigNumberish[]> {
-
+    async queryBatchSwap(
+        batchSwap: Pick<BatchSwap, 'kind' | 'swaps' | 'assets'>
+    ): Promise<string[]> {
         // TO DO - Pull in a ContractsService and use this to pass Vault to queryBatchSwap.
         const provider = new JsonRpcProvider(this.rpcUrl);
         const vaultContract = new Contract(balancerVault, vaultAbi, provider);
@@ -77,8 +78,12 @@ export class SwapsService {
      * @param queryWithSor.fetchPools - If true SOR will fetch updated pool info from Subgraph.
      * @returns Returns amount of tokens swaps along with swap and asset info that can be submitted to a batchSwap call.
      */
-    async queryBatchSwapWithSor(queryWithSor: QueryWithSor): Promise<{ returnAmounts: BigNumberish[]; swaps: BatchSwapStep[]; assets: string[]; deltas: BigNumberish[] }> {
-
+    async queryBatchSwapWithSor(queryWithSor: QueryWithSor): Promise<{
+        returnAmounts: BigNumberish[];
+        swaps: BatchSwapStep[];
+        assets: string[];
+        deltas: BigNumberish[];
+    }> {
         // TO DO - Pull in a ContractsService and use this to pass Vault to queryBatchSwap.
         const provider = new JsonRpcProvider(this.rpcUrl);
         const vaultContract = new Contract(balancerVault, vaultAbi, provider);

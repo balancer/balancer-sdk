@@ -1,10 +1,8 @@
-
 import { BigNumberish } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 import { AddressZero, Zero } from '@ethersproject/constants';
 import { SOR, SwapTypes, SwapInfo } from 'sor-linear';
 import { SwapType, BatchSwapStep, FundManagement } from './types';
-
 
 /*
  * queryBatchSwap simulates a call to `batchSwap`, returning an array of Vault asset deltas. Calls to `swap` cannot be
@@ -19,7 +17,7 @@ export async function queryBatchSwap(
     swapType: SwapType,
     swaps: BatchSwapStep[],
     assets: string[]
-): Promise<BigNumberish[]> {
+): Promise<string[]> {
     const funds: FundManagement = {
         sender: AddressZero,
         recipient: AddressZero,
@@ -28,7 +26,13 @@ export async function queryBatchSwap(
     };
 
     try {
-        return await vaultContract.queryBatchSwap(swapType, swaps, assets, funds);
+        const deltas = await vaultContract.queryBatchSwap(
+            swapType,
+            swaps,
+            assets,
+            funds
+        );
+        return deltas.map((d: BigNumberish) => d.toString());
     } catch (err) {
         throw `queryBatchSwap call error: ${err}`;
     }
@@ -45,10 +49,13 @@ export async function queryBatchSwapWithSor(
     swapType: SwapType,
     amounts: BigNumberish[],
     fetchPools: boolean
-): Promise<{ returnAmounts: BigNumberish[]; swaps: BatchSwapStep[]; assets: string[], deltas: BigNumberish[] }> {
-
-    if(fetchPools)
-        await sor.fetchPools([], false);
+): Promise<{
+    returnAmounts: BigNumberish[];
+    swaps: BatchSwapStep[];
+    assets: string[];
+    deltas: BigNumberish[];
+}> {
+    if (fetchPools) await sor.fetchPools([], false);
 
     const swaps: BatchSwapStep[][] = [];
     const assetArray: string[][] = [];
@@ -68,7 +75,8 @@ export async function queryBatchSwapWithSor(
     // Join swaps and assets together correctly
     const batchedSwaps = batchSwaps(assetArray, swaps);
 
-    const returnTokens = swapType === SwapType.SwapExactIn ? tokensOut : tokensIn;
+    const returnTokens =
+        swapType === SwapType.SwapExactIn ? tokensOut : tokensIn;
     const returnAmounts: BigNumberish[] = Array(returnTokens.length).fill(Zero);
     let deltas: BigNumberish[] = Array(batchedSwaps.assets.length).fill(Zero);
     try {
@@ -80,7 +88,12 @@ export async function queryBatchSwapWithSor(
             batchedSwaps.assets
         );
 
-        returnTokens.forEach((t, i) => returnAmounts[i] = deltas[batchedSwaps.assets.indexOf(t.toLowerCase())] ?? Zero)
+        returnTokens.forEach(
+            (t, i) =>
+                (returnAmounts[i] =
+                    deltas[batchedSwaps.assets.indexOf(t.toLowerCase())] ??
+                    Zero)
+        );
     } catch (err) {
         console.error(`queryBatchSwapTokensIn error: ${err}`);
     }
@@ -89,7 +102,7 @@ export async function queryBatchSwapWithSor(
         returnAmounts,
         swaps: batchedSwaps.swaps,
         assets: batchedSwaps.assets,
-        deltas
+        deltas,
     };
 }
 
@@ -104,7 +117,10 @@ async function getSorSwapInfo(
     amount: string,
     sor: SOR
 ): Promise<SwapInfo> {
-    const swapTypeSOR: SwapTypes = swapType === SwapType.SwapExactIn ? SwapTypes.SwapExactIn : SwapTypes.SwapExactOut;
+    const swapTypeSOR: SwapTypes =
+        swapType === SwapType.SwapExactIn
+            ? SwapTypes.SwapExactIn
+            : SwapTypes.SwapExactOut;
     const swapInfo = await sor.getSwaps(
         tokenIn.toLowerCase(),
         tokenOut.toLowerCase(),
