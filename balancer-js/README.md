@@ -49,16 +49,16 @@ swaps.queryBatchSwap(batchSwap: {
 
 [Example](./examples/queryBatchSwap.ts)
 
-### queryBatchSwapTokensIn
+### queryBatchSwapWithSor
 
-Uses SOR to create and query a batchSwap for multiple tokens in > single tokenOut. For example can be used to join staBal3 with DAI/USDC/USDT.
+Uses SOR to create and query a batchSwap for multiple tokens in > multiple tokensOut.
 
 @param queryWithSor - Swap information used for querying using SOR.
 @param queryWithSor.tokensIn - Array of addresses of assets in.
 @param queryWithSor.tokensOut - Array of addresses of assets out.
 @param queryWithSor.swapType - Type of Swap, ExactIn/Out.
 @param queryWithSor.amounts - Array of amounts used in swap.
-@param queryWithSor.fetchPools - If true SOR will fetch updated pool info from Subgraph.
+@param queryWithSor.fetchPools - Set whether SOR will fetch updated pool info.
 @returns Returns amount of tokens swaps along with swap and asset info that can be submitted to a batchSwap call.
 ```js
 swaps.queryBatchSwapWithSor(queryWithSor: {
@@ -66,9 +66,14 @@ swaps.queryBatchSwapWithSor(queryWithSor: {
     tokensOut: string[],
     swapType: SwapType,
     amounts: BigNumberish[],
-    fetchPools: boolean,
+    fetchPools: FetchPoolsInput;
 }): 
-Promise<{ returnAmounts: BigNumberish[]; swaps: BatchSwapStep[]; assets: string[] }
+Promise<QueryWithSorOutput {
+    returnAmounts: string[];
+    swaps: BatchSwapStep[];
+    assets: string[];
+    deltas: string[];
+}>
 ```
 
 [Example](./examples/queryBatchSwapWithSor.ts)
@@ -94,6 +99,7 @@ Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to und
 @param rates - The rate used to convert wrappedToken to underlying.
 @param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
 @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+@param fetchPools - Set whether SOR will fetch updated pool info.
 @returns Transaction data with calldata. Outputs.amountsOut has final amounts out of unwrapped tokens.
 ```js
 async relayer.swapUnwrapAaveStaticExactIn(
@@ -102,7 +108,11 @@ async relayer.swapUnwrapAaveStaticExactIn(
     amountsIn: BigNumberish[],
     rates: BigNumberish[],
     funds: FundManagement,
-    slippage: BigNumberish
+    slippage: BigNumberish,
+    fetchPools: FetchPoolsInput = {
+        fetchPools: true,
+        fetchOnChain: false
+    }
 ): Promise<TransactionData>
 ```
 
@@ -118,6 +128,7 @@ Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to und
 @param rates - The rate used to convert wrappedToken to underlying.
 @param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
 @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+@param fetchPools - Set whether SOR will fetch updated pool info.
 @returns Transaction data with calldata. Outputs.amountsIn has the amounts of tokensIn.
 ```js
 async relayer.swapUnwrapAaveStaticExactOut(
@@ -126,7 +137,11 @@ async relayer.swapUnwrapAaveStaticExactOut(
     amountsUnwrapped: BigNumberish[],
     rates: BigNumberish[],
     funds: FundManagement,
-    slippage: BigNumberish
+    slippage: BigNumberish,
+    fetchPools: FetchPoolsInput = {
+        fetchPools: true,
+        fetchOnChain: false
+    }
 ): Promise<TransactionData>
 ```
 
@@ -136,19 +151,30 @@ async relayer.swapUnwrapAaveStaticExactOut(
 
 Chains poolExit with batchSwap to final tokens.
 
-@param {ExitAndBatchSwapInput} params
-@param {string} exiter - Address used to exit pool.
-@param {string} swapRecipient - Address that receives final tokens.
-@param {string} poolId - Id of pool being exited.
-@param {string[]} exitTokens - Array containing addresses of tokens to receive after exiting pool. (must have the same length and order as the array returned by `getPoolTokens`.)
-@param {string} userData - Encoded exitPool data.
-@param {string[]} minExitAmountsOut - Minimum amounts of exitTokens to receive when exiting pool.
-@param {string[]} finalTokensOut - Array containing the addresses of the final tokens out.
- @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+@param params:
+@param exiter - Address used to exit pool.
+@param swapRecipient - Address that receives final tokens.
+@param poolId - Id of pool being exited.
+@param exitTokens - Array containing addresses of tokens to receive after exiting pool. (must have the same length and order as the array returned by `getPoolTokens`.)
+@param userData - Encoded exitPool data.
+@param minExitAmountsOut - Minimum amounts of exitTokens to receive when exiting pool.
+@param finalTokensOut - Array containing the addresses of the final tokens out.
+@param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+@param fetchPools - Set whether SOR will fetch updated pool info.
 @returns Transaction data with calldata. Outputs.amountsOut has amounts of finalTokensOut returned.
 ```js
 async relayer.exitPoolAndBatchSwap(
-    params: ExitAndBatchSwapInput
+    params: ExitAndBatchSwapInput {
+        exiter: string;
+        swapRecipient: string;
+        poolId: string;
+        exitTokens: string[];
+        userData: string;
+        minExitAmountsOut: string[];
+        finalTokensOut: string[];
+        slippage: string;
+        fetchPools: FetchPoolsInput;
+    }
 ): Promise<TransactionData>
 ```
 

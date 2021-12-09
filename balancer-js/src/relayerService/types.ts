@@ -1,7 +1,7 @@
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 
 import { ExitPoolRequest } from '../types';
-import { SwapType, BatchSwapStep, FundManagement } from '../swapsService/types';
+import { SwapType, BatchSwapStep, FundManagement, FetchPoolsInput } from '../swapsService/types';
 
 export type OutputReference = {
     index: number;
@@ -46,4 +46,5 @@ export interface ExitAndBatchSwapInput {
     minExitAmountsOut: string[];
     finalTokensOut: string[];
     slippage: string;
+    fetchPools: FetchPoolsInput;
 }

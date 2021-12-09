@@ -45,12 +45,17 @@ export type BatchSwap = {
     deadline: BigNumberish;
 };
 
+export interface FetchPoolsInput {
+    fetchPools: boolean;
+    fetchOnChain: boolean;
+}
+
 export interface QueryWithSorInput {
     tokensIn: string[];
     tokensOut: string[];
     swapType: SwapType;
     amounts: string[];
-    fetchPools: boolean;
+    fetchPools: FetchPoolsInput;
 }
 
 export interface QueryWithSorOutput {

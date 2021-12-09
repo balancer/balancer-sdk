@@ -77,7 +77,7 @@ export class SwapsService {
      * @param {string[]} queryWithSor.tokensOut - Array of addresses of assets out.
      * @param {SwapType} queryWithSor.swapType - Type of Swap, ExactIn/Out.
      * @param {string[]} queryWithSor.amounts - Array of amounts used in swap.
-     * @param {boolean} queryWithSor.fetchPools - If true SOR will fetch updated pool info from Subgraph.
+     * @param {FetchPoolsInput} queryWithSor.fetchPools - Set whether SOR will fetch updated pool info.
      * @returns Returns amount of tokens swaps along with swap and asset info that can be submitted to a batchSwap call.
      */
     async queryBatchSwapWithSor(queryWithSor: QueryWithSorInput): Promise<QueryWithSorOutput> {

@@ -126,5 +126,5 @@ async function runRelayerSwapUnwrapExactOut() {
 }
 
 // TS_NODE_PROJECT='tsconfig.testing.json' ts-node ./examples/relayerSwapUnwrap.ts
-runRelayerSwapUnwrapExactOut();
-// runRelayerSwapUnwrapExactIn();
+// runRelayerSwapUnwrapExactOut();
+runRelayerSwapUnwrapExactIn();
