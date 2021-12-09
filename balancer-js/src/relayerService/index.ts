@@ -11,7 +11,7 @@ import {
     ExitAndBatchSwapInput,
 } from './types';
 import { TransactionData, ExitPoolRequest } from '../types';
-import { SwapType, FundManagement, BatchSwapStep } from '../swapsService/types';
+import { SwapType, FundManagement, BatchSwapStep, FetchPoolsInput } from '../swapsService/types';
 
 import relayerLibraryAbi from '../abi/VaultActions.json';
 import aaveWrappingAbi from '../abi/AaveWrapping.json';
@@ -89,7 +89,8 @@ export class RelayerService {
      * @param {string} userData - Encoded exitPool data.
      * @param {string[]} minExitAmountsOut - Minimum amounts of exitTokens to receive when exiting pool.
      * @param {string[]} finalTokensOut - Array containing the addresses of the final tokens out.
-     * @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+     * @param {string} slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+     * @param {FetchPoolsInput} fetchPools - Set whether SOR will fetch updated pool info.
      * @returns Transaction data with calldata. Outputs.amountsOut has amounts of finalTokensOut returned.
      */
     async exitPoolAndBatchSwap(
@@ -135,14 +136,14 @@ export class RelayerService {
             tokensOut: params.finalTokensOut,
             swapType: SwapType.SwapExactIn,
             amounts: exitPoolInput.exitPoolRequest.minAmountsOut, // tempAmts
-            fetchPools: true,
+            fetchPools: params.fetchPools,
         });
 
         // Update swap amounts with ref outputs from exitPool
         queryResult.swaps.forEach((swap) => {
             const token = queryResult.assets[swap.assetInIndex];
             const index = exitPoolInput.exitPoolRequest.assets.indexOf(token);
-            if (index !== -1) swap.amount = outputReferences[index].key; // RelayerService.toChainedReference(index);
+            if (index !== -1) swap.amount = outputReferences[index].key.toString(); // RelayerService.toChainedReference(index);
         });
 
         // const tempDeltas = ['10096980', '0', '0', '10199896999999482390', '0']; // Useful for debug
@@ -190,21 +191,26 @@ export class RelayerService {
 
     /**
      * swapUnwrapAaveStaticExactIn Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable.
-     * @param tokensIn - array to token addresses for swapping as tokens in.
-     * @param aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
-     * @param amountsIn - amounts to be swapped for each token in.
-     * @param rates - The rate used to convert wrappedToken to underlying.
-     * @param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
-     * @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+     * @param {string[]} tokensIn - array to token addresses for swapping as tokens in.
+     * @param {string[]} aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
+     * @param {string[]} amountsIn - amounts to be swapped for each token in.
+     * @param {string[]} rates - The rate used to convert wrappedToken to underlying.
+     * @param {FundManagement} funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
+     * @param {string} slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+     * @param {FetchPoolsInput} fetchPools - Set whether SOR will fetch updated pool info.
      * @returns Transaction data with calldata. Outputs.amountsOut has final amounts out of unwrapped tokens.
      */
     async swapUnwrapAaveStaticExactIn(
         tokensIn: string[],
         aaveStaticTokens: string[],
-        amountsIn: BigNumberish[],
-        rates: BigNumberish[],
+        amountsIn: string[],
+        rates: string[],
         funds: FundManagement,
-        slippage: BigNumberish
+        slippage: string,
+        fetchPools: FetchPoolsInput = {
+            fetchPools: true,
+            fetchOnChain: false
+        }
     ): Promise<TransactionData> {
         // Use swapsService to get swap info for tokensIn>wrappedTokens
         const queryResult = await this.swapsService.queryBatchSwapWithSor({
@@ -212,7 +218,7 @@ export class RelayerService {
             tokensOut: aaveStaticTokens,
             swapType: SwapType.SwapExactIn,
             amounts: amountsIn,
-            fetchPools: true,
+            fetchPools,
         });
 
         // Gets limits array for tokensIn>wrappedTokens based on input slippage
@@ -253,24 +259,29 @@ export class RelayerService {
 
     /**
      * swapUnwrapAaveStaticExactOut Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable.
-     * @param tokensIn - array to token addresses for swapping as tokens in.
-     * @param aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
-     * @param amountsUnwrapped - amounts of unwrapped tokens out.
-     * @param rates - The rate used to convert wrappedToken to underlying.
-     * @param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
-     * @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+     * @param {string[]} tokensIn - array to token addresses for swapping as tokens in.
+     * @param {string[]} aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
+     * @param {string[]} amountsUnwrapped - amounts of unwrapped tokens out.
+     * @param {string[]} rates - The rate used to convert wrappedToken to underlying.
+     * @param {FundManagement} funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
+     * @param {string} slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+     * @param {FetchPoolsInput} fetchPools - Set whether SOR will fetch updated pool info.
      * @returns Transaction data with calldata. Outputs.amountsIn has the amounts of tokensIn.
      */
     async swapUnwrapAaveStaticExactOut(
         tokensIn: string[],
         aaveStaticTokens: string[],
-        amountsUnwrapped: BigNumberish[],
-        rates: BigNumberish[],
+        amountsUnwrapped: string[],
+        rates: string[],
         funds: FundManagement,
-        slippage: BigNumberish
+        slippage: string,
+        fetchPools: FetchPoolsInput = {
+            fetchPools: true,
+            fetchOnChain: false
+        }
     ): Promise<TransactionData> {
-        const amountsWrapped = amountsUnwrapped.map((amountWrapped, i) =>
-            BigNumber.from(amountWrapped).mul(WeiPerEther).div(rates[i])
+        const amountsWrapped = amountsUnwrapped.map((amountInwrapped, i) =>
+            BigNumber.from(amountInwrapped).mul(WeiPerEther).div(rates[i]).toString()
         );
 
         // Use swapsService to get swap info for tokensIn>wrappedTokens
@@ -279,7 +290,7 @@ export class RelayerService {
             tokensOut: aaveStaticTokens,
             swapType: SwapType.SwapExactOut,
             amounts: amountsWrapped,
-            fetchPools: true,
+            fetchPools
         });
 
         // Gets limits array for tokensIn>wrappedTokens based on input slippage

@@ -65,6 +65,10 @@ async function relayerExitPoolAndBatchSwap() {
         minExitAmountsOut,
         finalTokensOut: [STABAL3PHANTOM.address, STABAL3PHANTOM.address],
         slippage: '50000000000000000', // Slippage for swap 5%
+        fetchPools: {
+            fetchPools: true,
+            fetchOnChain: false
+        }
     });
 
     const relayerContract = new Contract(
