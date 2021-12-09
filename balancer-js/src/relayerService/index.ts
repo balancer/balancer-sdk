@@ -190,21 +190,21 @@ export class RelayerService {
 
     /**
      * swapUnwrapAaveStaticExactIn Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable.
-     * @param tokensIn - array to token addresses for swapping as tokens in.
-     * @param aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
-     * @param amountsIn - amounts to be swapped for each token in.
-     * @param rates - The rate used to convert wrappedToken to underlying.
-     * @param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
-     * @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+     * @param {string[]} tokensIn - array to token addresses for swapping as tokens in.
+     * @param {string[]} aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
+     * @param {string[]} amountsIn - amounts to be swapped for each token in.
+     * @param {string[]} rates - The rate used to convert wrappedToken to underlying.
+     * @param {FundManagement} funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
+     * @param {string} slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
      * @returns Transaction data with calldata. Outputs.amountsOut has final amounts out of unwrapped tokens.
      */
     async swapUnwrapAaveStaticExactIn(
         tokensIn: string[],
         aaveStaticTokens: string[],
         amountsIn: string[],
-        rates: BigNumberish[],
+        rates: string[],
         funds: FundManagement,
-        slippage: BigNumberish
+        slippage: string
     ): Promise<TransactionData> {
         // Use swapsService to get swap info for tokensIn>wrappedTokens
         const queryResult = await this.swapsService.queryBatchSwapWithSor({
@@ -253,21 +253,21 @@ export class RelayerService {
 
     /**
      * swapUnwrapAaveStaticExactOut Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable.
-     * @param tokensIn - array to token addresses for swapping as tokens in.
-     * @param aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
-     * @param amountsUnwrapped - amounts of unwrapped tokens out.
-     * @param rates - The rate used to convert wrappedToken to underlying.
-     * @param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
-     * @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+     * @param {string[]} tokensIn - array to token addresses for swapping as tokens in.
+     * @param {string[]} aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
+     * @param {string[]} amountsUnwrapped - amounts of unwrapped tokens out.
+     * @param {string[]} rates - The rate used to convert wrappedToken to underlying.
+     * @param {FundManagement} funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
+     * @param {string} slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
      * @returns Transaction data with calldata. Outputs.amountsIn has the amounts of tokensIn.
      */
     async swapUnwrapAaveStaticExactOut(
         tokensIn: string[],
         aaveStaticTokens: string[],
-        amountsUnwrapped: BigNumberish[],
-        rates: BigNumberish[],
+        amountsUnwrapped: string[],
+        rates: string[],
         funds: FundManagement,
-        slippage: BigNumberish
+        slippage: string
     ): Promise<TransactionData> {
         const amountsWrapped = amountsUnwrapped.map((amountInwrapped, i) =>
             BigNumber.from(amountInwrapped).mul(WeiPerEther).div(rates[i]).toString()

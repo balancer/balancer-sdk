@@ -28,12 +28,12 @@ export class SwapsService {
         tokensIn: string[],
         tokensOut: string[],
         swapType: SwapType,
-        deltas: BigNumberish[],
+        deltas: string[],
         assets: string[],
-        slippage: BigNumberish
-    ): BigNumberish[] {
+        slippage: string
+    ): string[] {
         // TO DO - Check best way to do this?
-        return getLimitsForSlippage(
+        const limits = getLimitsForSlippage(
             tokensIn,
             tokensOut,
             swapType,
@@ -41,6 +41,8 @@ export class SwapsService {
             assets,
             slippage
         );
+
+        return limits.map(l => l.toString());
     }
 
     /**
