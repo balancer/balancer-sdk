@@ -14,6 +14,12 @@ async function runQueryBatchSwapWithSor() {
     console.log(config.subgraphUrl);
     const balancer = new BalancerSDK(config);
 
+    const poolsFetched = await balancer.swaps.fetchPools([], false);
+    if(!poolsFetched){
+        console.log(`Error fetching pools data.`);
+        return;
+    }
+
     // Example showing how to join bb-a-usd pool by swapping stables > BPT
     let queryResult = await balancer.swaps.queryBatchSwapWithSor({
         tokensIn: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
@@ -21,8 +27,8 @@ async function runQueryBatchSwapWithSor() {
         swapType: SwapType.SwapExactIn,
         amounts: [parseFixed('100', 18).toString(), parseFixed('100', 6).toString(), parseFixed('100', 6).toString()],
         fetchPools: {
-            fetchPools: true,   // Initial fetch gets onchain pool info
-            fetchOnChain: true
+            fetchPools: false, // Because pools were previously fetched we can reuse to speed things up
+            fetchOnChain: false
         }
     });
     console.log(`\n******* stables > BPT ExactIn`);
@@ -38,7 +44,7 @@ async function runQueryBatchSwapWithSor() {
         swapType: SwapType.SwapExactIn,
         amounts: [parseFixed('1', 18).toString(), parseFixed('1', 18).toString(), parseFixed('1', 18).toString()],
         fetchPools: {
-            fetchPools: false,  // Because pools were previously fetched we can reuse to speed things up
+            fetchPools: false,
             fetchOnChain: false
         }
     });
