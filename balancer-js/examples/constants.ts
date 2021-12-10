@@ -5,7 +5,7 @@ interface TestToken {
 
 // Kovan version
 export const STABAL3PHANTOM: TestToken = {
-    address: '0x21ff756ca0cfcc5fff488ad67babadffee0c4149',
+    address: '0x8fd162f338b770f7e879030830cde9173367f301',
     decimals: 18,
 };
 
