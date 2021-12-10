@@ -2,7 +2,13 @@ import { BigNumberish } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 import { AddressZero, Zero } from '@ethersproject/constants';
 import { SOR, SwapTypes, SwapInfo } from 'sor-linear';
-import { SwapType, BatchSwapStep, FundManagement, QueryWithSorInput, QueryWithSorOutput } from './types';
+import {
+    SwapType,
+    BatchSwapStep,
+    FundManagement,
+    QueryWithSorInput,
+    QueryWithSorOutput,
+} from './types';
 
 /*
  * queryBatchSwap simulates a call to `batchSwap`, returning an array of Vault asset deltas. Calls to `swap` cannot be
@@ -46,7 +52,8 @@ export async function queryBatchSwapWithSor(
     vaultContract: Contract,
     queryWithSor: QueryWithSorInput
 ): Promise<QueryWithSorOutput> {
-    if (queryWithSor.fetchPools.fetchPools) await sor.fetchPools([], queryWithSor.fetchPools.fetchOnChain);
+    if (queryWithSor.fetchPools.fetchPools)
+        await sor.fetchPools([], queryWithSor.fetchPools.fetchOnChain);
 
     const swaps: BatchSwapStep[][] = [];
     const assetArray: string[][] = [];
@@ -67,7 +74,9 @@ export async function queryBatchSwapWithSor(
     const batchedSwaps = batchSwaps(assetArray, swaps);
 
     const returnTokens =
-        queryWithSor.swapType === SwapType.SwapExactIn ? queryWithSor.tokensOut : queryWithSor.tokensIn;
+        queryWithSor.swapType === SwapType.SwapExactIn
+            ? queryWithSor.tokensOut
+            : queryWithSor.tokensIn;
     const returnAmounts: string[] = Array(returnTokens.length).fill(Zero);
     let deltas: BigNumberish[] = Array(batchedSwaps.assets.length).fill(Zero);
     try {
@@ -79,12 +88,15 @@ export async function queryBatchSwapWithSor(
             batchedSwaps.assets
         );
 
-        returnTokens.forEach(
-            (t, i) =>
-                (returnAmounts[i] =
-                    deltas[batchedSwaps.assets.indexOf(t.toLowerCase())].toString() ??
-                    Zero.toString())
-        );
+        if (deltas.length > 0) {
+            returnTokens.forEach(
+                (t, i) =>
+                    (returnAmounts[i] =
+                        deltas[
+                            batchedSwaps.assets.indexOf(t.toLowerCase())
+                        ].toString() ?? Zero.toString())
+            );
+        }
     } catch (err) {
         console.error(`queryBatchSwapTokensIn error: ${err}`);
     }
@@ -93,7 +105,7 @@ export async function queryBatchSwapWithSor(
         returnAmounts,
         swaps: batchedSwaps.swaps,
         assets: batchedSwaps.assets,
-        deltas: deltas.map(d => d.toString()),
+        deltas: deltas.map((d) => d.toString()),
     };
 }
 
