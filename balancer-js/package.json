@@ -58,7 +58,7 @@
     "@ethersproject/providers": "^5.5.0",
     "ethers": "^5.5.1",
     "lodash": "^4.17.21",
-    "sor-linear": "github:balancer-labs/balancer-sor#607bf8783c0cf024c194e9da9da6f5fb487579ff"
+    "sor-linear": "github:balancer-labs/balancer-sor#651e40c505a6ea7f8965415a23ea6e1fb1c860b9"
   },
   "peerDependencies": {
     "@ethersproject/abi": "^5.4.0",
