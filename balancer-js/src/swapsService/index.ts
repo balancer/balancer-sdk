@@ -1,6 +1,6 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
-import { SOR, SubgraphPoolBase } from 'sor-linear';
+import { SOR, SubgraphPoolBase } from '@balancer-labs/sor';
 
 import { ConfigSdk } from '../types';
 import { Network } from '../constants/network';

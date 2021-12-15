@@ -52,13 +52,13 @@
     "typescript": "^4.0.2"
   },
   "dependencies": {
+    "@balancer-labs/sor": "^2.1.0-beta.1",
     "@ethersproject/abi": "^5.5.0",
     "@ethersproject/abstract-signer": "^5.5.0",
     "@ethersproject/contracts": "^5.5.0",
     "@ethersproject/providers": "^5.5.0",
     "ethers": "^5.5.1",
-    "lodash": "^4.17.21",
-    "sor-linear": "github:balancer-labs/balancer-sor#651e40c505a6ea7f8965415a23ea6e1fb1c860b9"
+    "lodash": "^4.17.21"
   },
   "peerDependencies": {
     "@ethersproject/abi": "^5.4.0",

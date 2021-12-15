@@ -1,7 +1,7 @@
 import { BigNumberish } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 import { AddressZero, Zero } from '@ethersproject/constants';
-import { SOR, SwapTypes, SwapInfo } from 'sor-linear';
+import { SOR, SwapTypes, SwapInfo } from '@balancer-labs/sor';
 import {
     SwapType,
     BatchSwapStep,

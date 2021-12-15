@@ -30,6 +30,14 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
+"@balancer-labs/sor@^2.1.0-beta.1":
+  version "2.1.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@balancer-labs/sor/-/sor-2.1.0-beta.1.tgz#a71410677f338eb684e16179d3254fd932c6b900"
+  integrity sha512-EJlzX43qeChY8n1mh99B2ZaqyNL+ozJda0CeeR+4MOcAjs4bnOiG2LT0TWv7L9LFpFbAosSwXroXLn4k/exFXA==
+  dependencies:
+    "@georgeroman/balancer-v2-pools" "^0.0.7"
+    isomorphic-fetch "^2.2.1"
+
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
   resolved "https://registry.yarnpkg.com/@cspotcode/source-map-consumer/-/source-map-consumer-0.8.0.tgz#33bf4b7b39c178821606f669bbc447a6a629786b"
@@ -2183,13 +2191,6 @@ slice-ansi@^4.0.0:
     ansi-styles "^4.0.0"
     astral-regex "^2.0.0"
     is-fullwidth-code-point "^3.0.0"
-
-"sor-linear@github:balancer-labs/balancer-sor#651e40c505a6ea7f8965415a23ea6e1fb1c860b9":
-  version "2.0.0-beta.9"
-  resolved "https://codeload.github.com/balancer-labs/balancer-sor/tar.gz/651e40c505a6ea7f8965415a23ea6e1fb1c860b9"
-  dependencies:
-    "@georgeroman/balancer-v2-pools" "^0.0.7"
-    isomorphic-fetch "^2.2.1"
 
 sourcemap-codec@^1.4.4:
   version "1.4.8"
