@@ -30,10 +30,10 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
-"@balancer-labs/sor@^2.1.0-beta.2":
-  version "2.1.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@balancer-labs/sor/-/sor-2.1.0-beta.2.tgz#06a244d967c10b69e8e785142e4bea60328b34cb"
-  integrity sha512-YO+EErxI8aUceXDMWgibleMtkbrqkN30iv55mCt/OTqj9vP6786t2rvZRTnmOACGiO+waKDSsqBOWgGMf/MDRA==
+"@balancer-labs/sor@^2.1.0-beta.3":
+  version "2.1.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@balancer-labs/sor/-/sor-2.1.0-beta.3.tgz#252f883dab1efa3e76abcb352402c2fe2b8180ba"
+  integrity sha512-ZXRzp8VW2l3h4paCYReB/Sf5Xf/EeOkDqv/laKn3HXH4GxaXIeYRIxlTTi1eTsGFLb9zJ+xlLfuDTvq9IBuqMQ==
   dependencies:
     "@georgeroman/balancer-v2-pools" "0.0.7"
     isomorphic-fetch "^2.2.1"
