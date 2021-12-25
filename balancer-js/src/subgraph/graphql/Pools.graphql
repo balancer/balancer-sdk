@@ -1,5 +1,5 @@
 
-query BalancerPools(
+query SubgraphPools(
     $skip: Int
     $first: Int
     $orderBy: Pool_orderBy
@@ -13,17 +13,17 @@ query BalancerPools(
         orderDirection: $orderDirection
         where: $where
         block: $block) {
-        ...BalancerPool
+        ...SubgraphPool
     }
 }
 
-query BalancerPool($id: ID!, $block: Block_height) {
+query SubgraphPool($id: ID!, $block: Block_height) {
     pool(id: $id, block: $block) {
-        ...BalancerPool
+        ...SubgraphPool
     }
 }
 
-fragment BalancerPool on Pool {
+fragment SubgraphPool on Pool {
     id
     address
     poolType
@@ -39,11 +39,11 @@ fragment BalancerPool on Pool {
     holdersCount
 
     tokens(first: 1000) {
-        ...BalancerPoolToken
+        ...SubgraphPoolToken
     }
 }
 
-fragment BalancerPoolToken on PoolToken {
+fragment SubgraphPoolToken on PoolToken {
     id
     symbol
     name
@@ -55,7 +55,7 @@ fragment BalancerPoolToken on PoolToken {
     priceRate
 }
 
-query BalancerPoolHistoricalLiquidities(
+query SubgraphPoolHistoricalLiquidities(
     $skip: Int
     $first: Int
     $orderBy: PoolHistoricalLiquidity_orderBy
@@ -83,7 +83,7 @@ query BalancerPoolHistoricalLiquidities(
     }
 }
 
-query BalancerPoolSnapshots(
+query SubgraphPoolSnapshots(
     $skip: Int
     $first: Int
     $orderBy: PoolSnapshot_orderBy
@@ -99,11 +99,11 @@ query BalancerPoolSnapshots(
         where: $where
         block: $block
     ) {
-        ...BalancerPoolSnapshot
+        ...SubgraphPoolSnapshot
     }
 }
 
-fragment BalancerPoolSnapshot on PoolSnapshot {
+fragment SubgraphPoolSnapshot on PoolSnapshot {
     id
     pool {
         id
@@ -115,7 +115,7 @@ fragment BalancerPoolSnapshot on PoolSnapshot {
 }
 
 
-query BalancerJoinExits(
+query SubgraphJoinExits(
     $skip: Int
     $first: Int
     $orderBy: JoinExit_orderBy
@@ -131,11 +131,11 @@ query BalancerJoinExits(
         where: $where
         block: $block
     ) {
-        ...BalancerJoinExit
+        ...SubgraphJoinExit
     }
 }
 
-fragment BalancerJoinExit on JoinExit {
+fragment SubgraphJoinExit on JoinExit {
     amounts
     id
     sender

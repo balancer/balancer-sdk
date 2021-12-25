@@ -1,10 +1,10 @@
-query BalancerUser($id: ID!, $block: Block_height) {
+query SubgraphUser($id: ID!, $block: Block_height) {
     user(id: $id, block: $block) {
-        ...BalancerUser
+        ...SubgraphUser
     }
 }
 
-query BalancerUsers(
+query SubgraphUsers(
     $skip: Int
     $first: Int
     $orderBy: User_orderBy
@@ -20,11 +20,11 @@ query BalancerUsers(
         where: $where
         block: $block
     ) {
-        ...BalancerUser
+        ...SubgraphUser
     }
 }
 
-fragment BalancerUser on User {
+fragment SubgraphUser on User {
     id
     sharesOwned(first: 1000) {
         balance

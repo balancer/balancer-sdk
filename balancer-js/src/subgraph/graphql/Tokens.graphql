@@ -1,4 +1,4 @@
-query BalancerTokenPrices(
+query SubgraphTokenPrices(
     $skip: Int
     $first: Int
     $orderBy: TokenPrice_orderBy
@@ -14,11 +14,11 @@ query BalancerTokenPrices(
         where: $where
         block: $block
     ) {
-        ...BalancerTokenPrice
+        ...SubgraphTokenPrice
     }
 }
 
-fragment BalancerTokenPrice on TokenPrice {
+fragment SubgraphTokenPrice on TokenPrice {
     id
     poolId {
         id
@@ -31,7 +31,7 @@ fragment BalancerTokenPrice on TokenPrice {
     timestamp
 }
 
-query BalancerTokenLatestPrices(
+query SubgraphTokenLatestPrices(
     $skip: Int
     $first: Int
     $orderBy: LatestPrice_orderBy
@@ -47,11 +47,11 @@ query BalancerTokenLatestPrices(
         where: $where
         block: $block
     ) {
-        ...BalancerTokenLatestPrice
+        ...SubgraphTokenLatestPrice
     }
 }
 
-fragment BalancerTokenLatestPrice on LatestPrice {
+fragment SubgraphTokenLatestPrice on LatestPrice {
     id
     asset
     price

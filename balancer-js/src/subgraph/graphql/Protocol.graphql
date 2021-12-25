@@ -1,4 +1,4 @@
-query BalancerProtocolData(
+query SubgraphBalancers(
     $skip: Int
     $first: Int
     $orderBy: Balancer_orderBy
@@ -14,11 +14,11 @@ query BalancerProtocolData(
         where: $where
         block: $block
     ) {
-        ...BalancerProtocol
+        ...SubgraphBalancer
     }
 }
 
-fragment BalancerProtocol on Balancer {
+fragment SubgraphBalancer on Balancer {
     id
     totalLiquidity
     totalSwapVolume
