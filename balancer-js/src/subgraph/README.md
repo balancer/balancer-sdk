@@ -8,13 +8,13 @@ The module leverages `graphql-codegen` and `graphql-request`.
 ## Usage
 
 ```ts
-//TODO: add import statement for createBalancerSubgraphClient
+//TODO: add import statement for createSubgraphClient
 
-const client = createBalancerSubgraphClient(BALANCER_SUBGRAPH_URL);
+const client = createSubgraphClient(BALANCER_SUBGRAPH_URL);
 
-const { pools } = await client.BalancerPools({ first: 5, where: { totalLiquidity_gt: '1' } });
+const { pools } = await client.SubgraphPools({ first: 5, where: { totalLiquidity_gt: '1' } });
 
-const { users } = await client.BalancerUsers({
+const { users } = await client.SubgraphUsers({
     first: 5,
     orderBy: User_OrderBy.SharesOwned,
     orderDirection: OrderDirection.Desc,
@@ -34,7 +34,7 @@ Refer to any existing query in the `graphql` directory as a reference when first
 All queries get exactly typed, so if you query a partial reference to an underlying model, only the quereied fields will be available. If you need to reference the type created by the query, create a fragment and use that fragment in your query.
 
 ```graphql
-fragment BalancerProtocol on Balancer {
+fragment SubgraphBalancer on Balancer {
     id
     totalLiquidity
     totalSwapVolume
@@ -43,32 +43,34 @@ fragment BalancerProtocol on Balancer {
     poolCount
 }
 
-query BalancerProtocolData {
+query SubgraphProtocolData {
     balancers(first: 1) {
-        ...BalancerProtocol
+        ...SubgraphBalancer
     }
 }
 ```
 
-The generated type will be exported from the module suffixed with `Fragment`. So in this example, your type is named: `BalancerProtocolFragment`.
+The generated type will be exported from the module suffixed with `Fragment`. So in this example, your type is named: `SubgraphProtocolFragment`.
 
 ```ts
 //TODO: add import statements
 
-const { balancers } = await client.BalancerProtocolData();
-const protocolData: BalancerProtocolFragment = balancers[0];
+import { SubgraphBalancerFragment } from "./balancer-subgraph-types";
+
+const { balancers } = await client.SubgraphProtocolData();
+const protocolData: SubgraphBalancerFragment = balancers[0];
 ```
 
 If you need to call the same query twice, you can rename the output variable of either one or both queries.
 
 ```graphql
-query BalancerProtocolData {
+query SubgraphProtocolData {
     balancers(first: 1) {
-        ...BalancerProtocol
+        ...SubgraphBalancer
     }
 
     others: balancers(first: 1000) {
-        ...BalancerProtocol
+        ...SubgraphBalancer
     }
 }
 ```
