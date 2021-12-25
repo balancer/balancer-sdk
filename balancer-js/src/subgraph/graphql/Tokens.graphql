@@ -1,0 +1,62 @@
+query BalancerTokenPrices(
+    $skip: Int
+    $first: Int
+    $orderBy: TokenPrice_orderBy
+    $orderDirection: OrderDirection
+    $where: TokenPrice_filter
+    $block: Block_height
+) {
+    tokenPrices(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...BalancerTokenPrice
+    }
+}
+
+fragment BalancerTokenPrice on TokenPrice {
+    id
+    poolId {
+        id
+    }
+    asset
+    amount
+    pricingAsset
+    price
+    block
+    timestamp
+}
+
+query BalancerTokenLatestPrices(
+    $skip: Int
+    $first: Int
+    $orderBy: LatestPrice_orderBy
+    $orderDirection: OrderDirection
+    $where: LatestPrice_filter
+    $block: Block_height
+) {
+    latestPrices(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...BalancerTokenLatestPrice
+    }
+}
+
+fragment BalancerTokenLatestPrice on LatestPrice {
+    id
+    asset
+    price
+    poolId {
+        id
+    }
+    pricingAsset
+}
