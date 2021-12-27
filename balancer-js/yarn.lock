@@ -481,13 +481,13 @@
     "@babel/helper-validator-identifier" "^7.15.7"
     to-fast-properties "^2.0.0"
 
-"@balancer-labs/sor@^2.1.0-beta.4":
-  version "2.1.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@balancer-labs/sor/-/sor-2.1.0-beta.4.tgz#184b99861bf364f5348ba56a7bc9c971036e6e0e"
-  integrity sha512-q5W++wcMfF2MrVtlzK1XTWUgxQNqxTKOuWXMCpDpcpfHFe/n8UL9RMg8UMQl4dfFYUmThwqnXYad71ISyrRQNw==
+"@balancer-labs/sor@github:beethovenxfi/balancer-sor#daniel/sor-refactor-merged":
+  version "2.1.0-beta.3"
+  resolved "https://codeload.github.com/beethovenxfi/balancer-sor/tar.gz/9936bd8b9c178012d794afa7e55cfac359ad77bd"
   dependencies:
     "@georgeroman/balancer-v2-pools" "0.0.7"
     isomorphic-fetch "^2.2.1"
+    sdk-latest "npm:@georgeroman/balancer-v2-pools"
 
 "@cspotcode/source-map-consumer@0.8.0":
   version "0.8.0"
@@ -4536,6 +4536,13 @@ scuid@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/scuid/-/scuid-1.1.0.tgz#d3f9f920956e737a60f72d0e4ad280bf324d5dab"
   integrity sha512-MuCAyrGZcTLfQoH2XoBlQ8C6bzwN88XT/0slOGz0pn8+gIP85BOAfYa44ZXQUTOwRwPU0QvgU+V+OSajl/59Xg==
+
+"sdk-latest@npm:@georgeroman/balancer-v2-pools":
+  version "0.0.14"
+  resolved "https://registry.yarnpkg.com/@georgeroman/balancer-v2-pools/-/balancer-v2-pools-0.0.14.tgz#53e32d126dd47b2f2a80aa47111fd0bceb7b1e58"
+  integrity sha512-/A8ENwtu1ts/rfSfr5wb1wRxMIu8s8cKew28C/qIVDxjhFT+mcpohEaNlEnstAdnuMlWaroJEu9jVJlCD7xE2Q==
+  dependencies:
+    bignumber.js "^9.0.1"
 
 semver@^5.6.0:
   version "5.7.1"

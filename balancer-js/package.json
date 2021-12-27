@@ -62,7 +62,7 @@
     "@graphql-codegen/typescript-resolvers": "2.4.1"
   },
   "dependencies": {
-    "@balancer-labs/sor": "^2.1.0-beta.4",
+    "@balancer-labs/sor": "github:beethovenxfi/balancer-sor#daniel/sor-refactor-merged",
     "@ethersproject/abi": "^5.5.0",
     "@ethersproject/abstract-signer": "^5.5.0",
     "@ethersproject/contracts": "^5.5.0",
