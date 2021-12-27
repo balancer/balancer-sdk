@@ -3,7 +3,9 @@ import { getSdk, Sdk } from './generated/balancer-subgraph-types';
 
 export * from './generated/balancer-subgraph-types';
 
-export function createSubgraphClient(subgraphUrl: string): Sdk {
+export type SubgraphClient = Sdk;
+
+export function createSubgraphClient(subgraphUrl: string): SubgraphClient {
     const client = new GraphQLClient(subgraphUrl);
 
     return getSdk(client);
