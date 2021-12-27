@@ -52,8 +52,7 @@ export async function queryBatchSwapWithSor(
     vaultContract: Contract,
     queryWithSor: QueryWithSorInput
 ): Promise<QueryWithSorOutput> {
-    if (queryWithSor.fetchPools.fetchPools)
-        await sor.fetchPools([], queryWithSor.fetchPools.fetchOnChain);
+    if (queryWithSor.fetchPools.fetchPools) await sor.fetchPools();
 
     const swaps: BatchSwapStep[][] = [];
     const assetArray: string[][] = [];
