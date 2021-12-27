@@ -1,4 +1,3 @@
-
 query SubgraphPools(
     $skip: Int
     $first: Int
@@ -7,12 +6,14 @@ query SubgraphPools(
     $where: Pool_filter
     $block: Block_height
 ) {
-    pools(skip: $skip
+    pools(
+        skip: $skip
         first: $first
         orderBy: $orderBy
         orderDirection: $orderDirection
         where: $where
-        block: $block) {
+        block: $block
+    ) {
         ...SubgraphPool
     }
 }
@@ -20,6 +21,32 @@ query SubgraphPools(
 query SubgraphPool($id: ID!, $block: Block_height) {
     pool(id: $id, block: $block) {
         ...SubgraphPool
+    }
+}
+
+query SubgraphPoolsWithoutLinear(
+    $skip: Int
+    $first: Int
+    $orderBy: Pool_orderBy
+    $orderDirection: OrderDirection
+    $where: Pool_filter
+    $block: Block_height
+) {
+    pools(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphPoolWithoutLinear
+    }
+}
+
+query SubgraphPoolWithoutLinear($id: ID!, $block: Block_height) {
+    pool(id: $id, block: $block) {
+        ...SubgraphPoolWithoutLinear
     }
 }
 
@@ -35,12 +62,50 @@ fragment SubgraphPool on Pool {
     totalSwapFee
     totalLiquidity
     totalShares
-    swapsCount
-    holdersCount
-
     tokens(first: 1000) {
         ...SubgraphPoolToken
     }
+    swapsCount
+    holdersCount
+    tokensList
+    totalWeight
+    amp
+    expiryTime
+    unitSeconds
+    principalToken
+    baseToken
+    swapEnabled
+    wrappedIndex
+    mainIndex
+    lowerTarget
+    upperTarget
+}
+
+fragment SubgraphPoolWithoutLinear on Pool {
+    id
+    address
+    poolType
+    symbol
+    name
+    swapFee
+    totalWeight
+    totalSwapVolume
+    totalSwapFee
+    totalLiquidity
+    totalShares
+    tokens(first: 1000) {
+        ...SubgraphPoolToken
+    }
+    swapsCount
+    holdersCount
+    tokensList
+    totalWeight
+    amp
+    expiryTime
+    unitSeconds
+    principalToken
+    baseToken
+    swapEnabled
 }
 
 fragment SubgraphPoolToken on PoolToken {
@@ -113,7 +178,6 @@ fragment SubgraphPoolSnapshot on PoolSnapshot {
     swapFees
     timestamp
 }
-
 
 query SubgraphJoinExits(
     $skip: Int
