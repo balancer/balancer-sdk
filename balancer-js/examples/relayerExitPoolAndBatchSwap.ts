@@ -5,9 +5,8 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
 import {
     BalancerSDK,
+    BalancerSdkConfig,
     Network,
-    ConfigSdk,
-    SUBGRAPH_URLS,
     StablePoolEncoder,
 } from '../src/index';
 import { AAVE_DAI, AAVE_USDT, STABAL3PHANTOM } from './constants';
@@ -22,10 +21,9 @@ User must approve relayer.
 Vault must have approvals for tokens.
 */
 async function relayerExitPoolAndBatchSwap() {
-    const config: ConfigSdk = {
+    const config: BalancerSdkConfig = {
         network: Network.KOVAN,
         rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
-        subgraphUrl: SUBGRAPH_URLS[Network.KOVAN],
     };
 
     const provider = new JsonRpcProvider(config.rpcUrl);
@@ -67,8 +65,8 @@ async function relayerExitPoolAndBatchSwap() {
         slippage: '50000000000000000', // Slippage for swap 5%
         fetchPools: {
             fetchPools: true,
-            fetchOnChain: false
-        }
+            fetchOnChain: false,
+        },
     });
 
     const relayerContract = new Contract(
