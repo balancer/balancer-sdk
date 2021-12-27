@@ -51,6 +51,12 @@ query SubgraphTokenLatestPrices(
     }
 }
 
+query SubgraphTokenLatestPrice($id: ID!) {
+    latestPrice(id: $id) {
+        ...SubgraphTokenLatestPrice
+    }
+}
+
 fragment SubgraphTokenLatestPrice on LatestPrice {
     id
     asset
