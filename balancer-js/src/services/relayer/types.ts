@@ -1,7 +1,7 @@
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 
-import { ExitPoolRequest } from '../types';
-import { SwapType, BatchSwapStep, FundManagement, FetchPoolsInput } from '../swapsService/types';
+import { ExitPoolRequest } from '../../types';
+import { SwapType, BatchSwapStep, FundManagement, FetchPoolsInput } from '../swaps/types';
 
 export type OutputReference = {
     index: number;

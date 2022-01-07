@@ -1,7 +1,7 @@
 import { ConfigSdk } from '../types';
 import { Network } from '../constants/network';
-import { SwapsService } from '../swapsService';
-import { RelayerService } from '../relayerService';
+import { SwapsService } from '../services/swaps/swaps.service';
+import { RelayerService } from '../services/relayer/relayer.service';
 
 export class BalancerSDK {
     network: Network;

@@ -2,14 +2,14 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
 import { SOR, SubgraphPoolBase } from '@balancer-labs/sor';
 
-import { ConfigSdk } from '../types';
-import { Network } from '../constants/network';
+import { ConfigSdk } from '../../types';
+import { Network } from '../../constants/network';
 import { SwapType, QueryWithSorInput, QueryWithSorOutput, BatchSwap } from './types';
 import { queryBatchSwap, queryBatchSwapWithSor } from './queryBatchSwap';
-import { balancerVault } from '../constants/contracts';
+import { balancerVault } from '../../constants/contracts';
 import { getLimitsForSlippage } from './helpers';
 
-import vaultAbi from '../abi/Vault.json';
+import vaultAbi from '../../abi/Vault.json';
 
 export class SwapsService {
     network: Network;

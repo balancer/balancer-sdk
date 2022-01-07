@@ -2,7 +2,7 @@ import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Interface } from '@ethersproject/abi';
 import { MaxUint256, WeiPerEther } from '@ethersproject/constants';
 
-import { SwapsService } from '../swapsService';
+import { SwapsService } from '../swaps/swaps.service';
 import {
     EncodeBatchSwapInput,
     EncodeUnwrapAaveStaticTokenInput,
@@ -10,11 +10,11 @@ import {
     EncodeExitPoolInput,
     ExitAndBatchSwapInput,
 } from './types';
-import { TransactionData, ExitPoolRequest } from '../types';
-import { SwapType, FundManagement, BatchSwapStep, FetchPoolsInput } from '../swapsService/types';
+import { TransactionData, ExitPoolRequest } from '../../types';
+import { SwapType, FundManagement, BatchSwapStep, FetchPoolsInput } from '../swaps/types';
 
-import relayerLibraryAbi from '../abi/VaultActions.json';
-import aaveWrappingAbi from '../abi/AaveWrapping.json';
+import relayerLibraryAbi from '../../abi/VaultActions.json';
+import aaveWrappingAbi from '../../abi/AaveWrapping.json';
 
 export * from './types';
 
