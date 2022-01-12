@@ -3,16 +3,22 @@ import { Provider } from '@ethersproject/providers';
 import { SubgraphPoolDataService } from './pool-data/subgraphPoolDataService';
 import { CoingeckoTokenPriceService } from './token-price/coingeckoTokenPriceService';
 import { SubgraphClient } from '../subgraph/subgraph';
-import { BalancerNetworkConfig, BalancerSdkSorConfig } from '../types';
+import {
+    BalancerNetworkConfig,
+    BalancerSdkConfig,
+    BalancerSdkSorConfig,
+} from '../types';
 import { SubgraphTokenPriceService } from './token-price/subgraphTokenPriceService';
 
 export class SorFactory {
     public static createSor(
         network: BalancerNetworkConfig,
-        sorConfig: BalancerSdkSorConfig,
+        sdkConfig: BalancerSdkConfig,
         provider: Provider,
         subgraphClient: SubgraphClient
     ): SOR {
+        const sorConfig = SorFactory.getSorConfig(sdkConfig);
+
         const poolDataService = SorFactory.getPoolDataService(
             network,
             sorConfig,
@@ -27,6 +33,17 @@ export class SorFactory {
         );
 
         return new SOR(provider, network, poolDataService, tokenPriceService);
+    }
+
+    private static getSorConfig(
+        config: BalancerSdkConfig
+    ): BalancerSdkSorConfig {
+        return {
+            tokenPriceService: 'coingecko',
+            poolDataService: 'subgraph',
+            fetchOnChainBalances: true,
+            ...config.sor,
+        };
     }
 
     private static getPoolDataService(

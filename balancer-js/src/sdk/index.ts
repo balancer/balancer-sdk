@@ -26,10 +26,9 @@ export class BalancerSDK {
         this.provider = new JsonRpcProvider(this.rpcUrl);
         this.subgraphClient = createSubgraphClient(this.network.subgraphUrl);
 
-        const sorConfig = this.getSorConfig(config);
         this.sor = SorFactory.createSor(
             this.network,
-            sorConfig,
+            config,
             this.provider,
             this.subgraphClient
         );
@@ -52,15 +51,6 @@ export class BalancerSDK {
         return {
             ...config.network,
             subgraphUrl: config.customSubgraphUrl ?? config.network.subgraphUrl,
-        };
-    }
-
-    private getSorConfig(config: BalancerSdkConfig): BalancerSdkSorConfig {
-        return {
-            tokenPriceService: 'coingecko',
-            poolDataService: 'subgraph',
-            fetchOnChainBalances: true,
-            ...config.sor,
         };
     }
 }
