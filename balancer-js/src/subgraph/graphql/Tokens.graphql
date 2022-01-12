@@ -1,4 +1,4 @@
-query SubgraphTokenPrices(
+query TokenPrices(
     $skip: Int
     $first: Int
     $orderBy: TokenPrice_orderBy
@@ -31,7 +31,7 @@ fragment SubgraphTokenPrice on TokenPrice {
     timestamp
 }
 
-query SubgraphTokenLatestPrices(
+query TokenLatestPrices(
     $skip: Int
     $first: Int
     $orderBy: LatestPrice_orderBy
@@ -51,7 +51,7 @@ query SubgraphTokenLatestPrices(
     }
 }
 
-query SubgraphTokenLatestPrice($id: ID!) {
+query TokenLatestPrice($id: ID!) {
     latestPrice(id: $id) {
         ...SubgraphTokenLatestPrice
     }

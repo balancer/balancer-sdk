@@ -1,4 +1,4 @@
-query SubgraphBalancers(
+query Balancers(
     $skip: Int
     $first: Int
     $orderBy: Balancer_orderBy

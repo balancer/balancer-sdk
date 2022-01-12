@@ -12,9 +12,9 @@ The module leverages `graphql-codegen` and `graphql-request`.
 
 const client = createSubgraphClient(BALANCER_SUBGRAPH_URL);
 
-const { pools } = await client.SubgraphPools({ first: 5, where: { totalLiquidity_gt: '1' } });
+const { pools } = await client.Pools({ first: 5, where: { totalLiquidity_gt: '1' } });
 
-const { users } = await client.SubgraphUsers({
+const { users } = await client.Users({
     first: 5,
     orderBy: User_OrderBy.SharesOwned,
     orderDirection: OrderDirection.Desc,
@@ -43,7 +43,7 @@ fragment SubgraphBalancer on Balancer {
     poolCount
 }
 
-query SubgraphProtocolData {
+query ProtocolData {
     balancers(first: 1) {
         ...SubgraphBalancer
     }
@@ -57,14 +57,14 @@ The generated type will be exported from the module suffixed with `Fragment`. So
 
 import { SubgraphBalancerFragment } from "./balancer-subgraph-types";
 
-const { balancers } = await client.SubgraphProtocolData();
+const { balancers } = await client.ProtocolData();
 const protocolData: SubgraphBalancerFragment = balancers[0];
 ```
 
 If you need to call the same query twice, you can rename the output variable of either one or both queries.
 
 ```graphql
-query SubgraphProtocolData {
+query ProtocolData {
     balancers(first: 1) {
         ...SubgraphBalancer
     }

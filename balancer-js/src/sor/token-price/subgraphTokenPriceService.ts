@@ -30,7 +30,7 @@ export class SubgraphTokenPriceService implements TokenPriceService {
     ): Promise<number | null> {
         tokenAddress = tokenAddress.toLowerCase();
 
-        const { latestPrices } = await this.client.SubgraphTokenLatestPrices({
+        const { latestPrices } = await this.client.TokenLatestPrices({
             where: { asset_in: [tokenAddress, this.weth] },
         });
         const pricesKeyedOnId = keyBy(latestPrices, 'id');
