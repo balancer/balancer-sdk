@@ -23,7 +23,7 @@ export class BalancerSDK {
     constructor(config: BalancerSdkConfig) {
         this.network = this.getNetworkConfig(config);
         this.rpcUrl = config.rpcUrl;
-        this.provider = config.provider ?? new JsonRpcProvider(this.rpcUrl);
+        this.provider = new JsonRpcProvider(this.rpcUrl);
         this.subgraphClient = createSubgraphClient(this.network.subgraphUrl);
 
         const sorConfig = this.getSorConfig(config);

@@ -2,14 +2,11 @@ import { BigNumberish } from '@ethersproject/bignumber';
 import { Network } from './constants/network';
 import { Contract } from '@ethersproject/contracts';
 import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
-import { Provider } from '@ethersproject/providers';
 
 export interface BalancerSdkConfig {
     //use a known network or provide an entirely custom config
     network: Network | BalancerNetworkConfig;
     rpcUrl: string;
-    //default to JsonRpcProvider if not provided
-    provider?: Provider;
     //overwrite the subgraph url if you don't want to use the balancer labs maintained version
     customSubgraphUrl?: string;
     //optionally overwrite parts of the standard SOR config
