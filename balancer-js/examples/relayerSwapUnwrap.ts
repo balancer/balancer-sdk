@@ -8,9 +8,8 @@ import { Contract } from '@ethersproject/contracts';
 import {
     BalancerSDK,
     Network,
-    ConfigSdk,
-    SUBGRAPH_URLS,
     AaveHelpers,
+    BalancerSdkConfig,
 } from '../src/index';
 import { FundManagement } from '../src/swapsService/types';
 import {
@@ -31,10 +30,9 @@ User must approve relayer
 Vault must have approvals for tokens
 */
 async function runRelayerSwapUnwrapExactIn() {
-    const config: ConfigSdk = {
+    const config: BalancerSdkConfig = {
         network: Network.KOVAN,
         rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
-        subgraphUrl: SUBGRAPH_URLS[Network.KOVAN],
     };
 
     const provider = new JsonRpcProvider(config.rpcUrl);
@@ -112,10 +110,9 @@ User must approve relayer
 Vault must have approvals for tokens
 */
 async function runRelayerSwapUnwrapExactOut() {
-    const config: ConfigSdk = {
+    const config: BalancerSdkConfig = {
         network: Network.KOVAN,
         rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
-        subgraphUrl: SUBGRAPH_URLS[Network.KOVAN],
     };
 
     const provider = new JsonRpcProvider(config.rpcUrl);

@@ -1,22 +1,56 @@
-import { ConfigSdk } from '../types';
-import { Network } from '../constants/network';
+import {
+    BalancerNetworkConfig,
+    BalancerSdkConfig,
+    BalancerSdkSorConfig,
+} from '../types';
 import { SwapsService } from '../swapsService';
 import { RelayerService } from '../relayerService';
+import { SOR } from '@balancer-labs/sor';
+import { SorFactory } from '../sor/sorFactory';
+import { BALANCER_NETWORK_CONFIG } from '../constants/contracts';
+import { JsonRpcProvider, Provider } from '@ethersproject/providers';
+import { createSubgraphClient, SubgraphClient } from '../subgraph/subgraph';
 
 export class BalancerSDK {
-    network: Network;
-    rpcUrl: string;
-    swaps: SwapsService;
-    relayer: RelayerService;
+    public readonly network: BalancerNetworkConfig;
+    public readonly rpcUrl: string;
+    public readonly swaps: SwapsService;
+    public readonly relayer: RelayerService;
+    public readonly sor: SOR;
+    public readonly provider: Provider;
+    public readonly subgraphClient: SubgraphClient;
 
-    constructor(config: ConfigSdk, swapService = SwapsService, relayerService = RelayerService) {
-        this.network = config.network;
+    constructor(config: BalancerSdkConfig) {
+        this.network = this.getNetworkConfig(config);
         this.rpcUrl = config.rpcUrl;
-        this.swaps = new swapService({
-            network: this.network,
-            rpcUrl: this.rpcUrl,
-            subgraphUrl: config.subgraphUrl
-        });
-        this.relayer = new relayerService(this.swaps, this.rpcUrl);
+        this.provider = new JsonRpcProvider(this.rpcUrl);
+        this.subgraphClient = createSubgraphClient(this.network.subgraphUrl);
+
+        this.sor = SorFactory.createSor(
+            this.network,
+            config,
+            this.provider,
+            this.subgraphClient
+        );
+
+        this.swaps = new SwapsService(this.network, this.sor, this.provider);
+        this.relayer = new RelayerService(this.swaps, this.rpcUrl);
+    }
+
+    private getNetworkConfig(config: BalancerSdkConfig): BalancerNetworkConfig {
+        if (typeof config.network === 'number') {
+            const networkConfig = BALANCER_NETWORK_CONFIG[config.network];
+
+            return {
+                ...networkConfig,
+                subgraphUrl:
+                    config.customSubgraphUrl ?? networkConfig.subgraphUrl,
+            };
+        }
+
+        return {
+            ...config.network,
+            subgraphUrl: config.customSubgraphUrl ?? config.network.subgraphUrl,
+        };
     }
 }

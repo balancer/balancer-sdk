@@ -1,0 +1,28 @@
+query Balancers(
+    $skip: Int
+    $first: Int
+    $orderBy: Balancer_orderBy
+    $orderDirection: OrderDirection
+    $where: Balancer_filter
+    $block: Block_height
+) {
+    balancers(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphBalancer
+    }
+}
+
+fragment SubgraphBalancer on Balancer {
+    id
+    totalLiquidity
+    totalSwapVolume
+    totalSwapFee
+    totalSwapCount
+    poolCount
+}
