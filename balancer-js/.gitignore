@@ -3,4 +3,6 @@ node_modules
 yarn-error.log
 .DS_Store
 .env
+.idea/
 dist/
+src/subgraph/generated/

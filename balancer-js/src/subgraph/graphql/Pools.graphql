@@ -1,0 +1,216 @@
+query Pools(
+    $skip: Int
+    $first: Int
+    $orderBy: Pool_orderBy
+    $orderDirection: OrderDirection
+    $where: Pool_filter
+    $block: Block_height
+) {
+    pools(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphPool
+    }
+}
+
+query Pool($id: ID!, $block: Block_height) {
+    pool(id: $id, block: $block) {
+        ...SubgraphPool
+    }
+}
+
+query PoolsWithoutLinear(
+    $skip: Int
+    $first: Int
+    $orderBy: Pool_orderBy
+    $orderDirection: OrderDirection
+    $where: Pool_filter
+    $block: Block_height
+) {
+    pools(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphPoolWithoutLinear
+    }
+}
+
+query PoolWithoutLinear($id: ID!, $block: Block_height) {
+    pool(id: $id, block: $block) {
+        ...SubgraphPoolWithoutLinear
+    }
+}
+
+fragment SubgraphPool on Pool {
+    id
+    address
+    poolType
+    symbol
+    name
+    swapFee
+    totalWeight
+    totalSwapVolume
+    totalSwapFee
+    totalLiquidity
+    totalShares
+    tokens(first: 100) {
+        ...SubgraphPoolToken
+    }
+    swapsCount
+    holdersCount
+    tokensList
+    totalWeight
+    amp
+    expiryTime
+    unitSeconds
+    principalToken
+    baseToken
+    swapEnabled
+    wrappedIndex
+    mainIndex
+    lowerTarget
+    upperTarget
+}
+
+fragment SubgraphPoolWithoutLinear on Pool {
+    id
+    address
+    poolType
+    symbol
+    name
+    swapFee
+    totalWeight
+    totalSwapVolume
+    totalSwapFee
+    totalLiquidity
+    totalShares
+    tokens(first: 1000) {
+        ...SubgraphPoolToken
+    }
+    swapsCount
+    holdersCount
+    tokensList
+    totalWeight
+    amp
+    expiryTime
+    unitSeconds
+    principalToken
+    baseToken
+    swapEnabled
+}
+
+fragment SubgraphPoolToken on PoolToken {
+    id
+    symbol
+    name
+    decimals
+    address
+    balance
+    invested
+    weight
+    priceRate
+}
+
+query PoolHistoricalLiquidities(
+    $skip: Int
+    $first: Int
+    $orderBy: PoolHistoricalLiquidity_orderBy
+    $orderDirection: OrderDirection
+    $where: PoolHistoricalLiquidity_filter
+    $block: Block_height
+) {
+    poolHistoricalLiquidities(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        id
+        poolId {
+            id
+        }
+        poolTotalShares
+        poolLiquidity
+        poolShareValue
+        pricingAsset
+        block
+    }
+}
+
+query PoolSnapshots(
+    $skip: Int
+    $first: Int
+    $orderBy: PoolSnapshot_orderBy
+    $orderDirection: OrderDirection
+    $where: PoolSnapshot_filter
+    $block: Block_height
+) {
+    poolSnapshots(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphPoolSnapshot
+    }
+}
+
+fragment SubgraphPoolSnapshot on PoolSnapshot {
+    id
+    pool {
+        id
+    }
+    totalShares
+    swapVolume
+    swapFees
+    timestamp
+}
+
+query JoinExits(
+    $skip: Int
+    $first: Int
+    $orderBy: JoinExit_orderBy
+    $orderDirection: OrderDirection
+    $where: JoinExit_filter
+    $block: Block_height
+) {
+    joinExits(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphJoinExit
+    }
+}
+
+fragment SubgraphJoinExit on JoinExit {
+    amounts
+    id
+    sender
+    timestamp
+    tx
+    type
+    user {
+        id
+    }
+    pool {
+        id
+        tokensList
+    }
+}

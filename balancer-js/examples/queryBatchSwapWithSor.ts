@@ -1,21 +1,24 @@
 import dotenv from 'dotenv';
 import { parseFixed, BigNumber } from '@ethersproject/bignumber';
-import { BalancerSDK, Network, ConfigSdk, SUBGRAPH_URLS, SwapType } from '../src/index';
+import {
+    BalancerSDK,
+    BalancerSdkConfig,
+    Network,
+    SwapType,
+} from '../src/index';
 import { AAVE_DAI, AAVE_USDC, AAVE_USDT, STABAL3PHANTOM } from './constants';
 
 dotenv.config();
 
 async function runQueryBatchSwapWithSor() {
-    const config: ConfigSdk = {
+    const config: BalancerSdkConfig = {
         network: Network.KOVAN,
         rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
-        subgraphUrl: SUBGRAPH_URLS[Network.KOVAN]
-    } 
-    console.log(config.subgraphUrl);
+    };
     const balancer = new BalancerSDK(config);
 
-    const poolsFetched = await balancer.swaps.fetchPools([], false);
-    if(!poolsFetched){
+    const poolsFetched = await balancer.swaps.fetchPools();
+    if (!poolsFetched) {
         console.log(`Error fetching pools data.`);
         return;
     }
@@ -23,30 +26,46 @@ async function runQueryBatchSwapWithSor() {
     // Example showing how to join bb-a-usd pool by swapping stables > BPT
     let queryResult = await balancer.swaps.queryBatchSwapWithSor({
         tokensIn: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
-        tokensOut: [STABAL3PHANTOM.address, STABAL3PHANTOM.address, STABAL3PHANTOM.address],
+        tokensOut: [
+            STABAL3PHANTOM.address,
+            STABAL3PHANTOM.address,
+            STABAL3PHANTOM.address,
+        ],
         swapType: SwapType.SwapExactIn,
-        amounts: [parseFixed('100', 18).toString(), parseFixed('100', 6).toString(), parseFixed('100', 6).toString()],
+        amounts: [
+            parseFixed('100', 18).toString(),
+            parseFixed('100', 6).toString(),
+            parseFixed('100', 6).toString(),
+        ],
         fetchPools: {
             fetchPools: false, // Because pools were previously fetched we can reuse to speed things up
-            fetchOnChain: false
-        }
+            fetchOnChain: false,
+        },
     });
     console.log(`\n******* stables > BPT ExactIn`);
     console.log(queryResult.swaps);
     console.log(queryResult.assets);
     console.log(queryResult.deltas.toString());
-    console.log(queryResult.returnAmounts.toString()); 
+    console.log(queryResult.returnAmounts.toString());
 
     // Example showing how to exit bb-a-usd pool by swapping BPT > stables
     queryResult = await balancer.swaps.queryBatchSwapWithSor({
-        tokensIn: [STABAL3PHANTOM.address, STABAL3PHANTOM.address, STABAL3PHANTOM.address],
+        tokensIn: [
+            STABAL3PHANTOM.address,
+            STABAL3PHANTOM.address,
+            STABAL3PHANTOM.address,
+        ],
         tokensOut: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
         swapType: SwapType.SwapExactIn,
-        amounts: [parseFixed('1', 18).toString(), parseFixed('1', 18).toString(), parseFixed('1', 18).toString()],
+        amounts: [
+            parseFixed('1', 18).toString(),
+            parseFixed('1', 18).toString(),
+            parseFixed('1', 18).toString(),
+        ],
         fetchPools: {
             fetchPools: false,
-            fetchOnChain: false
-        }
+            fetchOnChain: false,
+        },
     });
     console.log(`\n******* BPT > stables ExactIn`);
     console.log(queryResult.swaps);
@@ -55,14 +74,20 @@ async function runQueryBatchSwapWithSor() {
     console.log(queryResult.returnAmounts.toString());
 
     queryResult = await balancer.swaps.queryBatchSwapWithSor({
-        tokensIn: [STABAL3PHANTOM.address, STABAL3PHANTOM.address, STABAL3PHANTOM.address],
+        tokensIn: [
+            STABAL3PHANTOM.address,
+            STABAL3PHANTOM.address,
+            STABAL3PHANTOM.address,
+        ],
         tokensOut: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
         swapType: SwapType.SwapExactOut,
-        amounts: queryResult.returnAmounts.map(amt => BigNumber.from(amt).abs().toString()),
+        amounts: queryResult.returnAmounts.map((amt) =>
+            BigNumber.from(amt).abs().toString()
+        ),
         fetchPools: {
             fetchPools: false,
-            fetchOnChain: false
-        }
+            fetchOnChain: false,
+        },
     });
     console.log(`\n******* BPT > stables Exact Out`);
     console.log(queryResult.swaps);

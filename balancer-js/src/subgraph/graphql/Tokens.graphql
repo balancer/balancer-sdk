@@ -1,0 +1,68 @@
+query TokenPrices(
+    $skip: Int
+    $first: Int
+    $orderBy: TokenPrice_orderBy
+    $orderDirection: OrderDirection
+    $where: TokenPrice_filter
+    $block: Block_height
+) {
+    tokenPrices(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphTokenPrice
+    }
+}
+
+fragment SubgraphTokenPrice on TokenPrice {
+    id
+    poolId {
+        id
+    }
+    asset
+    amount
+    pricingAsset
+    price
+    block
+    timestamp
+}
+
+query TokenLatestPrices(
+    $skip: Int
+    $first: Int
+    $orderBy: LatestPrice_orderBy
+    $orderDirection: OrderDirection
+    $where: LatestPrice_filter
+    $block: Block_height
+) {
+    latestPrices(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphTokenLatestPrice
+    }
+}
+
+query TokenLatestPrice($id: ID!) {
+    latestPrice(id: $id) {
+        ...SubgraphTokenLatestPrice
+    }
+}
+
+fragment SubgraphTokenLatestPrice on LatestPrice {
+    id
+    asset
+    price
+    poolId {
+        id
+    }
+    pricingAsset
+}
