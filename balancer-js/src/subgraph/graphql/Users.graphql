@@ -1,0 +1,35 @@
+query User($id: ID!, $block: Block_height) {
+    user(id: $id, block: $block) {
+        ...SubgraphUser
+    }
+}
+
+query Users(
+    $skip: Int
+    $first: Int
+    $orderBy: User_orderBy
+    $orderDirection: OrderDirection
+    $where: User_filter
+    $block: Block_height
+) {
+    users(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphUser
+    }
+}
+
+fragment SubgraphUser on User {
+    id
+    sharesOwned(first: 1000) {
+        balance
+        poolId {
+            id
+        }
+    }
+}
