@@ -41,7 +41,7 @@ async function relayerExitPoolAndBatchSwap() {
     maxBptIn should set to a known amount based on pool balances, etc.
     */
     // const exactPoolTokensOut = ['100000', '100000000000000000'];
-    // const minExitAmountsOut = exactPoolTokensOut;
+    // const expectedAmountsOut = exactPoolTokensOut;
     // const maxBptIn = MaxUint256;
     // const userData = StablePoolEncoder.exitBPTInForExactTokensOut(
     //     exactPoolTokensOut,
@@ -50,10 +50,10 @@ async function relayerExitPoolAndBatchSwap() {
 
     /*
     This creates pool request for exactBPTIn.
-    minExitAmountsOut should be set to a known/realistic value as this is used to estimate swap/limit amounts and can cause issues if off.
+    expectedAmountsOut should be set to a known/realistic value as this is used to estimate swap/limit amounts and can cause issues if off.
     */
     const bptAmountIn = '2049658696117824796';
-    const minExitAmountsOut = ['1019700', '1029989699999948233'];
+    const expectedAmountsOut = ['1019700', '1029989699999948233'];
     const userData = StablePoolEncoder.exitExactBPTInForTokensOut(bptAmountIn);
 
     const txInfo = await balancer.relayer.exitPoolAndBatchSwap({
@@ -62,13 +62,13 @@ async function relayerExitPoolAndBatchSwap() {
         poolId: '0xf5f6fb82649df7991054ef796c39da81b93364df0002000000000000000004a5', // USDT/DAI pool
         exitTokens: [AAVE_USDT.address, AAVE_DAI.address],
         userData,
-        minExitAmountsOut,
+        expectedAmountsOut,
         finalTokensOut: [STABAL3PHANTOM.address, STABAL3PHANTOM.address],
         slippage: '50000000000000000', // Slippage for swap 5%
         fetchPools: {
             fetchPools: true,
-            fetchOnChain: false
-        }
+            fetchOnChain: false,
+        },
     });
 
     const relayerContract = new Contract(
