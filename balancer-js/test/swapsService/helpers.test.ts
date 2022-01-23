@@ -1,4 +1,3 @@
-import { AddressZero } from '@ethersproject/constants';
 import { expect } from 'chai';
 
 import { getLimitsForSlippage, SwapType } from '../../src';
