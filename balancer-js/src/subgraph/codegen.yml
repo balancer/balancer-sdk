@@ -16,3 +16,6 @@ generates:
         schema: ${BALANCER_SUBGRAPH_URL}
         plugins:
             - schema-ast
+hooks:
+    afterOneFileWrite:
+        - eslint --fix
