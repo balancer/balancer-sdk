@@ -1,18 +1,18 @@
 overwrite: true
 generates:
-  src/subgraph/generated/balancer-subgraph-types.ts:
-    schema: ${BALANCER_SUBGRAPH_URL}
-    documents: 'src/subgraph/graphql/**/*.graphql'
-    plugins:
-      - typescript
-      - typescript-operations
-      - typescript-graphql-request
-    config:
-      scalars:
-        BigInt: string
-        Bytes: string
-        BigDecimal: string
-  src/subgraph/generated/balancer-subgraph-schema.graphql:
-    schema: ${BALANCER_SUBGRAPH_URL}
-    plugins:
-      - schema-ast
+    src/subgraph/generated/balancer-subgraph-types.ts:
+        schema: ${BALANCER_SUBGRAPH_URL}
+        documents: 'src/subgraph/graphql/**/*.graphql'
+        plugins:
+            - typescript
+            - typescript-operations
+            - typescript-graphql-request
+        config:
+            scalars:
+                BigInt: string
+                Bytes: string
+                BigDecimal: string
+    src/subgraph/generated/balancer-subgraph-schema.graphql:
+        schema: ${BALANCER_SUBGRAPH_URL}
+        plugins:
+            - schema-ast
