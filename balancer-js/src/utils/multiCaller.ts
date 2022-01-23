@@ -1,15 +1,17 @@
 import { set } from 'lodash';
 import { Fragment, JsonFragment, Interface, Result } from '@ethersproject/abi';
-import { Contract } from '@ethersproject/contracts';
+import { CallOverrides, Contract } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/providers';
+import { BytesLike } from '@ethersproject/bytes';
 
 export class Multicaller {
     private multiAddress: string;
     private provider: Provider;
     private interface: Interface;
-    public options: any = {};
+    public options: CallOverrides = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private calls: [string, string, any][] = [];
-    private paths: any[] = [];
+    private paths: string[] = [];
 
     constructor(
         multiAddress: string,
@@ -27,6 +29,7 @@ export class Multicaller {
         path: string,
         address: string,
         functionName: string,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         params?: any[]
     ): Multicaller {
         this.calls.push([address, functionName, params]);
@@ -64,7 +67,7 @@ export class Multicaller {
             this.options
         );
 
-        return res.map((result: any, i: number) =>
+        return res.map((result: BytesLike, i: number) =>
             this.interface.decodeFunctionResult(this.calls[i][1], result)
         );
     }
