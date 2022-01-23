@@ -27,6 +27,14 @@
         "generate": "graphql-codegen --config src/subgraph/codegen.yml -r dotenv/config"
     },
     "devDependencies": {
+        "@ethersproject/abi": "^5.4.0",
+        "@ethersproject/abstract-signer": "^5.4.0",
+        "@ethersproject/address": "^5.4.0",
+        "@ethersproject/bignumber": "^5.4.0",
+        "@ethersproject/bytes": "^5.4.0",
+        "@ethersproject/constants": "^5.4.0",
+        "@ethersproject/contracts": "^5.4.0",
+        "@ethersproject/providers": "^5.4.5",
         "@graphql-codegen/add": "^3.1.0",
         "@graphql-codegen/cli": "^2.3.0",
         "@graphql-codegen/introspection": "^2.1.0",
@@ -63,10 +71,6 @@
     },
     "dependencies": {
         "@balancer-labs/sor": "3.0.0-beta.0",
-        "@ethersproject/abi": "^5.5.0",
-        "@ethersproject/abstract-signer": "^5.5.0",
-        "@ethersproject/contracts": "^5.5.0",
-        "@ethersproject/providers": "^5.5.0",
         "axios": "^0.24.0",
         "graphql": "^15.6.1",
         "graphql-request": "^3.5.0",
@@ -79,6 +83,7 @@
         "@ethersproject/bignumber": "^5.4.0",
         "@ethersproject/bytes": "^5.4.0",
         "@ethersproject/constants": "^5.4.0",
-        "@ethersproject/contracts": "^5.4.0"
+        "@ethersproject/contracts": "^5.4.0",
+        "@ethersproject/providers": "^5.4.5"
     }
 }
