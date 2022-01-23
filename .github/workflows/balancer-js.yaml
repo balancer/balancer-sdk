@@ -51,6 +51,8 @@ jobs:
       - name: Install
         run: yarn --immutable
         if: steps.cache.outputs.cache-hit != 'true'
+      - name: Generate Subgraph Queries
+        run: yarn generate
       - name: Build
         run: yarn build
 
@@ -74,6 +76,8 @@ jobs:
       - name: Install
         run: yarn --immutable
         if: steps.cache.outputs.cache-hit != 'true'
+      - name: Generate Subgraph Queries
+        run: yarn generate
       - name: Compile
         run: yarn build
       - name: Test
