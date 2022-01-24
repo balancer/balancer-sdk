@@ -99,5 +99,8 @@ export interface TransactionData {
     contract?: Contract;
     function: string;
     params: string[];
-    outputs?: any;
+    outputs?: {
+        amountsIn?: string[];
+        amountsOut?: string[];
+    };
 }

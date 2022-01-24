@@ -305,6 +305,7 @@ export class RelayerService {
                     .abs()
                     .mul(rates[i])
                     .div(WeiPerEther)
+                    .toString()
         );
 
         return {
@@ -378,7 +379,9 @@ export class RelayerService {
             function: 'multicall',
             params: calls,
             outputs: {
-                amountsIn: queryResult.returnAmounts.toString(),
+                amountsIn: queryResult.returnAmounts.map((amount) =>
+                    amount.toString()
+                ),
             },
         };
     }

@@ -12,7 +12,10 @@ The module leverages `graphql-codegen` and `graphql-request`.
 
 const client = createSubgraphClient(BALANCER_SUBGRAPH_URL);
 
-const { pools } = await client.Pools({ first: 5, where: { totalLiquidity_gt: '1' } });
+const { pools } = await client.Pools({
+    first: 5,
+    where: { totalLiquidity_gt: '1' },
+});
 
 const { users } = await client.Users({
     first: 5,
@@ -55,7 +58,7 @@ The generated type will be exported from the module suffixed with `Fragment`. So
 ```ts
 //TODO: add import statements
 
-import { SubgraphBalancerFragment } from "./balancer-subgraph-types";
+import { SubgraphBalancerFragment } from './balancer-subgraph-types';
 
 const { balancers } = await client.ProtocolData();
 const protocolData: SubgraphBalancerFragment = balancers[0];
@@ -75,10 +78,8 @@ query ProtocolData {
 }
 ```
 
-
 ## Resync the schema
 
 Anytime there are schema changes published to `balancer-subgraph-v2`, you'll need to resync the local schema by running `yarn generate`.
 
 If the update introduced breaking changes, running `yarn generate` will fail and print the necessary changes that need to be made to the console.
-

@@ -1,8 +1,4 @@
-import {
-    BalancerNetworkConfig,
-    BalancerSdkConfig,
-    BalancerSdkSorConfig,
-} from '../types';
+import { BalancerNetworkConfig, BalancerSdkConfig } from '../types';
 import { SwapsService } from '../swapsService';
 import { RelayerService } from '../relayerService';
 import { SOR } from '@balancer-labs/sor';

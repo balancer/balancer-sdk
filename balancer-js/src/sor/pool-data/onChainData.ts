@@ -20,6 +20,7 @@ export async function getOnChainBalances(
 ): Promise<SubgraphPoolBase[]> {
     if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const abis: any = Object.values(
         // Remove duplicate entries using their names
         Object.fromEntries(
