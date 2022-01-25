@@ -23,13 +23,20 @@ export class Multicaller {
         this.options = options;
     }
 
-    call(path: string, address: string, functionName: string, params?: any[]): Multicaller {
+    call(
+        path: string,
+        address: string,
+        functionName: string,
+        params?: any[]
+    ): Multicaller {
         this.calls.push([address, functionName, params]);
         this.paths.push(path);
         return this;
     }
 
-    async execute(from: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
+    async execute(
+        from: Record<string, unknown> = {}
+    ): Promise<Record<string, unknown>> {
         const obj = from;
         const results = await this.executeMulticall();
         results.forEach((result, i) =>

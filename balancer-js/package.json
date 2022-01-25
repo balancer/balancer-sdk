@@ -24,6 +24,7 @@
         "dev": "rollup -c -w",
         "test": "TS_NODE_PROJECT='tsconfig.testing.json' mocha --extension test.ts -r ts-node/register --recursive",
         "lint": "eslint ./src --ext .ts --max-warnings 0",
+        "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
         "generate": "graphql-codegen --config src/subgraph/codegen.yml -r dotenv/config"
     },
     "devDependencies": {
