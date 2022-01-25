@@ -103,4 +103,4 @@ export interface TransactionData {
     outputs?: unknown;
 }
 
-export type GenericABI = string | (string | Fragment | JsonFragment)[];
+export type GenericABI = string | Array<Fragment | JsonFragment | string>;

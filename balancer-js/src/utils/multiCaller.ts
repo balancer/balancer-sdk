@@ -1,7 +1,9 @@
 import { set } from 'lodash';
-import { Fragment, JsonFragment, Interface, Result } from '@ethersproject/abi';
+import { Interface, Result } from '@ethersproject/abi';
 import { Contract } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/providers';
+import { GenericABI } from '..';
+import { BytesLike } from '@ethersproject/bytes';
 
 export class Multicaller {
     private multiAddress: string;
@@ -14,7 +16,7 @@ export class Multicaller {
     constructor(
         multiAddress: string,
         provider: Provider,
-        abi: string | Array<Fragment | JsonFragment | string>,
+        abi: GenericABI,
         options = {}
     ) {
         this.multiAddress = multiAddress;
@@ -27,7 +29,7 @@ export class Multicaller {
         path: string,
         address: string,
         functionName: string,
-        params?: any[]
+        params?: unknown[]
     ): Multicaller {
         this.calls.push([address, functionName, params]);
         this.paths.push(path);
@@ -64,7 +66,7 @@ export class Multicaller {
             this.options
         );
 
-        return res.map((result: any, i: number) =>
+        return res.map((result: BytesLike, i: number) =>
             this.interface.decodeFunctionResult(this.calls[i][1], result)
         );
     }
