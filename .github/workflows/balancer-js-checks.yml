@@ -1,4 +1,4 @@
-name: Checks
+name: balancer-js Checks
 
 on:
   pull_request:
