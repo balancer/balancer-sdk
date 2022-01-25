@@ -2,6 +2,7 @@ import { BigNumberish } from '@ethersproject/bignumber';
 import { Network } from './constants/network';
 import { Contract } from '@ethersproject/contracts';
 import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
+import { Fragment, JsonFragment } from '@ethersproject/abi';
 
 export interface BalancerSdkConfig {
     //use a known network or provide an entirely custom config
@@ -101,3 +102,5 @@ export interface TransactionData {
     params: string[];
     outputs?: any;
 }
+
+export type GenericABI = string | (string | Fragment | JsonFragment)[];

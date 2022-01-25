@@ -11,6 +11,7 @@ import weightedPoolAbi from '../../abi/WeightedPool.json';
 import stablePoolAbi from '../../abi/StablePool.json';
 import elementPoolAbi from '../../abi/ConvergentCurvePool.json';
 import linearPoolAbi from '../../abi/LinearPool.json';
+import { GenericABI } from '@/types';
 
 export async function getOnChainBalances(
     subgraphPoolsOriginal: SubgraphPoolBase[],
@@ -20,7 +21,7 @@ export async function getOnChainBalances(
 ): Promise<SubgraphPoolBase[]> {
     if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
 
-    const abis: any = Object.values(
+    const abis: GenericABI = Object.values(
         // Remove duplicate entries using their names
         Object.fromEntries(
             [
