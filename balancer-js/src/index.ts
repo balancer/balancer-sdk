@@ -7,7 +7,7 @@ export * from './modules/swaps/swaps.module';
 export * from './modules/swaps/types';
 export * from './modules/swaps/helpers';
 export * from './constants/network';
-export * from './sdk.module';
+export * from './modules/sdk.module';
 export * from './modules/relayer/relayer.module';
 export {
     SwapInfo,
