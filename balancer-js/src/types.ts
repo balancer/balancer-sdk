@@ -100,7 +100,7 @@ export interface TransactionData {
     contract?: Contract;
     function: string;
     params: string[];
-    outputs?: any;
+    outputs?: unknown;
 }
 
 export type GenericABI = string | (string | Fragment | JsonFragment)[];
