@@ -7,7 +7,7 @@ import {
 import { parseInt } from 'lodash';
 import { getOnChainBalances } from './onChainData';
 import { Provider } from '@ethersproject/providers';
-import { Network } from '../../constants/network';
+import { Network } from '../../lib/constants/network';
 import { BalancerNetworkConfig, BalancerSdkSorConfig } from '../../types';
 
 const NETWORKS_WITH_LINEAR_POOLS = [

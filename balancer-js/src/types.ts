@@ -1,5 +1,5 @@
 import { BigNumberish } from '@ethersproject/bignumber';
-import { Network } from './constants/network';
+import { Network } from './lib/constants/network';
 import { Contract } from '@ethersproject/contracts';
 import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 

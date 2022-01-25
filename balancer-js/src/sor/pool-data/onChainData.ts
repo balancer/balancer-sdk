@@ -1,8 +1,8 @@
 import { formatFixed } from '@ethersproject/bignumber';
 import { Provider } from '@ethersproject/providers';
 import { PoolFilter, SubgraphPoolBase } from '@balancer-labs/sor';
-import { Multicaller } from '../../utils/multiCaller';
-import { isSameAddress } from '../../utils';
+import { Multicaller } from '../../lib/utils/multiCaller';
+import { isSameAddress } from '../../lib/utils';
 
 // TODO: decide whether we want to trim these ABIs down to the relevant functions
 import vaultAbi from '../../abi/Vault.json';

@@ -2,7 +2,7 @@ import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Zero, WeiPerEther } from '@ethersproject/constants';
 
 import { SwapType } from './types';
-import { isSameAddress } from '@/utils';
+import { isSameAddress } from '@/lib/utils';
 
 /**
  * Helper to create limits using a defined slippage amount.
