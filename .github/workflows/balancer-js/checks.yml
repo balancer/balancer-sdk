@@ -1,0 +1,37 @@
+name: Checks
+
+on:
+  pull_request:
+    paths:
+      - 'balancer-js/**'
+
+defaults:
+  run:
+    working-directory: balancer-js
+
+jobs:
+  Lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+    - name: Install deps
+      run: yarn install --frozen-lockfile
+    - name: Run lint
+      run: yarn lint
+        
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+    - name: Install deps
+      run: yarn install --frozen-lockfile
+    - name: Run tests
+      run: yarn test
