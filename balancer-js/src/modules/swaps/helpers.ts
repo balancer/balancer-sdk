@@ -2,18 +2,18 @@ import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Zero, WeiPerEther } from '@ethersproject/constants';
 
 import { SwapType } from './types';
-import { isSameAddress } from '../utils';
+import { isSameAddress } from '@/utils';
 
-/*
-* Helper to create limits using a defined slippage amount.
-* @param tokensIn - Array of token in addresses.
-* @param tokensOut - Array of token out addresses.
-* @param swapType - Type of swap - SwapExactIn or SwapExactOut
-* @param deltas - An array with the net Vault asset balance deltas. Positive amounts represent tokens (or ETH) sent to the Vault, and negative amounts represent tokens (or ETH) sent by the Vault. Each delta corresponds to the asset at the same index in the `assets` array.
-* @param assets - array contains the addresses of all assets involved in the swaps.
-* @param slippage - Slippage to be applied. i.e. 5%=50000000000000000.
-* @returns Returns an array (same length as assets) with limits applied for each asset.
-*/
+/**
+ * Helper to create limits using a defined slippage amount.
+ * @param tokensIn - Array of token in addresses.
+ * @param tokensOut - Array of token out addresses.
+ * @param swapType - Type of swap - SwapExactIn or SwapExactOut
+ * @param deltas - An array with the net Vault asset balance deltas. Positive amounts represent tokens (or ETH) sent to the Vault, and negative amounts represent tokens (or ETH) sent by the Vault. Each delta corresponds to the asset at the same index in the `assets` array.
+ * @param assets - array contains the addresses of all assets involved in the swaps.
+ * @param slippage - Slippage to be applied. i.e. 5%=50000000000000000.
+ * @returns Returns an array (same length as assets) with limits applied for each asset.
+ */
 export function getLimitsForSlippage(
     tokensIn: string[],
     tokensOut: string[],

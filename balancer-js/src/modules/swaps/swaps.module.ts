@@ -2,7 +2,7 @@ import { Provider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
 import { SOR } from '@balancer-labs/sor';
 
-import { BalancerNetworkConfig } from '../types';
+import { BalancerNetworkConfig } from '@/types';
 import {
     BatchSwap,
     QueryWithSorInput,
@@ -10,12 +10,12 @@ import {
     SwapType,
 } from './types';
 import { queryBatchSwap, queryBatchSwapWithSor } from './queryBatchSwap';
-import { balancerVault } from '../constants/contracts';
+import { balancerVault } from '@/constants/contracts';
 import { getLimitsForSlippage } from './helpers';
 
-import vaultAbi from '../abi/Vault.json';
+import vaultAbi from '@/abi/Vault.json';
 
-export class SwapsService {
+export class Swaps {
     constructor(
         private readonly network: BalancerNetworkConfig,
         private readonly sor: SOR,

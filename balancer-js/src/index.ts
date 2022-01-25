@@ -3,12 +3,12 @@ export * from './pool-weighted';
 export * from './pool-utils';
 export * from './utils';
 export * from './types';
-export * from './swapsService/index';
-export * from './swapsService/types';
-export * from './swapsService/helpers';
+export * from './modules/swaps/swaps.module';
+export * from './modules/swaps/types';
+export * from './modules/swaps/helpers';
 export * from './constants/network';
-export * from './sdk';
-export * from './relayerService/index';
+export * from './sdk.module';
+export * from './modules/relayer/relayer.module';
 export {
     SwapInfo,
     SubgraphPoolBase,
