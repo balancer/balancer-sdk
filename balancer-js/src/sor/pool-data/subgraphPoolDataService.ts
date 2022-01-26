@@ -69,6 +69,7 @@ export class SubgraphPoolDataService implements PoolDataService {
             where: { swapEnabled: true },
             orderBy: Pool_OrderBy.TotalLiquidity,
             orderDirection: OrderDirection.Desc,
+            first: 1000,
         });
 
         return pools;
@@ -79,6 +80,7 @@ export class SubgraphPoolDataService implements PoolDataService {
             where: { swapEnabled: true },
             orderBy: Pool_OrderBy.TotalLiquidity,
             orderDirection: OrderDirection.Desc,
+            first: 1000,
         });
 
         return pools;
