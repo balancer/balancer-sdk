@@ -22,7 +22,7 @@
     "scripts": {
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "test": "ts-mocha -p tsconfig.testing.json --paths test/**/*.test.ts",
+        "test": "ts-mocha --paths --recursive -p tsconfig.testing.json 'src/**/*.spec.ts'",
         "lint": "eslint ./src --ext .ts --max-warnings 0",
         "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
         "generate": "graphql-codegen --config src/subgraph/codegen.yml -r dotenv/config"
