@@ -1,12 +1,12 @@
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 
-import { ExitPoolRequest } from '../types';
+import { ExitPoolRequest } from '@/types';
 import {
     SwapType,
     BatchSwapStep,
     FundManagement,
     FetchPoolsInput,
-} from '../swapsService/types';
+} from '@/modules/swaps/types';
 
 export type OutputReference = {
     index: number;

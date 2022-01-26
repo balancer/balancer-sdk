@@ -1,6 +1,6 @@
 import { BalancerNetworkConfig, BalancerSdkConfig } from '../types';
-import { SwapsService } from '../swapsService';
-import { RelayerService } from '../relayerService';
+import { Swaps } from './swaps/swaps.module';
+import { Relayer } from './relayer/relayer.module';
 import { SOR } from '@balancer-labs/sor';
 import { SorFactory } from '../sor/sorFactory';
 import { BALANCER_NETWORK_CONFIG } from '../constants/contracts';
@@ -10,8 +10,8 @@ import { createSubgraphClient, SubgraphClient } from '../subgraph/subgraph';
 export class BalancerSDK {
     public readonly network: BalancerNetworkConfig;
     public readonly rpcUrl: string;
-    public readonly swaps: SwapsService;
-    public readonly relayer: RelayerService;
+    public readonly swaps: Swaps;
+    public readonly relayer: Relayer;
     public readonly sor: SOR;
     public readonly provider: Provider;
     public readonly subgraphClient: SubgraphClient;
@@ -29,8 +29,8 @@ export class BalancerSDK {
             this.subgraphClient
         );
 
-        this.swaps = new SwapsService(this.network, this.sor, this.provider);
-        this.relayer = new RelayerService(this.swaps, this.rpcUrl);
+        this.swaps = new Swaps(this.network, this.sor, this.provider);
+        this.relayer = new Relayer(this.swaps);
     }
 
     private getNetworkConfig(config: BalancerSdkConfig): BalancerNetworkConfig {

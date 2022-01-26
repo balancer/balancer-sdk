@@ -2,7 +2,7 @@ import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Interface } from '@ethersproject/abi';
 import { MaxUint256, WeiPerEther } from '@ethersproject/constants';
 
-import { SwapsService } from '../swapsService';
+import { Swaps } from '@/modules/swaps/swaps.module';
 import {
     EncodeBatchSwapInput,
     EncodeUnwrapAaveStaticTokenInput,
@@ -11,28 +11,23 @@ import {
     ExitAndBatchSwapInput,
     ExitPoolData,
 } from './types';
-import { TransactionData, ExitPoolRequest } from '../types';
+import { TransactionData, ExitPoolRequest } from '@/types';
 import {
     SwapType,
     FundManagement,
     BatchSwapStep,
     FetchPoolsInput,
-} from '../swapsService/types';
+} from '../swaps/types';
 
-import relayerLibraryAbi from '../abi/VaultActions.json';
-import aaveWrappingAbi from '../abi/AaveWrapping.json';
+import relayerLibraryAbi from '@/abi/VaultActions.json';
+import aaveWrappingAbi from '@/abi/AaveWrapping.json';
 
 export * from './types';
 
-export class RelayerService {
-    swapsService: SwapsService;
-    rpcUrl: string;
+export class Relayer {
     static CHAINED_REFERENCE_PREFIX = 'ba10';
 
-    constructor(swapsService: SwapsService, rpcUrl: string) {
-        this.swapsService = swapsService;
-        this.rpcUrl = rpcUrl;
-    }
+    constructor(private readonly swaps: Swaps) {}
 
     static encodeBatchSwap(params: EncodeBatchSwapInput): string {
         const relayerLibrary = new Interface(relayerLibraryAbi);
@@ -80,8 +75,8 @@ export class RelayerService {
     static toChainedReference(key: BigNumberish): BigNumber {
         // The full padded prefix is 66 characters long, with 64 hex characters and the 0x prefix.
         const paddedPrefix = `0x${
-            RelayerService.CHAINED_REFERENCE_PREFIX
-        }${'0'.repeat(64 - RelayerService.CHAINED_REFERENCE_PREFIX.length)}`;
+            Relayer.CHAINED_REFERENCE_PREFIX
+        }${'0'.repeat(64 - Relayer.CHAINED_REFERENCE_PREFIX.length)}`;
         return BigNumber.from(paddedPrefix).add(key);
     }
 
@@ -114,7 +109,7 @@ export class RelayerService {
             exitPoolRequest,
         };
 
-        const exitEncoded = RelayerService.encodeExitPool(exitPoolInput);
+        const exitEncoded = Relayer.encodeExitPool(exitPoolInput);
         return exitEncoded;
     }
 
@@ -149,14 +144,14 @@ export class RelayerService {
         // Output of exit is used as input to swaps
         const outputReferences: OutputReference[] = [];
         params.exitTokens.forEach((asset, i) => {
-            const key = RelayerService.toChainedReference(i);
+            const key = Relayer.toChainedReference(i);
             outputReferences.push({
                 index: i,
                 key: key,
             });
         });
 
-        const exitCall = RelayerService.constructExitCall({
+        const exitCall = Relayer.constructExitCall({
             assets: params.exitTokens,
             minAmountsOut,
             userData: params.userData,
@@ -172,7 +167,7 @@ export class RelayerService {
         // Use swapsService to get swap info for exitTokens>finalTokens
         // This will give batchSwap swap paths
         // Amounts out will be worst case amounts
-        const queryResult = await this.swapsService.queryBatchSwapWithSor({
+        const queryResult = await this.swaps.queryBatchSwapWithSor({
             tokensIn: params.exitTokens,
             tokensOut: params.finalTokensOut,
             swapType: SwapType.SwapExactIn,
@@ -209,7 +204,7 @@ export class RelayerService {
 
         // Creates limit array.
         // Slippage set to 0. Already accounted for as swap used amounts out of pool with worst case slippage.
-        const limits = SwapsService.getLimitsForSlippage(
+        const limits = Swaps.getLimitsForSlippage(
             params.exitTokens, // tokensIn
             params.finalTokensOut, // tokensOut
             SwapType.SwapExactIn,
@@ -226,7 +221,7 @@ export class RelayerService {
             toInternalBalance: false,
         };
 
-        const encodedBatchSwap = RelayerService.encodeBatchSwap({
+        const encodedBatchSwap = Relayer.encodeBatchSwap({
             swapType: SwapType.SwapExactIn,
             swaps: queryResult.swaps,
             assets: queryResult.assets,
@@ -272,7 +267,7 @@ export class RelayerService {
         }
     ): Promise<TransactionData> {
         // Use swapsService to get swap info for tokensIn>wrappedTokens
-        const queryResult = await this.swapsService.queryBatchSwapWithSor({
+        const queryResult = await this.swaps.queryBatchSwapWithSor({
             tokensIn,
             tokensOut: aaveStaticTokens,
             swapType: SwapType.SwapExactIn,
@@ -281,7 +276,7 @@ export class RelayerService {
         });
 
         // Gets limits array for tokensIn>wrappedTokens based on input slippage
-        const limits = SwapsService.getLimitsForSlippage(
+        const limits = Swaps.getLimitsForSlippage(
             tokensIn, // tokensIn
             aaveStaticTokens, // tokensOut
             SwapType.SwapExactIn,
@@ -348,7 +343,7 @@ export class RelayerService {
         );
 
         // Use swapsService to get swap info for tokensIn>wrappedTokens
-        const queryResult = await this.swapsService.queryBatchSwapWithSor({
+        const queryResult = await this.swaps.queryBatchSwapWithSor({
             tokensIn,
             tokensOut: aaveStaticTokens,
             swapType: SwapType.SwapExactOut,
@@ -357,7 +352,7 @@ export class RelayerService {
         });
 
         // Gets limits array for tokensIn>wrappedTokens based on input slippage
-        const limits = SwapsService.getLimitsForSlippage(
+        const limits = Swaps.getLimitsForSlippage(
             tokensIn, // tokensIn
             aaveStaticTokens, // tokensOut
             SwapType.SwapExactOut,
@@ -416,7 +411,7 @@ export class RelayerService {
             // There may be cases where swap isn't possible for wrappedToken
             if (index === -1) return;
 
-            const key = RelayerService.toChainedReference(i);
+            const key = Relayer.toChainedReference(i);
 
             outputReferences.push({
                 index: index,
@@ -425,7 +420,7 @@ export class RelayerService {
 
             // console.log(`Unwrapping ${wrappedToken} with amt: ${key.toHexString()}`);
 
-            const encodedUnwrap = RelayerService.encodeUnwrapAaveStaticToken({
+            const encodedUnwrap = Relayer.encodeUnwrapAaveStaticToken({
                 staticToken: wrappedToken,
                 sender: funds.recipient, // This should be relayer
                 recipient: funds.sender, // This will be caller
@@ -437,7 +432,7 @@ export class RelayerService {
             unwrapCalls.push(encodedUnwrap);
         });
 
-        const encodedBatchSwap = RelayerService.encodeBatchSwap({
+        const encodedBatchSwap = Relayer.encodeBatchSwap({
             swapType: swapType,
             swaps: swaps,
             assets: assets,
