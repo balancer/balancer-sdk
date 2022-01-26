@@ -5,14 +5,16 @@ on:
     branches:
       - master
   pull_request:
-    branches: "*"
+    paths:
+      - 'balancer-js/**'
+
+defaults:
+  run:
+    working-directory: balancer-js
 
 jobs:
   lint:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./balancer-js
     steps:
       - uses: actions/checkout@v2
       - name: Install node
@@ -33,9 +35,6 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./balancer-js
     steps:
       - uses: actions/checkout@v2
       - name: Install node
@@ -58,9 +57,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./balancer-js
     steps:
       - uses: actions/checkout@v2
       - name: Install node
