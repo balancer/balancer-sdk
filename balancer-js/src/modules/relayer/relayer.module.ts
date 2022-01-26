@@ -74,9 +74,9 @@ export class Relayer {
 
     static toChainedReference(key: BigNumberish): BigNumber {
         // The full padded prefix is 66 characters long, with 64 hex characters and the 0x prefix.
-        const paddedPrefix = `0x${
-            Relayer.CHAINED_REFERENCE_PREFIX
-        }${'0'.repeat(64 - Relayer.CHAINED_REFERENCE_PREFIX.length)}`;
+        const paddedPrefix = `0x${Relayer.CHAINED_REFERENCE_PREFIX}${'0'.repeat(
+            64 - Relayer.CHAINED_REFERENCE_PREFIX.length
+        )}`;
         return BigNumber.from(paddedPrefix).add(key);
     }
 
