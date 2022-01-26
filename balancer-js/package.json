@@ -26,7 +26,7 @@
         "lint": "eslint ./src --ext .ts --max-warnings 0",
         "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
         "generate": "graphql-codegen --config src/subgraph/codegen.yml -r dotenv/config",
-        "examples:queryBatchSwap": "TS_NODE_PROJECT='tsconfig.testing.json' ts-node -r tsconfig-paths/register ./examples/queryBatchSwap.ts"
+        "examples:run": "TS_NODE_PROJECT='tsconfig.testing.json' ts-node -r tsconfig-paths/register"
     },
     "devDependencies": {
         "@ethersproject/abi": "^5.4.0",
