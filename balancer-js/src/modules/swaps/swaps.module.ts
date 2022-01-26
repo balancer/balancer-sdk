@@ -13,7 +13,7 @@ import { queryBatchSwap, queryBatchSwapWithSor } from './queryBatchSwap';
 import { balancerVault } from '@/lib/constants/contracts';
 import { getLimitsForSlippage } from './helpers';
 
-import vaultAbi from '@/abi/Vault.json';
+import vaultAbi from '@/lib/abi/Vault.json';
 
 export class Swaps {
     constructor(
