@@ -83,10 +83,10 @@ async function relayerExitPoolAndBatchSwap() {
         });
 
     console.log(`Amounts of tokensOut:`);
-    console.log(txInfo.outputs.amountsOut.toString());
+    console.log(txInfo.outputs?.amountsOut?.toString());
     console.log(`Swap Deltas:`);
     console.log(defaultAbiCoder.decode(['int256[]'], tx[1]).toString());
 }
 
-// TS_NODE_PROJECT='tsconfig.testing.json' ts-node ./examples/relayerExitPoolAndBatchSwap.ts
+// yarn examples:run ./examples/relayerExitPoolAndBatchSwap.ts
 relayerExitPoolAndBatchSwap();

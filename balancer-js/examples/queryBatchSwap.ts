@@ -56,5 +56,5 @@ async function runQueryBatchSwap() {
     console.log(deltas.toString());
 }
 
-// TS_NODE_PROJECT='tsconfig.testing.json' ts-node ./examples/queryBatchSwap.ts
+// yarn examples:run ./examples/queryBatchSwap.ts
 runQueryBatchSwap();

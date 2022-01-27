@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { getLimitsForSlippage, SwapType } from '../../src';
+import { getLimitsForSlippage, SwapType } from '@/.';
 
 describe('swaps service helpers', () => {
     context('getLimits', () => {

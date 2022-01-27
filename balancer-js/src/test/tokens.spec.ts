@@ -1,7 +1,7 @@
 import { AddressZero } from '@ethersproject/constants';
 import { expect } from 'chai';
 
-import { AssetHelpers } from '../src';
+import { AssetHelpers } from '@/utils';
 
 describe('sortTokens', () => {
     const ETH = AddressZero;
