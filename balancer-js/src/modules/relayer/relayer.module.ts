@@ -19,8 +19,8 @@ import {
     FetchPoolsInput,
 } from '../swaps/types';
 
-import relayerLibraryAbi from '@/abi/VaultActions.json';
-import aaveWrappingAbi from '@/abi/AaveWrapping.json';
+import relayerLibraryAbi from '@/lib/abi/VaultActions.json';
+import aaveWrappingAbi from '@/lib/abi/AaveWrapping.json';
 
 export * from './types';
 

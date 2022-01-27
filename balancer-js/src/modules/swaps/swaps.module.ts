@@ -10,10 +10,10 @@ import {
     SwapType,
 } from './types';
 import { queryBatchSwap, queryBatchSwapWithSor } from './queryBatchSwap';
-import { balancerVault } from '@/constants/contracts';
+import { balancerVault } from '@/lib/constants/contracts';
 import { getLimitsForSlippage } from './helpers';
 
-import vaultAbi from '@/abi/Vault.json';
+import vaultAbi from '@/lib/abi/Vault.json';
 
 export class Swaps {
     constructor(

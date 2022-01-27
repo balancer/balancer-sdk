@@ -3,7 +3,7 @@ import { Swaps } from './swaps/swaps.module';
 import { Relayer } from './relayer/relayer.module';
 import { SOR } from '@balancer-labs/sor';
 import { SorFactory } from '../sor/sorFactory';
-import { BALANCER_NETWORK_CONFIG } from '../constants/contracts';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/contracts';
 import { JsonRpcProvider, Provider } from '@ethersproject/providers';
 import { createSubgraphClient, SubgraphClient } from '../subgraph/subgraph';
 
