@@ -16,6 +16,7 @@ const config: ConfigSdk = {
 const balancer = new BalancerSDK(config);
 ```
 
+
 ## SwapsService
 
 The SwapsService provides function to query and make swaps using Balancer V2 liquidity.
