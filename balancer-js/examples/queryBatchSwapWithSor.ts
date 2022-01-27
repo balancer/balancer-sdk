@@ -96,5 +96,5 @@ async function runQueryBatchSwapWithSor() {
     console.log(queryResult.returnAmounts.toString());
 }
 
-// TS_NODE_PROJECT='tsconfig.testing.json' ts-node ./examples/queryBatchSwapWithSor.ts
+// yarn examples:run ./examples/queryBatchSwapWithSor.ts
 runQueryBatchSwapWithSor();

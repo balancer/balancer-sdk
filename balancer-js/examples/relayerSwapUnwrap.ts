@@ -11,7 +11,7 @@ import {
     AaveHelpers,
     BalancerSdkConfig,
 } from '../src/index';
-import { FundManagement } from '../src/swapsService/types';
+import { FundManagement } from '../src/modules/swaps/types';
 import {
     WRAPPED_AAVE_DAI,
     WRAPPED_AAVE_USDC,
@@ -100,7 +100,7 @@ async function runRelayerSwapUnwrapExactIn() {
     console.log(`Swap Deltas:`);
     console.log(defaultAbiCoder.decode(['int256[]'], tx[0]).toString());
     console.log(`Unwrapped Amounts Out:`);
-    console.log(txInfo.outputs.amountsOut.toString());
+    console.log(txInfo.outputs?.amountsOut?.toString());
 }
 
 /*
@@ -112,7 +112,7 @@ Vault must have approvals for tokens
 async function runRelayerSwapUnwrapExactOut() {
     const config: BalancerSdkConfig = {
         network: Network.KOVAN,
-        rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+        rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,       
     };
 
     const provider = new JsonRpcProvider(config.rpcUrl);
@@ -176,9 +176,9 @@ async function runRelayerSwapUnwrapExactOut() {
     console.log(`Swap Deltas:`);
     console.log(defaultAbiCoder.decode(['int256[]'], tx[0]).toString());
     console.log(`Amounts In:`);
-    console.log(txInfo.outputs.amountsIn);
+    console.log(txInfo.outputs?.amountsIn);
 }
 
-// TS_NODE_PROJECT='tsconfig.testing.json' ts-node ./examples/relayerSwapUnwrap.ts
-// runRelayerSwapUnwrapExactOut();
+// yarn examples:run ./examples/relayerSwapUnwrap.ts
 runRelayerSwapUnwrapExactIn();
+// runRelayerSwapUnwrapExactOut();
