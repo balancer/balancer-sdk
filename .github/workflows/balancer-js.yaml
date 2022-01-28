@@ -83,3 +83,4 @@ jobs:
 
 env:
   CI: true
+  INFURA: ${{ secrets.INFURA }}

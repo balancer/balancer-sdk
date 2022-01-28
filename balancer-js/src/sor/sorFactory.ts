@@ -1,8 +1,9 @@
 import { SOR, TokenPriceService } from '@balancer-labs/sor';
-import { Provider } from '@ethersproject/providers';
+import { Provider, JsonRpcProvider } from '@ethersproject/providers';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/contracts';
 import { SubgraphPoolDataService } from './pool-data/subgraphPoolDataService';
 import { CoingeckoTokenPriceService } from './token-price/coingeckoTokenPriceService';
-import { SubgraphClient } from '../subgraph/subgraph';
+import { SubgraphClient, createSubgraphClient } from '../subgraph/subgraph';
 import {
     BalancerNetworkConfig,
     BalancerSdkConfig,
@@ -11,13 +12,11 @@ import {
 import { SubgraphTokenPriceService } from './token-price/subgraphTokenPriceService';
 
 export class SorFactory {
-    public static createSor(
-        network: BalancerNetworkConfig,
-        sdkConfig: BalancerSdkConfig,
-        provider: Provider,
-        subgraphClient: SubgraphClient
-    ): SOR {
+    public static createSor(sdkConfig: BalancerSdkConfig): SOR {
+        const network = this.getNetworkConfig(sdkConfig);
         const sorConfig = SorFactory.getSorConfig(sdkConfig);
+        const provider = new JsonRpcProvider(sdkConfig.rpcUrl);
+        const subgraphClient = createSubgraphClient(network.subgraphUrl);
 
         const poolDataService = SorFactory.getPoolDataService(
             network,
@@ -33,6 +32,25 @@ export class SorFactory {
         );
 
         return new SOR(provider, network, poolDataService, tokenPriceService);
+    }
+
+    private static getNetworkConfig(
+        config: BalancerSdkConfig
+    ): BalancerNetworkConfig {
+        if (typeof config.network === 'number') {
+            const networkConfig = BALANCER_NETWORK_CONFIG[config.network];
+
+            return {
+                ...networkConfig,
+                subgraphUrl:
+                    config.customSubgraphUrl ?? networkConfig.subgraphUrl,
+            };
+        }
+
+        return {
+            ...config.network,
+            subgraphUrl: config.customSubgraphUrl ?? config.network.subgraphUrl,
+        };
     }
 
     private static getSorConfig(

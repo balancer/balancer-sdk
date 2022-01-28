@@ -1,26 +1,30 @@
-import { Provider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
 import { SOR } from '@balancer-labs/sor';
-
-import { BalancerNetworkConfig } from '../../types';
+import { BalancerSdkConfig } from '../../types';
 import {
     BatchSwap,
     QueryWithSorInput,
     QueryWithSorOutput,
     SwapType,
 } from './types';
+import { SubgraphPoolBase } from '@/.';
 import { queryBatchSwap, queryBatchSwapWithSor } from './queryBatchSwap';
 import { balancerVault } from '@/lib/constants/contracts';
 import { getLimitsForSlippage } from './helpers';
 
 import vaultAbi from '@/lib/abi/Vault.json';
+import { SorFactory } from '../../sor/sorFactory';
 
 export class Swaps {
-    constructor(
-        private readonly network: BalancerNetworkConfig,
-        private readonly sor: SOR,
-        private readonly provider: Provider
-    ) {}
+    private readonly sor: SOR;
+
+    constructor(sorOrConfig: SOR | BalancerSdkConfig) {
+        if (sorOrConfig instanceof SOR) {
+            this.sor = sorOrConfig;
+        } else {
+            this.sor = SorFactory.createSor(sorOrConfig);
+        }
+    }
 
     static getLimitsForSlippage(
         tokensIn: string[],
@@ -53,6 +57,10 @@ export class Swaps {
         return this.sor.fetchPools();
     }
 
+    public getPools(): SubgraphPoolBase[] {
+        return this.sor.getPools();
+    }
+
     /**
      * queryBatchSwap simulates a call to `batchSwap`, returning an array of Vault asset deltas.
      * @param batchSwap - BatchSwap information used for query.
@@ -70,7 +78,7 @@ export class Swaps {
         const vaultContract = new Contract(
             balancerVault,
             vaultAbi,
-            this.provider
+            this.sor.provider
         );
 
         return await queryBatchSwap(
@@ -98,7 +106,7 @@ export class Swaps {
         const vaultContract = new Contract(
             balancerVault,
             vaultAbi,
-            this.provider
+            this.sor.provider
         );
 
         return await queryBatchSwapWithSor(
