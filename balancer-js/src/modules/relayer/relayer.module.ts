@@ -11,13 +11,14 @@ import {
     ExitAndBatchSwapInput,
     ExitPoolData,
 } from './types';
-import { TransactionData, ExitPoolRequest } from '@/types';
+import { TransactionData, ExitPoolRequest, BalancerSdkConfig } from '@/types';
 import {
     SwapType,
     FundManagement,
     BatchSwapStep,
     FetchPoolsInput,
 } from '../swaps/types';
+import { SubgraphPoolBase } from '@/.';
 
 import relayerLibraryAbi from '@/lib/abi/VaultActions.json';
 import aaveWrappingAbi from '@/lib/abi/AaveWrapping.json';
@@ -25,9 +26,17 @@ import aaveWrappingAbi from '@/lib/abi/AaveWrapping.json';
 export * from './types';
 
 export class Relayer {
+    private readonly swaps: Swaps;
+
     static CHAINED_REFERENCE_PREFIX = 'ba10';
 
-    constructor(private readonly swaps: Swaps) {}
+    constructor(swapsOrConfig: Swaps | BalancerSdkConfig) {
+        if (swapsOrConfig instanceof Swaps) {
+            this.swaps = swapsOrConfig;
+        } else {
+            this.swaps = new Swaps(swapsOrConfig);
+        }
+    }
 
     static encodeBatchSwap(params: EncodeBatchSwapInput): string {
         const relayerLibrary = new Interface(relayerLibraryAbi);
@@ -111,6 +120,20 @@ export class Relayer {
 
         const exitEncoded = Relayer.encodeExitPool(exitPoolInput);
         return exitEncoded;
+    }
+
+    /**
+     * fetchPools saves updated pools data to SOR internal onChainBalanceCache.
+     * @param {SubgraphPoolBase[]} [poolsData=[]] If poolsData passed uses this as pools source otherwise fetches from config.subgraphUrl.
+     * @param {boolean} [isOnChain=true] If isOnChain is true will retrieve all required onChain data via multicall otherwise uses subgraph values.
+     * @returns {boolean} Boolean indicating whether pools data was fetched correctly (true) or not (false).
+     */
+    async fetchPools(): Promise<boolean> {
+        return this.swaps.fetchPools();
+    }
+
+    public getPools(): SubgraphPoolBase[] {
+        return this.swaps.getPools();
     }
 
     /**
