@@ -5,8 +5,8 @@ import { getSdk } from './generated/balancer-subgraph-types';
 import { SubgraphClient } from './subgraph';
 
 export class Subgraph {
-    public url: string;
-    public client: SubgraphClient;
+    public readonly url: string;
+    public readonly client: SubgraphClient;
 
     constructor(config: BalancerSdkConfig) {
         this.url = BalancerSDK.getNetworkConfig(config).subgraphUrl;
