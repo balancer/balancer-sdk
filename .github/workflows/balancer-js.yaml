@@ -53,7 +53,7 @@ jobs:
         run: yarn --immutable
         if: steps.cache.outputs.cache-hit != 'true'
       - name: Generate Subgraph Queries
-        run: yarn generate
+        run: yarn subgraph:generate
       - name: Build
         run: yarn build
 
