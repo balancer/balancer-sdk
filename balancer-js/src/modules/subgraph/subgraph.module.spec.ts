@@ -8,7 +8,7 @@ dotenv.config();
 const sdkConfig: BalancerSdkConfig = {
     network: Network.KOVAN,
     rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
-    customSubgraphUrl: 'https://thegraph.com/custom-subgraph'
+    customSubgraphUrl: 'https://thegraph.com/custom-subgraph',
 };
 
 describe('subgraph module', () => {
