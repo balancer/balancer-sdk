@@ -1,4 +1,4 @@
-import { Fragment, JsonFragment } from '@ethersproject/abi';
+import { Interface } from '@ethersproject/abi';
 import { Provider } from '@ethersproject/providers';
 import { Multicaller } from './multiCaller';
 import { BalancerNetworkConfig } from '@/types';
@@ -12,9 +12,7 @@ import elementPoolAbi from '../../abi/ConvergentCurvePool.json';
 import linearPoolAbi from '../../abi/LinearPool.json';
 
 export class MulticallerFactory {
-    private static readonly DEFAULT_ABI: Array<
-        Fragment | JsonFragment | string
-    > = [
+    private static readonly DEFAULT_INTERFACE: Interface = new Interface([
         ...new Map(
             [
                 ...vaultAbi,
@@ -25,17 +23,17 @@ export class MulticallerFactory {
                 ...linearPoolAbi,
             ].map((v) => [v.name, v]) // Remove duplicate entries using their names
         ).values(),
-    ];
+    ]);
 
     public static create(
         networkConfig: BalancerNetworkConfig,
         provider: Provider,
-        abi:
-            | string
-            | Array<
-                  Fragment | JsonFragment | string
-              > = MulticallerFactory.DEFAULT_ABI
+        contractInterface: Interface = MulticallerFactory.DEFAULT_INTERFACE
     ): Multicaller {
-        return new Multicaller(networkConfig.multicall, provider, abi);
+        return new Multicaller(
+            networkConfig.multicall,
+            provider,
+            contractInterface
+        );
     }
 }
