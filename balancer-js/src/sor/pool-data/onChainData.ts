@@ -2,7 +2,7 @@ import { formatFixed } from '@ethersproject/bignumber';
 import { Provider } from '@ethersproject/providers';
 import { PoolFilter, SubgraphPoolBase } from '@balancer-labs/sor';
 import { isSameAddress } from '@/lib/utils';
-import { MulticallerFactory } from '@/utils/multicall';
+import { MulticallerFactory } from '@/lib/utils/multicall';
 import { BalancerNetworkConfig } from '@/types';
 
 export async function getOnChainBalances(
