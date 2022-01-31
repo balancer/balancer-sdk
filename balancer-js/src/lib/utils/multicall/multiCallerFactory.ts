@@ -12,10 +12,10 @@ import elementPoolAbi from '../../abi/ConvergentCurvePool.json';
 import linearPoolAbi from '../../abi/LinearPool.json';
 
 export class MulticallerFactory {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private static readonly DEFAULT_ABI: any = Object.values(
-        // Remove duplicate entries using their names
-        Object.fromEntries(
+    private static readonly DEFAULT_ABI: Array<
+        Fragment | JsonFragment | string
+    > = [
+        ...new Map(
             [
                 ...vaultAbi,
                 ...aTokenRateProvider,
@@ -23,9 +23,9 @@ export class MulticallerFactory {
                 ...stablePoolAbi,
                 ...elementPoolAbi,
                 ...linearPoolAbi,
-            ].map((row) => [row.name, row])
-        )
-    );
+            ].map((v) => [v.name, v]) // Remove duplicate entries using their names
+        ).values(),
+    ];
 
     public static create(
         networkConfig: BalancerNetworkConfig,
