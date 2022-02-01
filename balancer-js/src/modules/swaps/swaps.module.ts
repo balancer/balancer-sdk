@@ -13,7 +13,7 @@ import { balancerVault } from '@/lib/constants/contracts';
 import { getLimitsForSlippage } from './helpers';
 
 import vaultAbi from '@/lib/abi/Vault.json';
-import { SorFactory } from '../../sor/sorFactory';
+import { SorFactory } from '../sor/sorFactory';
 
 export class Swaps {
     private readonly sor: SOR;

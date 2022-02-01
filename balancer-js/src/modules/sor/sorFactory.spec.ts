@@ -6,7 +6,7 @@ import {
     Network,
     BalancerSDK,
 } from '@/.';
-import { SorFactory } from '@/sor/sorFactory';
+import { SorFactory } from '@/modules/sor/sorFactory';
 import { mockPool, mockPoolDataService } from '@/test/lib/mockPool';
 
 dotenv.config();

@@ -2,7 +2,7 @@ import { BalancerSdkConfig } from '../types';
 import { Swaps } from './swaps/swaps.module';
 import { Relayer } from './relayer/relayer.module';
 import { SOR } from '@balancer-labs/sor';
-import { SorFactory } from '../sor/sorFactory';
+import { SorFactory } from './sor/sorFactory';
 import { BalancerNetworkConfig } from '..';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/contracts';
 import { Subgraph } from './subgraph/subgraph.module';

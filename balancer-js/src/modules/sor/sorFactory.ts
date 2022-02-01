@@ -10,9 +10,9 @@ import {
     BalancerNetworkConfig,
     BalancerSdkConfig,
     BalancerSdkSorConfig,
-} from '../types';
+} from '../../types';
 import { SubgraphTokenPriceService } from './token-price/subgraphTokenPriceService';
-import { BalancerSDK } from '..';
+import { BalancerSDK } from '../..';
 
 export class SorFactory {
     public static createSor(sdkConfig: BalancerSdkConfig): SOR {
