@@ -11,7 +11,7 @@ import {
 } from '../src/index';
 import { AAVE_DAI, AAVE_USDT, STABAL3PHANTOM } from './constants';
 
-import balancerRelayerAbi from '../src/abi/BalancerRelayer.json';
+import balancerRelayerAbi from '../src/lib/abi/BalancerRelayer.json';
 
 dotenv.config();
 
