@@ -12,11 +12,11 @@ import {
     BalancerSdkSorConfig,
 } from '../types';
 import { SubgraphTokenPriceService } from './token-price/subgraphTokenPriceService';
-import { BalancerSDK } from '..';
+import { getNetworkConfig } from '@/modules/sdk.helpers';
 
 export class SorFactory {
     public static createSor(sdkConfig: BalancerSdkConfig): SOR {
-        const network = BalancerSDK.getNetworkConfig(sdkConfig);
+        const network = getNetworkConfig(sdkConfig);
         const sorConfig = SorFactory.getSorConfig(sdkConfig);
         const provider = new JsonRpcProvider(sdkConfig.rpcUrl);
         const subgraphClient = createSubgraphClient(network.subgraphUrl);
