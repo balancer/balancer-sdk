@@ -54,8 +54,8 @@ export class SubgraphPoolDataService implements PoolDataService {
 
         return getOnChainBalances(
             mapped,
-            this.network.multicall,
-            this.network.vault,
+            this.network.addresses.contracts.multicall,
+            this.network.addresses.contracts.vault,
             this.provider
         );
     }
