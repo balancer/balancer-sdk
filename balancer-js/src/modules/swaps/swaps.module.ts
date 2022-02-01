@@ -1,19 +1,17 @@
 import { Contract } from '@ethersproject/contracts';
-import { SOR } from '@balancer-labs/sor';
-import { BalancerSdkConfig } from '../../types';
+import { SOR, SubgraphPoolBase } from '@balancer-labs/sor';
 import {
     BatchSwap,
     QueryWithSorInput,
     QueryWithSorOutput,
     SwapType,
 } from './types';
-import { SubgraphPoolBase } from '@/.';
 import { queryBatchSwap, queryBatchSwapWithSor } from './queryBatchSwap';
 import { balancerVault } from '@/lib/constants/contracts';
 import { getLimitsForSlippage } from './helpers';
-
 import vaultAbi from '@/lib/abi/Vault.json';
 import { SorFactory } from '../../sor/sorFactory';
+import { BalancerSdkConfig } from '@/types';
 
 export class Swaps {
     private readonly sor: SOR;
