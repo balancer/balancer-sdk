@@ -3,7 +3,7 @@ import {
     OrderDirection,
     Pool_OrderBy,
     SubgraphClient,
-} from '../../subgraph/subgraph';
+} from '@/modules/subgraph/subgraph';
 import { parseInt } from 'lodash';
 import { getOnChainBalances } from './onChainData';
 import { Provider } from '@ethersproject/providers';

@@ -1,5 +1,5 @@
 import { TokenPriceService } from '@balancer-labs/sor';
-import { SubgraphClient } from '../../subgraph/subgraph';
+import { SubgraphClient } from '@/modules/subgraph/subgraph';
 import { keyBy } from 'lodash';
 
 export class SubgraphTokenPriceService implements TokenPriceService {

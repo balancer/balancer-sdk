@@ -25,7 +25,7 @@
         "test": "ts-mocha --paths --recursive -p tsconfig.testing.json 'src/**/*.spec.ts'",
         "lint": "eslint ./src --ext .ts --max-warnings 0",
         "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
-        "generate": "graphql-codegen --config src/subgraph/codegen.yml -r dotenv/config",
+        "subgraph:generate": "graphql-codegen --config src/modules/subgraph/codegen.yml -r dotenv/config",
         "examples:run": "TS_NODE_PROJECT='tsconfig.testing.json' ts-node -r tsconfig-paths/register"
     },
     "devDependencies": {

@@ -18,7 +18,7 @@ import {
     BatchSwapStep,
     FetchPoolsInput,
 } from '../swaps/types';
-import { SubgraphPoolBase } from '@/.';
+import { SubgraphPoolBase } from '@balancer-labs/sor';
 
 import relayerLibraryAbi from '@/lib/abi/VaultActions.json';
 import aaveWrappingAbi from '@/lib/abi/AaveWrapping.json';
