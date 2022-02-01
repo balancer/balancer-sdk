@@ -1,6 +1,6 @@
 import { BalancerSdkConfig } from '@/types';
 import { GraphQLClient } from 'graphql-request';
-import { BalancerSDK } from '../sdk.module';
+import { getNetworkConfig } from '../sdk.helpers';
 import { getSdk } from './generated/balancer-subgraph-types';
 import { SubgraphClient } from './subgraph';
 
@@ -9,7 +9,7 @@ export class Subgraph {
     public readonly client: SubgraphClient;
 
     constructor(config: BalancerSdkConfig) {
-        this.url = BalancerSDK.getNetworkConfig(config).subgraphUrl;
+        this.url = getNetworkConfig(config).subgraphUrl;
         this.client = this.initClient();
     }
 
