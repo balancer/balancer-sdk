@@ -27,18 +27,18 @@ export interface BalancerSdkSorConfig {
 
 export interface BalancerNetworkConfig {
     chainId: Network;
-    vault: string;
-    weth: string;
-    multicall: string;
-    staBal3Pool?: {
-        id: string;
-        address: string;
+    addresses: {
+        contracts: {
+            vault: string;
+            multicall: string;
+        };
+        tokens: {
+            wrappedNativeAsset: string;
+        };
     };
-    wethStaBal3?: {
-        id: string;
-        address: string;
+    urls: {
+        subgraph: string;
     };
-    subgraphUrl: string;
 }
 
 export enum PoolSpecialization {

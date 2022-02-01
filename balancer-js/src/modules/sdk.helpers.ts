@@ -1,4 +1,4 @@
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/contracts';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { BalancerNetworkConfig, BalancerSdkConfig } from '@/types';
 
 export function getNetworkConfig(
@@ -9,12 +9,19 @@ export function getNetworkConfig(
 
         return {
             ...networkConfig,
-            subgraphUrl: config.customSubgraphUrl ?? networkConfig.subgraphUrl,
+            urls: {
+                ...networkConfig.urls,
+                subgraph:
+                    config.customSubgraphUrl ?? networkConfig.urls.subgraph,
+            },
         };
     }
 
     return {
         ...config.network,
-        subgraphUrl: config.customSubgraphUrl ?? config.network.subgraphUrl,
+        urls: {
+            ...config.network.urls,
+            subgraph: config.customSubgraphUrl ?? config.network.urls.subgraph,
+        },
     };
 }

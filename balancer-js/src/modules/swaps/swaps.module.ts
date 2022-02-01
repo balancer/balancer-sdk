@@ -7,7 +7,7 @@ import {
     SwapType,
 } from './types';
 import { queryBatchSwap, queryBatchSwapWithSor } from './queryBatchSwap';
-import { balancerVault } from '@/lib/constants/contracts';
+import { balancerVault } from '@/lib/constants/config';
 import { getLimitsForSlippage } from './helpers';
 import vaultAbi from '@/lib/abi/Vault.json';
 import { BalancerSdkConfig } from '@/types';
