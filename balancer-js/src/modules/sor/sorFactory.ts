@@ -10,7 +10,7 @@ import {
     BalancerNetworkConfig,
     BalancerSdkConfig,
     BalancerSdkSorConfig,
-} from '../../types';
+} from '@/types';
 import { SubgraphTokenPriceService } from './token-price/subgraphTokenPriceService';
 import { getNetworkConfig } from '@/modules/sdk.helpers';
 
