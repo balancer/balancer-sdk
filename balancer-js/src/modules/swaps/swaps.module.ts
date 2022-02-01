@@ -10,8 +10,8 @@ import { queryBatchSwap, queryBatchSwapWithSor } from './queryBatchSwap';
 import { balancerVault } from '@/lib/constants/contracts';
 import { getLimitsForSlippage } from './helpers';
 import vaultAbi from '@/lib/abi/Vault.json';
-import { SorFactory } from '@/modules/sor/sorFactory';
 import { BalancerSdkConfig } from '@/types';
+import { Sor } from '@/modules/sor/sor.module';
 
 export class Swaps {
     private readonly sor: SOR;
@@ -20,7 +20,7 @@ export class Swaps {
         if (sorOrConfig instanceof SOR) {
             this.sor = sorOrConfig;
         } else {
-            this.sor = SorFactory.createSor(sorOrConfig);
+            this.sor = new Sor(sorOrConfig);
         }
     }
 

@@ -6,8 +6,8 @@ import {
     Network,
     BalancerSDK,
 } from '@/.';
-import { SorFactory } from '@/modules/sor/sorFactory';
 import { mockPool, mockPoolDataService } from '@/test/lib/mockPool';
+import { Sor } from './sor.module';
 
 dotenv.config();
 
@@ -23,10 +23,10 @@ const sdkConfig: BalancerSdkConfig = {
     sor: sorConfig,
 };
 
-describe('sorFactory', () => {
-    context('createSor', () => {
+describe('sor module', () => {
+    context('instantiation', () => {
         it('instantiate via module', async () => {
-            const sor = SorFactory.createSor(sdkConfig);
+            const sor = new Sor(sdkConfig);
             await sor.fetchPools();
             const pools = sor.getPools();
             expect(pools).to.deep.eq([mockPool]);
