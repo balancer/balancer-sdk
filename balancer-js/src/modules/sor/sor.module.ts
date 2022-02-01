@@ -10,31 +10,31 @@ import {
     BalancerNetworkConfig,
     BalancerSdkConfig,
     BalancerSdkSorConfig,
-} from '../types';
+} from '@/types';
 import { SubgraphTokenPriceService } from './token-price/subgraphTokenPriceService';
 import { getNetworkConfig } from '@/modules/sdk.helpers';
 
-export class SorFactory {
-    public static createSor(sdkConfig: BalancerSdkConfig): SOR {
+export class Sor extends SOR {
+    constructor(sdkConfig: BalancerSdkConfig) {
         const network = getNetworkConfig(sdkConfig);
-        const sorConfig = SorFactory.getSorConfig(sdkConfig);
+        const sorConfig = Sor.getSorConfig(sdkConfig);
         const provider = new JsonRpcProvider(sdkConfig.rpcUrl);
         const subgraphClient = createSubgraphClient(network.subgraphUrl);
 
-        const poolDataService = SorFactory.getPoolDataService(
+        const poolDataService = Sor.getPoolDataService(
             network,
             sorConfig,
             provider,
             subgraphClient
         );
 
-        const tokenPriceService = SorFactory.getTokenPriceService(
+        const tokenPriceService = Sor.getTokenPriceService(
             network,
             sorConfig,
             subgraphClient
         );
 
-        return new SOR(provider, network, poolDataService, tokenPriceService);
+        super(provider, network, poolDataService, tokenPriceService);
     }
 
     private static getSorConfig(
