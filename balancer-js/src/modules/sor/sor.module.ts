@@ -1,4 +1,4 @@
-import { SOR, TokenPriceService } from '@balancer-labs/sor';
+import { SOR, SorConfig, TokenPriceService } from '@balancer-labs/sor';
 import { Provider, JsonRpcProvider } from '@ethersproject/providers';
 import { SubgraphPoolDataService } from './pool-data/subgraphPoolDataService';
 import { CoingeckoTokenPriceService } from './token-price/coingeckoTokenPriceService';
@@ -18,8 +18,9 @@ export class Sor extends SOR {
     constructor(sdkConfig: BalancerSdkConfig) {
         const network = getNetworkConfig(sdkConfig);
         const sorConfig = Sor.getSorConfig(sdkConfig);
+        const sorNetworkConfig = Sor.getSorNetworkConfig(network);
         const provider = new JsonRpcProvider(sdkConfig.rpcUrl);
-        const subgraphClient = createSubgraphClient(network.subgraphUrl);
+        const subgraphClient = createSubgraphClient(network.urls.subgraph);
 
         const poolDataService = Sor.getPoolDataService(
             network,
@@ -34,7 +35,7 @@ export class Sor extends SOR {
             subgraphClient
         );
 
-        super(provider, network, poolDataService, tokenPriceService);
+        super(provider, sorNetworkConfig, poolDataService, tokenPriceService);
     }
 
     private static getSorConfig(
@@ -45,6 +46,18 @@ export class Sor extends SOR {
             poolDataService: 'subgraph',
             fetchOnChainBalances: true,
             ...config.sor,
+        };
+    }
+
+    private static getSorNetworkConfig(
+        network: BalancerNetworkConfig
+    ): SorConfig {
+        return {
+            ...network,
+            vault: network.addresses.contracts.vault,
+            weth: network.addresses.tokens.wrappedNativeAsset,
+            staBal3Pool: network.pools?.staBal3Pool,
+            wethStaBal3: network.pools?.wethStaBal3,
         };
     }
 
@@ -72,7 +85,10 @@ export class Sor extends SOR {
         if (typeof sorConfig.tokenPriceService === 'object') {
             return sorConfig.tokenPriceService;
         } else if (sorConfig.tokenPriceService === 'subgraph') {
-            new SubgraphTokenPriceService(subgraphClient, network.weth);
+            new SubgraphTokenPriceService(
+                subgraphClient,
+                network.addresses.tokens.wrappedNativeAsset
+            );
         }
 
         return new CoingeckoTokenPriceService(network.chainId);

@@ -9,7 +9,7 @@ export class Subgraph {
     public readonly client: SubgraphClient;
 
     constructor(config: BalancerSdkConfig) {
-        this.url = getNetworkConfig(config).subgraphUrl;
+        this.url = getNetworkConfig(config).urls.subgraph;
         this.client = this.initClient();
     }
 
