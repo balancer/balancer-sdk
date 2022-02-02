@@ -39,7 +39,16 @@ export interface BalancerNetworkConfig {
     urls: {
         subgraph: string;
     };
+    pools: {
+        staBal3Pool?: PoolReference;
+        wethStaBal3?: PoolReference;
+    };
 }
+
+export type PoolReference = {
+    id: string;
+    address: string;
+};
 
 export enum PoolSpecialization {
     GeneralPool = 0,

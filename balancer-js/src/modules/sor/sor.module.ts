@@ -13,7 +13,6 @@ import {
 } from '@/types';
 import { SubgraphTokenPriceService } from './token-price/subgraphTokenPriceService';
 import { getNetworkConfig } from '@/modules/sdk.helpers';
-import { POOLS } from '@/lib/constants/pools';
 
 export class Sor extends SOR {
     constructor(sdkConfig: BalancerSdkConfig) {
@@ -57,7 +56,8 @@ export class Sor extends SOR {
             ...network,
             vault: network.addresses.contracts.vault,
             weth: network.addresses.tokens.wrappedNativeAsset,
-            ...POOLS[network.chainId],
+            staBal3Pool: network.pools?.staBal3Pool,
+            wethStaBal3: network.pools?.wethStaBal3,
         };
     }
 
