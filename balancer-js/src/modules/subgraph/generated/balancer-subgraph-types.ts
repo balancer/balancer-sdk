@@ -21,12 +21,12 @@ export type Scalars = {
 export type AmpUpdate = {
   __typename?: 'AmpUpdate';
   endAmp: Scalars['BigInt'];
-  endTimestamp: Scalars['Int'];
+  endTimestamp: Scalars['BigInt'];
   id: Scalars['ID'];
   poolId: Pool;
   scheduledTimestamp: Scalars['Int'];
   startAmp: Scalars['BigInt'];
-  startTimestamp: Scalars['Int'];
+  startTimestamp: Scalars['BigInt'];
 };
 
 export type AmpUpdate_Filter = {
@@ -38,14 +38,14 @@ export type AmpUpdate_Filter = {
   endAmp_lte?: InputMaybe<Scalars['BigInt']>;
   endAmp_not?: InputMaybe<Scalars['BigInt']>;
   endAmp_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
-  endTimestamp?: InputMaybe<Scalars['Int']>;
-  endTimestamp_gt?: InputMaybe<Scalars['Int']>;
-  endTimestamp_gte?: InputMaybe<Scalars['Int']>;
-  endTimestamp_in?: InputMaybe<Array<Scalars['Int']>>;
-  endTimestamp_lt?: InputMaybe<Scalars['Int']>;
-  endTimestamp_lte?: InputMaybe<Scalars['Int']>;
-  endTimestamp_not?: InputMaybe<Scalars['Int']>;
-  endTimestamp_not_in?: InputMaybe<Array<Scalars['Int']>>;
+  endTimestamp?: InputMaybe<Scalars['BigInt']>;
+  endTimestamp_gt?: InputMaybe<Scalars['BigInt']>;
+  endTimestamp_gte?: InputMaybe<Scalars['BigInt']>;
+  endTimestamp_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  endTimestamp_lt?: InputMaybe<Scalars['BigInt']>;
+  endTimestamp_lte?: InputMaybe<Scalars['BigInt']>;
+  endTimestamp_not?: InputMaybe<Scalars['BigInt']>;
+  endTimestamp_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -84,14 +84,14 @@ export type AmpUpdate_Filter = {
   startAmp_lte?: InputMaybe<Scalars['BigInt']>;
   startAmp_not?: InputMaybe<Scalars['BigInt']>;
   startAmp_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
-  startTimestamp?: InputMaybe<Scalars['Int']>;
-  startTimestamp_gt?: InputMaybe<Scalars['Int']>;
-  startTimestamp_gte?: InputMaybe<Scalars['Int']>;
-  startTimestamp_in?: InputMaybe<Array<Scalars['Int']>>;
-  startTimestamp_lt?: InputMaybe<Scalars['Int']>;
-  startTimestamp_lte?: InputMaybe<Scalars['Int']>;
-  startTimestamp_not?: InputMaybe<Scalars['Int']>;
-  startTimestamp_not_in?: InputMaybe<Array<Scalars['Int']>>;
+  startTimestamp?: InputMaybe<Scalars['BigInt']>;
+  startTimestamp_gt?: InputMaybe<Scalars['BigInt']>;
+  startTimestamp_gte?: InputMaybe<Scalars['BigInt']>;
+  startTimestamp_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  startTimestamp_lt?: InputMaybe<Scalars['BigInt']>;
+  startTimestamp_lte?: InputMaybe<Scalars['BigInt']>;
+  startTimestamp_not?: InputMaybe<Scalars['BigInt']>;
+  startTimestamp_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
 };
 
 export enum AmpUpdate_OrderBy {
@@ -289,24 +289,24 @@ export type Block_Height = {
 
 export type GradualWeightUpdate = {
   __typename?: 'GradualWeightUpdate';
-  endTimestamp: Scalars['Int'];
+  endTimestamp: Scalars['BigInt'];
   endWeights: Array<Scalars['BigInt']>;
   id: Scalars['ID'];
   poolId: Pool;
   scheduledTimestamp: Scalars['Int'];
-  startTimestamp: Scalars['Int'];
+  startTimestamp: Scalars['BigInt'];
   startWeights: Array<Scalars['BigInt']>;
 };
 
 export type GradualWeightUpdate_Filter = {
-  endTimestamp?: InputMaybe<Scalars['Int']>;
-  endTimestamp_gt?: InputMaybe<Scalars['Int']>;
-  endTimestamp_gte?: InputMaybe<Scalars['Int']>;
-  endTimestamp_in?: InputMaybe<Array<Scalars['Int']>>;
-  endTimestamp_lt?: InputMaybe<Scalars['Int']>;
-  endTimestamp_lte?: InputMaybe<Scalars['Int']>;
-  endTimestamp_not?: InputMaybe<Scalars['Int']>;
-  endTimestamp_not_in?: InputMaybe<Array<Scalars['Int']>>;
+  endTimestamp?: InputMaybe<Scalars['BigInt']>;
+  endTimestamp_gt?: InputMaybe<Scalars['BigInt']>;
+  endTimestamp_gte?: InputMaybe<Scalars['BigInt']>;
+  endTimestamp_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  endTimestamp_lt?: InputMaybe<Scalars['BigInt']>;
+  endTimestamp_lte?: InputMaybe<Scalars['BigInt']>;
+  endTimestamp_not?: InputMaybe<Scalars['BigInt']>;
+  endTimestamp_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
   endWeights?: InputMaybe<Array<Scalars['BigInt']>>;
   endWeights_contains?: InputMaybe<Array<Scalars['BigInt']>>;
   endWeights_not?: InputMaybe<Array<Scalars['BigInt']>>;
@@ -341,14 +341,14 @@ export type GradualWeightUpdate_Filter = {
   scheduledTimestamp_lte?: InputMaybe<Scalars['Int']>;
   scheduledTimestamp_not?: InputMaybe<Scalars['Int']>;
   scheduledTimestamp_not_in?: InputMaybe<Array<Scalars['Int']>>;
-  startTimestamp?: InputMaybe<Scalars['Int']>;
-  startTimestamp_gt?: InputMaybe<Scalars['Int']>;
-  startTimestamp_gte?: InputMaybe<Scalars['Int']>;
-  startTimestamp_in?: InputMaybe<Array<Scalars['Int']>>;
-  startTimestamp_lt?: InputMaybe<Scalars['Int']>;
-  startTimestamp_lte?: InputMaybe<Scalars['Int']>;
-  startTimestamp_not?: InputMaybe<Scalars['Int']>;
-  startTimestamp_not_in?: InputMaybe<Array<Scalars['Int']>>;
+  startTimestamp?: InputMaybe<Scalars['BigInt']>;
+  startTimestamp_gt?: InputMaybe<Scalars['BigInt']>;
+  startTimestamp_gte?: InputMaybe<Scalars['BigInt']>;
+  startTimestamp_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  startTimestamp_lt?: InputMaybe<Scalars['BigInt']>;
+  startTimestamp_lte?: InputMaybe<Scalars['BigInt']>;
+  startTimestamp_not?: InputMaybe<Scalars['BigInt']>;
+  startTimestamp_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
   startWeights?: InputMaybe<Array<Scalars['BigInt']>>;
   startWeights_contains?: InputMaybe<Array<Scalars['BigInt']>>;
   startWeights_not?: InputMaybe<Array<Scalars['BigInt']>>;
