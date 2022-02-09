@@ -6,12 +6,12 @@ directive @subgraphId(id: String) on OBJECT
 
 type AmpUpdate {
   endAmp: BigInt!
-  endTimestamp: Int!
+  endTimestamp: BigInt!
   id: ID!
   poolId: Pool!
   scheduledTimestamp: Int!
   startAmp: BigInt!
-  startTimestamp: Int!
+  startTimestamp: BigInt!
 }
 
 input AmpUpdate_filter {
@@ -23,14 +23,14 @@ input AmpUpdate_filter {
   endAmp_lte: BigInt
   endAmp_not: BigInt
   endAmp_not_in: [BigInt!]
-  endTimestamp: Int
-  endTimestamp_gt: Int
-  endTimestamp_gte: Int
-  endTimestamp_in: [Int!]
-  endTimestamp_lt: Int
-  endTimestamp_lte: Int
-  endTimestamp_not: Int
-  endTimestamp_not_in: [Int!]
+  endTimestamp: BigInt
+  endTimestamp_gt: BigInt
+  endTimestamp_gte: BigInt
+  endTimestamp_in: [BigInt!]
+  endTimestamp_lt: BigInt
+  endTimestamp_lte: BigInt
+  endTimestamp_not: BigInt
+  endTimestamp_not_in: [BigInt!]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -69,14 +69,14 @@ input AmpUpdate_filter {
   startAmp_lte: BigInt
   startAmp_not: BigInt
   startAmp_not_in: [BigInt!]
-  startTimestamp: Int
-  startTimestamp_gt: Int
-  startTimestamp_gte: Int
-  startTimestamp_in: [Int!]
-  startTimestamp_lt: Int
-  startTimestamp_lte: Int
-  startTimestamp_not: Int
-  startTimestamp_not_in: [Int!]
+  startTimestamp: BigInt
+  startTimestamp_gt: BigInt
+  startTimestamp_gte: BigInt
+  startTimestamp_in: [BigInt!]
+  startTimestamp_lt: BigInt
+  startTimestamp_lte: BigInt
+  startTimestamp_not: BigInt
+  startTimestamp_not_in: [BigInt!]
 }
 
 enum AmpUpdate_orderBy {
@@ -268,24 +268,24 @@ input Block_height {
 scalar Bytes
 
 type GradualWeightUpdate {
-  endTimestamp: Int!
+  endTimestamp: BigInt!
   endWeights: [BigInt!]!
   id: ID!
   poolId: Pool!
   scheduledTimestamp: Int!
-  startTimestamp: Int!
+  startTimestamp: BigInt!
   startWeights: [BigInt!]!
 }
 
 input GradualWeightUpdate_filter {
-  endTimestamp: Int
-  endTimestamp_gt: Int
-  endTimestamp_gte: Int
-  endTimestamp_in: [Int!]
-  endTimestamp_lt: Int
-  endTimestamp_lte: Int
-  endTimestamp_not: Int
-  endTimestamp_not_in: [Int!]
+  endTimestamp: BigInt
+  endTimestamp_gt: BigInt
+  endTimestamp_gte: BigInt
+  endTimestamp_in: [BigInt!]
+  endTimestamp_lt: BigInt
+  endTimestamp_lte: BigInt
+  endTimestamp_not: BigInt
+  endTimestamp_not_in: [BigInt!]
   endWeights: [BigInt!]
   endWeights_contains: [BigInt!]
   endWeights_not: [BigInt!]
@@ -320,14 +320,14 @@ input GradualWeightUpdate_filter {
   scheduledTimestamp_lte: Int
   scheduledTimestamp_not: Int
   scheduledTimestamp_not_in: [Int!]
-  startTimestamp: Int
-  startTimestamp_gt: Int
-  startTimestamp_gte: Int
-  startTimestamp_in: [Int!]
-  startTimestamp_lt: Int
-  startTimestamp_lte: Int
-  startTimestamp_not: Int
-  startTimestamp_not_in: [Int!]
+  startTimestamp: BigInt
+  startTimestamp_gt: BigInt
+  startTimestamp_gte: BigInt
+  startTimestamp_in: [BigInt!]
+  startTimestamp_lt: BigInt
+  startTimestamp_lte: BigInt
+  startTimestamp_not: BigInt
+  startTimestamp_not_in: [BigInt!]
   startWeights: [BigInt!]
   startWeights_contains: [BigInt!]
   startWeights_not: [BigInt!]
