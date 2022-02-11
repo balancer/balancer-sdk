@@ -32,7 +32,7 @@ Vault must have approvals for tokens
 async function runRelayerSwapUnwrapExactIn() {
     const config: BalancerSdkConfig = {
         network: Network.KOVAN,
-        rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+        rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
     };
 
     const provider = new JsonRpcProvider(config.rpcUrl);
@@ -112,7 +112,7 @@ Vault must have approvals for tokens
 async function runRelayerSwapUnwrapExactOut() {
     const config: BalancerSdkConfig = {
         network: Network.KOVAN,
-        rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,       
+        rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
     };
 
     const provider = new JsonRpcProvider(config.rpcUrl);

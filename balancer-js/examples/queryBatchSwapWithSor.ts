@@ -13,7 +13,7 @@ dotenv.config();
 async function runQueryBatchSwapWithSor() {
     const config: BalancerSdkConfig = {
         network: Network.KOVAN,
-        rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+        rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
     };
     const balancer = new BalancerSDK(config);
 

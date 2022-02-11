@@ -11,7 +11,7 @@ import { BalancerSDK, ConfigSdk, Network } from '@balancer-labs/sdk';
 
 const config: ConfigSdk = {
     network: Network.MAINNET,
-    rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+    rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
 };
 const balancer = new BalancerSDK(config);
 ```
