@@ -27,6 +27,15 @@
         "generate": "graphql-codegen --config src/subgraph/codegen.yml -r dotenv/config"
     },
     "devDependencies": {
+        "@graphql-codegen/add": "^3.1.0",
+        "@graphql-codegen/cli": "^2.3.0",
+        "@graphql-codegen/introspection": "^2.1.0",
+        "@graphql-codegen/schema-ast": "^2.4.0",
+        "@graphql-codegen/typescript": "2.4.0",
+        "@graphql-codegen/typescript-document-nodes": "^2.2.0",
+        "@graphql-codegen/typescript-graphql-request": "^4.3.0",
+        "@graphql-codegen/typescript-operations": "^2.2.0",
+        "@graphql-codegen/typescript-resolvers": "2.4.1",
         "@rollup/plugin-commonjs": "^21.0.1",
         "@rollup/plugin-json": "^4.1.0",
         "@rollup/plugin-node-resolve": "^13.0.0",
@@ -50,27 +59,18 @@
         "tiny-invariant": "^1.1.0",
         "ts-node": "^10.0.0",
         "typechain": "^5.1.1",
-        "typescript": "^4.0.2",
-        "@graphql-codegen/add": "^3.1.0",
-        "@graphql-codegen/cli": "^2.3.0",
-        "@graphql-codegen/introspection": "^2.1.0",
-        "@graphql-codegen/schema-ast": "^2.4.0",
-        "@graphql-codegen/typescript": "2.4.0",
-        "@graphql-codegen/typescript-document-nodes": "^2.2.0",
-        "@graphql-codegen/typescript-graphql-request": "^4.3.0",
-        "@graphql-codegen/typescript-operations": "^2.2.0",
-        "@graphql-codegen/typescript-resolvers": "2.4.1"
+        "typescript": "^4.0.2"
     },
     "dependencies": {
-        "@balancer-labs/sor": "3.0.0-beta.0",
+        "@balancer-labs/sor": "3.0.0-beta.1",
         "@ethersproject/abi": "^5.5.0",
         "@ethersproject/abstract-signer": "^5.5.0",
         "@ethersproject/contracts": "^5.5.0",
         "@ethersproject/providers": "^5.5.0",
-        "lodash": "^4.17.21",
         "axios": "^0.24.0",
         "graphql": "^15.6.1",
-        "graphql-request": "^3.5.0"
+        "graphql-request": "^3.5.0",
+        "lodash": "^4.17.21"
     },
     "peerDependencies": {
         "@ethersproject/abi": "^5.4.0",
