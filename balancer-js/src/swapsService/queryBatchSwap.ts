@@ -65,6 +65,15 @@ export async function queryBatchSwapWithSor(
             queryWithSor.amounts[i].toString(),
             sor
         );
+        if (!swap.returnAmount.gt(Zero))
+            // Throw here because swaps with 0 amounts has no path and has misleading result for query
+            throw new Error(
+                `queryBatchSwapWithSor: SOR Swap returned 0 amount, ${
+                    queryWithSor.tokensIn[i]
+                }>${queryWithSor.tokensOut[i]}: ${queryWithSor.amounts[
+                    i
+                ].toString()}`
+            );
         swaps.push(swap.swaps);
         assetArray.push(swap.tokenAddresses);
     }
@@ -76,8 +85,8 @@ export async function queryBatchSwapWithSor(
         queryWithSor.swapType === SwapType.SwapExactIn
             ? queryWithSor.tokensOut
             : queryWithSor.tokensIn;
-    const returnAmounts: string[] = Array(returnTokens.length).fill(Zero);
-    let deltas: BigNumberish[] = Array(batchedSwaps.assets.length).fill(Zero);
+    const returnAmounts: string[] = Array(returnTokens.length).fill('0');
+    let deltas: BigNumberish[] = Array(batchedSwaps.assets.length).fill('0');
     try {
         // Onchain query
         deltas = await queryBatchSwap(
@@ -97,7 +106,9 @@ export async function queryBatchSwapWithSor(
             );
         }
     } catch (err) {
-        console.error(`queryBatchSwapTokensIn error: ${err}`);
+        throw new Error(
+            `queryBatchSwapWithSor: Error duing onchain query ${err}`
+        );
     }
 
     return {
