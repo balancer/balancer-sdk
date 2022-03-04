@@ -1,1 +1,5 @@
-export abstract class iPoolType {}
+import { PoolTypeCalcs } from './modules/types';
+
+export interface PoolType {
+    calcs: PoolTypeCalcs;
+}
