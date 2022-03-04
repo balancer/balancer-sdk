@@ -1,6 +1,6 @@
-import { Calcs } from './modules/stable/calcs.module';
+import { Liquidity } from './concerns/stable/liquidity.concern';
 import { PoolType } from './pool-type.interface';
 
 export class Stable implements PoolType {
-    constructor(public calcs = new Calcs()) {}
+    constructor(public liquidity = new Liquidity()) {}
 }

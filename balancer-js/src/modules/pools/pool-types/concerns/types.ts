@@ -1,7 +1,7 @@
 import { BigNumberish } from '@ethersproject/bignumber';
 
-export interface PoolTypeCalcs {
-    totalLiquidity: (
+export interface LiquidityConcern {
+    calcTotal: (
         tokenBalances: BigNumberish[],
         tokenDecimals: number[],
         tokenPriceRates: BigNumberish[],

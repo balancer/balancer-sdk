@@ -1,5 +1,5 @@
-import { PoolTypeCalcs } from './modules/types';
+import { LiquidityConcern } from './concerns/types';
 
 export interface PoolType {
-    calcs: PoolTypeCalcs;
+    liquidity: LiquidityConcern;
 }
