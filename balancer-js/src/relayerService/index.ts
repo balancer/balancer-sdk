@@ -2,6 +2,7 @@ import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Interface } from '@ethersproject/abi';
 import { MaxUint256, WeiPerEther, Zero } from '@ethersproject/constants';
 
+import { BalancerError, BalancerErrorCode } from '../balancerErrors';
 import { SwapsService } from '../swapsService';
 import {
     EncodeBatchSwapInput,
@@ -181,11 +182,8 @@ export class RelayerService {
         });
 
         // This is a safety check to avoid issues when a swap path exists with 0 value
-        if (queryResult.returnAmounts.includes('0')) {
-            throw new Error(
-                `exitPoolAndBatchSwap: queryBatchSwapWithSor returning 0 amounts: ${queryResult.returnAmounts.toString()}`
-            );
-        }
+        if (queryResult.returnAmounts.includes('0'))
+            throw new BalancerError(BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT);
 
         // Update swap amounts with ref outputs from exitPool
         queryResult.swaps.forEach((swap) => {
@@ -288,11 +286,8 @@ export class RelayerService {
         });
 
         // This is a safety check to avoid issues when a swap path exists with 0 value
-        if (queryResult.returnAmounts.includes('0')) {
-            throw new Error(
-                `swapUnwrapAaveStaticExactIn: queryBatchSwapWithSor returning 0 amounts: ${queryResult.returnAmounts.toString()}`
-            );
-        }
+        if (queryResult.returnAmounts.includes('0'))
+            throw new BalancerError(BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT);
 
         // Gets limits array for tokensIn>wrappedTokens based on input slippage
         const limits = SwapsService.getLimitsForSlippage(
@@ -322,9 +317,10 @@ export class RelayerService {
 
                 // This is a safety check to avoid issues when a swap path exists with 0 value
                 if (!amountUnwrapped.gt(Zero))
-                    throw new Error(
-                        `swapUnwrapAaveStaticExactIn: 0 unwrapped amount.`
+                    throw new BalancerError(
+                        BalancerErrorCode.UNWRAP_ZERO_AMOUNT
                     );
+
                 return amountUnwrapped;
             }
         );
@@ -368,9 +364,8 @@ export class RelayerService {
 
             // This is a safety check to avoid issues when a swap path exists with 0 value
             if (!amountWrapped.gt(Zero))
-                throw new Error(
-                    `swapUnwrapAaveStaticExactOut: 0 wrapped exact out amount.`
-                );
+                throw new BalancerError(BalancerErrorCode.WRAP_ZERO_AMOUNT);
+
             return amountWrapped.toString();
         });
 
@@ -384,11 +379,8 @@ export class RelayerService {
         });
 
         // This is a safety check to avoid issues when a swap path exists with 0 value
-        if (queryResult.returnAmounts.includes('0')) {
-            throw new Error(
-                `swapUnwrapAaveStaticExactIn: queryBatchSwapWithSor returning 0 amounts: ${queryResult.returnAmounts.toString()}`
-            );
-        }
+        if (queryResult.returnAmounts.includes('0'))
+            throw new BalancerError(BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT);
 
         // Gets limits array for tokensIn>wrappedTokens based on input slippage
         const limits = SwapsService.getLimitsForSlippage(

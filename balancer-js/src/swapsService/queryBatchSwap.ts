@@ -2,6 +2,7 @@ import { BigNumberish } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 import { AddressZero, Zero } from '@ethersproject/constants';
 import { SOR, SwapTypes, SwapInfo } from '@balancer-labs/sor';
+import { BalancerError, BalancerErrorCode } from '../balancerErrors';
 import {
     SwapType,
     BatchSwapStep,
@@ -67,13 +68,8 @@ export async function queryBatchSwapWithSor(
         );
         if (!swap.returnAmount.gt(Zero))
             // Throw here because swaps with 0 amounts has no path and has misleading result for query
-            throw new Error(
-                `queryBatchSwapWithSor: SOR Swap returned 0 amount, ${
-                    queryWithSor.tokensIn[i]
-                }>${queryWithSor.tokensOut[i]}: ${queryWithSor.amounts[
-                    i
-                ].toString()}`
-            );
+            throw new BalancerError(BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT);
+
         swaps.push(swap.swaps);
         assetArray.push(swap.tokenAddresses);
     }
@@ -106,9 +102,7 @@ export async function queryBatchSwapWithSor(
             );
         }
     } catch (err) {
-        throw new Error(
-            `queryBatchSwapWithSor: Error duing onchain query ${err}`
-        );
+        throw new BalancerError(BalancerErrorCode.QUERY_BATCH_SWAP);
     }
 
     return {
