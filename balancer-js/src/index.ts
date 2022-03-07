@@ -9,6 +9,7 @@ export * from './swapsService/helpers';
 export * from './constants/network';
 export * from './sdk';
 export * from './relayerService/index';
+export * from './balancerErrors';
 export {
     SwapInfo,
     SubgraphPoolBase,
