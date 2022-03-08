@@ -9,7 +9,7 @@ export class StablePoolLiquidity implements LiquidityConcern {
         tokenPrices: (number | null)[]
     ): string {
         // TODO implementation
-        console.log(tokenBalances, tokenDecimals, tokenPriceRates, tokenPrices)
+        console.log(tokenBalances, tokenDecimals, tokenPriceRates, tokenPrices);
         return '1000';
     }
 }
