@@ -2,6 +2,7 @@ import { BigNumberish } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 import { AddressZero, Zero } from '@ethersproject/constants';
 import { SOR, SwapTypes, SwapInfo } from '@balancer-labs/sor';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
     SwapType,
     BatchSwapStep,
@@ -65,6 +66,10 @@ export async function queryBatchSwapWithSor(
             queryWithSor.amounts[i].toString(),
             sor
         );
+        if (!swap.returnAmount.gt(Zero))
+            // Throw here because swaps with 0 amounts has no path and has misleading result for query
+            throw new BalancerError(BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT);
+
         swaps.push(swap.swaps);
         assetArray.push(swap.tokenAddresses);
     }
@@ -76,8 +81,8 @@ export async function queryBatchSwapWithSor(
         queryWithSor.swapType === SwapType.SwapExactIn
             ? queryWithSor.tokensOut
             : queryWithSor.tokensIn;
-    const returnAmounts: string[] = Array(returnTokens.length).fill(Zero);
-    let deltas: BigNumberish[] = Array(batchedSwaps.assets.length).fill(Zero);
+    const returnAmounts: string[] = Array(returnTokens.length).fill('0');
+    let deltas: BigNumberish[] = Array(batchedSwaps.assets.length).fill('0');
     try {
         // Onchain query
         deltas = await queryBatchSwap(
@@ -97,7 +102,7 @@ export async function queryBatchSwapWithSor(
             );
         }
     } catch (err) {
-        console.error(`queryBatchSwapTokensIn error: ${err}`);
+        throw new BalancerError(BalancerErrorCode.QUERY_BATCH_SWAP);
     }
 
     return {
