@@ -34,6 +34,7 @@ export interface BalancerNetworkConfig {
         };
         tokens: {
             wrappedNativeAsset: string;
+            lbpRaisingTokens?: string[];
         };
     };
     urls: {
@@ -42,6 +43,8 @@ export interface BalancerNetworkConfig {
     pools: {
         staBal3Pool?: PoolReference;
         wethStaBal3?: PoolReference;
+        bbausd?: PoolReference;
+        wethBBausd?: PoolReference;
     };
 }
 
