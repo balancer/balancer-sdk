@@ -1,6 +1,6 @@
 {
     "name": "@balancer-labs/sdk",
-    "version": "0.1.1",
+    "version": "0.1.4",
     "description": "JavaScript SDK for interacting with the Balancer Protocol V2",
     "license": "GPL-3.0-only",
     "homepage": "https://github.com/balancer-labs/balancer-sdk/balancer-js#readme",
@@ -37,6 +37,7 @@
         "@ethersproject/constants": "^5.4.0",
         "@ethersproject/contracts": "^5.4.0",
         "@ethersproject/providers": "^5.4.5",
+        "@ethersproject/wallet": "^5.5.0",
         "@graphql-codegen/add": "^3.1.0",
         "@graphql-codegen/cli": "^2.3.0",
         "@graphql-codegen/introspection": "^2.1.0",
@@ -74,7 +75,7 @@
         "typescript": "^4.0.2"
     },
     "dependencies": {
-        "@balancer-labs/sor": "3.0.0-beta.0",
+        "@balancer-labs/sor": "^4.0.0-beta.0",
         "axios": "^0.24.0",
         "graphql": "^15.6.1",
         "graphql-request": "^3.5.0",
