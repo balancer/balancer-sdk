@@ -30,14 +30,9 @@ export interface BalancerNetworkConfig {
     vault: string;
     weth: string;
     multicall: string;
-    staBal3Pool?: {
-        id: string;
-        address: string;
-    };
-    wethStaBal3?: {
-        id: string;
-        address: string;
-    };
+    bbausd?: { id: string; address: string };
+    wethBBausd?: { id: string; address: string };
+    lbpRaisingTokens?: string[];
     subgraphUrl: string;
 }
 
