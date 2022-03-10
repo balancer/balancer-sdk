@@ -1,8 +1,9 @@
 import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Interface } from '@ethersproject/abi';
-import { MaxUint256, WeiPerEther } from '@ethersproject/constants';
+import { MaxUint256, WeiPerEther, Zero } from '@ethersproject/constants';
 
 import { Swaps } from '@/modules/swaps/swaps.module';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
     EncodeBatchSwapInput,
     EncodeUnwrapAaveStaticTokenInput,
@@ -198,6 +199,10 @@ export class Relayer {
             fetchPools: params.fetchPools,
         });
 
+        // This is a safety check to avoid issues when a swap path exists with 0 value
+        if (queryResult.returnAmounts.includes('0'))
+            throw new BalancerError(BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT);
+
         // Update swap amounts with ref outputs from exitPool
         queryResult.swaps.forEach((swap) => {
             const token = queryResult.assets[swap.assetInIndex];
@@ -298,6 +303,10 @@ export class Relayer {
             fetchPools,
         });
 
+        // This is a safety check to avoid issues when a swap path exists with 0 value
+        if (queryResult.returnAmounts.includes('0'))
+            throw new BalancerError(BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT);
+
         // Gets limits array for tokensIn>wrappedTokens based on input slippage
         const limits = Swaps.getLimitsForSlippage(
             tokensIn, // tokensIn
@@ -318,12 +327,20 @@ export class Relayer {
         );
 
         const amountsUnwrapped = queryResult.returnAmounts.map(
-            (amountWrapped, i) =>
-                BigNumber.from(amountWrapped)
+            (amountWrapped, i) => {
+                const amountUnwrapped = BigNumber.from(amountWrapped)
                     .abs()
                     .mul(rates[i])
-                    .div(WeiPerEther)
-                    .toString()
+                    .div(WeiPerEther);
+
+                // This is a safety check to avoid issues when a swap path exists with 0 value
+                if (!amountUnwrapped.gt(Zero))
+                    throw new BalancerError(
+                        BalancerErrorCode.UNWRAP_ZERO_AMOUNT
+                    );
+
+                return amountUnwrapped.toString();
+            }
         );
 
         return {
@@ -358,12 +375,17 @@ export class Relayer {
             fetchOnChain: false,
         }
     ): Promise<TransactionData> {
-        const amountsWrapped = amountsUnwrapped.map((amountInwrapped, i) =>
-            BigNumber.from(amountInwrapped)
+        const amountsWrapped = amountsUnwrapped.map((amountInwrapped, i) => {
+            const amountWrapped = BigNumber.from(amountInwrapped)
                 .mul(WeiPerEther)
-                .div(rates[i])
-                .toString()
-        );
+                .div(rates[i]);
+
+            // This is a safety check to avoid issues when a swap path exists with 0 value
+            if (!amountWrapped.gt(Zero))
+                throw new BalancerError(BalancerErrorCode.WRAP_ZERO_AMOUNT);
+
+            return amountWrapped.toString();
+        });
 
         // Use swapsService to get swap info for tokensIn>wrappedTokens
         const queryResult = await this.swaps.queryBatchSwapWithSor({
@@ -373,6 +395,10 @@ export class Relayer {
             amounts: amountsWrapped,
             fetchPools,
         });
+
+        // This is a safety check to avoid issues when a swap path exists with 0 value
+        if (queryResult.returnAmounts.includes('0'))
+            throw new BalancerError(BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT);
 
         // Gets limits array for tokensIn>wrappedTokens based on input slippage
         const limits = Swaps.getLimitsForSlippage(

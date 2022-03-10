@@ -6,7 +6,7 @@ import {
     Network,
     SwapType,
 } from '../src/index';
-import { AAVE_DAI, AAVE_USDC, AAVE_USDT, STABAL3PHANTOM } from './constants';
+import { AAVE_DAI, AAVE_USDC, AAVE_USDT, bbausd } from './constants';
 
 dotenv.config();
 
@@ -27,9 +27,9 @@ async function runQueryBatchSwapWithSor() {
     let queryResult = await balancer.swaps.queryBatchSwapWithSor({
         tokensIn: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
         tokensOut: [
-            STABAL3PHANTOM.address,
-            STABAL3PHANTOM.address,
-            STABAL3PHANTOM.address,
+            bbausd.address,
+            bbausd.address,
+            bbausd.address,
         ],
         swapType: SwapType.SwapExactIn,
         amounts: [
@@ -51,9 +51,9 @@ async function runQueryBatchSwapWithSor() {
     // Example showing how to exit bb-a-usd pool by swapping BPT > stables
     queryResult = await balancer.swaps.queryBatchSwapWithSor({
         tokensIn: [
-            STABAL3PHANTOM.address,
-            STABAL3PHANTOM.address,
-            STABAL3PHANTOM.address,
+            bbausd.address,
+            bbausd.address,
+            bbausd.address,
         ],
         tokensOut: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
         swapType: SwapType.SwapExactIn,
@@ -75,9 +75,9 @@ async function runQueryBatchSwapWithSor() {
 
     queryResult = await balancer.swaps.queryBatchSwapWithSor({
         tokensIn: [
-            STABAL3PHANTOM.address,
-            STABAL3PHANTOM.address,
-            STABAL3PHANTOM.address,
+            bbausd.address,
+            bbausd.address,
+            bbausd.address,
         ],
         tokensOut: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
         swapType: SwapType.SwapExactOut,

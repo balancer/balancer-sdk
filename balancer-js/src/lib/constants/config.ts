@@ -14,6 +14,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
             tokens: {
                 wrappedNativeAsset:
                     '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+                lbpRaisingTokens: [
+                    '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+                    '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+                    '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+                ],
             },
         },
         urls: {
@@ -21,7 +26,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
                 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2',
         },
         pools: {
-            staBal3Pool: {
+            bbausd: {
                 id: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe',
                 address: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
             },
@@ -80,13 +85,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
                 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-kovan-v2',
         },
         pools: {
-            staBal3Pool: {
+            bbausd: {
                 id: '0x8fd162f338b770f7e879030830cde9173367f3010000000000000000000004d8',
                 address: '0x8fd162f338b770f7e879030830cde9173367f301',
-            },
-            wethStaBal3: {
-                id: '0x6be79a54f119dbf9e8ebd9ded8c5bd49205bc62d00020000000000000000033c',
-                address: '0x6be79a54f119dbf9e8ebd9ded8c5bd49205bc62d',
             },
         },
     },

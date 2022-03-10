@@ -13,6 +13,7 @@ export * from './modules/subgraph/subgraph.module';
 export * from './modules/sor/sor.module';
 export * from './modules/pools/pools.module';
 export * from './modules/pools/types';
+export * from './balancerErrors';
 export {
     SwapInfo,
     SubgraphPoolBase,

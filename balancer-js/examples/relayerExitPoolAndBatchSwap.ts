@@ -9,7 +9,7 @@ import {
     Network,
     StablePoolEncoder,
 } from '../src/index';
-import { AAVE_DAI, AAVE_USDT, STABAL3PHANTOM } from './constants';
+import { AAVE_DAI, AAVE_USDT, bbausd } from './constants';
 
 import balancerRelayerAbi from '../src/lib/abi/BalancerRelayer.json';
 
@@ -61,13 +61,16 @@ async function relayerExitPoolAndBatchSwap() {
         exitTokens: [AAVE_USDT.address, AAVE_DAI.address],
         userData,
         expectedAmountsOut,
-        finalTokensOut: [STABAL3PHANTOM.address, STABAL3PHANTOM.address],
+        finalTokensOut: [bbausd.address, bbausd.address],
         slippage: '50000000000000000', // Slippage for swap 5%
         fetchPools: {
             fetchPools: true,
             fetchOnChain: false,
         },
     });
+
+    console.log(`Amounts of tokensOut:`);
+    console.log(txInfo.outputs?.amountsOut?.toString());
 
     const relayerContract = new Contract(
         relayerAddress,
@@ -82,8 +85,6 @@ async function relayerExitPoolAndBatchSwap() {
             // gasLimit: '2000000',
         });
 
-    console.log(`Amounts of tokensOut:`);
-    console.log(txInfo.outputs?.amountsOut?.toString());
     console.log(`Swap Deltas:`);
     console.log(defaultAbiCoder.decode(['int256[]'], tx[1]).toString());
 }
