@@ -17,6 +17,7 @@ export class WeightedPoolLiquidity implements LiquidityConcern {
             tokenPrices,
             someOtherInput
         );
+        throw new Error('To be implemented');
         return '100';
     }
 }

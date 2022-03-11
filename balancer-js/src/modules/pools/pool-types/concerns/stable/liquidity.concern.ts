@@ -10,6 +10,7 @@ export class StablePoolLiquidity implements LiquidityConcern {
     ): string {
         // TODO implementation
         console.log(tokenBalances, tokenDecimals, tokenPriceRates, tokenPrices);
+        throw new Error('To be implemented');
         return '1000';
     }
 }
