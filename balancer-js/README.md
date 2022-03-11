@@ -4,7 +4,6 @@ A JavaScript SDK which provides commonly used utilties for interacting with Bala
 
 ## Installation
 
-
 ## Getting Started
 
 ```js
@@ -12,8 +11,8 @@ import { BalancerSDK, ConfigSdk, Network } from '@balancer-labs/sdk';
 
 const config: ConfigSdk = {
     network: Network.MAINNET,
-    rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`
-} 
+    rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+};
 const balancer = new BalancerSDK(config);
 ```
 
@@ -30,7 +29,7 @@ const swaps = new swapService({
 
 ### queryBatchSwap
 
-The Balancer Vault provides a [method to simulate a call to batchSwap](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/vault/contracts/interfaces/IVault.sol#L644). 
+The Balancer Vault provides a [method to simulate a call to batchSwap](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/vault/contracts/interfaces/IVault.sol#L644).
 This function performs no checks on the sender or recipient or token balances or approvals. Note that this function is not 'view' (due to implementation details): the client code must explicitly execute eth_call instead of eth_sendTransaction.
 
 @param batchSwap - BatchSwap information used for query.
@@ -60,6 +59,7 @@ Uses SOR to create and query a batchSwap for multiple tokens in > multiple token
 @param queryWithSor.amounts - Array of amounts used in swap.
 @param queryWithSor.fetchPools - Set whether SOR will fetch updated pool info.
 @returns Returns amount of tokens swaps along with swap and asset info that can be submitted to a batchSwap call.
+
 ```js
 swaps.queryBatchSwapWithSor(queryWithSor: {
     tokensIn: string[],
@@ -67,7 +67,7 @@ swaps.queryBatchSwapWithSor(queryWithSor: {
     swapType: SwapType,
     amounts: BigNumberish[],
     fetchPools: FetchPoolsInput;
-}): 
+}):
 Promise<QueryWithSorOutput {
     returnAmounts: string[];
     swaps: BatchSwapStep[];
@@ -101,6 +101,7 @@ Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to und
 @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
 @param fetchPools - Set whether SOR will fetch updated pool info.
 @returns Transaction data with calldata. Outputs.amountsOut has final amounts out of unwrapped tokens.
+
 ```js
 async relayer.swapUnwrapAaveStaticExactIn(
     tokensIn: string[],
@@ -130,6 +131,7 @@ Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to und
 @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
 @param fetchPools - Set whether SOR will fetch updated pool info.
 @returns Transaction data with calldata. Outputs.amountsIn has the amounts of tokensIn.
+
 ```js
 async relayer.swapUnwrapAaveStaticExactOut(
     tokensIn: string[],
@@ -162,6 +164,7 @@ Chains poolExit with batchSwap to final tokens.
 @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
 @param fetchPools - Set whether SOR will fetch updated pool info.
 @returns Transaction data with calldata. Outputs.amountsOut has amounts of finalTokensOut returned.
+
 ```js
 async relayer.exitPoolAndBatchSwap(
     params: ExitAndBatchSwapInput {

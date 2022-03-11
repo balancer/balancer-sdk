@@ -1,5 +1,5 @@
 import { BigNumberish } from '@ethersproject/bignumber';
-import { Network } from './constants/network';
+import { Network } from './lib/constants/network';
 import { Contract } from '@ethersproject/contracts';
 import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 
@@ -27,14 +27,31 @@ export interface BalancerSdkSorConfig {
 
 export interface BalancerNetworkConfig {
     chainId: Network;
-    vault: string;
-    weth: string;
-    multicall: string;
-    bbausd?: { id: string; address: string };
-    wethBBausd?: { id: string; address: string };
-    lbpRaisingTokens?: string[];
-    subgraphUrl: string;
+    addresses: {
+        contracts: {
+            vault: string;
+            multicall: string;
+        };
+        tokens: {
+            wrappedNativeAsset: string;
+            lbpRaisingTokens?: string[];
+        };
+    };
+    urls: {
+        subgraph: string;
+    };
+    pools: {
+        staBal3Pool?: PoolReference;
+        wethStaBal3?: PoolReference;
+        bbausd?: PoolReference;
+        wethBBausd?: PoolReference;
+    };
 }
+
+export type PoolReference = {
+    id: string;
+    address: string;
+};
 
 export enum PoolSpecialization {
     GeneralPool = 0,
@@ -94,5 +111,8 @@ export interface TransactionData {
     contract?: Contract;
     function: string;
     params: string[];
-    outputs?: any;
+    outputs?: {
+        amountsIn?: string[];
+        amountsOut?: string[];
+    };
 }

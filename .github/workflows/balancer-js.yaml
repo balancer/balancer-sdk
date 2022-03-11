@@ -1,0 +1,86 @@
+name: BalancerJS CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '*'
+    paths:
+      - 'balancer-js/**'
+
+defaults:
+  run:
+    working-directory: balancer-js
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - name: Cache
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: "**/node_modules"
+          key: yarn-v1-${{ hashFiles('**/yarn.lock') }}
+      - name: Install
+        run: yarn --immutable
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Lint
+        run: yarn lint
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - name: Cache
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: "**/node_modules"
+          key: yarn-v1-${{ hashFiles('**/yarn.lock') }}
+      - name: Install
+        run: yarn --immutable
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Generate Subgraph Queries
+        run: yarn subgraph:generate
+      - name: Build
+        run: yarn build
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+      - name: Cache
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: "**/node_modules"
+          key: yarn-v1-${{ hashFiles('**/yarn.lock') }}
+      - name: Install
+        run: yarn --immutable
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Generate Subgraph Queries
+        run: yarn subgraph:generate
+      - name: Compile
+        run: yarn build
+      - name: Test
+        run: yarn test
+
+env:
+  CI: true
+  INFURA: ${{ secrets.INFURA }}

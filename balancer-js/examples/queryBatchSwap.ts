@@ -11,7 +11,7 @@ dotenv.config();
 
 async function runQueryBatchSwap() {
     const config: BalancerSdkConfig = {
-        network: Network.MAINNET,
+        network: Network.KOVAN,
         rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
     };
     const balancer = new BalancerSDK(config);
@@ -56,5 +56,5 @@ async function runQueryBatchSwap() {
     console.log(deltas.toString());
 }
 
-// TS_NODE_PROJECT='tsconfig.testing.json' ts-node ./examples/queryBatchSwap.ts
+// yarn examples:run ./examples/queryBatchSwap.ts
 runQueryBatchSwap();

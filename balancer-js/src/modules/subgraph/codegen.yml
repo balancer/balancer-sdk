@@ -1,0 +1,21 @@
+overwrite: true
+generates:
+    src/modules/subgraph/generated/balancer-subgraph-types.ts:
+        schema: ${BALANCER_SUBGRAPH_URL:https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2}
+        documents: 'src/modules/subgraph/graphql/**/*.graphql'
+        plugins:
+            - typescript
+            - typescript-operations
+            - typescript-graphql-request
+        config:
+            scalars:
+                BigInt: string
+                Bytes: string
+                BigDecimal: string
+    src/modules/subgraph/generated/balancer-subgraph-schema.graphql:
+        schema: ${BALANCER_SUBGRAPH_URL:https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2}
+        plugins:
+            - schema-ast
+hooks:
+    afterOneFileWrite:
+        - eslint --fix

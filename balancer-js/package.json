@@ -22,11 +22,22 @@
     "scripts": {
         "build": "rollup -c",
         "dev": "rollup -c -w",
-        "test": "TS_NODE_PROJECT='tsconfig.testing.json' mocha --extension test.ts -r ts-node/register --recursive",
+        "test": "ts-mocha --paths --recursive -p tsconfig.testing.json 'src/**/*.spec.ts'",
         "lint": "eslint ./src --ext .ts --max-warnings 0",
-        "generate": "graphql-codegen --config src/subgraph/codegen.yml -r dotenv/config"
+        "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
+        "subgraph:generate": "graphql-codegen --config src/modules/subgraph/codegen.yml -r dotenv/config",
+        "examples:run": "TS_NODE_PROJECT='tsconfig.testing.json' ts-node -r tsconfig-paths/register"
     },
     "devDependencies": {
+        "@ethersproject/abi": "^5.4.0",
+        "@ethersproject/abstract-signer": "^5.4.0",
+        "@ethersproject/address": "^5.4.0",
+        "@ethersproject/bignumber": "^5.4.0",
+        "@ethersproject/bytes": "^5.4.0",
+        "@ethersproject/constants": "^5.4.0",
+        "@ethersproject/contracts": "^5.4.0",
+        "@ethersproject/providers": "^5.4.5",
+        "@ethersproject/wallet": "^5.5.0",
         "@graphql-codegen/add": "^3.1.0",
         "@graphql-codegen/cli": "^2.3.0",
         "@graphql-codegen/introspection": "^2.1.0",
@@ -57,16 +68,14 @@
         "rollup": "^2.52.8",
         "rollup-plugin-dts": "^3.0.2",
         "tiny-invariant": "^1.1.0",
-        "ts-node": "^10.0.0",
+        "ts-mocha": "^9.0.2",
+        "ts-node": "^10.4.0",
+        "tsconfig-paths": "^3.12.0",
         "typechain": "^5.1.1",
         "typescript": "^4.0.2"
     },
     "dependencies": {
         "@balancer-labs/sor": "^4.0.0-beta.0",
-        "@ethersproject/abi": "^5.5.0",
-        "@ethersproject/abstract-signer": "^5.5.0",
-        "@ethersproject/contracts": "^5.5.0",
-        "@ethersproject/providers": "^5.5.0",
         "axios": "^0.24.0",
         "graphql": "^15.6.1",
         "graphql-request": "^3.5.0",
@@ -79,6 +88,7 @@
         "@ethersproject/bignumber": "^5.4.0",
         "@ethersproject/bytes": "^5.4.0",
         "@ethersproject/constants": "^5.4.0",
-        "@ethersproject/contracts": "^5.4.0"
+        "@ethersproject/contracts": "^5.4.0",
+        "@ethersproject/providers": "^5.4.5"
     }
 }
