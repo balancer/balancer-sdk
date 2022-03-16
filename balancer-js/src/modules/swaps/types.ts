@@ -1,4 +1,5 @@
 import { BigNumberish } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
 
 export enum SwapType {
     SwapExactIn,
@@ -63,4 +64,23 @@ export interface QueryWithSorOutput {
     swaps: BatchSwapStep[];
     assets: string[];
     deltas: string[];
+}
+
+export interface QuerySimpleFlashSwapParameters {
+    poolIds: string[];
+    assets: BatchSwap['assets'];
+    flashLoanAmount: string;
+    vaultContract: Contract;
+}
+
+export interface SimpleFlashSwapParameters {
+    poolIds: string[];
+    assets: BatchSwap['assets'];
+    flashLoanAmount: string;
+    walletAddress: string;
+}
+
+export interface QuerySimpleFlashSwapResponse {
+    profits: Record<string, string>;
+    isProfitable: boolean;
 }
