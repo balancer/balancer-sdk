@@ -44,3 +44,21 @@ export const WRAPPED_AAVE_DAI: TestToken = {
     address: '0x4811a7bb9061a46753486e5e84b3cd3d668fb596',
     decimals: 18,
 };
+
+// Kovan version
+export const USDC: TestToken = {
+    address: '0xc2569dd7d0fd715b054fbf16e75b001e5c0c1115',
+    decimals: 6,
+};
+
+// Kovan version
+export const USDT: TestToken = {
+    address: '0xcc08220af469192c53295fdd34cfb8df29aa17ab',
+    decimals: 6,
+};
+
+// Kovan version
+export const DAI: TestToken = {
+    address: '0x04df6e4121c27713ed22341e7c7df330f56f289b',
+    decimals: 6,
+};
