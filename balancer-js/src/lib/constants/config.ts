@@ -1,9 +1,38 @@
 import { Network } from './network';
 import { BalancerNetworkConfig } from '@/types';
 
-export const balancerVault = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
+// export const balancerVault = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
+export const balancerVault = '0x7Cd0C38850A3AaBb773311AAAADA3444D31DCE03';
 
 export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
+    [Network.ASTAR]: {
+        chainId: Network.ASTAR, //592
+        addresses: {
+            contracts: {
+                vault: '0x7Cd0C38850A3AaBb773311AAAADA3444D31DCE03',
+                multicall: '0xeB93D9EDDCb7476aF0c415E5a6d429454f85833A',
+            },
+            tokens: {
+                wrappedNativeAsset:
+                    '0xAeaaf0e2c81Af264101B9129C00F4440cCF0F720',//WASTR
+                lbpRaisingTokens: [
+                    '0x6De33698e9e9b787e09d3Bd7771ef63557E148bb', // DAI
+                    '0x6a2d262D56735DbA19Dd70682B39F6bE9a931D98', // USDC 
+                    '0xAeaaf0e2c81Af264101B9129C00F4440cCF0F720', // WASTR
+                ],
+            },
+        },
+        urls: {
+            subgraph:
+                'https://graph-node1.starbank.finance/subgraphs/name/starbank-finance/balancer-v2',
+        },
+        pools: {
+            // bbausd: {
+            //     id: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe',
+            //     address: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
+            // },
+        },
+    },
     [Network.MAINNET]: {
         chainId: Network.MAINNET, //1
         addresses: {

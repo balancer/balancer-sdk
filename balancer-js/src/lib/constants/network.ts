@@ -5,5 +5,6 @@ export enum Network {
     GÖRLI = 5,
     KOVAN = 42,
     POLYGON = 137,
+    ASTAR = 592,
     ARBITRUM = 42161,
 }
