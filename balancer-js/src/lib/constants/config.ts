@@ -2,14 +2,16 @@ import { Network } from './network';
 import { BalancerNetworkConfig } from '@/types';
 
 // export const balancerVault = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
-export const balancerVault = '0x7Cd0C38850A3AaBb773311AAAADA3444D31DCE03';
+// export const balancerVault = '0x7Cd0C38850A3AaBb773311AAAADA3444D31DCE03';
+export const balancerVault = '0xB05E81918C00D5a327c3AF5372b9C07528E9400E';
 
 export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     [Network.ASTAR]: {
         chainId: Network.ASTAR, //592
         addresses: {
             contracts: {
-                vault: '0x7Cd0C38850A3AaBb773311AAAADA3444D31DCE03',
+                // vault: '0x7Cd0C38850A3AaBb773311AAAADA3444D31DCE03',
+                vault: '0xB05E81918C00D5a327c3AF5372b9C07528E9400E',
                 multicall: '0xeB93D9EDDCb7476aF0c415E5a6d429454f85833A',
             },
             tokens: {
@@ -24,7 +26,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         },
         urls: {
             subgraph:
-                'https://graph-node1.starbank.finance/subgraphs/name/starbank-finance/balancer-v2',
+                // 'https://graph-node1.starbank.finance/subgraphs/name/starbank-finance/balancer-v2',
+                'https://graph-node1.starbank.finance/subgraphs/name/starbank-finance/balancer-v2-new',
         },
         pools: {
             // bbausd: {
