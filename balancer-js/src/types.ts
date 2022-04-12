@@ -31,10 +31,13 @@ export interface BalancerNetworkConfig {
         contracts: {
             vault: string;
             multicall: string;
+            lidoRelayer?: string;
         };
         tokens: {
             wrappedNativeAsset: string;
             lbpRaisingTokens?: string[];
+            stETH?: string;
+            wstETH?: string;
         };
     };
     urls: {

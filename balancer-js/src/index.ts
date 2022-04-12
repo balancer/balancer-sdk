@@ -28,10 +28,7 @@ export {
     weightedBPTForTokensZeroPriceImpact,
     SOR,
     PoolDataService,
-    RouteProposer,
     NewPath,
     parseToPoolsDict,
     PoolDictionary,
-    formatSequence,
-    getTokenAddressesForSwap,
 } from '@balancer-labs/sor';

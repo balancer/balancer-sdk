@@ -10,6 +10,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0xeefba1e63905ef1d7acba5a8513c70307c1ce441',
+                lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
             },
             tokens: {
                 wrappedNativeAsset:
@@ -19,6 +20,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
                     '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
                     '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
                 ],
+                stETH: '0xae7ab96520de3a18e5e111b5eaab095312d7fe84',
+                wstETH: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
             },
         },
         urls: {
@@ -145,3 +148,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         pools: {},
     },
 };
+
+export const networkAddresses = (
+    chainId: number
+): BalancerNetworkConfig['addresses'] =>
+    BALANCER_NETWORK_CONFIG[chainId as Network].addresses;

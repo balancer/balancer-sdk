@@ -19,7 +19,10 @@ export class Sor extends SOR {
         const network = getNetworkConfig(sdkConfig);
         const sorConfig = Sor.getSorConfig(sdkConfig);
         const sorNetworkConfig = Sor.getSorNetworkConfig(network);
-        const provider = new JsonRpcProvider(sdkConfig.rpcUrl);
+        const provider = new JsonRpcProvider(
+            sdkConfig.rpcUrl,
+            sdkConfig.network as number
+        );
         const subgraphClient = createSubgraphClient(network.urls.subgraph);
 
         const poolDataService = Sor.getPoolDataService(

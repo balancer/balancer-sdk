@@ -6,9 +6,19 @@ import { Sor } from './sor/sor.module';
 import { getNetworkConfig } from './sdk.helpers';
 import { Pools } from './pools/pools.module';
 
-export class BalancerSDK {
-    public readonly swaps: Swaps;
-    public readonly relayer: Relayer;
+export interface BalancerSDKRoot {
+    config: BalancerSdkConfig;
+    sor: Sor;
+    subgraph: Subgraph;
+    pools: Pools;
+    swaps: Swaps;
+    relayer: Relayer;
+    networkConfig: BalancerNetworkConfig;
+}
+
+export class BalancerSDK implements BalancerSDKRoot {
+    readonly swaps: Swaps;
+    readonly relayer: Relayer;
 
     constructor(
         public config: BalancerSdkConfig,
@@ -16,11 +26,11 @@ export class BalancerSDK {
         public subgraph = new Subgraph(config),
         public pools = new Pools(config)
     ) {
-        this.swaps = new Swaps(this.sor);
+        this.swaps = new Swaps(this.config);
         this.relayer = new Relayer(this.swaps);
     }
 
-    public get networkConfig(): BalancerNetworkConfig {
+    get networkConfig(): BalancerNetworkConfig {
         return getNetworkConfig(this.config);
     }
 }
