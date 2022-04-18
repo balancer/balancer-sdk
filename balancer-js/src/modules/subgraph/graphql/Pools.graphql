@@ -6,9 +6,18 @@ query Pools(
     $where: Pool_filter
     $block: Block_height
 ) {
-    pools(
-        skip: $skip
-        first: $first
+    pool0: pools(
+        first: 1000
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphPool
+    }
+    pool1000: pools(
+        skip: 1000
+        first: 1000
         orderBy: $orderBy
         orderDirection: $orderDirection
         where: $where
