@@ -15,8 +15,9 @@ import vaultAbi from '@/lib/abi/Vault.json';
 import vaultActionsAbi from '@/lib/abi/VaultActions.json';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
-import { AddressZero } from '@ethersproject/constants';
+import { AddressZero, MaxUint256 } from '@ethersproject/constants';
 import { SwapInfo } from '@balancer-labs/sor';
+import hardhat from 'hardhat';
 
 dotenv.config();
 
@@ -29,6 +30,12 @@ const sorConfig: BalancerSdkSorConfig = {
 const sdkConfig: BalancerSdkConfig = {
     network: Network.KOVAN,
     rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+    sor: sorConfig,
+};
+
+const forkedSdkConfig: BalancerSdkConfig = {
+    network: Network.MAINNET,
+    rpcUrl: `localhost:8545`,
     sor: sorConfig,
 };
 
@@ -209,6 +216,45 @@ describe('swaps module', () => {
                     expect(to).to.eql(contracts.lidoRelayer);
                 });
             });
+        });
+    });
+
+    describe('full flow', async () => {
+        const [signer] = await hardhat.ethers.getSigners();
+        const swaps = new Swaps(forkedSdkConfig);
+
+        await swaps.fetchPools();
+
+        const tokenIn = AddressZero; // ETH
+        const tokenOut = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'; // wBTC
+        const amount = hardhat.ethers.utils.parseEther('1');
+        const gasPrice = hardhat.ethers.utils.parseUnits('50', 'gwei');
+        const maxPools = 4;
+
+        it('should work', async () => {
+            const swapInfo: SwapInfo = await swaps.findRouteGivenIn({
+                tokenIn,
+                tokenOut,
+                amount,
+                gasPrice,
+                maxPools,
+            });
+
+            const deadline = MaxUint256;
+            const maxSlippage = 10;
+            const tx = swaps.buildSwap({
+                userAddress: signer.address,
+                swapInfo,
+                kind: SwapType.SwapExactIn,
+                deadline,
+                maxSlippage,
+            });
+
+            const receipt = await signer.sendTransaction(tx);
+
+            console.log(receipt);
+
+            expect(receipt).to.be('1');
         });
     });
 });
