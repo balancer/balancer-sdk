@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "balancer-rs"
+name = "balancer_rs"
 version = "0.1.0"
