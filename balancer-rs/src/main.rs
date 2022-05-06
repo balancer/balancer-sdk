@@ -1,3 +1,6 @@
+mod vault;
+
 fn main() {
-    println!("Hello, world!");
+    println!("Starting script..");
+    vault::init();
 }
