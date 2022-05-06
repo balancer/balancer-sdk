@@ -75,7 +75,7 @@
         "typescript": "^4.0.2"
     },
     "dependencies": {
-        "@balancer-labs/sor": "^4.0.0-beta.3",
+        "@balancer-labs/sor": "^4.0.0-beta.4",
         "axios": "^0.24.0",
         "graphql": "^15.6.1",
         "graphql-request": "^3.5.0",
