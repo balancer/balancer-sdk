@@ -1,14 +1,18 @@
 #[cfg(test)]
 mod tests {
-  #[test]
-  fn it_works() {
-    assert_eq!(2 + 2, 4);
-  }
+  // Test to see if the module can get the WETH address from the vault
+  #[actix_rt::test]
+  async fn test_weth_async() {
+    let web3 = balancer_rs::infura::build_web3();
+    let vault = balancer_rs::Vault::new(web3);
+    let weth_address = vault.weth().await;
 
-  #[test]
-  fn test_init() {
-    let result = balancer_rs::vault::get_number();
+    let address_str = web3::helpers::to_string(&weth_address);
+    println!("{}", address_str);
 
-    assert_eq!(result, 1);
+    assert_eq!(
+      snailquote::unescape(&address_str).unwrap(),
+      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2".to_string()
+    );
   }
 }

@@ -1,6 +1,8 @@
-mod vault;
+mod examples;
 
-fn main() {
-    println!("Starting script..");
-    vault::init();
+#[tokio::main]
+async fn main() {
+    println!("Starting examples..");
+
+    examples::weth().await;
 }
