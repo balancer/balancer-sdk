@@ -21,11 +21,43 @@ balancer-rs has been tested on:
 <!-- - Linux using Python 3.9-dev
 - Windows using Python 3.9.5 -->
 
-### Install
+### Install from crate
 
-#### Install from crate
+The balancer-rs sdk can be installed as a crate from [https://crates.io/](https://crates.io/). Simply add the following to your `[dependencies]` in your Rust project's `Cargo.toml` file:
 
-TBD
+```
+[dependencies]
+balancer_rs = "*"
+```
+
+Once installed, you will be able to use the Balancer Rust module as follows:
+
+Example to get the WETH address:
+
+```rust
+let vault = balancer_rs::Vault::new(web3);
+let weth_address = vault.weth().await;
+```
+
+## More Examples
+
+To see examples of all Vault methods available, see the examples [here.](./examples/)
+
+## Feature List
+### Authorization
+[] getAuthorizer
+[] setAuthorizer
+[] hasApprovedRelayer
+
+### Internal Balances
+[] getInternalBalances
+[] manageUserBalance
+
+### Pools
+[] regiserPools
+[] getPool
+[] getPool
+
 
 ### Run directly from CLI
 
@@ -36,9 +68,3 @@ TBD
 TBD
 
 ### Environment Variables
-
-TBD
-
-## Examples
-
-See examples/
