@@ -1,3 +1,10 @@
+/**
+ * Miscellaneous Methods
+ * https://dev.balancer.fi/references/contracts/apis/the-vault#miscellaneous
+ *
+ * The tests also serve as functional examples
+ */
+
 #[cfg(test)]
 mod tests {
   // Test to see if the module can get the WETH address from the vault
@@ -8,7 +15,6 @@ mod tests {
     let weth_address = vault.weth().await;
 
     let address_str = web3::helpers::to_string(&weth_address);
-    println!("{}", address_str);
 
     assert_eq!(
       snailquote::unescape(&address_str).unwrap(),

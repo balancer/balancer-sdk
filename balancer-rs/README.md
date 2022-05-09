@@ -21,24 +21,102 @@ balancer-rs has been tested on:
 <!-- - Linux using Python 3.9-dev
 - Windows using Python 3.9.5 -->
 
-### Install
+### Install from crate
 
-#### Install from crate
+The balancer-rs sdk can be installed as a crate from [https://crates.io/](https://crates.io/). Simply add the following to your `[dependencies]` in your Rust project's `Cargo.toml` file:
 
-TBD
+```
+[dependencies]
+balancer_rs = "*"
+```
 
-### Run directly from CLI
+Once installed, you will be able to use the Balancer Rust module as follows:
 
-TBD
+Example to get the WETH address:
+
+```rust
+let vault = balancer_rs::Vault::new(web3);
+let weth_address = vault.weth().await;
+```
+
+### Environment Variables
+
+```
+INFURA_PROJECT_ID
+WALLET_ADDRESS
+PRIVATE_KEY
+```
+
+### Testing
+
+Integration tests go in `./tests`
+
+To run tests:
+
+`cargo test`
 
 ## Contributing
 
 TBD
 
-### Environment Variables
-
-TBD
-
 ## Examples
 
-See examples/
+To see examples of all Vault methods available, see the examples [here.](./examples/)
+
+To run an example:
+
+`cargo run --example [name]`
+
+## Examples List - Vault Methods
+
+### Authorization
+
+- [x] getAuthorizer [`#get_authorizer`](./examples/get_authorizer.rs)
+- [ ] setAuthorizer [`#set_authorizer`](./examples/set_authorizer.rs)
+- [ ] hasApprovedRelayer
+
+### Internal Balances
+
+- [ ] getInternalBalances
+- [ ] manageUserBalance
+
+### Pools
+
+- [ ] regiserPools
+- [ ] getPool
+- [ ] registerTokens
+- [ ] deregisterTokens
+- [ ] getPoolTokenInfo
+- [ ] getPoolTokens
+
+### Joins and Exits
+
+- [ ] joinPool
+- [ ] exitPool
+
+### Single Swaps
+
+- [ ] swap
+
+### Batch Swaps
+
+- [ ] batchSwap
+- [ ] queryBatchSwap
+
+### Flash Loans
+
+- [ ] flashLoan
+
+### Flash Loans
+
+- [ ] flashLoan
+
+### Asset Management
+
+- [ ] managePoolBalance
+
+### Miscellaneous
+
+- [ ] getProtocolFeesCollector
+- [ ] setPaused
+- [x] WETH [`#weth`](./examples/weth.rs)
