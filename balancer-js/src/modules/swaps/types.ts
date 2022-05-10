@@ -59,6 +59,13 @@ export interface QueryWithSorInput {
     fetchPools: FetchPoolsInput;
 }
 
+export interface SwapInput {
+    tokenIn: string;
+    tokenOut: string;
+    swapType: SwapType;
+    amount: string;
+}
+
 export interface QueryWithSorOutput {
     returnAmounts: string[];
     swaps: BatchSwapStep[];

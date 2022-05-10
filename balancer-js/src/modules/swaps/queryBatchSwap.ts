@@ -117,7 +117,7 @@ export async function queryBatchSwapWithSor(
 Use SOR to get swapInfo for tokenIn>tokenOut.
 SwapInfos.swaps has path information.
 */
-async function getSorSwapInfo(
+export async function getSorSwapInfo(
     tokenIn: string,
     tokenOut: string,
     swapType: SwapType,
