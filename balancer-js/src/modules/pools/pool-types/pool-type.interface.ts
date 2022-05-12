@@ -1,6 +1,9 @@
+import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { LiquidityConcern, SpotPriceConcern } from './concerns/types';
 
 export interface PoolType {
     liquidity: LiquidityConcern;
-    spotPrice: SpotPriceConcern;
+    spotPriceConcern: SpotPriceConcern;
+    updateData: (poolData: SubgraphPoolBase) => void;
+    spotPrice: (tokenIn: string, tokenOut: string) => string;
 }

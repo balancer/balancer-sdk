@@ -76,57 +76,8 @@ export class Pricing {
             return getSpotPriceAfterSwapForPath(paths[0], 0, ZERO).toString();
         } else {
             // Find pool of interest from pools list
-            const pool = pools.find(
-                (p) => p.id.toLowerCase() === poolId.toLowerCase()
-            );
-            if (!pool)
-                throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-
-            // Calculate spot price using pool type
-            switch (pool.poolType) {
-                case 'Weighted':
-                case 'Investment':
-                case 'LiquidityBootstrapping': {
-                    return this.pools.weighted.spotPrice.calcPoolSpotPrice(
-                        tokenIn,
-                        tokenOut,
-                        pool
-                    );
-                }
-                case 'Stable': {
-                    return this.pools.stable.spotPrice.calcPoolSpotPrice(
-                        tokenIn,
-                        tokenOut,
-                        pool
-                    );
-                }
-                case 'MetaStable': {
-                    return this.pools.metaStable.spotPrice.calcPoolSpotPrice(
-                        tokenIn,
-                        tokenOut,
-                        pool
-                    );
-                }
-                case 'StablePhantom': {
-                    return this.pools.stablePhantom.spotPrice.calcPoolSpotPrice(
-                        tokenIn,
-                        tokenOut,
-                        pool
-                    );
-                }
-                case 'AaveLinear':
-                case 'ERC4626Linear': {
-                    return this.pools.linear.spotPrice.calcPoolSpotPrice(
-                        tokenIn,
-                        tokenOut,
-                        pool
-                    );
-                }
-                default:
-                    throw new BalancerError(
-                        BalancerErrorCode.UNSUPPORTED_POOL_TYPE
-                    );
-            }
+            const pool = Pools.find(poolId, pools);
+            return pool.spotPrice(tokenIn, tokenOut);
         }
     }
 }

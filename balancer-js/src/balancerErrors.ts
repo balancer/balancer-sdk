@@ -6,6 +6,7 @@ export enum BalancerErrorCode {
     POOL_DOESNT_EXIST = 'POOL_DOESNT_EXIST',
     UNSUPPORTED_POOL_TYPE = 'UNSUPPORTED_POOL_TYPE',
     UNSUPPORTED_PAIR = 'UNSUPPORTED_PAIR',
+    NO_POOL_DATA = 'NO_POOL_DATA',
 }
 
 export class BalancerError extends Error {
@@ -30,6 +31,8 @@ export class BalancerError extends Error {
                 return 'unsupported pool type';
             case BalancerErrorCode.UNSUPPORTED_PAIR:
                 return 'unsupported token pair';
+            case BalancerErrorCode.NO_POOL_DATA:
+                return 'no pool data';
             default:
                 return 'Unknown error';
         }
