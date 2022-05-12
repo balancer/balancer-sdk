@@ -54,7 +54,6 @@ const ETHUSDPriceSum = ['USDC', 'DAI', 'USDT']
     }, BigNumber.from(0));
 const ETHUSDPrice = BigNumber.from(ETHUSDPriceSum).div('3');
 
-console.log('EthUSD Price is: ', ETHUSDPrice.toString());
 
 // console.log('Selected pools: ', selectedPools);
 
@@ -65,17 +64,14 @@ selectedPools.forEach((pool) => {
         if (!tokenDetails) {
             console.error(`Could not find token: ${token.address}`);
         }
-        console.log('Doing token: ', tokenDetails?.symbol);
         const price = parseFixed('1', 18)
             .mul(ETHUSDPrice)
-            .div(parseFixed(tokenDetails?.price || '1', 18))
-            .toString();
-        console.log('Price of token: ', token.symbol, ' is: ', price);
+            .div(parseFixed(tokenDetails?.price || '1', 18));
         const tokenBalance = {
             balance: token.balance,
             decimals: token.decimals,
             priceRate: token.priceRate,
-            price: price,
+            price: formatFixed(price, 18),
         };
         return tokenBalance;
     });

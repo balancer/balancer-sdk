@@ -1,5 +1,5 @@
 import { LiquidityConcern } from '../types';
-import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
+import { BigNumber, parseFixed, formatFixed, BigNumberish } from '@ethersproject/bignumber';
 
 export interface TokenBalance {
     balance: string;
