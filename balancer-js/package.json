@@ -77,6 +77,7 @@
     "dependencies": {
         "@balancer-labs/sor": "^4.0.0-beta.6",
         "axios": "^0.24.0",
+        "bignumber.js": "^9.0.2",
         "graphql": "^15.6.1",
         "graphql-request": "^3.5.0",
         "lodash": "^4.17.21"

@@ -27,6 +27,10 @@ const swaps = new swapService({
 });
 ```
 
+## Examples
+
+You can run each example with `npm run examples:run -- examples/exampleName.ts`
+
 ### #queryBatchSwap
 
 The Balancer Vault provides a [method to simulate a call to batchSwap](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/vault/contracts/interfaces/IVault.sol#L644).
