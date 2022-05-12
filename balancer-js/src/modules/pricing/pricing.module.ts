@@ -2,26 +2,24 @@ import { Swaps } from '@/modules/swaps/swaps.module';
 import { BalancerSdkConfig } from '@/types';
 import {
     SubgraphPoolBase,
-    WeightedPool,
-    StablePool,
-    MetaStablePool,
-    PhantomStablePool,
     ZERO,
     parseToPoolsDict,
     getSpotPriceAfterSwapForPath,
-    LinearPool,
 } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { Pools } from '@/modules/pools/pools.module';
 
 export class Pricing {
     private readonly swaps: Swaps;
+    private pools: Pools;
 
-    constructor(swapsOrConfig: Swaps | BalancerSdkConfig) {
-        if (swapsOrConfig instanceof Swaps) {
-            this.swaps = swapsOrConfig;
+    constructor(config: BalancerSdkConfig, swaps?: Swaps) {
+        if (swaps) {
+            this.swaps = swaps;
         } else {
-            this.swaps = new Swaps(swapsOrConfig);
+            this.swaps = new Swaps(config);
         }
+        this.pools = new Pools(config);
     }
 
     /**
@@ -38,24 +36,6 @@ export class Pricing {
      */
     public getPools(): SubgraphPoolBase[] {
         return this.swaps.getPools();
-    }
-
-    /**
-     * Calculate Spot Price for token pair in specific  pool.
-     * @param {WeightedPool | StablePool | PhantomStablePool | LinearPool} pool Pool instance.
-     * @param { string } tokenIn Token in address.
-     * @param { string } tokenOut Token out address.
-     * @returns  { string } Spot price.
-     */
-    private calculatePoolSpotPrice(
-        pool: WeightedPool | StablePool | PhantomStablePool | LinearPool,
-        tokenIn: string,
-        tokenOut: string
-    ): string {
-        const poolPairData: any = pool.parsePoolPairData(tokenIn, tokenOut);
-        return pool
-            ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, ZERO)
-            .toString();
     }
 
     /**
@@ -107,44 +87,39 @@ export class Pricing {
                 case 'Weighted':
                 case 'Investment':
                 case 'LiquidityBootstrapping': {
-                    const weightedPool = WeightedPool.fromPool(pool);
-                    return this.calculatePoolSpotPrice(
-                        weightedPool,
+                    return this.pools.weighted.spotPrice.calcPoolSpotPrice(
                         tokenIn,
-                        tokenOut
+                        tokenOut,
+                        pool
                     );
                 }
                 case 'Stable': {
-                    const stablePool = StablePool.fromPool(pool);
-                    return this.calculatePoolSpotPrice(
-                        stablePool,
+                    return this.pools.stable.spotPrice.calcPoolSpotPrice(
                         tokenIn,
-                        tokenOut
+                        tokenOut,
+                        pool
                     );
                 }
                 case 'MetaStable': {
-                    const metaStablePool = MetaStablePool.fromPool(pool);
-                    return this.calculatePoolSpotPrice(
-                        metaStablePool,
+                    return this.pools.metaStable.spotPrice.calcPoolSpotPrice(
                         tokenIn,
-                        tokenOut
+                        tokenOut,
+                        pool
                     );
                 }
                 case 'StablePhantom': {
-                    const stablePool = PhantomStablePool.fromPool(pool);
-                    return this.calculatePoolSpotPrice(
-                        stablePool,
+                    return this.pools.stablePhantom.spotPrice.calcPoolSpotPrice(
                         tokenIn,
-                        tokenOut
+                        tokenOut,
+                        pool
                     );
                 }
                 case 'AaveLinear':
                 case 'ERC4626Linear': {
-                    const linearPool = LinearPool.fromPool(pool);
-                    return this.calculatePoolSpotPrice(
-                        linearPool,
+                    return this.pools.linear.spotPrice.calcPoolSpotPrice(
                         tokenIn,
-                        tokenOut
+                        tokenOut,
+                        pool
                     );
                 }
                 default:

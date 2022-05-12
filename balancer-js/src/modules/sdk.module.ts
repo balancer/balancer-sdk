@@ -20,7 +20,7 @@ export class BalancerSDK {
     ) {
         this.swaps = new Swaps(this.sor);
         this.relayer = new Relayer(this.swaps);
-        this.pricing = new Pricing(this.swaps);
+        this.pricing = new Pricing(config, this.swaps);
     }
 
     public get networkConfig(): BalancerNetworkConfig {
