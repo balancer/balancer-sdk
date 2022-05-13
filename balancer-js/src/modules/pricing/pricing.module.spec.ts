@@ -102,6 +102,7 @@ describe('pricing module', () => {
                         ADDRESSES[Network.MAINNET].USDC.address,
                         weth_usdc_pool_id
                     );
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } catch (err: any) {
                     error = err.message;
                 }
@@ -126,6 +127,7 @@ describe('pricing module', () => {
                         pools_14717479[0].id,
                         [nonValidPool]
                     );
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } catch (err: any) {
                     error = err.message;
                 }
@@ -156,6 +158,7 @@ describe('pricing module', () => {
                 try {
                     const pricing = new Pricing(sdkConfig);
                     await pricing.getSpotPrice('', '');
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } catch (err: any) {
                     error = err.message;
                 }
