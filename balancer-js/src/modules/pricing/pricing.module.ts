@@ -76,8 +76,17 @@ export class Pricing {
             return getSpotPriceAfterSwapForPath(paths[0], 0, ZERO).toString();
         } else {
             // Find pool of interest from pools list
-            const pool = Pools.find(poolId, pools);
-            return pool.spotPrice(tokenIn, tokenOut);
+            const poolData = pools.find(
+                (p) => p.id.toLowerCase() === poolId.toLowerCase()
+            );
+            if (!poolData)
+                throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
+            const pool = Pools.from(poolData);
+            return pool.spotPriceCalculator.calcPoolSpotPrice(
+                tokenIn,
+                tokenOut,
+                poolData
+            );
         }
     }
 }

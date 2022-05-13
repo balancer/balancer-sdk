@@ -17,33 +17,28 @@ export class Pools {
         public linear = new Linear()
     ) {}
 
-    static find(
-        id: string,
-        pools: SubgraphPoolBase[]
+    static from(
+        pool: SubgraphPoolBase
     ): Weighted | Stable | MetaStable | StablePhantom | Linear {
-        // Find pool of interest from pools list
-        const pool = pools.find((p) => p.id.toLowerCase() === id.toLowerCase());
-        if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-
         // Calculate spot price using pool type
         switch (pool.poolType) {
             case 'Weighted':
             case 'Investment':
             case 'LiquidityBootstrapping': {
-                return new Weighted(pool);
+                return new Weighted();
             }
             case 'Stable': {
-                return new Stable(pool);
+                return new Stable();
             }
             case 'MetaStable': {
-                return new MetaStable(pool);
+                return new MetaStable();
             }
             case 'StablePhantom': {
-                return new StablePhantom(pool);
+                return new StablePhantom();
             }
             case 'AaveLinear':
             case 'ERC4626Linear': {
-                return new Linear(pool);
+                return new Linear();
             }
             default:
                 throw new BalancerError(

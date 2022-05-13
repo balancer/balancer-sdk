@@ -1,28 +1,17 @@
-import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { StablePoolLiquidity } from './concerns/stable/liquidity.concern';
 import { StablePoolSpotPrice } from './concerns/stable/spotPrice.concern';
 import { PoolType } from './pool-type.interface';
-import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { LiquidityConcern, SpotPriceConcern } from './concerns/types';
 
 export class Stable implements PoolType {
+    public liquidityCalculator: LiquidityConcern;
+    public spotPriceCalculator: SpotPriceConcern;
+
     constructor(
-        public poolData?: SubgraphPoolBase,
-        public liquidity = new StablePoolLiquidity(),
-        public spotPriceConcern = new StablePoolSpotPrice()
-    ) {}
-
-    updateData(poolData: SubgraphPoolBase): void {
-        this.poolData = poolData;
-    }
-
-    spotPrice(tokenIn: string, tokenOut: string): string {
-        if (!this.poolData)
-            throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
-
-        return this.spotPriceConcern.calcPoolSpotPrice(
-            tokenIn,
-            tokenOut,
-            this.poolData
-        );
+        private liquidityCalculatorConcern = StablePoolLiquidity,
+        private spotPriceCalculatorConcern = StablePoolSpotPrice
+    ) {
+        this.liquidityCalculator = new this.liquidityCalculatorConcern();
+        this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
     }
 }

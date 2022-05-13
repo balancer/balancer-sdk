@@ -1,28 +1,17 @@
-import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { WeightedPoolLiquidity } from './concerns/weighted/liquidity.concern';
 import { WeightedPoolSpotPrice } from './concerns/weighted/spotPrice.concern';
 import { PoolType } from './pool-type.interface';
-import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { LiquidityConcern, SpotPriceConcern } from './concerns/types';
 
 export class Weighted implements PoolType {
+    public liquidityCalculator: LiquidityConcern;
+    public spotPriceCalculator: SpotPriceConcern;
+
     constructor(
-        public poolData?: SubgraphPoolBase,
-        public liquidity = new WeightedPoolLiquidity(),
-        public spotPriceConcern = new WeightedPoolSpotPrice()
-    ) {}
-
-    updateData(poolData: SubgraphPoolBase): void {
-        this.poolData = poolData;
-    }
-
-    spotPrice(tokenIn: string, tokenOut: string): string {
-        if (!this.poolData)
-            throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
-
-        return this.spotPriceConcern.calcPoolSpotPrice(
-            tokenIn,
-            tokenOut,
-            this.poolData
-        );
+        private liquidityCalculatorConcern = WeightedPoolLiquidity,
+        private spotPriceCalculatorConcern = WeightedPoolSpotPrice
+    ) {
+        this.liquidityCalculator = new this.liquidityCalculatorConcern();
+        this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
     }
 }
