@@ -7,9 +7,9 @@ A JavaScript SDK which provides commonly used utilties for interacting with Bala
 ## Getting Started
 
 ```js
-import { BalancerSDK, ConfigSdk, Network } from '@balancer-labs/sdk';
+import { BalancerSDK, BalancerSdkConfig, Network } from '@balancer-labs/sdk';
 
-const config: ConfigSdk = {
+const config: BalancerSdkConfig = {
     network: Network.MAINNET,
     rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
 };

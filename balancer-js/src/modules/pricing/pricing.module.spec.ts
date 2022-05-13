@@ -26,6 +26,7 @@ describe('pricing module', () => {
     before(() => {
         // Mainnet pool snapshot taken at block 14717479
         const mockPoolDataService = new MockPoolDataService(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             pools_14717479 as any
         );
 
@@ -112,6 +113,7 @@ describe('pricing module', () => {
             });
 
             it('should throw with unsupported pool type', async () => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const nonValidPool = { ...(pools_14717479[0] as any) };
                 nonValidPool.poolType = 'UnsupportedPool';
 
