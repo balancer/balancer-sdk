@@ -1,7 +1,6 @@
 import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
-import { BalancerSDK, BalancerSdkConfig, Network, Pools } from '../../src';
-import { TokenBalance } from '../../src/modules/pools/pool-types/concerns/weighted/liquidity.concern';
-import { bnum } from '../../src/lib/utils/bignumber';
+import { BalancerSDK, BalancerSdkConfig, Network } from '../../src';
+import { TokenBalance } from '../../src/types';
 import POOLS from './pools-subset.json';
 import DECORATED_POOLS from './decorated-pools.json';
 import TOKENS from './tokens.json';
@@ -54,7 +53,6 @@ const ETHUSDPriceSum = ['USDC', 'DAI', 'USDT']
     }, BigNumber.from(0));
 const ETHUSDPrice = BigNumber.from(ETHUSDPriceSum).div('3');
 
-
 // console.log('Selected pools: ', selectedPools);
 
 selectedPools.forEach((pool) => {
@@ -68,16 +66,22 @@ selectedPools.forEach((pool) => {
             .mul(ETHUSDPrice)
             .div(parseFixed(tokenDetails?.price || '1', 18));
         const tokenBalance = {
+            token: {
+                decimals: token.decimals,
+                priceRate: token.priceRate,
+                price: formatFixed(price, 18),
+            },
             balance: token.balance,
-            decimals: token.decimals,
-            priceRate: token.priceRate,
-            price: formatFixed(price, 18),
         };
         return tokenBalance;
     });
 
-    const totalLiquidity =
-        balancer.pools.weighted.liquidity.calcTotal(tokenBalances);
+    const poolType = pool.poolType || 'Weighted';
+
+    const totalLiquidity = balancer.pools
+        .getByType(poolType)
+        .liquidity.calcTotal(tokenBalances);
+
     const decoratedPool = DECORATED_POOLS.find((p) => p.id == pool.id);
 
     console.log(`Pool:  ${pool.id} - ${pool.symbol} - ${pool.poolType}`);

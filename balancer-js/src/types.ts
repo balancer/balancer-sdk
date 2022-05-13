@@ -116,3 +116,14 @@ export interface TransactionData {
         amountsOut?: string[];
     };
 }
+
+export interface Token {
+    decimals: number;
+    price: string;
+    priceRate: string;
+}
+
+export interface TokenBalance {
+    token: Token;
+    balance: string;
+}
