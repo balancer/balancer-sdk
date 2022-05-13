@@ -1,5 +1,5 @@
 import { Contract } from '@ethersproject/contracts';
-import { SOR, SubgraphPoolBase } from '@balancer-labs/sor';
+import { SOR, SubgraphPoolBase, SwapInfo } from '@balancer-labs/sor';
 import {
     BatchSwap,
     QuerySimpleFlashSwapParameters,
@@ -9,11 +9,16 @@ import {
     SimpleFlashSwapParameters,
     SwapType,
 } from './types';
-import { queryBatchSwap, queryBatchSwapWithSor } from './queryBatchSwap';
+import {
+    queryBatchSwap,
+    queryBatchSwapWithSor,
+    getSorSwapInfo,
+} from './queryBatchSwap';
 import { balancerVault } from '@/lib/constants/config';
 import { getLimitsForSlippage } from './helpers';
 import vaultAbi from '@/lib/abi/Vault.json';
 import { BalancerSdkConfig } from '@/types';
+import { SwapInput } from './types';
 import { Sor } from '@/modules/sor/sor.module';
 import {
     convertSimpleFlashSwapToBatchSwapParameters,
@@ -22,7 +27,7 @@ import {
 import { Interface } from '@ethersproject/abi';
 
 export class Swaps {
-    private readonly sor: SOR;
+    readonly sor: SOR;
 
     constructor(sorOrConfig: SOR | BalancerSdkConfig) {
         if (sorOrConfig instanceof SOR) {
@@ -206,5 +211,24 @@ export class Swaps {
             ...params,
             vaultContract,
         });
+    }
+
+    /**
+     * Use SOR to get swapInfo for tokenIn<>tokenOut.
+     * @param {SwapInput} swapInput - Swap information used for querying using SOR.
+     * @param {string} swapInput.tokenIn - Addresse of asset in.
+     * @param {string} swapInput.tokenOut - Addresse of asset out.
+     * @param {SwapType} swapInput.swapType - Type of Swap, ExactIn/Out.
+     * @param {string} swapInput.amount - Amount used in swap.
+     * @returns {Promise<SwapInfo>} SOR swap info.
+     */
+    async getSorSwap(swapInput: SwapInput): Promise<SwapInfo> {
+        return await getSorSwapInfo(
+            swapInput.tokenIn,
+            swapInput.tokenOut,
+            swapInput.swapType,
+            swapInput.amount,
+            this.sor
+        );
     }
 }
