@@ -119,8 +119,8 @@ export interface TransactionData {
 
 export interface Token {
     decimals: number;
-    price: string;
-    priceRate: string;
+    price?: string;
+    priceRate?: string;
 }
 
 export interface TokenBalance {
