@@ -11,7 +11,7 @@ use web3::types::Address;
 #[tokio::main]
 async fn main() {
   let web3 = balancer_rs::infura::build_web3();
-  let vault = balancer_rs::Vault::new(web3);
+  let vault = balancer_rs::vault::VaultService::new(web3);
 
   let authorizer = Address::from_str("0xA331D84eC860Bf466b4CdCcFb4aC09a1B43F3aE6").unwrap();
 

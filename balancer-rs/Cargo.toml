@@ -12,3 +12,6 @@ hex = "0.4"
 snailquote = "0.3.1"
 tokio = { version= "1", features = ["full"] }
 web3 = "0.17.0"
+
+[dev-dependencies]
+# For examples

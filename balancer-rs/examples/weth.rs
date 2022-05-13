@@ -10,7 +10,7 @@ async fn main() {
   helpers::print_start_new_example("WETH");
 
   let web3 = balancer_rs::infura::build_web3();
-  let vault = balancer_rs::Vault::new(web3);
+  let vault = balancer_rs::vault::VaultService::new(web3);
   let weth_address = vault.weth().await;
   let address_str = web3::helpers::to_string(&weth_address);
 

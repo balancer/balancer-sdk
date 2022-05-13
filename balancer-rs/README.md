@@ -67,7 +67,7 @@ To run an example:
 
 `cargo run --example [name]`
 
-## Examples List - Vault Methods
+## Examples List - [Vault Methods](https://dev.balancer.fi/references/contracts/apis/the-vault)
 
 ### Authorization
 
@@ -120,3 +120,93 @@ To run an example:
 - [ ] getProtocolFeesCollector
 - [ ] setPaused
 - [x] WETH [`#weth`](./examples/weth.rs)
+
+## Examples List - Pool Methods
+
+### [Base Pool](https://dev.balancer.fi/references/contracts/apis/pools)
+
+- [ ] getVault
+- [ ] getPoolId
+- [ ] setSwapFeePercentage
+- [ ] setPaused
+- [ ] on{Join,Exit}Pool
+- [ ] on{Join,Exit}Pool
+
+### [Weighted Pool](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool)
+
+- [ ] onSwap
+
+### [WeightedPool2Tokens](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool2tokens)
+
+- [ ] onSwap
+- [ ] enableOracle
+- [ ] getMiscData
+- [ ] getLargestSafeQueryWindow
+- [ ] getLatest
+- [ ] getTimeWeightedAverage
+- [ ] getPastAccumulators
+
+### [LiquidityBootstrappingPool](https://dev.balancer.fi/references/contracts/apis/pools/liquiditybootstrappingpool)
+
+#### API
+
+- [ ] onSwap
+- [ ] getSwapEnabled
+- [ ] getGradualWeightUpdateParam
+- [ ] getGradualWeightUpdateParam
+
+#### Permissioned Functions
+
+- [ ] setSwapEnabled
+- [ ] updateWeightsGradually
+
+### [NabagedPools](https://dev.balancer.fi/references/contracts/apis/pools/investmentpools)
+
+#### API
+
+- [ ] onSwap
+- [ ] getSwapEnabled
+- [ ] getManagementSwapFeePercentage
+- [ ] getMinimumWeightChangeDuration
+- [ ] getCollectedManagementFees
+- [ ] getCollectedManagementFees
+
+#### Permissioned Functions
+
+- [ ] setSwapEnabled
+- [ ] updateWeightsGradually
+- [ ] withdrawCollectedManagementFees
+
+### [StablePools](https://dev.balancer.fi/references/contracts/apis/pools/stablepools)
+
+#### API
+
+- [ ] onSwap
+- [ ] getAmplificationParameter
+
+#### Permissioned Functions
+
+- [ ] startAmplificationParameterUpdate
+- [ ] stopAmplificationParameterUpdate
+
+### [MetaStablePools](https://dev.balancer.fi/references/contracts/apis/pools/metastablepools)
+
+#### API
+
+- [ ] onSwap
+- [ ] getAmplificationParameter
+- [ ] enableOracle
+- [ ] getMiscData
+- [ ] getLargestSafeQueryWindow
+- [ ] getLatest
+- [ ] getTimeWeightedAverage
+- [ ] getPastAccumulators
+- [ ] getRateProviders
+- [ ] getPriceRateCache
+- [ ] updatePriceRateCache
+
+#### Permissioned Functions
+
+- [ ] startAmplificationParameterUpdate
+- [ ] stopAmplificationParameterUpdate
+- [ ] setPriceRateCacheDuration
