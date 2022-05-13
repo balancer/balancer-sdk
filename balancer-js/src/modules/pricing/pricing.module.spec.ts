@@ -101,7 +101,7 @@ describe('pricing module', () => {
                         ADDRESSES[Network.MAINNET].USDC.address,
                         weth_usdc_pool_id
                     );
-                } catch (err) {
+                } catch (err: any) {
                     error = err.message;
                 }
                 expect(error).to.eq(
@@ -124,7 +124,7 @@ describe('pricing module', () => {
                         pools_14717479[0].id,
                         [nonValidPool]
                     );
-                } catch (err) {
+                } catch (err: any) {
                     error = err.message;
                 }
                 expect(error).to.eq(
@@ -154,7 +154,7 @@ describe('pricing module', () => {
                 try {
                     const pricing = new Pricing(sdkConfig);
                     await pricing.getSpotPrice('', '');
-                } catch (err) {
+                } catch (err: any) {
                     error = err.message;
                 }
                 expect(error).to.eq(
