@@ -1,15 +1,15 @@
-import { StablePoolLiquidity } from './concerns/stable/liquidity.concern';
-import { StablePoolSpotPrice } from './concerns/stable/spotPrice.concern';
+import { MetaStablePoolLiquidity } from './concerns/metaStable/liquidity.concern';
+import { MetaStablePoolSpotPrice } from './concerns/metaStable/spotPrice.concern';
 import { PoolType } from './pool-type.interface';
 import { LiquidityConcern, SpotPriceConcern } from './concerns/types';
 
-export class Stable implements PoolType {
+export class MetaStable implements PoolType {
     public liquidityCalculator: LiquidityConcern;
     public spotPriceCalculator: SpotPriceConcern;
 
     constructor(
-        private liquidityCalculatorConcern = StablePoolLiquidity,
-        private spotPriceCalculatorConcern = StablePoolSpotPrice
+        private liquidityCalculatorConcern = MetaStablePoolLiquidity,
+        private spotPriceCalculatorConcern = MetaStablePoolSpotPrice
     ) {
         this.liquidityCalculator = new this.liquidityCalculatorConcern();
         this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
