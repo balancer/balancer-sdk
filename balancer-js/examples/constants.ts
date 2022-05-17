@@ -62,3 +62,8 @@ export const DAI: TestToken = {
     address: '0x04df6e4121c27713ed22341e7c7df330f56f289b',
     decimals: 6,
 };
+
+export const WETH: TestToken = {
+    address: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+    decimals: 18,
+};
