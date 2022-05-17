@@ -1,4 +1,5 @@
-import { BigNumberish } from '@ethersproject/bignumber';
+import { SwapInfo } from '@balancer-labs/sor';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 
 export enum SwapType {
@@ -23,10 +24,12 @@ export type SingleSwap = {
 };
 
 export type Swap = {
-    kind: SwapType;
-    singleSwap: SingleSwap;
+    request: SingleSwap;
+    funds: FundManagement;
     limit: BigNumberish;
     deadline: BigNumberish;
+    value?: BigNumberish;
+    outputReference?: BigNumberish;
 };
 
 export type BatchSwapStep = {
@@ -44,6 +47,8 @@ export type BatchSwap = {
     funds: FundManagement;
     limits: BigNumberish[];
     deadline: BigNumberish;
+    value?: BigNumberish;
+    outputReferences?: { index: BigNumberish; key: BigNumberish }[];
 };
 
 export interface FetchPoolsInput {
@@ -90,4 +95,34 @@ export interface SimpleFlashSwapParameters {
 export interface QuerySimpleFlashSwapResponse {
     profits: Record<string, string>;
     isProfitable: boolean;
+}
+
+export interface FindRouteParameters {
+    tokenIn: string;
+    tokenOut: string;
+    amount: BigNumber;
+    gasPrice: BigNumber;
+    maxPools: number;
+}
+
+export interface BuildTransactionParameters {
+    userAddress: string;
+    swapInfo: SwapInfo;
+    kind: SwapType;
+    deadline: BigNumber;
+    maxSlippage: number;
+}
+
+export interface SwapTransactionRequest {
+    to: string;
+    data: string;
+    value?: BigNumber;
+}
+
+export interface SwapAttributes {
+    to: string;
+    functionName: string;
+    attributes: Swap | BatchSwap;
+    data: string;
+    value?: BigNumber;
 }

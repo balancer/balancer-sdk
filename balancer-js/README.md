@@ -16,6 +16,37 @@ const config: BalancerSdkConfig = {
 const balancer = new BalancerSDK(config);
 ```
 
+## Swaps Module
+
+Exposes complete functionality for token swapping. An example of using the module with data fetched from the subgraph:
+
+```js
+// Uses SOR to find optimal route for a trading pair and amount
+const route = balancer.swaps.findRouteGivenIn({
+    tokenIn,
+    tokenOut,
+    amount,
+    gasPrice,
+    maxPools,
+})
+
+// Prepares transaction attributes based on the route
+const transactionAttributes = balancer.swaps.buildSwap({
+    userAddress,
+    swapInfo: route,
+    kind: 0, // 0 - givenIn, 1 - givenOut
+    deadline,
+    maxSlippage,
+})
+
+// Extract parameters required for sendTransaction
+const { to, data, value } = transactionAttributes
+
+// Execution with ethers.js
+const transactionResponse = await signer.sendTransaction({ to, data, value })
+```
+
+
 ## SwapsService
 
 The SwapsService provides function to query and make swaps using Balancer V2 liquidity.

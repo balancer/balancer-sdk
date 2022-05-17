@@ -30,8 +30,9 @@ describe('sor module', () => {
             await sor.fetchPools();
             const pools = sor.getPools();
             expect(pools).to.deep.eq([mockPool]);
-            const providerNetwork = await sor.provider.getNetwork();
-            expect(providerNetwork.chainId).to.eq(sdkConfig.network);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const providerNetwork = (<any>sor.provider)['_network']['chainId'];
+            expect(providerNetwork).to.eq(sdkConfig.network);
         });
 
         it('instantiate via SDK', async () => {
@@ -40,8 +41,11 @@ describe('sor module', () => {
             await balancer.sor.fetchPools();
             const pools = balancer.sor.getPools();
             expect(pools).to.deep.eq([mockPool]);
-            const providerNetwork = await balancer.sor.provider.getNetwork();
-            expect(providerNetwork.chainId).to.eq(sdkConfig.network);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const providerNetwork = (<any>balancer.sor.provider)['_network'][
+                'chainId'
+            ];
+            expect(providerNetwork).to.eq(sdkConfig.network);
         });
     });
 });
