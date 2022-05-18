@@ -6,6 +6,7 @@ import { Sor } from './sor/sor.module';
 import { getNetworkConfig } from './sdk.helpers';
 import { Pools } from './pools/pools.module';
 import { Pricing } from './pricing/pricing.module';
+import { Tokens } from './tokens/tokens.module';
 
 export class BalancerSDK {
     public readonly swaps: Swaps;
@@ -16,7 +17,8 @@ export class BalancerSDK {
         public config: BalancerSdkConfig,
         public sor = new Sor(config),
         public subgraph = new Subgraph(config),
-        public pools = new Pools(config)
+        public pools = new Pools(config),
+        public tokens = new Tokens(config)
     ) {
         this.swaps = new Swaps(this.sor);
         this.relayer = new Relayer(this.swaps);

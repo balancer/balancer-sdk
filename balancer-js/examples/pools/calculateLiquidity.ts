@@ -1,5 +1,5 @@
 import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
-import { BalancerSDK, BalancerSdkConfig, Network } from '../../src';
+import { BalancerSDK, BalancerSdkConfig, Network, StaticTokenProvider } from '../../src';
 import { TokenBalance } from '../../src/types';
 import POOLS from './pools-subset.json';
 import DECORATED_POOLS from './decorated-pools.json';
@@ -27,6 +27,9 @@ const balancer = new BalancerSDK(config);
 // pools.weighted.liquidity.calcTotal(...);
 // pools.stable.liquidity.calcTotal(...);
 
+const staticTokenProvider = new StaticTokenProvider(TOKENS);
+balancer.tokens.setProvider(staticTokenProvider);
+
 const poolIds = [
     '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080',
     '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe',
@@ -44,7 +47,7 @@ const selectedPools = poolIds.map((id) => POOLS.find((p) => p.id === id));
 
 const ETHUSDPriceSum = ['USDC', 'DAI', 'USDT']
     .map((symbol) => {
-        const token = TOKENS.find((t) => t.symbol === symbol);
+        const token = balancer.tokens.getBySymbol(symbol);
         if (!token) return BigNumber.from('1');
         return parseFixed(token.price, 18);
     })
