@@ -48,8 +48,10 @@ const selectedPools = poolIds.map((id) => POOLS.find((p) => p.id === id));
 const ETHUSDPriceSum = ['USDC', 'DAI', 'USDT']
     .map((symbol) => {
         const token = balancer.tokens.getBySymbol(symbol);
-        if (!token) return BigNumber.from('1');
-        return parseFixed(token.price, 18);
+        if (token?.price) {
+            return parseFixed(token.price, 18);
+        }
+        return BigNumber.from('1');
     })
     .reduce((prev, cur) => {
         return prev.add(cur);
@@ -61,7 +63,7 @@ const ETHUSDPrice = BigNumber.from(ETHUSDPriceSum).div('3');
 selectedPools.forEach((pool) => {
     if (!pool) return;
     const tokenBalances: TokenBalance[] = pool.tokens.map((token) => {
-        const tokenDetails = TOKENS.find((t) => t.address === token.address);
+        const tokenDetails = balancer.tokens.get(token.address);
         if (!tokenDetails) {
             console.error(`Could not find token: ${token.address}`);
         }
@@ -70,6 +72,8 @@ selectedPools.forEach((pool) => {
             .div(parseFixed(tokenDetails?.price || '1', 18));
         const tokenBalance = {
             token: {
+                address: token.address,
+                symbol: token.symbol,
                 decimals: token.decimals,
                 priceRate: token.priceRate,
                 price: formatFixed(price, 18),

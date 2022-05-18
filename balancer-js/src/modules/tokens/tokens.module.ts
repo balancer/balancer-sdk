@@ -15,4 +15,8 @@ export class Tokens {
     get(address: string): Token | undefined {
         return this.provider.get(address);
     }
+
+    getBySymbol(symbol: string): Token | undefined {
+        return this.provider.getBySymbol(symbol);
+    }
 }
