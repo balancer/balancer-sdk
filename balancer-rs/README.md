@@ -32,19 +32,34 @@ balancer_rs = "*"
 
 Once installed, you will be able to use the Balancer Rust module as follows:
 
-Example to get the WETH address:
+Example Vault usage ([see in examples](./examples/vault_methods.rs)):
 
 ```rust
-let vault = balancer_rs::Vault::new(web3);
-let weth_address = vault.weth().await;
+fn main() {
+  let rpc_url = "https://rpc.flashbots.net/";
+  let transport = ethcontract::web3::transports::Http::new(rpc_url).unwrap();
+  let web3 = ethcontract::Web3::new(transport);
+
+  let vault_instance = balancer_rs::vault::Vault::new(web3);
+
+  let weth_address = vault_instance.weth().call().await.unwrap();
+}
 ```
 
-### Environment Variables
+Example to get the vault address via a pool ([see in examples](./examples/base_pool_methods.rs)):
 
-```
-INFURA_PROJECT_ID
-WALLET_ADDRESS
-PRIVATE_KEY
+```rust
+use balancer_rs::helpers::macros::*;
+
+fn main() {
+  let rpc_url = "https://rpc.flashbots.net/";
+  let transport = ethcontract::web3::transports::Http::new(rpc_url).unwrap();
+  let web3 = ethcontract::Web3::new(transport);
+
+  let pool_address = addr!("0x01abc00e86c7e258823b9a055fd62ca6cf61a163");
+  let weighted_pool_instance = balancer_rs::pools::WeightedPool::new(web3, addr!(pool_address));
+  let vault_address = weighted_pool_instance.getVault().call().await.unwrap();
+}
 ```
 
 ### Testing
@@ -83,7 +98,7 @@ To run an example:
 ### Pools
 
 - [ ] regiserPools
-- [ ] getPool
+- [x] getPool
 - [ ] registerTokens
 - [ ] deregisterTokens
 - [ ] getPoolTokenInfo
@@ -125,9 +140,9 @@ To run an example:
 
 ### [Base Pool](https://dev.balancer.fi/references/contracts/apis/pools)
 
-- [ ] getVault
-- [ ] getPoolId
-- [ ] setSwapFeePercentage
+- [x] getVault
+- [x] getPoolId
+- [x] setSwapFeePercentage
 - [ ] setPaused
 - [ ] on{Join,Exit}Pool
 - [ ] on{Join,Exit}Pool

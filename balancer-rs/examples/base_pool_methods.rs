@@ -14,7 +14,6 @@ mod helpers;
 use balancer_rs::generated_contracts::weighted_pool::WeightedPool;
 use balancer_rs::helpers::conversions::*;
 use balancer_rs::helpers::macros::*;
-use balancer_rs::weighted_pool;
 use ethers_core::utils;
 use helpers::*;
 
@@ -25,8 +24,11 @@ use helpers::*;
 const RPC_URL: &'static str = "https://rpc.flashbots.net/";
 const POOL_ADDRESS: &'static str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
 fn get_pool_instance() -> WeightedPool {
-  let pool_address = addr!("0x01abc00e86c7e258823b9a055fd62ca6cf61a163");
-  return weighted_pool::get_contract_instance(RPC_URL, pool_address);
+  let transport = ethcontract::web3::transports::Http::new(RPC_URL).unwrap();
+  let web3 = ethcontract::Web3::new(transport);
+  let pool_address = addr!(POOL_ADDRESS);
+
+  return balancer_rs::WeightedPool::new(web3, pool_address);
 }
 
 // BASE POOL API EXAMPLES

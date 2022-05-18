@@ -8,7 +8,7 @@
 extern crate balancer_rs;
 mod helpers;
 
-use balancer_rs::helpers::conversions::*;
+use balancer_rs::types::*;
 use ethcontract::Address;
 use helpers::*;
 use std::str::FromStr;
@@ -19,7 +19,10 @@ use std::str::FromStr;
 // You can replace the RPC_URL with whatever is your prefered rpc endpoint.
 const RPC_URL: &'static str = "https://rpc.flashbots.net/";
 fn get_vault_instance() -> balancer_rs::generated_contracts::vault::Vault {
-  return balancer_rs::vault::get_contract_instance(RPC_URL);
+  let transport = ethcontract::web3::transports::Http::new(RPC_URL).unwrap();
+  let web3 = ethcontract::Web3::new(transport);
+
+  return balancer_rs::vault::Vault::new(web3);
 }
 
 // VAULT API EXAMPLES
@@ -94,8 +97,8 @@ async fn get_pool() {
 
   let instance = get_vault_instance();
   let pool_id = "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080";
-  let hex_string = hex_string_to_bytes32(pool_id);
-  let address_str = instance.get_pool(hex_string).call().await.unwrap();
+  let data = HexString(pool_id).to_bytes32();
+  let address_str = instance.get_pool(data).call().await.unwrap();
 
   println!(
     "Balancer Pool address {:#?} for pool id {:#?}",
