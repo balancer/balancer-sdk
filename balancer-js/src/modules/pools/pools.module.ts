@@ -110,9 +110,7 @@ export class Pools {
      * @param {string} slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
      * @returns Transaction data with calldata. Outputs.amountsOut has amounts of finalTokensOut returned.
      */
-    async exactTokensJoinPool(
-        params: ExactTokensJoinPoolInput
-    ): Promise<TransactionData> {
+    exactTokensJoinPool(params: ExactTokensJoinPoolInput): string {
         const slippageAmountNegative = WeiPerEther.sub(
             BigNumber.from(params.slippage)
         );
@@ -131,7 +129,7 @@ export class Pools {
             assets: params.assets,
             maxAmountsIn: params.amountsIn,
             userData,
-            fromInternalBalance: true,
+            fromInternalBalance: false,
             poolId: params.poolId,
             sender: params.joiner,
             recipient: params.joiner,
@@ -140,12 +138,6 @@ export class Pools {
 
         const joinCall = Pools.constructJoinCall(joinPoolData);
 
-        // TODO: validate if this is the proper way to build the transaction data even if it is not using the Relayer
-        const joinTransaction: TransactionData = {
-            function: 'joinPool',
-            params: [joinCall],
-        };
-
-        return joinTransaction;
+        return joinCall;
     }
 }
