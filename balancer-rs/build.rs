@@ -25,4 +25,5 @@ fn make_contract_from_json(path: &str, name: &str) {
 fn main() {
   make_contract_from_json("./src/abis/SimpleTestContract.json", "simple_test_contract");
   make_contract_from_json("./src/abis/Vault.json", "vault");
+  make_contract_from_json("./src/abis/WeightedPool.json", "weighted_pool");
 }

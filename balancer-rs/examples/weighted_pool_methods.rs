@@ -5,13 +5,12 @@
  *
  * The examples use the RPC_URL constant, but you can/should replace that with your own.
  */
-extern crate balancer_rs;
 mod helpers;
 
-use balancer_rs::helpers::conversions::*;
-use ethcontract::Address;
-use helpers::*;
-use std::str::FromStr;
+extern crate balancer_rs;
+
+pub use ethcontract::Address;
+pub use std::str::FromStr;
 
 // HELPERS
 
@@ -24,7 +23,7 @@ fn get_vault_instance() -> balancer_rs::generated_contracts::vault::Vault {
 
 // VAULT API EXAMPLES
 async fn get_authorizer() {
-  print_start_new_example("Vault#getAuthorizer");
+  helpers::print_start_new_example("Vault#getAuthorizer");
 
   let instance = get_vault_instance();
   let authorizer = instance.get_authorizer().call().await.unwrap();
@@ -33,7 +32,7 @@ async fn get_authorizer() {
 }
 
 async fn set_authorizer() {
-  print_start_new_example("Vault#setAuthorizer");
+  helpers::print_start_new_example("Vault#setAuthorizer");
 
   let instance = get_vault_instance();
   let some_addr = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
@@ -51,7 +50,7 @@ async fn set_authorizer() {
 }
 
 async fn has_approved_relayer() {
-  print_start_new_example("Vault#hasApprovedRelayer");
+  helpers::print_start_new_example("Vault#hasApprovedRelayer");
 
   let instance = get_vault_instance();
   let some_user_addr = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
@@ -70,7 +69,7 @@ async fn has_approved_relayer() {
 }
 
 async fn get_internal_balance() {
-  print_start_new_example("Vault#getInternalBalance");
+  helpers::print_start_new_example("Vault#getInternalBalance");
 
   let instance = get_vault_instance();
   let some_user_addr = "0x85B0Acce5798bEAf27FEBe56572D7567b06c4B07";
@@ -90,11 +89,11 @@ async fn get_internal_balance() {
 }
 
 async fn get_pool() {
-  print_start_new_example("Vault#getPool");
+  helpers::print_start_new_example("Vault#getPool");
 
   let instance = get_vault_instance();
   let pool_id = "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080";
-  let hex_string = hex_string_to_bytes32(pool_id);
+  let hex_string = balancer_rs::helpers::hex_string_to_bytes32(pool_id);
   let address_str = instance.get_pool(hex_string).call().await.unwrap();
 
   println!(
@@ -104,7 +103,7 @@ async fn get_pool() {
 }
 
 async fn weth() {
-  print_start_new_example("Vault#WETH");
+  helpers::print_start_new_example("Vault#WETH");
 
   let instance = get_vault_instance();
   let weth_address = instance.weth().call().await.unwrap();
