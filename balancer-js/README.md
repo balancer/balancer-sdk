@@ -165,6 +165,35 @@ swaps.querySimpleFlashSwap(batchSwap: {
 
 [Example](./examples/querySimpleFlashSwap.ts)
 
+## Pricing Module
+
+Exposes Spot Price functionality allowing user to query spot price for token pair.
+
+```js
+const pricing = new Pricing(sdkConfig);
+```
+
+### #getSpotPrice
+
+Calculates Spot Price for a token pair - for specific pool if ID otherwise finds most liquid path and uses this as reference SP.
+
+@param { string } tokenIn Token in address.
+@param { string } tokenOut Token out address.
+@param { string } poolId Optional - if specified this pool will be used for SP calculation.
+@param { SubgraphPoolBase[] } pools Optional - Pool data. Will be fetched via dataProvider if not supplied.
+@returns  { string } Spot price.
+
+```js
+async getSpotPrice(
+    tokenIn: string,
+    tokenOut: string,
+    poolId = '',
+    pools: SubgraphPoolBase[] = []
+): Promise<string>
+```
+
+[Example](./examples/spotPrice.ts)
+
 ## RelayerService
 
 Relayers are (user opt-in, audited) contracts that can make calls to the vault (with the transaction “sender” being any arbitrary address) and use the sender’s ERC20 vault allowance, internal balance or BPTs on their behalf.
