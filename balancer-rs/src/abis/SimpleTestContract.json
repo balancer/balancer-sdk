@@ -1,0 +1,21 @@
+{
+  "contractName": "SimpleTestContract",
+  "abi": [
+    {
+      "inputs": [
+        { "internalType": "bytes32", "name": "poolId", "type": "bytes32" }
+      ],
+      "name": "getPool",
+      "outputs": [
+        { "internalType": "address", "name": "", "type": "address" },
+        {
+          "internalType": "enum IVault.PoolSpecialization",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

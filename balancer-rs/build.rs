@@ -1,0 +1,28 @@
+use ethcontract_generate::loaders::TruffleLoader;
+use ethcontract_generate::ContractBuilder;
+use std::path::Path;
+
+fn make_contract_from_json(path: &str, name: &str) {
+  println!("Building contract {} to {:#?}", path, name);
+
+  // Prepare filesystem paths.
+  let dest = Path::new("./src/generated_contracts/").join(format!("{}.rs", name));
+
+  // Load a contract.
+  let contract = TruffleLoader::new().load_contract_from_file(path).unwrap();
+
+  // Generate bindings for it.
+  ContractBuilder::new()
+    .visibility_modifier("pub")
+    // It seems with large files, the formatting fails and you'll need to do it manually
+    .rustfmt(false)
+    .generate(&contract)
+    .unwrap()
+    .write_to_file(dest)
+    .unwrap();
+}
+
+fn main() {
+  make_contract_from_json("./src/abis/SimpleTestContract.json", "simple_test_contract");
+  make_contract_from_json("./src/abis/Vault.json", "vault");
+}

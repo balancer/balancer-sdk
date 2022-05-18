@@ -15,3 +15,6 @@ target/
 
 # Env files
 .env
+
+# OS files
+.DS_Store

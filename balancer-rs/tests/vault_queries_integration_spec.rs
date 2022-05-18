@@ -10,8 +10,10 @@ mod tests {
   // Test to see if the module can get the WETH address from the vault
   #[actix_rt::test]
   async fn test_weth_async() {
+    use balancer_rs::vault::vault_service::VaultService;
+
     let web3 = balancer_rs::infura::build_web3();
-    let vault = balancer_rs::Vault::new(web3);
+    let vault = VaultService::new(web3);
     let weth_address = vault.weth().await;
 
     let address_str = web3::helpers::to_string(&weth_address);

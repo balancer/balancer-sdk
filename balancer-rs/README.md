@@ -72,12 +72,12 @@ To run an example:
 ### Authorization
 
 - [x] getAuthorizer [`#get_authorizer`](./examples/get_authorizer.rs)
-- [ ] setAuthorizer [`#set_authorizer`](./examples/set_authorizer.rs)
-- [ ] hasApprovedRelayer
+- [x] setAuthorizer [`#set_authorizer`](./examples/set_authorizer.rs)
+- [x] hasApprovedRelayer
 
 ### Internal Balances
 
-- [ ] getInternalBalances
+- [x] getInternalBalances
 - [ ] manageUserBalance
 
 ### Pools

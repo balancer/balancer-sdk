@@ -14,7 +14,7 @@ impl BasePool {
       web3.eth(),
       pool_address,
       // We can use this for the base pool abi
-      include_bytes!("../abis/weighted_pool.json"),
+      include_bytes!("../abis/WeightedPool.json"),
     )
     .unwrap();
 
