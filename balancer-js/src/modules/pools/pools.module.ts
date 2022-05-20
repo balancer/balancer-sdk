@@ -1,33 +1,33 @@
-import { BigNumber } from '@ethersproject/bignumber';
-import { WeiPerEther } from '@ethersproject/constants';
-
-import { BalancerSdkConfig, JoinPoolRequest, TransactionData } from '@/types';
-import {
-    EncodeJoinPoolInput,
-    JoinPoolData,
-    ExactTokensJoinPoolInput,
-} from './types';
+import { BalancerSdkConfig } from '@/types';
 import { Stable } from './pool-types/stable.module';
 import { Weighted } from './pool-types/weighted.module';
 import { MetaStable } from './pool-types/metaStable.module';
 import { StablePhantom } from './pool-types/stablePhantom.module';
 import { Linear } from './pool-types/linear.module';
-import { SubgraphPoolBase } from '@balancer-labs/sor';
+import { SOR, SubgraphPoolBase } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { Interface } from '@ethersproject/abi';
 
-import vaultAbi from '@/lib/abi/Vault.json';
-import { WeightedPoolEncoder } from '@/pool-weighted';
+import { Sor } from '../sor/sor.module';
+import { JoinConcern } from './pool-types/concerns/types';
 
 export class Pools {
+    private readonly sor: Sor;
+
     constructor(
         config: BalancerSdkConfig,
+        sor?: SOR,
         public weighted = new Weighted(),
         public stable = new Stable(),
         public metaStable = new MetaStable(),
         public stablePhantom = new StablePhantom(),
         public linear = new Linear()
-    ) {}
+    ) {
+        if (sor) {
+            this.sor = sor;
+        } else {
+            this.sor = new Sor(config);
+        }
+    }
 
     static from(
         pool: SubgraphPoolBase
@@ -59,85 +59,84 @@ export class Pools {
         }
     }
 
-    static encodeJoinPool(params: EncodeJoinPoolInput): string {
-        const vaultLibrary = new Interface(vaultAbi);
-
-        return vaultLibrary.encodeFunctionData('joinPool', [
-            params.poolId,
-            params.sender,
-            params.recipient,
-            params.joinPoolRequest,
-        ]);
+    /**
+     * fetchPools saves updated pools data to SOR internal onChainBalanceCache.
+     * @param {SubgraphPoolBase[]} [poolsData=[]] If poolsData passed uses this as pools source otherwise fetches from config.subgraphUrl.
+     * @param {boolean} [isOnChain=true] If isOnChain is true will retrieve all required onChain data via multicall otherwise uses subgraph values.
+     * @returns {boolean} Boolean indicating whether pools data was fetched correctly (true) or not (false).
+     */
+    async fetchPools(): Promise<boolean> {
+        return this.sor.fetchPools();
     }
 
-    static constructJoinCall(params: JoinPoolData): string {
-        const {
-            assets,
-            maxAmountsIn,
-            userData,
-            fromInternalBalance,
-            poolId,
-            sender,
-            recipient,
-        } = params;
-
-        const joinPoolRequest: JoinPoolRequest = {
-            assets,
-            maxAmountsIn,
-            userData,
-            fromInternalBalance,
-        };
-
-        const joinPoolInput: EncodeJoinPoolInput = {
-            poolId,
-            sender,
-            recipient,
-            joinPoolRequest,
-        };
-
-        const joinEncoded = Pools.encodeJoinPool(joinPoolInput);
-        return joinEncoded;
+    public getPools(): SubgraphPoolBase[] {
+        return this.sor.getPools();
     }
 
     /**
      * exactTokensJoinPool Joins user to desired pool with exact tokens in and minimum BPT out based on slippage tolerance
-     * @param {ExactTokensJoinPoolInput} params
      * @param {string} joiner - Address used to join pool.
      * @param {string} poolId - Id of pool being joined.
-     * @param {string[]} assets - Array containing addresses of tokens to provide for joining pool. (must have same length and order as amountsIn)
-     * @param {string[]} amountsIn - Array containing amounts of tokens to provide for joining pool. (must have same length and order as assets)
-     * @param {string} expectedBPTOut - Expected amounts of BPT to receive when joining pool.
+     * @param {string[]} tokensIn - Array containing addresses of tokens to provide for joining pool. (must have same length and order as amountsIn)
+     * @param {string[]} amountsIn - Array containing amounts of tokens to provide for joining pool. (must have same length and order as tokensIn)
      * @param {string} slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
-     * @returns Transaction data with calldata. Outputs.amountsOut has amounts of finalTokensOut returned.
+     * @returns String with encoded transaction data.
      */
-    exactTokensJoinPool(params: ExactTokensJoinPoolInput): string {
-        const slippageAmountNegative = WeiPerEther.sub(
-            BigNumber.from(params.slippage)
+    async exactTokensJoinPool(
+        joiner: string,
+        poolId: string,
+        tokensIn: string[],
+        amountsIn: string[],
+        slippage: string
+    ): Promise<string> {
+        const poolsFetched = await this.fetchPools();
+        if (!poolsFetched)
+            throw new BalancerError(BalancerErrorCode.NO_POOL_DATA); // TODO: review this later
+        const pools = this.getPools();
+        const pool = pools.find(
+            (p) => p.id.toLowerCase() === poolId.toLowerCase()
         );
-        // Set min amounts of BPT out based on slippage
-        const minBPTOut = BigNumber.from(params.expectedBPTOut)
-            .mul(slippageAmountNegative)
-            .div(WeiPerEther)
-            .toString();
+        if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
-        const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
-            params.amountsIn,
-            minBPTOut
+        let joinCalculator: JoinConcern;
+
+        // Calculate spot price using pool type
+        switch (pool.poolType) {
+            case 'Weighted':
+            case 'Investment':
+            case 'LiquidityBootstrapping': {
+                joinCalculator = this.weighted.joinCalculator;
+                break;
+            }
+            case 'Stable': {
+                joinCalculator = this.stable.joinCalculator;
+                break;
+            }
+            case 'MetaStable': {
+                joinCalculator = this.metaStable.joinCalculator;
+                break;
+            }
+            case 'StablePhantom': {
+                joinCalculator = this.stablePhantom.joinCalculator;
+                break;
+            }
+            case 'AaveLinear':
+            case 'ERC4626Linear': {
+                joinCalculator = this.linear.joinCalculator;
+                break;
+            }
+            default:
+                throw new BalancerError(
+                    BalancerErrorCode.UNSUPPORTED_POOL_TYPE
+                );
+        }
+
+        return joinCalculator.exactTokensJoinPool(
+            joiner,
+            pool,
+            tokensIn,
+            amountsIn,
+            slippage
         );
-
-        const joinPoolData: JoinPoolData = {
-            assets: params.assets,
-            maxAmountsIn: params.amountsIn,
-            userData,
-            fromInternalBalance: false,
-            poolId: params.poolId,
-            sender: params.joiner,
-            recipient: params.joiner,
-            joinPoolRequest: {} as JoinPoolRequest,
-        };
-
-        const joinCall = Pools.constructJoinCall(joinPoolData);
-
-        return joinCall;
     }
 }
