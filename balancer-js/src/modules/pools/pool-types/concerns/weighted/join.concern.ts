@@ -100,15 +100,6 @@ export class WeighedPoolJoin implements JoinConcern {
         );
         const amounts = denormAmounts.map((a) => bnum(a.toString()));
 
-        // console.log(this.calc.pool);
-        // console.log(balances);
-        // console.log(weights);
-        // console.log(amounts);
-        // console.log(this.calc.poolTotalSupply.toString());
-        // console.log(bnum(this.calc.poolTotalSupply.toString()));
-        // console.log(this.calc.poolSwapFee.toString());
-        // console.log(bnum(this.calc.poolSwapFee.toString()));
-
         const fullBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
             balances,
             weights,
