@@ -1,20 +1,15 @@
 import dotenv from 'dotenv';
-import { defaultAbiCoder } from '@ethersproject/abi';
 import { Wallet } from '@ethersproject/wallet';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { Contract } from '@ethersproject/contracts';
 import { BalancerSDK, BalancerSdkConfig, Network } from '../src/index';
 import { USDC, WETH } from './constants';
 
 import { balancerVault } from '../src/lib/constants/config';
-import vaultAbi from '../src/lib/abi/Vault.json';
 
 dotenv.config();
 
 /*
-Example showing how to use Relayer to chain exitPool followed by batchSwaps using tokens from exit.
-User must approve relayer.
-Vault must have approvals for tokens.
+Example showing how to use Pools module to join pools with exact tokens in method.
 */
 async function exactTokensJoinPool() {
     const config: BalancerSdkConfig = {
@@ -30,7 +25,7 @@ async function exactTokensJoinPool() {
 
     const txInfo = balancer.pools.exactTokensJoinPool(
         wallet.address,
-        '0x3a19030ed746bd1c3f2b0f996ff9479af04c5f0a000200000000000000000004',
+        '0x3a19030ed746bd1c3f2b0f996ff9479af04c5f0a000200000000000000000004', // BAL50-WETH50 pool on kovan https://kovan.etherscan.io/token/0x3A19030Ed746bD1C3f2B0f996FF9479aF04C5F0A
         [WETH.address, USDC.address],
         ['40107594979787384', '1000000000'],
         '152734682157524511368' // TODO: calculate a realistic amount of expected BTP out
