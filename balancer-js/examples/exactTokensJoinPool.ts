@@ -28,14 +28,13 @@ async function exactTokensJoinPool() {
 
     const balancer = new BalancerSDK(config);
 
-    const txInfo = balancer.pools.exactTokensJoinPool({
-        joiner: wallet.address,
-        poolId: '0x3a19030ed746bd1c3f2b0f996ff9479af04c5f0a000200000000000000000004',
-        assets: [WETH.address, USDC.address],
-        amountsIn: ['40107594979787384', '1000000000'],
-        expectedBPTOut: '0', // TODO: validate if the expected output set as 0 actually means no restriction in the output - get from the frontend
-        slippage: '10000000000000000', // Slippage for join 1%
-    });
+    const txInfo = balancer.pools.exactTokensJoinPool(
+        wallet.address,
+        '0x3a19030ed746bd1c3f2b0f996ff9479af04c5f0a000200000000000000000004',
+        [WETH.address, USDC.address],
+        ['40107594979787384', '1000000000'],
+        '152734682157524511368' // TODO: calculate a realistic amount of expected BTP out
+    );
 
     const tx = await wallet.call({
         data: txInfo,
