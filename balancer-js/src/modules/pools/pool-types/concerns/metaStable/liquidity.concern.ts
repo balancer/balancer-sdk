@@ -1,11 +1,12 @@
 import { LiquidityConcern } from '../types';
 import { TokenBalance } from '@/types';
-import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
+import { parseFixed, formatFixed } from '@ethersproject/bignumber';
+import { WeiPerEther as ONE, Zero } from '@ethersproject/constants';
 
 export class MetaStablePoolLiquidity implements LiquidityConcern {
     calcTotal(tokenBalances: TokenBalance[]): string {
-        let sumBalance = BigNumber.from(0);
-        let sumValue = BigNumber.from(0);
+        let sumBalance = Zero;
+        let sumValue = Zero;
 
         for (let i = 0; i < tokenBalances.length; i++) {
             const tokenBalance = tokenBalances[i];
@@ -17,7 +18,15 @@ export class MetaStablePoolLiquidity implements LiquidityConcern {
             }
 
             const price = parseFixed(tokenBalance.token.price, 18);
-            const balance = parseFixed(tokenBalance.balance, 18);
+            const priceRate = parseFixed(
+                tokenBalance.token.priceRate || '1',
+                18
+            );
+
+            // Apply priceRate to scale the balance correctly
+            const balance = parseFixed(tokenBalance.balance, 18)
+                .mul(priceRate)
+                .div(ONE);
 
             const value = balance.mul(price);
             sumValue = sumValue.add(value);
