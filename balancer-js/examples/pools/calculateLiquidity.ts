@@ -1,5 +1,11 @@
 import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
-import { BalancerSDK, BalancerSdkConfig, Network, StaticTokenProvider } from '../../src';
+import {
+    BalancerSDK,
+    BalancerSdkConfig,
+    Network,
+    StaticTokenProvider,
+    Pools,
+} from '../../src';
 import { TokenBalance } from '../../src/types';
 import POOLS from './pools-subset.json';
 import DECORATED_POOLS from './decorated-pools.json';
@@ -79,15 +85,12 @@ selectedPools.forEach((pool) => {
                 price: formatFixed(price, 18),
             },
             balance: token.balance,
+            weight: token.weight ? parseFixed(token.weight, 2).toString() : '0',
         };
         return tokenBalance;
     });
 
-    const poolType = pool.poolType || 'Weighted';
-
-    const totalLiquidity = balancer.pools
-        .getByType(poolType)
-        .liquidity.calcTotal(tokenBalances);
+    const totalLiquidity = Pools.from(pool).liquidity.calcTotal(tokenBalances);
 
     const decoratedPool = DECORATED_POOLS.find((p) => p.id == pool.id);
 

@@ -7,14 +7,12 @@
         "wrappedIndex": 0,
         "mainIndex": 0,
         "totalSwapVolume": "612338433.0456970790338563366556254",
-        "upperTarget": null,
         "tokensList": [
             "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
         ],
         "poolType": "MetaStable",
         "totalShares": "75964.966050674744440747",
-        "lowerTarget": null,
         "totalSwapFee": "244935.3732182788316135425346622516",
         "swapsCount": "2629",
         "totalLiquidity": "141719896.5784586828479153757182586",
@@ -57,7 +55,6 @@
         "wrappedIndex": 0,
         "mainIndex": 0,
         "totalSwapVolume": "118306382.6326532550464085271297371",
-        "upperTarget": null,
         "tokensList": [
             "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
             "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2",
@@ -66,7 +63,6 @@
         ],
         "poolType": "StablePhantom",
         "totalShares": "148403251.383272174590598015",
-        "lowerTarget": null,
         "totalSwapFee": "1206.360294779271171439543469426801",
         "swapsCount": "1995",
         "totalLiquidity": "148780434.0857589207655245277363832",
@@ -131,7 +127,6 @@
         "wrappedIndex": 0,
         "mainIndex": 0,
         "totalSwapVolume": "6578059935.525332853377248027",
-        "upperTarget": null,
         "tokensList": [
             "0x6b175474e89094c44da98b954eedeac495271d0f",
             "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
@@ -139,7 +134,6 @@
         ],
         "poolType": "Stable",
         "totalShares": "130561258.294988197827735431",
-        "lowerTarget": null,
         "totalSwapFee": "603667.29570368734020478274695",
         "swapsCount": "23623",
         "totalLiquidity": "130230493.8291366356477030497345191",
@@ -192,14 +186,12 @@
         "wrappedIndex": 0,
         "mainIndex": 0,
         "totalSwapVolume": "1917261427.2449131854157914080227",
-        "upperTarget": null,
         "tokensList": [
             "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
         ],
         "poolType": "Weighted",
         "totalShares": "13355.897648839977400873",
-        "lowerTarget": null,
         "totalSwapFee": "2741813.371648552653027494916104866",
         "swapsCount": "24373",
         "totalLiquidity": "96121465.48852588867409860992342417",
@@ -241,14 +233,12 @@
         "wrappedIndex": 0,
         "mainIndex": 0,
         "totalSwapVolume": "1398821089.438668",
-        "upperTarget": null,
         "tokensList": [
             "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
         ],
         "poolType": "Weighted",
         "totalShares": "1352409.932694509652813334",
-        "lowerTarget": null,
         "totalSwapFee": "2378314.5166597123",
         "swapsCount": "85071",
         "totalLiquidity": "64756725.24540200000000000000000001",
@@ -290,14 +280,12 @@
         "wrappedIndex": 0,
         "mainIndex": 0,
         "totalSwapVolume": "876057014.5849226452824950311834075",
-        "upperTarget": null,
         "tokensList": [
             "0xba100000625a3754423978a60c9317c58a424e3d",
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
         ],
         "poolType": "Weighted",
         "totalShares": "3595615.082825200140608544",
-        "lowerTarget": null,
         "totalSwapFee": "1520620.952795012125541012630683986",
         "swapsCount": "32456",
         "totalLiquidity": "75125458.75955019765763668286464256",
@@ -339,14 +327,12 @@
         "wrappedIndex": 0,
         "mainIndex": 0,
         "totalSwapVolume": "225885897.899894976213283983883831",
-        "upperTarget": null,
         "tokensList": [
             "0x956f47f50a910163d8bf957cf5846d573e7f87ca",
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
         ],
         "poolType": "Weighted",
         "totalShares": "386844.60586952898661366",
-        "lowerTarget": null,
         "totalSwapFee": "677657.6936996849286398519516514965",
         "swapsCount": "4602",
         "totalLiquidity": "69427893.53746734837513478544401495",
@@ -388,14 +374,12 @@
         "wrappedIndex": 0,
         "mainIndex": 0,
         "totalSwapVolume": "69052027.45619764575952231240813262",
-        "upperTarget": null,
         "tokensList": [
             "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
         ],
         "poolType": "Weighted",
         "totalShares": "7258.870526005584714263",
-        "lowerTarget": null,
         "totalSwapFee": "305674.9602629912029632857878129485",
         "swapsCount": "3653",
         "totalLiquidity": "31426474.03579654772355547351776582",
@@ -437,14 +421,12 @@
         "wrappedIndex": 0,
         "mainIndex": 0,
         "totalSwapVolume": "205441907.0055256339254302014757212",
-        "upperTarget": null,
         "tokensList": [
             "0x6810e776880c02933d47db1b9fc05908e5386b96",
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
         ],
         "poolType": "Weighted",
         "totalShares": "110606.650194986123303718",
-        "lowerTarget": null,
         "totalSwapFee": "448261.1710567994033552414998821613",
         "swapsCount": "7989",
         "totalLiquidity": "31717021.6343331576015905047185688",
@@ -486,14 +468,12 @@
         "wrappedIndex": 0,
         "mainIndex": 0,
         "totalSwapVolume": "2501664577.523403435820277332",
-        "upperTarget": null,
         "tokensList": [
             "0x6b175474e89094c44da98b954eedeac495271d0f",
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
         ],
         "poolType": "Weighted",
         "totalShares": "332328.213923828188781924",
-        "lowerTarget": null,
         "totalSwapFee": "4016418.1855238160162020617464",
         "swapsCount": "54898",
         "totalLiquidity": "31403491.51141153400056925760579356",

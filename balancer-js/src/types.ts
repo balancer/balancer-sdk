@@ -128,4 +128,5 @@ export interface Token {
 export interface TokenBalance {
     token: Token;
     balance: string;
+    weight: string;
 }

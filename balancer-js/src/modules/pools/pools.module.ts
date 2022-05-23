@@ -7,14 +7,11 @@ import { StablePhantom } from './pool-types/stablePhantom.module';
 import { Linear } from './pool-types/linear.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { Investment } from './pool-types/investment.module';
-import { LiquidityBootstrapping } from './pool-types/liquidityBootstrapping.module';
 
 export class Pools {
     constructor(
         config: BalancerSdkConfig,
         public weighted = new Weighted(),
-        public investment = new Investment(),
         public stable = new Stable(),
         public metaStable = new MetaStable(),
         public stablePhantom = new StablePhantom(),
