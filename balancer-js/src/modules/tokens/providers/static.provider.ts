@@ -6,13 +6,13 @@ export class StaticTokenProvider implements TokenProvider {
 
     get(address: string): Token | undefined {
         return this.tokens.find((token) => {
-            token.address === address;
+            return token.address.toLowerCase() === address.toLowerCase();
         });
     }
 
     getBySymbol(symbol: string): Token | undefined {
         return this.tokens.find((token) => {
-            token.symbol === symbol;
+            return token.symbol === symbol;
         });
     }
 }
