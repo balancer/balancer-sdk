@@ -1,55 +1,68 @@
 /**
  *  Example showing how to find a swap and send it using ethers.
  */
-
 import dotenv from 'dotenv';
-import { BigNumber } from '@ethersproject/bignumber';
-import { Wallet } from '@ethersproject/wallet';
-import { InfuraProvider } from '@ethersproject/providers';
 import { BalancerSDK, Network } from '../src/index';
+import mainnetTop10 from '@/test/lib/mainnet-top-10.json';
+import { MockPoolDataService } from '@/test/lib/mockPool';
+import { getOnChainBalances } from '@/modules/sor/pool-data/onChainData';
+import { mapPools } from '@/modules/sor/pool-data/subgraphPoolDataService';
+import { JsonRpcProvider } from '@ethersproject/providers';
+import { Wallet } from '@ethersproject/wallet';
+import { getNetworkConfig } from '../src/modules/sdk.helpers';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
 
 dotenv.config();
 
-const { TRADER_KEY, TRADER_ADDRESS, INFURA_PROJECT_ID } = process.env;
-const rpcUrl = `https://kovan.infura.io/v3/${INFURA_PROJECT_ID}`;
+const { TRADER_KEY, TRADER_ADDRESS } = process.env;
 
-const balancer = new BalancerSDK({
-    network: Network.KOVAN,
-    rpcUrl,
-});
-
-const provider = new InfuraProvider(Network.KOVAN, INFURA_PROJECT_ID);
+const network = Network.MAINNET;
+const rpcUrl = `http://127.0.0.1:8545`;
+const provider = new JsonRpcProvider(rpcUrl, network);
+const { addresses } = getNetworkConfig({ network, rpcUrl });
 const wallet = new Wallet(TRADER_KEY as string, provider);
 
-async function executeSwapWithEthers() {
-    const userAddress =
-        TRADER_ADDRESS || '0x0000000000000000000000000000000000000000';
-    const eth = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'; // ETH
-    const usdc = '0xc2569dd7d0fd715b054fbf16e75b001e5c0c1115'; // 6 decimals
-    const dai = '0x04df6e4121c27713ed22341e7c7df330f56f289b'; // 18 decimals
-    const amount = BigNumber.from('1000000000000000000');
-    const gasPrice = BigNumber.from('10000000000000');
-    const maxPools = 4;
-    const deadline = BigNumber.from(`${Math.ceil(Date.now() / 1000) + 60}`) // 60 seconds from now
-    const maxSlippage = 50; // 50 bsp = 0.5%
+async function executePoolFetching() {
+    const pools = mapPools(mainnetTop10);
+
+    const onchain = await getOnChainBalances(
+        pools,
+        addresses.contracts.multicall,
+        addresses.contracts.vault,
+        provider
+    );
+
+    const mockPoolDataService = new MockPoolDataService(onchain);
+
+    const balancer = new BalancerSDK({
+        network,
+        rpcUrl,
+        sor: {
+            tokenPriceService: 'coingecko',
+            poolDataService: mockPoolDataService,
+        },
+    });
 
     await balancer.swaps.fetchPools();
 
-    const route = await balancer.swaps.findRouteGivenIn({
-        tokenIn: dai,
-        tokenOut: usdc,
-        amount,
-        gasPrice,
-        maxPools,
+    const swapInfo = await balancer.swaps.findRouteGivenIn({
+        // tokenIn: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // weth
+        tokenIn: AddressZero, // eth
+        tokenOut: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', // wBTC
+        amount: parseFixed('1', 18),
+        gasPrice: parseFixed('1', 9),
+        maxPools: 4,
     });
 
-    console.log(route);
+    const userAddress = TRADER_ADDRESS as string;
+    const deadline = BigNumber.from(`${Math.ceil(Date.now() / 1000) + 60}`); // 60 seconds from now
+    const maxSlippage = 50; // 50 bsp = 0.5%
 
-    // Prepares transaction attributes based on the route
     const transactionAttributes = balancer.swaps.buildSwap({
         userAddress,
-        swapInfo: route,
-        kind: 0, // 0 - givenIn, 1 - givenOut
+        swapInfo,
+        kind: 0,
         deadline,
         maxSlippage,
     });
@@ -58,14 +71,17 @@ async function executeSwapWithEthers() {
     const { to, data, value } = transactionAttributes;
 
     // Execution with ethers.js
-    const transactionResponse = await wallet.sendTransaction({
-        to,
-        data,
-        value,
-    });
-
-    console.log(transactionResponse);
+    try {
+        const transactionResponse = await wallet.sendTransaction({
+            to,
+            data,
+            value,
+        });
+        console.log(transactionResponse);
+    } catch (err) {
+        console.log(err);
+    }
 }
 
-// yarn examples:run ./examples/swap.ts
-executeSwapWithEthers();
+// yarn examples:run ./examples/fetch-pools.ts
+executePoolFetching();
