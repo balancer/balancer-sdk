@@ -20,17 +20,18 @@ In some examples we present a way to make end to end trades against mainnet stat
 
 Installation instructions for:
 
-* [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation)
-  
-  To start a forked node:
-  ```
-  anvil -f FORKABLE_RPC_URL (optional pinned block: --fork-block-number XXX)
-  ```
 * [Hardhat](https://hardhat.org/getting-started/#installation)
 
   To start a forked node:
   ```
-  npx hardhat --fork FORKABLE_RPC_URL (optional pinned block: --fork-block-number XXX)
+  npm run node
+  ```
+
+* [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation) - use with caution, still experimental.
+  
+  To start a forked node:
+  ```
+  anvil -f FORKABLE_RPC_URL (optional pinned block: --fork-block-number XXX)
   ```
 
 ## Swaps Module

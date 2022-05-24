@@ -10,8 +10,9 @@ import { mapPools } from '@/modules/sor/pool-data/subgraphPoolDataService';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Wallet } from '@ethersproject/wallet';
 import { getNetworkConfig } from '../src/modules/sdk.helpers';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
+import { Contract } from '@ethersproject/contracts';
 
 dotenv.config();
 
@@ -22,6 +23,13 @@ const rpcUrl = `http://127.0.0.1:8545`;
 const provider = new JsonRpcProvider(rpcUrl, network);
 const { addresses } = getNetworkConfig({ network, rpcUrl });
 const wallet = new Wallet(TRADER_KEY as string, provider);
+
+const tokenOut = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'; // wBTC
+const tokenOutContract = new Contract(
+    tokenOut,
+    ['function balanceOf(address) external view returns (uint256)'],
+    provider
+);
 
 async function executePoolFetching() {
     const pools = mapPools(mainnetTop10);
@@ -49,7 +57,7 @@ async function executePoolFetching() {
     const swapInfo = await balancer.swaps.findRouteGivenIn({
         // tokenIn: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // weth
         tokenIn: AddressZero, // eth
-        tokenOut: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', // wBTC
+        tokenOut,
         amount: parseFixed('1', 18),
         gasPrice: parseFixed('1', 9),
         maxPools: 4,
@@ -72,12 +80,24 @@ async function executePoolFetching() {
 
     // Execution with ethers.js
     try {
-        const transactionResponse = await wallet.sendTransaction({
-            to,
-            data,
-            value,
-        });
-        console.log(transactionResponse);
+        const balanceBefore = await tokenOutContract.balanceOf(userAddress);
+
+        await (
+            await wallet.sendTransaction({
+                to,
+                data,
+                value,
+            })
+        ).wait();
+
+        // check delta
+        const balanceAfter = await tokenOutContract.balanceOf(userAddress);
+        console.log(
+            `Amount received: ${formatFixed(
+                balanceAfter.sub(balanceBefore),
+                8
+            )} Amount expected: ${formatFixed(swapInfo.returnAmount, 8)}`
+        );
     } catch (err) {
         console.log(err);
     }
