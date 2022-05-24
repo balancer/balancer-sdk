@@ -16,6 +16,23 @@ const config: BalancerSdkConfig = {
 const balancer = new BalancerSDK(config);
 ```
 
+In some examples we present a way to make end to end trades against mainnet state. To run them you will need to setup a localhost test node using tools like ganache, hardhat, anvil.
+
+Installation instructions for:
+
+* [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation)
+  
+  To start a forked node:
+  ```
+  anvil -f FORKABLE_RPC_URL (optional pinned block: --fork-block-number XXX)
+  ```
+* [Hardhat](https://hardhat.org/getting-started/#installation)
+
+  To start a forked node:
+  ```
+  npx hardhat --fork FORKABLE_RPC_URL (optional pinned block: --fork-block-number XXX)
+  ```
+
 ## Swaps Module
 
 Exposes complete functionality for token swapping. An example of using the module with data fetched from the subgraph:
