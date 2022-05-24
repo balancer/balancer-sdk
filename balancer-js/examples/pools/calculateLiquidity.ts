@@ -1,4 +1,3 @@
-import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
 import {
     BalancerSDK,
     BalancerSdkConfig,
@@ -6,7 +5,7 @@ import {
     StaticTokenProvider,
     Pools,
 } from '../../src';
-import { TokenBalance } from '../../src/types';
+import { Liquidity } from '../../src/modules/liquidity/liquidity.module';
 import POOLS from './pools-subset.json';
 import DECORATED_POOLS from './decorated-pools.json';
 import TOKENS from './tokens.json';
@@ -36,6 +35,8 @@ const balancer = new BalancerSDK(config);
 const staticTokenProvider = new StaticTokenProvider(TOKENS);
 balancer.tokens.setProvider(staticTokenProvider);
 
+const liquidity = new Liquidity(config, balancer.tokens);
+
 const poolIds = [
     '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080',
     '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe',
@@ -51,47 +52,12 @@ const poolIds = [
 
 const selectedPools = poolIds.map((id) => POOLS.find((p) => p.id === id));
 
-const ETHUSDPriceSum = ['USDC', 'DAI', 'USDT']
-    .map((symbol) => {
-        const token = balancer.tokens.getBySymbol(symbol);
-        if (token?.price) {
-            return parseFixed(token.price, 18);
-        }
-        return BigNumber.from('1');
-    })
-    .reduce((prev, cur) => {
-        return prev.add(cur);
-    }, BigNumber.from(0));
-const ETHUSDPrice = BigNumber.from(ETHUSDPriceSum).div('3');
-
 // console.log('Selected pools: ', selectedPools);
 
-selectedPools.forEach((pool) => {
+selectedPools.forEach(async (pool) => {
     if (!pool) return;
-    const tokenBalances: TokenBalance[] = pool.tokens.map((token) => {
-        const tokenDetails = balancer.tokens.get(token.address);
-        if (!tokenDetails) {
-            console.error(`Could not find token: ${token.address}`);
-        }
-        const price = parseFixed('1', 18)
-            .mul(ETHUSDPrice)
-            .div(parseFixed(tokenDetails?.price || '1', 18));
-        const tokenBalance = {
-            token: {
-                address: token.address,
-                symbol: token.symbol,
-                decimals: token.decimals,
-                priceRate: token.priceRate,
-                price: formatFixed(price, 18),
-            },
-            balance: token.balance,
-            weight: token.weight ? parseFixed(token.weight, 2).toString() : '0',
-        };
-        return tokenBalance;
-    });
 
-    const totalLiquidity = Pools.from(pool).liquidity.calcTotal(tokenBalances);
-
+    const totalLiquidity = await liquidity.getLiquidity(pool);
     const decoratedPool = DECORATED_POOLS.find((p) => p.id == pool.id);
 
     console.log(`Pool:  ${pool.id} - ${pool.symbol} - ${pool.poolType}`);
