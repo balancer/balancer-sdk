@@ -23,22 +23,6 @@ export class Pricing {
     }
 
     /**
-     * Retrieves pools using poolDataService.
-     * @returns {boolean} Boolean indicating whether pools data was fetched correctly (true) or not (false).
-     */
-    async fetchPools(): Promise<boolean> {
-        return this.swaps.fetchPools();
-    }
-
-    /**
-     * Get currently saved pools list (fetched using fetchPools()).
-     * @returns {SubgraphPoolBase[]} pools list.
-     */
-    public getPools(): SubgraphPoolBase[] {
-        return this.swaps.getPools();
-    }
-
-    /**
      * Calculates Spot Price for a token pair - for specific pool if ID otherwise finds most liquid path and uses this as reference SP.
      * @param { string } tokenIn Token in address.
      * @param { string } tokenOut Token out address.
@@ -54,8 +38,8 @@ export class Pricing {
     ): Promise<string> {
         // If pools list isn't supplied fetch it from swaps data provider
         if (pools.length === 0) {
-            await this.fetchPools();
-            pools = this.getPools();
+            await this.pools.fetchPools();
+            pools = this.pools.getPools();
         }
 
         // If a poolId isn't specified we find the path for the pair with the highest liquidity and use this as the ref SP
