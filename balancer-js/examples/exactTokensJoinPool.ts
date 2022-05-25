@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import { Wallet } from '@ethersproject/wallet';
+import { defaultAbiCoder } from '@ethersproject/abi';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { BalancerSDK, BalancerSdkConfig, Network } from '../src/index';
 import { USDC, WETH } from './constants';
@@ -23,12 +24,12 @@ async function exactTokensJoinPool() {
 
     const balancer = new BalancerSDK(config);
 
-    const txInfo = balancer.pools.exactTokensJoinPool(
+    const txInfo = await balancer.pools.exactTokensJoinPool(
         wallet.address,
         '0x3a19030ed746bd1c3f2b0f996ff9479af04c5f0a000200000000000000000004', // BAL50-WETH50 pool on kovan https://kovan.etherscan.io/token/0x3A19030Ed746bD1C3f2B0f996FF9479aF04C5F0A
-        [WETH.address, USDC.address],
-        ['40107594979787384', '1000000000'],
-        '152734682157524511368' // TODO: calculate a realistic amount of expected BTP out
+        [USDC.address, WETH.address],
+        ['1000', '0.0404635786916841'],
+        '0.01'
     );
 
     const tx = await wallet.call({
