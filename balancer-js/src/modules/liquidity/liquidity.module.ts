@@ -2,12 +2,12 @@ import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
 import { BalancerSdkConfig, TokenBalance } from '@/types';
 import { Pools } from '@/modules/pools/pools.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
-import { Tokens } from '../tokens/tokens.module';
+import { TokenProvider } from '../data-providers/tokens/provider.interface';
 
 export class Liquidity {
-    private tokens: Tokens;
+    private tokens: TokenProvider;
 
-    constructor(config: BalancerSdkConfig, tokenProvider: Tokens) {
+    constructor(config: BalancerSdkConfig, tokenProvider: TokenProvider) {
         this.tokens = tokenProvider;
     }
 

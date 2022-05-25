@@ -14,7 +14,6 @@ const config: BalancerSdkConfig = {
     network: Network.MAINNET,
     rpcUrl: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
 };
-const balancer = new BalancerSDK(config);
 
 /**
  * Grab pool information from the local DDB table and put as JSON here.
@@ -33,9 +32,7 @@ const balancer = new BalancerSDK(config);
 // pools.stable.liquidity.calcTotal(...);
 
 const staticTokenProvider = new StaticTokenProvider(TOKENS);
-balancer.tokens.setProvider(staticTokenProvider);
-
-const liquidity = new Liquidity(config, balancer.tokens);
+const liquidity = new Liquidity(config, staticTokenProvider);
 
 const poolIds = [
     '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080',
