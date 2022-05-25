@@ -60,20 +60,27 @@ export class WeighedPoolJoin implements JoinConcern {
         amountsIn: string[],
         slippage: string
     ): Promise<string> {
-        const minBPTOut = this.calcBptOutGivenExactTokensIn(
-            pool,
-            amountsIn,
-            slippage
-        ).toString();
+        // TODO: must check tokensIn and amountsIn to see if they are sorted by token addresses - it's currently depending on having the inputs already sorted
+        const normalizedMinBPTOut = BigNumber.from(
+            this.calcBptOutGivenExactTokensIn(
+                pool,
+                amountsIn,
+                slippage
+            ).toString()
+        );
+
+        const normalizedAmountsIn = pool.tokens.map((token, i) => {
+            return parseUnits(amountsIn[i], token.decimals);
+        });
 
         const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
-            amountsIn,
-            minBPTOut
+            normalizedAmountsIn,
+            normalizedMinBPTOut
         );
 
         const joinPoolData: JoinPoolData = {
             assets: tokensIn,
-            maxAmountsIn: amountsIn,
+            maxAmountsIn: normalizedAmountsIn,
             userData,
             fromInternalBalance: false,
             poolId: pool.id,
@@ -92,31 +99,37 @@ export class WeighedPoolJoin implements JoinConcern {
         tokenAmounts: string[],
         slippage?: string
     ): OldBigNumber {
-        const balances = pool.tokens.map((token) => bnum(token.balance));
-        const weights = pool.tokens.map((token) => bnum(token.weight || '0')); //  TODO: validate approach of setting undefined to zero and calculation - frontend normalizes by parsing decimals
-        const denormAmounts = this.denormAmounts(
-            tokenAmounts,
-            pool.tokens.map((token) => token.decimals)
+        const normalizedBalances = pool.tokens.map((token) =>
+            bnum(parseUnits(token.balance).toString())
         );
-        const amounts = denormAmounts.map((a) => bnum(a.toString()));
+        const normalizedWeights = pool.tokens.map((token) =>
+            bnum(parseUnits(token.weight || '0').toString())
+        ); //  TODO: validate approach of setting undefined to zero and calculation - frontend normalizes by parsing decimals
+        const normalizedAmounts = pool.tokens.map((token, i) => {
+            return bnum(parseUnits(tokenAmounts[i], token.decimals).toString());
+        });
+
+        const normalizedTotalShares = bnum(
+            parseUnits(pool.totalShares).toString()
+        );
+        const normalizedSwapFee = bnum(parseUnits(pool.swapFee).toString());
 
         const fullBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
-            balances,
-            weights,
-            amounts,
-            bnum(pool.totalShares), // TODO: validate calculation - frontend parses based on decimals
-            bnum(pool.swapFee) // TODO: validate calculation - frontend parses based on decimals
+            normalizedBalances,
+            normalizedWeights,
+            normalizedAmounts,
+            normalizedTotalShares, // TODO: validate calculation - frontend parses based on decimals
+            normalizedSwapFee // TODO: validate calculation - frontend parses based on decimals
         );
 
         if (slippage) {
-            return new OldBigNumber(
-                useSlippage.minusSlippageScaled(fullBPTOut.toString(), slippage)
+            const minBPTOut = useSlippage.minusSlippage(
+                fullBPTOut.toString(),
+                0,
+                slippage
             );
+            return new OldBigNumber(minBPTOut);
         }
         return fullBPTOut;
-    }
-
-    public denormAmounts(amounts: string[], decimals: number[]): BigNumber[] {
-        return amounts.map((a, i) => parseUnits(a, decimals[i]));
     }
 }
