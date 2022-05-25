@@ -3,11 +3,18 @@ import { BalancerSdkConfig, TokenBalance } from '@/types';
 import { Pools } from '@/modules/pools/pools.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { TokenProvider } from '../data-providers/tokens/provider.interface';
+import { PoolProvider } from '../data-providers/pools/provider.interface';
 
 export class Liquidity {
+    private pools: PoolProvider;
     private tokens: TokenProvider;
 
-    constructor(config: BalancerSdkConfig, tokenProvider: TokenProvider) {
+    constructor(
+        config: BalancerSdkConfig,
+        poolProvider: PoolProvider,
+        tokenProvider: TokenProvider
+    ) {
+        this.pools = poolProvider;
         this.tokens = tokenProvider;
     }
 

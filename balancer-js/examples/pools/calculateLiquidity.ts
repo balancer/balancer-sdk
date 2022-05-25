@@ -3,6 +3,7 @@ import {
     BalancerSdkConfig,
     Network,
     StaticTokenProvider,
+    StaticPoolProvider,
     Pools,
 } from '../../src';
 import { Liquidity } from '../../src/modules/liquidity/liquidity.module';
@@ -32,7 +33,12 @@ const config: BalancerSdkConfig = {
 // pools.stable.liquidity.calcTotal(...);
 
 const staticTokenProvider = new StaticTokenProvider(TOKENS);
-const liquidity = new Liquidity(config, staticTokenProvider);
+const staticPoolProvider = new StaticPoolProvider(POOLS);
+const liquidity = new Liquidity(
+    config,
+    staticPoolProvider,
+    staticTokenProvider
+);
 
 const poolIds = [
     '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080',
