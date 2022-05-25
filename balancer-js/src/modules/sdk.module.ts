@@ -6,6 +6,7 @@ import { Sor } from './sor/sor.module';
 import { getNetworkConfig } from './sdk.helpers';
 import { Pools } from './pools/pools.module';
 import { Pricing } from './pricing/pricing.module';
+import { Join } from './join/join.module';
 
 export interface BalancerSDKRoot {
     config: BalancerSdkConfig;
@@ -21,6 +22,7 @@ export class BalancerSDK implements BalancerSDKRoot {
     readonly swaps: Swaps;
     readonly relayer: Relayer;
     readonly pricing: Pricing;
+    public readonly join: Join;
 
     constructor(
         public config: BalancerSdkConfig,
@@ -31,6 +33,7 @@ export class BalancerSDK implements BalancerSDKRoot {
         this.swaps = new Swaps(this.config);
         this.relayer = new Relayer(this.swaps);
         this.pricing = new Pricing(config, this.swaps);
+        this.join = new Join(config);
     }
 
     get networkConfig(): BalancerNetworkConfig {

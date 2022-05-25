@@ -24,7 +24,7 @@ async function exactTokensJoinPool() {
 
     const balancer = new BalancerSDK(config);
 
-    const txInfo = await balancer.pools.exactTokensJoinPool(
+    const txInfo = await balancer.join.exactTokensJoinPool(
         wallet.address,
         '0x3a19030ed746bd1c3f2b0f996ff9479af04c5f0a000200000000000000000004', // BAL50-WETH50 pool on kovan https://kovan.etherscan.io/token/0x3A19030Ed746bD1C3f2B0f996FF9479aF04C5F0A
         [USDC.address, WETH.address],
