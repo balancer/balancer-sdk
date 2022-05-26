@@ -1,51 +1,71 @@
-import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
-import { BalancerSdkConfig, TokenBalance } from '@/types';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BalancerSdkConfig, TokenBalance, TokenPrice } from '@/types';
 import { Pools } from '@/modules/pools/pools.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { TokenProvider } from '../data-providers/token/provider.interface';
 import { PoolProvider } from '../data-providers/pool/provider.interface';
+import { TokenPriceProvider } from '../data-providers/token-price/provider.interface';
 
 export class Liquidity {
     private pools: PoolProvider;
     private tokens: TokenProvider;
+    private tokenPrices: TokenPriceProvider;
 
     constructor(
         config: BalancerSdkConfig,
         poolProvider: PoolProvider,
-        tokenProvider: TokenProvider
+        tokenProvider: TokenProvider,
+        tokenPriceProvider: TokenPriceProvider
     ) {
         this.pools = poolProvider;
         this.tokens = tokenProvider;
+        this.tokenPrices = tokenPriceProvider;
     }
 
     async getLiquidity(pool: SubgraphPoolBase): Promise<string> {
-        const ETHUSDPriceSum = ['USDC', 'DAI', 'USDT']
-            .map((symbol) => {
-                const token = this.tokens.getBySymbol(symbol);
-                if (token?.price) {
-                    return parseFixed(token.price, 18);
-                }
-                return BigNumber.from('1');
-            })
-            .reduce((prev, cur) => {
-                return prev.add(cur);
-            }, BigNumber.from(0));
-        const ETHUSDPrice = BigNumber.from(ETHUSDPriceSum).div('3');
+        const USDAssets = ['USDC', 'DAI', 'USDT'];
+        let assetsAvailable = 0;
+        let assetValueSum = BigNumber.from(0);
+
+        USDAssets.forEach((symbol) => {
+            const token = this.tokens.findBy('symbol', symbol);
+            if (!token) return;
+
+            const tokenPrice = this.tokenPrices.find(token.address);
+            if (tokenPrice?.ofNativeAsset) {
+                assetValueSum = assetValueSum.add(tokenPrice.ofNativeAsset);
+                assetsAvailable++;
+            }
+        });
+
+        const NativeAssetUSDPrice = assetValueSum.div(assetsAvailable);
 
         const tokenBalances: TokenBalance[] = pool.tokens.map((token) => {
-            const tokenDetails = this.tokens.get(token.address);
+            const tokenDetails = this.tokens.find(token.address);
             if (!tokenDetails) {
-                console.error(`Could not find token: ${token.address}`);
+                throw new Error(
+                    `Unable to calculate balance. Could not find token: ${token.address}`
+                );
             }
-            const price = parseFixed('1', 18)
-                .mul(ETHUSDPrice)
-                .div(parseFixed(tokenDetails?.price || '1', 18));
+
+            let price: TokenPrice | undefined;
+            const tokenPrice = this.tokenPrices.find(tokenDetails.address);
+            if (tokenPrice?.ofNativeAsset) {
+                price = {
+                    inUSD: parseFixed('1', 18)
+                        .mul(NativeAssetUSDPrice)
+                        .div(parseFixed(tokenPrice?.ofNativeAsset || '1', 18))
+                        .toString(),
+                    ofNativeAsset: tokenPrice.ofNativeAsset,
+                };
+            }
+
             const tokenBalance: TokenBalance = {
                 token: {
                     address: token.address,
                     decimals: token.decimals,
                     priceRate: token.priceRate,
-                    price: formatFixed(price, 18),
+                    price: price,
                 },
                 balance: token.balance,
                 weight: token.weight

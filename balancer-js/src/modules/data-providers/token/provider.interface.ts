@@ -1,6 +1,8 @@
 import { Token } from '@/types';
 
+export type TokenAttribute = 'address' | 'symbol';
+
 export interface TokenProvider {
-    get: (address: string) => Token | undefined;
-    getBySymbol: (symbol: string) => Token | undefined;
+    find: (address: string) => Token | undefined;
+    findBy: (attribute: TokenAttribute, value: string) => Token | undefined;
 }

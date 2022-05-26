@@ -10,14 +10,11 @@ export class WeightedPoolLiquidity implements LiquidityConcern {
 
         for (let i = 0; i < tokenBalances.length; i++) {
             const tokenBalance = tokenBalances[i];
-            if (!tokenBalance.token.price) {
+            if (!tokenBalance.token.price?.inUSD) {
                 continue;
             }
-            const price = parseFixed(tokenBalance.token.price, 18);
-            const balance = parseFixed(
-                tokenBalance.balance,
-                18 //tokenBalance.token.decimals
-            );
+            const price = parseFixed(tokenBalance.token.price.inUSD, 18);
+            const balance = parseFixed(tokenBalance.balance, 18);
 
             const value = balance.mul(price);
             sumValue = sumValue.add(value);
