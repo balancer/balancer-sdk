@@ -2,12 +2,13 @@ import {
     BalancerSDK,
     BalancerSdkConfig,
     Network,
-    StaticTokenProvider,
     StaticPoolProvider,
+    StaticTokenProvider,
+    StaticTokenPriceProvider,
     Pools,
 } from '../../src';
 import { Liquidity } from '../../src/modules/liquidity/liquidity.module';
-import POOLS from './pools-subset.json';
+import POOLS from './pools.json';
 import DECORATED_POOLS from './decorated-pools.json';
 import TOKENS from './tokens.json';
 
@@ -32,12 +33,30 @@ const config: BalancerSdkConfig = {
 // pools.weighted.liquidity.calcTotal(...);
 // pools.stable.liquidity.calcTotal(...);
 
-const staticTokenProvider = new StaticTokenProvider(TOKENS);
-const staticPoolProvider = new StaticPoolProvider(POOLS);
+const tokenPrices = TOKENS.map((token) => {
+    return {
+        address: token.address,
+        ofNativeAsset: token.price,
+    };
+});
+
+const tokens = TOKENS.map((token) => {
+    return {
+        address: token.address,
+        symbol: token.symbol,
+        decimals: token.decimals,
+    };
+});
+
+const poolProvider = new StaticPoolProvider(POOLS);
+const tokenProvider = new StaticTokenProvider(tokens);
+const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
+
 const liquidity = new Liquidity(
     config,
-    staticPoolProvider,
-    staticTokenProvider
+    poolProvider,
+    tokenProvider,
+    tokenPriceProvider
 );
 
 const poolIds = [

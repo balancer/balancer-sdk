@@ -1,4 +1,4 @@
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
 import { TokenPriceData } from '@/types';
 import { TokenPriceProvider } from './provider.interface';
 
@@ -23,7 +23,8 @@ export class StaticTokenPriceProvider implements TokenPriceProvider {
         USDAssets.forEach((address) => {
             const tokenPrice = this.find(address);
             if (tokenPrice?.ofNativeAsset) {
-                assetValueSum = assetValueSum.add(tokenPrice.ofNativeAsset);
+                const scaledPrice = parseFixed(tokenPrice.ofNativeAsset, 18);
+                assetValueSum = assetValueSum.add(scaledPrice);
                 assetsAvailable++;
             }
         });
@@ -32,10 +33,11 @@ export class StaticTokenPriceProvider implements TokenPriceProvider {
 
         this.tokenPrices = this.tokenPrices.map((tokenPrice) => {
             if (tokenPrice.ofNativeAsset) {
-                tokenPrice.inUSD = parseFixed('1', 18)
+                const usdPrice = parseFixed('1', 20)
                     .mul(NativeAssetUSDPrice)
-                    .div(parseFixed(tokenPrice.ofNativeAsset, 18))
+                    .div(parseFixed(tokenPrice.ofNativeAsset, 20))
                     .toString();
+                tokenPrice.inUSD = formatFixed(usdPrice, 18);
             }
 
             return tokenPrice;

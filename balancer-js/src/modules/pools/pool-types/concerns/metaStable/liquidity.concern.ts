@@ -13,11 +13,11 @@ export class MetaStablePoolLiquidity implements LiquidityConcern {
 
             // if a token's price is unknown, ignore it
             // it will be computed at the next step
-            if (!tokenBalance.token.price) {
+            if (!tokenBalance.token.price?.inUSD) {
                 continue;
             }
 
-            const price = parseFixed(tokenBalance.token.price, 18);
+            const price = parseFixed(tokenBalance.token.price.inUSD, 18);
             const priceRate = parseFixed(
                 tokenBalance.token.priceRate || '1',
                 18
@@ -41,7 +41,7 @@ export class MetaStablePoolLiquidity implements LiquidityConcern {
             for (let i = 0; i < tokenBalances.length; i++) {
                 const tokenBalance = tokenBalances[i];
 
-                if (tokenBalance.token.price) {
+                if (tokenBalance.token.price?.inUSD) {
                     continue;
                 }
 
