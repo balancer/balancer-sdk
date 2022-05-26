@@ -6,8 +6,8 @@ import { Sor } from './sor/sor.module';
 import { getNetworkConfig } from './sdk.helpers';
 import { Pools } from './pools/pools.module';
 import { Pricing } from './pricing/pricing.module';
-import { TokenProvider } from './data-providers/tokens/provider.interface';
-import { UninitializedTokenProvider } from './data-providers/tokens/uninitialized.provider';
+import { TokenProvider } from './data-providers/token/provider.interface';
+import { UninitializedTokenProvider } from './data-providers/token/uninitialized.provider';
 
 export class BalancerSDK {
     public readonly swaps: Swaps;

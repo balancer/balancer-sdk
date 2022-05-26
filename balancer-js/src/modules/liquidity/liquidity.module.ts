@@ -2,8 +2,8 @@ import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
 import { BalancerSdkConfig, TokenBalance } from '@/types';
 import { Pools } from '@/modules/pools/pools.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
-import { TokenProvider } from '../data-providers/tokens/provider.interface';
-import { PoolProvider } from '../data-providers/pools/provider.interface';
+import { TokenProvider } from '../data-providers/token/provider.interface';
+import { PoolProvider } from '../data-providers/pool/provider.interface';
 
 export class Liquidity {
     private pools: PoolProvider;
