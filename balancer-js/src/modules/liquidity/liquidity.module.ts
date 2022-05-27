@@ -50,31 +50,35 @@ export class Liquidity {
             return formatFixed(totalLiquidity, 36);
         }
 
-        const tokenBalances: TokenBalance[] = parsedTokens.map((token) => {
-            const tokenDetails = this.tokens.find(token.address);
-            if (!tokenDetails) {
-                throw new Error(
-                    `Unable to calculate balance. Could not find token: ${token.address}`
-                );
-            }
+        const tokenBalances: TokenBalance[] = await Promise.all(
+            parsedTokens.map(async (token) => {
+                const tokenDetails = await this.tokens.find(token.address);
+                if (!tokenDetails) {
+                    throw new Error(
+                        `Unable to calculate balance. Could not find token: ${token.address}`
+                    );
+                }
 
-            const tokenPrice = this.tokenPrices.find(tokenDetails.address);
-            const tokenBalance: TokenBalance = {
-                token: {
-                    address: token.address,
-                    decimals: token.decimals,
-                    priceRate: token.priceRate,
-                    price: {
-                        inUSD: tokenPrice?.inUSD,
+                const tokenPrice = await this.tokenPrices.find(
+                    tokenDetails.address
+                );
+                const tokenBalance: TokenBalance = {
+                    token: {
+                        address: token.address,
+                        decimals: token.decimals,
+                        priceRate: token.priceRate,
+                        price: {
+                            inUSD: tokenPrice?.inUSD,
+                        },
                     },
-                },
-                balance: token.balance,
-                weight: token.weight
-                    ? parseFixed(token.weight, 2).toString()
-                    : '0',
-            };
-            return tokenBalance;
-        });
+                    balance: token.balance,
+                    weight: token.weight
+                        ? parseFixed(token.weight, 2).toString()
+                        : '0',
+                };
+                return tokenBalance;
+            })
+        );
 
         const totalLiquidity =
             Pools.from(pool).liquidity.calcTotal(tokenBalances);

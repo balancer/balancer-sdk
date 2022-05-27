@@ -21,7 +21,10 @@ export class StaticTokenPriceProvider implements TokenPriceProvider {
         let assetValueSum = BigNumber.from(0);
 
         USDAssets.forEach((address) => {
-            const tokenPrice = this.find(address);
+            const tokenPrice = this.tokenPrices.find(
+                (tokenPrice) =>
+                    tokenPrice.address.toLowerCase() === address.toLowerCase()
+            );
             if (tokenPrice?.ofNativeAsset) {
                 const scaledPrice = parseFixed(tokenPrice.ofNativeAsset, 18);
                 assetValueSum = assetValueSum.add(scaledPrice);
@@ -44,7 +47,7 @@ export class StaticTokenPriceProvider implements TokenPriceProvider {
         });
     }
 
-    find(address: string): TokenPriceData | undefined {
+    async find(address: string): Promise<TokenPriceData | undefined> {
         return this.tokenPrices.find((tokenPrice) => {
             return tokenPrice.address.toLowerCase() === address.toLowerCase();
         });
