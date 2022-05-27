@@ -7,6 +7,7 @@ import {
     StaticTokenPriceProvider,
     Pools,
 } from '../../src';
+import { SORPoolProvider } from '../../src/modules/data-providers/pool/sor.provider';
 import { Liquidity } from '../../src/modules/liquidity/liquidity.module';
 import POOLS from './pools.json';
 import DECORATED_POOLS from './decorated-pools.json';
@@ -48,7 +49,7 @@ const tokens = TOKENS.map((token) => {
     };
 });
 
-const poolProvider = new StaticPoolProvider(POOLS);
+const poolProvider = new SORPoolProvider(config);
 const tokenProvider = new StaticTokenProvider(tokens);
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
 
@@ -72,19 +73,26 @@ const poolIds = [
     '0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a',
 ];
 
-const selectedPools = poolIds.map((id) => POOLS.find((p) => p.id === id));
+const staticPools: Record<string, any> = {};
+poolIds.forEach((poolId) => {
+    staticPools[poolId] = POOLS.find((p) => p.id === poolId);
+});
 
-// console.log('Selected pools: ', selectedPools);
-
-selectedPools.forEach(async (pool) => {
-    if (!pool) return;
+poolIds.forEach(async (poolId) => {
+    const pool = await poolProvider.find(poolId);
+    if (!pool) {
+        console.error('Could not find pool: ' + poolId);
+        return;
+    }
 
     const totalLiquidity = await liquidity.getLiquidity(pool);
     const decoratedPool = DECORATED_POOLS.find((p) => p.id == pool.id);
 
-    console.log(`Pool:  ${pool.id} - ${pool.symbol} - ${pool.poolType}`);
-    console.log('Calculated liquidity: ', totalLiquidity);
-    console.log('Pool Liqudidity: ', pool.totalLiquidity);
-    console.log('Decorated Pool Liqudity: ', decoratedPool?.totalLiquidity);
+    console.log(
+        `Pool:  ${pool.id} - ${staticPools[poolId].symbol} - ${pool.poolType}`
+    );
+    console.log('Calculated liquidity: \t\t', totalLiquidity);
+    console.log('Pool Liqudidity: \t\t', staticPools[poolId].totalLiquidity);
+    console.log('Decorated Pool Liqudity: \t', decoratedPool?.totalLiquidity);
     console.log('---');
 });

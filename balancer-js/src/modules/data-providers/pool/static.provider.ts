@@ -4,16 +4,16 @@ import { PoolAttribute, PoolProvider } from './provider.interface';
 export class StaticPoolProvider implements PoolProvider {
     constructor(private pools: SubgraphPoolBase[]) {}
 
-    find(id: string): SubgraphPoolBase | undefined {
+    async find(id: string): Promise<SubgraphPoolBase | undefined> {
         return this.pools.find((pool) => {
             return pool.id.toLowerCase() === id.toLowerCase();
         });
     }
 
-    findBy(
+    async findBy(
         attribute: PoolAttribute,
         value: string
-    ): SubgraphPoolBase | undefined {
+    ): Promise<SubgraphPoolBase | undefined> {
         return this.pools.find((pool) => {
             return pool[attribute] === value;
         });

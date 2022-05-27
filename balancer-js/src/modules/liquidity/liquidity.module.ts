@@ -26,7 +26,10 @@ export class Liquidity {
             // For a StablePhantom pool, each token is a pool, so fetch liquidity for those pools instead.
             const subPoolLiquidity = await Promise.all(
                 parsedTokens.map(async (subPool) => {
-                    const pool = this.pools.findBy('address', subPool.address);
+                    const pool = await this.pools.findBy(
+                        'address',
+                        subPool.address
+                    );
                     if (!pool) {
                         throw new Error(
                             `Unable to calculate balance. Could not find sub-pool: ${subPool.address}`
