@@ -8,7 +8,7 @@ export class SORPoolProvider implements PoolProvider {
     initialized: boolean;
 
     constructor(private config: BalancerSdkConfig) {
-        this.sor = new Sor(config);
+        this.sor = new Sor(this.config);
         this.initialized = false;
     }
 
@@ -17,11 +17,17 @@ export class SORPoolProvider implements PoolProvider {
         return this.initialized;
     }
 
-    async find(id: string): Promise<SubgraphPoolBase | undefined> {
+    async checkInitialized(): Promise<void> {
         if (!this.initialized) {
             await this.init();
+            if (!this.initialized) {
+                throw new Error('Cannot initialize SOR Provider');
+            }
         }
+    }
 
+    async find(id: string): Promise<SubgraphPoolBase | undefined> {
+        await this.checkInitialized();
         return this.sor.getPools().find((pool) => {
             return pool.id.toLowerCase() === id.toLowerCase();
         });
@@ -31,6 +37,7 @@ export class SORPoolProvider implements PoolProvider {
         attribute: PoolAttribute,
         value: string
     ): Promise<SubgraphPoolBase | undefined> {
+        await this.checkInitialized();
         return this.sor.getPools().find((pool) => {
             return pool[attribute] === value;
         });
