@@ -82,7 +82,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         },
         urls: {
             subgraph:
-                'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-kovan-v2',
+                'https://api.thegraph.com/subgraphs/name/aleelus/pools-diss',
         },
         pools: {
             bbausd: {
