@@ -1,11 +1,9 @@
+import { Multicall, Vault } from '@/contracts/generated';
 import { Contract } from 'ethers';
 
-export { Vault } from './vault';
-export { Multicall } from './multicall';
-
 export interface ContractList {
-    vault: Contract;
-    multicall: Contract;
+    vault: Vault;
+    multicall: Multicall;
     lidoRelayer?: Contract;
 }
 

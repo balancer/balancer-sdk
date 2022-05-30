@@ -25,9 +25,11 @@
         "test": "ts-mocha --paths --recursive -p tsconfig.testing.json 'src/**/*.spec.ts'",
         "lint": "eslint ./src --ext .ts --max-warnings 0",
         "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
+        "typechain": "typechain --target ethers-v5 --out-dir src/contracts/generated 'src/lib/abi/*.json'",
         "subgraph:generate": "graphql-codegen --config src/modules/subgraph/codegen.yml -r dotenv/config",
         "examples:run": "TS_NODE_PROJECT='tsconfig.testing.json' ts-node -r tsconfig-paths/register"
     },
+    "postinstall": "typechain --target ethers-v5 --out-dir src/contracts/generated 'src/lib/abi/*.json'",
     "devDependencies": {
         "@ethersproject/abi": "^5.4.0",
         "@ethersproject/abstract-signer": "^5.4.0",

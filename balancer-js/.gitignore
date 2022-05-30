@@ -6,3 +6,5 @@ yarn-error.log
 .idea/
 dist/
 src/subgraph/generated/
+cache
+src/contracts/generated
