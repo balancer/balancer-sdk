@@ -35,7 +35,7 @@ export class StaticTokenPriceProvider implements TokenPriceProvider {
         const NativeAssetUSDPrice = assetValueSum.div(assetsAvailable);
 
         this.tokenPrices = this.tokenPrices.map((tokenPrice) => {
-            if (tokenPrice.ofNativeAsset) {
+            if (tokenPrice.ofNativeAsset && !tokenPrice.inUSD) {
                 const usdPrice = parseFixed('1', 20)
                     .mul(NativeAssetUSDPrice)
                     .div(parseFixed(tokenPrice.ofNativeAsset, 20))

@@ -5,6 +5,16 @@
       "ofNativeAsset": "2000"
   },
   {
+      "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "inUSD": "1.01",
+      "ofNativeAsset": "1980.198019"
+  },
+  {
+      "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "inUSD": "0.99",
+      "ofNativeAsset": "2020.202020"
+  },
+  {
       "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
       "inUSD": "2000",
       "ofNativeAsset": "1"
@@ -18,5 +28,10 @@
       "address": "0xba100000625a3754423978a60c9317c58a424e3d",
       "inUSD": "16",
       "ofNativeAsset": "125"
+  },
+  {
+      "address": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+      "inUSD": "2140",
+      "ofNativeAsset": "0.93457943925"
   }
 ]

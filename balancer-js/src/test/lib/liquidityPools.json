@@ -67,44 +67,110 @@
     {
         "address": "0xd8833594420db3d6589c1098dbdd073f52419dba",
         "tokensList": [
-          "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-          "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-          "0x6b175474e89094c44da98b954eedeac495271d0f",
-          "0xba100000625a3754423978a60c9317c58a424e3d"
+            "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+            "0x6b175474e89094c44da98b954eedeac495271d0f",
+            "0xba100000625a3754423978a60c9317c58a424e3d"
         ],
         "poolType": "Weighted",
         "chainId": 1,
         "swapEnabled": true,
         "totalWeight": "1",
         "tokens": [
-          {
-            "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-            "priceRate": "1",
-            "balance": "1",
-            "decimals": 18,
-            "weight": "0.25"
-          },
-          {
-            "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-            "priceRate": "1",
-            "balance": "15",
-            "decimals": 18,
-            "weight": "0.25"
-          },
-          {
-            "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-            "priceRate": "1",
-            "balance": "33000",
-            "decimals": 18,
-            "weight": "0.25"
-          },
-          {
-            "address": "0xba100000625a3754423978a60c9317c58a424e3d",
-            "priceRate": "1",
-            "balance": "2005",
-            "decimals": 18,
-            "weight": "0.25"
-          }
+            {
+                "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+                "priceRate": "1",
+                "balance": "1",
+                "decimals": 18,
+                "weight": "0.25"
+            },
+            {
+                "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "priceRate": "1",
+                "balance": "15",
+                "decimals": 18,
+                "weight": "0.25"
+            },
+            {
+                "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+                "priceRate": "1",
+                "balance": "33000",
+                "decimals": 18,
+                "weight": "0.25"
+            },
+            {
+                "address": "0xba100000625a3754423978a60c9317c58a424e3d",
+                "priceRate": "1",
+                "balance": "2005",
+                "decimals": 18,
+                "weight": "0.25"
+            }
         ]
-      }
+    },
+    {
+        "symbol": "staBAL3",
+        "address": "0x06df3b2bbb68adc8b0e302443692037ed9f91b42",
+        "tokensList": [
+            "0x6b175474e89094c44da98b954eedeac495271d0f",
+            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            "0xdac17f958d2ee523a2206206994597c13d831ec7"
+        ],
+        "poolType": "Stable",
+        "chainId": 1,
+        "tokens": [
+            {
+                "symbol": "DAI",
+                "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+                "priceRate": "1",
+                "balance": "11657153",
+                "decimals": 18,
+                "name": "Dai Stablecoin",
+                "weight": null
+            },
+            {
+                "symbol": "USDC",
+                "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                "priceRate": "1",
+                "balance": "11541107",
+                "decimals": 6,
+                "name": "USD Coin",
+                "weight": null
+            },
+            {
+                "symbol": "USDT",
+                "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+                "priceRate": "1",
+                "balance": "108293584",
+                "decimals": 6,
+                "name": "Tether USD",
+                "weight": null
+            }
+        ]
+    },
+    {
+        "address": "0x32296969ef14eb0c6d29669c550d4a0449130230",
+        "tokensList": [
+            "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        ],
+        "poolType": "MetaStable",
+        "chainId": 1,
+        "tokens": [
+            {
+                "symbol": "wstETH",
+                "address": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+                "priceRate": "1.07",
+                "balance": "45744",
+                "decimals": 18
+            },
+            {
+                "symbol": "WETH",
+                "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "priceRate": "1",
+                "balance": "28333",
+                "decimals": 18,
+                "name": "Wrapped Ether"
+            }
+        ]
+    }
 ]

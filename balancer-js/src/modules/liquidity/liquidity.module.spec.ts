@@ -57,7 +57,7 @@ describe('Liquidity Module', () => {
             expect(liquidity).to.be.eq('10000.0');
         });
 
-        it('Correctly calculates value of a 25/25/25/25 pool which is slightly off weight', async () => {
+        it('Correctly calculates value of a 25/25/25/25 pool which is slightly imbalanced', async () => {
             const liquidity = await liquidityProvider.getLiquidity(
                 findPool('0xd8833594420db3d6589c1098dbdd073f52419dba')
             );
@@ -65,19 +65,23 @@ describe('Liquidity Module', () => {
         });
     });
 
-    // context('Stable Pool calculations', () => {
-    //     it('Correctly calculates value of a USD 3pool', async () => {
-    //         const liquidity = await liquidityProvider.getLiquidity(pools[2]);
-    //         expect(liquidity).to.be.eq('30000.0');
-    //     });
-    // });
+    context('Stable Pool calculations', () => {
+        it('Correctly calculates value of a USD 3pool', async () => {
+            const liquidity = await liquidityProvider.getLiquidity(
+                findPool('0x06df3b2bbb68adc8b0e302443692037ed9f91b42')
+            );
+            expect(liquidity).to.be.eq('130524319.23');
+        });
+    });
 
-    // context('Metastable Pool calculations', () => {
-    //     it('Correct calculates liquidity of a wstETH/ETH metastable pool', async () => {
-    //         const liquidity = await liquidityProvider.getLiquidity(pools[2]);
-    //         expect(liquidity).to.be.eq('30000.0');
-    //     });
-    // });
+    context('Metastable Pool calculations', () => {
+        it('Correct calculates liquidity of a wstETH/ETH metastable pool', async () => {
+            const liquidity = await liquidityProvider.getLiquidity(
+                findPool('0x32296969ef14eb0c6d29669c550d4a0449130230')
+            );
+            expect(liquidity).to.be.eq('161410611.2');
+        });
+    });
 
     // context('PhantomStable Pool calculations', () => {
     //     it('Correctly calculates liquidity of a Boosted USD 3pool', async () => {});
