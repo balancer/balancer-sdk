@@ -8,5 +8,15 @@
       "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
       "inUSD": "2000",
       "ofNativeAsset": "1"
+  },
+  {
+      "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "inUSD": "32000",
+      "ofNativeAsset": "0.0625"
+  },
+  {
+      "address": "0xba100000625a3754423978a60c9317c58a424e3d",
+      "inUSD": "16",
+      "ofNativeAsset": "125"
   }
 ]

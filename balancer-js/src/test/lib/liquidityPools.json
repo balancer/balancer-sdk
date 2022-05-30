@@ -1,5 +1,40 @@
 [
     {
+        "address": "0xa6f548df93de924d73be7d25dc02554c6bd66db5",
+        "wrappedIndex": 0,
+        "mainIndex": 0,
+        "tokensList": [
+            "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+        ],
+        "poolType": "Weighted",
+        "chainId": 1,
+        "swapEnabled": true,
+        "totalWeight": "1",
+        "tokens": [
+            {
+                "symbol": "WBTC",
+                "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+                "priceRate": "1",
+                "balance": "10",
+                "decimals": 8,
+                "name": "Wrapped BTC",
+                "weight": "0.5"
+            },
+            {
+                "symbol": "WETH",
+                "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                "priceRate": "1",
+                "balance": "160",
+                "decimals": 18,
+                "name": "Wrapped Ether",
+                "weight": "0.5"
+            }
+        ],
+        "id": "0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e",
+        "swapFee": "0.001"
+    },
+    {
         "address": "0xc6a5032dc4bf638e15b4a66bc718ba7ba474ff73",
         "wrappedIndex": 0,
         "mainIndex": 0,
@@ -8,7 +43,6 @@
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
         ],
         "poolType": "Weighted",
-        "totalShares": "19.249031279382203913",
         "swapEnabled": true,
         "totalWeight": "1",
         "tokens": [
@@ -29,5 +63,48 @@
         ],
         "id": "0xc6a5032dc4bf638e15b4a66bc718ba7ba474ff73000200000000000000000004",
         "swapFee": "0.0025"
-    }
+    },
+    {
+        "address": "0xd8833594420db3d6589c1098dbdd073f52419dba",
+        "tokensList": [
+          "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+          "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+          "0x6b175474e89094c44da98b954eedeac495271d0f",
+          "0xba100000625a3754423978a60c9317c58a424e3d"
+        ],
+        "poolType": "Weighted",
+        "chainId": 1,
+        "swapEnabled": true,
+        "totalWeight": "1",
+        "tokens": [
+          {
+            "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+            "priceRate": "1",
+            "balance": "1",
+            "decimals": 18,
+            "weight": "0.25"
+          },
+          {
+            "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+            "priceRate": "1",
+            "balance": "15",
+            "decimals": 18,
+            "weight": "0.25"
+          },
+          {
+            "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+            "priceRate": "1",
+            "balance": "33000",
+            "decimals": 18,
+            "weight": "0.25"
+          },
+          {
+            "address": "0xba100000625a3754423978a60c9317c58a424e3d",
+            "priceRate": "1",
+            "balance": "2005",
+            "decimals": 18,
+            "weight": "0.25"
+          }
+        ]
+      }
 ]
