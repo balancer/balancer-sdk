@@ -53,7 +53,7 @@ const tokens = TOKENS.map((token) => {
 const sorPoolProvider = new SORPoolProvider(config);
 const staticPoolProvider = new StaticPoolProvider(POOLS);
 const poolProvider = new FallbackPoolProvider([
-    sorPoolProvider,
+    // sorPoolProvider,
     staticPoolProvider,
 ]);
 const tokenProvider = new StaticTokenProvider(tokens);

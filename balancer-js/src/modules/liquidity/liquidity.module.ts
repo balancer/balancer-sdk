@@ -1,4 +1,9 @@
-import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
+import {
+    BigNumber,
+    parseFixed,
+    formatFixed,
+    BigNumberish,
+} from '@ethersproject/bignumber';
 import { BalancerSdkConfig, TokenBalance, TokenPrice } from '@/types';
 import { Pools } from '@/modules/pools/pools.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
@@ -7,6 +12,11 @@ import { PoolProvider } from '../data-providers/pool/provider.interface';
 import { TokenPriceProvider } from '../data-providers/token-price/provider.interface';
 import { PoolType } from '../pools/types';
 import { Zero } from '@ethersproject/constants';
+
+export interface PoolLiquidity {
+    address: string;
+    liquidity: BigNumberish;
+}
 
 export class Liquidity {
     constructor(
@@ -22,36 +32,42 @@ export class Liquidity {
             return token.address !== pool.address;
         });
 
-        if (pool.poolType == PoolType.StablePhantom) {
-            // For a StablePhantom pool, each token is a pool, so fetch liquidity for those pools instead.
-            const subPoolLiquidity = await Promise.all(
-                parsedTokens.map(async (subPool) => {
-                    const pool = await this.pools.findBy(
-                        'address',
-                        subPool.address
-                    );
-                    if (!pool) {
-                        throw new Error(
-                            `Unable to calculate balance. Could not find sub-pool: ${subPool.address}`
-                        );
-                    }
-                    return await this.getLiquidity(pool);
-                })
-            );
+        // For all tokens that are pools, recurse into them and fetch their liquidity
+        const subPoolLiquidity = await Promise.all(
+            parsedTokens.map(async (subPool) => {
+                const pool = await this.pools.findBy(
+                    'address',
+                    subPool.address
+                );
+                let liquidity = '0';
+                if (pool) {
+                    liquidity = await this.getLiquidity(pool);
+                }
 
-            const totalLiquidity = subPoolLiquidity.reduce(
-                (totalLiquidity, poolLiquidity) => {
-                    const scaledLiquidity = parseFixed(poolLiquidity, 36);
-                    return totalLiquidity.add(scaledLiquidity);
-                },
-                Zero
-            );
+                return {
+                    address: subPool.address,
+                    liquidity,
+                };
+            })
+        );
 
-            return formatFixed(totalLiquidity, 36);
-        }
+        const totalSubPoolLiquidity = subPoolLiquidity.reduce(
+            (totalLiquidity, pool) => {
+                const scaledLiquidity = parseFixed(pool.liquidity, 36);
+                return totalLiquidity.add(scaledLiquidity);
+            },
+            Zero
+        );
+
+        const nonPoolTokens = parsedTokens.filter((token) => {
+            return (
+                subPoolLiquidity.find((pool) => pool.address === token.address)
+                    ?.liquidity === '0'
+            );
+        });
 
         const tokenBalances: TokenBalance[] = await Promise.all(
-            parsedTokens.map(async (token) => {
+            nonPoolTokens.map(async (token) => {
                 const tokenDetails = await this.tokens.find(token.address);
                 if (!tokenDetails) {
                     throw new Error(
@@ -80,8 +96,15 @@ export class Liquidity {
             })
         );
 
-        const totalLiquidity =
+        const tokenLiquidity =
             Pools.from(pool).liquidity.calcTotal(tokenBalances);
+
+        const totalLiquidity = formatFixed(
+            BigNumber.from(totalSubPoolLiquidity).add(
+                parseFixed(tokenLiquidity, 36)
+            ),
+            36
+        );
 
         return totalLiquidity;
     }
