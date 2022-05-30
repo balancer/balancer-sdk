@@ -1,6 +1,6 @@
 {
     "name": "@disscorp/sdk",
-    "version": "0.1.14",
+    "version": "0.1.15",
     "description": "JavaScript SDK for interacting with the Balancer Protocol V2",
     "license": "GPL-3.0-only",
     "homepage": "https://github.com/balancer-labs/balancer-sdk/balancer-js#readme",
