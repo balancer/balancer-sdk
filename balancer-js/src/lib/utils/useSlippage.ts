@@ -1,5 +1,5 @@
 import { formatUnits, parseUnits } from '@ethersproject/units';
-import BigNumber from 'bignumber.js';
+import OldBigNumber from 'bignumber.js';
 
 import { bnum } from '@/lib/utils';
 
@@ -22,7 +22,7 @@ function minusSlippageScaled(amount: string, slippage: string): string {
     const delta = bnum(amount)
         .times(slippageBasisPoints(slippage))
         .div(10000)
-        .dp(0, BigNumber.ROUND_UP);
+        .dp(0, OldBigNumber.ROUND_UP);
 
     return bnum(amount).minus(delta).toString();
 }
@@ -42,7 +42,7 @@ function addSlippageScaled(amount: string, slippage: string): string {
     const delta = bnum(amount)
         .times(slippageBasisPoints(slippage))
         .div(10000)
-        .dp(0, BigNumber.ROUND_DOWN);
+        .dp(0, OldBigNumber.ROUND_DOWN);
 
     return bnum(amount).plus(delta).toString();
 }
