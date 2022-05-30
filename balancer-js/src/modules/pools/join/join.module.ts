@@ -1,12 +1,11 @@
-import { BalancerSdkConfig } from '@/types';
 import { Pools } from '@/modules/pools/pools.module';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export class Join {
     private pools: Pools;
 
-    constructor(config: BalancerSdkConfig) {
-        this.pools = new Pools(config);
+    constructor(pools: Pools) {
+        this.pools = pools;
     }
 
     /**
