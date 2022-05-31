@@ -8,17 +8,17 @@ import invariant from 'tiny-invariant';
  * @returns an object with the decomposed poolId
  */
 export const splitPoolId = (
-    poolId: string
+  poolId: string
 ): {
-    address: string;
-    specialization: PoolSpecialization;
-    nonce: BigNumber;
+  address: string;
+  specialization: PoolSpecialization;
+  nonce: BigNumber;
 } => {
-    return {
-        address: getPoolAddress(poolId),
-        specialization: getPoolSpecialization(poolId),
-        nonce: getPoolNonce(poolId),
-    };
+  return {
+    address: getPoolAddress(poolId),
+    specialization: getPoolSpecialization(poolId),
+    nonce: getPoolNonce(poolId),
+  };
 };
 
 /**
@@ -27,8 +27,8 @@ export const splitPoolId = (
  * @returns the pool's address
  */
 export const getPoolAddress = (poolId: string): string => {
-    invariant(poolId.length === 66, 'Invalid poolId length');
-    return poolId.slice(0, 42);
+  invariant(poolId.length === 66, 'Invalid poolId length');
+  return poolId.slice(0, 42);
 };
 
 /**
@@ -37,13 +37,13 @@ export const getPoolAddress = (poolId: string): string => {
  * @returns the pool's specialization
  */
 export const getPoolSpecialization = (poolId: string): PoolSpecialization => {
-    invariant(poolId.length === 66, 'Invalid poolId length');
+  invariant(poolId.length === 66, 'Invalid poolId length');
 
-    // Only have 3 pool specializations so we can just pull the relevant character
-    const specializationCode = parseInt(poolId[45]);
-    invariant(specializationCode < 3, 'Invalid pool specialization');
+  // Only have 3 pool specializations so we can just pull the relevant character
+  const specializationCode = parseInt(poolId[45]);
+  invariant(specializationCode < 3, 'Invalid pool specialization');
 
-    return specializationCode;
+  return specializationCode;
 };
 
 /**
@@ -52,6 +52,6 @@ export const getPoolSpecialization = (poolId: string): PoolSpecialization => {
  * @returns the pool's nonce
  */
 export const getPoolNonce = (poolId: string): BigNumber => {
-    invariant(poolId.length === 66, 'Invalid poolId length');
-    return BigNumber.from(`0x${poolId.slice(46)}`);
+  invariant(poolId.length === 66, 'Invalid poolId length');
+  return BigNumber.from(`0x${poolId.slice(46)}`);
 };

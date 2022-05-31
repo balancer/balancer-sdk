@@ -5,16 +5,16 @@ import { getSdk } from './generated/balancer-subgraph-types';
 import { SubgraphClient } from './subgraph';
 
 export class Subgraph {
-    public readonly url: string;
-    public readonly client: SubgraphClient;
+  public readonly url: string;
+  public readonly client: SubgraphClient;
 
-    constructor(config: BalancerSdkConfig) {
-        this.url = getNetworkConfig(config).urls.subgraph;
-        this.client = this.initClient();
-    }
+  constructor(config: BalancerSdkConfig) {
+    this.url = getNetworkConfig(config).urls.subgraph;
+    this.client = this.initClient();
+  }
 
-    private initClient(): SubgraphClient {
-        const client = new GraphQLClient(this.url);
-        return getSdk(client);
-    }
+  private initClient(): SubgraphClient {
+    const client = new GraphQLClient(this.url);
+    return getSdk(client);
+  }
 }

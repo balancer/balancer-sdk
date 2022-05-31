@@ -23,20 +23,20 @@ const rpcUrl = `https://kovan.infura.io/v3/${INFURA}`;
 -   If the flash swap isn't profitable, the interal flash loan will fail.
  */
 async function runQueryFlashSwap() {
-    const config: BalancerSdkConfig = { network, rpcUrl };
+  const config: BalancerSdkConfig = { network, rpcUrl };
 
-    const balancer = new BalancerSDK(config);
+  const balancer = new BalancerSDK(config);
 
-    const response = await balancer.swaps.querySimpleFlashSwap({
-        flashLoanAmount: '100',
-        poolIds: [
-            '0x0cdab06b07197d96369fea6f3bea6efc7ecdf7090002000000000000000003de',
-            '0x17018c2f7c345add873474879ff0ed98ebd6346a000200000000000000000642',
-        ],
-        assets: [USDC.address, DAI.address],
-    });
+  const response = await balancer.swaps.querySimpleFlashSwap({
+    flashLoanAmount: '100',
+    poolIds: [
+      '0x0cdab06b07197d96369fea6f3bea6efc7ecdf7090002000000000000000003de',
+      '0x17018c2f7c345add873474879ff0ed98ebd6346a000200000000000000000642',
+    ],
+    assets: [USDC.address, DAI.address],
+  });
 
-    console.table(response);
+  console.table(response);
 }
 
 // yarn examples:run ./examples/queryFlashSwap.ts
