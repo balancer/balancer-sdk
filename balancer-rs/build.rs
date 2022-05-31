@@ -11,6 +11,7 @@ fn make_contract_from_json(path: &str, name: &str) {
   // Load a contract.
   let contract = TruffleLoader::new().load_contract_from_file(path).unwrap();
 
+  // https://docs.rs/ethcontract-generate/0.17.0/ethcontract_generate/
   // Generate bindings for it.
   ContractBuilder::new()
     .visibility_modifier("pub")

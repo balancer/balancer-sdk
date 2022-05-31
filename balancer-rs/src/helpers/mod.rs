@@ -1,7 +1,5 @@
 extern crate hexutil;
 
-pub use ethcontract::Address;
-
 use std::any::type_name;
 
 pub mod conversions {
@@ -25,19 +23,6 @@ pub fn type_of<T>(_: T) -> &'static str {
 pub fn build_web3(rpc_endpoint: &str) -> web3::Web3<web3::transports::Http> {
   let transport = web3::transports::Http::new(&rpc_endpoint).unwrap();
   return web3::Web3::new(transport);
-}
-
-pub mod macros {
-  pub use std::str::FromStr;
-
-  #[macro_export]
-  macro_rules! addr {
-    ($address: expr) => {
-      ethcontract::Address::from_str($address).unwrap()
-    };
-  }
-
-  pub use addr;
 }
 
 #[cfg(test)]

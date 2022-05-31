@@ -13,7 +13,7 @@ mod helpers;
 
 use balancer_rs::generated_contracts::weighted_pool::WeightedPool;
 use balancer_rs::helpers::conversions::*;
-use balancer_rs::helpers::macros::*;
+use balancer_rs::types::*;
 use ethers_core::utils;
 use helpers::*;
 

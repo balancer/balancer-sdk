@@ -149,7 +149,7 @@ To run an example:
 
 ### [Weighted Pool](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool)
 
-- [ ] onSwap
+- [x] onSwap
 
 ### [WeightedPool2Tokens](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool2tokens)
 
@@ -175,7 +175,7 @@ To run an example:
 - [ ] setSwapEnabled
 - [ ] updateWeightsGradually
 
-### [NabagedPools](https://dev.balancer.fi/references/contracts/apis/pools/investmentpools)
+### [ManagedPools](https://dev.balancer.fi/references/contracts/apis/pools/investmentpools)
 
 #### API
 
