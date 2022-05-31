@@ -20,7 +20,7 @@
         "dist/"
     ],
     "scripts": {
-        "build": "rollup -c",
+        "build": "rimraf dist && rollup -c",
         "dev": "rollup -c -w",
         "test": "ts-mocha --paths --recursive -p tsconfig.testing.json 'src/**/*.spec.ts'",
         "test:only": "ts-mocha --paths --recursive -p tsconfig.testing.json",
@@ -71,6 +71,7 @@
         "hardhat": "^2.9.3",
         "mocha": "^8.2.1",
         "prettier": "^2.1.2",
+        "rimraf": "^3.0.2",
         "rollup": "^2.52.8",
         "rollup-plugin-dts": "^3.0.2",
         "tiny-invariant": "^1.1.0",
