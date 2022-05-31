@@ -53,7 +53,7 @@ export class WeighedPoolJoin implements JoinConcern {
         return joinEncoded;
     }
 
-    async exactTokensJoinPool(
+    async encodedExactTokensInJoinPool(
         joiner: string,
         pool: SubgraphPoolBase,
         tokensIn: string[],

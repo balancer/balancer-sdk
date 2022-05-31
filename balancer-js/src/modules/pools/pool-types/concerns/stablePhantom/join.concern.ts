@@ -2,7 +2,7 @@ import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { JoinConcern } from '../types';
 
 export class StablePhantomPoolJoin implements JoinConcern {
-    async exactTokensJoinPool(
+    async encodedExactTokensInJoinPool(
         joiner: string,
         pool: SubgraphPoolBase,
         tokensIn: string[],
