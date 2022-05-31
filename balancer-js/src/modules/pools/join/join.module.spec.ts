@@ -1,6 +1,11 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { BalancerSdkConfig, BalancerSdkSorConfig, Network } from '@/.';
+import {
+    BalancerSdkConfig,
+    BalancerSdkSorConfig,
+    Network,
+    BalancerSDK,
+} from '@/.';
 import { Pools } from '../pools.module';
 import { MockPoolDataService } from '@/test/lib/mockPool';
 
@@ -41,6 +46,12 @@ describe('pools join module', () => {
     });
 
     context('instantiation', () => {
+        it('instantiate via SDK', async () => {
+            const balancer = new BalancerSDK(sdkConfig);
+            await balancer.pools.fetchPools();
+            const pools = balancer.pools.getPools();
+            expect(pools).to.deep.eq(pools_14717479);
+        });
         it('instantiate via module', async () => {
             const poolsModule = new Pools(sdkConfig);
             await poolsModule.fetchPools();
