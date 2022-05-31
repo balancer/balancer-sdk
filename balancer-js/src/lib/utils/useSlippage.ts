@@ -1,55 +1,43 @@
-import { formatUnits, parseUnits } from '@ethersproject/units';
-import OldBigNumber from 'bignumber.js';
+import { parseFixed, formatFixed } from '@ethersproject/bignumber';
 
-import { bnum } from '@/lib/utils';
-
-function slippageBasisPoints(slippage: string): string {
-    return bnum(slippage).times(10000).toString();
-}
-
-function minusSlippage(
-    _amount: string,
+const mulSlippage = (
+    amount: string,
     decimals: number,
     slippage: string
-): string {
-    let amount = parseUnits(_amount, decimals).toString();
-    amount = minusSlippageScaled(amount, slippage);
+): string => {
+    const parsedAmount = parseFixed(amount, decimals);
+    const parsedDelta = parsedAmount
+        .mul(parseFixed(slippage, 4))
+        .div(parseFixed('1', 4));
+    return formatFixed(parsedDelta, decimals);
+};
 
-    return formatUnits(amount, decimals);
-}
-
-function minusSlippageScaled(amount: string, slippage: string): string {
-    const delta = bnum(amount)
-        .times(slippageBasisPoints(slippage))
-        .div(10000)
-        .dp(0, OldBigNumber.ROUND_UP);
-
-    return bnum(amount).minus(delta).toString();
-}
-
-function addSlippage(
-    _amount: string,
+const subSlippage = (
+    amount: string,
     decimals: number,
     slippage: string
-): string {
-    let amount = parseUnits(_amount, decimals).toString();
-    amount = addSlippageScaled(amount, slippage);
+): string => {
+    const delta = mulSlippage(amount, decimals, slippage);
+    const parsedDelta = parseFixed(delta, decimals);
+    const parsedAmount = parseFixed(amount, decimals);
+    const parsedResult = parsedAmount.sub(parsedDelta);
+    return formatFixed(parsedResult, decimals);
+};
 
-    return formatUnits(amount, decimals).toString();
-}
-
-function addSlippageScaled(amount: string, slippage: string): string {
-    const delta = bnum(amount)
-        .times(slippageBasisPoints(slippage))
-        .div(10000)
-        .dp(0, OldBigNumber.ROUND_DOWN);
-
-    return bnum(amount).plus(delta).toString();
-}
+const addSlippage = (
+    amount: string,
+    decimals: number,
+    slippage: string
+): string => {
+    const delta = mulSlippage(amount, decimals, slippage);
+    const parsedDelta = parseFixed(delta, decimals);
+    const parsedAmount = parseFixed(amount, decimals);
+    const parsedResult = parsedAmount.add(parsedDelta);
+    return formatFixed(parsedResult, decimals);
+};
 
 export default {
-    minusSlippage,
-    minusSlippageScaled,
+    mulSlippage,
+    subSlippage,
     addSlippage,
-    addSlippageScaled,
 };

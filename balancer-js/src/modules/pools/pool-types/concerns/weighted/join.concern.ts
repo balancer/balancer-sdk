@@ -5,7 +5,6 @@ import OldBigNumber from 'bignumber.js';
 import * as SDK from '@georgeroman/balancer-v2-pools';
 
 import vaultAbi from '@/lib/abi/Vault.json';
-import { bnum } from '@/lib/utils';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { JoinConcern, JoinPoolData, EncodeJoinPoolInput } from '../types';
@@ -99,6 +98,12 @@ export class WeighedPoolJoin implements JoinConcern {
         tokenAmounts: string[],
         slippage?: string
     ): OldBigNumber {
+        const bnum = (val: string | number | OldBigNumber): OldBigNumber => {
+            const number =
+                typeof val === 'string' ? val : val ? val.toString() : '0';
+            return new OldBigNumber(number);
+        };
+
         const normalizedBalances = pool.tokens.map((token) =>
             bnum(parseUnits(token.balance).toString())
         );
@@ -123,7 +128,7 @@ export class WeighedPoolJoin implements JoinConcern {
         );
 
         if (slippage) {
-            const minBPTOut = useSlippage.minusSlippage(
+            const minBPTOut = useSlippage.subSlippage(
                 fullBPTOut.toString(),
                 0,
                 slippage
