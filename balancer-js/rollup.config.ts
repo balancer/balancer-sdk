@@ -38,14 +38,22 @@ export default [
             { file: pkg.main, format: 'cjs', sourcemap: true },
             { file: pkg.module, format: 'es', sourcemap: true },
         ],
-        plugins: [nodeResolve(), json(), commonjs(), typescript({
-            exclude: ['node_modules', '**/*.spec.ts'],
-        })],
+        plugins: [
+            nodeResolve(),
+            json(),
+            commonjs(),
+            typescript({
+                exclude: ['node_modules', '**/*.spec.ts'],
+            }),
+        ],
         external,
     },
     {
         input: 'src/index.ts',
         output: [{ file: 'dist/index.d.ts', format: 'es' }],
-        plugins: [dts(), typescript({ exclude: ['node_modules', '**/*.spec.ts'] })],
+        plugins: [
+            dts(),
+            typescript({ exclude: ['node_modules', '**/*.spec.ts'] }),
+        ],
     },
 ];
