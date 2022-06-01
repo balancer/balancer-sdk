@@ -61,13 +61,13 @@ export class WeighedPoolJoin implements JoinConcern {
     return joinEncoded;
   }
 
-  async encodedExactTokensInJoinPool(
-    joiner: string,
-    pool: SubgraphPoolBase,
-    tokensIn: string[],
-    amountsIn: string[],
-    slippage: string
-  ): Promise<string> {
+  async encodedExactTokensInJoinPool({
+    joiner,
+    pool,
+    tokensIn,
+    amountsIn,
+    slippage,
+  }: ExactTokensInJoinPoolParameters): Promise<string> {
     // TODO: must check tokensIn and amountsIn to see if they are sorted by token addresses - it's currently depending on having the inputs already sorted
     const normalizedMinBPTOut = BigNumber.from(
       this.calcBptOutGivenExactTokensIn(pool, amountsIn, slippage).toString()

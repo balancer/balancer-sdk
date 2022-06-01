@@ -17,13 +17,13 @@ export interface SpotPriceConcern {
 }
 
 export interface JoinConcern {
-  encodedExactTokensInJoinPool: (
-    joiner: string,
-    pool: SubgraphPoolBase,
-    tokensIn: string[],
-    amountsIn: string[],
-    slippage: string
-  ) => Promise<string>;
+  encodedExactTokensInJoinPool: ({
+    joiner,
+    pool,
+    tokensIn,
+    amountsIn,
+    slippage,
+  }: ExactTokensInJoinPoolParameters) => Promise<string>;
 }
 
 export interface JoinPool {

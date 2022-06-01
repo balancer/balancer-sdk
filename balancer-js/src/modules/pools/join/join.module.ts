@@ -30,12 +30,12 @@ export class Join {
     const pool = pools.find((p) => p.id.toLowerCase() === poolId.toLowerCase());
     if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
-    return Pools.from(pool).joinCalculator.encodedExactTokensInJoinPool(
+    return Pools.from(pool).joinCalculator.encodedExactTokensInJoinPool({
       joiner,
       pool,
       tokensIn,
       amountsIn,
-      slippage
-    );
+      slippage,
+    });
   }
 }
