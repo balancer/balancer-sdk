@@ -7,7 +7,13 @@ import * as SDK from '@georgeroman/balancer-v2-pools';
 import vaultAbi from '@/lib/abi/Vault.json';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
-import { JoinConcern, JoinPoolData, EncodeJoinPoolInput } from '../types';
+import {
+  JoinConcern,
+  JoinPoolData,
+  JoinPool,
+  JoinPoolAttributes,
+  ExactTokensInJoinPoolParameters,
+} from '../types';
 import { JoinPoolRequest } from '@/types';
 import useSlippage from '@/lib/utils/useSlippage';
 
@@ -17,7 +23,7 @@ export class WeighedPoolJoin implements JoinConcern {
     sender,
     recipient,
     joinPoolRequest,
-  }: EncodeJoinPoolInput): string {
+  }: JoinPool): string {
     const vaultLibrary = new Interface(vaultAbi);
 
     return vaultLibrary.encodeFunctionData('joinPool', [
@@ -44,7 +50,7 @@ export class WeighedPoolJoin implements JoinConcern {
       fromInternalBalance,
     };
 
-    const joinPoolInput: EncodeJoinPoolInput = {
+    const joinPoolInput: JoinPool = {
       poolId,
       sender,
       recipient,
