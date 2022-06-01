@@ -72,7 +72,15 @@ To run tests:
 
 ## Contributing
 
-TBD
+### Adding new pool support
+
+Balancer continues to add new pool types that have new contract APIs. To add support for a new pool:
+
+- Add a new json file with a contract name (important) and abi filed with the contract's abi
+- Add the pool to the `build.rs` script like the others
+- Run `cargo build`
+- Add the new pool to the pools module
+- Done!
 
 ## Examples
 

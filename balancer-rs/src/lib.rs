@@ -5,4 +5,4 @@ pub mod pools;
 pub mod types;
 pub mod vault;
 
-pub use pools::weighted_pool::WeightedPool;
+pub use pools::*;

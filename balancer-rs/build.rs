@@ -23,8 +23,16 @@ fn make_contract_from_json(path: &str, name: &str) {
     .unwrap();
 }
 
+// ABIs from https://github.com/balancer-labs/balancer-subgraph-v2/tree/master/abis
 fn main() {
   make_contract_from_json("./src/abis/SimpleTestContract.json", "simple_test_contract");
   make_contract_from_json("./src/abis/Vault.json", "vault");
   make_contract_from_json("./src/abis/WeightedPool.json", "weighted_pool");
+  make_contract_from_json("./src/abis/MetaStablePool.json", "meta_stable_pool");
+  make_contract_from_json("./src/abis/StablePool.json", "stable_pool");
+  make_contract_from_json("./src/abis/InvestmentPool.json", "managed_pool");
+  make_contract_from_json(
+    "./src/abis/LiquidityBootstrappingPool.json",
+    "liquidity_bootstrapping_pool",
+  );
 }
