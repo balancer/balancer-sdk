@@ -30,7 +30,11 @@ async fn get_authorizer() {
   print_start_new_example("Vault#getAuthorizer");
 
   let instance = get_vault_instance();
-  let authorizer = instance.get_authorizer().call().await.unwrap();
+  let authorizer = instance
+    .get_authorizer()
+    .call()
+    .await
+    .expect("getAuthorizer call failed");
 
   println!("Balancer Pool authorizer address {:#?}", authorizer);
 }
@@ -62,12 +66,11 @@ async fn has_approved_relayer() {
   let user_addr = Address::from_str(some_user_addr).unwrap();
   let relayer_addr = Address::from_str(some_relayer_addr).unwrap();
 
-  // This will fail - The caller must be allowed by the current Authorizer to do this.
   let result = instance
     .has_approved_relayer(user_addr, relayer_addr)
     .call()
     .await
-    .unwrap();
+    .expect("This should fail - caller must be allowed by the current Authorizer.");
 
   println!("Has approved relayer? {:#?}", result);
 }
@@ -87,7 +90,7 @@ async fn get_internal_balance() {
     .get_internal_balance(user_addr, tokens)
     .call()
     .await
-    .unwrap();
+    .expect("Failed to get internal balance");
 
   println!("User {:#?} has a balance of {:#?} WETH", user_addr, result);
 }
@@ -98,7 +101,11 @@ async fn get_pool() {
   let instance = get_vault_instance();
   let pool_id = "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080";
   let data = HexString(pool_id).to_bytes32();
-  let address_str = instance.get_pool(data).call().await.unwrap();
+  let address_str = instance
+    .get_pool(data)
+    .call()
+    .await
+    .expect("Failed to get pool");
 
   println!(
     "Balancer Pool address {:#?} for pool id {:#?}",
@@ -110,7 +117,7 @@ async fn weth() {
   print_start_new_example("Vault#WETH");
 
   let instance = get_vault_instance();
-  let weth_address = instance.weth().call().await.unwrap();
+  let weth_address = instance.weth().call().await.expect("Failed to get WETH");
 
   println!("Balancer Vault WETH address {:#?}", weth_address);
 }
