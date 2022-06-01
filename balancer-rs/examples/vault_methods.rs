@@ -8,6 +8,7 @@
 extern crate balancer_rs;
 mod helpers;
 
+use balancer_rs::constants::addresses::*;
 use balancer_rs::types::*;
 use ethcontract::Address;
 use helpers::*;
@@ -113,6 +114,50 @@ async fn get_pool() {
   )
 }
 
+async fn query_batch_swap() {
+  print_start_new_example("Vault#getPool");
+
+  let instance = get_vault_instance();
+  let assets = vec![addr!(UNI_ADDRESS), addr!(AAVE_ADDRESS)];
+  let swap_step = BatchSwapStep::new(
+    PoolId("0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080"),
+    0,
+    1,
+    "1000",
+    UserData("0x"),
+  );
+  let funds = FundManagement {
+    sender: addr!("0x85B0Acce5798bEAf27FEBe56572D7567b06c4B07"),
+    from_internal_balance: false,
+    recipient: addr!("0x85B0Acce5798bEAf27FEBe56572D7567b06c4B07"),
+    to_internal_balance: false,
+  };
+  let deltas = match instance
+    .query_batch_swap(
+      SwapKind::GivenIn.into(),
+      vec![swap_step.into()],
+      assets,
+      funds.into(),
+    )
+    .call()
+    .await
+  {
+    Ok(any) => any,
+    Err(e) => {
+      println!(
+        "If this fails with a BAL#*** error, you've made the request successfully, 
+        but you will need to fix your inputs so that they don't violate the Balancer protocol."
+      );
+
+      println!("Error {}", e);
+
+      return;
+    }
+  };
+
+  println!("Asset deltas {:#?}", deltas);
+}
+
 async fn weth() {
   print_start_new_example("Vault#WETH");
 
@@ -132,5 +177,6 @@ async fn main() {
   has_approved_relayer().await;
   get_internal_balance().await;
   get_pool().await;
+  query_batch_swap().await;
   weth().await;
 }
