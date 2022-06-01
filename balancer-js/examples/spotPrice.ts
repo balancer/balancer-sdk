@@ -4,6 +4,7 @@ import { ADDRESSES } from '../src/test/lib/constants';
 
 dotenv.config();
 
+
 /*
 Example showing how to use SDK to get spot price for a pair.
 */
