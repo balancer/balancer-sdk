@@ -166,6 +166,7 @@ describe('swaps execution', async () => {
             let reason;
             try {
                 await signer.sendTransaction(userTx);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (err: any) {
                 // Slippage should trigger 507 error:
                 // https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/solidity-utils/contracts/helpers/BalancerErrors.sol#L218
