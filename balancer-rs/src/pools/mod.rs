@@ -9,6 +9,7 @@ macro_rules! define_contract {
   ($name:ident, $generated_name:ident) => {
     pub struct $name {}
     impl $name {
+      #[allow(clippy::new_ret_no_self)]
       pub fn new(
         web3: ethcontract::Web3<ethcontract::web3::transports::Http>,
         pool_address: Address,

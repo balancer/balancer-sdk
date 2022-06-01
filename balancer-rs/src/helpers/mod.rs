@@ -7,12 +7,12 @@ pub mod conversions {
   use ethers_core::utils;
 
   pub fn bytes32_to_string(value: ethcontract::Bytes<[u8; 32]>) -> String {
-    return value.into_token().to_string();
+    value.into_token().to_string()
   }
 
   pub fn readable_string_to_swap_fee_percentage(value: &str) -> usize {
     let percentage = utils::parse_ether(value).unwrap();
-    return percentage.as_usize();
+    percentage.as_usize()
   }
 }
 
@@ -21,8 +21,8 @@ pub fn type_of<T>(_: T) -> &'static str {
 }
 
 pub fn build_web3(rpc_endpoint: &str) -> web3::Web3<web3::transports::Http> {
-  let transport = web3::transports::Http::new(&rpc_endpoint).unwrap();
-  return web3::Web3::new(transport);
+  let transport = web3::transports::Http::new(rpc_endpoint).unwrap();
+  web3::Web3::new(transport)
 }
 
 #[cfg(test)]
