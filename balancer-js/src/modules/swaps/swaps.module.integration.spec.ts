@@ -148,32 +148,62 @@ describe('swaps execution', async () => {
       await provider.send('evm_setAutomine', [true]);
     });
 
-    it('fails on slippage', async () => {
-      const frontrunner = provider.getSigner(1);
-      const frTx = await getTx(
-        ethers.utils.parseEther('100'),
-        await frontrunner.getAddress()
-      );
-      const userTx = await getTx(
-        ethers.utils.parseEther('1'),
-        await signer.getAddress()
-      );
+    context('in mempool', () => {
+      const getTx = async (amount: BigNumber, userAddress: string) => {
+        const swapInfo: SwapInfo = await swaps.findRouteGivenIn({
+          tokenIn,
+          tokenOut,
+          amount,
+          gasPrice,
+          maxPools,
+        });
 
-      await frontrunner.sendTransaction(frTx);
+        const { to, data, value } = swaps.buildSwap({
+          userAddress,
+          swapInfo,
+          kind: 0,
+          deadline,
+          maxSlippage,
+        });
 
-      let reason;
-      try {
-        await signer.sendTransaction(userTx);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        // Slippage should trigger 507 error:
-        // https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/solidity-utils/contracts/helpers/BalancerErrors.sol#L218
-        reason = err.reason;
-      }
+        return { to, data, value };
+      };
 
-      expect(reason).to.contain('BAL#507');
+      before(async () => {
+        await provider.send('evm_setAutomine', [false]);
+      });
 
-      await provider.send('evm_mine', []);
+      after(async () => {
+        await provider.send('evm_setAutomine', [true]);
+      });
+
+      it('fails on slippage', async () => {
+        const frontrunner = provider.getSigner(1);
+        const frTx = await getTx(
+          ethers.utils.parseEther('100'),
+          await frontrunner.getAddress()
+        );
+        const userTx = await getTx(
+          ethers.utils.parseEther('1'),
+          await signer.getAddress()
+        );
+
+        await frontrunner.sendTransaction(frTx);
+
+        let reason;
+        try {
+          await signer.sendTransaction(userTx);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+          // Slippage should trigger 507 error:
+          // https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/solidity-utils/contracts/helpers/BalancerErrors.sol#L218
+          reason = err.reason;
+        }
+
+        expect(reason).to.contain('BAL#507');
+
+        await provider.send('evm_mine', []);
+      });
     });
   });
 }).timeout(20000);
