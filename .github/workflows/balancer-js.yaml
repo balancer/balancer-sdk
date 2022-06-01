@@ -86,3 +86,4 @@ jobs:
 env:
   CI: true
   INFURA: ${{ secrets.INFURA }}
+  ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
