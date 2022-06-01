@@ -5,13 +5,28 @@
         "decimals": 18
     },
     {
+        "symbol": "aDAI",
+        "address": "0x02d60b84491589974263d922d9cc7a3152618ef6",
+        "decimals": 18
+    },
+    {
         "symbol": "USDC",
         "decimals": 6,
         "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
     },
     {
+        "symbol": "aUSDC",
+        "decimals": 6,
+        "address": "0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de"
+    },
+    {
         "symbol": "USDT",
         "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "decimals": 6
+    },
+    {
+        "symbol": "aUSDT",
+        "address": "0xf8fd466f12e236f4c96f7cce6c79eadb819abf58",
         "decimals": 6
     },
     {

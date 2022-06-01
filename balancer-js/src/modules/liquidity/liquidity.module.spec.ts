@@ -83,7 +83,14 @@ describe('Liquidity Module', () => {
         });
     });
 
-    // context('PhantomStable Pool calculations', () => {
-    //     it('Correctly calculates liquidity of a Boosted USD 3pool', async () => {});
-    // });
+    context('PhantomStable Pool calculations', () => {
+        it('Correctly calculates liquidity of a Boosted USD 3pool', async () => {
+            const liquidity = await liquidityProvider.getLiquidity(
+                findPool('0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2')
+            );
+            expect(Number(liquidity).toFixed(8).toString()).to.be.eq(
+                '176802743.05530426'
+            );
+        });
+    });
 });

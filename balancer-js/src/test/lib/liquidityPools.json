@@ -172,5 +172,169 @@
                 "name": "Wrapped Ether"
             }
         ]
+    },
+    {
+        "symbol": "bb-a-USD",
+        "address": "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2",
+        "tokensList": [
+          "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
+          "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2",
+          "0x804cdb9116a10bb78768d3252355a1b18067bf8f",
+          "0x9210f1204b5a24742eba12f710636d76240df3d0"
+        ],
+        "poolType": "StablePhantom",
+        "name": "Balancer Aave Boosted StablePool (USD)",
+        "id": "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe",
+        "totalShares": "175398736.272923442582230154",
+        "tokens": [
+          {
+            "symbol": "bb-a-USDT",
+            "address": "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
+            "priceRate": "1.01082996497897589",
+            "balance": "100355819.977213065407573583",
+            "decimals": 18,
+            "name": "Balancer Aave Boosted Pool (USDT)"
+          },
+          {
+            "symbol": "bb-a-USD",
+            "address": "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2",
+            "priceRate": "1",
+            "balance": "5192296683136091.355607053746989941",
+            "decimals": 18,
+            "name": "Balancer Aave Boosted StablePool (USD)"
+          },
+          {
+            "symbol": "bb-a-DAI",
+            "address": "0x804cdb9116a10bb78768d3252355a1b18067bf8f",
+            "priceRate": "1.008921813227916035",
+            "balance": "37830325.972946457887112113",
+            "decimals": 18,
+            "name": "Balancer Aave Boosted Pool (DAI)"
+          },
+          {
+            "symbol": "bb-a-USDC",
+            "address": "0x9210f1204b5a24742eba12f710636d76240df3d0",
+            "priceRate": "1.008899657313215288",
+            "balance": "37493298.126187604430920272",
+            "decimals": 18,
+            "name": "Balancer Aave Boosted Pool (USDC)"
+          }
+        ]
+    },
+    {
+        "symbol": "bb-a-USDT",
+        "address": "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
+        "tokensList": [
+          "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
+          "0xdac17f958d2ee523a2206206994597c13d831ec7",
+          "0xf8fd466f12e236f4c96f7cce6c79eadb819abf58"
+        ],
+        "poolType": "AaveLinear",
+        "totalShares": "100355830.767546444512740882",
+        "chainId": 1,
+        "id": "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c0000000000000000000000fd",
+        "tokens": [
+          {
+            "symbol": "bb-a-USDT",
+            "address": "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
+            "priceRate": "1",
+            "balance": "5192296758178996.860984051816479213",
+            "decimals": 18,
+            "name": "Balancer Aave Boosted Pool (USDT)"
+          },
+          {
+            "symbol": "USDT",
+            "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+            "priceRate": "1",
+            "balance": "3217998.444815",
+            "decimals": 6,
+            "name": "Tether USD"
+          },
+          {
+            "symbol": "aUSDT",
+            "address": "0xf8fd466f12e236f4c96f7cce6c79eadb819abf58",
+            "priceRate": "1.087899129027144107",
+            "balance": "90289274.201411",
+            "decimals": 6,
+            "name": "Wrapped aUSDT"
+          }
+        ]
+    },
+    {
+        "symbol": "bb-a-DAI",
+        "address": "0x804cdb9116a10bb78768d3252355a1b18067bf8f",
+        "tokensList": [
+          "0x02d60b84491589974263d922d9cc7a3152618ef6",
+          "0x6b175474e89094c44da98b954eedeac495271d0f",
+          "0x804cdb9116a10bb78768d3252355a1b18067bf8f"
+        ],
+        "poolType": "AaveLinear",
+        "totalShares": "37830443.163696080769220657",
+        "chainId": 1,
+        "id": "0x804cdb9116a10bb78768d3252355a1b18067bf8f0000000000000000000000fb",
+        "tokens": [
+          {
+            "symbol": "aDAI",
+            "address": "0x02d60b84491589974263d922d9cc7a3152618ef6",
+            "priceRate": "1.072616406560299348",
+            "balance": "32830627.214575144958054567",
+            "decimals": 18,
+            "name": "Wrapped aDAI"
+          },
+          {
+            "symbol": "DAI",
+            "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+            "priceRate": "1",
+            "balance": "2953604.822433960363139146",
+            "decimals": 18,
+            "name": "Dai Stablecoin"
+          },
+          {
+            "symbol": "bb-a-DAI",
+            "address": "0x804cdb9116a10bb78768d3252355a1b18067bf8f",
+            "priceRate": "1",
+            "balance": "5192296820704384.464834415559999438",
+            "decimals": 18,
+            "name": "Balancer Aave Boosted Pool (DAI)"
+          }
+        ]
+    },
+    {
+        "symbol": "bb-a-USDC",
+        "address": "0x9210f1204b5a24742eba12f710636d76240df3d0",
+        "tokensList": [
+          "0x9210f1204b5a24742eba12f710636d76240df3d0",
+          "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+          "0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de"
+        ],
+        "poolType": "AaveLinear",
+        "totalShares": "37493426.782937744120070627",
+        "id": "0x9210f1204b5a24742eba12f710636d76240df3d00000000000000000000000fc",
+        "tokens": [
+          {
+            "symbol": "bb-a-USDC",
+            "address": "0x9210f1204b5a24742eba12f710636d76240df3d0",
+            "priceRate": "1",
+            "balance": "5192296821041400.845592752209149468",
+            "decimals": 18,
+            "name": "Balancer Aave Boosted Pool (USDC)"
+          },
+          {
+            "symbol": "USDC",
+            "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            "priceRate": "1",
+            "balance": "9848032.156925",
+            "decimals": 6,
+            "name": "USD Coin"
+          },
+          {
+            "symbol": "aUSDC",
+            "address": "0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de",
+            "priceRate": "1.075650894903184157",
+            "balance": "26011449.668942",
+            "decimals": 6,
+            "name": "Wrapped aUSDC"
+          }
+        ]
     }
 ]

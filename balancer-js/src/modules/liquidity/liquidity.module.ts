@@ -13,9 +13,11 @@ import { TokenPriceProvider } from '../data-providers/token-price/provider.inter
 import { PoolType } from '../pools/types';
 import { Zero } from '@ethersproject/constants';
 
+const SCALING_FACTOR = 36;
+
 export interface PoolLiquidity {
     address: string;
-    liquidity: BigNumberish;
+    liquidity: string;
 }
 
 export class Liquidity {
@@ -33,36 +35,55 @@ export class Liquidity {
         });
 
         // For all tokens that are pools, recurse into them and fetch their liquidity
-        const subPoolLiquidity = await Promise.all(
-            parsedTokens.map(async (subPool) => {
-                const pool = await this.pools.findBy(
-                    'address',
-                    subPool.address
-                );
-                let liquidity = '0';
-                if (pool) {
-                    liquidity = await this.getLiquidity(pool);
-                }
+        const subPoolLiquidity: (PoolLiquidity | undefined)[] =
+            await Promise.all(
+                parsedTokens.map(async (token) => {
+                    const pool = await this.pools.findBy(
+                        'address',
+                        token.address
+                    );
+                    if (!pool) return;
 
-                return {
-                    address: subPool.address,
-                    liquidity,
-                };
-            })
-        );
+                    const liquidity = await this.getLiquidity(pool);
+                    const tokenBalance = parseFixed(
+                        token.balance,
+                        SCALING_FACTOR
+                    );
+                    const totalShares = parseFixed(
+                        pool.totalShares,
+                        SCALING_FACTOR
+                    );
+                    const shareOfLiquidityScaled = parseFixed(
+                        tokenBalance.toString(),
+                        SCALING_FACTOR
+                    ).div(totalShares);
+                    const scaledLiquidity = parseFixed(
+                        liquidity,
+                        SCALING_FACTOR
+                    );
+                    const phantomPoolLiquidity = formatFixed(
+                        scaledLiquidity.mul(shareOfLiquidityScaled),
+                        SCALING_FACTOR
+                    ).replace(/\.[0-9]+/, ''); // strip trailing decimals, we don't need them as we're already scaled up by 1e36
+
+                    return {
+                        address: pool.address,
+                        liquidity: phantomPoolLiquidity,
+                    };
+                })
+            );
 
         const totalSubPoolLiquidity = subPoolLiquidity.reduce(
-            (totalLiquidity, pool) => {
-                const scaledLiquidity = parseFixed(pool.liquidity, 36);
-                return totalLiquidity.add(scaledLiquidity);
+            (totalLiquidity, subPool) => {
+                if (!subPool) return Zero;
+                return totalLiquidity.add(subPool.liquidity);
             },
             Zero
         );
 
         const nonPoolTokens = parsedTokens.filter((token) => {
-            return (
-                subPoolLiquidity.find((pool) => pool.address === token.address)
-                    ?.liquidity === '0'
+            return !subPoolLiquidity.find(
+                (pool) => pool?.address === token.address
             );
         });
 
@@ -101,9 +122,9 @@ export class Liquidity {
 
         const totalLiquidity = formatFixed(
             BigNumber.from(totalSubPoolLiquidity).add(
-                parseFixed(tokenLiquidity, 36)
+                parseFixed(tokenLiquidity, SCALING_FACTOR)
             ),
-            36
+            SCALING_FACTOR
         );
 
         return totalLiquidity;
