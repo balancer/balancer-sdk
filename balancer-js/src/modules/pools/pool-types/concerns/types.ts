@@ -4,15 +4,15 @@ import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { JoinPoolRequest } from '@/types';
 
 export interface LiquidityConcern {
-    calcTotal: (...args: any[]) => string;
+  calcTotal: (...args: any[]) => string;
 }
 
 export interface SpotPriceConcern {
-    calcPoolSpotPrice: (
-        tokenIn: string,
-        tokenOut: string,
-        pool: SubgraphPoolBase
-    ) => string;
+  calcPoolSpotPrice: (
+    tokenIn: string,
+    tokenOut: string,
+    pool: SubgraphPoolBase
+  ) => string;
 }
 
 export interface JoinConcern {

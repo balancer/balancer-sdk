@@ -7,4 +7,4 @@ export * from './assetHelpers';
 export * from './aaveHelpers';
 
 export const isSameAddress = (address1: string, address2: string): boolean =>
-    getAddress(address1) === getAddress(address2);
+  getAddress(address1) === getAddress(address2);

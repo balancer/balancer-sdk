@@ -15,11 +15,11 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 
 const getERC20Contract = (address: string) => {
-    return new ethers.Contract(
-        address,
-        ['function balanceOf(address) view returns (uint256)'],
-        provider
-    );
+  return new ethers.Contract(
+    address,
+    ['function balanceOf(address) view returns (uint256)'],
+    provider
+  );
 };
 
 const rpcUrl = 'http://127.0.0.1:8545';
@@ -27,21 +27,21 @@ const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
 
 const setupSwaps = async (provider: JsonRpcProvider) => {
-    const pools = await getForkedPools(provider);
+  const pools = await getForkedPools(provider);
 
-    const swaps = new Swaps({
-        network: Network.MAINNET,
-        rpcUrl,
-        sor: {
-            tokenPriceService: 'coingecko',
-            poolDataService: new MockPoolDataService(pools),
-            fetchOnChainBalances: true,
-        },
-    });
+  const swaps = new Swaps({
+    network: Network.MAINNET,
+    rpcUrl,
+    sor: {
+      tokenPriceService: 'coingecko',
+      poolDataService: new MockPoolDataService(pools),
+      fetchOnChainBalances: true,
+    },
+  });
 
-    await swaps.fetchPools();
+  await swaps.fetchPools();
 
-    return swaps;
+  return swaps;
 };
 
 const tokenIn = AddressZero; // ETH
@@ -53,128 +53,137 @@ const deadline = MaxUint256;
 const maxSlippage = 1;
 
 describe('swaps execution', async () => {
-    let swaps: Swaps;
-    let transactionReceipt: TransactionReceipt;
-    let balanceBefore: BigNumber;
-    let balanceExpected: BigNumber;
-    const tokenOutContract = getERC20Contract(tokenOut);
+  let swaps: Swaps;
+  let transactionReceipt: TransactionReceipt;
+  let balanceBefore: BigNumber;
+  let balanceExpected: BigNumber;
+  const tokenOutContract = getERC20Contract(tokenOut);
 
-    // Setup chain
+  // Setup chain
+  before(async function () {
+    this.timeout(20000);
+
+    await provider.send('hardhat_reset', [
+      {
+        forking: {
+          jsonRpcUrl,
+        },
+      },
+    ]);
+
+    swaps = await setupSwaps(provider);
+  });
+
+  context('single transaction', () => {
     before(async function () {
-        this.timeout(20000);
+      this.timeout(20000);
 
-        await provider.send('hardhat_reset', [
-            {
-                forking: {
-                    jsonRpcUrl,
-                },
-            },
-        ]);
+      balanceBefore = await tokenOutContract.balanceOf(
+        await signer.getAddress()
+      );
 
-        swaps = await setupSwaps(provider);
+      const swapInfo: SwapInfo = await swaps.findRouteGivenIn({
+        tokenIn,
+        tokenOut,
+        amount,
+        gasPrice,
+        maxPools,
+      });
+
+      const { to, data, value } = swaps.buildSwap({
+        userAddress: await signer.getAddress(),
+        swapInfo,
+        kind: 0,
+        deadline,
+        maxSlippage,
+      });
+
+      const tx = { to, data, value };
+
+      balanceExpected = swapInfo.returnAmount;
+      transactionReceipt = await (await signer.sendTransaction(tx)).wait();
     });
 
-    context('single transaction', () => {
-        before(async function () {
-            this.timeout(20000);
+    it('should work', async () => {
+      expect(transactionReceipt.status).to.eql(1);
+    });
 
-            balanceBefore = await tokenOutContract.balanceOf(
-                await signer.getAddress()
-            );
+    it('balance should increase', async () => {
+      const balanceAfter: BigNumber = await tokenOutContract.balanceOf(
+        await signer.getAddress()
+      );
 
-            const swapInfo: SwapInfo = await swaps.findRouteGivenIn({
-                tokenIn,
-                tokenOut,
-                amount,
-                gasPrice,
-                maxPools,
-            });
+      expect(balanceAfter.sub(balanceBefore).toNumber()).to.eql(
+        balanceExpected.toNumber()
+      );
+    });
+  });
 
-            const { to, data, value } = swaps.buildSwap({
-                userAddress: await signer.getAddress(),
-                swapInfo,
-                kind: 0,
-                deadline,
-                maxSlippage,
-            });
+  context('in mempool', () => {
+    before(async () => {
+      await provider.send('evm_setAutomine', [false]);
+    });
 
-            const tx = { to, data, value };
-
-            balanceExpected = swapInfo.returnAmount;
-            transactionReceipt = await (
-                await signer.sendTransaction(tx)
-            ).wait();
-        });
-
-        it('should work', async () => {
-            expect(transactionReceipt.status).to.eql(1);
-        });
-
-        it('balance should increase', async () => {
-            const balanceAfter: BigNumber = await tokenOutContract.balanceOf(
-                await signer.getAddress()
-            );
-
-            expect(balanceAfter.sub(balanceBefore).toNumber()).to.eql(
-                balanceExpected.toNumber()
-            );
-        });
+    after(async () => {
+      await provider.send('evm_setAutomine', [true]);
     });
 
     context('in mempool', () => {
-        const getTx = async (amount: BigNumber, userAddress: string) => {
-            const swapInfo: SwapInfo = await swaps.findRouteGivenIn({
-                tokenIn,
-                tokenOut,
-                amount,
-                gasPrice,
-                maxPools,
-            });
-
-            const { to, data, value } = swaps.buildSwap({
-                userAddress,
-                swapInfo,
-                kind: 0,
-                deadline,
-                maxSlippage,
-            });
-
-            return { to, data, value };
-        };
-
-        before(async () => {
-            await provider.send('evm_setAutomine', [false]);
+      const getTx = async (amount: BigNumber, userAddress: string) => {
+        const swapInfo: SwapInfo = await swaps.findRouteGivenIn({
+          tokenIn,
+          tokenOut,
+          amount,
+          gasPrice,
+          maxPools,
         });
 
-        after(async () => {
-            await provider.send('evm_setAutomine', [true]);
+        const { to, data, value } = swaps.buildSwap({
+          userAddress,
+          swapInfo,
+          kind: 0,
+          deadline,
+          maxSlippage,
         });
 
-        it('fails on slippage', async () => {
-            const frontrunner = provider.getSigner(1);
-            const frTx = await getTx(
-                ethers.utils.parseEther('100'),
-                await frontrunner.getAddress()
-            );
-            const userTx = await getTx(
-                ethers.utils.parseEther('1'),
-                await signer.getAddress()
-            );
+        return { to, data, value };
+      };
 
-            await frontrunner.sendTransaction(frTx);
+      before(async () => {
+        await provider.send('evm_setAutomine', [false]);
+      });
 
-            let reason;
-            try {
-                await signer.sendTransaction(userTx);
-            } catch (err: any) {
-                // Slippage should trigger 507 error:
-                // https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/solidity-utils/contracts/helpers/BalancerErrors.sol#L218
-                reason = err.reason;
-            }
+      after(async () => {
+        await provider.send('evm_setAutomine', [true]);
+      });
 
-            expect(reason).to.contain('BAL#507');
+      it('fails on slippage', async () => {
+        const frontrunner = provider.getSigner(1);
+        const frTx = await getTx(
+          ethers.utils.parseEther('100'),
+          await frontrunner.getAddress()
+        );
+        const userTx = await getTx(
+          ethers.utils.parseEther('1'),
+          await signer.getAddress()
+        );
 
-            await provider.send('evm_mine', []);
-        });
+        await frontrunner.sendTransaction(frTx);
+
+        let reason;
+        try {
+          await signer.sendTransaction(userTx);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+          // Slippage should trigger 507 error:
+          // https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/solidity-utils/contracts/helpers/BalancerErrors.sol#L218
+          reason = err.reason;
+        }
+
+        expect(reason).to.contain('BAL#507');
+
+        await provider.send('evm_mine', []);
+      });
     });
+  });
 }).timeout(20000);

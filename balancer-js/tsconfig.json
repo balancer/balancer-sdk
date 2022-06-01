@@ -18,6 +18,6 @@
         }
     },
     "include": ["./src", "src/abi/*.json"],
-    "exclude": ["node_modules", "**/*.spec.ts"],
+    "exclude": ["node_modules"],
     "files": ["hardhat.config.js"]
 }
