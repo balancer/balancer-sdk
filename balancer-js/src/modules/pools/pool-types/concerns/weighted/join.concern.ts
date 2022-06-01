@@ -12,28 +12,31 @@ import { JoinPoolRequest } from '@/types';
 import useSlippage from '@/lib/utils/useSlippage';
 
 export class WeighedPoolJoin implements JoinConcern {
-  static encodeJoinPool(params: EncodeJoinPoolInput): string {
+  static encodeJoinPool({
+    poolId,
+    sender,
+    recipient,
+    joinPoolRequest,
+  }: EncodeJoinPoolInput): string {
     const vaultLibrary = new Interface(vaultAbi);
 
     return vaultLibrary.encodeFunctionData('joinPool', [
-      params.poolId,
-      params.sender,
-      params.recipient,
-      params.joinPoolRequest,
-    ]);
-  }
-
-  static constructJoinCall(params: JoinPoolData): string {
-    const {
-      assets,
-      maxAmountsIn,
-      userData,
-      fromInternalBalance,
       poolId,
       sender,
       recipient,
-    } = params;
+      joinPoolRequest,
+    ]);
+  }
 
+  static constructJoinCall({
+    assets,
+    maxAmountsIn,
+    userData,
+    fromInternalBalance,
+    poolId,
+    sender,
+    recipient,
+  }: JoinPoolData): string {
     const joinPoolRequest: JoinPoolRequest = {
       assets,
       maxAmountsIn,
@@ -89,7 +92,7 @@ export class WeighedPoolJoin implements JoinConcern {
     return joinCall;
   }
 
-  public calcBptOutGivenExactTokensIn(
+  private calcBptOutGivenExactTokensIn(
     pool: SubgraphPoolBase,
     tokenAmounts: string[],
     slippage?: string
@@ -105,9 +108,9 @@ export class WeighedPoolJoin implements JoinConcern {
     const normalizedWeights = pool.tokens.map((token) =>
       bnum(parseUnits(token.weight || '0').toString())
     ); //  TODO: validate approach of setting undefined to zero and calculation - frontend normalizes by parsing decimals
-    const normalizedAmounts = pool.tokens.map((token, i) => {
-      return bnum(parseUnits(tokenAmounts[i], token.decimals).toString());
-    });
+    const normalizedAmounts = pool.tokens.map((token, i) =>
+      bnum(parseUnits(tokenAmounts[i], token.decimals).toString())
+    );
 
     const normalizedTotalShares = bnum(parseUnits(pool.totalShares).toString());
     const normalizedSwapFee = bnum(parseUnits(pool.swapFee).toString());
