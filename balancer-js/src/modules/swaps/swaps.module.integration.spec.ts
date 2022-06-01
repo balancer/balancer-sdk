@@ -120,26 +120,6 @@ describe('swaps execution', async () => {
   });
 
   context('in mempool', () => {
-    const getTx = async (amount: BigNumber, userAddress: string) => {
-      const swapInfo: SwapInfo = await swaps.findRouteGivenIn({
-        tokenIn,
-        tokenOut,
-        amount,
-        gasPrice,
-        maxPools,
-      });
-
-      const { to, data, value } = swaps.buildSwap({
-        userAddress,
-        swapInfo,
-        kind: 0,
-        deadline,
-        maxSlippage,
-      });
-
-      return { to, data, value };
-    };
-
     before(async () => {
       await provider.send('evm_setAutomine', [false]);
     });
