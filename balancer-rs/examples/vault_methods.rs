@@ -11,7 +11,9 @@ mod sample_data;
 
 use balancer_rs::constants::*;
 use balancer_rs::helpers::errors::handle_bal_error;
-use balancer_rs::types::*;
+
+use balancer_rs::vault::Vault;
+use balancer_rs::*;
 use ethcontract::Address;
 use helpers::*;
 use std::str::FromStr;
@@ -20,12 +22,12 @@ use std::str::FromStr;
 
 // Helper to get the active instance that will interact with the ethereum node.
 // You can replace the RPC_URL with whatever is your prefered rpc endpoint.
-const RPC_URL: &'static str = rpc_endpoints::KOVAN_TESTNET;
-fn get_vault_instance() -> balancer_rs::generated_contracts::vault::Vault {
+const RPC_URL: &str = rpc_endpoints::KOVAN_TESTNET;
+fn get_vault_instance() -> Vault {
   let transport = ethcontract::web3::transports::Http::new(RPC_URL).unwrap();
   let web3 = ethcontract::Web3::new(transport);
 
-  balancer_rs::vault::Vault::new(web3)
+  Vault::new(web3)
 }
 
 // VAULT API EXAMPLES
@@ -123,10 +125,12 @@ async fn query_batch_swap() {
   print_start_new_example("Vault#getPool");
 
   let instance = get_vault_instance();
+
   let assets = vec![
     addr!(sample_data::kovan::BAL_ADDRESS),
     addr!(sample_data::kovan::USDC_ADDRESS),
   ];
+
   let swap_step = BatchSwapStep::new(
     PoolId(sample_data::kovan::POOLS[0].id),
     0,
@@ -134,12 +138,14 @@ async fn query_batch_swap() {
     "1",
     UserData("0x"),
   );
+
   let funds = FundManagement {
     sender: addr!("0x85B0Acce5798bEAf27FEBe56572D7567b06c4B07"),
     from_internal_balance: false,
     recipient: addr!("0x85B0Acce5798bEAf27FEBe56572D7567b06c4B07"),
     to_internal_balance: false,
   };
+
   let deltas = match instance
     .query_batch_swap(
       SwapKind::GivenIn.into(),

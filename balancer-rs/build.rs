@@ -28,6 +28,10 @@ fn main() {
   make_contract_from_json("./src/abis/SimpleTestContract.json", "simple_test_contract");
   make_contract_from_json("./src/abis/Vault.json", "vault");
   make_contract_from_json("./src/abis/WeightedPool.json", "weighted_pool");
+  make_contract_from_json(
+    "./src/abis/WeightedPool2Tokens.json",
+    "weighted_pool_2_tokens",
+  );
   make_contract_from_json("./src/abis/MetaStablePool.json", "meta_stable_pool");
   make_contract_from_json("./src/abis/StablePool.json", "stable_pool");
   make_contract_from_json("./src/abis/InvestmentPool.json", "managed_pool");

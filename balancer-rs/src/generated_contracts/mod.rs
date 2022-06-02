@@ -7,3 +7,4 @@ pub mod simple_test_contract;
 pub mod stable_pool;
 pub mod vault;
 pub mod weighted_pool;
+pub mod weighted_pool_2_tokens;

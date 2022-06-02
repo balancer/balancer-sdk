@@ -1,34 +1,33 @@
-/**
- * This is a collection of examples for interacting with each of the Base Vault API methods.
- * Each method is run in main() below -- you can comment out whichever example you don't want
- * to run.
- *
- * The examples use the RPC_URL constant, but you can/should replace that with your own.
- *
- * Since the Base Pool contract is inherited by all of the other pools, we can use any pool interface.
- * In these examples, we use the WeightedPool
- */
+//! This is a collection of examples for interacting with each of the Base Vault API methods.
+//! Each method is run in main() below -- you can comment out whichever example you don't want
+//! to run.
+//!
+//! The examples use the RPC_URL constant, but you can/should replace that with your own.
+//! Since the Base Pool contract is inherited by all of the other pools, we can use any pool interface.
+//! In these examples, we use the WeightedPool
+
 extern crate balancer_rs;
 mod helpers;
 
-use balancer_rs::generated_contracts::weighted_pool::WeightedPool;
-use balancer_rs::helpers::conversions::*;
-use balancer_rs::types::*;
+use balancer_rs::pools::*;
+use balancer_rs::*;
+use ethcontract::tokens::Tokenize;
 use ethers_core::utils;
 use helpers::*;
+use std::str::FromStr;
 
 // HELPERS
 
 // Helper to get the active instance that will interact with the ethereum node.
 // You can replace the RPC_URL with whatever is your prefered rpc endpoint.
-const RPC_URL: &'static str = "https://rpc.flashbots.net/";
-const POOL_ADDRESS: &'static str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
+const RPC_URL: &str = "https://rpc.flashbots.net/";
+const POOL_ADDRESS: &str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
 fn get_pool_instance() -> WeightedPool {
   let transport = ethcontract::web3::transports::Http::new(RPC_URL).unwrap();
   let web3 = ethcontract::Web3::new(transport);
   let pool_address = addr!(POOL_ADDRESS);
 
-  return balancer_rs::WeightedPool::new(web3, pool_address);
+  WeightedPool::new(web3, pool_address)
 }
 
 // BASE POOL API EXAMPLES
@@ -49,7 +48,7 @@ async fn get_pool_id() {
 
   println!(
     "Balancer Pool Id {:#?} for pool with address {:#?}",
-    bytes32_to_string(id),
+    id.into_token().to_string(),
     POOL_ADDRESS
   );
 }
@@ -59,13 +58,11 @@ async fn get_swap_fee_percentage() {
 
   let instance = get_pool_instance();
   let fee = instance.get_swap_fee_percentage().call().await.unwrap();
-  let fee_human_readable = utils::format_units(fee.as_usize(), 18 - 2).unwrap();
+  let fee_human_readable = utils::format_units::<usize, i32>(fee.as_usize(), 18 - 2).unwrap();
 
   println!(
-    "Balancer Pool Id {:#?} swap fee percentage {:#?} ({})",
-    POOL_ADDRESS,
-    fee,
-    format!("{:.4}%", fee_human_readable)
+    "Balancer Pool Id {:#?} swap fee percentage {:#?} ({:.4})%",
+    POOL_ADDRESS, fee, fee_human_readable
   );
 }
 
@@ -85,13 +82,9 @@ async fn set_swap_fee_percentage() {
   print_start_new_example("BasePool#setSwapFeePercentage");
 
   let instance = get_pool_instance();
-  let percentage = readable_string_to_swap_fee_percentage("0.15");
+  let percentage = swap_fee!("0.15");
 
-  let result = match instance
-    .set_swap_fee_percentage(percentage.into())
-    .call()
-    .await
-  {
+  let result = match instance.set_swap_fee_percentage(percentage).call().await {
     Ok(any) => any,
     Err(e) => println!(
       "This should fail with BAL#401 if you are not the pool owner. {}",
