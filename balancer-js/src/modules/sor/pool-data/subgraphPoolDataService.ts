@@ -15,7 +15,7 @@ const NETWORKS_WITH_LINEAR_POOLS = [
   Network.POLYGON,
   Network.ROPSTEN,
   Network.RINKEBY,
-  Network.GÖRLI,
+  Network.GOERLI,
   Network.KOVAN,
 ];
 

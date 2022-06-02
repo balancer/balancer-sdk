@@ -123,15 +123,15 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     pools: {},
   },
-  [Network.GÖRLI]: {
-    chainId: Network.GÖRLI, //5
+  [Network.GOERLI]: {
+    chainId: Network.GOERLI, //5
     addresses: {
       contracts: {
-        vault: '0x65748E8287Ce4B9E6D83EE853431958851550311',
-        multicall: '0x42ad527de7d4e9d9d011ac45b31d8551f8fe9821',
+        vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+        multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
       },
       tokens: {
-        wrappedNativeAsset: '0x9A1000D492d40bfccbc03f413A48F5B6516Ec0Fd',
+        wrappedNativeAsset: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6',
       },
     },
     urls: {
