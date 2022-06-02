@@ -70,7 +70,7 @@ export class WeighedPoolJoin implements JoinConcern {
   }: ExactTokensInJoinPoolParameters): Promise<string> {
     // TODO: must check tokensIn and amountsIn to see if they are sorted by token addresses - it's currently depending on having the inputs already sorted
     const normalizedMinBPTOut = BigNumber.from(
-      this.calcBptOutGivenExactTokensIn(pool, amountsIn, slippage).toString()
+      this.calcBptOutGivenExactTokensIn(pool, amountsIn, slippage)
     );
 
     const normalizedAmountsIn = pool.tokens.map((token, i) => {
@@ -102,7 +102,7 @@ export class WeighedPoolJoin implements JoinConcern {
     pool: SubgraphPoolBase,
     tokenAmounts: string[],
     slippage?: string
-  ): OldBigNumber {
+  ): string {
     const bnum = (val: string | number | OldBigNumber): OldBigNumber => {
       const number = typeof val === 'string' ? val : val ? val.toString() : '0';
       return new OldBigNumber(number);
@@ -135,8 +135,8 @@ export class WeighedPoolJoin implements JoinConcern {
         0,
         slippage
       );
-      return new OldBigNumber(minBPTOut);
+      return minBPTOut;
     }
-    return fullBPTOut;
+    return fullBPTOut.toString();
   }
 }
