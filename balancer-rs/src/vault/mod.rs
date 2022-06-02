@@ -1,9 +1,9 @@
-extern crate hexutil;
+//! This module contains all things specific to the Balancer Vault.
 
 use super::generated_contracts::vault::Vault as GeneratedVault;
 use std::str::FromStr;
 
-// This should always be the same address across chains
+/// This should always be the same address across chains
 const VAULT_CONTRACT_ADDRESS: &str = "0xBA12222222228d8Ba445958a75a0704d566BF2C8";
 
 pub struct Vault {}

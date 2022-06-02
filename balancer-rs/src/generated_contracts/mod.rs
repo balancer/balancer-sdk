@@ -1,3 +1,5 @@
+//! Modules generated from json abis `src/abis`. You should not be interacting with these modules directly.
+//! But they are in scope so you can view the generated API interfaces.
 pub mod liquidity_bootstrapping_pool;
 pub mod managed_pool;
 pub mod meta_stable_pool;
