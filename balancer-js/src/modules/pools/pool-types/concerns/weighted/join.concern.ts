@@ -1,6 +1,5 @@
 import { Interface } from '@ethersproject/abi';
 import { parseUnits } from '@ethersproject/units';
-import { BigNumber } from '@ethersproject/bignumber';
 import OldBigNumber from 'bignumber.js';
 import * as SDK from '@georgeroman/balancer-v2-pools';
 
@@ -16,6 +15,7 @@ import {
 } from '../types';
 import { JoinPoolRequest } from '@/types';
 import useSlippage from '@/lib/utils/useSlippage';
+import { AssetHelpers } from '@/lib/utils';
 
 export class WeighedPoolJoin implements JoinConcern {
   static encodeJoinPool({
@@ -68,14 +68,14 @@ export class WeighedPoolJoin implements JoinConcern {
     amountsIn,
     slippage,
   }: ExactTokensInJoinPoolParameters): Promise<string> {
-    // TODO: must check tokensIn and amountsIn to see if they are sorted by token addresses - it's currently depending on having the inputs already sorted
-    const normalizedMinBPTOut = BigNumber.from(
-      this.calcBptOutGivenExactTokensIn(pool, amountsIn, slippage)
-    );
-
-    const normalizedAmountsIn = pool.tokens.map((token, i) => {
-      return parseUnits(amountsIn[i], token.decimals);
-    });
+    if (
+      tokensIn.length != amountsIn.length ||
+      tokensIn.length != pool.tokensList.length
+    ) {
+      throw new Error('Must provide amount for all tokens in the pool');
+    }
+    const [sortedTokensIn, normalizedAmountsIn, normalizedMinBPTOut] =
+      this.calcBptOutGivenExactTokensIn(pool, tokensIn, amountsIn, slippage);
 
     const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
       normalizedAmountsIn,
@@ -83,7 +83,7 @@ export class WeighedPoolJoin implements JoinConcern {
     );
 
     const joinPoolData: JoinPoolData = {
-      assets: tokensIn,
+      assets: sortedTokensIn,
       maxAmountsIn: normalizedAmountsIn,
       userData,
       fromInternalBalance: false,
@@ -98,45 +98,121 @@ export class WeighedPoolJoin implements JoinConcern {
     return joinCall;
   }
 
-  private calcBptOutGivenExactTokensIn(
+  private sortPoolInfo(
     pool: SubgraphPoolBase,
-    tokenAmounts: string[],
-    slippage?: string
-  ): string {
+    tokensIn: string[],
+    amountsIn: string[]
+  ): [
+    sortedTokens: string[],
+    sortedBalances: string[],
+    sortedWeights: string[],
+    sortedAmounts: string[],
+    sortedDecimals: string[]
+  ] {
+    const WETH = '0x000000000000000000000000000000000000000F';
+    const assetHelpers = new AssetHelpers(WETH);
+    const [sortedTokensIn, sortedAmounts] = assetHelpers.sortTokens(
+      tokensIn,
+      amountsIn
+    ) as [string[], string[]];
+    const [sortedTokens, sortedBalances, sortedWeights, sortedDecimals] =
+      assetHelpers.sortTokens(
+        pool.tokens.map((token) => token.address),
+        pool.tokens.map((token) => token.balance),
+        pool.tokens.map((token) => token.weight),
+        pool.tokens.map((token) => token.decimals)
+      ) as [string[], string[], string[], string[]];
+    return [
+      sortedTokens,
+      sortedBalances,
+      sortedWeights,
+      sortedAmounts,
+      sortedDecimals,
+    ];
+  }
+
+  private normalizeCalcInputs(
+    sortedBalances: string[],
+    sortedWeights: string[],
+    sortedAmounts: string[],
+    sortedDecimals: string[],
+    totalShares: string,
+    swapFee: string
+  ): [
+    normalizedBalances: OldBigNumber[],
+    normalizedWeights: OldBigNumber[],
+    normalizedAmounts: OldBigNumber[],
+    normalizedTotalShares: OldBigNumber,
+    normalizedSwapFee: OldBigNumber
+  ] {
     const bnum = (val: string | number | OldBigNumber): OldBigNumber => {
       const number = typeof val === 'string' ? val : val ? val.toString() : '0';
       return new OldBigNumber(number);
     };
-
-    const normalizedBalances = pool.tokens.map((token) =>
-      bnum(parseUnits(token.balance).toString())
+    const _normalizedBalances = sortedBalances.map((balance, i) =>
+      bnum(parseUnits(balance, sortedDecimals[i]).toString())
     );
-    const normalizedWeights = pool.tokens.map((token) =>
-      bnum(parseUnits(token.weight || '0').toString())
-    ); //  TODO: validate approach of setting undefined to zero and calculation - frontend normalizes by parsing decimals
-    const normalizedAmounts = pool.tokens.map((token, i) =>
-      bnum(parseUnits(tokenAmounts[i], token.decimals).toString())
+    const _normalizedWeights = sortedWeights.map((weight) =>
+      bnum(parseUnits(weight).toString())
     );
+    const _normalizedAmounts = sortedAmounts.map((amount, i) =>
+      bnum(parseUnits(amount, sortedDecimals[i]).toString())
+    );
+    const _normalizedTotalShares = bnum(parseUnits(totalShares).toString());
+    const _normalizedSwapFee = bnum(parseUnits(swapFee).toString());
+    return [
+      _normalizedBalances,
+      _normalizedWeights,
+      _normalizedAmounts,
+      _normalizedTotalShares,
+      _normalizedSwapFee,
+    ];
+  }
 
-    const normalizedTotalShares = bnum(parseUnits(pool.totalShares).toString());
-    const normalizedSwapFee = bnum(parseUnits(pool.swapFee).toString());
+  private calcBptOutGivenExactTokensIn(
+    pool: SubgraphPoolBase,
+    tokensIn: string[],
+    amountsIn: string[],
+    slippage?: string
+  ): [string[], string[], string] {
+    const [
+      sortedTokens,
+      sortedBalances,
+      sortedWeights,
+      sortedAmounts,
+      sortedDecimals,
+    ] = this.sortPoolInfo(pool, tokensIn, amountsIn);
 
-    const fullBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
+    const [
       normalizedBalances,
       normalizedWeights,
       normalizedAmounts,
-      normalizedTotalShares, // TODO: validate calculation - frontend parses based on decimals
-      normalizedSwapFee // TODO: validate calculation - frontend parses based on decimals
+      normalizedTotalShares,
+      normalizedSwapFee,
+    ] = this.normalizeCalcInputs(
+      sortedBalances,
+      sortedWeights,
+      sortedAmounts,
+      sortedDecimals,
+      pool.totalShares,
+      pool.swapFee
     );
 
+    let fullBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
+      normalizedBalances,
+      normalizedWeights,
+      normalizedAmounts,
+      normalizedTotalShares,
+      normalizedSwapFee
+    ).toString();
+
     if (slippage) {
-      const minBPTOut = useSlippage.subSlippage(
-        fullBPTOut.toString(),
-        0,
-        slippage
-      );
-      return minBPTOut;
+      fullBPTOut = useSlippage.subSlippage(fullBPTOut, 0, slippage);
     }
-    return fullBPTOut.toString();
+    return [
+      sortedTokens,
+      normalizedAmounts.map((amount) => amount.toString()),
+      fullBPTOut,
+    ];
   }
 }
