@@ -12,6 +12,7 @@ import { PoolProvider } from '../data-providers/pool/provider.interface';
 import { TokenPriceProvider } from '../data-providers/token-price/provider.interface';
 import { PoolType } from '../pools/types';
 import { Zero } from '@ethersproject/constants';
+import util from 'util';
 
 const SCALING_FACTOR = 36;
 
@@ -104,9 +105,7 @@ export class Liquidity {
                         address: token.address,
                         decimals: token.decimals,
                         priceRate: token.priceRate,
-                        price: {
-                            inUSD: tokenPrice?.inUSD,
-                        },
+                        price: tokenPrice,
                     },
                     balance: token.balance,
                     weight: token.weight

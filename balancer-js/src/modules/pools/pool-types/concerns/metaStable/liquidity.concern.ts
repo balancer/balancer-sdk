@@ -3,6 +3,8 @@ import { TokenBalance } from '@/types';
 import { parseFixed, formatFixed } from '@ethersproject/bignumber';
 import { WeiPerEther as ONE, Zero } from '@ethersproject/constants';
 
+const SCALING_FACTOR = 18;
+
 export class MetaStablePoolLiquidity implements LiquidityConcern {
     calcTotal(tokenBalances: TokenBalance[]): string {
         let sumBalance = Zero;
@@ -13,18 +15,21 @@ export class MetaStablePoolLiquidity implements LiquidityConcern {
 
             // if a token's price is unknown, ignore it
             // it will be computed at the next step
-            if (!tokenBalance.token.price?.inUSD) {
+            if (!tokenBalance.token.price?.USD) {
                 continue;
             }
 
-            const price = parseFixed(tokenBalance.token.price.inUSD, 18);
+            const price = parseFixed(
+                tokenBalance.token.price.USD,
+                SCALING_FACTOR
+            );
             const priceRate = parseFixed(
                 tokenBalance.token.priceRate || '1',
-                18
+                SCALING_FACTOR
             );
 
             // Apply priceRate to scale the balance correctly
-            const balance = parseFixed(tokenBalance.balance, 18)
+            const balance = parseFixed(tokenBalance.balance, SCALING_FACTOR)
                 .mul(priceRate)
                 .div(ONE);
 
@@ -41,11 +46,14 @@ export class MetaStablePoolLiquidity implements LiquidityConcern {
             for (let i = 0; i < tokenBalances.length; i++) {
                 const tokenBalance = tokenBalances[i];
 
-                if (tokenBalance.token.price?.inUSD) {
+                if (tokenBalance.token.price?.USD) {
                     continue;
                 }
 
-                const balance = parseFixed(tokenBalance.balance, 18);
+                const balance = parseFixed(
+                    tokenBalance.balance,
+                    SCALING_FACTOR
+                );
 
                 const value = balance.mul(avgPrice);
                 sumValue = sumValue.add(value);
@@ -53,6 +61,6 @@ export class MetaStablePoolLiquidity implements LiquidityConcern {
             }
         }
 
-        return formatFixed(sumValue, 36).toString();
+        return formatFixed(sumValue, SCALING_FACTOR * 2).toString();
     }
 }

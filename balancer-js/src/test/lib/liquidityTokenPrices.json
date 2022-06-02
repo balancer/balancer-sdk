@@ -1,52 +1,72 @@
 [
     {
         "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-        "inUSD": "1",
-        "ofNativeAsset": "2000"
+        "price": {
+            "USD": "1",
+            "ETH": "0.0005"
+        }
     },
     {
         "address": "0x02d60b84491589974263d922d9cc7a3152618ef6",
-        "inUSD": "1",
-        "ofNativeAsset": "2000"
+        "price": {
+            "USD": "1",
+            "ETH": "0.0005"
+        }
     },
     {
         "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "inUSD": "1.01",
-        "ofNativeAsset": "1980.198019"
+        "price": {
+            "USD": "1.01",
+            "ETH": "0.000505"
+        }
     },
     {
         "address": "0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de",
-        "inUSD": "1.01",
-        "ofNativeAsset": "1980.198019"
+        "price": {
+            "USD": "1.01",
+            "ETH": "0.000505"
+        }
     },
     {
         "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
-        "inUSD": "0.99",
-        "ofNativeAsset": "2020.202020"
+        "price": {
+            "USD": "0.99",
+            "ETH": "0.000495"
+        }
     },
     {
         "address": "0xf8fd466f12e236f4c96f7cce6c79eadb819abf58",
-        "inUSD": "0.99",
-        "ofNativeAsset": "2020.202020"
+        "price": {
+            "USD": "0.99",
+            "ETH": "0.000495"
+        }
     },
     {
         "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "inUSD": "2000",
-        "ofNativeAsset": "1"
+        "price": {
+            "USD": "2000",
+            "ETH": "1"
+        }
     },
     {
         "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-        "inUSD": "32000",
-        "ofNativeAsset": "0.0625"
+        "price": {
+            "USD": "32000",
+            "ETH": "16"
+        }
     },
     {
         "address": "0xba100000625a3754423978a60c9317c58a424e3d",
-        "inUSD": "16",
-        "ofNativeAsset": "125"
+        "price": {
+            "USD": "16",
+            "ETH": "0.008"
+        }
     },
     {
         "address": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
-        "inUSD": "2140",
-        "ofNativeAsset": "0.93457943925"
+        "price": {
+            "USD": "2140",
+            "ETH": "1.07"
+        }
     }
 ]

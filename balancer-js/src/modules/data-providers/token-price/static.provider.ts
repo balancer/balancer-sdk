@@ -1,6 +1,8 @@
 import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
-import { TokenPriceData } from '@/types';
+import { TokenPrice, TokenPriceData } from '@/types';
 import { TokenPriceProvider } from './provider.interface';
+
+const SCALING_FACTOR = 18;
 
 export class StaticTokenPriceProvider implements TokenPriceProvider {
     constructor(private tokenPrices: TokenPriceData[]) {
@@ -25,8 +27,11 @@ export class StaticTokenPriceProvider implements TokenPriceProvider {
                 (tokenPrice) =>
                     tokenPrice.address.toLowerCase() === address.toLowerCase()
             );
-            if (tokenPrice?.ofNativeAsset) {
-                const scaledPrice = parseFixed(tokenPrice.ofNativeAsset, 18);
+            if (tokenPrice?.price.ETH) {
+                const scaledPrice = parseFixed(
+                    tokenPrice?.price.ETH,
+                    SCALING_FACTOR
+                );
                 assetValueSum = assetValueSum.add(scaledPrice);
                 assetsAvailable++;
             }
@@ -35,21 +40,23 @@ export class StaticTokenPriceProvider implements TokenPriceProvider {
         const NativeAssetUSDPrice = assetValueSum.div(assetsAvailable);
 
         this.tokenPrices = this.tokenPrices.map((tokenPrice) => {
-            if (tokenPrice.ofNativeAsset && !tokenPrice.inUSD) {
-                const usdPrice = parseFixed('1', 20)
-                    .mul(NativeAssetUSDPrice)
-                    .div(parseFixed(tokenPrice.ofNativeAsset, 20))
+            if (tokenPrice.price.ETH && !tokenPrice.price.USD) {
+                const usdPrice = parseFixed('1', SCALING_FACTOR)
+                    .mul(parseFixed(tokenPrice.price.ETH, SCALING_FACTOR))
+                    .div(NativeAssetUSDPrice)
                     .toString();
-                tokenPrice.inUSD = formatFixed(usdPrice, 18);
+                tokenPrice.price.USD = formatFixed(usdPrice, SCALING_FACTOR);
             }
 
             return tokenPrice;
         });
     }
 
-    async find(address: string): Promise<TokenPriceData | undefined> {
-        return this.tokenPrices.find((tokenPrice) => {
+    async find(address: string): Promise<TokenPrice | undefined> {
+        const data = this.tokenPrices.find((tokenPrice) => {
             return tokenPrice.address.toLowerCase() === address.toLowerCase();
         });
+        if (!data) return;
+        return data.price;
     }
 }

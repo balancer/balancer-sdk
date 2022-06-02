@@ -117,14 +117,11 @@ export interface TransactionData {
     };
 }
 
-export interface TokenPrice {
-    inUSD?: string;
-    inNativeAsset?: string;
-    ofNativeAsset?: string;
-}
+export type TokenPrice = { [currency: string]: string };
 
-export interface TokenPriceData extends TokenPrice {
+export interface TokenPriceData {
     address: string;
+    price: TokenPrice;
 }
 
 export interface Token {

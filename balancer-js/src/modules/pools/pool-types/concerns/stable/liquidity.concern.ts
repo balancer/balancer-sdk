@@ -2,6 +2,8 @@ import { LiquidityConcern } from '../types';
 import { TokenBalance } from '@/types';
 import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
 
+const SCALING_FACTOR = 18;
+
 export class StablePoolLiquidity implements LiquidityConcern {
     calcTotal(tokenBalances: TokenBalance[]): string {
         let sumBalance = BigNumber.from(0);
@@ -12,12 +14,15 @@ export class StablePoolLiquidity implements LiquidityConcern {
 
             // if a token's price is unknown, ignore it
             // it will be computed at the next step
-            if (!tokenBalance.token.price?.inUSD) {
+            if (!tokenBalance.token.price?.USD) {
                 continue;
             }
 
-            const price = parseFixed(tokenBalance.token.price.inUSD, 18);
-            const balance = parseFixed(tokenBalance.balance, 18);
+            const price = parseFixed(
+                tokenBalance.token.price.USD,
+                SCALING_FACTOR
+            );
+            const balance = parseFixed(tokenBalance.balance, SCALING_FACTOR);
 
             const value = balance.mul(price);
             sumValue = sumValue.add(value);
@@ -32,11 +37,14 @@ export class StablePoolLiquidity implements LiquidityConcern {
             for (let i = 0; i < tokenBalances.length; i++) {
                 const tokenBalance = tokenBalances[i];
 
-                if (tokenBalance.token.price?.inUSD) {
+                if (tokenBalance.token.price?.USD) {
                     continue;
                 }
 
-                const balance = parseFixed(tokenBalance.balance, 18);
+                const balance = parseFixed(
+                    tokenBalance.balance,
+                    SCALING_FACTOR
+                );
 
                 const value = balance.mul(avgPrice);
                 sumValue = sumValue.add(value);
@@ -44,6 +52,6 @@ export class StablePoolLiquidity implements LiquidityConcern {
             }
         }
 
-        return formatFixed(sumValue, 36).toString();
+        return formatFixed(sumValue, SCALING_FACTOR * 2).toString();
     }
 }

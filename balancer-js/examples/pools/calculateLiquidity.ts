@@ -7,6 +7,7 @@ import {
     StaticTokenPriceProvider,
     Pools,
 } from '../../src';
+import { parseFixed, formatFixed } from '@ethersproject/bignumber';
 import { SORPoolProvider } from '../../src/modules/data-providers/pool/sor.provider';
 import { FallbackPoolProvider } from '../../src/modules/data-providers/pool/fallback.provider';
 import { Liquidity } from '../../src/modules/liquidity/liquidity.module';
@@ -36,9 +37,21 @@ const config: BalancerSdkConfig = {
 // pools.stable.liquidity.calcTotal(...);
 
 const tokenPrices = TOKENS.map((token) => {
+    // Strip price down to max 18 decimals.
+    let priceInETH = '0';
+    if (token.price) {
+        const tokenPriceMatch = token.price.match(/[0-9]+\.[0-9]{0,18}/);
+        const tokenPrice = tokenPriceMatch ? tokenPriceMatch[0] : '';
+        priceInETH = formatFixed(
+            parseFixed('1', 36).div(parseFixed(tokenPrice, 18)),
+            18
+        );
+    }
     return {
         address: token.address,
-        ofNativeAsset: token.price,
+        price: {
+            ETH: priceInETH,
+        },
     };
 });
 
