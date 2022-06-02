@@ -7,23 +7,33 @@ import { getNetworkConfig } from './sdk.helpers';
 import { Pools } from './pools/pools.module';
 import { Pricing } from './pricing/pricing.module';
 
-export class BalancerSDK {
-    public readonly swaps: Swaps;
-    public readonly relayer: Relayer;
-    public readonly pricing: Pricing;
+export interface BalancerSDKRoot {
+  config: BalancerSdkConfig;
+  sor: Sor;
+  subgraph: Subgraph;
+  pools: Pools;
+  swaps: Swaps;
+  relayer: Relayer;
+  networkConfig: BalancerNetworkConfig;
+}
 
-    constructor(
-        public config: BalancerSdkConfig,
-        public sor = new Sor(config),
-        public subgraph = new Subgraph(config),
-        public pools = new Pools(config)
-    ) {
-        this.swaps = new Swaps(this.sor);
-        this.relayer = new Relayer(this.swaps);
-        this.pricing = new Pricing(config, this.swaps);
-    }
+export class BalancerSDK implements BalancerSDKRoot {
+  readonly swaps: Swaps;
+  readonly relayer: Relayer;
+  readonly pricing: Pricing;
 
-    public get networkConfig(): BalancerNetworkConfig {
-        return getNetworkConfig(this.config);
-    }
+  constructor(
+    public config: BalancerSdkConfig,
+    public sor = new Sor(config),
+    public subgraph = new Subgraph(config),
+    public pools = new Pools(config)
+  ) {
+    this.swaps = new Swaps(this.config);
+    this.relayer = new Relayer(this.swaps);
+    this.pricing = new Pricing(config, this.swaps);
+  }
+
+  get networkConfig(): BalancerNetworkConfig {
+    return getNetworkConfig(this.config);
+  }
 }

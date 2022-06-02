@@ -1,0 +1,436 @@
+[
+  {
+    "id": "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe",
+    "address": "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2",
+    "poolType": "StablePhantom",
+    "swapFee": "0.00001",
+    "swapEnabled": true,
+    "totalShares": "185345925.677602644927340579",
+    "tokens": [
+      {
+        "address": "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
+        "symbol": "bb-a-USDT",
+        "balance": "110099182.938061876600984833",
+        "weight": null,
+        "priceRate": "1.010489741245550747",
+        "decimals": 18
+      },
+      {
+        "address": "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2",
+        "symbol": "bb-a-USD",
+        "balance": "5192296673188901.950927851401879516",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 18
+      },
+      {
+        "address": "0x804cdb9116a10bb78768d3252355a1b18067bf8f",
+        "symbol": "bb-a-DAI",
+        "balance": "38910679.869475244352250601",
+        "weight": null,
+        "priceRate": "1.008597867373721822",
+        "decimals": 18
+      },
+      {
+        "address": "0x9210f1204b5a24742eba12f710636d76240df3d0",
+        "symbol": "bb-a-USDC",
+        "balance": "36627640.70011837584569211",
+        "weight": null,
+        "priceRate": "1.008733188238467688",
+        "decimals": 18
+      }
+    ],
+    "tokensList": [
+      "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
+      "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2",
+      "0x804cdb9116a10bb78768d3252355a1b18067bf8f",
+      "0x9210f1204b5a24742eba12f710636d76240df3d0"
+    ],
+    "totalWeight": "0",
+    "amp": "1472",
+    "principalToken": null,
+    "baseToken": null,
+    "wrappedIndex": 0,
+    "mainIndex": 0,
+    "lowerTarget": null,
+    "upperTarget": null
+  },
+  {
+    "id": "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
+    "address": "0x32296969ef14eb0c6d29669c550d4a0449130230",
+    "poolType": "MetaStable",
+    "swapFee": "0.0004",
+    "swapEnabled": true,
+    "totalShares": "91159.560567453827466139",
+    "tokens": [
+      {
+        "address": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+        "symbol": "wstETH",
+        "balance": "60578.775583770045200186",
+        "weight": null,
+        "priceRate": "1.072339505663582219",
+        "decimals": 18
+      },
+      {
+        "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "symbol": "WETH",
+        "balance": "28389.031209848992719846",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 18
+      }
+    ],
+    "tokensList": [
+      "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    ],
+    "totalWeight": "0",
+    "amp": "50",
+    "principalToken": null,
+    "baseToken": null,
+    "wrappedIndex": 0,
+    "mainIndex": 0,
+    "lowerTarget": null,
+    "upperTarget": null
+  },
+  {
+    "id": "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c0000000000000000000000fd",
+    "address": "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
+    "poolType": "AaveLinear",
+    "swapFee": "0.0002",
+    "swapEnabled": true,
+    "totalShares": "110099193.728395255706152132",
+    "tokens": [
+      {
+        "address": "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
+        "symbol": "bb-a-USDT",
+        "balance": "5192296748435633.900135240623067963",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 18
+      },
+      {
+        "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "symbol": "USDT",
+        "balance": "5505576.541109",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 6
+      },
+      {
+        "address": "0xf8fd466f12e236f4c96f7cce6c79eadb819abf58",
+        "symbol": "aUSDT",
+        "balance": "97239386.185478",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 6
+      }
+    ],
+    "tokensList": [
+      "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
+      "0xdac17f958d2ee523a2206206994597c13d831ec7",
+      "0xf8fd466f12e236f4c96f7cce6c79eadb819abf58"
+    ],
+    "totalWeight": "0",
+    "amp": null,
+    "principalToken": null,
+    "baseToken": null,
+    "wrappedIndex": 2,
+    "mainIndex": 1,
+    "lowerTarget": "2900000",
+    "upperTarget": "10000000"
+  },
+  {
+    "id": "0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e",
+    "address": "0xa6f548df93de924d73be7d25dc02554c6bd66db5",
+    "poolType": "Weighted",
+    "swapFee": "0.001",
+    "swapEnabled": true,
+    "totalShares": "8870.405080904069291925",
+    "tokens": [
+      {
+        "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+        "symbol": "WBTC",
+        "balance": "1175.76669749",
+        "weight": "0.5",
+        "priceRate": "1",
+        "decimals": 8
+      },
+      {
+        "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "symbol": "WETH",
+        "balance": "17349.605103772407539053",
+        "weight": "0.5",
+        "priceRate": "1",
+        "decimals": 18
+      }
+    ],
+    "tokensList": [
+      "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    ],
+    "totalWeight": "1",
+    "amp": null,
+    "principalToken": null,
+    "baseToken": null,
+    "wrappedIndex": 0,
+    "mainIndex": 0,
+    "lowerTarget": null,
+    "upperTarget": null
+  },
+  {
+    "id": "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014",
+    "address": "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56",
+    "poolType": "Weighted",
+    "swapFee": "0.02",
+    "swapEnabled": true,
+    "totalShares": "5111749.770967309172389442",
+    "tokens": [
+      {
+        "address": "0xba100000625a3754423978a60c9317c58a424e3d",
+        "symbol": "BAL",
+        "balance": "10417022.165794507073015422",
+        "weight": "0.8",
+        "priceRate": "1",
+        "decimals": 18
+      },
+      {
+        "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "symbol": "WETH",
+        "balance": "9952.394490029745769164",
+        "weight": "0.2",
+        "priceRate": "1",
+        "decimals": 18
+      }
+    ],
+    "tokensList": [
+      "0xba100000625a3754423978a60c9317c58a424e3d",
+      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    ],
+    "totalWeight": "1",
+    "amp": null,
+    "principalToken": null,
+    "baseToken": null,
+    "wrappedIndex": 0,
+    "mainIndex": 0,
+    "lowerTarget": null,
+    "upperTarget": null
+  },
+  {
+    "id": "0x90291319f1d4ea3ad4db0dd8fe9e12baf749e84500020000000000000000013c",
+    "address": "0x90291319f1d4ea3ad4db0dd8fe9e12baf749e845",
+    "poolType": "Weighted",
+    "swapFee": "0.003",
+    "swapEnabled": true,
+    "totalShares": "373535.492782594721150015",
+    "tokens": [
+      {
+        "address": "0x956f47f50a910163d8bf957cf5846d573e7f87ca",
+        "symbol": "FEI",
+        "balance": "21102434.242590829677362",
+        "weight": "0.3",
+        "priceRate": "1",
+        "decimals": 18
+      },
+      {
+        "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "symbol": "WETH",
+        "balance": "25016.461771494761501949",
+        "weight": "0.7",
+        "priceRate": "1",
+        "decimals": 18
+      }
+    ],
+    "tokensList": [
+      "0x956f47f50a910163d8bf957cf5846d573e7f87ca",
+      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    ],
+    "totalWeight": "1",
+    "amp": null,
+    "principalToken": null,
+    "baseToken": null,
+    "wrappedIndex": 0,
+    "mainIndex": 0,
+    "lowerTarget": null,
+    "upperTarget": null
+  },
+  {
+    "id": "0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063",
+    "address": "0x06df3b2bbb68adc8b0e302443692037ed9f91b42",
+    "poolType": "Stable",
+    "swapFee": "0.00005",
+    "swapEnabled": true,
+    "totalShares": "53146228.386067028913388454",
+    "tokens": [
+      {
+        "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "symbol": "DAI",
+        "balance": "11181465.657414779214513023",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 18
+      },
+      {
+        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "symbol": "USDC",
+        "balance": "10990768.033916",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 6
+      },
+      {
+        "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+        "symbol": "USDT",
+        "balance": "31414868.941632",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 6
+      }
+    ],
+    "tokensList": [
+      "0x6b175474e89094c44da98b954eedeac495271d0f",
+      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "0xdac17f958d2ee523a2206206994597c13d831ec7"
+    ],
+    "totalWeight": "0",
+    "amp": "1390",
+    "principalToken": null,
+    "baseToken": null,
+    "wrappedIndex": 0,
+    "mainIndex": 0,
+    "lowerTarget": null,
+    "upperTarget": null
+  },
+  {
+    "id": "0x804cdb9116a10bb78768d3252355a1b18067bf8f0000000000000000000000fb",
+    "address": "0x804cdb9116a10bb78768d3252355a1b18067bf8f",
+    "poolType": "AaveLinear",
+    "swapFee": "0.0002",
+    "swapEnabled": true,
+    "totalShares": "38910797.060224867234359145",
+    "tokens": [
+      {
+        "address": "0x02d60b84491589974263d922d9cc7a3152618ef6",
+        "symbol": "aDAI",
+        "balance": "33896107.766318549296694753",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 18
+      },
+      {
+        "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+        "symbol": "DAI",
+        "balance": "2900834.596380034678063367",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 18
+      },
+      {
+        "address": "0x804cdb9116a10bb78768d3252355a1b18067bf8f",
+        "symbol": "bb-a-DAI",
+        "balance": "5192296819624030.56830562909486095",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 18
+      }
+    ],
+    "tokensList": [
+      "0x02d60b84491589974263d922d9cc7a3152618ef6",
+      "0x6b175474e89094c44da98b954eedeac495271d0f",
+      "0x804cdb9116a10bb78768d3252355a1b18067bf8f"
+    ],
+    "totalWeight": "0",
+    "amp": null,
+    "principalToken": null,
+    "baseToken": null,
+    "wrappedIndex": 0,
+    "mainIndex": 1,
+    "lowerTarget": "2900000",
+    "upperTarget": "10000000"
+  },
+  {
+    "id": "0x9210f1204b5a24742eba12f710636d76240df3d00000000000000000000000fc",
+    "address": "0x9210f1204b5a24742eba12f710636d76240df3d0",
+    "poolType": "AaveLinear",
+    "swapFee": "0.0002",
+    "swapEnabled": true,
+    "totalShares": "36627769.356868515534842465",
+    "tokens": [
+      {
+        "address": "0x9210f1204b5a24742eba12f710636d76240df3d0",
+        "symbol": "bb-a-USDC",
+        "balance": "5192296821907058.27166198079437763",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 18
+      },
+      {
+        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "symbol": "USDC",
+        "balance": "9203233.688654",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 6
+      },
+      {
+        "address": "0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de",
+        "symbol": "aUSDC",
+        "balance": "25798924.081938",
+        "weight": null,
+        "priceRate": "1",
+        "decimals": 6
+      }
+    ],
+    "tokensList": [
+      "0x9210f1204b5a24742eba12f710636d76240df3d0",
+      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de"
+    ],
+    "totalWeight": "0",
+    "amp": null,
+    "principalToken": null,
+    "baseToken": null,
+    "wrappedIndex": 2,
+    "mainIndex": 1,
+    "lowerTarget": "2900000",
+    "upperTarget": "10000000"
+  },
+  {
+    "id": "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019",
+    "address": "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8",
+    "poolType": "Weighted",
+    "swapFee": "0.00075",
+    "swapEnabled": true,
+    "totalShares": "717368.27182997399072352",
+    "tokens": [
+      {
+        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "symbol": "USDC",
+        "balance": "17981073.730052",
+        "weight": "0.5",
+        "priceRate": "1",
+        "decimals": 6
+      },
+      {
+        "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "symbol": "WETH",
+        "balance": "8928.966265274874436087",
+        "weight": "0.5",
+        "priceRate": "1",
+        "decimals": 18
+      }
+    ],
+    "tokensList": [
+      "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    ],
+    "totalWeight": "1",
+    "amp": null,
+    "principalToken": null,
+    "baseToken": null,
+    "wrappedIndex": 0,
+    "mainIndex": 0,
+    "lowerTarget": null,
+    "upperTarget": null
+  }
+]

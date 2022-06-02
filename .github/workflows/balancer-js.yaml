@@ -78,9 +78,12 @@ jobs:
         run: yarn subgraph:generate
       - name: Compile
         run: yarn build
+      - name: Run node in background for integration tests
+        run: npx hardhat node --hostname 127.0.0.1 &
       - name: Test
         run: yarn test
 
 env:
   CI: true
   INFURA: ${{ secrets.INFURA }}
+  ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
