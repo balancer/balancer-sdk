@@ -7,8 +7,10 @@
  */
 extern crate balancer_rs;
 mod helpers;
+mod sample_data;
 
-use balancer_rs::constants::addresses::*;
+use balancer_rs::constants::*;
+use balancer_rs::helpers::errors::handle_bal_error;
 use balancer_rs::types::*;
 use ethcontract::Address;
 use helpers::*;
@@ -18,12 +20,12 @@ use std::str::FromStr;
 
 // Helper to get the active instance that will interact with the ethereum node.
 // You can replace the RPC_URL with whatever is your prefered rpc endpoint.
-const RPC_URL: &'static str = "https://rpc.flashbots.net/";
+const RPC_URL: &'static str = rpc_endpoints::KOVAN_TESTNET;
 fn get_vault_instance() -> balancer_rs::generated_contracts::vault::Vault {
   let transport = ethcontract::web3::transports::Http::new(RPC_URL).unwrap();
   let web3 = ethcontract::Web3::new(transport);
 
-  return balancer_rs::vault::Vault::new(web3);
+  balancer_rs::vault::Vault::new(web3)
 }
 
 // VAULT API EXAMPLES
@@ -100,17 +102,20 @@ async fn get_pool() {
   print_start_new_example("Vault#getPool");
 
   let instance = get_vault_instance();
-  let pool_id = "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080";
-  let data = HexString(pool_id).to_bytes32();
-  let address_str = instance
-    .get_pool(data)
-    .call()
-    .await
-    .expect("Failed to get pool");
+  let pool_id = PoolId(sample_data::kovan::POOLS[0].id);
+
+  let address_str = match instance.get_pool(pool_id.into()).call().await {
+    Ok(address) => address,
+    Err(ref e) => {
+      println!("Failed to get pool: {}", e);
+      handle_bal_error(e);
+      return;
+    }
+  };
 
   println!(
-    "Balancer Pool address {:#?} for pool id {:#?}",
-    pool_id, address_str
+    "Found Balancer Pool address {:#?} for pool id {:#?}",
+    address_str, pool_id
   )
 }
 
@@ -118,12 +123,15 @@ async fn query_batch_swap() {
   print_start_new_example("Vault#getPool");
 
   let instance = get_vault_instance();
-  let assets = vec![addr!(UNI_ADDRESS), addr!(AAVE_ADDRESS)];
+  let assets = vec![
+    addr!(sample_data::kovan::BAL_ADDRESS),
+    addr!(sample_data::kovan::USDC_ADDRESS),
+  ];
   let swap_step = BatchSwapStep::new(
-    PoolId("0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080"),
+    PoolId(sample_data::kovan::POOLS[0].id),
     0,
     1,
-    "1000",
+    "1",
     UserData("0x"),
   );
   let funds = FundManagement {
@@ -135,7 +143,7 @@ async fn query_batch_swap() {
   let deltas = match instance
     .query_batch_swap(
       SwapKind::GivenIn.into(),
-      vec![swap_step.into()],
+      vec![swap_step.clone().into()],
       assets,
       funds.into(),
     )
@@ -144,18 +152,13 @@ async fn query_batch_swap() {
   {
     Ok(any) => any,
     Err(e) => {
-      println!(
-        "If this fails with a BAL#*** error, you've made the request successfully, 
-        but you will need to fix your inputs so that they don't violate the Balancer protocol."
-      );
-
-      println!("Error {}", e);
-
+      println!("Failed to query: {}", e);
+      handle_bal_error(&e);
       return;
     }
   };
 
-  println!("Asset deltas {:#?}", deltas);
+  println!("Asset deltas for {:#?} are {:#?}", swap_step, deltas);
 }
 
 async fn weth() {

@@ -1,5 +1,7 @@
 extern crate hexutil;
 
+pub mod errors;
+
 use std::any::type_name;
 
 pub mod conversions {

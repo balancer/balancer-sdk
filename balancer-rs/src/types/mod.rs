@@ -11,6 +11,7 @@ pub mod swap_request;
 pub use conversions::macros::*;
 pub use swap_request::SwapRequest;
 
+#[derive(Debug, Clone, Copy)]
 pub struct HexString(pub &'static str);
 impl HexString {
   pub fn to_str(&self) -> &str {
@@ -35,6 +36,7 @@ impl From<HexString> for ethcontract::tokens::Bytes<Vec<u8>> {
   }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct PoolId(pub &'static str);
 impl From<PoolId> for Bytes32 {
   fn from(pool_id: PoolId) -> Self {
@@ -45,7 +47,7 @@ impl From<PoolId> for Bytes32 {
   }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct UserData(pub &'static str);
 impl From<UserData> for ethcontract::tokens::Bytes<Vec<u8>> {
   fn from(data: UserData) -> Self {
@@ -54,6 +56,7 @@ impl From<UserData> for ethcontract::tokens::Bytes<Vec<u8>> {
   }
 }
 
+#[derive(Copy, Clone)]
 #[repr(u8)]
 pub enum SwapKind {
   GivenIn,
@@ -76,7 +79,7 @@ type BatchSwapTuple = (
   ethcontract::tokens::Bytes<Vec<u8>>,  // user_data
 );
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BatchSwapStep {
   pub pool_id: Bytes32,
   pub asset_in_index: ethcontract::U256,
