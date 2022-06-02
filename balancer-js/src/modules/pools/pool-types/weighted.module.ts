@@ -2,6 +2,7 @@ import { WeightedPoolLiquidity } from './concerns/weighted/liquidity.concern';
 import { WeightedPoolSpotPrice } from './concerns/weighted/spotPrice.concern';
 import { PoolType } from './pool-type.interface';
 import { LiquidityConcern, SpotPriceConcern } from './concerns/types';
+import { WeightedFactoryParams } from '../types';
 
 export class Weighted implements PoolType {
   public liquidityCalculator: LiquidityConcern;
@@ -13,5 +14,9 @@ export class Weighted implements PoolType {
   ) {
     this.liquidityCalculator = new this.liquidityCalculatorConcern();
     this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
+  }
+
+  async getCreationTxParams(params: WeightedFactoryParams): Promise<{ to: any; data: any; value: any; err?: boolean}> {
+      throw new Error('Method not implemented.');
   }
 }

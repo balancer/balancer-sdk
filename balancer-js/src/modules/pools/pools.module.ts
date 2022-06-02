@@ -44,4 +44,11 @@ export class Pools {
         throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
     }
   }
+
+  getPoolInfoFromCreateTx(tx: any) {
+      return new Promise((resolve, reject) => {
+        resolve('')
+        reject('No contract created in that transaction')
+      })
+  }
 }
