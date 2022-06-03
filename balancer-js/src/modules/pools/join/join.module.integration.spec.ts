@@ -29,6 +29,8 @@ const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
 const IMPERSONATED_ADDRESS = '0xf933058d90020e88ae97fa5a4753ff9b4f3a7879';
 let signer: SignerWithAddress;
 
+// Setup
+
 const setupSigner = async (address: string): Promise<SignerWithAddress> => {
   await hardhat.network.provider.request({
     method: 'hardhat_impersonateAccount',
@@ -52,7 +54,6 @@ const setupBalance = async (address: string) => {
 };
 
 const setupPoolsModule = async (provider: JsonRpcProvider) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const pools = await getForkedPools(provider);
   const poolsModule = new Pools({
     network: Network.MAINNET,
@@ -66,6 +67,8 @@ const setupPoolsModule = async (provider: JsonRpcProvider) => {
   await poolsModule.fetchPools();
   return poolsModule;
 };
+
+// Test scenarios
 
 describe('join execution', async () => {
   let poolsModule: Pools;
@@ -97,20 +100,20 @@ describe('join execution', async () => {
       this.timeout(20000);
 
       balanceBefore = await bptContract.balanceOf(signerAddress);
-      const tokensIn = [
-        B_50WBTC_50WETH.tokens[0].address, // wETH
-        B_50WBTC_50WETH.tokens[1].address, // wBTC
-      ];
+      const wETH = B_50WBTC_50WETH.tokens[0];
+      const wBTC = B_50WBTC_50WETH.tokens[1];
+      const tokensIn = [wETH.address, wBTC.address];
       const amountsIn = [
-        (parseInt(B_50WBTC_50WETH.tokens[0].balance) / 100).toString(),
-        (parseInt(B_50WBTC_50WETH.tokens[1].balance) / 100).toString(),
+        (parseInt(wETH.balance) / 100).toString(),
+        (parseInt(wBTC.balance) / 100).toString(),
       ];
+      const slippage = '0.01';
       const data = await poolsModule.join.encodedExactTokensInJoinPool(
         signerAddress,
         B_50WBTC_50WETH.id,
         tokensIn,
         amountsIn,
-        '0.01'
+        slippage
       );
       const to = balancerVault;
       const tx = { data, to };
