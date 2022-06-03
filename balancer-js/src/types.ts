@@ -117,18 +117,14 @@ export interface TransactionData {
     };
 }
 
-export type TokenPrice = { [currency: string]: string };
-
-export interface TokenPriceData {
-    address: string;
-    price: TokenPrice;
-}
+export type Price = { [currency: string]: string };
+export type TokenPrices = { [address: string]: Price };
 
 export interface Token {
     address: string;
     symbol?: string;
     decimals: number;
-    price?: TokenPrice;
+    price?: Price;
     priceRate?: string;
 }
 

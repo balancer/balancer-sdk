@@ -4,7 +4,7 @@ import {
     formatFixed,
     BigNumberish,
 } from '@ethersproject/bignumber';
-import { BalancerSdkConfig, TokenBalance, TokenPrice } from '@/types';
+import { BalancerSdkConfig, TokenBalance } from '@/types';
 import { Pools } from '@/modules/pools/pools.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { TokenProvider } from '../data-providers/token/provider.interface';

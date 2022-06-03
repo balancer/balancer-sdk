@@ -6,6 +6,7 @@ import {
     StaticTokenProvider,
     StaticTokenPriceProvider,
     Pools,
+    TokenPrices,
 } from '../../src';
 import { parseFixed, formatFixed } from '@ethersproject/bignumber';
 import { SORPoolProvider } from '../../src/modules/data-providers/pool/sor.provider';
@@ -36,7 +37,8 @@ const config: BalancerSdkConfig = {
 // pools.weighted.liquidity.calcTotal(...);
 // pools.stable.liquidity.calcTotal(...);
 
-const tokenPrices = TOKENS.map((token) => {
+const tokenPrices: TokenPrices = {};
+TOKENS.forEach((token) => {
     // Strip price down to max 18 decimals.
     let priceInETH = '0';
     if (token.price) {
@@ -47,11 +49,8 @@ const tokenPrices = TOKENS.map((token) => {
             18
         );
     }
-    return {
-        address: token.address,
-        price: {
-            ETH: priceInETH,
-        },
+    tokenPrices[token.address] = {
+        ETH: priceInETH,
     };
 });
 

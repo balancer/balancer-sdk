@@ -1,11 +1,11 @@
 import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
-import { TokenPrice, TokenPriceData } from '@/types';
+import { Price, TokenPrices } from '@/types';
 import { TokenPriceProvider } from './provider.interface';
 
 const SCALING_FACTOR = 18;
 
 export class StaticTokenPriceProvider implements TokenPriceProvider {
-    constructor(private tokenPrices: TokenPriceData[]) {
+    constructor(private tokenPrices: TokenPrices) {
         this.calculateUSDPrices();
     }
 
@@ -23,15 +23,9 @@ export class StaticTokenPriceProvider implements TokenPriceProvider {
         let assetValueSum = BigNumber.from(0);
 
         USDAssets.forEach((address) => {
-            const tokenPrice = this.tokenPrices.find(
-                (tokenPrice) =>
-                    tokenPrice.address.toLowerCase() === address.toLowerCase()
-            );
-            if (tokenPrice?.price.ETH) {
-                const scaledPrice = parseFixed(
-                    tokenPrice?.price.ETH,
-                    SCALING_FACTOR
-                );
+            const tokenPrice = this.tokenPrices[address];
+            if (tokenPrice?.ETH) {
+                const scaledPrice = parseFixed(tokenPrice?.ETH, SCALING_FACTOR);
                 assetValueSum = assetValueSum.add(scaledPrice);
                 assetsAvailable++;
             }
@@ -39,24 +33,21 @@ export class StaticTokenPriceProvider implements TokenPriceProvider {
 
         const NativeAssetUSDPrice = assetValueSum.div(assetsAvailable);
 
-        this.tokenPrices = this.tokenPrices.map((tokenPrice) => {
-            if (tokenPrice.price.ETH && !tokenPrice.price.USD) {
+        for (const token in this.tokenPrices) {
+            const price = this.tokenPrices[token];
+            if (price.ETH && !price.USD) {
                 const usdPrice = parseFixed('1', SCALING_FACTOR)
-                    .mul(parseFixed(tokenPrice.price.ETH, SCALING_FACTOR))
+                    .mul(parseFixed(price.ETH, SCALING_FACTOR))
                     .div(NativeAssetUSDPrice)
                     .toString();
-                tokenPrice.price.USD = formatFixed(usdPrice, SCALING_FACTOR);
+                price.USD = formatFixed(usdPrice, SCALING_FACTOR);
             }
-
-            return tokenPrice;
-        });
+        }
     }
 
-    async find(address: string): Promise<TokenPrice | undefined> {
-        const data = this.tokenPrices.find((tokenPrice) => {
-            return tokenPrice.address.toLowerCase() === address.toLowerCase();
-        });
-        if (!data) return;
-        return data.price;
+    async find(address: string): Promise<Price | undefined> {
+        const price = this.tokenPrices[address];
+        if (!price) return;
+        return price;
     }
 }
