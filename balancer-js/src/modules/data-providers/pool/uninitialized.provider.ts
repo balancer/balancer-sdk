@@ -1,13 +1,12 @@
-import { SubgraphPoolBase } from '@balancer-labs/sor';
+import { Pool } from '@/types';
 import { PoolProvider } from './provider.interface';
 
 export class UninitializedPoolProvider implements PoolProvider {
-    find(): SubgraphPoolBase | undefined {
+    find(): Promise<Pool | undefined> {
         throw new Error('No pool provider set');
     }
 
-    findBy(): SubgraphPoolBase | undefined {
+    findBy(): Promise<Pool | undefined> {
         throw new Error('No pool provider set');
     }
-
 }

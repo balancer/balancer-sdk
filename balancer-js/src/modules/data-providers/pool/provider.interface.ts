@@ -1,11 +1,11 @@
-import { SubgraphPoolBase } from '@balancer-labs/sor';
+import { Pool } from '@/types';
 
 export type PoolAttribute = 'id' | 'address';
 
 export interface PoolProvider {
-    find: (id: string) => Promise<SubgraphPoolBase | undefined>;
+    find: (id: string) => Promise<Pool | undefined>;
     findBy: (
         attribute: PoolAttribute,
         value: string
-    ) => Promise<SubgraphPoolBase | undefined>;
+    ) => Promise<Pool | undefined>;
 }

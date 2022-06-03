@@ -1,5 +1,5 @@
-import { TokenPrice, TokenPriceData } from '@/types';
+import { Price } from '@/types';
 
 export interface TokenPriceProvider {
-    find: (address: string) => Promise<TokenPrice | undefined>;
+    find: (address: string) => Promise<Price | undefined>;
 }

@@ -4,7 +4,7 @@ import {
     StaticTokenProvider,
     StaticPoolProvider,
 } from '../../';
-import { Token, TokenBalance } from '@/types';
+import { Pool } from '@/types';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { expect } from 'chai';
 import { Liquidity } from './liquidity.module';

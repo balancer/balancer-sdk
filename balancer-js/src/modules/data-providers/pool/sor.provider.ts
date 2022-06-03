@@ -1,6 +1,6 @@
 import { Sor } from '@/modules/sor/sor.module';
-import { BalancerSdkConfig } from '@/types';
-import { SOR, SubgraphPoolBase } from '@balancer-labs/sor';
+import { BalancerSdkConfig, Pool } from '@/types';
+import { SOR } from '@balancer-labs/sor';
 import { PoolAttribute, PoolProvider } from './provider.interface';
 
 export class SORPoolProvider implements PoolProvider {
@@ -26,7 +26,7 @@ export class SORPoolProvider implements PoolProvider {
         }
     }
 
-    async find(id: string): Promise<SubgraphPoolBase | undefined> {
+    async find(id: string): Promise<Pool | undefined> {
         await this.checkInitialized();
         return this.sor.getPools().find((pool) => {
             return pool.id.toLowerCase() === id.toLowerCase();
@@ -36,7 +36,7 @@ export class SORPoolProvider implements PoolProvider {
     async findBy(
         attribute: PoolAttribute,
         value: string
-    ): Promise<SubgraphPoolBase | undefined> {
+    ): Promise<Pool | undefined> {
         await this.checkInitialized();
         return this.sor.getPools().find((pool) => {
             return pool[attribute] === value;

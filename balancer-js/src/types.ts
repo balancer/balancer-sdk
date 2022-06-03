@@ -1,7 +1,7 @@
 import { BigNumberish } from '@ethersproject/bignumber';
 import { Network } from './lib/constants/network';
 import { Contract } from '@ethersproject/contracts';
-import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
+import { PoolDataService, SubgraphPoolBase, TokenPriceService } from '@balancer-labs/sor';
 
 export interface BalancerSdkConfig {
     //use a known network or provide an entirely custom config
@@ -132,4 +132,8 @@ export interface TokenBalance {
     token: Token;
     balance: string;
     weight: string;
+}
+
+export interface Pool extends SubgraphPoolBase {
+    extra?: string;
 }

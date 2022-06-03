@@ -1,10 +1,10 @@
-import { SubgraphPoolBase } from '@balancer-labs/sor';
+import { Pool } from '@/types';
 import { PoolAttribute, PoolProvider } from './provider.interface';
 
 export class StaticPoolProvider implements PoolProvider {
-    constructor(private pools: SubgraphPoolBase[]) {}
+    constructor(private pools: Pool[]) {}
 
-    async find(id: string): Promise<SubgraphPoolBase | undefined> {
+    async find(id: string): Promise<Pool | undefined> {
         return this.pools.find((pool) => {
             return pool.id.toLowerCase() === id.toLowerCase();
         });
@@ -13,7 +13,7 @@ export class StaticPoolProvider implements PoolProvider {
     async findBy(
         attribute: PoolAttribute,
         value: string
-    ): Promise<SubgraphPoolBase | undefined> {
+    ): Promise<Pool | undefined> {
         return this.pools.find((pool) => {
             return pool[attribute] === value;
         });

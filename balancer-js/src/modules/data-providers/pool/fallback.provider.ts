@@ -1,4 +1,4 @@
-import { SubgraphPoolBase } from '@balancer-labs/sor';
+import { Pool } from '@/types';
 import { PoolAttribute, PoolProvider } from './provider.interface';
 
 /**
@@ -18,7 +18,7 @@ export class FallbackPoolProvider implements PoolProvider {
         this.currentProviderIdx = 0;
     }
 
-    async find(id: string): Promise<SubgraphPoolBase | undefined> {
+    async find(id: string): Promise<Pool | undefined> {
         if (this.currentProviderIdx >= this.providers.length) {
             throw new Error('No working providers found');
         }
@@ -26,7 +26,7 @@ export class FallbackPoolProvider implements PoolProvider {
         let pool;
 
         try {
-            pool = await Promise.race<SubgraphPoolBase | undefined>([
+            pool = await Promise.race<Pool | undefined>([
                 this.providers[this.currentProviderIdx].find(id),
                 new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('timeout')), this.timeout)
@@ -48,7 +48,7 @@ export class FallbackPoolProvider implements PoolProvider {
     async findBy(
         attribute: PoolAttribute,
         value: string
-    ): Promise<SubgraphPoolBase | undefined> {
+    ): Promise<Pool | undefined> {
         if (this.currentProviderIdx >= this.providers.length) {
             throw new Error('No working providers found');
         }
@@ -56,7 +56,7 @@ export class FallbackPoolProvider implements PoolProvider {
         let pool;
 
         try {
-            pool = await Promise.race<SubgraphPoolBase | undefined>([
+            pool = await Promise.race<Pool | undefined>([
                 this.providers[this.currentProviderIdx].findBy(
                     attribute,
                     value
