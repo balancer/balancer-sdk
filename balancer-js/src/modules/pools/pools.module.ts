@@ -71,4 +71,19 @@ export class Pools {
   public getPools(): SubgraphPoolBase[] {
     return this.sor.getPools();
   }
+
+  public async findById(poolId: string): Promise<SubgraphPoolBase> {
+    let _pools = this.getPools();
+    if (!_pools.length) {
+      const poolsFetched = await this.fetchPools();
+      if (!poolsFetched)
+        throw new BalancerError(BalancerErrorCode.NO_POOL_DATA); // TODO: check if this is the proper error to throw
+      _pools = this.getPools();
+    }
+    const pool = _pools.find(
+      (p) => p.id.toLowerCase() === poolId.toLowerCase()
+    );
+    if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
+    return pool;
+  }
 }

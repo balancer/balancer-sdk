@@ -24,12 +24,7 @@ export class Join {
     amountsIn: string[],
     slippage: string
   ): Promise<string> {
-    const poolsFetched = await this.pools.fetchPools();
-    if (!poolsFetched) throw new BalancerError(BalancerErrorCode.NO_POOL_DATA); // TODO: review this later
-    const pools = this.pools.getPools();
-    const pool = pools.find((p) => p.id.toLowerCase() === poolId.toLowerCase());
-    if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-
+    const pool = await this.pools.findById(poolId);
     return Pools.from(pool).joinCalculator.encodedExactTokensInJoinPool({
       joiner,
       pool,
