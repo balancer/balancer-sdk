@@ -28,3 +28,17 @@ export type WeightedFactoryParams = {
   seedTokens: SeedToken[];
   owner: string; value: string;
 }
+
+export type WeightedFactoryCreationInfo = {
+  to: any;
+  data: any
+  value: any;
+  attributes: {
+    name: string;
+    symbol: string;
+    swapFee: string;
+    tokens: SeedToken[];
+    owner: string;
+  },
+  err?: boolean
+}
