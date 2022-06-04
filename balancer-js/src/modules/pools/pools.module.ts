@@ -47,7 +47,7 @@ export class Pools {
 
   getPoolInfoFromCreateTx(tx: any) {
       return new Promise((resolve, reject) => {
-        resolve('')
+        resolve({ id: 0, address: "0x000000000000000000000000000000" })
         reject('No contract created in that transaction')
       })
   }
