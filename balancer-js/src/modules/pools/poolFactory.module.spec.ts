@@ -76,7 +76,7 @@ describe('pool factory module', () => {
         })
     });
 
-    context('handleCreation', async () => {
+    context('getPoolInfoFromCreateTx', async () => {
         let balancer: BalancerSDK
         beforeEach(async () => {
             balancer = new BalancerSDK(sdkConfig);
@@ -84,7 +84,7 @@ describe('pool factory module', () => {
         })
         it('should return the pool ID from the issuing transaction', async () => {
             const tx = { hash: "0x1234543211111111111111111111111111111111111111111111" } as TransactionResponse
-            const { id, address } = await balancer.pools.getPoolInfoFromCreateTx(tx);
+            const { id, address } = await balancer.pools.getPoolInfoFromCreateTx(tx) as { id: number, address: string };
             expect(id).to.equal(1)
             expect(address).to.equal(0x0000000000000000000000000000000000000001)
         })
