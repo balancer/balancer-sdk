@@ -131,14 +131,20 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
       },
       tokens: {
-        wrappedNativeAsset: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6',
+        wrappedNativeAsset:
+          '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
       },
     },
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2',
     },
-    pools: {},
+    pools: {
+      bbausd: {
+        id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
+        address: '0x13ACD41C585d7EbB4a9460f7C8f50BE60DC080Cd',
+      },
+    },
   },
 };
 
