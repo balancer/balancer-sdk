@@ -1,3 +1,5 @@
+import { BigNumber } from "@ethersproject/bignumber";
+
 export enum PoolType {
   Weighted = 'Weighted',
   Investment = 'Investment',
@@ -29,10 +31,11 @@ export type WeightedFactoryParams = {
   owner: string; value: string;
 }
 
-export type WeightedFactoryCreationInfo = {
+export type WeightedFactoryAttributes = {
   to: any;
   data: any
-  value: any;
+  value?: BigNumber;
+  functionName: string;
   attributes: {
     name: string;
     symbol: string;
@@ -41,4 +44,13 @@ export type WeightedFactoryCreationInfo = {
     owner: string;
   },
   err?: boolean
+}
+
+export interface InitJoinAttributes {
+  to: string;
+  functionName: string;
+  attributes: any
+  data: string;
+  value?: BigNumber;
+  err?: boolean;
 }

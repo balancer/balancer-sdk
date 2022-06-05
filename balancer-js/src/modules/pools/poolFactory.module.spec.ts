@@ -22,6 +22,14 @@ const SEED_TOKENS: Array<SeedToken> = [
     { id: 2, tokenAddress: ADDRESSES[42].WBTC.address, weight: 30, isLocked: false, amount: "200000000" } 
 ];
 
+const INIT_JOIN_PARAMS = {
+    poolId: 200,
+    sender: "0x0000000000000000000000000000000000000001",
+    receiver: "0x0000000000000000000000000000000000000002",
+    tokenAddresses: [ADDRESSES[42].DAI.address, ADDRESSES[42].USDC.address, ADDRESSES[42].WBTC.address],
+    initialBalancesString: ["2000000000000000000", "2000000000000000000", "2000000000000000000"],
+}
+
 const POOL_TYPES = [
     "WeightedPoolFactory",
     "WeightedPool2TokensFactory",
@@ -43,6 +51,7 @@ const POOL_PARAMS = {
     value: "0.1",
 }
 const poolFactoryContract = ""
+const vaultAddress = ""
 
 describe('pool factory module', () => {
     context('getCreationTxParams', () => {
@@ -52,7 +61,7 @@ describe('pool factory module', () => {
             POOL_PARAMS.name = POOL_TYPES[0]
         })
         it('should return the parameters to construct a transaction', async () => {
-            const creationTxParams = await balancer.pools.weighted.getCreationTxParams(POOL_PARAMS);
+            const creationTxParams = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
             expect(creationTxParams.err).to.not.eq(true);
             expect(creationTxParams.attributes.name).to.eq('30DAI-40USDC-30WBTC')
             expect(creationTxParams.to).to.equal(poolFactoryContract);
@@ -60,7 +69,7 @@ describe('pool factory module', () => {
             expect(creationTxParams.value).to.equal(true);
         });
         it('should return an attributes object for the expected pool', async () => {
-            const { attributes, err } = await balancer.pools.weighted.getCreationTxParams(POOL_PARAMS);
+            const { attributes, err } = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
             expect(err).to.not.eq(true);
             expect(attributes.name).to.eq('30DAI-40USDC-30WBTC')
             expect(attributes.owner).to.eq('0x0000000000000000000000000000000000000001')
@@ -71,16 +80,19 @@ describe('pool factory module', () => {
         it('should not create a pool if weight of seed tokens is not equal to 100', async () => {
             const params = { ...POOL_PARAMS }
             params.seedTokens[1].weight = 10
-            const creationTxParams = await balancer.pools.weighted.getCreationTxParams(params);
+            const creationTxParams = await balancer.pools.weighted.buildCreateTx(params);
             expect(creationTxParams.err).to.eq(true);
         })
     });
+
+    context('create', async () => {
+
+    })
 
     context('getPoolInfoFromCreateTx', async () => {
         let balancer: BalancerSDK
         beforeEach(async () => {
             balancer = new BalancerSDK(sdkConfig);
-            POOL_PARAMS.name = POOL_TYPES[0]
         })
         it('should return the pool ID from the issuing transaction', async () => {
             const tx = { hash: "0x1234543211111111111111111111111111111111111111111111" } as TransactionResponse
@@ -96,5 +108,19 @@ describe('pool factory module', () => {
                 (err: any) => expect(err).to.equal(true)
             )
         })
+    })
+
+    context('buildInitJoin', async () => {
+        let balancer: BalancerSDK
+        beforeEach(async () => {
+            balancer = new BalancerSDK(sdkConfig);
+        })
+        it('should return transaction attributes for an InitJoin', async () => {
+            const transactionAttributes = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS);
+            expect(transactionAttributes.err).to.not.eq(true);
+            expect(transactionAttributes.data).to.eq('0x123')
+            expect(transactionAttributes.to).to.equal(vaultAddress);
+            expect(transactionAttributes.value).to.equal(true);
+        });
     })
 });
