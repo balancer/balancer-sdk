@@ -139,7 +139,7 @@ describe('join execution', async () => {
       bptBalanceBefore = await bptContract.balanceOf(signerAddress);
 
       const slippage = '0.01';
-      const data = await poolsModule.join.encodedExactTokensInJoinPool(
+      const { data } = await poolsModule.join.buildExactTokensInJoinPool(
         signerAddress,
         B_50WBTC_50WETH.id,
         tokensInAddresses,

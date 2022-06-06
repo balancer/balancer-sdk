@@ -60,8 +60,6 @@ export class Pools {
 
   /**
    * fetchPools saves updated pools data to SOR internal onChainBalanceCache.
-   * @param {SubgraphPoolBase[]} [poolsData=[]] If poolsData passed uses this as pools source otherwise fetches from config.subgraphUrl.
-   * @param {boolean} [isOnChain=true] If isOnChain is true will retrieve all required onChain data via multicall otherwise uses subgraph values.
    * @returns {boolean} Boolean indicating whether pools data was fetched correctly (true) or not (false).
    */
   async fetchPools(): Promise<boolean> {

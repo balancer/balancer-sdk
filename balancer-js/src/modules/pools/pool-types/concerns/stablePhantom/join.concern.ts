@@ -1,13 +1,17 @@
-import { ExactTokensInJoinPoolParameters, JoinConcern } from '../types';
+import {
+  ExactTokensInJoinPoolParameters,
+  JoinConcern,
+  JoinPoolAttributes,
+} from '../types';
 
 export class StablePhantomPoolJoin implements JoinConcern {
-  async encodedExactTokensInJoinPool({
+  async buildExactTokensInJoinPool({
     joiner,
     pool,
     tokensIn,
     amountsIn,
     slippage,
-  }: ExactTokensInJoinPoolParameters): Promise<string> {
+  }: ExactTokensInJoinPoolParameters): Promise<JoinPoolAttributes> {
     // TODO implementation
     console.log(joiner, pool, tokensIn, amountsIn, slippage);
     throw new Error('To be implemented');

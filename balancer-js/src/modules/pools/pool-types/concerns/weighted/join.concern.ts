@@ -16,6 +16,7 @@ import {
 import { JoinPoolRequest } from '@/types';
 import useSlippage from '@/lib/utils/useSlippage';
 import { AssetHelpers } from '@/lib/utils';
+import { balancerVault } from '@/lib/constants/config';
 
 export class WeighedPoolJoin implements JoinConcern {
   static encodeJoinPool({
@@ -61,13 +62,15 @@ export class WeighedPoolJoin implements JoinConcern {
     return joinEncoded;
   }
 
-  async encodedExactTokensInJoinPool({
+  // Join Concern Intereface
+
+  async buildExactTokensInJoinPool({
     joiner,
     pool,
     tokensIn,
     amountsIn,
     slippage,
-  }: ExactTokensInJoinPoolParameters): Promise<string> {
+  }: ExactTokensInJoinPoolParameters): Promise<JoinPoolAttributes> {
     if (
       tokensIn.length != amountsIn.length ||
       tokensIn.length != pool.tokensList.length
@@ -93,9 +96,22 @@ export class WeighedPoolJoin implements JoinConcern {
       joinPoolRequest: {} as JoinPoolRequest,
     };
 
-    const joinCall = WeighedPoolJoin.constructJoinCall(joinPoolData);
+    const data = WeighedPoolJoin.constructJoinCall(joinPoolData);
+    const to = balancerVault;
+    const functionName = 'joinPool';
+    const attributes: JoinPool = {
+      poolId: pool.id,
+      sender: joiner,
+      recipient: joiner,
+      joinPoolRequest: {
+        assets: sortedTokensIn,
+        maxAmountsIn: normalizedAmountsIn,
+        userData: userData,
+        fromInternalBalance: false,
+      },
+    };
 
-    return joinCall;
+    return { to, functionName, attributes, data };
   }
 
   private sortPoolInfo(
