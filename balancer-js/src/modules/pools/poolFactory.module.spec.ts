@@ -61,12 +61,11 @@ describe('pool factory module', () => {
             POOL_PARAMS.name = POOL_TYPES[0]
         })
         it('should return the parameters to construct a transaction', async () => {
-            const creationTxParams = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
-            expect(creationTxParams.err).to.not.eq(true);
-            expect(creationTxParams.attributes.name).to.eq('30DAI-40USDC-30WBTC')
-            expect(creationTxParams.to).to.equal(poolFactoryContract);
-            expect(creationTxParams.data).to.equal(true);
-            expect(creationTxParams.value).to.equal(true);
+            const creationTxAttributes = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
+            expect(creationTxAttributes.err).to.not.eq(true);
+            expect(creationTxAttributes.to).to.equal(poolFactoryContract);
+            expect(creationTxAttributes.data).to.equal(true);
+            expect(creationTxAttributes.value).to.equal(true);
         });
         it('should return an attributes object for the expected pool', async () => {
             const { attributes, err } = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
@@ -77,17 +76,13 @@ describe('pool factory module', () => {
             expect(attributes.symbol).to.eq('WPOOL')
             expect(attributes.tokens).to.eql(SEED_TOKENS)
         });
-        it('should not create a pool if weight of seed tokens is not equal to 100', async () => {
+        it('should not create a pool if weight of seed tokens do not add to 100', async () => {
             const params = { ...POOL_PARAMS }
             params.seedTokens[1].weight = 10
             const creationTxParams = await balancer.pools.weighted.buildCreateTx(params);
             expect(creationTxParams.err).to.eq(true);
         })
     });
-
-    context('create', async () => {
-
-    })
 
     context('getPoolInfoFromCreateTx', async () => {
         let balancer: BalancerSDK
