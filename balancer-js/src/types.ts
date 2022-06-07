@@ -3,6 +3,8 @@ import { Network } from './lib/constants/network';
 import { Contract } from '@ethersproject/contracts';
 import { PoolDataService, SubgraphPoolBase, TokenPriceService } from '@balancer-labs/sor';
 
+export type Address = string;
+
 export interface BalancerSdkConfig {
     //use a known network or provide an entirely custom config
     network: Network | BalancerNetworkConfig;
@@ -122,10 +124,19 @@ export type TokenPrices = { [address: string]: Price };
 
 export interface Token {
     address: string;
-    symbol?: string;
     decimals: number;
+    symbol?: string;
     price?: Price;
     priceRate?: string;
+}
+
+export interface PoolToken {
+    address: string;
+    decimals: number;
+    balance: string;
+    weight: string | null;
+    priceRate?: string;
+    symbol?: string;
 }
 
 export interface TokenBalance {
@@ -134,6 +145,46 @@ export interface TokenBalance {
     weight: string;
 }
 
-export interface Pool extends SubgraphPoolBase {
-    extra?: string;
+export interface OnchainTokenData {
+    balance: string;
+    weight: number;
+    decimals: number;
+    logoURI: string | undefined;
+    name: string;
+    symbol: string;
+}
+
+export interface OnchainPoolData {
+    tokens: Record<Address, OnchainTokenData>;
+    totalSupply: string;
+    decimals: number;
+    swapFee: string;
+    amp?: string;
+    swapEnabled: boolean;
+    tokenRates?: string[];
+}
+
+export interface Pool {
+    id: string;
+    address: string;
+    poolType: string;
+    swapFee: string;
+    owner?: string;
+    factory?: string;
+    tokens: PoolToken[];
+    tokensList: string[];
+    tokenAddresses?: string[];
+    totalLiquidity?: string;
+    totalShares: string;
+    totalSwapFee?: string;
+    totalSwapVolume?: string;
+    onchain?: OnchainPoolData;
+    createTime?: number;
+    mainTokens?: string[];
+    wrappedTokens?: string[];
+    unwrappedTokens?: string[];
+    isNew?: boolean;
+    volumeSnapshot?: string;
+    feesSnapshot?: string;
+    boost?: string;
 }

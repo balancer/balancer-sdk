@@ -81,7 +81,7 @@ export class Pricing {
             );
             if (!poolData)
                 throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-            const pool = Pools.from(poolData);
+            const pool = Pools.from(poolData.poolType);
             return pool.spotPriceCalculator.calcPoolSpotPrice(
                 tokenIn,
                 tokenOut,

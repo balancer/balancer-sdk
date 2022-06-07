@@ -10,17 +10,19 @@ export class LinearPoolLiquidity implements LiquidityConcern {
         let sumBalance = Zero;
         let sumValue = Zero;
 
+        console.log('calculating linear pool liquidity');
+
         for (let i = 0; i < tokenBalances.length; i++) {
             const tokenBalance = tokenBalances[i];
 
             // if a token's price is unknown, ignore it
             // it will be computed at the next step
-            if (!tokenBalance.token.price?.USD) {
+            if (!tokenBalance.token.price?.usd) {
                 continue;
             }
 
             const price = parseFixed(
-                tokenBalance.token.price.USD,
+                tokenBalance.token.price.usd,
                 SCALING_FACTOR
             );
             const priceRate = parseFixed(
@@ -32,6 +34,15 @@ export class LinearPoolLiquidity implements LiquidityConcern {
             const balance = parseFixed(tokenBalance.balance, SCALING_FACTOR)
                 .mul(priceRate)
                 .div(ONE);
+
+            console.log(
+                'price: ',
+                price,
+                ' priceRate: ',
+                priceRate,
+                ' balance: ',
+                balance
+            );
 
             const value = balance.mul(price);
             sumValue = sumValue.add(value);
@@ -46,7 +57,7 @@ export class LinearPoolLiquidity implements LiquidityConcern {
             for (let i = 0; i < tokenBalances.length; i++) {
                 const tokenBalance = tokenBalances[i];
 
-                if (tokenBalance.token.price?.USD) {
+                if (tokenBalance.token.price?.usd) {
                     continue;
                 }
 

@@ -14,12 +14,12 @@ export class StablePoolLiquidity implements LiquidityConcern {
 
             // if a token's price is unknown, ignore it
             // it will be computed at the next step
-            if (!tokenBalance.token.price?.USD) {
+            if (!tokenBalance.token.price?.usd) {
                 continue;
             }
 
             const price = parseFixed(
-                tokenBalance.token.price.USD,
+                tokenBalance.token.price.usd,
                 SCALING_FACTOR
             );
             const balance = parseFixed(tokenBalance.balance, SCALING_FACTOR);
@@ -37,7 +37,7 @@ export class StablePoolLiquidity implements LiquidityConcern {
             for (let i = 0; i < tokenBalances.length; i++) {
                 const tokenBalance = tokenBalances[i];
 
-                if (tokenBalance.token.price?.USD) {
+                if (tokenBalance.token.price?.usd) {
                     continue;
                 }
 

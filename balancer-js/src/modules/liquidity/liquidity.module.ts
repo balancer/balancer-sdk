@@ -4,13 +4,11 @@ import {
     formatFixed,
     BigNumberish,
 } from '@ethersproject/bignumber';
-import { BalancerSdkConfig, TokenBalance } from '@/types';
+import { BalancerSdkConfig, TokenBalance, Pool } from '@/types';
 import { Pools } from '@/modules/pools/pools.module';
-import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { TokenProvider } from '../data-providers/token/provider.interface';
 import { PoolProvider } from '../data-providers/pool/provider.interface';
 import { TokenPriceProvider } from '../data-providers/token-price/provider.interface';
-import { PoolType } from '../pools/types';
 import { Zero } from '@ethersproject/constants';
 import util from 'util';
 
@@ -29,7 +27,7 @@ export class Liquidity {
         private tokenPrices: TokenPriceProvider
     ) {}
 
-    async getLiquidity(pool: SubgraphPoolBase): Promise<string> {
+    async getLiquidity(pool: Pool): Promise<string> {
         // Remove any tokens with same address as pool as they are pre-printed BPT
         const parsedTokens = pool.tokens.filter((token) => {
             return token.address !== pool.address;
@@ -67,6 +65,12 @@ export class Liquidity {
                         SCALING_FACTOR
                     ).replace(/\.[0-9]+/, ''); // strip trailing decimals, we don't need them as we're already scaled up by 1e36
 
+                    console.log(
+                        'pool: ',
+                        pool.address,
+                        ' liquidity: ',
+                        phantomPoolLiquidity.toString()
+                    );
                     return {
                         address: pool.address,
                         liquidity: phantomPoolLiquidity,
@@ -116,8 +120,9 @@ export class Liquidity {
             })
         );
 
-        const tokenLiquidity =
-            Pools.from(pool).liquidity.calcTotal(tokenBalances);
+        const tokenLiquidity = Pools.from(pool.poolType).liquidity.calcTotal(
+            tokenBalances
+        );
 
         const totalLiquidity = formatFixed(
             BigNumber.from(totalSubPoolLiquidity).add(

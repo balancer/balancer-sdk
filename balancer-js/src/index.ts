@@ -6,6 +6,7 @@ export * from './types';
 export * from './modules/swaps/types';
 export * from './modules/swaps/helpers';
 export * from './lib/constants/network';
+export * from './modules/liquidity/liquidity.module';
 export * from './modules/sdk.module';
 export * from './modules/relayer/relayer.module';
 export * from './modules/swaps/swaps.module';

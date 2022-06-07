@@ -2,6 +2,7 @@ import {
     BalancerSDK,
     BalancerSdkConfig,
     Network,
+    Liquidity,
     StaticPoolProvider,
     StaticTokenProvider,
     StaticTokenPriceProvider,
@@ -9,9 +10,8 @@ import {
     TokenPrices,
 } from '../../src';
 import { parseFixed, formatFixed } from '@ethersproject/bignumber';
-import { SORPoolProvider } from '../../src/modules/data-providers/pool/sor.provider';
+// import { SORPoolProvider } from '../../src/modules/data-providers/pool/sor.provider';
 import { FallbackPoolProvider } from '../../src/modules/data-providers/pool/fallback.provider';
-import { Liquidity } from '../../src/modules/liquidity/liquidity.module';
 import POOLS from './pools.json';
 import DECORATED_POOLS from './decorated-pools.json';
 import TOKENS from './tokens.json';
@@ -62,7 +62,7 @@ const tokens = TOKENS.map((token) => {
     };
 });
 
-const sorPoolProvider = new SORPoolProvider(config);
+// const sorPoolProvider = new SORPoolProvider(config);
 const staticPoolProvider = new StaticPoolProvider(POOLS);
 const poolProvider = new FallbackPoolProvider([
     // sorPoolProvider,

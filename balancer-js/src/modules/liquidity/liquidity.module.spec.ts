@@ -5,7 +5,6 @@ import {
     StaticPoolProvider,
 } from '../../';
 import { Pool } from '@/types';
-import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { expect } from 'chai';
 import { Liquidity } from './liquidity.module';
 import pools from '@/test/lib/liquidityPools.json';
@@ -32,7 +31,7 @@ beforeEach(() => {
     );
 });
 
-function findPool(address: string): SubgraphPoolBase {
+function findPool(address: string): Pool {
     const pool = pools.find((pool) => {
         return pool.address === address;
     });
