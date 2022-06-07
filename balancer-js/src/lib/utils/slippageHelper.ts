@@ -1,6 +1,6 @@
 import { parseFixed, formatFixed } from '@ethersproject/bignumber';
 
-const mulSlippage = (
+export const mulSlippage = (
   amount: string,
   decimals: number,
   slippage: string
@@ -12,7 +12,7 @@ const mulSlippage = (
   return formatFixed(parsedDelta, decimals);
 };
 
-const subSlippage = (
+export const subSlippage = (
   amount: string,
   decimals: number,
   slippage: string
@@ -24,7 +24,7 @@ const subSlippage = (
   return formatFixed(parsedResult, decimals);
 };
 
-const addSlippage = (
+export const addSlippage = (
   amount: string,
   decimals: number,
   slippage: string
@@ -34,10 +34,4 @@ const addSlippage = (
   const parsedAmount = parseFixed(amount, decimals);
   const parsedResult = parsedAmount.add(parsedDelta);
   return formatFixed(parsedResult, decimals);
-};
-
-export default {
-  mulSlippage,
-  subSlippage,
-  addSlippage,
 };

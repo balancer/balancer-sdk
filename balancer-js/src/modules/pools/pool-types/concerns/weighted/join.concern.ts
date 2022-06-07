@@ -14,7 +14,7 @@ import {
   ExactTokensInJoinPoolParameters,
 } from '../types';
 import { JoinPoolRequest } from '@/types';
-import useSlippage from '@/lib/utils/useSlippage';
+import { subSlippage } from '@/lib/utils/slippageHelper';
 import { AssetHelpers } from '@/lib/utils';
 import { balancerVault } from '@/lib/constants/config';
 
@@ -223,7 +223,7 @@ export class WeighedPoolJoin implements JoinConcern {
     ).toString();
 
     if (slippage) {
-      fullBPTOut = useSlippage.subSlippage(fullBPTOut, 0, slippage);
+      fullBPTOut = subSlippage(fullBPTOut, 0, slippage);
     }
     return [
       sortedTokens,
