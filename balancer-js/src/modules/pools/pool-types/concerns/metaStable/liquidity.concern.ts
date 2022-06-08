@@ -27,6 +27,7 @@ export class MetaStablePoolLiquidity implements LiquidityConcern {
             const balance = parseFixed(tokenBalance.balance, SCALING_FACTOR);
 
             const value = balance.mul(price);
+            console.log('SDK balance: ', balance.toString(), ' price: ', price.toString(), ' value: ', value.toString());
             sumValue = sumValue.add(value);
             sumBalance = sumBalance.add(balance);
         }

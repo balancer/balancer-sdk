@@ -86,6 +86,11 @@ export class Liquidity {
             Zero
         );
 
+        console.log(
+            'SDK Final total liquidity: ',
+            totalSubPoolLiquidity.toString()
+        );
+
         const nonPoolTokens = parsedTokens.filter((token) => {
             return !subPoolLiquidity.find(
                 (pool) => pool?.address === token.address
