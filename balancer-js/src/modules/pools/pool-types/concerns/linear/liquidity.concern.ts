@@ -11,8 +11,6 @@ export class LinearPoolLiquidity implements LiquidityConcern {
         let sumBalance = Zero;
         let sumValue = Zero;
 
-        console.log('calculating linear pool liquidity');
-
         for (let i = 0; i < tokenBalances.length; i++) {
             const tokenBalance = tokenBalances[i];
 
@@ -28,17 +26,7 @@ export class LinearPoolLiquidity implements LiquidityConcern {
             );
 
             const balance = parseFixed(tokenBalance.balance, SCALING_FACTOR);
-
             const value = balance.mul(price);
-            console.log(
-                'SDK Main Token: ',
-                'price: ',
-                price.toString(),
-                ' balance: ',
-                balance.toString(),
-                ' value: ',
-                value.toString()
-            );
 
             sumValue = sumValue.add(value);
             sumBalance = sumBalance.add(balance);
@@ -67,18 +55,6 @@ export class LinearPoolLiquidity implements LiquidityConcern {
                     .div(ONE);
 
                 const value = balance.mul(avgPrice);
-
-                console.log(
-                    'SDK Wrapped Token: ',
-                    'price: ',
-                    avgPrice.toString(),
-                    ' priceRate: ',
-                    priceRate.toString(),
-                    ' balance: ',
-                    balance.toString(),
-                    ' value: ',
-                    value.toString()
-                );
                 sumValue = sumValue.add(value);
                 sumBalance = sumBalance.add(balance);
             }
@@ -88,7 +64,6 @@ export class LinearPoolLiquidity implements LiquidityConcern {
             sumValue,
             SCALING_FACTOR * 2
         ).toString();
-        console.log('SDK linearpool totalLiquidity: ', totalLiquidity);
         return totalLiquidity;
     }
 }

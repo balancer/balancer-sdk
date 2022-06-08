@@ -65,12 +65,6 @@ export class Liquidity {
                         SCALING_FACTOR
                     ).replace(/\.[0-9]+/, ''); // strip trailing decimals, we don't need them as we're already scaled up by 1e36
 
-                    console.log(
-                        'pool: ',
-                        pool.address,
-                        ' liquidity: ',
-                        phantomPoolLiquidity.toString()
-                    );
                     return {
                         address: pool.address,
                         liquidity: phantomPoolLiquidity,
@@ -84,11 +78,6 @@ export class Liquidity {
                 return totalLiquidity.add(subPool.liquidity);
             },
             Zero
-        );
-
-        console.log(
-            'SDK Final total liquidity: ',
-            totalSubPoolLiquidity.toString()
         );
 
         const nonPoolTokens = parsedTokens.filter((token) => {

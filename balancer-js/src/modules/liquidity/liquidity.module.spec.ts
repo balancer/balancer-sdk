@@ -71,6 +71,13 @@ describe('Liquidity Module', () => {
             );
             expect(liquidity).to.be.eq('130524319.23');
         });
+
+        it('Correctly calculates the liquidity of a 3pool with a missing price', async () => {
+            const liquidity = await liquidityProvider.getLiquidity(
+                findPool('0x000f3b2bbb68adc8b0e302443692037ed9f91b42')
+            );
+            expect(liquidity).to.be.eq('130304713.065278948964422831');
+        });
     });
 
     context('Metastable Pool calculations', () => {
@@ -78,7 +85,7 @@ describe('Liquidity Module', () => {
             const liquidity = await liquidityProvider.getLiquidity(
                 findPool('0x32296969ef14eb0c6d29669c550d4a0449130230')
             );
-            expect(liquidity).to.be.eq('161410611.2');
+            expect(liquidity).to.be.eq('154558160.0');
         });
     });
 
