@@ -1,5 +1,4 @@
-import { BalancerSdkConfig } from '@/types';
-import { PoolType } from './types';
+import { BalancerSdkConfig, PoolType } from '@/types';
 import { Stable } from './pool-types/stable.module';
 import { Weighted } from './pool-types/weighted.module';
 import { MetaStable } from './pool-types/metaStable.module';

@@ -169,10 +169,21 @@ export interface OnchainPoolData {
   tokenRates?: string[];
 }
 
+export enum PoolType {
+  Weighted = 'Weighted',
+  Investment = 'Investment',
+  Stable = 'Stable',
+  MetaStable = 'MetaStable',
+  StablePhantom = 'StablePhantom',
+  LiquidityBootstrapping = 'LiquidityBootstrapping',
+  AaveLinear = 'AaveLinear',
+  ERC4626Linear = 'ERC4626Linear',
+}
+
 export interface Pool {
   id: string;
   address: string;
-  poolType: string;
+  poolType: PoolType;
   swapFee: string;
   owner?: string;
   factory?: string;

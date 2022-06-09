@@ -13,7 +13,6 @@ export * from './modules/swaps/swaps.module';
 export * from './modules/subgraph/subgraph.module';
 export * from './modules/sor/sor.module';
 export * from './modules/pools/pools.module';
-export * from './modules/pools/types';
 export * from './modules/data-providers/pool/static.provider';
 export * from './modules/data-providers/token/static.provider';
 export * from './modules/data-providers/token-price/static.provider';
