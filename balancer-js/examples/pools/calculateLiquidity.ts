@@ -40,18 +40,17 @@ const config: BalancerSdkConfig = {
 const tokenPrices: TokenPrices = {};
 TOKENS.forEach((token) => {
   // Strip price down to max 18 decimals.
-  let priceInETH = '0';
   if (token.price) {
     const tokenPriceMatch = token.price.match(/[0-9]+\.[0-9]{0,18}/);
     const tokenPrice = tokenPriceMatch ? tokenPriceMatch[0] : '';
-    priceInETH = formatFixed(
+    const priceInETH = formatFixed(
       parseFixed('1', 36).div(parseFixed(tokenPrice, 18)),
       18
     );
+    tokenPrices[token.address] = {
+      eth: priceInETH,
+    };
   }
-  tokenPrices[token.address] = {
-    eth: priceInETH,
-  };
 });
 
 const tokens = TOKENS.map((token) => {
