@@ -11,12 +11,12 @@
 
 mod generated_contracts;
 mod macros;
-mod structs;
+mod domain;
 mod types;
 
 pub use generated_contracts::erc20::*;
 pub use helpers::*;
-pub use structs::*;
+pub use domain::*;
 pub use types::*;
 
 pub mod constants;

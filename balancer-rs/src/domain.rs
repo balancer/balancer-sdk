@@ -5,31 +5,6 @@ use ethers_core::utils::parse_units;
 
 use crate::{u256, Address, Bytes32, IERC20};
 
-#[derive(Debug, Clone, Copy)]
-pub struct HexString(pub &'static str);
-impl HexString {
-    pub fn to_str(&self) -> &str {
-        self.0
-    }
-    pub fn to_bytes32(&self) -> Bytes32 {
-        let hex_string = hexutil::read_hex(self.0);
-        let bytes = FixedBytes(hex_string.unwrap());
-        Bytes::from_token(bytes).unwrap()
-    }
-}
-impl From<HexString> for Bytes32 {
-    fn from(hex_string: HexString) -> Self {
-        hex_string.to_bytes32()
-    }
-}
-impl From<HexString> for ethcontract::tokens::Bytes<Vec<u8>> {
-    fn from(hex_string: HexString) -> Self {
-        let hex_string = hexutil::read_hex(hex_string.to_str()).unwrap();
-
-        ethcontract::tokens::Bytes::<Vec<u8>>(hex_string)
-    }
-}
-
 #[derive(Clone, Copy, Debug)]
 pub struct PoolId(pub &'static str);
 impl From<PoolId> for Bytes32 {
