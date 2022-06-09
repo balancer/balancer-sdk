@@ -23,47 +23,47 @@ use std::str::FromStr;
 const RPC_URL: &str = "https://rpc.flashbots.net/";
 const POOL_ADDRESS: &str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
 fn get_pool_instance() -> WeightedPool {
-  let transport = ethcontract::web3::transports::Http::new(RPC_URL).unwrap();
-  let web3 = ethcontract::Web3::new(transport);
-  let pool_address = addr!(POOL_ADDRESS);
+    let transport = ethcontract::web3::transports::Http::new(RPC_URL).unwrap();
+    let web3 = ethcontract::Web3::new(transport);
+    let pool_address = addr!(POOL_ADDRESS);
 
-  WeightedPool::new(web3, pool_address)
+    WeightedPool::new(web3, pool_address)
 }
 
 // BASE POOL API EXAMPLES
 async fn get_vault() {
-  print_start_new_example("BasePool#getVault");
+    print_start_new_example("BasePool#getVault");
 
-  let instance = get_pool_instance();
-  let vault_address = instance.get_vault().call().await.unwrap();
+    let instance = get_pool_instance();
+    let vault_address = instance.get_vault().call().await.unwrap();
 
-  println!("Balancer Pool Vault Address {:#?}", vault_address,);
+    println!("Balancer Pool Vault Address {:#?}", vault_address,);
 }
 
 async fn get_pool_id() {
-  print_start_new_example("BasePool#getPoolId");
+    print_start_new_example("BasePool#getPoolId");
 
-  let instance = get_pool_instance();
-  let id = instance.get_pool_id().call().await.unwrap();
+    let instance = get_pool_instance();
+    let id = instance.get_pool_id().call().await.unwrap();
 
-  println!(
-    "Balancer Pool Id {:#?} for pool with address {:#?}",
-    id.into_token().to_string(),
-    POOL_ADDRESS
-  );
+    println!(
+        "Balancer Pool Id {:#?} for pool with address {:#?}",
+        id.into_token().to_string(),
+        POOL_ADDRESS
+    );
 }
 
 async fn get_swap_fee_percentage() {
-  print_start_new_example("BasePool#getSwapFeePercentage");
+    print_start_new_example("BasePool#getSwapFeePercentage");
 
-  let instance = get_pool_instance();
-  let fee = instance.get_swap_fee_percentage().call().await.unwrap();
-  let fee_human_readable = utils::format_units::<usize, i32>(fee.as_usize(), 18 - 2).unwrap();
+    let instance = get_pool_instance();
+    let fee = instance.get_swap_fee_percentage().call().await.unwrap();
+    let fee_human_readable = utils::format_units::<usize, i32>(fee.as_usize(), 18 - 2).unwrap();
 
-  println!(
-    "Balancer Pool Id {:#?} swap fee percentage {:#?} ({:.4})%",
-    POOL_ADDRESS, fee, fee_human_readable
-  );
+    println!(
+        "Balancer Pool Id {:#?} swap fee percentage {:#?} ({:.4})%",
+        POOL_ADDRESS, fee, fee_human_readable
+    );
 }
 
 /**
@@ -79,20 +79,20 @@ async fn get_swap_fee_percentage() {
   - Owner: the account which was set at pool creation
 */
 async fn set_swap_fee_percentage() {
-  print_start_new_example("BasePool#setSwapFeePercentage");
+    print_start_new_example("BasePool#setSwapFeePercentage");
 
-  let instance = get_pool_instance();
-  let percentage = swap_fee!("0.15");
+    let instance = get_pool_instance();
+    let percentage = swap_fee!("0.15");
 
-  let result = match instance.set_swap_fee_percentage(percentage).call().await {
-    Ok(any) => any,
-    Err(e) => println!(
-      "This should fail with BAL#401 if you are not the pool owner. {}",
-      e
-    ),
-  };
+    let result = match instance.set_swap_fee_percentage(percentage).call().await {
+        Ok(any) => any,
+        Err(e) => println!(
+            "This should fail with BAL#401 if you are not the pool owner. {}",
+            e
+        ),
+    };
 
-  println!("Balancer Pool fee set? {:#?}", result);
+    println!("Balancer Pool fee set? {:#?}", result);
 }
 
 /**
@@ -100,8 +100,8 @@ async fn set_swap_fee_percentage() {
  */
 #[tokio::main]
 async fn main() {
-  get_vault().await;
-  get_pool_id().await;
-  get_swap_fee_percentage().await;
-  set_swap_fee_percentage().await;
+    get_vault().await;
+    get_pool_id().await;
+    get_swap_fee_percentage().await;
+    set_swap_fee_percentage().await;
 }
