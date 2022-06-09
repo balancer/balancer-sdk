@@ -16,6 +16,55 @@ const config: BalancerSdkConfig = {
 const balancer = new BalancerSDK(config);
 ```
 
+In some examples we present a way to make end to end trades against mainnet state. To run them you will need to setup a localhost test node using tools like ganache, hardhat, anvil.
+
+Installation instructions for:
+
+* [Hardhat](https://hardhat.org/getting-started/#installation)
+
+  To start a forked node:
+  ```
+  npm run node
+  ```
+
+* [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation) - use with caution, still experimental.
+  
+  To start a forked node:
+  ```
+  anvil -f FORKABLE_RPC_URL (optional pinned block: --fork-block-number XXX)
+  ```
+
+## Swaps Module
+
+Exposes complete functionality for token swapping. An example of using the module with data fetched from the subgraph:
+
+```js
+// Uses SOR to find optimal route for a trading pair and amount
+const route = balancer.swaps.findRouteGivenIn({
+    tokenIn,
+    tokenOut,
+    amount,
+    gasPrice,
+    maxPools,
+})
+
+// Prepares transaction attributes based on the route
+const transactionAttributes = balancer.swaps.buildSwap({
+    userAddress,
+    swapInfo: route,
+    kind: 0, // 0 - givenIn, 1 - givenOut
+    deadline,
+    maxSlippage,
+})
+
+// Extract parameters required for sendTransaction
+const { to, data, value } = transactionAttributes
+
+// Execution with ethers.js
+const transactionResponse = await signer.sendTransaction({ to, data, value })
+```
+
+
 ## SwapsService
 
 The SwapsService provides function to query and make swaps using Balancer V2 liquidity.

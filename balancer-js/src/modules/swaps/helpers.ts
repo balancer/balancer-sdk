@@ -15,46 +15,42 @@ import { isSameAddress } from '@/lib/utils';
  * @returns Returns an array (same length as assets) with limits applied for each asset.
  */
 export function getLimitsForSlippage(
-    tokensIn: string[],
-    tokensOut: string[],
-    swapType: SwapType,
-    deltas: BigNumberish[],
-    assets: string[],
-    slippage: BigNumberish
+  tokensIn: string[],
+  tokensOut: string[],
+  swapType: SwapType,
+  deltas: BigNumberish[],
+  assets: string[],
+  slippage: BigNumberish
 ): BigNumberish[] {
-    // Limits:
-    // +ve means max to send
-    // -ve mean min to receive
-    // For a multihop the intermediate tokens should be 0
-    const limits: BigNumber[] = new Array(assets.length).fill(Zero);
+  // Limits:
+  // +ve means max to send
+  // -ve mean min to receive
+  // For a multihop the intermediate tokens should be 0
+  const limits: BigNumber[] = new Array(assets.length).fill(Zero);
 
-    assets.forEach((token, i) => {
-        if (tokensIn.some((tokenIn) => isSameAddress(token, tokenIn))) {
-            // For SwapExactOut slippage is on tokenIn, i.e. amtIn + slippage
-            const slippageAmount = BigNumber.from(slippage).add(WeiPerEther);
-            limits[i] =
-                swapType === SwapType.SwapExactOut
-                    ? limits[i].add(
-                          BigNumber.from(deltas[i])
-                              .mul(slippageAmount)
-                              .div(WeiPerEther)
-                      )
-                    : limits[i].add(deltas[i]);
-        }
+  assets.forEach((token, i) => {
+    if (tokensIn.some((tokenIn) => isSameAddress(token, tokenIn))) {
+      // For SwapExactOut slippage is on tokenIn, i.e. amtIn + slippage
+      const slippageAmount = BigNumber.from(slippage).add(WeiPerEther);
+      limits[i] =
+        swapType === SwapType.SwapExactOut
+          ? limits[i].add(
+              BigNumber.from(deltas[i]).mul(slippageAmount).div(WeiPerEther)
+            )
+          : limits[i].add(deltas[i]);
+    }
 
-        if (tokensOut.some((tokenOut) => isSameAddress(token, tokenOut))) {
-            // For SwapExactIn slippage is on tokenOut, i.e. amtOut - slippage
-            const slippageAmount = WeiPerEther.sub(BigNumber.from(slippage));
-            limits[i] =
-                swapType === SwapType.SwapExactIn
-                    ? limits[i].add(
-                          BigNumber.from(deltas[i])
-                              .mul(slippageAmount)
-                              .div(WeiPerEther)
-                      )
-                    : limits[i].add(deltas[i]);
-        }
-    });
+    if (tokensOut.some((tokenOut) => isSameAddress(token, tokenOut))) {
+      // For SwapExactIn slippage is on tokenOut, i.e. amtOut - slippage
+      const slippageAmount = WeiPerEther.sub(BigNumber.from(slippage));
+      limits[i] =
+        swapType === SwapType.SwapExactIn
+          ? limits[i].add(
+              BigNumber.from(deltas[i]).mul(slippageAmount).div(WeiPerEther)
+            )
+          : limits[i].add(deltas[i]);
+    }
+  });
 
-    return limits;
+  return limits;
 }
