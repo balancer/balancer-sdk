@@ -22,6 +22,9 @@ use ethcontract::U256;
 use helpers::*;
 use std::str::FromStr;
 
+#[allow(unused_imports)]
+use ethcontract::transaction::TransactionBuilder;
+
 const RECIPIENT_WALLET_ADDRESS: &str = "0x35f5a330FD2F8e521ebd259FA272bA8069590741";
 const SENDER_WALLET_ADDRESS: &str = "0x35f5a330FD2F8e521ebd259FA272bA8069590741";
 
@@ -87,7 +90,7 @@ pub async fn query_batch_swap() {
 
 /// Executes a single swap of USDC for DAI via the Vault for a particular pool.
 ///
-/// Successful swap transaction: https://kovan.etherscan.io/tx/0xfcb6d38c73841f37bd4bf5d0e1245822a8c2457877cf071390d04fce336ce7d5
+/// Successful swap transaction: `https://kovan.etherscan.io/tx/0xfcb6d38c73841f37bd4bf5d0e1245822a8c2457877cf071390d04fce336ce7d5`
 pub async fn single_swap() {
     print_start_new_example("Vault#singleSwap");
 
@@ -139,11 +142,11 @@ pub async fn single_swap() {
 /// # Batch Swap
 ///
 /// ## Gotchas
-/// - If you don't provide gas, gas_price, or nonce, the interal [`TransactionBuilder`] will have to make a call to the node to get those values.
+/// - If you don't provide gas, gas_price, or nonce, the internal [`TransactionBuilder`] will have to make a call to the node to get those values.
 /// - If the transaction will fail, then getting these values will fail as well, even on the `build` step.
 /// - If you haven't approved the tokens for spending, it will fail.
 ///
-/// Successful batch swap transaction on Kovan: https://kovan.etherscan.io/tx/0x2f7603dc9dbc0ae406bdfd95abe06d3d90152d329fad4faf1021954978468993
+/// Successful batch swap transaction on Kovan: `https://kovan.etherscan.io/tx/0x2f7603dc9dbc0ae406bdfd95abe06d3d90152d329fad4faf1021954978468993`
 #[allow(dead_code)]
 pub async fn batch_swap() {
     print_start_new_example("Vault#batchSwap");

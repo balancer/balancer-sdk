@@ -6,19 +6,42 @@
 //! Balancer V2 separates the Automated Market Maker (AMM) logic from the token management and accounting. Token management/accounting is done by the Vault while the AMM logic is individual to each pool.
 //! Because pools are contracts external to the Vault, they can implement any arbitrary, customized AMM logic.
 //!
-//!  # Examples
-//!  Basic usage:
+//! # Examples
+//! The tested examples below show basic usage of the Vault. For more examples, see the examples directory.
 //!
-//! ## Create instance
-//!
-//! ```
+//! ### Create instance
+//! ```rust
 //! use balancer_rs::vault::Vault;
 //!
 //! const RPC_URL: &str = balancer_rs::constants::rpc_endpoints::KOVAN_TESTNET;
-//!
 //! let transport = ethcontract::web3::transports::Http::new(RPC_URL).unwrap();
 //! let web3 = ethcontract::Web3::new(transport);
+//!
 //! Vault::new(web3);
+//! ```
+//!
+//! ### Get Authorizer
+//! ```no_run
+//! use balancer_rs::vault::Vault;
+//! # use balancer_rs::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//! Vault::new(web3).get_authorizer().call().await.unwrap()
+//! # });
+//! ```
+//!
+//! ### Get Pool
+//! ```no_run
+//! use balancer_rs::vault::Vault;
+//! # use balancer_rs::helpers::*;
+//! use balancer_rs::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//! let pool_id = PoolId("0x0371c272fdd28ac13c434f1ef6b8b52ea3e6d844");
+//! Vault::new(web3).get_pool(pool_id.into()).call().await.unwrap()
+//! # });
 //! ```
 
 pub use super::generated_contracts::vault::Vault;

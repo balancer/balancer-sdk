@@ -5,9 +5,11 @@ pub mod tokens;
 
 pub use tokens::*;
 
-pub fn build_web3(rpc_endpoint: &str) -> web3::Web3<web3::transports::Http> {
-    let transport = web3::transports::Http::new(rpc_endpoint).unwrap();
-    web3::Web3::new(transport)
+use crate::Web3;
+
+pub fn build_web3(rpc_endpoint: &str) -> Web3 {
+    let transport = ethcontract::web3::transports::Http::new(rpc_endpoint).unwrap();
+    Web3::new(transport)
 }
 
 pub fn get_env_var(key: &str) -> String {

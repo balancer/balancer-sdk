@@ -7,6 +7,7 @@ pub struct Pool {
 
 // Kovan sample data is from the subgraph:
 // https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-kovan-v2
+#[allow(dead_code)]
 pub mod kovan {
     use super::*;
 

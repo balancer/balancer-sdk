@@ -17,6 +17,7 @@ snailquote = "0.3.1"
 tokio = { version= "1", features = ["full"] }
 ethereum-hexutil = "0.2.3"
 web3 = "0.17.0"
+tokio-test = "0.4.2"
 
 [build-dependencies]
 ethcontract-generate = "0.17.0"

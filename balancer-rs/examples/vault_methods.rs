@@ -1,10 +1,10 @@
-/**
- * This is a collection of examples for interacting with each of the Vault API methods.
- * Each method is run in main() below -- you can comment out whichever example you don't want
- * to run.
- *
- * The examples use the RPC_URL constant, but you can/should replace that with your own.
- */
+//!
+//! This is a collection of examples for interacting with the Vault API methods.
+//! Each method is run in main() below -- you can comment out whichever example you don't want
+//! to run.
+//!
+//! The examples use the RPC_URL constant, but you can/should replace that with your own.
+
 extern crate balancer_rs;
 mod helpers;
 mod sample_data;
