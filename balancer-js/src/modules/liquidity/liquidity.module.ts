@@ -67,14 +67,7 @@ export class Liquidity {
 
     const tokenBalances: TokenBalance[] = await Promise.all(
       nonPoolTokens.map(async (token) => {
-        const tokenDetails = await this.tokens.find(token.address);
-        if (!tokenDetails) {
-          throw new Error(
-            `Unable to calculate balance. Could not find token: ${token.address}`
-          );
-        }
-
-        const tokenPrice = await this.tokenPrices.find(tokenDetails.address);
+        const tokenPrice = await this.tokenPrices.find(token.address);
         const tokenBalance: TokenBalance = {
           token: {
             address: token.address,

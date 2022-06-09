@@ -50,7 +50,7 @@ TOKENS.forEach((token) => {
     );
   }
   tokenPrices[token.address] = {
-    ETH: priceInETH,
+    eth: priceInETH,
   };
 });
 
@@ -96,8 +96,6 @@ poolIds.forEach((poolId) => {
   staticPools[poolId] = POOLS.find((p) => p.id === poolId);
 });
 
-getLiquidity(poolIds);
-
 async function getLiquidity(poolIds: string[]) {
   for (const poolId of poolIds) {
     const pool = await poolProvider.find(poolId);
@@ -117,4 +115,8 @@ async function getLiquidity(poolIds: string[]) {
     console.log('Decorated Pool Liqudity: \t', decoratedPool?.totalLiquidity);
     console.log('---');
   }
+
+  process.exit(0);
 }
+
+getLiquidity(poolIds);
