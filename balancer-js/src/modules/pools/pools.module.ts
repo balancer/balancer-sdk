@@ -18,10 +18,10 @@ export class Pools {
   ) {}
 
   static from(
-    pool: SubgraphPoolBase
+    poolType: string
   ): Weighted | Stable | MetaStable | StablePhantom | Linear {
     // Calculate spot price using pool type
-    switch (pool.poolType) {
+    switch (poolType) {
       case 'Weighted':
       case 'Investment':
       case 'LiquidityBootstrapping': {
