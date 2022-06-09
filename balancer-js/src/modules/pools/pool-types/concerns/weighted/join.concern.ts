@@ -18,7 +18,7 @@ import { subSlippage } from '@/lib/utils/slippageHelper';
 import { AssetHelpers } from '@/lib/utils';
 import { balancerVault } from '@/lib/constants/config';
 
-export class WeighedPoolJoin implements JoinConcern {
+export class WeightedPoolJoin implements JoinConcern {
   static encodeJoinPool({
     poolId,
     sender,
@@ -58,7 +58,7 @@ export class WeighedPoolJoin implements JoinConcern {
       joinPoolRequest,
     };
 
-    const joinEncoded = WeighedPoolJoin.encodeJoinPool(joinPoolInput);
+    const joinEncoded = WeightedPoolJoin.encodeJoinPool(joinPoolInput);
     return joinEncoded;
   }
 
@@ -96,7 +96,7 @@ export class WeighedPoolJoin implements JoinConcern {
       joinPoolRequest: {} as JoinPoolRequest,
     };
 
-    const data = WeighedPoolJoin.constructJoinCall(joinPoolData);
+    const data = WeightedPoolJoin.constructJoinCall(joinPoolData);
     const to = balancerVault;
     const functionName = 'joinPool';
     const attributes: JoinPool = {
