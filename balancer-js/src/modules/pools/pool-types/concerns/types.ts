@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-explicit-any: ["error", { "ignoreRestArgs": true }] */
 
 import { SubgraphPoolBase } from '@balancer-labs/sor';
-import { JoinPoolRequest } from '@/types';
+import { JoinPoolRequest, ExitPoolRequest } from '@/types';
 import { BigNumber } from '@ethersproject/bignumber';
 
 export interface LiquidityConcern {
@@ -26,6 +26,15 @@ export interface JoinConcern {
   }: ExactTokensInJoinPoolParameters) => Promise<JoinPoolAttributes>;
 }
 
+export interface ExitConcern {
+  buildExitExactBPTInForTokensOut: ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+  }: ExitExactBPTInForTokensOutParameters) => Promise<ExitPoolAttributes>;
+}
+
 export interface JoinPool {
   poolId: string;
   sender: string;
@@ -48,5 +57,27 @@ export interface ExactTokensInJoinPoolParameters {
   pool: SubgraphPoolBase;
   tokensIn: string[];
   amountsIn: string[];
+  slippage: string;
+}
+
+export interface ExitPool {
+  poolId: string;
+  sender: string;
+  recipient: string;
+  exitPoolRequest: ExitPoolRequest;
+}
+
+export interface ExitPoolAttributes {
+  to: string;
+  functionName: string;
+  attributes: ExitPool;
+  data: string;
+  value?: BigNumber;
+}
+
+export interface ExitExactBPTInForTokensOutParameters {
+  exiter: string;
+  pool: SubgraphPoolBase;
+  bptIn: string;
   slippage: string;
 }
