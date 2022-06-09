@@ -57,7 +57,9 @@ export class WeightedPoolExit implements ExitConcern {
     const userData =
       WeightedPoolEncoder.exitExactBPTInForTokensOut(normalizedBptIn);
 
-    const exitPool: ExitPool = {
+    const to = balancerVault;
+    const functionName = 'exitPool';
+    const attributes: ExitPool = {
       poolId: pool.id,
       sender: exiter,
       recipient: exiter,
@@ -68,13 +70,7 @@ export class WeightedPoolExit implements ExitConcern {
         toInternalBalance: false,
       },
     };
-
-    const to = balancerVault;
-    const functionName = 'exitPool';
-
-    const attributes = exitPool;
-
-    const data = WeightedPoolExit.encodeExitPool(exitPool);
+    const data = WeightedPoolExit.encodeExitPool(attributes);
 
     return { to, functionName, attributes, data };
   }

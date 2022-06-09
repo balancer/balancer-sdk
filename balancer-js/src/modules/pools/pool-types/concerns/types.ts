@@ -42,8 +42,6 @@ export interface JoinPool {
   joinPoolRequest: JoinPoolRequest;
 }
 
-export type JoinPoolData = JoinPoolRequest & JoinPool;
-
 export interface JoinPoolAttributes {
   to: string;
   functionName: string;

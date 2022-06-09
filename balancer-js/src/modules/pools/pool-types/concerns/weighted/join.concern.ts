@@ -8,7 +8,6 @@ import { WeightedPoolEncoder } from '@/pool-weighted';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import {
   JoinConcern,
-  JoinPoolData,
   JoinPool,
   JoinPoolAttributes,
   ExactTokensInJoinPoolParameters,
@@ -35,33 +34,6 @@ export class WeightedPoolJoin implements JoinConcern {
     ]);
   }
 
-  static constructJoinCall({
-    assets,
-    maxAmountsIn,
-    userData,
-    fromInternalBalance,
-    poolId,
-    sender,
-    recipient,
-  }: JoinPoolData): string {
-    const joinPoolRequest: JoinPoolRequest = {
-      assets,
-      maxAmountsIn,
-      userData,
-      fromInternalBalance,
-    };
-
-    const joinPoolInput: JoinPool = {
-      poolId,
-      sender,
-      recipient,
-      joinPoolRequest,
-    };
-
-    const joinEncoded = WeightedPoolJoin.encodeJoinPool(joinPoolInput);
-    return joinEncoded;
-  }
-
   // Join Concern Intereface
 
   async buildExactTokensInJoinPool({
@@ -85,18 +57,6 @@ export class WeightedPoolJoin implements JoinConcern {
       normalizedMinBPTOut
     );
 
-    const joinPoolData: JoinPoolData = {
-      assets: sortedTokensIn,
-      maxAmountsIn: normalizedAmountsIn,
-      userData,
-      fromInternalBalance: false,
-      poolId: pool.id,
-      sender: joiner,
-      recipient: joiner,
-      joinPoolRequest: {} as JoinPoolRequest,
-    };
-
-    const data = WeightedPoolJoin.constructJoinCall(joinPoolData);
     const to = balancerVault;
     const functionName = 'joinPool';
     const attributes: JoinPool = {
@@ -106,10 +66,11 @@ export class WeightedPoolJoin implements JoinConcern {
       joinPoolRequest: {
         assets: sortedTokensIn,
         maxAmountsIn: normalizedAmountsIn,
-        userData: userData,
+        userData,
         fromInternalBalance: false,
       },
     };
+    const data = WeightedPoolJoin.encodeJoinPool(attributes);
 
     return { to, functionName, attributes, data };
   }
