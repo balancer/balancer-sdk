@@ -1,11 +1,7 @@
 import { BigNumberish } from '@ethersproject/bignumber';
 import { Network } from './lib/constants/network';
 import { Contract } from '@ethersproject/contracts';
-import {
-  PoolDataService,
-  SubgraphPoolBase,
-  TokenPriceService,
-} from '@balancer-labs/sor';
+import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 
 export type Address = string;
 
