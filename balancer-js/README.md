@@ -22,9 +22,9 @@ Installation instructions for:
 
 * [Hardhat](https://hardhat.org/getting-started/#installation)
 
-  To start a forked node:
+  To start a forked node setting FORK_URL from local .env:
   ```
-  npm run node
+  FORK_URL=$(grep ALCHEMY_URL .env | cut -d '=' -f2) yarn run mainnet-fork
   ```
 
 * [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation) - use with caution, still experimental.

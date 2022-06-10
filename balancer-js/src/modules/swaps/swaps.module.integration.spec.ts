@@ -149,14 +149,6 @@ describe('swaps execution', async () => {
         return { to, data, value };
       };
 
-      before(async () => {
-        await provider.send('evm_setAutomine', [false]);
-      });
-
-      after(async () => {
-        await provider.send('evm_setAutomine', [true]);
-      });
-
       it('fails on slippage', async () => {
         const frontrunner = provider.getSigner(1);
         const frTx = await getTx(
@@ -173,16 +165,16 @@ describe('swaps execution', async () => {
         let reason;
         try {
           await signer.sendTransaction(userTx);
+          await provider.send('evm_mine', ['0x1']);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
+          console.log(err.body);
           // Slippage should trigger 507 error:
           // https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/solidity-utils/contracts/helpers/BalancerErrors.sol#L218
-          reason = err.reason;
+          reason = err.body;
         }
 
         expect(reason).to.contain('BAL#507');
-
-        await provider.send('evm_mine', []);
       });
     });
   });
