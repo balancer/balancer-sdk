@@ -119,16 +119,12 @@ To run an example:
 
 ### Single Swaps
 
-- [ ] swap
+- [x] swap
 
 ### Batch Swaps
 
-- [ ] batchSwap
-- [ ] queryBatchSwap
-
-### Flash Loans
-
-- [ ] flashLoan
+- [x] batchSwap
+- [x] queryBatchSwap
 
 ### Flash Loans
 
