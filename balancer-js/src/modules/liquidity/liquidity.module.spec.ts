@@ -1,34 +1,18 @@
-import {
-  BalancerSdkConfig,
-  Network,
-  StaticTokenProvider,
-  StaticPoolProvider,
-} from '../../';
+import { StaticPoolProvider } from '../../';
 import { Pool } from '@/types';
 import { expect } from 'chai';
 import { Liquidity } from './liquidity.module';
 import pools from '@/test/lib/liquidityPools.json';
-import tokens from '@/test/lib/liquidityTokens.json';
 import tokenPrices from '@/test/lib/liquidityTokenPrices.json';
 import { StaticTokenPriceProvider } from '../data-providers/token-price/static.provider';
 
-const tokenProvider = new StaticTokenProvider(tokens);
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
-const poolProvider = new StaticPoolProvider(pools);
+const poolProvider = new StaticPoolProvider(pools as Pool[]);
 
 let liquidityProvider: Liquidity;
 
 beforeEach(() => {
-  const config: BalancerSdkConfig = {
-    network: Network.MAINNET,
-    rpcUrl: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
-  };
-  liquidityProvider = new Liquidity(
-    config,
-    poolProvider,
-    tokenProvider,
-    tokenPriceProvider
-  );
+  liquidityProvider = new Liquidity(poolProvider, tokenPriceProvider);
 });
 
 function findPool(address: string): Pool {
@@ -36,7 +20,7 @@ function findPool(address: string): Pool {
     return pool.address === address;
   });
   if (!pool) throw new Error('Could not find test pool of address: ' + address);
-  return pool;
+  return pool as Pool;
 }
 
 describe('Liquidity Module', () => {

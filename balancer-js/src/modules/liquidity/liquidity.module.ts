@@ -1,7 +1,6 @@
 import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
-import { BalancerSdkConfig, TokenBalance, Pool } from '@/types';
+import { Pool, PoolToken } from '@/types';
 import { Pools } from '@/modules/pools/pools.module';
-import { TokenProvider } from '../data-providers/token/provider.interface';
 import { PoolProvider } from '../data-providers/pool/provider.interface';
 import { TokenPriceProvider } from '../data-providers/token-price/provider.interface';
 import { Zero } from '@ethersproject/constants';
@@ -15,9 +14,7 @@ export interface PoolLiquidity {
 
 export class Liquidity {
   constructor(
-    config: BalancerSdkConfig,
     private pools: PoolProvider,
-    private tokens: TokenProvider,
     private tokenPrices: TokenPriceProvider
   ) {}
 
@@ -65,20 +62,18 @@ export class Liquidity {
       return !subPoolLiquidity.find((pool) => pool?.address === token.address);
     });
 
-    const tokenBalances: TokenBalance[] = await Promise.all(
+    const tokenBalances: PoolToken[] = await Promise.all(
       nonPoolTokens.map(async (token) => {
         const tokenPrice = await this.tokenPrices.find(token.address);
-        const tokenBalance: TokenBalance = {
-          token: {
-            address: token.address,
-            decimals: token.decimals,
-            priceRate: token.priceRate,
-            price: tokenPrice,
-          },
+        const poolToken: PoolToken = {
+          address: token.address,
+          decimals: token.decimals,
+          priceRate: token.priceRate,
+          price: tokenPrice,
           balance: token.balance,
           weight: token.weight ? parseFixed(token.weight, 2).toString() : '0',
         };
-        return tokenBalance;
+        return poolToken;
       })
     );
 

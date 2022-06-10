@@ -62,12 +62,8 @@ const tokens = TOKENS.map((token) => {
   };
 });
 
-const pools: Pool[] = POOLS.map((pool) => {
-  return pool as Pool;
-});
-
 // const sorPoolProvider = new SORPoolProvider(config);
-const staticPoolProvider = new StaticPoolProvider(pools);
+const staticPoolProvider = new StaticPoolProvider(POOLS as Pool[]);
 const poolProvider = new FallbackPoolProvider([
   // sorPoolProvider,
   staticPoolProvider,
@@ -75,12 +71,7 @@ const poolProvider = new FallbackPoolProvider([
 const tokenProvider = new StaticTokenProvider(tokens);
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
 
-const liquidity = new Liquidity(
-  config,
-  poolProvider,
-  tokenProvider,
-  tokenPriceProvider
-);
+const liquidity = new Liquidity(poolProvider, tokenPriceProvider);
 
 const poolIds = [
   '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080',

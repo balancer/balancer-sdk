@@ -129,25 +129,15 @@ export type TokenPrices = { [address: string]: Price };
 
 export interface Token {
   address: string;
-  decimals: number;
+  decimals?: number;
   symbol?: string;
   price?: Price;
-  priceRate?: string;
 }
 
-export interface PoolToken {
-  address: string;
-  decimals: number;
+export interface PoolToken extends Token {
   balance: string;
-  weight: string | null;
   priceRate?: string;
-  symbol?: string;
-}
-
-export interface TokenBalance {
-  token: Token;
-  balance: string;
-  weight: string;
+  weight?: string | null;
 }
 
 export interface OnchainTokenData {
