@@ -7,7 +7,7 @@ import { Zero } from '@ethersproject/constants';
 
 const SCALING_FACTOR = 36;
 
-export interface PoolLiquidity {
+export interface PoolBPTValue {
   address: string;
   liquidity: string;
 }
@@ -25,27 +25,25 @@ export class Liquidity {
     });
 
     // For all tokens that are pools, recurse into them and fetch their liquidity
-    const subPoolLiquidity: (PoolLiquidity | undefined)[] = await Promise.all(
+    const subPoolLiquidity: (PoolBPTValue | undefined)[] = await Promise.all(
       parsedTokens.map(async (token) => {
         const pool = await this.pools.findBy('address', token.address);
         if (!pool) return;
 
         const liquidity = await this.getLiquidity(pool);
-        const tokenBalance = parseFixed(token.balance, SCALING_FACTOR);
-        const totalShares = parseFixed(pool.totalShares, SCALING_FACTOR);
-        const shareOfLiquidityScaled = parseFixed(
-          tokenBalance.toString(),
-          SCALING_FACTOR
-        ).div(totalShares);
-        const scaledLiquidity = parseFixed(liquidity, SCALING_FACTOR);
-        const phantomPoolLiquidity = formatFixed(
-          scaledLiquidity.mul(shareOfLiquidityScaled),
+        const scaledLiquidity = parseFixed(liquidity, SCALING_FACTOR * 2);
+        const totalBPT = parseFixed(pool.totalShares, SCALING_FACTOR);
+        const bptValue = scaledLiquidity.div(totalBPT);
+
+        const bptInParentPool = parseFixed(token.balance, SCALING_FACTOR);
+        const liquidityInParentPool = formatFixed(
+          bptValue.mul(bptInParentPool),
           SCALING_FACTOR
         ).replace(/\.[0-9]+/, ''); // strip trailing decimals, we don't need them as we're already scaled up by 1e36
 
         return {
           address: pool.address,
-          liquidity: phantomPoolLiquidity,
+          liquidity: liquidityInParentPool,
         };
       })
     );
