@@ -6,6 +6,7 @@ import {
   StaticPoolProvider,
   StaticTokenProvider,
   StaticTokenPriceProvider,
+  Pool,
   Pools,
   TokenPrices,
 } from '../../src';
@@ -61,8 +62,12 @@ const tokens = TOKENS.map((token) => {
   };
 });
 
+const pools: Pool[] = POOLS.map((pool) => {
+  return pool as Pool;
+});
+
 // const sorPoolProvider = new SORPoolProvider(config);
-const staticPoolProvider = new StaticPoolProvider(POOLS);
+const staticPoolProvider = new StaticPoolProvider(pools);
 const poolProvider = new FallbackPoolProvider([
   // sorPoolProvider,
   staticPoolProvider,
