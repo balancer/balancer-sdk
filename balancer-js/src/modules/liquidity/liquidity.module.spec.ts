@@ -2,8 +2,8 @@ import { StaticPoolProvider } from '../../';
 import { Pool } from '@/types';
 import { expect } from 'chai';
 import { Liquidity } from './liquidity.module';
-import pools from '@/test/lib/liquidityPools.json';
-import tokenPrices from '@/test/lib/liquidityTokenPrices.json';
+import pools from '@/test/fixtures/liquidityPools.json';
+import tokenPrices from '@/test/fixtures/liquidityTokenPrices.json';
 import { StaticTokenPriceProvider } from '../data-providers/token-price/static.provider';
 
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);

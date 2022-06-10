@@ -1,42 +1,15 @@
 import {
-  BalancerSDK,
-  BalancerSdkConfig,
-  Network,
   Liquidity,
   StaticPoolProvider,
-  StaticTokenProvider,
   StaticTokenPriceProvider,
   Pool,
-  Pools,
   TokenPrices,
 } from '../../src';
 import { parseFixed, formatFixed } from '@ethersproject/bignumber';
-// import { SORPoolProvider } from '../../src/modules/data-providers/pool/sor.provider';
 import { FallbackPoolProvider } from '../../src/modules/data-providers/pool/fallback.provider';
 import POOLS from './pools.json';
 import DECORATED_POOLS from './decorated-pools.json';
 import TOKENS from './tokens.json';
-
-const config: BalancerSdkConfig = {
-  network: Network.MAINNET,
-  rpcUrl: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
-};
-
-/**
- * Grab pool information from the local DDB table and put as JSON here.
- * Only existing pool info that is in the API layer should be neccessary to calculate total liquidity.
- * So that users can just query the subgraph, get pool information, then pass it into these functions to get all extra information neccessary
- * No manual on-chain calls should be needed before being able to calculate this total liquidity.
- **/
-
-// balancer.pools.weighted.liquidity.calcTotal(...);
-// balancer.pools.stable.liquidity.calcTotal(...);
-
-// or with pools module directly
-// const pools = new Pools(...configParams);
-
-// pools.weighted.liquidity.calcTotal(...);
-// pools.stable.liquidity.calcTotal(...);
 
 const tokenPrices: TokenPrices = {};
 TOKENS.forEach((token) => {
@@ -54,21 +27,12 @@ TOKENS.forEach((token) => {
   }
 });
 
-const tokens = TOKENS.map((token) => {
-  return {
-    address: token.address,
-    symbol: token.symbol,
-    decimals: token.decimals,
-  };
-});
-
 // const sorPoolProvider = new SORPoolProvider(config);
 const staticPoolProvider = new StaticPoolProvider(POOLS as Pool[]);
 const poolProvider = new FallbackPoolProvider([
   // sorPoolProvider,
   staticPoolProvider,
 ]);
-const tokenProvider = new StaticTokenProvider(tokens);
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
 
 const liquidity = new Liquidity(poolProvider, tokenPriceProvider);
