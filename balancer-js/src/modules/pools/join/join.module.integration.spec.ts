@@ -5,7 +5,11 @@ import { MockPoolDataService } from '@/test/lib/mockPool';
 import { B_50WBTC_50WETH, getForkedPools } from '@/test/lib/mainnetPools';
 import hardhat from 'hardhat';
 
-import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
+import {
+  JsonRpcProvider,
+  JsonRpcSigner,
+  TransactionReceipt,
+} from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
 import { BigNumber } from 'ethers';
 import { parseFixed } from '@ethersproject/bignumber';
@@ -94,7 +98,11 @@ const setupPoolsModule = async (provider: JsonRpcProvider) => {
   return poolsModule;
 };
 
-const approveTokens = async (tokens: SubgraphToken[], amounts: string[]) => {
+const approveTokens = async (
+  tokens: SubgraphToken[],
+  amounts: string[],
+  signer: JsonRpcSigner
+) => {
   const parsedAmounts = amounts.map((amount, i) => {
     return parseFixed(amount, tokens[i].decimals);
   });
@@ -129,7 +137,7 @@ describe('join execution', async () => {
     signerAddress = await signer.getAddress();
     await setupTokenBalance(signerAddress, wETH.address, wETH_SLOT);
     await setupTokenBalance(signerAddress, wBTC.address, wBTC_SLOT);
-    await approveTokens(tokensIn, amountsIn);
+    await approveTokens(tokensIn, amountsIn, signer);
   });
 
   context('exactTokensInJoinPool transaction', () => {
@@ -138,7 +146,7 @@ describe('join execution', async () => {
 
       bptBalanceBefore = await bptContract.balanceOf(signerAddress);
 
-      const slippage = '0.01';
+      const slippage = '0.1';
       const { data } = await poolsModule.join.buildExactTokensInJoinPool(
         signerAddress,
         B_50WBTC_50WETH.id,
@@ -147,7 +155,7 @@ describe('join execution', async () => {
         slippage
       );
       const to = balancerVault;
-      const tx = { data, to }; // , gasPrice: '60000000000', gasLimit: '2000000'
+      const tx = { data, to };
 
       bptBalanceIncrease = BigNumber.from('8793334702586135'); // get from bptOut value (after adapting function to return transaction attributes)
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
@@ -165,6 +173,37 @@ describe('join execution', async () => {
       expect(bptBalanceAfter.sub(bptBalanceBefore).toNumber()).to.eql(
         bptBalanceIncrease.toNumber()
       );
+    });
+  });
+
+  context('exactTokensInJoinPool transaction - slippage out of bounds', () => {
+    before(async function () {
+      this.timeout(20000);
+      await approveTokens(tokensIn, amountsIn, signer);
+    });
+
+    it('should fail on slippage', async () => {
+      const slippage = '0.001';
+      const { data } = await poolsModule.join.buildExactTokensInJoinPool(
+        signerAddress,
+        B_50WBTC_50WETH.id,
+        tokensInAddresses,
+        amountsIn,
+        slippage
+      );
+      const to = balancerVault;
+      const tx = { data, to };
+      let reason;
+      try {
+        await (await signer.sendTransaction(tx)).wait();
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        reason = error.reason;
+      }
+      // Slippage should trigger 208 error => Slippage/front-running protection check failed on a pool join
+      // https://dev.balancer.fi/references/error-codes
+      expect(reason).to.contain('BAL#208');
     });
   });
 }).timeout(20000);
