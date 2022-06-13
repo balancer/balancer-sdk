@@ -18,6 +18,24 @@ import { AssetHelpers } from '@/lib/utils';
 import { balancerVault } from '@/lib/constants/config';
 
 export class WeightedPoolJoin implements JoinConcern {
+  // Static
+
+  /**
+   * Encode joinPool in an ABI byte string
+   *
+   * [See method for a join pool](https://dev.balancer.fi/references/contracts/apis/the-vault#joinpool).
+   *
+   * _NB: This method doesn't execute a join pool -- it returns an [ABI byte string](https://docs.soliditylang.org/en/latest/abi-spec.html)
+   * containing the data of the function call on a contract, which can then be sent to the network to be executed.
+   * (ex. [sendTransaction](https://web3js.readthedocs.io/en/v1.2.11/web3-eth.html#sendtransaction)).
+   *
+   * @param {JoinPool}          joinPool - join pool information to be encoded
+   * @param {string}            joinPool.poolId - id of pool being joined
+   * @param {string}            joinPool.sender - account address sending tokens to join pool
+   * @param {string}            joinPool.recipient - account address receiving BPT after joining pool
+   * @param {JoinPoolRequest}   joinPool.joinPoolRequest - object containing join pool request information
+   * @returns {string}          encodedJoinPoolData - Returns an ABI byte string containing the data of the function call on a contract
+   */
   static encodeJoinPool({
     poolId,
     sender,
@@ -34,8 +52,18 @@ export class WeightedPoolJoin implements JoinConcern {
     ]);
   }
 
-  // Join Concern Intereface
+  // Join Concern Interface
 
+  /**
+   * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
+   * @param {ExactTokensInJoinPoolParameters} params - parameters used to build exact tokens in for bpt out transaction
+   * @param {string}                          params.joiner - Account address joining pool
+   * @param {SubgraphPoolBase}                params.pool - Subgraph pool object of pool being joined
+   * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
+   * @param {string[]}                        params.amountsIn - Token amounts provided for joining pool (same length and order as tokensIn)
+   * @param {string}                          params.slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @returns                                 transaction request ready to send with signer.sendTransaction
+   */
   async buildExactTokensInJoinPool({
     joiner,
     pool,
@@ -75,6 +103,15 @@ export class WeightedPoolJoin implements JoinConcern {
     return { to, functionName, attributes, data };
   }
 
+  // Helper methods
+
+  /**
+   * Sort pool info alphabetically by token addresses as required by calcBptOutGivenExactTokensIn
+   * @param {SubgraphPoolBase}  pool - Subgraph pool object containing pool info to be sorted
+   * @param {string[]}          tokensIn - Array containing addresses of tokens to be sorted
+   * @param {string[]}          amountsIn - Array containing amounts of tokens to be sorted
+   * @returns                   sorted pool info
+   */
   private sortPoolInfo(
     pool: SubgraphPoolBase,
     tokensIn: string[],
@@ -108,6 +145,16 @@ export class WeightedPoolJoin implements JoinConcern {
     ];
   }
 
+  /**
+   * Parse pool info by respective decimals
+   * @param {string[]}  sortedBalances - Token balances to be parsed
+   * @param {string[]}  sortedWeights - Token weights to be parsed
+   * @param {string[]}  sortedAmounts - Token amounts to be parsed
+   * @param {string[]}  sortedDecimals - Token decimals used for parsing
+   * @param {string}    totalShares - Pool total supply to be parsed
+   * @param {string}    swapFee - Pool swap fee to be parsed
+   * @returns           parsed pool info
+   */
   private parseCalcInputs(
     sortedBalances: string[],
     sortedWeights: string[],
@@ -146,6 +193,14 @@ export class WeightedPoolJoin implements JoinConcern {
     ];
   }
 
+  /**
+   * Calculate BPT out given exact tokens in
+   * @param {SubgraphPoolBase}  pool - Subgraph pool object
+   * @param {string[]}          tokensIn - Token addresses
+   * @param {string[]}          amountsIn - Token amounts
+   * @param {string}            slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @returns                   expected BPT out factored by slippage tolerance
+   */
   private calcBptOutGivenExactTokensIn(
     pool: SubgraphPoolBase,
     tokensIn: string[],
@@ -175,6 +230,7 @@ export class WeightedPoolJoin implements JoinConcern {
       pool.swapFee
     );
 
+    // TODO: replace third-party BPT calculation in order to remove bignumber.js
     let fullBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
       parsedBalances,
       parsedWeights,

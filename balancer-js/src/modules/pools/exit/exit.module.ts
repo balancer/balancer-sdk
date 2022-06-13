@@ -9,13 +9,12 @@ export class Exit {
   }
 
   /**
-   * buildExactTokensInJoinPool Joins user to desired pool with exact tokens in and minimum BPT out based on slippage tolerance
-   * @param {string} joiner - Address used to join pool.
-   * @param {string} poolId - Id of pool being joined.
-   * @param {string[]} tokensIn - Array containing addresses of tokens to provide for joining pool. (must have same length and order as amountsIn)
-   * @param {string[]} amountsIn - Array containing amounts of tokens to provide for joining pool. (must have same length and order as tokensIn)
-   * @param {string} slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
-   * @returns String with encoded transaction data.
+   * Build exit pool transaction parameters with exact BPT in and minimum tokens out based on slippage tolerance
+   * @param {string}  exiter - Address used to exit pool
+   * @param {string}  poolId - Id of pool being exited
+   * @param {string}  bptIn - Amount of BPT to provide for exiting pool
+   * @param {string}  slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @returns         transaction request ready to send with signer.sendTransaction
    */
   async buildExitExactBPTInForTokensOut(
     exiter: string,
