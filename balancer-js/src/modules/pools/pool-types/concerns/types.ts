@@ -13,3 +13,12 @@ export interface SpotPriceConcern {
     pool: SubgraphPoolBase
   ) => string;
 }
+
+export interface PriceImpactConcern {
+  calcPriceImpact: (
+    tokenAmounts: string[],
+    isJoin: boolean,
+    isExactOut: boolean,
+    pool: SubgraphPoolBase
+  ) => string;
+}

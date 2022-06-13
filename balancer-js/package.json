@@ -83,6 +83,7 @@
     },
     "dependencies": {
         "@balancer-labs/sor": "^4.0.0-beta.6",
+        "@georgeroman/balancer-v2-pools": "^0.0.5",
         "axios": "^0.24.0",
         "graphql": "^15.6.1",
         "graphql-request": "^3.5.0",

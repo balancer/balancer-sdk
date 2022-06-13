@@ -8,6 +8,11 @@ import {
 } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Pools } from '@/modules/pools/pools.module';
+import { Linear } from '../pools/pool-types/linear.module';
+import { Weighted } from '../pools/pool-types/weighted.module';
+import { MetaStable } from '../pools/pool-types/metaStable.module';
+import { Stable } from '../pools/pool-types/stable.module';
+import { StablePhantom } from '../pools/pool-types/stablePhantom.module';
 
 export class Pricing {
   private readonly swaps: Swaps;
@@ -87,5 +92,31 @@ export class Pricing {
         poolData
       );
     }
+  }
+
+  async getPriceImpact(
+    tokenAmounts: string[],
+    isJoin: boolean,
+    isExactOut: boolean,
+    poolId = '',
+    pool?: SubgraphPoolBase
+  ): Promise<string> {
+    let typedPool: Weighted | Stable | MetaStable | StablePhantom | Linear;
+
+    if (pool) typedPool = Pools.from(pool);
+    else {
+      await this.fetchPools();
+      const pools = this.getPools();
+      pool = pools.find((pool) => pool.id == poolId);
+      if (!pool) throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
+      typedPool = Pools.from(pool);
+    }
+    const answer = typedPool.priceImpactCalculator.calcPriceImpact(
+      tokenAmounts,
+      isJoin,
+      isExactOut,
+      pool
+    );
+    return answer;
   }
 }

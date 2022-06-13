@@ -1,6 +1,11 @@
-import { LiquidityConcern, SpotPriceConcern } from './concerns/types';
+import {
+  LiquidityConcern,
+  SpotPriceConcern,
+  PriceImpactConcern,
+} from './concerns/types';
 
 export interface PoolType {
   liquidityCalculator: LiquidityConcern;
   spotPriceCalculator: SpotPriceConcern;
+  priceImpactCalculator: PriceImpactConcern;
 }
