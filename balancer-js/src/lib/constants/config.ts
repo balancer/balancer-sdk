@@ -131,8 +131,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
       },
       tokens: {
-        wrappedNativeAsset:
-          '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+        wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
       },
     },
     urls: {
