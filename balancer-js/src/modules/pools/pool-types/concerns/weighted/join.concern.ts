@@ -49,12 +49,12 @@ export class WeightedPoolJoin implements JoinConcern {
     ) {
       throw new Error('Must provide amount for all tokens in the pool');
     }
-    const [sortedTokensIn, normalizedAmountsIn, normalizedMinBPTOut] =
+    const [sortedTokensIn, parsedAmountsIn, parsedMinBPTOut] =
       this.calcBptOutGivenExactTokensIn(pool, tokensIn, amountsIn, slippage);
 
     const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
-      normalizedAmountsIn,
-      normalizedMinBPTOut
+      parsedAmountsIn,
+      parsedMinBPTOut
     );
 
     const to = balancerVault;
@@ -65,7 +65,7 @@ export class WeightedPoolJoin implements JoinConcern {
       recipient: joiner,
       joinPoolRequest: {
         assets: sortedTokensIn,
-        maxAmountsIn: normalizedAmountsIn,
+        maxAmountsIn: parsedAmountsIn,
         userData,
         fromInternalBalance: false,
       },
@@ -108,7 +108,7 @@ export class WeightedPoolJoin implements JoinConcern {
     ];
   }
 
-  private normalizeCalcInputs(
+  private parseCalcInputs(
     sortedBalances: string[],
     sortedWeights: string[],
     sortedAmounts: string[],
@@ -116,33 +116,33 @@ export class WeightedPoolJoin implements JoinConcern {
     totalShares: string,
     swapFee: string
   ): [
-    normalizedBalances: OldBigNumber[],
-    normalizedWeights: OldBigNumber[],
-    normalizedAmounts: OldBigNumber[],
-    normalizedTotalShares: OldBigNumber,
-    normalizedSwapFee: OldBigNumber
+    parsedBalances: OldBigNumber[],
+    parsedWeights: OldBigNumber[],
+    parsedAmounts: OldBigNumber[],
+    parsedTotalShares: OldBigNumber,
+    parsedSwapFee: OldBigNumber
   ] {
     const bnum = (val: string | number | OldBigNumber): OldBigNumber => {
       const number = typeof val === 'string' ? val : val ? val.toString() : '0';
       return new OldBigNumber(number);
     };
-    const _normalizedBalances = sortedBalances.map((balance, i) =>
+    const _parsedBalances = sortedBalances.map((balance, i) =>
       bnum(parseUnits(balance, sortedDecimals[i]).toString())
     );
-    const _normalizedWeights = sortedWeights.map((weight) =>
+    const _parsedWeights = sortedWeights.map((weight) =>
       bnum(parseUnits(weight).toString())
     );
-    const _normalizedAmounts = sortedAmounts.map((amount, i) =>
+    const _parsedAmounts = sortedAmounts.map((amount, i) =>
       bnum(parseUnits(amount, sortedDecimals[i]).toString())
     );
-    const _normalizedTotalShares = bnum(parseUnits(totalShares).toString());
-    const _normalizedSwapFee = bnum(parseUnits(swapFee).toString());
+    const _parsedTotalShares = bnum(parseUnits(totalShares).toString());
+    const _parsedSwapFee = bnum(parseUnits(swapFee).toString());
     return [
-      _normalizedBalances,
-      _normalizedWeights,
-      _normalizedAmounts,
-      _normalizedTotalShares,
-      _normalizedSwapFee,
+      _parsedBalances,
+      _parsedWeights,
+      _parsedAmounts,
+      _parsedTotalShares,
+      _parsedSwapFee,
     ];
   }
 
@@ -161,12 +161,12 @@ export class WeightedPoolJoin implements JoinConcern {
     ] = this.sortPoolInfo(pool, tokensIn, amountsIn);
 
     const [
-      normalizedBalances,
-      normalizedWeights,
-      normalizedAmounts,
-      normalizedTotalShares,
-      normalizedSwapFee,
-    ] = this.normalizeCalcInputs(
+      parsedBalances,
+      parsedWeights,
+      parsedAmounts,
+      parsedTotalShares,
+      parsedSwapFee,
+    ] = this.parseCalcInputs(
       sortedBalances,
       sortedWeights,
       sortedAmounts,
@@ -176,11 +176,11 @@ export class WeightedPoolJoin implements JoinConcern {
     );
 
     let fullBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
-      normalizedBalances,
-      normalizedWeights,
-      normalizedAmounts,
-      normalizedTotalShares,
-      normalizedSwapFee
+      parsedBalances,
+      parsedWeights,
+      parsedAmounts,
+      parsedTotalShares,
+      parsedSwapFee
     ).toString();
 
     if (slippage) {
@@ -188,7 +188,7 @@ export class WeightedPoolJoin implements JoinConcern {
     }
     return [
       sortedTokens,
-      normalizedAmounts.map((amount) => amount.toString()),
+      parsedAmounts.map((amount) => amount.toString()),
       fullBPTOut,
     ];
   }

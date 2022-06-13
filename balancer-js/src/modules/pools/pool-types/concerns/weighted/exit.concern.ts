@@ -51,11 +51,11 @@ export class WeightedPoolExit implements ExitConcern {
       throw new Error('Must provide bptIn greater than zero');
     }
 
-    const [sortedTokensOut, normalizedAmountsOut, normalizedBptIn] =
+    const [sortedTokensOut, parsedAmountsOut, parsedBptIn] =
       this.calcTokensOutGivenExactBptIn(pool, bptIn, slippage);
 
     const userData =
-      WeightedPoolEncoder.exitExactBPTInForTokensOut(normalizedBptIn);
+      WeightedPoolEncoder.exitExactBPTInForTokensOut(parsedBptIn);
 
     const to = balancerVault;
     const functionName = 'exitPool';
@@ -65,7 +65,7 @@ export class WeightedPoolExit implements ExitConcern {
       recipient: exiter,
       exitPoolRequest: {
         assets: sortedTokensOut,
-        minAmountsOut: normalizedAmountsOut,
+        minAmountsOut: parsedAmountsOut,
         userData,
         toInternalBalance: false,
       },
@@ -95,26 +95,26 @@ export class WeightedPoolExit implements ExitConcern {
     return [sortedTokens, sortedBalances, sortedDecimals];
   }
 
-  private normalizeCalcInputs(
+  private parseCalcInputs(
     sortedBalances: string[],
     sortedDecimals: string[],
     bptIn: string,
     totalShares: string
   ): [
-    normalizedBalances: OldBigNumber[],
-    normalizedBptIn: OldBigNumber,
-    normalizedTotalShares: OldBigNumber
+    parsedBalances: OldBigNumber[],
+    parsedBptIn: OldBigNumber,
+    parsedTotalShares: OldBigNumber
   ] {
     const bnum = (val: string | number | OldBigNumber): OldBigNumber => {
       const number = typeof val === 'string' ? val : val ? val.toString() : '0';
       return new OldBigNumber(number);
     };
-    const _normalizedBalances = sortedBalances.map((balance, i) =>
+    const _parsedBalances = sortedBalances.map((balance, i) =>
       bnum(parseUnits(balance, sortedDecimals[i]).toString())
     );
-    const _normalizedBptIn = bnum(parseUnits(bptIn).toString());
-    const _normalizedTotalShares = bnum(parseUnits(totalShares).toString());
-    return [_normalizedBalances, _normalizedBptIn, _normalizedTotalShares];
+    const _parsedBptIn = bnum(parseUnits(bptIn).toString());
+    const _parsedTotalShares = bnum(parseUnits(totalShares).toString());
+    return [_parsedBalances, _parsedBptIn, _parsedTotalShares];
   }
 
   private calcTokensOutGivenExactBptIn(
@@ -125,8 +125,8 @@ export class WeightedPoolExit implements ExitConcern {
     const [sortedTokens, sortedBalances, sortedDecimals] =
       this.sortPoolInfo(pool);
 
-    const [normalizedBalances, normalizedBptIn, normalizedTotalShares] =
-      this.normalizeCalcInputs(
+    const [parsedBalances, parsedBptIn, parsedTotalShares] =
+      this.parseCalcInputs(
         sortedBalances,
         sortedDecimals,
         bptIn,
@@ -134,9 +134,9 @@ export class WeightedPoolExit implements ExitConcern {
       );
 
     const amountsOut = SDK.WeightedMath._calcTokensOutGivenExactBptIn(
-      normalizedBalances,
-      normalizedBptIn,
-      normalizedTotalShares
+      parsedBalances,
+      parsedBptIn,
+      parsedTotalShares
     ).map((amount) => amount.toString());
     const minAmountsOut = amountsOut.map((amount, i) => {
       const formattedAmount = formatFixed(amount, sortedDecimals[i]);
@@ -148,6 +148,6 @@ export class WeightedPoolExit implements ExitConcern {
       return parseFixed(minFormattedAmount, sortedDecimals[i]).toString();
     });
 
-    return [sortedTokens, minAmountsOut, normalizedBptIn.toString()];
+    return [sortedTokens, minAmountsOut, parsedBptIn.toString()];
   }
 }
