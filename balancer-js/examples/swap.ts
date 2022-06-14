@@ -16,7 +16,7 @@ import { Contract } from '@ethersproject/contracts';
 
 dotenv.config();
 
-const { TRADER_KEY, TRADER_ADDRESS } = process.env;
+const { TRADER_KEY } = process.env;
 
 const network = Network.MAINNET;
 const rpcUrl = `http://127.0.0.1:8545`;
@@ -63,7 +63,7 @@ async function executePoolFetching() {
     maxPools: 4,
   });
 
-  const userAddress = TRADER_ADDRESS as string;
+  const userAddress = wallet.address;
   const deadline = BigNumber.from(`${Math.ceil(Date.now() / 1000) + 60}`); // 60 seconds from now
   const maxSlippage = 50; // 50 bsp = 0.5%
 
