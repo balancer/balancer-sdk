@@ -82,7 +82,7 @@
         "typescript": "^4.0.2"
     },
     "dependencies": {
-        "@balancer-labs/sor": "^4.0.0-beta.6",
+        "@balancer-labs/sor": "^4.0.0-beta.8",
         "axios": "^0.24.0",
         "bignumber.js": "^9.0.2",
         "graphql": "^15.6.1",
