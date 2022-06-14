@@ -1,7 +1,15 @@
 [package]
-name = "balancer_rs"
-version = "0.1.0"
+name = "balancer_sdk"
+version = "0.1.3-alpha"
+description = "A Rust SDK which provides commonly used utilties for interacting with Balancer Protocol V2"
+documentation = "https://docs.rs/crate/balancer_sdk"
 edition = "2021"
+homepage = "https://github.com/drewdrewthis/balancer-sdk/tree/develop/balancer-rs"
+repository = "https://github.com/drewdrewthis/balancer-sdk/tree/develop/balancer-rs"
+readme = "README.md"
+keywords = ["balancer", "crypto"]
+catagories = ["API bindings", "Accessibility"]
+license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

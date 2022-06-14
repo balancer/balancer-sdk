@@ -27,7 +27,7 @@ The balancer-rs sdk can be installed as a crate from [https://crates.io/](https:
 
 ```
 [dependencies]
-balancer_rs = "*"
+balancer_sdk = "*"
 ```
 
 Once installed, you will be able to use the Balancer Rust module as follows:
@@ -40,7 +40,7 @@ fn main() {
   let transport = ethcontract::web3::transports::Http::new(rpc_url).unwrap();
   let web3 = ethcontract::Web3::new(transport);
 
-  let vault_instance = balancer_rs::vault::Vault::new(web3);
+  let vault_instance = balancer_sdk::vault::Vault::new(web3);
 
   let weth_address = vault_instance.weth().call().await.unwrap();
 }
@@ -49,7 +49,7 @@ fn main() {
 Example to get the vault address via a pool ([see in examples](./examples/base_pool_methods.rs)):
 
 ```rust
-use balancer_rs::helpers::macros::*;
+use balancer_sdk::helpers::macros::*;
 
 fn main() {
   let rpc_url = "https://rpc.flashbots.net/";
@@ -57,7 +57,7 @@ fn main() {
   let web3 = ethcontract::Web3::new(transport);
 
   let pool_address = addr!("0x01abc00e86c7e258823b9a055fd62ca6cf61a163");
-  let weighted_pool_instance = balancer_rs::pools::WeightedPool::new(web3, addr!(pool_address));
+  let weighted_pool_instance = balancer_sdk::pools::WeightedPool::new(web3, addr!(pool_address));
   let vault_address = weighted_pool_instance.getVault().call().await.unwrap();
 }
 ```

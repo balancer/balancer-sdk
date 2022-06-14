@@ -1,11 +1,11 @@
-extern crate balancer_rs;
+extern crate balancer_sdk;
 
 mod helpers;
 mod sample_data;
 
 use std::str::FromStr;
 
-use balancer_rs::*;
+use balancer_sdk::*;
 use ethcontract::PrivateKey;
 use helpers::*;
 

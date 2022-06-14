@@ -9,14 +9,14 @@
 //!
 //! - Vault API: [`generated_contracts::vault::vault::Contract`]
 
+mod domain;
 mod generated_contracts;
 mod macros;
-mod domain;
 mod types;
 
+pub use domain::*;
 pub use generated_contracts::erc20::*;
 pub use helpers::*;
-pub use domain::*;
 pub use types::*;
 
 pub mod constants;

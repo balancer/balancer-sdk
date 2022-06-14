@@ -6,14 +6,14 @@
 //! - `RPC_URL`
 //! - `PRIVATE_KEY`
 
-extern crate balancer_rs;
+extern crate balancer_sdk;
 mod helpers;
 mod sample_data;
 
-use balancer_rs::helpers::errors::handle_bal_error;
-use balancer_rs::helpers::get_env_var;
-use balancer_rs::vault::Vault;
-use balancer_rs::*;
+use balancer_sdk::helpers::errors::handle_bal_error;
+use balancer_sdk::helpers::get_env_var;
+use balancer_sdk::vault::Vault;
+use balancer_sdk::*;
 use ethcontract::Account;
 use ethcontract::Address;
 use ethcontract::PrivateKey;

@@ -116,7 +116,7 @@ impl BatchSwapStep {
     /// Basic usage:
     ///
     /// ```
-    /// use balancer_rs::*;
+    /// use balancer_sdk::*;
     /// let pool_id = PoolId("01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b");
     /// let swap_step = BatchSwapStep::new(pool_id, 0, 1, "1000", UserData("0x"));
     /// ```

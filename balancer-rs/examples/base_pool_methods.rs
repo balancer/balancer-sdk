@@ -6,11 +6,11 @@
 //! Since the Base Pool contract is inherited by all of the other pools, we can use any pool interface.
 //! In these examples, we use the WeightedPool
 
-extern crate balancer_rs;
+extern crate balancer_sdk;
 mod helpers;
 
-use balancer_rs::pools::*;
-use balancer_rs::*;
+use balancer_sdk::pools::*;
+use balancer_sdk::*;
 use ethcontract::tokens::Tokenize;
 use ethers_core::utils;
 use helpers::*;

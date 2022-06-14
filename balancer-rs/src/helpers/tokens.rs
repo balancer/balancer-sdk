@@ -10,17 +10,17 @@ use crate::{Address, Web3, ERC20};
 /// # Basic usage:
 ///
 /// ```no_run
-/// use balancer_rs::*;
+/// use balancer_sdk::*;
 /// use std::str::FromStr;
 /// use ethcontract::PrivateKey;
 ///
 /// # tokio_test::block_on(async {
-/// const RPC_URL: &str = balancer_rs::constants::rpc_endpoints::KOVAN_TESTNET;
+/// const RPC_URL: &str = balancer_sdk::constants::rpc_endpoints::KOVAN_TESTNET;
 /// let transport = ethcontract::web3::transports::Http::new(RPC_URL).unwrap();
 /// let web3 = ethcontract::Web3::new(transport);
 ///
 /// /// USDC Address
-/// let private_key = balancer_rs::helpers::get_env_var("PRIVATE_KEY");
+/// let private_key = balancer_sdk::helpers::get_env_var("PRIVATE_KEY");
 /// let private_key = PrivateKey::from_str(&private_key).unwrap();
 ///
 /// let token_approver = TokenApprover::new(web3, addr!(vault::VAULT_CONTRACT_ADDRESS), private_key);

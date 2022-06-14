@@ -5,14 +5,14 @@
 //!
 //! The examples use the RPC_URL constant, but you can/should replace that with your own.
 
-extern crate balancer_rs;
+extern crate balancer_sdk;
 mod helpers;
 mod sample_data;
 
-use balancer_rs::helpers::errors::handle_bal_error;
-use balancer_rs::helpers::get_env_var;
-use balancer_rs::vault::Vault;
-use balancer_rs::*;
+use balancer_sdk::helpers::errors::handle_bal_error;
+use balancer_sdk::helpers::get_env_var;
+use balancer_sdk::vault::Vault;
+use balancer_sdk::*;
 use ethcontract::Address;
 use helpers::*;
 use std::str::FromStr;

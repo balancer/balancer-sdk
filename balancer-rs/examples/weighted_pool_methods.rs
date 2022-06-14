@@ -5,10 +5,10 @@
  *
  * The examples use the RPC_URL constant, but you can/should replace that with your own.
  */
-extern crate balancer_rs;
+extern crate balancer_sdk;
 mod helpers;
 
-use balancer_rs::{constants::addresses::*, pools::*, *};
+use balancer_sdk::{constants::addresses::*, pools::*, *};
 use ethcontract::U256;
 use helpers::*;
 use std::str::FromStr;

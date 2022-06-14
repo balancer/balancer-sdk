@@ -11,9 +11,9 @@
 //!
 //! ### Create instance
 //! ```rust
-//! use balancer_rs::vault::Vault;
+//! use balancer_sdk::vault::Vault;
 //!
-//! const RPC_URL: &str = balancer_rs::constants::rpc_endpoints::KOVAN_TESTNET;
+//! const RPC_URL: &str = balancer_sdk::constants::rpc_endpoints::KOVAN_TESTNET;
 //! let transport = ethcontract::web3::transports::Http::new(RPC_URL).unwrap();
 //! let web3 = ethcontract::Web3::new(transport);
 //!
@@ -22,8 +22,8 @@
 //!
 //! ### Get Authorizer
 //! ```no_run
-//! use balancer_rs::vault::Vault;
-//! # use balancer_rs::helpers::*;
+//! use balancer_sdk::vault::Vault;
+//! # use balancer_sdk::helpers::*;
 //!
 //! # tokio_test::block_on(async {
 //! # let web3 = build_web3(&get_env_var("RPC_URL"));
@@ -33,9 +33,9 @@
 //!
 //! ### Get Pool
 //! ```no_run
-//! use balancer_rs::vault::Vault;
-//! # use balancer_rs::helpers::*;
-//! use balancer_rs::*;
+//! use balancer_sdk::vault::Vault;
+//! # use balancer_sdk::helpers::*;
+//! use balancer_sdk::*;
 //!
 //! # tokio_test::block_on(async {
 //! # let web3 = build_web3(&get_env_var("RPC_URL"));

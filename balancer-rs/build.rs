@@ -21,6 +21,9 @@ fn make_contract_from_json(path: &str, name: &str) {
         .unwrap()
         .write_to_file(dest)
         .unwrap();
+
+    // https://doc.rust-lang.org/cargo/reference/build-scripts.html#rerun-if-changed
+    println!("cargo:rerun-if-changed={}", path);
 }
 
 // ABIs from https://github.com/balancer-labs/balancer-subgraph-v2/tree/master/abis
@@ -40,4 +43,6 @@ fn main() {
         "liquidity_bootstrapping_pool",
     );
     make_contract_from_json("./src/abis/ERC20.json", "erc20");
+
+    println!("cargo:rerun-if-changed=build.rs");
 }

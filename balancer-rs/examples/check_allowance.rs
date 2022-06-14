@@ -1,9 +1,9 @@
-extern crate balancer_rs;
+extern crate balancer_sdk;
 
 mod helpers;
 mod sample_data;
 
-use balancer_rs::*;
+use balancer_sdk::*;
 use helpers::*;
 use std::str::FromStr;
 
