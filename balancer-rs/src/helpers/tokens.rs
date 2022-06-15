@@ -53,7 +53,7 @@ impl TokenApprover {
     ) -> Result<TransactionResult, MethodError> {
         let contract_instance = ERC20::at(&self.web3, token_address);
         contract_instance
-            .approve(self.spender.clone(), amount)
+            .approve(self.spender, amount)
             .from(Account::Offline(self.private_key.clone(), None))
             .send()
             .await

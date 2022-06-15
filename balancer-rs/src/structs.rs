@@ -5,7 +5,7 @@ use ethers_core::utils::parse_units;
 
 pub use std::str::FromStr;
 
-use crate::{Address, Bytes32, PoolBalanceOpKind, SwapKind, IERC20};
+use crate::{Address, Bytes32, PoolBalanceOpKind, SwapKind, Variable, IERC20};
 
 #[derive(Clone, Copy, Debug)]
 pub struct PoolId(pub Bytes32);
@@ -253,7 +253,7 @@ impl From<JoinPoolRequest>
             from_internal_balance,
         } = request;
         (
-            assets.into(),
+            assets,
             max_amounts_in,
             user_data.into(),
             from_internal_balance,
@@ -295,7 +295,7 @@ impl From<ExitPoolRequest>
             to_internal_balance,
         } = request;
         (
-            assets.into(),
+            assets,
             max_amounts_out,
             user_data.into(),
             to_internal_balance,
@@ -319,5 +319,21 @@ impl From<PoolBalanceOp> for (u8, Bytes<[u8; 32]>, Address, U256) {
             amount,
         } = op;
         (kind as u8, pool_id.into(), token, amount)
+    }
+}
+
+pub struct OracleAverageQuery {
+    pub variable: Variable,
+    pub secs: U256,
+    pub ago: U256,
+}
+impl From<OracleAverageQuery> for (u8, U256, U256) {
+    fn from(query: OracleAverageQuery) -> (u8, U256, U256) {
+        let OracleAverageQuery {
+            variable,
+            secs,
+            ago,
+        } = query;
+        (variable as u8, secs, ago)
     }
 }

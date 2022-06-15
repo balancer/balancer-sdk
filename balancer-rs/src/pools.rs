@@ -188,11 +188,11 @@
 //! See Base Pool Methods above
 //!
 //! #### enable_oracle()
-//! Enables the oracle functionality.
-//!
 //! [See interface](struct.Weighted2PoolTokens.html#method.enable_oracle)
 //!
-//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools#enableoracle)
+//! Enables the oracle functionality.
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool2tokensenableoracle)
 //!
 //! ```no_run
 //! use balancer_sdk::pools::WeightedPool2Tokens;
@@ -211,6 +211,8 @@
 //! # });
 //! ```
 //! #### get_misc_data()
+//! [See interface](struct.Weighted2PoolTokens.html#method.get_misc_data)
+//!
 //! Returns a variety of data fields:
 //!
 //! ```solidity
@@ -224,9 +226,7 @@
 //!   uint256 swapFeePercentage)
 //! ```
 //!
-//! [See interface](struct.Weighted2PoolTokens.html#method.get_misc_data)
-//!
-//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools#getMiscData)
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool2tokensgetMiscData)
 //!
 //! ```no_run
 //! use balancer_sdk::pools::WeightedPool2Tokens;
@@ -245,11 +245,11 @@
 //! # });
 //! ```
 //! #### get_largest_safe_query_window()
-//! Returns largest safe query window.
-//!
 //! [See interface](struct.Weighted2PoolTokens.html#method.get_largest_safe_query_window)
 //!
-//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools#getLargestSafeQueryWindow)
+//! Returns largest safe query window.
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool2tokensgetLargestSafeQueryWindow)
 //!
 //! ```no_run
 //! use balancer_sdk::pools::WeightedPool2Tokens;
@@ -268,11 +268,11 @@
 //! # });
 //! ```
 //! #### get_latest()
-//! Returns latest pair price, BPT price, or invariant depending on what variable enum you pass. Samples are recorded by the pool as calculated with the pre-operation balances. For example, the spot price before a swap is the value stored as the most recent PAIR_PRICE.
-//!
 //! [See interface](struct.Weighted2PoolTokens.html#method.get_latest)
 //!
-//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools#getLatest)
+//! Returns latest pair price, BPT price, or invariant depending on what variable enum you pass. Samples are recorded by the pool as calculated with the pre-operation balances. For example, the spot price before a swap is the value stored as the most recent PAIR_PRICE.
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool2tokens#getlatest)
 //!
 //! Uses [`Variable`](crate::Variable) enum
 //!
@@ -287,6 +287,39 @@
 //! let weighted_pool_instance = WeightedPool2Tokens::new(web3, addr!(pool_address));
 //!
 //! let misc_data = weighted_pool_instance.get_latest(Variable::PairPrice as u8)
+//!     .call()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
+//! #### get_time_weighted_average()
+//! [See interface](struct.Weighted2PoolTokens.html#method.get_time_weighted_average)
+//!
+//! Returns time weighted average prices corresponding to the variables in each query. secs is the duration of the query in seconds, and ago is the time in seconds from since end of that duration. Prices are represented as 18 decimal fixed point values.
+//! > **Note**
+//! > Note that you can only call getTimeWeightedAverage after the buffer is full, or it will revert with ORACLE_NOT_INITIALIZED. If you call getSample(1023) and it returns 0's, that means the buffer's not full yet.
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool2tokens#getTimeWeightedAverage)
+//!
+//! Uses [`Variable`](crate::Variable) enum
+//! Uses [`OracleAverageQuery`](crate::OracleAverageQuery) struct
+//!
+//! ```no_run
+//! use balancer_sdk::pools::WeightedPool2Tokens;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//! let pool_address: &str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
+//! let weighted_pool_instance = WeightedPool2Tokens::new(web3, addr!(pool_address));
+//! let query = OracleAverageQuery {
+//!     variable: Variable::PairPrice,
+//!     secs: u256!(10000),
+//!     ago: u256!(1234),
+//! };
+//!
+//! let misc_data = weighted_pool_instance.get_time_weighted_average(vec![query.into()])
 //!     .call()
 //!     .await
 //!     .unwrap();
