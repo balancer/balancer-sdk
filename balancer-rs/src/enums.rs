@@ -1,4 +1,3 @@
-/// General, MinimalSwapInfo, TwoToken,
 #[derive(Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum PoolSpecialization {
@@ -7,7 +6,6 @@ pub enum PoolSpecialization {
     TwoToken,
 }
 
-/// GivenIn, GivenOut
 #[derive(Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum SwapKind {
@@ -15,11 +13,18 @@ pub enum SwapKind {
     GivenOut,
 }
 
-/// Withdraw, Deposit, Update,
 #[derive(Copy, Clone, Debug)]
 #[repr(u8)]
 pub enum PoolBalanceOpKind {
     Withdraw,
     Deposit,
     Update,
+}
+
+#[derive(Copy, Clone, Debug)]
+#[repr(u8)]
+pub enum Variable {
+    PairPrice,
+    BptPrice,
+    Invariant,
 }

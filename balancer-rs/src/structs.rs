@@ -2,9 +2,10 @@ use ethcontract::tokens::{Bytes, Tokenize};
 use ethcontract::{H160, U256};
 use ethcontract_common::abi::Token::FixedBytes;
 use ethers_core::utils::parse_units;
+
 pub use std::str::FromStr;
 
-use crate::{u256, Address, Bytes32, PoolBalanceOpKind, SwapKind, IERC20};
+use crate::{Address, Bytes32, PoolBalanceOpKind, SwapKind, Variable, IERC20};
 
 #[derive(Clone, Copy, Debug)]
 pub struct PoolId(pub Bytes32);
@@ -34,12 +35,24 @@ impl From<UserData> for ethcontract::tokens::Bytes<Vec<u8>> {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct FromDecStrErr;
+
 #[derive(Debug, Clone, Copy)]
-pub struct SwapFeePercentage(pub &'static str);
-impl From<SwapFeePercentage> for ethcontract::U256 {
+pub struct SwapFeePercentage(pub U256);
+impl FromStr for SwapFeePercentage {
+    type Err = FromDecStrErr;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let wei = parse_units(s, "wei").unwrap();
+        let percentage = U256::from_dec_str(&wei.to_string()).unwrap();
+
+        Ok(SwapFeePercentage(percentage))
+    }
+}
+impl From<SwapFeePercentage> for U256 {
     fn from(percentage: SwapFeePercentage) -> Self {
-        let wei = parse_units(percentage.0, "wei").unwrap();
-        U256::from_dec_str(&wei.to_string()).unwrap()
+        percentage.0
     }
 }
 
@@ -93,52 +106,20 @@ type BatchSwapTuple = (
 #[derive(Clone, Debug)]
 pub struct BatchSwapStep {
     pub pool_id: PoolId,
-    pub asset_in_index: ethcontract::U256,
-    pub asset_out_index: ethcontract::U256,
-    pub amount: ethcontract::U256,
-    pub user_data: ethcontract::tokens::Bytes<Vec<u8>>,
-}
-impl BatchSwapStep {
-    /// # Creates a new BatchSwapStep
-    ///
-    /// The new constructor allows for the BatchSwapStep to be easily instantiated
-    /// from easy to read strings and numbers. The inputs will be converted to typesafe
-    /// and type correct values.
-    ///
-    /// ## Examples
-    ///
-    /// Basic usage:
-    ///
-    /// ```
-    /// use balancer_sdk::*;
-    /// let pool_id = pool_id!("01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b");
-    /// let swap_step = BatchSwapStep::new(pool_id, 0, 1, "1000", UserData("0x"));
-    /// ```
-    pub fn new(
-        pool_id: PoolId,
-        asset_in_index: i32,
-        asset_out_index: i32,
-        amount: &str,
-        user_data: UserData,
-    ) -> Self {
-        BatchSwapStep {
-            pool_id: pool_id.into(),
-            asset_in_index: asset_in_index.into(),
-            asset_out_index: asset_out_index.into(),
-            amount: u256!(amount),
-            user_data: user_data.into(),
-        }
-    }
+    pub asset_in_index: usize,
+    pub asset_out_index: usize,
+    pub amount: U256,
+    pub user_data: UserData,
 }
 /// Allows for conversion of a BatchSwapStep to a tuple
 impl From<BatchSwapStep> for BatchSwapTuple {
     fn from(swap_step: BatchSwapStep) -> BatchSwapTuple {
         (
             swap_step.pool_id.into(),
-            swap_step.asset_in_index,
-            swap_step.asset_out_index,
+            swap_step.asset_in_index.into(),
+            swap_step.asset_out_index.into(),
             swap_step.amount,
-            swap_step.user_data,
+            swap_step.user_data.into(),
         )
     }
 }
@@ -181,11 +162,11 @@ pub struct SwapRequest {
     pub amount: U256,
 
     // Misc data
-    pub pool_id: Bytes32,
+    pub pool_id: PoolId,
     pub last_change_block: U256,
     pub from: Address,
     pub to: Address,
-    pub user_data: ethcontract::tokens::Bytes<Vec<u8>>,
+    pub user_data: UserData,
 }
 impl From<SwapRequest>
     for (
@@ -229,11 +210,11 @@ impl From<SwapRequest>
             token_in,
             token_out,
             amount,
-            pool_id,
+            pool_id.into(),
             last_change_block,
             from,
             to,
-            user_data,
+            user_data.into(),
         )
     }
 }
@@ -272,7 +253,7 @@ impl From<JoinPoolRequest>
             from_internal_balance,
         } = request;
         (
-            assets.into(),
+            assets,
             max_amounts_in,
             user_data.into(),
             from_internal_balance,
@@ -280,7 +261,7 @@ impl From<JoinPoolRequest>
     }
 }
 
-/// `https://dev.balancer.fi/resources/joins-and-exits/pool-exits#api`
+/// [See Balancer documentation](https://dev.balancer.fi/resources/joins-and-exits/pool-exits#api)
 pub struct ExitPoolRequest {
     /// List of your tokens, ordered
     pub assets: Vec<Address>,
@@ -314,7 +295,7 @@ impl From<ExitPoolRequest>
             to_internal_balance,
         } = request;
         (
-            assets.into(),
+            assets,
             max_amounts_out,
             user_data.into(),
             to_internal_balance,
@@ -338,5 +319,32 @@ impl From<PoolBalanceOp> for (u8, Bytes<[u8; 32]>, Address, U256) {
             amount,
         } = op;
         (kind as u8, pool_id.into(), token, amount)
+    }
+}
+
+pub struct OracleAverageQuery {
+    pub variable: Variable,
+    pub secs: U256,
+    pub ago: U256,
+}
+impl From<OracleAverageQuery> for (u8, U256, U256) {
+    fn from(query: OracleAverageQuery) -> (u8, U256, U256) {
+        let OracleAverageQuery {
+            variable,
+            secs,
+            ago,
+        } = query;
+        (variable as u8, secs, ago)
+    }
+}
+
+pub struct OracleAccumulatorQuery {
+    pub variable: Variable,
+    pub ago: U256,
+}
+impl From<OracleAccumulatorQuery> for (u8, U256) {
+    fn from(query: OracleAccumulatorQuery) -> (u8, U256) {
+        let OracleAccumulatorQuery { variable, ago } = query;
+        (variable as u8, ago)
     }
 }
