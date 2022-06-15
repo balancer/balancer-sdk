@@ -1,6 +1,6 @@
 [package]
 name = "balancer_sdk"
-version = "0.1.9-alpha"
+version = "0.1.10-alpha"
 description = "A Rust SDK which provides commonly used utilties for interacting with Balancer Protocol V2"
 documentation = "https://docs.rs/crate/balancer_sdk"
 edition = "2021"
