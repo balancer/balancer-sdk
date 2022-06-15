@@ -6,6 +6,7 @@ import { Sor } from './sor/sor.module';
 import { getNetworkConfig } from './sdk.helpers';
 import { Pools } from './pools/pools.module';
 import { Pricing } from './pricing/pricing.module';
+import { ContractInstances, Contracts } from './contracts/contracts.module';
 
 export interface BalancerSDKRoot {
     config: BalancerSdkConfig;
@@ -26,7 +27,8 @@ export class BalancerSDK implements BalancerSDKRoot {
         public config: BalancerSdkConfig,
         public sor = new Sor(config),
         public subgraph = new Subgraph(config),
-        public pools = new Pools(config)
+        public pools = new Pools(config),
+        public balancerContracts = new Contracts(config, sor.provider)
     ) {
         this.swaps = new Swaps(this.config);
         this.relayer = new Relayer(this.swaps);
@@ -35,5 +37,9 @@ export class BalancerSDK implements BalancerSDKRoot {
 
     get networkConfig(): BalancerNetworkConfig {
         return getNetworkConfig(this.config);
+    }
+
+    get contracts(): ContractInstances {
+        return this.balancerContracts.contracts;
     }
 }

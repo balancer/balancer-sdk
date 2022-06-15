@@ -1,5 +1,5 @@
-import { Contract } from '@ethersproject/contracts';
 import { SOR, SubgraphPoolBase, SwapInfo, SwapTypes } from '@balancer-labs/sor';
+import { Vault__factory } from '@balancer-labs/typechain';
 import {
     BatchSwap,
     QuerySimpleFlashSwapParameters,
@@ -242,10 +242,8 @@ export class Swaps {
     async queryBatchSwap(
         batchSwap: Pick<BatchSwap, 'kind' | 'swaps' | 'assets'>
     ): Promise<string[]> {
-        // TO DO - Pull in a ContractsService and use this to pass Vault to queryBatchSwap.
-        const vaultContract = new Contract(
+        const vaultContract = Vault__factory.connect(
             balancerVault,
-            vaultAbi,
             this.sor.provider
         );
 
@@ -270,10 +268,8 @@ export class Swaps {
     async queryBatchSwapWithSor(
         queryWithSor: QueryWithSorInput
     ): Promise<QueryWithSorOutput> {
-        // TO DO - Pull in a ContractsService and use this to pass Vault to queryBatchSwap.
-        const vaultContract = new Contract(
+        const vaultContract = Vault__factory.connect(
             balancerVault,
-            vaultAbi,
             this.sor.provider
         );
 
@@ -304,10 +300,8 @@ export class Swaps {
     async querySimpleFlashSwap(
         params: Omit<QuerySimpleFlashSwapParameters, 'vaultContract'>
     ): Promise<QuerySimpleFlashSwapResponse> {
-        // TO DO - Pull in a ContractsService and use this to pass Vault to queryBatchSwap.
-        const vaultContract = new Contract(
+        const vaultContract = Vault__factory.connect(
             balancerVault,
-            vaultAbi,
             this.sor.provider
         );
 

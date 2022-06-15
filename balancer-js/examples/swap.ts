@@ -12,11 +12,10 @@ import { Wallet } from '@ethersproject/wallet';
 import { getNetworkConfig } from '../src/modules/sdk.helpers';
 import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
-import { Contract } from '@ethersproject/contracts';
 
 dotenv.config();
 
-const { TRADER_KEY, TRADER_ADDRESS } = process.env;
+const { TRADER_KEY } = process.env;
 
 const network = Network.MAINNET;
 const rpcUrl = `http://127.0.0.1:8545`;
@@ -25,11 +24,6 @@ const { addresses } = getNetworkConfig({ network, rpcUrl });
 const wallet = new Wallet(TRADER_KEY as string, provider);
 
 const tokenOut = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'; // wBTC
-const tokenOutContract = new Contract(
-    tokenOut,
-    ['function balanceOf(address) external view returns (uint256)'],
-    provider
-);
 
 async function executePoolFetching() {
     const pools = mapPools(mainnetTop10);
@@ -52,6 +46,8 @@ async function executePoolFetching() {
         },
     });
 
+    const tokenOutContract = balancer.contracts.ERC20.attach(tokenOut);
+
     await balancer.swaps.fetchPools();
 
     const swapInfo = await balancer.swaps.findRouteGivenIn({
@@ -63,7 +59,7 @@ async function executePoolFetching() {
         maxPools: 4,
     });
 
-    const userAddress = TRADER_ADDRESS as string;
+    const userAddress = wallet.address;
     const deadline = BigNumber.from(`${Math.ceil(Date.now() / 1000) + 60}`); // 60 seconds from now
     const maxSlippage = 50; // 50 bsp = 0.5%
 
