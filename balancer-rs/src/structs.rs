@@ -4,7 +4,7 @@ use ethcontract_common::abi::Token::FixedBytes;
 use ethers_core::utils::parse_units;
 pub use std::str::FromStr;
 
-use crate::{u256, Address, Bytes32, SwapKind, IERC20};
+use crate::{u256, Address, Bytes32, PoolBalanceOpKind, SwapKind, IERC20};
 
 #[derive(Clone, Copy, Debug)]
 pub struct PoolId(pub Bytes32);
@@ -319,5 +319,24 @@ impl From<ExitPoolRequest>
             user_data.into(),
             to_internal_balance,
         )
+    }
+}
+
+/// PoolBalanceOp describes the type of operation (deposit/withdraw/update), the pool ID, the token, and the amount.
+pub struct PoolBalanceOp {
+    pub kind: PoolBalanceOpKind,
+    pub pool_id: PoolId,
+    pub token: Address,
+    pub amount: U256,
+}
+impl From<PoolBalanceOp> for (u8, Bytes<[u8; 32]>, Address, U256) {
+    fn from(op: PoolBalanceOp) -> (u8, Bytes<[u8; 32]>, Address, U256) {
+        let PoolBalanceOp {
+            kind,
+            pool_id,
+            token,
+            amount,
+        } = op;
+        (kind as u8, pool_id.into(), token, amount)
     }
 }

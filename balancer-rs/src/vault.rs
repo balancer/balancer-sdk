@@ -19,6 +19,17 @@
 //! Vault::new(web3);
 //! ```
 //!
+//! ## Domain specific structs, enums, macros
+//! Some of the examples below use "helper" structs, enums, macros, etc. from this crate taken from the Balancer domain.
+//! Here are a few for easy reference:
+//!
+//! - [`addr!` macro](crate::addr)
+//! - [`BatchSwapStep`](crate::BatchSwapStep)
+//! - [`PoolId`](crate::PoolId)
+//! - [`JoinPoolRequest`](crate::JoinPoolRequest)
+//! - [`UserData`](crate::UserData)
+//!
+//!
 //! # Vault Methods
 //! [See Balancer's Vault API documentation](https://dev.balancer.fi/references/contracts/apis/the-vault#getauthorizer)
 //!
@@ -475,6 +486,108 @@
 //!     .gas(u256!("4712388"))
 //!     .gas_price(u256!("100000000000").into())
 //!     .send()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
+//!
+//! ## Asset Management
+//! This can only be called by the asset manager of a token in a pool.
+//!
+//! #### manage_pool_balance()
+//!  Deposit or withdraw funds from the pool (i.e., move funds between cash and managed balances), or update the total balance (i.e., reporting a gain or loss from management activities). Implemented in AssetManagers. Each PoolBalanceOp describes the type of operation (deposit/withdraw/update), the pool ID, the token, and the amount.
+//!
+//! [See interface](struct.Vault.html#method.manage_pool_balance)
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/the-vault#managepoolbalance)
+//! ```no_run
+//! use balancer_sdk::vault::Vault;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//! let pool_balance_op = PoolBalanceOp {
+//!     kind: PoolBalanceOpKind::Deposit,
+//!     pool_id: pool_id!("0x0371c272fdd28ac13c434f1ef6b8b52ea3e6d844"),
+//!     token: addr!("0x1f9840a85d5af5bf1d1762f925bdaddc4201f984"),
+//!     amount: u256!("1000000000")
+//! };
+//!
+//! let private_key = PrivateKey::from_str("00e0000a00aaaa0e0a000e0e0000e00e000a000000000000000aaa00a0aaaaaa").unwrap();
+//!
+//! let result = Vault::new(web3)
+//!     .manage_pool_balance(vec![pool_balance_op.into()])
+//!     .from(Account::Offline(private_key, None))
+//!     .send()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
+//! ## Miscellaneous
+//!
+//! #### get_protocol_fees_collector()
+//! The external contract authorized to collect protocol fees. Implemented by Fees.
+//!
+//! [See interface](struct.Vault.html#method.get_protocol_fees_collector)
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/the-vault#getProtocolFeesCollector)
+//! ```no_run
+//! use balancer_sdk::vault::Vault;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//!
+//! let result = Vault::new(web3)
+//!     .get_protocol_fees_collector()
+//!     .call()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
+//! #### set_paused()
+//! Safety mechanism to halt most Vault operations in the event of an emergency. The only functions allowed involve withdrawing funds (e.g., from internal balances, or proportional pool exits). Implemented by Vault.
+//!
+//! [See interface](struct.Vault.html#method.set_paused)
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/the-vault#setPaused)
+//! ```no_run
+//! use balancer_sdk::vault::Vault;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//!
+//! let private_key = PrivateKey::from_str("00e0000a00aaaa0e0a000e0e0000e00e000a000000000000000aaa00a0aaaaaa").unwrap();
+//!
+//! let result = Vault::new(web3)
+//!     .set_paused(true)
+//!     .from(Account::Offline(private_key, None))
+//!     .send()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
+//! #### weth()
+//! The Vault's address for WETH. Implemented by Vault.
+//!
+//! [See interface](struct.Vault.html#method.weth)
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/the-vault#weth)
+//! ```no_run
+//! use balancer_sdk::vault::Vault;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//!
+//! let result = Vault::new(web3)
+//!     .weth()
+//!     .call()
 //!     .await
 //!     .unwrap();
 //! # });
