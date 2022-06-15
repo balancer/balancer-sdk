@@ -21,23 +21,23 @@
               "type": "string"
             },
             {
-              "internalType": "contract IERC20[]",
-              "name": "tokens",
-              "type": "address[]"
+              "internalType": "contract IERC20",
+              "name": "token0",
+              "type": "address"
             },
             {
-              "internalType": "contract IRateProvider[]",
-              "name": "rateProviders",
-              "type": "address[]"
-            },
-            {
-              "internalType": "uint256[]",
-              "name": "priceRateCacheDuration",
-              "type": "uint256[]"
+              "internalType": "contract IERC20",
+              "name": "token1",
+              "type": "address"
             },
             {
               "internalType": "uint256",
-              "name": "amplificationParameter",
+              "name": "normalizedWeight0",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "normalizedWeight1",
               "type": "uint256"
             },
             {
@@ -66,57 +66,13 @@
               "type": "address"
             }
           ],
-          "internalType": "struct MetaStablePool.NewPoolParams",
+          "internalType": "struct WeightedPool2Tokens.NewPoolParams",
           "name": "params",
           "type": "tuple"
         }
       ],
       "stateMutability": "nonpayable",
       "type": "constructor"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "startValue",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "endValue",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "startTime",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "endTime",
-          "type": "uint256"
-        }
-      ],
-      "name": "AmpUpdateStarted",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "currentValue",
-          "type": "uint256"
-        }
-      ],
-      "name": "AmpUpdateStopped",
-      "type": "event"
     },
     {
       "anonymous": false,
@@ -167,50 +123,6 @@
         }
       ],
       "name": "PausedStateChanged",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "contract IERC20",
-          "name": "token",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "rate",
-          "type": "uint256"
-        }
-      ],
-      "name": "PriceRateCacheUpdated",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "contract IERC20",
-          "name": "token",
-          "type": "address"
-        },
-        {
-          "indexed": true,
-          "internalType": "contract IRateProvider",
-          "name": "provider",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "cacheDuration",
-          "type": "uint256"
-        }
-      ],
-      "name": "PriceRateProviderSet",
       "type": "event"
     },
     {
@@ -341,7 +253,7 @@
           "type": "uint8"
         }
       ],
-      "stateMutability": "view",
+      "stateMutability": "pure",
       "type": "function"
     },
     {
@@ -357,7 +269,7 @@
           "type": "uint256"
         }
       ],
-      "name": "decreaseAllowance",
+      "name": "decreaseApproval",
       "outputs": [
         {
           "internalType": "bool",
@@ -396,22 +308,12 @@
     },
     {
       "inputs": [],
-      "name": "getAmplificationParameter",
+      "name": "getAuthorizer",
       "outputs": [
         {
-          "internalType": "uint256",
-          "name": "value",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bool",
-          "name": "isUpdating",
-          "type": "bool"
-        },
-        {
-          "internalType": "uint256",
-          "name": "precision",
-          "type": "uint256"
+          "internalType": "contract IAuthorizer",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -419,12 +321,12 @@
     },
     {
       "inputs": [],
-      "name": "getAuthorizer",
+      "name": "getInvariant",
       "outputs": [
         {
-          "internalType": "contract IAuthorizer",
+          "internalType": "uint256",
           "name": "",
-          "type": "address"
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -449,12 +351,7 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "lastInvariant",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "lastInvariantAmp",
+          "name": "",
           "type": "uint256"
         }
       ],
@@ -482,7 +379,7 @@
     },
     {
       "inputs": [],
-      "name": "getOracleMiscData",
+      "name": "getMiscData",
       "outputs": [
         {
           "internalType": "int256",
@@ -508,6 +405,24 @@
           "internalType": "bool",
           "name": "oracleEnabled",
           "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "swapFeePercentage",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getNormalizedWeights",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
         }
       ],
       "stateMutability": "view",
@@ -594,35 +509,6 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "token",
-          "type": "address"
-        }
-      ],
-      "name": "getPriceRateCache",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "rate",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "duration",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "expires",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [],
       "name": "getRate",
       "outputs": [
@@ -630,19 +516,6 @@
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "getRateProviders",
-      "outputs": [
-        {
-          "internalType": "contract IRateProvider[]",
-          "name": "providers",
-          "type": "address[]"
         }
       ],
       "stateMutability": "view",
@@ -692,19 +565,6 @@
           "internalType": "uint256",
           "name": "timestamp",
           "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "getScalingFactors",
-      "outputs": [
-        {
-          "internalType": "uint256[]",
-          "name": "",
-          "type": "uint256[]"
         }
       ],
       "stateMutability": "view",
@@ -794,11 +654,11 @@
         },
         {
           "internalType": "uint256",
-          "name": "addedValue",
+          "name": "amount",
           "type": "uint256"
         }
       ],
-      "name": "increaseAllowance",
+      "name": "increaseApproval",
       "outputs": [
         {
           "internalType": "bool",
@@ -883,12 +743,12 @@
       "outputs": [
         {
           "internalType": "uint256[]",
-          "name": "amountsOut",
+          "name": "",
           "type": "uint256[]"
         },
         {
           "internalType": "uint256[]",
-          "name": "dueProtocolFeeAmounts",
+          "name": "",
           "type": "uint256[]"
         }
       ],
@@ -1004,18 +864,13 @@
           "type": "tuple"
         },
         {
-          "internalType": "uint256[]",
-          "name": "balances",
-          "type": "uint256[]"
-        },
-        {
           "internalType": "uint256",
-          "name": "indexIn",
+          "name": "balanceTokenIn",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
-          "name": "indexOut",
+          "name": "balanceTokenOut",
           "type": "uint256"
         }
       ],
@@ -1124,7 +979,7 @@
           "type": "uint256[]"
         }
       ],
-      "stateMutability": "view",
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -1178,24 +1033,6 @@
           "type": "uint256[]"
         }
       ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "token",
-          "type": "address"
-        },
-        {
-          "internalType": "bytes",
-          "name": "poolConfig",
-          "type": "bytes"
-        }
-      ],
-      "name": "setAssetManagerPoolConfig",
-      "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
     },
@@ -1215,55 +1052,12 @@
     {
       "inputs": [
         {
-          "internalType": "contract IERC20",
-          "name": "token",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "duration",
-          "type": "uint256"
-        }
-      ],
-      "name": "setPriceRateCacheDuration",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "uint256",
           "name": "swapFeePercentage",
           "type": "uint256"
         }
       ],
       "name": "setSwapFeePercentage",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "rawEndValue",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "endTime",
-          "type": "uint256"
-        }
-      ],
-      "name": "startAmplificationParameterUpdate",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "stopAmplificationParameterUpdate",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -1344,19 +1138,6 @@
           "type": "bool"
         }
       ],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "contract IERC20",
-          "name": "token",
-          "type": "address"
-        }
-      ],
-      "name": "updatePriceRateCache",
-      "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
     }

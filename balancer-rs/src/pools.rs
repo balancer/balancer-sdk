@@ -181,6 +181,117 @@
 //!     .unwrap();
 //! # });
 //! ```
+//! ## Pools Methods - Weighted2PoolTokens
+//! [See Balancer's Pool API documentation](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool2tokens)
+//!
+//! ### on_swap()
+//! See Base Pool Methods above
+//!
+//! #### enable_oracle()
+//! Enables the oracle functionality.
+//!
+//! [See interface](struct.Weighted2PoolTokens.html#method.enable_oracle)
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools#enableoracle)
+//!
+//! ```no_run
+//! use balancer_sdk::pools::WeightedPool2Tokens;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//! let pool_address: &str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
+//! let weighted_pool_instance = WeightedPool2Tokens::new(web3, addr!(pool_address));
+//!
+//! weighted_pool_instance.enable_oracle()
+//!     .call()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
+//! #### get_misc_data()
+//! Returns a variety of data fields:
+//!
+//! ```solidity
+//! getMiscData()
+//! returns (
+//!   int256 logInvariant,
+//!   int256 logTotalSupply,
+//!   uint256 oracleSampleCreationTimestamp,
+//!   uint256 oracleIndex,
+//!   bool oracleEnabled,
+//!   uint256 swapFeePercentage)
+//! ```
+//!
+//! [See interface](struct.Weighted2PoolTokens.html#method.get_misc_data)
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools#getMiscData)
+//!
+//! ```no_run
+//! use balancer_sdk::pools::WeightedPool2Tokens;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//! let pool_address: &str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
+//! let weighted_pool_instance = WeightedPool2Tokens::new(web3, addr!(pool_address));
+//!
+//! let misc_data = weighted_pool_instance.get_misc_data()
+//!     .call()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
+//! #### get_largest_safe_query_window()
+//! Returns largest safe query window.
+//!
+//! [See interface](struct.Weighted2PoolTokens.html#method.get_largest_safe_query_window)
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools#getLargestSafeQueryWindow)
+//!
+//! ```no_run
+//! use balancer_sdk::pools::WeightedPool2Tokens;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//! let pool_address: &str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
+//! let weighted_pool_instance = WeightedPool2Tokens::new(web3, addr!(pool_address));
+//!
+//! let misc_data = weighted_pool_instance.get_largest_safe_query_window()
+//!     .call()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
+//! #### get_latest()
+//! Returns latest pair price, BPT price, or invariant depending on what variable enum you pass. Samples are recorded by the pool as calculated with the pre-operation balances. For example, the spot price before a swap is the value stored as the most recent PAIR_PRICE.
+//!
+//! [See interface](struct.Weighted2PoolTokens.html#method.get_latest)
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools#getLatest)
+//!
+//! Uses [`Variable`](crate::Variable) enum
+//!
+//! ```no_run
+//! use balancer_sdk::pools::WeightedPool2Tokens;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//! let pool_address: &str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
+//! let weighted_pool_instance = WeightedPool2Tokens::new(web3, addr!(pool_address));
+//!
+//! let misc_data = weighted_pool_instance.get_latest(Variable::PairPrice as u8)
+//!     .call()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
 
 pub use crate::generated_contracts::*;
 pub use liquidity_bootstrapping_pool::LiquidityBootStrappingPool;
