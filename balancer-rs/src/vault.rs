@@ -371,13 +371,13 @@
 //!
 //! let limits = vec![i256!("1000000000000000000"), i256!("1000000000000000000")];
 //!
-//! let swap_step = BatchSwapStep::new(
-//!     pool_id!("0x0371c272fdd28ac13c434f1ef6b8b52ea3e6d844"),
-//!     0,
-//!     1,
-//!     "10",
-//!     UserData("0x"),
-//! );
+//! let swap_step = BatchSwapStep {
+//!     pool_id: pool_id!("0x0371c272fdd28ac13c434f1ef6b8b52ea3e6d844"),
+//!     asset_in_index: 0,
+//!     asset_out_index: 1,
+//!     amount: u256!("10"),
+//!     user_data: UserData("0x"),
+//! };
 //!
 //! let funds = FundManagement {
 //!     sender: addr!("0xBA12222222228d8Ba445958a75a0704d566BF2C8"),
@@ -425,13 +425,13 @@
 //!     addr!("0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9"),
 //! ];
 //!
-//! let swap_step = BatchSwapStep::new(
-//!     pool_id!("0x0371c272fdd28ac13c434f1ef6b8b52ea3e6d844"),
-//!     0,
-//!     1,
-//!     "10",
-//!     UserData("0x"),
-//! );
+//! let swap_step = BatchSwapStep {
+//!     pool_id: pool_id!("0x0371c272fdd28ac13c434f1ef6b8b52ea3e6d844"),
+//!     asset_in_index: 0,
+//!     asset_out_index: 1,
+//!     amount: u256!("10"),
+//!     user_data: UserData("0x"),
+//! };
 //!
 //! let funds = FundManagement {
 //!     sender: addr!("0xBA12222222228d8Ba445958a75a0704d566BF2C8"),

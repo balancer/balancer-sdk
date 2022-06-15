@@ -1,8 +1,8 @@
-//! #![doc = include_str!("../README.md")]
+#![doc = include_str!("../README.md")]
 
 mod enums;
 mod generated_contracts;
-mod macros;
+pub mod macros;
 mod structs;
 mod types;
 

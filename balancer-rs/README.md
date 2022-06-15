@@ -31,7 +31,7 @@ balancer-rs has been tested on:
 
 The balancer-rs sdk can be installed as a crate from [https://crates.io/](https://crates.io/). Simply add the following to your `[dependencies]` in your Rust project's `Cargo.toml` file:
 
-```
+```doc
 [dependencies]
 balancer_sdk = "*"
 ```
@@ -42,8 +42,9 @@ Once installed, you will be able to use the Balancer Rust module as follows:
 
 An example of how to get the WETH address from the Vault contract API
 
-```rust
-fn main() {
+```rust no_compile
+#[tokio::main]
+async fn main() {
   let rpc_url = "https://rpc.flashbots.net/";
   let transport = ethcontract::web3::transports::Http::new(rpc_url).unwrap();
   let web3 = ethcontract::Web3::new(transport);
@@ -62,7 +63,9 @@ fn main() {
 
 To run tests:
 
-`cargo test -all`
+```console
+$ cargo test -all
+```
 
 ## Contributing
 
@@ -84,4 +87,6 @@ The [GIT repository](https://github.com/drewdrewthis/balancer-sdk/tree/develop/b
 
 To run an example:
 
-`cargo run --example [name]`
+```console
+$ cargo run --example [name]
+```

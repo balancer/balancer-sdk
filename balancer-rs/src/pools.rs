@@ -24,6 +24,7 @@
 //! Here are a few for easy reference:
 //!
 //! - [`addr!` macro](crate::addr)
+//! - [`swap_fee!` macro](crate::swap_fee)
 //! - [`pool_id!` macro](crate::pool_id)
 //! - [`UserData`](crate::UserData)
 //!
@@ -109,9 +110,73 @@
 //! let pool_address: &str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
 //! let weighted_pool_instance = WeightedPool::new(web3, addr!(pool_address));
 //! let vault_address = weighted_pool_instance.set_swap_fee_percentage(
-//!     u256!('10')
+//!     swap_fee!(0.10).into()
 //!    )
 //!     .send()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
+//! #### set_paused()
+//! Pauses trading within the pool. Users can exit their positions proportionally.
+//!
+//! Note: This can only be called by an authorized account and is intended to be used only as an emergency stop if something goes wrong.
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools#setpaused)
+//!
+//! ```no_run
+//! use balancer_sdk::pools::WeightedPool;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//! let pool_address: &str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
+//! let weighted_pool_instance = WeightedPool::new(web3, addr!(pool_address));
+//! let vault_address = weighted_pool_instance.set_paused(true)
+//!     .send()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
+//! #### on_swap()
+//! When the Vault is handling a swap, it will call onSwap to ask the pool what the amounts should be. Pools that use weighted math only need the input/output tokens to determine price.
+//!
+//! [See interface](struct.WeightedPool.html#method.on_swap)
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool#onswap)
+//!
+//!
+//! ```no_run
+//! use balancer_sdk::pools::WeightedPool;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//! let pool_address: &str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
+//! let weighted_pool_instance = WeightedPool::new(web3, addr!(pool_address));
+//! let swap_request = SwapRequest {
+//!     kind: SwapKind::GivenIn,
+//!     token_in: addr!("0x0"),
+//!     token_out: addr!("0x0"),
+//!     amount: u256!(0),
+//!     pool_id: pool_id!("0x0"),
+//!     last_change_block: u256!(12),
+//!     from: addr!("0x0"),
+//!     to: addr!("0x0"),
+//!     user_data: UserData("0x")
+//! };
+//! let balance_token_in = u256!(123);
+//! let balance_token_out = u256!(123);
+//!
+//! let amount_out = weighted_pool_instance
+//!     .on_swap(
+//!         swap_request.into(),
+//!         balance_token_in,
+//!         balance_token_out,
+//!     )
+//!     .call()
 //!     .await
 //!     .unwrap();
 //! # });

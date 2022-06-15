@@ -16,32 +16,38 @@ macro_rules! pool_id {
     };
 }
 
-/// Simple conversion from a string slice to an U256
+/// Simple conversion from various "numberish" types to a [`U256`](crate::U256).
+///
+/// Uses [`stringify`] to convert token to string before conversion.
 #[macro_export]
 macro_rules! u256 {
-    ($string: expr) => {{
+    ($t: tt) => {{
         {
-            U256::from_dec_str($string).unwrap()
+            U256::from_dec_str(stringify!($t)).unwrap()
         }
     }};
 }
 
-/// Simple conversion from a string slice to an I256
+/// Simple conversion from various "numberish" types to a [`I256`](crate::I256).
+///
+/// Uses [`stringify`] to convert token to string before conversion.
 #[macro_export]
 macro_rules! i256 {
-    ($string: expr) => {{
+    ($t: tt) => {{
         {
-            I256::from_dec_str($string).unwrap()
+            I256::from_dec_str(stringify!($t)).unwrap()
         }
     }};
 }
 
-// Simple conversion from a string slice to a [`SwapFeePercentage`]
+/// Simple conversion from various "numberish" types to a [`SwapFeePercentage`](crate::SwapFeePercentage).
+///
+/// Uses [`stringify`] to convert token to string before conversion.
 #[macro_export]
 macro_rules! swap_fee {
-    ($string: expr) => {{
+    ($t: tt) => {{
         {
-            SwapFeePercentage($string).into()
+            SwapFeePercentage::from_str(stringify!($t)).unwrap()
         }
     }};
 }
