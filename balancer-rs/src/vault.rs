@@ -16,7 +16,7 @@
 //! let transport = ethcontract::web3::transports::Http::new(RPC_URL).unwrap();
 //! let web3 = ethcontract::Web3::new(transport);
 //!
-//! Vault::new(web3);
+//! let vault_instance = Vault::new(web3);
 //! ```
 //!
 //! ## Domain specific structs, enums, macros
@@ -24,6 +24,7 @@
 //! Here are a few for easy reference:
 //!
 //! - [`addr!` macro](crate::addr)
+//! - [`pool_id!` macro](crate::pool_id)
 //! - [`BatchSwapStep`](crate::BatchSwapStep)
 //! - [`PoolId`](crate::PoolId)
 //! - [`JoinPoolRequest`](crate::JoinPoolRequest)
