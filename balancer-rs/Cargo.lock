@@ -89,7 +89,7 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "balancer_sdk"
-version = "0.1.8-alpha"
+version = "0.1.9-alpha"
 dependencies = [
  "actix-rt",
  "dotenv",

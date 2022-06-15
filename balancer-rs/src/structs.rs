@@ -337,3 +337,14 @@ impl From<OracleAverageQuery> for (u8, U256, U256) {
         (variable as u8, secs, ago)
     }
 }
+
+pub struct OracleAccumulatorQuery {
+    pub variable: Variable,
+    pub ago: U256,
+}
+impl From<OracleAccumulatorQuery> for (u8, U256) {
+    fn from(query: OracleAccumulatorQuery) -> (u8, U256) {
+        let OracleAccumulatorQuery { variable, ago } = query;
+        (variable as u8, ago)
+    }
+}

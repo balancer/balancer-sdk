@@ -325,6 +325,36 @@
 //!     .unwrap();
 //! # });
 //! ```
+//! #### get_past_accumulators()
+//! [See interface](struct.Weighted2PoolTokens.html#method.get_past_accumulators)
+//!
+//! Returns estimates for the accumulator at a time ago seconds ago for each query.
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool2tokens#getPastAccumulators)
+//!
+//! Uses [`Variable`](crate::Variable) enum
+//! Uses [`OracleAccumulatorQuery`](crate::OracleAccumulatorQuery) struct
+//!
+//! ```no_run
+//! use balancer_sdk::pools::WeightedPool2Tokens;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//! let pool_address: &str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
+//! let weighted_pool_instance = WeightedPool2Tokens::new(web3, addr!(pool_address));
+//! let query = OracleAccumulatorQuery {
+//!     variable: Variable::PairPrice,
+//!     ago: u256!(1234),
+//! };
+//!
+//! let misc_data = weighted_pool_instance.get_past_accumulators(vec![query.into()])
+//!     .call()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
 
 pub use crate::generated_contracts::*;
 pub use liquidity_bootstrapping_pool::LiquidityBootStrappingPool;
