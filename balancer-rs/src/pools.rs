@@ -29,7 +29,7 @@
 //!
 //!
 //! ## Examples
-//! ### Pools Methods - Base Pool
+//! ## Pools Methods - Base Pool
 //! [See Balancer's Pool API documentation](https://dev.balancer.fi/references/contracts/apis/pools)
 //!
 //! Since all pools share a base API, we can use the Weighted Pool for the examples below
@@ -90,6 +90,28 @@
 //! let weighted_pool_instance = WeightedPool::new(web3, addr!(pool_address));
 //! let vault_address = weighted_pool_instance.get_swap_fee_percentage()
 //!     .call()
+//!     .await
+//!     .unwrap();
+//! # });
+//! ```
+//! #### set_swap_fee_percentage()
+//! Returns the pool's current swap fee.
+//!
+//! [See Balancer documentation](https://dev.balancer.fi/references/contracts/apis/pools#setSwapFeePercentage)
+//!
+//! ```no_run
+//! use balancer_sdk::pools::WeightedPool;
+//! use balancer_sdk::*;
+//! # use balancer_sdk::helpers::*;
+//!
+//! # tokio_test::block_on(async {
+//! # let web3 = build_web3(&get_env_var("RPC_URL"));
+//! let pool_address: &str = "0x01abc00e86c7e258823b9a055fd62ca6cf61a163";
+//! let weighted_pool_instance = WeightedPool::new(web3, addr!(pool_address));
+//! let vault_address = weighted_pool_instance.set_swap_fee_percentage(
+//!     u256!('10')
+//!    )
+//!     .send()
 //!     .await
 //!     .unwrap();
 //! # });

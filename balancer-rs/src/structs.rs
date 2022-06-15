@@ -2,6 +2,7 @@ use ethcontract::tokens::{Bytes, Tokenize};
 use ethcontract::{H160, U256};
 use ethcontract_common::abi::Token::FixedBytes;
 use ethers_core::utils::parse_units;
+
 pub use std::str::FromStr;
 
 use crate::{u256, Address, Bytes32, PoolBalanceOpKind, SwapKind, IERC20};
@@ -34,12 +35,24 @@ impl From<UserData> for ethcontract::tokens::Bytes<Vec<u8>> {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct FromDecStrErr;
+
 #[derive(Debug, Clone, Copy)]
-pub struct SwapFeePercentage(pub &'static str);
-impl From<SwapFeePercentage> for ethcontract::U256 {
+pub struct SwapFeePercentage(pub U256);
+impl FromStr for SwapFeePercentage {
+    type Err = FromDecStrErr;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let wei = parse_units(s, "wei").unwrap();
+        let percentage = U256::from_dec_str(&wei.to_string()).unwrap();
+
+        Ok(SwapFeePercentage(percentage))
+    }
+}
+impl From<SwapFeePercentage> for U256 {
     fn from(percentage: SwapFeePercentage) -> Self {
-        let wei = parse_units(percentage.0, "wei").unwrap();
-        U256::from_dec_str(&wei.to_string()).unwrap()
+        percentage.0
     }
 }
 
