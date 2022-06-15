@@ -9,6 +9,13 @@ macro_rules! addr {
     };
 }
 
+#[macro_export]
+macro_rules! pool_id {
+    ($id: expr) => {
+        PoolId::from_str($id).unwrap()
+    };
+}
+
 /// Simple conversion from a string slice to an U256
 #[macro_export]
 macro_rules! u256 {

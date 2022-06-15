@@ -1,5 +1,7 @@
 # Balancer Rust SDK
 
+## WARNING: THIS CRATE IS IN PRE-RELEASE ALPHA AND CHANGING ALMOST DAILY. THE INTERFACES MAY CHANGE.
+
 This project was funded by the [Balancer Grants subDAO](http://grants.balancer.community/). [Read the press release on Medium](https://medium.com/@BalancerGrants/balancer-is-adding-rust-support-c28bdc1305e6).
 
 ## Rust tools for interacting with Balancer Protocol V2 in Rust.
@@ -12,6 +14,10 @@ There isn’t currently any Rust support in the Balancer ecosystem, so this SDK 
 
 - [Balancer Vault Contract](https://dev.balancer.fi/references/contracts/apis/the-vault)
 - [Balancer Pools](https://dev.balancer.fi/references/contracts/apis/pools)
+
+## Documentation
+
+For complete usage documentation, including all interfaces, definitions, and extensive usage examples, see the [Rust Doc](https://docs.rs/crate/balancer_sdk)
 
 ## Usage
 
@@ -32,7 +38,9 @@ balancer_sdk = "*"
 
 Once installed, you will be able to use the Balancer Rust module as follows:
 
-Example Vault usage ([see in examples](./examples/vault_methods.rs)):
+### Example Usage
+
+An example of how to get the WETH address from the Vault contract API
 
 ```rust
 fn main() {
@@ -46,31 +54,19 @@ fn main() {
 }
 ```
 
-Example to get the vault address via a pool ([see in examples](./examples/base_pool_methods.rs)):
-
-```rust
-use balancer_sdk::helpers::macros::*;
-
-fn main() {
-  let rpc_url = "https://rpc.flashbots.net/";
-  let transport = ethcontract::web3::transports::Http::new(rpc_url).unwrap();
-  let web3 = ethcontract::Web3::new(transport);
-
-  let pool_address = addr!("0x01abc00e86c7e258823b9a055fd62ca6cf61a163");
-  let weighted_pool_instance = balancer_sdk::pools::WeightedPool::new(web3, addr!(pool_address));
-  let vault_address = weighted_pool_instance.getVault().call().await.unwrap();
-}
-```
-
 ### Testing
 
-Integration tests go in `./tests`
+- Integration tests go in `./tests`
+- Unit tests are colocated with files
+- Example tests are in the documentation
 
 To run tests:
 
-`cargo test`
+`cargo test -all`
 
 ## Contributing
+
+_TBD_
 
 ### Adding new pool support
 
@@ -84,148 +80,8 @@ Balancer continues to add new pool types that have new contract APIs. To add sup
 
 ## Examples
 
-To see examples of all Vault methods available, see the examples [here.](./examples/)
+The [GIT repository](https://github.com/drewdrewthis/balancer-sdk/tree/develop/balancer-rs) contains a number of complete and working examples which can be found in the `./examples` directory.
 
 To run an example:
 
 `cargo run --example [name]`
-
-## Examples List - [Vault Methods](https://dev.balancer.fi/references/contracts/apis/the-vault)
-
-### Authorization
-
-- [x] getAuthorizer [`#get_authorizer`](./examples/get_authorizer.rs)
-- [x] setAuthorizer [`#set_authorizer`](./examples/set_authorizer.rs)
-- [x] hasApprovedRelayer
-
-### Internal Balances
-
-- [x] getInternalBalances
-- [ ] manageUserBalance
-
-### Pools
-
-- [ ] regiserPools
-- [x] getPool
-- [ ] registerTokens
-- [ ] deregisterTokens
-- [ ] getPoolTokenInfo
-- [ ] getPoolTokens
-
-### Joins and Exits
-
-- [ ] joinPool
-- [ ] exitPool
-
-### Single Swaps
-
-- [x] swap
-
-### Batch Swaps
-
-- [x] batchSwap
-- [x] queryBatchSwap
-
-### Flash Loans
-
-- [ ] flashLoan
-
-### Asset Management
-
-- [ ] managePoolBalance
-
-### Miscellaneous
-
-- [ ] getProtocolFeesCollector
-- [ ] setPaused
-- [x] WETH [`#weth`](./examples/weth.rs)
-
-## Examples List - Pool Methods
-
-### [Base Pool](https://dev.balancer.fi/references/contracts/apis/pools)
-
-- [x] getVault
-- [x] getPoolId
-- [x] setSwapFeePercentage
-- [ ] setPaused
-- [ ] on{Join,Exit}Pool
-- [ ] on{Join,Exit}Pool
-
-### [Weighted Pool](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool)
-
-- [x] onSwap
-
-### [WeightedPool2Tokens](https://dev.balancer.fi/references/contracts/apis/pools/weightedpool2tokens)
-
-- [ ] onSwap
-- [ ] enableOracle
-- [ ] getMiscData
-- [ ] getLargestSafeQueryWindow
-- [ ] getLatest
-- [ ] getTimeWeightedAverage
-- [ ] getPastAccumulators
-
-### [LiquidityBootstrappingPool](https://dev.balancer.fi/references/contracts/apis/pools/liquiditybootstrappingpool)
-
-#### API
-
-- [ ] onSwap
-- [ ] getSwapEnabled
-- [ ] getGradualWeightUpdateParam
-- [ ] getGradualWeightUpdateParam
-
-#### Permissioned Functions
-
-- [ ] setSwapEnabled
-- [ ] updateWeightsGradually
-
-### [ManagedPools](https://dev.balancer.fi/references/contracts/apis/pools/investmentpools)
-
-#### API
-
-- [ ] onSwap
-- [ ] getSwapEnabled
-- [ ] getManagementSwapFeePercentage
-- [ ] getMinimumWeightChangeDuration
-- [ ] getCollectedManagementFees
-- [ ] getCollectedManagementFees
-
-#### Permissioned Functions
-
-- [ ] setSwapEnabled
-- [ ] updateWeightsGradually
-- [ ] withdrawCollectedManagementFees
-
-### [StablePools](https://dev.balancer.fi/references/contracts/apis/pools/stablepools)
-
-#### API
-
-- [ ] onSwap
-- [ ] getAmplificationParameter
-
-#### Permissioned Functions
-
-- [ ] startAmplificationParameterUpdate
-- [ ] stopAmplificationParameterUpdate
-
-### [MetaStablePools](https://dev.balancer.fi/references/contracts/apis/pools/metastablepools)
-
-#### API
-
-- [ ] onSwap
-- [ ] getAmplificationParameter
-- [ ] enableOracle
-- [ ] getMiscData
-- [ ] getLargestSafeQueryWindow
-- [ ] getLatest
-- [ ] getTimeWeightedAverage
-- [ ] getPastAccumulators
-- [ ] getRateProviders
-- [ ] getPriceRateCache
-- [ ] updatePriceRateCache
-
-#### Permissioned Functions
-
-- [ ] startAmplificationParameterUpdate
-- [ ] stopAmplificationParameterUpdate
-- [ ] setPriceRateCacheDuration

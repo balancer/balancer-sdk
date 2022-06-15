@@ -53,7 +53,7 @@ pub async fn query_batch_swap() {
     ];
 
     let swap_step = BatchSwapStep::new(
-        PoolId(sample_data::kovan::POOLS[1].id),
+        sample_data::kovan::POOLS[1].id.parse().unwrap(),
         0,
         1,
         "10",
@@ -69,7 +69,7 @@ pub async fn query_batch_swap() {
 
     let deltas = match instance
         .query_batch_swap(
-            SwapKind::GivenIn.into(),
+            SwapKind::GivenIn as u8,
             vec![swap_step.clone().into()],
             assets,
             funds.into(),
@@ -97,7 +97,7 @@ pub async fn single_swap() {
     let instance = get_vault_instance();
 
     let swap_step = SingleSwap {
-        pool_id: PoolId(sample_data::kovan::POOLS[1].id).into(),
+        pool_id: pool_id!(sample_data::kovan::POOLS[1].id),
         kind: SwapKind::GivenIn,
         asset_in: addr!(sample_data::kovan::USDC_ADDRESS),
         asset_out: addr!(sample_data::kovan::DAI_ADDRESS),
@@ -121,7 +121,7 @@ pub async fn single_swap() {
     let result = match instance
         .swap(swap_step.clone().into(), funds.into(), limit, deadline)
         .from(Account::Offline(private_key, Some(42)))
-        .gas(4_712_388.into())
+        .gas(u256!("4712388"))
         .gas_price(u256!("100000000000").into())
         .send()
         .await
@@ -161,7 +161,7 @@ pub async fn batch_swap() {
     let limits = vec![i256!("1000000000000000000"), i256!("1000000000000000000")];
 
     let swap_step = BatchSwapStep::new(
-        PoolId(sample_data::kovan::POOLS[1].id),
+        pool_id!(sample_data::kovan::POOLS[1].id),
         0,
         1,
         "10",
@@ -180,7 +180,7 @@ pub async fn batch_swap() {
 
     let result = match instance
         .batch_swap(
-            SwapKind::GivenIn.into(),
+            SwapKind::GivenIn as u8,
             vec![swap_step.clone().into()],
             assets,
             funds.into(),

@@ -108,7 +108,7 @@ async fn get_pool() {
     print_start_new_example("Vault#getPool");
 
     let instance = get_vault_instance();
-    let pool_id = PoolId(sample_data::kovan::POOLS[0].id);
+    let pool_id = PoolId::from_str(sample_data::kovan::POOLS[0].id).unwrap();
 
     let address_str = match instance.get_pool(pool_id.into()).call().await {
         Ok(address) => address,

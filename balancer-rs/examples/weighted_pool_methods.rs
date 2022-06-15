@@ -37,7 +37,8 @@ async fn on_swap() {
         token_in: addr!(UNI_ADDRESS),
         token_out: addr!(AAVE_ADDRESS),
         amount: u256!("1234"),
-        pool_id: PoolId("01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b").into(),
+        pool_id: pool_id!("01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b")
+            .into(),
         last_change_block: u256!("12345"),
         from: addr!("0xBA12222222228d8Ba445958a75a0704d566BF2C8"),
         to: addr!("0xBA12222222228d8Ba445958a75a0704d566BF2C8"),
