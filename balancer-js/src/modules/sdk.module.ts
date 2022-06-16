@@ -39,6 +39,9 @@ export class BalancerSDK implements BalancerSDKRoot {
     return getNetworkConfig(this.config);
   }
 
+  /**
+   * Expose balancer contracts, e.g. Vault, LidoRelayer.
+   */
   get contracts(): ContractInstances {
     return this.balancerContracts.contracts;
   }

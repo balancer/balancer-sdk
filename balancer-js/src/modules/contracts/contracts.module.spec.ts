@@ -25,8 +25,7 @@ describe('contracts module', () => {
         '0xBA12222222228d8Ba445958a75a0704d566BF2C8'
       );
       const wethAddress = await vaultContract.WETH();
-      console.log(wethAddress);
-      // expect(pools).to.deep.eq(pools_14717479);
+      expect(wethAddress).to.eq('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2');
     });
 
     it('instantiate via SDK', async () => {
@@ -36,7 +35,7 @@ describe('contracts module', () => {
         '0xBA12222222228d8Ba445958a75a0704d566BF2C8'
       );
       const wethAddress = await vaultContract.WETH();
-      console.log(wethAddress);
+      expect(wethAddress).to.eq('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2');
     });
   });
 });
