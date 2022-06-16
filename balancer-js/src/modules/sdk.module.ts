@@ -22,17 +22,22 @@ export class BalancerSDK implements BalancerSDKRoot {
   readonly swaps: Swaps;
   readonly relayer: Relayer;
   readonly pricing: Pricing;
+  balancerContracts: Contracts;
 
   constructor(
     public config: BalancerSdkConfig,
     public sor = new Sor(config),
     public subgraph = new Subgraph(config),
-    public pools = new Pools(config),
-    public balancerContracts = new Contracts(config, sor.provider)
+    public pools = new Pools(config)
   ) {
     this.swaps = new Swaps(this.config);
     this.relayer = new Relayer(this.swaps);
     this.pricing = new Pricing(config, this.swaps);
+    const networkConfig = getNetworkConfig(config);
+    this.balancerContracts = new Contracts(
+      networkConfig.addresses.contracts,
+      sor.provider
+    );
   }
 
   get networkConfig(): BalancerNetworkConfig {

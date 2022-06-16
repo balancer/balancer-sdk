@@ -19,7 +19,7 @@ describe('contracts module', () => {
   context('instantiation', () => {
     it('instantiate via module with provider', async () => {
       const provider = new JsonRpcProvider(sdkConfig.rpcUrl);
-      const contracts = new Contracts(sdkConfig, provider);
+      const contracts = new Contracts(sdkConfig.network as Network, provider);
       const vaultContract = contracts.contracts['vault'];
       expect(vaultContract.address).to.eq(
         '0xBA12222222228d8Ba445958a75a0704d566BF2C8'
