@@ -1,5 +1,5 @@
 import { SOR, SubgraphPoolBase, SwapInfo, SwapTypes } from '@balancer-labs/sor';
-import { Vault__factory } from '@balancer-labs/typechain';
+import { Vault__factory, Vault } from '@balancer-labs/typechain';
 import {
   BatchSwap,
   QuerySimpleFlashSwapParameters,
@@ -36,6 +36,7 @@ import {
 export class Swaps {
   readonly sor: SOR;
   chainId: number;
+  vaultContract: Vault;
 
   // TODO: sorOrConfig - let's make it more predictable and always pass configuration explicitly
   constructor(sorOrConfig: SOR | BalancerSdkConfig) {
@@ -47,6 +48,11 @@ export class Swaps {
       this.sor = new Sor(sorOrConfig);
       this.chainId = sorOrConfig.network as number;
     }
+
+    this.vaultContract = Vault__factory.connect(
+      balancerVault,
+      this.sor.provider
+    );
   }
 
   static getLimitsForSlippage(
@@ -236,13 +242,8 @@ export class Swaps {
   async queryBatchSwap(
     batchSwap: Pick<BatchSwap, 'kind' | 'swaps' | 'assets'>
   ): Promise<string[]> {
-    const vaultContract = Vault__factory.connect(
-      balancerVault,
-      this.sor.provider
-    );
-
     return await queryBatchSwap(
-      vaultContract,
+      this.vaultContract,
       batchSwap.kind,
       batchSwap.swaps,
       batchSwap.assets
@@ -262,12 +263,11 @@ export class Swaps {
   async queryBatchSwapWithSor(
     queryWithSor: QueryWithSorInput
   ): Promise<QueryWithSorOutput> {
-    const vaultContract = Vault__factory.connect(
-      balancerVault,
-      this.sor.provider
+    return await queryBatchSwapWithSor(
+      this.sor,
+      this.vaultContract,
+      queryWithSor
     );
-
-    return await queryBatchSwapWithSor(this.sor, vaultContract, queryWithSor);
   }
 
   /**
@@ -290,14 +290,9 @@ export class Swaps {
   async querySimpleFlashSwap(
     params: Omit<QuerySimpleFlashSwapParameters, 'vaultContract'>
   ): Promise<QuerySimpleFlashSwapResponse> {
-    const vaultContract = Vault__factory.connect(
-      balancerVault,
-      this.sor.provider
-    );
-
     return await querySimpleFlashSwap({
       ...params,
-      vaultContract,
+      vaultContract: this.vaultContract,
     });
   }
 
