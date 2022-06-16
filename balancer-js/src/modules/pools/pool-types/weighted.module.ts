@@ -4,14 +4,14 @@ import { PoolType } from './pool-type.interface';
 import { LiquidityConcern, SpotPriceConcern } from './concerns/types';
 
 export class Weighted implements PoolType {
-    public liquidityCalculator: LiquidityConcern;
-    public spotPriceCalculator: SpotPriceConcern;
+  public liquidity: LiquidityConcern;
+  public spotPriceCalculator: SpotPriceConcern;
 
-    constructor(
-        private liquidityCalculatorConcern = WeightedPoolLiquidity,
-        private spotPriceCalculatorConcern = WeightedPoolSpotPrice
-    ) {
-        this.liquidityCalculator = new this.liquidityCalculatorConcern();
-        this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-    }
+  constructor(
+    private liquidityConcern = WeightedPoolLiquidity,
+    private spotPriceCalculatorConcern = WeightedPoolSpotPrice
+  ) {
+    this.liquidity = new this.liquidityConcern();
+    this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
+  }
 }

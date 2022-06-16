@@ -4,14 +4,14 @@ import { PoolType } from './pool-type.interface';
 import { LiquidityConcern, SpotPriceConcern } from './concerns/types';
 
 export class Linear implements PoolType {
-    public liquidityCalculator: LiquidityConcern;
-    public spotPriceCalculator: SpotPriceConcern;
+  public liquidity: LiquidityConcern;
+  public spotPriceCalculator: SpotPriceConcern;
 
-    constructor(
-        private liquidityCalculatorConcern = LinearPoolLiquidity,
-        private spotPriceCalculatorConcern = LinearPoolSpotPrice
-    ) {
-        this.liquidityCalculator = new this.liquidityCalculatorConcern();
-        this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-    }
+  constructor(
+    private liquidityConcern = LinearPoolLiquidity,
+    private spotPriceCalculatorConcern = LinearPoolSpotPrice
+  ) {
+    this.liquidity = new this.liquidityConcern();
+    this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
+  }
 }

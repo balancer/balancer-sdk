@@ -26,14 +26,14 @@ const wallet = new Wallet(TRADER_KEY as string, provider);
 const tokenOut = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'; // wBTC
 
 async function executePoolFetching() {
-    const pools = mapPools(mainnetTop10);
+  const pools = mapPools(mainnetTop10);
 
-    const onchain = await getOnChainBalances(
-        pools,
-        addresses.contracts.multicall,
-        addresses.contracts.vault,
-        provider
-    );
+  const onchain = await getOnChainBalances(
+    pools,
+    addresses.contracts.multicall,
+    addresses.contracts.vault,
+    provider
+  );
 
     const mockPoolDataService = new MockPoolDataService(onchain);
 

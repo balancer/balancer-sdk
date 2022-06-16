@@ -1,16 +1,14 @@
 import { LiquidityConcern } from '../types';
-import { BigNumberish } from '@ethersproject/bignumber';
+import { PoolToken } from '@/types';
 
 export class StablePhantomPoolLiquidity implements LiquidityConcern {
-    calcTotal(
-        tokenBalances: BigNumberish[],
-        tokenDecimals: number[],
-        tokenPriceRates: BigNumberish[],
-        tokenPrices: (number | null)[]
-    ): string {
-        // TODO implementation
-        console.log(tokenBalances, tokenDecimals, tokenPriceRates, tokenPrices);
-        throw new Error('To be implemented');
-        return '1000';
+  calcTotal(tokens: PoolToken[]): string {
+    if (tokens.length > 0) {
+      throw new Error(
+        'Not Implemented - StablePhantom liquidity should all come from sub-pools.'
+      );
     }
+
+    return '0';
+  }
 }
