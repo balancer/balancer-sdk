@@ -45,8 +45,8 @@ async function executePoolFetching() {
             poolDataService: mockPoolDataService,
         },
     });
-
-    const tokenOutContract = balancer.contracts.ERC20.attach(tokenOut);
+    
+    const tokenOutContract = balancer.contracts.ERC20(tokenOut, provider);
 
     await balancer.swaps.fetchPools();
 
@@ -99,5 +99,5 @@ async function executePoolFetching() {
     }
 }
 
-// yarn examples:run ./examples/fetch-pools.ts
+// yarn examples:run ./examples/swap.ts
 executePoolFetching();
