@@ -39,5 +39,5 @@ async function runQueryFlashSwap() {
   console.table(response);
 }
 
-// yarn examples:run ./examples/queryFlashSwap.ts
+// yarn examples:run ./examples/querySimpleFlashSwap.ts
 runQueryFlashSwap();

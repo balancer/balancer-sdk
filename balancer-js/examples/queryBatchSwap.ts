@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { AddressZero } from '@ethersproject/constants';
 import {
   BalancerSDK,
   Network,
@@ -6,49 +7,50 @@ import {
   BatchSwapStep,
   BalancerSdkConfig,
 } from '../src/index';
+import { ADDRESSES } from '../src/test/lib/constants';
 
 dotenv.config();
 
 async function runQueryBatchSwap() {
   const config: BalancerSdkConfig = {
-    network: Network.KOVAN,
-    rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+    network: Network.MAINNET,
+    rpcUrl: `http://127.0.0.1:8545`,
   };
   const balancer = new BalancerSDK(config);
 
-  const swapType = SwapType.SwapExactOut;
+  const swapType = SwapType.SwapExactIn;
   const swaps: BatchSwapStep[] = [
+    // First pool swap: 0.01ETH > USDC
     {
       poolId:
-        '0x6a8c3239695613c0710dc971310b36f9b81e115e00000000000000000000023e',
-      assetInIndex: 2,
-      assetOutIndex: 3,
-      amount: '123456',
-      userData: '0x',
-    },
-    {
-      poolId:
-        '0x21ff756ca0cfcc5fff488ad67babadffee0c4149000000000000000000000240',
-      assetInIndex: 1,
-      assetOutIndex: 2,
-      amount: '0',
-      userData: '0x',
-    },
-    {
-      poolId:
-        '0xcd32a460b6fecd053582e43b07ed6e2c04e1536900000000000000000000023c',
+        '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019',
+      // ETH
       assetInIndex: 0,
+      // USDC
       assetOutIndex: 1,
-      amount: '0',
+      amount: '10000000000000000',
+      userData: '0x',
+    },
+    // Second pool swap: 0.01ETH > BAL
+    {
+      poolId:
+        '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014',
+      // ETH
+      assetInIndex: 0,
+      // BAL
+      assetOutIndex: 2,
+      amount: '10000000000000000',
       userData: '0x',
     },
   ];
 
   const assets: string[] = [
-    '0xff795577d9ac8bd7d90ee22b6c1703490b6512fd',
-    '0xcd32a460b6fecd053582e43b07ed6e2c04e15369',
-    '0x6a8c3239695613c0710dc971310b36f9b81e115e',
-    '0x13512979ade267ab5100878e2e0f485b568328a4',
+    // Balancer use the zero address for ETH and the Vault will wrap/unwrap as neccessary
+    AddressZero,
+    // USDC
+    ADDRESSES[Network.MAINNET].USDC.address,
+    // BAL
+    ADDRESSES[Network.MAINNET].BAL.address
   ];
 
   const deltas = await balancer.swaps.queryBatchSwap({
