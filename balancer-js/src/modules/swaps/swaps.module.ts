@@ -19,7 +19,6 @@ import {
 } from './queryBatchSwap';
 import { balancerVault } from '@/lib/constants/config';
 import { getLimitsForSlippage } from './helpers';
-import vaultAbi from '@/lib/abi/Vault.json';
 import { BalancerSdkConfig } from '@/types';
 import { SwapInput } from './types';
 import { Sor } from '@/modules/sor/sor.module';
@@ -27,7 +26,6 @@ import {
   convertSimpleFlashSwapToBatchSwapParameters,
   querySimpleFlashSwap,
 } from './flashSwap';
-import { Interface } from '@ethersproject/abi';
 import {
   SingleSwapBuilder,
   BatchSwapBuilder,
@@ -181,9 +179,9 @@ export class Swaps {
    * @returns {string}            encodedBatchSwapData - Returns an ABI byte string containing the data of the function call on a contract
    */
   static encodeBatchSwap(batchSwap: BatchSwap): string {
-    const vault = new Interface(vaultAbi);
+    const vaultInterface = Vault__factory.createInterface();
 
-    return vault.encodeFunctionData('batchSwap', [
+    return vaultInterface.encodeFunctionData('batchSwap', [
       batchSwap.kind,
       batchSwap.swaps,
       batchSwap.assets,

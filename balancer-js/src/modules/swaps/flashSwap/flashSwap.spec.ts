@@ -1,11 +1,11 @@
 import { Contract } from '@ethersproject/contracts';
 import { expect } from 'chai';
+import { Vault__factory } from '@balancer-labs/typechain';
 import {
   convertSimpleFlashSwapToBatchSwapParameters,
   querySimpleFlashSwap,
 } from '.';
 import { SwapType } from '../types';
-import vaultAbi from '@/lib/abi/Vault.json';
 import { balancerVault } from '../../../lib/constants/config';
 import MockProvider from '../../../test/lib/MockProvider';
 
@@ -77,7 +77,7 @@ describe('convertSimpleFlashSwapToBatchSwapParameters', () => {
 describe('querySimpleFlashSwap', () => {
   const vaultContract = new MockVaultContract(
     balancerVault,
-    vaultAbi,
+    Vault__factory.abi,
     new MockProvider()
   );
 
