@@ -6,6 +6,7 @@ import { Sor } from './sor/sor.module';
 import { getNetworkConfig } from './sdk.helpers';
 import { Pools } from './pools/pools.module';
 import { Pricing } from './pricing/pricing.module';
+import { ContractInstances, Contracts } from './contracts/contracts.module';
 
 export interface BalancerSDKRoot {
   config: BalancerSdkConfig;
@@ -21,6 +22,7 @@ export class BalancerSDK implements BalancerSDKRoot {
   readonly swaps: Swaps;
   readonly relayer: Relayer;
   readonly pricing: Pricing;
+  balancerContracts: Contracts;
 
   constructor(
     public config: BalancerSdkConfig,
@@ -31,9 +33,21 @@ export class BalancerSDK implements BalancerSDKRoot {
     this.swaps = new Swaps(this.config);
     this.relayer = new Relayer(this.swaps);
     this.pricing = new Pricing(config, this.swaps);
+    const networkConfig = getNetworkConfig(config);
+    this.balancerContracts = new Contracts(
+      networkConfig.addresses.contracts,
+      sor.provider
+    );
   }
 
   get networkConfig(): BalancerNetworkConfig {
     return getNetworkConfig(this.config);
+  }
+
+  /**
+   * Expose balancer contracts, e.g. Vault, LidoRelayer.
+   */
+  get contracts(): ContractInstances {
+    return this.balancerContracts.contracts;
   }
 }
