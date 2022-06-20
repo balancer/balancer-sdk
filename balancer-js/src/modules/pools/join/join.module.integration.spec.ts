@@ -1,22 +1,16 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { Network } from '@/.';
+import { BalancerSDK, Network } from '@/.';
 import { MockPoolDataService } from '@/test/lib/mockPool';
 import { B_50WBTC_50WETH, getForkedPools } from '@/test/lib/mainnetPools';
 import hardhat from 'hardhat';
 
-import {
-  JsonRpcProvider,
-  JsonRpcSigner,
-  TransactionReceipt,
-} from '@ethersproject/providers';
-import { Contract } from '@ethersproject/contracts';
+import { JsonRpcSigner, TransactionReceipt } from '@ethersproject/providers';
 import { BigNumber } from 'ethers';
 import { parseFixed } from '@ethersproject/bignumber';
 
 import { Pools } from '../pools.module';
 import { balancerVault } from '@/lib/constants/config';
-import erc20Abi from '@/lib/abi/erc20.json';
 import { SubgraphToken } from '@balancer-labs/sor';
 
 dotenv.config();
@@ -32,6 +26,7 @@ const getERC20Contract = (address: string) => {
   );
 };
 
+let balancer: BalancerSDK;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
@@ -83,9 +78,9 @@ const setupTokenBalance = async (
   );
 };
 
-const setupPoolsModule = async (provider: JsonRpcProvider) => {
+const setupPools = async () => {
   const pools = await getForkedPools(provider);
-  const poolsModule = new Pools({
+  balancer = new BalancerSDK({
     network: Network.MAINNET,
     rpcUrl,
     sor: {
@@ -94,8 +89,7 @@ const setupPoolsModule = async (provider: JsonRpcProvider) => {
       fetchOnChainBalances: true,
     },
   });
-  await poolsModule.fetchPools();
-  return poolsModule;
+  await balancer.pools.fetchPools();
 };
 
 const approveTokens = async (
@@ -107,7 +101,10 @@ const approveTokens = async (
     return parseFixed(amount, tokens[i].decimals);
   });
   for (let i = 0; i < tokens.length; i++) {
-    const tokenContract = new Contract(tokens[i].address, erc20Abi, signer);
+    const tokenContract = balancer.contracts.ERC20(
+      tokens[i].address,
+      signer.provider
+    );
     await tokenContract.approve(balancerVault, parsedAmounts[i]);
   }
 };
@@ -115,7 +112,6 @@ const approveTokens = async (
 // Test scenarios
 
 describe('join execution', async () => {
-  let poolsModule: Pools;
   let transactionReceipt: TransactionReceipt;
   let bptBalanceBefore: BigNumber;
   let bptBalanceIncrease: BigNumber;
@@ -133,7 +129,7 @@ describe('join execution', async () => {
         },
       },
     ]);
-    poolsModule = await setupPoolsModule(provider); // must setup pools module before amountsIn calculation
+    await setupPools();
     signerAddress = await signer.getAddress();
     await setupTokenBalance(signerAddress, wETH.address, wETH_SLOT);
     await setupTokenBalance(signerAddress, wBTC.address, wBTC_SLOT);
@@ -147,7 +143,7 @@ describe('join execution', async () => {
       bptBalanceBefore = await bptContract.balanceOf(signerAddress);
 
       const slippage = '0.1';
-      const { data } = await poolsModule.join.buildExactTokensInJoinPool(
+      const { data } = await balancer.pools.join.buildExactTokensInJoinPool(
         signerAddress,
         B_50WBTC_50WETH.id,
         tokensInAddresses,
@@ -184,7 +180,7 @@ describe('join execution', async () => {
 
     it('should fail on slippage', async () => {
       const slippage = '0.001';
-      const { data } = await poolsModule.join.buildExactTokensInJoinPool(
+      const { data } = await balancer.pools.join.buildExactTokensInJoinPool(
         signerAddress,
         B_50WBTC_50WETH.id,
         tokensInAddresses,
