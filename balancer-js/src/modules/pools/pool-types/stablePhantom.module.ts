@@ -11,18 +11,18 @@ import {
 import { StablePhantomPoolExit } from './concerns/stablePhantom/exit.concern';
 
 export class StablePhantom implements PoolType {
-  public liquidityCalculator: LiquidityConcern;
+  public liquidity: LiquidityConcern;
   public spotPriceCalculator: SpotPriceConcern;
   public joinCalculator: JoinConcern;
   public exitCalculator: ExitConcern;
 
   constructor(
-    private liquidityCalculatorConcern = StablePhantomPoolLiquidity,
+    private liquidityConcern = StablePhantomPoolLiquidity,
     private spotPriceCalculatorConcern = StablePhantomPoolSpotPrice,
     public joinCalculatorConcern = StablePhantomPoolJoin,
     public exitCalculatorConcern = StablePhantomPoolExit
   ) {
-    this.liquidityCalculator = new this.liquidityCalculatorConcern();
+    this.liquidity = new this.liquidityConcern();
     this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
     this.joinCalculator = new this.joinCalculatorConcern();
     this.exitCalculator = new this.exitCalculatorConcern();

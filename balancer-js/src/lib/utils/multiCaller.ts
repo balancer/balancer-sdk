@@ -1,9 +1,9 @@
 import { set } from 'lodash';
 import { Fragment, JsonFragment, Interface, Result } from '@ethersproject/abi';
-import { CallOverrides, Contract } from '@ethersproject/contracts';
+import { CallOverrides } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/providers';
 import { BytesLike } from '@ethersproject/bytes';
-
+import { Multicall } from '../../modules/contracts/multicall';
 export class Multicaller {
   private multiAddress: string;
   private provider: Provider;
@@ -51,13 +51,7 @@ export class Multicaller {
   }
 
   private async executeMulticall(): Promise<Result[]> {
-    const multi = new Contract(
-      this.multiAddress,
-      [
-        'function aggregate(tuple[](address target, bytes callData) memory calls) public view returns (uint256 blockNumber, bytes[] memory returnData)',
-      ],
-      this.provider
-    );
+    const multi = Multicall(this.multiAddress, this.provider);
 
     const [, res] = await multi.aggregate(
       this.calls.map(([address, functionName, params]) => [

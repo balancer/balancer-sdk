@@ -11,18 +11,18 @@ import { LinearPoolJoin } from './concerns/linear/join.concern';
 import { LinearPoolExit } from './concerns/linear/exit.concern';
 
 export class Linear implements PoolType {
-  public liquidityCalculator: LiquidityConcern;
+  public liquidity: LiquidityConcern;
   public spotPriceCalculator: SpotPriceConcern;
   public joinCalculator: JoinConcern;
   public exitCalculator: ExitConcern;
 
   constructor(
-    private liquidityCalculatorConcern = LinearPoolLiquidity,
+    private liquidityConcern = LinearPoolLiquidity,
     private spotPriceCalculatorConcern = LinearPoolSpotPrice,
     private joinCalculatorConcern = LinearPoolJoin,
     private exitCalculatorConcern = LinearPoolExit
   ) {
-    this.liquidityCalculator = new this.liquidityCalculatorConcern();
+    this.liquidity = new this.liquidityConcern();
     this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
     this.joinCalculator = new this.joinCalculatorConcern();
     this.exitCalculator = new this.exitCalculatorConcern();

@@ -123,22 +123,27 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     pools: {},
   },
-  [Network.GÖRLI]: {
-    chainId: Network.GÖRLI, //5
+  [Network.GOERLI]: {
+    chainId: Network.GOERLI, //5
     addresses: {
       contracts: {
-        vault: '0x65748E8287Ce4B9E6D83EE853431958851550311',
-        multicall: '0x42ad527de7d4e9d9d011ac45b31d8551f8fe9821',
+        vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+        multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
       },
       tokens: {
-        wrappedNativeAsset: '0x9A1000D492d40bfccbc03f413A48F5B6516Ec0Fd',
+        wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
       },
     },
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2',
     },
-    pools: {},
+    pools: {
+      bbausd: {
+        id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
+        address: '0x13ACD41C585d7EbB4a9460f7C8f50BE60DC080Cd',
+      },
+    },
   },
 };
 

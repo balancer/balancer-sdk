@@ -11,7 +11,7 @@ import {
 import { getNetworkConfig } from '@/modules/sdk.helpers';
 import { mockPool, mockPoolDataService } from '@/test/lib/mockPool';
 import { SwapTransactionRequest, SwapType } from './types';
-import vaultAbi from '@/lib/abi/Vault.json';
+import { Vault__factory } from '@balancer-labs/typechain';
 import vaultActionsAbi from '@/lib/abi/VaultActions.json';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -39,7 +39,7 @@ const forkedSdkConfig: BalancerSdkConfig = {
   sor: sorConfig,
 };
 
-const vault = new Interface(vaultAbi);
+const vaultInterface = Vault__factory.createInterface();
 const vaultActions = new Interface(vaultActionsAbi);
 
 const funds = {
@@ -151,7 +151,7 @@ describe('swaps module', () => {
         const { data, to } = subject(swapInfo);
 
         it('expect execution via vault', () => {
-          const decoded = vault.decodeFunctionData('swap', data);
+          const decoded = vaultInterface.decodeFunctionData('swap', data);
 
           expect(decoded.length).to.eql(4);
           expect(to).to.eql(contracts.vault);
@@ -167,7 +167,6 @@ describe('swaps module', () => {
 
         it('relayer should be lido', () => {
           const decoded = vaultActions.decodeFunctionData('swap', data);
-
           expect(decoded.length).to.eql(6);
           expect(to).to.eql(contracts.lidoRelayer);
         });
@@ -187,7 +186,7 @@ describe('swaps module', () => {
         const { data, to } = subject(swapInfo);
 
         it('expect execution via vault', () => {
-          const decoded = vault.decodeFunctionData('batchSwap', data);
+          const decoded = vaultInterface.decodeFunctionData('batchSwap', data);
 
           expect(decoded.length).to.eql(6);
           expect(to).to.eql(contracts.vault);
