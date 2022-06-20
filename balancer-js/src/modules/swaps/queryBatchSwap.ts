@@ -1,5 +1,4 @@
 import { BigNumberish } from '@ethersproject/bignumber';
-import { Contract } from '@ethersproject/contracts';
 import { AddressZero, Zero } from '@ethersproject/constants';
 import { SOR, SwapTypes, SwapInfo } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
@@ -10,6 +9,7 @@ import {
   QueryWithSorInput,
   QueryWithSorOutput,
 } from './types';
+import { Vault } from '@balancer-labs/typechain';
 
 /*
  * queryBatchSwap simulates a call to `batchSwap`, returning an array of Vault asset deltas. Calls to `swap` cannot be
@@ -20,7 +20,7 @@ import {
  * receives are the same that an equivalent `batchSwap` call would receive.
  */
 export async function queryBatchSwap(
-  vaultContract: Contract,
+  vaultContract: Vault,
   swapType: SwapType,
   swaps: BatchSwapStep[],
   assets: string[]
@@ -33,7 +33,7 @@ export async function queryBatchSwap(
   };
 
   try {
-    const deltas = await vaultContract.queryBatchSwap(
+    const deltas = await vaultContract.callStatic.queryBatchSwap(
       swapType,
       swaps,
       assets,
@@ -50,7 +50,7 @@ Uses SOR to create a batchSwap which is then queried onChain.
 */
 export async function queryBatchSwapWithSor(
   sor: SOR,
-  vaultContract: Contract,
+  vaultContract: Vault,
   queryWithSor: QueryWithSorInput
 ): Promise<QueryWithSorOutput> {
   if (queryWithSor.fetchPools.fetchPools) await sor.fetchPools();

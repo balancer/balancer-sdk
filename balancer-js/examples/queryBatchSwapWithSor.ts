@@ -6,14 +6,19 @@ import {
   Network,
   SwapType,
 } from '../src/index';
-import { AAVE_DAI, AAVE_USDC, AAVE_USDT, bbausd } from './constants';
+import { ADDRESSES } from '../src/test/lib/constants';
+
+const DAI = ADDRESSES[Network.MAINNET].DAI.address;
+const USDC = ADDRESSES[Network.MAINNET].USDC.address;
+const USDT = ADDRESSES[Network.MAINNET].USDT.address;
+const bbausd = ADDRESSES[Network.MAINNET].bbausd.address;
 
 dotenv.config();
 
 async function runQueryBatchSwapWithSor() {
   const config: BalancerSdkConfig = {
-    network: Network.KOVAN,
-    rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+    network: Network.MAINNET,
+    rpcUrl: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
   };
   const balancer = new BalancerSDK(config);
 
@@ -25,8 +30,8 @@ async function runQueryBatchSwapWithSor() {
 
   // Example showing how to join bb-a-usd pool by swapping stables > BPT
   let queryResult = await balancer.swaps.queryBatchSwapWithSor({
-    tokensIn: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
-    tokensOut: [bbausd.address, bbausd.address, bbausd.address],
+    tokensIn: [DAI, USDC, USDT],
+    tokensOut: [bbausd, bbausd, bbausd],
     swapType: SwapType.SwapExactIn,
     amounts: [
       parseFixed('100', 18).toString(),
@@ -46,8 +51,8 @@ async function runQueryBatchSwapWithSor() {
 
   // Example showing how to exit bb-a-usd pool by swapping BPT > stables
   queryResult = await balancer.swaps.queryBatchSwapWithSor({
-    tokensIn: [bbausd.address, bbausd.address, bbausd.address],
-    tokensOut: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
+    tokensIn: [bbausd, bbausd, bbausd],
+    tokensOut: [DAI, USDC, USDT],
     swapType: SwapType.SwapExactIn,
     amounts: [
       parseFixed('1', 18).toString(),
@@ -66,8 +71,8 @@ async function runQueryBatchSwapWithSor() {
   console.log(queryResult.returnAmounts.toString());
 
   queryResult = await balancer.swaps.queryBatchSwapWithSor({
-    tokensIn: [bbausd.address, bbausd.address, bbausd.address],
-    tokensOut: [AAVE_DAI.address, AAVE_USDC.address, AAVE_USDT.address],
+    tokensIn: [bbausd, bbausd, bbausd],
+    tokensOut: [DAI, USDC, USDT],
     swapType: SwapType.SwapExactOut,
     amounts: queryResult.returnAmounts.map((amt) =>
       BigNumber.from(amt).abs().toString()
