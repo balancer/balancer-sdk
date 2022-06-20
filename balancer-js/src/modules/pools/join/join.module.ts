@@ -1,4 +1,5 @@
 import { Pools } from '@/modules/pools/pools.module';
+import { PoolType } from '@/types';
 import { JoinPoolAttributes } from '../pool-types/concerns/types';
 
 export class Join {
@@ -25,7 +26,9 @@ export class Join {
     slippage: string
   ): Promise<JoinPoolAttributes> {
     const pool = await this.pools.findById(poolId);
-    return Pools.from(pool).joinCalculator.buildExactTokensInJoinPool({
+    return Pools.from(
+      pool.poolType as PoolType
+    ).joinCalculator.buildExactTokensInJoinPool({
       joiner,
       pool,
       tokensIn,

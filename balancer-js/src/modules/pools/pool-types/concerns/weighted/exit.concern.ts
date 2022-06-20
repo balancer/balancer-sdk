@@ -10,10 +10,9 @@ import {
 } from '../types';
 import { AssetHelpers } from '@/lib/utils';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
+import { Vault__factory } from '@balancer-labs/typechain';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { subSlippage } from '@/lib/utils/slippageHelper';
-import { Interface } from '@ethersproject/abi';
-import vaultAbi from '@/lib/abi/Vault.json';
 import { balancerVault } from '@/lib/constants/config';
 import { ExitPoolRequest } from '@/types';
 
@@ -42,9 +41,9 @@ export class WeightedPoolExit implements ExitConcern {
     recipient,
     exitPoolRequest,
   }: ExitPool): string {
-    const vaultLibrary = new Interface(vaultAbi);
+    const vaultInterface = Vault__factory.createInterface();
 
-    return vaultLibrary.encodeFunctionData('exitPool', [
+    return vaultInterface.encodeFunctionData('exitPool', [
       poolId,
       sender,
       recipient,

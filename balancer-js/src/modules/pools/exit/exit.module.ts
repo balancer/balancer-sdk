@@ -1,4 +1,5 @@
 import { Pools } from '@/modules/pools/pools.module';
+import { PoolType } from '@/types';
 import { ExitPoolAttributes } from '../pool-types/concerns/types';
 
 export class Exit {
@@ -23,7 +24,9 @@ export class Exit {
     slippage: string
   ): Promise<ExitPoolAttributes> {
     const pool = await this.pools.findById(poolId);
-    return Pools.from(pool).exitCalculator.buildExitExactBPTInForTokensOut({
+    return Pools.from(
+      pool.poolType as PoolType
+    ).exitCalculator.buildExitExactBPTInForTokensOut({
       exiter,
       pool,
       bptIn,

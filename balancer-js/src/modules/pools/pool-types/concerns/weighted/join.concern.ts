@@ -1,9 +1,7 @@
-import { Interface } from '@ethersproject/abi';
 import { parseUnits } from '@ethersproject/units';
 import OldBigNumber from 'bignumber.js';
 import * as SDK from '@georgeroman/balancer-v2-pools';
 
-import vaultAbi from '@/lib/abi/Vault.json';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import {
@@ -16,6 +14,7 @@ import { JoinPoolRequest } from '@/types';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { AssetHelpers } from '@/lib/utils';
 import { balancerVault } from '@/lib/constants/config';
+import { Vault__factory } from '@balancer-labs/typechain';
 
 export class WeightedPoolJoin implements JoinConcern {
   // Static
@@ -42,9 +41,9 @@ export class WeightedPoolJoin implements JoinConcern {
     recipient,
     joinPoolRequest,
   }: JoinPool): string {
-    const vaultLibrary = new Interface(vaultAbi);
+    const vaultInterface = Vault__factory.createInterface();
 
-    return vaultLibrary.encodeFunctionData('joinPool', [
+    return vaultInterface.encodeFunctionData('joinPool', [
       poolId,
       sender,
       recipient,

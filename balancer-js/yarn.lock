@@ -469,12 +469,17 @@
     "@babel/helper-validator-identifier" "^7.16.7"
     to-fast-properties "^2.0.0"
 
-"@balancer-labs/sor@^4.0.0-beta.6":
-  version "4.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/@balancer-labs/sor/-/sor-4.0.0-beta.6.tgz#1ee214b49184702ff10c73bfdd2e7c9b58be2950"
-  integrity sha512-tdnBIUf+NlHulMvCSh2FguE59z7o863mjtp6oWxz1PF3G5L3V4TCF39FrIho+z2/+J2iPqMXNBWRnF7luOBIDw==
+"@balancer-labs/sor@^4.0.0-beta.9":
+  version "4.0.0-beta.9"
+  resolved "https://registry.yarnpkg.com/@balancer-labs/sor/-/sor-4.0.0-beta.9.tgz#466ac65eb92e667330fcf91b1905e69f4feef6a0"
+  integrity sha512-73bh889BiIQ6vqDP0ynx5MS2pkV9zF3CNXqdmWYXVZN+4Lx0bKdZxwokFJ4u66RtphUsf+qJN/xRtGkT4occAQ==
   dependencies:
     isomorphic-fetch "^2.2.1"
+
+"@balancer-labs/typechain@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@balancer-labs/typechain/-/typechain-1.0.0.tgz#823eb13b9e166f7b50334c9d70d9ade81344f5c9"
+  integrity sha512-/fWxh4UgmHxtRt5e1anVeF8COo6FBNF28X8bd0/55SIdRDyaW7TMC7K4Jbuy58IcaERmEqi089lABlEgoeiWTQ==
 
 "@balancer-labs/v2-deployments@^1.0.0":
   version "1.1.1"
@@ -2787,7 +2792,7 @@ bech32@1.1.4:
   resolved "https://registry.yarnpkg.com/bech32/-/bech32-1.1.4.tgz#e38c9f37bf179b8eb16ae3a772b40c356d4832e9"
   integrity sha512-s0IrSOzLlbvX7yp4WBfPITzpAU8sqQcpsmwXDiKwrG4r491vwCO/XpejasRNl0piBMe/DvP4Tz0mIS/X1DPJBQ==
 
-bignumber.js@^9.0.1:
+bignumber.js@^9.0.1, bignumber.js@^9.0.2:
   version "9.0.2"
   resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-9.0.2.tgz#71c6c6bed38de64e24a65ebe16cfcf23ae693673"
   integrity sha512-GAcQvbpsM0pUb0zw1EI0KhQEZ+lRwR5fYaAp3vPOYuP7aDvGy6cVN6XHLauvF8SOga2y0dcLcjt3iQDTSEliyw==
