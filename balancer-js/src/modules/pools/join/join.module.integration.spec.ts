@@ -9,7 +9,6 @@ import { JsonRpcSigner, TransactionReceipt } from '@ethersproject/providers';
 import { BigNumber } from 'ethers';
 import { parseFixed } from '@ethersproject/bignumber';
 
-import { Pools } from '../pools.module';
 import { balancerVault } from '@/lib/constants/config';
 import { SubgraphToken } from '@balancer-labs/sor';
 
@@ -17,14 +16,6 @@ dotenv.config();
 
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
-
-const getERC20Contract = (address: string) => {
-  return new ethers.Contract(
-    address,
-    ['function balanceOf(address) view returns (uint256)'],
-    provider
-  );
-};
 
 let balancer: BalancerSDK;
 const rpcUrl = 'http://127.0.0.1:8545';
@@ -105,7 +96,9 @@ const approveTokens = async (
       tokens[i].address,
       signer.provider
     );
-    await tokenContract.approve(balancerVault, parsedAmounts[i]);
+    await tokenContract
+      .connect(signer)
+      .approve(balancerVault, parsedAmounts[i]);
   }
 };
 
@@ -116,7 +109,6 @@ describe('join execution', async () => {
   let bptBalanceBefore: BigNumber;
   let bptBalanceIncrease: BigNumber;
   let signerAddress: string;
-  const bptContract = getERC20Contract(B_50WBTC_50WETH.address);
 
   // Setup chain
   before(async function () {
@@ -140,7 +132,9 @@ describe('join execution', async () => {
     before(async function () {
       this.timeout(20000);
 
-      bptBalanceBefore = await bptContract.balanceOf(signerAddress);
+      bptBalanceBefore = await balancer.contracts
+        .ERC20(B_50WBTC_50WETH.address, signer.provider)
+        .balanceOf(signerAddress);
 
       const slippage = '0.1';
       const { data } = await balancer.pools.join.buildExactTokensInJoinPool(
@@ -162,9 +156,9 @@ describe('join execution', async () => {
     });
 
     it('balance should increase', async () => {
-      const bptBalanceAfter: BigNumber = await bptContract.balanceOf(
-        signerAddress
-      );
+      const bptBalanceAfter: BigNumber = await balancer.contracts
+        .ERC20(B_50WBTC_50WETH.address, signer.provider)
+        .balanceOf(signerAddress);
 
       expect(bptBalanceAfter.sub(bptBalanceBefore).toNumber()).to.eql(
         bptBalanceIncrease.toNumber()
