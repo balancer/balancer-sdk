@@ -32,6 +32,7 @@ const SEED_TOKENS: Array<SeedToken> = [
     { id: 1, tokenAddress: namedTokens.wETH.address, weight: 40, isLocked: false, amount: "200000000" },
     { id: 2, tokenAddress: DAI.address, weight: 30, isLocked: false, amount: "200000000" } 
 ]
+
 /*
 create a weighted liquidity pool with the factory contract
 */
@@ -73,7 +74,22 @@ async function createWeightedPool() {
     // gasLimit: '2000000',
   });
 
-  console.log(await balancer.pools.getPoolInfoFromCreateTx(tx));
+  const createdPoolInfo = await balancer.pools.getPoolInfoFromCreateTx(tx) as { id: number, address: string };
+  console.log({ createdPoolInfo })
+
+  const INIT_JOIN_PARAMS = {
+    poolId: createdPoolInfo.id,
+    sender: "0x0000000000000000000000000000000000000001",
+    receiver: createdPoolInfo.address,
+    tokenAddresses: [DAI.address, namedTokens.wBTC.address, namedTokens.wETH.address],
+    initialBalancesString: ["3000000000000000000", "4000000000000000000", "3000000000000000000"],
+  }
+  const { to, data: initJoinRawData } = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS);
+  const initJoinTx = wallet.sendTransaction({
+    to,
+    data: initJoinRawData,
+  })
+  console.log({ initJoinTx })
 }
 
 // yarn examples:run ./examples/batchSwap.ts
