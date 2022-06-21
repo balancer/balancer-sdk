@@ -15,6 +15,7 @@ export interface tokens {
   };
 }
 const WEIGHTED_POOL_FACTORY = '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9';
+const POOL_OWNER = "0x1111111111111111111111111111111111111111"
 
 const namedTokens: tokens = {
   wETH: {
@@ -45,7 +46,7 @@ async function createWeightedPool() {
   const { data } = await balancer.pools.weighted.buildCreateTx({
     // Pool name
     name: "WeightedPoolFactoryExample",
-    symbol: "WPOOL",
+    symbol: "30wBTC-40wETH-30wDAI",
 
     // How much of a swap fee the pool collects
     initialFee: "0.1",
@@ -56,7 +57,7 @@ async function createWeightedPool() {
     // The "owner" of the pool: account that has some limited control over pool parameters
     // If you want static fees, you should set the fee you want the pool to have forever,
     // and set the owner to the zero address 0x0000000000000000000000000000000000000000.
-    owner: "0x1111111111111111111111111111111111111111",
+    owner: POOL_OWNER,
     value: "0.1",
   });
   const provider = new InfuraProvider(Network.KOVAN, process.env.INFURA);
