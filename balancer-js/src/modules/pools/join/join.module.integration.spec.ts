@@ -7,7 +7,7 @@ import hardhat from 'hardhat';
 
 import { JsonRpcSigner, TransactionReceipt } from '@ethersproject/providers';
 import { BigNumber } from 'ethers';
-import { parseFixed } from '@ethersproject/bignumber';
+import { formatFixed, parseFixed } from '@ethersproject/bignumber';
 
 import { balancerVault } from '@/lib/constants/config';
 import { SubgraphToken } from '@balancer-labs/sor';
@@ -31,7 +31,7 @@ const wBTC_SLOT = 0;
 
 const tokensIn = [wETH, wBTC];
 const tokensInAddresses = tokensIn.map((token) => token.address);
-const amountsIn = ['0.018174', '0.001099'];
+let amountsIn: string[];
 
 // Setup
 
@@ -107,7 +107,7 @@ const approveTokens = async (
 describe('join execution', async () => {
   let transactionReceipt: TransactionReceipt;
   let bptBalanceBefore: BigNumber;
-  let bptBalanceIncrease: BigNumber;
+  let bptMinBalanceIncrease: BigNumber;
   let signerAddress: string;
 
   // Setup chain
@@ -122,6 +122,16 @@ describe('join execution', async () => {
       },
     ]);
     await setupPools();
+    amountsIn = [
+      formatFixed(
+        parseFixed(wETH.balance, wETH.decimals).div('1000000'),
+        wETH.decimals
+      ),
+      formatFixed(
+        parseFixed(wBTC.balance, wBTC.decimals).div('1000000'),
+        wBTC.decimals
+      ),
+    ];
     signerAddress = await signer.getAddress();
     await setupTokenBalance(signerAddress, wETH.address, wETH_SLOT);
     await setupTokenBalance(signerAddress, wBTC.address, wBTC_SLOT);
@@ -136,18 +146,19 @@ describe('join execution', async () => {
         .ERC20(B_50WBTC_50WETH.address, signer.provider)
         .balanceOf(signerAddress);
 
-      const slippage = '0.1';
-      const { data } = await balancer.pools.join.buildExactTokensInJoinPool(
-        signerAddress,
-        B_50WBTC_50WETH.id,
-        tokensInAddresses,
-        amountsIn,
-        slippage
-      );
+      const slippage = '0.2';
+      const { data, minAmountsOut } =
+        await balancer.pools.join.buildExactTokensInJoinPool(
+          signerAddress,
+          B_50WBTC_50WETH.id,
+          tokensInAddresses,
+          amountsIn,
+          slippage
+        );
       const to = balancerVault;
       const tx = { data, to };
 
-      bptBalanceIncrease = BigNumber.from('8793334702586135'); // get from bptOut value (after adapting function to return transaction attributes)
+      bptMinBalanceIncrease = BigNumber.from(minAmountsOut[0]);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
     });
 
@@ -160,13 +171,23 @@ describe('join execution', async () => {
         .ERC20(B_50WBTC_50WETH.address, signer.provider)
         .balanceOf(signerAddress);
 
-      expect(bptBalanceAfter.sub(bptBalanceBefore).toNumber()).to.eql(
-        bptBalanceIncrease.toNumber()
-      );
+      expect(
+        bptBalanceAfter.sub(bptBalanceBefore).toNumber()
+      ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
     });
   });
 
   context('exactTokensInJoinPool transaction - slippage out of bounds', () => {
+    amountsIn = [
+      formatFixed(
+        parseFixed(wETH.balance, wETH.decimals).div('100'),
+        wETH.decimals
+      ),
+      formatFixed(
+        parseFixed(wBTC.balance, wBTC.decimals).div('10'),
+        wBTC.decimals
+      ),
+    ];
     before(async function () {
       this.timeout(20000);
       await approveTokens(tokensIn, amountsIn, signer);
