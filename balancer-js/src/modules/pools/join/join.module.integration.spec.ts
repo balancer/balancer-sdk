@@ -180,6 +180,63 @@ describe('join execution', async () => {
     });
   });
 
+  context('exactTokensInJoinPool transaction - join with params', () => {
+    before(async function () {
+      this.timeout(20000);
+
+      amountsIn = [
+        formatFixed(
+          parseFixed(wETH.balance, wETH.decimals).div('1000000'),
+          wETH.decimals
+        ),
+        formatFixed(
+          parseFixed(wBTC.balance, wBTC.decimals).div('1000000'),
+          wBTC.decimals
+        ),
+      ];
+
+      bptBalanceBefore = await balancer.contracts
+        .ERC20(B_50WBTC_50WETH.address, signer.provider)
+        .balanceOf(signerAddress);
+
+      const slippage = '0.01';
+      const { functionName, attributes, value, minAmountsOut } =
+        await balancer.pools.join.buildExactTokensInJoinPool(
+          signerAddress,
+          B_50WBTC_50WETH.id,
+          tokensInAddresses,
+          amountsIn,
+          slippage
+        );
+      const transactionResponse = await balancer.contracts.vault
+        .connect(signer)
+        [functionName](
+          attributes.poolId,
+          attributes.sender,
+          attributes.recipient,
+          attributes.joinPoolRequest,
+          { value }
+        );
+      transactionReceipt = await transactionResponse.wait();
+
+      bptMinBalanceIncrease = BigNumber.from(minAmountsOut);
+    });
+
+    it('should work', async () => {
+      expect(transactionReceipt.status).to.eql(1);
+    });
+
+    it('balance should increase', async () => {
+      const bptBalanceAfter: BigNumber = await balancer.contracts
+        .ERC20(B_50WBTC_50WETH.address, signer.provider)
+        .balanceOf(signerAddress);
+
+      expect(
+        bptBalanceAfter.sub(bptBalanceBefore).toNumber()
+      ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
+    });
+  });
+
   context('exactTokensInJoinPool transaction - single token join', () => {
     before(async function () {
       this.timeout(20000);
