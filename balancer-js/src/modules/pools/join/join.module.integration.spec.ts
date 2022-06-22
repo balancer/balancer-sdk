@@ -29,6 +29,8 @@ const wBTC = B_50WBTC_50WETH.tokens[1];
 const wETH_SLOT = 3;
 const wBTC_SLOT = 0;
 
+const initialBalance = '100000';
+
 const tokensIn = [wETH, wBTC];
 const tokensInAddresses = tokensIn.map((token) => token.address);
 let amountsIn: string[];
@@ -37,8 +39,9 @@ let amountsIn: string[];
 
 const setupTokenBalance = async (
   signerAddress: string,
-  tokenAddress: string,
-  slot: number
+  token: SubgraphToken,
+  slot: number,
+  balance: string
 ) => {
   const toBytes32 = (bn: BigNumber) => {
     return ethers.utils.hexlify(ethers.utils.zeroPad(bn.toHexString(), 32));
@@ -53,7 +56,7 @@ const setupTokenBalance = async (
     await provider.send('evm_mine', []); // Just mines to the next block
   };
 
-  const locallyManipulatedBalance = parseFixed('100000', 18);
+  const locallyManipulatedBalance = parseFixed(balance, token.decimals);
 
   // Get storage slot index
   const index = ethers.utils.solidityKeccak256(
@@ -63,7 +66,7 @@ const setupTokenBalance = async (
 
   // Manipulate local balance (needs to be bytes32 string)
   await setStorageAt(
-    tokenAddress,
+    token.address,
     index,
     toBytes32(locallyManipulatedBalance).toString()
   );
@@ -123,8 +126,9 @@ describe('join execution', async () => {
     ]);
     await setupPools();
     signerAddress = await signer.getAddress();
-    await setupTokenBalance(signerAddress, wETH.address, wETH_SLOT);
-    await setupTokenBalance(signerAddress, wBTC.address, wBTC_SLOT);
+    await setupTokenBalance(signerAddress, wETH, wETH_SLOT, initialBalance);
+    await setupTokenBalance(signerAddress, wBTC, wBTC_SLOT, initialBalance);
+    await approveTokens(tokensIn, [initialBalance, initialBalance], signer);
   });
 
   context('exactTokensInJoinPool transaction - proportional amounts in', () => {
@@ -141,7 +145,6 @@ describe('join execution', async () => {
           wBTC.decimals
         ),
       ];
-      await approveTokens(tokensIn, amountsIn, signer);
 
       bptBalanceBefore = await balancer.contracts
         .ERC20(B_50WBTC_50WETH.address, signer.provider)
@@ -178,25 +181,21 @@ describe('join execution', async () => {
     });
   });
 
-  context('exactTokensInJoinPool transaction - single token in', () => {
+  context('exactTokensInJoinPool transaction - single token join', () => {
     before(async function () {
       this.timeout(20000);
-
       amountsIn = [
         formatFixed(
-          parseFixed(wETH.balance, wETH.decimals).div('1000000'),
+          parseFixed(wETH.balance, wETH.decimals).div('100'),
           wETH.decimals
         ),
-        '0',
       ];
-      await approveTokens(tokensIn, amountsIn, signer);
+    });
 
-      bptBalanceBefore = await balancer.contracts
-        .ERC20(B_50WBTC_50WETH.address, signer.provider)
-        .balanceOf(signerAddress);
-
-      const slippage = '0.2';
-      const { data, minAmountsOut } =
+    it('should fail on number of input tokens', async () => {
+      const slippage = '0.001';
+      let errorMessage;
+      try {
         await balancer.pools.join.buildExactTokensInJoinPool(
           signerAddress,
           B_50WBTC_50WETH.id,
@@ -204,25 +203,15 @@ describe('join execution', async () => {
           amountsIn,
           slippage
         );
-      const to = balancerVault;
-      const tx = { data, to };
-
-      bptMinBalanceIncrease = BigNumber.from(minAmountsOut[0]);
-      transactionReceipt = await (await signer.sendTransaction(tx)).wait();
-    });
-
-    it('should work', async () => {
-      expect(transactionReceipt.status).to.eql(1);
-    });
-
-    it('balance should increase', async () => {
-      const bptBalanceAfter: BigNumber = await balancer.contracts
-        .ERC20(B_50WBTC_50WETH.address, signer.provider)
-        .balanceOf(signerAddress);
-
-      expect(
-        bptBalanceAfter.sub(bptBalanceBefore).toNumber()
-      ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      // Slippage should trigger 208 error => Slippage/front-running protection check failed on a pool join
+      // https://dev.balancer.fi/references/error-codes
+      expect(errorMessage).to.contain(
+        'Must provide amount for all tokens in the pool'
+      );
     });
   });
 
@@ -239,7 +228,6 @@ describe('join execution', async () => {
           wBTC.decimals
         ),
       ];
-      await approveTokens(tokensIn, amountsIn, signer);
     });
 
     it('should fail on slippage', async () => {
