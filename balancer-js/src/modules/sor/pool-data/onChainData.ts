@@ -109,6 +109,7 @@ export async function getOnChainBalances(
         tokens: string[];
         balances: string[];
       };
+      totalSupply: string;
       rate?: string;
     }
   >;
@@ -124,6 +125,7 @@ export async function getOnChainBalances(
           tokens: string[];
           balances: string[];
         };
+        totalSupply: string;
         rate?: string;
       }
     >;
@@ -135,7 +137,7 @@ export async function getOnChainBalances(
 
   Object.entries(pools).forEach(([poolId, onchainData], index) => {
     try {
-      const { poolTokens, swapFee, weights } = onchainData;
+      const { poolTokens, swapFee, weights, totalSupply } = onchainData;
 
       if (
         subgraphPools[index].poolType === 'Stable' ||
@@ -194,6 +196,9 @@ export async function getOnChainBalances(
           T.weight = formatFixed(weights[i], 18);
         }
       });
+
+      subgraphPools[index].totalShares = formatFixed(totalSupply, 18);
+
       onChainPools.push(subgraphPools[index]);
     } catch (err) {
       throw `Issue with pool onchain data: ${err}`;
