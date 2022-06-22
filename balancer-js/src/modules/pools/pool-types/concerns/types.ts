@@ -72,6 +72,7 @@ export interface ExitPoolAttributes {
   attributes: ExitPool;
   data: string;
   value?: BigNumber;
+  minAmountsOut: string[];
 }
 
 export interface ExitExactBPTInForTokensOutParameters {

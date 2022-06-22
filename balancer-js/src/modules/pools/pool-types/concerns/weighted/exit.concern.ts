@@ -76,7 +76,7 @@ export class WeightedPoolExit implements ExitConcern {
       throw new Error('Must provide bptIn greater than zero');
     }
 
-    const [sortedTokensOut, parsedAmountsOut, parsedBptIn] =
+    const [sortedTokensOut, minAmountsOut, parsedBptIn] =
       this.calcTokensOutGivenExactBptIn(pool, bptIn, slippage);
 
     const userData =
@@ -90,14 +90,14 @@ export class WeightedPoolExit implements ExitConcern {
       recipient: exiter,
       exitPoolRequest: {
         assets: sortedTokensOut,
-        minAmountsOut: parsedAmountsOut,
+        minAmountsOut,
         userData,
         toInternalBalance: false,
       },
     };
     const data = WeightedPoolExit.encodeExitPool(attributes);
 
-    return { to, functionName, attributes, data };
+    return { to, functionName, attributes, data, minAmountsOut };
   }
 
   // Helper methods

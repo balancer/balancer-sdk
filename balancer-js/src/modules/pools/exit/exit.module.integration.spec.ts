@@ -93,7 +93,8 @@ describe('exit pool execution', async () => {
   let poolsModule: Pools;
   let transactionReceipt: TransactionReceipt;
   let tokensBalanceBefore: BigNumber[];
-  let tokensBalanceIncrease: BigNumber[];
+  let tokensMinBalanceIncrease: BigNumber[];
+  let tokensBalanceAfter: BigNumber[];
   let signerAddress: string;
   const wETHContract = getERC20Contract(wETH.address);
   const wBTCContract = getERC20Contract(wBTC.address);
@@ -120,23 +121,21 @@ describe('exit pool execution', async () => {
 
       const wETHBalanceBefore = await wETHContract.balanceOf(signerAddress);
       const wBTCBalanceBefore = await wBTCContract.balanceOf(signerAddress);
-      tokensBalanceBefore = [wETHBalanceBefore, wBTCBalanceBefore];
+      tokensBalanceBefore = [wETHBalanceBefore, wBTCBalanceBefore].sort();
 
       const bptIn = '0.001';
-      const slippage = '0.1';
-      const { data } = await poolsModule.exit.buildExitExactBPTInForTokensOut(
-        signerAddress,
-        B_50WBTC_50WETH.id,
-        bptIn,
-        slippage
-      );
+      const slippage = '0';
+      const { data, minAmountsOut } =
+        await poolsModule.exit.buildExitExactBPTInForTokensOut(
+          signerAddress,
+          B_50WBTC_50WETH.id,
+          bptIn,
+          slippage
+        );
       const to = balancerVault;
-      const tx = { data, to, gasPrice: '600000000000', gasLimit: '2000000' };
+      const tx = { data, to }; // , gasPrice: '600000000000', gasLimit: '2000000' };
 
-      tokensBalanceIncrease = [
-        BigNumber.from('2082313995603838'),
-        BigNumber.from('12406'),
-      ]; // get from amountsOut value (after adapting function to return transaction attributes)
+      tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
     });
 
@@ -151,12 +150,12 @@ describe('exit pool execution', async () => {
       const wBTCBalanceAfter: BigNumber = await wBTCContract.balanceOf(
         signerAddress
       );
-      const tokensBalanceAfter = [wETHBalanceAfter, wBTCBalanceAfter];
+      tokensBalanceAfter = [wETHBalanceAfter, wBTCBalanceAfter].sort();
 
       for (let i = 0; i < tokensBalanceAfter.length; i++) {
         expect(
           tokensBalanceAfter[i].sub(tokensBalanceBefore[i]).toNumber()
-        ).to.eql(tokensBalanceIncrease[i].toNumber());
+        ).to.eql(tokensMinBalanceIncrease[i].toNumber());
       }
     });
   });
