@@ -98,7 +98,7 @@ export class WeightedPoolJoin implements JoinConcern {
       },
     };
     const data = WeightedPoolJoin.encodeJoinPool(attributes);
-    const minAmountsOut = [parsedMinBPTOut];
+    const minAmountsOut = parsedMinBPTOut;
 
     return { to, functionName, attributes, data, minAmountsOut };
   }

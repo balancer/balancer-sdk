@@ -48,7 +48,7 @@ export interface JoinPoolAttributes {
   attributes: JoinPool;
   data: string;
   value?: BigNumber;
-  minAmountsOut: string[];
+  minAmountsOut: string;
 }
 
 export interface ExactTokensInJoinPoolParameters {

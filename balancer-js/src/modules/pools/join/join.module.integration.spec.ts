@@ -162,7 +162,7 @@ describe('join execution', async () => {
       const to = balancerVault;
       const tx = { data, to };
 
-      bptMinBalanceIncrease = BigNumber.from(minAmountsOut[0]);
+      bptMinBalanceIncrease = BigNumber.from(minAmountsOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
     });
 
