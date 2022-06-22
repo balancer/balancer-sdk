@@ -131,7 +131,7 @@ describe('join execution', async () => {
     await approveTokens(tokensIn, [initialBalance, initialBalance], signer);
   });
 
-  context('exactTokensInJoinPool transaction - proportional amounts in', () => {
+  context('exactTokensInJoinPool transaction - join with encoded data', () => {
     before(async function () {
       this.timeout(20000);
 
@@ -150,8 +150,8 @@ describe('join execution', async () => {
         .ERC20(B_50WBTC_50WETH.address, signer.provider)
         .balanceOf(signerAddress);
 
-      const slippage = '0.2';
-      const { data, minAmountsOut } =
+      const slippage = '0.01';
+      const { to, data, minAmountsOut } =
         await balancer.pools.join.buildExactTokensInJoinPool(
           signerAddress,
           B_50WBTC_50WETH.id,
@@ -159,8 +159,7 @@ describe('join execution', async () => {
           amountsIn,
           slippage
         );
-      const to = balancerVault;
-      const tx = { data, to };
+      const tx = { to, data };
 
       bptMinBalanceIncrease = BigNumber.from(minAmountsOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
@@ -232,15 +231,14 @@ describe('join execution', async () => {
 
     it('should fail on slippage', async () => {
       const slippage = '0.001';
-      const { data } = await balancer.pools.join.buildExactTokensInJoinPool(
+      const { to, data } = await balancer.pools.join.buildExactTokensInJoinPool(
         signerAddress,
         B_50WBTC_50WETH.id,
         tokensInAddresses,
         amountsIn,
         slippage
       );
-      const to = balancerVault;
-      const tx = { data, to };
+      const tx = { to, data };
       let reason;
       try {
         await (await signer.sendTransaction(tx)).wait();
