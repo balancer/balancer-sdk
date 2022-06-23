@@ -7,7 +7,7 @@ import hardhat from 'hardhat';
 
 import { JsonRpcSigner, TransactionReceipt } from '@ethersproject/providers';
 import { BigNumber } from 'ethers';
-import { formatFixed, parseFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@ethersproject/bignumber';
 
 import { balancerVault } from '@/lib/constants/config';
 import { SubgraphToken } from '@balancer-labs/sor';
@@ -146,14 +146,8 @@ describe('join execution', async () => {
       this.timeout(20000);
 
       amountsIn = [
-        formatFixed(
-          parseFixed(wETH.balance, wETH.decimals).div('1000000'),
-          wETH.decimals
-        ),
-        formatFixed(
-          parseFixed(wBTC.balance, wBTC.decimals).div('1000000'),
-          wBTC.decimals
-        ),
+        parseFixed(wETH.balance, wETH.decimals).div('1000000').toString(),
+        parseFixed(wBTC.balance, wBTC.decimals).div('1000000').toString(),
       ];
 
       bptBalanceBefore = await tokenBalance(B_50WBTC_50WETH.address);
@@ -162,7 +156,7 @@ describe('join execution', async () => {
         await tokenBalance(wBTC.address),
       ];
 
-      const slippage = '0.01';
+      const slippage = '100';
       const { to, data, minAmountsOut } =
         await balancer.pools.join.buildExactTokensInJoinPool(
           signerAddress,
@@ -198,7 +192,7 @@ describe('join execution', async () => {
       for (let i = 0; i < tokensIn.length; i++) {
         expect(
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
-        ).to.equal(parseFixed(amountsIn[i], tokensIn[i].decimals).toString());
+        ).to.equal(amountsIn[i]);
       }
     });
   });
@@ -208,14 +202,8 @@ describe('join execution', async () => {
       this.timeout(20000);
 
       amountsIn = [
-        formatFixed(
-          parseFixed(wETH.balance, wETH.decimals).div('1000000'),
-          wETH.decimals
-        ),
-        formatFixed(
-          parseFixed(wBTC.balance, wBTC.decimals).div('1000000'),
-          wBTC.decimals
-        ),
+        parseFixed(wETH.balance, wETH.decimals).div('1000000').toString(),
+        parseFixed(wBTC.balance, wBTC.decimals).div('1000000').toString(),
       ];
 
       bptBalanceBefore = await tokenBalance(B_50WBTC_50WETH.address);
@@ -224,7 +212,7 @@ describe('join execution', async () => {
         await tokenBalance(wBTC.address),
       ];
 
-      const slippage = '0.01';
+      const slippage = '100';
       const { functionName, attributes, value, minAmountsOut } =
         await balancer.pools.join.buildExactTokensInJoinPool(
           signerAddress,
@@ -268,7 +256,7 @@ describe('join execution', async () => {
       for (let i = 0; i < tokensIn.length; i++) {
         expect(
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
-        ).to.equal(parseFixed(amountsIn[i], tokensIn[i].decimals).toString());
+        ).to.equal(amountsIn[i]);
       }
     });
   });
@@ -277,15 +265,12 @@ describe('join execution', async () => {
     before(async function () {
       this.timeout(20000);
       amountsIn = [
-        formatFixed(
-          parseFixed(wETH.balance, wETH.decimals).div('100'),
-          wETH.decimals
-        ),
+        parseFixed(wETH.balance, wETH.decimals).div('100').toString(),
       ];
     });
 
     it('should fail on number of input tokens', async () => {
-      const slippage = '0.001';
+      const slippage = '10';
       let errorMessage;
       try {
         await balancer.pools.join.buildExactTokensInJoinPool(

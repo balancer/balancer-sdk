@@ -15,6 +15,7 @@ import { subSlippage } from '@/lib/utils/slippageHelper';
 import { AssetHelpers } from '@/lib/utils';
 import { balancerVault } from '@/lib/constants/config';
 import { Vault__factory } from '@balancer-labs/typechain';
+import { formatFixed } from '@ethersproject/bignumber';
 
 export class WeightedPoolJoin implements JoinConcern {
   // Static
@@ -59,8 +60,8 @@ export class WeightedPoolJoin implements JoinConcern {
    * @param {string}                          params.joiner - Account address joining pool
    * @param {SubgraphPoolBase}                params.pool - Subgraph pool object of pool being joined
    * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
-   * @param {string[]}                        params.amountsIn - Token amounts provided for joining pool (same length and order as tokensIn)
-   * @param {string}                          params.slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @param {string[]}                        params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
+   * @param {string}                          params.slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
    * @returns                                 transaction request ready to send with signer.sendTransaction
    */
   async buildExactTokensInJoinPool({
@@ -76,8 +77,21 @@ export class WeightedPoolJoin implements JoinConcern {
     ) {
       throw new Error('Must provide amount for all tokens in the pool');
     }
+
+    const formattedAmountsIn = amountsIn.map((amount, i) => {
+      const relatedToken = pool.tokens.find(
+        (token) => token.address === tokensIn[i]
+      );
+      return formatFixed(amount, relatedToken?.decimals || 18).toString();
+    });
+
     const [sortedTokensIn, parsedAmountsIn, parsedMinBPTOut] =
-      this.calcBptOutGivenExactTokensIn(pool, tokensIn, amountsIn, slippage);
+      this.calcBptOutGivenExactTokensIn(
+        pool,
+        tokensIn,
+        formattedAmountsIn,
+        slippage
+      );
 
     const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
       parsedAmountsIn,
@@ -108,8 +122,8 @@ export class WeightedPoolJoin implements JoinConcern {
   /**
    * Sort pool info alphabetically by token addresses as required by calcBptOutGivenExactTokensIn
    * @param {SubgraphPoolBase}  pool - Subgraph pool object containing pool info to be sorted
-   * @param {string[]}          tokensIn - Array containing addresses of tokens to be sorted
-   * @param {string[]}          amountsIn - Array containing amounts of tokens to be sorted
+   * @param {string[]}          tokensIn - Token addresses
+   * @param {string[]}          amountsIn - Token amounts
    * @returns                   sorted pool info
    */
   private sortPoolInfo(
@@ -240,7 +254,7 @@ export class WeightedPoolJoin implements JoinConcern {
     ).toString();
 
     if (slippage) {
-      fullBPTOut = subSlippage(fullBPTOut, 0, slippage);
+      fullBPTOut = subSlippage(fullBPTOut, slippage);
     }
     return [
       sortedTokens,

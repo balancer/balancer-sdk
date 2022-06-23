@@ -184,11 +184,7 @@ export class WeightedPoolExit implements ExitConcern {
     ).map((amount) => amount.toString());
     const minAmountsOut = amountsOut.map((amount, i) => {
       const formattedAmount = formatFixed(amount, sortedDecimals[i]);
-      const minFormattedAmount = subSlippage(
-        formattedAmount,
-        parseInt(sortedDecimals[i]),
-        slippage
-      );
+      const minFormattedAmount = subSlippage(formattedAmount, slippage);
       return parseFixed(minFormattedAmount, sortedDecimals[i]).toString();
     });
 

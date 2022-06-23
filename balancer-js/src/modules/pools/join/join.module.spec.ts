@@ -67,8 +67,8 @@ describe('pools join module', () => {
         '0x35f5a330FD2F8e521ebd259FA272bA8069590741',
         weth_usdc_pool_id,
         [USDC_address, WETH_address],
-        ['7249.202509', '2.479805746401150127'],
-        '0.01'
+        ['7249202509', '2479805746401150127'],
+        '100'
       );
 
       expect(data).to.equal(
@@ -81,7 +81,7 @@ describe('pools join module', () => {
         '0x35f5a330FD2F8e521ebd259FA272bA8069590741',
         weth_bal_pool_id,
         [BAL_address, WETH_address],
-        ['6889.567593728423369471', '8.493803428792888641'],
+        ['6889567593728423369471', '8493803428792888641'],
         '0'
       );
 

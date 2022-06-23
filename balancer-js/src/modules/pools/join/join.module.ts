@@ -13,9 +13,9 @@ export class Join {
    * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
    * @param {string}    joiner - Address used to join pool
    * @param {string}    poolId - Id of pool being joined
-   * @param {string[]}  tokensIn - Array containing addresses of tokens to provide for joining pool. (must have same length and order as amountsIn)
-   * @param {string[]}  amountsIn - Array containing amounts of tokens to provide for joining pool. (must have same length and order as tokensIn)
-   * @param {string}    slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @param {string[]}  tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
+   * @param {string[]}  amountsIn - Token amounts provided for joining pool in EVM amounts
+   * @param {string}    slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
    * @returns           transaction request ready to send with signer.sendTransaction
    */
   async buildExactTokensInJoinPool(
