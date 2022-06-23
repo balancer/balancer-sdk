@@ -48,10 +48,7 @@ export interface BalancerNetworkConfig {
     subgraph: string;
   };
   pools: {
-    staBal3Pool?: PoolReference;
-    wethStaBal3?: PoolReference;
-    bbausd?: PoolReference;
-    wethBBausd?: PoolReference;
+    wETHwstETH?: PoolReference;
   };
 }
 
