@@ -7,6 +7,8 @@ import {
   JoinPoolAttributes,
 } from './modules/pools/pool-types/concerns/types';
 
+export * from '@/modules/data/types';
+
 export type Address = string;
 
 export interface BalancerSdkConfig {
