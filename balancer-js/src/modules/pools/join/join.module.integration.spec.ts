@@ -21,6 +21,7 @@ let balancer: BalancerSDK;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
+let signerAddress: string;
 
 const wETH = B_50WBTC_50WETH.tokens[0];
 const wBTC = B_50WBTC_50WETH.tokens[1];
@@ -105,6 +106,13 @@ const approveTokens = async (
   }
 };
 
+const tokenBalance = async (tokenAddress: string) => {
+  const balance: Promise<BigNumber> = balancer.contracts
+    .ERC20(tokenAddress, signer.provider)
+    .balanceOf(signerAddress);
+  return balance;
+};
+
 // Test scenarios
 
 describe('join execution', async () => {
@@ -112,7 +120,6 @@ describe('join execution', async () => {
   let bptBalanceBefore: BigNumber;
   let bptMinBalanceIncrease: BigNumber;
   let bptBalanceAfter: BigNumber;
-  let signerAddress: string;
 
   // Setup chain
   before(async function () {
@@ -147,9 +154,7 @@ describe('join execution', async () => {
         ),
       ];
 
-      bptBalanceBefore = await balancer.contracts
-        .ERC20(B_50WBTC_50WETH.address, signer.provider)
-        .balanceOf(signerAddress);
+      bptBalanceBefore = await tokenBalance(B_50WBTC_50WETH.address);
 
       const slippage = '0.01';
       const { to, data, minAmountsOut } =
@@ -171,9 +176,7 @@ describe('join execution', async () => {
     });
 
     it('balance should increase', async () => {
-      bptBalanceAfter = await balancer.contracts
-        .ERC20(B_50WBTC_50WETH.address, signer.provider)
-        .balanceOf(signerAddress);
+      bptBalanceAfter = await tokenBalance(B_50WBTC_50WETH.address);
 
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
@@ -196,9 +199,7 @@ describe('join execution', async () => {
         ),
       ];
 
-      bptBalanceBefore = await balancer.contracts
-        .ERC20(B_50WBTC_50WETH.address, signer.provider)
-        .balanceOf(signerAddress);
+      bptBalanceBefore = await tokenBalance(B_50WBTC_50WETH.address);
 
       const slippage = '0.01';
       const { functionName, attributes, value, minAmountsOut } =
@@ -227,10 +228,8 @@ describe('join execution', async () => {
       expect(transactionReceipt.status).to.eql(1);
     });
 
-    it('balance should increase', async () => {
-      bptBalanceAfter = await balancer.contracts
-        .ERC20(B_50WBTC_50WETH.address, signer.provider)
-        .balanceOf(signerAddress);
+    it('should increase BPT balance', async () => {
+      bptBalanceAfter = await tokenBalance(B_50WBTC_50WETH.address);
 
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
