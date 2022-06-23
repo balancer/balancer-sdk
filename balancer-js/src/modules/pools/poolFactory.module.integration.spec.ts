@@ -99,6 +99,10 @@ describe('pool factory module', () => {
             transactionReceipt = await (await signer.sendTransaction(txAttributes)).wait();
         })
 
+        it('should send the transaction succesfully', async () => {
+            expect(transactionReceipt.status).to.eql(1);
+        });
+        
         it('should give user tokens on initial join', async () => {
             const { address } = await balancer.pools.getPoolInfoFromCreateTx(transactionReceipt)
             const tx = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS); 
