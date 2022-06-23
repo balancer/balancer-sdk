@@ -1,18 +1,18 @@
 import { Pool } from '@/types';
-import { PoolAttribute, PoolProvider } from './provider.interface';
+import { PoolAttribute, PoolRepository } from './types';
 
 /**
- * The fallback provider takes multiple PoolProvider's in an array and uses them in order
+ * The fallback provider takes multiple PoolRepository's in an array and uses them in order
  * falling back to the next one if a request times out.
  *
  * This is useful for using the Balancer API while being able to fall back to the graph if it is down
  * to ensure Balancer is maximally decentralized.
  **/
-export class FallbackPoolProvider implements PoolProvider {
+export class FallbackPoolRepository implements PoolRepository {
   currentProviderIdx: number;
 
   constructor(
-    private readonly providers: PoolProvider[],
+    private readonly providers: PoolRepository[],
     private timeout = 10000
   ) {
     this.currentProviderIdx = 0;

@@ -1,5 +1,5 @@
 import { Token } from '@/types';
-import { TokenAttribute, TokenProvider } from './provider.interface';
+import { TokenAttribute, TokenProvider } from './types';
 
 export class StaticTokenProvider implements TokenProvider {
   constructor(private tokens: Token[]) {}

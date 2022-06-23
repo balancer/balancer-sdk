@@ -1,13 +1,13 @@
-import { StaticPoolProvider } from '../../';
+import { StaticPoolRepository } from '../data';
 import { Pool } from '@/types';
 import { expect } from 'chai';
 import { Liquidity } from './liquidity.module';
 import pools from '@/test/fixtures/liquidityPools.json';
 import tokenPrices from '@/test/fixtures/liquidityTokenPrices.json';
-import { StaticTokenPriceProvider } from '../data-providers/token-price/static.provider';
+import { StaticTokenPriceProvider } from '../data';
 
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
-const poolProvider = new StaticPoolProvider(pools as Pool[]);
+const poolProvider = new StaticPoolRepository(pools as Pool[]);
 
 let liquidityProvider: Liquidity;
 
