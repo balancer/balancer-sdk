@@ -120,6 +120,8 @@ describe('join execution', async () => {
   let bptBalanceBefore: BigNumber;
   let bptMinBalanceIncrease: BigNumber;
   let bptBalanceAfter: BigNumber;
+  let tokensBalanceBefore: BigNumber[];
+  let tokensBalanceAfter: BigNumber[];
 
   // Setup chain
   before(async function () {
@@ -155,6 +157,10 @@ describe('join execution', async () => {
       ];
 
       bptBalanceBefore = await tokenBalance(B_50WBTC_50WETH.address);
+      tokensBalanceBefore = [
+        await tokenBalance(wETH.address),
+        await tokenBalance(wBTC.address),
+      ];
 
       const slippage = '0.01';
       const { to, data, minAmountsOut } =
@@ -175,12 +181,25 @@ describe('join execution', async () => {
       expect(transactionReceipt.status).to.eql(1);
     });
 
-    it('balance should increase', async () => {
+    it('should increase BPT balance', async () => {
       bptBalanceAfter = await tokenBalance(B_50WBTC_50WETH.address);
 
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
       ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
+    });
+
+    it('should decrease tokens balance', async () => {
+      tokensBalanceAfter = [
+        await tokenBalance(wETH.address),
+        await tokenBalance(wBTC.address),
+      ];
+
+      for (let i = 0; i < tokensIn.length; i++) {
+        expect(
+          tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
+        ).to.equal(parseFixed(amountsIn[i], tokensIn[i].decimals).toString());
+      }
     });
   });
 
@@ -200,6 +219,10 @@ describe('join execution', async () => {
       ];
 
       bptBalanceBefore = await tokenBalance(B_50WBTC_50WETH.address);
+      tokensBalanceBefore = [
+        await tokenBalance(wETH.address),
+        await tokenBalance(wBTC.address),
+      ];
 
       const slippage = '0.01';
       const { functionName, attributes, value, minAmountsOut } =
@@ -234,6 +257,19 @@ describe('join execution', async () => {
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
       ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
+    });
+
+    it('should decrease tokens balance', async () => {
+      tokensBalanceAfter = [
+        await tokenBalance(wETH.address),
+        await tokenBalance(wBTC.address),
+      ];
+
+      for (let i = 0; i < tokensIn.length; i++) {
+        expect(
+          tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
+        ).to.equal(parseFixed(amountsIn[i], tokensIn[i].decimals).toString());
+      }
     });
   });
 
