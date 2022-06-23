@@ -8,12 +8,26 @@ import {
 } from '@/.';
 import { ADDRESSES } from '@/test/lib/constants';
 import { TransactionResponse } from '@ethersproject/providers';
+import { BigNumber, Contract, ethers } from 'ethers';
 
 dotenv.config();
+const { ALCHEMY_URL: jsonRpcUrl } = process.env;
+
+const getFactoryContract = (address: string) => {
+  return new ethers.Contract(
+    address,
+    ['function balanceOf(address) view returns (uint256)'],
+    provider
+  );
+};
+
+const rpcUrl = 'http://127.0.0.1:8545';
+const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
+const signer = provider.getSigner();
 
 const sdkConfig: BalancerSdkConfig = {
-    network: Network.KOVAN,
-    rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+    network: 1,
+    rpcUrl: rpcUrl,
 };
 
 const SEED_TOKENS: Array<SeedToken> = [ 
@@ -30,18 +44,6 @@ const INIT_JOIN_PARAMS = {
     initialBalancesString: ["2000000000000000000", "2000000000000000000", "2000000000000000000"],
 }
 
-const POOL_TYPES = [
-    "WeightedPoolFactory",
-    "WeightedPool2TokensFactory",
-    "StablePoolFactory",
-    "LiquidityBootstrappingPoolFactory",
-    "MetaStablePoolFactory",
-    "InvestmentPoolFactory",
-    "StablePhantomPoolFactory",
-    "AaveLinearPoolFactory",
-    "ERC4626LinearPoolFactory",
-    "NoProtocolFeeLiquidityBootstrappingPoolFactory"
-];
 const POOL_PARAMS = {
     name: "WeightedPoolFactory",
     symbol: "WPOOL",
@@ -52,70 +54,65 @@ const POOL_PARAMS = {
 }
 const poolFactoryContract = ""
 const vaultAddress = ""
+const getERC20Contract = (address: string) => {
+    return new ethers.Contract(
+      address,
+      ['function balanceOf(address) view returns (uint256)', 'function name() returns (string)'],
+      provider
+    );
+  };
 
 describe('pool factory module', () => {
-    context('getCreationTxParams', () => {
-        let balancer: BalancerSDK
+    context('factory transaction', () => {
+        let balancer: BalancerSDK, to: string, data:string, value:BigNumber,
+            expectedPoolName: string, transactionReceipt: ethers.providers.TransactionReceipt
         beforeEach(async () => {
             balancer = new BalancerSDK(sdkConfig);
-            POOL_PARAMS.name = POOL_TYPES[0]
-        })
-        it('should return the parameters to construct a transaction', async () => {
-            const creationTxAttributes = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
-            expect(creationTxAttributes.err).to.not.eq(true);
-            expect(creationTxAttributes.to).to.equal(poolFactoryContract);
-            expect(creationTxAttributes.data).to.equal(true);
-            expect(creationTxAttributes.value).to.equal(true);
-        });
-        it('should return an attributes object for the expected pool', async () => {
-            const { attributes, err } = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
-            expect(err).to.not.eq(true);
-            expect(attributes.name).to.eq('30DAI-40USDC-30WBTC')
-            expect(attributes.owner).to.eq('0x0000000000000000000000000000000000000001')
-            expect(attributes.swapFee).to.eq('0.1')
-            expect(attributes.symbol).to.eq('WPOOL')
-            expect(attributes.tokens).to.eql(SEED_TOKENS)
-        });
-        it('should not create a pool if weight of seed tokens do not add to 100', async () => {
-            const params = { ...POOL_PARAMS }
-            params.seedTokens[1].weight = 10
-            const creationTxParams = await balancer.pools.weighted.buildCreateTx(params);
-            expect(creationTxParams.err).to.eq(true);
-        })
-    });
-
-    context('getPoolInfoFromCreateTx', async () => {
-        let balancer: BalancerSDK
-        beforeEach(async () => {
-            balancer = new BalancerSDK(sdkConfig);
-        })
-        it('should return the pool ID from the issuing transaction', async () => {
-            const tx = { hash: "0x1234543211111111111111111111111111111111111111111111" } as TransactionResponse
-            const { id, address } = await balancer.pools.getPoolInfoFromCreateTx(tx) as { id: number, address: string };
-            expect(id).to.equal(1)
-            expect(address).to.equal(0x0000000000000000000000000000000000000001)
+            let createTx =  await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
+            to = createTx.to
+            data = createTx.data
+            value = createTx.value as BigNumber
+            expectedPoolName = createTx.attributes.name
+            const tx = { to, data, value };
+            transactionReceipt = await (await signer.sendTransaction(tx)).wait();
         })
 
-        it('should return error if no transaction at given hash', () => {
-            const tx = { hash: "0x1234543200000000000000000000000000000000000000000000" } as TransactionResponse
-            return balancer.pools.getPoolInfoFromCreateTx(tx).then(
-                () => Promise.reject(new Error('Expected method to reject.')),
-                (err: any) => expect(err).to.equal(true)
-            )
+        it('should send the transaction succesfully', async () => {
+
+            expect(transactionReceipt.status).to.eql(1);
+        });
+
+        it('should create a pool with the correct token name', async () => {
+            const abi = [
+                "event PoolCreated(address indexed)"
+            ];
+            const contract = new Contract(poolFactoryContract, abi, provider);
+            const { address } = contract.filters.PoolCreated()
+            const tokenContract = getERC20Contract(address as string)
+            expect(expectedPoolName).to.eql(await tokenContract.getName())
         })
     })
-
-    context('buildInitJoin', async () => {
-        let balancer: BalancerSDK
+    context('initial join transaction', () => {
+        let balancer: BalancerSDK, to: string, data:string, value:BigNumber,
+            expectedPoolName: string, transactionReceipt: ethers.providers.TransactionReceipt
         beforeEach(async () => {
             balancer = new BalancerSDK(sdkConfig);
+            let createTx =  await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
+            to = createTx.to
+            data = createTx.data
+            value = createTx.value as BigNumber
+            expectedPoolName = createTx.attributes.name
+            const tx = { to, data, value };
+            transactionReceipt = await (await signer.sendTransaction(tx)).wait();
         })
-        it('should return transaction attributes for an InitJoin', async () => {
-            const transactionAttributes = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS);
-            expect(transactionAttributes.err).to.not.eq(true);
-            expect(transactionAttributes.data).to.eq('0x123')
-            expect(transactionAttributes.to).to.equal(vaultAddress);
-            expect(transactionAttributes.value).to.equal(true);
-        });
+
+        it('should give user tokens on initial join', async () => {
+            const tx = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS); 
+            const transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+            const { address } = await balancer.pools.getPoolInfoFromCreateTx(transactionReceipt)
+            const createdPool = getERC20Contract(address)
+            const senderBalance: BigNumber = await createdPool.balanceOf(signer)
+            expect(senderBalance.gt(BigNumber.from("0"))).to.eql(true)
+        })
     })
 });
