@@ -28,9 +28,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2',
     },
     pools: {
-      bbausd: {
-        id: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe',
-        address: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
+      wETHwstETH: {
+        id: '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080',
+        address: '0x32296969ef14eb0c6d29669c550d4a0449130230',
       },
     },
   },
@@ -83,12 +83,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-kovan-v2',
     },
-    pools: {
-      bbausd: {
-        id: '0x8fd162f338b770f7e879030830cde9173367f3010000000000000000000004d8',
-        address: '0x8fd162f338b770f7e879030830cde9173367f301',
-      },
-    },
+    pools: {},
   },
   [Network.ROPSTEN]: {
     chainId: Network.ROPSTEN, //3
@@ -138,12 +133,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2',
     },
-    pools: {
-      bbausd: {
-        id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
-        address: '0x13ACD41C585d7EbB4a9460f7C8f50BE60DC080Cd',
-      },
-    },
+    pools: {},
   },
 };
 
