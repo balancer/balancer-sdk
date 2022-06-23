@@ -78,7 +78,6 @@ describe('pool factory module', () => {
         })
 
         it('should send the transaction succesfully', async () => {
-
             expect(transactionReceipt.status).to.eql(1);
         });
 
@@ -93,23 +92,17 @@ describe('pool factory module', () => {
         })
     })
     context('initial join transaction', () => {
-        let balancer: BalancerSDK, to: string, data:string, value:BigNumber,
-            expectedPoolName: string, transactionReceipt: ethers.providers.TransactionReceipt
+        let balancer: BalancerSDK, transactionReceipt: ethers.providers.TransactionReceipt
         beforeEach(async () => {
             balancer = new BalancerSDK(sdkConfig);
-            let createTx =  await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
-            to = createTx.to
-            data = createTx.data
-            value = createTx.value as BigNumber
-            expectedPoolName = createTx.attributes.name
-            const tx = { to, data, value };
-            transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+            const txAttributes =  await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
+            transactionReceipt = await (await signer.sendTransaction(txAttributes)).wait();
         })
 
         it('should give user tokens on initial join', async () => {
-            const tx = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS); 
-            const transactionReceipt = await (await signer.sendTransaction(tx)).wait();
             const { address } = await balancer.pools.getPoolInfoFromCreateTx(transactionReceipt)
+            const tx = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS); 
+            await (await signer.sendTransaction(tx)).wait();
             const createdPool = getERC20Contract(address)
             const senderBalance: BigNumber = await createdPool.balanceOf(signer)
             expect(senderBalance.gt(BigNumber.from("0"))).to.eql(true)
