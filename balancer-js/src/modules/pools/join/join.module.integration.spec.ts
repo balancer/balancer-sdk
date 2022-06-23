@@ -111,6 +111,7 @@ describe('join execution', async () => {
   let transactionReceipt: TransactionReceipt;
   let bptBalanceBefore: BigNumber;
   let bptMinBalanceIncrease: BigNumber;
+  let bptBalanceAfter: BigNumber;
   let signerAddress: string;
 
   // Setup chain
@@ -170,7 +171,7 @@ describe('join execution', async () => {
     });
 
     it('balance should increase', async () => {
-      const bptBalanceAfter: BigNumber = await balancer.contracts
+      bptBalanceAfter = await balancer.contracts
         .ERC20(B_50WBTC_50WETH.address, signer.provider)
         .balanceOf(signerAddress);
 
@@ -227,7 +228,7 @@ describe('join execution', async () => {
     });
 
     it('balance should increase', async () => {
-      const bptBalanceAfter: BigNumber = await balancer.contracts
+      bptBalanceAfter = await balancer.contracts
         .ERC20(B_50WBTC_50WETH.address, signer.provider)
         .balanceOf(signerAddress);
 
@@ -268,45 +269,6 @@ describe('join execution', async () => {
       expect(errorMessage).to.contain(
         'Must provide amount for all tokens in the pool'
       );
-    });
-  });
-
-  context('exactTokensInJoinPool transaction - slippage out of bounds', () => {
-    before(async function () {
-      this.timeout(20000);
-      amountsIn = [
-        formatFixed(
-          parseFixed(wETH.balance, wETH.decimals).div('100'),
-          wETH.decimals
-        ),
-        formatFixed(
-          parseFixed(wBTC.balance, wBTC.decimals).div('10'),
-          wBTC.decimals
-        ),
-      ];
-    });
-
-    it('should fail on slippage', async () => {
-      const slippage = '0.001';
-      const { to, data } = await balancer.pools.join.buildExactTokensInJoinPool(
-        signerAddress,
-        B_50WBTC_50WETH.id,
-        tokensInAddresses,
-        amountsIn,
-        slippage
-      );
-      const tx = { to, data };
-      let reason;
-      try {
-        await (await signer.sendTransaction(tx)).wait();
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (error: any) {
-        reason = error.reason;
-      }
-      // Slippage should trigger 208 error => Slippage/front-running protection check failed on a pool join
-      // https://dev.balancer.fi/references/error-codes
-      expect(reason).to.contain('BAL#208');
     });
   });
 }).timeout(20000);
