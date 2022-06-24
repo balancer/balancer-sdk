@@ -11,6 +11,7 @@ import { parseFixed } from '@ethersproject/bignumber';
 
 import { balancerVault } from '@/lib/constants/config';
 import { SubgraphToken } from '@balancer-labs/sor';
+import { AddressZero } from '@ethersproject/constants';
 
 dotenv.config();
 
@@ -250,6 +251,66 @@ describe('join execution', async () => {
     it('should decrease tokens balance', async () => {
       tokensBalanceAfter = [
         await tokenBalance(wETH.address),
+        await tokenBalance(wBTC.address),
+      ];
+
+      for (let i = 0; i < tokensIn.length; i++) {
+        expect(
+          tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
+        ).to.equal(amountsIn[i]);
+      }
+    });
+  });
+
+  context('exactTokensInJoinPool transaction - join with ETH', () => {
+    let transactionCost: BigNumber;
+    before(async function () {
+      this.timeout(20000);
+
+      amountsIn = [
+        parseFixed(wETH.balance, wETH.decimals).div('1000000').toString(),
+        parseFixed(wBTC.balance, wBTC.decimals).div('1000000').toString(),
+      ];
+
+      bptBalanceBefore = await tokenBalance(B_50WBTC_50WETH.address);
+      tokensBalanceBefore = [
+        await signer.getBalance(),
+        await tokenBalance(wBTC.address),
+      ];
+
+      const slippage = '100';
+      const { to, data, value, minAmountsOut } =
+        await balancer.pools.join.buildExactTokensInJoinPool(
+          signerAddress,
+          B_50WBTC_50WETH.id,
+          [AddressZero, wBTC.address],
+          amountsIn,
+          slippage
+        );
+      const tx = { to, data, value };
+
+      bptMinBalanceIncrease = BigNumber.from(minAmountsOut);
+      transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+      transactionCost = transactionReceipt.gasUsed.mul(
+        transactionReceipt.effectiveGasPrice
+      );
+    });
+
+    it('should work', async () => {
+      expect(transactionReceipt.status).to.eql(1);
+    });
+
+    it('should increase BPT balance', async () => {
+      bptBalanceAfter = await tokenBalance(B_50WBTC_50WETH.address);
+
+      expect(
+        bptBalanceAfter.sub(bptBalanceBefore).toNumber()
+      ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
+    });
+
+    it('should decrease tokens balance', async () => {
+      tokensBalanceAfter = [
+        await (await signer.getBalance()).add(transactionCost),
         await tokenBalance(wBTC.address),
       ];
 

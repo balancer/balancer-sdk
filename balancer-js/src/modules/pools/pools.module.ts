@@ -9,6 +9,7 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Join } from './join/join.module';
 import { Sor } from '../sor/sor.module';
 import { Exit } from './exit/exit.module';
+import { getNetworkConfig } from '../sdk.helpers';
 
 export class Pools {
   private readonly sor: Sor;
@@ -29,7 +30,9 @@ export class Pools {
     } else {
       this.sor = new Sor(config);
     }
-    this.join = new Join(this);
+    const wrappedNativeAsset =
+      getNetworkConfig(config).addresses.tokens.wrappedNativeAsset;
+    this.join = new Join(this, wrappedNativeAsset);
     this.exit = new Exit(this);
   }
 

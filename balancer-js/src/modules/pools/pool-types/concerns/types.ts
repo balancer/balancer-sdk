@@ -23,6 +23,7 @@ export interface JoinConcern {
     tokensIn,
     amountsIn,
     slippage,
+    wrappedNativeAsset,
   }: ExactTokensInJoinPoolParameters) => Promise<JoinPoolAttributes>;
 }
 
@@ -57,6 +58,7 @@ export interface ExactTokensInJoinPoolParameters {
   tokensIn: string[];
   amountsIn: string[];
   slippage: string;
+  wrappedNativeAsset: string;
 }
 
 export interface ExitPool {

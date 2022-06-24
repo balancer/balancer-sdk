@@ -4,9 +4,11 @@ import { JoinPoolAttributes } from '../pool-types/concerns/types';
 
 export class Join {
   private pools: Pools;
+  private wrappedNativeAsset: string;
 
-  constructor(pools: Pools) {
+  constructor(pools: Pools, wrappedNativeAsset: string) {
     this.pools = pools;
+    this.wrappedNativeAsset = wrappedNativeAsset;
   }
 
   /**
@@ -34,6 +36,7 @@ export class Join {
       tokensIn,
       amountsIn,
       slippage,
+      wrappedNativeAsset: this.wrappedNativeAsset,
     });
   }
 }

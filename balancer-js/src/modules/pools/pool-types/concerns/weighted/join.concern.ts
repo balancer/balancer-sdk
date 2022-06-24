@@ -16,6 +16,8 @@ import { AssetHelpers } from '@/lib/utils';
 import { balancerVault } from '@/lib/constants/config';
 import { Vault__factory } from '@balancer-labs/typechain';
 import { formatFixed } from '@ethersproject/bignumber';
+import { BigNumber } from 'ethers';
+import { AddressZero } from '@ethersproject/constants';
 
 export class WeightedPoolJoin implements JoinConcern {
   // Static
@@ -70,6 +72,7 @@ export class WeightedPoolJoin implements JoinConcern {
     tokensIn,
     amountsIn,
     slippage,
+    wrappedNativeAsset,
   }: ExactTokensInJoinPoolParameters): Promise<JoinPoolAttributes> {
     if (
       tokensIn.length != amountsIn.length ||
@@ -90,6 +93,7 @@ export class WeightedPoolJoin implements JoinConcern {
         pool,
         tokensIn,
         formattedAmountsIn,
+        wrappedNativeAsset,
         slippage
       );
 
@@ -112,9 +116,11 @@ export class WeightedPoolJoin implements JoinConcern {
       },
     };
     const data = WeightedPoolJoin.encodeJoinPool(attributes);
+    const values = amountsIn.filter((amount, i) => tokensIn[i] === AddressZero); // filter native asset (e.g. ETH) amounts
+    const value = values[0] ? BigNumber.from(values[0]) : undefined;
     const minAmountsOut = parsedMinBPTOut;
 
-    return { to, functionName, attributes, data, minAmountsOut };
+    return { to, functionName, attributes, data, value, minAmountsOut };
   }
 
   // Helper methods
@@ -129,7 +135,8 @@ export class WeightedPoolJoin implements JoinConcern {
   private sortPoolInfo(
     pool: SubgraphPoolBase,
     tokensIn: string[],
-    amountsIn: string[]
+    amountsIn: string[],
+    wrappedNativeAsset: string
   ): [
     sortedTokens: string[],
     sortedBalances: string[],
@@ -137,13 +144,12 @@ export class WeightedPoolJoin implements JoinConcern {
     sortedAmounts: string[],
     sortedDecimals: string[]
   ] {
-    const WETH = '0x000000000000000000000000000000000000000F';
-    const assetHelpers = new AssetHelpers(WETH);
+    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     const [sortedTokensIn, sortedAmounts] = assetHelpers.sortTokens(
       tokensIn,
       amountsIn
     ) as [string[], string[]];
-    const [sortedTokens, sortedBalances, sortedWeights, sortedDecimals] =
+    const [, sortedBalances, sortedWeights, sortedDecimals] =
       assetHelpers.sortTokens(
         pool.tokens.map((token) => token.address),
         pool.tokens.map((token) => token.balance),
@@ -151,7 +157,7 @@ export class WeightedPoolJoin implements JoinConcern {
         pool.tokens.map((token) => token.decimals)
       ) as [string[], string[], string[], string[]];
     return [
-      sortedTokens,
+      sortedTokensIn,
       sortedBalances,
       sortedWeights,
       sortedAmounts,
@@ -219,6 +225,7 @@ export class WeightedPoolJoin implements JoinConcern {
     pool: SubgraphPoolBase,
     tokensIn: string[],
     amountsIn: string[],
+    wrappedNativeAsset: string,
     slippage?: string
   ): [string[], string[], string] {
     const [
@@ -227,7 +234,7 @@ export class WeightedPoolJoin implements JoinConcern {
       sortedWeights,
       sortedAmounts,
       sortedDecimals,
-    ] = this.sortPoolInfo(pool, tokensIn, amountsIn);
+    ] = this.sortPoolInfo(pool, tokensIn, amountsIn, wrappedNativeAsset);
 
     const [
       parsedBalances,

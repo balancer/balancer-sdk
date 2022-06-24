@@ -11,9 +11,17 @@ export class StablePoolJoin implements JoinConcern {
     tokensIn,
     amountsIn,
     slippage,
+    wrappedNativeAsset,
   }: ExactTokensInJoinPoolParameters): Promise<JoinPoolAttributes> {
     // TODO implementation
-    console.log(joiner, pool, tokensIn, amountsIn, slippage);
+    console.log(
+      joiner,
+      pool,
+      tokensIn,
+      amountsIn,
+      slippage,
+      wrappedNativeAsset
+    );
     throw new Error('To be implemented');
   }
 }
