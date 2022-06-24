@@ -50,5 +50,5 @@ async function exactTokensInJoinPool() {
   console.log(tx);
 }
 
-// yarn examples:run ./examples/exactTokensInJoinPool.ts
+// yarn examples:run ./examples/joinPool.ts
 exactTokensInJoinPool();
