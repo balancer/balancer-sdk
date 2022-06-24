@@ -88,18 +88,19 @@ export class WeightedPoolJoin implements JoinConcern {
       return formatFixed(amount, relatedToken?.decimals || 18).toString();
     });
 
-    const [sortedTokensIn, parsedAmountsIn, parsedMinBPTOut] =
+    const [sortedTokensIn, parsedAmountsIn, expectedBPTOut] =
       this.calcBptOutGivenExactTokensIn(
         pool,
         tokensIn,
         formattedAmountsIn,
-        wrappedNativeAsset,
-        slippage
+        wrappedNativeAsset
       );
+
+    const minBPTOut = subSlippage(expectedBPTOut, slippage);
 
     const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
       parsedAmountsIn,
-      parsedMinBPTOut
+      minBPTOut
     );
 
     const to = balancerVault;
@@ -118,7 +119,6 @@ export class WeightedPoolJoin implements JoinConcern {
     const data = WeightedPoolJoin.encodeJoinPool(attributes);
     const values = amountsIn.filter((amount, i) => tokensIn[i] === AddressZero); // filter native asset (e.g. ETH) amounts
     const value = values[0] ? BigNumber.from(values[0]) : undefined;
-    const minBPTOut = parsedMinBPTOut;
 
     return { to, functionName, attributes, data, value, minBPTOut };
   }
@@ -225,8 +225,7 @@ export class WeightedPoolJoin implements JoinConcern {
     pool: SubgraphPoolBase,
     tokensIn: string[],
     amountsIn: string[],
-    wrappedNativeAsset: string,
-    slippage?: string
+    wrappedNativeAsset: string
   ): [string[], string[], string] {
     const [
       sortedTokens,
@@ -252,7 +251,7 @@ export class WeightedPoolJoin implements JoinConcern {
     );
 
     // TODO: replace third-party BPT calculation in order to remove bignumber.js
-    let fullBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
+    const expectedBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
       parsedBalances,
       parsedWeights,
       parsedAmounts,
@@ -260,13 +259,10 @@ export class WeightedPoolJoin implements JoinConcern {
       parsedSwapFee
     ).toString();
 
-    if (slippage) {
-      fullBPTOut = subSlippage(fullBPTOut, slippage);
-    }
     return [
       sortedTokens,
       parsedAmounts.map((amount) => amount.toString()),
-      fullBPTOut,
+      expectedBPTOut,
     ];
   }
 }
