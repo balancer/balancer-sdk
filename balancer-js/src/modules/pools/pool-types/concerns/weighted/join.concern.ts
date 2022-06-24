@@ -99,7 +99,10 @@ export class WeightedPoolJoin implements JoinConcern {
       new OldBigNumber(parsedPoolInfo.swapFee)
     ).toString();
 
-    const minBPTOut = subSlippage(expectedBPTOut, slippage);
+    const minBPTOut = subSlippage(
+      BigNumber.from(expectedBPTOut),
+      BigNumber.from(slippage)
+    ).toString();
 
     const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
       sortedCalcInputs.amounts,
