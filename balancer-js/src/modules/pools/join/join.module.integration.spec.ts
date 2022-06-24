@@ -158,7 +158,7 @@ describe('join execution', async () => {
       ];
 
       const slippage = '100';
-      const { to, data, minAmountsOut } =
+      const { to, data, minBPTOut } =
         await balancer.pools.join.buildExactTokensInJoinPool(
           signerAddress,
           B_50WBTC_50WETH.id,
@@ -168,7 +168,7 @@ describe('join execution', async () => {
         );
       const tx = { to, data };
 
-      bptMinBalanceIncrease = BigNumber.from(minAmountsOut);
+      bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
     });
 
@@ -214,7 +214,7 @@ describe('join execution', async () => {
       ];
 
       const slippage = '100';
-      const { functionName, attributes, value, minAmountsOut } =
+      const { functionName, attributes, value, minBPTOut } =
         await balancer.pools.join.buildExactTokensInJoinPool(
           signerAddress,
           B_50WBTC_50WETH.id,
@@ -233,7 +233,7 @@ describe('join execution', async () => {
         );
       transactionReceipt = await transactionResponse.wait();
 
-      bptMinBalanceIncrease = BigNumber.from(minAmountsOut);
+      bptMinBalanceIncrease = BigNumber.from(minBPTOut);
     });
 
     it('should work', async () => {
@@ -279,7 +279,7 @@ describe('join execution', async () => {
       ];
 
       const slippage = '100';
-      const { to, data, value, minAmountsOut } =
+      const { to, data, value, minBPTOut } =
         await balancer.pools.join.buildExactTokensInJoinPool(
           signerAddress,
           B_50WBTC_50WETH.id,
@@ -289,7 +289,7 @@ describe('join execution', async () => {
         );
       const tx = { to, data, value };
 
-      bptMinBalanceIncrease = BigNumber.from(minAmountsOut);
+      bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
       transactionCost = transactionReceipt.gasUsed.mul(
         transactionReceipt.effectiveGasPrice

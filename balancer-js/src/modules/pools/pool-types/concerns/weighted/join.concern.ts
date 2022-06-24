@@ -118,9 +118,9 @@ export class WeightedPoolJoin implements JoinConcern {
     const data = WeightedPoolJoin.encodeJoinPool(attributes);
     const values = amountsIn.filter((amount, i) => tokensIn[i] === AddressZero); // filter native asset (e.g. ETH) amounts
     const value = values[0] ? BigNumber.from(values[0]) : undefined;
-    const minAmountsOut = parsedMinBPTOut;
+    const minBPTOut = parsedMinBPTOut;
 
-    return { to, functionName, attributes, data, value, minAmountsOut };
+    return { to, functionName, attributes, data, value, minBPTOut };
   }
 
   // Helper methods
