@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { BigNumber } from '@ethersproject/bignumber';
 import { parseFixed } from './math';
 
 describe('utils/math', () => {
