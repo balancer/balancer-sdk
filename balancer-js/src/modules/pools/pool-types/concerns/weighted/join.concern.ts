@@ -15,7 +15,7 @@ import { subSlippage } from '@/lib/utils/slippageHelper';
 import { AssetHelpers } from '@/lib/utils';
 import { balancerVault } from '@/lib/constants/config';
 import { Vault__factory } from '@balancer-labs/typechain';
-import { formatFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@ethersproject/bignumber';
 import { BigNumber } from 'ethers';
 import { AddressZero } from '@ethersproject/constants';
 
@@ -81,25 +81,28 @@ export class WeightedPoolJoin implements JoinConcern {
       throw new Error('Must provide amount for all tokens in the pool');
     }
 
-    const formattedAmountsIn = amountsIn.map((amount, i) => {
-      const relatedToken = pool.tokens.find(
-        (token) => token.address === tokensIn[i]
-      );
-      return formatFixed(amount, relatedToken?.decimals || 18).toString();
-    });
-
-    const [sortedTokensIn, parsedAmountsIn, expectedBPTOut] =
-      this.calcBptOutGivenExactTokensIn(
-        pool,
-        tokensIn,
-        formattedAmountsIn,
-        wrappedNativeAsset
-      );
+    const parsedPoolInfo = this.parsePoolInfo(pool);
+    const sortedCalcInputs = this.sortCalcInputs(
+      parsedPoolInfo.tokens,
+      parsedPoolInfo.balances,
+      parsedPoolInfo.weights,
+      parsedPoolInfo.decimals,
+      tokensIn,
+      amountsIn,
+      wrappedNativeAsset
+    );
+    const expectedBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
+      sortedCalcInputs.balances.map((b) => new OldBigNumber(b)),
+      sortedCalcInputs.weights.map((w) => new OldBigNumber(w)),
+      sortedCalcInputs.amounts.map((a) => new OldBigNumber(a)),
+      new OldBigNumber(parsedPoolInfo.totalShares),
+      new OldBigNumber(parsedPoolInfo.swapFee)
+    ).toString();
 
     const minBPTOut = subSlippage(expectedBPTOut, slippage);
 
     const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
-      parsedAmountsIn,
+      sortedCalcInputs.amounts,
       minBPTOut
     );
 
@@ -110,8 +113,8 @@ export class WeightedPoolJoin implements JoinConcern {
       sender: joiner,
       recipient: joiner,
       joinPoolRequest: {
-        assets: sortedTokensIn,
-        maxAmountsIn: parsedAmountsIn,
+        assets: sortedCalcInputs.tokens,
+        maxAmountsIn: sortedCalcInputs.amounts,
         userData,
         fromInternalBalance: false,
       },
@@ -126,143 +129,60 @@ export class WeightedPoolJoin implements JoinConcern {
   // Helper methods
 
   /**
-   * Sort pool info alphabetically by token addresses as required by calcBptOutGivenExactTokensIn
-   * @param {SubgraphPoolBase}  pool - Subgraph pool object containing pool info to be sorted
-   * @param {string[]}          tokensIn - Token addresses
-   * @param {string[]}          amountsIn - Token amounts
-   * @returns                   sorted pool info
+   * Sort BPT calc. inputs alphabetically by token addresses as required by calcBptOutGivenExactTokensIn
    */
-  private sortPoolInfo(
-    pool: SubgraphPoolBase,
+  private sortCalcInputs = (
+    poolTokens: string[],
+    poolBalances: string[],
+    poolWeights: string[],
+    poolDecimals: number[],
     tokensIn: string[],
     amountsIn: string[],
     wrappedNativeAsset: string
-  ): [
-    sortedTokens: string[],
-    sortedBalances: string[],
-    sortedWeights: string[],
-    sortedAmounts: string[],
-    sortedDecimals: string[]
-  ] {
+  ) => {
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    const [sortedTokensIn, sortedAmounts] = assetHelpers.sortTokens(
-      tokensIn,
-      amountsIn
-    ) as [string[], string[]];
-    const [, sortedBalances, sortedWeights, sortedDecimals] =
-      assetHelpers.sortTokens(
-        pool.tokens.map((token) => token.address),
-        pool.tokens.map((token) => token.balance),
-        pool.tokens.map((token) => token.weight),
-        pool.tokens.map((token) => token.decimals)
-      ) as [string[], string[], string[], string[]];
-    return [
-      sortedTokensIn,
-      sortedBalances,
-      sortedWeights,
-      sortedAmounts,
-      sortedDecimals,
+    const [tokens, amounts] = assetHelpers.sortTokens(tokensIn, amountsIn) as [
+      string[],
+      string[]
     ];
-  }
-
-  /**
-   * Parse pool info by respective decimals
-   * @param {string[]}  sortedBalances - Token balances to be parsed
-   * @param {string[]}  sortedWeights - Token weights to be parsed
-   * @param {string[]}  sortedAmounts - Token amounts to be parsed
-   * @param {string[]}  sortedDecimals - Token decimals used for parsing
-   * @param {string}    totalShares - Pool total supply to be parsed
-   * @param {string}    swapFee - Pool swap fee to be parsed
-   * @returns           parsed pool info
-   */
-  private parseCalcInputs(
-    sortedBalances: string[],
-    sortedWeights: string[],
-    sortedAmounts: string[],
-    sortedDecimals: string[],
-    totalShares: string,
-    swapFee: string
-  ): [
-    parsedBalances: OldBigNumber[],
-    parsedWeights: OldBigNumber[],
-    parsedAmounts: OldBigNumber[],
-    parsedTotalShares: OldBigNumber,
-    parsedSwapFee: OldBigNumber
-  ] {
-    const bnum = (val: string | number | OldBigNumber): OldBigNumber => {
-      const number = typeof val === 'string' ? val : val ? val.toString() : '0';
-      return new OldBigNumber(number);
+    const [, balances, weights, decimals] = assetHelpers.sortTokens(
+      poolTokens,
+      poolBalances,
+      poolWeights,
+      poolDecimals
+    ) as [string[], string[], string[], number[]];
+    return {
+      tokens,
+      balances,
+      weights,
+      amounts,
+      decimals,
     };
-    const _parsedBalances = sortedBalances.map((balance, i) =>
-      bnum(parseUnits(balance, sortedDecimals[i]).toString())
-    );
-    const _parsedWeights = sortedWeights.map((weight) =>
-      bnum(parseUnits(weight).toString())
-    );
-    const _parsedAmounts = sortedAmounts.map((amount, i) =>
-      bnum(parseUnits(amount, sortedDecimals[i]).toString())
-    );
-    const _parsedTotalShares = bnum(parseUnits(totalShares).toString());
-    const _parsedSwapFee = bnum(parseUnits(swapFee).toString());
-    return [
-      _parsedBalances,
-      _parsedWeights,
-      _parsedAmounts,
-      _parsedTotalShares,
-      _parsedSwapFee,
-    ];
-  }
+  };
 
   /**
-   * Calculate BPT out given exact tokens in
-   * @param {SubgraphPoolBase}  pool - Subgraph pool object
-   * @param {string[]}          tokensIn - Token addresses
-   * @param {string[]}          amountsIn - Token amounts
-   * @param {string}            slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-   * @returns                   expected BPT out factored by slippage tolerance
+   * Parse pool info into EVM amounts
+   * @param {SubgraphPoolBase}  pool
+   * @returns                   parsed pool info
    */
-  private calcBptOutGivenExactTokensIn(
-    pool: SubgraphPoolBase,
-    tokensIn: string[],
-    amountsIn: string[],
-    wrappedNativeAsset: string
-  ): [string[], string[], string] {
-    const [
-      sortedTokens,
-      sortedBalances,
-      sortedWeights,
-      sortedAmounts,
-      sortedDecimals,
-    ] = this.sortPoolInfo(pool, tokensIn, amountsIn, wrappedNativeAsset);
-
-    const [
-      parsedBalances,
-      parsedWeights,
-      parsedAmounts,
-      parsedTotalShares,
-      parsedSwapFee,
-    ] = this.parseCalcInputs(
-      sortedBalances,
-      sortedWeights,
-      sortedAmounts,
-      sortedDecimals,
-      pool.totalShares,
-      pool.swapFee
+  private parsePoolInfo = (pool: SubgraphPoolBase) => {
+    const tokens = pool.tokens.map((token) => token.address);
+    const balances = pool.tokens.map((token) =>
+      parseFixed(token.balance, token.decimals).toString()
     );
-
-    // TODO: replace third-party BPT calculation in order to remove bignumber.js
-    const expectedBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
-      parsedBalances,
-      parsedWeights,
-      parsedAmounts,
-      parsedTotalShares,
-      parsedSwapFee
-    ).toString();
-
-    return [
-      sortedTokens,
-      parsedAmounts.map((amount) => amount.toString()),
-      expectedBPTOut,
-    ];
-  }
+    const weights = pool.tokens.map((token) => {
+      return parseUnits(token.weight || '0').toString(); // TODO: validate if null weights should indeed be considered zero
+    });
+    const decimals = pool.tokens.map((token) => token.decimals);
+    const totalShares = parseUnits(pool.totalShares).toString();
+    const swapFee = parseUnits(pool.swapFee).toString();
+    return {
+      tokens,
+      balances,
+      weights,
+      decimals,
+      totalShares,
+      swapFee,
+    };
+  };
 }
