@@ -5,7 +5,8 @@ import {
   Pool,
   TokenPrices,
 } from '../../src';
-import { parseFixed, formatFixed } from '@ethersproject/bignumber';
+import { formatFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '../../src/lib/utils/math';
 import { FallbackPoolProvider } from '../../src/modules/data-providers/pool/fallback.provider';
 import POOLS from './pools.json';
 import DECORATED_POOLS from './decorated-pools.json';
