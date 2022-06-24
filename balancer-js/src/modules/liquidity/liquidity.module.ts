@@ -1,4 +1,5 @@
-import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@/lib/utils/math';
 import { Pool, PoolToken } from '@/types';
 import { Pools } from '@/modules/pools/pools.module';
 import { PoolProvider } from '../data-providers/pool/provider.interface';
