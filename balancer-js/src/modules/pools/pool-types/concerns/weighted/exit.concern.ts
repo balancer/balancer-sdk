@@ -1,4 +1,4 @@
-import { formatFixed, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { parseUnits } from '@ethersproject/units';
 import OldBigNumber from 'bignumber.js';
 import * as SDK from '@georgeroman/balancer-v2-pools';
@@ -183,9 +183,11 @@ export class WeightedPoolExit implements ExitConcern {
       parsedTotalShares
     ).map((amount) => amount.toString());
     const minAmountsOut = amountsOut.map((amount, i) => {
-      const formattedAmount = formatFixed(amount, sortedDecimals[i]);
-      const minFormattedAmount = subSlippage(formattedAmount, slippage);
-      return parseFixed(minFormattedAmount, sortedDecimals[i]).toString();
+      const minAmount = subSlippage(
+        BigNumber.from(amount),
+        BigNumber.from(slippage)
+      );
+      return minAmount.toString();
     });
 
     return [sortedTokens, minAmountsOut, parsedBptIn.toString()];
