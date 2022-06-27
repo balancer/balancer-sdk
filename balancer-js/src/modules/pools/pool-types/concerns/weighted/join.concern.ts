@@ -81,7 +81,7 @@ export class WeightedPoolJoin implements JoinConcern {
       throw new Error('Must provide amount for all tokens in the pool');
     }
 
-    const parsedPoolInfo = this.parsePoolInfo(pool);
+    const parsedPoolInfo = this.parsePoolInfo(pool); // Parse pool info into EVM amounts in order to match amountsIn scalling
     const sortedCalcInputs = this.sortCalcInputs(
       parsedPoolInfo.tokens,
       parsedPoolInfo.balances,
