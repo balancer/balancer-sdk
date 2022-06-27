@@ -8,13 +8,11 @@ import { SOR, SubgraphPoolBase } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Join } from './join/join.module';
 import { Sor } from '../sor/sor.module';
-import { Exit } from './exit/exit.module';
 import { getNetworkConfig } from '../sdk.helpers';
 
 export class Pools {
   private readonly sor: Sor;
   public readonly join: Join;
-  public readonly exit: Exit;
 
   constructor(
     config: BalancerSdkConfig,
@@ -33,7 +31,6 @@ export class Pools {
     const wrappedNativeAsset =
       getNetworkConfig(config).addresses.tokens.wrappedNativeAsset;
     this.join = new Join(this, wrappedNativeAsset);
-    this.exit = new Exit(this);
   }
 
   static from(
