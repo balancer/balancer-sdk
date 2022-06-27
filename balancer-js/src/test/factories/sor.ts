@@ -75,7 +75,7 @@ const subgraphPoolBase = Factory.define<SubgraphPoolBase>(
       tokens,
       tokensList: [],
       totalWeight: '1',
-      totalShares: '8769',
+      totalShares: '1',
     };
   }
 );
