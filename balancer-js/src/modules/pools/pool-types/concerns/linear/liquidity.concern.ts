@@ -1,6 +1,7 @@
 import { LiquidityConcern } from '../types';
 import { PoolToken } from '@/types';
-import { parseFixed, formatFixed } from '@ethersproject/bignumber';
+import { formatFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@/lib/utils/math';
 import { Zero } from '@ethersproject/constants';
 
 const SCALING_FACTOR = 18;
