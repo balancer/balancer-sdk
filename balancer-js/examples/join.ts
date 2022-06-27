@@ -10,7 +10,7 @@ dotenv.config();
 /*
 Example showing how to use Pools module to join pools with exact tokens in method.
 */
-async function exactTokensInJoinPool() {
+async function join() {
   const config: BalancerSdkConfig = {
     network: Network.KOVAN,
     rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
@@ -32,7 +32,7 @@ async function exactTokensInJoinPool() {
   ];
   const slippage = '100'; // 100 bps = 1%
 
-  const { to, data } = await balancer.pools.join.buildExactTokensInJoinPool(
+  const { to, data } = await balancer.pools.join.buildJoin(
     wallet.address,
     poolId,
     tokensIn,
@@ -50,5 +50,5 @@ async function exactTokensInJoinPool() {
   console.log(tx);
 }
 
-// yarn examples:run ./examples/joinPool.ts
-exactTokensInJoinPool();
+// yarn examples:run ./examples/join.ts
+join();

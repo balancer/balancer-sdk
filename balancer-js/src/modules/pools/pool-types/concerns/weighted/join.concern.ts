@@ -66,7 +66,7 @@ export class WeightedPoolJoin implements JoinConcern {
    * @param {string}                          params.slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
    * @returns                                 transaction request ready to send with signer.sendTransaction
    */
-  async buildExactTokensInJoinPool({
+  async buildJoin({
     joiner,
     pool,
     tokensIn,

@@ -142,7 +142,7 @@ describe('join execution', async () => {
     await approveTokens(tokensIn, [initialBalance, initialBalance], signer);
   });
 
-  context('exactTokensInJoinPool transaction - join with encoded data', () => {
+  context('join transaction - join with encoded data', () => {
     before(async function () {
       this.timeout(20000);
 
@@ -158,14 +158,13 @@ describe('join execution', async () => {
       ];
 
       const slippage = '100';
-      const { to, data, minBPTOut } =
-        await balancer.pools.join.buildExactTokensInJoinPool(
-          signerAddress,
-          B_50WBTC_50WETH.id,
-          tokensInAddresses,
-          amountsIn,
-          slippage
-        );
+      const { to, data, minBPTOut } = await balancer.pools.join.buildJoin(
+        signerAddress,
+        B_50WBTC_50WETH.id,
+        tokensInAddresses,
+        amountsIn,
+        slippage
+      );
       const tx = { to, data };
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
@@ -198,7 +197,7 @@ describe('join execution', async () => {
     });
   });
 
-  context('exactTokensInJoinPool transaction - join with params', () => {
+  context('join transaction - join with params', () => {
     before(async function () {
       this.timeout(20000);
 
@@ -215,7 +214,7 @@ describe('join execution', async () => {
 
       const slippage = '100';
       const { functionName, attributes, value, minBPTOut } =
-        await balancer.pools.join.buildExactTokensInJoinPool(
+        await balancer.pools.join.buildJoin(
           signerAddress,
           B_50WBTC_50WETH.id,
           tokensInAddresses,
@@ -262,7 +261,7 @@ describe('join execution', async () => {
     });
   });
 
-  context('exactTokensInJoinPool transaction - join with ETH', () => {
+  context('join transaction - join with ETH', () => {
     let transactionCost: BigNumber;
     before(async function () {
       this.timeout(20000);
@@ -280,7 +279,7 @@ describe('join execution', async () => {
 
       const slippage = '100';
       const { to, data, value, minBPTOut } =
-        await balancer.pools.join.buildExactTokensInJoinPool(
+        await balancer.pools.join.buildJoin(
           signerAddress,
           B_50WBTC_50WETH.id,
           [AddressZero, wBTC.address],
@@ -322,7 +321,7 @@ describe('join execution', async () => {
     });
   });
 
-  context('exactTokensInJoinPool transaction - single token join', () => {
+  context('join transaction - single token join', () => {
     before(async function () {
       this.timeout(20000);
       amountsIn = [
@@ -334,7 +333,7 @@ describe('join execution', async () => {
       const slippage = '10';
       let errorMessage;
       try {
-        await balancer.pools.join.buildExactTokensInJoinPool(
+        await balancer.pools.join.buildJoin(
           signerAddress,
           B_50WBTC_50WETH.id,
           tokensInAddresses,

@@ -5,7 +5,7 @@ import {
 } from '../types';
 
 export class LinearPoolJoin implements JoinConcern {
-  async buildExactTokensInJoinPool({
+  async buildJoin({
     joiner,
     pool,
     tokensIn,

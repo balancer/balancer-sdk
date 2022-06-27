@@ -20,7 +20,7 @@ export class Join {
    * @param {string}    slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
    * @returns           transaction request ready to send with signer.sendTransaction
    */
-  async buildExactTokensInJoinPool(
+  async buildJoin(
     joiner: string,
     poolId: string,
     tokensIn: string[],
@@ -28,9 +28,7 @@ export class Join {
     slippage: string
   ): Promise<JoinPoolAttributes> {
     const pool = await this.pools.findById(poolId);
-    return Pools.from(
-      pool.poolType as PoolType
-    ).joinCalculator.buildExactTokensInJoinPool({
+    return Pools.from(pool.poolType as PoolType).joinCalculator.buildJoin({
       joiner,
       pool,
       tokensIn,

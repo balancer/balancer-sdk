@@ -60,10 +60,10 @@ describe('pools join module', () => {
     });
   });
 
-  describe('buildExactTokensInJoinPool', () => {
+  describe('buildJoin', () => {
     it('should return encoded params - with slippage', async () => {
       const pools = new Pools(sdkConfig);
-      const { data } = await pools.join.buildExactTokensInJoinPool(
+      const { data } = await pools.join.buildJoin(
         '0x35f5a330FD2F8e521ebd259FA272bA8069590741',
         weth_usdc_pool_id,
         [USDC_address, WETH_address],
@@ -77,7 +77,7 @@ describe('pools join module', () => {
     });
     it('should return encoded params - without slippage', async () => {
       const pools = new Pools(sdkConfig);
-      const { data } = await pools.join.buildExactTokensInJoinPool(
+      const { data } = await pools.join.buildJoin(
         '0x35f5a330FD2F8e521ebd259FA272bA8069590741',
         weth_bal_pool_id,
         [BAL_address, WETH_address],

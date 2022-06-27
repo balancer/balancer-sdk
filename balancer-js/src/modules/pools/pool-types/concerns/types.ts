@@ -17,7 +17,7 @@ export interface SpotPriceConcern {
 }
 
 export interface JoinConcern {
-  buildExactTokensInJoinPool: ({
+  buildJoin: ({
     joiner,
     pool,
     tokensIn,
