@@ -14,7 +14,6 @@ export interface tokens {
     decimals: number;
   };
 }
-const WEIGHTED_POOL_FACTORY = '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9';
 const POOL_OWNER = "0x1111111111111111111111111111111111111111"
 
 const namedTokens: tokens = {

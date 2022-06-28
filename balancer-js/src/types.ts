@@ -32,6 +32,9 @@ export interface BalancerNetworkConfig {
       vault: string;
       multicall: string;
       lidoRelayer?: string;
+      poolFactories: {
+        weighted?: string
+      }
     };
     tokens: {
       wrappedNativeAsset: string;
