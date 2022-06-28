@@ -2,7 +2,9 @@ import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { BalancerSdkConfig, BalancerSDK, SeedToken } from '@/.';
 import { ADDRESSES } from '@/test/lib/constants';
-import { BigNumber, Contract, ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
+import { WeightedPoolFactory, WeightedPoolFactory__factory } from '@balancer-labs/typechain'
+import { Interface } from '@ethersproject/abi';
 
 dotenv.config();
 
@@ -89,7 +91,6 @@ describe('pool factory module', () => {
   // Setup chain
   before(async function () {
     this.timeout(20000);
-
     await provider.send('hardhat_reset', [
       {
         forking: {
@@ -105,7 +106,8 @@ describe('pool factory module', () => {
       data: string,
       value: BigNumber,
       expectedPoolName: string,
-      transactionReceipt: ethers.providers.TransactionReceipt;
+      transactionReceipt: ethers.providers.TransactionReceipt,
+      wPoolFactory: WeightedPoolFactory;
     beforeEach(async () => {
       balancer = new BalancerSDK(sdkConfig);
       const createTx = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
@@ -115,6 +117,7 @@ describe('pool factory module', () => {
       expectedPoolName = createTx.attributes.name;
       const tx = { to, data, value };
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+      wPoolFactory = WeightedPoolFactory__factory.connect(to, provider)
     });
 
     it('should send the transaction succesfully', async () => {
@@ -122,9 +125,7 @@ describe('pool factory module', () => {
     });
 
     it('should create a pool with the correct token name', async () => {
-      const abi = ['event PoolCreated(address indexed)'];
-      const contract = new Contract(poolFactoryContract, abi, provider);
-      const { address } = contract.filters.PoolCreated();
+      const { address } = wPoolFactory.filters.PoolCreated()
       const tokenContract = getERC20Contract(address as string);
       expect(expectedPoolName).to.eql(await tokenContract.getName());
     });
