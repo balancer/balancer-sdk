@@ -1,6 +1,6 @@
 import { Pools } from '@/modules/pools/pools.module';
 import { PoolType } from '@/types';
-import { JoinPoolAttributes } from '../pool-types/concerns/types';
+import { JoinPoolAttributes } from '../pools/pool-types/concerns/types';
 
 export class Join {
   private pools: Pools;

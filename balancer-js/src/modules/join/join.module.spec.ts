@@ -1,4 +1,3 @@
-import dotenv from 'dotenv';
 import { expect } from 'chai';
 import {
   BalancerSdkConfig,
@@ -6,14 +5,14 @@ import {
   Network,
   BalancerSDK,
 } from '@/.';
-import { Pools } from '../pools.module';
+import { Pools } from '../pools/pools.module';
 import { MockPoolDataService } from '@/test/lib/mockPool';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
+import { Join } from './join.module';
+import { getNetworkConfig } from '../sdk.helpers';
 
 let sdkConfig: BalancerSdkConfig;
-
-dotenv.config();
 
 const weth_usdc_pool_id =
   '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019';
@@ -60,10 +59,14 @@ describe('pools join module', () => {
     });
   });
 
-  describe('buildJoin', () => {
+  describe('buildJoin', async () => {
+    const balancer = new BalancerSDK(sdkConfig);
+    const join = new Join(
+      balancer.pools,
+      getNetworkConfig(balancer.config).addresses.tokens.wrappedNativeAsset
+    );
     it('should return encoded params - with slippage', async () => {
-      const pools = new Pools(sdkConfig);
-      const { data } = await pools.join.buildJoin(
+      const { data } = await join.buildJoin(
         '0x35f5a330FD2F8e521ebd259FA272bA8069590741',
         weth_usdc_pool_id,
         [USDC_address, WETH_address],
@@ -76,8 +79,7 @@ describe('pools join module', () => {
       );
     });
     it('should return encoded params - without slippage', async () => {
-      const pools = new Pools(sdkConfig);
-      const { data } = await pools.join.buildJoin(
+      const { data } = await join.buildJoin(
         '0x35f5a330FD2F8e521ebd259FA272bA8069590741',
         weth_bal_pool_id,
         [BAL_address, WETH_address],

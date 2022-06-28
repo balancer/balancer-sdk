@@ -4,6 +4,8 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import { BalancerSDK, BalancerSdkConfig, Network } from '../src/index';
 import { USDC, WETH } from './constants';
 import { parseFixed } from '@ethersproject/bignumber';
+import { Join } from '../src/modules/join/join.module';
+import { getNetworkConfig } from '../src/modules/sdk.helpers';
 
 dotenv.config();
 
@@ -32,7 +34,11 @@ async function join() {
   ];
   const slippage = '100'; // 100 bps = 1%
 
-  const { to, data } = await balancer.pools.join.buildJoin(
+  const wrappedNativeAsset =
+    getNetworkConfig(config).addresses.tokens.wrappedNativeAsset;
+  const join = new Join(balancer.pools, wrappedNativeAsset);
+
+  const { to, data } = await join.buildJoin(
     wallet.address,
     poolId,
     tokensIn,

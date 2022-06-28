@@ -6,13 +6,10 @@ import { StablePhantom } from './pool-types/stablePhantom.module';
 import { Linear } from './pool-types/linear.module';
 import { SOR, SubgraphPoolBase } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { Join } from './join/join.module';
 import { Sor } from '../sor/sor.module';
-import { getNetworkConfig } from '../sdk.helpers';
 
 export class Pools {
   private readonly sor: Sor;
-  public readonly join: Join;
 
   constructor(
     config: BalancerSdkConfig,
@@ -28,9 +25,6 @@ export class Pools {
     } else {
       this.sor = new Sor(config);
     }
-    const wrappedNativeAsset =
-      getNetworkConfig(config).addresses.tokens.wrappedNativeAsset;
-    this.join = new Join(this, wrappedNativeAsset);
   }
 
   static from(

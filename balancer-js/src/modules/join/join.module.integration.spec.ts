@@ -12,6 +12,8 @@ import { parseFixed } from '@ethersproject/bignumber';
 import { balancerVault } from '@/lib/constants/config';
 import { SubgraphToken } from '@balancer-labs/sor';
 import { AddressZero } from '@ethersproject/constants';
+import { Join } from './join.module';
+import { getNetworkConfig } from '../sdk.helpers';
 
 dotenv.config();
 
@@ -123,6 +125,7 @@ describe('join execution', async () => {
   let bptBalanceAfter: BigNumber;
   let tokensBalanceBefore: BigNumber[];
   let tokensBalanceAfter: BigNumber[];
+  let join: Join;
 
   // Setup chain
   before(async function () {
@@ -136,6 +139,10 @@ describe('join execution', async () => {
       },
     ]);
     await setupPools();
+    join = new Join(
+      balancer.pools,
+      getNetworkConfig(balancer.config).addresses.tokens.wrappedNativeAsset
+    );
     signerAddress = await signer.getAddress();
     await setupTokenBalance(signerAddress, wETH, wETH_SLOT, initialBalance);
     await setupTokenBalance(signerAddress, wBTC, wBTC_SLOT, initialBalance);
@@ -158,7 +165,7 @@ describe('join execution', async () => {
       ];
 
       const slippage = '100';
-      const { to, data, minBPTOut } = await balancer.pools.join.buildJoin(
+      const { to, data, minBPTOut } = await join.buildJoin(
         signerAddress,
         B_50WBTC_50WETH.id,
         tokensInAddresses,
@@ -214,7 +221,7 @@ describe('join execution', async () => {
 
       const slippage = '100';
       const { functionName, attributes, value, minBPTOut } =
-        await balancer.pools.join.buildJoin(
+        await join.buildJoin(
           signerAddress,
           B_50WBTC_50WETH.id,
           tokensInAddresses,
@@ -278,14 +285,13 @@ describe('join execution', async () => {
       ];
 
       const slippage = '100';
-      const { to, data, value, minBPTOut } =
-        await balancer.pools.join.buildJoin(
-          signerAddress,
-          B_50WBTC_50WETH.id,
-          [AddressZero, wBTC.address],
-          amountsIn,
-          slippage
-        );
+      const { to, data, value, minBPTOut } = await join.buildJoin(
+        signerAddress,
+        B_50WBTC_50WETH.id,
+        [AddressZero, wBTC.address],
+        amountsIn,
+        slippage
+      );
       const tx = { to, data, value };
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
@@ -333,7 +339,7 @@ describe('join execution', async () => {
       const slippage = '10';
       let errorMessage;
       try {
-        await balancer.pools.join.buildJoin(
+        await join.buildJoin(
           signerAddress,
           B_50WBTC_50WETH.id,
           tokensInAddresses,
