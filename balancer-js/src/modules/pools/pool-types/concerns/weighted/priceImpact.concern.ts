@@ -1,29 +1,9 @@
 import { PriceImpactConcern } from '../types';
-import { SubgraphPoolBase, WeightedPool, ZERO } from '@balancer-labs/sor';
-import * as SOR from '@balancer-labs/sor/dist/index';
-import * as GSDK from '@georgeroman/balancer-v2-pools';
-import { BigNumber } from 'ethers';
+import { SubgraphPoolBase, WeightedPool } from '@balancer-labs/sor';
 import { cloneDeep } from 'lodash';
-import { MathSol } from '@/utils/basicOperations';
-import { One } from '@ethersproject/constants';
-import { BalancerError } from '@/balancerErrors';
+import { realNumberToEvm, evmToRealNumber } from '@/utils/conversions';
 
 const ONE = BigInt('1000000000000000000');
-
-function realNumberToEvm(stringNumber: string): bigint {
-  return BigInt(
-    SOR.bnum(stringNumber)
-      .times(10 ** 18)
-      .dp(0)
-      .toString()
-  );
-}
-
-function evmToRealNumber(bigintNumber: bigint): string {
-  return SOR.bnum(bigintNumber.toString())
-    .div(10 ** 18)
-    .toString();
-}
 
 export class WeightedPoolPriceImpact implements PriceImpactConcern {
   bptZeroPriceImpact(pool: SubgraphPoolBase, amounts: string[]): string {

@@ -298,7 +298,7 @@ describe('pricing module', () => {
         if (!pool) return;
         const stablePool = Pools.from(pool);
         let tokenAmounts = [
-          '629870.1629199810394001584',
+          '629870.162919981039400158',
           '615159.92969774',
           '641181.65731857',
         ];

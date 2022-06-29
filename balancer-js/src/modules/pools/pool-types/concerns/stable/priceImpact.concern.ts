@@ -1,26 +1,10 @@
-import { PriceImpactConcern, PriceImpactInput } from '../types';
-import { SubgraphPoolBase, StablePool, ZERO } from '@balancer-labs/sor';
-import * as SOR from '@balancer-labs/sor/dist/index';
-import * as GSDK from '@georgeroman/balancer-v2-pools';
+import { PriceImpactConcern } from '../types';
+import { SubgraphPoolBase, StablePool } from '@balancer-labs/sor';
 import { BZERO, MathSol } from '@/utils/basicOperations';
 import { cloneDeep } from 'lodash';
+import { realNumberToEvm, evmToRealNumber } from '@/utils/conversions';
 
 const ONE = BigInt('1000000000000000000');
-
-function realNumberToEvm(stringNumber: string): bigint {
-  return BigInt(
-    SOR.bnum(stringNumber)
-      .times(10 ** 18)
-      .dp(0)
-      .toString()
-  );
-}
-
-function evmToRealNumber(bigIntNumber: bigint): string {
-  return SOR.bnum(bigIntNumber.toString())
-    .div(10 ** 18)
-    .toString();
-}
 
 export class StablePriceImpact implements PriceImpactConcern {
   bptZeroPriceImpact(pool: SubgraphPoolBase, amounts: string[]): string {
