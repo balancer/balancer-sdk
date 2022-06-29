@@ -172,7 +172,7 @@ describe('pool factory module', () => {
       expect(senderBalance).to.eql(bptOut);
     });
 
-    it("should decrease the sender's token balance by the expected amount", async () => {
+    it('should decrease the sender\'s token balance by the expected amount', async () => {
       const signerAddress = await signer.getAddress()
       
       const getTokenBalanceFromUserAddress = (user: string) => (address:string): Promise<BigNumber> => {
