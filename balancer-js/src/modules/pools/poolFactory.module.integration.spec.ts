@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { BalancerSdkConfig, BalancerSDK, SeedToken } from '@/.';
+import { BalancerSdkConfig, BalancerSDK, SeedToken, WeightedPoolEncoder } from '@/.';
 import { ADDRESSES } from '@/test/lib/constants';
 import { BigNumber, ethers } from 'ethers';
-import { WeightedPoolFactory, WeightedPoolFactory__factory } from '@balancer-labs/typechain'
+import { BalancerHelpers, WeightedPoolFactory, WeightedPoolFactory__factory, BalancerHelpers__factory } from '@balancer-labs/typechain'
 import { Interface } from '@ethersproject/abi';
 
 dotenv.config();
@@ -129,7 +129,8 @@ describe('pool factory module', () => {
   });
   context('initial join transaction', () => {
     let balancer: BalancerSDK,
-      transactionReceipt: ethers.providers.TransactionReceipt;
+      transactionReceipt: ethers.providers.TransactionReceipt,
+      helpers: BalancerHelpers;
     beforeEach(async () => {
       balancer = new BalancerSDK(sdkConfig);
       const txAttributes = await balancer.pools.weighted.buildCreateTx(
@@ -138,6 +139,10 @@ describe('pool factory module', () => {
       transactionReceipt = await (
         await signer.sendTransaction(txAttributes)
       ).wait();
+      const { address } = await balancer.pools.getPoolInfoFromCreateTx(
+        transactionReceipt
+      );
+      helpers = BalancerHelpers__factory.connect('0x5aDDCCa35b7A0D07C74063c48700C8590E87864E', provider)
     });
 
     it('should send the transaction succesfully', async () => {
@@ -145,14 +150,53 @@ describe('pool factory module', () => {
     });
 
     it('should give user tokens on initial join', async () => {
-      const { address } = await balancer.pools.getPoolInfoFromCreateTx(
+      const { id, address } = await balancer.pools.getPoolInfoFromCreateTx(
         transactionReceipt
       );
+
+      const { bptOut } = await helpers.queryJoin(
+        id.toString(),
+        INIT_JOIN_PARAMS.sender,
+        INIT_JOIN_PARAMS.receiver,
+        {
+          assets: INIT_JOIN_PARAMS.tokenAddresses,
+          maxAmountsIn: Array(INIT_JOIN_PARAMS.tokenAddresses.length).fill(BigNumber.from("1000000000000000000000")),
+          userData: WeightedPoolEncoder.joinInit(INIT_JOIN_PARAMS.initialBalancesString),
+          fromInternalBalance: false,
+        })
+      
       const tx = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS);
       await (await signer.sendTransaction(tx)).wait();
       const createdPool = getERC20Contract(address);
       const senderBalance: BigNumber = await createdPool.balanceOf(signer);
-      expect(senderBalance.gt(BigNumber.from('0'))).to.eql(true);
+      expect(senderBalance).to.eql(bptOut);
+    });
+
+    it("should decrease the sender's token balance by the expected amount", async () => {
+      const signerAddress = await signer.getAddress()
+      
+      const getTokenBalanceFromUserAddress = (user: string) => (address:string): Promise<BigNumber> => {
+        return getERC20Contract(address).balanceOf(user)
+      }
+
+      const initialTokenBalances = await Promise.all(
+        INIT_JOIN_PARAMS.tokenAddresses.map(getTokenBalanceFromUserAddress(signerAddress))
+      )
+
+      const expectedTokenBalances = initialTokenBalances.map((val, i) => {
+        return val.sub(INIT_JOIN_PARAMS.initialBalancesString[i])
+      })
+
+      const tx = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS);
+      await (await signer.sendTransaction(tx)).wait();
+
+      const finalTokenBalances = await Promise.all(
+        INIT_JOIN_PARAMS.tokenAddresses.map(getTokenBalanceFromUserAddress(signerAddress))
+      )
+      
+      expectedTokenBalances.forEach((bal, i) => {
+        expect(bal.eq(finalTokenBalances[i])).to.be.true;
+      })
     });
   });
-});
+})
