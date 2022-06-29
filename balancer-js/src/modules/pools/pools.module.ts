@@ -6,6 +6,8 @@ import { StablePhantom } from './pool-types/stablePhantom.module';
 import { Linear } from './pool-types/linear.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { PoolInfo } from './types';
+import { BigNumber } from 'ethers';
 
 export class Pools {
   constructor(
@@ -45,9 +47,9 @@ export class Pools {
     }
   }
 
-  getPoolInfoFromCreateTx(tx: any): Promise<{ id: number, address: string }> {
+  getPoolInfoFromCreateTx(tx: any): Promise<PoolInfo> {
       return new Promise((resolve, reject) => {
-        resolve({ id: 0, address: "0x000000000000000000000000000000" })
+        resolve({ id: BigNumber.from('0'), address: "0x000000000000000000000000000000", name: '' })
         reject('No contract created in that transaction')
       })
   }

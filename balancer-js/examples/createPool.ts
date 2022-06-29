@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import { Wallet } from '@ethersproject/wallet';
 import { InfuraProvider } from '@ethersproject/providers';
-import { BalancerSDK, BalancerSdkConfig, Network, SeedToken, SwapType } from '../src/index';
+import { BalancerSDK, BalancerSdkConfig, Network, SeedToken } from '../src/index';
 import { DAI } from './constants';
 
 dotenv.config();
@@ -27,9 +27,9 @@ const namedTokens: tokens = {
   },
 };
 const SEED_TOKENS: Array<SeedToken> = [ 
-    { id: 0, tokenAddress: namedTokens.wBTC.address, weight: 30, isLocked: false, amount: "200000000" }, 
-    { id: 1, tokenAddress: namedTokens.wETH.address, weight: 40, isLocked: false, amount: "200000000" },
-    { id: 2, tokenAddress: DAI.address, weight: 30, isLocked: false, amount: "200000000" } 
+    { id: 0, tokenAddress: namedTokens.wBTC.address, weight: 30, amount: "200000000" }, 
+    { id: 1, tokenAddress: namedTokens.wETH.address, weight: 40, amount: "200000000" },
+    { id: 2, tokenAddress: DAI.address, weight: 30, amount: "200000000" } 
 ]
 
 /*
@@ -43,7 +43,7 @@ async function createWeightedPool() {
   };
   const balancer = new BalancerSDK(sdkConfig);
 
-  const { data } = await balancer.pools.weighted.buildCreateTx({
+  const { data, to: wPoolFactoryContractAddress } = await balancer.pools.weighted.buildCreateTx({
     // Pool name
     name: "WeightedPoolFactoryExample",
     symbol: "30wBTC-40wETH-30wDAI",
@@ -65,7 +65,7 @@ async function createWeightedPool() {
 
   const tx = await wallet.sendTransaction({
     data,
-    to: WEIGHTED_POOL_FACTORY,
+    to: wPoolFactoryContractAddress,
     /**
      * The following gas inputs are optional,
      **/
@@ -73,7 +73,7 @@ async function createWeightedPool() {
     // gasLimit: '2000000',
   });
 
-  const createdPoolInfo = await balancer.pools.getPoolInfoFromCreateTx(tx) as { id: number, address: string };
+  const createdPoolInfo = await balancer.pools.getPoolInfoFromCreateTx(tx);
   console.log({ createdPoolInfo })
 
   const INIT_JOIN_PARAMS = {

@@ -32,21 +32,18 @@ const SEED_TOKENS: Array<SeedToken> = [
     id: 0,
     tokenAddress: ADDRESSES[42].DAI.address,
     weight: 30,
-    isLocked: false,
     amount: '200000000',
   },
   {
     id: 1,
     tokenAddress: ADDRESSES[42].USDC.address,
     weight: 40,
-    isLocked: false,
     amount: '200000000',
   },
   {
     id: 2,
     tokenAddress: ADDRESSES[42].WBTC.address,
     weight: 30,
-    isLocked: false,
     amount: '200000000',
   },
 ];

@@ -1,4 +1,4 @@
-import { BigNumber } from "@ethersproject/bignumber";
+import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 
 export enum PoolType {
   Weighted = 'Weighted',
@@ -11,14 +11,13 @@ export enum PoolType {
 
 export type SeedToken = {
   tokenAddress: string;
-  weight: number;
-  isLocked: boolean;
+  weight: BigNumberish;
   amount: string;
   id: number;
 }
 
 export type PoolInfo = {
-  id: number;
+  id: BigNumber;
   name: string;
   address: string;
 }
