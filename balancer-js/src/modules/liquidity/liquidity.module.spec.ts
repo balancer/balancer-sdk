@@ -46,11 +46,18 @@ describe('Liquidity Module', () => {
       expect(liquidity).to.be.eq('127080.0');
     });
 
-    it('Should return 0 liquidity with no errors when prices are undefined', async () => {
+    it('Should return 0 liquidity with no errors when all prices are undefined', async () => {
       const liquidity = await liquidityProvider.getLiquidity(
         findPool('0x062f38735aac32320db5e2dbbeb07968351d7c72')
       );
       expect(liquidity).to.be.eq('0.0');
+    });
+
+    it('Should approximate liquidity when some prices are unknown', async () => {
+      const liquidity = await liquidityProvider.getLiquidity(
+        findPool('0x996616bde0cb4974e571f17d31c844da2bd177f8')
+      );
+      expect(liquidity).to.be.eq('30134.168378867');
     });
   });
 
