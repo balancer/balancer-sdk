@@ -34,10 +34,10 @@ class SingleSwapBuilder {
     );
   }
 
-  setFunds(userAddress: string): void {
+  setFunds(sender: string, recipient?: string): void {
     this.funds = {
-      sender: userAddress,
-      recipient: userAddress,
+      sender,
+      recipient: recipient || sender,
       fromInternalBalance: false,
       toInternalBalance: false,
     };

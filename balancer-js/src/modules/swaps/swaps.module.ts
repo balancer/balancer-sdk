@@ -135,6 +135,7 @@ export class Swaps {
    */
   buildSwap({
     userAddress,
+    recipient,
     swapInfo,
     kind,
     deadline,
@@ -147,7 +148,7 @@ export class Swaps {
       swapInfo.swaps.length > 1
         ? new BatchSwapBuilder(swapInfo, kind, this.chainId)
         : new SingleSwapBuilder(swapInfo, kind, this.chainId);
-    builder.setFunds(userAddress);
+    builder.setFunds(userAddress, recipient);
     builder.setDeadline(deadline);
     builder.setLimits(maxSlippage);
 
