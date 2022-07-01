@@ -34,6 +34,7 @@ export interface ContractAddresses {
   vault: string;
   multicall: string;
   lidoRelayer?: string;
+  gaugeController: string;
 }
 
 export interface BalancerNetworkConfig {
