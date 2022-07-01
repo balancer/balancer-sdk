@@ -26,6 +26,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2',
+      gaugesSubgraph:
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
     },
     pools: {
       wETHwstETH: {
@@ -48,6 +50,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2',
+      gaugesSubgraph:
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
     },
     pools: {},
   },
@@ -65,6 +69,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-arbitrum-v2',
+      gaugesSubgraph:
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
     },
     pools: {},
   },
@@ -82,6 +88,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-kovan-v2',
+      gaugesSubgraph:
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
     },
     pools: {},
   },
@@ -98,6 +106,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph: '',
+      gaugesSubgraph:
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
     },
     pools: {},
   },
@@ -115,6 +125,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-rinkeby-v2',
+      gaugesSubgraph:
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
     },
     pools: {},
   },
@@ -132,6 +144,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2',
+      gaugesSubgraph:
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
     },
     pools: {},
   },
