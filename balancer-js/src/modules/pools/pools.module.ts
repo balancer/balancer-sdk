@@ -10,14 +10,24 @@ import { PoolInfo } from './types';
 import { BigNumber } from 'ethers';
 
 export class Pools {
+  config: BalancerSdkConfig;
+  public weighted: Weighted;
+  public stable: Stable;
+  public metaStable: MetaStable;
+  public stablePhantom: StablePhantom;
+  public linear: Linear;
+  static config: BalancerSdkConfig;
+
   constructor(
     config: BalancerSdkConfig,
-    public weighted = new Weighted(),
-    public stable = new Stable(),
-    public metaStable = new MetaStable(),
-    public stablePhantom = new StablePhantom(),
-    public linear = new Linear()
-  ) {}
+  ) {
+    this.config = config;
+    this.weighted = new Weighted(this.config);
+    this.stable = new Stable();
+    this.metaStable = new MetaStable();
+    this.stablePhantom = new StablePhantom();
+    this.linear = new Linear();
+  }
 
   static from(
     pool: SubgraphPoolBase
@@ -27,7 +37,7 @@ export class Pools {
       case 'Weighted':
       case 'Investment':
       case 'LiquidityBootstrapping': {
-        return new Weighted();
+        return new Weighted(this.config);
       }
       case 'Stable': {
         return new Stable();

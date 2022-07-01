@@ -35,15 +35,18 @@ export type WeightedFactoryAttributes = {
   data: any
   value?: BigNumber;
   functionName: string;
-  attributes: {
-    name: string;
-    symbol: string;
-    swapFee: string;
-    tokens: SeedToken[];
-    owner: string;
-  },
+  attributes: WeightedFactoryFormattedAttributes,
   err?: boolean
 }
+
+export type WeightedFactoryFormattedAttributes = {
+    name: string,
+    symbol: string,
+    tokens: string[],
+    weights: BigNumberish[],
+    swapFeePercentage: BigNumberish,
+    owner: string,
+  }
 
 export interface InitJoinAttributes {
   to: string;
