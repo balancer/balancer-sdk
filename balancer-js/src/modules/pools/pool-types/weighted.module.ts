@@ -7,6 +7,7 @@ import { Interface } from '@ethersproject/abi';
 import { WeightedPoolFactory__factory } from '@balancer-labs/typechain';
 import { BalancerSdkConfig } from '@/types';
 import { poolFactoryAddresses } from '@/lib/constants/config';
+import { ethers } from 'ethers';
 
 export class Weighted implements PoolType {
   public liquidityCalculator: LiquidityConcern;
@@ -29,13 +30,18 @@ export class Weighted implements PoolType {
         symbol: params.symbol,
         tokens: params.seedTokens.map(token => token.tokenAddress),
         weights: params.seedTokens.map(token => token.weight),
-        swapFeePercentage: params.initialFee,
+        swapFeePercentage: ethers.utils.parseEther(params.initialFee),
         owner: params.owner,
       }
 
       const data = wPoolFactory.encodeFunctionData('create', Object.values(attributes))
 
-      return { to: poolFactoryAddresses.weighted, data, functionName: 'create', attributes, err: false }
+      return { 
+        to: poolFactoryAddresses.weighted,
+        data, functionName: 'create',
+        attributes, err: false,
+        value: ethers.utils.parseEther(params.value)
+      }
   }
 
   async buildInitJoin(initJoinParams: any): Promise<InitJoinAttributes>{
