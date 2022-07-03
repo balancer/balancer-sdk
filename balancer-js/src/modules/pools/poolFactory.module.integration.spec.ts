@@ -4,7 +4,6 @@ import { BalancerSdkConfig, BalancerSDK, SeedToken, WeightedPoolEncoder } from '
 import { ADDRESSES } from '@/test/lib/constants';
 import { BigNumber, ethers } from 'ethers';
 import { BalancerHelpers, WeightedPoolFactory, WeightedPoolFactory__factory, BalancerHelpers__factory } from '@balancer-labs/typechain'
-import { Interface } from '@ethersproject/abi';
 
 dotenv.config();
 
