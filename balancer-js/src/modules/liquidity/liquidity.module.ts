@@ -7,6 +7,7 @@ import { TokenPriceProvider } from '../data-providers/token-price/provider.inter
 import { Zero } from '@ethersproject/constants';
 
 const SCALING_FACTOR = 36;
+const TOKEN_WEIGHT_SCALING = 18;
 
 export interface PoolBPTValue {
   address: string;
@@ -70,7 +71,9 @@ export class Liquidity {
           priceRate: token.priceRate,
           price: tokenPrice,
           balance: token.balance,
-          weight: token.weight ? parseFixed(token.weight, 2).toString() : '0',
+          weight: token.weight
+            ? parseFixed(token.weight, TOKEN_WEIGHT_SCALING).toString()
+            : '0',
         };
         return poolToken;
       })
