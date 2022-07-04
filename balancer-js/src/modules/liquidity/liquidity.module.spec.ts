@@ -65,7 +65,7 @@ describe('Liquidity Module', () => {
       const wethPrice = tokenPrices[wethAddress].usd;
       const expectedLiquidity = parseFixed(wethBalance, 18)
         .mul(parseFixed(wethPrice, 0))
-        .mul('2'); 
+        .mul('2');
       expect(liquidity).to.be.eq(formatFixed(expectedLiquidity, 18));
     });
   });
