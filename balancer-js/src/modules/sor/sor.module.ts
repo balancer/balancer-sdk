@@ -58,6 +58,7 @@ export class Sor extends SOR {
       vault: network.addresses.contracts.vault,
       weth: network.addresses.tokens.wrappedNativeAsset,
       lbpRaisingTokens: network.addresses.tokens?.lbpRaisingTokens,
+      wETHwstETH: network.pools.wETHwstETH,
     };
   }
 
