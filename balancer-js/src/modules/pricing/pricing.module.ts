@@ -94,6 +94,7 @@ export class Pricing {
     }
   }
 
+  // TO DO - This will be refactored to match joinPool architecture
   async getPriceImpact(
     tokenAmounts: string[],
     isJoin: boolean,

@@ -6,7 +6,7 @@ import { parseToBigInt18, formatFromBigInt18 } from '@/lib/utils/math';
 
 const ONE = BigInt('1000000000000000000');
 
-export class StablePriceImpact implements PriceImpactConcern {
+export class StablePoolPriceImpact implements PriceImpactConcern {
   bptZeroPriceImpact(pool: SubgraphPoolBase, amounts: string[]): string {
     const bigIntAmounts = amounts.map((amount) => parseToBigInt18(amount));
     const stablePool = StablePool.fromPool(pool);

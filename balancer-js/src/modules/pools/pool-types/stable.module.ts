@@ -1,6 +1,6 @@
 import { StablePoolLiquidity } from './concerns/stable/liquidity.concern';
 import { StablePoolSpotPrice } from './concerns/stable/spotPrice.concern';
-import { StablePriceImpact } from './concerns/stable/priceImpact.concern';
+import { StablePoolPriceImpact } from './concerns/stable/priceImpact.concern';
 import { PoolType } from './pool-type.interface';
 import {
   LiquidityConcern,
@@ -16,7 +16,7 @@ export class Stable implements PoolType {
   constructor(
     private liquidityConcern = StablePoolLiquidity,
     private spotPriceCalculatorConcern = StablePoolSpotPrice,
-    private priceImpactCalculatorConcern = StablePriceImpact
+    private priceImpactCalculatorConcern = StablePoolPriceImpact
   ) {
     this.liquidity = new this.liquidityConcern();
     this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
