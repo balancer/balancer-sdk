@@ -1,14 +1,14 @@
 import { PriceImpactConcern } from '../types';
 import { SubgraphPoolBase, WeightedPool } from '@balancer-labs/sor';
 import { cloneDeep } from 'lodash';
-import { realNumberToEvm, evmToRealNumber } from '@/utils/conversions';
+import { parseToBigInt18, formatFromBigInt18 } from '@/lib/utils/math';
 
 const ONE = BigInt('1000000000000000000');
 
 export class WeightedPoolPriceImpact implements PriceImpactConcern {
   bptZeroPriceImpact(pool: SubgraphPoolBase, amounts: string[]): string {
     const bigIntAmounts = amounts.map((amount) =>
-      BigInt(realNumberToEvm(amount))
+      BigInt(parseToBigInt18(amount))
     );
     const weightedPool = WeightedPool.fromPool(pool);
     const tokensList = cloneDeep(pool.tokensList);
@@ -19,15 +19,15 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
     let bptZeroPriceImpact = BigInt(0);
     for (let i = 0; i < n; i++) {
       const weight =
-        (realNumberToEvm(weightedPool.tokens[i].weight) *
+        (parseToBigInt18(weightedPool.tokens[i].weight) *
           weightedPool.totalWeight.toBigInt()) /
         ONE;
-      const balance = realNumberToEvm(weightedPool.tokens[i].balance);
+      const balance = parseToBigInt18(weightedPool.tokens[i].balance);
       const price = (weight * totalShares) / balance;
       const newTerm = (price * bigIntAmounts[i]) / ONE;
       bptZeroPriceImpact += newTerm;
     }
-    return evmToRealNumber(bptZeroPriceImpact);
+    return formatFromBigInt18(bptZeroPriceImpact);
   }
 
   calcPriceImpact(

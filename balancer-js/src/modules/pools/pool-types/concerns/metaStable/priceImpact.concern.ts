@@ -1,15 +1,15 @@
 import { PriceImpactConcern } from '../types';
 import { SubgraphPoolBase, MetaStablePool } from '@balancer-labs/sor';
-import { realNumberToEvm, evmToRealNumber } from '@/utils/conversions';
+import { parseToBigInt18, formatFromBigInt18 } from '@/lib/utils/math';
 import { cloneDeep } from 'lodash';
 import { bptSpotPrice } from '../stable/priceImpact.concern';
-import { MathSol } from '@/utils/basicOperations';
+import { SolidityMaths } from '@/lib/utils/solidityMaths';
 
 const ONE = BigInt('1000000000000000000');
 
 export class MetaStablePoolPriceImpact implements PriceImpactConcern {
   bptZeroPriceImpact(pool: SubgraphPoolBase, amounts: string[]): string {
-    const bigIntAmounts = amounts.map((amount) => realNumberToEvm(amount));
+    const bigIntAmounts = amounts.map((amount) => parseToBigInt18(amount));
     const metaStablePool = MetaStablePool.fromPool(pool);
     const tokensList = cloneDeep(pool.tokensList);
     const n = tokensList.length;
@@ -18,13 +18,13 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
     let bptZeroPriceImpact = BigInt(0);
     const totalShares = BigInt(metaStablePool.totalShares.toString());
     const balances = metaStablePool.tokens.map((token) =>
-      realNumberToEvm(token.balance)
+      parseToBigInt18(token.balance)
     );
     const priceRates = metaStablePool.tokens.map((token) =>
-      realNumberToEvm(token.priceRate)
+      parseToBigInt18(token.priceRate)
     );
     const balancesScaled = balances.map((balance, i) =>
-      MathSol.mulDownFixed(balance, priceRates[i])
+      SolidityMaths.mulDownFixed(balance, priceRates[i])
     );
 
     for (let i = 0; i < n; i++) {
@@ -40,7 +40,7 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
       const newTerm = (price * bigIntAmounts[i]) / ONE;
       bptZeroPriceImpact += newTerm;
     }
-    return evmToRealNumber(bptZeroPriceImpact);
+    return formatFromBigInt18(bptZeroPriceImpact);
   }
 
   calcPriceImpact(

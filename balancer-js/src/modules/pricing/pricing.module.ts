@@ -103,13 +103,13 @@ export class Pricing {
   ): Promise<string> {
     let typedPool: Weighted | Stable | MetaStable | StablePhantom | Linear;
 
-    if (pool) typedPool = Pools.from(pool);
+    if (pool) typedPool = Pools.from(pool.poolType as PoolType);
     else {
       await this.fetchPools();
       const pools = this.getPools();
       pool = pools.find((pool) => pool.id == poolId);
       if (!pool) throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
-      typedPool = Pools.from(pool);
+      typedPool = Pools.from(pool.poolType as PoolType);
     }
     const answer = typedPool.priceImpactCalculator.calcPriceImpact(
       tokenAmounts,

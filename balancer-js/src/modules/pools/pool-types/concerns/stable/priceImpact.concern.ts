@@ -1,14 +1,14 @@
 import { PriceImpactConcern } from '../types';
 import { SubgraphPoolBase, StablePool } from '@balancer-labs/sor';
-import { BZERO, MathSol } from '@/utils/basicOperations';
+import { BZERO, SolidityMaths } from '@/lib/utils/solidityMaths';
 import { cloneDeep } from 'lodash';
-import { realNumberToEvm, evmToRealNumber } from '@/utils/conversions';
+import { parseToBigInt18, formatFromBigInt18 } from '@/lib/utils/math';
 
 const ONE = BigInt('1000000000000000000');
 
 export class StablePriceImpact implements PriceImpactConcern {
   bptZeroPriceImpact(pool: SubgraphPoolBase, amounts: string[]): string {
-    const bigIntAmounts = amounts.map((amount) => realNumberToEvm(amount));
+    const bigIntAmounts = amounts.map((amount) => parseToBigInt18(amount));
     const stablePool = StablePool.fromPool(pool);
     const tokensList = cloneDeep(pool.tokensList);
     const n = tokensList.length;
@@ -17,7 +17,7 @@ export class StablePriceImpact implements PriceImpactConcern {
     let bptZeroPriceImpact = BigInt(0);
     const totalShares = BigInt(stablePool.totalShares.toString());
     const balances = stablePool.tokens.map((token) =>
-      realNumberToEvm(token.balance)
+      parseToBigInt18(token.balance)
     );
 
     for (let i = 0; i < n; i++) {
@@ -30,7 +30,7 @@ export class StablePriceImpact implements PriceImpactConcern {
       const newTerm = (price * bigIntAmounts[i]) / ONE;
       bptZeroPriceImpact += newTerm;
     }
-    return evmToRealNumber(bptZeroPriceImpact);
+    return formatFromBigInt18(bptZeroPriceImpact);
   }
 
   calcPriceImpact(
@@ -71,7 +71,10 @@ export function bptSpotPrice(
   const partial_x = BigInt(2) * alpha * x + beta + gamma * D;
   const minus_partial_D =
     D_P * BigInt(totalCoins + 1) * AMP_PRECISION - gamma * x;
-  const ans = MathSol.divUpFixed((partial_x * bptSupply) / minus_partial_D, D);
+  const ans = SolidityMaths.divUpFixed(
+    (partial_x * bptSupply) / minus_partial_D,
+    D
+  );
   return ans;
 }
 
@@ -107,24 +110,30 @@ function _calculateInvariant(
   for (let i = 0; i < 255; i++) {
     let P_D = balances[0] * BigInt(numTokens);
     for (let j = 1; j < numTokens; j++) {
-      P_D = MathSol.div(
-        MathSol.mul(MathSol.mul(P_D, balances[j]), BigInt(numTokens)),
+      P_D = SolidityMaths.div(
+        SolidityMaths.mul(
+          SolidityMaths.mul(P_D, balances[j]),
+          BigInt(numTokens)
+        ),
         invariant,
         roundUp
       );
     }
     prevInvariant = invariant;
-    invariant = MathSol.div(
-      MathSol.mul(MathSol.mul(BigInt(numTokens), invariant), invariant) +
-        MathSol.div(
-          MathSol.mul(MathSol.mul(ampTimesTotal, sum), P_D),
+    invariant = SolidityMaths.div(
+      SolidityMaths.mul(
+        SolidityMaths.mul(BigInt(numTokens), invariant),
+        invariant
+      ) +
+        SolidityMaths.div(
+          SolidityMaths.mul(SolidityMaths.mul(ampTimesTotal, sum), P_D),
           AMP_PRECISION,
           roundUp
         ),
-      MathSol.mul(BigInt(numTokens + 1), invariant) +
+      SolidityMaths.mul(BigInt(numTokens + 1), invariant) +
         // No need to use checked arithmetic for the amp precision, the amp is guaranteed to be at least 1
-        MathSol.div(
-          MathSol.mul(ampTimesTotal - AMP_PRECISION, P_D),
+        SolidityMaths.div(
+          SolidityMaths.mul(ampTimesTotal - AMP_PRECISION, P_D),
           AMP_PRECISION,
           !roundUp
         ),
