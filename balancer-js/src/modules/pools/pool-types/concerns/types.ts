@@ -14,22 +14,6 @@ export interface SpotPriceConcern {
   ) => string;
 }
 
-/*
-The following idea is not being currently used
-
-interface weightedPIInput {
-  balances: string[];
-  weights: string[];
-}
-
-interface metaStableInput {
-  balances: string[];
-  rates: string[];
-}
-
-export type PriceImpactInput = weightedPIInput | metaStableInput;
-*/
-
 export interface PriceImpactConcern {
   bptZeroPriceImpact: (pool: SubgraphPoolBase, amounts: string[]) => string;
   calcPriceImpact: (

@@ -119,28 +119,4 @@ export class Pricing {
     );
     return answer;
   }
-
-  async movePriceAmount(
-    tokenIn: string,
-    tokenOut: string,
-    pool: SubgraphPoolBase
-  ): Promise<string> {
-    // const spotPrice = this.getSpotPrice(tokenIn, tokenOut, pool.id, [pool]);
-    // console.log(spotPrice);
-    const typedPool = Pools.from(pool);
-    /* for (let i = 0; i < 1000; i++) {
-      const a = typedPool.spotPriceCalculator.calcPoolSpotPrice(
-        tokenIn,
-        tokenOut,
-        pool
-      );
-      console.log(a);
-    } */
-
-    return typedPool.spotPriceCalculator.calcPoolSpotPrice(
-      tokenIn,
-      tokenOut,
-      pool
-    );
-  }
 }
