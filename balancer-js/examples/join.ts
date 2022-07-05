@@ -1,11 +1,17 @@
 import dotenv from 'dotenv';
 import { Wallet } from '@ethersproject/wallet';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { BalancerSDK, BalancerSdkConfig, Network } from '../src/index';
+import {
+  BalancerSDK,
+  BalancerSdkConfig,
+  Network,
+  Pool,
+  StaticPoolRepository,
+} from '../src/index';
 import { USDC, WETH } from './constants';
 import { parseFixed } from '@ethersproject/bignumber';
-import { Join } from '../src/modules/join/join.module';
-import { getNetworkConfig } from '../src/modules/sdk.helpers';
+import { PoolsProvider } from '../src/modules/pools/provider';
+import KOVAN_POOLS from '../src/test/lib/kovan-pools.json';
 
 dotenv.config();
 
@@ -24,7 +30,7 @@ async function join() {
 
   const balancer = new BalancerSDK(config);
 
-  // BAL50-WETH50 pool on kovan https://kovan.etherscan.io/token/0x3A19030Ed746bD1C3f2B0f996FF9479aF04C5F0A
+  // BAL50-WETH50 pool on kovan https://kovan.etherscan.io/address/0x3A19030Ed746bD1C3f2B0f996FF9479aF04C5F0A
   const poolId =
     '0x3a19030ed746bd1c3f2b0f996ff9479af04c5f0a000200000000000000000004';
   const tokensIn = [USDC.address, WETH.address];
@@ -34,13 +40,14 @@ async function join() {
   ];
   const slippage = '100'; // 100 bps = 1%
 
-  const wrappedNativeAsset =
-    getNetworkConfig(config).addresses.tokens.wrappedNativeAsset;
-  const join = new Join(balancer.pools, wrappedNativeAsset);
-
-  const { to, data } = await join.buildJoin(
+  const staticRepository = new StaticPoolRepository(KOVAN_POOLS as Pool[]);
+  const pools = new PoolsProvider(staticRepository, config);
+  const pool = await pools.find(poolId);
+  if (!pool) {
+    throw new Error('no pool');
+  }
+  const { to, data } = await pool.buildJoin(
     wallet.address,
-    poolId,
     tokensIn,
     amountsIn,
     slippage

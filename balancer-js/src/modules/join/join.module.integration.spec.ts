@@ -1,8 +1,14 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { BalancerSDK, Network } from '@/.';
-import { MockPoolDataService } from '@/test/lib/mockPool';
-import { B_50WBTC_50WETH, getForkedPools } from '@/test/lib/mainnetPools';
+import {
+  BalancerSDK,
+  Network,
+  Pool,
+  PoolModel,
+  StaticPoolRepository,
+  PoolToken,
+} from '@/.';
+import pools_14717479 from '@/test/lib/pools_14717479.json';
 import hardhat from 'hardhat';
 
 import { JsonRpcSigner, TransactionReceipt } from '@ethersproject/providers';
@@ -10,10 +16,9 @@ import { BigNumber } from 'ethers';
 import { parseFixed } from '@ethersproject/bignumber';
 
 import { balancerVault } from '@/lib/constants/config';
-import { SubgraphToken } from '@balancer-labs/sor';
 import { AddressZero } from '@ethersproject/constants';
-import { Join } from './join.module';
-import { getNetworkConfig } from '../sdk.helpers';
+
+import { PoolsProvider } from '@/modules/pools/provider';
 
 dotenv.config();
 
@@ -26,24 +31,41 @@ const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
 let signerAddress: string;
 
-const wETH = B_50WBTC_50WETH.tokens[0];
-const wBTC = B_50WBTC_50WETH.tokens[1];
 // Slots used to set the account balance for each token through hardhat_setStorageAt
 // Info fetched using npm package slot20
 const wETH_SLOT = 3;
 const wBTC_SLOT = 0;
 
 const initialBalance = '100000';
+const amountsInDiv = '100000000';
 
-const tokensIn = [wETH, wBTC];
-const tokensInAddresses = tokensIn.map((token) => token.address);
+let tokensIn: PoolToken[];
 let amountsIn: string[];
 
 // Setup
 
+const setupPool = async () => {
+  const sdkConfig = {
+    network: Network.MAINNET,
+    rpcUrl,
+  };
+  balancer = new BalancerSDK(sdkConfig);
+  const staticRepository = new StaticPoolRepository(pools_14717479 as Pool[]);
+  const pools = new PoolsProvider(staticRepository, sdkConfig);
+  const _pool = await pools.find(
+    '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
+  );
+  if (!_pool) {
+    throw new Error('Pool not found');
+  }
+  const pool = _pool;
+  tokensIn = pool.tokens;
+  return pool;
+};
+
 const setupTokenBalance = async (
   signerAddress: string,
-  token: SubgraphToken,
+  token: PoolToken,
   slot: number,
   balance: string
 ) => {
@@ -76,22 +98,8 @@ const setupTokenBalance = async (
   );
 };
 
-const setupPools = async () => {
-  const pools = await getForkedPools(provider);
-  balancer = new BalancerSDK({
-    network: Network.MAINNET,
-    rpcUrl,
-    sor: {
-      tokenPriceService: 'coingecko',
-      poolDataService: new MockPoolDataService(pools),
-      fetchOnChainBalances: true,
-    },
-  });
-  await balancer.pools.fetchPools();
-};
-
 const approveTokens = async (
-  tokens: SubgraphToken[],
+  tokens: PoolToken[],
   amounts: string[],
   signer: JsonRpcSigner
 ) => {
@@ -125,7 +133,7 @@ describe('join execution', async () => {
   let bptBalanceAfter: BigNumber;
   let tokensBalanceBefore: BigNumber[];
   let tokensBalanceAfter: BigNumber[];
-  let join: Join;
+  let pool: PoolModel;
 
   // Setup chain
   before(async function () {
@@ -135,40 +143,45 @@ describe('join execution', async () => {
       {
         forking: {
           jsonRpcUrl,
+          blockNumber: 14717479, // holds same state static repository
         },
       },
     ]);
-    await setupPools();
-    join = new Join(
-      balancer.pools,
-      getNetworkConfig(balancer.config).addresses.tokens.wrappedNativeAsset
-    );
+    pool = await setupPool();
     signerAddress = await signer.getAddress();
-    await setupTokenBalance(signerAddress, wETH, wETH_SLOT, initialBalance);
-    await setupTokenBalance(signerAddress, wBTC, wBTC_SLOT, initialBalance);
+    await setupTokenBalance(
+      signerAddress,
+      tokensIn[1], // wETH
+      wETH_SLOT,
+      initialBalance
+    );
+    await setupTokenBalance(
+      signerAddress,
+      tokensIn[0], // wBTC
+      wBTC_SLOT,
+      initialBalance
+    );
     await approveTokens(tokensIn, [initialBalance, initialBalance], signer);
   });
 
   context('join transaction - join with encoded data', () => {
     before(async function () {
       this.timeout(20000);
+      amountsIn = tokensIn.map((t) =>
+        parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
+      );
 
-      amountsIn = [
-        parseFixed(wETH.balance, wETH.decimals).div('1000000').toString(),
-        parseFixed(wBTC.balance, wBTC.decimals).div('1000000').toString(),
-      ];
-
-      bptBalanceBefore = await tokenBalance(B_50WBTC_50WETH.address);
+      bptBalanceBefore = await tokenBalance(pool.address);
       tokensBalanceBefore = [
-        await tokenBalance(wETH.address),
-        await tokenBalance(wBTC.address),
+        await tokenBalance(tokensIn[0].address),
+        await tokenBalance(tokensIn[1].address),
       ];
 
       const slippage = '100';
-      const { to, data, minBPTOut } = await join.buildJoin(
+
+      const { to, data, minBPTOut } = await pool.buildJoin(
         signerAddress,
-        B_50WBTC_50WETH.id,
-        tokensInAddresses,
+        tokensIn.map((t) => t.address),
         amountsIn,
         slippage
       );
@@ -183,7 +196,7 @@ describe('join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(B_50WBTC_50WETH.address);
+      bptBalanceAfter = await tokenBalance(pool.address);
 
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
@@ -192,8 +205,8 @@ describe('join execution', async () => {
 
     it('should decrease tokens balance', async () => {
       tokensBalanceAfter = [
-        await tokenBalance(wETH.address),
-        await tokenBalance(wBTC.address),
+        await tokenBalance(tokensIn[0].address),
+        await tokenBalance(tokensIn[1].address),
       ];
 
       for (let i = 0; i < tokensIn.length; i++) {
@@ -208,35 +221,27 @@ describe('join execution', async () => {
     before(async function () {
       this.timeout(20000);
 
-      amountsIn = [
-        parseFixed(wETH.balance, wETH.decimals).div('1000000').toString(),
-        parseFixed(wBTC.balance, wBTC.decimals).div('1000000').toString(),
-      ];
+      amountsIn = tokensIn.map((t) =>
+        parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
+      );
 
-      bptBalanceBefore = await tokenBalance(B_50WBTC_50WETH.address);
+      bptBalanceBefore = await tokenBalance(pool.address);
       tokensBalanceBefore = [
-        await tokenBalance(wETH.address),
-        await tokenBalance(wBTC.address),
+        await tokenBalance(tokensIn[0].address),
+        await tokenBalance(tokensIn[1].address),
       ];
 
       const slippage = '100';
       const { functionName, attributes, value, minBPTOut } =
-        await join.buildJoin(
+        await pool.buildJoin(
           signerAddress,
-          B_50WBTC_50WETH.id,
-          tokensInAddresses,
+          tokensIn.map((t) => t.address),
           amountsIn,
           slippage
         );
       const transactionResponse = await balancer.contracts.vault
         .connect(signer)
-        [functionName](
-          attributes.poolId,
-          attributes.sender,
-          attributes.recipient,
-          attributes.joinPoolRequest,
-          { value }
-        );
+        [functionName](...Object.values(attributes), { value });
       transactionReceipt = await transactionResponse.wait();
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
@@ -247,7 +252,7 @@ describe('join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(B_50WBTC_50WETH.address);
+      bptBalanceAfter = await tokenBalance(pool.address);
 
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
@@ -256,8 +261,8 @@ describe('join execution', async () => {
 
     it('should decrease tokens balance', async () => {
       tokensBalanceAfter = [
-        await tokenBalance(wETH.address),
-        await tokenBalance(wBTC.address),
+        await tokenBalance(tokensIn[0].address),
+        await tokenBalance(tokensIn[1].address),
       ];
 
       for (let i = 0; i < tokensIn.length; i++) {
@@ -273,22 +278,20 @@ describe('join execution', async () => {
     before(async function () {
       this.timeout(20000);
 
-      amountsIn = [
-        parseFixed(wETH.balance, wETH.decimals).div('1000000').toString(),
-        parseFixed(wBTC.balance, wBTC.decimals).div('1000000').toString(),
-      ];
+      amountsIn = tokensIn.map((t) =>
+        parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
+      );
 
-      bptBalanceBefore = await tokenBalance(B_50WBTC_50WETH.address);
+      bptBalanceBefore = await tokenBalance(pool.address);
       tokensBalanceBefore = [
+        await tokenBalance(tokensIn[0].address),
         await signer.getBalance(),
-        await tokenBalance(wBTC.address),
       ];
 
       const slippage = '100';
-      const { to, data, value, minBPTOut } = await join.buildJoin(
+      const { to, data, value, minBPTOut } = await pool.buildJoin(
         signerAddress,
-        B_50WBTC_50WETH.id,
-        [AddressZero, wBTC.address],
+        [tokensIn[0].address, AddressZero],
         amountsIn,
         slippage
       );
@@ -306,7 +309,7 @@ describe('join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(B_50WBTC_50WETH.address);
+      bptBalanceAfter = await tokenBalance(pool.address);
 
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
@@ -315,8 +318,8 @@ describe('join execution', async () => {
 
     it('should decrease tokens balance', async () => {
       tokensBalanceAfter = [
+        await tokenBalance(tokensIn[0].address),
         await (await signer.getBalance()).add(transactionCost),
-        await tokenBalance(wBTC.address),
       ];
 
       for (let i = 0; i < tokensIn.length; i++) {
@@ -331,7 +334,9 @@ describe('join execution', async () => {
     before(async function () {
       this.timeout(20000);
       amountsIn = [
-        parseFixed(wETH.balance, wETH.decimals).div('100').toString(),
+        parseFixed(tokensIn[1].balance, tokensIn[1].decimals)
+          .div('100')
+          .toString(),
       ];
     });
 
@@ -339,19 +344,15 @@ describe('join execution', async () => {
       const slippage = '10';
       let errorMessage;
       try {
-        await join.buildJoin(
+        await pool.buildJoin(
           signerAddress,
-          B_50WBTC_50WETH.id,
-          tokensInAddresses,
+          tokensIn.map((t) => t.address),
           amountsIn,
           slippage
         );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error) {
         errorMessage = (error as Error).message;
       }
-      // Slippage should trigger 208 error => Slippage/front-running protection check failed on a pool join
-      // https://dev.balancer.fi/references/error-codes
       expect(errorMessage).to.contain(
         'Must provide amount for all tokens in the pool'
       );

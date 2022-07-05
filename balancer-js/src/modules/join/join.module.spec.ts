@@ -1,94 +1,42 @@
 import { expect } from 'chai';
-import {
-  BalancerSdkConfig,
-  BalancerSdkSorConfig,
-  Network,
-  BalancerSDK,
-} from '@/.';
-import { Pools } from '../pools/pools.module';
-import { MockPoolDataService } from '@/test/lib/mockPool';
+import { BalancerSdkConfig, Network, StaticPoolRepository, Pool } from '@/.';
+import { PoolsProvider } from '../pools/provider';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import { Join } from './join.module';
-import { getNetworkConfig } from '../sdk.helpers';
-
-let sdkConfig: BalancerSdkConfig;
 
 const weth_usdc_pool_id =
   '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019';
-const weth_bal_pool_id =
-  '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014';
 
 const USDC_address = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
 const WETH_address = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
-const BAL_address = '0xba100000625a3754423978a60c9317c58a424e3d';
 
-describe('pools join module', () => {
-  before(() => {
-    // Mainnet pool snapshot taken at block 14717479
-    const mockPoolDataService = new MockPoolDataService(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      pools_14717479 as any
-    );
-
-    const sorConfig: BalancerSdkSorConfig = {
-      tokenPriceService: 'coingecko',
-      poolDataService: mockPoolDataService,
-      fetchOnChainBalances: false,
-    };
-
-    sdkConfig = {
-      network: Network.MAINNET,
-      rpcUrl: ``,
-      sor: sorConfig,
-    };
-  });
-
-  context('instantiation', () => {
-    it('instantiate via SDK', async () => {
-      const balancer = new BalancerSDK(sdkConfig);
-      await balancer.pools.fetchPools();
-      const pools = balancer.pools.getPools();
-      expect(pools).to.deep.eq(pools_14717479);
-    });
-    it('instantiate via module', async () => {
-      const poolsModule = new Pools(sdkConfig);
-      await poolsModule.fetchPools();
-      const pools = poolsModule.getPools();
-      expect(pools).to.deep.eq(pools_14717479);
-    });
-  });
+describe('join module', () => {
+  const sdkConfig: BalancerSdkConfig = {
+    network: Network.MAINNET,
+    rpcUrl: '',
+  };
 
   describe('buildJoin', async () => {
-    const balancer = new BalancerSDK(sdkConfig);
-    const join = new Join(
-      balancer.pools,
-      getNetworkConfig(balancer.config).addresses.tokens.wrappedNativeAsset
-    );
-    it('should return encoded params - with slippage', async () => {
-      const { data } = await join.buildJoin(
-        '0x35f5a330FD2F8e521ebd259FA272bA8069590741',
-        weth_usdc_pool_id,
-        [USDC_address, WETH_address],
-        ['7249202509', '2479805746401150127'],
-        '100'
+    const staticRepository = new StaticPoolRepository(pools_14717479 as Pool[]);
+    const pools = new PoolsProvider(staticRepository, sdkConfig);
+    const pool = await pools.find(weth_usdc_pool_id);
+    if (!pool) {
+      throw new Error('no pool');
+    }
+    it('should return encoded params', async () => {
+      const account = '0x35f5a330fd2f8e521ebd259fa272ba8069590741';
+      const tokensIn = [USDC_address, WETH_address];
+      const amountsIn = ['7249202509', '2479805746401150127'];
+      const slippage = '100';
+      const { data } = await pool.buildJoin(
+        account,
+        tokensIn,
+        amountsIn,
+        slippage
       );
 
       expect(data).to.equal(
         '0xb95cac2896646936b91d6b9d7d0c47c496afbf3d6ec7b6f800020000000000000000001900000000000000000000000035f5a330fd2f8e521ebd259fa272ba806959074100000000000000000000000035f5a330fd2f8e521ebd259fa272ba80695907410000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000001b0160d4d000000000000000000000000000000000000000000000000226a0a30123684af00000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000d053b627d205d2629000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000001b0160d4d000000000000000000000000000000000000000000000000226a0a30123684af'
-      );
-    });
-    it('should return encoded params - without slippage', async () => {
-      const { data } = await join.buildJoin(
-        '0x35f5a330FD2F8e521ebd259FA272bA8069590741',
-        weth_bal_pool_id,
-        [BAL_address, WETH_address],
-        ['6889567593728423369471', '8493803428792888641'],
-        '0'
-      );
-
-      expect(data).to.equal(
-        '0xb95cac285c6ee304399dbdb9c8ef030ab642b10820db8f5600020000000000000000001400000000000000000000000035f5a330fd2f8e521ebd259fa272ba806959074100000000000000000000000035f5a330fd2f8e521ebd259fa272ba80695907410000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000ba100000625a3754423978a60c9317c58a424e3d000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000001757bf50800a16e1aff00000000000000000000000000000000000000000000000075e00d376531ed4100000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000c1d12923abffd0d43d00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000001757bf50800a16e1aff00000000000000000000000000000000000000000000000075e00d376531ed41'
       );
     });
   });

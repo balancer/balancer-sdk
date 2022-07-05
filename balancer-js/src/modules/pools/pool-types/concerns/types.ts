@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-explicit-any: ["error", { "ignoreRestArgs": true }] */
 
 import { SubgraphPoolBase } from '@balancer-labs/sor';
-import { JoinPoolRequest } from '@/types';
+import { JoinPoolRequest, Pool } from '@/types';
 import { BigNumber } from '@ethersproject/bignumber';
 
 export interface LiquidityConcern {
@@ -45,7 +45,7 @@ export interface JoinPoolAttributes {
 
 export interface ExactTokensInJoinPoolParameters {
   joiner: string;
-  pool: SubgraphPoolBase;
+  pool: Pool;
   tokensIn: string[];
   amountsIn: string[];
   slippage: string;

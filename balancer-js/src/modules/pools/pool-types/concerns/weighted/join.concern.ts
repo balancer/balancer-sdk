@@ -3,14 +3,13 @@ import OldBigNumber from 'bignumber.js';
 import * as SDK from '@georgeroman/balancer-v2-pools';
 
 import { WeightedPoolEncoder } from '@/pool-weighted';
-import { SubgraphPoolBase } from '@balancer-labs/sor';
 import {
   JoinConcern,
   JoinPool,
   JoinPoolAttributes,
   ExactTokensInJoinPoolParameters,
 } from '../types';
-import { JoinPoolRequest } from '@/types';
+import { JoinPoolRequest, Pool } from '@/types';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { AssetHelpers } from '@/lib/utils';
 import { balancerVault } from '@/lib/constants/config';
@@ -164,10 +163,10 @@ export class WeightedPoolJoin implements JoinConcern {
 
   /**
    * Parse pool info into EVM amounts
-   * @param {SubgraphPoolBase}  pool
-   * @returns                   parsed pool info
+   * @param {Pool}  pool
+   * @returns       parsed pool info
    */
-  private parsePoolInfo = (pool: SubgraphPoolBase) => {
+  private parsePoolInfo = (pool: Pool) => {
     const tokens = pool.tokens.map((token) => token.address);
     const balances = pool.tokens.map((token) =>
       parseFixed(token.balance, token.decimals).toString()
@@ -175,7 +174,7 @@ export class WeightedPoolJoin implements JoinConcern {
     const weights = pool.tokens.map((token) => {
       return parseUnits(token.weight || '0').toString(); // TODO: validate if null weights should indeed be considered zero
     });
-    const decimals = pool.tokens.map((token) => token.decimals);
+    const decimals = pool.tokens.map((token) => token.decimals || 18); // TODO: validate if it's ok to default to 18 decimals
     const totalShares = parseUnits(pool.totalShares).toString();
     const swapFee = parseUnits(pool.swapFee).toString();
     return {
