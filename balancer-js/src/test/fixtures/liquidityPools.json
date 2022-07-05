@@ -465,5 +465,62 @@
     ],
     "id": "0x062f38735aac32320db5e2dbbeb07968351d7c720002000000000000000000ac",
     "swapFee": "0.003"
+  },
+  {
+    "symbol": "50 wETH 33 3S-ETH 17 3L-ETH",
+    "holdersCount": "11",
+    "address": "0x996616bde0cb4974e571f17d31c844da2bd177f8",
+    "totalSwapVolume": "73154158.64390964307202247896488856",
+    "tokensList": [
+      "0x7d7e4f49a29dda8b1ecdcf8a8bc85edcb234e997",
+      "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+      "0xaa846004dc01b532b63feaa0b7a0cb0990f19ed9"
+    ],
+    "poolType": "Weighted",
+    "totalShares": "723.387236870109483763",
+    "totalSwapFee": "731541.5864390964307202247896488856",
+    "swapsCount": "18624",
+    "totalLiquidity": "106775.0505514730485330043905010193",
+    "chainId": 42161,
+    "swapEnabled": true,
+    "name": "50 wETH 33 3S-ETH 17 3L-ETH",
+    "totalWeight": "1",
+    "tokens": [
+      {
+        "symbol": "3S-ETH/USD",
+        "address": "0x7d7e4f49a29dda8b1ecdcf8a8bc85edcb234e997",
+        "priceRate": "1",
+        "balance": "4767.936495",
+        "decimals": 6,
+        "name": "3S-ETH/USD",
+        "weight": "0.3333",
+        "id": "0x996616bde0cb4974e571f17d31c844da2bd177f8000100000000000000000018-0x7d7e4f49a29dda8b1ecdcf8a8bc85edcb234e997",
+        "invested": "0"
+      },
+      {
+        "symbol": "WETH",
+        "address": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+        "priceRate": "1",
+        "balance": "7.533542094716690404",
+        "decimals": 18,
+        "name": "Wrapped Ether",
+        "weight": "0.5",
+        "id": "0x996616bde0cb4974e571f17d31c844da2bd177f8000100000000000000000018-0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+        "invested": "0"
+      },
+      {
+        "symbol": "3L-ETH/USD",
+        "address": "0xaa846004dc01b532b63feaa0b7a0cb0990f19ed9",
+        "priceRate": "1",
+        "balance": "104354.570452",
+        "decimals": 6,
+        "name": "3L-ETH/USD",
+        "weight": "0.1667",
+        "id": "0x996616bde0cb4974e571f17d31c844da2bd177f8000100000000000000000018-0xaa846004dc01b532b63feaa0b7a0cb0990f19ed9",
+        "invested": "0"
+      }
+    ],
+    "id": "0x996616bde0cb4974e571f17d31c844da2bd177f8000100000000000000000018",
+    "swapFee": "0.01"
   }
 ]
