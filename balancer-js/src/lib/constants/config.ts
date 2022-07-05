@@ -3,8 +3,8 @@ import { BalancerNetworkConfig } from '@/types';
 
 export const balancerVault = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
 export const poolFactoryAddresses = {
-    weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9'
-}
+  weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+};
 
 export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   [Network.MAINNET]: {
@@ -131,7 +131,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     addresses: {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
-        multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e'
+        multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
       },
       tokens: {
         wrappedNativeAsset: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6',
