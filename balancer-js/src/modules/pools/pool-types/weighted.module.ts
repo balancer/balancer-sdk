@@ -11,15 +11,15 @@ import {
 export class Weighted implements PoolType {
   public liquidity: LiquidityConcern;
   public spotPriceCalculator: SpotPriceConcern;
-  public joinCalculator: JoinConcern;
+  public join: JoinConcern;
 
   constructor(
     private liquidityConcern = WeightedPoolLiquidity,
     private spotPriceCalculatorConcern = WeightedPoolSpotPrice,
-    private joinCalculatorConcern = WeightedPoolJoin
+    private joinConcern = WeightedPoolJoin
   ) {
     this.liquidity = new this.liquidityConcern();
     this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-    this.joinCalculator = new this.joinCalculatorConcern();
+    this.join = new this.joinConcern();
   }
 }

@@ -11,15 +11,15 @@ import {
 export class StablePhantom implements PoolType {
   public liquidity: LiquidityConcern;
   public spotPriceCalculator: SpotPriceConcern;
-  public joinCalculator: JoinConcern;
+  public join: JoinConcern;
 
   constructor(
     private liquidityConcern = StablePhantomPoolLiquidity,
     private spotPriceCalculatorConcern = StablePhantomPoolSpotPrice,
-    public joinCalculatorConcern = StablePhantomPoolJoin
+    public joinConcern = StablePhantomPoolJoin
   ) {
     this.liquidity = new this.liquidityConcern();
     this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-    this.joinCalculator = new this.joinCalculatorConcern();
+    this.join = new this.joinConcern();
   }
 }

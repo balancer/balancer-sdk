@@ -11,15 +11,15 @@ import { StablePoolJoin } from './concerns/stable/join.concern';
 export class Stable implements PoolType {
   public liquidity: LiquidityConcern;
   public spotPriceCalculator: SpotPriceConcern;
-  public joinCalculator: JoinConcern;
+  public join: JoinConcern;
 
   constructor(
     private liquidityConcern = StablePoolLiquidity,
     private spotPriceCalculatorConcern = StablePoolSpotPrice,
-    private joinCalculatorConcern = StablePoolJoin
+    private joinConcern = StablePoolJoin
   ) {
     this.liquidity = new this.liquidityConcern();
     this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-    this.joinCalculator = new this.joinCalculatorConcern();
+    this.join = new this.joinConcern();
   }
 }

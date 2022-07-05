@@ -7,5 +7,5 @@ import {
 export interface PoolType {
   liquidity: LiquidityConcern;
   spotPriceCalculator: SpotPriceConcern;
-  joinCalculator: JoinConcern;
+  join: JoinConcern;
 }
