@@ -1,7 +1,6 @@
 import { PriceImpactConcern } from '../types';
 import { SubgraphPoolBase, PhantomStablePool, ZERO } from '@balancer-labs/sor';
 import * as SOR from '@balancer-labs/sor/dist/index';
-import * as GSDK from '@georgeroman/balancer-v2-pools';
 import { cloneDeep } from 'lodash';
 //import { StablePhantom } from '../../stablePhantom.module';
 
