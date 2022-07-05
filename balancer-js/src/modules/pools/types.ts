@@ -32,14 +32,18 @@ export type WeightedFactoryParams = {
   value: string;
 };
 
-export type WeightedFactoryAttributes = {
-  to: any;
-  data: any;
-  value?: BigNumber;
-  functionName: string;
-  attributes: WeightedFactoryFormattedAttributes;
-  err?: boolean;
-};
+export type WeightedFactoryAttributes =
+  | {
+      to: string;
+      data: string;
+      value?: BigNumber;
+      functionName: string;
+      attributes: WeightedFactoryFormattedAttributes;
+      error: false;
+    }
+  | ErrorObject;
+
+type ErrorObject = { error: true; message: string };
 
 export type WeightedFactoryFormattedAttributes = {
   name: string;
@@ -50,11 +54,11 @@ export type WeightedFactoryFormattedAttributes = {
   owner: string;
 };
 
-export interface InitJoinAttributes {
+export type InitJoinAttributes = {
   to: string;
   functionName: string;
-  attributes: any;
+  attributes: Record<string, unknown>;
   data: string;
   value?: BigNumber;
   err?: boolean;
-}
+};

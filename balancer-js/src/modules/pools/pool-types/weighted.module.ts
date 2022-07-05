@@ -31,6 +31,18 @@ export class Weighted implements PoolType {
   async buildCreateTx(
     params: WeightedFactoryParams
   ): Promise<WeightedFactoryAttributes> {
+    const sumOfWeights = params.seedTokens
+      .map((t) => t.weight)
+      .reduce((previous, current) => {
+        return BigNumber.from(previous).add(BigNumber.from(current));
+      }, 0);
+    if (sumOfWeights.toString() != '100') {
+      return {
+        error: true,
+        message: 'Token weights must add to 100',
+      };
+    }
+
     const attributes: WeightedFactoryFormattedAttributes = {
       name: params.name || `${this.formatPoolName(params.seedTokens)} Pool`,
       symbol: params.symbol || this.formatPoolName(params.seedTokens),
@@ -41,7 +53,6 @@ export class Weighted implements PoolType {
       swapFeePercentage: ethers.utils.parseEther(params.initialFee),
       owner: params.owner,
     };
-
     const wPoolFactory = new Interface(WeightedPoolFactory__factory.abi);
     const data = wPoolFactory.encodeFunctionData(
       'create',
@@ -49,11 +60,11 @@ export class Weighted implements PoolType {
     );
 
     return {
+      error: false,
       to: poolFactoryAddresses.weighted,
       data,
       functionName: 'create',
       attributes,
-      err: false,
       value: ethers.utils.parseEther(params.value),
     };
   }
@@ -67,7 +78,7 @@ export class Weighted implements PoolType {
     });
   }
 
-  formatPoolName(tokens: SeedToken[]) {
+  formatPoolName(tokens: SeedToken[]): string {
     return tokens
       .map((token) => {
         return token.weight + token.symbol;

@@ -6,6 +6,7 @@ import {
     BalancerSDK,
     SeedToken,
   WeightedFactoryParams,
+  WeightedFactoryAttributes,
 } from '@/.';
 import { ADDRESSES } from '@/test/lib/constants';
 import { TransactionResponse } from '@ethersproject/providers';
@@ -59,19 +60,6 @@ const INIT_JOIN_PARAMS = {
     '2000000000000000000',
   ],
 };
-
-const POOL_TYPES = [
-  'WeightedPoolFactory',
-  'WeightedPool2TokensFactory',
-  'StablePoolFactory',
-  'LiquidityBootstrappingPoolFactory',
-  'MetaStablePoolFactory',
-  'InvestmentPoolFactory',
-  'StablePhantomPoolFactory',
-  'AaveLinearPoolFactory',
-  'ERC4626LinearPoolFactory',
-  'NoProtocolFeeLiquidityBootstrappingPoolFactory',
-];
 const POOL_PARAMS: WeightedFactoryParams = {
   name: '30DAI-40USDC-30WBTC Pool',
   initialFee: '0.1',
@@ -79,7 +67,6 @@ const POOL_PARAMS: WeightedFactoryParams = {
   owner: '0x0000000000000000000000000000000000000001',
   value: '0.1',
 };
-const vaultAddress = '';
 
 describe.only('pool factory module', () => {
     context('getCreationTxParams', () => {
@@ -91,17 +78,23 @@ describe.only('pool factory module', () => {
       const creationTxAttributes = await balancer.pools.weighted.buildCreateTx(
         POOL_PARAMS
       );
-            expect(creationTxAttributes.err).to.not.eq(true);
+      if (creationTxAttributes.error) {
+        expect(creationTxAttributes.error).to.eq(false);
+      } else {
             expect(creationTxAttributes.to).to.equal(poolFactoryAddresses.weighted);
       expect(creationTxAttributes.value?.toString()).to.equal(
         '100000000000000000'
             );
+      }
         });
         it('should return an attributes object for the expected pool', async () => {
-      const { attributes, err } = await balancer.pools.weighted.buildCreateTx(
+      const creationTxAttributes = await balancer.pools.weighted.buildCreateTx(
         POOL_PARAMS
       );
-      expect(err).to.not.eq(true);
+      if (creationTxAttributes.error) {
+        expect(creationTxAttributes.error).to.eq(false);
+      } else {
+        const { attributes } = creationTxAttributes;
       expect(attributes.name).to.eq('30DAI-40USDC-30WBTC Pool');
       expect(attributes.owner).to.eq(
         '0x0000000000000000000000000000000000000001'
@@ -110,25 +103,37 @@ describe.only('pool factory module', () => {
         attributes.swapFeePercentage.eq(BigNumber.from('100000000000000000'))
       ).to.eq(true);
       expect(attributes.symbol).to.eq('30DAI-40USDC-30WBTC');
-      expect(attributes.tokens).to.eql(SEED_TOKENS.map((t) => t.tokenAddress));
+        expect(attributes.tokens).to.eql(
+          SEED_TOKENS.map((t) => t.tokenAddress)
+        );
+      }
     });
     it('should return an attributes object with name overrides if sent by user', async () => {
       const params = { ...POOL_PARAMS };
       params.name = 'test';
       params.symbol = '99wbtx-99aave';
-      const { attributes, err } = await balancer.pools.weighted.buildCreateTx(
+      const creationTxParams = await balancer.pools.weighted.buildCreateTx(
         params
       );
-            expect(err).to.not.eq(true);
-      expect(attributes.name).to.eq(params.name);
-      expect(attributes.symbol).to.eq(params.symbol);
+      if (creationTxParams.error) {
+        expect(creationTxParams.error).to.eq(false);
+      } else {
+        expect(creationTxParams.attributes.name).to.eq(params.name);
+        expect(creationTxParams.attributes.symbol).to.eq(params.symbol);
+      }
         });
         it('should not create a pool if weight of seed tokens do not add to 100', async () => {
-            const params = { ...POOL_PARAMS }
-            params.seedTokens[1].weight = 10
-            const creationTxParams = await balancer.pools.weighted.buildCreateTx(params);
-            expect(creationTxParams.err).to.eq(true);
-        })
+      const params = { ...POOL_PARAMS };
+      params.seedTokens[1].weight = 10;
+      const creationTxParams = await balancer.pools.weighted.buildCreateTx(
+        params
+      );
+      if (!creationTxParams.error) {
+        expect(creationTxParams.error).to.eq(true);
+      } else {
+        expect(creationTxParams.message).to.eq('Token weights must add to 100');
+      }
+    });
     });
 
     context('getPoolInfoFromCreateTx', async () => {
