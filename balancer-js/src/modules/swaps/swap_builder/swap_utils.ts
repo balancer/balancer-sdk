@@ -1,4 +1,4 @@
-import vaultAbi from '@/lib/abi/Vault.json';
+import { Vault__factory } from '@balancer-labs/typechain';
 import vaultActionsAbi from '@/lib/abi/VaultActions.json';
 import { JsonFragment } from '@ethersproject/abi';
 import { networkAddresses } from '@/lib/constants/config';
@@ -85,7 +85,7 @@ function relayerResolver(
 }
 
 function swapFragment(relayer: SwapRelayer): JsonFragment[] {
-  let source = vaultAbi;
+  let source = Vault__factory.abi;
   if (relayer.id === Relayers.lido) source = vaultActionsAbi;
 
   const signatures = source.filter(
@@ -100,7 +100,7 @@ function batchSwapFragment(
   assetOut: string,
   chainId: number
 ): JsonFragment[] {
-  const vaultSignaturesForSwaps = vaultAbi.filter(
+  const vaultSignaturesForSwaps = Vault__factory.abi.filter(
     (fn) => fn.name && ['batchSwap'].includes(fn.name)
   );
   const relayerSignaturesForSwaps = vaultActionsAbi.filter(

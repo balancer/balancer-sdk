@@ -1,5 +1,5 @@
 import { Swaps } from '@/modules/swaps/swaps.module';
-import { BalancerSdkConfig } from '@/types';
+import { BalancerSdkConfig, PoolType } from '@/types';
 import {
   SubgraphPoolBase,
   ZERO,
@@ -85,7 +85,7 @@ export class Pricing {
       );
       if (!poolData)
         throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-      const pool = Pools.from(poolData);
+      const pool = Pools.from(poolData.poolType as PoolType);
       return pool.spotPriceCalculator.calcPoolSpotPrice(
         tokenIn,
         tokenOut,

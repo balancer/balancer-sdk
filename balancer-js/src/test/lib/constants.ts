@@ -21,6 +21,11 @@ export const ADDRESSES = {
       decimals: 6,
       symbol: 'USDC',
     },
+    USDT: {
+      address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+      decimals: 6,
+      symbol: 'USDT',
+    },
     WBTC: {
       address: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
       decimals: 8,
@@ -117,6 +122,11 @@ export const ADDRESSES = {
       decimals: 6,
       symbol: 'USDT_from_AAVE',
     },
+    USDT: {
+      address: '0x13512979ade267ab5100878e2e0f485b568328a4',
+      decimals: 6,
+      symbol: 'USDT',
+    },
     aUSDT: {
       address: '0xe8191aacfcdb32260cda25830dc6c9342142f310',
       decimals: 6,
@@ -151,6 +161,11 @@ export const ADDRESSES = {
       address: '0x8fd162f338b770f7e879030830cde9173367f301',
       decimals: 18,
       symbol: 'STABAL3',
+    },
+    bbausd: {
+      address: 'N/A',
+      decimals: 18,
+      symbol: 'bbausd',
     },
   },
   [Network.POLYGON]: {
@@ -224,6 +239,11 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'dUSD',
     },
+    bbausd: {
+      address: 'N/A',
+      decimals: 18,
+      symbol: 'bbausd',
+    },
   },
   [Network.ARBITRUM]: {
     WETH: {
@@ -241,10 +261,25 @@ export const ADDRESSES = {
       decimals: 6,
       symbol: 'USDC',
     },
+    DAI: {
+      address: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
+      decimals: 18,
+      symbol: 'DAI',
+    },
+    USDT: {
+      address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+      decimals: 6,
+      symbol: 'USDT',
+    },
     STETH: {
       address: 'N/A',
       decimals: 18,
       symbol: 'STETH',
+    },
+    bbausd: {
+      address: 'N/A',
+      decimals: 18,
+      symbol: 'bbausd',
     },
   },
 };

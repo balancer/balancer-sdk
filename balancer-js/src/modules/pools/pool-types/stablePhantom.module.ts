@@ -9,16 +9,16 @@ import {
 } from './concerns/types';
 
 export class StablePhantom implements PoolType {
-  public liquidityCalculator: LiquidityConcern;
+  public liquidity: LiquidityConcern;
   public spotPriceCalculator: SpotPriceConcern;
   public priceImpactCalculator: PriceImpactConcern;
 
   constructor(
-    private liquidityCalculatorConcern = StablePhantomPoolLiquidity,
+    private liquidityConcern = StablePhantomPoolLiquidity,
     private spotPriceCalculatorConcern = StablePhantomPoolSpotPrice,
     private priceImpactCalculatorConcern = PhantomStablePriceImpact
   ) {
-    this.liquidityCalculator = new this.liquidityCalculatorConcern();
+    this.liquidity = new this.liquidityConcern();
     this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
     this.priceImpactCalculator = new this.priceImpactCalculatorConcern();
   }
