@@ -5,9 +5,12 @@ import {
     Network,
     BalancerSDK,
     SeedToken,
+  WeightedFactoryParams,
 } from '@/.';
 import { ADDRESSES } from '@/test/lib/constants';
 import { TransactionResponse } from '@ethersproject/providers';
+import { poolFactoryAddresses } from '@/lib/constants/config';
+import { BigNumber } from 'ethers';
 
 dotenv.config();
 
@@ -17,65 +20,108 @@ const sdkConfig: BalancerSdkConfig = {
 };
 
 const SEED_TOKENS: Array<SeedToken> = [ 
-    { id: 0, tokenAddress: ADDRESSES[42].DAI.address, weight: 30, isLocked: false, amount: "200000000" }, 
-    { id: 1, tokenAddress: ADDRESSES[42].USDC.address, weight: 40, isLocked: false, amount: "200000000" },
-    { id: 2, tokenAddress: ADDRESSES[42].WBTC.address, weight: 30, isLocked: false, amount: "200000000" } 
+  {
+    id: 0,
+    tokenAddress: ADDRESSES[42].DAI.address,
+    weight: 30,
+    amount: '200000000',
+    symbol: 'DAI',
+  },
+  {
+    id: 1,
+    tokenAddress: ADDRESSES[42].USDC.address,
+    weight: 40,
+
+    amount: '200000000',
+    symbol: 'USDC',
+  },
+  {
+    id: 2,
+    tokenAddress: ADDRESSES[42].WBTC.address,
+    weight: 30,
+    amount: '200000000',
+    symbol: 'WBTC',
+  },
 ];
 
 const INIT_JOIN_PARAMS = {
     poolId: 200,
-    sender: "0x0000000000000000000000000000000000000001",
-    receiver: "0x0000000000000000000000000000000000000002",
-    tokenAddresses: [ADDRESSES[42].DAI.address, ADDRESSES[42].USDC.address, ADDRESSES[42].WBTC.address],
-    initialBalancesString: ["2000000000000000000", "2000000000000000000", "2000000000000000000"],
-}
+  sender: '0x0000000000000000000000000000000000000001',
+  receiver: '0x0000000000000000000000000000000000000002',
+  tokenAddresses: [
+    ADDRESSES[42].DAI.address,
+    ADDRESSES[42].USDC.address,
+    ADDRESSES[42].WBTC.address,
+  ],
+  initialBalancesString: [
+    '2000000000000000000',
+    '2000000000000000000',
+    '2000000000000000000',
+  ],
+};
 
 const POOL_TYPES = [
-    "WeightedPoolFactory",
-    "WeightedPool2TokensFactory",
-    "StablePoolFactory",
-    "LiquidityBootstrappingPoolFactory",
-    "MetaStablePoolFactory",
-    "InvestmentPoolFactory",
-    "StablePhantomPoolFactory",
-    "AaveLinearPoolFactory",
-    "ERC4626LinearPoolFactory",
-    "NoProtocolFeeLiquidityBootstrappingPoolFactory"
+  'WeightedPoolFactory',
+  'WeightedPool2TokensFactory',
+  'StablePoolFactory',
+  'LiquidityBootstrappingPoolFactory',
+  'MetaStablePoolFactory',
+  'InvestmentPoolFactory',
+  'StablePhantomPoolFactory',
+  'AaveLinearPoolFactory',
+  'ERC4626LinearPoolFactory',
+  'NoProtocolFeeLiquidityBootstrappingPoolFactory',
 ];
-const POOL_PARAMS = {
-    name: "WeightedPoolFactory",
-    symbol: "WPOOL",
-    initialFee: "0.1",
+const POOL_PARAMS: WeightedFactoryParams = {
+  name: '30DAI-40USDC-30WBTC Pool',
+  initialFee: '0.1',
     seedTokens: SEED_TOKENS,
-    owner: "0x0000000000000000000000000000000000000001",
-    value: "0.1",
-}
-const vaultAddress = ""
+  owner: '0x0000000000000000000000000000000000000001',
+  value: '0.1',
+};
+const vaultAddress = '';
 
-describe('pool factory module', () => {
+describe.only('pool factory module', () => {
     context('getCreationTxParams', () => {
-        let balancer: BalancerSDK
+    let balancer: BalancerSDK;
         beforeEach(async () => {
             balancer = new BalancerSDK(sdkConfig);
-            POOL_PARAMS.name = POOL_TYPES[0]
-        })
+    });
         it('should return the parameters to construct a transaction', async () => {
-            const creationTxAttributes = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
+      const creationTxAttributes = await balancer.pools.weighted.buildCreateTx(
+        POOL_PARAMS
+      );
             expect(creationTxAttributes.err).to.not.eq(true);
             expect(creationTxAttributes.to).to.equal(poolFactoryAddresses.weighted);
-            expect(creationTxAttributes.data).to.equal(
-                '0xfbce039300000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000001c0000000000000000000000000000000000000000000000000016345785d8a0000000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000135765696768746564506f6f6c466163746f727900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000557504f4f4c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000004df6e4121c27713ed22341e7c7df330f56f289b000000000000000000000000c2569dd7d0fd715b054fbf16e75b001e5c0c11150000000000000000000000001c8e3bcb3378a443cc591f154c5ce0ebb4da96480000000000000000000000000000000000000000000000000000000000000003000000000000000000000000000000000000000000000000000000000000001e0000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000001e'
+      expect(creationTxAttributes.value?.toString()).to.equal(
+        '100000000000000000'
             );
-            expect(creationTxAttributes.value?.toString()).to.equal('100000000000000000');
         });
         it('should return an attributes object for the expected pool', async () => {
-            const { attributes, err } = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
+      const { attributes, err } = await balancer.pools.weighted.buildCreateTx(
+        POOL_PARAMS
+      );
+      expect(err).to.not.eq(true);
+      expect(attributes.name).to.eq('30DAI-40USDC-30WBTC Pool');
+      expect(attributes.owner).to.eq(
+        '0x0000000000000000000000000000000000000001'
+      );
+      expect(
+        attributes.swapFeePercentage.eq(BigNumber.from('100000000000000000'))
+      ).to.eq(true);
+      expect(attributes.symbol).to.eq('30DAI-40USDC-30WBTC');
+      expect(attributes.tokens).to.eql(SEED_TOKENS.map((t) => t.tokenAddress));
+    });
+    it('should return an attributes object with name overrides if sent by user', async () => {
+      const params = { ...POOL_PARAMS };
+      params.name = 'test';
+      params.symbol = '99wbtx-99aave';
+      const { attributes, err } = await balancer.pools.weighted.buildCreateTx(
+        params
+      );
             expect(err).to.not.eq(true);
-            expect(attributes.name).to.eq('30DAI-40USDC-30WBTC')
-            expect(attributes.owner).to.eq('0x0000000000000000000000000000000000000001')
-            expect(attributes.swapFee).to.eq('0.1')
-            expect(attributes.symbol).to.eq('WPOOL')
-            expect(attributes.tokens).to.eql(SEED_TOKENS)
+      expect(attributes.name).to.eq(params.name);
+      expect(attributes.symbol).to.eq(params.symbol);
         });
         it('should not create a pool if weight of seed tokens do not add to 100', async () => {
             const params = { ...POOL_PARAMS }

@@ -2,12 +2,18 @@ import { WeightedPoolLiquidity } from './concerns/weighted/liquidity.concern';
 import { WeightedPoolSpotPrice } from './concerns/weighted/spotPrice.concern';
 import { PoolType } from './pool-type.interface';
 import { LiquidityConcern, SpotPriceConcern } from './concerns/types';
-import { WeightedFactoryParams, WeightedFactoryAttributes, InitJoinAttributes, WeightedFactoryFormattedAttributes } from '../types';
+import {
+  WeightedFactoryParams,
+  WeightedFactoryAttributes,
+  InitJoinAttributes,
+  WeightedFactoryFormattedAttributes,
+  SeedToken,
+} from '../types';
 import { Interface } from '@ethersproject/abi';
 import { WeightedPoolFactory__factory } from '@balancer-labs/typechain';
 import { BalancerSdkConfig } from '@/types';
 import { poolFactoryAddresses } from '@/lib/constants/config';
-import { ethers } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 
 export class Weighted implements PoolType {
   public liquidityCalculator: LiquidityConcern;
@@ -16,35 +22,56 @@ export class Weighted implements PoolType {
   constructor(
     config: BalancerSdkConfig,
     private liquidityCalculatorConcern = WeightedPoolLiquidity,
-    private spotPriceCalculatorConcern = WeightedPoolSpotPrice,
+    private spotPriceCalculatorConcern = WeightedPoolSpotPrice
   ) {
     this.liquidityCalculator = new this.liquidityCalculatorConcern();
     this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
   }
 
-  async buildCreateTx(params: WeightedFactoryParams): Promise<WeightedFactoryAttributes> {
-      const wPoolFactory = new Interface(WeightedPoolFactory__factory.abi)
+  async buildCreateTx(
+    params: WeightedFactoryParams
+  ): Promise<WeightedFactoryAttributes> {
+    const attributes: WeightedFactoryFormattedAttributes = {
+      name: params.name || `${this.formatPoolName(params.seedTokens)} Pool`,
+      symbol: params.symbol || this.formatPoolName(params.seedTokens),
+      tokens: params.seedTokens.map((token) => token.tokenAddress),
+      weights: params.seedTokens.map((token) =>
+        BigNumber.from(token.weight).mul(BigNumber.from('10000000000000000'))
+      ),
+      swapFeePercentage: ethers.utils.parseEther(params.initialFee),
+      owner: params.owner,
+    };
 
-      const attributes: WeightedFactoryFormattedAttributes = {
-        name: params.name,
-        symbol: params.symbol,
-        tokens: params.seedTokens.map(token => token.tokenAddress),
-        weights: params.seedTokens.map(token => token.weight),
-        swapFeePercentage: ethers.utils.parseEther(params.initialFee),
-        owner: params.owner,
-      }
+    const wPoolFactory = new Interface(WeightedPoolFactory__factory.abi);
+    const data = wPoolFactory.encodeFunctionData(
+      'create',
+      Object.values(attributes)
+    );
 
-      const data = wPoolFactory.encodeFunctionData('create', Object.values(attributes))
-
-      return { 
-        to: poolFactoryAddresses.weighted,
-        data, functionName: 'create',
-        attributes, err: false,
-        value: ethers.utils.parseEther(params.value)
-      }
+    return {
+      to: poolFactoryAddresses.weighted,
+      data,
+      functionName: 'create',
+      attributes,
+      err: false,
+      value: ethers.utils.parseEther(params.value),
+    };
   }
 
-  async buildInitJoin(initJoinParams: any): Promise<InitJoinAttributes>{
-    return Promise.resolve({ to: '', data: "0x0", attributes: {}, functionName: 'initJoin' })
+  async buildInitJoin(initJoinParams: any): Promise<InitJoinAttributes> {
+    return Promise.resolve({
+      to: '',
+      data: '0x0',
+      attributes: {},
+      functionName: 'initJoin',
+    });
+  }
+
+  formatPoolName(tokens: SeedToken[]) {
+    return tokens
+      .map((token) => {
+        return token.weight + token.symbol;
+      })
+      .join('-');
   }
 }
