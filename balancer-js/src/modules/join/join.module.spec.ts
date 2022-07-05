@@ -17,12 +17,12 @@ describe('join module', () => {
   };
 
   describe('buildJoin', async () => {
-    const staticRepository = new StaticPoolRepository(pools_14717479 as Pool[]);
-    const pools = new PoolsProvider(staticRepository, sdkConfig);
+    const pools = new PoolsProvider(
+      sdkConfig,
+      new StaticPoolRepository(pools_14717479 as Pool[])
+    );
     const pool = await pools.find(weth_usdc_pool_id);
-    if (!pool) {
-      throw new Error('no pool');
-    }
+    if (!pool) throw new Error('Pool not found');
     it('should return encoded params', async () => {
       const account = '0x35f5a330fd2f8e521ebd259fa272ba8069590741';
       const tokensIn = [USDC_address, WETH_address];

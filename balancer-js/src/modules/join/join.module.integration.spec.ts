@@ -1,14 +1,6 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import {
-  BalancerSDK,
-  Network,
-  Pool,
-  PoolModel,
-  StaticPoolRepository,
-  PoolToken,
-} from '@/.';
-import pools_14717479 from '@/test/lib/pools_14717479.json';
+import { BalancerSDK, Network, PoolModel, PoolToken } from '@/.';
 import hardhat from 'hardhat';
 
 import { JsonRpcSigner, TransactionReceipt } from '@ethersproject/providers';
@@ -17,8 +9,6 @@ import { parseFixed } from '@ethersproject/bignumber';
 
 import { balancerVault } from '@/lib/constants/config';
 import { AddressZero } from '@ethersproject/constants';
-
-import { PoolsProvider } from '@/modules/pools/provider';
 
 dotenv.config();
 
@@ -50,14 +40,10 @@ const setupPool = async () => {
     rpcUrl,
   };
   balancer = new BalancerSDK(sdkConfig);
-  const staticRepository = new StaticPoolRepository(pools_14717479 as Pool[]);
-  const pools = new PoolsProvider(staticRepository, sdkConfig);
-  const _pool = await pools.find(
+  const _pool = await balancer.poolsProvider.find(
     '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
   );
-  if (!_pool) {
-    throw new Error('Pool not found');
-  }
+  if (!_pool) throw new Error('Pool not found');
   const pool = _pool;
   tokensIn = pool.tokens;
   return pool;
