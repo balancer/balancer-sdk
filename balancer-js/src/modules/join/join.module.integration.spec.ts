@@ -3,12 +3,12 @@ import { expect } from 'chai';
 import { BalancerSDK, Network, PoolModel, PoolToken } from '@/.';
 import hardhat from 'hardhat';
 
-import { JsonRpcSigner, TransactionReceipt } from '@ethersproject/providers';
-import { BigNumber } from 'ethers';
-import { parseFixed } from '@ethersproject/bignumber';
+import { TransactionReceipt } from '@ethersproject/providers';
+import { parseFixed, BigNumber } from '@ethersproject/bignumber';
 
-import { balancerVault } from '@/lib/constants/config';
 import { AddressZero } from '@ethersproject/constants';
+
+import { setTokenBalance, approveToken } from '@/test/lib/utils';
 
 dotenv.config();
 
@@ -23,8 +23,9 @@ let signerAddress: string;
 
 // Slots used to set the account balance for each token through hardhat_setStorageAt
 // Info fetched using npm package slot20
-const wETH_SLOT = 3;
 const wBTC_SLOT = 0;
+const wETH_SLOT = 3;
+const slots = [wBTC_SLOT, wETH_SLOT];
 
 const initialBalance = '100000';
 const amountsInDiv = '100000000';
@@ -47,60 +48,6 @@ const setupPool = async () => {
   const pool = _pool;
   tokensIn = pool.tokens;
   return pool;
-};
-
-const setupTokenBalance = async (
-  signerAddress: string,
-  token: PoolToken,
-  slot: number,
-  balance: string
-) => {
-  const toBytes32 = (bn: BigNumber) => {
-    return ethers.utils.hexlify(ethers.utils.zeroPad(bn.toHexString(), 32));
-  };
-
-  const setStorageAt = async (
-    tokenAddress: string,
-    index: string,
-    value: string
-  ) => {
-    await provider.send('hardhat_setStorageAt', [tokenAddress, index, value]);
-    await provider.send('evm_mine', []); // Just mines to the next block
-  };
-
-  const locallyManipulatedBalance = parseFixed(balance, token.decimals);
-
-  // Get storage slot index
-  const index = ethers.utils.solidityKeccak256(
-    ['uint256', 'uint256'],
-    [signerAddress, slot] // key, slot
-  );
-
-  // Manipulate local balance (needs to be bytes32 string)
-  await setStorageAt(
-    token.address,
-    index,
-    toBytes32(locallyManipulatedBalance).toString()
-  );
-};
-
-const approveTokens = async (
-  tokens: PoolToken[],
-  amounts: string[],
-  signer: JsonRpcSigner
-) => {
-  const parsedAmounts = amounts.map((amount, i) => {
-    return parseFixed(amount, tokens[i].decimals);
-  });
-  for (let i = 0; i < tokens.length; i++) {
-    const tokenContract = balancer.contracts.ERC20(
-      tokens[i].address,
-      signer.provider
-    );
-    await tokenContract
-      .connect(signer)
-      .approve(balancerVault, parsedAmounts[i]);
-  }
 };
 
 const tokenBalance = async (tokenAddress: string) => {
@@ -135,19 +82,12 @@ describe('join execution', async () => {
     ]);
     pool = await setupPool();
     signerAddress = await signer.getAddress();
-    await setupTokenBalance(
-      signerAddress,
-      tokensIn[1], // wETH
-      wETH_SLOT,
-      initialBalance
-    );
-    await setupTokenBalance(
-      signerAddress,
-      tokensIn[0], // wBTC
-      wBTC_SLOT,
-      initialBalance
-    );
-    await approveTokens(tokensIn, [initialBalance, initialBalance], signer);
+    for (let i = 0; i < tokensIn.length; i++) {
+      const token = tokensIn[i];
+      const balance = parseFixed(initialBalance, token.decimals).toString();
+      await setTokenBalance(signer, token.address, slots[i], balance);
+      await approveToken(balancer, token.address, balance, signer);
+    }
   });
 
   context('join transaction - join with encoded data', () => {
