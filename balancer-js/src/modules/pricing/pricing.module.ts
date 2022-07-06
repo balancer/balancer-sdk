@@ -97,8 +97,7 @@ export class Pricing {
   // TO DO - This will be refactored to match joinPool architecture
   async getPriceImpact(
     tokenAmounts: string[],
-    isJoin: boolean,
-    isExactOut: boolean,
+    bptAmount: string,
     poolId = '',
     pool?: SubgraphPoolBase
   ): Promise<string> {
@@ -112,12 +111,12 @@ export class Pricing {
       if (!pool) throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
       typedPool = Pools.from(pool.poolType as PoolType);
     }
-    const answer = typedPool.priceImpactCalculator.calcPriceImpact(
+
+    const priceImpact = typedPool.priceImpactCalculator.calcPriceImpact(
+      pool,
       tokenAmounts,
-      isJoin,
-      isExactOut,
-      pool
+      bptAmount
     );
-    return answer;
+    return priceImpact;
   }
 }

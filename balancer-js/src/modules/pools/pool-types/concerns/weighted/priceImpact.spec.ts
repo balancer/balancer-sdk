@@ -24,25 +24,32 @@ describe('weighted pool price impact', () => {
       const wethDaiId =
         '0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a';
       const pool = mockPoolDataService.getPool(wethDaiId);
-      const tokenAmounts = ['10', '100'];
+      const tokenAmounts = [
+        BigInt('10000000000000000000'),
+        BigInt('100000000000000000000'),
+      ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
         pool,
         tokenAmounts
       );
-      expect(bptZeroPriceImpact).to.eq('2362.84764342136128155');
+      expect(bptZeroPriceImpact.toString()).to.eq('2362847643421361281550');
     });
     it('three token pool', () => {
       const threeTokensPoolId =
         '0xb39362c3d5ac235fe588b0b83ed7ac87241039cb000100000000000000000195';
       const pool = mockPoolDataService.getPool(threeTokensPoolId);
-      const tokenAmounts = ['10.234', '0.02342', '2000'];
+      const tokenAmounts = [
+        BigInt('10234000000000000000'),
+        BigInt('23420000000000000'),
+        BigInt('2000000000000000000000'),
+      ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
         pool,
         tokenAmounts
       );
-      expect(bptZeroPriceImpact).to.eq('876.361770363362937782');
+      expect(bptZeroPriceImpact.toString()).to.eq('876361770363362937782');
     });
   });
 

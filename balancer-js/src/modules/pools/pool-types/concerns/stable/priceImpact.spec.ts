@@ -25,26 +25,30 @@ describe('stable pool price impact', () => {
     it('test1', () => {
       const pool = mockPoolDataService.getPool(staBal3Id);
       const tokenAmounts = [
-        '629870.162919981039400158',
-        '615159.92969774',
-        '641181.65731857',
+        BigInt('629870162919981039400158'),
+        BigInt('615159929697'),
+        BigInt('641181657318'),
       ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
         pool,
         tokenAmounts
       );
-      expect(bptZeroPriceImpact).to.eq('1875386.353953167409103212');
+      expect(bptZeroPriceImpact.toString()).to.eq('1875386353951864923721207');
     });
     it('test2', () => {
       const pool = mockPoolDataService.getPool(staBal3Id);
-      const tokenAmounts = ['10.0001', '100', '20.345'];
+      const tokenAmounts = [
+        BigInt('10000100000000000000'),
+        BigInt('100000000'),
+        BigInt('20345000'),
+      ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
         pool,
         tokenAmounts
       );
-      expect(bptZeroPriceImpact).to.eq('129.598303041827170846');
+      expect(bptZeroPriceImpact.toString()).to.eq('129598303041827170846');
     });
   });
 

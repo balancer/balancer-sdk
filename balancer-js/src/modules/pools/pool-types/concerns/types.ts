@@ -15,11 +15,13 @@ export interface SpotPriceConcern {
 }
 
 export interface PriceImpactConcern {
-  bptZeroPriceImpact: (pool: SubgraphPoolBase, amounts: string[]) => string;
+  bptZeroPriceImpact: (
+    pool: SubgraphPoolBase,
+    tokenAmounts: bigint[]
+  ) => bigint;
   calcPriceImpact: (
+    pool: SubgraphPoolBase,
     tokenAmounts: string[],
-    isJoin: boolean,
-    isExactOut: boolean,
-    pool: SubgraphPoolBase
+    bptAmount: string
   ) => string;
 }

@@ -1,23 +1,27 @@
 import { cloneDeep } from 'lodash';
 import { SubgraphPoolBase, StablePool } from '@balancer-labs/sor';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
-import { ONE, BZERO, SolidityMaths } from '@/lib/utils/solidityMaths';
-import { parseToBigInt18, formatFromBigInt18 } from '@/lib/utils/math';
+import {
+  ONE,
+  BZERO,
+  SolidityMaths,
+  _computeScalingFactor,
+  _upscale,
+} from '@/lib/utils/solidityMaths';
+import { calcPriceImpact } from '@/modules/pricing/priceImpact';
+import { parseToBigInt18 } from '@/lib/utils/math';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export class StablePoolPriceImpact implements PriceImpactConcern {
   /**
    * Calculates the BPT return amount when investing with no price impact.
    * @param { SubgraphPoolBase } pool Investment pool.
-   * @param { string [] } amounts Token amounts being invested. Needs a value for each pool token.
-   * @returns { string } BPT amount.
+   * @param { bigint [] } amounts Token amounts being invested. Needs a value for each pool token.
+   * @returns { bigint } BPT amount.
    */
-  bptZeroPriceImpact(pool: SubgraphPoolBase, amounts: string[]): string {
-    if (amounts.length !== pool.tokensList.length)
+  bptZeroPriceImpact(pool: SubgraphPoolBase, tokenAmounts: bigint[]): bigint {
+    if (tokenAmounts.length !== pool.tokensList.length)
       throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
-
-    // upscaling amounts
-    const bigIntAmounts = amounts.map((amount) => parseToBigInt18(amount));
 
     // upscales amp, swapfee, totalshares
     const stablePool = StablePool.fromPool(pool);
@@ -34,22 +38,26 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
         totalShares,
         i
       );
-      const newTerm = (price * bigIntAmounts[i]) / ONE;
+      const scalingFactor = _computeScalingFactor(
+        BigInt(pool.tokens[i].decimals)
+      );
+      const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
+      const newTerm = (price * amountUpscaled) / ONE;
       bptZeroPriceImpact += newTerm;
     }
-    return formatFromBigInt18(bptZeroPriceImpact);
+    return bptZeroPriceImpact;
   }
 
   calcPriceImpact(
+    pool: SubgraphPoolBase,
     tokenAmounts: string[],
-    isJoin: boolean,
-    isExactOut: boolean,
-    pool: SubgraphPoolBase
+    bptAmount: string
   ): string {
-    const bptZeroPriceImpact = this.bptZeroPriceImpact(pool, tokenAmounts);
-    // Compute BPT amount
-    // answer = bptAmount / bptZeroPriceImpact - 1
-    return '';
+    const bptZeroPriceImpact = this.bptZeroPriceImpact(
+      pool,
+      tokenAmounts.map((a) => BigInt(a))
+    );
+    return calcPriceImpact(BigInt(bptAmount), bptZeroPriceImpact).toString();
   }
 }
 
