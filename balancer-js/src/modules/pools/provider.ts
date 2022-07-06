@@ -1,8 +1,7 @@
 import { BalancerSdkConfig, Pool, PoolModel } from '@/types';
-import { PoolRepository, StaticPoolRepository } from '@/modules/data';
+import { PoolRepository, SubgraphPoolRepository } from '@/modules/data';
 import { Pools as PoolMethods } from './pools.module';
 import { getNetworkConfig } from '../sdk.helpers';
-import pools_14717479 from '@/test/lib/pools_14717479.json';
 
 /**
  * Building pools from raw data injecting poolType specific methods
@@ -10,9 +9,7 @@ import pools_14717479 from '@/test/lib/pools_14717479.json';
 export class PoolsProvider {
   constructor(
     private config: BalancerSdkConfig,
-    private repository: PoolRepository = new StaticPoolRepository( // TODO: replace with proper default repository e.g. subgraph
-      pools_14717479 as Pool[]
-    )
+    private repository: PoolRepository = new SubgraphPoolRepository(config)
   ) {}
 
   static wrap(data: Pool, config: BalancerSdkConfig): PoolModel {
