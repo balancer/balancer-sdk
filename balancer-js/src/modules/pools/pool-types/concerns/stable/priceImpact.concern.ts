@@ -1,26 +1,33 @@
-import { PriceImpactConcern } from '../types';
-import { SubgraphPoolBase, StablePool } from '@balancer-labs/sor';
-import { BZERO, SolidityMaths } from '@/lib/utils/solidityMaths';
 import { cloneDeep } from 'lodash';
+import { SubgraphPoolBase, StablePool } from '@balancer-labs/sor';
+import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
+import { ONE, BZERO, SolidityMaths } from '@/lib/utils/solidityMaths';
 import { parseToBigInt18, formatFromBigInt18 } from '@/lib/utils/math';
-
-const ONE = BigInt('1000000000000000000');
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export class StablePoolPriceImpact implements PriceImpactConcern {
+  /**
+   * Calculates the BPT return amount when investing with no price impact.
+   * @param { SubgraphPoolBase } pool Investment pool.
+   * @param { string [] } amounts Token amounts being invested. Needs a value for each pool token.
+   * @returns { string } BPT amount.
+   */
   bptZeroPriceImpact(pool: SubgraphPoolBase, amounts: string[]): string {
+    if (amounts.length !== pool.tokensList.length)
+      throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
+
+    // upscaling amounts
     const bigIntAmounts = amounts.map((amount) => parseToBigInt18(amount));
+
+    // upscales amp, swapfee, totalshares
     const stablePool = StablePool.fromPool(pool);
     const tokensList = cloneDeep(pool.tokensList);
-    const n = tokensList.length;
-    // Should the following check throw an error?
-    if (amounts.length !== tokensList.length) return 'array length mismatch';
-    let bptZeroPriceImpact = BigInt(0);
     const totalShares = BigInt(stablePool.totalShares.toString());
     const balances = stablePool.tokens.map((token) =>
       parseToBigInt18(token.balance)
     );
-
-    for (let i = 0; i < n; i++) {
+    let bptZeroPriceImpact = BZERO;
+    for (let i = 0; i < tokensList.length; i++) {
       const price = bptSpotPrice(
         stablePool.amp.toBigInt(), // this already includes the extra digits from precision
         balances,
@@ -56,7 +63,7 @@ export function bptSpotPrice(
 ): bigint {
   const totalCoins = balances.length;
   const D = _calculateInvariant(amp, balances, true);
-  let S = BigInt(0);
+  let S = BZERO;
   let D_P = D / BigInt(totalCoins);
   for (let i = 0; i < totalCoins; i++) {
     if (i != tokenIndexIn) {

@@ -1,9 +1,9 @@
 import { PriceImpactConcern } from '../types';
-import { SubgraphPoolBase, LinearPool, ZERO } from '@balancer-labs/sor';
+import { SubgraphPoolBase } from '@balancer-labs/sor';
 
 export class LinearPriceImpact implements PriceImpactConcern {
   bptZeroPriceImpact(pool: SubgraphPoolBase, amounts: string[]): string {
-    return '';
+    throw new Error('Linear Pool bptZeroPriceImpact Not Implented');
   }
   calcPriceImpact(
     tokenAmounts: string[],
@@ -11,7 +11,6 @@ export class LinearPriceImpact implements PriceImpactConcern {
     isExactOut: boolean,
     pool: SubgraphPoolBase
   ): string {
-    const poolClass = LinearPool.fromPool(pool);
-    return '';
+    throw new Error('Linear Pool Price Impact Not Implented');
   }
 }

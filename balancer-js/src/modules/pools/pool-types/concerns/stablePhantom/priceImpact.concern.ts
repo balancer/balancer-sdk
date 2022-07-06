@@ -1,48 +1,44 @@
-import { PriceImpactConcern } from '../types';
 import { SubgraphPoolBase, PhantomStablePool, ZERO } from '@balancer-labs/sor';
-import * as SOR from '@balancer-labs/sor/dist/index';
 import { cloneDeep } from 'lodash';
-//import { StablePhantom } from '../../stablePhantom.module';
-
-const ONE = BigInt('1000000000000000000');
-
-function realNumberToEvm(stringNumber: string): bigint {
-  return BigInt(
-    SOR.bnum(stringNumber)
-      .times(10 ** 18)
-      .dp(0)
-      .toString()
-  );
-}
-
-function evmToRealNumber(bigIntNumber: bigint): string {
-  return SOR.bnum(bigIntNumber.toString())
-    .div(10 ** 18)
-    .toString();
-}
+import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
+import { parseToBigInt18, formatFromBigInt18 } from '@/lib/utils/math';
+import { ONE, BZERO } from '@/lib/utils/solidityMaths';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export class PhantomStablePriceImpact implements PriceImpactConcern {
+  /**
+   * Calculates the BPT return amount when investing with no price impact.
+   * @param { SubgraphPoolBase } pool Investment pool.
+   * @param { string [] } amounts Token amounts being invested. Needs a value for each pool token that is not a PhantomBpt.
+   * @returns { string } BPT amount.
+   */
   bptZeroPriceImpact(pool: SubgraphPoolBase, amounts: string[]): string {
-    const bigIntAmounts = amounts.map((amount) => realNumberToEvm(amount));
+    if (amounts.length !== pool.tokensList.length - 1)
+      throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
+
+    // upscaling amounts
+    const bigIntAmounts = amounts.map((amount) => parseToBigInt18(amount));
+
+    // upscales amp, swapfee, totalshares
     const phantomStablePool = PhantomStablePool.fromPool(pool);
     const tokensList = cloneDeep(pool.tokensList);
     const bptIndex = tokensList.findIndex((token) => token == pool.address);
     tokensList.splice(bptIndex, 1);
-    let bptZeroPriceImpact = BigInt(0);
-    const n = tokensList.length;
-    for (let i = 0; i < n; i++) {
+    let bptZeroPriceImpact = BZERO;
+    for (let i = 0; i < tokensList.length; i++) {
+      // Scales and applies rates to balances
       const poolPairData = phantomStablePool.parsePoolPairData(
         tokensList[i],
         pool.address
       );
-      const price = realNumberToEvm(
+      const price = parseToBigInt18(
         phantomStablePool
           ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, ZERO)
           .toString()
       );
       bptZeroPriceImpact += (bigIntAmounts[i] * price) / ONE;
     }
-    return evmToRealNumber(bptZeroPriceImpact);
+    return formatFromBigInt18(bptZeroPriceImpact);
   }
 
   calcPriceImpact(

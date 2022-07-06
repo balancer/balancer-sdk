@@ -1,5 +1,6 @@
 export const BZERO = BigInt(0);
 export const BONE = BigInt(1);
+export const ONE = BigInt('1000000000000000000'); // 18 decimal places
 
 const _require = (b: boolean, message: string) => {
   if (!b) throw new Error(message);
@@ -82,7 +83,6 @@ export class SolidityMaths {
   }
 
   // Modification: Taken from the fixed point class
-  static ONE = BigInt('1000000000000000000'); // 18 decimal places
   static MAX_POW_RELATIVE_ERROR = BigInt(10000);
 
   static mulUpFixed(a: bigint, b: bigint): bigint {
@@ -98,7 +98,7 @@ export class SolidityMaths {
       // divUp(x, y) := (x - 1) / y + 1
       // Note that this requires x != 0, which we already tested for.
 
-      return (product - BONE) / this.ONE + BONE;
+      return (product - BONE) / ONE + BONE;
     }
   }
 
@@ -108,7 +108,7 @@ export class SolidityMaths {
     if (a == BZERO) {
       return BZERO;
     } else {
-      const aInflated = a * this.ONE;
+      const aInflated = a * ONE;
       // _require(aInflated / a == ONE, Errors.DIV_INTERNAL); // mul overflow
 
       return aInflated / b;
@@ -122,8 +122,8 @@ export class SolidityMaths {
     if (a == BZERO) {
       return BZERO;
     } else {
-      const aInflated = a * this.ONE;
-      _require(aInflated / a == this.ONE, 'Errors.DIV_INTERNAL'); // mul overflow
+      const aInflated = a * ONE;
+      _require(aInflated / a == ONE, 'Errors.DIV_INTERNAL'); // mul overflow
 
       // The traditional divUp formula is:
       // divUp(x, y) := (x + y - 1) / y
@@ -148,14 +148,14 @@ export class SolidityMaths {
 
   // Modification: Taken from the fixed point class
   static complementFixed(x: bigint): bigint {
-    return x < this.ONE ? this.ONE - x : BZERO;
+    return x < ONE ? ONE - x : BZERO;
   }
 
   static mulDownFixed(a: bigint, b: bigint): bigint {
     const product = a * b;
     _require(a == BZERO || product / a == b, 'Errors.MUL_OVERFLOW');
 
-    return product / this.ONE;
+    return product / ONE;
   }
 }
 
