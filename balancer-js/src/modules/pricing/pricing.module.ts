@@ -95,6 +95,14 @@ export class Pricing {
   }
 
   // TO DO - This will be refactored to match joinPool architecture
+  /**
+   * Calculates price impact for a given BPT amount for a pool.
+   * @param tokenAmounts Token amounts used for join.
+   * @param bptAmount Expected BPT amount returned from join.
+   * @param poolId Pool to join.
+   * @param pool Pool to join.
+   * @returns Price impact (EVM scale)
+   */
   async getPriceImpact(
     tokenAmounts: string[],
     bptAmount: string,
