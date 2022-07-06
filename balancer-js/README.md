@@ -247,6 +247,38 @@ async getSpotPrice(
 
 [Example](./examples/spotPrice.ts)
 
+## Join Pool
+
+Exposes Join functionality allowing user to join pools.
+
+```js
+const balancer = new BalancerSDK(sdkConfig);
+const pool = await balancer.poolsProvider.find(poolId);
+const { to, functionName, attributes, data } = pool.buildJoin(params);
+```
+
+### #buildJoin
+
+Builds a join transaction.
+
+```js
+/**
+ * @param { string }   joiner - Address used to exit pool.
+ * @param { string[] } tokensIn - Token addresses provided for joining pool (same length and order as amountsIn).
+ * @param { string[] } amountsIn - Token amounts provided for joining pool in EVM amounts.
+ * @param { string }   slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+ * @returns { Promise<JoinPoolAttributes> } Returns join transaction ready to send with signer.sendTransaction.
+*/
+buildJoin: (
+  joiner: string,
+  tokensIn: string[],
+  amountsIn: string[],
+  slippage: string
+) => Promise<JoinPoolAttributes>;
+```
+
+[Example](./examples/join.ts)
+
 ## RelayerService
 
 Relayers are (user opt-in, audited) contracts that can make calls to the vault (with the transaction “sender” being any arbitrary address) and use the sender’s ERC20 vault allowance, internal balance or BPTs on their behalf.
