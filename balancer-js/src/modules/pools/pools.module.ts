@@ -4,28 +4,17 @@ import { Weighted } from './pool-types/weighted.module';
 import { MetaStable } from './pool-types/metaStable.module';
 import { StablePhantom } from './pool-types/stablePhantom.module';
 import { Linear } from './pool-types/linear.module';
-import { SOR } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { Sor } from '../sor/sor.module';
 
 export class Pools {
-  private readonly sor: Sor;
-
   constructor(
     config: BalancerSdkConfig,
-    sor?: SOR,
     public weighted = new Weighted(),
     public stable = new Stable(),
     public metaStable = new MetaStable(),
     public stablePhantom = new StablePhantom(),
     public linear = new Linear()
-  ) {
-    if (sor) {
-      this.sor = sor;
-    } else {
-      this.sor = new Sor(config);
-    }
-  }
+  ) {}
 
   static from(
     poolType: PoolType
