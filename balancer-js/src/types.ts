@@ -168,6 +168,7 @@ export enum PoolType {
   LiquidityBootstrapping = 'LiquidityBootstrapping',
   AaveLinear = 'AaveLinear',
   ERC4626Linear = 'ERC4626Linear',
+  Element = 'Element',
 }
 
 export interface Pool {
