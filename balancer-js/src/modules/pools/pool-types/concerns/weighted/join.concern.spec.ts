@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { BalancerSdkConfig, Network, StaticPoolRepository, Pool } from '@/.';
-import { PoolsProvider } from '../pools/provider';
+import { PoolsProvider } from '@/modules/pools/provider';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 
