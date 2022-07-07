@@ -7,7 +7,7 @@ import {
   JoinConcern,
   JoinPool,
   JoinPoolAttributes,
-  ExactTokensInJoinPoolParameters,
+  JoinPoolParameters,
 } from '../types';
 import { JoinPoolRequest, Pool } from '@/types';
 import { subSlippage } from '@/lib/utils/slippageHelper';
@@ -57,7 +57,7 @@ export class WeightedPoolJoin implements JoinConcern {
 
   /**
    * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
-   * @param {ExactTokensInJoinPoolParameters} params - parameters used to build exact tokens in for bpt out transaction
+   * @param {JoinPoolParameters} params - parameters used to build exact tokens in for bpt out transaction
    * @param {string}                          params.joiner - Account address joining pool
    * @param {SubgraphPoolBase}                params.pool - Subgraph pool object of pool being joined
    * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
@@ -72,7 +72,7 @@ export class WeightedPoolJoin implements JoinConcern {
     amountsIn,
     slippage,
     wrappedNativeAsset,
-  }: ExactTokensInJoinPoolParameters): Promise<JoinPoolAttributes> {
+  }: JoinPoolParameters): Promise<JoinPoolAttributes> {
     if (
       tokensIn.length != amountsIn.length ||
       tokensIn.length != pool.tokensList.length

@@ -1,8 +1,4 @@
-import {
-  ExactTokensInJoinPoolParameters,
-  JoinConcern,
-  JoinPoolAttributes,
-} from '../types';
+import { JoinPoolParameters, JoinConcern, JoinPoolAttributes } from '../types';
 
 export class StablePoolJoin implements JoinConcern {
   async buildJoin({
@@ -12,7 +8,7 @@ export class StablePoolJoin implements JoinConcern {
     amountsIn,
     slippage,
     wrappedNativeAsset,
-  }: ExactTokensInJoinPoolParameters): Promise<JoinPoolAttributes> {
+  }: JoinPoolParameters): Promise<JoinPoolAttributes> {
     // TODO implementation
     console.log(
       joiner,
