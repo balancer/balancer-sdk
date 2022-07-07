@@ -1,10 +1,9 @@
-import hardhat from 'hardhat';
 import { BalancerSDK } from '@/.';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';
 import { balancerVault } from '@/lib/constants/config';
-
-const { ethers } = hardhat;
+import { hexlify, zeroPad } from '@ethersproject/bytes';
+import { keccak256 } from '@ethersproject/solidity';
 
 /**
  * Set token balance for a given account
@@ -21,7 +20,7 @@ export const setTokenBalance = async (
   balance: string
 ): Promise<void> => {
   const toBytes32 = (bn: BigNumber) => {
-    return ethers.utils.hexlify(ethers.utils.zeroPad(bn.toHexString(), 32));
+    return hexlify(zeroPad(bn.toHexString(), 32));
   };
 
   const setStorageAt = async (token: string, index: string, value: string) => {
@@ -32,7 +31,7 @@ export const setTokenBalance = async (
   const signerAddress = await signer.getAddress();
 
   // Get storage slot index
-  const index = ethers.utils.solidityKeccak256(
+  const index = keccak256(
     ['uint256', 'uint256'],
     [signerAddress, slot] // key, slot
   );
