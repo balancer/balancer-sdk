@@ -5,6 +5,7 @@ import { Liquidity } from './liquidity.module';
 import pools from '@/test/fixtures/liquidityPools.json';
 import tokenPrices from '@/test/fixtures/liquidityTokenPrices.json';
 import { StaticTokenPriceProvider } from '../data';
+import { formatFixed, parseFixed } from '@ethersproject/bignumber';
 
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
 const poolProvider = new StaticPoolRepository(pools as Pool[]);
