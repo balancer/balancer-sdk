@@ -25,7 +25,7 @@ class BatchSwapBuilder {
     private readonly kind: SwapType,
     private readonly chainId: number
   ) {
-    this.swapInfo = decorateSorSwapInfo(swapInfo);
+    this.swapInfo = decorateSorSwapInfo(swapInfo, kind);
     this.relayer = relayerResolver(
       this.swapInfo.tokenIn,
       this.swapInfo.tokenOut,

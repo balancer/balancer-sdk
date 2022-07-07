@@ -36,11 +36,11 @@ describe('SwapBuilder', () => {
       const maxSlippage = 1;
       builder.setLimits(maxSlippage);
       expect(builder.limits).to.eql([
-        swapAmountForSwaps
+        returnAmountFromSwaps
           .mul(1e3 + maxSlippage)
           .div(1e3)
           .toString(),
-        returnAmountFromSwaps.mul(-1).toString(),
+        swapAmountForSwaps.mul(-1).toString(),
       ]);
     });
   });

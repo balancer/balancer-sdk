@@ -116,10 +116,16 @@ export class Swaps {
     gasPrice,
     maxPools,
   }: FindRouteParameters): Promise<SwapInfo> {
-    return this.sor.getSwaps(tokenIn, tokenOut, SwapTypes.SwapExactIn, amount, {
-      gasPrice,
-      maxPools,
-    });
+    return this.sor.getSwaps(
+      tokenIn,
+      tokenOut,
+      SwapTypes.SwapExactOut,
+      amount,
+      {
+        gasPrice,
+        maxPools,
+      }
+    );
   }
 
   /**
