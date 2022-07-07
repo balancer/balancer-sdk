@@ -1,3 +1,4 @@
+/* eslint-disable no-unexpected-multiline */
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { BalancerSDK, Network, PoolModel, PoolToken } from '@/.';
