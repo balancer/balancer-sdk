@@ -1,7 +1,14 @@
 /* eslint-disable no-unexpected-multiline */
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { BalancerSDK, Network, PoolModel, PoolToken } from '@/.';
+import {
+  BalancerError,
+  BalancerErrorCode,
+  BalancerSDK,
+  Network,
+  PoolModel,
+  PoolToken,
+} from '@/.';
 import hardhat from 'hardhat';
 
 import { TransactionReceipt } from '@ethersproject/providers';
@@ -281,7 +288,7 @@ describe('join execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain(
-        'Must provide amount for all tokens in the pool'
+        BalancerError.getMessage(BalancerErrorCode.INPUT_LENGTH_MISMATCH)
       );
     });
   });
