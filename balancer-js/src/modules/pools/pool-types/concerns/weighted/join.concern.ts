@@ -168,14 +168,20 @@ export class WeightedPoolJoin implements JoinConcern {
    * @returns       parsed pool info
    */
   private parsePoolInfo = (pool: Pool) => {
+    const decimals = pool.tokens.map((token) => {
+      if (!token.decimals)
+        throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+      return token.decimals;
+    });
+    const weights = pool.tokens.map((token) => {
+      if (!token.weight)
+        throw new BalancerError(BalancerErrorCode.MISSING_WEIGHT);
+      return parseUnits(token.weight).toString();
+    });
     const tokens = pool.tokens.map((token) => token.address);
     const balances = pool.tokens.map((token) =>
       parseFixed(token.balance, token.decimals).toString()
     );
-    const weights = pool.tokens.map((token) => {
-      return parseUnits(token.weight || '0').toString(); // TODO: validate if null weights should indeed be considered zero
-    });
-    const decimals = pool.tokens.map((token) => token.decimals || 18); // TODO: validate if it's ok to default to 18 decimals
     const totalShares = parseUnits(pool.totalShares).toString();
     const swapFee = parseUnits(pool.swapFee).toString();
     return {
