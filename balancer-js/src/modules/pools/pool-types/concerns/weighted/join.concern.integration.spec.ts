@@ -6,17 +6,20 @@ import {
   BalancerErrorCode,
   BalancerSDK,
   Network,
+  Pool,
   PoolModel,
   PoolToken,
+  StaticPoolRepository,
 } from '@/.';
 import hardhat from 'hardhat';
 
 import { TransactionReceipt } from '@ethersproject/providers';
 import { parseFixed, BigNumber } from '@ethersproject/bignumber';
-
 import { AddressZero } from '@ethersproject/constants';
 
 import { setTokenBalance, approveToken } from '@/test/lib/utils';
+import pools_14717479 from '@/test/lib/pools_14717479.json';
+import { PoolsProvider } from '@/modules/pools/provider';
 
 dotenv.config();
 
@@ -48,7 +51,17 @@ const setupPool = async () => {
     network: Network.MAINNET,
     rpcUrl,
   };
-  balancer = new BalancerSDK(sdkConfig);
+  const poolsProvider = new PoolsProvider(
+    sdkConfig,
+    new StaticPoolRepository(pools_14717479 as Pool[])
+  );
+  balancer = new BalancerSDK(
+    sdkConfig,
+    undefined,
+    undefined,
+    undefined,
+    poolsProvider
+  );
   const _pool = await balancer.poolsProvider.find(
     '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
   );
