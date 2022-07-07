@@ -8,6 +8,7 @@ import { Pools } from './pools/pools.module';
 import { Pricing } from './pricing/pricing.module';
 import { ContractInstances, Contracts } from './contracts/contracts.module';
 import { PoolsProvider } from './pools/provider';
+import { SubgraphPoolRepository } from './data';
 
 export interface BalancerSDKRoot {
   config: BalancerSdkConfig;
@@ -30,7 +31,10 @@ export class BalancerSDK implements BalancerSDKRoot {
     public sor = new Sor(config),
     public subgraph = new Subgraph(config),
     public pools = new Pools(config),
-    public poolsProvider = new PoolsProvider(config)
+    public poolsProvider = new PoolsProvider(
+      config,
+      new SubgraphPoolRepository(subgraph.client)
+    )
   ) {
     this.swaps = new Swaps(this.config);
     this.relayer = new Relayer(this.swaps);

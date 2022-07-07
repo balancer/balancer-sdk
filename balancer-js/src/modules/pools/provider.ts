@@ -1,5 +1,5 @@
 import { BalancerSdkConfig, Pool, PoolModel } from '@/types';
-import { PoolRepository, SubgraphPoolRepository } from '@/modules/data';
+import { PoolRepository } from '@/modules/data';
 import { Pools as PoolMethods } from './pools.module';
 import { getNetworkConfig } from '../sdk.helpers';
 
@@ -9,7 +9,7 @@ import { getNetworkConfig } from '../sdk.helpers';
 export class PoolsProvider {
   constructor(
     private config: BalancerSdkConfig,
-    private repository: PoolRepository = new SubgraphPoolRepository(config)
+    private repository: PoolRepository
   ) {}
 
   static wrap(data: Pool, config: BalancerSdkConfig): PoolModel {

@@ -1,17 +1,12 @@
-import { BalancerSdkConfig, Pool, PoolType } from '@/types';
+import { Pool, PoolType } from '@/types';
 import { PoolAttribute, PoolRepository } from './types';
-import { Subgraph } from '@/modules/subgraph/subgraph.module';
-import { PoolToken } from '@/modules/subgraph/subgraph';
+import { PoolToken, SubgraphClient } from '@/modules/subgraph/subgraph';
 
 export class SubgraphPoolRepository implements PoolRepository {
-  private subgraph: Subgraph;
-
-  constructor(sdkConfig: BalancerSdkConfig) {
-    this.subgraph = new Subgraph(sdkConfig);
-  }
+  constructor(private client: SubgraphClient) {}
 
   async find(id: string): Promise<Pool | undefined> {
-    const { pool } = await this.subgraph.client.Pool({ id });
+    const { pool } = await this.client.Pool({ id });
     return this.mapPool(pool);
   }
 
@@ -24,7 +19,7 @@ export class SubgraphPoolRepository implements PoolRepository {
         return this.find(value);
       case 'address':
         // eslint-disable-next-line no-case-declarations
-        const { pool0 } = await this.subgraph.client.Pools({
+        const { pool0 } = await this.client.Pools({
           where: { address: value },
         });
         return this.mapPool(pool0);
