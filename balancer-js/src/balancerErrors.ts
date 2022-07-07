@@ -7,6 +7,7 @@ export enum BalancerErrorCode {
   UNSUPPORTED_POOL_TYPE = 'UNSUPPORTED_POOL_TYPE',
   UNSUPPORTED_PAIR = 'UNSUPPORTED_PAIR',
   NO_POOL_DATA = 'NO_POOL_DATA',
+  INPUT_LENGTH_MISMATCH = 'INPUT_LENGTH_MISMATCH',
 }
 
 export class BalancerError extends Error {
@@ -33,6 +34,8 @@ export class BalancerError extends Error {
         return 'unsupported token pair';
       case BalancerErrorCode.NO_POOL_DATA:
         return 'no pool data';
+      case BalancerErrorCode.INPUT_LENGTH_MISMATCH:
+        return 'input length mismatch';
       default:
         return 'Unknown error';
     }

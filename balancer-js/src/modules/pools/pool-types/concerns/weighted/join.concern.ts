@@ -16,6 +16,7 @@ import { balancerVault } from '@/lib/constants/config';
 import { Vault__factory } from '@balancer-labs/typechain';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export class WeightedPoolJoin implements JoinConcern {
   // Static
@@ -76,7 +77,7 @@ export class WeightedPoolJoin implements JoinConcern {
       tokensIn.length != amountsIn.length ||
       tokensIn.length != pool.tokensList.length
     ) {
-      throw new Error('Must provide amount for all tokens in the pool');
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
 
     const parsedPoolInfo = this.parsePoolInfo(pool); // Parse pool info into EVM amounts in order to match amountsIn scalling
