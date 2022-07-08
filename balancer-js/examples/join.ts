@@ -1,10 +1,13 @@
 import dotenv from 'dotenv';
 import { Wallet } from '@ethersproject/wallet';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { BalancerSDK, Network, PoolModel } from '../src/index';
+import { BalancerSDK, Network, PoolModel, StaticPoolRepository, Pool } from '../src/index';
 import { formatFixed } from '@ethersproject/bignumber';
 import { setTokenBalance, approveToken } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
+import { PoolsProvider } from '../src/modules/pools/provider';
+
+import pools_14717479 from '../src/test/lib/pools_14717479.json';
 
 dotenv.config();
 
@@ -58,18 +61,27 @@ async function join() {
   const poolId =
     '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e'; // 50/50 WBTC/WETH Pool
   const tokensIn = [ADDRESSES[network].WBTC?.address, ADDRESSES[network].WETH?.address]; // Tokens that will be provided to pool by joiner
-  const amountsIn = ['100000', '10000000000000000']; // DEBUG: This causes issues
-  // BAL#208
-  // _require(bptAmountOut >= minBPTAmountOut, Errors.BPT_OUT_MIN_AMOUNT)
-
-  // const amountsIn = ['558692', '97290517585686049']; // DEBUG: This matches the amounts from old version of example and runs the same
+  const amountsIn = ['10000000', '1000000000000000000'];
   const slippage = '100'; // 100 bps = 1%
 
-  // Instantiate SDK
-  const balancer = new BalancerSDK({
+  const sdkConfig = {
     network,
     rpcUrl,
-  });
+  }
+
+  // We use a static pool provider to fetch pool state at local fork number
+  // (live Subgraph data would mismatch fork)
+  const poolsProvider = new PoolsProvider(
+    sdkConfig,
+    new StaticPoolRepository(pools_14717479 as Pool[])
+  );
+  const balancer = new BalancerSDK(
+    sdkConfig,
+    undefined,
+    undefined,
+    undefined,
+    poolsProvider
+  );
 
   // Set up local fork balances and approvals
   await forkSetup(balancer, provider, tokensIn as string[], slots, initialBalances);
