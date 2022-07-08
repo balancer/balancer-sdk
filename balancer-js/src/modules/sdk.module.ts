@@ -8,7 +8,7 @@ import { Pools } from './pools/pools.module';
 import { Pricing } from './pricing/pricing.module';
 import { ContractInstances, Contracts } from './contracts/contracts.module';
 import { PoolsProvider } from './pools/provider';
-import { SubgraphPoolRepository } from './data';
+import { SubgraphPoolRepository } from './data/pool/subgraph';
 
 export interface BalancerSDKRoot {
   config: BalancerSdkConfig;
