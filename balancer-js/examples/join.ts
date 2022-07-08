@@ -85,7 +85,7 @@ async function join() {
   // Use SDK to create join
   const { to, data, minBPTOut } = await pool.buildJoin(
     wallet.address,
-    pool.tokensList,
+    tokensIn as string[],
     amountsIn,
     slippage
   );
