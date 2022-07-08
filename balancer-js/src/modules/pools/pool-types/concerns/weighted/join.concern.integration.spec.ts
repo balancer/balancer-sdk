@@ -17,7 +17,7 @@ import { TransactionReceipt } from '@ethersproject/providers';
 import { parseFixed, BigNumber } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 
-import { setTokenBalance, approveToken } from '@/test/lib/utils';
+import { forkSetup } from '@/test/lib/utils';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import { PoolsProvider } from '@/modules/pools/provider';
 
@@ -46,28 +46,10 @@ let amountsIn: string[];
 
 // Setup
 
-const setupPool = async () => {
-  const sdkConfig = {
-    network: Network.MAINNET,
-    rpcUrl,
-  };
-  const poolsProvider = new PoolsProvider(
-    sdkConfig,
-    new StaticPoolRepository(pools_14717479 as Pool[])
-  );
-  balancer = new BalancerSDK(
-    sdkConfig,
-    undefined,
-    undefined,
-    undefined,
-    poolsProvider
-  );
-  const _pool = await balancer.poolsProvider.find(
-    '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
-  );
+const setupPool = async (provider: PoolsProvider, poolId: string) => {
+  const _pool = await provider.find(poolId);
   if (!_pool) throw new Error('Pool not found');
   const pool = _pool;
-  tokensIn = pool.tokens;
   return pool;
 };
 
@@ -92,23 +74,41 @@ describe('join execution', async () => {
   // Setup chain
   before(async function () {
     this.timeout(20000);
-
-    await provider.send('hardhat_reset', [
-      {
-        forking: {
-          jsonRpcUrl,
-          blockNumber: 14717479, // holds same state static repository
-        },
-      },
-    ]);
-    pool = await setupPool();
+    const sdkConfig = {
+      network: Network.MAINNET,
+      rpcUrl,
+    };
+    // Using a static repository to make test consistent over time
+    const poolsProvider = new PoolsProvider(
+      sdkConfig,
+      new StaticPoolRepository(pools_14717479 as Pool[])
+    );
+    balancer = new BalancerSDK(
+      sdkConfig,
+      undefined,
+      undefined,
+      undefined,
+      poolsProvider
+    );
+    pool = await setupPool(
+      poolsProvider,
+      '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
+    );
+    tokensIn = pool.tokens;
+    const balances = [
+      parseFixed(initialBalance, tokensIn[0].decimals).toString(),
+      parseFixed(initialBalance, tokensIn[1].decimals).toString(),
+    ];
+    await forkSetup(
+      balancer,
+      provider,
+      tokensIn.map((t) => t.address),
+      slots,
+      balances,
+      jsonRpcUrl as string,
+      14717479 // holds the same state as the static repository
+    );
     signerAddress = await signer.getAddress();
-    for (let i = 0; i < tokensIn.length; i++) {
-      const token = tokensIn[i];
-      const balance = parseFixed(initialBalance, token.decimals).toString();
-      await setTokenBalance(signer, token.address, slots[i], balance);
-      await approveToken(balancer, token.address, balance, signer);
-    }
   });
 
   context('join transaction - join with encoded data', () => {
