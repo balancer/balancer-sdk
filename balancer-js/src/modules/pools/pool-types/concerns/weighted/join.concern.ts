@@ -9,7 +9,7 @@ import {
   JoinPoolAttributes,
   JoinPoolParameters,
 } from '../types';
-import { JoinPoolRequest, Pool } from '@/types';
+import { Pool } from '@/types';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { AssetHelpers } from '@/lib/utils';
 import { balancerVault } from '@/lib/constants/config';
