@@ -25,6 +25,7 @@ const getERC20Contract = (address: string) => {
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
+const recipient = provider.getSigner(1);
 
 const setupSwaps = async (provider: JsonRpcProvider) => {
   const pools = await getForkedPools(provider);
@@ -55,8 +56,10 @@ const maxSlippage = 1;
 describe('swaps execution', async () => {
   let swaps: Swaps;
   let transactionReceipt: TransactionReceipt;
-  let balanceBefore: BigNumber;
-  let balanceExpected: BigNumber;
+  let inBalanceBeforeSigner: BigNumber;
+  let outBalanceBeforeSigner: BigNumber;
+  let outBalanceBeforeRecipient: BigNumber;
+  let outBalanceExpected: BigNumber;
   const tokenOutContract = getERC20Contract(tokenOut);
 
   // Setup chain
@@ -74,48 +77,200 @@ describe('swaps execution', async () => {
     swaps = await setupSwaps(provider);
   });
 
-  context('single transaction', () => {
-    before(async function () {
-      this.timeout(20000);
+  context('ExactIn', () => {
+    context('same receiver as signer', () => {
+      before(async function () {
+        this.timeout(20000);
+        inBalanceBeforeSigner = await signer.getBalance();
+        outBalanceBeforeSigner = await tokenOutContract.balanceOf(
+          await signer.getAddress()
+        );
 
-      balanceBefore = await tokenOutContract.balanceOf(
-        await signer.getAddress()
-      );
+        const swapInfo: SwapInfo = await swaps.findRouteGivenIn({
+          tokenIn,
+          tokenOut,
+          amount,
+          gasPrice,
+          maxPools,
+        });
+        const { to, data, value } = swaps.buildSwap({
+          userAddress: await signer.getAddress(),
+          swapInfo,
+          kind: 0,
+          deadline,
+          maxSlippage,
+        });
 
-      const swapInfo: SwapInfo = await swaps.findRouteGivenIn({
-        tokenIn,
-        tokenOut,
-        amount,
-        gasPrice,
-        maxPools,
+        const tx = { to, data, value };
+
+        outBalanceExpected = swapInfo.returnAmount;
+        transactionReceipt = await (await signer.sendTransaction(tx)).wait();
       });
 
-      const { to, data, value } = swaps.buildSwap({
-        userAddress: await signer.getAddress(),
-        swapInfo,
-        kind: 0,
-        deadline,
-        maxSlippage,
+      it('should work', async () => {
+        expect(transactionReceipt.status).to.eql(1);
       });
 
-      const tx = { to, data, value };
+      it('tokenIn balance should decrease', async () => {
+        const balanceAfter: BigNumber = await signer.getBalance();
+        const txFee = transactionReceipt.gasUsed.mul(
+          transactionReceipt.effectiveGasPrice
+        );
+        expect(
+          inBalanceBeforeSigner.sub(balanceAfter).sub(txFee).toString()
+        ).to.equal(amount.toString());
+      });
 
-      balanceExpected = swapInfo.returnAmount;
-      transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+      it('tokenOut balance should increase', async () => {
+        const balanceAfter: BigNumber = await tokenOutContract.balanceOf(
+          await signer.getAddress()
+        );
+
+        expect(balanceAfter.sub(outBalanceBeforeSigner).toNumber()).to.eql(
+          outBalanceExpected.toNumber()
+        );
+      });
     });
 
-    it('should work', async () => {
-      expect(transactionReceipt.status).to.eql(1);
+    context('different receiver', () => {
+      before(async function () {
+        this.timeout(20000);
+        await provider.send('hardhat_reset', [
+          {
+            forking: {
+              jsonRpcUrl,
+            },
+          },
+        ]);
+
+        inBalanceBeforeSigner = await signer.getBalance();
+        outBalanceBeforeSigner = await tokenOutContract.balanceOf(
+          await signer.getAddress()
+        );
+        outBalanceBeforeRecipient = await tokenOutContract.balanceOf(
+          await recipient.getAddress()
+        );
+
+        const swapInfo: SwapInfo = await swaps.findRouteGivenIn({
+          tokenIn,
+          tokenOut,
+          amount,
+          gasPrice,
+          maxPools,
+        });
+
+        const { to, data, value } = swaps.buildSwap({
+          userAddress: await signer.getAddress(),
+          recipient: await recipient.getAddress(),
+          swapInfo,
+          kind: 0,
+          deadline,
+          maxSlippage,
+        });
+
+        const tx = { to, data, value };
+
+        outBalanceExpected = swapInfo.returnAmount;
+        transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+      });
+
+      it('should work', async () => {
+        expect(transactionReceipt.status).to.eql(1);
+      });
+
+      it('singer tokenIn balance should decrease', async () => {
+        const balanceAfter: BigNumber = await signer.getBalance();
+        const txFee = transactionReceipt.gasUsed.mul(
+          transactionReceipt.effectiveGasPrice
+        );
+        expect(
+          inBalanceBeforeSigner.sub(balanceAfter).sub(txFee).toString()
+        ).to.equal(amount.toString());
+      });
+
+      it('signer tokenOut balance shouldnt change', async () => {
+        const balanceAfter: BigNumber = await tokenOutContract.balanceOf(
+          await signer.getAddress()
+        );
+        expect(balanceAfter.toString()).to.eql(
+          outBalanceBeforeSigner.toString()
+        );
+      });
+
+      it('recipient tokenOut balance should increase', async () => {
+        const balanceAfter: BigNumber = await tokenOutContract.balanceOf(
+          await recipient.getAddress()
+        );
+
+        expect(balanceAfter.sub(outBalanceBeforeRecipient).toNumber()).to.eql(
+          outBalanceExpected.toNumber()
+        );
+      });
     });
+  });
 
-    it('balance should increase', async () => {
-      const balanceAfter: BigNumber = await tokenOutContract.balanceOf(
-        await signer.getAddress()
-      );
+  context('ExactOut', () => {
+    const amountOut = ethers.utils.parseUnits('0.001', 8);
+    let expectedAmtIn: BigNumber;
+    context('same receiver as signer', () => {
+      before(async function () {
+        this.timeout(20000);
+        await provider.send('hardhat_reset', [
+          {
+            forking: {
+              jsonRpcUrl,
+            },
+          },
+        ]);
+        inBalanceBeforeSigner = await signer.getBalance();
+        outBalanceBeforeSigner = await tokenOutContract.balanceOf(
+          await signer.getAddress()
+        );
 
-      expect(balanceAfter.sub(balanceBefore).toNumber()).to.eql(
-        balanceExpected.toNumber()
-      );
+        const swapInfo: SwapInfo = await swaps.findRouteGivenOut({
+          tokenIn,
+          tokenOut,
+          amount: amountOut,
+          gasPrice,
+          maxPools,
+        });
+
+        const { to, data, value } = swaps.buildSwap({
+          userAddress: await signer.getAddress(),
+          swapInfo,
+          kind: 1,
+          deadline,
+          maxSlippage,
+        });
+
+        const tx = { to, data, value };
+        transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+
+        expectedAmtIn = swapInfo.returnAmount;
+      });
+
+      it('should work', async () => {
+        expect(transactionReceipt.status).to.eql(1);
+      });
+
+      it('tokenIn balance should decrease', async () => {
+        const balanceAfter: BigNumber = await signer.getBalance();
+        const txFee = transactionReceipt.gasUsed.mul(
+          transactionReceipt.effectiveGasPrice
+        );
+        expect(
+          inBalanceBeforeSigner.sub(balanceAfter).sub(txFee).toString()
+        ).to.equal(expectedAmtIn.toString());
+      });
+
+      it('tokenOut balance should increase', async () => {
+        const balanceAfter: BigNumber = await tokenOutContract.balanceOf(
+          await signer.getAddress()
+        );
+        expect(balanceAfter.sub(outBalanceBeforeSigner).toString()).to.eql(
+          amountOut.toString()
+        );
+      });
     });
   });
 

@@ -107,6 +107,7 @@ export interface FindRouteParameters {
 
 export interface BuildTransactionParameters {
   userAddress: string;
+  recipient?: string;
   swapInfo: SwapInfo;
   kind: SwapType;
   deadline: BigNumber;

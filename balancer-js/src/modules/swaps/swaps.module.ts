@@ -116,10 +116,16 @@ export class Swaps {
     gasPrice,
     maxPools,
   }: FindRouteParameters): Promise<SwapInfo> {
-    return this.sor.getSwaps(tokenIn, tokenOut, SwapTypes.SwapExactIn, amount, {
-      gasPrice,
-      maxPools,
-    });
+    return this.sor.getSwaps(
+      tokenIn,
+      tokenOut,
+      SwapTypes.SwapExactOut,
+      amount,
+      {
+        gasPrice,
+        maxPools,
+      }
+    );
   }
 
   /**
@@ -135,6 +141,7 @@ export class Swaps {
    */
   buildSwap({
     userAddress,
+    recipient,
     swapInfo,
     kind,
     deadline,
@@ -147,7 +154,7 @@ export class Swaps {
       swapInfo.swaps.length > 1
         ? new BatchSwapBuilder(swapInfo, kind, this.chainId)
         : new SingleSwapBuilder(swapInfo, kind, this.chainId);
-    builder.setFunds(userAddress);
+    builder.setFunds(userAddress, recipient);
     builder.setDeadline(deadline);
     builder.setLimits(maxSlippage);
 

@@ -2,6 +2,7 @@ import { BigNumberish } from '@ethersproject/bignumber';
 import { Network } from './lib/constants/network';
 import { Contract } from '@ethersproject/contracts';
 import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
+import { JoinPoolAttributes } from './modules/pools/pool-types/concerns/types';
 
 export type Address = string;
 
@@ -167,6 +168,7 @@ export enum PoolType {
   LiquidityBootstrapping = 'LiquidityBootstrapping',
   AaveLinear = 'AaveLinear',
   ERC4626Linear = 'ERC4626Linear',
+  Element = 'Element',
 }
 
 export interface Pool {
@@ -192,4 +194,15 @@ export interface Pool {
   volumeSnapshot?: string;
   feesSnapshot?: string;
   boost?: string;
+  symbol?: string;
+}
+
+export interface PoolModel extends Pool {
+  liquidity: () => Promise<string>;
+  buildJoin: (
+    joiner: string,
+    tokensIn: string[],
+    amountsIn: string[],
+    slippage: string
+  ) => Promise<JoinPoolAttributes>;
 }

@@ -1,6 +1,7 @@
-import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@/lib/utils/math';
 import { Price, TokenPrices } from '@/types';
-import { TokenPriceProvider } from './provider.interface';
+import { TokenPriceProvider } from './types';
 
 const SCALING_FACTOR = 18;
 

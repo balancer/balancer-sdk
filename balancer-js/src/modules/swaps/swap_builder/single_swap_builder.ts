@@ -26,7 +26,7 @@ class SingleSwapBuilder {
     private readonly kind: SwapType,
     private readonly chainId: number
   ) {
-    this.swapInfo = decorateSorSwapInfo(swapInfo);
+    this.swapInfo = decorateSorSwapInfo(swapInfo, kind);
     this.relayer = relayerResolver(
       this.swapInfo.tokenIn,
       this.swapInfo.tokenOut,
@@ -34,10 +34,10 @@ class SingleSwapBuilder {
     );
   }
 
-  setFunds(userAddress: string): void {
+  setFunds(sender: string, recipient?: string): void {
     this.funds = {
-      sender: userAddress,
-      recipient: userAddress,
+      sender,
+      recipient: recipient || sender,
       fromInternalBalance: false,
       toInternalBalance: false,
     };

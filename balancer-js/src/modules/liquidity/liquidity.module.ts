@@ -1,11 +1,13 @@
-import { BigNumber, parseFixed, formatFixed } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@/lib/utils/math';
 import { Pool, PoolToken } from '@/types';
 import { Pools } from '@/modules/pools/pools.module';
-import { PoolProvider } from '../data-providers/pool/provider.interface';
-import { TokenPriceProvider } from '../data-providers/token-price/provider.interface';
+import { PoolRepository } from '../data';
+import { TokenPriceProvider } from '../data';
 import { Zero } from '@ethersproject/constants';
 
 const SCALING_FACTOR = 36;
+const TOKEN_WEIGHT_SCALING_FACTOR = 18;
 
 export interface PoolBPTValue {
   address: string;
@@ -14,7 +16,7 @@ export interface PoolBPTValue {
 
 export class Liquidity {
   constructor(
-    private pools: PoolProvider,
+    private pools: PoolRepository,
     private tokenPrices: TokenPriceProvider
   ) {}
 
@@ -69,7 +71,9 @@ export class Liquidity {
           priceRate: token.priceRate,
           price: tokenPrice,
           balance: token.balance,
-          weight: token.weight ? parseFixed(token.weight, 2).toString() : '0',
+          weight: token.weight
+            ? parseFixed(token.weight, TOKEN_WEIGHT_SCALING_FACTOR).toString()
+            : '0',
         };
         return poolToken;
       })

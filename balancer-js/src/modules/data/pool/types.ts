@@ -2,7 +2,7 @@ import { Pool } from '@/types';
 
 export type PoolAttribute = 'id' | 'address';
 
-export interface PoolProvider {
+export interface PoolRepository {
   find: (id: string) => Promise<Pool | undefined>;
   findBy: (
     attribute: PoolAttribute,

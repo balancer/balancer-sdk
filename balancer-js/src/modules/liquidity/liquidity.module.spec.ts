@@ -1,13 +1,14 @@
-import { StaticPoolProvider } from '../../';
+import { StaticPoolRepository } from '../data';
 import { Pool } from '@/types';
 import { expect } from 'chai';
 import { Liquidity } from './liquidity.module';
 import pools from '@/test/fixtures/liquidityPools.json';
 import tokenPrices from '@/test/fixtures/liquidityTokenPrices.json';
-import { StaticTokenPriceProvider } from '../data-providers/token-price/static.provider';
+import { StaticTokenPriceProvider } from '../data';
+import { formatFixed, parseFixed } from '@ethersproject/bignumber';
 
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
-const poolProvider = new StaticPoolProvider(pools as Pool[]);
+const poolProvider = new StaticPoolRepository(pools as Pool[]);
 
 let liquidityProvider: Liquidity;
 
@@ -44,6 +45,27 @@ describe('Liquidity Module', () => {
         findPool('0xd8833594420db3d6589c1098dbdd073f52419dba')
       );
       expect(liquidity).to.be.eq('127080.0');
+    });
+
+    it('Should return 0 liquidity with no errors when all prices are undefined', async () => {
+      const liquidity = await liquidityProvider.getLiquidity(
+        findPool('0x062f38735aac32320db5e2dbbeb07968351d7c72')
+      );
+      expect(liquidity).to.be.eq('0.0');
+    });
+
+    it('Should approximate liquidity when some prices are unknown', async () => {
+      const pool = findPool('0x996616bde0cb4974e571f17d31c844da2bd177f8');
+      const liquidity = await liquidityProvider.getLiquidity(pool);
+      const wethAddress = '0x82af49447d8a07e3bd95bd0d56f35241523fbab1';
+      const wethBalance =
+        pool.tokens.find((token) => token.address === wethAddress)?.balance ||
+        '0';
+      const wethPrice = tokenPrices[wethAddress].usd;
+      const expectedLiquidity = parseFixed(wethBalance, 18)
+        .mul(parseFixed(wethPrice, 0))
+        .mul('2');
+      expect(liquidity).to.be.eq(formatFixed(expectedLiquidity, 18));
     });
   });
 
