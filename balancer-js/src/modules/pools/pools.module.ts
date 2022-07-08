@@ -7,7 +7,10 @@ import { Linear } from './pool-types/linear.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { PoolInfo } from './types';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers, Signer } from 'ethers';
+import { WeightedPoolFactory__factory } from '@balancer-labs/typechain';
+import { poolFactoryAddresses } from '@/lib/constants/config';
+import { TypedEventFilter } from '@balancer-labs/typechain/dist/commons';
 
 export class Pools {
   constructor(
@@ -47,10 +50,13 @@ export class Pools {
     }
   }
 
-  getPoolInfoFromCreateTx(tx: any): Promise<PoolInfo> {
-      return new Promise((resolve, reject) => {
-        resolve({ id: BigNumber.from('0'), address: "0x000000000000000000000000000000", name: '' })
-        reject('No contract created in that transaction')
-      })
+  getPoolInfoFilter(): (string | string[])[] {
+    const wPoolFactory = WeightedPoolFactory__factory.createInterface();
+    const filterTopics = wPoolFactory.encodeFilterTopics(
+      wPoolFactory.events['PoolCreated(address)'],
+      []
+    );
+
+    return filterTopics;
   }
 }
