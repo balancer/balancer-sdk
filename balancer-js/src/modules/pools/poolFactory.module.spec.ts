@@ -66,7 +66,7 @@ const POOL_PARAMS: WeightedFactoryParams = {
   value: '0.1',
 };
 
-describe.only('pool factory module', () => {
+describe('pool factory module', () => {
   context('getCreationTxParams', () => {
     let balancer: BalancerSDK;
     beforeEach(async () => {
@@ -77,7 +77,7 @@ describe.only('pool factory module', () => {
         POOL_PARAMS
       );
       if (creationTxAttributes.error) {
-        expect(creationTxAttributes.error).to.eq(false);
+        expect.fail('Should not give error');
       } else {
         expect(creationTxAttributes.to).to.equal(
           BALANCER_NETWORK_CONFIG[1].addresses.contracts.poolFactories.weighted
@@ -92,7 +92,7 @@ describe.only('pool factory module', () => {
         POOL_PARAMS
       );
       if (creationTxAttributes.error) {
-        expect(creationTxAttributes.error).to.eq(false);
+        expect.fail('Should not give error');
       } else {
         const { attributes } = creationTxAttributes;
         expect(attributes.name).to.eq('30DAI-40USDC-30WBTC Pool');
@@ -116,7 +116,7 @@ describe.only('pool factory module', () => {
         params
       );
       if (creationTxParams.error) {
-        expect(creationTxParams.error).to.eq(false);
+        expect.fail('Should not give error');
       } else {
         expect(creationTxParams.attributes.name).to.eq(params.name);
         expect(creationTxParams.attributes.symbol).to.eq(params.symbol);
@@ -129,7 +129,7 @@ describe.only('pool factory module', () => {
         params
       );
       if (!creationTxParams.error) {
-        expect(creationTxParams.error).to.eq(true);
+        expect.fail('Should show error');
       } else {
         expect(creationTxParams.message).to.eq('Token weights must add to 100');
       }
