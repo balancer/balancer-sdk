@@ -33,12 +33,6 @@ const sdkConfig: BalancerSdkConfig = {
   sor: sorConfig,
 };
 
-const forkedSdkConfig: BalancerSdkConfig = {
-  network: Network.MAINNET,
-  rpcUrl: `localhost:8545`,
-  sor: sorConfig,
-};
-
 const vaultInterface = Vault__factory.createInterface();
 const vaultActions = new Interface(vaultActionsAbi);
 
@@ -132,9 +126,13 @@ describe('swaps module', () => {
     const { contracts } = networkConfig.addresses;
     const swaps = new Swaps(configWithLido);
 
-    const subject = (swapInfo: SwapInfo): SwapTransactionRequest => {
+    const subject = (
+      swapInfo: SwapInfo,
+      recipient?: string
+    ): SwapTransactionRequest => {
       return swaps.buildSwap({
         userAddress: '0x2940211793749d9edbDdBa80ac142Fb18BE44257',
+        recipient,
         swapInfo,
         kind: SwapType.SwapExactIn,
         deadline: BigNumber.from('0'),
@@ -169,6 +167,17 @@ describe('swaps module', () => {
           const decoded = vaultActions.decodeFunctionData('swap', data);
           expect(decoded.length).to.eql(6);
           expect(to).to.eql(contracts.lidoRelayer);
+        });
+      });
+
+      context('with custom recipient', () => {
+        const recipient = '0x71bE63f3384f5fb98995898A86B02Fb2426c5788';
+        const swapInfo = factories.swapInfo.build();
+        const { data } = subject(swapInfo, recipient);
+
+        it('funds params match the recipient', () => {
+          const decoded = vaultInterface.decodeFunctionData('swap', data);
+          expect(decoded.funds.recipient).to.eql(recipient);
         });
       });
     });
@@ -214,17 +223,29 @@ describe('swaps module', () => {
     });
   });
 
-  describe('full flow', async () => {
-    const [signer] = await hardhat.ethers.getSigners();
-    const swaps = new Swaps(forkedSdkConfig);
-
-    await swaps.fetchPools();
+  describe('full flow', () => {
+    const swaps = new Swaps({
+      network: Network.MAINNET,
+      rpcUrl: `localhost:8545`,
+      sor: sorConfig,
+    });
 
     const tokenIn = AddressZero; // ETH
-    const tokenOut = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'; // wBTC
+    const tokenOut = '0xba100000625a3754423978a60c9317c58a424e3d'; // BAL
     const amount = hardhat.ethers.utils.parseEther('1');
     const gasPrice = hardhat.ethers.utils.parseUnits('50', 'gwei');
     const maxPools = 4;
+    const deadline = MaxUint256;
+    const maxSlippage = 10;
+
+    let signer: SignerWithAddress, recipient: SignerWithAddress;
+
+    before(async () => {
+      const signers = await hardhat.ethers.getSigners();
+      signer = signers[0];
+      recipient = signers[1];
+      await swaps.fetchPools();
+    });
 
     it('should work', async () => {
       const swapInfo: SwapInfo = await swaps.findRouteGivenIn({
@@ -235,21 +256,20 @@ describe('swaps module', () => {
         maxPools,
       });
 
-      const deadline = MaxUint256;
-      const maxSlippage = 10;
-      const tx = swaps.buildSwap({
+      const { to, data, value } = swaps.buildSwap({
         userAddress: signer.address,
+        recipient: recipient.address,
         swapInfo,
         kind: SwapType.SwapExactIn,
         deadline,
         maxSlippage,
       });
 
-      const receipt = await signer.sendTransaction(tx);
+      const receipt = await (
+        await signer.sendTransaction({ to, data, value })
+      ).wait();
 
-      console.log(receipt);
-
-      expect(receipt).to.be('1');
+      expect(receipt.status).to.be.eql(1);
     });
   });
 });
