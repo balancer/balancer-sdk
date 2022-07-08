@@ -6,13 +6,10 @@ import {
   BalancerSDK,
   SeedToken,
   WeightedFactoryParams,
-  WeightedFactoryAttributes,
 } from '@/.';
 import { ADDRESSES } from '@/test/lib/constants';
-import { TransactionResponse } from '@ethersproject/providers';
-import { poolFactoryAddresses } from '@/lib/constants/config';
-import { BigNumber, ethers } from 'ethers';
-import hardhat from 'hardhat';
+import { BigNumber } from 'ethers';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 
 dotenv.config();
 
@@ -82,7 +79,9 @@ describe.only('pool factory module', () => {
       if (creationTxAttributes.error) {
         expect(creationTxAttributes.error).to.eq(false);
       } else {
-        expect(creationTxAttributes.to).to.equal(poolFactoryAddresses.weighted);
+        expect(creationTxAttributes.to).to.equal(
+          BALANCER_NETWORK_CONFIG[1].addresses.contracts.poolFactories.weighted
+        );
         expect(creationTxAttributes.value?.toString()).to.equal(
           '100000000000000000'
         );
@@ -137,7 +136,7 @@ describe.only('pool factory module', () => {
     });
   });
 
-  context('getPoolInfoFromCreateTx', async () => {
+  context('getPoolInfoFilter', async () => {
     let balancer: BalancerSDK;
     beforeEach(async () => {
       balancer = new BalancerSDK(sdkConfig);
@@ -145,33 +144,26 @@ describe.only('pool factory module', () => {
 
     it('should return the pool ID from the issuing transaction', async () => {
       const poolInfoFilter = balancer.pools.getPoolInfoFilter();
-      console.log(poolInfoFilter);
-      expect(poolInfoFilter).to.equal([
-        '0x83a48fbcfc991335314e74d0496aab6a1987e992ddc85dddbcc4d6dd6ef2e9fc',
-      ]);
+      expect(poolInfoFilter.length).to.eq(1);
+      expect(poolInfoFilter[0]).to.equal(
+        '0x83a48fbcfc991335314e74d0496aab6a1987e992ddc85dddbcc4d6dd6ef2e9fc'
+      );
     });
   });
 
-        it('should return error if no transaction at given hash', () => {
-            const tx = { hash: "0x1234543200000000000000000000000000000000000000000000" } as TransactionResponse
-            return balancer.pools.getPoolInfoFromCreateTx(tx).then(
-                () => Promise.reject(new Error('Expected method to reject.')),
-                (err: any) => expect(err).to.equal(true)
-            )
-        })
-    })
-
-    context('buildInitJoin', async () => {
-        let balancer: BalancerSDK
-        beforeEach(async () => {
-            balancer = new BalancerSDK(sdkConfig);
-        })
-        it('should return transaction attributes for an InitJoin', async () => {
-            const transactionAttributes = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS);
-            expect(transactionAttributes.err).to.not.eq(true);
-            expect(transactionAttributes.data).to.eq('0x123')
-            expect(transactionAttributes.to).to.equal(vaultAddress);
-            expect(transactionAttributes.value).to.equal(true);
-        });
-    })
+  // context('buildInitJoin', async () => {
+  //   let balancer: BalancerSDK;
+  //   beforeEach(async () => {
+  //     balancer = new BalancerSDK(sdkConfig);
+  //   });
+  //   it('should return transaction attributes for an InitJoin', async () => {
+  //     const transactionAttributes = await balancer.pools.weighted.buildInitJoin(
+  //       INIT_JOIN_PARAMS
+  //     );
+  //     expect(transactionAttributes.err).to.not.eq(true);
+  //     expect(transactionAttributes.data).to.eq('0x123');
+  //     expect(transactionAttributes.to).to.equal(vaultAddress);
+  //     expect(transactionAttributes.value).to.equal(true);
+  //   });
+  // });
 });

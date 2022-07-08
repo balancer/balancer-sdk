@@ -67,7 +67,7 @@ export class Weighted implements PoolType {
 
     return {
       error: false,
-      to: poolFactoryAddresses.weighted,
+      to: this.factoryAddress,
       data,
       functionName: 'create',
       attributes,
