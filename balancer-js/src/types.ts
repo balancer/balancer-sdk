@@ -3,6 +3,12 @@ import { Network } from './lib/constants/network';
 import { Contract } from '@ethersproject/contracts';
 import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 import { JoinPoolAttributes } from './modules/pools/pool-types/concerns/types';
+import type {
+  Findable,
+  LiquidityGauge,
+  PoolAttribute,
+  TokenAttribute,
+} from '@/modules/data/types';
 import type { BaseFeeDistributor } from './modules/data';
 
 export * from '@/modules/data/types';
