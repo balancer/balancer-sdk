@@ -1,3 +1,3 @@
 export * from './pool';
 export * from './token';
-export * from './token-price';
+export * from './token-prices';
