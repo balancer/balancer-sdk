@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 
 export enum PoolType {
   Weighted = 'Weighted',
@@ -14,45 +14,51 @@ export type SeedToken = {
   weight: BigNumberish;
   amount: string;
   id: number;
-}
+  symbol: string;
+};
 
 export type PoolInfo = {
   id: BigNumber;
   name: string;
   address: string;
-}
+};
 
-export type WeightedFactoryParams = { 
-  name: string;
-  symbol: string;
+export type WeightedFactoryParams = {
+  name?: string;
+  symbol?: string;
   initialFee: string;
   seedTokens: SeedToken[];
-  owner: string; value: string;
-}
+  owner: string;
+  value: string;
+};
 
-export type WeightedFactoryAttributes = {
-  to: any;
-  data: any
-  value?: BigNumber;
-  functionName: string;
-  attributes: WeightedFactoryFormattedAttributes,
-  err?: boolean
-}
+export type WeightedFactoryAttributes =
+  | {
+      to: string;
+      data: string;
+      value?: BigNumber;
+      functionName: string;
+      attributes: WeightedFactoryFormattedAttributes;
+      error: false;
+    }
+  | ErrorObject;
+
+type ErrorObject = { error: true; message: string };
 
 export type WeightedFactoryFormattedAttributes = {
-    name: string,
-    symbol: string,
-    tokens: string[],
-    weights: BigNumberish[],
-    swapFeePercentage: BigNumberish,
-    owner: string,
-  }
+  name: string;
+  symbol: string;
+  tokens: string[];
+  weights: BigNumber[];
+  swapFeePercentage: BigNumber;
+  owner: string;
+};
 
-export interface InitJoinAttributes {
+export type InitJoinAttributes = {
   to: string;
   functionName: string;
-  attributes: any
+  attributes: Record<string, unknown>;
   data: string;
   value?: BigNumber;
   err?: boolean;
-}
+};

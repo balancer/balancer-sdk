@@ -12,8 +12,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         multicall: '0xeefba1e63905ef1d7acba5a8513c70307c1ce441',
         lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
         poolFactories: {
-          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9'
-        }
+          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        },
       },
       tokens: {
         wrappedNativeAsset: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -44,8 +44,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
         poolFactories: {
-          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9'
-        }
+          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        },
       },
       tokens: {
         wrappedNativeAsset: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
@@ -64,8 +64,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
         poolFactories: {
-          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9'
-        }
+          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        },
       },
       tokens: {
         wrappedNativeAsset: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
@@ -84,8 +84,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x2cc8688C5f75E365aaEEb4ea8D6a480405A48D2A',
         poolFactories: {
-          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9'
-        }
+          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        },
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
@@ -109,8 +109,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x53c43764255c17bd724f74c4ef150724ac50a3ed',
         poolFactories: {
-          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9'
-        }
+          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        },
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
@@ -128,8 +128,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x42ad527de7d4e9d9d011ac45b31d8551f8fe9821',
         poolFactories: {
-          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9'
-        }
+          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        },
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
@@ -148,8 +148,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
         poolFactories: {
-          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9'
-        }
+          weighted: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        },
       },
       tokens: {
         wrappedNativeAsset: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6',
