@@ -56,12 +56,12 @@ export class WeightedPoolExit implements ExitConcern {
 
   /**
    * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
-   * @param {ExitExactBPTInForTokensOutParameters}  params - parameters used to build exact BPT in for token amounts out transaction
-   * @param {string}                                params.exiter - Account address exiting pool
-   * @param {SubgraphPoolBase}                      params.pool - Subgraph pool object of pool being exited
-   * @param {string}                                params.bptIn - BPT provided for exiting pool
-   * @param {string}                                params.slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-   * @returns                                       transaction request ready to send with signer.sendTransaction
+   * @param {string}  exiter - Account address exiting pool
+   * @param {Pool}    pool - Subgraph pool object of pool being exited
+   * @param {string}  bptIn - BPT provided for exiting pool
+   * @param {string}  slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @param {string}  singleTokenMaxOut - Optional: token address that if provided will exit to given token
+   * @returns         transaction request ready to send with signer.sendTransaction
    */
   buildExitExactBPTIn = ({
     exiter,
@@ -92,7 +92,7 @@ export class WeightedPoolExit implements ExitConcern {
     let userData: string;
 
     if (singleTokenMaxOut) {
-      // Exit pool with single token using all bpt available
+      // Exit pool with single token using exact bptIn
 
       const singleTokenMaxOutIndex =
         parsedPoolInfo.tokens.indexOf(singleTokenMaxOut);
@@ -112,7 +112,7 @@ export class WeightedPoolExit implements ExitConcern {
         singleTokenMaxOutIndex
       );
     } else {
-      // Exit pool with all tokens by a proportional amount
+      // Exit pool with all tokens proportinally
 
       const amountsOut = SDK.WeightedMath._calcTokensOutGivenExactBptIn(
         sortedPoolInfo.balances.map((b) => new OldBigNumber(b)),
@@ -156,6 +156,15 @@ export class WeightedPoolExit implements ExitConcern {
     };
   };
 
+  /**
+   * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
+   * @param {string}    exiter - Account address exiting pool
+   * @param {Pool}      pool - Subgraph pool object of pool being exited
+   * @param {string[]}  tokensOut - Tokens provided for exiting pool
+   * @param {string[]}  amountsOut - Amoutns provided for exiting pool
+   * @param {string}    slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @returns           transaction request ready to send with signer.sendTransaction
+   */
   buildExitExactTokensOut = ({
     exiter,
     pool,
