@@ -1,21 +1,13 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { BalancerSdkConfig, BalancerSDK, SeedToken, WeightedPoolEncoder } from '@/.';
+import { BalancerSdkConfig, BalancerSDK, SeedToken } from '@/.';
 import { ADDRESSES } from '@/test/lib/constants';
 import { BigNumber, ethers } from 'ethers';
-import { BalancerHelpers, WeightedPoolFactory, WeightedPoolFactory__factory, BalancerHelpers__factory } from '@balancer-labs/typechain'
+import { BalancerHelpers__factory } from '@balancer-labs/typechain';
 
 dotenv.config();
 
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
-
-const getFactoryContract = (address: string) => {
-  return new ethers.Contract(
-    address,
-    ['function balanceOf(address) view returns (uint256)'],
-    provider
-  );
-};
 
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
@@ -32,18 +24,21 @@ const SEED_TOKENS: Array<SeedToken> = [
     tokenAddress: ADDRESSES[42].DAI.address,
     weight: 30,
     amount: '200000000',
+    symbol: 'DAI',
   },
   {
     id: 1,
     tokenAddress: ADDRESSES[42].USDC.address,
     weight: 40,
     amount: '200000000',
+    symbol: 'USDC',
   },
   {
     id: 2,
     tokenAddress: ADDRESSES[42].WBTC.address,
     weight: 30,
     amount: '200000000',
+    symbol: 'WBTC',
   },
 ];
 
@@ -71,7 +66,6 @@ const POOL_PARAMS = {
   owner: '0x0000000000000000000000000000000000000001',
   value: '0.1',
 };
-const poolFactoryContract = '';
 const getERC20Contract = (address: string) => {
   return new ethers.Contract(
     address,
@@ -83,7 +77,7 @@ const getERC20Contract = (address: string) => {
   );
 };
 
-describe('pool factory module', () => {
+describe.only('pool factory module', () => {
   // Setup chain
   before(async function () {
     this.timeout(20000);
@@ -102,18 +96,21 @@ describe('pool factory module', () => {
       data: string,
       value: BigNumber,
       expectedPoolName: string,
-      transactionReceipt: ethers.providers.TransactionReceipt,
-      wPoolFactory: WeightedPoolFactory;
+      transactionReceipt: ethers.providers.TransactionReceipt;
     beforeEach(async () => {
       balancer = new BalancerSDK(sdkConfig);
       const createTx = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
-      to = createTx.to;
-      data = createTx.data;
-      value = createTx.value as BigNumber;
-      expectedPoolName = createTx.attributes.name;
-      const tx = { to, data, value };
-      transactionReceipt = await (await signer.sendTransaction(tx)).wait();
-      wPoolFactory = WeightedPoolFactory__factory.connect(to, provider)
+      if (createTx.error) {
+        expect.fail('Should not give error');
+      } else {
+        to = createTx.to;
+        data = createTx.data;
+        value = createTx.value as BigNumber;
+        const tx = { to, data, value, gasLimit: 28976 };
+        const transactionResponse = await signer.sendTransaction(tx);
+        console.log({ transactionResponse });
+        transactionReceipt = await transactionResponse.wait();
+      }
     });
 
     it('should send the transaction succesfully', async () => {
@@ -121,7 +118,8 @@ describe('pool factory module', () => {
     });
 
     it('should create a pool with the correct token name', async () => {
-      const { address } = wPoolFactory.filters.PoolCreated()
+      const wPoolFactory = WeightedPoolFactory__factory.connect(to, provider);
+      const { address } = wPoolFactory.filters.PoolCreated();
       const tokenContract = getERC20Contract(address as string);
       expect(expectedPoolName).to.eql(await tokenContract.getName());
     });
@@ -132,16 +130,18 @@ describe('pool factory module', () => {
       helpers: BalancerHelpers;
     beforeEach(async () => {
       balancer = new BalancerSDK(sdkConfig);
-      const txAttributes = await balancer.pools.weighted.buildCreateTx(
+      const txAttributes = (await balancer.pools.weighted.buildCreateTx(
         POOL_PARAMS
-      );
+      )) as ethers.providers.TransactionRequest;
       transactionReceipt = await (
         await signer.sendTransaction(txAttributes)
       ).wait();
-      const { address } = await balancer.pools.getPoolInfoFromCreateTx(
-        transactionReceipt
+      const filter = await balancer.pools.getPoolInfoFilter();
+
+      helpers = BalancerHelpers__factory.connect(
+        '0x5aDDCCa35b7A0D07C74063c48700C8590E87864E',
+        provider
       );
-      helpers = BalancerHelpers__factory.connect('0x5aDDCCa35b7A0D07C74063c48700C8590E87864E', provider)
     });
 
     it('should send the transaction succesfully', async () => {
@@ -149,9 +149,7 @@ describe('pool factory module', () => {
     });
 
     it('should give user tokens on initial join', async () => {
-      const { id, address } = await balancer.pools.getPoolInfoFromCreateTx(
-        transactionReceipt
-      );
+      const filter = await balancer.pools.getPoolInfoFilter();
 
       const { bptOut } = await helpers.queryJoin(
         id.toString(),
@@ -159,11 +157,16 @@ describe('pool factory module', () => {
         INIT_JOIN_PARAMS.receiver,
         {
           assets: INIT_JOIN_PARAMS.tokenAddresses,
-          maxAmountsIn: Array(INIT_JOIN_PARAMS.tokenAddresses.length).fill(BigNumber.from("1000000000000000000000")),
-          userData: WeightedPoolEncoder.joinInit(INIT_JOIN_PARAMS.initialBalancesString),
+          maxAmountsIn: Array(INIT_JOIN_PARAMS.tokenAddresses.length).fill(
+            BigNumber.from('1000000000000000000000')
+          ),
+          userData: WeightedPoolEncoder.joinInit(
+            INIT_JOIN_PARAMS.initialBalancesString
+          ),
           fromInternalBalance: false,
-        })
-      
+        }
+      );
+
       const tx = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS);
       await (await signer.sendTransaction(tx)).wait();
       const createdPool = getERC20Contract(address);
@@ -171,31 +174,37 @@ describe('pool factory module', () => {
       expect(senderBalance).to.eql(bptOut);
     });
 
-    it('should decrease the sender\'s token balance by the expected amount', async () => {
-      const signerAddress = await signer.getAddress()
-      
-      const getTokenBalanceFromUserAddress = (user: string) => (address:string): Promise<BigNumber> => {
-        return getERC20Contract(address).balanceOf(user)
-      }
+    it("should decrease the sender's token balance by the expected amount", async () => {
+      const signerAddress = await signer.getAddress();
+
+      const getTokenBalanceFromUserAddress =
+        (user: string) =>
+        (address: string): Promise<BigNumber> => {
+          return getERC20Contract(address).balanceOf(user);
+        };
 
       const initialTokenBalances = await Promise.all(
-        INIT_JOIN_PARAMS.tokenAddresses.map(getTokenBalanceFromUserAddress(signerAddress))
-      )
+        INIT_JOIN_PARAMS.tokenAddresses.map(
+          getTokenBalanceFromUserAddress(signerAddress)
+        )
+      );
 
       const expectedTokenBalances = initialTokenBalances.map((val, i) => {
-        return val.sub(INIT_JOIN_PARAMS.initialBalancesString[i])
-      })
+        return val.sub(INIT_JOIN_PARAMS.initialBalancesString[i]);
+      });
 
       const tx = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS);
       await (await signer.sendTransaction(tx)).wait();
 
       const finalTokenBalances = await Promise.all(
-        INIT_JOIN_PARAMS.tokenAddresses.map(getTokenBalanceFromUserAddress(signerAddress))
-      )
-      
+        INIT_JOIN_PARAMS.tokenAddresses.map(
+          getTokenBalanceFromUserAddress(signerAddress)
+        )
+      );
+
       expectedTokenBalances.forEach((bal, i) => {
         expect(bal.eq(finalTokenBalances[i])).to.be.true;
-      })
+      });
     });
   });
-})
+});
