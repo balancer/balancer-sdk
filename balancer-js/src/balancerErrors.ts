@@ -7,8 +7,11 @@ export enum BalancerErrorCode {
   UNSUPPORTED_POOL_TYPE = 'UNSUPPORTED_POOL_TYPE',
   UNSUPPORTED_PAIR = 'UNSUPPORTED_PAIR',
   NO_POOL_DATA = 'NO_POOL_DATA',
+  INPUT_OUT_OF_BOUNDS = 'INPUT_OUT_OF_BOUNDS',
   INPUT_LENGTH_MISMATCH = 'INPUT_LENGTH_MISMATCH',
+  TOKEN_MISMATCH = 'TOKEN_MISMATCH',
   MISSING_DECIMALS = 'MISSING_DECIMALS',
+  MISSING_TOKENS = 'MISSING_TOKENS',
   MISSING_WEIGHT = 'MISSING_WEIGHT',
 }
 
@@ -36,10 +39,16 @@ export class BalancerError extends Error {
         return 'unsupported token pair';
       case BalancerErrorCode.NO_POOL_DATA:
         return 'no pool data';
+      case BalancerErrorCode.INPUT_OUT_OF_BOUNDS:
+        return 'input out of bounds';
       case BalancerErrorCode.INPUT_LENGTH_MISMATCH:
         return 'input length mismatch';
+      case BalancerErrorCode.TOKEN_MISMATCH:
+        return 'token mismatch';
       case BalancerErrorCode.MISSING_DECIMALS:
         return 'missing decimals';
+      case BalancerErrorCode.MISSING_TOKENS:
+        return 'missing tokens';
       case BalancerErrorCode.MISSING_WEIGHT:
         return 'missing weight';
       default:
