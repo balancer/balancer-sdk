@@ -1,8 +1,14 @@
 import dotenv from 'dotenv';
 import { Wallet } from '@ethersproject/wallet';
 import { InfuraProvider } from '@ethersproject/providers';
-import { BalancerSDK, BalancerSdkConfig, Network, SeedToken } from '../src/index';
+import {
+  BalancerSDK,
+  BalancerSdkConfig,
+  Network,
+  SeedToken,
+} from '../src/index';
 import { DAI } from './constants';
+import { ethers } from 'ethers';
 
 dotenv.config();
 
@@ -14,7 +20,7 @@ export interface tokens {
     decimals: number;
   };
 }
-const POOL_OWNER = "0x1111111111111111111111111111111111111111"
+const POOL_OWNER = '0x1111111111111111111111111111111111111111';
 
 const namedTokens: tokens = {
   wETH: {
@@ -26,30 +32,47 @@ const namedTokens: tokens = {
     decimals: 8,
   },
 };
-const SEED_TOKENS: Array<SeedToken> = [ 
-    { id: 0, tokenAddress: namedTokens.wBTC.address, weight: 30, amount: "200000000" }, 
-    { id: 1, tokenAddress: namedTokens.wETH.address, weight: 40, amount: "200000000" },
-    { id: 2, tokenAddress: DAI.address, weight: 30, amount: "200000000" } 
-]
+const SEED_TOKENS: Array<SeedToken> = [
+  {
+    id: 0,
+    tokenAddress: namedTokens.wBTC.address,
+    weight: 30,
+    amount: '200000000',
+    symbol: 'wBTC',
+  },
+  {
+    id: 1,
+    tokenAddress: namedTokens.wETH.address,
+    weight: 40,
+    amount: '200000000',
+    symbol: 'wETH',
+  },
+  {
+    id: 2,
+    tokenAddress: DAI.address,
+    weight: 30,
+    amount: '200000000',
+    symbol: 'DAI',
+  },
+];
 
 /*
 create a weighted liquidity pool with the factory contract
 */
 async function createWeightedPool() {
-
   const sdkConfig: BalancerSdkConfig = {
     network: Network.KOVAN,
     rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
   };
   const balancer = new BalancerSDK(sdkConfig);
 
-  const { data, to: wPoolFactoryContractAddress } = await balancer.pools.weighted.buildCreateTx({
+  const createTxData = await balancer.pools.weighted.buildCreateTx({
     // Pool name
-    name: "WeightedPoolFactoryExample",
-    symbol: "30wBTC-40wETH-30wDAI",
+    name: 'WeightedPoolFactoryExample',
+    symbol: '30wBTC-40wETH-30wDAI',
 
     // How much of a swap fee the pool collects
-    initialFee: "0.1",
+    initialFee: '0.1',
 
     // A numerically sorted array of all tokens in the pool
     seedTokens: SEED_TOKENS,
@@ -58,8 +81,11 @@ async function createWeightedPool() {
     // If you want static fees, you should set the fee you want the pool to have forever,
     // and set the owner to the zero address 0x0000000000000000000000000000000000000000.
     owner: POOL_OWNER,
-    value: "0.1",
+    value: '0.1',
   });
+  if (createTxData.error) return;
+  const { data, to: wPoolFactoryContractAddress } = createTxData;
+
   const provider = new InfuraProvider(Network.KOVAN, process.env.INFURA);
   const wallet = new Wallet(TRADER_KEY as string, provider);
 
@@ -73,22 +99,31 @@ async function createWeightedPool() {
     // gasLimit: '2000000',
   });
 
-  const createdPoolInfo = await balancer.pools.getPoolInfoFromCreateTx(tx);
-  console.log({ createdPoolInfo })
+  const createdPoolInfo = await balancer.pools.getPoolInfoFilter();
+  console.log({ createdPoolInfo });
 
   const INIT_JOIN_PARAMS = {
     poolId: createdPoolInfo.id,
-    sender: "0x0000000000000000000000000000000000000001",
+    sender: '0x0000000000000000000000000000000000000001',
     receiver: createdPoolInfo.address,
-    tokenAddresses: [DAI.address, namedTokens.wBTC.address, namedTokens.wETH.address],
-    initialBalancesString: ["3000000000000000000", "4000000000000000000", "3000000000000000000"],
-  }
-  const { to, data: initJoinRawData } = await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS);
+    tokenAddresses: [
+      DAI.address,
+      namedTokens.wBTC.address,
+      namedTokens.wETH.address,
+    ],
+    initialBalancesString: [
+      '3000000000000000000',
+      '4000000000000000000',
+      '3000000000000000000',
+    ],
+  };
+  const { to, data: initJoinRawData } =
+    await balancer.pools.weighted.buildInitJoin(INIT_JOIN_PARAMS);
   const initJoinTx = wallet.sendTransaction({
     to,
     data: initJoinRawData,
-  })
-  console.log({ initJoinTx })
+  });
+  console.log({ initJoinTx });
 }
 
 // yarn examples:run ./examples/batchSwap.ts
