@@ -13,7 +13,7 @@ import { Interface } from '@ethersproject/abi';
 import { WeightedPoolFactory__factory } from '@balancer-labs/typechain';
 import { BalancerSdkConfig } from '@/types';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber, BigNumberish, ethers } from 'ethers';
 
 export class Weighted implements PoolType {
   public liquidityCalculator: LiquidityConcern;
@@ -59,7 +59,7 @@ export class Weighted implements PoolType {
       swapFeePercentage: ethers.utils.parseEther(params.initialFee),
       owner: params.owner,
     };
-    const wPoolFactory = new Interface(WeightedPoolFactory__factory.abi);
+    const wPoolFactory = WeightedPoolFactory__factory.createInterface();
     const data = wPoolFactory.encodeFunctionData(
       'create',
       Object.values(attributes)
