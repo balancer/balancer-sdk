@@ -98,3 +98,25 @@ export const approveToken = async (
   const tokenContract = balancer.contracts.ERC20(token, signer.provider);
   return await tokenContract.connect(signer).approve(balancerVault, amount);
 };
+
+/**
+ * Return token balances for given account
+ *
+ * @param {BalancerSDK}   balancer Balancer SDK (used to fetch ERC20 contracts)
+ * @param {string}        tokens Token addresses
+ * @param {JsonRpcSigner} signer Account that will have token balances returned
+ * @returns               Token balances for given account
+ */
+export const tokenBalances = async (
+  balancer: BalancerSDK,
+  signer: JsonRpcSigner,
+  tokens: string[]
+): Promise<string[]> => {
+  const balances: string[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const tokenContract = balancer.contracts.ERC20(tokens[i], signer.provider);
+    const signerAddress = await signer.getAddress();
+    balances.push((await tokenContract.balanceOf(signerAddress)).toString());
+  }
+  return balances;
+};

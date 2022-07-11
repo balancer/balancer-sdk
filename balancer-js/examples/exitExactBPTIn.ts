@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import {
   BalancerError,
   BalancerErrorCode,
@@ -8,7 +8,7 @@ import {
   PoolModel,
 } from '../src/index';
 import { parseFixed } from '@ethersproject/bignumber';
-import { forkSetup } from '../src/test/lib/utils';
+import { forkSetup, tokenBalances } from '../src/test/lib/utils';
 
 dotenv.config();
 
@@ -86,20 +86,6 @@ async function exitExactBPTIn() {
   console.log('Token balances after exit:               ', tokenBalancesAfter);
   console.log('Min token balances expected after exit:  ', minAmountsOut);
 }
-
-const tokenBalances = async (
-  balancer: BalancerSDK,
-  signer: JsonRpcSigner,
-  tokens: string[]
-) => {
-  let balances: string[] = [];
-  for (let i = 0; i < tokens.length; i++) {
-    const tokenContract = balancer.contracts.ERC20(tokens[i], signer.provider);
-    const signerAddress = await signer.getAddress();
-    balances.push((await tokenContract.balanceOf(signerAddress)).toString());
-  }
-  return balances;
-};
 
 // yarn examples:run ./examples/exitExactBPTIn.ts
 exitExactBPTIn();
