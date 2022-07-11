@@ -47,9 +47,8 @@ let amountsIn: string[];
 // Setup
 
 const setupPool = async (provider: PoolsProvider, poolId: string) => {
-  const _pool = await provider.find(poolId);
-  if (!_pool) throw new Error('Pool not found');
-  const pool = _pool;
+  const pool = await provider.find(poolId);
+  if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
   return pool;
 };
 

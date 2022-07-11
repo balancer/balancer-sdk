@@ -1,6 +1,12 @@
 import dotenv from 'dotenv';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { BalancerSDK, Network, PoolModel } from '../src/index';
+import {
+  BalancerError,
+  BalancerErrorCode,
+  BalancerSDK,
+  Network,
+  PoolModel,
+} from '../src/index';
 import { formatFixed } from '@ethersproject/bignumber';
 import { forkSetup } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
@@ -53,7 +59,7 @@ async function join() {
 
   // Use SDK to find pool info
   const pool: PoolModel | undefined = await balancer.poolsProvider.find(poolId);
-  if (!pool) throw new Error('Pool not found');
+  if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
   // Checking balances to confirm success
   const bptContract = balancer.contracts.ERC20(pool.address, provider);
