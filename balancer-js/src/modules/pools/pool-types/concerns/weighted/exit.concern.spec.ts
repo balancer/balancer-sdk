@@ -7,7 +7,7 @@ import {
   Pool,
   StaticPoolRepository,
 } from '@/.';
-import { PoolsProvider } from '../provider';
+import { PoolsProvider } from '@/modules/pools/provider';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import { parseFixed } from '@/lib/utils/math';

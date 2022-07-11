@@ -112,7 +112,7 @@ describe('exit execution', async () => {
     tokensOut = pool.tokens;
     await forkSetup(
       balancer,
-      provider,
+      signer,
       [pool.address],
       [BPT_SLOT],
       [parseFixed(initialBalance, 18).toString()],
