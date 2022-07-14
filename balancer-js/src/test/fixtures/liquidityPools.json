@@ -449,7 +449,7 @@
         "name": "Curve.fi ETH/stETH",
         "weight": "0.500000000000000001",
         "id": "0x062f38735aac32320db5e2dbbeb07968351d7c720002000000000000000000ac-0x06325440d014e39736583c165c2963ba99faf14e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "eYyvcrvSTETH-15APR22",
@@ -460,7 +460,7 @@
         "name": "Element Yield Token yvcrvSTETH-15APR22",
         "weight": "0.499999999999999999",
         "id": "0x062f38735aac32320db5e2dbbeb07968351d7c720002000000000000000000ac-0xeb1a6c6ea0cd20847150c27b5985fa198b2f90bd",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x062f38735aac32320db5e2dbbeb07968351d7c720002000000000000000000ac",
@@ -495,7 +495,7 @@
         "name": "3S-ETH/USD",
         "weight": "0.3333",
         "id": "0x996616bde0cb4974e571f17d31c844da2bd177f8000100000000000000000018-0x7d7e4f49a29dda8b1ecdcf8a8bc85edcb234e997",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -506,7 +506,7 @@
         "name": "Wrapped Ether",
         "weight": "0.5",
         "id": "0x996616bde0cb4974e571f17d31c844da2bd177f8000100000000000000000018-0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "3L-ETH/USD",
@@ -517,7 +517,7 @@
         "name": "3L-ETH/USD",
         "weight": "0.1667",
         "id": "0x996616bde0cb4974e571f17d31c844da2bd177f8000100000000000000000018-0xaa846004dc01b532b63feaa0b7a0cb0990f19ed9",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x996616bde0cb4974e571f17d31c844da2bd177f8000100000000000000000018",
