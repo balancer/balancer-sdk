@@ -65,7 +65,7 @@ async function join() {
   const bptBalanceBefore = await bptContract.balanceOf(wallet.address);
 
   // Use SDK to create join
-  const { to, data, minBPTOut } = await pool.buildJoin(
+  const { to, data, minBPTOut } = pool.buildJoin(
     wallet.address,
     tokensIn as string[],
     amountsIn,

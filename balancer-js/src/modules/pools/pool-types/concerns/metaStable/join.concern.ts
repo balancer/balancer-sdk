@@ -1,23 +1,23 @@
 import { JoinPoolParameters, JoinConcern, JoinPoolAttributes } from '../types';
 
 export class MetaStablePoolJoin implements JoinConcern {
-  async buildJoin({
+  buildJoin = ({
     joiner,
     pool,
     tokensIn,
     amountsIn,
     slippage,
     wrappedNativeAsset,
-  }: JoinPoolParameters): Promise<JoinPoolAttributes> {
     // TODO implementation
     console.log(
       joiner,
       pool,
+  }: JoinPoolParameters): JoinPoolAttributes => {
       tokensIn,
       amountsIn,
       slippage,
       wrappedNativeAsset
     );
     throw new Error('To be implemented');
-  }
+  };
 }
