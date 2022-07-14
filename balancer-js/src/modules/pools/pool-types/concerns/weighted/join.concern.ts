@@ -1,4 +1,3 @@
-import { parseUnits } from '@ethersproject/units';
 import OldBigNumber from 'bignumber.js';
 import * as SDK from '@georgeroman/balancer-v2-pools';
 
@@ -9,12 +8,11 @@ import {
   JoinPoolAttributes,
   JoinPoolParameters,
 } from '../types';
-import { Pool } from '@/types';
 import { subSlippage } from '@/lib/utils/slippageHelper';
-import { AssetHelpers } from '@/lib/utils';
+import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
 import { balancerVault } from '@/lib/constants/config';
 import { Vault__factory } from '@balancer-labs/typechain';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
@@ -80,22 +78,40 @@ export class WeightedPoolJoin implements JoinConcern {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
 
-    const parsedPoolInfo = this.parsePoolInfo(pool); // Parse pool info into EVM amounts in order to match amountsIn scalling
-    const sortedCalcInputs = this.sortCalcInputs(
-      parsedPoolInfo.tokens,
-      parsedPoolInfo.balances,
-      parsedPoolInfo.weights,
-      parsedPoolInfo.decimals,
+    // Check if there's any relevant weighted pool info missing
+    if (pool.tokens.some((token) => !token.decimals))
+      throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+    if (pool.tokens.some((token) => !token.weight))
+      throw new BalancerError(BalancerErrorCode.MISSING_WEIGHT);
+
+    // Parse pool info into EVM amounts in order to match amountsIn scalling
+    const {
+      parsedTokens,
+      parsedBalances,
+      parsedWeights,
+      parsedTotalShares,
+      parsedSwapFee,
+    } = parsePoolInfo(pool);
+
+    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+    // sort inputs
+    const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
       tokensIn,
-      amountsIn,
-      wrappedNativeAsset
-    );
+      amountsIn
+    ) as [string[], string[]];
+    // sort pool info
+    const [, sortedBalances, sortedWeights] = assetHelpers.sortTokens(
+      parsedTokens,
+      parsedBalances,
+      parsedWeights
+    ) as [string[], string[], string[]];
+
     const expectedBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
-      sortedCalcInputs.balances.map((b) => new OldBigNumber(b)),
-      sortedCalcInputs.weights.map((w) => new OldBigNumber(w)),
-      sortedCalcInputs.amounts.map((a) => new OldBigNumber(a)),
-      new OldBigNumber(parsedPoolInfo.totalShares),
-      new OldBigNumber(parsedPoolInfo.swapFee)
+      sortedBalances.map((b) => new OldBigNumber(b)),
+      sortedWeights.map((w) => new OldBigNumber(w)),
+      sortedAmounts.map((a) => new OldBigNumber(a)),
+      new OldBigNumber(parsedTotalShares),
+      new OldBigNumber(parsedSwapFee)
     ).toString();
 
     const minBPTOut = subSlippage(
@@ -104,7 +120,7 @@ export class WeightedPoolJoin implements JoinConcern {
     ).toString();
 
     const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
-      sortedCalcInputs.amounts,
+      sortedAmounts,
       minBPTOut
     );
 
@@ -115,8 +131,8 @@ export class WeightedPoolJoin implements JoinConcern {
       sender: joiner,
       recipient: joiner,
       joinPoolRequest: {
-        assets: sortedCalcInputs.tokens,
-        maxAmountsIn: sortedCalcInputs.amounts,
+        assets: sortedTokens,
+        maxAmountsIn: sortedAmounts,
         userData,
         fromInternalBalance: false,
       },
@@ -126,71 +142,5 @@ export class WeightedPoolJoin implements JoinConcern {
     const value = values[0] ? BigNumber.from(values[0]) : undefined;
 
     return { to, functionName, attributes, data, value, minBPTOut };
-  }
-
-  // Helper methods
-
-  /**
-   * Sort BPT calc. inputs alphabetically by token addresses as required by calcBptOutGivenExactTokensIn
-   */
-  private sortCalcInputs = (
-    poolTokens: string[],
-    poolBalances: string[],
-    poolWeights: string[],
-    poolDecimals: number[],
-    tokensIn: string[],
-    amountsIn: string[],
-    wrappedNativeAsset: string
-  ) => {
-    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    const [tokens, amounts] = assetHelpers.sortTokens(tokensIn, amountsIn) as [
-      string[],
-      string[]
-    ];
-    const [, balances, weights, decimals] = assetHelpers.sortTokens(
-      poolTokens,
-      poolBalances,
-      poolWeights,
-      poolDecimals
-    ) as [string[], string[], string[], number[]];
-    return {
-      tokens,
-      balances,
-      weights,
-      amounts,
-      decimals,
-    };
-  };
-
-  /**
-   * Parse pool info into EVM amounts
-   * @param {Pool}  pool
-   * @returns       parsed pool info
-   */
-  private parsePoolInfo = (pool: Pool) => {
-    const decimals = pool.tokens.map((token) => {
-      if (!token.decimals)
-        throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
-      return token.decimals;
-    });
-    const weights = pool.tokens.map((token) => {
-      if (!token.weight)
-        throw new BalancerError(BalancerErrorCode.MISSING_WEIGHT);
-      return parseUnits(token.weight).toString();
-    });
-    const tokens = pool.tokens.map((token) => token.address);
-    const balances = pool.tokens.map((token) =>
-      parseFixed(token.balance, token.decimals).toString()
-    );
-    const totalShares = parseUnits(pool.totalShares).toString();
-    const swapFee = parseUnits(pool.swapFee).toString();
-    return {
-      tokens,
-      balances,
-      weights,
-      decimals,
-      totalShares,
-      swapFee,
-    };
   };
 }
