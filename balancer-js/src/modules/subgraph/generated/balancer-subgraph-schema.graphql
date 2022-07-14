@@ -963,7 +963,7 @@ type PoolToken {
   balance: BigDecimal!
   decimals: Int!
   id: ID!
-  invested: BigDecimal!
+  managedBalance: BigDecimal!
   investments(first: Int = 100, orderBy: Investment_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: Investment_filter): [Investment!]
   name: String!
   poolId: Pool!
@@ -1020,14 +1020,14 @@ input PoolToken_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
-  invested: BigDecimal
-  invested_gt: BigDecimal
-  invested_gte: BigDecimal
-  invested_in: [BigDecimal!]
-  invested_lt: BigDecimal
-  invested_lte: BigDecimal
-  invested_not: BigDecimal
-  invested_not_in: [BigDecimal!]
+  managedBalance: BigDecimal
+  managedBalance_gt: BigDecimal
+  managedBalance_gte: BigDecimal
+  managedBalance_in: [BigDecimal!]
+  managedBalance_lt: BigDecimal
+  managedBalance_lte: BigDecimal
+  managedBalance_not: BigDecimal
+  managedBalance_not_in: [BigDecimal!]
   name: String
   name_contains: String
   name_contains_nocase: String
@@ -1131,7 +1131,7 @@ enum PoolToken_orderBy {
   balance
   decimals
   id
-  invested
+  managedBalance
   investments
   name
   poolId
