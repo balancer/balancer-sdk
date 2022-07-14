@@ -1040,7 +1040,7 @@ export type PoolToken = {
   decimals: Scalars['Int'];
   id: Scalars['ID'];
   managedBalance: Scalars['BigDecimal'];
-  investments?: Maybe<Array<Investment>>;
+  managements?: Maybe<Array<Investment>>;
   name: Scalars['String'];
   poolId: Pool;
   priceRate: Scalars['BigDecimal'];
@@ -1050,7 +1050,7 @@ export type PoolToken = {
 };
 
 
-export type PoolTokenInvestmentsArgs = {
+export type PoolTokenManagementsArgs = {
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Investment_OrderBy>;
   orderDirection?: InputMaybe<OrderDirection>;
@@ -1217,7 +1217,7 @@ export enum PoolToken_OrderBy {
   Decimals = 'decimals',
   Id = 'id',
   managedBalance = 'managedBalance',
-  Investments = 'investments',
+  Managements = 'managements',
   Name = 'name',
   PoolId = 'poolId',
   PriceRate = 'priceRate',
@@ -1676,7 +1676,7 @@ export type Query = {
   gradualWeightUpdate?: Maybe<GradualWeightUpdate>;
   gradualWeightUpdates: Array<GradualWeightUpdate>;
   investment?: Maybe<Investment>;
-  investments: Array<Investment>;
+  managements: Array<Investment>;
   joinExit?: Maybe<JoinExit>;
   joinExits: Array<JoinExit>;
   latestPrice?: Maybe<LatestPrice>;
@@ -1796,7 +1796,7 @@ export type QueryInvestmentArgs = {
 };
 
 
-export type QueryInvestmentsArgs = {
+export type QueryManagementsArgs = {
   block?: InputMaybe<Block_Height>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Investment_OrderBy>;
@@ -2107,7 +2107,7 @@ export type Subscription = {
   gradualWeightUpdate?: Maybe<GradualWeightUpdate>;
   gradualWeightUpdates: Array<GradualWeightUpdate>;
   investment?: Maybe<Investment>;
-  investments: Array<Investment>;
+  managements: Array<Investment>;
   joinExit?: Maybe<JoinExit>;
   joinExits: Array<JoinExit>;
   latestPrice?: Maybe<LatestPrice>;
@@ -2227,7 +2227,7 @@ export type SubscriptionInvestmentArgs = {
 };
 
 
-export type SubscriptionInvestmentsArgs = {
+export type SubscriptionManagementsArgs = {
   block?: InputMaybe<Block_Height>;
   first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Investment_OrderBy>;

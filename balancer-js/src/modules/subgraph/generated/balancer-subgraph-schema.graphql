@@ -964,7 +964,7 @@ type PoolToken {
   decimals: Int!
   id: ID!
   managedBalance: BigDecimal!
-  investments(first: Int = 100, orderBy: Investment_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: Investment_filter): [Investment!]
+  managements(first: Int = 100, orderBy: Investment_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: Investment_filter): [Investment!]
   name: String!
   poolId: Pool!
   priceRate: BigDecimal!
@@ -1132,7 +1132,7 @@ enum PoolToken_orderBy {
   decimals
   id
   managedBalance
-  investments
+  managements
   name
   poolId
   priceRate
@@ -1704,7 +1704,7 @@ type Query {
     """
     subgraphError: _SubgraphErrorPolicy_! = deny
   ): Investment
-  investments(
+  managements(
     """
     The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
     """
@@ -2297,7 +2297,7 @@ type Subscription {
     """
     subgraphError: _SubgraphErrorPolicy_! = deny
   ): Investment
-  investments(
+  managements(
     """
     The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
     """
