@@ -1,9 +1,0 @@
-node_modules
-.nyc_output
-yarn-error.log
-.DS_Store
-.env
-.idea/
-dist/
-src/subgraph/generated/
-cache/
