@@ -38,6 +38,7 @@ export interface ContractAddresses {
   multicall: string;
   lidoRelayer?: string;
   gaugeController: string;
+  feeDistributor: string;
 }
 
 export interface BalancerNetworkConfig {
