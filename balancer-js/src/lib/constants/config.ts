@@ -23,6 +23,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         ],
         stETH: '0xae7ab96520de3a18e5e111b5eaab095312d7fe84',
         wstETH: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+        bal: '0xba100000625a3754423978a60c9317c58a424e3d',
+        veBal: '0xC128a9954e6c874eA3d62ce62B468bA073093F25',
+        bbaUsd: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
       },
     },
     urls: {
@@ -49,6 +52,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
+        bal: '',
+        veBal: '',
+        bbaUsd: '',
       },
     },
     urls: {
@@ -66,9 +72,13 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
         gaugeController: '',
+        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+        bal: '',
+        veBal: '',
+        bbaUsd: '',
       },
     },
     urls: {
@@ -90,6 +100,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+        bal: '',
+        veBal: '',
+        bbaUsd: '',
       },
     },
     urls: {
@@ -111,6 +124,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+        bal: '',
+        veBal: '',
+        bbaUsd: '',
       },
     },
     urls: {
@@ -131,6 +147,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+        bal: '',
+        veBal: '',
+        bbaUsd: '',
       },
     },
     urls: {
@@ -152,6 +171,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+        bal: '',
+        veBal: '',
+        bbaUsd: '',
       },
     },
     urls: {
