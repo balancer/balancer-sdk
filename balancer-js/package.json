@@ -83,7 +83,8 @@
     "ts-node": "^10.4.0",
     "tsconfig-paths": "^3.12.0",
     "typechain": "^5.1.1",
-    "typescript": "^4.0.2"
+    "typescript": "^4.0.2",
+    "mockdate": "^3.0.5"
   },
   "dependencies": {
     "@balancer-labs/sor": "^4.0.1-beta.3",
