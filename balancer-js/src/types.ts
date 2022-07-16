@@ -3,6 +3,7 @@ import { Network } from './lib/constants/network';
 import { Contract } from '@ethersproject/contracts';
 import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 import { JoinPoolAttributes } from './modules/pools/pool-types/concerns/types';
+import type { BaseFeeDistributor } from './modules/data';
 
 export * from '@/modules/data/types';
 
@@ -35,6 +36,7 @@ export interface ContractAddresses {
   multicall: string;
   lidoRelayer?: string;
   gaugeController: string;
+  feeDistributor: string;
 }
 
 export interface BalancerNetworkConfig {
