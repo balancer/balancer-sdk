@@ -26,6 +26,7 @@ export class BalancerSDK implements BalancerSDKRoot {
   readonly relayer: Relayer;
   readonly pricing: Pricing;
   balancerContracts: Contracts;
+  zaps: Zaps;
 
   constructor(
     public config: BalancerSdkConfig,
@@ -35,8 +36,7 @@ export class BalancerSDK implements BalancerSDKRoot {
     public poolsProvider = new PoolsProvider(
       config,
       new SubgraphPoolRepository(subgraph.client)
-    ),
-    public zaps = new Zaps(config)
+    )
   ) {
     this.swaps = new Swaps(this.config);
     this.relayer = new Relayer(this.swaps);
@@ -46,6 +46,7 @@ export class BalancerSDK implements BalancerSDKRoot {
       networkConfig.addresses.contracts,
       sor.provider
     );
+    this.zaps = new Zaps(networkConfig.chainId, this.relayer);
   }
 
   get networkConfig(): BalancerNetworkConfig {
