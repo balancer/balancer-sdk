@@ -76,6 +76,7 @@ export interface BalancerDataRepositories {
   tokenMeta: Findable<Token, TokenAttribute>;
   liquidityGauges: Findable<LiquidityGauge>;
   feeDistributor: BaseFeeDistributor;
+  feeCollector: Findable<number>;
   tokenYields: Findable<number>;
 }
 

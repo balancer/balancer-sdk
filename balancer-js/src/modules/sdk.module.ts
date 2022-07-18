@@ -13,6 +13,7 @@ import {
   PoolsSubgraphRepository,
   StaticTokenProvider,
   FeeDistributorRepository,
+  FeeCollectorRepository,
   TokenYieldsRepository,
 } from './data';
 
@@ -55,6 +56,10 @@ export class BalancerSDK implements BalancerSDKRoot {
         networkConfig.addresses.tokens.bal,
         networkConfig.addresses.tokens.veBal,
         networkConfig.addresses.tokens.bbaUsd,
+        sor.provider
+      ),
+      feeCollector: new FeeCollectorRepository(
+        networkConfig.addresses.contracts.vault,
         sor.provider
       ),
       tokenYields: new TokenYieldsRepository(),

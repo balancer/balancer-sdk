@@ -30,6 +30,7 @@ const bbAUsdInterface = new Interface([
 
 export class FeeDistributorRepository implements BaseFeeDistributor {
   multicall: Contract;
+  data?: FeeDistributorData;
 
   constructor(
     multicallAddress: string,
@@ -42,7 +43,7 @@ export class FeeDistributorRepository implements BaseFeeDistributor {
     this.multicall = Multicall(multicallAddress, provider);
   }
 
-  async multicallData(timestamp: number): Promise<FeeDistributorData> {
+  async fetch(timestamp: number): Promise<FeeDistributorData> {
     const previousWeek = this.getPreviousWeek(timestamp);
     const payload = [
       [
@@ -73,6 +74,14 @@ export class FeeDistributorRepository implements BaseFeeDistributor {
     };
 
     return data;
+  }
+
+  async multicallData(timestamp: number): Promise<FeeDistributorData> {
+    if (!this.data) {
+      this.data = await this.fetch(timestamp);
+    }
+
+    return this.data;
   }
 
   getPreviousWeek(fromTimestamp: number): number {
