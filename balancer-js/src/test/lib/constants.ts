@@ -20,26 +20,31 @@ export const ADDRESSES = {
       address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
       decimals: 6,
       symbol: 'USDC',
+      slot: 9,
     },
     USDT: {
       address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
       decimals: 6,
       symbol: 'USDT',
+      slot: 9,
     },
     WBTC: {
       address: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
       decimals: 8,
       symbol: 'WBTC',
+      slot: 0,
     },
     WETH: {
       address: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
       decimals: 18,
       symbol: 'WETH',
+      slot: 3,
     },
     DAI: {
       address: '0x6b175474e89094c44da98b954eedeac495271d0f',
       decimals: 18,
       symbol: 'DAI',
+      slot: 2,
     },
     STETH: {
       address: '0xae7ab96520de3a18e5e111b5eaab095312d7fe84',
@@ -50,6 +55,7 @@ export const ADDRESSES = {
       address: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
       decimals: 18,
       symbol: 'wSTETH',
+      slot: 0,
     },
     bbausd: {
       address: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
