@@ -52,6 +52,15 @@ export async function getOnChainBalances(
     ]);
     multiPool.call(`${pool.id}.totalSupply`, pool.address, 'totalSupply');
 
+    // Pools with pre minted BPT
+    if (pool.poolType.includes('Linear') || pool.poolType === 'StablePhantom') {
+      multiPool.call(
+        `${pool.id}.virtualSupply`,
+        pool.address,
+        'getVirtualSupply'
+      );
+    }
+
     // TO DO - Make this part of class to make more flexible?
     if (
       pool.poolType === 'Weighted' ||
@@ -110,6 +119,7 @@ export async function getOnChainBalances(
         balances: string[];
       };
       totalSupply: string;
+      virtualSupply?: string;
       rate?: string;
     }
   >;
@@ -126,6 +136,7 @@ export async function getOnChainBalances(
           balances: string[];
         };
         totalSupply: string;
+        virtualSupply?: string;
         rate?: string;
       }
     >;
@@ -137,7 +148,8 @@ export async function getOnChainBalances(
 
   Object.entries(pools).forEach(([poolId, onchainData], index) => {
     try {
-      const { poolTokens, swapFee, weights, totalSupply } = onchainData;
+      const { poolTokens, swapFee, weights, totalSupply, virtualSupply } =
+        onchainData;
 
       if (
         subgraphPools[index].poolType === 'Stable' ||
@@ -197,7 +209,21 @@ export async function getOnChainBalances(
         }
       });
 
-      subgraphPools[index].totalShares = formatFixed(totalSupply, 18);
+      // Pools with pre minted BPT
+      if (
+        subgraphPools[index].poolType.includes('Linear') ||
+        subgraphPools[index].poolType === 'StablePhantom'
+      ) {
+        if (virtualSupply === undefined) {
+          console.error(
+            `Pool with pre-minted BPT missing Virtual Supply: ${poolId}`
+          );
+          return;
+        }
+        subgraphPools[index].totalShares = formatFixed(virtualSupply, 18);
+      } else {
+        subgraphPools[index].totalShares = formatFixed(totalSupply, 18);
+      }
 
       onChainPools.push(subgraphPools[index]);
     } catch (err) {
