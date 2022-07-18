@@ -48,6 +48,7 @@ export const repositores = ({
         balAddress: '',
       }),
   },
+  feeCollector = stubbed<number>(0),
   tokenYields = stubbed<number>(100),
 }): BalancerDataRepositories => ({
   pools,
@@ -55,5 +56,6 @@ export const repositores = ({
   tokenMeta,
   liquidityGauges,
   feeDistributor,
+  feeCollector,
   tokenYields,
 });
