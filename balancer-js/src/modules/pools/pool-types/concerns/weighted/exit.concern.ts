@@ -18,42 +18,6 @@ import { Pool } from '@/types';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export class WeightedPoolExit implements ExitConcern {
-  // Static
-
-  /**
-   * Encode exitPool in an ABI byte string
-   *
-   * [See method for a exit pool](https://dev.balancer.fi/references/contracts/apis/the-vault#exitpool).
-   *
-   * _NB: This method doesn't execute an exit pool -- it returns an [ABI byte string](https://docs.soliditylang.org/en/latest/abi-spec.html)
-   * containing the data of the function call on a contract, which can then be sent to the network to be executed.
-   * (ex. [sendTransaction](https://web3js.readthedocs.io/en/v1.2.11/web3-eth.html#sendtransaction)).
-   *
-   * @param {ExitPool}          exitPool - exit pool information to be encoded
-   * @param {string}            exitPool.poolId - id of pool being exited
-   * @param {string}            exitPool.sender - account address sending BPT to exit pool
-   * @param {string}            exitPool.recipient - account address receiving tokens after exiting pool
-   * @param {ExitPoolRequest}   exitPool.exitPoolRequest - object containing exit pool request information
-   * @returns {string}          encodedExitPoolData - Returns an ABI byte string containing the data of the function call on a contract
-   */
-  static encodeExitPool({
-    poolId,
-    sender,
-    recipient,
-    exitPoolRequest,
-  }: ExitPool): string {
-    const vaultInterface = Vault__factory.createInterface();
-
-    return vaultInterface.encodeFunctionData('exitPool', [
-      poolId,
-      sender,
-      recipient,
-      exitPoolRequest,
-    ]);
-  }
-
-  // Exit Concern
-
   /**
    * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
    * @param {string}  exiter - Account address exiting pool
@@ -144,7 +108,14 @@ export class WeightedPoolExit implements ExitConcern {
         toInternalBalance: false,
       },
     };
-    const data = WeightedPoolExit.encodeExitPool(attributes);
+    const vaultInterface = Vault__factory.createInterface();
+    // encode transaction data into an ABI byte string which can be sent to the network to be executed
+    const data = vaultInterface.encodeFunctionData(functionName, [
+      attributes.poolId,
+      attributes.sender,
+      attributes.recipient,
+      attributes.exitPoolRequest,
+    ]);
 
     return {
       to,
@@ -219,7 +190,14 @@ export class WeightedPoolExit implements ExitConcern {
         toInternalBalance: false,
       },
     };
-    const data = WeightedPoolExit.encodeExitPool(attributes);
+    const vaultInterface = Vault__factory.createInterface();
+    // encode transaction data into an ABI byte string which can be sent to the network to be executed
+    const data = vaultInterface.encodeFunctionData(functionName, [
+      attributes.poolId,
+      attributes.sender,
+      attributes.recipient,
+      attributes.exitPoolRequest,
+    ]);
 
     return {
       to,
@@ -242,7 +220,7 @@ export class WeightedPoolExit implements ExitConcern {
     poolWeights: string[],
     poolDecimals: number[]
   ) => {
-    const WETH = '0x000000000000000000000000000000000000000F';
+    const WETH = '0x000000000000000000000000000000000000000F'; // TODO: check if it should be possible to exit with ETH instead of WETH
     const assetHelpers = new AssetHelpers(WETH);
     const [tokens, balances, weights, decimals] = assetHelpers.sortTokens(
       poolTokens,
@@ -263,7 +241,7 @@ export class WeightedPoolExit implements ExitConcern {
    * Sort inputs alphabetically by token addresses as required by gerogeroman SDK
    */
   private sortInputs = (tokens: string[], amounts: string[]) => {
-    const WETH = '0x000000000000000000000000000000000000000F';
+    const WETH = '0x000000000000000000000000000000000000000F'; // TODO: check if it should be possible to exit with ETH instead of WETH
     const assetHelpers = new AssetHelpers(WETH);
     const [_tokens, _amounts] = assetHelpers.sortTokens(tokens, amounts) as [
       string[],
