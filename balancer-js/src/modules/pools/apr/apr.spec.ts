@@ -66,12 +66,12 @@ describe('pool apr', () => {
     it('are 10000 bsp APR', async () => {
       const apr = await new PoolApr(
         poolData,
-        0,
         repositories.tokenPrices,
         repositories.tokenMeta,
         repositories.pools,
         repositories.liquidityGauges,
         repositories.feeDistributor,
+        repositories.feeCollector,
         repositories.tokenYields
       ).swapFees();
       expect(apr).to.eq(10000);
@@ -84,12 +84,12 @@ describe('pool apr', () => {
       it('are 100 bsp (1%)', async () => {
         const apr = await new PoolApr(
           poolData,
-          0,
           repositories.tokenPrices,
           repositories.tokenMeta,
           repositories.pools,
           repositories.liquidityGauges,
           repositories.feeDistributor,
+          repositories.feeCollector,
           repositories.tokenYields
         ).tokenAprs();
         expect(apr).to.eq(100);
@@ -125,12 +125,12 @@ describe('pool apr', () => {
       it('are 5000 bsp (50%) half of pool1 APR', async () => {
         const apr = await new PoolApr(
           poolWithBpt,
-          0,
           repositories.tokenPrices,
           repositories.tokenMeta,
           repositories.pools,
           repositories.liquidityGauges,
           repositories.feeDistributor,
+          factories.data.stubbed<number>(0),
           factories.data.stubbed<number>(undefined)
         ).tokenAprs();
 
@@ -152,12 +152,12 @@ describe('pool apr', () => {
 
       const apr = await new PoolApr(
         poolData,
-        0,
         repositories.tokenPrices,
         repositories.tokenMeta,
         repositories.pools,
         factories.data.stubbed<LiquidityGauge>(gauge),
         repositories.feeDistributor,
+        repositories.feeCollector,
         factories.data.stubbed<number>(undefined)
       ).stakingApr();
 
@@ -178,12 +178,12 @@ describe('pool apr', () => {
 
       const apr = await new PoolApr(
         poolData,
-        0,
         repositories.tokenPrices,
         repositories.tokenMeta,
         repositories.pools,
         factories.data.stubbed<LiquidityGauge>(gauge),
         repositories.feeDistributor,
+        repositories.feeCollector,
         factories.data.stubbed<number>(undefined)
       ).rewardsApr();
 
