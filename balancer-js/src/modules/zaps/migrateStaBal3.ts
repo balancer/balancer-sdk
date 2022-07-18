@@ -1,9 +1,15 @@
+import { Contract } from '@ethersproject/contracts';
+import { defaultAbiCoder } from '@ethersproject/abi';
 import { MaxUint256 } from '@ethersproject/constants';
 import { ExitPoolRequest } from '@/types';
 import { Network } from '@/lib/constants/network';
 import { Relayer, OutputReference } from '../relayer/relayer.module';
 import { StablePoolEncoder } from '@/pool-stable';
 import { SwapType, FundManagement, BatchSwapStep } from '../swaps/types';
+
+// TO DO - Ask Nico to update Typechain?
+import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
+import { JsonRpcProvider } from '@ethersproject/providers';
 
 export const CONSTANTS: NewtorkConstants = {
   Mainnet: {
@@ -336,13 +342,18 @@ export class MigrateStaBal3 {
     };
   }
 
-  buildPoolJoin(joinAmounts: OutputReference[]): {
+  buildPoolJoin(
+    joinAmounts: OutputReference[],
+    expectedBptReturn: string,
+    slippage: string
+  ): {
     call: JoinPool;
     bptOutputReference: OutputReference;
   } {
     /*
       Create encoded joinPool.
       join bbausd2 pool using Linear2 BPT tokens.
+      Use expectedBptReturn and slippage to set minAmount out
       The join amounts should be stored in previous reference
       Needs to set output references for next step - this will be the amount of bpt returned by join
       */
@@ -376,7 +387,12 @@ export class MigrateStaBal3 {
     return '';
   }
 
-  buildMigration(migrator: string, amount: string): MigrationAttributes {
+  buildMigration(
+    migrator: string,
+    amount: string,
+    expectedBptReturn: string,
+    slippage: string
+  ): MigrationAttributes {
     /*
     From Nico -
     the flow is:
@@ -397,7 +413,11 @@ export class MigrateStaBal3 {
 
     const swaps = this.buildSwap(poolExit.oldLinearAmountsReferences);
 
-    const poolJoin = this.buildPoolJoin(swaps.newLinearAmountsReferences);
+    const poolJoin = this.buildPoolJoin(
+      swaps.newLinearAmountsReferences,
+      expectedBptReturn,
+      slippage
+    );
 
     const gaugeDeposit = this.buildDeposit(
       migrator,
@@ -417,5 +437,31 @@ export class MigrateStaBal3 {
       functionName: 'multicall',
       calldata: calls,
     };
+  }
+
+  /**
+   * Statically calls migration action to find final BPT amount returned.
+   * @param migrator Migrator address.
+   * @param amount Amount of staBal3 BPT.
+   * @param provider Provider.
+   * @returns BPT amount from poolJoin call.
+   */
+  async queryMigration(
+    migrator: string,
+    amount: string,
+    provider: JsonRpcProvider
+  ): Promise<string> {
+    const migrationData = this.buildMigration(migrator, amount, '0', '0');
+    const relayerContract = new Contract(
+      this.constants.relayer,
+      balancerRelayerAbi,
+      provider
+    );
+    // Returns result of each call in an array
+    const tx = await relayerContract.callStatic[migrationData.functionName](
+      migrationData.calldata
+    );
+    // BPT amount from poolJoin call
+    return defaultAbiCoder.decode(['int256[]'], tx[3]).toString();
   }
 }
