@@ -96,7 +96,7 @@ interface Pool {
   address: string;
 }
 
-interface Constants {
+export interface Constants {
   relayer: string;
   staBal3: Pool;
   staBal3Gauge: string;
