@@ -44,9 +44,9 @@ let transactionReceipt: TransactionReceipt;
 let bptBalanceBefore: BigNumber;
 let bptBalanceAfter: BigNumber;
 let bptMaxBalanceDecrease: BigNumber;
-let tokensBalanceBefore: BigNumber[];
+const tokensBalanceBefore: BigNumber[] = [];
+const tokensBalanceAfter: BigNumber[] = [];
 let tokensMinBalanceIncrease: BigNumber[];
-let tokensBalanceAfter: BigNumber[];
 let signerAddress: string;
 let pool: PoolModel;
 
@@ -66,19 +66,23 @@ const tokenBalance = async (tokenAddress: string, signerAddress: string) => {
   return balance;
 };
 
-const updateBalancesBefore = async () => {
-  tokensBalanceBefore = [
-    await tokenBalance(pool.tokens[0].address, signerAddress),
-    await tokenBalance(pool.tokens[1].address, signerAddress),
-  ];
+const updateBalancesBefore = async (pool: Pool) => {
+  for (let i = 0; i < pool.tokensList.length; i++) {
+    tokensBalanceBefore[i] = await tokenBalance(
+      pool.tokensList[i],
+      signerAddress
+    );
+  }
   bptBalanceBefore = await tokenBalance(pool.address, signerAddress);
 };
 
-const updateBalancesAfter = async () => {
-  tokensBalanceAfter = [
-    await tokenBalance(pool.tokens[0].address, signerAddress),
-    await tokenBalance(pool.tokens[1].address, signerAddress),
-  ];
+const updateBalancesAfter = async (pool: Pool) => {
+  for (let i = 0; i < pool.tokensList.length; i++) {
+    tokensBalanceAfter[i] = await tokenBalance(
+      pool.tokensList[i],
+      signerAddress
+    );
+  }
   bptBalanceAfter = await tokenBalance(pool.address, signerAddress);
 };
 
@@ -125,7 +129,7 @@ describe('exit execution', async () => {
   context('exitExactBPTIn transaction - exit with encoded data', async () => {
     before(async function () {
       this.timeout(20000);
-      await updateBalancesBefore();
+      await updateBalancesBefore(pool);
 
       const { to, data, minAmountsOut, maxBPTIn } =
         await pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
@@ -135,7 +139,7 @@ describe('exit execution', async () => {
       tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
       const transactionResponse = await signer.sendTransaction(tx);
       transactionReceipt = await transactionResponse.wait();
-      await updateBalancesAfter();
+      await updateBalancesAfter(pool);
     });
 
     it('should work', async () => {
@@ -161,7 +165,7 @@ describe('exit execution', async () => {
   context('exitExactBPTIn transaction - exit with params', async () => {
     before(async function () {
       this.timeout(20000);
-      await updateBalancesBefore();
+      await updateBalancesBefore(pool);
 
       const { attributes, minAmountsOut, maxBPTIn } =
         await pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
@@ -178,7 +182,7 @@ describe('exit execution', async () => {
           attributes.exitPoolRequest
         );
       transactionReceipt = await transactionResponse.wait();
-      await updateBalancesAfter();
+      await updateBalancesAfter(pool);
     });
 
     it('should work', async () => {
@@ -204,11 +208,11 @@ describe('exit execution', async () => {
   context('exitExactTokensOut - exit with encoded data', async () => {
     before(async function () {
       this.timeout(20000);
-      await updateBalancesBefore();
+      await updateBalancesBefore(pool);
 
-      amountsOut = pool.tokens.map((t) => {
-        return parseFixed(t.balance, t.decimals).div(amountsOutDiv).toString();
-      });
+      amountsOut = pool.tokens.map((t) =>
+        parseFixed(t.balance, t.decimals).div(amountsOutDiv).toString()
+      );
       const { to, data, minAmountsOut, maxBPTIn } =
         await pool.buildExitExactTokensOut(
           signerAddress,
@@ -222,7 +226,7 @@ describe('exit execution', async () => {
       tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
       const transactionResponse = await signer.sendTransaction(tx);
       transactionReceipt = await transactionResponse.wait();
-      await updateBalancesAfter();
+      await updateBalancesAfter(pool);
     });
 
     it('should work', async () => {
@@ -248,7 +252,7 @@ describe('exit execution', async () => {
   context('exitExactTokensOut transaction - exit with params', async () => {
     before(async function () {
       this.timeout(20000);
-      await updateBalancesBefore();
+      await updateBalancesBefore(pool);
 
       amountsOut = pool.tokens.map((t) =>
         parseFixed(t.balance, t.decimals).div(amountsOutDiv).toString()
@@ -273,7 +277,7 @@ describe('exit execution', async () => {
           attributes.exitPoolRequest
         );
       transactionReceipt = await transactionResponse.wait();
-      await updateBalancesAfter();
+      await updateBalancesAfter(pool);
     });
 
     it('should work', async () => {
