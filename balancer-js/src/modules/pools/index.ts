@@ -38,12 +38,12 @@ export class Pools {
       apr: async () => {
         const aprService = new PoolApr(
           data,
-          0,
           repositories.tokenPrices,
           repositories.tokenMeta,
           repositories.pools,
           repositories.liquidityGauges,
           repositories.feeDistributor,
+          repositories.feeCollector,
           repositories.tokenYields
         );
 

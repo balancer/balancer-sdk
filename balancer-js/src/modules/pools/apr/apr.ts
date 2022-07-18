@@ -39,12 +39,12 @@ export interface AprBreakdown {
 export class PoolApr {
   constructor(
     private pool: Pool,
-    private protocolSwapFeePercentage: number,
     private tokenPrices: Findable<Price>,
     private tokenMeta: Findable<Token, TokenAttribute>,
     private pools: Findable<Pool, PoolAttribute>,
     private liquidityGauges: Findable<LiquidityGauge>,
     private feeDistributor: BaseFeeDistributor,
+    private feeCollector: Findable<number>,
     private tokenYields: Findable<number>
   ) {}
 
@@ -68,7 +68,7 @@ export class PoolApr {
     }
     const dailyFees =
       (parseFloat(totalSwapFee) / daysLive) *
-      (1 - this.protocolSwapFeePercentage);
+      (1 - (await this.protocolSwapFeePercentage()));
     const feesDailyBsp = 10000 * (dailyFees / parseFloat(totalLiquidity));
 
     return Math.round(365 * feesDailyBsp);
@@ -108,12 +108,12 @@ export class PoolApr {
           apr = (
             await new PoolApr(
               subPool,
-              this.protocolSwapFeePercentage,
               this.tokenPrices,
               this.tokenMeta,
               this.pools,
               this.liquidityGauges,
               this.feeDistributor,
+              this.feeCollector,
               this.tokenYields
             ).apr()
           ).min;
@@ -322,5 +322,11 @@ export class PoolApr {
       parseFloat(await this.totalLiquidity()) /
       parseFloat(this.pool.totalShares)
     );
+  }
+
+  private async protocolSwapFeePercentage() {
+    const fee = await this.feeCollector.find('');
+
+    return fee ? fee : 0;
   }
 }
