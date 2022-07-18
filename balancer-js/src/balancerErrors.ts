@@ -10,6 +10,7 @@ export enum BalancerErrorCode {
   INPUT_LENGTH_MISMATCH = 'INPUT_LENGTH_MISMATCH',
   MISSING_AMP = 'MISSING_AMP',
   MISSING_DECIMALS = 'MISSING_DECIMALS',
+  MISSING_PRICE_RATE = 'MISSING_PRICE_RATE',
   MISSING_WEIGHT = 'MISSING_WEIGHT',
 }
 
@@ -43,6 +44,8 @@ export class BalancerError extends Error {
         return 'missing amp';
       case BalancerErrorCode.MISSING_DECIMALS:
         return 'missing decimals';
+      case BalancerErrorCode.MISSING_PRICE_RATE:
+        return 'missing price rate';
       case BalancerErrorCode.MISSING_WEIGHT:
         return 'missing weight';
       default:
