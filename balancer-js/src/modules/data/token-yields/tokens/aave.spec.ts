@@ -13,7 +13,7 @@ describe('aave apr', () => {
         reserves: [
           {
             underlyingAsset: underlyingUsdt,
-            liquidityRate: '10000000000000000000000000',
+            liquidityRate: '16633720952291480781459657',
           },
         ],
       },
@@ -27,6 +27,6 @@ describe('aave apr', () => {
 
   it('is getting fetched', async () => {
     const apr = await aave(wrappedAUsdt);
-    expect(apr).to.eq(1);
+    expect(apr).to.eq(166);
   });
 });

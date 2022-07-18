@@ -69,6 +69,7 @@ interface ReserveResponse {
 let aprTtl = 0;
 let aprs: Record<string, number>;
 let bustCache = false;
+let promisedCall: Promise<Record<string, number>>; // Prevent multiple rounds to APIs.
 
 /**
  * Controls API response 1h auto-caching, when true (default) it will return APR cached value.
@@ -104,12 +105,12 @@ const getAprs = async (): Promise<Record<string, number>> => {
 
     const aprEntries = reserves.map((r) => [
       underlyingToWrapped[r.underlyingAsset],
-      // Note: our assumption is frontend usage, it's not a good source where more accuracy is needed.
-      // TODO: check if this math is correct, it's ray number (27 digits) from aave
+      // Note: our assumption is frontend usage, this service is not a good source where more accuracy is needed.
+      // Converting from aave ray number (27 digits) to bsp
       // essentially same as here:
       // https://github.com/aave/aave-utilities/blob/master/packages/math-utils/src/formatters/reserve/index.ts#L231
       Math.round(
-        parseFloat(formatUnits(BigNumber.from(r.liquidityRate), 27)) * 100
+        parseFloat(formatUnits(BigNumber.from(r.liquidityRate), 27)) * 10000
       ),
     ]);
 
@@ -134,10 +135,11 @@ export const aave: AprFetcher = async (address?: string) => {
   }
 
   // cache for 1h
-  if (bustCache || Date.now() > aprTtl) {
-    aprs = await getAprs();
+  if ((bustCache || Date.now() > aprTtl) && !promisedCall) {
+    promisedCall = getAprs();
     aprTtl = Date.now() + 1 * 60 * 60 * 1000;
   }
+  aprs = await promisedCall;
 
   return aprs[address];
 };
