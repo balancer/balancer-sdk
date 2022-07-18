@@ -86,217 +86,228 @@ const updateBalancesAfter = async (pool: Pool) => {
   bptBalanceAfter = await tokenBalance(pool.address, signerAddress);
 };
 
-// Test scenarios
-
-describe('exit execution', async () => {
-  // Setup chain
-  before(async function () {
-    this.timeout(20000);
-
-    const sdkConfig = {
-      network: Network.MAINNET,
-      rpcUrl,
-    };
-    // Using a static repository to make test consistent over time
-    const poolsProvider = new PoolsProvider(
-      sdkConfig,
-      new StaticPoolRepository(pools_14717479 as Pool[])
-    );
-    balancer = new BalancerSDK(
-      sdkConfig,
-      undefined,
-      undefined,
-      undefined,
-      poolsProvider
-    );
-    pool = await setupPool(
-      poolsProvider,
-      '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
-    );
-    tokensOut = pool.tokens;
-    await forkSetup(
-      balancer,
-      signer,
-      [pool.address],
-      [BPT_SLOT],
-      [parseFixed(initialBalance, 18).toString()],
-      jsonRpcUrl as string,
-      14717479 // holds the same state as the static repository
-    );
-    signerAddress = await signer.getAddress();
-  });
-
-  context('exitExactBPTIn transaction - exit with encoded data', async () => {
+const testExitPool = (poolId: string) => {
+  describe('exit execution', async () => {
+    // Setup chain
     before(async function () {
       this.timeout(20000);
-      await updateBalancesBefore(pool);
 
-      const { to, data, minAmountsOut, maxBPTIn } =
-        await pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
-      const tx = { to, data }; // , gasPrice: '600000000000', gasLimit: '2000000' };
-
-      bptMaxBalanceDecrease = BigNumber.from(maxBPTIn);
-      tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
-      const transactionResponse = await signer.sendTransaction(tx);
-      transactionReceipt = await transactionResponse.wait();
-      await updateBalancesAfter(pool);
-    });
-
-    it('should work', async () => {
-      expect(transactionReceipt.status).to.eql(1);
-    });
-
-    it('tokens balance should increase', async () => {
-      for (let i = 0; i < tokensBalanceAfter.length; i++) {
-        expect(
-          tokensBalanceAfter[i]
-            .sub(tokensBalanceBefore[i])
-            .gte(tokensMinBalanceIncrease[i])
-        ).to.be.true;
-      }
-    });
-
-    it('bpt balance should decrease', async () => {
-      expect(bptBalanceBefore.sub(bptBalanceAfter).eq(bptMaxBalanceDecrease)).to
-        .be.true;
-    });
-  });
-
-  context('exitExactBPTIn transaction - exit with params', async () => {
-    before(async function () {
-      this.timeout(20000);
-      await updateBalancesBefore(pool);
-
-      const { attributes, minAmountsOut, maxBPTIn } =
-        await pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
-
-      bptMaxBalanceDecrease = BigNumber.from(maxBPTIn);
-      tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
-
-      const transactionResponse = await balancer.contracts.vault
-        .connect(signer)
-        .exitPool(
-          attributes.poolId,
-          attributes.sender,
-          attributes.recipient,
-          attributes.exitPoolRequest
-        );
-      transactionReceipt = await transactionResponse.wait();
-      await updateBalancesAfter(pool);
-    });
-
-    it('should work', async () => {
-      expect(transactionReceipt.status).to.eql(1);
-    });
-
-    it('tokens balance should increase', async () => {
-      for (let i = 0; i < tokensBalanceAfter.length; i++) {
-        expect(
-          tokensBalanceAfter[i]
-            .sub(tokensBalanceBefore[i])
-            .gte(tokensMinBalanceIncrease[i])
-        ).to.be.true;
-      }
-    });
-
-    it('bpt balance should decrease', async () => {
-      expect(bptBalanceBefore.sub(bptBalanceAfter).eq(bptMaxBalanceDecrease)).to
-        .be.true;
-    });
-  });
-
-  context('exitExactTokensOut - exit with encoded data', async () => {
-    before(async function () {
-      this.timeout(20000);
-      await updateBalancesBefore(pool);
-
-      amountsOut = pool.tokens.map((t) =>
-        parseFixed(t.balance, t.decimals).div(amountsOutDiv).toString()
+      const sdkConfig = {
+        network: Network.MAINNET,
+        rpcUrl,
+      };
+      // Using a static repository to make test consistent over time
+      const poolsProvider = new PoolsProvider(
+        sdkConfig,
+        new StaticPoolRepository(pools_14717479 as Pool[])
       );
-      const { to, data, minAmountsOut, maxBPTIn } =
-        await pool.buildExitExactTokensOut(
-          signerAddress,
-          tokensOut.map((t) => t.address),
-          amountsOut,
-          slippage
-        );
-      const tx = { to, data }; // , gasPrice: '600000000000', gasLimit: '2000000' };
-
-      bptMaxBalanceDecrease = BigNumber.from(maxBPTIn);
-      tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
-      const transactionResponse = await signer.sendTransaction(tx);
-      transactionReceipt = await transactionResponse.wait();
-      await updateBalancesAfter(pool);
-    });
-
-    it('should work', async () => {
-      expect(transactionReceipt.status).to.eql(1);
-    });
-
-    it('tokens balance should increase', async () => {
-      for (let i = 0; i < tokensBalanceAfter.length; i++) {
-        expect(
-          tokensBalanceAfter[i]
-            .sub(tokensBalanceBefore[i])
-            .eq(tokensMinBalanceIncrease[i])
-        ).to.be.true;
-      }
-    });
-
-    it('bpt balance should decrease', async () => {
-      expect(bptBalanceBefore.sub(bptBalanceAfter).lte(bptMaxBalanceDecrease))
-        .to.be.true;
-    });
-  });
-
-  context('exitExactTokensOut transaction - exit with params', async () => {
-    before(async function () {
-      this.timeout(20000);
-      await updateBalancesBefore(pool);
-
-      amountsOut = pool.tokens.map((t) =>
-        parseFixed(t.balance, t.decimals).div(amountsOutDiv).toString()
+      balancer = new BalancerSDK(
+        sdkConfig,
+        undefined,
+        undefined,
+        undefined,
+        poolsProvider
       );
-      const { attributes, minAmountsOut, maxBPTIn } =
-        await pool.buildExitExactTokensOut(
-          signerAddress,
-          tokensOut.map((t) => t.address),
-          amountsOut,
-          slippage
+      pool = await setupPool(poolsProvider, poolId);
+      tokensOut = pool.tokens;
+      await forkSetup(
+        balancer,
+        signer,
+        [pool.address],
+        [BPT_SLOT],
+        [parseFixed(initialBalance, 18).toString()],
+        jsonRpcUrl as string,
+        14717479 // holds the same state as the static repository
+      );
+      signerAddress = await signer.getAddress();
+    });
+
+    context('exitExactBPTIn transaction - exit with encoded data', async () => {
+      before(async function () {
+        this.timeout(20000);
+        await updateBalancesBefore(pool);
+
+        const { to, data, minAmountsOut, maxBPTIn } =
+          await pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
+        const tx = { to, data }; // , gasPrice: '600000000000', gasLimit: '2000000' };
+
+        bptMaxBalanceDecrease = BigNumber.from(maxBPTIn);
+        tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
+        const transactionResponse = await signer.sendTransaction(tx);
+        transactionReceipt = await transactionResponse.wait();
+        await updateBalancesAfter(pool);
+      });
+
+      it('should work', async () => {
+        expect(transactionReceipt.status).to.eql(1);
+      });
+
+      it('tokens balance should increase', async () => {
+        for (let i = 0; i < tokensBalanceAfter.length; i++) {
+          expect(
+            tokensBalanceAfter[i]
+              .sub(tokensBalanceBefore[i])
+              .gte(tokensMinBalanceIncrease[i])
+          ).to.be.true;
+        }
+      });
+
+      it('bpt balance should decrease', async () => {
+        expect(bptBalanceBefore.sub(bptBalanceAfter).eq(bptMaxBalanceDecrease))
+          .to.be.true;
+      });
+    });
+
+    context('exitExactBPTIn transaction - exit with params', async () => {
+      before(async function () {
+        this.timeout(20000);
+        await updateBalancesBefore(pool);
+
+        const { attributes, minAmountsOut, maxBPTIn } =
+          await pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
+
+        bptMaxBalanceDecrease = BigNumber.from(maxBPTIn);
+        tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
+
+        const transactionResponse = await balancer.contracts.vault
+          .connect(signer)
+          .exitPool(
+            attributes.poolId,
+            attributes.sender,
+            attributes.recipient,
+            attributes.exitPoolRequest
+          );
+        transactionReceipt = await transactionResponse.wait();
+        await updateBalancesAfter(pool);
+      });
+
+      it('should work', async () => {
+        expect(transactionReceipt.status).to.eql(1);
+      });
+
+      it('tokens balance should increase', async () => {
+        for (let i = 0; i < tokensBalanceAfter.length; i++) {
+          expect(
+            tokensBalanceAfter[i]
+              .sub(tokensBalanceBefore[i])
+              .gte(tokensMinBalanceIncrease[i])
+          ).to.be.true;
+        }
+      });
+
+      it('bpt balance should decrease', async () => {
+        expect(bptBalanceBefore.sub(bptBalanceAfter).eq(bptMaxBalanceDecrease))
+          .to.be.true;
+      });
+    });
+
+    context('exitExactTokensOut - exit with encoded data', async () => {
+      before(async function () {
+        this.timeout(20000);
+        await updateBalancesBefore(pool);
+
+        amountsOut = pool.tokens.map((t) =>
+          parseFixed(t.balance, t.decimals).div(amountsOutDiv).toString()
         );
+        const { to, data, minAmountsOut, maxBPTIn } =
+          await pool.buildExitExactTokensOut(
+            signerAddress,
+            tokensOut.map((t) => t.address),
+            amountsOut,
+            slippage
+          );
+        const tx = { to, data }; // , gasPrice: '600000000000', gasLimit: '2000000' };
 
-      bptMaxBalanceDecrease = BigNumber.from(maxBPTIn);
-      tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
+        bptMaxBalanceDecrease = BigNumber.from(maxBPTIn);
+        tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
+        const transactionResponse = await signer.sendTransaction(tx);
+        transactionReceipt = await transactionResponse.wait();
+        await updateBalancesAfter(pool);
+      });
 
-      const transactionResponse = await balancer.contracts.vault
-        .connect(signer)
-        .exitPool(
-          attributes.poolId,
-          attributes.sender,
-          attributes.recipient,
-          attributes.exitPoolRequest
+      it('should work', async () => {
+        expect(transactionReceipt.status).to.eql(1);
+      });
+
+      it('tokens balance should increase', async () => {
+        for (let i = 0; i < tokensBalanceAfter.length; i++) {
+          expect(
+            tokensBalanceAfter[i]
+              .sub(tokensBalanceBefore[i])
+              .eq(tokensMinBalanceIncrease[i])
+          ).to.be.true;
+        }
+      });
+
+      it('bpt balance should decrease', async () => {
+        expect(bptBalanceBefore.sub(bptBalanceAfter).lte(bptMaxBalanceDecrease))
+          .to.be.true;
+      });
+    });
+
+    context('exitExactTokensOut transaction - exit with params', async () => {
+      before(async function () {
+        this.timeout(20000);
+        await updateBalancesBefore(pool);
+
+        amountsOut = pool.tokens.map((t) =>
+          parseFixed(t.balance, t.decimals).div(amountsOutDiv).toString()
         );
-      transactionReceipt = await transactionResponse.wait();
-      await updateBalancesAfter(pool);
-    });
+        const { attributes, minAmountsOut, maxBPTIn } =
+          await pool.buildExitExactTokensOut(
+            signerAddress,
+            tokensOut.map((t) => t.address),
+            amountsOut,
+            slippage
+          );
 
-    it('should work', async () => {
-      expect(transactionReceipt.status).to.eql(1);
-    });
+        bptMaxBalanceDecrease = BigNumber.from(maxBPTIn);
+        tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
 
-    it('tokens balance should increase', async () => {
-      for (let i = 0; i < tokensBalanceAfter.length; i++) {
-        expect(
-          tokensBalanceAfter[i]
-            .sub(tokensBalanceBefore[i])
-            .eq(tokensMinBalanceIncrease[i])
-        ).to.be.true;
-      }
-    });
+        const transactionResponse = await balancer.contracts.vault
+          .connect(signer)
+          .exitPool(
+            attributes.poolId,
+            attributes.sender,
+            attributes.recipient,
+            attributes.exitPoolRequest
+          );
+        transactionReceipt = await transactionResponse.wait();
+        await updateBalancesAfter(pool);
+      });
 
-    it('bpt balance should decrease', async () => {
-      expect(bptBalanceBefore.sub(bptBalanceAfter).lte(bptMaxBalanceDecrease))
-        .to.be.true;
+      it('should work', async () => {
+        expect(transactionReceipt.status).to.eql(1);
+      });
+
+      it('tokens balance should increase', async () => {
+        for (let i = 0; i < tokensBalanceAfter.length; i++) {
+          expect(
+            tokensBalanceAfter[i]
+              .sub(tokensBalanceBefore[i])
+              .eq(tokensMinBalanceIncrease[i])
+          ).to.be.true;
+        }
+      });
+
+      it('bpt balance should decrease', async () => {
+        expect(bptBalanceBefore.sub(bptBalanceAfter).lte(bptMaxBalanceDecrease))
+          .to.be.true;
+      });
     });
-  });
-}).timeout(20000);
+  }).timeout(20000);
+};
+
+// Test Scenarios
+
+// testExitPool(
+//   '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
+// );
+
+// testExitPool(
+//   '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014' // Balancer 80 BAL 20 WETH
+// );
+
+testExitPool(
+  '0xc45d42f801105e861e86658648e3678ad7aa70f900010000000000000000011e' // 50OHM-25DAI-25WETH
+);
