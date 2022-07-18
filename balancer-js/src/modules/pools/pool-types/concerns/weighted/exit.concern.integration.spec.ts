@@ -163,7 +163,7 @@ describe('exit execution', async () => {
       this.timeout(20000);
       await updateBalancesBefore();
 
-      const { functionName, attributes, minAmountsOut, maxBPTIn } =
+      const { attributes, minAmountsOut, maxBPTIn } =
         await pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
 
       bptMaxBalanceDecrease = BigNumber.from(maxBPTIn);
@@ -171,7 +171,12 @@ describe('exit execution', async () => {
 
       const transactionResponse = await balancer.contracts.vault
         .connect(signer)
-        [functionName](...Object.values(attributes));
+        .exitPool(
+          attributes.poolId,
+          attributes.sender,
+          attributes.recipient,
+          attributes.exitPoolRequest
+        );
       transactionReceipt = await transactionResponse.wait();
       await updateBalancesAfter();
     });
@@ -248,7 +253,7 @@ describe('exit execution', async () => {
       amountsOut = pool.tokens.map((t) =>
         parseFixed(t.balance, t.decimals).div(amountsOutDiv).toString()
       );
-      const { functionName, attributes, minAmountsOut, maxBPTIn } =
+      const { attributes, minAmountsOut, maxBPTIn } =
         await pool.buildExitExactTokensOut(
           signerAddress,
           tokensOut.map((t) => t.address),
@@ -261,7 +266,12 @@ describe('exit execution', async () => {
 
       const transactionResponse = await balancer.contracts.vault
         .connect(signer)
-        [functionName](...Object.values(attributes));
+        .exitPool(
+          attributes.poolId,
+          attributes.sender,
+          attributes.recipient,
+          attributes.exitPoolRequest
+        );
       transactionReceipt = await transactionResponse.wait();
       await updateBalancesAfter();
     });
