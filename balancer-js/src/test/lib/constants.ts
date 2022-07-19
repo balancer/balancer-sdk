@@ -34,6 +34,12 @@ export const ADDRESSES = {
       symbol: 'WBTC',
       slot: 0,
     },
+    renBTC: {
+      address: '0xeb4c2781e4eba804ce9a9803c67d0893436bb27d',
+      decimals: 8,
+      symbol: 'renBTC',
+      slot: 102,
+    },
     WETH: {
       address: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
       decimals: 18,
