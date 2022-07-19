@@ -30,7 +30,7 @@
               "name": "Wrapped liquid staked Ether 2.0",
               "weight": null,
               "id": "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080-0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "WETH",
@@ -41,7 +41,7 @@
               "name": "Wrapped Ether",
               "weight": null,
               "id": "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-              "invested": "0"
+              "managedBalance": "0"
           }
       ],
       "id": "0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080",
@@ -80,7 +80,7 @@
               "name": "Balancer Aave Boosted Pool (USDT)",
               "weight": null,
               "id": "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe-0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "bb-a-USD",
@@ -91,7 +91,7 @@
               "name": "Balancer Aave Boosted StablePool (USD)",
               "weight": null,
               "id": "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe-0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "bb-a-DAI",
@@ -102,7 +102,7 @@
               "name": "Balancer Aave Boosted Pool (DAI)",
               "weight": null,
               "id": "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe-0x804cdb9116a10bb78768d3252355a1b18067bf8f",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "bb-a-USDC",
@@ -113,7 +113,7 @@
               "name": "Balancer Aave Boosted Pool (USDC)",
               "weight": null,
               "id": "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe-0x9210f1204b5a24742eba12f710636d76240df3d0",
-              "invested": "0"
+              "managedBalance": "0"
           }
       ],
       "id": "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe",
@@ -151,7 +151,7 @@
               "name": "Dai Stablecoin",
               "weight": null,
               "id": "0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063-0x6b175474e89094c44da98b954eedeac495271d0f",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "USDC",
@@ -162,7 +162,7 @@
               "name": "USD Coin",
               "weight": null,
               "id": "0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "USDT",
@@ -173,7 +173,7 @@
               "name": "Tether USD",
               "weight": null,
               "id": "0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063-0xdac17f958d2ee523a2206206994597c13d831ec7",
-              "invested": "0"
+              "managedBalance": "0"
           }
       ],
       "id": "0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063",
@@ -209,7 +209,7 @@
               "name": "Wrapped BTC",
               "weight": "0.5",
               "id": "0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e-0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "WETH",
@@ -220,7 +220,7 @@
               "name": "Wrapped Ether",
               "weight": "0.5",
               "id": "0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-              "invested": "0"
+              "managedBalance": "0"
           }
       ],
       "id": "0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e",
@@ -256,7 +256,7 @@
               "name": "USD Coin",
               "weight": "0.5",
               "id": "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "WETH",
@@ -267,7 +267,7 @@
               "name": "Wrapped Ether",
               "weight": "0.5",
               "id": "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-              "invested": "0"
+              "managedBalance": "0"
           }
       ],
       "id": "0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019",
@@ -303,7 +303,7 @@
               "name": "Balancer",
               "weight": "0.8",
               "id": "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014-0xba100000625a3754423978a60c9317c58a424e3d",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "WETH",
@@ -314,7 +314,7 @@
               "name": "Wrapped Ether",
               "weight": "0.2",
               "id": "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-              "invested": "0"
+              "managedBalance": "0"
           }
       ],
       "id": "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014",
@@ -350,7 +350,7 @@
               "name": "Fei USD",
               "weight": "0.3",
               "id": "0x90291319f1d4ea3ad4db0dd8fe9e12baf749e84500020000000000000000013c-0x956f47f50a910163d8bf957cf5846d573e7f87ca",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "WETH",
@@ -361,7 +361,7 @@
               "name": "Wrapped Ether",
               "weight": "0.7",
               "id": "0x90291319f1d4ea3ad4db0dd8fe9e12baf749e84500020000000000000000013c-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-              "invested": "0"
+              "managedBalance": "0"
           }
       ],
       "id": "0x90291319f1d4ea3ad4db0dd8fe9e12baf749e84500020000000000000000013c",
@@ -397,7 +397,7 @@
               "name": "yearn.finance",
               "weight": "0.5",
               "id": "0x186084ff790c65088ba694df11758fae4943ee9e000200000000000000000013-0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "WETH",
@@ -408,7 +408,7 @@
               "name": "Wrapped Ether",
               "weight": "0.5",
               "id": "0x186084ff790c65088ba694df11758fae4943ee9e000200000000000000000013-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-              "invested": "0"
+              "managedBalance": "0"
           }
       ],
       "id": "0x186084ff790c65088ba694df11758fae4943ee9e000200000000000000000013",
@@ -444,7 +444,7 @@
               "name": "Gnosis Token",
               "weight": "0.8",
               "id": "0xf4c0dd9b82da36c07605df83c8a416f11724d88b000200000000000000000026-0x6810e776880c02933d47db1b9fc05908e5386b96",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "WETH",
@@ -455,7 +455,7 @@
               "name": "Wrapped Ether",
               "weight": "0.2",
               "id": "0xf4c0dd9b82da36c07605df83c8a416f11724d88b000200000000000000000026-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-              "invested": "0"
+              "managedBalance": "0"
           }
       ],
       "id": "0xf4c0dd9b82da36c07605df83c8a416f11724d88b000200000000000000000026",
@@ -491,7 +491,7 @@
               "name": "Dai Stablecoin",
               "weight": "0.4",
               "id": "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a-0x6b175474e89094c44da98b954eedeac495271d0f",
-              "invested": "0"
+              "managedBalance": "0"
           },
           {
               "symbol": "WETH",
@@ -502,7 +502,7 @@
               "name": "Wrapped Ether",
               "weight": "0.6",
               "id": "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-              "invested": "0"
+              "managedBalance": "0"
           }
       ],
       "id": "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
@@ -540,7 +540,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0xed5d8fa2f341b1f6f264db560d9b8215e8beffaa000200000000000000000121-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WAMPL",
@@ -551,7 +551,7 @@
         "name": "Wrapped Ampleforth",
         "weight": "0.8",
         "id": "0xed5d8fa2f341b1f6f264db560d9b8215e8beffaa000200000000000000000121-0xedb171c18ce90b633db442f2a6f72874093b49ef",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xed5d8fa2f341b1f6f264db560d9b8215e8beffaa000200000000000000000121",
@@ -589,7 +589,7 @@
         "name": "Dai Stablecoin",
         "weight": "0.4",
         "id": "0xc6a5032dc4bf638e15b4a66bc718ba7ba474ff73000200000000000000000004-0x6b175474e89094c44da98b954eedeac495271d0f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -600,7 +600,7 @@
         "name": "Wrapped Ether",
         "weight": "0.6",
         "id": "0xc6a5032dc4bf638e15b4a66bc718ba7ba474ff73000200000000000000000004-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xc6a5032dc4bf638e15b4a66bc718ba7ba474ff73000200000000000000000004",
@@ -638,7 +638,7 @@
         "name": "Synthetix Network Token",
         "weight": "0.5",
         "id": "0x072f14b85add63488ddad88f855fda4a99d6ac9b000200000000000000000027-0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -649,7 +649,7 @@
         "name": "Wrapped Ether",
         "weight": "0.5",
         "id": "0x072f14b85add63488ddad88f855fda4a99d6ac9b000200000000000000000027-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x072f14b85add63488ddad88f855fda4a99d6ac9b000200000000000000000027",
@@ -687,7 +687,7 @@
         "name": "Curve.fi ETH/stETH",
         "weight": "0.500000000000000001",
         "id": "0x062f38735aac32320db5e2dbbeb07968351d7c720002000000000000000000ac-0x06325440d014e39736583c165c2963ba99faf14e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "eYyvcrvSTETH-15APR22",
@@ -698,7 +698,7 @@
         "name": "Element Yield Token yvcrvSTETH-15APR22",
         "weight": "0.499999999999999999",
         "id": "0x062f38735aac32320db5e2dbbeb07968351d7c720002000000000000000000ac-0xeb1a6c6ea0cd20847150c27b5985fa198b2f90bd",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x062f38735aac32320db5e2dbbeb07968351d7c720002000000000000000000ac",
@@ -736,7 +736,7 @@
         "name": "DOGE KILLER",
         "weight": "0.5",
         "id": "0xb5152e7b85e9c2a9cef95879ee67cfa19da13b1f00020000000000000000015b-0x27c70cd1946795b66be9d954418546998b546634",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "CGT",
@@ -747,7 +747,7 @@
         "name": "Cage Governance Token",
         "weight": "0.5",
         "id": "0xb5152e7b85e9c2a9cef95879ee67cfa19da13b1f00020000000000000000015b-0x8987a07ba83607a66c7351266e771fb865c9ca6c",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xb5152e7b85e9c2a9cef95879ee67cfa19da13b1f00020000000000000000015b",
@@ -787,7 +787,7 @@
         "name": "Cage Governance Token",
         "weight": "0.25",
         "id": "0x170bc09ff5c966b39c7aa09d6b0351a8c8236a2d00010000000000000000014e-0x8987a07ba83607a66c7351266e771fb865c9ca6c",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "CMI",
@@ -798,7 +798,7 @@
         "name": "Cage Meme Index",
         "weight": "0.25",
         "id": "0x170bc09ff5c966b39c7aa09d6b0351a8c8236a2d00010000000000000000014e-0xbba8120b355bc70e771f28e151a141a126843cdf",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -809,7 +809,7 @@
         "name": "Wrapped Ether",
         "weight": "0.25",
         "id": "0x170bc09ff5c966b39c7aa09d6b0351a8c8236a2d00010000000000000000014e-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "C4G3",
@@ -820,7 +820,7 @@
         "name": "CAGE",
         "weight": "0.25",
         "id": "0x170bc09ff5c966b39c7aa09d6b0351a8c8236a2d00010000000000000000014e-0xf2ef3551c1945a7218fc4ec0a75c9ecfdf012a4f",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x170bc09ff5c966b39c7aa09d6b0351a8c8236a2d00010000000000000000014e",
@@ -858,7 +858,7 @@
         "name": "yearn.finance",
         "weight": "0.500007629510948349",
         "id": "0x64aca7d9d6f1be160f49a8e573965769071dd059000200000000000000000098-0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -869,7 +869,7 @@
         "name": "Wrapped Ether",
         "weight": "0.500007629510948349",
         "id": "0x64aca7d9d6f1be160f49a8e573965769071dd059000200000000000000000098-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x64aca7d9d6f1be160f49a8e573965769071dd059000200000000000000000098",
@@ -907,7 +907,7 @@
         "name": "Quasacoin",
         "weight": "0.5",
         "id": "0x3f725ed5791b72554e9bedf461eb76fc72db883400020000000000000000017a-0x4daeb4a06f70f4b1a5c329115731fe4b89c0b227",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDT",
@@ -918,7 +918,7 @@
         "name": "Tether USD",
         "weight": "0.5",
         "id": "0x3f725ed5791b72554e9bedf461eb76fc72db883400020000000000000000017a-0xdac17f958d2ee523a2206206994597c13d831ec7",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x3f725ed5791b72554e9bedf461eb76fc72db883400020000000000000000017a",
@@ -956,7 +956,7 @@
         "name": "PAR Stablecoin",
         "weight": "0.2",
         "id": "0xa5533a44d06800eaf2daad5aad3f9aa9e1dc36140002000000000000000001b8-0x68037790a0229e9ce6eaa8a99ea92964106c4703",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "MIMO",
@@ -967,7 +967,7 @@
         "name": "MIMO Parallel Governance Token",
         "weight": "0.8",
         "id": "0xa5533a44d06800eaf2daad5aad3f9aa9e1dc36140002000000000000000001b8-0x90b831fa3bebf58e9744a14d638e25b4ee06f9bc",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xa5533a44d06800eaf2daad5aad3f9aa9e1dc36140002000000000000000001b8",
@@ -1005,7 +1005,7 @@
         "name": "Dai Stablecoin",
         "weight": "0.500000000000000001",
         "id": "0xe54b3f5c444a801e61becdca93e74cdc1c4c1f90000200000000000000000077-0x6b175474e89094c44da98b954eedeac495271d0f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "eYyvDAI-16OCT21",
@@ -1016,7 +1016,7 @@
         "name": "Element Yield Token yvDAI-16OCT21",
         "weight": "0.499999999999999999",
         "id": "0xe54b3f5c444a801e61becdca93e74cdc1c4c1f90000200000000000000000077-0xa1cc9bbcd3731a9fd43e1f1416f9b6bf824f37d7",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xe54b3f5c444a801e61becdca93e74cdc1c4c1f90000200000000000000000077",
@@ -1054,7 +1054,7 @@
         "name": "M2",
         "weight": "0.9",
         "id": "0x3febe770201cf4d351d33708170b9202ba1c6af7000200000000000000000045-0x965d79f1a1016b574a62986e13ca8ab04dfdd15c",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -1065,7 +1065,7 @@
         "name": "Wrapped Ether",
         "weight": "0.1",
         "id": "0x3febe770201cf4d351d33708170b9202ba1c6af7000200000000000000000045-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x3febe770201cf4d351d33708170b9202ba1c6af7000200000000000000000045",
@@ -1103,7 +1103,7 @@
         "name": "Livepeer Token",
         "weight": "0.5",
         "id": "0x80be0c303d8ad2a280878b50a39b1ee8e54dbd2200020000000000000000000f-0x58b6a8a3302369daec383334672404ee733ab239",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -1114,7 +1114,7 @@
         "name": "Wrapped Ether",
         "weight": "0.5",
         "id": "0x80be0c303d8ad2a280878b50a39b1ee8e54dbd2200020000000000000000000f-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x80be0c303d8ad2a280878b50a39b1ee8e54dbd2200020000000000000000000f",
@@ -1153,7 +1153,7 @@
         "name": "LUSD Stablecoin",
         "weight": "0.1",
         "id": "0xb39362c3d5ac235fe588b0b83ed7ac87241039cb000100000000000000000195-0x5f98805a4e8be255a32880fdec7f6728c6568ba0",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -1164,7 +1164,7 @@
         "name": "Wrapped Ether",
         "weight": "0.3",
         "id": "0xb39362c3d5ac235fe588b0b83ed7ac87241039cb000100000000000000000195-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "RPL",
@@ -1175,7 +1175,7 @@
         "name": "Rocket Pool Protocol",
         "weight": "0.6",
         "id": "0xb39362c3d5ac235fe588b0b83ed7ac87241039cb000100000000000000000195-0xd33526068d116ce69f19a9ee46f0bd304f21a51f",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xb39362c3d5ac235fe588b0b83ed7ac87241039cb000100000000000000000195",
@@ -1219,7 +1219,7 @@
         "name": "UMA Voting Token v1",
         "weight": "0.125",
         "id": "0x8bda1ab5eead21547ba0f33c07c86c5dc48d9baa00010000000000000000005b-0x04fa0d235c4abf4bcf4787af4cf447de572ef828",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "YFI",
@@ -1230,7 +1230,7 @@
         "name": "yearn.finance",
         "weight": "0.125",
         "id": "0x8bda1ab5eead21547ba0f33c07c86c5dc48d9baa00010000000000000000005b-0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "wNXM",
@@ -1241,7 +1241,7 @@
         "name": "Wrapped NXM",
         "weight": "0.125",
         "id": "0x8bda1ab5eead21547ba0f33c07c86c5dc48d9baa00010000000000000000005b-0x0d438f3b5175bebc262bf23753c1e53d03432bde",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "REN",
@@ -1252,7 +1252,7 @@
         "name": "Republic Token",
         "weight": "0.125",
         "id": "0x8bda1ab5eead21547ba0f33c07c86c5dc48d9baa00010000000000000000005b-0x408e41876cccdc0f92210600ef50372656052a38",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "LDO",
@@ -1263,7 +1263,7 @@
         "name": "Lido DAO Token",
         "weight": "0.125",
         "id": "0x8bda1ab5eead21547ba0f33c07c86c5dc48d9baa00010000000000000000005b-0x5a98fcbea516cf06857215779fd812ca3bef1b32",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "BAL",
@@ -1274,7 +1274,7 @@
         "name": "Balancer",
         "weight": "0.125",
         "id": "0x8bda1ab5eead21547ba0f33c07c86c5dc48d9baa00010000000000000000005b-0xba100000625a3754423978a60c9317c58a424e3d",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -1285,7 +1285,7 @@
         "name": "Wrapped Ether",
         "weight": "0.125",
         "id": "0x8bda1ab5eead21547ba0f33c07c86c5dc48d9baa00010000000000000000005b-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "CRV",
@@ -1296,7 +1296,7 @@
         "name": "Curve DAO Token",
         "weight": "0.125",
         "id": "0x8bda1ab5eead21547ba0f33c07c86c5dc48d9baa00010000000000000000005b-0xd533a949740bb3306d119cc777fa900ba034cd52",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x8bda1ab5eead21547ba0f33c07c86c5dc48d9baa00010000000000000000005b",
@@ -1334,7 +1334,7 @@
         "name": "",
         "weight": "0.6",
         "id": "0xaac98ee71d4f8a156b6abaa6844cdb7789d086ce00020000000000000000001b-0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -1345,7 +1345,7 @@
         "name": "Wrapped Ether",
         "weight": "0.4",
         "id": "0xaac98ee71d4f8a156b6abaa6844cdb7789d086ce00020000000000000000001b-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xaac98ee71d4f8a156b6abaa6844cdb7789d086ce00020000000000000000001b",
@@ -1383,7 +1383,7 @@
         "name": "YOUR STATE OF MIND",
         "weight": "0.500007629510948349",
         "id": "0x7e49f73a5b8c62f4c5792dcd23efb03ec35285850002000000000000000001ae-0x84eee6cabcdbdf13c0442d1f7044f2f1020f82c2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -1394,7 +1394,7 @@
         "name": "Wrapped Ether",
         "weight": "0.500007629510948349",
         "id": "0x7e49f73a5b8c62f4c5792dcd23efb03ec35285850002000000000000000001ae-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x7e49f73a5b8c62f4c5792dcd23efb03ec35285850002000000000000000001ae",
@@ -1432,7 +1432,7 @@
         "name": "VitaDAO Token",
         "weight": "0.5",
         "id": "0xbaeec99c90e3420ec6c1e7a769d2a856d2898e4d00020000000000000000008a-0x81f8f0bb1cb2a06649e51913a151f0e7ef6fa321",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -1443,7 +1443,7 @@
         "name": "Wrapped Ether",
         "weight": "0.5",
         "id": "0xbaeec99c90e3420ec6c1e7a769d2a856d2898e4d00020000000000000000008a-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xbaeec99c90e3420ec6c1e7a769d2a856d2898e4d00020000000000000000008a",
@@ -1481,7 +1481,7 @@
         "name": "Global Tech",
         "weight": "0.334011356887937862",
         "id": "0x245982632b64b88579974728accd8955926369b30002000000000000000001e7-0xb8d13df06274a3b9bc8b4b725e861025ae799928",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -1492,7 +1492,7 @@
         "name": "Wrapped Ether",
         "weight": "0.666003902210937373",
         "id": "0x245982632b64b88579974728accd8955926369b30002000000000000000001e7-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x245982632b64b88579974728accd8955926369b30002000000000000000001e7",
@@ -1530,7 +1530,7 @@
         "name": "Hakka Finance",
         "weight": "0.5",
         "id": "0xa0488d89fb8d3085d83ad2426b94b9715cf0286900020000000000000000002f-0x0e29e5abbb5fd88e28b2d355774e73bd47de3bcd",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "",
@@ -1541,7 +1541,7 @@
         "name": "",
         "weight": "0.5",
         "id": "0xa0488d89fb8d3085d83ad2426b94b9715cf0286900020000000000000000002f-0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xa0488d89fb8d3085d83ad2426b94b9715cf0286900020000000000000000002f",
@@ -1579,7 +1579,7 @@
         "name": "Prime",
         "weight": "0.5",
         "id": "0x8f4205e1604133d1875a3e771ae7e4f2b086563900020000000000000000010e-0x43d4a3cd90ddd2f8f4f693170c9c8098163502ad",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "BAL",
@@ -1590,7 +1590,7 @@
         "name": "Balancer",
         "weight": "0.5",
         "id": "0x8f4205e1604133d1875a3e771ae7e4f2b086563900020000000000000000010e-0xba100000625a3754423978a60c9317c58a424e3d",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x8f4205e1604133d1875a3e771ae7e4f2b086563900020000000000000000010e",
@@ -1628,7 +1628,7 @@
         "name": "UMA Voting Token v1",
         "weight": "0.8",
         "id": "0xf8a0623ab66f985effc1c69d05f1af4badb01b0000020000000000000000001d-0x04fa0d235c4abf4bcf4787af4cf447de572ef828",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -1639,7 +1639,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0xf8a0623ab66f985effc1c69d05f1af4badb01b0000020000000000000000001d-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xf8a0623ab66f985effc1c69d05f1af4badb01b0000020000000000000000001d",
@@ -1677,7 +1677,7 @@
         "name": "Curve.fi Factory USD Metapool: Magic Internet Money 3Pool",
         "weight": "0.500000000000000001",
         "id": "0x6fe95fafe2f86158c77bf18350672d360bfc78a20002000000000000000000bd-0x5a6a4d54456819380173272a5e8e9b9904bdf41b",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "eYyvCurve-MIM-29APR22",
@@ -1688,7 +1688,7 @@
         "name": "Element Yield Token yvCurve-MIM-29APR22",
         "weight": "0.499999999999999999",
         "id": "0x6fe95fafe2f86158c77bf18350672d360bfc78a20002000000000000000000bd-0x83c32857df72019bc71264ea8e3e06c3031641a2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x6fe95fafe2f86158c77bf18350672d360bfc78a20002000000000000000000bd",
@@ -1726,7 +1726,7 @@
         "name": "Balancer",
         "weight": "0.5",
         "id": "0x3ebf48cd7586d7a4521ce59e53d9a907ebf1480f000200000000000000000028-0xba100000625a3754423978a60c9317c58a424e3d",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -1737,7 +1737,7 @@
         "name": "Wrapped Ether",
         "weight": "0.5",
         "id": "0x3ebf48cd7586d7a4521ce59e53d9a907ebf1480f000200000000000000000028-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x3ebf48cd7586d7a4521ce59e53d9a907ebf1480f000200000000000000000028",
@@ -1775,7 +1775,7 @@
         "name": "Balancer",
         "weight": "0.8",
         "id": "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014-0xba100000625a3754423978a60c9317c58a424e3d",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -1786,7 +1786,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014",
@@ -1824,7 +1824,7 @@
         "name": "USD Coin",
         "weight": "0.500007629510948349",
         "id": "0x38ff18c8322b675aefc74a5cdd7c8c0c461b97df0002000000000000000000f6-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "MTT",
@@ -1835,7 +1835,7 @@
         "name": "My Token",
         "weight": "0.500007629510948349",
         "id": "0x38ff18c8322b675aefc74a5cdd7c8c0c461b97df0002000000000000000000f6-0xfc248cef4c8763838743d3bd599a27e1bd6397f4",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x38ff18c8322b675aefc74a5cdd7c8c0c461b97df0002000000000000000000f6",
@@ -1873,7 +1873,7 @@
         "name": "USD Coin",
         "weight": "0.990005340657663844",
         "id": "0x3965ed15a0bbab8c6292f4a3d9bf3504069877490002000000000000000001d7-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ROST",
@@ -1884,7 +1884,7 @@
         "name": "Robo Step",
         "weight": "0.010009918364232853",
         "id": "0x3965ed15a0bbab8c6292f4a3d9bf3504069877490002000000000000000001d7-0xb45ff0d00882e1cc12d5a9acc183e59b600dc54f",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x3965ed15a0bbab8c6292f4a3d9bf3504069877490002000000000000000001d7",
@@ -1922,7 +1922,7 @@
         "name": "Element Yield Token yvCrvTriCrypto-15AUG21",
         "weight": "0.499999999999999999",
         "id": "0xf94a7df264a2ec8bceef2cfe54d7ca3f6c6dfc7a000200000000000000000064-0xc080f19d9e7ccb6ef2096dfa08570e0057490940",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "crvTricrypto",
@@ -1933,7 +1933,7 @@
         "name": "Curve.fi USD-BTC-ETH",
         "weight": "0.500000000000000001",
         "id": "0xf94a7df264a2ec8bceef2cfe54d7ca3f6c6dfc7a000200000000000000000064-0xca3d75ac011bf5ad07a98d02f18225f9bd9a6bdf",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xf94a7df264a2ec8bceef2cfe54d7ca3f6c6dfc7a000200000000000000000064",
@@ -1971,7 +1971,7 @@
         "name": "Material",
         "weight": "0.7",
         "id": "0xf33a6b68d2f6ae0353746c150757e4c494e02366000200000000000000000117-0x13c99770694f07279607a6274f28a28c33086424",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ELA",
@@ -1982,7 +1982,7 @@
         "name": "ELA on Ethereum",
         "weight": "0.3",
         "id": "0xf33a6b68d2f6ae0353746c150757e4c494e02366000200000000000000000117-0xe6fd75ff38adca4b97fbcd938c86b98772431867",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xf33a6b68d2f6ae0353746c150757e4c494e02366000200000000000000000117",
@@ -2020,7 +2020,7 @@
         "name": "Offshift",
         "weight": "0.9",
         "id": "0xa5629408958264c2bce5217a0466924644e311ed0002000000000000000000f8-0xabe580e7ee158da464b51ee1a83ac0289622e6be",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -2031,7 +2031,7 @@
         "name": "Wrapped Ether",
         "weight": "0.1",
         "id": "0xa5629408958264c2bce5217a0466924644e311ed0002000000000000000000f8-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xa5629408958264c2bce5217a0466924644e311ed0002000000000000000000f8",
@@ -2070,7 +2070,7 @@
         "name": "Balancer Aave Boosted Pool (USDT)",
         "weight": null,
         "id": "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c0000000000000000000000fd-0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDT",
@@ -2081,7 +2081,7 @@
         "name": "Tether USD",
         "weight": null,
         "id": "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c0000000000000000000000fd-0xdac17f958d2ee523a2206206994597c13d831ec7",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "aUSDT",
@@ -2092,7 +2092,7 @@
         "name": "Wrapped aUSDT",
         "weight": null,
         "id": "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c0000000000000000000000fd-0xf8fd466f12e236f4c96f7cce6c79eadb819abf58",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c0000000000000000000000fd",
@@ -2130,7 +2130,7 @@
         "name": "Balancer Aave Boosted Pool (USDC)",
         "weight": null,
         "id": "0x9210f1204b5a24742eba12f710636d76240df3d00000000000000000000000fc-0x9210f1204b5a24742eba12f710636d76240df3d0",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -2141,7 +2141,7 @@
         "name": "USD Coin",
         "weight": null,
         "id": "0x9210f1204b5a24742eba12f710636d76240df3d00000000000000000000000fc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "aUSDC",
@@ -2152,7 +2152,7 @@
         "name": "Wrapped aUSDC",
         "weight": null,
         "id": "0x9210f1204b5a24742eba12f710636d76240df3d00000000000000000000000fc-0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x9210f1204b5a24742eba12f710636d76240df3d00000000000000000000000fc",
@@ -2190,7 +2190,7 @@
         "name": "The 4th Pillar Token",
         "weight": "0.7",
         "id": "0x494b26d4aee801cb1fabf498ee24f0af20238743000200000000000000000083-0x4730fb1463a6f1f44aeb45f6c5c422427f37f4d0",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -2201,7 +2201,7 @@
         "name": "Wrapped Ether",
         "weight": "0.3",
         "id": "0x494b26d4aee801cb1fabf498ee24f0af20238743000200000000000000000083-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x494b26d4aee801cb1fabf498ee24f0af20238743000200000000000000000083",
@@ -2232,7 +2232,7 @@
         "name": "USD Coin",
         "weight": null,
         "id": "0x787546bf2c05e3e19e2b6bde57a203da7f682eff00020000000000000000007c-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ePyvUSDC-29OCT21",
@@ -2243,7 +2243,7 @@
         "name": "Element Principal Token yvUSDC-29OCT21",
         "weight": null,
         "id": "0x787546bf2c05e3e19e2b6bde57a203da7f682eff00020000000000000000007c-0xf38c3e836be9cd35072055ff6a9ba570e0b70797",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x787546bf2c05e3e19e2b6bde57a203da7f682eff00020000000000000000007c",
@@ -2292,7 +2292,7 @@
         "name": "Wrapped NXM",
         "weight": "0.8",
         "id": "0xb0fba102a03703fe2c1dd6300e7b431eac60e4b6000200000000000000000033-0x0d438f3b5175bebc262bf23753c1e53d03432bde",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -2303,7 +2303,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0xb0fba102a03703fe2c1dd6300e7b431eac60e4b6000200000000000000000033-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xb0fba102a03703fe2c1dd6300e7b431eac60e4b6000200000000000000000033",
@@ -2341,7 +2341,7 @@
         "name": "USD Coin",
         "weight": "0.500007629510948349",
         "id": "0x791d625aead01e57d1b03ddc99a43b252930c43c0002000000000000000000dd-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "CCM",
@@ -2352,7 +2352,7 @@
         "name": "Car Coin",
         "weight": "0.500007629510948349",
         "id": "0x791d625aead01e57d1b03ddc99a43b252930c43c0002000000000000000000dd-0xbc6669e7914a2b327ae428184086d8ac88d74efc",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x791d625aead01e57d1b03ddc99a43b252930c43c0002000000000000000000dd",
@@ -2391,7 +2391,7 @@
         "name": "Wrapped aDAI",
         "weight": null,
         "id": "0x804cdb9116a10bb78768d3252355a1b18067bf8f0000000000000000000000fb-0x02d60b84491589974263d922d9cc7a3152618ef6",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "DAI",
@@ -2402,7 +2402,7 @@
         "name": "Dai Stablecoin",
         "weight": null,
         "id": "0x804cdb9116a10bb78768d3252355a1b18067bf8f0000000000000000000000fb-0x6b175474e89094c44da98b954eedeac495271d0f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "bb-a-DAI",
@@ -2413,7 +2413,7 @@
         "name": "Balancer Aave Boosted Pool (DAI)",
         "weight": null,
         "id": "0x804cdb9116a10bb78768d3252355a1b18067bf8f0000000000000000000000fb-0x804cdb9116a10bb78768d3252355a1b18067bf8f",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x804cdb9116a10bb78768d3252355a1b18067bf8f0000000000000000000000fb",
@@ -2451,7 +2451,7 @@
         "name": "yfu.finance",
         "weight": "0.5",
         "id": "0x9f2b223da9f3911698c9b90ecdf3ffee37dd54a8000200000000000000000041-0xa279dab6ec190ee4efce7da72896eb58ad533262",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -2462,7 +2462,7 @@
         "name": "Wrapped Ether",
         "weight": "0.5",
         "id": "0x9f2b223da9f3911698c9b90ecdf3ffee37dd54a8000200000000000000000041-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x9f2b223da9f3911698c9b90ecdf3ffee37dd54a8000200000000000000000041",
@@ -2493,7 +2493,7 @@
         "name": "Element Principal Token yvCurveLUSD-29APR22",
         "weight": null,
         "id": "0x56f30398d13f111401d6e7ffe758254a0946687d000200000000000000000105-0x0740a6cfb9468b8b53070c0b327099293dccb82d",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "LUSD3CRV-f",
@@ -2504,7 +2504,7 @@
         "name": "Curve.fi Factory USD Metapool: Liquity",
         "weight": null,
         "id": "0x56f30398d13f111401d6e7ffe758254a0946687d000200000000000000000105-0xed279fdd11ca84beef15af5d39bb4d4bee23f0ca",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x56f30398d13f111401d6e7ffe758254a0946687d000200000000000000000105",
@@ -2553,7 +2553,7 @@
         "name": "Wrapped Ether",
         "weight": "0.6",
         "id": "0xbf4f5e87d0b2f9ba735b7ab4e11bc30d65fab991000200000000000000000142-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "BOG",
@@ -2564,7 +2564,7 @@
         "name": "BOG",
         "weight": "0.4",
         "id": "0xbf4f5e87d0b2f9ba735b7ab4e11bc30d65fab991000200000000000000000142-0xda91e5547cba22e79d0c66bd9040aed90f0363c5",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xbf4f5e87d0b2f9ba735b7ab4e11bc30d65fab991000200000000000000000142",
@@ -2602,7 +2602,7 @@
         "name": "Fei USD",
         "weight": "0.100007629510948349",
         "id": "0xc35bdda2e93c401c6645e0d8a0b2c86906c51710000200000000000000000111-0x956f47f50a910163d8bf957cf5846d573e7f87ca",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "TRIBE",
@@ -2613,7 +2613,7 @@
         "name": "Tribe",
         "weight": "0.900007629510948349",
         "id": "0xc35bdda2e93c401c6645e0d8a0b2c86906c51710000200000000000000000111-0xc7283b66eb1eb5fb86327f08e1b5816b0720212b",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xc35bdda2e93c401c6645e0d8a0b2c86906c51710000200000000000000000111",
@@ -2651,7 +2651,7 @@
         "name": "ELONs Tesla Twitter",
         "weight": "0.2",
         "id": "0x1158c354a702e86a711cedb86806d91cd9a136810002000000000000000001d1-0x85cae40f368aa01b8f5a5a2f24aa22575fa5c45e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -2662,7 +2662,7 @@
         "name": "USD Coin",
         "weight": "0.8",
         "id": "0x1158c354a702e86a711cedb86806d91cd9a136810002000000000000000001d1-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x1158c354a702e86a711cedb86806d91cd9a136810002000000000000000001d1",
@@ -2700,7 +2700,7 @@
         "name": "Amplesense Elastic Finance token",
         "weight": "0.9",
         "id": "0x844ba71d4902ed3de091112951b9c4b4d25a09dd00020000000000000000014b-0x92915c346287ddfbcec8f86c8eb52280ed05b3a3",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -2711,7 +2711,7 @@
         "name": "Wrapped Ether",
         "weight": "0.1",
         "id": "0x844ba71d4902ed3de091112951b9c4b4d25a09dd00020000000000000000014b-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x844ba71d4902ed3de091112951b9c4b4d25a09dd00020000000000000000014b",
@@ -2749,7 +2749,7 @@
         "name": "Congruent DAO Presale Token",
         "weight": "0.500007629510948349",
         "id": "0xf0d0fcbd9a4a9ac147acfd7450ba7d9e4c35dd90000200000000000000000143-0x3250e701413896cf32a5bed36a148707d817a22e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -2760,7 +2760,7 @@
         "name": "USD Coin",
         "weight": "0.500007629510948349",
         "id": "0xf0d0fcbd9a4a9ac147acfd7450ba7d9e4c35dd90000200000000000000000143-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xf0d0fcbd9a4a9ac147acfd7450ba7d9e4c35dd90000200000000000000000143",
@@ -2798,7 +2798,7 @@
         "name": "SANIC",
         "weight": "0.010009918364232853",
         "id": "0xb8631c4abc3de0b546f721a9debc5e780985df770002000000000000000001ad-0x7b52118bcd20d43861cdb112150a9b0342677d3b",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -2809,7 +2809,7 @@
         "name": "USD Coin",
         "weight": "0.990005340657663844",
         "id": "0xb8631c4abc3de0b546f721a9debc5e780985df770002000000000000000001ad-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xb8631c4abc3de0b546f721a9debc5e780985df770002000000000000000001ad",
@@ -2847,7 +2847,7 @@
         "name": "Squelch",
         "weight": "0.68000305180437934",
         "id": "0x37a4d0f6a7f4fd0684076b951a1b996a84dbfca90002000000000000000001a7-0x13948b020f2350b261b8388881e55c12f6719145",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -2858,7 +2858,7 @@
         "name": "Wrapped Ether",
         "weight": "0.320012207217517358",
         "id": "0x37a4d0f6a7f4fd0684076b951a1b996a84dbfca90002000000000000000001a7-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x37a4d0f6a7f4fd0684076b951a1b996a84dbfca90002000000000000000001a7",
@@ -2896,7 +2896,7 @@
         "name": "MuskGold",
         "weight": "0.500007629510948349",
         "id": "0x8175c3893a54238e0f1350075d17c177bf789a240002000000000000000000ff-0x6069c9223e8a5da1ec49ac5525d4bb757af72cd8",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -2907,7 +2907,7 @@
         "name": "Wrapped Ether",
         "weight": "0.500007629510948349",
         "id": "0x8175c3893a54238e0f1350075d17c177bf789a240002000000000000000000ff-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x8175c3893a54238e0f1350075d17c177bf789a240002000000000000000000ff",
@@ -2945,7 +2945,7 @@
         "name": "DSLA",
         "weight": "0.8",
         "id": "0x065e51b8786d8031645e8871aac0e1386f50ea38000200000000000000000139-0x3affcca64c2a6f4e3b6bd9c64cd2c969efd1ecbe",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -2956,7 +2956,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0x065e51b8786d8031645e8871aac0e1386f50ea38000200000000000000000139-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x065e51b8786d8031645e8871aac0e1386f50ea38000200000000000000000139",
@@ -3000,7 +3000,7 @@
         "name": "BlackPool Token",
         "weight": "0.125",
         "id": "0x59e2563c08029f13f80cba9eb610bfd0367ed266000100000000000000000082-0x0ec9f76202a7061eb9b3a7d6b59d36215a7e37da",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "AUDIO",
@@ -3011,7 +3011,7 @@
         "name": "Audius",
         "weight": "0.125",
         "id": "0x59e2563c08029f13f80cba9eb610bfd0367ed266000100000000000000000082-0x18aaa7115705e8be94bffebde57af9bfc265b998",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "YGG",
@@ -3022,7 +3022,7 @@
         "name": "Yield Guild Games Token",
         "weight": "0.125",
         "id": "0x59e2563c08029f13f80cba9eb610bfd0367ed266000100000000000000000082-0x25f8087ead173b73d6e8b84329989a8eea16cf73",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "SAND",
@@ -3033,7 +3033,7 @@
         "name": "SAND",
         "weight": "0.125",
         "id": "0x59e2563c08029f13f80cba9eb610bfd0367ed266000100000000000000000082-0x3845badade8e6dff049820680d1f14bd3903a5d0",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "NFTX",
@@ -3044,7 +3044,7 @@
         "name": "NFTX",
         "weight": "0.125",
         "id": "0x59e2563c08029f13f80cba9eb610bfd0367ed266000100000000000000000082-0x87d73e916d7057945c9bcd8cdd94e42a6f47f776",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "AXS",
@@ -3055,7 +3055,7 @@
         "name": "Axie Infinity Shard",
         "weight": "0.125",
         "id": "0x59e2563c08029f13f80cba9eb610bfd0367ed266000100000000000000000082-0xbb0e17ef65f82ab018d8edd776e8dd940327b28b",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -3066,7 +3066,7 @@
         "name": "Wrapped Ether",
         "weight": "0.125",
         "id": "0x59e2563c08029f13f80cba9eb610bfd0367ed266000100000000000000000082-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ROBOT",
@@ -3077,7 +3077,7 @@
         "name": "MetaFactory",
         "weight": "0.125",
         "id": "0x59e2563c08029f13f80cba9eb610bfd0367ed266000100000000000000000082-0xfb5453340c03db5ade474b27e68b6a9c6b2823eb",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x59e2563c08029f13f80cba9eb610bfd0367ed266000100000000000000000082",
@@ -3121,7 +3121,7 @@
         "name": "BlackPool Token",
         "weight": "0.125",
         "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0x0ec9f76202a7061eb9b3a7d6b59d36215a7e37da",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "AUDIO",
@@ -3132,7 +3132,7 @@
         "name": "Audius",
         "weight": "0.125",
         "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0x18aaa7115705e8be94bffebde57af9bfc265b998",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "YGG",
@@ -3143,7 +3143,7 @@
         "name": "Yield Guild Games Token",
         "weight": "0.125",
         "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0x25f8087ead173b73d6e8b84329989a8eea16cf73",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "SAND",
@@ -3154,7 +3154,7 @@
         "name": "SAND",
         "weight": "0.125",
         "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0x3845badade8e6dff049820680d1f14bd3903a5d0",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "NFTX",
@@ -3165,7 +3165,7 @@
         "name": "NFTX",
         "weight": "0.125",
         "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0x87d73e916d7057945c9bcd8cdd94e42a6f47f776",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "MUSE",
@@ -3176,7 +3176,7 @@
         "name": "Muse",
         "weight": "0.125",
         "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0xb6ca7399b4f9ca56fc27cbff44f4d2e4eef1fc81",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "AXS",
@@ -3187,7 +3187,7 @@
         "name": "Axie Infinity Shard",
         "weight": "0.125",
         "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0xbb0e17ef65f82ab018d8edd776e8dd940327b28b",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -3198,7 +3198,7 @@
         "name": "Wrapped Ether",
         "weight": "0.125",
         "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079",
@@ -3236,7 +3236,7 @@
         "name": "Element Yield Token yvCurveLUSD-28SEP21",
         "weight": "0.499999999999999999",
         "id": "0xde620bb8be43ee54d7aa73f8e99a7409fe51108400020000000000000000005d-0xbabd64a87881d8df7680907fcde176ff11fa0292",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "LUSD3CRV-f",
@@ -3247,7 +3247,7 @@
         "name": "Curve.fi Factory USD Metapool: Liquity",
         "weight": "0.500000000000000001",
         "id": "0xde620bb8be43ee54d7aa73f8e99a7409fe51108400020000000000000000005d-0xed279fdd11ca84beef15af5d39bb4d4bee23f0ca",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xde620bb8be43ee54d7aa73f8e99a7409fe51108400020000000000000000005d",
@@ -3285,7 +3285,7 @@
         "name": "Balancer",
         "weight": "0.8",
         "id": "0x647c1fd457b95b75d0972ff08fe01d7d7bda05df000200000000000000000002-0xba100000625a3754423978a60c9317c58a424e3d",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -3296,7 +3296,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0x647c1fd457b95b75d0972ff08fe01d7d7bda05df000200000000000000000002-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x647c1fd457b95b75d0972ff08fe01d7d7bda05df000200000000000000000002",
@@ -3334,7 +3334,7 @@
         "name": "USD Coin",
         "weight": "0.2",
         "id": "0xa7ff759dbef9f3efdd1d59beee44b966acafe214000200000000000000000180-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "PAL",
@@ -3345,7 +3345,7 @@
         "name": "Paladin Token",
         "weight": "0.8",
         "id": "0xa7ff759dbef9f3efdd1d59beee44b966acafe214000200000000000000000180-0xab846fb6c81370327e784ae7cbb6d6a6af6ff4bf",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xa7ff759dbef9f3efdd1d59beee44b966acafe214000200000000000000000180",
@@ -3383,7 +3383,7 @@
         "name": "yearn.finance",
         "weight": "0.500007629510948349",
         "id": "0x8028861545e40528bdb47fccd3a6a21fb221ee7a0002000000000000000000a1-0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -3394,7 +3394,7 @@
         "name": "Wrapped Ether",
         "weight": "0.500007629510948349",
         "id": "0x8028861545e40528bdb47fccd3a6a21fb221ee7a0002000000000000000000a1-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x8028861545e40528bdb47fccd3a6a21fb221ee7a0002000000000000000000a1",
@@ -3432,7 +3432,7 @@
         "name": "Material",
         "weight": "0.7",
         "id": "0x77952e11e1ba727ffcea95a0f38ed7da586eebc7000200000000000000000116-0x13c99770694f07279607a6274f28a28c33086424",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -3443,7 +3443,7 @@
         "name": "Wrapped Ether",
         "weight": "0.3",
         "id": "0x77952e11e1ba727ffcea95a0f38ed7da586eebc7000200000000000000000116-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x77952e11e1ba727ffcea95a0f38ed7da586eebc7000200000000000000000116",
@@ -3481,7 +3481,7 @@
         "name": "Element Yield Token yvCurveLUSD-30JUN21",
         "weight": "0.499999999999999999",
         "id": "0xe2cd73cfeb471f9f2b08a18afbc87ff2324ef24e000200000000000000000058-0xd6fd2f39ff3f3565d456bb8aa94703fe5fd88d33",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "LUSD3CRV-f",
@@ -3492,7 +3492,7 @@
         "name": "Curve.fi Factory USD Metapool: Liquity",
         "weight": "0.500000000000000001",
         "id": "0xe2cd73cfeb471f9f2b08a18afbc87ff2324ef24e000200000000000000000058-0xed279fdd11ca84beef15af5d39bb4d4bee23f0ca",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xe2cd73cfeb471f9f2b08a18afbc87ff2324ef24e000200000000000000000058",
@@ -3530,7 +3530,7 @@
         "name": "Horus DAO",
         "weight": "0.010009918364232853",
         "id": "0xe00609d1ff9ec2c5415f5b3d3f7acc7e21c3b1050002000000000000000001af-0x6ad58cb51605ce245848750135ff8e8ef763692d",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -3541,7 +3541,7 @@
         "name": "USD Coin",
         "weight": "0.990005340657663844",
         "id": "0xe00609d1ff9ec2c5415f5b3d3f7acc7e21c3b1050002000000000000000001af-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xe00609d1ff9ec2c5415f5b3d3f7acc7e21c3b1050002000000000000000001af",
@@ -3585,7 +3585,7 @@
         "name": "Aave Token",
         "weight": "0.125",
         "id": "0x0b55c8d4f9d5dd4de88519a11ba84178f8b0c3c100010000000000000000018c-0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "BAL",
@@ -3596,7 +3596,7 @@
         "name": "Balancer",
         "weight": "0.125",
         "id": "0x0b55c8d4f9d5dd4de88519a11ba84178f8b0c3c100010000000000000000018c-0xba100000625a3754423978a60c9317c58a424e3d",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "RARE",
@@ -3607,7 +3607,7 @@
         "name": "SuperRare",
         "weight": "0.125",
         "id": "0x0b55c8d4f9d5dd4de88519a11ba84178f8b0c3c100010000000000000000018c-0xba5bde662c17e2adff1075610382b9b691296350",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ENS",
@@ -3618,7 +3618,7 @@
         "name": "Ethereum Name Service",
         "weight": "0.125",
         "id": "0x0b55c8d4f9d5dd4de88519a11ba84178f8b0c3c100010000000000000000018c-0xc18360217d8f7ab5e7c516566761ea12ce7f9d72",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "RPL",
@@ -3629,7 +3629,7 @@
         "name": "Rocket Pool Protocol",
         "weight": "0.125",
         "id": "0x0b55c8d4f9d5dd4de88519a11ba84178f8b0c3c100010000000000000000018c-0xd33526068d116ce69f19a9ee46f0bd304f21a51f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "GTC",
@@ -3640,7 +3640,7 @@
         "name": "Gitcoin",
         "weight": "0.125",
         "id": "0x0b55c8d4f9d5dd4de88519a11ba84178f8b0c3c100010000000000000000018c-0xde30da39c46104798bb5aa3fe8b9e0e1f348163f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "HAUS",
@@ -3651,7 +3651,7 @@
         "name": "DAOhaus Token",
         "weight": "0.125",
         "id": "0x0b55c8d4f9d5dd4de88519a11ba84178f8b0c3c100010000000000000000018c-0xf2051511b9b121394fa75b8f7d4e7424337af687",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ROBOT",
@@ -3662,7 +3662,7 @@
         "name": "MetaFactory",
         "weight": "0.125",
         "id": "0x0b55c8d4f9d5dd4de88519a11ba84178f8b0c3c100010000000000000000018c-0xfb5453340c03db5ade474b27e68b6a9c6b2823eb",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x0b55c8d4f9d5dd4de88519a11ba84178f8b0c3c100010000000000000000018c",
@@ -3693,7 +3693,7 @@
         "name": "Element Principal Token yvUSDC-17DEC21",
         "weight": null,
         "id": "0x90ca5cef5b29342b229fb8ae2db5d8f4f894d6520002000000000000000000b5-0x76a34d72b9cf97d972fb0e390eb053a37f211c74",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -3704,7 +3704,7 @@
         "name": "USD Coin",
         "weight": null,
         "id": "0x90ca5cef5b29342b229fb8ae2db5d8f4f894d6520002000000000000000000b5-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x90ca5cef5b29342b229fb8ae2db5d8f4f894d6520002000000000000000000b5",
@@ -3759,7 +3759,7 @@
         "name": "Audius",
         "weight": "0.125",
         "id": "0xf099b7c3bd5a221aa34cb83004a50d66b0189ad0000100000000000000000070-0x18aaa7115705e8be94bffebde57af9bfc265b998",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "SAND",
@@ -3770,7 +3770,7 @@
         "name": "SAND",
         "weight": "0.125",
         "id": "0xf099b7c3bd5a221aa34cb83004a50d66b0189ad0000100000000000000000070-0x3845badade8e6dff049820680d1f14bd3903a5d0",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "MVI",
@@ -3781,7 +3781,7 @@
         "name": "Metaverse Index",
         "weight": "0.125",
         "id": "0xf099b7c3bd5a221aa34cb83004a50d66b0189ad0000100000000000000000070-0x72e364f2abdc788b7e918bc238b21f109cd634d7",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "NFTX",
@@ -3792,7 +3792,7 @@
         "name": "NFTX",
         "weight": "0.125",
         "id": "0xf099b7c3bd5a221aa34cb83004a50d66b0189ad0000100000000000000000070-0x87d73e916d7057945c9bcd8cdd94e42a6f47f776",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "MUSE",
@@ -3803,7 +3803,7 @@
         "name": "Muse",
         "weight": "0.125",
         "id": "0xf099b7c3bd5a221aa34cb83004a50d66b0189ad0000100000000000000000070-0xb6ca7399b4f9ca56fc27cbff44f4d2e4eef1fc81",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "COMP",
@@ -3814,7 +3814,7 @@
         "name": "Compound",
         "weight": "0.125",
         "id": "0xf099b7c3bd5a221aa34cb83004a50d66b0189ad0000100000000000000000070-0xc00e94cb662c3520282e6f5717214004a7f26888",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -3825,7 +3825,7 @@
         "name": "Wrapped Ether",
         "weight": "0.125",
         "id": "0xf099b7c3bd5a221aa34cb83004a50d66b0189ad0000100000000000000000070-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "AXS",
@@ -3836,7 +3836,7 @@
         "name": "Axie Infinity Shard",
         "weight": "0.125",
         "id": "0xf099b7c3bd5a221aa34cb83004a50d66b0189ad0000100000000000000000070-0xf5d669627376ebd411e34b98f19c868c8aba5ada",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xf099b7c3bd5a221aa34cb83004a50d66b0189ad0000100000000000000000070",
@@ -3874,7 +3874,7 @@
         "name": "USD Coin",
         "weight": "0.100007629510948349",
         "id": "0x04953368a77af5b65512ee3536efe152b96aa453000200000000000000000100-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "MTT",
@@ -3885,7 +3885,7 @@
         "name": "My Token",
         "weight": "0.900007629510948349",
         "id": "0x04953368a77af5b65512ee3536efe152b96aa453000200000000000000000100-0xfc248cef4c8763838743d3bd599a27e1bd6397f4",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x04953368a77af5b65512ee3536efe152b96aa453000200000000000000000100",
@@ -3923,7 +3923,7 @@
         "name": "Gelato Network Token",
         "weight": "0.8",
         "id": "0x1e9142bfd599bdecc03e7963aef0d96947bee845000200000000000000000145-0x15b7c0c907e4c6b9adaaaabc300c08991d6cea05",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -3934,7 +3934,7 @@
         "name": "USD Coin",
         "weight": "0.2",
         "id": "0x1e9142bfd599bdecc03e7963aef0d96947bee845000200000000000000000145-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x1e9142bfd599bdecc03e7963aef0d96947bee845000200000000000000000145",
@@ -3972,7 +3972,7 @@
         "name": "Asteroid",
         "weight": "0.010009918364232853",
         "id": "0x6d39e85025fdc6fd7b1333454a2e18b873583f7c0002000000000000000001c5-0x72b734e6046304a78734937da869638e7e5b51d0",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -3983,7 +3983,7 @@
         "name": "USD Coin",
         "weight": "0.990005340657663844",
         "id": "0x6d39e85025fdc6fd7b1333454a2e18b873583f7c0002000000000000000001c5-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x6d39e85025fdc6fd7b1333454a2e18b873583f7c0002000000000000000001c5",
@@ -4021,7 +4021,7 @@
         "name": "ROI Gaming",
         "weight": "0.500007629510948349",
         "id": "0xbad8de88febc2d9364254e108fe5a547a7b6b4c000020000000000000000012e-0x618d37b4d27667c34576ffe993a4617eacabe587",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -4032,7 +4032,7 @@
         "name": "USD Coin",
         "weight": "0.500007629510948349",
         "id": "0xbad8de88febc2d9364254e108fe5a547a7b6b4c000020000000000000000012e-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xbad8de88febc2d9364254e108fe5a547a7b6b4c000020000000000000000012e",
@@ -4063,7 +4063,7 @@
         "name": "Element Principal Token yvCurveLUSD-28SEP21",
         "weight": null,
         "id": "0xa8d4433badaa1a35506804b43657b0694dea928d00020000000000000000005e-0x9b44ed798a10df31dee52c5256dcb4754bcf097e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "LUSD3CRV-f",
@@ -4074,7 +4074,7 @@
         "name": "Curve.fi Factory USD Metapool: Liquity",
         "weight": null,
         "id": "0xa8d4433badaa1a35506804b43657b0694dea928d00020000000000000000005e-0xed279fdd11ca84beef15af5d39bb4d4bee23f0ca",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xa8d4433badaa1a35506804b43657b0694dea928d00020000000000000000005e",
@@ -4124,7 +4124,7 @@
         "name": "Wrapped BTC",
         "weight": "0.3333",
         "id": "0x4080f182f6c654b87eaa3366139378c4b9a4626f0001000000000000000001d8-0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "OCEAN",
@@ -4135,7 +4135,7 @@
         "name": "Ocean Token",
         "weight": "0.3334",
         "id": "0x4080f182f6c654b87eaa3366139378c4b9a4626f0001000000000000000001d8-0x967da4048cd07ab37855c090aaf366e4ce1b9f48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "BAL",
@@ -4146,7 +4146,7 @@
         "name": "Balancer",
         "weight": "0.3333",
         "id": "0x4080f182f6c654b87eaa3366139378c4b9a4626f0001000000000000000001d8-0xba100000625a3754423978a60c9317c58a424e3d",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x4080f182f6c654b87eaa3366139378c4b9a4626f0001000000000000000001d8",
@@ -4184,7 +4184,7 @@
         "name": "Your Dreams Token",
         "weight": "0.99",
         "id": "0x117fbaa48a188ed3d1605f2b49895fec28d6b0380002000000000000000001b3-0x2930e74d4634ae54519ae0ccd69ce728531c252e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -4195,7 +4195,7 @@
         "name": "Wrapped Ether",
         "weight": "0.01",
         "id": "0x117fbaa48a188ed3d1605f2b49895fec28d6b0380002000000000000000001b3-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x117fbaa48a188ed3d1605f2b49895fec28d6b0380002000000000000000001b3",
@@ -4239,7 +4239,7 @@
         "name": "yearn.finance",
         "weight": "0.125",
         "id": "0x01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b-0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "UNI",
@@ -4250,7 +4250,7 @@
         "name": "Uniswap",
         "weight": "0.125",
         "id": "0x01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b-0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "SUSHI",
@@ -4261,7 +4261,7 @@
         "name": "SushiToken",
         "weight": "0.125",
         "id": "0x01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b-0x6b3595068778dd592e39a122f4f5a5cf09c90fe2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "AAVE",
@@ -4272,7 +4272,7 @@
         "name": "Aave Token",
         "weight": "0.125",
         "id": "0x01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b-0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "",
@@ -4283,7 +4283,7 @@
         "name": "",
         "weight": "0.125",
         "id": "0x01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b-0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "BAL",
@@ -4294,7 +4294,7 @@
         "name": "Balancer",
         "weight": "0.125",
         "id": "0x01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b-0xba100000625a3754423978a60c9317c58a424e3d",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "COMP",
@@ -4305,7 +4305,7 @@
         "name": "Compound",
         "weight": "0.125",
         "id": "0x01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b-0xc00e94cb662c3520282e6f5717214004a7f26888",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -4316,7 +4316,7 @@
         "name": "Wrapped Ether",
         "weight": "0.125",
         "id": "0x01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x01abc00e86c7e258823b9a055fd62ca6cf61a16300010000000000000000003b",
@@ -4354,7 +4354,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0xa5aeb7b7a40aec3fc6d30eb3ee1431b1e01d2d43000200000000000000000184-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "FDT",
@@ -4365,7 +4365,7 @@
         "name": "FIAT DAO Token",
         "weight": "0.8",
         "id": "0xa5aeb7b7a40aec3fc6d30eb3ee1431b1e01d2d43000200000000000000000184-0xed1480d12be41d92f36f5f7bdd88212e381a3677",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xa5aeb7b7a40aec3fc6d30eb3ee1431b1e01d2d43000200000000000000000184",
@@ -4409,7 +4409,7 @@
         "name": "Aave Token",
         "weight": "0.125",
         "id": "0xd921811bdeb2fd219e08bcc30b7918ae62cfee6000010000000000000000018b-0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "BAL",
@@ -4420,7 +4420,7 @@
         "name": "Balancer",
         "weight": "0.125",
         "id": "0xd921811bdeb2fd219e08bcc30b7918ae62cfee6000010000000000000000018b-0xba100000625a3754423978a60c9317c58a424e3d",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "RARE",
@@ -4431,7 +4431,7 @@
         "name": "SuperRare",
         "weight": "0.125",
         "id": "0xd921811bdeb2fd219e08bcc30b7918ae62cfee6000010000000000000000018b-0xba5bde662c17e2adff1075610382b9b691296350",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ENS",
@@ -4442,7 +4442,7 @@
         "name": "Ethereum Name Service",
         "weight": "0.125",
         "id": "0xd921811bdeb2fd219e08bcc30b7918ae62cfee6000010000000000000000018b-0xc18360217d8f7ab5e7c516566761ea12ce7f9d72",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "RPL",
@@ -4453,7 +4453,7 @@
         "name": "Rocket Pool Protocol",
         "weight": "0.125",
         "id": "0xd921811bdeb2fd219e08bcc30b7918ae62cfee6000010000000000000000018b-0xd33526068d116ce69f19a9ee46f0bd304f21a51f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "GTC",
@@ -4464,7 +4464,7 @@
         "name": "Gitcoin",
         "weight": "0.125",
         "id": "0xd921811bdeb2fd219e08bcc30b7918ae62cfee6000010000000000000000018b-0xde30da39c46104798bb5aa3fe8b9e0e1f348163f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "HAUS",
@@ -4475,7 +4475,7 @@
         "name": "DAOhaus Token",
         "weight": "0.125",
         "id": "0xd921811bdeb2fd219e08bcc30b7918ae62cfee6000010000000000000000018b-0xf2051511b9b121394fa75b8f7d4e7424337af687",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ROBOT",
@@ -4486,7 +4486,7 @@
         "name": "MetaFactory",
         "weight": "0.125",
         "id": "0xd921811bdeb2fd219e08bcc30b7918ae62cfee6000010000000000000000018b-0xfb5453340c03db5ade474b27e68b6a9c6b2823eb",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xd921811bdeb2fd219e08bcc30b7918ae62cfee6000010000000000000000018b",
@@ -4525,7 +4525,7 @@
         "name": "UMA Voting Token v1",
         "weight": "0.333333333333333333",
         "id": "0xeb58be542e77195355d90100beb07105b9bd295e00010000000000000000003d-0x04fa0d235c4abf4bcf4787af4cf447de572ef828",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "SNX",
@@ -4536,7 +4536,7 @@
         "name": "Synthetix Network Token",
         "weight": "0.333333333333333333",
         "id": "0xeb58be542e77195355d90100beb07105b9bd295e00010000000000000000003d-0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -4547,7 +4547,7 @@
         "name": "Wrapped Ether",
         "weight": "0.333333333333333334",
         "id": "0xeb58be542e77195355d90100beb07105b9bd295e00010000000000000000003d-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xeb58be542e77195355d90100beb07105b9bd295e00010000000000000000003d",
@@ -4578,7 +4578,7 @@
         "name": "Wrapped BTC",
         "weight": null,
         "id": "0x4db9024fc9f477134e00da0da3c77de98d9836ac000200000000000000000086-0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ePyvWBTC-26NOV21",
@@ -4589,7 +4589,7 @@
         "name": "Element Principal Token yvWBTC-26NOV21",
         "weight": null,
         "id": "0x4db9024fc9f477134e00da0da3c77de98d9836ac000200000000000000000086-0x6bf924137e769c0a5c443dce6ec885552d31d579",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x4db9024fc9f477134e00da0da3c77de98d9836ac000200000000000000000086",
@@ -4644,7 +4644,7 @@
         "name": "yearn.finance",
         "weight": "0.3",
         "id": "0x4e7f40cd37cee710f5e87ad72959d30ef8a01a5d000100000000000000000031-0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "1INCH",
@@ -4655,7 +4655,7 @@
         "name": "1INCH Token",
         "weight": "0.1",
         "id": "0x4e7f40cd37cee710f5e87ad72959d30ef8a01a5d000100000000000000000031-0x111111111117dc0aa78b770fa6a738034120c302",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "UNI",
@@ -4666,7 +4666,7 @@
         "name": "Uniswap",
         "weight": "0.1",
         "id": "0x4e7f40cd37cee710f5e87ad72959d30ef8a01a5d000100000000000000000031-0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "DAI",
@@ -4677,7 +4677,7 @@
         "name": "Dai Stablecoin",
         "weight": "0.1",
         "id": "0x4e7f40cd37cee710f5e87ad72959d30ef8a01a5d000100000000000000000031-0x6b175474e89094c44da98b954eedeac495271d0f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "AAVE",
@@ -4688,7 +4688,7 @@
         "name": "Aave Token",
         "weight": "0.1",
         "id": "0x4e7f40cd37cee710f5e87ad72959d30ef8a01a5d000100000000000000000031-0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "xSUSHI",
@@ -4699,7 +4699,7 @@
         "name": "SushiBar",
         "weight": "0.1",
         "id": "0x4e7f40cd37cee710f5e87ad72959d30ef8a01a5d000100000000000000000031-0x8798249c2e607446efb7ad49ec89dd1865ff4272",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "",
@@ -4710,7 +4710,7 @@
         "name": "",
         "weight": "0.1",
         "id": "0x4e7f40cd37cee710f5e87ad72959d30ef8a01a5d000100000000000000000031-0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -4721,7 +4721,7 @@
         "name": "Wrapped Ether",
         "weight": "0.1",
         "id": "0x4e7f40cd37cee710f5e87ad72959d30ef8a01a5d000100000000000000000031-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x4e7f40cd37cee710f5e87ad72959d30ef8a01a5d000100000000000000000031",
@@ -4759,7 +4759,7 @@
         "name": "0xDEADBEEF",
         "weight": "0.2",
         "id": "0x6b7c875b3bbb29ecc69807ac540dc7f05cbcbd10000200000000000000000173-0x7660bd4dd73d97a045872a3377f0c78f66005897",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -4770,7 +4770,7 @@
         "name": "Wrapped Ether",
         "weight": "0.8",
         "id": "0x6b7c875b3bbb29ecc69807ac540dc7f05cbcbd10000200000000000000000173-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x6b7c875b3bbb29ecc69807ac540dc7f05cbcbd10000200000000000000000173",
@@ -4801,7 +4801,7 @@
         "name": "Curve.fi ETH/stETH",
         "weight": null,
         "id": "0xb03c6b351a283bc1cd26b9cf6d7b0c4556013bdb0002000000000000000000ab-0x06325440d014e39736583c165c2963ba99faf14e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ePyvcrvSTETH-15APR22",
@@ -4812,7 +4812,7 @@
         "name": "Element Principal Token yvcrvSTETH-15APR22",
         "weight": null,
         "id": "0xb03c6b351a283bc1cd26b9cf6d7b0c4556013bdb0002000000000000000000ab-0x2361102893ccabfb543bc55ac4cc8d6d0824a67e",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xb03c6b351a283bc1cd26b9cf6d7b0c4556013bdb0002000000000000000000ab",
@@ -4861,7 +4861,7 @@
         "name": "Dai Stablecoin",
         "weight": "0.500000000000000001",
         "id": "0x0a9e96988e21c9a03b8dc011826a00259e02c46e000200000000000000000055-0x6b175474e89094c44da98b954eedeac495271d0f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "eYyvDAI-27JUN21",
@@ -4872,7 +4872,7 @@
         "name": "Element Yield Token yvDAI-27JUN21",
         "weight": "0.499999999999999999",
         "id": "0x0a9e96988e21c9a03b8dc011826a00259e02c46e000200000000000000000055-0xe7f4294033d0fde6eecb94bef7da22fde68a61ec",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x0a9e96988e21c9a03b8dc011826a00259e02c46e000200000000000000000055",
@@ -4903,7 +4903,7 @@
         "name": "Element Principal Token yvDAI-08DEC23",
         "weight": null,
         "id": "0x85dca8667d020e694fdff06e7ee85e0c5c7c61a4000200000000000000000076-0x46a6c6aa64c148386af77c76a4666da961f8c65c",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "DAI",
@@ -4914,7 +4914,7 @@
         "name": "Dai Stablecoin",
         "weight": null,
         "id": "0x85dca8667d020e694fdff06e7ee85e0c5c7c61a4000200000000000000000076-0x6b175474e89094c44da98b954eedeac495271d0f",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x85dca8667d020e694fdff06e7ee85e0c5c7c61a4000200000000000000000076",
@@ -4963,7 +4963,7 @@
         "name": "Element Yield Token yvcrv3crypto-12NOV21",
         "weight": "0.499999999999999999",
         "id": "0xd16847480d6bc218048cd31ad98b63cc34e5c2bf00020000000000000000007d-0x4f4500b3885bc72199373abfe7adefd0366bafed",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "crv3crypto",
@@ -4974,7 +4974,7 @@
         "name": "Curve.fi USD-BTC-ETH",
         "weight": "0.500000000000000001",
         "id": "0xd16847480d6bc218048cd31ad98b63cc34e5c2bf00020000000000000000007d-0xc4ad29ba4b3c580e6d59105fff484999997675ff",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xd16847480d6bc218048cd31ad98b63cc34e5c2bf00020000000000000000007d",
@@ -5012,7 +5012,7 @@
         "name": "USD Coin",
         "weight": "0.990005340657663844",
         "id": "0xdd3b8a0a963f51869df37d270339c33071f2d4280002000000000000000001bd-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "TWIT",
@@ -5023,7 +5023,7 @@
         "name": "Twatter",
         "weight": "0.010009918364232853",
         "id": "0xdd3b8a0a963f51869df37d270339c33071f2d4280002000000000000000001bd-0xc1d8debe416364cff6ae83e9387104b46f4a716a",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xdd3b8a0a963f51869df37d270339c33071f2d4280002000000000000000001bd",
@@ -5063,7 +5063,7 @@
         "name": "Cool Cats",
         "weight": "0.25",
         "id": "0xd8833594420db3d6589c1098dbdd073f52419dba000100000000000000000134-0x114f1388fab456c4ba31b1850b244eedcd024136",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "PUNK",
@@ -5074,7 +5074,7 @@
         "name": "CryptoPunks",
         "weight": "0.25",
         "id": "0xd8833594420db3d6589c1098dbdd073f52419dba000100000000000000000134-0x269616d549d7e8eaa82dfb17028d0b212d11232a",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "VBTC",
@@ -5085,7 +5085,7 @@
         "name": "Strudel BTC",
         "weight": "0.25",
         "id": "0xd8833594420db3d6589c1098dbdd073f52419dba000100000000000000000134-0xe1406825186d63980fd6e2ec61888f7b91c4bae4",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "BAYC",
@@ -5096,7 +5096,7 @@
         "name": "Bored Ape Yacht Club",
         "weight": "0.25",
         "id": "0xd8833594420db3d6589c1098dbdd073f52419dba000100000000000000000134-0xea47b64e1bfccb773a0420247c0aa0a3c1d2e5c5",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xd8833594420db3d6589c1098dbdd073f52419dba000100000000000000000134",
@@ -5134,7 +5134,7 @@
         "name": "USD Coin",
         "weight": "0.990005340657663844",
         "id": "0x604a625b1db031e8cde1d49d30d425e0b6cf734f0002000000000000000000d1-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "c0",
@@ -5145,7 +5145,7 @@
         "name": "CarbonEco",
         "weight": "0.010009918364232853",
         "id": "0x604a625b1db031e8cde1d49d30d425e0b6cf734f0002000000000000000000d1-0xbb3c2a170fbb8988cdb41c04344f9863b0f71c20",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x604a625b1db031e8cde1d49d30d425e0b6cf734f0002000000000000000000d1",
@@ -5184,7 +5184,7 @@
         "name": "Wrapped BTC",
         "weight": "0.33",
         "id": "0xe0947a0d847f9662a6a22ca2eff9d7e6352a123e000100000000000000000073-0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "VUSD",
@@ -5195,7 +5195,7 @@
         "name": "VUSD",
         "weight": "0.34",
         "id": "0xe0947a0d847f9662a6a22ca2eff9d7e6352a123e000100000000000000000073-0x677ddbd918637e5f2c79e164d402454de7da8619",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -5206,7 +5206,7 @@
         "name": "Wrapped Ether",
         "weight": "0.33",
         "id": "0xe0947a0d847f9662a6a22ca2eff9d7e6352a123e000100000000000000000073-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xe0947a0d847f9662a6a22ca2eff9d7e6352a123e000100000000000000000073",
@@ -5244,7 +5244,7 @@
         "name": "Akita Inu",
         "weight": "0.601931894133954106",
         "id": "0xc065798f227b49c150bcdc6cdc43149a12c4d75700020000000000000000010b-0x3301ee63fb29f863f2333bd4466acb46cd8323e6",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -5255,7 +5255,7 @@
         "name": "Wrapped Ether",
         "weight": "0.398083365028575572",
         "id": "0xc065798f227b49c150bcdc6cdc43149a12c4d75700020000000000000000010b-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xc065798f227b49c150bcdc6cdc43149a12c4d75700020000000000000000010b",
@@ -5293,7 +5293,7 @@
         "name": "Anubis",
         "weight": "0.250003814755474175",
         "id": "0x9212b088d48fc749c5adc573b445bc0d0a289a340002000000000000000000b1-0x507586012a126421c3669a64b8393fffa9c44462",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -5304,7 +5304,7 @@
         "name": "Wrapped Ether",
         "weight": "0.750011444266422523",
         "id": "0x9212b088d48fc749c5adc573b445bc0d0a289a340002000000000000000000b1-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x9212b088d48fc749c5adc573b445bc0d0a289a340002000000000000000000b1",
@@ -5342,7 +5342,7 @@
         "name": "Curve.fi Factory USD Metapool: Magic Internet Money 3Pool",
         "weight": "0.500000000000000001",
         "id": "0x1d310a6238e11c8be91d83193c88a99eb66279be0002000000000000000000a2-0x5a6a4d54456819380173272a5e8e9b9904bdf41b",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "eYyvCurve-MIM-11FEB22",
@@ -5353,7 +5353,7 @@
         "name": "Element Yield Token yvCurve-MIM-11FEB22",
         "weight": "0.499999999999999999",
         "id": "0x1d310a6238e11c8be91d83193c88a99eb66279be0002000000000000000000a2-0x8c981f68015d8eb13883bfd25aaf4b7c05ec7df5",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x1d310a6238e11c8be91d83193c88a99eb66279be0002000000000000000000a2",
@@ -5391,7 +5391,7 @@
         "name": "USD Coin",
         "weight": "0.070008392462043184",
         "id": "0x66d25e31cf63992db9d7c690b61762096f119288000200000000000000000129-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "SAWA",
@@ -5402,7 +5402,7 @@
         "name": "SAWA Crypto Fund Protocol",
         "weight": "0.930006866559853514",
         "id": "0x66d25e31cf63992db9d7c690b61762096f119288000200000000000000000129-0xa60d4a5c42cd6d4cc7987cb154e874d84096cb4a",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x66d25e31cf63992db9d7c690b61762096f119288000200000000000000000129",
@@ -5442,7 +5442,7 @@
         "name": "Decentraland MANA",
         "weight": "0.25",
         "id": "0x827ad315960f5a0f5280d6936c8e52a5878bba040001000000000000000000f3-0x0f5d2fb29fb7d3cfee444a200298f468908cc942",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "OCEAN",
@@ -5453,7 +5453,7 @@
         "name": "Ocean Token",
         "weight": "0.25",
         "id": "0x827ad315960f5a0f5280d6936c8e52a5878bba040001000000000000000000f3-0x967da4048cd07ab37855c090aaf366e4ce1b9f48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "LRC",
@@ -5464,7 +5464,7 @@
         "name": "LoopringCoin V2",
         "weight": "0.25",
         "id": "0x827ad315960f5a0f5280d6936c8e52a5878bba040001000000000000000000f3-0xbbbbca6a901c926f240b89eacb641d8aec7aeafd",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ENJ",
@@ -5475,7 +5475,7 @@
         "name": "Enjin Coin",
         "weight": "0.25",
         "id": "0x827ad315960f5a0f5280d6936c8e52a5878bba040001000000000000000000f3-0xf629cbd94d3791c9250152bd8dfbdf380e2a3b9c",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x827ad315960f5a0f5280d6936c8e52a5878bba040001000000000000000000f3",
@@ -5513,7 +5513,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0xcb0e14e96f2cefa8550ad8e4aea344f211e5061d00020000000000000000011a-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "PSP",
@@ -5524,7 +5524,7 @@
         "name": "ParaSwap",
         "weight": "0.8",
         "id": "0xcb0e14e96f2cefa8550ad8e4aea344f211e5061d00020000000000000000011a-0xcafe001067cdef266afb7eb5a286dcfd277f3de5",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xcb0e14e96f2cefa8550ad8e4aea344f211e5061d00020000000000000000011a",
@@ -5562,7 +5562,7 @@
         "name": "Tether USD",
         "weight": "0.5",
         "id": "0x503717b3dc137e230afc7c772520d7974474fb70000200000000000000000081-0xdac17f958d2ee523a2206206994597c13d831ec7",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "",
@@ -5573,7 +5573,7 @@
         "name": "",
         "weight": "0.5",
         "id": "0x503717b3dc137e230afc7c772520d7974474fb70000200000000000000000081-0xf1290473e210b2108a85237fbcd7b6eb42cc654f",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x503717b3dc137e230afc7c772520d7974474fb70000200000000000000000081",
@@ -5611,7 +5611,7 @@
         "name": "Wrapped Ether",
         "weight": "0.25",
         "id": "0xea8886a24b6e01fba88a9e98d794e8d1f29ed863000200000000000000000010-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ZRX",
@@ -5622,7 +5622,7 @@
         "name": "0x Protocol Token",
         "weight": "0.75",
         "id": "0xea8886a24b6e01fba88a9e98d794e8d1f29ed863000200000000000000000010-0xe41d2489571d322189246dafa5ebde1f4699f498",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xea8886a24b6e01fba88a9e98d794e8d1f29ed863000200000000000000000010",
@@ -5653,7 +5653,7 @@
         "name": "Element Principal Token yvUSDC-28JAN22",
         "weight": null,
         "id": "0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090-0x8a2228705ec979961f0e16df311debcf097a2766",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -5664,7 +5664,7 @@
         "name": "USD Coin",
         "weight": null,
         "id": "0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x10a2f8bd81ee2898d7ed18fb8f114034a549fa59000200000000000000000090",
@@ -5713,7 +5713,7 @@
         "name": "Gnosis Token",
         "weight": "0.5",
         "id": "0x36128d5436d2d70cab39c9af9cce146c38554ff0000200000000000000000009-0x6810e776880c02933d47db1b9fc05908e5386b96",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "BAL",
@@ -5724,7 +5724,7 @@
         "name": "Balancer",
         "weight": "0.5",
         "id": "0x36128d5436d2d70cab39c9af9cce146c38554ff0000200000000000000000009-0xba100000625a3754423978a60c9317c58a424e3d",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x36128d5436d2d70cab39c9af9cce146c38554ff0000200000000000000000009",
@@ -5762,7 +5762,7 @@
         "name": "A Gamblers Dream",
         "weight": "0.010009918364232853",
         "id": "0x57ce7bfb3e3379e1b3a1a1e852e82e775a5c81350002000000000000000001e0-0x699d2b018369c0c639866551c6a686f081b35d54",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -5773,7 +5773,7 @@
         "name": "USD Coin",
         "weight": "0.990005340657663844",
         "id": "0x57ce7bfb3e3379e1b3a1a1e852e82e775a5c81350002000000000000000001e0-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x57ce7bfb3e3379e1b3a1a1e852e82e775a5c81350002000000000000000001e0",
@@ -5811,7 +5811,7 @@
         "name": "",
         "weight": "0.5",
         "id": "0xef123b9e0485d837281342af27012c54bbc0d26100020000000000000000003f-0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -5822,7 +5822,7 @@
         "name": "Wrapped Ether",
         "weight": "0.5",
         "id": "0xef123b9e0485d837281342af27012c54bbc0d26100020000000000000000003f-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xef123b9e0485d837281342af27012c54bbc0d26100020000000000000000003f",
@@ -5860,7 +5860,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0x9137f3a026fa419a7a9a0ba8df6601d4b0abfd260002000000000000000001ab-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "BICO",
@@ -5871,7 +5871,7 @@
         "name": "Biconomy Token",
         "weight": "0.8",
         "id": "0x9137f3a026fa419a7a9a0ba8df6601d4b0abfd260002000000000000000001ab-0xf17e65822b568b3903685a7c9f496cf7656cc6c2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x9137f3a026fa419a7a9a0ba8df6601d4b0abfd260002000000000000000001ab",
@@ -5902,7 +5902,7 @@
         "name": "Element Principal Token yvDAI-28JAN22",
         "weight": null,
         "id": "0xa47d1251cf21ad42685cc6b8b3a186a73dbd06cf000200000000000000000097-0x449d7c2e096e9f867339078535b15440d42f78e8",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "DAI",
@@ -5913,7 +5913,7 @@
         "name": "Dai Stablecoin",
         "weight": null,
         "id": "0xa47d1251cf21ad42685cc6b8b3a186a73dbd06cf000200000000000000000097-0x6b175474e89094c44da98b954eedeac495271d0f",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xa47d1251cf21ad42685cc6b8b3a186a73dbd06cf000200000000000000000097",
@@ -5962,7 +5962,7 @@
         "name": "π",
         "weight": "0.010009918364232853",
         "id": "0xd1e18b0e5b61c1f529260eb88c49f944cc7060e40002000000000000000001bb-0x314159261c521f8c70fd0813d34445d63d229ae7",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -5973,7 +5973,7 @@
         "name": "USD Coin",
         "weight": "0.990005340657663844",
         "id": "0xd1e18b0e5b61c1f529260eb88c49f944cc7060e40002000000000000000001bb-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xd1e18b0e5b61c1f529260eb88c49f944cc7060e40002000000000000000001bb",
@@ -6011,7 +6011,7 @@
         "name": "Curve.fi ETH/stETH",
         "weight": "0.500000000000000001",
         "id": "0xd5d7bc115b32ad1449c6d0083e43c87be95f280900020000000000000000006c-0x06325440d014e39736583c165c2963ba99faf14e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "eYyvcrvSTETH-15OCT21",
@@ -6022,7 +6022,7 @@
         "name": "Element Yield Token yvcrvSTETH-15OCT21",
         "weight": "0.499999999999999999",
         "id": "0xd5d7bc115b32ad1449c6d0083e43c87be95f280900020000000000000000006c-0x94046274b5aa816ab236a9eab42b5563b56e1931",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xd5d7bc115b32ad1449c6d0083e43c87be95f280900020000000000000000006c",
@@ -6053,7 +6053,7 @@
         "name": "Curve.fi ETH/stETH",
         "weight": null,
         "id": "0x544c823194218f0640dae8291c1f59752d25fae3000200000000000000000093-0x06325440d014e39736583c165c2963ba99faf14e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ePyvcrvSTETH-28JAN22",
@@ -6064,7 +6064,7 @@
         "name": "Element Principal Token yvcrvSTETH-28JAN22",
         "weight": null,
         "id": "0x544c823194218f0640dae8291c1f59752d25fae3000200000000000000000093-0x720465a4ae6547348056885060eeb51f9cadb571",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x544c823194218f0640dae8291c1f59752d25fae3000200000000000000000093",
@@ -6113,7 +6113,7 @@
         "name": "Nexo",
         "weight": "0.8",
         "id": "0x5e6989c0e2b6600ab585d56bf05479d5450a60c80002000000000000000000c1-0xb62132e35a6c13ee1ee0f84dc5d40bad8d815206",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -6124,7 +6124,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0x5e6989c0e2b6600ab585d56bf05479d5450a60c80002000000000000000000c1-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x5e6989c0e2b6600ab585d56bf05479d5450a60c80002000000000000000000c1",
@@ -6162,7 +6162,7 @@
         "name": "Wrapped Ether",
         "weight": "0.1",
         "id": "0x8339e311265a025fd5792db800daa8eda4264e2c000200000000000000000029-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "RLY",
@@ -6173,7 +6173,7 @@
         "name": "Rally",
         "weight": "0.9",
         "id": "0x8339e311265a025fd5792db800daa8eda4264e2c000200000000000000000029-0xf1f955016ecbcd7321c7266bccfb96c68ea5e49b",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x8339e311265a025fd5792db800daa8eda4264e2c000200000000000000000029",
@@ -6211,7 +6211,7 @@
         "name": "LUSD Stablecoin",
         "weight": "0.4",
         "id": "0x1b46e4b0791c9383b73b64aabc371360a031a83f000200000000000000000057-0x5f98805a4e8be255a32880fdec7f6728c6568ba0",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -6222,7 +6222,7 @@
         "name": "Wrapped Ether",
         "weight": "0.6",
         "id": "0x1b46e4b0791c9383b73b64aabc371360a031a83f000200000000000000000057-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x1b46e4b0791c9383b73b64aabc371360a031a83f000200000000000000000057",
@@ -6260,7 +6260,7 @@
         "name": "USD Coin",
         "weight": "0.100007629510948349",
         "id": "0xf1b3256505159f6004da0b16e985ee46e6ffeea80002000000000000000000fa-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "MTT",
@@ -6271,7 +6271,7 @@
         "name": "My Token",
         "weight": "0.900007629510948349",
         "id": "0xf1b3256505159f6004da0b16e985ee46e6ffeea80002000000000000000000fa-0xfc248cef4c8763838743d3bd599a27e1bd6397f4",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xf1b3256505159f6004da0b16e985ee46e6ffeea80002000000000000000000fa",
@@ -6309,7 +6309,7 @@
         "name": "USD Coin",
         "weight": "0.950011444266422523",
         "id": "0x32f0dc9e2d890bac95106a65eb82db70bc58badb0002000000000000000000f4-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -6320,7 +6320,7 @@
         "name": "Wrapped Ether",
         "weight": "0.050003814755474175",
         "id": "0x32f0dc9e2d890bac95106a65eb82db70bc58badb0002000000000000000000f4-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x32f0dc9e2d890bac95106a65eb82db70bc58badb0002000000000000000000f4",
@@ -6358,7 +6358,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0x1050f901a307e7e71471ca3d12dfcea01d0a0a1c00020000000000000000004c-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ENJ",
@@ -6369,7 +6369,7 @@
         "name": "Enjin Coin",
         "weight": "0.8",
         "id": "0x1050f901a307e7e71471ca3d12dfcea01d0a0a1c00020000000000000000004c-0xf629cbd94d3791c9250152bd8dfbdf380e2a3b9c",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x1050f901a307e7e71471ca3d12dfcea01d0a0a1c00020000000000000000004c",
@@ -6407,7 +6407,7 @@
         "name": "AlphaFloor",
         "weight": "0.4",
         "id": "0x70b18450bd1f9296c38cc36ac1369f51f45b95f8000200000000000000000151-0x0c3983165e9bce0a9bb43184cc4eebb26dce48fa",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -6418,7 +6418,7 @@
         "name": "Wrapped Ether",
         "weight": "0.6",
         "id": "0x70b18450bd1f9296c38cc36ac1369f51f45b95f8000200000000000000000151-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x70b18450bd1f9296c38cc36ac1369f51f45b95f8000200000000000000000151",
@@ -6456,7 +6456,7 @@
         "name": "Bankless Token",
         "weight": "0.8",
         "id": "0x87165b659ba7746907a48763063efa3b323c2b0700020000000000000000002d-0x2d94aa3e47d9d5024503ca8491fce9a2fb4da198",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -6467,7 +6467,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0x87165b659ba7746907a48763063efa3b323c2b0700020000000000000000002d-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x87165b659ba7746907a48763063efa3b323c2b0700020000000000000000002d",
@@ -6505,7 +6505,7 @@
         "name": "yearn.finance",
         "weight": "0.5",
         "id": "0x186084ff790c65088ba694df11758fae4943ee9e000200000000000000000013-0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -6516,7 +6516,7 @@
         "name": "Wrapped Ether",
         "weight": "0.5",
         "id": "0x186084ff790c65088ba694df11758fae4943ee9e000200000000000000000013-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x186084ff790c65088ba694df11758fae4943ee9e000200000000000000000013",
@@ -6554,7 +6554,7 @@
         "name": "Wrapped Ether",
         "weight": "0.2",
         "id": "0x517390b2b806cb62f20ad340de6d98b2a8f17f2b0002000000000000000001ba-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ELIMU",
@@ -6565,7 +6565,7 @@
         "name": "elimu.ai",
         "weight": "0.8",
         "id": "0x517390b2b806cb62f20ad340de6d98b2a8f17f2b0002000000000000000001ba-0xe29797910d413281d2821d5d9a989262c8121cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x517390b2b806cb62f20ad340de6d98b2a8f17f2b0002000000000000000001ba",
@@ -6609,7 +6609,7 @@
         "name": "Uniswap",
         "weight": "0.250000000058207661",
         "id": "0x3b40d7d5ae25df2561944dd68b252016c4c7b2800001000000000000000000c2-0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "SUSHI",
@@ -6620,7 +6620,7 @@
         "name": "SushiToken",
         "weight": "0.064900000129104592",
         "id": "0x3b40d7d5ae25df2561944dd68b252016c4c7b2800001000000000000000000c2-0x6b3595068778dd592e39a122f4f5a5cf09c90fe2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "AAVE",
@@ -6631,7 +6631,7 @@
         "name": "Aave Token",
         "weight": "0.182500000154250302",
         "id": "0x3b40d7d5ae25df2561944dd68b252016c4c7b2800001000000000000000000c2-0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "",
@@ -6642,7 +6642,7 @@
         "name": "",
         "weight": "0.093200000024680049",
         "id": "0x3b40d7d5ae25df2561944dd68b252016c4c7b2800001000000000000000000c2-0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "COMP",
@@ -6653,7 +6653,7 @@
         "name": "Compound",
         "weight": "0.075200000096857548",
         "id": "0x3b40d7d5ae25df2561944dd68b252016c4c7b2800001000000000000000000c2-0xc00e94cb662c3520282e6f5717214004a7f26888",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "SNX",
@@ -6664,7 +6664,7 @@
         "name": "Synthetix Network Token",
         "weight": "0.059600000050757081",
         "id": "0x3b40d7d5ae25df2561944dd68b252016c4c7b2800001000000000000000000c2-0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "GRT",
@@ -6675,7 +6675,7 @@
         "name": "Graph Token",
         "weight": "0.206900000154715963",
         "id": "0x3b40d7d5ae25df2561944dd68b252016c4c7b2800001000000000000000000c2-0xc944e90c64b2c07662a292be6244bdf05cda44a7",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "CRV",
@@ -6686,7 +6686,7 @@
         "name": "Curve DAO Token",
         "weight": "0.067700000029918738",
         "id": "0x3b40d7d5ae25df2561944dd68b252016c4c7b2800001000000000000000000c2-0xd533a949740bb3306d119cc777fa900ba034cd52",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x3b40d7d5ae25df2561944dd68b252016c4c7b2800001000000000000000000c2",
@@ -6724,7 +6724,7 @@
         "name": "Dai Stablecoin",
         "weight": "0.4",
         "id": "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a-0x6b175474e89094c44da98b954eedeac495271d0f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -6735,7 +6735,7 @@
         "name": "Wrapped Ether",
         "weight": "0.6",
         "id": "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a",
@@ -6773,7 +6773,7 @@
         "name": "Curve.fi EURS/sEUR",
         "weight": "0.500000000000000001",
         "id": "0x5fa3ce1fb47bc8a29b5c02e2e7167799bbaf5f410002000000000000000000a7-0x194ebd173f6cdace046c53eacce9b953f28411d1",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "eYyvCurve-EURS-11FEB22",
@@ -6784,7 +6784,7 @@
         "name": "Element Yield Token yvCurve-EURS-11FEB22",
         "weight": "0.499999999999999999",
         "id": "0x5fa3ce1fb47bc8a29b5c02e2e7167799bbaf5f410002000000000000000000a7-0x1ac5d65a987d448b0ecfe7e39017c3ec516d1d87",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x5fa3ce1fb47bc8a29b5c02e2e7167799bbaf5f410002000000000000000000a7",
@@ -6815,7 +6815,7 @@
         "name": "Element Principal Token yvCurve-MIM-11FEB22",
         "weight": null,
         "id": "0x09b1b33bad0e87454ff05696b1151bfbd208a43f0002000000000000000000a6-0x418de6227499181b045cadf554030722e460881a",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "MIM-3LP3CRV-f",
@@ -6826,7 +6826,7 @@
         "name": "Curve.fi Factory USD Metapool: Magic Internet Money 3Pool",
         "weight": null,
         "id": "0x09b1b33bad0e87454ff05696b1151bfbd208a43f0002000000000000000000a6-0x5a6a4d54456819380173272a5e8e9b9904bdf41b",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x09b1b33bad0e87454ff05696b1151bfbd208a43f0002000000000000000000a6",
@@ -6875,7 +6875,7 @@
         "name": "Pilot Token",
         "weight": "0.94000152590218967",
         "id": "0xef6ae2cc302c8619b6e64616997ef5107962d7ab0002000000000000000000d9-0x4f63e1355b844227ad8a365068697c753fb7e462",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -6886,7 +6886,7 @@
         "name": "USD Coin",
         "weight": "0.060013733119707027",
         "id": "0xef6ae2cc302c8619b6e64616997ef5107962d7ab0002000000000000000000d9-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xef6ae2cc302c8619b6e64616997ef5107962d7ab0002000000000000000000d9",
@@ -6924,7 +6924,7 @@
         "name": "Dai Stablecoin",
         "weight": "0.5",
         "id": "0x571046eae58c783f29f95adba17dd561af8a871200020000000000000000000c-0x6b175474e89094c44da98b954eedeac495271d0f",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "WETH",
@@ -6935,7 +6935,7 @@
         "name": "Wrapped Ether",
         "weight": "0.5",
         "id": "0x571046eae58c783f29f95adba17dd561af8a871200020000000000000000000c-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x571046eae58c783f29f95adba17dd561af8a871200020000000000000000000c",
@@ -6966,7 +6966,7 @@
         "name": "Wrapped BTC",
         "weight": null,
         "id": "0x4bd6d86debdb9f5413e631ad386c4427dc9d01b20002000000000000000000ec-0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "ePyvWBTC-29APR22",
@@ -6977,7 +6977,7 @@
         "name": "Element Principal Token yvWBTC-29APR22",
         "weight": null,
         "id": "0x4bd6d86debdb9f5413e631ad386c4427dc9d01b20002000000000000000000ec-0x49e9e169f0b661ea0a883f490564f4cc275123ed",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x4bd6d86debdb9f5413e631ad386c4427dc9d01b20002000000000000000000ec",
@@ -7027,7 +7027,7 @@
         "name": "Wrapped BTC",
         "weight": "0.5",
         "id": "0x3a19030ed746bd1c3f2b0f996ff9479af04c5f0a000100000000000000000005-0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "cUNI",
@@ -7038,7 +7038,7 @@
         "name": "Compound Uniswap",
         "weight": "0.01",
         "id": "0x3a19030ed746bd1c3f2b0f996ff9479af04c5f0a000100000000000000000005-0x35a18000230da775cac24873d00ff85bccded550",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -7049,7 +7049,7 @@
         "name": "USD Coin",
         "weight": "0.49",
         "id": "0x3a19030ed746bd1c3f2b0f996ff9479af04c5f0a000100000000000000000005-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x3a19030ed746bd1c3f2b0f996ff9479af04c5f0a000100000000000000000005",
@@ -7087,7 +7087,7 @@
         "name": "Wrapped Ether",
         "weight": "0.5",
         "id": "0x14bf727f67aa294ec36347bd95aba1a2c136fe7a00020000000000000000002c-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDT",
@@ -7098,7 +7098,7 @@
         "name": "Tether USD",
         "weight": "0.5",
         "id": "0x14bf727f67aa294ec36347bd95aba1a2c136fe7a00020000000000000000002c-0xdac17f958d2ee523a2206206994597c13d831ec7",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0x14bf727f67aa294ec36347bd95aba1a2c136fe7a00020000000000000000002c",
@@ -7136,7 +7136,7 @@
         "name": "Truth to Reveal",
         "weight": "0.500007629510948349",
         "id": "0xbb0e7784c902009c9a730837848408d463e7ee9f0002000000000000000001da-0x529ff59a4423239f07e8114ca83acc674479a94c",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "USDC",
@@ -7147,7 +7147,7 @@
         "name": "USD Coin",
         "weight": "0.500007629510948349",
         "id": "0xbb0e7784c902009c9a730837848408d463e7ee9f0002000000000000000001da-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xbb0e7784c902009c9a730837848408d463e7ee9f0002000000000000000001da",
@@ -7185,7 +7185,7 @@
         "name": "LUSD Stablecoin",
         "weight": "0.990005340657663844",
         "id": "0xede4efcc5492cf41ed3f0109d60bc0543cfad23a0002000000000000000000bb-0x5f98805a4e8be255a32880fdec7f6728c6568ba0",
-        "invested": "0"
+        "managedBalance": "0"
       },
       {
         "symbol": "FEI",
@@ -7196,7 +7196,7 @@
         "name": "Fei USD",
         "weight": "0.010009918364232853",
         "id": "0xede4efcc5492cf41ed3f0109d60bc0543cfad23a0002000000000000000000bb-0x956f47f50a910163d8bf957cf5846d573e7f87ca",
-        "invested": "0"
+        "managedBalance": "0"
       }
     ],
     "id": "0xede4efcc5492cf41ed3f0109d60bc0543cfad23a0002000000000000000000bb",
