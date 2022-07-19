@@ -120,10 +120,9 @@ interface NewtorkConstants {
 type GaugeWithDraw = string;
 type ExitPool = string;
 type BatchSwap = string;
-type JoinPool = string;
 type GaugeDeposit = string;
 
-type CallData = [GaugeWithDraw, ExitPool, BatchSwap, JoinPool, GaugeDeposit];
+type CallData = [GaugeWithDraw, ExitPool, BatchSwap, GaugeDeposit];
 
 export interface MigrationAttributes {
   to: string;
@@ -221,12 +220,15 @@ export class MigrateStaBal3 {
    * @param outputReferences References from previous exit call.
    * @returns BatchSwap call.
    */
-  buildSwap(outputReferences: OutputReference[]): {
+  buildSwap(
+    outputReferences: OutputReference[],
+    expectedBptReturn: string
+  ): {
     call: BatchSwap;
-    newLinearAmountsReferences: OutputReference[];
+    bptAmountOut: OutputReference;
   } {
     // for each linear pool swap -
-    // linear1Bpt[linear1]stable[linear2]linear2bpt Uses chainedReference from previous action for amount.
+    // linear1Bpt[linear1]stable[linear2]linear2bpt[bbausd2]bbausd2 Uses chainedReference from previous action for amount.
     // TO DO - Will swap order matter here? John to ask Fernando.
     const swaps: BatchSwapStep[] = [
       {
@@ -240,6 +242,13 @@ export class MigrateStaBal3 {
         poolId: this.constants.linearDai2.id,
         assetInIndex: 1,
         assetOutIndex: 2,
+        amount: '0',
+        userData: '0x',
+      },
+      {
+        poolId: this.constants.bbausd2.id,
+        assetInIndex: 2,
+        assetOutIndex: 3,
         amount: '0',
         userData: '0x',
       },
@@ -258,6 +267,13 @@ export class MigrateStaBal3 {
         userData: '0x',
       },
       {
+        poolId: this.constants.bbausd2.id,
+        assetInIndex: 5,
+        assetOutIndex: 3,
+        amount: '0',
+        userData: '0x',
+      },
+      {
         poolId: this.constants.linearUsdt1.id,
         assetInIndex: 6,
         assetOutIndex: 7,
@@ -271,11 +287,19 @@ export class MigrateStaBal3 {
         amount: '0',
         userData: '0x',
       },
+      {
+        poolId: this.constants.bbausd2.id,
+        assetInIndex: 8,
+        assetOutIndex: 3,
+        amount: '0',
+        userData: '0x',
+      }
     ];
     const assets = [
       this.constants.linearDai1.address,
       this.constants.DAI,
       this.constants.linearDai2.address,
+      this.constants.bbausd2.address,
       this.constants.linearUsdc1.address,
       this.constants.USDC,
       this.constants.linearUsdc2.address,
@@ -288,6 +312,7 @@ export class MigrateStaBal3 {
       MaxUint256.toString(),
       '0',
       '0',
+      expectedBptReturn.toString(),
       MaxUint256.toString(),
       '0',
       '0',
@@ -326,40 +351,12 @@ export class MigrateStaBal3 {
       outputReferences: swapOutputReferences,
     });
 
-    // We only need the deltas/amounts of the new Linear pools (matches assets index)
-    // Final order should match token order required for joinPool
-    const linearDai2OutputRef = swapOutputReferences[2];
-    const linearUsdc2OutputRef = swapOutputReferences[5];
-    const linearUsdt2OutputRef = swapOutputReferences[8];
+    // We only need the deltas/amounts of the bbausd2 (matches assets index)
+    const bptOut = swapOutputReferences[3];
 
     return {
       call: encodedBatchSwap,
-      newLinearAmountsReferences: [
-        linearDai2OutputRef,
-        linearUsdc2OutputRef,
-        linearUsdt2OutputRef,
-      ],
-    };
-  }
-
-  buildPoolJoin(
-    joinAmounts: OutputReference[],
-    expectedBptReturn: string,
-    slippage: string
-  ): {
-    call: JoinPool;
-    bptOutputReference: OutputReference;
-  } {
-    /*
-      Create encoded joinPool.
-      join bbausd2 pool using Linear2 BPT tokens.
-      Use expectedBptReturn and slippage to set minAmount out
-      The join amounts should be stored in previous reference
-      Needs to set output references for next step - this will be the amount of bpt returned by join
-      */
-    return {
-      call: '',
-      bptOutputReference: {} as OutputReference,
+      bptAmountOut: bptOut,
     };
   }
 
@@ -411,24 +408,18 @@ export class MigrateStaBal3 {
 
     const poolExit = this.buildPoolExit(migrator, amount);
 
-    const swaps = this.buildSwap(poolExit.oldLinearAmountsReferences);
-
-    const poolJoin = this.buildPoolJoin(
-      swaps.newLinearAmountsReferences,
-      expectedBptReturn,
-      slippage
+    // We can swap to bbausd2 instead of join as swap fees will be 0
+    const swaps = this.buildSwap(
+      poolExit.oldLinearAmountsReferences,
+      expectedBptReturn
     );
 
-    const gaugeDeposit = this.buildDeposit(
-      migrator,
-      poolJoin.bptOutputReference
-    );
+    const gaugeDeposit = this.buildDeposit(migrator, swaps.bptAmountOut);
 
     const calls: CallData = [
       gaugeWithdraw,
       poolExit.call,
       swaps.call,
-      poolJoin.call,
       gaugeDeposit,
     ];
 
@@ -461,7 +452,7 @@ export class MigrateStaBal3 {
     const tx = await relayerContract.callStatic[migrationData.functionName](
       migrationData.calldata
     );
-    // BPT amount from poolJoin call
-    return defaultAbiCoder.decode(['int256[]'], tx[3]).toString();
+    // BPT amount from batchSwap call
+    return defaultAbiCoder.decode(['int256[]'], tx[2])[3].toString();
   }
 }

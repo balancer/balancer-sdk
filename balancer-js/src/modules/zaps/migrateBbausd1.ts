@@ -206,7 +206,7 @@ export class MigrateBbausd1 {
       '0',
       '0',
       '0',
-      '0', // Can use expectedBpt amount and slippage to set this limit
+      expectedBptReturn, // Can use expectedBpt amount and slippage to set this limit
       '0',
       '0',
       '0',
@@ -259,7 +259,6 @@ export class MigrateBbausd1 {
   buildMigration(
     migrator: string,
     amount: string,
-    expectedBptReturn: string,
     slippage: string
   ): MigrationAttributes {
     /*
@@ -270,7 +269,9 @@ export class MigrateBbausd1 {
     */
     const gaugeWithdraw = this.buildWithdraw(migrator, amount);
 
-    const swaps = this.buildSwap(amount, expectedBptReturn, slippage);
+    // Fernando - final bbausd2 amount should equal bbausd1 input amount
+    // Use this to set final swap limit
+    const swaps = this.buildSwap(amount, amount, slippage);
 
     const gaugeDeposit = this.buildDeposit(
       migrator,
@@ -298,7 +299,7 @@ export class MigrateBbausd1 {
     amount: string,
     provider: JsonRpcProvider
   ): Promise<string> {
-    const migrationData = this.buildMigration(migrator, amount, '0', '0');
+    const migrationData = this.buildMigration(migrator, amount, '0');
     const relayerContract = new Contract(
       this.constants.relayer,
       balancerRelayerAbi,
