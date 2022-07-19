@@ -175,20 +175,27 @@ describe('join execution', async () => {
       ];
 
       const slippage = '100';
-      const { to, data, value, minBPTOut } = await pool.buildJoin(
-        signerAddress,
-        tokensIn.map((t) => t.address),
-        amountsIn,
-        slippage
-      );
 
-      transactionReceipt = await (
-        await signer.sendTransaction({
-          to,
-          data,
-          value,
-        })
-      ).wait();
+      const { functionName, attributes, value, minBPTOut } =
+        await pool.buildJoin(
+          signerAddress,
+          tokensIn.map((t) => t.address),
+          amountsIn,
+          slippage
+        );
+
+      if (functionName == 'joinPool') {
+        const transactionResponse = await balancer.contracts.vault
+          .connect(signer)
+          .joinPool(
+            attributes.poolId,
+            attributes.sender,
+            attributes.recipient,
+            attributes.joinPoolRequest,
+            { value }
+          );
+        transactionReceipt = await transactionResponse.wait();
+      }
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
     });
