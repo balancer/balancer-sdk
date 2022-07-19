@@ -27,7 +27,7 @@ export class PoolsProvider {
           slippage,
           wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
         }),
-      buildExitExactBPTIn: async (exiter, bptIn, slippage, singleTokenMaxOut) =>
+      buildExitExactBPTIn: (exiter, bptIn, slippage, singleTokenMaxOut) =>
         methods.exit.buildExitExactBPTIn({
           exiter,
           pool: data,
@@ -35,12 +35,7 @@ export class PoolsProvider {
           slippage,
           singleTokenMaxOut,
         }),
-      buildExitExactTokensOut: async (
-        exiter,
-        tokensOut,
-        amountsOut,
-        slippage
-      ) =>
+      buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) =>
         methods.exit.buildExitExactTokensOut({
           exiter,
           pool: data,

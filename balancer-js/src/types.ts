@@ -213,11 +213,11 @@ export interface PoolModel extends Pool {
     bptIn: string,
     slippage: string,
     singleTokenMaxOut?: string
-  ) => Promise<ExitPoolAttributes>;
+  ) => ExitPoolAttributes;
   buildExitExactTokensOut: (
     exiter: string,
     tokensOut: string[],
     amountsOut: string[],
     slippage: string
-  ) => Promise<ExitPoolAttributes>;
+  ) => ExitPoolAttributes;
 }

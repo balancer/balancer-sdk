@@ -116,8 +116,11 @@ const testExitPool = (poolId: string) => {
         this.timeout(20000);
         [bptBalanceBefore, ...tokensBalanceBefore] = await updateBalances(pool);
 
-        const { to, data, minAmountsOut, maxBPTIn } =
-          await pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
+        const { to, data, minAmountsOut, maxBPTIn } = pool.buildExitExactBPTIn(
+          signerAddress,
+          bptIn,
+          slippage
+        );
         const tx = { to, data }; // , gasPrice: '600000000000', gasLimit: '2000000' };
 
         bptMaxBalanceDecrease = BigNumber.from(maxBPTIn);
@@ -153,7 +156,7 @@ const testExitPool = (poolId: string) => {
         [bptBalanceBefore, ...tokensBalanceBefore] = await updateBalances(pool);
 
         const { attributes, minAmountsOut, maxBPTIn } =
-          await pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
+          pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
 
         bptMaxBalanceDecrease = BigNumber.from(maxBPTIn);
         tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
