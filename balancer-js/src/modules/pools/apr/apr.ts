@@ -180,16 +180,11 @@ export class PoolApr {
       return 0;
     }
 
-    const [tokenPrice, bptPriceUsd] = await Promise.all([
-    this.tokenPrices.find(
-          '0xba100000625a3754423978a60c9317c58a424e3d'
-        ),
-         this.bptPrice()
-        ]
-        )
-    const balPriceUsd = parseFloat(
-      tokenPrice.usd || '0'
-    );
+    const [balPrice, bptPriceUsd] = await Promise.all([
+      this.tokenPrices.find('0xba100000625a3754423978a60c9317c58a424e3d'),
+      this.bptPrice(),
+    ]);
+    const balPriceUsd = parseFloat(balPrice?.usd || '0');
 
     const now = Math.round(new Date().getTime() / 1000);
     const totalBalEmissions = emissions.between(now, now + 365 * 86400);
@@ -289,14 +284,21 @@ export class PoolApr {
    * @returns pool APR split [bsp]
    */
   async apr(): Promise<AprBreakdown> {
-    const [swapFees, tokenAprs, minStakingApr, maxStakingApr, rewardsApr, protocolApr]= await Promise.all([
+    const [
+      swapFees,
+      tokenAprs,
+      minStakingApr,
+      maxStakingApr,
+      rewardsApr,
+      protocolApr,
+    ] = await Promise.all([
       this.swapFees(), // pool snapshot for last 24h fees dependency
-      this.tokenAprs(), 
+      this.tokenAprs(),
       this.stakingApr(),
       this.stakingApr(2.5),
       this.rewardsApr(),
-      this.protocolApr()
-    ]) ; 
+      this.protocolApr(),
+    ]);
 
     return {
       swapFees,
