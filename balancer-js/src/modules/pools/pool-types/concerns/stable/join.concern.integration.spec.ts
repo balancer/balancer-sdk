@@ -48,6 +48,7 @@ const slots = [
 
 const initialBalance = '100000';
 const amountsInDiv = '100000'; // TODO: setting amountsInDiv to 1000 will fail test due to stable math convergence issue - check if that's expected from maths
+const slippage = '100';
 
 let tokensIn: PoolToken[];
 let amountsIn: string[];
@@ -133,8 +134,6 @@ describe('join execution', async () => {
 
       [bptBalanceBefore, ...tokensBalanceBefore] = await updateBalances(pool);
 
-      const slippage = '1';
-
       const { to, data, minBPTOut } = pool.buildJoin(
         signerAddress,
         tokensIn.map((t) => t.address),
@@ -144,7 +143,8 @@ describe('join execution', async () => {
       const tx = { to, data };
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
-      transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+      const transactionResponse = await signer.sendTransaction(tx);
+      transactionReceipt = await transactionResponse.wait();
       [bptBalanceAfter, ...tokensBalanceAfter] = await updateBalances(pool);
     });
 
@@ -176,7 +176,6 @@ describe('join execution', async () => {
 
       [bptBalanceBefore, ...tokensBalanceBefore] = await updateBalances(pool);
 
-      const slippage = '100';
       const { functionName, attributes, value, minBPTOut } = pool.buildJoin(
         signerAddress,
         tokensIn.map((t) => t.address),
@@ -221,7 +220,6 @@ describe('join execution', async () => {
     });
 
     it('should fail on number of input tokens', async () => {
-      const slippage = '10';
       let errorMessage;
       try {
         pool.buildJoin(
