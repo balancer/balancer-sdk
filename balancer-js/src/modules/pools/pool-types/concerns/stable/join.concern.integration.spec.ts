@@ -47,7 +47,7 @@ const slots = [
 ];
 
 const initialBalance = '100000';
-const amountsInDiv = '10000'; // TODO: setting amountsInDiv to 1000 will fail test due to stable math convergence issue - check if there's something to be done from SDK side
+const amountsInDiv = '100000'; // TODO: setting amountsInDiv to 1000 will fail test due to stable math convergence issue - check if that's expected from maths
 
 let tokensIn: PoolToken[];
 let amountsIn: string[];
@@ -69,6 +69,15 @@ const tokenBalance = async (tokenAddress: string) => {
   return balance;
 };
 
+const updateBalances = async (pool: Pool) => {
+  const bptBalance = tokenBalance(pool.address);
+  const balances = [];
+  for (let i = 0; i < pool.tokensList.length; i++) {
+    balances[i] = tokenBalance(pool.tokensList[i]);
+  }
+  return Promise.all([bptBalance, ...balances]);
+};
+
 // Test scenarios
 
 describe('join execution', async () => {
@@ -76,8 +85,8 @@ describe('join execution', async () => {
   let bptBalanceBefore: BigNumber;
   let bptMinBalanceIncrease: BigNumber;
   let bptBalanceAfter: BigNumber;
-  const tokensBalanceBefore: BigNumber[] = [];
-  const tokensBalanceAfter: BigNumber[] = [];
+  let tokensBalanceBefore: BigNumber[];
+  let tokensBalanceAfter: BigNumber[];
   let pool: PoolModel;
 
   // Setup chain
@@ -122,12 +131,9 @@ describe('join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      bptBalanceBefore = await tokenBalance(pool.address);
-      for (let i = 0; i < tokensIn.length; i++) {
-        tokensBalanceBefore[i] = await tokenBalance(tokensIn[i].address);
-      }
+      [bptBalanceBefore, ...tokensBalanceBefore] = await updateBalances(pool);
 
-      const slippage = '100';
+      const slippage = '1';
 
       const { to, data, minBPTOut } = pool.buildJoin(
         signerAddress,
@@ -139,6 +145,7 @@ describe('join execution', async () => {
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+      [bptBalanceAfter, ...tokensBalanceAfter] = await updateBalances(pool);
     });
 
     it('should work', async () => {
@@ -146,17 +153,11 @@ describe('join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(pool.address);
-
       expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
         .to.be.true;
     });
 
     it('should decrease tokens balance', async () => {
-      for (let i = 0; i < tokensIn.length; i++) {
-        tokensBalanceAfter[i] = await tokenBalance(tokensIn[i].address);
-      }
-
       for (let i = 0; i < tokensIn.length; i++) {
         expect(
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
@@ -173,10 +174,7 @@ describe('join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      bptBalanceBefore = await tokenBalance(pool.address);
-      for (let i = 0; i < tokensIn.length; i++) {
-        tokensBalanceBefore[i] = await tokenBalance(tokensIn[i].address);
-      }
+      [bptBalanceBefore, ...tokensBalanceBefore] = await updateBalances(pool);
 
       const slippage = '100';
       const { functionName, attributes, value, minBPTOut } = pool.buildJoin(
@@ -191,6 +189,7 @@ describe('join execution', async () => {
       transactionReceipt = await transactionResponse.wait();
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
+      [bptBalanceAfter, ...tokensBalanceAfter] = await updateBalances(pool);
     });
 
     it('should work', async () => {
@@ -198,17 +197,11 @@ describe('join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(pool.address);
-
       expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
         .to.be.true;
     });
 
     it('should decrease tokens balance', async () => {
-      for (let i = 0; i < tokensIn.length; i++) {
-        tokensBalanceAfter[i] = await tokenBalance(tokensIn[i].address);
-      }
-
       for (let i = 0; i < tokensIn.length; i++) {
         expect(
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
