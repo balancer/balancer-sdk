@@ -85,10 +85,12 @@ export class LiquidityGaugesMulticallRepository {
       liquidityGaugeV5Interface.encodeFunctionData('reward_count', []),
     ]);
     const [, res] = await this.multicall.aggregate(payload);
+    // Handle 0x return values
+    const res0x = res.map((r: string) => (r == '0x' ? '0x0' : r));
 
     const rewardCounts = gaugeAddresses.reduce(
       (p: { [key: string]: number }, a, i) => {
-        p[a] ||= parseInt(res[i]);
+        p[a] ||= parseInt(res0x[i]);
         return p;
       },
       {}
