@@ -26,7 +26,7 @@ export const ADDRESSES = {
       address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
       decimals: 6,
       symbol: 'USDT',
-      slot: 9,
+      slot: 2,
     },
     WBTC: {
       address: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
