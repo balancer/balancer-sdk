@@ -101,7 +101,7 @@ describe('join execution', async () => {
     );
     await forkSetup(
       balancer,
-      provider,
+      signer,
       tokensIn.map((t) => t.address),
       slots,
       balances,

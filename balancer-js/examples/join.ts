@@ -17,12 +17,6 @@ const wETH_SLOT = 3;
 const slots = [wBTC_SLOT, wETH_SLOT];
 const initialBalances = ['1000000000', '100000000000000000000'];
 
-// Public test account with 10000 ETH
-// publicKey = '0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266';
-const privateKey =
-  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
-const wallet = new Wallet(privateKey);
-
 /*
 Example showing how to use Pools module to join pools.
 */
@@ -30,6 +24,9 @@ async function join() {
   const network = Network.MAINNET;
   const rpcUrl = 'http://127.0.0.1:8545';
   const provider = new JsonRpcProvider(rpcUrl, network);
+
+  const signer = provider.getSigner();
+  const signerAddress = await signer.getAddress();
 
   const poolId =
     '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e'; // 50/50 WBTC/WETH Pool
@@ -49,7 +46,7 @@ async function join() {
   // Sets up local fork granting signer initial balances and token approvals
   await forkSetup(
     balancer,
-    provider,
+    signer,
     tokensIn as string[],
     slots,
     initialBalances,
@@ -62,18 +59,18 @@ async function join() {
 
   // Checking balances to confirm success
   const bptContract = balancer.contracts.ERC20(pool.address, provider);
-  const bptBalanceBefore = await bptContract.balanceOf(wallet.address);
+  const bptBalanceBefore = await bptContract.balanceOf(signerAddress);
 
   // Use SDK to create join
   const { to, data, minBPTOut } = pool.buildJoin(
-    wallet.address,
+    signerAddress,
     tokensIn as string[],
     amountsIn,
     slippage
   );
 
   // Submit join tx
-  const transactionResponse = await wallet.connect(provider).sendTransaction({
+  const transactionResponse = await signer.sendTransaction({
     to,
     data,
     // gasPrice: '6000000000', // gas inputs are optional
@@ -82,7 +79,7 @@ async function join() {
 
   const transactionReceipt = await transactionResponse.wait();
 
-  const bptBalanceAfter = await bptContract.balanceOf(wallet.address);
+  const bptBalanceAfter = await bptContract.balanceOf(signerAddress);
   console.log(
     'BPT Balance before joining pool: ',
     formatFixed(bptBalanceBefore, 18)
