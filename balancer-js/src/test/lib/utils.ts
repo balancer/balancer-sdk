@@ -1,5 +1,5 @@
 import { BalancerSDK } from '@/.';
-import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
+import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';
 import { balancerVault } from '@/lib/constants/config';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
@@ -7,14 +7,15 @@ import { keccak256 } from '@ethersproject/solidity';
 
 export const forkSetup = async (
   balancer: BalancerSDK,
-  provider: JsonRpcProvider,
+  signer: JsonRpcSigner, // it's safer to use signer than provider for this
   tokens: string[],
   slots: number[],
   balances: string[],
   jsonRpcUrl: string,
+  isVyperMapping = false,
   blockNumber?: number
 ): Promise<void> => {
-  await provider.send('hardhat_reset', [
+  await signer.provider.send('hardhat_reset', [
     {
       forking: {
         jsonRpcUrl,
@@ -26,13 +27,14 @@ export const forkSetup = async (
   for (let i = 0; i < tokens.length; i++) {
     // Set initial account balance for each token that will be used to join pool
     await setTokenBalance(
-      provider.getSigner(),
+      signer,
       tokens[i],
       slots[i],
-      balances[i]
+      balances[i],
+      isVyperMapping
     );
     // Approve appropriate allowances so that vault contract can move tokens
-    await approveToken(balancer, tokens[i], balances[i], provider.getSigner());
+    await approveToken(balancer, tokens[i], balances[i], signer);
   }
 };
 
@@ -48,7 +50,8 @@ export const setTokenBalance = async (
   signer: JsonRpcSigner,
   token: string,
   slot: number,
-  balance: string
+  balance: string,
+  isVyperMapping = false
 ): Promise<void> => {
   const toBytes32 = (bn: BigNumber) => {
     return hexlify(zeroPad(bn.toHexString(), 32));
@@ -62,10 +65,18 @@ export const setTokenBalance = async (
   const signerAddress = await signer.getAddress();
 
   // Get storage slot index
-  const index = keccak256(
-    ['uint256', 'uint256'],
-    [signerAddress, slot] // key, slot
-  );
+  let index;
+  if (isVyperMapping) {
+    index = keccak256(
+      ['uint256', 'uint256'],
+      [slot, signerAddress] // slot, key
+    );
+  } else {
+    index = keccak256(
+      ['uint256', 'uint256'],
+      [signerAddress, slot] // key, slot
+    );
+  }
 
   // Manipulate local balance (needs to be bytes32 string)
   await setStorageAt(
