@@ -1,5 +1,5 @@
 import { Contract } from '@ethersproject/contracts';
-import { defaultAbiCoder } from '@ethersproject/abi';
+import { defaultAbiCoder, Interface } from '@ethersproject/abi';
 import { MaxUint256 } from '@ethersproject/constants';
 import { ExitPoolRequest } from '@/types';
 import { Network } from '@/lib/constants/network';
@@ -11,54 +11,73 @@ import { SwapType, FundManagement, BatchSwapStep } from '../swaps/types';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { JsonRpcProvider } from '@ethersproject/providers';
 
-export const CONSTANTS: NewtorkConstants = {
+export const gaugeActionsInterface = new Interface([
+  'function gaugeDeposit(address gauge, address sender, address recipient, uint amount) payable',
+  'function gaugeWithdraw(address gauge, address sender, address recipient, uint amount) payable',
+]);
+
+export const CONSTANTS = {
   Mainnet: {
     relayer: 'TODO',
     staBal3: {
-      id: '',
-      address: '0x8fd162f338b770f7e879030830cde9173367f301',
+      id: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063',
+      address: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42',
+      gauge: '0x34f33cdaed8ba0e1ceece80e5f4a73bcf234cfac',
     },
-    staBal3Gauge: '0x8fd162f338b770f7e879030830cde9173367f301',
+    bbausd1: {
+      id: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe',
+      address: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
+      gauge: '0x68d019f64a7aa97e2d4e7363aee42251d08124fb',
+    },
+    bbausd2: {
+      id: '',
+      address: '',
+      gauge: '',
+    },
     linearUsdc1: {
       id: '',
       address: 'N/A',
     },
     linearDai1: {
       id: '',
-
       address: 'N/A',
     },
     linearUsdt1: {
       id: '',
-
       address: 'N/A',
     },
     linearUsdc2: {
       id: '',
-
       address: 'N/A',
     },
     linearDai2: {
       id: '',
-
       address: 'N/A',
     },
     linearUsdt2: {
       id: '',
-
       address: 'N/A',
     },
-    bbausd2Gauge: '0x8fd162f338b770f7e879030830cde9173367f301',
     DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
     USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
     USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
   },
   Goerli: {
     relayer: 'TODO',
-    staBal3Gauge: '0x8fd162f338b770f7e879030830cde9173367f301',
     staBal3: {
+      id: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063',
+      address: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42',
+      gauge: '0x34f33cdaed8ba0e1ceece80e5f4a73bcf234cfac',
+    },
+    bbausd1: {
+      id: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe',
+      address: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
+      gauge: '0x68d019f64a7aa97e2d4e7363aee42251d08124fb',
+    },
+    bbausd2: {
       id: '',
-      address: '0x8fd162f338b770f7e879030830cde9173367f301',
+      address: '',
+      gauge: '',
     },
     linearUsdc1: {
       id: '',
@@ -84,38 +103,11 @@ export const CONSTANTS: NewtorkConstants = {
       id: '',
       address: 'N/A',
     },
-    bbausd2Gauge: '0x8fd162f338b770f7e879030830cde9173367f301',
-    DAI: '',
-    USDC: '',
-    USDT: '',
+    DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
+    USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
   },
 };
-
-interface Pool {
-  id: string;
-  address: string;
-}
-
-export interface Constants {
-  relayer: string;
-  staBal3: Pool;
-  staBal3Gauge: string;
-  linearUsdc1: Pool;
-  linearDai1: Pool;
-  linearUsdt1: Pool;
-  linearUsdc2: Pool;
-  linearDai2: Pool;
-  linearUsdt2: Pool;
-  bbausd2Gauge: string;
-  DAI: string;
-  USDC: string;
-  USDT: string;
-}
-
-interface NewtorkConstants {
-  Mainnet: Constants;
-  Goerli: Constants;
-}
 
 type GaugeWithDraw = string;
 type ExitPool = string;
@@ -131,8 +123,13 @@ export interface MigrationAttributes {
 }
 
 export class MigrateStaBal3 {
-  public constants: Constants;
-  constructor(public network: Network, public relayer: Relayer) {
+  public constants;
+
+  constructor(
+    public network: Network,
+    public relayer: Relayer,
+    private from: Pool
+  ) {
     if (!(network === Network.MAINNET || network === Network.GOERLI))
       throw new Error('This is not a supported network');
 
@@ -140,28 +137,32 @@ export class MigrateStaBal3 {
       this.network === Network.MAINNET ? CONSTANTS.Mainnet : CONSTANTS.Goerli;
   }
 
+  /**
+   * Is using gauge relayer to withdraw staked BPT from user to itself
+   *
+   * @returns withdraw call
+   */
   buildWithdraw(migrator: string, amount: string): GaugeWithDraw {
-    /*
-      a) relayer uses allowance to transfer staked bpt from user to itself
-      b) relayer returns staked bpt to get bpt back
-     (steps a) and b) are done automatically by the relayer)
-      TO DO -
-      See relayer GaugeActions.sol
-      Encode gaugeWithdraw
-      GaugeActions gaugeWithdraw(
-          IStakingLiquidityGauge gauge,
-          address sender,
-          address recipient,
-          uint256 amount
-      )
-      gaugeWithdraw(
-        this.constants.staBal3Gauge,
-        migrator,
-        this.constants.relayer,
-        amount
-      );
-      */
-    return '';
+    return gaugeActionsInterface.encodeFunctionData('gaugeWithdraw', [
+      this.constants.staBal3.gauge,
+      migrator,
+      this.constants.relayer,
+      amount,
+    ]);
+  }
+
+  /**
+   * Is using gauge relayer to deposit user's BPT to itself
+   *
+   * @returns deposit call
+   */
+  buildDeposit(migrator: string, amount: OutputReference): GaugeDeposit {
+    return gaugeActionsInterface.encodeFunctionData('gaugeDeposit', [
+      this.constants.bbausd2.gauge,
+      this.constants.relayer,
+      migrator,
+      amount,
+    ]);
   }
 
   /**
@@ -235,7 +236,7 @@ export class MigrateStaBal3 {
         poolId: this.constants.linearDai1.id,
         assetInIndex: 0,
         assetOutIndex: 1,
-        amount: outputReferences[0].key.toString(),
+        amount: outputReferences[0].key.toString(), // exitPool amount of DAI subpool..
         userData: '0x',
       },
       {
@@ -256,7 +257,7 @@ export class MigrateStaBal3 {
         poolId: this.constants.linearUsdc1.id,
         assetInIndex: 3,
         assetOutIndex: 4,
-        amount: outputReferences[1].key.toString(),
+        amount: outputReferences[1].key.toString(), // exitPool amount of DAI subpool..
         userData: '0x',
       },
       {
@@ -277,7 +278,7 @@ export class MigrateStaBal3 {
         poolId: this.constants.linearUsdt1.id,
         assetInIndex: 6,
         assetOutIndex: 7,
-        amount: outputReferences[2].key.toString(),
+        amount: outputReferences[2].key.toString(), // exitPool amount of DAI subpool..
         userData: '0x',
       },
       {
@@ -358,30 +359,6 @@ export class MigrateStaBal3 {
       call: encodedBatchSwap,
       bptAmountOut: bptOut,
     };
-  }
-
-  buildDeposit(migrator: string, bptAmount: OutputReference): GaugeDeposit {
-    /*
-        f) relayer stakes bb-a-usd-bpt
-        g) relayer sends staked bpt to user
-        (steps f) and g) are done automatically by the relayer)
-        TO DO -
-        Encode gaugeDeposit
-        GaugeActions gaugeDeposit(
-            IStakingLiquidityGauge gauge,
-            address sender,
-            address recipient,
-            uint256 amount
-        )
-        Uses chainedReference from previous action for amount
-        gaugeDeposit(
-            this.constants.bbausd2Gauge,
-            this.constants.relayer,
-            migrator,
-            bptAmount
-        )
-        */
-    return '';
   }
 
   buildMigration(

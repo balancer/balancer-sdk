@@ -1,15 +1,18 @@
 import { Contract } from '@ethersproject/contracts';
 import { defaultAbiCoder } from '@ethersproject/abi';
-import { MaxUint256 } from '@ethersproject/constants';
+import { MaxUint256, Zero } from '@ethersproject/constants';
 import { Network } from '@/lib/constants/network';
 import { Relayer, OutputReference } from '../relayer/relayer.module';
 import { SwapType, FundManagement, BatchSwapStep } from '../swaps/types';
 
 // TO DO - Ask Nico to update Typechain?
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
+// we are missing encodeGaugeDeposit / Withdraw functions
 import { JsonRpcProvider } from '@ethersproject/providers';
 
-import { Constants, CONSTANTS } from './migrateStaBal3';
+import { CONSTANTS, gaugeActionsInterface } from './migrateStaBal3';
+import { Pool } from '@/types';
+import { BigNumber } from '@ethersproject/bignumber';
 
 type GaugeWithDraw = string;
 type BatchSwap = string;
@@ -23,8 +26,13 @@ export interface MigrationAttributes {
 }
 
 export class MigrateBbausd1 {
-  public constants: Constants;
-  constructor(public network: Network, public relayer: Relayer) {
+  public constants;
+
+  constructor(
+    public network: Network,
+    public relayer: Relayer,
+    private from: Pool
+  ) {
     if (!(network === Network.MAINNET || network === Network.GOERLI))
       throw new Error('This is not a supported network');
 
@@ -32,52 +40,32 @@ export class MigrateBbausd1 {
       this.network === Network.MAINNET ? CONSTANTS.Mainnet : CONSTANTS.Goerli;
   }
 
+  /**
+   * Is using gauge relayer to withdraw staked BPT from user to itself
+   *
+   * @returns withdraw call
+   */
   buildWithdraw(migrator: string, amount: string): GaugeWithDraw {
-    /*
-          a) relayer uses allowance to transfer staked bpt from user to itself
-          b) relayer returns staked bpt to get bpt back
-         (steps a) and b) are done automatically by the relayer)
-          TO DO -
-          See relayer GaugeActions.sol
-          Encode gaugeWithdraw
-          GaugeActions gaugeWithdraw(
-              IStakingLiquidityGauge gauge,
-              address sender,
-              address recipient,
-              uint256 amount
-          )
-          gaugeWithdraw(
-            this.constants.bbausd1Gauge,
-            migrator,
-            this.constants.relayer,
-            amount
-          );
-          */
-    return '';
+    return gaugeActionsInterface.encodeFunctionData('gaugeWithdraw', [
+      this.constants.bbausd1.gauge,
+      migrator,
+      this.constants.relayer,
+      amount,
+    ]);
   }
 
-  buildDeposit(migrator: string, bptAmount: OutputReference): GaugeDeposit {
-    /*
-            f) relayer stakes bb-a-usd-bpt
-            g) relayer sends staked bpt to user
-            (steps f) and g) are done automatically by the relayer)
-            TO DO -
-            Encode gaugeDeposit
-            GaugeActions gaugeDeposit(
-                IStakingLiquidityGauge gauge,
-                address sender,
-                address recipient,
-                uint256 amount
-            )
-            Uses chainedReference from previous action for amount
-            gaugeDeposit(
-                this.constants.bbausd2Gauge,
-                this.constants.relayer,
-                migrator,
-                bptAmount
-            )
-            */
-    return '';
+  /**
+   * Is using gauge relayer to deposit user's BPT to itself
+   *
+   * @returns deposit call
+   */
+  buildDeposit(migrator: string, amount: OutputReference): GaugeDeposit {
+    return gaugeActionsInterface.encodeFunctionData('gaugeDeposit', [
+      this.constants.bbausd2.gauge,
+      this.constants.relayer,
+      migrator,
+      amount,
+    ]);
   }
 
   /**
@@ -94,12 +82,35 @@ export class MigrateBbausd1 {
     call: BatchSwap;
     bbausd2AmountsReference: OutputReference;
   } {
+    const { tokens } = this.from;
+
+    // Assuming 1:1 exchange rates between tokens
+    // TODO: Fetch current prices, or use price or priceRate from subgraph?
+    const totalLiquidity = tokens.reduce(
+      (sum, token) => sum.add(BigNumber.from(token.balance)),
+      Zero
+    );
+
+    const weights = Object.fromEntries(
+      tokens.map((token) => [
+        token.symbol,
+        BigNumber.from(token.balance).div(totalLiquidity),
+      ])
+    );
+
     // bbausd1[bbausd1]blinear1[linear1]stable[linear2]blinear2[bbausd2]bbausd2 and then do that proportionally for each underlying stable.
     // TO DO - Will swap order matter here? John to ask Fernando.
-    // TO DO - Need to split BPT amount proportionally
-    const daiBptAmt = '';
-    const usdcBptAmt = '';
-    const usdtBptAmt = '';
+
+    // Split BPT amount proportionally:
+    const daiBptAmt = BigNumber.from(bptAmount)
+      .mul(weights['bb-a-DAI'])
+      .toString();
+    const usdcBptAmt = BigNumber.from(bptAmount)
+      .mul(weights['bb-a-USDC'])
+      .toString();
+    const usdtBptAmt = BigNumber.from(bptAmount)
+      .mul(weights['bb-a-USDT'])
+      .toString();
 
     const swaps: BatchSwapStep[] = [
       {
@@ -187,6 +198,7 @@ export class MigrateBbausd1 {
         userData: '0x',
       },
     ];
+
     const assets = [
       this.constants.bbausd1.address,
       this.constants.linearDai1.address,
@@ -200,6 +212,7 @@ export class MigrateBbausd1 {
       this.constants.USDT,
       this.constants.linearUsdt2.address,
     ];
+
     // For now assuming ref amounts will be safe - should we add more accurate?
     const limits = [
       bptAmount,
@@ -297,6 +310,7 @@ export class MigrateBbausd1 {
   async queryMigration(
     migrator: string,
     amount: string,
+    poolData: Pool,
     provider: JsonRpcProvider
   ): Promise<string> {
     const migrationData = this.buildMigration(migrator, amount, '0');
