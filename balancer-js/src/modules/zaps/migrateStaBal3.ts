@@ -1,7 +1,7 @@
 import { Contract } from '@ethersproject/contracts';
 import { defaultAbiCoder, Interface } from '@ethersproject/abi';
 import { MaxUint256 } from '@ethersproject/constants';
-import { ExitPoolRequest } from '@/types';
+import { Pool, ExitPoolRequest } from '@/types';
 import { Network } from '@/lib/constants/network';
 import { Relayer, OutputReference } from '../relayer/relayer.module';
 import { StablePoolEncoder } from '@/pool-stable';
@@ -294,7 +294,7 @@ export class MigrateStaBal3 {
         assetOutIndex: 3,
         amount: '0',
         userData: '0x',
-      }
+      },
     ];
     const assets = [
       this.constants.linearDai1.address,
