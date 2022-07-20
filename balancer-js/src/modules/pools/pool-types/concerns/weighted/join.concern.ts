@@ -1,6 +1,5 @@
 import { parseUnits } from '@ethersproject/units';
-import OldBigNumber from 'bignumber.js';
-import * as SDK from '@georgeroman/balancer-v2-pools';
+import { WeightedMaths } from '@balancer-labs/sor';
 
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import {
@@ -90,12 +89,12 @@ export class WeightedPoolJoin implements JoinConcern {
       amountsIn,
       wrappedNativeAsset
     );
-    const expectedBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
-      sortedCalcInputs.balances.map((b) => new OldBigNumber(b)),
-      sortedCalcInputs.weights.map((w) => new OldBigNumber(w)),
-      sortedCalcInputs.amounts.map((a) => new OldBigNumber(a)),
-      new OldBigNumber(parsedPoolInfo.totalShares),
-      new OldBigNumber(parsedPoolInfo.swapFee)
+    const expectedBPTOut = WeightedMaths._calcBptOutGivenExactTokensIn(
+      sortedCalcInputs.balances.map((b) => BigInt(b)),
+      sortedCalcInputs.weights.map((w) => BigInt(w)),
+      sortedCalcInputs.amounts.map((a) => BigInt(a)),
+      BigInt(parsedPoolInfo.totalShares),
+      BigInt(parsedPoolInfo.swapFee)
     ).toString();
 
     const minBPTOut = subSlippage(
