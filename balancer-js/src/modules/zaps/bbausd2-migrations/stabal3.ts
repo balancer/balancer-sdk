@@ -86,7 +86,7 @@ export class StaBal3Builder {
       assets,
       minAmountsOut: ['0', '0', '0'],
       userData,
-      toInternalBalance: false,
+      toInternalBalance: true,
       poolId: this.addresses.staBal3.id,
       poolKind: 0, // This will always be 0 to match supported Relayer types
       sender: migrator,
@@ -172,8 +172,8 @@ export class StaBal3Builder {
     const funds: FundManagement = {
       sender: this.addresses.relayer,
       recipient: this.addresses.relayer,
-      fromInternalBalance: false,
-      toInternalBalance: false,
+      fromInternalBalance: true,
+      toInternalBalance: true,
     };
 
     const encodedBatchSwap = Relayer.encodeBatchSwap({
