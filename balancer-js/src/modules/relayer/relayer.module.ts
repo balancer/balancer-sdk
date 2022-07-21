@@ -47,7 +47,7 @@ export class Relayer {
     recipient: string,
     amount: string
   ): string {
-    return relayerLibrary.encodeFunctionData('gaugeDeposit', [
+    return relayerLibrary.encodeFunctionData('gaugeWithdraw', [
       gaugeAddress,
       sender,
       recipient,
