@@ -8,8 +8,11 @@ import {
   BZERO,
   _computeScalingFactor,
   _upscale,
+  SolidityMaths,
 } from '@/lib/utils/solidityMaths';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { bptSpotPrice } from '../stable/priceImpact.concern';
+import { BigNumber } from 'ethers';
 
 export class PhantomStablePriceImpact implements PriceImpactConcern {
   /**
@@ -27,7 +30,57 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
     const tokensList = cloneDeep(pool.tokensList);
     const bptIndex = tokensList.findIndex((token) => token == pool.address);
     tokensList.splice(bptIndex, 1);
+    if (tokenAmounts.length !== tokensList.length)
+      throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
+    const totalShares = BigInt(phantomStablePool.totalShares.toString());
+    const balances = phantomStablePool.tokens.map((token) =>
+      parseToBigInt18(token.balance)
+    );
+    balances.splice(bptIndex, 1);
+    const priceRates = phantomStablePool.tokens.map((token) =>
+      parseToBigInt18(token.priceRate)
+    );
+    const balancesScaled = balances.map((balance, i) =>
+      SolidityMaths.mulDownFixed(balance, priceRates[i])
+    );
     let bptZeroPriceImpact = BZERO;
+    for (let i = 0; i < tokensList.length; i++) {
+      const price =
+        (bptSpotPrice(
+          phantomStablePool.amp.toBigInt(), // this already includes the extra digits from precision
+          balancesScaled,
+          totalShares,
+          i
+        ) *
+          priceRates[i]) /
+        ONE;
+      const scalingFactor = _computeScalingFactor(
+        BigInt(pool.tokens[i].decimals)
+      );
+      const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
+      const newTerm = (price * amountUpscaled) / ONE;
+      bptZeroPriceImpact += newTerm;
+    }
+    return bptZeroPriceImpact;
+  }
+
+  // This alternative function should compute the same result, but it does not.
+  bptZeroPriceImpactAlt(
+    pool: SubgraphPoolBase,
+    tokenAmounts: bigint[]
+  ): bigint {
+    if (tokenAmounts.length !== pool.tokensList.length - 1)
+      throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
+
+    // upscales amp, swapfee, totalshares
+    const phantomStablePool = PhantomStablePool.fromPool(pool);
+    const tokensList = cloneDeep(pool.tokensList);
+    const decimals = phantomStablePool.tokens.map((token) => token.decimals);
+    const bptIndex = tokensList.findIndex((token) => token == pool.address);
+    tokensList.splice(bptIndex, 1);
+    decimals.splice(bptIndex, 1);
+    let bptZeroPriceImpact = BZERO;
+    phantomStablePool.swapFee = BigNumber.from(0); // sets swap fee to zero
     for (let i = 0; i < tokensList.length; i++) {
       // Scales and applies rates to balances
       const poolPairData = phantomStablePool.parsePoolPairData(
@@ -39,10 +92,9 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
           ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, ZERO)
           .toString()
       );
-      const scalingFactor = _computeScalingFactor(
-        BigInt(pool.tokens[i].decimals)
-      );
+      const scalingFactor = _computeScalingFactor(BigInt(decimals[i]));
       const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
+      console.log(price);
       bptZeroPriceImpact += (amountUpscaled * price) / ONE;
     }
     return bptZeroPriceImpact;
