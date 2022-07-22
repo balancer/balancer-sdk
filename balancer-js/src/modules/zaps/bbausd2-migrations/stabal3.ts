@@ -32,21 +32,24 @@ export class StaBal3Builder {
     data: string;
   } {
     const { assetOrder } = this.addresses.staBal3;
-
-    let calls = [
-      this.buildExit(userAddress, amount),
-      ...assetOrder.map((name) => {
-        const tokenAddress = this.addresses[
-          name as keyof typeof this.addresses
-        ] as string;
-        return this.buildApproveVault(tokenAddress);
-      }),
-      this.buildSwap(expectedAmount, !staked ? userAddress : undefined),
-    ];
+    let calls: string[] = [];
 
     if (authorisation) {
-      calls = [this.buildSetRelayerApproval(authorisation), ...calls];
+      calls = [this.buildSetRelayerApproval(authorisation)];
     }
+
+    calls = [
+      ...calls,
+      this.buildExit(userAddress, amount),
+      // TODO: Let's double check with setting approveVault to 0 if we need that or not, or ask Nico ;)
+      // ...assetOrder.map((name) => {
+      //   const tokenAddress = this.addresses[
+      //     name as keyof typeof this.addresses
+      //   ] as string;
+      //   return this.buildApproveVault(tokenAddress);
+      // }),
+      this.buildSwap(expectedAmount, !staked ? userAddress : undefined),
+    ];
 
     if (staked) {
       calls = [

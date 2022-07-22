@@ -104,6 +104,8 @@ describe('execution', async () => {
       .ERC20(addresses.staBal3.address, provider)
       .connect(holder)
       .transfer(signerAddress, balance);
+
+    // TODO: Stake them
   });
 
   it('should transfer tokens from stable to boosted', async () => {

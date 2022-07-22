@@ -31,6 +31,7 @@ export class MigrateStaBal3 {
    * @param userAddress
    * @param amount Amount of staBal3 BPT.
    * @param authorisation Approving relayer to access tokens in vault.
+   * @param staked BPT are staked.
    * @returns BPT amount from swap joining a pool.
    */
   async queryMigration(
