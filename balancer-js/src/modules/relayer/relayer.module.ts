@@ -41,6 +41,25 @@ export class Relayer {
     }
   }
 
+  static encodeApproveVault(tokenAddress: string, maxAmount: string): string {
+    return relayerLibrary.encodeFunctionData('approveVault', [
+      tokenAddress,
+      maxAmount,
+    ]);
+  }
+
+  static encodeSetRelayerApproval(
+    relayerAdress: string,
+    approved: boolean,
+    authorisation: string
+  ): string {
+    return relayerLibrary.encodeFunctionData('setRelayerApproval', [
+      relayerAdress,
+      approved,
+      authorisation,
+    ]);
+  }
+
   static encodeGaugeWithdraw(
     gaugeAddress: string,
     sender: string,
