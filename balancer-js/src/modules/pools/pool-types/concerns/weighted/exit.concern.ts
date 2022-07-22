@@ -81,7 +81,10 @@ export class WeightedPoolExit implements ExitConcern {
         new OldBigNumber(parsedSwapFee)
       ).toString();
 
-      minAmountsOut[singleTokenMaxOutIndex] = amountOut;
+      minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
+        BigNumber.from(amountOut),
+        BigNumber.from(slippage)
+      ).toString();
 
       userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(
         bptIn,
