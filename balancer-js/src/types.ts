@@ -198,6 +198,7 @@ export interface Pool {
   feesSnapshot?: string;
   boost?: string;
   symbol?: string;
+  amp?: string;
 }
 
 export interface PoolModel extends Pool {
