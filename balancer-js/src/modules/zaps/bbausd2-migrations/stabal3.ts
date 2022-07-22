@@ -32,6 +32,7 @@ export class StaBal3Builder {
     data: string;
   } {
     const { assetOrder } = this.addresses.staBal3;
+
     let calls = [
       this.buildExit(userAddress, amount),
       ...assetOrder.map((name) => {
@@ -40,7 +41,7 @@ export class StaBal3Builder {
         ] as string;
         return this.buildApproveVault(tokenAddress);
       }),
-      this.buildSwap(expectedAmount),
+      this.buildSwap(expectedAmount, !staked ? userAddress : undefined),
     ];
 
     if (authorisation) {
@@ -113,7 +114,7 @@ export class StaBal3Builder {
    *
    * @returns BatchSwap call.
    */
-  buildSwap(expectedBptReturn: string): string {
+  buildSwap(expectedBptReturn: string, recipient?: string): string {
     const assets = [
       this.addresses.DAI,
       this.addresses.linearDai2.address,
@@ -188,9 +189,9 @@ export class StaBal3Builder {
     // Swap to/from Relayer
     const funds: FundManagement = {
       sender: this.addresses.relayer,
-      recipient: this.addresses.relayer,
+      recipient: recipient ? recipient : this.addresses.relayer,
       fromInternalBalance: true,
-      toInternalBalance: true,
+      toInternalBalance: recipient ? false : true,
     };
 
     const encodedBatchSwap = Relayer.encodeBatchSwap({

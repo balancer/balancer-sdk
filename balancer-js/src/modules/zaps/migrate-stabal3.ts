@@ -38,7 +38,13 @@ export class MigrateStaBal3 {
     authorisation: string,
     staked: boolean
   ): Promise<{ to: string; data: string; decode: (output: string) => string }> {
-    const request = this.builder.calldata(amount, '0', userAddress, staked);
+    const request = this.builder.calldata(
+      amount,
+      '0',
+      userAddress,
+      staked,
+      authorisation
+    );
 
     return {
       to: request.to,

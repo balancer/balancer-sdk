@@ -2,13 +2,12 @@ import dotenv from 'dotenv';
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 import { Network, RelayerAuthorization } from '@/.';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { ADDRESSES } from './bbausd2-migrations/addresses';
 import { MigrateStaBal3 as Migration } from './migrate-stabal3';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 import { parseEther, formatEther } from '@ethersproject/units';
-import { ContractTransaction } from '@ethersproject/contracts';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256 } from '@ethersproject/constants';
 
@@ -27,12 +26,16 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
+const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
 const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
 const { contracts } = new Contracts(5, provider);
 const migration = new Migration(network, provider);
+
+const getErc20Balance = (token: string, holder: string): Promise<BigNumber> =>
+  contracts.ERC20(token, provider).balanceOf(holder);
 
 // https://hardhat.org/hardhat-network/docs/guides/forking-other-networks#impersonating-accounts
 // WARNING: don't use hardhat SignerWithAddress to sendTransactions!!
@@ -44,42 +47,36 @@ const impersonateAccount = async (account: string) => {
   return provider.getSigner(account);
 };
 
-const approveRelayer = async (
-  address: string,
-  signer: JsonRpcSigner,
-  withSignature = false
-): Promise<ContractTransaction> => {
-  let calldata = contracts.vault.interface.encodeFunctionData(
+const signRelayerApproval = async (
+  signerAddress: string,
+  signer: JsonRpcSigner
+): Promise<string> => {
+  const approval = contracts.vault.interface.encodeFunctionData(
     'setRelayerApproval',
-    [address, addresses.relayer, true]
+    [signerAddress, addresses.relayer, true]
   );
 
-  if (withSignature) {
-    const signature =
-      await RelayerAuthorization.signSetRelayerApprovalAuthorization(
-        contracts.vault,
-        signer,
-        address,
-        calldata
-      );
-    calldata = RelayerAuthorization.encodeCalldataAuthorization(
-      calldata,
-      MaxUint256,
-      signature
+  const signature =
+    await RelayerAuthorization.signSetRelayerApprovalAuthorization(
+      contracts.vault,
+      signer,
+      addresses.relayer,
+      approval
     );
-  }
 
-  // Hardcoding a gas limit prevents (slow) gas estimation
-  return signer.sendTransaction({
-    to: contracts.vault.address,
-    data: calldata,
-    gasLimit: MAX_GAS_LIMIT,
-  });
+  const calldata = RelayerAuthorization.encodeCalldataAuthorization(
+    '0x',
+    MaxUint256,
+    signature
+  );
+
+  return calldata;
 };
 
-// Test Scenarios
-
 describe('execution', async () => {
+  let signer: JsonRpcSigner;
+  let signerAddress: string;
+
   before(async function () {
     this.timeout(20000);
 
@@ -91,45 +88,62 @@ describe('execution', async () => {
         },
       },
     ]);
+
+    signer = provider.getSigner();
+    signerAddress = await signer.getAddress();
+
+    // Transfer tokens from existing user account to signer
+    // We need that to test signatures, because hardhat doesn't have access to private keys on impersonated accounts
+    const holder = await impersonateAccount(holderAddress);
+    const balance = await getErc20Balance(
+      addresses.staBal3.address,
+      holderAddress
+    );
+    await contracts
+      .ERC20(addresses.staBal3.address, provider)
+      .connect(holder)
+      .transfer(signerAddress, balance);
   });
 
   it('should transfer tokens from stable to boosted', async () => {
-    const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
-    const holder = await impersonateAccount(holderAddress);
+    // Store balancer before migration
+    const before = {
+      from: await getErc20Balance(addresses.staBal3.address, signerAddress),
+      to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
+    };
 
-    const balance = await contracts
-      .ERC20(addresses.staBal3.address, provider)
-      .balanceOf(holderAddress);
-
-    // Approval
-    await (
-      await contracts.vault
-        .connect(holder)
-        .setRelayerApproval(holderAddress, addresses.relayer, true)
-    ).wait();
+    // Get authorisation
+    const authorisation = await signRelayerApproval(signerAddress, signer);
 
     const query = await migration.queryMigration(
-      holderAddress,
-      balance,
-      '', // can we use signature with relayer?
+      signerAddress,
+      before.from.toString(),
+      authorisation,
       false
     );
 
-    const response = await holder.sendTransaction({
+    const response = await signer.sendTransaction({
       to: query.to,
       data: query.data,
       gasLimit: MAX_GAS_LIMIT,
     });
 
     const reciept = await response.wait();
-    console.log(reciept);
+    console.log('Gas used', reciept.gasUsed.toString());
 
-    const balanceAfterExit = await contracts
-      .ERC20(addresses.staBal3.address, provider)
-      .balanceOf(holderAddress);
+    const after = {
+      from: await getErc20Balance(addresses.staBal3.address, signerAddress),
+      to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
+    };
 
-    console.log(balance, balanceAfterExit);
+    const diffs = {
+      from: after.from.sub(before.from),
+      to: after.to.sub(before.to),
+    };
 
-    expect(balanceAfterExit).to.eq(0);
+    console.log(diffs.from, diffs.to);
+
+    expect(diffs.from).to.eql(before.from.mul(-1));
+    expect(parseFloat(formatEther(diffs.to))).to.be.gt(0);
   }).timeout(20000);
 }).timeout(20000);
