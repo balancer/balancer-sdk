@@ -1,12 +1,11 @@
-import { BalancerSDK } from '@/.';
-import { JsonRpcSigner } from '@ethersproject/providers';
+import { Provider, JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';
 import { balancerVault } from '@/lib/constants/config';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { keccak256 } from '@ethersproject/solidity';
+import { ERC20 } from '@/modules/contracts/ERC20';
 
 export const forkSetup = async (
-  balancer: BalancerSDK,
   signer: JsonRpcSigner, // it's safer to use signer than provider for this
   tokens: string[],
   slots: number[],
@@ -34,7 +33,7 @@ export const forkSetup = async (
       isVyperMapping
     );
     // Approve appropriate allowances so that vault contract can move tokens
-    await approveToken(balancer, tokens[i], balances[i], signer);
+    await approveToken(tokens[i], balances[i], signer);
   }
 };
 
@@ -95,11 +94,10 @@ export const setTokenBalance = async (
  * @param {JsonRpcSigner} signer Account that will have tokens approved
  */
 export const approveToken = async (
-  balancer: BalancerSDK,
   token: string,
   amount: string,
   signer: JsonRpcSigner
 ): Promise<boolean> => {
-  const tokenContract = balancer.contracts.ERC20(token, signer.provider);
+  const tokenContract = ERC20(token, signer.provider);
   return await tokenContract.connect(signer).approve(balancerVault, amount);
 };

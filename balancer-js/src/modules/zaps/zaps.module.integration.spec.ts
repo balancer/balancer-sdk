@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { BalancerSDK, BalancerSdkConfig, Network, Relayer } from '@/.';
+import { Contracts } from '@/modules/contracts/contracts.module';
+import { Network, Relayer } from '@/.';
 import hardhat from 'hardhat';
 
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
@@ -22,30 +23,27 @@ dotenv.config();
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 
-let balancer: BalancerSDK;
-const network = Network.MAINNET;
+const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
-const sdkConfig: BalancerSdkConfig = {
-  network,
-  rpcUrl,
-};
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 
 const gaugeSlots = [1]; // Info fetched using npm package slot20
 
 // Goerli
-// const gaugeAddresses = ['0xf0f572ad66baacDd07d8c7ea3e0E5EFA56a76081']; // Balancer B-50WBTC-50WETH Gauge Deposit
+const gaugeAddresses = ['0xf0f572ad66baacDd07d8c7ea3e0E5EFA56a76081']; // Balancer B-50WBTC-50WETH Gauge Deposit
 // Mainnet
-const gaugeAddresses = ['0x68d019f64a7aa97e2d4e7363aee42251d08124fb']; // Balancer bb-a-USD Gauge Deposit
+// const gaugeAddresses = ['0x68d019f64a7aa97e2d4e7363aee42251d08124fb']; // Balancer bb-a-USD Gauge Deposit
 
 const initialBalance = '1000';
 let signerAddress: string;
 
+const { contracts } = new Contracts(5, provider);
+
 // Setup
 
 const tokenBalance = async (tokenAddress: string) => {
-  const balance: Promise<BigNumber> = balancer.contracts
+  const balance: Promise<BigNumber> = contracts
     .ERC20(tokenAddress, signer.provider)
     .balanceOf(signerAddress);
   return balance;
@@ -64,11 +62,9 @@ const updateBalances = async (addresses: string[]) => {
 describe('zaps execution', async () => {
   before(async function () {
     this.timeout(20000);
-    balancer = new BalancerSDK(sdkConfig);
 
     const isVyperMapping = true; // required for gauge tokens
     await forkSetup(
-      balancer,
       signer,
       gaugeAddresses,
       gaugeSlots,
