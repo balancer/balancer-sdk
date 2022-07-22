@@ -10,6 +10,7 @@ export enum BalancerErrorCode {
   INPUT_OUT_OF_BOUNDS = 'INPUT_OUT_OF_BOUNDS',
   INPUT_LENGTH_MISMATCH = 'INPUT_LENGTH_MISMATCH',
   TOKEN_MISMATCH = 'TOKEN_MISMATCH',
+  MISSING_AMP = 'MISSING_AMP',
   MISSING_DECIMALS = 'MISSING_DECIMALS',
   MISSING_TOKENS = 'MISSING_TOKENS',
   MISSING_WEIGHT = 'MISSING_WEIGHT',
@@ -45,6 +46,8 @@ export class BalancerError extends Error {
         return 'input length mismatch';
       case BalancerErrorCode.TOKEN_MISMATCH:
         return 'token mismatch';
+      case BalancerErrorCode.MISSING_AMP:
+        return 'missing amp';
       case BalancerErrorCode.MISSING_DECIMALS:
         return 'missing decimals';
       case BalancerErrorCode.MISSING_TOKENS:
