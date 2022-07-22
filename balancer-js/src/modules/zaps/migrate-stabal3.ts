@@ -1,5 +1,6 @@
 import { defaultAbiCoder } from '@ethersproject/abi';
 import { Provider } from '@ethersproject/providers';
+import { MaxInt256 } from '@ethersproject/constants';
 import { StaBal3Builder } from './bbausd2-migrations/stabal3';
 
 export class MigrateStaBal3 {
@@ -40,7 +41,7 @@ export class MigrateStaBal3 {
   ): Promise<{ to: string; data: string; decode: (output: string) => string }> {
     const request = this.builder.calldata(
       amount,
-      '0',
+      MaxInt256.toString(),
       userAddress,
       staked,
       authorisation
@@ -52,20 +53,29 @@ export class MigrateStaBal3 {
       decode: (output) =>
         defaultAbiCoder.decode(['int256[]'], output[2])[3].toString(),
     };
-
-    // const tx = await this.provider.call(request);
-
-    // // BPT amount from batchSwap call
-    // return defaultAbiCoder.decode(['int256[]'], tx[2])[3].toString();
   }
 
   buildMigration(
     userAddress: string,
     amount: string,
-    signature: string,
+    expectedBptOut: string,
+    authorisation: string,
     staked: boolean
   ): {
     to: string;
     data: string;
-  } {}
+  } {
+    const request = this.builder.calldata(
+      amount,
+      expectedBptOut,
+      userAddress,
+      staked,
+      authorisation
+    );
+
+    return {
+      to: request.to,
+      data: request.data,
+    };
+  }
 }

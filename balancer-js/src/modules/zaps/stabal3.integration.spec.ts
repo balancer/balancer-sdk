@@ -48,19 +48,20 @@ const impersonateAccount = async (account: string) => {
 };
 
 const signRelayerApproval = async (
+  relayerAddress: string,
   signerAddress: string,
   signer: JsonRpcSigner
 ): Promise<string> => {
   const approval = contracts.vault.interface.encodeFunctionData(
     'setRelayerApproval',
-    [signerAddress, addresses.relayer, true]
+    [signerAddress, relayerAddress, true]
   );
 
   const signature =
     await RelayerAuthorization.signSetRelayerApprovalAuthorization(
       contracts.vault,
       signer,
-      addresses.relayer,
+      relayerAddress,
       approval
     );
 
@@ -93,7 +94,7 @@ describe('execution', async () => {
     signerAddress = await signer.getAddress();
 
     // Transfer tokens from existing user account to signer
-    // We need that to test signatures, because hardhat doesn't have access to private keys on impersonated accounts
+    // We need that to test signatures, because hardhat doesn't have impersonated accounts private keys
     const holder = await impersonateAccount(holderAddress);
     const balance = await getErc20Balance(
       addresses.staBal3.address,
@@ -113,7 +114,11 @@ describe('execution', async () => {
     };
 
     // Get authorisation
-    const authorisation = await signRelayerApproval(signerAddress, signer);
+    const authorisation = await signRelayerApproval(
+      addresses.relayer,
+      signerAddress,
+      signer
+    );
 
     const query = await migration.queryMigration(
       signerAddress,

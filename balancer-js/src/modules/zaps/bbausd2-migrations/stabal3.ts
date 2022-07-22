@@ -183,7 +183,7 @@ export class StaBal3Builder {
       MaxInt256.toString(),
       MaxInt256.toString(),
       MaxInt256.toString(),
-      MaxInt256.toString(), // expectedBptReturn.toString()];
+      expectedBptReturn.toString(),
     ];
 
     // Swap to/from Relayer
