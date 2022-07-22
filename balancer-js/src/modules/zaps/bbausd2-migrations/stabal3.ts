@@ -4,8 +4,8 @@ import { Relayer } from '@/modules/relayer/relayer.module';
 import { ExitPoolRequest } from '@/types';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { Interface } from '@ethersproject/abi';
-import { MaxUint256 } from '@ethersproject/constants';
-// TO DO - Ask Nico to update Typechain?
+import { MaxUint256, MaxInt256 } from '@ethersproject/constants';
+// TODO - Ask Nico to update Typechain?
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
@@ -25,15 +25,27 @@ export class StaBal3Builder {
     amount: string,
     expectedAmount: string,
     userAddress: string,
-    staked: boolean
+    staked: boolean,
+    authorisation?: string
   ): {
     to: string;
     data: string;
   } {
+    const { assetOrder } = this.addresses.staBal3;
     let calls = [
       this.buildExit(userAddress, amount),
+      ...assetOrder.map((name) => {
+        const tokenAddress = this.addresses[
+          name as keyof typeof this.addresses
+        ] as string;
+        return this.buildApproveVault(tokenAddress);
+      }),
       this.buildSwap(expectedAmount),
     ];
+
+    if (authorisation) {
+      calls = [this.buildSetRelayerApproval(authorisation), ...calls];
+    }
 
     if (staked) {
       calls = [
@@ -43,10 +55,9 @@ export class StaBal3Builder {
       ];
     }
 
-    const callData = balancerRelayerInterface.encodeFunctionData(
-      'multicall',
-      calls
-    );
+    const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
+      calls,
+    ]);
 
     return {
       to: this.addresses.relayer,
@@ -67,19 +78,17 @@ export class StaBal3Builder {
     // Assume gaugeWithdraw returns same amount value
     const userData = StablePoolEncoder.exitExactBPTInForTokensOut(amount);
 
-    // TO DO - Tokens have to be in correct order - might not be.
-    // UPDATE: checked PoolBalanceChanged events after exit in etherscan, order checks out for all the transactions
-    const assets = [
-      this.addresses.DAI,
-      this.addresses.USDC,
-      this.addresses.USDT,
-    ];
+    // Goerli and Mainnet has different assets ordering
+    const { assetOrder } = this.addresses.staBal3;
+    const assets = assetOrder.map(
+      (key) => this.addresses[key as keyof typeof this.addresses] as string
+    );
 
     // Ask to store exit outputs for batchSwap of exit is used as input to swaps
     const outputReferences = [
-      { index: 0, key: EXIT_DAI },
-      { index: 1, key: EXIT_USDC },
-      { index: 2, key: EXIT_USDT },
+      { index: assetOrder.indexOf('DAI'), key: EXIT_DAI },
+      { index: assetOrder.indexOf('USDC'), key: EXIT_USDC },
+      { index: assetOrder.indexOf('USDT'), key: EXIT_USDT },
     ];
 
     const callData = Relayer.constructExitCall({
@@ -89,7 +98,7 @@ export class StaBal3Builder {
       toInternalBalance: true,
       poolId: this.addresses.staBal3.id,
       poolKind: 0, // This will always be 0 to match supported Relayer types
-      sender: migrator,
+      sender: migrator, // this.addresses.relayer,
       recipient: this.addresses.relayer,
       outputReferences,
       exitPoolRequest: {} as ExitPoolRequest,
@@ -166,7 +175,15 @@ export class StaBal3Builder {
     ];
 
     // For now assuming ref amounts will be safe - should we add more accurate?
-    const limits = ['0', '0', '0', '0', '0', '0', expectedBptReturn.toString()];
+    const limits = [
+      MaxInt256.toString(),
+      MaxInt256.toString(),
+      MaxInt256.toString(),
+      MaxInt256.toString(),
+      MaxInt256.toString(),
+      MaxInt256.toString(),
+      MaxInt256.toString(), // expectedBptReturn.toString()];
+    ];
 
     // Swap to/from Relayer
     const funds: FundManagement = {
@@ -215,6 +232,18 @@ export class StaBal3Builder {
       this.addresses.relayer,
       migrator,
       SWAP_RESULT_BBAUSD.toString()
+    );
+  }
+
+  buildApproveVault(token: string): string {
+    return Relayer.encodeApproveVault(token, MaxUint256.toString());
+  }
+
+  buildSetRelayerApproval(authorisation: string): string {
+    return Relayer.encodeSetRelayerApproval(
+      this.addresses.relayer,
+      true,
+      authorisation
     );
   }
 }

@@ -29,19 +29,37 @@ export class MigrateStaBal3 {
    *
    * @param userAddress
    * @param amount Amount of staBal3 BPT.
-   * @param signature Approving relayer to access tokens in vault.
+   * @param authorisation Approving relayer to access tokens in vault.
    * @returns BPT amount from swap joining a pool.
    */
   async queryMigration(
     userAddress: string,
     amount: string,
+    authorisation: string,
+    staked: boolean
+  ): Promise<{ to: string; data: string; decode: (output: string) => string }> {
+    const request = this.builder.calldata(amount, '0', userAddress, staked);
+
+    return {
+      to: request.to,
+      data: request.data,
+      decode: (output) =>
+        defaultAbiCoder.decode(['int256[]'], output[2])[3].toString(),
+    };
+
+    // const tx = await this.provider.call(request);
+
+    // // BPT amount from batchSwap call
+    // return defaultAbiCoder.decode(['int256[]'], tx[2])[3].toString();
+  }
+
+  buildMigration(
+    userAddress: string,
+    amount: string,
     signature: string,
     staked: boolean
-  ): Promise<string> {
-    const request = this.builder.calldata(amount, '0', userAddress, staked);
-    const tx = await this.provider.call(request);
-
-    // BPT amount from batchSwap call
-    return defaultAbiCoder.decode(['int256[]'], tx[2])[3].toString();
-  }
+  ): {
+    to: string;
+    data: string;
+  } {}
 }

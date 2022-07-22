@@ -1,5 +1,5 @@
 import { Network } from '@/lib/constants/network';
-import { MigrateStaBal3, MigrationAttributes } from './migrateStaBal3';
+import { MigrateStaBal3, MigrationAttributes } from './migrate-stabal3';
 import { Relayer } from '../relayer/relayer.module';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Pool } from '@/types';

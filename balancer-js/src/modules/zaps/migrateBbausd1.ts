@@ -10,7 +10,7 @@ import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 // we are missing encodeGaugeDeposit / Withdraw functions
 import { JsonRpcProvider } from '@ethersproject/providers';
 
-import { CONSTANTS, gaugeActionsInterface } from './migrateStaBal3';
+import { CONSTANTS, gaugeActionsInterface } from './migrate-stabal3';
 import { Pool } from '@/types';
 import { BigNumber } from '@ethersproject/bignumber';
 

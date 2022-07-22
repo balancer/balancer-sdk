@@ -5,6 +5,7 @@ export const ADDRESSES = {
       id: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063',
       address: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42',
       gauge: '0x34f33cdaed8ba0e1ceece80e5f4a73bcf234cfac',
+      assetOrder: ['DAI', 'USDC', 'USDT'],
     },
     bbausd1: {
       id: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe',
@@ -50,6 +51,7 @@ export const ADDRESSES = {
       id: '0xdcdd4a3d36dec8d57594e89763d069a7e9b223e2000000000000000000000062',
       address: '0xdcdd4a3d36dec8d57594e89763d069a7e9b223e2',
       gauge: '',
+      assetOrder: ['USDT', 'DAI', 'USDC'],
     },
     bbausd1: {
       id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
@@ -85,8 +87,8 @@ export const ADDRESSES = {
       id: '0xefd681a82970ac5d980b9b2d40499735e7bf3f1f00000000000000000000005e',
       address: '0xefd681a82970ac5d980b9b2d40499735e7bf3f1f',
     },
+    USDT: '0x1f1f156e0317167c11aa412e3d1435ea29dc3cce',
     DAI: '0x8c9e6c40d3402480ace624730524facc5482798c',
     USDC: '0xe0c9275e44ea80ef17579d33c55136b7da269aeb',
-    USDT: '0x1f1f156e0317167c11aa412e3d1435ea29dc3cce',
   },
 };
