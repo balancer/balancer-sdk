@@ -9,10 +9,10 @@ import { MaxUint256 } from '@ethersproject/constants';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
-const EXIT_DAI = Relayer.toChainedReference('exit_dai');
-const EXIT_USDC = Relayer.toChainedReference('exit_usdc');
-const EXIT_USDT = Relayer.toChainedReference('exit_usdt');
-const SWAP_RESULT_BBAUSD = Relayer.toChainedReference('swap_result_bbausd');
+const EXIT_DAI = Relayer.toChainedReference('21');
+const EXIT_USDC = Relayer.toChainedReference('22');
+const EXIT_USDT = Relayer.toChainedReference('23');
+const SWAP_RESULT_BBAUSD = Relayer.toChainedReference('24');
 
 export class StaBal3Builder {
   private addresses;
