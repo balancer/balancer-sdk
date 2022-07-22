@@ -24,17 +24,19 @@ describe('stable pool price impact', () => {
   context('bpt zero price impact', () => {
     it('test1', () => {
       const pool = mockPoolDataService.getPool(staBal3Id);
-      const tokenAmounts = [
+      const proportionalTokenAmounts = [
         BigInt('629870162919981039400158'),
         BigInt('615159929697'),
         BigInt('641181657318'),
       ];
 
-      const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
+      const proportionalBptZeroPI = priceImpactCalc.bptZeroPriceImpact(
         pool,
-        tokenAmounts
+        proportionalTokenAmounts
       );
-      expect(bptZeroPriceImpact.toString()).to.eq('1875386353951864923721207');
+      expect(proportionalBptZeroPI.toString()).to.eq(
+        '1875386353951864923721207'
+      );
     });
     it('test2', () => {
       const pool = mockPoolDataService.getPool(staBal3Id);

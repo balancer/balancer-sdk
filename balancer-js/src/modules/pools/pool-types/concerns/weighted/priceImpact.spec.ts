@@ -34,6 +34,16 @@ describe('weighted pool price impact', () => {
         tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('2362847643421361281550');
+
+      const proportionalTokenAmounts = [
+        BigInt('244477477399253547632406'),
+        BigInt('125240456379058423162'),
+      ];
+      const proportionalBptZeroPI = priceImpactCalc.bptZeroPriceImpact(
+        pool,
+        proportionalTokenAmounts
+      );
+      expect(proportionalBptZeroPI.toString()).to.eq('4931900186642428185328');
     });
     it('three token pool', () => {
       const threeTokensPoolId =
@@ -50,6 +60,17 @@ describe('weighted pool price impact', () => {
         tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('876361770363362937782');
+
+      const proportionalTokenAmounts = [
+        BigInt('2008674590910876751911'),
+        BigInt('1980591720094174457'),
+        BigInt('383499316375739080555'),
+      ];
+      const proportionalBptZeroPI = priceImpactCalc.bptZeroPriceImpact(
+        pool,
+        proportionalTokenAmounts
+      );
+      expect(proportionalBptZeroPI.toString()).to.eq('279707470176761335097');
     });
   });
 
