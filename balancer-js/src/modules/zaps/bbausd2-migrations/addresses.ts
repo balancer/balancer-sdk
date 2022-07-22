@@ -18,16 +18,16 @@ export const ADDRESSES = {
       gauge: '',
     },
     linearUsdc1: {
-      id: '',
-      address: 'N/A',
+      id: '0x9210f1204b5a24742eba12f710636d76240df3d00000000000000000000000fc',
+      address: '0x9210F1204b5a24742Eba12f710636D76240dF3d0',
     },
     linearDai1: {
-      id: '',
-      address: 'N/A',
+      id: '0x804cdb9116a10bb78768d3252355a1b18067bf8f0000000000000000000000fb',
+      address: '0x804CdB9116a10bB78768D3252355a1b18067bF8f',
     },
     linearUsdt1: {
-      id: '',
-      address: 'N/A',
+      id: '0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c0000000000000000000000fd',
+      address: '0x2BBf681cC4eb09218BEe85EA2a5d3D13Fa40fC0C',
     },
     linearUsdc2: {
       id: '',
