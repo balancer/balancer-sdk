@@ -1,0 +1,79 @@
+import dotenv from 'dotenv';
+import { expect } from 'chai';
+import { Network } from '@/.';
+import hardhat from 'hardhat';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { forkSetup } from '@/test/lib/utils';
+import { Contracts } from '@/modules/contracts/contracts.module';
+
+/*
+ * Testing on GOERLI
+ * - Update hardhat.config.js with chainId = 5
+ * - Update ALCHEMY_URL on .env with a goerli api key
+ * - Run goerli node on terminal: yarn run node
+ * - Change `network` to Network.GOERLI
+ * - Provide gaugeAddresses from goerli which can be found on subgraph: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-gauges-goerli
+ */
+
+dotenv.config();
+
+const { ALCHEMY_URL: jsonRpcUrl } = process.env;
+const { ethers } = hardhat;
+
+const network = Network.GOERLI;
+const rpcUrl = 'http://127.0.0.1:8545';
+const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
+const signer = provider.getSigner();
+
+const gaugeSlots = [1]; // Info fetched using npm package slot20
+
+// Goerli
+const gaugeAddresses = ['0xf0f572ad66baacDd07d8c7ea3e0E5EFA56a76081']; // Balancer B-50WBTC-50WETH Gauge Deposit
+// Mainnet
+// const gaugeAddresses = ['0x68d019f64a7aa97e2d4e7363aee42251d08124fb']; // Balancer bb-a-USD Gauge Deposit
+
+const initialBalance = '1000';
+let signerAddress: string;
+
+const { contracts } = new Contracts(5, provider);
+// Setup
+
+const tokenBalance = async (tokenAddress: string) => {
+  const balance: Promise<BigNumber> = contracts
+    .ERC20(tokenAddress, signer.provider)
+    .balanceOf(signerAddress);
+  return balance;
+};
+
+const updateBalances = async (addresses: string[]) => {
+  const balances = [];
+  for (let i = 0; i < addresses.length; i++) {
+    balances[i] = tokenBalance(addresses[i]);
+  }
+  return Promise.all(balances);
+};
+
+// Test Scenarios
+
+describe('execution', async () => {
+  before(async function () {
+    this.timeout(20000);
+    const isVyperMapping = true; // required for gauge tokens
+    await forkSetup(
+      signer,
+      gaugeAddresses,
+      gaugeSlots,
+      [parseFixed(initialBalance, 18).toString()],
+      jsonRpcUrl as string,
+      isVyperMapping
+    );
+    signerAddress = await signer.getAddress();
+  });
+
+  it('should update balances', async () => {
+    const balances = await updateBalances(gaugeAddresses);
+    for (let i = 0; i < balances.length; i++) {
+      expect(balances[i].eq(parseFixed(initialBalance, 18))).to.be.true;
+    }
+  }).timeout(20000);
+}).timeout(20000);
