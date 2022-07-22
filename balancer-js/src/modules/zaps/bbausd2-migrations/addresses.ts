@@ -50,18 +50,18 @@ export const ADDRESSES = {
     staBal3: {
       id: '0xdcdd4a3d36dec8d57594e89763d069a7e9b223e2000000000000000000000062',
       address: '0xdcdd4a3d36dec8d57594e89763d069a7e9b223e2',
-      gauge: '',
+      gauge: '0xfd364cda96bb7db06b65706182c448a73f0a5f9a',
       assetOrder: ['USDT', 'DAI', 'USDC'],
     },
     bbausd1: {
       id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
       address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
-      gauge: '',
+      gauge: '0xa2d0ea81a47d68598922cd54c59249ff58c2a3ff',
     },
     bbausd2: {
       id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
       address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
-      gauge: '',
+      gauge: '0xa2d0ea81a47d68598922cd54c59249ff58c2a3ff',
     },
     linearUsdc1: {
       id: '0x0595d1df64279ddb51f1bdc405fe2d0b4cc8668100000000000000000000005c',
