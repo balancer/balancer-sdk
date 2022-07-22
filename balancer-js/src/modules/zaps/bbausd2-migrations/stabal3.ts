@@ -79,14 +79,18 @@ export class StaBal3Builder {
    * @returns Encoded exitPool call. Output references.
    */
   buildExit(migrator: string, amount: string): string {
-    // Assume gaugeWithdraw returns same amount value
-    const userData = StablePoolEncoder.exitExactBPTInForTokensOut(amount);
-
     // Goerli and Mainnet has different assets ordering
     const { assetOrder } = this.addresses.staBal3;
     const assets = assetOrder.map(
       (key) => this.addresses[key as keyof typeof this.addresses] as string
     );
+
+    // Assume gaugeWithdraw returns same amount value
+    const userData = StablePoolEncoder.exitExactBPTInForTokensOut(amount);
+    // const userData = StablePoolEncoder.exitExactBPTInForOneTokenOut(
+    //   amount,
+    //   assetOrder.indexOf('DAI')
+    // );
 
     // Ask to store exit outputs for batchSwap of exit is used as input to swaps
     const outputReferences = [
@@ -102,7 +106,8 @@ export class StaBal3Builder {
       toInternalBalance: true,
       poolId: this.addresses.staBal3.id,
       poolKind: 0, // This will always be 0 to match supported Relayer types
-      sender: migrator, // this.addresses.relayer,
+      // sender: this.addresses.relayer, // For staked tokens, because they are sent to relayer first
+      sender: migrator,
       recipient: this.addresses.relayer,
       outputReferences,
       exitPoolRequest: {} as ExitPoolRequest,
@@ -119,16 +124,16 @@ export class StaBal3Builder {
    */
   buildSwap(expectedBptReturn: string, recipient?: string): string {
     const assets = [
+      this.addresses.bbausd2.address,
       this.addresses.DAI,
       this.addresses.linearDai2.address,
       this.addresses.USDC,
       this.addresses.linearUsdc2.address,
       this.addresses.USDT,
       this.addresses.linearUsdt2.address,
-      this.addresses.bbausd2.address,
     ];
 
-    const outputReferences = [{ index: 6, key: SWAP_RESULT_BBAUSD }];
+    const outputReferences = [{ index: 0, key: SWAP_RESULT_BBAUSD }];
 
     // for each linear pool swap -
     // linear1Bpt[linear1]stable[linear2]linear2bpt[bbausd2]bbausd2 Uses chainedReference from previous action for amount.
@@ -136,43 +141,43 @@ export class StaBal3Builder {
     const swaps: BatchSwapStep[] = [
       {
         poolId: this.addresses.linearDai2.id,
-        assetInIndex: 0,
-        assetOutIndex: 1,
+        assetInIndex: 1,
+        assetOutIndex: 2,
         amount: EXIT_DAI.toString(),
         userData: '0x',
       },
       {
         poolId: this.addresses.bbausd2.id,
-        assetInIndex: 1,
-        assetOutIndex: 6,
+        assetInIndex: 2,
+        assetOutIndex: 0,
         amount: '0',
         userData: '0x',
       },
       {
         poolId: this.addresses.linearUsdc2.id,
-        assetInIndex: 2,
-        assetOutIndex: 3,
+        assetInIndex: 3,
+        assetOutIndex: 4,
         amount: EXIT_USDC.toString(),
         userData: '0x',
       },
       {
         poolId: this.addresses.bbausd2.id,
-        assetInIndex: 3,
-        assetOutIndex: 6,
+        assetInIndex: 4,
+        assetOutIndex: 0,
         amount: '0',
         userData: '0x',
       },
       {
         poolId: this.addresses.linearUsdt2.id,
-        assetInIndex: 4,
-        assetOutIndex: 5,
+        assetInIndex: 5,
+        assetOutIndex: 6,
         amount: EXIT_USDT.toString(),
         userData: '0x',
       },
       {
         poolId: this.addresses.bbausd2.id,
-        assetInIndex: 5,
-        assetOutIndex: 6,
+        assetInIndex: 6,
+        assetOutIndex: 0,
         amount: '0',
         userData: '0x',
       },
@@ -180,13 +185,13 @@ export class StaBal3Builder {
 
     // For now assuming ref amounts will be safe - should we add more accurate?
     const limits = [
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
       expectedBptReturn.toString(),
+      MaxInt256.toString(),
+      MaxInt256.toString(),
+      MaxInt256.toString(),
+      MaxInt256.toString(),
+      MaxInt256.toString(),
+      MaxInt256.toString(),
     ];
 
     // Swap to/from Relayer

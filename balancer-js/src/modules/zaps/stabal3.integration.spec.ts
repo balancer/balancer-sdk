@@ -26,7 +26,8 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
-const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
+// const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
+const holderAddress = '0xb7d222a710169f42ddff2a9a5122bd7c724dc203';
 const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
