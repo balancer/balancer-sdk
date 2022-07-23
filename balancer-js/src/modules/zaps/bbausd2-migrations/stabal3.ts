@@ -31,16 +31,12 @@ export class StaBal3Builder {
     to: string;
     data: string;
   } {
+    const relayer = this.addresses.relayer;
     const { assetOrder } = this.addresses.staBal3;
     let calls: string[] = [];
 
-    if (authorisation) {
-      calls = [this.buildSetRelayerApproval(authorisation)];
-    }
-
     calls = [
-      ...calls,
-      this.buildExit(userAddress, amount),
+      this.buildExit(staked ? relayer : userAddress, relayer, amount),
       // TODO: Let's double check with setting approveVault to 0 if we need that or not, or ask Nico ;)
       // ...assetOrder.map((name) => {
       //   const tokenAddress = this.addresses[
@@ -48,16 +44,24 @@ export class StaBal3Builder {
       //   ] as string;
       //   return this.buildApproveVault(tokenAddress);
       // }),
-      this.buildSwap(expectedAmount, !staked ? userAddress : undefined),
+      this.buildSwap(
+        expectedAmount,
+        staked ? relayer : userAddress,
+        staked ? true : false
+      ),
     ];
 
     if (staked) {
       calls = [
         this.buildWithdraw(userAddress, amount),
         ...calls,
-        this.buildDeposit(userAddress),
+        // this.buildDeposit(userAddress),
       ];
     }
+
+    // if (authorisation) {
+    //   calls = [this.buildSetRelayerApproval(authorisation), ...calls];
+    // }
 
     const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
       calls,
@@ -78,7 +82,7 @@ export class StaBal3Builder {
    * @param amount Amount of staBal3 BPT to exit with.
    * @returns Encoded exitPool call. Output references.
    */
-  buildExit(migrator: string, amount: string): string {
+  buildExit(sender: string, recipient: string, amount: string): string {
     // Goerli and Mainnet has different assets ordering
     const { assetOrder } = this.addresses.staBal3;
     const assets = assetOrder.map(
@@ -106,9 +110,8 @@ export class StaBal3Builder {
       toInternalBalance: true,
       poolId: this.addresses.staBal3.id,
       poolKind: 0, // This will always be 0 to match supported Relayer types
-      // sender: this.addresses.relayer, // For staked tokens, because they are sent to relayer first
-      sender: migrator,
-      recipient: this.addresses.relayer,
+      sender,
+      recipient,
       outputReferences,
       exitPoolRequest: {} as ExitPoolRequest,
     });
@@ -122,7 +125,11 @@ export class StaBal3Builder {
    *
    * @returns BatchSwap call.
    */
-  buildSwap(expectedBptReturn: string, recipient?: string): string {
+  buildSwap(
+    expectedBptReturn: string,
+    recipient: string,
+    toInternalBalance = false
+  ): string {
     const assets = [
       this.addresses.bbausd2.address,
       this.addresses.DAI,
@@ -197,9 +204,9 @@ export class StaBal3Builder {
     // Swap to/from Relayer
     const funds: FundManagement = {
       sender: this.addresses.relayer,
-      recipient: recipient ? recipient : this.addresses.relayer,
+      recipient,
       fromInternalBalance: true,
-      toInternalBalance: recipient ? false : true,
+      toInternalBalance,
     };
 
     const encodedBatchSwap = Relayer.encodeBatchSwap({
@@ -221,10 +228,10 @@ export class StaBal3Builder {
    *
    * @returns withdraw call
    */
-  buildWithdraw(migrator: string, amount: string): string {
+  buildWithdraw(sender: string, amount: string): string {
     return Relayer.encodeGaugeWithdraw(
       this.addresses.staBal3.gauge,
-      migrator,
+      sender,
       this.addresses.relayer,
       amount
     );
@@ -235,11 +242,11 @@ export class StaBal3Builder {
    *
    * @returns deposit call
    */
-  buildDeposit(migrator: string): string {
+  buildDeposit(recipient: string): string {
     return Relayer.encodeGaugeDeposit(
       this.addresses.bbausd2.gauge,
       this.addresses.relayer,
-      migrator,
+      recipient,
       SWAP_RESULT_BBAUSD.toString()
     );
   }

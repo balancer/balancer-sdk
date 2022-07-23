@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import hardhat from 'hardhat';
+import { Contract } from 'ethers';
 import { Network, RelayerAuthorization } from '@/.';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
@@ -14,10 +15,9 @@ import { MaxUint256 } from '@ethersproject/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { Interface } from '@ethersproject/abi';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
-import { Contract } from 'ethers';
+const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
-
-import liquidityGaugeAbi from '@/lib/abi/LiquidityGaugeV5.json';
+const liquidityGauge = new Interface(liquidityGaugeAbi);
 
 /*
  * Testing on GOERLI
@@ -30,17 +30,23 @@ import liquidityGaugeAbi from '@/lib/abi/LiquidityGaugeV5.json';
 
 dotenv.config();
 
-const { ALCHEMY_URL: jsonRpcUrl } = process.env;
+const { ALCHEMY_URL: jsonRpcUrl, FORKED_BLOCK_NUMBER: blockNumber } =
+  process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
-const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
 const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
 const { contracts } = new Contracts(network as number, provider);
 const migration = new Migration(network, provider);
+
+const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
+const poolAddress = '0x16faf9f73748013155b7bc116a3008b57332d1e6';
+const gaugeAddress = '0xf0f572ad66baacdd07d8c7ea3e0e5efa56a76081';
+// const poolAddress = addresses.staBal3.address;
+// const gaugeAddress = addresses.staBal3.gauge;
 
 const getErc20Balance = (token: string, holder: string): Promise<BigNumber> =>
   contracts.ERC20(token, provider).balanceOf(holder);
@@ -93,7 +99,7 @@ describe('execution', async () => {
       {
         forking: {
           jsonRpcUrl,
-          blockNumber: 7269604,
+          blockNumber: blockNumber || 7273825,
         },
       },
     ]);
@@ -104,55 +110,35 @@ describe('execution', async () => {
     // Transfer tokens from existing user account to signer
     // We need that to test signatures, because hardhat doesn't have impersonated accounts private keys
     const holder = await impersonateAccount(holderAddress);
-    const balance = await getErc20Balance(
-      addresses.staBal3.address,
-      holderAddress
-    );
+    const balance = await getErc20Balance(poolAddress, holderAddress);
     await contracts
-      .ERC20(addresses.staBal3.address, provider)
+      .ERC20(poolAddress, provider)
       .connect(holder)
       .transfer(signerAddress, balance);
 
-    // TODO: Stake them
-    const authorisation = await signRelayerApproval(
-      addresses.relayer,
-      signerAddress,
-      signer
-    );
-    const authorisationCall = Relayer.encodeSetRelayerApproval(
-      addresses.relayer,
-      true,
-      authorisation
-    );
-    const approveTokenCall = Relayer.encodeApproveVault(
-      addresses.staBal3.address,
-      MaxUint256.toString()
-    );
-    const depositCall = Relayer.encodeGaugeDeposit(
-      addresses.staBal3.gauge,
-      signerAddress,
-      signerAddress,
-      balance.toString()
-    );
-    const calls = [authorisationCall, approveTokenCall, depositCall];
-    const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
-      calls,
-    ]);
-    const response = await signer.sendTransaction({
-      to: addresses.relayer,
-      data: callData,
-      gasLimit: MAX_GAS_LIMIT,
-    });
-    const recepit = await response.wait();
-    console.log('receipt status should be 1 -> ', recepit.status);
+    // Stake them
+    await (
+      await contracts
+        .ERC20(poolAddress, provider)
+        .connect(signer)
+        .approve(gaugeAddress, MaxUint256)
+    ).wait();
+
+    await (
+      await signer.sendTransaction({
+        to: gaugeAddress,
+        data: liquidityGauge.encodeFunctionData('deposit', [balance]),
+      })
+    ).wait();
   });
 
   it('should transfer tokens from stable to boosted', async () => {
     // Store balance before migration
     const before = {
-      from: await getErc20Balance(addresses.staBal3.address, signerAddress),
-      to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
+      from: await getErc20Balance(gaugeAddress, signerAddress),
+      to: await getErc20Balance(addresses.bbausd2.gauge, signerAddress),
     };
+    // console.log(before);
 
     // Get authorisation
     const authorisation = await signRelayerApproval(
@@ -177,10 +163,17 @@ describe('execution', async () => {
     const reciept = await response.wait();
     console.log('Gas used', reciept.gasUsed.toString());
 
+    const internalBalances1 = await contracts.vault.getInternalBalance(addresses.relayer, [addresses.DAI, addresses.USDC]);
+    const internalBalances2 = await contracts.vault.getInternalBalance(signerAddress, [addresses.DAI, addresses.USDC]);
+    const internalBalances3 = await contracts.vault.getInternalBalance(gaugeAddress, [addresses.DAI, addresses.USDC]);
+    console.log(internalBalances1, internalBalances2, internalBalances3);
+
     const after = {
-      from: await getErc20Balance(addresses.staBal3.address, signerAddress),
-      to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
+      from: await getErc20Balance(gaugeAddress, signerAddress),
+      to: await getErc20Balance(addresses.bbausd2.gauge, signerAddress),
     };
+
+    console.log(before, after);
 
     const diffs = {
       from: after.from.sub(before.from),
