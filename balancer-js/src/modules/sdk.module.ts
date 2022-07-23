@@ -46,7 +46,7 @@ export class BalancerSDK implements BalancerSDKRoot {
       networkConfig.addresses.contracts,
       sor.provider
     );
-    this.zaps = new Zaps(networkConfig.chainId, this.relayer);
+    this.zaps = new Zaps(networkConfig.chainId);
   }
 
   get networkConfig(): BalancerNetworkConfig {
