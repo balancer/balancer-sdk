@@ -11,6 +11,10 @@ import { parseEther, formatEther } from '@ethersproject/units';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256 } from '@ethersproject/constants';
 
+import { Interface } from '@ethersproject/abi';
+const liquidityGaugeAbi = ['function deposit(uint value) payable'];
+const liquidityGauge = new Interface(liquidityGaugeAbi);
+
 /*
  * Testing on GOERLI
  * - Update hardhat.config.js with chainId = 5
@@ -22,18 +26,21 @@ import { MaxUint256 } from '@ethersproject/constants';
 
 dotenv.config();
 
-const { ALCHEMY_URL: jsonRpcUrl } = process.env;
+const { ALCHEMY_URL: jsonRpcUrl, FORK_BLOCK_NUMBER: blockNumber } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
-// const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
-const holderAddress = '0xb7d222a710169f42ddff2a9a5122bd7c724dc203';
 const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
-const { contracts } = new Contracts(5, provider);
+const { contracts } = new Contracts(network as number, provider);
 const migration = new Migration(network, provider);
+
+const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
+const poolAddress = addresses.staBal3.address;
+const gaugeAddress = addresses.staBal3.gauge;
+const relayer = addresses.relayer;
 
 const getErc20Balance = (token: string, holder: string): Promise<BigNumber> =>
   contracts.ERC20(token, provider).balanceOf(holder);
@@ -75,83 +82,154 @@ const signRelayerApproval = async (
   return calldata;
 };
 
+const reset = () =>
+  provider.send('hardhat_reset', [
+    {
+      forking: {
+        jsonRpcUrl,
+        blockNumber: (blockNumber && parseInt(blockNumber)) || 7277540,
+      },
+    },
+  ]);
+
+const move = async (
+  token: string,
+  from: string,
+  to: string
+): Promise<BigNumber> => {
+  const holder = await impersonateAccount(from);
+  const balance = await getErc20Balance(token, from);
+  await contracts.ERC20(token, provider).connect(holder).transfer(to, balance);
+
+  return balance;
+};
+
+const stake = async (
+  signer: JsonRpcSigner,
+  balance: BigNumber
+): Promise<void> => {
+  await (
+    await contracts
+      .ERC20(poolAddress, provider)
+      .connect(signer)
+      .approve(gaugeAddress, MaxUint256)
+  ).wait();
+
+  await (
+    await contracts
+      .ERC20(addresses.bbausd1.address, provider)
+      .connect(signer)
+      .approve(addresses.bbausd1.gauge, MaxUint256)
+  ).wait();
+
+  await (
+    await signer.sendTransaction({
+      to: gaugeAddress,
+      data: liquidityGauge.encodeFunctionData('deposit', [balance]),
+    })
+  ).wait();
+};
+
 describe('execution', async () => {
   let signer: JsonRpcSigner;
   let signerAddress: string;
+  let authorisation: string;
+  let balance: BigNumber;
 
-  before(async function () {
-    this.timeout(20000);
-
-    await provider.send('hardhat_reset', [
-      {
-        forking: {
-          jsonRpcUrl,
-          blockNumber: 7269604,
-        },
-      },
-    ]);
+  beforeEach(async () => {
+    await reset();
 
     signer = provider.getSigner();
     signerAddress = await signer.getAddress();
+    authorisation = await signRelayerApproval(relayer, signerAddress, signer);
 
     // Transfer tokens from existing user account to signer
     // We need that to test signatures, because hardhat doesn't have impersonated accounts private keys
-    const holder = await impersonateAccount(holderAddress);
-    const balance = await getErc20Balance(
-      addresses.staBal3.address,
-      holderAddress
-    );
-    await contracts
-      .ERC20(addresses.staBal3.address, provider)
-      .connect(holder)
-      .transfer(signerAddress, balance);
-
-    // TODO: Stake them
+    balance = await move(poolAddress, holderAddress, signerAddress);
   });
 
-  it('should transfer tokens from stable to boosted', async () => {
-    // Store balancer before migration
-    const before = {
-      from: await getErc20Balance(addresses.staBal3.address, signerAddress),
-      to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
-    };
+  context('staked', async () => {
+    beforeEach(async function () {
+      this.timeout(20000);
 
-    // Get authorisation
-    const authorisation = await signRelayerApproval(
-      addresses.relayer,
-      signerAddress,
-      signer
-    );
-
-    const query = await migration.queryMigration(
-      signerAddress,
-      before.from.toString(),
-      authorisation,
-      false
-    );
-
-    const response = await signer.sendTransaction({
-      to: query.to,
-      data: query.data,
-      gasLimit: MAX_GAS_LIMIT,
+      // Stake them
+      await stake(signer, balance);
     });
 
-    const reciept = await response.wait();
-    console.log('Gas used', reciept.gasUsed.toString());
+    it('should transfer tokens from stable to boosted', async () => {
+      // Store balance before migration
+      const before = {
+        from: await getErc20Balance(gaugeAddress, signerAddress),
+        to: await getErc20Balance(addresses.bbausd2.gauge, signerAddress),
+      };
 
-    const after = {
-      from: await getErc20Balance(addresses.staBal3.address, signerAddress),
-      to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
-    };
+      const query = await migration.queryMigration(
+        signerAddress,
+        before.from.toString(),
+        authorisation,
+        true
+      );
 
-    const diffs = {
-      from: after.from.sub(before.from),
-      to: after.to.sub(before.to),
-    };
+      const { to, data } = query;
+      const gasLimit = MAX_GAS_LIMIT;
+      const response = await signer.sendTransaction({ to, data, gasLimit });
 
-    console.log(diffs.from, diffs.to);
+      const reciept = await response.wait();
+      console.log('Gas used', reciept.gasUsed.toString());
 
-    expect(diffs.from).to.eql(before.from.mul(-1));
-    expect(parseFloat(formatEther(diffs.to))).to.be.gt(0);
-  }).timeout(20000);
+      const after = {
+        from: await getErc20Balance(gaugeAddress, signerAddress),
+        to: await getErc20Balance(addresses.bbausd2.gauge, signerAddress),
+      };
+
+      const diffs = {
+        from: after.from.sub(before.from),
+        to: after.to.sub(before.to),
+      };
+
+      console.log(diffs.from, diffs.to);
+
+      expect(diffs.from).to.eql(before.from.mul(-1));
+      expect(parseFloat(formatEther(diffs.to))).to.be.gt(0);
+    }).timeout(20000);
+  });
+
+  context('not staked', async () => {
+    it('should transfer tokens from stable to boosted', async () => {
+      // Store balance before migration
+      const before = {
+        from: await getErc20Balance(poolAddress, signerAddress),
+        to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
+      };
+
+      const query = await migration.queryMigration(
+        signerAddress,
+        before.from.toString(),
+        authorisation,
+        false
+      );
+
+      const { to, data } = query;
+      const gasLimit = MAX_GAS_LIMIT;
+      const response = await signer.sendTransaction({ to, data, gasLimit });
+
+      const reciept = await response.wait();
+      console.log('Gas used', reciept.gasUsed.toString());
+
+      const after = {
+        from: await getErc20Balance(poolAddress, signerAddress),
+        to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
+      };
+
+      const diffs = {
+        from: after.from.sub(before.from),
+        to: after.to.sub(before.to),
+      };
+
+      console.log(diffs.from, diffs.to);
+
+      expect(diffs.from).to.eql(before.from.mul(-1));
+      expect(parseFloat(formatEther(diffs.to))).to.be.gt(0);
+    }).timeout(20000);
+  });
 }).timeout(20000);

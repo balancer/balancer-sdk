@@ -26,42 +26,38 @@ export class StaBal3Builder {
     expectedAmount: string,
     userAddress: string,
     staked: boolean,
-    authorisation?: string
+    authorisation: string
   ): {
     to: string;
     data: string;
   } {
     const relayer = this.addresses.relayer;
-    const { assetOrder } = this.addresses.staBal3;
     let calls: string[] = [];
-
-    calls = [
-      this.buildExit(staked ? relayer : userAddress, relayer, amount),
-      // TODO: Let's double check with setting approveVault to 0 if we need that or not, or ask Nico ;)
-      // ...assetOrder.map((name) => {
-      //   const tokenAddress = this.addresses[
-      //     name as keyof typeof this.addresses
-      //   ] as string;
-      //   return this.buildApproveVault(tokenAddress);
-      // }),
-      this.buildSwap(
-        expectedAmount,
-        staked ? relayer : userAddress,
-        staked ? true : false
-      ),
-    ];
 
     if (staked) {
       calls = [
+        this.buildSetRelayerApproval(authorisation),
         this.buildWithdraw(userAddress, amount),
-        ...calls,
-        // this.buildDeposit(userAddress),
+        this.buildExit(relayer, relayer, amount),
+        this.buildSwap(expectedAmount, relayer),
+        this.buildDeposit(userAddress),
+      ];
+    } else {
+      calls = [
+        this.buildSetRelayerApproval(authorisation),
+        this.buildExit(userAddress, relayer, amount),
+        this.buildSwap(expectedAmount, userAddress),
       ];
     }
 
-    // if (authorisation) {
-    //   calls = [this.buildSetRelayerApproval(authorisation), ...calls];
-    // }
+    // TODO: Let's double check with setting approveVault to 0 if we need that or not, or ask Nico ;)
+    // const { assetOrder } = this.addresses.staBal3;
+    // ...assetOrder.map((name) => {
+    //   const tokenAddress = this.addresses[
+    //     name as keyof typeof this.addresses
+    //   ] as string;
+    //   return this.buildApproveVault(tokenAddress);
+    // }),
 
     const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
       calls,
@@ -125,11 +121,7 @@ export class StaBal3Builder {
    *
    * @returns BatchSwap call.
    */
-  buildSwap(
-    expectedBptReturn: string,
-    recipient: string,
-    toInternalBalance = false
-  ): string {
+  buildSwap(expectedBptReturn: string, recipient: string): string {
     const assets = [
       this.addresses.bbausd2.address,
       this.addresses.DAI,
@@ -206,7 +198,7 @@ export class StaBal3Builder {
       sender: this.addresses.relayer,
       recipient,
       fromInternalBalance: true,
-      toInternalBalance,
+      toInternalBalance: false,
     };
 
     const encodedBatchSwap = Relayer.encodeBatchSwap({
