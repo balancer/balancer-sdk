@@ -4,8 +4,8 @@ import hardhat from 'hardhat';
 import { Network, RelayerAuthorization } from '@/.';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { ADDRESSES } from './bbausd2-migrations/addresses';
-import { MigrateStaBal3 as Migration } from './migrate-stabal3';
+import { ADDRESSES } from './addresses';
+import { StaBal3Builder as MigrationBuilder } from './stabal3';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 import { parseEther, formatEther } from '@ethersproject/units';
 import { JsonRpcSigner } from '@ethersproject/providers';
@@ -35,7 +35,7 @@ const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
 const { contracts } = new Contracts(network as number, provider);
-const migration = new Migration(network, provider);
+const migration = new MigrationBuilder(network);
 
 const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
 const poolAddress = addresses.staBal3.address;
@@ -163,11 +163,12 @@ describe('execution', async () => {
         to: await getErc20Balance(addresses.bbausd2.gauge, signerAddress),
       };
 
-      const query = await migration.queryMigration(
-        signerAddress,
+      const query = migration.calldata(
         before.from.toString(),
-        authorisation,
-        true
+        undefined,
+        signerAddress,
+        true,
+        authorisation
       );
 
       const { to, data } = query;
@@ -202,11 +203,12 @@ describe('execution', async () => {
         to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
       };
 
-      const query = await migration.queryMigration(
-        signerAddress,
+      const query = migration.calldata(
         before.from.toString(),
-        authorisation,
-        false
+        undefined,
+        signerAddress,
+        false,
+        authorisation
       );
 
       const { to, data } = query;

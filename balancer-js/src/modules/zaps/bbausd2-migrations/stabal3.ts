@@ -23,7 +23,7 @@ export class StaBal3Builder {
 
   calldata(
     amount: string,
-    expectedAmount: string,
+    expectedAmount = MaxInt256.toString(),
     userAddress: string,
     staked: boolean,
     authorisation: string
