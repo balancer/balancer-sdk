@@ -90,14 +90,15 @@ describe.only('pool factory module', () => {
     ]);
   });
 
-  context('factory transaction', () => {
+  context('factory transaction', async function () {
     let balancer: BalancerSDK,
       to: string,
       data: string,
       value: BigNumber,
       expectedPoolName: string,
       transactionReceipt: ethers.providers.TransactionReceipt;
-    beforeEach(async () => {
+    beforeEach(async function () {
+      this.timeout(20000);
       balancer = new BalancerSDK(sdkConfig);
       const createTx = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
       if (createTx.error) {
@@ -105,15 +106,18 @@ describe.only('pool factory module', () => {
       } else {
         to = createTx.to;
         data = createTx.data;
-        value = createTx.value as BigNumber;
-        const tx = { to, data, value, gasLimit: 28976 };
+        const from = await signer.getAddress();
+        const tx = {
+          from,
+          to,
+          data,
+        };
         const transactionResponse = await signer.sendTransaction(tx);
-        console.log({ transactionResponse });
         transactionReceipt = await transactionResponse.wait();
       }
     });
 
-    it('should send the transaction succesfully', async () => {
+    it('should send the transaction succesfully', async function () {
       expect(transactionReceipt.status).to.eql(1);
     });
 
