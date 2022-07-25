@@ -79,6 +79,7 @@ export class BbaUsd1Builder {
       this.addresses.USDT,
       this.addresses.linearUsdt1.address,
       this.addresses.linearUsdt2.address,
+      this.addresses.bbausd1.address,
     ];
 
     const outputReferences = [{ index: 0, key: SWAP_RESULT_BBAUSD }];
@@ -118,10 +119,17 @@ export class BbaUsd1Builder {
 
     const swaps: BatchSwapStep[] = [
       {
+        poolId: this.addresses.bbausd1.id,
+        assetInIndex: 10,
+        assetOutIndex: 2,
+        amount: daiBptAmt,
+        userData: '0x',
+      },
+      {
         poolId: this.addresses.linearDai1.id,
         assetInIndex: 2,
         assetOutIndex: 1,
-        amount: daiBptAmt,
+        amount: '0',
         userData: '0x',
       },
       {
@@ -139,10 +147,17 @@ export class BbaUsd1Builder {
         userData: '0x',
       },
       {
+        poolId: this.addresses.bbausd1.id,
+        assetInIndex: 10,
+        assetOutIndex: 5,
+        amount: usdcBptAmt,
+        userData: '0x',
+      },
+      {
         poolId: this.addresses.linearUsdc1.id,
         assetInIndex: 5,
         assetOutIndex: 4,
-        amount: usdcBptAmt,
+        amount: '0',
         userData: '0x',
       },
       {
@@ -160,10 +175,17 @@ export class BbaUsd1Builder {
         userData: '0x',
       },
       {
+        poolId: this.addresses.bbausd1.id,
+        assetInIndex: 10,
+        assetOutIndex: 8,
+        amount: usdtBptAmt,
+        userData: '0x',
+      },
+      {
         poolId: this.addresses.linearUsdt1.id,
         assetInIndex: 8,
         assetOutIndex: 7,
-        amount: usdtBptAmt,
+        amount: '0',
         userData: '0x',
       },
       {
@@ -185,6 +207,7 @@ export class BbaUsd1Builder {
     // For now assuming ref amounts will be safe - should we add more accurate?
     const limits = [
       expectedBptReturn.toString(),
+      MaxInt256.toString(),
       MaxInt256.toString(),
       MaxInt256.toString(),
       MaxInt256.toString(),
