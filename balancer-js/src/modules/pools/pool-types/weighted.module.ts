@@ -14,11 +14,13 @@ import { WeightedPoolFactory__factory } from '@balancer-labs/typechain';
 import { BalancerSdkConfig } from '@/types';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { BigNumber, BigNumberish, ethers } from 'ethers';
+import { AssetHelpers } from '@/lib/utils';
 
 export class Weighted implements PoolType {
   public liquidityCalculator: LiquidityConcern;
   public spotPriceCalculator: SpotPriceConcern;
   factoryAddress: string;
+  wrappedNativeAsset: string;
 
   constructor(
     config: BalancerSdkConfig,
@@ -27,11 +29,14 @@ export class Weighted implements PoolType {
   ) {
     this.liquidityCalculator = new this.liquidityCalculatorConcern();
     this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-    this.factoryAddress =
-      typeof config.network === 'number'
-        ? (BALANCER_NETWORK_CONFIG[config.network].addresses.contracts
-            .poolFactories.weighted as string)
-        : (config.network.addresses.contracts.poolFactories.weighted as string);
+    let addresses;
+    if (typeof config.network === 'number') {
+      addresses = BALANCER_NETWORK_CONFIG[config.network].addresses;
+    } else {
+      addresses = config.network.addresses;
+    }
+    this.wrappedNativeAsset = addresses.tokens.wrappedNativeAsset;
+    this.factoryAddress = addresses.contracts.poolFactories.weighted as string;
   }
 
   async buildCreateTx(
@@ -49,20 +54,33 @@ export class Weighted implements PoolType {
       };
     }
 
+    const helpers = new AssetHelpers(this.wrappedNativeAsset);
+    const [tokens, weights] = helpers.sortTokens(
+      params.seedTokens.map((token) => token.tokenAddress),
+      params.seedTokens.map((token) =>
+        BigNumber.from(token.weight).mul(BigNumber.from('10000000000000000'))
+      )
+    ) as [string[], BigNumber[]];
+
     const attributes: WeightedFactoryFormattedAttributes = {
       name: params.name || `${this.formatPoolName(params.seedTokens)} Pool`,
       symbol: params.symbol || this.formatPoolName(params.seedTokens),
-      tokens: params.seedTokens.map((token) => token.tokenAddress),
-      weights: params.seedTokens.map((token) =>
-        BigNumber.from(token.weight).mul(BigNumber.from('10000000000000000'))
-      ),
+      tokens,
+      weights,
       swapFeePercentage: ethers.utils.parseEther(params.initialFee),
       owner: params.owner,
     };
     const wPoolFactory = WeightedPoolFactory__factory.createInterface();
     const data = wPoolFactory.encodeFunctionData(
       'create',
-      Object.values(attributes)
+      Object.values(attributes) as [
+        string,
+        string,
+        string[],
+        BigNumberish[],
+        BigNumberish,
+        string
+      ]
     );
 
     return {
