@@ -6,7 +6,7 @@ import { MaxUint256, MaxInt256, Zero } from '@ethersproject/constants';
 // TODO - Ask Nico to update Typechain?
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { PoolToken } from '@/types';
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 const SWAP_RESULT_BBAUSD = Relayer.toChainedReference('24');
@@ -88,14 +88,14 @@ export class BbaUsd1Builder {
     // Assuming 1:1 exchange rates between tokens
     // TODO: Fetch current prices, or use price or priceRate from subgraph?
     const totalLiquidity = tokens.reduce(
-      (sum, token) => sum.add(BigNumber.from(token.balance)),
+      (sum, token) => sum.add(parseFixed(token.balance, 18)),
       Zero
     );
 
-    const weights = Object.fromEntries(
+    const balances = Object.fromEntries(
       tokens.map((token) => [
         token.symbol,
-        BigNumber.from(token.balance).div(totalLiquidity),
+        parseFixed(token.balance, 18).toString(),
       ])
     );
 
@@ -103,14 +103,17 @@ export class BbaUsd1Builder {
     // TO DO - Will swap order matter here? John to ask Fernando.
 
     // Split BPT amount proportionally:
-    const daiBptAmt = BigNumber.from(bptAmount)
-      .mul(weights['bb-a-DAI'])
-      .toString();
     const usdcBptAmt = BigNumber.from(bptAmount)
-      .mul(weights['bb-a-USDC'])
+      .mul(balances['bb-a-USDC'])
+      .div(totalLiquidity)
       .toString();
     const usdtBptAmt = BigNumber.from(bptAmount)
-      .mul(weights['bb-a-USDT'])
+      .mul(balances['bb-a-USDT'])
+      .div(totalLiquidity)
+      .toString();
+    const daiBptAmt = BigNumber.from(bptAmount)
+      .sub(BigNumber.from(usdcBptAmt))
+      .sub(BigNumber.from(usdtBptAmt))
       .toString();
 
     const swaps: BatchSwapStep[] = [
@@ -222,7 +225,7 @@ export class BbaUsd1Builder {
    */
   buildWithdraw(sender: string, amount: string): string {
     return Relayer.encodeGaugeWithdraw(
-      this.addresses.staBal3.gauge,
+      this.addresses.bbausd1.gauge,
       sender,
       this.addresses.relayer,
       amount
