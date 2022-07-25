@@ -71,13 +71,13 @@ const getERC20Contract = (address: string) => {
     address,
     [
       'function balanceOf(address) view returns (uint256)',
-      'function name() returns (string)',
+      'function name() view returns (string)',
     ],
-    provider
+    signer
   );
 };
 
-describe.only('pool factory module', () => {
+describe('pool factory module', () => {
   // Setup chain
   before(async function () {
     this.timeout(20000);
@@ -94,9 +94,7 @@ describe.only('pool factory module', () => {
     let balancer: BalancerSDK,
       to: string,
       data: string,
-      value: BigNumber,
-      expectedPoolName: string,
-      transactionReceipt: ethers.providers.TransactionReceipt;
+      transactionReceipt: ethers.ContractReceipt;
     beforeEach(async function () {
       this.timeout(20000);
       balancer = new BalancerSDK(sdkConfig);
@@ -117,15 +115,30 @@ describe.only('pool factory module', () => {
       }
     });
 
-    it('should send the transaction succesfully', async function () {
+    it('should send the transaction succesfully', async () => {
       expect(transactionReceipt.status).to.eql(1);
     });
 
-    it('should create a pool with the correct token name', async () => {
-      const wPoolFactory = WeightedPoolFactory__factory.connect(to, provider);
-      const { address } = wPoolFactory.filters.PoolCreated();
-      const tokenContract = getERC20Contract(address as string);
-      expect(expectedPoolName).to.eql(await tokenContract.getName());
+    it('should create a pool with the correct token name', async function () {
+      this.timeout(30000);
+      const expectedPoolName = '40MKR-30WETH-30USDT Pool';
+      const poolInfoFilter = balancer.pools.getPoolInfoFilter();
+      const addresses = await provider.getLogs(poolInfoFilter);
+      const filtered = addresses.filter((a) =>
+        a.topics.includes(
+          Array.isArray(poolInfoFilter[0])
+            ? poolInfoFilter[0][0]
+            : poolInfoFilter[0]
+        )
+      );
+
+      const eventData = filtered[0].topics[1] || '';
+      const poolAddress = ethers.utils.defaultAbiCoder.decode(
+        ['address'],
+        eventData
+      )[0];
+      const tokenContract = getERC20Contract(poolAddress);
+      expect(expectedPoolName).to.eq(await tokenContract.name());
     });
   });
   context('initial join transaction', () => {
