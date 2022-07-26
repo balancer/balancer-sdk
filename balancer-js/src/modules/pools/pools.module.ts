@@ -21,9 +21,7 @@ export class Pools {
   public linear: Linear;
   static config: BalancerSdkConfig;
 
-  constructor(
-    config: BalancerSdkConfig,
-  ) {
+  constructor(config: BalancerSdkConfig) {
     this.config = config;
     this.weighted = new Weighted(this.config);
     this.stable = new Stable();
@@ -32,7 +30,7 @@ export class Pools {
     this.linear = new Linear();
   }
 
-  static from(
+  from(
     pool: SubgraphPoolBase
   ): Weighted | Stable | MetaStable | StablePhantom | Linear {
     // Calculate spot price using pool type
