@@ -70,13 +70,13 @@ export class BbaUsd1Builder {
   ): string {
     const assets = [
       this.addresses.bbausd2.address,
-      this.addresses.DAI,
+      this.addresses.waDAI,
       this.addresses.linearDai1.address,
       this.addresses.linearDai2.address,
-      this.addresses.USDC,
+      this.addresses.waUSDC,
       this.addresses.linearUsdc1.address,
       this.addresses.linearUsdc2.address,
-      this.addresses.USDT,
+      this.addresses.waUSDT,
       this.addresses.linearUsdt1.address,
       this.addresses.linearUsdt2.address,
       this.addresses.bbausd1.address,
