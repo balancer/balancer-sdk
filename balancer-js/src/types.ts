@@ -181,7 +181,6 @@ export interface Pool {
   factory?: string;
   tokens: PoolToken[];
   tokensList: string[];
-  tokenAddresses?: string[];
   totalWeight?: string;
   totalLiquidity?: string;
   totalShares: string;
