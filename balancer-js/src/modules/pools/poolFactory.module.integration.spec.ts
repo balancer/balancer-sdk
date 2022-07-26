@@ -63,7 +63,6 @@ const INIT_JOIN_PARAMS = {
 };
 
 const POOL_PARAMS = {
-  name: 'WeightedPoolFactory',
   symbol: 'WPOOL',
   initialFee: '0.1',
   seedTokens: SEED_TOKENS,
