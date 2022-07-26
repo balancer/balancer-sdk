@@ -39,9 +39,7 @@ export class Weighted implements PoolType {
     this.factoryAddress = addresses.contracts.poolFactories.weighted as string;
   }
 
-  async buildCreateTx(
-    params: WeightedFactoryParams
-  ): Promise<WeightedFactoryAttributes> {
+  buildCreateTx(params: WeightedFactoryParams): WeightedFactoryAttributes {
     const sumOfWeights = params.seedTokens
       .map((t) => t.weight)
       .reduce((previous, current) => {

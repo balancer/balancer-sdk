@@ -98,7 +98,7 @@ describe('pool factory module', () => {
     beforeEach(async function () {
       this.timeout(20000);
       balancer = new BalancerSDK(sdkConfig);
-      const createTx = await balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
+      const createTx = balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
       if (createTx.error) {
         expect.fail('Should not give error');
       } else {
