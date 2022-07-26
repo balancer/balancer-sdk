@@ -125,22 +125,11 @@ describe('pool factory module', () => {
     it('should create a pool with the correct token name', async function () {
       this.timeout(30000);
       const expectedPoolName = '40MKR-30WETH-30USDT Pool';
-      const poolInfoFilter = balancer.pools.getPoolInfoFilter();
-      const addresses = await provider.getLogs(poolInfoFilter);
-      const filtered = addresses.filter((a) =>
-        a.topics.includes(
-          Array.isArray(poolInfoFilter[0])
-            ? poolInfoFilter[0][0]
-            : poolInfoFilter[0]
-        )
+      const { address } = await balancer.pools.getPoolInfoFromCreateTx(
+        transactionReceipt,
+        provider
       );
-
-      const eventData = filtered[0].topics[1] || '';
-      const poolAddress = ethers.utils.defaultAbiCoder.decode(
-        ['address'],
-        eventData
-      )[0];
-      const tokenContract = getERC20Contract(poolAddress);
+      const tokenContract = getERC20Contract(address);
       expect(expectedPoolName).to.eq(await tokenContract.name());
     });
   });

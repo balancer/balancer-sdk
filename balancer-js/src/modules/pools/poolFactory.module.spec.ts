@@ -8,8 +8,10 @@ import {
   WeightedFactoryParams,
 } from '@/.';
 import { ADDRESSES } from '@/test/lib/constants';
-import { BigNumber } from 'ethers';
+import { BigNumber, ethers } from 'ethers';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import MockProvider from '@/test/lib/MockProvider';
+import { Log } from '@ethersproject/providers';
 
 dotenv.config();
 
@@ -17,6 +19,33 @@ const sdkConfig: BalancerSdkConfig = {
   network: Network.KOVAN,
   rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
 };
+
+interface logArgs {
+  blockHash: number;
+  topics: string[];
+}
+class MockProviderLogs extends MockProvider {
+  public logsCount = 0;
+  public logsArgs: logArgs[] = [];
+  async getLogs(args: logArgs): Promise<Log[]> {
+    this.logsCount += 1;
+    this.logsArgs.push(args);
+    return Promise.resolve([
+      {
+        blockNumber: 1,
+        blockHash: '2',
+        transactionIndex: 1,
+        removed: false,
+        address: '0x00',
+        data: '0x00',
+        topics: [
+          '0x83a48fbcfc991335314e74d0496aab6a1987e992ddc85dddbcc4d6dd6ef2e9fc',
+          '0x000000000000000000000000ba26dcf1c68657c3e825c11185dbe2ffa66d745d',
+        ],
+      } as Log,
+    ]);
+  }
+}
 
 const SEED_TOKENS: Array<SeedToken> = [
   {
@@ -73,9 +102,8 @@ describe('pool factory module', () => {
       balancer = new BalancerSDK(sdkConfig);
     });
     it('should return the parameters to construct a transaction', async () => {
-      const creationTxAttributes = await balancer.pools.weighted.buildCreateTx(
-        POOL_PARAMS
-      );
+      const creationTxAttributes =
+        balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
       if (creationTxAttributes.error) {
         expect.fail('Should not give error');
       } else {
@@ -88,9 +116,8 @@ describe('pool factory module', () => {
       }
     });
     it('should return an attributes object for the expected pool', async () => {
-      const creationTxAttributes = await balancer.pools.weighted.buildCreateTx(
-        POOL_PARAMS
-      );
+      const creationTxAttributes =
+        balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
       if (creationTxAttributes.error) {
         expect.fail('Should not give error');
       } else {
@@ -103,18 +130,26 @@ describe('pool factory module', () => {
           attributes.swapFeePercentage.eq(BigNumber.from('100000000000000000'))
         ).to.eq(true);
         expect(attributes.symbol).to.eq('30DAI-40USDC-30WBTC');
-        expect(attributes.tokens).to.eql(
-          SEED_TOKENS.map((t) => t.tokenAddress)
-        );
+      }
+    });
+    it('should order the tokens given for succesful pool creation', () => {
+      const creationTxAttributes =
+        balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
+      if (creationTxAttributes.error) {
+        expect.fail('Should not give error');
+      } else {
+        expect(creationTxAttributes.attributes.tokens).to.eql([
+          SEED_TOKENS[0].tokenAddress,
+          SEED_TOKENS[2].tokenAddress,
+          SEED_TOKENS[1].tokenAddress,
+        ]);
       }
     });
     it('should return an attributes object with name overrides if sent by user', async () => {
       const params = { ...POOL_PARAMS };
       params.name = 'test';
       params.symbol = '99wbtx-99aave';
-      const creationTxParams = await balancer.pools.weighted.buildCreateTx(
-        params
-      );
+      const creationTxParams = balancer.pools.weighted.buildCreateTx(params);
       if (creationTxParams.error) {
         expect.fail('Should not give error');
       } else {
@@ -142,12 +177,19 @@ describe('pool factory module', () => {
       balancer = new BalancerSDK(sdkConfig);
     });
 
-    it('should return the pool ID from the issuing transaction', async () => {
-      const poolInfoFilter = balancer.pools.getPoolInfoFilter();
-      expect(poolInfoFilter.length).to.eq(1);
-      expect(poolInfoFilter[0]).to.equal(
-        '0x83a48fbcfc991335314e74d0496aab6a1987e992ddc85dddbcc4d6dd6ef2e9fc'
+    it('should return the pool address from the issuing transaction', async () => {
+      const mockProvider = new MockProviderLogs();
+      await balancer.pools.getPoolInfoFromCreateTx(
+        { blockHash: 0 } as unknown as ethers.ContractReceipt,
+        mockProvider as unknown as ethers.providers.JsonRpcProvider
       );
+      expect(mockProvider.logsCount).to.eq(1);
+      expect(mockProvider.logsArgs[0]).to.eql({
+        blockHash: 0,
+        topics: [
+          '0x83a48fbcfc991335314e74d0496aab6a1987e992ddc85dddbcc4d6dd6ef2e9fc',
+        ],
+      });
     });
   });
 

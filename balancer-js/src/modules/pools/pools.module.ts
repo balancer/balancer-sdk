@@ -60,13 +60,31 @@ export class Pools {
     }
   }
 
-  getPoolInfoFilter(): (string | string[])[] {
+  async getPoolInfoFromCreateTx(
+    tx: ethers.ContractReceipt,
+    provider: ethers.providers.JsonRpcProvider
+  ): Promise<{ address: string }> {
     const wPoolFactory = WeightedPoolFactory__factory.createInterface();
     const filterTopics = wPoolFactory.encodeFilterTopics(
       wPoolFactory.events['PoolCreated(address)'],
       []
+    ) as string[];
+    const event = await provider.getLogs({
+      blockHash: tx.blockHash,
+      topics: filterTopics,
+    });
+    const filtered = event.filter((a) =>
+      a.topics.includes(
+        Array.isArray(filterTopics[0]) ? filterTopics[0][0] : filterTopics[0]
+      )
     );
 
-    return filterTopics;
+    const eventData = filtered[0].topics[1] || '';
+    const poolAddress = ethers.utils.defaultAbiCoder.decode(
+      ['address'],
+      eventData
+    )[0];
+
+    return { address: poolAddress };
   }
 }
