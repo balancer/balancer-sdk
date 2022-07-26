@@ -18,27 +18,31 @@ const sdkConfig: BalancerSdkConfig = {
   rpcUrl: rpcUrl,
 };
 
+const MKR = '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2';
+const WETH = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+const USDT = '0xdac17f958d2ee523a2206206994597c13d831ec7';
+
 const SEED_TOKENS: Array<SeedToken> = [
   {
     id: 0,
-    tokenAddress: ADDRESSES[42].DAI.address,
-    weight: 30,
+    tokenAddress: MKR,
+    weight: 40,
     amount: '200000000',
-    symbol: 'DAI',
+    symbol: 'MKR',
   },
   {
     id: 1,
-    tokenAddress: ADDRESSES[42].USDC.address,
-    weight: 40,
+    tokenAddress: WETH,
+    weight: 30,
     amount: '200000000',
-    symbol: 'USDC',
+    symbol: 'WETH',
   },
   {
     id: 2,
-    tokenAddress: ADDRESSES[42].WBTC.address,
+    tokenAddress: USDT,
     weight: 30,
     amount: '200000000',
-    symbol: 'WBTC',
+    symbol: 'USDT',
   },
 ];
 
