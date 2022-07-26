@@ -46,7 +46,7 @@ const addresses = ADDRESSES[network];
 const { contracts } = new Contracts(network as number, provider);
 const migration = new MigrationBuilder(network);
 
-const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
+const holderAddress = '0xd86a11b0c859c18bfc1b4acd072c5afe57e79438';
 const poolAddress = addresses.bbausd1.address;
 const gaugeAddress = addresses.bbausd1.gauge;
 const relayer = addresses.relayer;
