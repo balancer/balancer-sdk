@@ -36,13 +36,19 @@ export class BbaUsd1Builder {
       calls = [
         this.buildSetRelayerApproval(authorisation),
         this.buildWithdraw(userAddress, amount),
-        this.buildSwap(amount, expectedAmount, relayer, tokens),
+        this.buildSwap(amount, expectedAmount, relayer, relayer, tokens),
         this.buildDeposit(userAddress),
       ];
     } else {
       calls = [
         this.buildSetRelayerApproval(authorisation),
-        this.buildSwap(amount, expectedAmount, userAddress, tokens),
+        this.buildSwap(
+          amount,
+          expectedAmount,
+          userAddress,
+          userAddress,
+          tokens
+        ),
       ];
     }
 
@@ -65,6 +71,7 @@ export class BbaUsd1Builder {
   buildSwap(
     bptAmount: string,
     expectedBptReturn: string,
+    sender: string,
     recipient: string,
     tokens: PoolToken[]
   ): string {
@@ -221,7 +228,7 @@ export class BbaUsd1Builder {
 
     // Swap to/from Relayer
     const funds: FundManagement = {
-      sender: this.addresses.relayer,
+      sender,
       recipient,
       fromInternalBalance: true,
       toInternalBalance: false,
