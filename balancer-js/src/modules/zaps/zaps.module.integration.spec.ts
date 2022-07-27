@@ -1,13 +1,12 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { Network, Relayer } from '@/.';
+import { Network } from '@/.';
 import hardhat from 'hardhat';
 
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 
 import { forkSetup } from '@/test/lib/utils';
-import { Zaps } from './zaps.module';
 
 /*
  * Testing on GOERLI
