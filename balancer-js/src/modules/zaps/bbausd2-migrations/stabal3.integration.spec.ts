@@ -5,11 +5,11 @@ import { Network, RelayerAuthorization } from '@/.';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { ADDRESSES } from './addresses';
-import { StaBal3Builder as MigrationBuilder } from './stabal3';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 import { parseEther, formatEther } from '@ethersproject/units';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256 } from '@ethersproject/constants';
+import { Migrations } from '../migrations';
 
 import { Interface } from '@ethersproject/abi';
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
@@ -35,7 +35,7 @@ const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
 const { contracts } = new Contracts(network as number, provider);
-const migration = new MigrationBuilder(network);
+const migrations = new Migrations(network);
 
 const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
 const poolAddress = addresses.staBal3.address;
@@ -164,12 +164,12 @@ describe('stabal3 migration execution', async () => {
         to: await getErc20Balance(addresses.bbausd2.gauge, signerAddress),
       };
 
-      const query = migration.calldata(
+      const query = migrations.stabal3(
+        signerAddress,
         before.from.toString(),
         undefined,
-        signerAddress,
-        true,
-        authorisation
+        authorisation,
+        true
       );
 
       const { to, data } = query;
@@ -204,12 +204,12 @@ describe('stabal3 migration execution', async () => {
         to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
       };
 
-      const query = migration.calldata(
+      const query = migrations.stabal3(
+        signerAddress,
         before.from.toString(),
         undefined,
-        signerAddress,
-        false,
-        authorisation
+        authorisation,
+        false
       );
 
       const { to, data } = query;

@@ -13,11 +13,11 @@ import {
 import { BigNumber } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { ADDRESSES } from './addresses';
-import { BbaUsd1Builder as MigrationBuilder } from './bbausd1';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 import { parseEther, formatEther } from '@ethersproject/units';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256 } from '@ethersproject/constants';
+import { Migrations } from '../migrations';
 
 import { Interface } from '@ethersproject/abi';
 import { PoolsProvider } from '@/modules/pools/provider';
@@ -44,7 +44,7 @@ const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
 const { contracts } = new Contracts(network as number, provider);
-const migration = new MigrationBuilder(network);
+const migrations = new Migrations(network);
 
 const holderAddress = '0xd86a11b0c859c18bfc1b4acd072c5afe57e79438';
 const poolAddress = addresses.bbausd1.address;
@@ -180,12 +180,12 @@ describe('bbausd migration execution', async () => {
         to: await getErc20Balance(addresses.bbausd2.gauge, signerAddress),
       };
 
-      const query = migration.calldata(
+      const query = migrations.bbaUsd(
+        signerAddress,
         before.from.toString(),
         undefined,
-        signerAddress,
-        true,
         authorisation,
+        true,
         pool.tokens.filter((token) => token.symbol !== 'bb-a-USD')
       );
 
@@ -221,12 +221,12 @@ describe('bbausd migration execution', async () => {
         to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
       };
 
-      const query = migration.calldata(
+      const query = migrations.bbaUsd(
+        signerAddress,
         before.from.toString(),
         undefined,
-        signerAddress,
-        false,
         authorisation,
+        false,
         pool.tokens.filter((token) => token.symbol !== 'bb-a-USD')
       );
 
