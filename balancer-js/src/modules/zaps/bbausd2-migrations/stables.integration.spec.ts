@@ -99,7 +99,7 @@ const reset = () =>
     {
       forking: {
         jsonRpcUrl,
-        blockNumber: blockNumber && parseInt(blockNumber),
+        blockNumber: (blockNumber && parseInt(blockNumber)) || 7300090,
       },
     },
   ]);
@@ -135,7 +135,7 @@ const stake = async (
   ).wait();
 };
 
-describe('execution', async () => {
+describe('stables migration execution', async () => {
   let signer: JsonRpcSigner;
   let signerAddress: string;
   let authorisation: string;

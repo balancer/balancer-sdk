@@ -132,7 +132,7 @@ const stake = async (
   ).wait();
 };
 
-describe('execution', async () => {
+describe('bbausd migration execution', async () => {
   let signer: JsonRpcSigner;
   let signerAddress: string;
   let authorisation: string;

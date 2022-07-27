@@ -130,7 +130,7 @@ const stake = async (
   ).wait();
 };
 
-describe('execution', async () => {
+describe('stabal3 migration execution', async () => {
   let signer: JsonRpcSigner;
   let signerAddress: string;
   let authorisation: string;
