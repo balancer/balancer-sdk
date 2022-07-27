@@ -24,7 +24,7 @@ export interface JoinConcern {
     amountsIn,
     slippage,
     wrappedNativeAsset,
-  }: JoinPoolParameters) => Promise<JoinPoolAttributes>;
+  }: JoinPoolParameters) => JoinPoolAttributes;
 }
 
 export interface ExitConcern {

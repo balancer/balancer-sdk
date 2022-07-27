@@ -198,6 +198,7 @@ export interface Pool {
   feesSnapshot?: string;
   boost?: string;
   symbol?: string;
+  amp?: string;
 }
 
 export interface PoolModel extends Pool {
@@ -207,7 +208,7 @@ export interface PoolModel extends Pool {
     tokensIn: string[],
     amountsIn: string[],
     slippage: string
-  ) => Promise<JoinPoolAttributes>;
+  ) => JoinPoolAttributes;
   buildExitExactBPTIn: (
     exiter: string,
     bptIn: string,
