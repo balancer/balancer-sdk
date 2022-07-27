@@ -17,7 +17,7 @@ import { TransactionReceipt } from '@ethersproject/providers';
 import { parseFixed, BigNumber } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 
-import { forkSetup } from '@/test/lib/utils';
+import { forkSetup, setupPool, tokenBalance } from '@/test/lib/utils';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import { PoolsProvider } from '@/modules/pools/provider';
 
@@ -43,23 +43,6 @@ const amountsInDiv = '100000000';
 
 let tokensIn: PoolToken[];
 let amountsIn: string[];
-
-// Setup
-
-const setupPool = async (provider: PoolsProvider, poolId: string) => {
-  const _pool = await provider.find(poolId);
-  if (!_pool) throw new Error('Pool not found');
-  const pool = _pool;
-  return pool;
-};
-
-const tokenBalance = async (tokenAddress: string) => {
-  const balance: Promise<BigNumber> = balancer.contracts
-    .ERC20(tokenAddress, signer.provider)
-    .balanceOf(signerAddress);
-  return balance;
-};
-
 // Test scenarios
 
 describe('join execution', async () => {
@@ -90,10 +73,12 @@ describe('join execution', async () => {
       undefined,
       poolsProvider
     );
-    pool = await setupPool(
+    const poolSetup = await setupPool(
       poolsProvider,
       '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
     );
+    if (!poolSetup) throw Error('Error setting up pool.');
+    pool = poolSetup;
     tokensIn = pool.tokens;
     const balances = [
       parseFixed(initialBalance, tokensIn[0].decimals).toString(),
@@ -118,10 +103,25 @@ describe('join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      bptBalanceBefore = await tokenBalance(pool.address);
+      bptBalanceBefore = await tokenBalance(
+        pool.address,
+        signer,
+        signerAddress,
+        balancer
+      );
       tokensBalanceBefore = [
-        await tokenBalance(tokensIn[0].address),
-        await tokenBalance(tokensIn[1].address),
+        await tokenBalance(
+          tokensIn[0].address,
+          signer,
+          signerAddress,
+          balancer
+        ),
+        await tokenBalance(
+          tokensIn[1].address,
+          signer,
+          signerAddress,
+          balancer
+        ),
       ];
 
       const slippage = '100';
@@ -143,7 +143,12 @@ describe('join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(pool.address);
+      bptBalanceAfter = await tokenBalance(
+        pool.address,
+        signer,
+        signerAddress,
+        balancer
+      );
 
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
@@ -152,8 +157,18 @@ describe('join execution', async () => {
 
     it('should decrease tokens balance', async () => {
       tokensBalanceAfter = [
-        await tokenBalance(tokensIn[0].address),
-        await tokenBalance(tokensIn[1].address),
+        await tokenBalance(
+          tokensIn[0].address,
+          signer,
+          signerAddress,
+          balancer
+        ),
+        await tokenBalance(
+          tokensIn[1].address,
+          signer,
+          signerAddress,
+          balancer
+        ),
       ];
 
       for (let i = 0; i < tokensIn.length; i++) {
@@ -172,10 +187,25 @@ describe('join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      bptBalanceBefore = await tokenBalance(pool.address);
+      bptBalanceBefore = await tokenBalance(
+        pool.address,
+        signer,
+        signerAddress,
+        balancer
+      );
       tokensBalanceBefore = [
-        await tokenBalance(tokensIn[0].address),
-        await tokenBalance(tokensIn[1].address),
+        await tokenBalance(
+          tokensIn[0].address,
+          signer,
+          signerAddress,
+          balancer
+        ),
+        await tokenBalance(
+          tokensIn[1].address,
+          signer,
+          signerAddress,
+          balancer
+        ),
       ];
 
       const slippage = '100';
@@ -199,7 +229,12 @@ describe('join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(pool.address);
+      bptBalanceAfter = await tokenBalance(
+        pool.address,
+        signer,
+        signerAddress,
+        balancer
+      );
 
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
@@ -208,8 +243,18 @@ describe('join execution', async () => {
 
     it('should decrease tokens balance', async () => {
       tokensBalanceAfter = [
-        await tokenBalance(tokensIn[0].address),
-        await tokenBalance(tokensIn[1].address),
+        await tokenBalance(
+          tokensIn[0].address,
+          signer,
+          signerAddress,
+          balancer
+        ),
+        await tokenBalance(
+          tokensIn[1].address,
+          signer,
+          signerAddress,
+          balancer
+        ),
       ];
 
       for (let i = 0; i < tokensIn.length; i++) {
@@ -229,9 +274,19 @@ describe('join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      bptBalanceBefore = await tokenBalance(pool.address);
+      bptBalanceBefore = await tokenBalance(
+        pool.address,
+        signer,
+        signerAddress,
+        balancer
+      );
       tokensBalanceBefore = [
-        await tokenBalance(tokensIn[0].address),
+        await tokenBalance(
+          tokensIn[0].address,
+          signer,
+          signerAddress,
+          balancer
+        ),
         await signer.getBalance(),
       ];
 
@@ -256,7 +311,12 @@ describe('join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(pool.address);
+      bptBalanceAfter = await tokenBalance(
+        pool.address,
+        signer,
+        signerAddress,
+        balancer
+      );
 
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
@@ -265,7 +325,12 @@ describe('join execution', async () => {
 
     it('should decrease tokens balance', async () => {
       tokensBalanceAfter = [
-        await tokenBalance(tokensIn[0].address),
+        await tokenBalance(
+          tokensIn[0].address,
+          signer,
+          signerAddress,
+          balancer
+        ),
         await (await signer.getBalance()).add(transactionCost),
       ];
 

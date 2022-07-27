@@ -18,7 +18,7 @@ import { parseFixed, BigNumber } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 
 import { ADDRESSES } from '@/test/lib/constants';
-import { forkSetup } from '@/test/lib/utils';
+import { forkSetup, setupPool, updateBalances } from '@/test/lib/utils';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import { PoolsProvider } from '@/modules/pools/provider';
 
@@ -52,33 +52,6 @@ const slippage = '100';
 
 let tokensIn: PoolToken[];
 let amountsIn: string[];
-
-// Setup
-
-const setupPool = async (provider: PoolsProvider, poolId: string) => {
-  const _pool = await provider.find(poolId);
-  if (!_pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-  const pool = _pool;
-  return pool;
-};
-
-const tokenBalance = async (tokenAddress: string) => {
-  if (tokenAddress === AddressZero) return await signer.getBalance();
-  const balance: Promise<BigNumber> = balancer.contracts
-    .ERC20(tokenAddress, signer.provider)
-    .balanceOf(signerAddress);
-  return balance;
-};
-
-const updateBalances = async (pool: Pool) => {
-  const bptBalance = tokenBalance(pool.address);
-  const balances = [];
-  for (let i = 0; i < pool.tokensList.length; i++) {
-    balances[i] = tokenBalance(pool.tokensList[i]);
-  }
-  return Promise.all([bptBalance, ...balances]);
-};
-
 // Test scenarios
 
 describe('join execution', async () => {
@@ -105,10 +78,12 @@ describe('join execution', async () => {
       undefined,
       poolsProvider
     );
-    pool = await setupPool(
+    const poolSetup = await setupPool(
       poolsProvider,
       '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063' // Balancer USD Stable Pool - staBAL3
     );
+    if (!poolSetup) throw Error('Error setting up pool.');
+    pool = poolSetup;
     tokensIn = pool.tokens;
     const balances = pool.tokens.map((token) =>
       parseFixed(initialBalance, token.decimals).toString()
@@ -132,7 +107,12 @@ describe('join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      [bptBalanceBefore, ...tokensBalanceBefore] = await updateBalances(pool);
+      [bptBalanceBefore, ...tokensBalanceBefore] = await updateBalances(
+        pool,
+        signer,
+        signerAddress,
+        balancer
+      );
 
       const { to, data, minBPTOut } = pool.buildJoin(
         signerAddress,
@@ -145,7 +125,12 @@ describe('join execution', async () => {
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       const transactionResponse = await signer.sendTransaction(tx);
       transactionReceipt = await transactionResponse.wait();
-      [bptBalanceAfter, ...tokensBalanceAfter] = await updateBalances(pool);
+      [bptBalanceAfter, ...tokensBalanceAfter] = await updateBalances(
+        pool,
+        signer,
+        signerAddress,
+        balancer
+      );
     });
 
     it('should work', async () => {
@@ -174,7 +159,12 @@ describe('join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      [bptBalanceBefore, ...tokensBalanceBefore] = await updateBalances(pool);
+      [bptBalanceBefore, ...tokensBalanceBefore] = await updateBalances(
+        pool,
+        signer,
+        signerAddress,
+        balancer
+      );
 
       const { functionName, attributes, value, minBPTOut } = pool.buildJoin(
         signerAddress,
@@ -188,7 +178,12 @@ describe('join execution', async () => {
       transactionReceipt = await transactionResponse.wait();
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
-      [bptBalanceAfter, ...tokensBalanceAfter] = await updateBalances(pool);
+      [bptBalanceAfter, ...tokensBalanceAfter] = await updateBalances(
+        pool,
+        signer,
+        signerAddress,
+        balancer
+      );
     });
 
     it('should work', async () => {
