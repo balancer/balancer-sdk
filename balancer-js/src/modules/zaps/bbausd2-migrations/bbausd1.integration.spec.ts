@@ -193,8 +193,8 @@ describe('bbausd migration execution', async () => {
       const gasLimit = MAX_GAS_LIMIT;
       const response = await signer.sendTransaction({ to, data, gasLimit });
 
-      const reciept = await response.wait();
-      console.log('Gas used', reciept.gasUsed.toString());
+      const receipt = await response.wait();
+      console.log('Gas used', receipt.gasUsed.toString());
 
       const after = {
         from: await getErc20Balance(gaugeAddress, signerAddress),
@@ -234,8 +234,8 @@ describe('bbausd migration execution', async () => {
       const gasLimit = MAX_GAS_LIMIT;
       const response = await signer.sendTransaction({ to, data, gasLimit });
 
-      const reciept = await response.wait();
-      console.log('Gas used', reciept.gasUsed.toString());
+      const receipt = await response.wait();
+      console.log('Gas used', receipt.gasUsed.toString());
 
       const after = {
         from: await getErc20Balance(poolAddress, signerAddress),
