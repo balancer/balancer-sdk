@@ -5,7 +5,6 @@ import { Network, RelayerAuthorization } from '@/.';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { ADDRESSES } from './addresses';
-import { StablesBuilder as MigrationBuilder } from './stables';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 import { parseEther, formatEther } from '@ethersproject/units';
 import { JsonRpcSigner } from '@ethersproject/providers';
@@ -36,7 +35,6 @@ const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
 const { contracts } = new Contracts(network as number, provider);
-const migration = new MigrationBuilder(network);
 
 const holderAddress = '0xd86a11b0c859c18bfc1b4acd072c5afe57e79438';
 const fromPool = {

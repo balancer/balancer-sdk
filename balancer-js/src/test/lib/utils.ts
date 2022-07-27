@@ -1,4 +1,4 @@
-import { JsonRpcSigner } from '@ethersproject/providers';
+import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 import { balancerVault } from '@/lib/constants/config';
@@ -6,7 +6,7 @@ import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { keccak256 } from '@ethersproject/solidity';
 import { ERC20 } from '@/modules/contracts/ERC20';
 import { PoolsProvider } from '@/modules/pools/provider';
-import { PoolModel, BalancerError, BalancerErrorCode, Pool } from '@/.';
+import { PoolModel, BalancerError, BalancerErrorCode } from '@/.';
 
 export const forkSetup = async (
   signer: JsonRpcSigner,
@@ -115,28 +115,24 @@ export const setupPool = async (
   return pool;
 };
 
-export const tokenBalance = async (
-  tokenAddress: string,
-  signer: JsonRpcSigner,
-  signerAddress: string
-): Promise<BigNumber> => {
-  if (tokenAddress === AddressZero) return await signer.getBalance();
-  const balance: Promise<BigNumber> = ERC20(
-    tokenAddress,
-    signer.provider
-  ).balanceOf(signerAddress);
-  return balance;
-};
+export const getErc20Balance = (
+  token: string,
+  provider: JsonRpcProvider,
+  holder: string
+): Promise<BigNumber> => ERC20(token, provider).balanceOf(holder);
 
-export const updateBalances = async (
-  pool: Pool,
+export const getBalances = async (
+  tokens: string[],
   signer: JsonRpcSigner,
   signerAddress: string
 ): Promise<Promise<BigNumber[]>> => {
-  const bptBalance = tokenBalance(pool.address, signer, signerAddress);
-  const balances = [];
-  for (let i = 0; i < pool.tokensList.length; i++) {
-    balances[i] = tokenBalance(pool.tokensList[i], signer, signerAddress);
+  const balances: Promise<BigNumber>[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i] === AddressZero) {
+      balances[i] = signer.getBalance();
+    } else {
+      balances[i] = getErc20Balance(tokens[i], signer.provider, signerAddress);
+    }
   }
-  return Promise.all([bptBalance, ...balances]);
+  return Promise.all(balances);
 };

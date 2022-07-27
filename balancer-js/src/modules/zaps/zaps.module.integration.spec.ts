@@ -1,12 +1,11 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { Contracts } from '@/modules/contracts/contracts.module';
 import { Network } from '@/.';
 import hardhat from 'hardhat';
 
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@ethersproject/bignumber';
 
-import { forkSetup } from '@/test/lib/utils';
+import { forkSetup, getBalances } from '@/test/lib/utils';
 
 /*
  * Testing on GOERLI
@@ -37,25 +36,6 @@ const gaugeAddresses = ['0xf0f572ad66baacDd07d8c7ea3e0E5EFA56a76081']; // Balanc
 const initialBalance = '1000';
 let signerAddress: string;
 
-const { contracts } = new Contracts(5, provider);
-
-// Setup
-
-const tokenBalance = async (tokenAddress: string) => {
-  const balance: Promise<BigNumber> = contracts
-    .ERC20(tokenAddress, signer.provider)
-    .balanceOf(signerAddress);
-  return balance;
-};
-
-const updateBalances = async (addresses: string[]) => {
-  const balances = [];
-  for (let i = 0; i < addresses.length; i++) {
-    balances[i] = tokenBalance(addresses[i]);
-  }
-  return Promise.all(balances);
-};
-
 // Test Scenarios
 
 describe('zaps execution', async () => {
@@ -75,7 +55,7 @@ describe('zaps execution', async () => {
   });
 
   it('should update balances', async () => {
-    const balances = await updateBalances(gaugeAddresses);
+    const balances = await getBalances(gaugeAddresses, signer, signerAddress);
     for (let i = 0; i < balances.length; i++) {
       expect(balances[i].eq(parseFixed(initialBalance, 18))).to.be.true;
     }
