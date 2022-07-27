@@ -142,7 +142,7 @@ export class StablesBuilder {
     }
 
     // For now assuming ref amounts will be safe - should we add more accurate?
-    const limits = [expectedBptReturn.toString()];
+    const limits = [expectedBptReturn];
     for (let i = 0; i < tokens.length; i++) {
       limits.push(MaxInt256.toString());
     }

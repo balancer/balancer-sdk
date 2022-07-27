@@ -213,7 +213,7 @@ export class BbaUsd1Builder {
 
     // For now assuming ref amounts will be safe - should we add more accurate?
     const limits = [
-      expectedBptReturn.toString(),
+      expectedBptReturn,
       MaxInt256.toString(),
       MaxInt256.toString(),
       MaxInt256.toString(),
