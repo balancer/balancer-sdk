@@ -136,7 +136,8 @@ describe('execution', async () => {
   let authorisation: string;
   let balance: BigNumber;
 
-  beforeEach(async () => {
+  beforeEach(async function () {
+    this.timeout(20000);
     await reset();
 
     signer = provider.getSigner();
