@@ -1,4 +1,5 @@
 import {
+  JoinConcern,
   LiquidityConcern,
   SpotPriceConcern,
   PriceImpactConcern,
@@ -8,4 +9,5 @@ export interface PoolType {
   liquidity: LiquidityConcern;
   spotPriceCalculator: SpotPriceConcern;
   priceImpactCalculator: PriceImpactConcern;
+  join: JoinConcern;
 }

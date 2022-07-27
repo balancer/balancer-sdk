@@ -2,8 +2,8 @@ import { BigNumber, formatFixed } from '@ethersproject/bignumber';
 import { parseFixed } from '@/lib/utils/math';
 import { Pool, PoolToken } from '@/types';
 import { Pools } from '@/modules/pools/pools.module';
-import { PoolProvider } from '../data-providers/pool/provider.interface';
-import { TokenPriceProvider } from '../data-providers/token-price/provider.interface';
+import { PoolRepository } from '../data';
+import { TokenPriceProvider } from '../data';
 import { Zero } from '@ethersproject/constants';
 
 const SCALING_FACTOR = 36;
@@ -16,7 +16,7 @@ export interface PoolBPTValue {
 
 export class Liquidity {
   constructor(
-    private pools: PoolProvider,
+    private pools: PoolRepository,
     private tokenPrices: TokenPriceProvider
   ) {}
 

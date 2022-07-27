@@ -1,7 +1,7 @@
 import { Pool } from '@/types';
-import { PoolAttribute, PoolProvider } from './provider.interface';
+import { PoolAttribute, PoolRepository } from './types';
 
-export class StaticPoolProvider implements PoolProvider {
+export class StaticPoolRepository implements PoolRepository {
   constructor(private pools: Pool[]) {}
 
   async find(id: string): Promise<Pool | undefined> {

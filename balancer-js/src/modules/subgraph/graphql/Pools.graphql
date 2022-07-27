@@ -124,7 +124,7 @@ fragment SubgraphPoolToken on PoolToken {
     decimals
     address
     balance
-    invested
+    managedBalance
     weight
     priceRate
 }

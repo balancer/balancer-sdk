@@ -8,11 +8,6 @@ import {
 } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Pools } from '@/modules/pools/pools.module';
-import { Linear } from '../pools/pool-types/linear.module';
-import { Weighted } from '../pools/pool-types/weighted.module';
-import { MetaStable } from '../pools/pool-types/metaStable.module';
-import { Stable } from '../pools/pool-types/stable.module';
-import { StablePhantom } from '../pools/pool-types/stablePhantom.module';
 
 export class Pricing {
   private readonly swaps: Swaps;
@@ -92,39 +87,5 @@ export class Pricing {
         poolData
       );
     }
-  }
-
-  // TO DO - This will be refactored to match joinPool architecture
-  /**
-   * Calculates price impact for a given BPT amount for a pool.
-   * @param tokenAmounts Token amounts used for join.
-   * @param bptAmount Expected BPT amount returned from join.
-   * @param poolId Pool to join.
-   * @param pool Pool to join.
-   * @returns Price impact (EVM scale)
-   */
-  async getPriceImpact(
-    tokenAmounts: string[],
-    bptAmount: string,
-    poolId = '',
-    pool?: SubgraphPoolBase
-  ): Promise<string> {
-    let typedPool: Weighted | Stable | MetaStable | StablePhantom | Linear;
-
-    if (pool) typedPool = Pools.from(pool.poolType as PoolType);
-    else {
-      await this.fetchPools();
-      const pools = this.getPools();
-      pool = pools.find((pool) => pool.id == poolId);
-      if (!pool) throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
-      typedPool = Pools.from(pool.poolType as PoolType);
-    }
-
-    const priceImpact = typedPool.priceImpactCalculator.calcPriceImpact(
-      pool,
-      tokenAmounts,
-      bptAmount
-    );
-    return priceImpact;
   }
 }

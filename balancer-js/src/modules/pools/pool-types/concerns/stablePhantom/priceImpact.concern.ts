@@ -13,6 +13,7 @@ import {
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { bptSpotPrice } from '../stable/priceImpact.concern';
 import { BigNumber } from 'ethers';
+import { Pool } from '@/types';
 
 export class PhantomStablePriceImpact implements PriceImpactConcern {
   /**
@@ -21,7 +22,7 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
    * @param { bigint [] } amounts Token amounts being invested. Needs a value for each pool token that is not a PhantomBpt.
    * @returns { bigint } BPT amount.
    */
-  bptZeroPriceImpact(pool: SubgraphPoolBase, tokenAmounts: bigint[]): bigint {
+  bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
     if (tokenAmounts.length !== pool.tokensList.length - 1)
       throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
 
@@ -55,7 +56,7 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
           priceRates[i]) /
         ONE;
       const scalingFactor = _computeScalingFactor(
-        BigInt(pool.tokens[i].decimals)
+        BigInt(pool.tokens[i].decimals as number)
       );
       const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
       const newTerm = (price * amountUpscaled) / ONE;
@@ -101,7 +102,7 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
   }
 
   calcPriceImpact(
-    pool: SubgraphPoolBase,
+    pool: Pool,
     tokenAmounts: string[],
     bptAmount: string
   ): string {

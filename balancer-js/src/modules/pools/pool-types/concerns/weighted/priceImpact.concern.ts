@@ -10,6 +10,8 @@ import {
   _upscale,
 } from '@/lib/utils/solidityMaths';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { Pool } from '@/types';
+import { formatFixed } from '@ethersproject/bignumber';
 
 export class WeightedPoolPriceImpact implements PriceImpactConcern {
   /**
@@ -18,7 +20,7 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
    * @param { bigint [] } amounts Token amounts being invested. EVM Scale. Needs a value for each pool token.
    * @returns { bigint } BPT amount.
    */
-  bptZeroPriceImpact(pool: SubgraphPoolBase, tokenAmounts: bigint[]): bigint {
+  bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
     if (tokenAmounts.length !== pool.tokensList.length)
       throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
 
@@ -37,7 +39,7 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
       const balance = parseToBigInt18(weightedPool.tokens[i].balance);
       const price = (weight * totalShares) / balance;
       const scalingFactor = _computeScalingFactor(
-        BigInt(pool.tokens[i].decimals)
+        BigInt(pool.tokens[i].decimals as number)
       );
       const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
       const newTerm = (price * amountUpscaled) / ONE;
@@ -47,7 +49,7 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
   }
 
   calcPriceImpact(
-    pool: SubgraphPoolBase,
+    pool: Pool,
     tokenAmounts: string[],
     bptAmount: string
   ): string {
@@ -55,6 +57,7 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
       pool,
       tokenAmounts.map((a) => BigInt(a))
     );
+    console.log(formatFixed(bptZeroPriceImpact.toString(), 18));
     return calcPriceImpact(BigInt(bptAmount), bptZeroPriceImpact).toString();
   }
 }

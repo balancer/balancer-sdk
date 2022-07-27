@@ -1,29 +1,54 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { WeightedPoolPriceImpact } from '@/modules/pools/pool-types/concerns/weighted/priceImpact.concern';
-import { MockPoolDataService } from '@/test/lib/mockPool';
-
 import pools_14717479 from '@/test/lib/pools_14717479.json';
+import { StaticPoolRepository } from '@/modules/data';
+import { PoolsProvider } from '@/modules/pools/provider';
+import { mockPoolDataService } from '@/test/lib/mockPool';
+import { PoolModel, Pool } from '@/types';
+import { Network } from '@/.';
+import { formatFixed } from '@ethersproject/bignumber';
 
 dotenv.config();
 
+const rpcUrl = 'http://127.0.0.1:8545';
+
 const priceImpactCalc = new WeightedPoolPriceImpact();
-let mockPoolDataService: MockPoolDataService;
+const wethDaiId =
+  '0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a';
+const threeTokensPoolId =
+  '0xb39362c3d5ac235fe588b0b83ed7ac87241039cb000100000000000000000195';
+
+// Setup
+const setupPool = async (provider: PoolsProvider, poolId: string) => {
+  const _pool = await provider.find(poolId);
+  if (!_pool) throw new Error('Pool not found');
+  const pool = _pool;
+  return pool;
+};
 
 describe('weighted pool price impact', () => {
-  before(async () => {
-    // Mainnet pool snapshot taken at block 14717479
-    mockPoolDataService = new MockPoolDataService(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      pools_14717479 as any
+  let pool: PoolModel;
+  let threeTokensPool: PoolModel;
+
+  // Setup chain
+  before(async function () {
+    this.timeout(20000);
+    const sdkConfig = {
+      network: Network.MAINNET,
+      rpcUrl,
+    };
+    // Using a static repository to make test consistent over time
+    const poolsProvider = new PoolsProvider(
+      sdkConfig,
+      new StaticPoolRepository(pools_14717479 as Pool[])
     );
+    pool = await setupPool(poolsProvider, wethDaiId);
+    threeTokensPool = await setupPool(poolsProvider, threeTokensPoolId);
   });
 
   context('bpt zero price impact', () => {
     it('two token pool', () => {
-      const wethDaiId =
-        '0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a';
-      const pool = mockPoolDataService.getPool(wethDaiId);
       const tokenAmounts = [
         BigInt('10000000000000000000'),
         BigInt('100000000000000000000'),
@@ -46,9 +71,6 @@ describe('weighted pool price impact', () => {
       expect(proportionalBptZeroPI.toString()).to.eq('4931900186642428185328');
     });
     it('three token pool', () => {
-      const threeTokensPoolId =
-        '0xb39362c3d5ac235fe588b0b83ed7ac87241039cb000100000000000000000195';
-      const pool = mockPoolDataService.getPool(threeTokensPoolId);
       const tokenAmounts = [
         BigInt('10234000000000000000'),
         BigInt('23420000000000000'),
@@ -56,7 +78,7 @@ describe('weighted pool price impact', () => {
       ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
-        pool,
+        threeTokensPool,
         tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('876361770363362937782');
@@ -67,7 +89,7 @@ describe('weighted pool price impact', () => {
         BigInt('383499316375739080555'),
       ];
       const proportionalBptZeroPI = priceImpactCalc.bptZeroPriceImpact(
-        pool,
+        threeTokensPool,
         proportionalTokenAmounts
       );
       expect(proportionalBptZeroPI.toString()).to.eq('279707470176761335097');
@@ -76,7 +98,16 @@ describe('weighted pool price impact', () => {
 
   context('price impact', () => {
     it('calculate price impact', () => {
-      expect(true).to.eq(false);
+      const proportionalTokenAmounts = [
+        '244477477399253547632406',
+        '125240456379058423162',
+      ];
+      const priceImpact = priceImpactCalc.calcPriceImpact(
+        pool,
+        proportionalTokenAmounts,
+        '4931900186642428185328'
+      );
+      expect(priceImpact.toString()).to.eq('0');
     });
   });
 });

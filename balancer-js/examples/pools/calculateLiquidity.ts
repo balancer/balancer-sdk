@@ -1,13 +1,13 @@
 import {
   Liquidity,
-  StaticPoolProvider,
+  StaticPoolRepository,
   StaticTokenPriceProvider,
   Pool,
   TokenPrices,
 } from '../../src';
 import { formatFixed } from '@ethersproject/bignumber';
 import { parseFixed } from '../../src/lib/utils/math';
-import { FallbackPoolProvider } from '../../src/modules/data-providers/pool/fallback.provider';
+import { FallbackPoolRepository } from '../../src/modules/data/pool';
 import POOLS from './pools.json';
 import DECORATED_POOLS from './decorated-pools.json';
 import TOKENS from './tokens.json';
@@ -29,8 +29,8 @@ TOKENS.forEach((token) => {
 });
 
 // const sorPoolProvider = new SORPoolProvider(config);
-const staticPoolProvider = new StaticPoolProvider(POOLS as Pool[]);
-const poolProvider = new FallbackPoolProvider([
+const staticPoolProvider = new StaticPoolRepository(POOLS as Pool[]);
+const poolProvider = new FallbackPoolRepository([
   // sorPoolProvider,
   staticPoolProvider,
 ]);
@@ -79,4 +79,5 @@ async function getLiquidity(poolIds: string[]) {
   process.exit(0);
 }
 
+// yarn examples:run ./examples/pools/calculateLiquidity.ts
 getLiquidity(poolIds);

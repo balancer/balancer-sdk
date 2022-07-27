@@ -1,6 +1,7 @@
 import { SwapInfo } from '@balancer-labs/sor';
 import { BigNumber } from '@ethersproject/bignumber';
 import { tokenForSwaps } from './swap_utils';
+import { SwapType } from '../types';
 
 interface AmountForLimit {
   amount: BigNumber;
@@ -33,12 +34,26 @@ function amountForLimit(amount: BigNumber): AmountForLimit {
   };
 }
 
-function decorateSorSwapInfo(swapInfo: SwapInfo): SDKSwapInfo {
-  const amountIn = swapInfo.swapAmount;
-  const amountOut = swapInfo.returnAmount;
-  const amountInForLimits = swapInfo.swapAmountForSwaps || swapInfo.swapAmount;
+function decorateSorSwapInfo(
+  swapInfo: SwapInfo,
+  swapType: SwapType
+): SDKSwapInfo {
+  const amountIn =
+    swapType === SwapType.SwapExactIn
+      ? swapInfo.swapAmount
+      : swapInfo.returnAmount;
+  const amountOut =
+    swapType === SwapType.SwapExactIn
+      ? swapInfo.returnAmount
+      : swapInfo.swapAmount;
+  const amountInForLimits =
+    swapType === SwapType.SwapExactIn
+      ? swapInfo.swapAmountForSwaps || swapInfo.swapAmount
+      : swapInfo.returnAmountFromSwaps || swapInfo.returnAmount;
   const amountOutForLimits =
-    swapInfo.returnAmountFromSwaps || swapInfo.returnAmount;
+    swapType === SwapType.SwapExactIn
+      ? swapInfo.returnAmountFromSwaps || swapInfo.returnAmount
+      : swapInfo.swapAmountForSwaps || swapInfo.swapAmount;
   const tokenInForSwaps = tokenForSwaps(swapInfo.tokenIn);
   const tokenOutFromSwaps = tokenForSwaps(swapInfo.tokenOut);
 

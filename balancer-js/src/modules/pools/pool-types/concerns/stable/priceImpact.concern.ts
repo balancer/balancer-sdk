@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { SubgraphPoolBase, StablePool } from '@balancer-labs/sor';
+import { StablePool } from '@balancer-labs/sor';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
 import {
   ONE,
@@ -11,6 +11,7 @@ import {
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
 import { parseToBigInt18 } from '@/lib/utils/math';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { Pool } from '@/types';
 
 export class StablePoolPriceImpact implements PriceImpactConcern {
   /**
@@ -19,7 +20,7 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
    * @param { bigint [] } amounts Token amounts being invested. Needs a value for each pool token.
    * @returns { bigint } BPT amount.
    */
-  bptZeroPriceImpact(pool: SubgraphPoolBase, tokenAmounts: bigint[]): bigint {
+  bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
     if (tokenAmounts.length !== pool.tokensList.length)
       throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
 
@@ -39,7 +40,7 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
         i
       );
       const scalingFactor = _computeScalingFactor(
-        BigInt(pool.tokens[i].decimals)
+        BigInt(pool.tokens[i].decimals as number)
       );
       const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
       const newTerm = (price * amountUpscaled) / ONE;
@@ -49,7 +50,7 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
   }
 
   calcPriceImpact(
-    pool: SubgraphPoolBase,
+    pool: Pool,
     tokenAmounts: string[],
     bptAmount: string
   ): string {
