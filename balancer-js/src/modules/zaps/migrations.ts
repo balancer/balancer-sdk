@@ -2,6 +2,7 @@ import { defaultAbiCoder } from '@ethersproject/abi';
 import { MaxInt256 } from '@ethersproject/constants';
 import { StaBal3Builder } from './bbausd2-migrations/stabal3';
 import { BbaUsd1Builder } from './bbausd2-migrations/bbausd1';
+import { StablesBuilder } from './bbausd2-migrations/stables';
 import { PoolToken } from '@/types';
 
 export class Migrations {
@@ -46,6 +47,36 @@ export class Migrations {
       userAddress,
       staked,
       authorisation,
+      tokens
+    );
+
+    return {
+      to: request.to,
+      data: request.data,
+      decode: (output) =>
+        defaultAbiCoder.decode(['int256[]'], output[2])[3].toString(),
+    };
+  }
+
+  stables(
+    from: { id: string; address: string; gauge?: string },
+    to: { id: string; address: string; gauge?: string },
+    userAddress: string,
+    amount: string,
+    limit = MaxInt256.toString(),
+    authorisation: string,
+    staked: boolean,
+    tokens: string[]
+  ): { to: string; data: string; decode: (output: string) => string } {
+    const builder = new StablesBuilder(this.network);
+    const request = builder.calldata(
+      from,
+      to,
+      userAddress,
+      amount,
+      limit,
+      authorisation,
+      staked,
       tokens
     );
 
