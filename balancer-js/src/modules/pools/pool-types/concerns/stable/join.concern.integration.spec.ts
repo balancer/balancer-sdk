@@ -15,7 +15,6 @@ import hardhat from 'hardhat';
 
 import { TransactionReceipt } from '@ethersproject/providers';
 import { parseFixed, BigNumber } from '@ethersproject/bignumber';
-import { AddressZero } from '@ethersproject/constants';
 
 import { ADDRESSES } from '@/test/lib/constants';
 import { forkSetup, setupPool, updateBalances } from '@/test/lib/utils';
