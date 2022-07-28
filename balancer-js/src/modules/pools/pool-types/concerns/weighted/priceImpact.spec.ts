@@ -4,10 +4,8 @@ import { WeightedPoolPriceImpact } from '@/modules/pools/pool-types/concerns/wei
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import { StaticPoolRepository } from '@/modules/data';
 import { PoolsProvider } from '@/modules/pools/provider';
-import { mockPoolDataService } from '@/test/lib/mockPool';
 import { PoolModel, Pool } from '@/types';
 import { Network } from '@/.';
-import { formatFixed } from '@ethersproject/bignumber';
 
 dotenv.config();
 
