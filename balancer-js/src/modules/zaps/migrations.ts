@@ -10,15 +10,19 @@ export class Migrations {
 
   stabal3(
     userAddress: string,
-    amount: string,
-    limit = MaxInt256.toString(),
+    staBal3Amount: string,
+    minBbausd2Out: string,
     authorisation: string,
     staked: boolean
-  ): { to: string; data: string; decode: (output: string) => string } {
+  ): {
+    to: string;
+    data: string;
+    decode: (output: string, staked: boolean) => string;
+  } {
     const builder = new StaBal3Builder(this.network);
     const request = builder.calldata(
-      amount,
-      limit,
+      staBal3Amount,
+      minBbausd2Out,
       userAddress,
       staked,
       authorisation
@@ -27,8 +31,17 @@ export class Migrations {
     return {
       to: request.to,
       data: request.data,
-      decode: (output) =>
-        defaultAbiCoder.decode(['int256[]'], output[2])[3].toString(),
+      decode: (output, staked) => {
+        const swapIndex = staked ? 3 : 2;
+        const multicallResult = defaultAbiCoder.decode(['bytes[]'], output);
+        const swapDeltas = defaultAbiCoder.decode(
+          ['int256[]'],
+          multicallResult[0][swapIndex]
+        );
+        console.log(swapDeltas.toString());
+        // bbausd2AmountOut
+        return swapDeltas[0][0].abs().toString();
+      },
     };
   }
 
