@@ -3,7 +3,6 @@ import { MaxInt256 } from '@ethersproject/constants';
 import { StaBal3Builder } from './bbausd2-migrations/stabal3';
 import { BbaUsd1Builder } from './bbausd2-migrations/bbausd1';
 import { StablesBuilder } from './bbausd2-migrations/stables';
-import { PoolToken } from '@/types';
 
 export class Migrations {
   constructor(private network: 1 | 5) {}

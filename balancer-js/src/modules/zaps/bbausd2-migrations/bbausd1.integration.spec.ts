@@ -251,19 +251,35 @@ describe('bbausd migration execution', async () => {
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
-      await testFlow(true, BigNumber.from(bbausd2AmountOut).add(1).toString());
-      expect(false).to.be.true; // Reminder - the above test should throw
+      let errorMessage = '';
+      try {
+        await testFlow(
+          true,
+          BigNumber.from(bbausd2AmountOut).add(1).toString()
+        );
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
     }).timeout(20000);
   });
 
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted - using exact bbausd2AmountOut from static call', async () => {
-      await testFlow(false);
+      bbausd2AmountOut = await testFlow(false);
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
-      await testFlow(false, BigNumber.from(bbausd2AmountOut).add(1).toString());
-      expect(false).to.be.true; // Reminder - the above test should throw
+      let errorMessage = '';
+      try {
+        await testFlow(
+          false,
+          BigNumber.from(bbausd2AmountOut).add(1).toString()
+        );
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
     }).timeout(20000);
   });
 }).timeout(20000);
