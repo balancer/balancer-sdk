@@ -167,6 +167,7 @@ describe('bbausd migration execution', async () => {
 
   async function testFlow(
     staked: boolean,
+    authorized = true,
     minBbausd2Out: undefined | string = undefined
   ): Promise<string> {
     const addressIn = staked
@@ -187,11 +188,11 @@ describe('bbausd migration execution', async () => {
       signerAddress,
       amount.toString(),
       '0',
-      authorisation,
       staked,
       pool.tokens
         .filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
-        .map((token) => parseFixed(token.balance, token.decimals).toString())
+        .map((token) => parseFixed(token.balance, token.decimals).toString()),
+      authorisation
     );
 
     const gasLimit = MAX_GAS_LIMIT;
@@ -208,11 +209,11 @@ describe('bbausd migration execution', async () => {
       signerAddress,
       amount.toString(),
       minBbausd2Out ? minBbausd2Out : expectedBpts.bbausd2AmountOut,
-      authorisation,
       staked,
       pool.tokens
         .filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
-        .map((token) => parseFixed(token.balance, token.decimals).toString())
+        .map((token) => parseFixed(token.balance, token.decimals).toString()),
+      authorized ? authorisation : undefined
     );
 
     const response = await signer.sendTransaction({
@@ -255,6 +256,7 @@ describe('bbausd migration execution', async () => {
       try {
         await testFlow(
           true,
+          true,
           BigNumber.from(bbausd2AmountOut).add(1).toString()
         );
       } catch (error) {
@@ -274,6 +276,7 @@ describe('bbausd migration execution', async () => {
       try {
         await testFlow(
           false,
+          true,
           BigNumber.from(bbausd2AmountOut).add(1).toString()
         );
       } catch (error) {
@@ -282,4 +285,30 @@ describe('bbausd migration execution', async () => {
       expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
     }).timeout(20000);
   });
+
+  context('authorization', async () => {
+    // authorisation wihtin relayer is the default case and is already tested on previous scenarios
+
+    it('should transfer tokens from stable to boosted - pre authorized', async () => {
+      const approval = contracts.vault.interface.encodeFunctionData(
+        'setRelayerApproval',
+        [signerAddress, relayer, true]
+      );
+      await signer.sendTransaction({
+        to: contracts.vault.address,
+        data: approval,
+      });
+      await testFlow(false, false);
+    }).timeout(20000);
+
+    it('should transfer tokens from stable to boosted - auhtorisation should fail', async () => {
+      let errorMessage = '';
+      try {
+        await testFlow(false, false);
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain('BAL#503'); // USER_DOESNT_ALLOW_RELAYER - Relayers must be allowed by both governance and the user account
+    }).timeout(20000);
+  }).timeout(20000);
 }).timeout(20000);

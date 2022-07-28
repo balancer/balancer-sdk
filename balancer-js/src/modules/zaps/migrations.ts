@@ -11,8 +11,8 @@ export class Migrations {
     userAddress: string,
     staBal3Amount: string,
     minBbausd2Out: string,
-    authorisation: string,
-    staked: boolean
+    staked: boolean,
+    authorisation?: string
   ): {
     to: string;
     data: string;
@@ -20,9 +20,9 @@ export class Migrations {
   } {
     const builder = new StaBal3Builder(this.network);
     const request = builder.calldata(
+      userAddress,
       staBal3Amount,
       minBbausd2Out,
-      userAddress,
       staked,
       authorisation
     );
@@ -31,7 +31,8 @@ export class Migrations {
       to: request.to,
       data: request.data,
       decode: (output, staked) => {
-        const swapIndex = staked ? 3 : 2;
+        let swapIndex = staked ? 3 : 2;
+        if (authorisation == undefined) swapIndex -= 1;
         const multicallResult = defaultAbiCoder.decode(['bytes[]'], output);
         const swapDeltas = defaultAbiCoder.decode(
           ['int256[]'],
@@ -48,9 +49,9 @@ export class Migrations {
     userAddress: string,
     bbausd1Amount: string,
     minBbausd2Out: string,
-    authorisation: string,
     staked: boolean,
-    tokenBalances: string[]
+    tokenBalances: string[],
+    authorisation?: string
   ): {
     to: string;
     data: string;
@@ -64,19 +65,20 @@ export class Migrations {
   } {
     const builder = new BbaUsd1Builder(this.network);
     const request = builder.calldata(
+      userAddress,
       bbausd1Amount,
       minBbausd2Out,
-      userAddress,
       staked,
-      authorisation,
-      tokenBalances
+      tokenBalances,
+      authorisation
     );
 
     return {
       to: request.to,
       data: request.data,
       decode: (output, staked) => {
-        const swapIndex = staked ? 2 : 1;
+        let swapIndex = staked ? 2 : 1;
+        if (authorisation == undefined) swapIndex -= 1;
         const multicallResult = defaultAbiCoder.decode(['bytes[]'], output);
         const swapDeltas = defaultAbiCoder.decode(
           ['int256[]'],

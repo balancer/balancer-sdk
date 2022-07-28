@@ -23,21 +23,23 @@ export class StaBal3Builder {
   }
 
   calldata(
+    userAddress: string,
     staBal3Amount: string,
     minBbausd2Out: string,
-    userAddress: string,
     staked: boolean,
-    authorisation: string
+    authorisation?: string
   ): {
     to: string;
     data: string;
   } {
     const relayer = this.addresses.relayer;
-    let calls: string[] = [];
+    let calls: string[] = authorisation
+      ? [this.buildSetRelayerApproval(authorisation)]
+      : [];
 
     if (staked) {
       calls = [
-        this.buildSetRelayerApproval(authorisation),
+        ...calls,
         this.buildWithdraw(userAddress, staBal3Amount),
         this.buildExit(relayer, relayer, staBal3Amount),
         this.buildSwap(minBbausd2Out, relayer),
@@ -45,20 +47,11 @@ export class StaBal3Builder {
       ];
     } else {
       calls = [
-        this.buildSetRelayerApproval(authorisation),
+        ...calls,
         this.buildExit(userAddress, relayer, staBal3Amount),
         this.buildSwap(minBbausd2Out, userAddress),
       ];
     }
-
-    // TODO: Let's double check with setting approveVault to 0 if we need that or not, or ask Nico ;)
-    // const { assetOrder } = this.addresses.staBal3;
-    // ...assetOrder.map((name) => {
-    //   const tokenAddress = this.addresses[
-    //     name as keyof typeof this.addresses
-    //   ] as string;
-    //   return this.buildApproveVault(tokenAddress);
-    // }),
 
     const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
       calls,

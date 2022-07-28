@@ -150,6 +150,7 @@ describe('stabal3 migration execution', async () => {
 
   async function testFlow(
     staked: boolean,
+    authorised = true,
     minBbausd2Out: undefined | string = undefined
   ): Promise<string> {
     const addressIn = staked
@@ -170,8 +171,8 @@ describe('stabal3 migration execution', async () => {
       signerAddress,
       amount.toString(),
       '0',
-      authorisation,
-      staked
+      staked,
+      authorisation
     );
     const gasLimit = MAX_GAS_LIMIT;
 
@@ -187,8 +188,8 @@ describe('stabal3 migration execution', async () => {
       signerAddress,
       amount.toString(),
       minBbausd2Out ? minBbausd2Out : bbausd2AmountOut,
-      authorisation,
-      staked
+      staked,
+      authorised ? authorisation : undefined
     );
 
     const response = await signer.sendTransaction({
@@ -225,12 +226,13 @@ describe('stabal3 migration execution', async () => {
 
     it('should transfer tokens from stable to boosted', async () => {
       bbausd2AmountOut = await testFlow(true);
-    });
+    }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
       try {
         await testFlow(
+          true,
           true,
           BigNumber.from(bbausd2AmountOut).add(1).toString()
         );
@@ -244,13 +246,14 @@ describe('stabal3 migration execution', async () => {
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted', async () => {
       bbausd2AmountOut = await testFlow(false);
-    });
+    }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
       try {
         await testFlow(
           false,
+          true,
           BigNumber.from(bbausd2AmountOut).add(1).toString()
         );
       } catch (error) {
@@ -259,4 +262,30 @@ describe('stabal3 migration execution', async () => {
       expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
     }).timeout(20000);
   });
+
+  context('authorization', async () => {
+    // authorisation wihtin relayer is the default case and is already tested on previous scenarios
+
+    it('should transfer tokens from stable to boosted - pre authorized', async () => {
+      const approval = contracts.vault.interface.encodeFunctionData(
+        'setRelayerApproval',
+        [signerAddress, relayer, true]
+      );
+      await signer.sendTransaction({
+        to: contracts.vault.address,
+        data: approval,
+      });
+      await testFlow(false, false);
+    }).timeout(20000);
+
+    it('should transfer tokens from stable to boosted - auhtorisation should fail', async () => {
+      let errorMessage = '';
+      try {
+        await testFlow(false, false);
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain('BAL#503'); // USER_DOESNT_ALLOW_RELAYER - Relayers must be allowed by both governance and the user account
+    }).timeout(20000);
+  }).timeout(20000);
 }).timeout(20000);

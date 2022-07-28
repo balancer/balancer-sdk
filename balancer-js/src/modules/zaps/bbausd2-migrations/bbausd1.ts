@@ -18,22 +18,24 @@ export class BbaUsd1Builder {
   }
 
   calldata(
+    userAddress: string,
     bbausd1Amount: string,
     minBbausd2Out: string,
-    userAddress: string,
     staked: boolean,
-    authorisation: string,
-    tokenBalances: string[]
+    tokenBalances: string[],
+    authorisation?: string
   ): {
     to: string;
     data: string;
   } {
     const relayer = this.addresses.relayer;
-    let calls: string[] = [];
+    let calls: string[] = authorisation
+      ? [this.buildSetRelayerApproval(authorisation)]
+      : [];
 
     if (staked) {
       calls = [
-        this.buildSetRelayerApproval(authorisation),
+        ...calls,
         this.buildWithdraw(userAddress, bbausd1Amount),
         this.buildSwap(
           bbausd1Amount,
@@ -46,7 +48,7 @@ export class BbaUsd1Builder {
       ];
     } else {
       calls = [
-        this.buildSetRelayerApproval(authorisation),
+        ...calls,
         this.buildSwap(
           bbausd1Amount,
           minBbausd2Out,
