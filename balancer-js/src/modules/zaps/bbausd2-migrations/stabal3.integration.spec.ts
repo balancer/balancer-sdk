@@ -39,7 +39,6 @@ const migrations = new Migrations(network);
 
 const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
 const poolAddress = addresses.staBal3.address;
-const gaugeAddress = addresses.staBal3.gauge;
 const relayer = addresses.relayer;
 
 const getErc20Balance = (token: string, holder: string): Promise<BigNumber> =>
@@ -112,7 +111,7 @@ const stake = async (
     await contracts
       .ERC20(poolAddress, provider)
       .connect(signer)
-      .approve(gaugeAddress, MaxUint256)
+      .approve(addresses.staBal3.gauge, MaxUint256)
   ).wait();
 
   await (
@@ -124,7 +123,7 @@ const stake = async (
 
   await (
     await signer.sendTransaction({
-      to: gaugeAddress,
+      to: addresses.staBal3.gauge,
       data: liquidityGauge.encodeFunctionData('deposit', [balance]),
     })
   ).wait();
@@ -149,6 +148,73 @@ describe('stabal3 migration execution', async () => {
     balance = await move(poolAddress, holderAddress, signerAddress);
   });
 
+  async function testFlow(
+    staked: boolean,
+    minBbausd2Out: undefined | string = undefined
+  ): Promise<string> {
+    const addressIn = staked
+      ? addresses.staBal3.gauge
+      : addresses.staBal3.address;
+    const addressOut = staked
+      ? addresses.bbausd2.gauge
+      : addresses.bbausd2.address;
+    // Store balance before migration
+    const before = {
+      from: await getErc20Balance(addressIn, signerAddress),
+      to: await getErc20Balance(addressOut, signerAddress),
+    };
+
+    const amount = before.from;
+
+    let query = migrations.stabal3(
+      signerAddress,
+      amount.toString(),
+      '0',
+      authorisation,
+      staked
+    );
+    const gasLimit = MAX_GAS_LIMIT;
+
+    // Static call can be used to simulate tx and get expected BPT in/out deltas
+    const staticResult = await signer.call({
+      to: query.to,
+      data: query.data,
+      gasLimit,
+    });
+    const bbausd2AmountOut = query.decode(staticResult, staked);
+
+    query = migrations.stabal3(
+      signerAddress,
+      amount.toString(),
+      minBbausd2Out ? minBbausd2Out : bbausd2AmountOut,
+      authorisation,
+      staked
+    );
+
+    const response = await signer.sendTransaction({
+      to: query.to,
+      data: query.data,
+      gasLimit,
+    });
+
+    const receipt = await response.wait();
+    console.log('Gas used', receipt.gasUsed.toString());
+
+    const after = {
+      from: await getErc20Balance(addressIn, signerAddress),
+      to: await getErc20Balance(addressOut, signerAddress),
+    };
+
+    console.log(bbausd2AmountOut);
+
+    expect(BigNumber.from(bbausd2AmountOut).gt(0)).to.be.true;
+    expect(after.from.toString()).to.eq('0');
+    expect(after.to.toString()).to.eq(bbausd2AmountOut);
+    return bbausd2AmountOut;
+  }
+
+  let bbausd2AmountOut: string;
+
   context('staked', async () => {
     beforeEach(async function () {
       this.timeout(20000);
@@ -158,81 +224,23 @@ describe('stabal3 migration execution', async () => {
     });
 
     it('should transfer tokens from stable to boosted', async () => {
-      // Store balance before migration
-      const before = {
-        from: await getErc20Balance(gaugeAddress, signerAddress),
-        to: await getErc20Balance(addresses.bbausd2.gauge, signerAddress),
-      };
+      bbausd2AmountOut = await testFlow(true);
+    });
 
-      const query = migrations.stabal3(
-        signerAddress,
-        before.from.toString(),
-        undefined,
-        authorisation,
-        true
-      );
-
-      const { to, data } = query;
-      const gasLimit = MAX_GAS_LIMIT;
-      const response = await signer.sendTransaction({ to, data, gasLimit });
-
-      const receipt = await response.wait();
-      console.log('Gas used', receipt.gasUsed.toString());
-
-      const after = {
-        from: await getErc20Balance(gaugeAddress, signerAddress),
-        to: await getErc20Balance(addresses.bbausd2.gauge, signerAddress),
-      };
-
-      const diffs = {
-        from: after.from.sub(before.from),
-        to: after.to.sub(before.to),
-      };
-
-      console.log(diffs.from, diffs.to);
-
-      expect(diffs.from).to.eql(before.from.mul(-1));
-      expect(parseFloat(formatEther(diffs.to))).to.be.gt(0);
+    it('should transfer tokens from stable to boosted - limit should fail', async () => {
+      await testFlow(true, BigNumber.from(bbausd2AmountOut).add(1).toString());
+      expect(false).to.be.true; // Reminder - the above test should throw
     }).timeout(20000);
   });
 
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted', async () => {
-      // Store balance before migration
-      const before = {
-        from: await getErc20Balance(poolAddress, signerAddress),
-        to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
-      };
+      bbausd2AmountOut = await testFlow(false);
+    });
 
-      const query = migrations.stabal3(
-        signerAddress,
-        before.from.toString(),
-        undefined,
-        authorisation,
-        false
-      );
-
-      const { to, data } = query;
-      const gasLimit = MAX_GAS_LIMIT;
-      const response = await signer.sendTransaction({ to, data, gasLimit });
-
-      const receipt = await response.wait();
-      console.log('Gas used', receipt.gasUsed.toString());
-
-      const after = {
-        from: await getErc20Balance(poolAddress, signerAddress),
-        to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
-      };
-
-      const diffs = {
-        from: after.from.sub(before.from),
-        to: after.to.sub(before.to),
-      };
-
-      console.log(diffs.from, diffs.to);
-
-      expect(diffs.from).to.eql(before.from.mul(-1));
-      expect(parseFloat(formatEther(diffs.to))).to.be.gt(0);
+    it('should transfer tokens from stable to boosted - limit should fail', async () => {
+      await testFlow(false, BigNumber.from(bbausd2AmountOut).add(1).toString());
+      expect(false).to.be.true; // Reminder - the above test should throw
     }).timeout(20000);
   });
 }).timeout(20000);

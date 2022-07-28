@@ -4,6 +4,7 @@ import { Relayer } from '@/modules/relayer/relayer.module';
 import { ExitPoolRequest } from '@/types';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { Interface } from '@ethersproject/abi';
+import { BigNumber } from '@ethersproject/bignumber';
 import { MaxUint256, MaxInt256 } from '@ethersproject/constants';
 // TODO - Ask Nico to update Typechain?
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
@@ -22,8 +23,8 @@ export class StaBal3Builder {
   }
 
   calldata(
-    amount: string,
-    expectedAmount = MaxInt256.toString(),
+    staBal3Amount: string,
+    minBbausd2Out: string,
     userAddress: string,
     staked: boolean,
     authorisation: string
@@ -37,16 +38,16 @@ export class StaBal3Builder {
     if (staked) {
       calls = [
         this.buildSetRelayerApproval(authorisation),
-        this.buildWithdraw(userAddress, amount),
-        this.buildExit(relayer, relayer, amount),
-        this.buildSwap(expectedAmount, relayer),
+        this.buildWithdraw(userAddress, staBal3Amount),
+        this.buildExit(relayer, relayer, staBal3Amount),
+        this.buildSwap(minBbausd2Out, relayer),
         this.buildDeposit(userAddress),
       ];
     } else {
       calls = [
         this.buildSetRelayerApproval(authorisation),
-        this.buildExit(userAddress, relayer, amount),
-        this.buildSwap(expectedAmount, userAddress),
+        this.buildExit(userAddress, relayer, staBal3Amount),
+        this.buildSwap(minBbausd2Out, userAddress),
       ];
     }
 
@@ -182,15 +183,16 @@ export class StaBal3Builder {
       },
     ];
 
-    // For now assuming ref amounts will be safe - should we add more accurate?
+    // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
+    console.log(`Min: `, BigNumber.from(expectedBptReturn).mul(-1).toString());
     const limits = [
-      expectedBptReturn,
+      BigNumber.from(expectedBptReturn).mul(-1).toString(),
       MaxInt256.toString(),
+      '0',
       MaxInt256.toString(),
+      '0',
       MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
+      '0',
     ];
 
     // Swap to/from Relayer

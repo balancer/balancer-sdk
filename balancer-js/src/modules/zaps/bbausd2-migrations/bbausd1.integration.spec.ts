@@ -192,11 +192,14 @@ describe('bbausd migration execution', async () => {
       pool.tokens.filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
     );
 
-    const { to, data } = query;
     const gasLimit = MAX_GAS_LIMIT;
 
     // Static call can be used to simulate tx and get expected BPT in/out deltas
-    const staticResult = await signer.call({ to, data, gasLimit });
+    const staticResult = await signer.call({
+      to: query.to,
+      data: query.data,
+      gasLimit,
+    });
     const expectedBpts = query.decode(staticResult, staked);
 
     query = migrations.bbaUsd(
@@ -208,7 +211,11 @@ describe('bbausd migration execution', async () => {
       pool.tokens.filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
     );
 
-    const response = await signer.sendTransaction({ to, data, gasLimit });
+    const response = await signer.sendTransaction({
+      to: query.to,
+      data: query.data,
+      gasLimit,
+    });
 
     const receipt = await response.wait();
     console.log('Gas used', receipt.gasUsed.toString());
@@ -240,18 +247,18 @@ describe('bbausd migration execution', async () => {
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
-      await testFlow(true, bbausd2AmountOut);
+      await testFlow(true, BigNumber.from(bbausd2AmountOut).add(1).toString());
       expect(false).to.be.true; // Reminder - the above test should throw
     }).timeout(20000);
   });
 
   context('not staked', async () => {
-    it('should transfer tokens from stable to boosted', async () => {
+    it('should transfer tokens from stable to boosted - using exact bbausd2AmountOut from static call', async () => {
       await testFlow(false);
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
-      await testFlow(false, bbausd2AmountOut);
+      await testFlow(false, BigNumber.from(bbausd2AmountOut).add(1).toString());
       expect(false).to.be.true; // Reminder - the above test should throw
     }).timeout(20000);
   });
