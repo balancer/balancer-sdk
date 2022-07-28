@@ -12,6 +12,7 @@ import { BigNumber, ethers } from 'ethers';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import MockProvider from '@/test/lib/MockProvider';
 import { Log } from '@ethersproject/providers';
+import { balancerVault } from '@/lib/constants/config';
 
 dotenv.config();
 
@@ -73,9 +74,9 @@ const SEED_TOKENS: Array<SeedToken> = [
 ];
 
 const INIT_JOIN_PARAMS = {
-  poolId: 200,
-  sender: '0x0000000000000000000000000000000000000001',
-  receiver: '0x0000000000000000000000000000000000000002',
+  poolId: '0xEEE8292CB20A443BA1CAAA59C985CE14CA2BDEE5000100000000000000000263',
+  sender: '0x0000000000000000000000000000000000000002',
+  receiver: '0x0000000000000000000000000000000000000003',
   tokenAddresses: [
     ADDRESSES[42].DAI.address,
     ADDRESSES[42].USDC.address,
@@ -171,7 +172,7 @@ describe('pool factory module', () => {
     });
   });
 
-  context('getPoolInfoFilter', async () => {
+  context('getPoolInfoFromCreateTx', async () => {
     let balancer: BalancerSDK;
     beforeEach(async () => {
       balancer = new BalancerSDK(sdkConfig);
@@ -193,19 +194,20 @@ describe('pool factory module', () => {
     });
   });
 
-  // context('buildInitJoin', async () => {
-  //   let balancer: BalancerSDK;
-  //   beforeEach(async () => {
-  //     balancer = new BalancerSDK(sdkConfig);
-  //   });
-  //   it('should return transaction attributes for an InitJoin', async () => {
-  //     const transactionAttributes = await balancer.pools.weighted.buildInitJoin(
-  //       INIT_JOIN_PARAMS
-  //     );
-  //     expect(transactionAttributes.err).to.not.eq(true);
-  //     expect(transactionAttributes.data).to.eq('0x123');
-  //     expect(transactionAttributes.to).to.equal(vaultAddress);
-  //     expect(transactionAttributes.value).to.equal(true);
-  //   });
-  // });
+  context('buildInitJoin', async () => {
+    let balancer: BalancerSDK;
+    beforeEach(async () => {
+      balancer = new BalancerSDK(sdkConfig);
+    });
+    it('should return transaction attributes for an InitJoin', async () => {
+      const transactionAttributes = await balancer.pools.weighted.buildInitJoin(
+        INIT_JOIN_PARAMS
+      );
+      expect(transactionAttributes.err).to.not.eq(true);
+      expect(transactionAttributes.data).to.eq(
+        '0xb95cac28eee8292cb20a443ba1caaa59c985ce14ca2bdee50001000000000000000002630000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000300000000000000000000000004df6e4121c27713ed22341e7c7df330f56f289b000000000000000000000000c2569dd7d0fd715b054fbf16e75b001e5c0c11150000000000000000000000001c8e3bcb3378a443cc591f154c5ce0ebb4da964800000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000001bc16d674ec800000000000000000000000000000000000000000000000000001bc16d674ec800000000000000000000000000000000000000000000000000001bc16d674ec8000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000030000000000000000000000000000000000000000000000001bc16d674ec800000000000000000000000000000000000000000000000000001bc16d674ec800000000000000000000000000000000000000000000000000001bc16d674ec80000'
+      );
+      expect(transactionAttributes.to).to.equal(balancerVault);
+    });
+  });
 });

@@ -9,18 +9,27 @@ import {
   WeightedFactoryFormattedAttributes,
   SeedToken,
 } from '../types';
-import { Interface } from '@ethersproject/abi';
-import { WeightedPoolFactory__factory } from '@balancer-labs/typechain';
+import { defaultAbiCoder, Interface } from '@ethersproject/abi';
+import {
+  Vault__factory,
+  WeightedPoolFactory__factory,
+} from '@balancer-labs/typechain';
 import { BalancerSdkConfig } from '@/types';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { BigNumber, BigNumberish, ethers } from 'ethers';
 import { AssetHelpers } from '@/lib/utils';
 
+type initJoinParams = {
+  poolId: string;
+  sender: string;
+  receiver: string;
+  tokenAddresses: string[];
+  initialBalancesString: string[];
+};
 export class Weighted implements PoolType {
   public liquidityCalculator: LiquidityConcern;
   public spotPriceCalculator: SpotPriceConcern;
-  factoryAddress: string;
-  wrappedNativeAsset: string;
+  addresses: Record<string, string> = {};
 
   constructor(
     config: BalancerSdkConfig,
@@ -35,8 +44,11 @@ export class Weighted implements PoolType {
     } else {
       addresses = config.network.addresses;
     }
-    this.wrappedNativeAsset = addresses.tokens.wrappedNativeAsset;
-    this.factoryAddress = addresses.contracts.poolFactories.weighted as string;
+    this.addresses = {
+      wrappedNativeAsset: addresses.tokens.wrappedNativeAsset,
+      factoryAddress: addresses.contracts.poolFactories as string,
+      vaultAddress: addresses.contracts.vault,
+    };
   }
 
   buildCreateTx(params: WeightedFactoryParams): WeightedFactoryAttributes {
@@ -52,7 +64,7 @@ export class Weighted implements PoolType {
       };
     }
 
-    const helpers = new AssetHelpers(this.wrappedNativeAsset);
+    const helpers = new AssetHelpers(this.addresses.wrappedNativeAsset);
     const [tokens, weights] = helpers.sortTokens(
       params.seedTokens.map((token) => token.tokenAddress),
       params.seedTokens.map((token) =>
@@ -83,28 +95,53 @@ export class Weighted implements PoolType {
 
     return {
       error: false,
-      to: this.factoryAddress,
+      to: this.addresses.factoryAddress,
       data,
       functionName: 'create',
       attributes,
       value: ethers.utils.parseEther(params.value),
     };
   }
-
-  async buildInitJoin(initJoinParams: any): Promise<InitJoinAttributes> {
-    return Promise.resolve({
-      to: '',
-      data: '0x0',
-      attributes: {},
-      functionName: 'initJoin',
-    });
-  }
-
   formatPoolName(tokens: SeedToken[]): string {
     return tokens
       .map((token) => {
         return token.weight + token.symbol;
       })
       .join('-');
+  }
+  buildInitJoin(params: initJoinParams): InitJoinAttributes {
+    const vault = Vault__factory.createInterface();
+    const JOIN_KIND_INIT = 0; // enum found in WeightedPoolUserData.sol
+    const initUserData = defaultAbiCoder.encode(
+      ['uint256', 'uint256[]'],
+      [JOIN_KIND_INIT, params.initialBalancesString]
+    );
+    const data = vault.encodeFunctionData('joinPool', [
+      params.poolId,
+      params.sender,
+      params.receiver,
+      {
+        assets: params.tokenAddresses,
+        maxAmountsIn: params.initialBalancesString,
+        userData: initUserData,
+        fromInternalBalance: false,
+      },
+    ]);
+    return {
+      to: this.addresses.vaultAddress,
+      data,
+      attributes: {
+        poolId: params.poolId,
+        sender: params.sender,
+        receiver: params.receiver,
+        joinPoolRequest: {
+          assets: params.tokenAddresses,
+          maxAmountsIn: params.initialBalancesString,
+          userData: initUserData,
+          fromInternalBalance: false,
+        },
+      },
+      functionName: 'joinPool',
+    };
   }
 }

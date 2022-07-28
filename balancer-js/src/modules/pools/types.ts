@@ -57,7 +57,17 @@ export type WeightedFactoryFormattedAttributes = {
 export type InitJoinAttributes = {
   to: string;
   functionName: string;
-  attributes: Record<string, unknown>;
+  attributes: {
+    poolId: string;
+    sender: string;
+    receiver: string;
+    joinPoolRequest: {
+      assets: string[];
+      maxAmountsIn: string[];
+      userData: string;
+      fromInternalBalance: boolean;
+    };
+  };
   data: string;
   value?: BigNumber;
   err?: boolean;
