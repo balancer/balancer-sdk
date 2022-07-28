@@ -93,32 +93,46 @@ export class Migrations {
   }
 
   stables(
+    userAddress: string,
     from: { id: string; address: string; gauge?: string },
     to: { id: string; address: string; gauge?: string },
-    userAddress: string,
     amount: string,
     limit = MaxInt256.toString(),
-    authorisation: string,
     staked: boolean,
-    tokens: string[]
-  ): { to: string; data: string; decode: (output: string) => string } {
+    tokens: string[],
+    authorisation?: string
+  ): {
+    to: string;
+    data: string;
+    decode: (output: string, staked: boolean) => string;
+  } {
     const builder = new StablesBuilder(this.network);
     const request = builder.calldata(
+      userAddress,
       from,
       to,
-      userAddress,
       amount,
       limit,
-      authorisation,
       staked,
-      tokens
+      tokens,
+      authorisation
     );
 
     return {
       to: request.to,
       data: request.data,
-      decode: (output) =>
-        defaultAbiCoder.decode(['int256[]'], output[2])[3].toString(),
+      decode: (output, staked) => {
+        let swapIndex = staked ? 3 : 2;
+        if (authorisation == undefined) swapIndex -= 1;
+        const multicallResult = defaultAbiCoder.decode(['bytes[]'], output);
+        const swapDeltas = defaultAbiCoder.decode(
+          ['int256[]'],
+          multicallResult[0][swapIndex]
+        );
+        console.log(swapDeltas.toString());
+        // bbausd2AmountOut
+        return swapDeltas[0][0].abs().toString();
+      },
     };
   }
 }

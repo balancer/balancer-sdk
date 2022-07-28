@@ -152,6 +152,79 @@ describe('stables migration execution', async () => {
     balance = await move(fromPool.address, holderAddress, signerAddress);
   });
 
+  const testFlow = async (
+    staked: boolean,
+    authorised = true,
+    minBbausd2Out: undefined | string = undefined
+  ) => {
+    // Store balance before migration
+    const before = {
+      from: await getErc20Balance(fromGauge, signerAddress),
+      to: await getErc20Balance(toGauge, signerAddress),
+    };
+
+    const migrations = new Migrations(network);
+    let query = migrations.stables(
+      signerAddress,
+      fromPool,
+      toPool,
+      before.from.toString(),
+      '0',
+      staked,
+      tokens,
+      authorisation
+    );
+
+    const gasLimit = MAX_GAS_LIMIT;
+
+    // Static call can be used to simulate tx and get expected BPT in/out deltas
+    const staticResult = await signer.call({
+      to: query.to,
+      data: query.data,
+      gasLimit,
+    });
+    const bbausd2AmountOut = query.decode(staticResult, staked);
+
+    query = migrations.stables(
+      signerAddress,
+      fromPool,
+      toPool,
+      before.from.toString(),
+      minBbausd2Out ? minBbausd2Out : bbausd2AmountOut,
+      staked,
+      tokens,
+      authorised ? authorisation : undefined
+    );
+
+    const response = await signer.sendTransaction({
+      to: query.to,
+      data: query.data,
+      gasLimit,
+    });
+
+    const receipt = await response.wait();
+    console.log('Gas used', receipt.gasUsed.toString());
+
+    const after = {
+      from: await getErc20Balance(fromGauge, signerAddress),
+      to: await getErc20Balance(toGauge, signerAddress),
+    };
+
+    const diffs = {
+      from: after.from.sub(before.from),
+      to: after.to.sub(before.to),
+    };
+
+    console.log(diffs.from, diffs.to);
+
+    expect(BigNumber.from(bbausd2AmountOut).gt(0)).to.be.true;
+    expect(after.from.toString()).to.eq('0');
+    expect(after.to.toString()).to.eq(bbausd2AmountOut);
+    return bbausd2AmountOut;
+  };
+
+  let bbausd2AmountOut: string;
+
   context('staked', async () => {
     beforeEach(async function () {
       this.timeout(20000);
@@ -161,89 +234,68 @@ describe('stables migration execution', async () => {
     });
 
     it('should transfer tokens from stable to boosted', async () => {
-      // Store balance before migration
-      const before = {
-        from: await getErc20Balance(fromGauge, signerAddress),
-        to: await getErc20Balance(toGauge, signerAddress),
-      };
+      bbausd2AmountOut = await testFlow(true);
+    }).timeout(20000);
 
-      const migrations = new Migrations(network);
-      const query = migrations.stables(
-        fromPool,
-        toPool,
-        signerAddress,
-        before.from.toString(),
-        undefined,
-        authorisation,
-        true,
-        tokens
-      );
-
-      const { to, data } = query;
-      const gasLimit = MAX_GAS_LIMIT;
-      const response = await signer.sendTransaction({ to, data, gasLimit });
-
-      const receipt = await response.wait();
-      console.log('Gas used', receipt.gasUsed.toString());
-
-      const after = {
-        from: await getErc20Balance(fromGauge, signerAddress),
-        to: await getErc20Balance(toGauge, signerAddress),
-      };
-
-      const diffs = {
-        from: after.from.sub(before.from),
-        to: after.to.sub(before.to),
-      };
-
-      console.log(diffs.from, diffs.to);
-
-      expect(diffs.from).to.eql(before.from.mul(-1));
-      expect(parseFloat(formatEther(diffs.to))).to.be.gt(0);
+    it('should transfer tokens from stable to boosted - limit should fail', async () => {
+      let errorMessage = '';
+      try {
+        await testFlow(
+          true,
+          true,
+          BigNumber.from(bbausd2AmountOut).add(1).toString()
+        );
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
     }).timeout(20000);
   });
 
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted', async () => {
       // Store balance before migration
-      const before = {
-        from: await getErc20Balance(fromPool.address, signerAddress),
-        to: await getErc20Balance(toPool.address, signerAddress),
-      };
+      bbausd2AmountOut = await testFlow(false);
+    }).timeout(20000);
 
-      const migrations = new Migrations(network);
-      const query = migrations.stables(
-        fromPool,
-        toPool,
-        signerAddress,
-        before.from.toString(),
-        undefined,
-        authorisation,
-        false,
-        tokens
-      );
-
-      const { to, data } = query;
-      const gasLimit = MAX_GAS_LIMIT;
-      const response = await signer.sendTransaction({ to, data, gasLimit });
-
-      const receipt = await response.wait();
-      console.log('Gas used', receipt.gasUsed.toString());
-
-      const after = {
-        from: await getErc20Balance(fromPool.address, signerAddress),
-        to: await getErc20Balance(toPool.address, signerAddress),
-      };
-
-      const diffs = {
-        from: after.from.sub(before.from),
-        to: after.to.sub(before.to),
-      };
-
-      console.log(diffs.from, diffs.to);
-
-      expect(diffs.from).to.eql(before.from.mul(-1));
-      expect(parseFloat(formatEther(diffs.to))).to.be.gt(0);
+    it('should transfer tokens from stable to boosted - limit should fail', async () => {
+      let errorMessage = '';
+      try {
+        await testFlow(
+          false,
+          true,
+          BigNumber.from(bbausd2AmountOut).add(1).toString()
+        );
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
     }).timeout(20000);
   });
+
+  context('authorization', async () => {
+    // authorisation wihtin relayer is the default case and is already tested on previous scenarios
+
+    it('should transfer tokens from stable to boosted - pre authorized', async () => {
+      const approval = contracts.vault.interface.encodeFunctionData(
+        'setRelayerApproval',
+        [signerAddress, relayer, true]
+      );
+      await signer.sendTransaction({
+        to: contracts.vault.address,
+        data: approval,
+      });
+      await testFlow(false, false);
+    }).timeout(20000);
+
+    it('should transfer tokens from stable to boosted - auhtorisation should fail', async () => {
+      let errorMessage = '';
+      try {
+        await testFlow(false, false);
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain('BAL#503'); // USER_DOESNT_ALLOW_RELAYER - Relayers must be allowed by both governance and the user account
+    }).timeout(20000);
+  }).timeout(20000);
 }).timeout(20000);

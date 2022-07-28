@@ -21,20 +21,23 @@ export class StablesBuilder {
   }
 
   calldata(
+    userAddress: string,
     from: { id: string; address: string; gauge?: string },
     to: { id: string; address: string; gauge?: string },
-    userAddress: string,
     amount: string,
     expectedAmount = MaxInt256.toString(),
-    authorisation: string,
     staked: boolean,
-    tokens: string[]
+    tokens: string[],
+    authorisation?: string
   ): {
     to: string;
     data: string;
   } {
     const relayer = this.addresses.relayer;
-    let calls: string[] = [];
+    let calls: string[] = authorisation
+      ? [this.buildSetRelayerApproval(authorisation)]
+      : [];
+
     if (staked && (from.gauge == undefined || to.gauge == undefined))
       throw new Error(
         'Staked flow migration requires gauge addresses to be provided'
@@ -42,7 +45,7 @@ export class StablesBuilder {
 
     if (staked) {
       calls = [
-        this.buildSetRelayerApproval(authorisation),
+        ...calls,
         this.buildWithdraw(userAddress, amount, from.gauge as string),
         this.buildExit(from.id, relayer, relayer, amount, tokens),
         this.buildSwap(expectedAmount, relayer, to.id, to.address, tokens),
@@ -50,7 +53,7 @@ export class StablesBuilder {
       ];
     } else {
       calls = [
-        this.buildSetRelayerApproval(authorisation),
+        ...calls,
         this.buildExit(from.id, userAddress, relayer, amount, tokens),
         this.buildSwap(expectedAmount, userAddress, to.id, to.address, tokens),
       ];
