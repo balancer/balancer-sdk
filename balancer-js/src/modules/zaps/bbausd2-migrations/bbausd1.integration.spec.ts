@@ -14,7 +14,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { ADDRESSES } from './addresses';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
-import { parseEther, formatEther } from '@ethersproject/units';
+import { parseEther } from '@ethersproject/units';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256 } from '@ethersproject/constants';
 import { Migrations } from '../migrations';
@@ -166,9 +166,9 @@ describe('bbausd migration execution', async () => {
   });
 
   async function testFlow(
-    limit: string | undefined,
-    staked: boolean
-  ): Promise<void> {
+    staked: boolean,
+    minBbausd2Out: undefined | string = undefined
+  ): Promise<string> {
     const addressIn = staked
       ? addresses.bbausd1.gauge
       : addresses.bbausd1.address;
@@ -183,10 +183,10 @@ describe('bbausd migration execution', async () => {
 
     const amount = before.from;
 
-    const query = migrations.bbaUsd(
+    let query = migrations.bbaUsd(
       signerAddress,
       amount.toString(),
-      limit,
+      '0',
       authorisation,
       staked,
       pool.tokens.filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
@@ -198,6 +198,15 @@ describe('bbausd migration execution', async () => {
     // Static call can be used to simulate tx and get expected BPT in/out deltas
     const staticResult = await signer.call({ to, data, gasLimit });
     const expectedBpts = query.decode(staticResult, staked);
+
+    query = migrations.bbaUsd(
+      signerAddress,
+      amount.toString(),
+      minBbausd2Out ? minBbausd2Out : expectedBpts.bbausd2AmountOut,
+      authorisation,
+      staked,
+      pool.tokens.filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
+    );
 
     const response = await signer.sendTransaction({ to, data, gasLimit });
 
@@ -211,10 +220,13 @@ describe('bbausd migration execution', async () => {
 
     console.log(expectedBpts);
 
-    expect(BigNumber.from(expectedBpts.expectedBptOut).gt(0)).to.be.true;
-    expect(amount.toString()).to.eq(expectedBpts.expectedBptIn.toString());
-    expect(after.to.toString()).to.eq(expectedBpts.expectedBptOut.toString());
+    expect(BigNumber.from(expectedBpts.bbausd2AmountOut).gt(0)).to.be.true;
+    expect(amount.toString()).to.eq(expectedBpts.bbausd1AmountIn);
+    expect(after.to.toString()).to.eq(expectedBpts.bbausd2AmountOut);
+    return expectedBpts.bbausd2AmountOut;
   }
+
+  let bbausd2AmountOut: string;
 
   context('staked', async () => {
     beforeEach(async function () {
@@ -223,14 +235,24 @@ describe('bbausd migration execution', async () => {
       await stake(signer, balance);
     });
 
-    it('should transfer tokens from stable to boosted', async () => {
-      await testFlow(undefined, true);
+    it('should transfer tokens from stable to boosted - using exact bbausd2AmountOut from static call', async () => {
+      bbausd2AmountOut = await testFlow(true);
+    }).timeout(20000);
+
+    it('should transfer tokens from stable to boosted - limit should fail', async () => {
+      await testFlow(true, bbausd2AmountOut);
+      expect(false).to.be.true; // Reminder - the above test should throw
     }).timeout(20000);
   });
 
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted', async () => {
-      await testFlow(undefined, false);
+      await testFlow(false);
+    }).timeout(20000);
+
+    it('should transfer tokens from stable to boosted - limit should fail', async () => {
+      await testFlow(false, bbausd2AmountOut);
+      expect(false).to.be.true; // Reminder - the above test should throw
     }).timeout(20000);
   });
 }).timeout(20000);

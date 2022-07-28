@@ -2,7 +2,7 @@ import { ADDRESSES } from './addresses';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { Interface } from '@ethersproject/abi';
-import { MaxUint256, MaxInt256, Zero } from '@ethersproject/constants';
+import { MaxUint256, Zero } from '@ethersproject/constants';
 // TODO - Ask Nico to update Typechain?
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { PoolToken } from '@/types';
@@ -19,8 +19,8 @@ export class BbaUsd1Builder {
   }
 
   calldata(
-    amount: string,
-    expectedAmount = MaxInt256.toString(),
+    bbausd1Amount: string,
+    minBbausd2Out: string,
     userAddress: string,
     staked: boolean,
     authorisation: string,
@@ -35,16 +35,16 @@ export class BbaUsd1Builder {
     if (staked) {
       calls = [
         this.buildSetRelayerApproval(authorisation),
-        this.buildWithdraw(userAddress, amount),
-        this.buildSwap(amount, expectedAmount, relayer, relayer, tokens),
+        this.buildWithdraw(userAddress, bbausd1Amount),
+        this.buildSwap(bbausd1Amount, minBbausd2Out, relayer, relayer, tokens),
         this.buildDeposit(userAddress),
       ];
     } else {
       calls = [
         this.buildSetRelayerApproval(authorisation),
         this.buildSwap(
-          amount,
-          expectedAmount,
+          bbausd1Amount,
+          minBbausd2Out,
           userAddress,
           userAddress,
           tokens
@@ -69,8 +69,8 @@ export class BbaUsd1Builder {
    * @returns BatchSwap call.
    */
   buildSwap(
-    bptAmount: string,
-    expectedBptReturn: string,
+    bbausd1Amount: string,
+    minBbausd2Out: string,
     sender: string,
     recipient: string,
     tokens: PoolToken[]
@@ -108,18 +108,16 @@ export class BbaUsd1Builder {
     );
 
     // bbausd1[bbausd1]blinear1[linear1]stable[linear2]blinear2[bbausd2]bbausd2 and then do that proportionally for each underlying stable.
-    // TO DO - Will swap order matter here? John to ask Fernando.
-
     // Split BPT amount proportionally:
-    const usdcBptAmt = BigNumber.from(bptAmount)
+    const usdcBptAmt = BigNumber.from(bbausd1Amount)
       .mul(balances['bb-a-USDC'])
       .div(totalLiquidity)
       .toString();
-    const usdtBptAmt = BigNumber.from(bptAmount)
+    const usdtBptAmt = BigNumber.from(bbausd1Amount)
       .mul(balances['bb-a-USDT'])
       .div(totalLiquidity)
       .toString();
-    const daiBptAmt = BigNumber.from(bptAmount)
+    const daiBptAmt = BigNumber.from(bbausd1Amount)
       .sub(BigNumber.from(usdcBptAmt))
       .sub(BigNumber.from(usdtBptAmt))
       .toString();
@@ -211,26 +209,26 @@ export class BbaUsd1Builder {
       },
     ];
 
-    // For now assuming ref amounts will be safe - should we add more accurate?
+    // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
     const limits = [
-      expectedBptReturn,
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
-      MaxInt256.toString(),
+      BigNumber.from(minBbausd2Out).mul(-1).toString(), // bbausd2
+      '0',
+      '0',
+      '0',
+      '0',
+      '0',
+      '0',
+      '0',
+      '0',
+      '0',
+      bbausd1Amount, // Max in should be bbausd1 amount
     ];
 
     // Swap to/from Relayer
     const funds: FundManagement = {
       sender,
       recipient,
-      fromInternalBalance: true,
+      fromInternalBalance: false,
       toInternalBalance: false,
     };
 

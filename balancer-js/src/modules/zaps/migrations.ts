@@ -34,8 +34,8 @@ export class Migrations {
 
   bbaUsd(
     userAddress: string,
-    amount: string,
-    limit = MaxInt256.toString(),
+    bbausd1Amount: string,
+    minBbausd2Out: string,
     authorisation: string,
     staked: boolean,
     tokens: PoolToken[]
@@ -46,14 +46,14 @@ export class Migrations {
       output: string,
       staked: boolean
     ) => {
-      expectedBptIn: string;
-      expectedBptOut: string;
+      bbausd1AmountIn: string;
+      bbausd2AmountOut: string;
     };
   } {
     const builder = new BbaUsd1Builder(this.network);
     const request = builder.calldata(
-      amount,
-      limit,
+      bbausd1Amount,
+      minBbausd2Out,
       userAddress,
       staked,
       authorisation,
@@ -71,8 +71,8 @@ export class Migrations {
           multicallResult[0][swapIndex]
         );
         return {
-          expectedBptIn: swapDeltas[0][10].toString(),
-          expectedBptOut: swapDeltas[0][0].abs().toString(),
+          bbausd1AmountIn: swapDeltas[0][10].toString(),
+          bbausd2AmountOut: swapDeltas[0][0].abs().toString(),
         };
       },
     };
