@@ -10,7 +10,7 @@ import {
   Subgraph,
   SubgraphPoolRepository,
 } from '@/.';
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { ADDRESSES } from './addresses';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
@@ -189,7 +189,9 @@ describe('bbausd migration execution', async () => {
       '0',
       authorisation,
       staked,
-      pool.tokens.filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
+      pool.tokens
+        .filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
+        .map((token) => parseFixed(token.balance, token.decimals).toString())
     );
 
     const { to, data } = query;
@@ -205,7 +207,9 @@ describe('bbausd migration execution', async () => {
       minBbausd2Out ? minBbausd2Out : expectedBpts.bbausd2AmountOut,
       authorisation,
       staked,
-      pool.tokens.filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
+      pool.tokens
+        .filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
+        .map((token) => parseFixed(token.balance, token.decimals).toString())
     );
 
     const response = await signer.sendTransaction({ to, data, gasLimit });

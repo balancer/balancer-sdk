@@ -5,8 +5,7 @@ import { Interface } from '@ethersproject/abi';
 import { MaxUint256, Zero } from '@ethersproject/constants';
 // TODO - Ask Nico to update Typechain?
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
-import { PoolToken } from '@/types';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber } from '@ethersproject/bignumber';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 const SWAP_RESULT_BBAUSD = Relayer.toChainedReference('24');
@@ -24,7 +23,7 @@ export class BbaUsd1Builder {
     userAddress: string,
     staked: boolean,
     authorisation: string,
-    tokens: PoolToken[]
+    tokenBalances: string[]
   ): {
     to: string;
     data: string;
@@ -36,7 +35,13 @@ export class BbaUsd1Builder {
       calls = [
         this.buildSetRelayerApproval(authorisation),
         this.buildWithdraw(userAddress, bbausd1Amount),
-        this.buildSwap(bbausd1Amount, minBbausd2Out, relayer, relayer, tokens),
+        this.buildSwap(
+          bbausd1Amount,
+          minBbausd2Out,
+          relayer,
+          relayer,
+          tokenBalances
+        ),
         this.buildDeposit(userAddress),
       ];
     } else {
@@ -47,7 +52,7 @@ export class BbaUsd1Builder {
           minBbausd2Out,
           userAddress,
           userAddress,
-          tokens
+          tokenBalances
         ),
       ];
     }
@@ -73,7 +78,7 @@ export class BbaUsd1Builder {
     minBbausd2Out: string,
     sender: string,
     recipient: string,
-    tokens: PoolToken[]
+    tokenBalances: string[]
   ): string {
     const assets = [
       this.addresses.bbausd2.address,
@@ -95,31 +100,25 @@ export class BbaUsd1Builder {
 
     // Assuming 1:1 exchange rates between tokens
     // TODO: Fetch current prices, or use price or priceRate from subgraph?
-    const totalLiquidity = tokens.reduce(
-      (sum, token) => sum.add(parseFixed(token.balance, 18)),
+    const totalLiquidity = tokenBalances.reduce(
+      (sum, tokenBalance) => sum.add(BigNumber.from(tokenBalance)),
       Zero
-    );
-
-    const balances = Object.fromEntries(
-      tokens.map((token) => [
-        token.address.toLowerCase(),
-        parseFixed(token.balance, 18).toString(),
-      ])
     );
 
     // bbausd1[bbausd1]blinear1[linear1]stable[linear2]blinear2[bbausd2]bbausd2 and then do that proportionally for each underlying stable.
     // Split BPT amount proportionally:
+    const { assetOrder } = this.addresses.bbausd1;
     const usdcBptAmt = BigNumber.from(bbausd1Amount)
-      .mul(balances[this.addresses.linearUsdc1.address.toLowerCase()])
-      .div(totalLiquidity)
-      .toString();
-    const usdtBptAmt = BigNumber.from(bbausd1Amount)
-      .mul(balances[this.addresses.linearUsdt1.address.toLowerCase()])
+      .mul(tokenBalances[assetOrder.indexOf('bb-a-USDC')])
       .div(totalLiquidity)
       .toString();
     const daiBptAmt = BigNumber.from(bbausd1Amount)
-      .sub(BigNumber.from(usdcBptAmt))
-      .sub(BigNumber.from(usdtBptAmt))
+      .mul(tokenBalances[assetOrder.indexOf('bb-a-DAI')])
+      .div(totalLiquidity)
+      .toString();
+    const usdtBptAmt = BigNumber.from(bbausd1Amount)
+      .sub(usdcBptAmt)
+      .sub(daiBptAmt)
       .toString();
 
     const swaps: BatchSwapStep[] = [

@@ -38,7 +38,7 @@ export class Migrations {
     minBbausd2Out: string,
     authorisation: string,
     staked: boolean,
-    tokens: PoolToken[]
+    tokenBalances: string[]
   ): {
     to: string;
     data: string;
@@ -57,7 +57,7 @@ export class Migrations {
       userAddress,
       staked,
       authorisation,
-      tokens
+      tokenBalances
     );
 
     return {

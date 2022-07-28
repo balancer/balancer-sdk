@@ -11,6 +11,7 @@ export const ADDRESSES = {
       id: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe',
       address: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
       gauge: '0x68d019f64a7aa97e2d4e7363aee42251d08124fb',
+      assetOrder: ['bb-a-USDT', 'bb-a-DAI', 'bb-a-USDC'],
     },
     bbausd2: {
       id: '',
@@ -66,6 +67,7 @@ export const ADDRESSES = {
       id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
       address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
       gauge: '0xa2d0ea81a47d68598922cd54c59249ff58c2a3ff',
+      assetOrder: ['bb-a-USDC', 'bb-a-DAI', 'bb-a-USDT'],
     },
     bbausd2: {
       id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
