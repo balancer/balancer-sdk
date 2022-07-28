@@ -165,92 +165,72 @@ describe('bbausd migration execution', async () => {
     pool = _pool;
   });
 
+  async function testFlow(
+    limit: string | undefined,
+    staked: boolean
+  ): Promise<void> {
+    const addressIn = staked
+      ? addresses.bbausd1.gauge
+      : addresses.bbausd1.address;
+    const addressOut = staked
+      ? addresses.bbausd2.gauge
+      : addresses.bbausd2.address;
+    // Store balance before migration
+    const before = {
+      from: await getErc20Balance(addressIn, signerAddress),
+      to: await getErc20Balance(addressOut, signerAddress),
+    };
+
+    const amount = before.from;
+
+    const query = migrations.bbaUsd(
+      signerAddress,
+      amount.toString(),
+      limit,
+      authorisation,
+      staked,
+      pool.tokens.filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
+    );
+
+    const { to, data } = query;
+    const gasLimit = MAX_GAS_LIMIT;
+
+    // Static call can be used to simulate tx and get expected BPT in/out deltas
+    const staticResult = await signer.call({ to, data, gasLimit });
+    const expectedBpts = query.decode(staticResult, staked);
+
+    const response = await signer.sendTransaction({ to, data, gasLimit });
+
+    const receipt = await response.wait();
+    console.log('Gas used', receipt.gasUsed.toString());
+
+    const after = {
+      from: await getErc20Balance(addressIn, signerAddress),
+      to: await getErc20Balance(addressOut, signerAddress),
+    };
+
+    console.log(expectedBpts);
+
+    expect(BigNumber.from(expectedBpts.expectedBptOut).gt(0)).to.be.true;
+    expect(amount.toString()).to.eq(expectedBpts.expectedBptIn.toString());
+    expect(after.to.toString()).to.eq(expectedBpts.expectedBptOut.toString());
+  }
+
   context('staked', async () => {
     beforeEach(async function () {
       this.timeout(20000);
-
       // Stake them
       await stake(signer, balance);
     });
 
     it('should transfer tokens from stable to boosted', async () => {
-      // Store balance before migration
-      const before = {
-        from: await getErc20Balance(gaugeAddress, signerAddress),
-        to: await getErc20Balance(addresses.bbausd2.gauge, signerAddress),
-      };
-
-      const query = migrations.bbaUsd(
-        signerAddress,
-        before.from.toString(),
-        undefined,
-        authorisation,
-        true,
-        pool.tokens.filter((token) => token.symbol !== 'bb-a-USD')
-      );
-
-      const { to, data } = query;
-      const gasLimit = MAX_GAS_LIMIT;
-      const response = await signer.sendTransaction({ to, data, gasLimit });
-
-      const receipt = await response.wait();
-      console.log('Gas used', receipt.gasUsed.toString());
-
-      const after = {
-        from: await getErc20Balance(gaugeAddress, signerAddress),
-        to: await getErc20Balance(addresses.bbausd2.gauge, signerAddress),
-      };
-
-      const diffs = {
-        from: after.from.sub(before.from),
-        to: after.to.sub(before.to),
-      };
-
-      console.log(diffs.from, diffs.to);
-
-      expect(diffs.from).to.eql(before.from.mul(-1));
-      expect(parseFloat(formatEther(diffs.to))).to.be.gt(0);
+      await testFlow(undefined, true);
     }).timeout(20000);
   });
 
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted', async () => {
-      // Store balance before migration
-      const before = {
-        from: await getErc20Balance(poolAddress, signerAddress),
-        to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
-      };
-
-      const query = migrations.bbaUsd(
-        signerAddress,
-        before.from.toString(),
-        undefined,
-        authorisation,
-        false,
-        pool.tokens.filter((token) => token.symbol !== 'bb-a-USD')
-      );
-
-      const { to, data } = query;
-      const gasLimit = MAX_GAS_LIMIT;
-      const response = await signer.sendTransaction({ to, data, gasLimit });
-
-      const receipt = await response.wait();
-      console.log('Gas used', receipt.gasUsed.toString());
-
-      const after = {
-        from: await getErc20Balance(poolAddress, signerAddress),
-        to: await getErc20Balance(addresses.bbausd2.address, signerAddress),
-      };
-
-      const diffs = {
-        from: after.from.sub(before.from),
-        to: after.to.sub(before.to),
-      };
-
-      console.log(diffs.from, diffs.to);
-
-      expect(diffs.from).to.eql(before.from.mul(-1));
-      expect(parseFloat(formatEther(diffs.to))).to.be.gt(0);
+      await testFlow(undefined, false);
     }).timeout(20000);
   });
 }).timeout(20000);

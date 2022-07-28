@@ -39,7 +39,17 @@ export class Migrations {
     authorisation: string,
     staked: boolean,
     tokens: PoolToken[]
-  ): { to: string; data: string; decode: (output: string) => string } {
+  ): {
+    to: string;
+    data: string;
+    decode: (
+      output: string,
+      staked: boolean
+    ) => {
+      expectedBptIn: string;
+      expectedBptOut: string;
+    };
+  } {
     const builder = new BbaUsd1Builder(this.network);
     const request = builder.calldata(
       amount,
@@ -53,8 +63,18 @@ export class Migrations {
     return {
       to: request.to,
       data: request.data,
-      decode: (output) =>
-        defaultAbiCoder.decode(['int256[]'], output[2])[3].toString(),
+      decode: (output, staked) => {
+        const swapIndex = staked ? 2 : 1;
+        const multicallResult = defaultAbiCoder.decode(['bytes[]'], output);
+        const swapDeltas = defaultAbiCoder.decode(
+          ['int256[]'],
+          multicallResult[0][swapIndex]
+        );
+        return {
+          expectedBptIn: swapDeltas[0][10].toString(),
+          expectedBptOut: swapDeltas[0][0].abs().toString(),
+        };
+      },
     };
   }
 
