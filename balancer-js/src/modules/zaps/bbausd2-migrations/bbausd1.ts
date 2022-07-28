@@ -102,7 +102,7 @@ export class BbaUsd1Builder {
 
     const balances = Object.fromEntries(
       tokens.map((token) => [
-        token.symbol,
+        token.address.toLowerCase(),
         parseFixed(token.balance, 18).toString(),
       ])
     );
@@ -110,11 +110,11 @@ export class BbaUsd1Builder {
     // bbausd1[bbausd1]blinear1[linear1]stable[linear2]blinear2[bbausd2]bbausd2 and then do that proportionally for each underlying stable.
     // Split BPT amount proportionally:
     const usdcBptAmt = BigNumber.from(bbausd1Amount)
-      .mul(balances['bb-a-USDC'])
+      .mul(balances[this.addresses.linearUsdc1.address.toLowerCase()])
       .div(totalLiquidity)
       .toString();
     const usdtBptAmt = BigNumber.from(bbausd1Amount)
-      .mul(balances['bb-a-USDT'])
+      .mul(balances[this.addresses.linearUsdt1.address.toLowerCase()])
       .div(totalLiquidity)
       .toString();
     const daiBptAmt = BigNumber.from(bbausd1Amount)
