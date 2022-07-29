@@ -1,6 +1,4 @@
-import OldBigNumber from 'bignumber.js';
-import * as SDK from '@georgeroman/balancer-v2-pools';
-
+import { WeightedMaths } from '@balancer-labs/sor';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import {
   JoinConcern,
@@ -70,12 +68,12 @@ export class WeightedPoolJoin implements JoinConcern {
       parsedWeights
     ) as [string[], string[], string[]];
 
-    const expectedBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
-      sortedBalances.map((b) => new OldBigNumber(b)),
-      sortedWeights.map((w) => new OldBigNumber(w)),
-      sortedAmounts.map((a) => new OldBigNumber(a)),
-      new OldBigNumber(parsedTotalShares),
-      new OldBigNumber(parsedSwapFee)
+    const expectedBPTOut = WeightedMaths._calcBptOutGivenExactTokensIn(
+      sortedBalances.map((b) => BigInt(b)),
+      sortedWeights.map((w) => BigInt(w)),
+      sortedAmounts.map((a) => BigInt(a)),
+      BigInt(parsedTotalShares),
+      BigInt(parsedSwapFee)
     ).toString();
 
     const minBPTOut = subSlippage(
