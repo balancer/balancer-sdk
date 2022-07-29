@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { StablePool } from '@balancer-labs/sor';
+import { StablePool, SubgraphPoolBase } from '@balancer-labs/sor';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
 import {
   ONE,
@@ -25,7 +25,7 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
       throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
 
     // upscales amp, swapfee, totalshares
-    const stablePool = StablePool.fromPool(pool);
+    const stablePool = StablePool.fromPool(pool as SubgraphPoolBase);
     const tokensList = cloneDeep(pool.tokensList);
     const totalShares = BigInt(stablePool.totalShares.toString());
     const balances = stablePool.tokens.map((token) =>

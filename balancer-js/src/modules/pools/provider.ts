@@ -27,16 +27,6 @@ export class PoolsProvider {
           slippage,
           wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
         }),
-      priceImpact: async (
-        pool: Pool,
-        tokenAmounts: string[],
-        bptAmount: string
-      ) =>
-        methods.priceImpactCalculator.calcPriceImpact(
-          pool,
-          tokenAmounts,
-          bptAmount
-        ),
 
       // TODO: spotPrice fails, because it needs a subgraphType,
       // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)

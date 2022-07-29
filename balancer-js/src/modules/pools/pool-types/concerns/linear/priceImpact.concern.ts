@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { PriceImpactConcern } from '../types';
 import { Pool } from '@/types';
 

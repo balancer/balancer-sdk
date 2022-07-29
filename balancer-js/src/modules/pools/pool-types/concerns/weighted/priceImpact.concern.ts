@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { WeightedPool } from '@balancer-labs/sor';
+import { SubgraphPoolBase, WeightedPool } from '@balancer-labs/sor';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
 import { parseToBigInt18 } from '@/lib/utils/math';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
@@ -24,7 +24,7 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
       throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
 
     // swapFee, totalShares, totalWeight all scaled up to 18 decimals
-    const weightedPool = WeightedPool.fromPool(pool);
+    const weightedPool = WeightedPool.fromPool(pool as SubgraphPoolBase);
 
     const totalShares = BigInt(weightedPool.totalShares.toString());
 

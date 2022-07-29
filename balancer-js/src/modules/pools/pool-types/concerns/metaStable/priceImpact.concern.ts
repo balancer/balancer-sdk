@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { SubgraphPoolBase, MetaStablePool } from '@balancer-labs/sor';
+import { MetaStablePool, SubgraphPoolBase } from '@balancer-labs/sor';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
 import { parseToBigInt18 } from '@/lib/utils/math';
 import { bptSpotPrice } from '@/modules/pools/pool-types/concerns/stable/priceImpact.concern';
@@ -26,7 +26,7 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
       throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
 
     // upscales amp, swapfee, totalshares
-    const metaStablePool = MetaStablePool.fromPool(pool);
+    const metaStablePool = MetaStablePool.fromPool(pool as SubgraphPoolBase);
     const tokensList = cloneDeep(pool.tokensList);
     const totalShares = BigInt(metaStablePool.totalShares.toString());
     const balances = metaStablePool.tokens.map((token) =>

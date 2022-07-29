@@ -1,4 +1,4 @@
-import { PhantomStablePool, ZERO } from '@balancer-labs/sor';
+import { PhantomStablePool, SubgraphPoolBase } from '@balancer-labs/sor';
 import { cloneDeep } from 'lodash';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
 import { parseToBigInt18 } from '@/lib/utils/math';
@@ -12,7 +12,6 @@ import {
 } from '@/lib/utils/solidityMaths';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { bptSpotPrice } from '../stable/priceImpact.concern';
-import { BigNumber } from 'ethers';
 import { Pool } from '@/types';
 
 export class PhantomStablePriceImpact implements PriceImpactConcern {
@@ -27,7 +26,9 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
       throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
 
     // upscales amp, swapfee, totalshares
-    const phantomStablePool = PhantomStablePool.fromPool(pool);
+    const phantomStablePool = PhantomStablePool.fromPool(
+      pool as SubgraphPoolBase
+    );
     const tokensList = cloneDeep(pool.tokensList);
     const bptIndex = tokensList.findIndex((token) => token == pool.address);
     tokensList.splice(bptIndex, 1);
