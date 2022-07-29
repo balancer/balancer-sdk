@@ -6,7 +6,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { ADDRESSES } from './addresses';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
-import { parseEther, formatEther } from '@ethersproject/units';
+import { parseEther } from '@ethersproject/units';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256 } from '@ethersproject/constants';
 import { Migrations } from '../migrations';

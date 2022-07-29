@@ -6,7 +6,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { ADDRESSES } from './addresses';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
-import { parseEther, formatEther } from '@ethersproject/units';
+import { parseEther } from '@ethersproject/units';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256 } from '@ethersproject/constants';
 import { Migrations } from '../migrations';
@@ -35,6 +35,7 @@ const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
 const { contracts } = new Contracts(network as number, provider);
+const migrations = new Migrations(network);
 
 const holderAddress = '0xd86a11b0c859c18bfc1b4acd072c5afe57e79438';
 const fromPool = {
@@ -48,8 +49,6 @@ const toPool = {
   gauge: addresses.staBal3_2.gauge,
 };
 const tokens = [addresses.USDT, addresses.DAI, addresses.USDC]; // this order only works for testing with Goerli - change order to test on Mainnet
-const fromGauge = addresses.staBal3.gauge;
-const toGauge = addresses.staBal3_2.gauge;
 const relayer = addresses.relayer;
 
 const getErc20Balance = (token: string, holder: string): Promise<BigNumber> =>
@@ -122,12 +121,12 @@ const stake = async (
     await contracts
       .ERC20(fromPool.address, provider)
       .connect(signer)
-      .approve(fromGauge, MaxUint256)
+      .approve(fromPool.gauge, MaxUint256)
   ).wait();
 
   await (
     await signer.sendTransaction({
-      to: fromGauge,
+      to: fromPool.gauge,
       data: liquidityGauge.encodeFunctionData('deposit', [balance]),
     })
   ).wait();
@@ -155,15 +154,16 @@ describe('stables migration execution', async () => {
   const testFlow = async (
     staked: boolean,
     authorised = true,
-    minBbausd2Out: undefined | string = undefined
+    minBptOut: undefined | string = undefined
   ) => {
+    const addressIn = staked ? fromPool.gauge : fromPool.address;
+    const addressOut = staked ? toPool.gauge : toPool.address;
     // Store balance before migration
     const before = {
-      from: await getErc20Balance(fromGauge, signerAddress),
-      to: await getErc20Balance(toGauge, signerAddress),
+      from: await getErc20Balance(addressIn, signerAddress),
+      to: await getErc20Balance(addressOut, signerAddress),
     };
 
-    const migrations = new Migrations(network);
     let query = migrations.stables(
       signerAddress,
       fromPool,
@@ -183,14 +183,14 @@ describe('stables migration execution', async () => {
       data: query.data,
       gasLimit,
     });
-    const bbausd2AmountOut = query.decode(staticResult, staked);
+    const bptOut = query.decode(staticResult, staked);
 
     query = migrations.stables(
       signerAddress,
       fromPool,
       toPool,
       before.from.toString(),
-      minBbausd2Out ? minBbausd2Out : bbausd2AmountOut,
+      minBptOut ? minBptOut : bptOut,
       staked,
       tokens,
       authorised ? authorisation : undefined
@@ -206,8 +206,8 @@ describe('stables migration execution', async () => {
     console.log('Gas used', receipt.gasUsed.toString());
 
     const after = {
-      from: await getErc20Balance(fromGauge, signerAddress),
-      to: await getErc20Balance(toGauge, signerAddress),
+      from: await getErc20Balance(addressIn, signerAddress),
+      to: await getErc20Balance(addressOut, signerAddress),
     };
 
     const diffs = {
@@ -217,13 +217,13 @@ describe('stables migration execution', async () => {
 
     console.log(diffs.from, diffs.to);
 
-    expect(BigNumber.from(bbausd2AmountOut).gt(0)).to.be.true;
+    expect(BigNumber.from(bptOut).gt(0)).to.be.true;
     expect(after.from.toString()).to.eq('0');
-    expect(after.to.toString()).to.eq(bbausd2AmountOut);
-    return bbausd2AmountOut;
+    expect(after.to.toString()).to.eq(bptOut);
+    return bptOut;
   };
 
-  let bbausd2AmountOut: string;
+  let bptOut: string;
 
   context('staked', async () => {
     beforeEach(async function () {
@@ -234,17 +234,13 @@ describe('stables migration execution', async () => {
     });
 
     it('should transfer tokens from stable to boosted', async () => {
-      bbausd2AmountOut = await testFlow(true);
+      bptOut = await testFlow(true);
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
       try {
-        await testFlow(
-          true,
-          true,
-          BigNumber.from(bbausd2AmountOut).add(1).toString()
-        );
+        await testFlow(true, true, BigNumber.from(bptOut).add(1).toString());
       } catch (error) {
         errorMessage = (error as Error).message;
       }
@@ -255,17 +251,13 @@ describe('stables migration execution', async () => {
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted', async () => {
       // Store balance before migration
-      bbausd2AmountOut = await testFlow(false);
+      bptOut = await testFlow(false);
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
       try {
-        await testFlow(
-          false,
-          true,
-          BigNumber.from(bbausd2AmountOut).add(1).toString()
-        );
+        await testFlow(false, true, BigNumber.from(bptOut).add(1).toString());
       } catch (error) {
         errorMessage = (error as Error).message;
       }

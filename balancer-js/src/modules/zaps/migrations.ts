@@ -31,8 +31,8 @@ export class Migrations {
       to: request.to,
       data: request.data,
       decode: (output, staked) => {
-        let swapIndex = staked ? 3 : 2;
-        if (authorisation == undefined) swapIndex -= 1;
+        let swapIndex = staked ? 2 : 1;
+        if (authorisation) swapIndex += 1;
         const multicallResult = defaultAbiCoder.decode(['bytes[]'], output);
         const swapDeltas = defaultAbiCoder.decode(
           ['int256[]'],
@@ -77,8 +77,8 @@ export class Migrations {
       to: request.to,
       data: request.data,
       decode: (output, staked) => {
-        let swapIndex = staked ? 2 : 1;
-        if (authorisation == undefined) swapIndex -= 1;
+        let swapIndex = staked ? 1 : 0;
+        if (authorisation) swapIndex += 1;
         const multicallResult = defaultAbiCoder.decode(['bytes[]'], output);
         const swapDeltas = defaultAbiCoder.decode(
           ['int256[]'],
@@ -96,8 +96,8 @@ export class Migrations {
     userAddress: string,
     from: { id: string; address: string; gauge?: string },
     to: { id: string; address: string; gauge?: string },
-    amount: string,
-    limit = MaxInt256.toString(),
+    bptIn: string,
+    minBptOut = MaxInt256.toString(),
     staked: boolean,
     tokens: string[],
     authorisation?: string
@@ -111,8 +111,8 @@ export class Migrations {
       userAddress,
       from,
       to,
-      amount,
-      limit,
+      bptIn,
+      minBptOut,
       staked,
       tokens,
       authorisation
@@ -122,8 +122,8 @@ export class Migrations {
       to: request.to,
       data: request.data,
       decode: (output, staked) => {
-        let swapIndex = staked ? 3 : 2;
-        if (authorisation == undefined) swapIndex -= 1;
+        let swapIndex = staked ? 2 : 1;
+        if (authorisation) swapIndex += 1;
         const multicallResult = defaultAbiCoder.decode(['bytes[]'], output);
         const swapDeltas = defaultAbiCoder.decode(
           ['int256[]'],

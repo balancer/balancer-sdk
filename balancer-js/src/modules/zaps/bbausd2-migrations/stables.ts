@@ -24,8 +24,8 @@ export class StablesBuilder {
     userAddress: string,
     from: { id: string; address: string; gauge?: string },
     to: { id: string; address: string; gauge?: string },
-    amount: string,
-    expectedAmount = MaxInt256.toString(),
+    bptIn: string,
+    minBptOut = MaxInt256.toString(),
     staked: boolean,
     tokens: string[],
     authorisation?: string
@@ -46,16 +46,16 @@ export class StablesBuilder {
     if (staked) {
       calls = [
         ...calls,
-        this.buildWithdraw(userAddress, amount, from.gauge as string),
-        this.buildExit(from.id, relayer, relayer, amount, tokens),
-        this.buildSwap(expectedAmount, relayer, to.id, to.address, tokens),
+        this.buildWithdraw(userAddress, bptIn, from.gauge as string),
+        this.buildExit(from.id, relayer, relayer, bptIn, tokens),
+        this.buildSwap(minBptOut, relayer, to.id, to.address, tokens),
         this.buildDeposit(userAddress, to.gauge as string),
       ];
     } else {
       calls = [
         ...calls,
-        this.buildExit(from.id, userAddress, relayer, amount, tokens),
-        this.buildSwap(expectedAmount, userAddress, to.id, to.address, tokens),
+        this.buildExit(from.id, userAddress, relayer, bptIn, tokens),
+        this.buildSwap(minBptOut, userAddress, to.id, to.address, tokens),
       ];
     }
 
@@ -144,8 +144,8 @@ export class StablesBuilder {
       });
     }
 
-    // For now assuming ref amounts will be safe - should we add more accurate?
-    const limits = [expectedBptReturn];
+    // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
+    const limits = [BigNumber.from(expectedBptReturn).mul(-1).toString()];
     for (let i = 0; i < tokens.length; i++) {
       limits.push(MaxInt256.toString());
     }
