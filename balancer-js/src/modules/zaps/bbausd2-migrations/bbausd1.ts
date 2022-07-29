@@ -275,10 +275,6 @@ export class BbaUsd1Builder {
     );
   }
 
-  buildApproveVault(token: string): string {
-    return Relayer.encodeApproveVault(token, MaxUint256.toString());
-  }
-
   buildSetRelayerApproval(authorisation: string): string {
     return Relayer.encodeSetRelayerApproval(
       this.addresses.relayer,
