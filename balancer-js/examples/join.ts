@@ -8,7 +8,7 @@ import {
   PoolModel,
 } from '../src/index';
 import { formatFixed } from '@ethersproject/bignumber';
-import { forkSetup } from '../src/test/lib/utils';
+import { forkSetup, updateBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
 
 dotenv.config();
@@ -20,7 +20,7 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const wBTC_SLOT = 0;
 const wETH_SLOT = 3;
 const slots = [wBTC_SLOT, wETH_SLOT];
-const initialBalances = ['1000000000', '100000000000000000000'];
+const initialBalances = ['10000000', '1000000000000000000'];
 
 /*
 Example showing how to use Pools module to join pools.
@@ -62,8 +62,7 @@ async function join() {
   if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
   // Checking balances to confirm success
-  const bptContract = balancer.contracts.ERC20(pool.address, provider);
-  const bptBalanceBefore = await bptContract.balanceOf(signerAddress);
+  const tokenBalancesBefore = await updateBalances(pool, signer, signerAddress, balancer)
 
   // Use SDK to create join
   const { to, data, minBPTOut } = pool.buildJoin(
@@ -81,21 +80,12 @@ async function join() {
     // gasLimit: '2000000', // gas inputs are optional
   });
 
-  const transactionReceipt = await transactionResponse.wait();
+  await transactionResponse.wait();
+  const tokenBalancesAfter = await updateBalances(pool, signer, signerAddress, balancer);
+  console.log('Token balances before exit:          ', tokenBalancesBefore.toString());
+  console.log('Token balances after exit:           ', tokenBalancesAfter.toString());
+  console.log('Minimum expected BPT balance:        ', minBPTOut.toString());
 
-  const bptBalanceAfter = await bptContract.balanceOf(signerAddress);
-  console.log(
-    'BPT Balance before joining pool: ',
-    formatFixed(bptBalanceBefore, 18)
-  );
-  console.log(
-    'BPT Balance after joining pool: ',
-    formatFixed(bptBalanceAfter, 18)
-  );
-  console.log(
-    'Minimum BPT balance expected after join: ',
-    formatFixed(minBPTOut, 18)
-  );
 }
 
 // yarn examples:run ./examples/join.ts
