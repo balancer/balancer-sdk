@@ -22,6 +22,18 @@ export class StaBal3Builder {
     this.addresses = ADDRESSES[networkId];
   }
 
+  /**
+   * Builds migration call data.
+   * Migrates tokens from staBal3 to bbausd2 pool.
+   * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+   *
+   * @param {string}  userAddress User address.
+   * @param {string}  staBal3Amount Amount of BPT tokens to migrate.
+   * @param {string}  minBbausd2Out Minimum of expected BPT out ot the migration flow.
+   * @param {boolean} staked Indicates whether tokens are initially staked or not.
+   * @param {string}  authorisation Encoded authorisation call.
+   * @returns Migration transaction request ready to send with signer.sendTransaction
+   */
   calldata(
     userAddress: string,
     staBal3Amount: string,
@@ -68,8 +80,9 @@ export class StaBal3Builder {
    * Exit staBal3 pool proportionally to underlying Linear BPTs. Exits to relayer.
    * Outputreferences are used to store exit amounts for next transaction.
    *
-   * @param migrator Migrator address.
-   * @param amount Amount of staBal3 BPT to exit with.
+   * @param {string} sender Sender address.
+   * @param {string} recipient Recipient address.
+   * @param {string} amount Amount of staBal3 BPT to exit with.
    * @returns Encoded exitPool call. Output references.
    */
   buildExit(sender: string, recipient: string, amount: string): string {
@@ -110,10 +123,12 @@ export class StaBal3Builder {
   }
 
   /**
-   * Creates encoded batchSwap function to swap Linear BPTs to underlying stables.
-   * outputreferences should contain the amounts of each new Linear BPT.
+   * Creates encoded batchSwap function with following swaps: stables -> linear pools -> boosted pool
+   * outputreferences should contain the amount of resulting BPT.
    *
-   * @returns BatchSwap call.
+   * @param {string} expectedBptReturn BPT amount expected out of the swap.
+   * @param {string} recipient Recipient address.
+   * @returns Encoded batchSwap call. Output references.
    */
   buildSwap(expectedBptReturn: string, recipient: string): string {
     const assets = [
@@ -177,7 +192,6 @@ export class StaBal3Builder {
     ];
 
     // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
-    console.log(`Min: `, BigNumber.from(expectedBptReturn).mul(-1).toString());
     const limits = [
       BigNumber.from(expectedBptReturn).mul(-1).toString(),
       MaxInt256.toString(),
@@ -211,8 +225,10 @@ export class StaBal3Builder {
   }
 
   /**
-   * Is using gauge relayer to withdraw staked BPT from user to itself
+   * Uses relayer to withdraw staked BPT from gauge and send to relayer
    *
+   * @param {string} sender Sender address.
+   * @param {string} amount Amount of BPT to exit with.
    * @returns withdraw call
    */
   buildWithdraw(sender: string, amount: string): string {
@@ -225,8 +241,9 @@ export class StaBal3Builder {
   }
 
   /**
-   * Is using gauge relayer to deposit user's BPT to itself
+   * Uses relayer to deposit user's BPT to gauge and sends to recipient
    *
+   * @param {string} recipient Recipient address.
    * @returns deposit call
    */
   buildDeposit(recipient: string): string {
@@ -238,6 +255,12 @@ export class StaBal3Builder {
     );
   }
 
+  /**
+   * Uses relayer to approve itself to act in behalf of the user
+   *
+   * @param {string} authorisation Encoded authorisation call.
+   * @returns relayer approval call
+   */
   buildSetRelayerApproval(authorisation: string): string {
     return Relayer.encodeSetRelayerApproval(
       this.addresses.relayer,

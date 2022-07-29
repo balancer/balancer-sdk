@@ -20,12 +20,27 @@ export class StablesBuilder {
     this.addresses = ADDRESSES[networkId];
   }
 
+  /**
+   * Builds migration call data.
+   * Migrates tokens from old stable to new stable phantom pools with the same underlying tokens.
+   * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+   *
+   * @param {string}                    userAddress User address.
+   * @param {{string, string, string}}  from Pool info being migrated from
+   * @param {{string, string, string}}  to Pool info being migrated to
+   * @param {string}                    bptIn Amount of BPT tokens to migrate.
+   * @param {string}                    minBptOut Minimum of expected BPT out ot the migration flow.
+   * @param {boolean}                   staked Indicates whether tokens are initially staked or not.
+   * @param {string[]}                  tokens Token addresses. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+   * @param {string}                    authorisation Encoded authorisation call.
+   * @returns Migration transaction request ready to send with signer.sendTransaction
+   */
   calldata(
     userAddress: string,
     from: { id: string; address: string; gauge?: string },
     to: { id: string; address: string; gauge?: string },
     bptIn: string,
-    minBptOut = MaxInt256.toString(),
+    minBptOut: string = MaxInt256.toString(),
     staked: boolean,
     tokens: string[],
     authorisation?: string
@@ -70,12 +85,15 @@ export class StablesBuilder {
   }
 
   /**
-   * Encodes exitPool callData.
-   * Exit staBal3 pool proportionally to underlying Linear BPTs. Exits to relayer.
+   * Encodes exitPool call data.
+   * Exit stable pool proportionally to underlying stables. Exits to relayer.
    * Outputreferences are used to store exit amounts for next transaction.
    *
-   * @param migrator Migrator address.
-   * @param amount Amount of staBal3 BPT to exit with.
+   * @param {string}    poolId Pool id.
+   * @param {string}    sender Sender address.
+   * @param {string}    recipient Recipient address.
+   * @param {string}    amount Amount of BPT to exit with.
+   * @param {string[]}  tokens Token addresses to exit to.
    * @returns Encoded exitPool call. Output references.
    */
   buildExit(
@@ -118,9 +136,14 @@ export class StablesBuilder {
   }
 
   /**
-   * Creates encoded batchSwap function to swap Linear BPTs to underlying stables.
-   * outputreferences should contain the amounts of each new Linear BPT.
+   * Creates encoded batchSwap function to swap stables to new phantom stable pool BPT.
+   * outputreferences should contain the amount of resulting BPT.
    *
+   * @param {string}    expectedBptReturn BPT amount expected out of the swap.
+   * @param {string}    recipient Recipient address.
+   * @param {string}    poolId Pool id
+   * @param {string}    poolAddress Pool address
+   * @param {string[]}  tokens Token addresses to swap from.
    * @returns BatchSwap call.
    */
   buildSwap(
@@ -175,13 +198,16 @@ export class StablesBuilder {
   }
 
   /**
-   * Is using gauge relayer to withdraw staked BPT from user to itself
+   * Uses relayer to withdraw staked BPT from gauge and send to relayer
    *
+   * @param {string} sender Sender address.
+   * @param {string} amount Amount of BPT to exit with.
+   * @param {string} gaugeAddress Gauge address.
    * @returns withdraw call
    */
-  buildWithdraw(sender: string, amount: string, address: string): string {
+  buildWithdraw(sender: string, amount: string, gaugeAddress: string): string {
     return Relayer.encodeGaugeWithdraw(
-      address,
+      gaugeAddress,
       sender,
       this.addresses.relayer,
       amount
@@ -189,19 +215,27 @@ export class StablesBuilder {
   }
 
   /**
-   * Is using gauge relayer to deposit user's BPT to itself
+   * Uses relayer to deposit user's BPT to gauge and sends to recipient
    *
+   * @param {string} recipient Recipient address.
+   * @param {string} gaugeAddress Gauge address.
    * @returns deposit call
    */
-  buildDeposit(recipient: string, address: string): string {
+  buildDeposit(recipient: string, gaugeAddress: string): string {
     return Relayer.encodeGaugeDeposit(
-      address,
+      gaugeAddress,
       this.addresses.relayer,
       recipient,
       SWAP_RESULT.toString()
     );
   }
 
+  /**
+   * Uses relayer to approve itself to act in behalf of the user
+   *
+   * @param {string} authorisation Encoded authorisation call.
+   * @returns relayer approval call
+   */
   buildSetRelayerApproval(authorisation: string): string {
     return Relayer.encodeSetRelayerApproval(
       this.addresses.relayer,
