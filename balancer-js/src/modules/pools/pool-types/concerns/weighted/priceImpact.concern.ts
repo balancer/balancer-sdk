@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { SubgraphPoolBase, WeightedPool } from '@balancer-labs/sor';
+import { WeightedPool } from '@balancer-labs/sor';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
 import { parseToBigInt18 } from '@/lib/utils/math';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
@@ -11,7 +11,6 @@ import {
 } from '@/lib/utils/solidityMaths';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Pool } from '@/types';
-import { formatFixed } from '@ethersproject/bignumber';
 
 export class WeightedPoolPriceImpact implements PriceImpactConcern {
   /**
@@ -57,7 +56,6 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
       pool,
       tokenAmounts.map((a) => BigInt(a))
     );
-    console.log(formatFixed(bptZeroPriceImpact.toString(), 18));
     return calcPriceImpact(BigInt(bptAmount), bptZeroPriceImpact).toString();
   }
 }

@@ -1,4 +1,4 @@
-import { SubgraphPoolBase, PhantomStablePool, ZERO } from '@balancer-labs/sor';
+import { PhantomStablePool, ZERO } from '@balancer-labs/sor';
 import { cloneDeep } from 'lodash';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
 import { parseToBigInt18 } from '@/lib/utils/math';
@@ -61,42 +61,6 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
       const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
       const newTerm = (price * amountUpscaled) / ONE;
       bptZeroPriceImpact += newTerm;
-    }
-    return bptZeroPriceImpact;
-  }
-
-  // This alternative function should compute the same result, but it does not.
-  bptZeroPriceImpactAlt(
-    pool: SubgraphPoolBase,
-    tokenAmounts: bigint[]
-  ): bigint {
-    if (tokenAmounts.length !== pool.tokensList.length - 1)
-      throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
-
-    // upscales amp, swapfee, totalshares
-    const phantomStablePool = PhantomStablePool.fromPool(pool);
-    const tokensList = cloneDeep(pool.tokensList);
-    const decimals = phantomStablePool.tokens.map((token) => token.decimals);
-    const bptIndex = tokensList.findIndex((token) => token == pool.address);
-    tokensList.splice(bptIndex, 1);
-    decimals.splice(bptIndex, 1);
-    let bptZeroPriceImpact = BZERO;
-    phantomStablePool.swapFee = BigNumber.from(0); // sets swap fee to zero
-    for (let i = 0; i < tokensList.length; i++) {
-      // Scales and applies rates to balances
-      const poolPairData = phantomStablePool.parsePoolPairData(
-        tokensList[i],
-        pool.address
-      );
-      const price = parseToBigInt18(
-        phantomStablePool
-          ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, ZERO)
-          .toString()
-      );
-      const scalingFactor = _computeScalingFactor(BigInt(decimals[i]));
-      const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
-      console.log(price);
-      bptZeroPriceImpact += (amountUpscaled * price) / ONE;
     }
     return bptZeroPriceImpact;
   }
