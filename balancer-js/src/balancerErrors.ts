@@ -8,7 +8,9 @@ export enum BalancerErrorCode {
   UNSUPPORTED_PAIR = 'UNSUPPORTED_PAIR',
   NO_POOL_DATA = 'NO_POOL_DATA',
   INPUT_LENGTH_MISMATCH = 'INPUT_LENGTH_MISMATCH',
+  MISSING_AMP = 'MISSING_AMP',
   MISSING_DECIMALS = 'MISSING_DECIMALS',
+  MISSING_PRICE_RATE = 'MISSING_PRICE_RATE',
   MISSING_WEIGHT = 'MISSING_WEIGHT',
 }
 
@@ -38,8 +40,12 @@ export class BalancerError extends Error {
         return 'no pool data';
       case BalancerErrorCode.INPUT_LENGTH_MISMATCH:
         return 'input length mismatch';
+      case BalancerErrorCode.MISSING_AMP:
+        return 'missing amp';
       case BalancerErrorCode.MISSING_DECIMALS:
         return 'missing decimals';
+      case BalancerErrorCode.MISSING_PRICE_RATE:
+        return 'missing price rate';
       case BalancerErrorCode.MISSING_WEIGHT:
         return 'missing weight';
       default:
