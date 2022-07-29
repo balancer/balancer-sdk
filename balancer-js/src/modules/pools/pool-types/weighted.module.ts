@@ -8,8 +8,9 @@ import {
   InitJoinAttributes,
   WeightedFactoryFormattedAttributes,
   SeedToken,
+  InitJoinParams,
 } from '../types';
-import { defaultAbiCoder, Interface } from '@ethersproject/abi';
+import { defaultAbiCoder } from '@ethersproject/abi';
 import {
   Vault__factory,
   WeightedPoolFactory__factory,
@@ -19,13 +20,6 @@ import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { BigNumber, BigNumberish, ethers } from 'ethers';
 import { AssetHelpers } from '@/lib/utils';
 
-type initJoinParams = {
-  poolId: string;
-  sender: string;
-  receiver: string;
-  tokenAddresses: string[];
-  initialBalancesString: string[];
-};
 export class Weighted implements PoolType {
   public liquidityCalculator: LiquidityConcern;
   public spotPriceCalculator: SpotPriceConcern;
@@ -46,7 +40,7 @@ export class Weighted implements PoolType {
     }
     this.addresses = {
       wrappedNativeAsset: addresses.tokens.wrappedNativeAsset,
-      factoryAddress: addresses.contracts.poolFactories as string,
+      factoryAddress: addresses.contracts.poolFactories.weighted as string,
       vaultAddress: addresses.contracts.vault,
     };
   }
@@ -109,7 +103,10 @@ export class Weighted implements PoolType {
       })
       .join('-');
   }
-  buildInitJoin(params: initJoinParams): InitJoinAttributes {
+  buildInitJoin(params: InitJoinParams): InitJoinAttributes {
+    if (params.initialBalancesString.length !== params.tokenAddresses.length) {
+      return { error: true, message: 'Addresses and balances length mismatch' };
+    }
     const vault = Vault__factory.createInterface();
     const JOIN_KIND_INIT = 0; // enum found in WeightedPoolUserData.sol
     const initUserData = defaultAbiCoder.encode(
@@ -128,6 +125,7 @@ export class Weighted implements PoolType {
       },
     ]);
     return {
+      error: false,
       to: this.addresses.vaultAddress,
       data,
       attributes: {

@@ -54,21 +54,31 @@ export type WeightedFactoryFormattedAttributes = {
   owner: string;
 };
 
-export type InitJoinAttributes = {
-  to: string;
-  functionName: string;
-  attributes: {
-    poolId: string;
-    sender: string;
-    receiver: string;
-    joinPoolRequest: {
-      assets: string[];
-      maxAmountsIn: string[];
-      userData: string;
-      fromInternalBalance: boolean;
-    };
-  };
-  data: string;
-  value?: BigNumber;
-  err?: boolean;
+export type InitJoinParams = {
+  poolId: string;
+  sender: string;
+  receiver: string;
+  tokenAddresses: string[];
+  initialBalancesString: string[];
 };
+
+export type InitJoinAttributes =
+  | {
+      to: string;
+      functionName: string;
+      attributes: {
+        poolId: string;
+        sender: string;
+        receiver: string;
+        joinPoolRequest: {
+          assets: string[];
+          maxAmountsIn: string[];
+          userData: string;
+          fromInternalBalance: boolean;
+        };
+      };
+      data: string;
+      value?: BigNumber;
+      error: false;
+    }
+  | ErrorObject;
