@@ -196,6 +196,7 @@ export interface Pool {
   boost?: string;
   symbol?: string;
   swapEnabled: boolean;
+  amp?: string;
 }
 
 export interface PoolModel extends Pool {
@@ -205,10 +206,5 @@ export interface PoolModel extends Pool {
     tokensIn: string[],
     amountsIn: string[],
     slippage: string
-  ) => Promise<JoinPoolAttributes>;
-  priceImpact: (
-    pool: Pool,
-    tokenAmounts: string[],
-    bptAmount: string
-  ) => Promise<string>;
+  ) => JoinPoolAttributes;
 }

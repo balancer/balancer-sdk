@@ -18,7 +18,7 @@ export class PoolsProvider {
     return {
       ...data,
       liquidity: async () => methods.liquidity.calcTotal(data.tokens),
-      buildJoin: async (joiner, tokensIn, amountsIn, slippage) =>
+      buildJoin: (joiner, tokensIn, amountsIn, slippage) =>
         methods.join.buildJoin({
           joiner,
           pool: data,
