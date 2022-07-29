@@ -99,9 +99,11 @@ export class StablesBuilder {
       EXIT_RESULTS.push(outputReferences[i].key);
     }
 
+    const minAmountsOut = Array<string>(tokens.length).fill('0');
+
     const callData = Relayer.constructExitCall({
       assets: tokens,
-      minAmountsOut: ['0', '0', '0'],
+      minAmountsOut,
       userData,
       toInternalBalance: true,
       poolId,
