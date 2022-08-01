@@ -4,10 +4,10 @@ import { Relayer } from '@/modules/relayer/relayer.module';
 import { ExitPoolRequest } from '@/types';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { Interface } from '@ethersproject/abi';
+import { BigNumber } from '@ethersproject/bignumber';
 import { MaxUint256, MaxInt256 } from '@ethersproject/constants';
 // TODO - Ask Nico to update Typechain?
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
-import { BigNumber } from 'ethers';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 const SWAP_RESULT = Relayer.toChainedReference('0');
