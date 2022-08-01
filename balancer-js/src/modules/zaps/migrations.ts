@@ -1,5 +1,4 @@
 import { defaultAbiCoder } from '@ethersproject/abi';
-import { MaxInt256 } from '@ethersproject/constants';
 import { StaBal3Builder } from './bbausd2-migrations/stabal3';
 import { BbaUsd1Builder } from './bbausd2-migrations/bbausd1';
 import { StablesBuilder } from './bbausd2-migrations/stables';
