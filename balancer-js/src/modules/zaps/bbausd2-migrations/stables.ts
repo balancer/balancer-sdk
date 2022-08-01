@@ -31,7 +31,7 @@ export class StablesBuilder {
    * @param {string}                    bptIn Amount of BPT tokens to migrate.
    * @param {string}                    minBptOut Minimum of expected BPT out ot the migration flow.
    * @param {boolean}                   staked Indicates whether tokens are initially staked or not.
-   * @param {string[]}                  tokens Token addresses. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+   * @param {string[]}                  underlyingTokens Underlying token addresses. Array must have the same length and order as underlying tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
    * @param {string}                    authorisation Encoded authorisation call.
    * @returns Migration transaction request ready to send with signer.sendTransaction
    */
@@ -42,7 +42,7 @@ export class StablesBuilder {
     bptIn: string,
     minBptOut: string,
     staked: boolean,
-    tokens: string[],
+    underlyingTokens: string[],
     authorisation?: string
   ): {
     to: string;
@@ -62,15 +62,21 @@ export class StablesBuilder {
       calls = [
         ...calls,
         this.buildWithdraw(userAddress, bptIn, from.gauge as string),
-        this.buildExit(from.id, relayer, relayer, bptIn, tokens),
-        this.buildSwap(minBptOut, relayer, to.id, to.address, tokens),
+        this.buildExit(from.id, relayer, bptIn, underlyingTokens),
+        this.buildSwap(minBptOut, relayer, to.id, to.address, underlyingTokens),
         this.buildDeposit(userAddress, to.gauge as string),
       ];
     } else {
       calls = [
         ...calls,
-        this.buildExit(from.id, userAddress, relayer, bptIn, tokens),
-        this.buildSwap(minBptOut, userAddress, to.id, to.address, tokens),
+        this.buildExit(from.id, userAddress, bptIn, underlyingTokens),
+        this.buildSwap(
+          minBptOut,
+          userAddress,
+          to.id,
+          to.address,
+          underlyingTokens
+        ),
       ];
     }
 
@@ -91,17 +97,15 @@ export class StablesBuilder {
    *
    * @param {string}    poolId Pool id.
    * @param {string}    sender Sender address.
-   * @param {string}    recipient Recipient address.
    * @param {string}    amount Amount of BPT to exit with.
-   * @param {string[]}  tokens Token addresses to exit to.
+   * @param {string[]}  underlyingTokens Token addresses to exit to.
    * @returns Encoded exitPool call. Output references.
    */
   buildExit(
     poolId: string,
     sender: string,
-    recipient: string,
     amount: string,
-    tokens: string[]
+    underlyingTokens: string[]
   ): string {
     // Assume gaugeWithdraw returns same amount value
     const userData = StablePoolEncoder.exitExactBPTInForTokensOut(amount);
@@ -109,7 +113,7 @@ export class StablesBuilder {
     // Ask to store exit outputs for batchSwap of exit is used as input to swaps
     // TODO: check how does tokens order matter between exits and swaps
     const outputReferences = [];
-    for (let i = 0; i < tokens.length; i++) {
+    for (let i = 0; i < underlyingTokens.length; i++) {
       outputReferences[i] = {
         index: i,
         key: Relayer.toChainedReference(`${i + 1}`), // index 0 will be used by swap result
@@ -117,17 +121,17 @@ export class StablesBuilder {
       EXIT_RESULTS.push(outputReferences[i].key);
     }
 
-    const minAmountsOut = Array<string>(tokens.length).fill('0');
+    const minAmountsOut = Array<string>(underlyingTokens.length).fill('0');
 
     const callData = Relayer.constructExitCall({
-      assets: tokens,
+      assets: underlyingTokens,
       minAmountsOut,
       userData,
       toInternalBalance: true,
       poolId,
       poolKind: 0, // This will always be 0 to match supported Relayer types
       sender,
-      recipient,
+      recipient: this.addresses.relayer,
       outputReferences,
       exitPoolRequest: {} as ExitPoolRequest,
     });

@@ -53,14 +53,14 @@ export class StaBal3Builder {
       calls = [
         ...calls,
         this.buildWithdraw(userAddress, staBal3Amount),
-        this.buildExit(relayer, relayer, staBal3Amount),
+        this.buildExit(relayer, staBal3Amount),
         this.buildSwap(minBbausd2Out, relayer),
         this.buildDeposit(userAddress),
       ];
     } else {
       calls = [
         ...calls,
-        this.buildExit(userAddress, relayer, staBal3Amount),
+        this.buildExit(userAddress, staBal3Amount),
         this.buildSwap(minBbausd2Out, userAddress),
       ];
     }
@@ -81,11 +81,10 @@ export class StaBal3Builder {
    * Outputreferences are used to store exit amounts for next transaction.
    *
    * @param {string} sender Sender address.
-   * @param {string} recipient Recipient address.
    * @param {string} amount Amount of staBal3 BPT to exit with.
    * @returns Encoded exitPool call. Output references.
    */
-  buildExit(sender: string, recipient: string, amount: string): string {
+  buildExit(sender: string, amount: string): string {
     // Goerli and Mainnet has different assets ordering
     const { assetOrder } = this.addresses.staBal3;
     const assets = assetOrder.map(
@@ -114,7 +113,7 @@ export class StaBal3Builder {
       poolId: this.addresses.staBal3.id,
       poolKind: 0, // This will always be 0 to match supported Relayer types
       sender,
-      recipient,
+      recipient: this.addresses.relayer,
       outputReferences,
       exitPoolRequest: {} as ExitPoolRequest,
     });
