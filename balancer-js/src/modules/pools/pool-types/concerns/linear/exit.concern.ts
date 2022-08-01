@@ -11,10 +11,18 @@ export class LinearPoolExit implements ExitConcern {
     pool,
     bptIn,
     slippage,
+    wrappedNativeAsset,
     singleTokenMaxOut,
   }: ExitExactBPTInParameters): ExitPoolAttributes => {
     // TODO implementation
-    console.log(exiter, pool, bptIn, slippage, singleTokenMaxOut);
+    console.log(
+      exiter,
+      pool,
+      bptIn,
+      slippage,
+      wrappedNativeAsset,
+      singleTokenMaxOut
+    );
     throw new Error('To be implemented');
   };
 
@@ -24,9 +32,17 @@ export class LinearPoolExit implements ExitConcern {
     tokensOut,
     amountsOut,
     slippage,
+    wrappedNativeAsset,
   }: ExitExactTokensOutParameters): ExitPoolAttributes => {
     // TODO implementation
-    console.log(exiter, pool, tokensOut, amountsOut, slippage);
+    console.log(
+      exiter,
+      pool,
+      tokensOut,
+      amountsOut,
+      slippage,
+      wrappedNativeAsset
+    );
     throw new Error('To be implemented');
   };
 }
