@@ -136,7 +136,7 @@ export class Migrations {
     from: { id: string; address: string; gauge?: string },
     to: { id: string; address: string; gauge?: string },
     bptIn: string,
-    minBptOut = MaxInt256.toString(),
+    minBptOut: string,
     staked: boolean,
     tokens: string[],
     authorisation?: string

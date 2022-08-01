@@ -40,7 +40,7 @@ export class StablesBuilder {
     from: { id: string; address: string; gauge?: string },
     to: { id: string; address: string; gauge?: string },
     bptIn: string,
-    minBptOut: string = MaxInt256.toString(),
+    minBptOut: string,
     staked: boolean,
     tokens: string[],
     authorisation?: string
