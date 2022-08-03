@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
 import {
   ONE,
@@ -7,12 +6,10 @@ import {
   _upscale,
 } from '@/lib/utils/solidityMaths';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
-import { parseToBigInt18 } from '@/lib/utils/math';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Pool } from '@/types';
 import { bptSpotPrice } from '@/lib/utils/stableMathHelpers';
 import { parsePoolInfo } from '@/lib/utils';
-import { StablePool, SubgraphPoolBase } from '@balancer-labs/sor';
 
 export class StablePoolPriceImpact implements PriceImpactConcern {
   /**
