@@ -1,8 +1,4 @@
-import { cloneDeep } from 'lodash';
-import { MetaStablePool, SubgraphPoolBase } from '@balancer-labs/sor';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
-import { parseToBigInt18 } from '@/lib/utils/math';
-import { bptSpotPrice } from '@/modules/pools/pool-types/concerns/stable/priceImpact.concern';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
 import {
   ONE,
@@ -13,11 +9,13 @@ import {
 } from '@/lib/utils/solidityMaths';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Pool } from '@/types';
+import { parsePoolInfo } from '@/lib/utils';
+import { bptSpotPrice } from '@/lib/utils/stableMathHelpers';
 
 export class MetaStablePoolPriceImpact implements PriceImpactConcern {
   /**
    * Calculates the BPT return amount when investing with no price impact.
-   * @param { SubgraphPoolBase } pool Investment pool.
+   * @param { Pool } pool Investment pool.
    * @param { string [] } amounts Token amounts being invested. Needs a value for each pool token.
    * @returns { string } BPT amount.
    */
@@ -25,24 +23,20 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
     if (tokenAmounts.length !== pool.tokensList.length)
       throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
 
-    // upscales amp, swapfee, totalshares
-    const metaStablePool = MetaStablePool.fromPool(pool as SubgraphPoolBase);
-    const tokensList = cloneDeep(pool.tokensList);
-    const totalShares = BigInt(metaStablePool.totalShares.toString());
-    const balances = metaStablePool.tokens.map((token) =>
-      parseToBigInt18(token.balance)
-    );
-    const priceRates = metaStablePool.tokens.map((token) =>
-      parseToBigInt18(token.priceRate)
-    );
+    // const tokensList = cloneDeep(pool.tokensList);
+    const { parsedBalances, parsedPriceRates, parsedAmp, parsedTotalShares } =
+      parsePoolInfo(pool);
+    const totalShares = BigInt(parsedTotalShares);
+    const balances = parsedBalances.map((balance) => BigInt(balance));
+    const priceRates = parsedPriceRates.map((rate) => BigInt(rate as string));
     const balancesScaled = balances.map((balance, i) =>
       SolidityMaths.mulDownFixed(balance, priceRates[i])
     );
     let bptZeroPriceImpact = BZERO;
-    for (let i = 0; i < tokensList.length; i++) {
+    for (let i = 0; i < balances.length; i++) {
       const price =
         (bptSpotPrice(
-          metaStablePool.amp.toBigInt(), // this already includes the extra digits from precision
+          BigInt(parsedAmp as string), // this already includes the extra digits from precision
           balancesScaled,
           totalShares,
           i

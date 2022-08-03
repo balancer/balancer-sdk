@@ -8,7 +8,6 @@ export enum BalancerErrorCode {
   UNSUPPORTED_PAIR = 'UNSUPPORTED_PAIR',
   NO_POOL_DATA = 'NO_POOL_DATA',
   ARRAY_LENGTH_MISMATCH = 'ARRAY_LENGTH_MISMATCH',
-  INPUT_LENGTH_MISMATCH = 'INPUT_LENGTH_MISMATCH',
   MISSING_AMP = 'MISSING_AMP',
   MISSING_DECIMALS = 'MISSING_DECIMALS',
   MISSING_PRICE_RATE = 'MISSING_PRICE_RATE',
@@ -41,8 +40,6 @@ export class BalancerError extends Error {
         return 'no pool data';
       case BalancerErrorCode.ARRAY_LENGTH_MISMATCH:
         return 'array lengths must match';
-      case BalancerErrorCode.INPUT_LENGTH_MISMATCH:
-        return 'input length mismatch';
       case BalancerErrorCode.MISSING_AMP:
         return 'missing amp';
       case BalancerErrorCode.MISSING_DECIMALS:

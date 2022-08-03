@@ -12,7 +12,7 @@ const AMP_PRECISION = 3; // number of decimals -> precision 1000
 export const parsePoolInfo = (pool: Pool) => {
   const parsedTokens = pool.tokens.map((token) => token.address);
   const parsedBalances = pool.tokens.map((token) =>
-    parseFixed(token.balance, token.decimals).toString()
+    parseFixed(token.balance, 18).toString()
   );
   const parsedWeights = pool.tokens.map((token) => {
     return token.weight ? parseFixed(token.weight, 18).toString() : undefined;

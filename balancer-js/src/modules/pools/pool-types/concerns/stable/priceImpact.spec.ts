@@ -6,6 +6,7 @@ import { Pool, PoolModel } from '@/types';
 import { StaticPoolRepository } from '@/modules/data';
 import { PoolsProvider } from '@/modules/pools/provider';
 import { Network } from '@/.';
+import { setupPool } from '@/test/lib/utils';
 
 dotenv.config();
 
@@ -14,14 +15,6 @@ const rpcUrl = 'http://127.0.0.1:8545';
 const priceImpactCalc = new StablePoolPriceImpact();
 const staBal3Id =
   '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063';
-
-// Setup
-const setupPool = async (provider: PoolsProvider, poolId: string) => {
-  const _pool = await provider.find(poolId);
-  if (!_pool) throw new Error('Pool not found');
-  const pool = _pool;
-  return pool;
-};
 
 describe('stable pool price impact', () => {
   let pool: PoolModel;
@@ -38,12 +31,11 @@ describe('stable pool price impact', () => {
       sdkConfig,
       new StaticPoolRepository(pools_14717479 as Pool[])
     );
-    pool = await setupPool(poolsProvider, staBal3Id);
+    pool = (await setupPool(poolsProvider, staBal3Id)) as PoolModel;
   });
 
   context('bpt zero price impact', () => {
-    it('test1', () => {
-      // const pool = mockPoolDataService.getPool(staBal3Id);
+    it('proportional case', () => {
       const proportionalTokenAmounts = [
         BigInt('629870162919981039400158'),
         BigInt('615159929697'),
@@ -58,7 +50,7 @@ describe('stable pool price impact', () => {
         '1875386353951864923721207'
       );
     });
-    it('test2', () => {
+    it('non-proportional case', () => {
       const tokenAmounts = [
         BigInt('10000100000000000000'),
         BigInt('100000000'),

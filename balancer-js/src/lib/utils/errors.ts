@@ -12,7 +12,7 @@ const balancerErrorCodes: Record<string, string> = {
   '100': 'OUT_OF_BOUNDS',
   '101': 'UNSORTED_ARRAY',
   '102': 'UNSORTED_TOKENS',
-  '103': 'INPUT_LENGTH_MISMATCH',
+  '103': 'ARRAY_LENGTH_MISMATCH',
   '104': 'ZERO_TOKEN',
   '200': 'MIN_TOKENS',
   '201': 'MAX_TOKENS',

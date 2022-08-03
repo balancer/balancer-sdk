@@ -70,8 +70,7 @@ async function join() {
   );
 
   // Calculate price impact
-  const priceImpact = await pool.priceImpact(
-    pool,
+  const priceImpact = await pool.calcPriceImpact(
     amountsIn as string[],
     minBPTOut
   );

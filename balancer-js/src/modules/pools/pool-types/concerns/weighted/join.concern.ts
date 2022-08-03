@@ -37,7 +37,7 @@ export class WeightedPoolJoin implements JoinConcern {
       tokensIn.length != amountsIn.length ||
       tokensIn.length != pool.tokensList.length
     ) {
-      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+      throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
     }
 
     // Check if there's any relevant weighted pool info missing

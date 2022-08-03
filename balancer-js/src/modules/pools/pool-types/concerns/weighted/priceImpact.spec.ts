@@ -6,6 +6,7 @@ import { StaticPoolRepository } from '@/modules/data';
 import { PoolsProvider } from '@/modules/pools/provider';
 import { PoolModel, Pool } from '@/types';
 import { Network } from '@/.';
+import { setupPool } from '@/test/lib/utils';
 
 dotenv.config();
 
@@ -17,17 +18,9 @@ const wethDaiId =
 const threeTokensPoolId =
   '0xb39362c3d5ac235fe588b0b83ed7ac87241039cb000100000000000000000195';
 
-// Setup
-const setupPool = async (provider: PoolsProvider, poolId: string) => {
-  const _pool = await provider.find(poolId);
-  if (!_pool) throw new Error('Pool not found');
-  const pool = _pool;
-  return pool;
-};
-
 describe('weighted pool price impact', () => {
-  let pool: PoolModel;
-  let threeTokensPool: PoolModel;
+  let pool: PoolModel | undefined;
+  let threeTokensPool: PoolModel | undefined;
 
   // Setup chain
   before(async function () {
@@ -53,7 +46,7 @@ describe('weighted pool price impact', () => {
       ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
-        pool,
+        pool as PoolModel,
         tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('2362847643421361281550');
@@ -63,7 +56,7 @@ describe('weighted pool price impact', () => {
         BigInt('125240456379058423162'),
       ];
       const proportionalBptZeroPI = priceImpactCalc.bptZeroPriceImpact(
-        pool,
+        pool as PoolModel,
         proportionalTokenAmounts
       );
       expect(proportionalBptZeroPI.toString()).to.eq('4931900186642428185328');
@@ -76,7 +69,7 @@ describe('weighted pool price impact', () => {
       ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
-        threeTokensPool,
+        threeTokensPool as PoolModel,
         tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('876361770363362937782');
@@ -87,7 +80,7 @@ describe('weighted pool price impact', () => {
         BigInt('383499316375739080555'),
       ];
       const proportionalBptZeroPI = priceImpactCalc.bptZeroPriceImpact(
-        threeTokensPool,
+        threeTokensPool as PoolModel,
         proportionalTokenAmounts
       );
       expect(proportionalBptZeroPI.toString()).to.eq('279707470176761335097');
@@ -101,7 +94,7 @@ describe('weighted pool price impact', () => {
         '125240456379058423162',
       ];
       const priceImpact = priceImpactCalc.calcPriceImpact(
-        pool,
+        pool as PoolModel,
         proportionalTokenAmounts,
         '4931900186642428185328'
       );

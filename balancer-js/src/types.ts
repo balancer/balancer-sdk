@@ -207,4 +207,5 @@ export interface PoolModel extends Pool {
     amountsIn: string[],
     slippage: string
   ) => JoinPoolAttributes;
+  calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
 }

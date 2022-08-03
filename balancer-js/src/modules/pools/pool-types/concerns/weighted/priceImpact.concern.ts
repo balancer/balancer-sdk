@@ -15,7 +15,7 @@ import { Pool } from '@/types';
 export class WeightedPoolPriceImpact implements PriceImpactConcern {
   /**
    * Calculates the BPT return amount when investing with no price impact.
-   * @param { SubgraphPoolBase } pool Investment pool.
+   * @param { Pool } pool Investment pool.
    * @param { bigint [] } amounts Token amounts being invested. EVM Scale. Needs a value for each pool token.
    * @returns { bigint } BPT amount.
    */

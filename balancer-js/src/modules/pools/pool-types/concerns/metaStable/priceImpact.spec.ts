@@ -6,6 +6,7 @@ import { PoolsProvider } from '@/modules/pools/provider';
 import { StaticPoolRepository } from '@/modules/data';
 import { PoolModel, Pool } from '@/types';
 import { Network } from '@/.';
+import { setupPool } from '@/test/lib/utils';
 
 dotenv.config();
 
@@ -15,16 +16,8 @@ const priceImpactCalc = new MetaStablePoolPriceImpact();
 const wstETHwETH =
   '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080';
 
-// Setup
-const setupPool = async (provider: PoolsProvider, poolId: string) => {
-  const _pool = await provider.find(poolId);
-  if (!_pool) throw new Error('Pool not found');
-  const pool = _pool;
-  return pool;
-};
-
 describe('metastable pool price impact', () => {
-  let pool: PoolModel;
+  let pool: PoolModel | undefined;
 
   // Setup chain
   before(async function () {
@@ -46,14 +39,14 @@ describe('metastable pool price impact', () => {
     BigInt('615159929697'),
   ];
   context('bpt zero price impact', () => {
-    it('test1', () => {
+    it('non-proportional case', () => {
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
-        pool,
+        pool as PoolModel,
         tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('662816325116386208862285');
     });
-    it('test2', () => {
+    it('proportional case', () => {
       // This tokenAmounts vector is proportional to the balances
       // so that the correct return value is totalShares times the
       // proportionality constant, equal to 0.01
@@ -63,7 +56,7 @@ describe('metastable pool price impact', () => {
       ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
-        pool,
+        pool as PoolModel,
         proportionalTokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('1696871032806568300470');
@@ -73,7 +66,7 @@ describe('metastable pool price impact', () => {
   context('price impact', () => {
     it('calculate price impact', () => {
       const priceImpact = priceImpactCalc.calcPriceImpact(
-        pool,
+        pool as PoolModel,
         tokenAmounts.map((amount) => amount.toString()),
         '660816325116386208862285'
       );

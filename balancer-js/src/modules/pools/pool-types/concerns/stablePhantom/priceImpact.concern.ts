@@ -1,7 +1,5 @@
-import { PhantomStablePool, SubgraphPoolBase } from '@balancer-labs/sor';
 import { cloneDeep } from 'lodash';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
-import { parseToBigInt18 } from '@/lib/utils/math';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
 import {
   ONE,
@@ -11,13 +9,14 @@ import {
   SolidityMaths,
 } from '@/lib/utils/solidityMaths';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { bptSpotPrice } from '../stable/priceImpact.concern';
+import { bptSpotPrice } from '@/lib/utils/stableMathHelpers';
 import { Pool } from '@/types';
+import { parsePoolInfo } from '@/lib/utils';
 
 export class PhantomStablePriceImpact implements PriceImpactConcern {
   /**
    * Calculates the BPT return amount when investing with no price impact.
-   * @param { SubgraphPoolBase } pool Investment pool.
+   * @param { Pool } pool Investment pool.
    * @param { bigint [] } amounts Token amounts being invested. Needs a value for each pool token that is not a PhantomBpt.
    * @returns { bigint } BPT amount.
    */
@@ -25,23 +24,19 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
     if (tokenAmounts.length !== pool.tokensList.length - 1)
       throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
 
-    // upscales amp, swapfee, totalshares
-    const phantomStablePool = PhantomStablePool.fromPool(
-      pool as SubgraphPoolBase
-    );
     const tokensList = cloneDeep(pool.tokensList);
     const bptIndex = tokensList.findIndex((token) => token == pool.address);
+
+    // upscales amp, swapfee, totalshares
+    const { parsedBalances, parsedPriceRates, parsedAmp, parsedTotalShares } =
+      parsePoolInfo(pool);
+    const totalShares = BigInt(parsedTotalShares);
+    const balances = parsedBalances.map((balance) => BigInt(balance));
+    const priceRates = parsedPriceRates.map((rate) => BigInt(rate as string));
     tokensList.splice(bptIndex, 1);
     if (tokenAmounts.length !== tokensList.length)
       throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
-    const totalShares = BigInt(phantomStablePool.totalShares.toString());
-    const balances = phantomStablePool.tokens.map((token) =>
-      parseToBigInt18(token.balance)
-    );
     balances.splice(bptIndex, 1);
-    const priceRates = phantomStablePool.tokens.map((token) =>
-      parseToBigInt18(token.priceRate)
-    );
     const balancesScaled = balances.map((balance, i) =>
       SolidityMaths.mulDownFixed(balance, priceRates[i])
     );
@@ -49,7 +44,8 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
     for (let i = 0; i < tokensList.length; i++) {
       const price =
         (bptSpotPrice(
-          phantomStablePool.amp.toBigInt(), // this already includes the extra digits from precision
+          // phantomStablePool.amp.toBigInt(),
+          BigInt(parsedAmp as string), // this already includes the extra digits from precision
           balancesScaled,
           totalShares,
           i
