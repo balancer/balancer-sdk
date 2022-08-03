@@ -11,6 +11,7 @@ export class StablePhantomPoolExit implements ExitConcern {
     pool,
     bptIn,
     slippage,
+    shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenMaxOut,
   }: ExitExactBPTInParameters): ExitPoolAttributes => {
@@ -20,6 +21,7 @@ export class StablePhantomPoolExit implements ExitConcern {
       pool,
       bptIn,
       slippage,
+      shouldUnwrapNativeAsset,
       wrappedNativeAsset,
       singleTokenMaxOut
     );

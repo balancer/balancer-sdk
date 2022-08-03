@@ -27,12 +27,19 @@ export class PoolsProvider {
           slippage,
           wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
         }),
-      buildExitExactBPTIn: (exiter, bptIn, slippage, singleTokenMaxOut) =>
+      buildExitExactBPTIn: (
+        exiter,
+        bptIn,
+        slippage,
+        shouldUnwrapNativeAsset = false,
+        singleTokenMaxOut
+      ) =>
         methods.exit.buildExitExactBPTIn({
           exiter,
           pool: data,
           bptIn,
           slippage,
+          shouldUnwrapNativeAsset,
           wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
           singleTokenMaxOut,
         }),

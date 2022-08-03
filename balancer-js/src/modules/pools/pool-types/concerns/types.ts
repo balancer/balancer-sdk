@@ -33,6 +33,7 @@ export interface ExitConcern {
     pool,
     bptIn,
     slippage,
+    shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenMaxOut,
   }: ExitExactBPTInParameters) => ExitPoolAttributes;
@@ -84,6 +85,7 @@ export interface ExitPoolAttributes {
   functionName: string;
   attributes: ExitPool;
   data: string;
+  value?: BigNumber;
   minAmountsOut: string[];
   maxBPTIn: string;
 }
@@ -93,6 +95,7 @@ export interface ExitExactBPTInParameters {
   pool: Pool;
   bptIn: string;
   slippage: string;
+  shouldUnwrapNativeAsset: boolean;
   wrappedNativeAsset: string;
   singleTokenMaxOut?: string;
 }

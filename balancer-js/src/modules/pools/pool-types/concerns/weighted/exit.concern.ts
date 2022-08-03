@@ -14,6 +14,7 @@ import { WeightedPoolEncoder } from '@/pool-weighted';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { balancerVault } from '@/lib/constants/config';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { AddressZero } from '@ethersproject/constants';
 
 export class WeightedPoolExit implements ExitConcern {
   /**
@@ -22,7 +23,8 @@ export class WeightedPoolExit implements ExitConcern {
    * @param {Pool}    pool - Subgraph pool object of pool being exited
    * @param {string}  bptIn - BPT provided for exiting pool
    * @param {string}  slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-   * @param {string}  wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting with ETH.
+   * @param {boolean} shouldUnwrapNativeAsset - Indicates wether wrapped native asset should be unwrapped after exit.
+   * @param {string}  wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting to native asset.
    * @param {string}  singleTokenMaxOut - Optional: token address that if provided will exit to given token
    * @returns         transaction request ready to send with signer.sendTransaction
    */
@@ -31,6 +33,7 @@ export class WeightedPoolExit implements ExitConcern {
     pool,
     bptIn,
     slippage,
+    shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenMaxOut,
   }: ExitExactBPTInParameters): ExitPoolAttributes => {
@@ -39,35 +42,49 @@ export class WeightedPoolExit implements ExitConcern {
     }
     if (
       singleTokenMaxOut &&
+      singleTokenMaxOut !== AddressZero &&
       !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)
     ) {
       throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
     }
+    if (!shouldUnwrapNativeAsset && singleTokenMaxOut === AddressZero)
+      throw new Error(
+        'shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values'
+      );
 
+    // Parse pool info into EVM amounts in order to match amountsIn scalling
     const {
       parsedTokens,
       parsedBalances,
       parsedWeights,
       parsedTotalShares,
       parsedSwapFee,
-    } = parsePoolInfo(pool); // Parse pool info into EVM amounts in order to match amountsIn scalling
+    } = parsePoolInfo(pool);
 
+    // Replace WETH address with ETH - required for exiting with ETH
+    const unwrappedTokens = parsedTokens.map((token) =>
+      token === wrappedNativeAsset ? AddressZero : token
+    );
+
+    // Sort pool info based on tokens addresses
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     const [sortedTokens, sortedBalances, sortedWeights] =
-      assetHelpers.sortTokens(parsedTokens, parsedBalances, parsedWeights) as [
-        string[],
-        string[],
-        string[]
-      ];
+      assetHelpers.sortTokens(
+        shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens,
+        parsedBalances,
+        parsedWeights
+      ) as [string[], string[], string[]];
 
     let minAmountsOut = Array(sortedTokens.length).fill('0');
     let userData: string;
+    let value: BigNumber | undefined;
 
     if (singleTokenMaxOut) {
       // Exit pool with single token using exact bptIn
 
       const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
 
+      // Calculate amount out given BPT in
       const amountOut = SDK.WeightedMath._calcTokenOutGivenExactBptIn(
         new OldBigNumber(sortedBalances[singleTokenMaxOutIndex]),
         new OldBigNumber(sortedWeights[singleTokenMaxOutIndex]),
@@ -76,6 +93,7 @@ export class WeightedPoolExit implements ExitConcern {
         new OldBigNumber(parsedSwapFee)
       ).toString();
 
+      // Apply slippage
       minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
         BigNumber.from(amountOut),
         BigNumber.from(slippage)
@@ -85,15 +103,21 @@ export class WeightedPoolExit implements ExitConcern {
         bptIn,
         singleTokenMaxOutIndex
       );
+
+      if (shouldUnwrapNativeAsset) {
+        value = BigNumber.from(amountOut);
+      }
     } else {
       // Exit pool with all tokens proportinally
 
+      // Calculate amounts out given BPT in
       const amountsOut = SDK.WeightedMath._calcTokensOutGivenExactBptIn(
         sortedBalances.map((b) => new OldBigNumber(b)),
         new OldBigNumber(bptIn),
         new OldBigNumber(parsedTotalShares)
       ).map((amount) => amount.toString());
 
+      // Apply slippage
       minAmountsOut = amountsOut.map((amount) => {
         const minAmount = subSlippage(
           BigNumber.from(amount),
@@ -103,6 +127,13 @@ export class WeightedPoolExit implements ExitConcern {
       });
 
       userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(bptIn);
+
+      if (shouldUnwrapNativeAsset) {
+        const amount = amountsOut.find(
+          (amount, i) => sortedTokens[i] == AddressZero
+        );
+        value = amount ? BigNumber.from(amount) : undefined;
+      }
     }
 
     const to = balancerVault;
@@ -112,14 +143,15 @@ export class WeightedPoolExit implements ExitConcern {
       sender: exiter,
       recipient: exiter,
       exitPoolRequest: {
-        assets: sortedTokens, //TODO: check if user wants to exit with ETH and replace address with AddressZero
+        assets: sortedTokens,
         minAmountsOut,
         userData,
         toInternalBalance: false,
       },
     };
-    const vaultInterface = Vault__factory.createInterface();
+
     // encode transaction data into an ABI byte string which can be sent to the network to be executed
+    const vaultInterface = Vault__factory.createInterface();
     const data = vaultInterface.encodeFunctionData(functionName, [
       attributes.poolId,
       attributes.sender,
@@ -132,6 +164,7 @@ export class WeightedPoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
+      value,
       minAmountsOut,
       maxBPTIn: bptIn,
     };
@@ -162,13 +195,16 @@ export class WeightedPoolExit implements ExitConcern {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
 
+    // Parse pool info into EVM amounts in order to match amountsIn scalling
     const {
       parsedTokens,
       parsedBalances,
       parsedWeights,
       parsedTotalShares,
       parsedSwapFee,
-    } = parsePoolInfo(pool); // Parse pool info into EVM amounts in order to match amountsIn scalling
+    } = parsePoolInfo(pool);
+
+    // Sort pool info and inputs based on tokens addresses
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     const [, sortedBalances, sortedWeights] = assetHelpers.sortTokens(
       parsedTokens,
@@ -180,6 +216,7 @@ export class WeightedPoolExit implements ExitConcern {
       amountsOut
     ) as [string[], string[]];
 
+    // Calculate expected BPT in given tokens out
     const bptIn = SDK.WeightedMath._calcBptInGivenExactTokensOut(
       sortedBalances.map((b) => new OldBigNumber(b)),
       sortedWeights.map((w) => new OldBigNumber(w)),
@@ -188,6 +225,7 @@ export class WeightedPoolExit implements ExitConcern {
       new OldBigNumber(parsedSwapFee)
     ).toString();
 
+    // Apply slippage
     const maxBPTIn = addSlippage(
       BigNumber.from(bptIn),
       BigNumber.from(slippage)
@@ -211,8 +249,9 @@ export class WeightedPoolExit implements ExitConcern {
         toInternalBalance: false,
       },
     };
-    const vaultInterface = Vault__factory.createInterface();
+
     // encode transaction data into an ABI byte string which can be sent to the network to be executed
+    const vaultInterface = Vault__factory.createInterface();
     const data = vaultInterface.encodeFunctionData(functionName, [
       attributes.poolId,
       attributes.sender,
@@ -220,11 +259,15 @@ export class WeightedPoolExit implements ExitConcern {
       attributes.exitPoolRequest,
     ]);
 
+    const amount = amountsOut.find((amount, i) => tokensOut[i] == AddressZero); // find native asset (e.g. ETH) amount
+    const value = amount ? BigNumber.from(amount) : undefined;
+
     return {
       to,
       functionName,
       attributes,
       data,
+      value,
       minAmountsOut: sortedAmounts,
       maxBPTIn,
     };

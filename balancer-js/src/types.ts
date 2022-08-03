@@ -213,6 +213,7 @@ export interface PoolModel extends Pool {
     exiter: string,
     bptIn: string,
     slippage: string,
+    shouldUnwrapNativeAsset?: boolean,
     singleTokenMaxOut?: string
   ) => ExitPoolAttributes;
   buildExitExactTokensOut: (
