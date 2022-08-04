@@ -5,10 +5,10 @@ import { Interface } from '@ethersproject/abi';
 // TODO - Ask Nico to update Typechain?
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { BigNumber } from '@ethersproject/bignumber';
+import { Zero } from '@ethersproject/constants';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 const SWAP_RESULT_BBAUSD = Relayer.toChainedReference('24');
-
 export class BbaUsd1Builder {
   private addresses;
 
