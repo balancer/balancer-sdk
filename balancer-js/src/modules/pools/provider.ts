@@ -15,6 +15,8 @@ export class PoolsProvider {
   static wrap(data: Pool, config: BalancerSdkConfig): PoolModel {
     const methods = PoolMethods.from(data.poolType);
     const networkConfig = getNetworkConfig(config);
+    const wrappedNativeAsset =
+      networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
     return {
       ...data,
       liquidity: async () => methods.liquidity.calcTotal(data.tokens),
@@ -25,7 +27,7 @@ export class PoolsProvider {
           tokensIn,
           amountsIn,
           slippage,
-          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+          wrappedNativeAsset,
         }),
       buildExitExactBPTIn: (
         exiter,
@@ -40,7 +42,7 @@ export class PoolsProvider {
           bptIn,
           slippage,
           shouldUnwrapNativeAsset,
-          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+          wrappedNativeAsset,
           singleTokenMaxOut,
         }),
       buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) =>
@@ -50,7 +52,7 @@ export class PoolsProvider {
           tokensOut,
           amountsOut,
           slippage,
-          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+          wrappedNativeAsset,
         }),
       // TODO: spotPrice fails, because it needs a subgraphType,
       // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
