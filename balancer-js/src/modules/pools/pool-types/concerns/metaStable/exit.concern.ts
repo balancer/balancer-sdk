@@ -10,10 +10,11 @@ import {
 } from '../types';
 import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
 import { Vault__factory } from '@balancer-labs/typechain';
-import { WeightedPoolEncoder } from '@/pool-weighted';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { balancerVault } from '@/lib/constants/config';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { AddressZero } from '@ethersproject/constants';
+import { StablePoolEncoder } from '@/pool-stable';
 
 export class MetaStablePoolExit implements ExitConcern {
   /**
@@ -22,6 +23,8 @@ export class MetaStablePoolExit implements ExitConcern {
    * @param {Pool}    pool - Subgraph pool object of pool being exited
    * @param {string}  bptIn - BPT provided for exiting pool
    * @param {string}  slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @param {boolean} shouldUnwrapNativeAsset - Indicates wether wrapped native asset should be unwrapped after exit.
+   * @param {string}  wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting to native asset.
    * @param {string}  singleTokenMaxOut - Optional: token address that if provided will exit to given token
    * @returns         transaction request ready to send with signer.sendTransaction
    */
@@ -39,18 +42,25 @@ export class MetaStablePoolExit implements ExitConcern {
     }
     if (
       singleTokenMaxOut &&
+      singleTokenMaxOut !== AddressZero &&
       !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)
     ) {
       throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
     }
 
-    // Check if there's any relevant weighted pool info missing
+    if (!shouldUnwrapNativeAsset && singleTokenMaxOut === AddressZero)
+      throw new Error(
+        'shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values'
+      );
+
+    // Check if there's any relevant meta stable pool info missing
     if (pool.tokens.some((token) => !token.decimals))
       throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
     if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
     if (pool.tokens.some((token) => !token.priceRate))
       throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
 
+    // Parse pool info into EVM amounts in order to match amountsIn scalling
     const {
       parsedTokens,
       parsedBalances,
@@ -60,16 +70,21 @@ export class MetaStablePoolExit implements ExitConcern {
       parsedSwapFee,
     } = parsePoolInfo(pool);
 
-    const WETH = '0x000000000000000000000000000000000000000F'; // TODO: check if it should be possible to exit with ETH instead of WETH
-    const assetHelpers = new AssetHelpers(WETH);
+    // Replace WETH address with ETH - required for exiting with ETH
+    const unwrappedTokens = parsedTokens.map((token) =>
+      token === wrappedNativeAsset ? AddressZero : token
+    );
+
+    // Sort pool info based on tokens addresses
+    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     const [sortedTokens, sortedBalances, sortedPriceRates] =
       assetHelpers.sortTokens(
-        parsedTokens,
+        shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens,
         parsedBalances,
         parsedPriceRates
       ) as [string[], string[], string[]];
 
-    // scale balances based on price rate for each token
+    // Scale balances based on price rate for each token
     const scaledBalances = sortedBalances.map((balance, i) => {
       return BigNumber.from(balance)
         .mul(BigNumber.from(sortedPriceRates[i]))
@@ -79,12 +94,21 @@ export class MetaStablePoolExit implements ExitConcern {
 
     let minAmountsOut = Array(parsedTokens.length).fill('0');
     let userData: string;
+    let value: BigNumber | undefined;
 
     if (singleTokenMaxOut) {
       // Exit pool with single token using exact bptIn
 
-      const singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
+      const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
 
+      console.log(parsedAmp);
+      console.log(scaledBalances);
+      console.log(singleTokenMaxOutIndex);
+      console.log(bptIn);
+      console.log(parsedTotalShares);
+      console.log(parsedSwapFee);
+
+      // Calculate amount out given BPT in
       const scaledAmountOut = SDK.StableMath._calcTokenOutGivenExactBptIn(
         new OldBigNumber(parsedAmp as string),
         scaledBalances.map((b) => new OldBigNumber(b)),
@@ -94,7 +118,7 @@ export class MetaStablePoolExit implements ExitConcern {
         new OldBigNumber(parsedSwapFee)
       ).toString();
 
-      // reverse scaled amount out based on token price rate
+      // Reverse scaled amount out based on token price rate
       const amountOut = BigNumber.from(scaledAmountOut)
         .div(BigNumber.from(sortedPriceRates[singleTokenMaxOutIndex]))
         .mul(parseFixed('1', 18))
@@ -105,20 +129,25 @@ export class MetaStablePoolExit implements ExitConcern {
         BigNumber.from(slippage)
       ).toString();
 
-      userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(
+      userData = StablePoolEncoder.exitExactBPTInForOneTokenOut(
         bptIn,
         singleTokenMaxOutIndex
       );
+
+      if (shouldUnwrapNativeAsset) {
+        value = BigNumber.from(amountOut);
+      }
     } else {
       // Exit pool with all tokens proportinally
 
+      // Calculate amount out given BPT in
       const scaledAmountsOut = SDK.StableMath._calcTokensOutGivenExactBptIn(
         scaledBalances.map((b) => new OldBigNumber(b)),
         new OldBigNumber(bptIn),
         new OldBigNumber(parsedTotalShares)
       ).map((amount) => amount.toString());
 
-      // reverse scaled amounts out based on token price rate
+      // Reverse scaled amounts out based on token price rate
       const amountsOut = scaledAmountsOut.map((amount, i) => {
         return BigNumber.from(amount)
           .div(BigNumber.from(sortedPriceRates[i]))
@@ -126,6 +155,7 @@ export class MetaStablePoolExit implements ExitConcern {
           .toString();
       });
 
+      // Apply slippage tolerance
       minAmountsOut = amountsOut.map((amount) => {
         const minAmount = subSlippage(
           BigNumber.from(amount),
@@ -134,7 +164,14 @@ export class MetaStablePoolExit implements ExitConcern {
         return minAmount.toString();
       });
 
-      userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(bptIn);
+      userData = StablePoolEncoder.exitExactBPTInForTokensOut(bptIn);
+
+      if (shouldUnwrapNativeAsset) {
+        const amount = amountsOut.find(
+          (amount, i) => sortedTokens[i] == AddressZero
+        );
+        value = amount ? BigNumber.from(amount) : undefined;
+      }
     }
 
     const to = balancerVault;
@@ -150,8 +187,9 @@ export class MetaStablePoolExit implements ExitConcern {
         toInternalBalance: false,
       },
     };
-    const vaultInterface = Vault__factory.createInterface();
+
     // encode transaction data into an ABI byte string which can be sent to the network to be executed
+    const vaultInterface = Vault__factory.createInterface();
     const data = vaultInterface.encodeFunctionData(functionName, [
       attributes.poolId,
       attributes.sender,
@@ -164,6 +202,7 @@ export class MetaStablePoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
+      value,
       minAmountsOut,
       maxBPTIn: bptIn,
     };
@@ -176,6 +215,7 @@ export class MetaStablePoolExit implements ExitConcern {
    * @param {string[]}  tokensOut - Tokens provided for exiting pool
    * @param {string[]}  amountsOut - Amoutns provided for exiting pool
    * @param {string}    slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @param {string}    wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting with ETH.
    * @returns           transaction request ready to send with signer.sendTransaction
    */
   buildExitExactTokensOut = ({
@@ -184,6 +224,7 @@ export class MetaStablePoolExit implements ExitConcern {
     tokensOut,
     amountsOut,
     slippage,
+    wrappedNativeAsset,
   }: ExitExactTokensOutParameters): ExitPoolAttributes => {
     if (
       tokensOut.length != amountsOut.length ||
@@ -192,6 +233,14 @@ export class MetaStablePoolExit implements ExitConcern {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
 
+    // Check if there's any relevant meta stable pool info missing
+    if (pool.tokens.some((token) => !token.decimals))
+      throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+    if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+    if (pool.tokens.some((token) => !token.priceRate))
+      throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
+
+    // Parse pool info into EVM amounts in order to match amountsOut scalling
     const {
       parsedTokens,
       parsedBalances,
@@ -201,8 +250,8 @@ export class MetaStablePoolExit implements ExitConcern {
       parsedSwapFee,
     } = parsePoolInfo(pool);
 
-    const WETH = '0x000000000000000000000000000000000000000F'; // TODO: check if it should be possible to exit with ETH instead of WETH
-    const assetHelpers = new AssetHelpers(WETH);
+    // Sort pool info based on tokens addresses
+    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     const [, sortedBalances, sortedPriceRates] = assetHelpers.sortTokens(
       parsedTokens,
       parsedBalances,
@@ -213,7 +262,7 @@ export class MetaStablePoolExit implements ExitConcern {
       amountsOut
     ) as [string[], string[]];
 
-    // scale amounts in based on price rate for each token
+    // Scale amounts out based on price rate for each token
     const scaledAmounts = sortedAmounts.map((amount, i) => {
       return BigNumber.from(amount)
         .mul(BigNumber.from(sortedPriceRates[i]))
@@ -221,7 +270,7 @@ export class MetaStablePoolExit implements ExitConcern {
         .toString();
     });
 
-    // scale balances based on price rate for each token
+    // Scale balances based on price rate for each token
     const scaledBalances = sortedBalances.map((balance, i) => {
       return BigNumber.from(balance)
         .mul(BigNumber.from(sortedPriceRates[i]))
@@ -229,6 +278,7 @@ export class MetaStablePoolExit implements ExitConcern {
         .toString();
     });
 
+    // Calculate expected BPT in given tokens out
     const bptIn = SDK.StableMath._calcBptInGivenExactTokensOut(
       new OldBigNumber(parsedAmp as string),
       scaledBalances.map((b) => new OldBigNumber(b)),
@@ -237,13 +287,14 @@ export class MetaStablePoolExit implements ExitConcern {
       new OldBigNumber(parsedSwapFee)
     ).toString();
 
+    // Apply slippage tolerance
     const maxBPTIn = addSlippage(
       BigNumber.from(bptIn),
       BigNumber.from(slippage)
     ).toString();
 
-    const userData = WeightedPoolEncoder.exitBPTInForExactTokensOut(
-      sortedAmounts,
+    const userData = StablePoolEncoder.exitBPTInForExactTokensOut(
+      ['0', '0'], // must not use scaledAmounts because it should match amountsOut provided by the user
       maxBPTIn
     );
 
@@ -260,8 +311,9 @@ export class MetaStablePoolExit implements ExitConcern {
         toInternalBalance: false,
       },
     };
-    const vaultInterface = Vault__factory.createInterface();
+
     // encode transaction data into an ABI byte string which can be sent to the network to be executed
+    const vaultInterface = Vault__factory.createInterface();
     const data = vaultInterface.encodeFunctionData(functionName, [
       attributes.poolId,
       attributes.sender,
@@ -269,11 +321,15 @@ export class MetaStablePoolExit implements ExitConcern {
       attributes.exitPoolRequest,
     ]);
 
+    const amount = amountsOut.find((amount, i) => tokensOut[i] == AddressZero); // find native asset (e.g. ETH) amount
+    const value = amount ? BigNumber.from(amount) : undefined;
+
     return {
       to,
       functionName,
       attributes,
       data,
+      value,
       minAmountsOut: sortedAmounts,
       maxBPTIn,
     };
