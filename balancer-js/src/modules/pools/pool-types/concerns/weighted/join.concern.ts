@@ -1,6 +1,4 @@
-import OldBigNumber from 'bignumber.js';
-import * as SDK from '@georgeroman/balancer-v2-pools';
-
+import { WeightedMaths } from '@balancer-labs/sor';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import {
   JoinConcern,
@@ -17,42 +15,6 @@ import { AddressZero } from '@ethersproject/constants';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export class WeightedPoolJoin implements JoinConcern {
-  // Static
-
-  /**
-   * Encode joinPool in an ABI byte string
-   *
-   * [See method for a join pool](https://dev.balancer.fi/references/contracts/apis/the-vault#joinpool).
-   *
-   * _NB: This method doesn't execute a join pool -- it returns an [ABI byte string](https://docs.soliditylang.org/en/latest/abi-spec.html)
-   * containing the data of the function call on a contract, which can then be sent to the network to be executed.
-   * (ex. [sendTransaction](https://web3js.readthedocs.io/en/v1.2.11/web3-eth.html#sendtransaction)).
-   *
-   * @param {JoinPool}          joinPool - join pool information to be encoded
-   * @param {string}            joinPool.poolId - id of pool being joined
-   * @param {string}            joinPool.sender - account address sending tokens to join pool
-   * @param {string}            joinPool.recipient - account address receiving BPT after joining pool
-   * @param {JoinPoolRequest}   joinPool.joinPoolRequest - object containing join pool request information
-   * @returns {string}          encodedJoinPoolData - Returns an ABI byte string containing the data of the function call on a contract
-   */
-  static encodeJoinPool({
-    poolId,
-    sender,
-    recipient,
-    joinPoolRequest,
-  }: JoinPool): string {
-    const vaultInterface = Vault__factory.createInterface();
-
-    return vaultInterface.encodeFunctionData('joinPool', [
-      poolId,
-      sender,
-      recipient,
-      joinPoolRequest,
-    ]);
-  }
-
-  // Join Concern Interface
-
   /**
    * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
    * @param {JoinPoolParameters} params - parameters used to build exact tokens in for bpt out transaction
@@ -61,16 +23,17 @@ export class WeightedPoolJoin implements JoinConcern {
    * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
    * @param {string[]}                        params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
    * @param {string}                          params.slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
+   * @param {string}                          wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for joining with ETH.
    * @returns                                 transaction request ready to send with signer.sendTransaction
    */
-  async buildJoin({
+  buildJoin = ({
     joiner,
     pool,
     tokensIn,
     amountsIn,
     slippage,
     wrappedNativeAsset,
-  }: JoinPoolParameters): Promise<JoinPoolAttributes> {
+  }: JoinPoolParameters): JoinPoolAttributes => {
     if (
       tokensIn.length != amountsIn.length ||
       tokensIn.length != pool.tokensList.length
@@ -106,12 +69,12 @@ export class WeightedPoolJoin implements JoinConcern {
       parsedWeights
     ) as [string[], string[], string[]];
 
-    const expectedBPTOut = SDK.WeightedMath._calcBptOutGivenExactTokensIn(
-      sortedBalances.map((b) => new OldBigNumber(b)),
-      sortedWeights.map((w) => new OldBigNumber(w)),
-      sortedAmounts.map((a) => new OldBigNumber(a)),
-      new OldBigNumber(parsedTotalShares),
-      new OldBigNumber(parsedSwapFee)
+    const expectedBPTOut = WeightedMaths._calcBptOutGivenExactTokensIn(
+      sortedBalances.map((b) => BigInt(b)),
+      sortedWeights.map((w) => BigInt(w)),
+      sortedAmounts.map((a) => BigInt(a)),
+      BigInt(parsedTotalShares),
+      BigInt(parsedSwapFee)
     ).toString();
 
     const minBPTOut = subSlippage(
@@ -137,7 +100,14 @@ export class WeightedPoolJoin implements JoinConcern {
         fromInternalBalance: false,
       },
     };
-    const data = WeightedPoolJoin.encodeJoinPool(attributes);
+    const vaultInterface = Vault__factory.createInterface();
+    // encode transaction data into an ABI byte string which can be sent to the network to be executed
+    const data = vaultInterface.encodeFunctionData(functionName, [
+      attributes.poolId,
+      attributes.sender,
+      attributes.recipient,
+      attributes.joinPoolRequest,
+    ]);
     const values = amountsIn.filter((amount, i) => tokensIn[i] === AddressZero); // filter native asset (e.g. ETH) amounts
     const value = values[0] ? BigNumber.from(values[0]) : undefined;
 

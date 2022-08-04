@@ -7,7 +7,7 @@ import {
   Network,
   PoolModel,
 } from '../src/index';
-import { forkSetup, tokenBalances } from '../src/test/lib/utils';
+import { forkSetup, updateBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
 
 dotenv.config();
@@ -48,7 +48,7 @@ async function exitExactTokensOut() {
   ]; // Tokens that will be provided to pool by joiner
   const amountsOut = ['10000000', '1000000000000000000'];
 
-  const { to, data, minAmountsOut, maxBPTIn } =
+  const { to, data, maxBPTIn } =
     await pool.buildExitExactTokensOut(
       signerAddress,
       tokensOut as string[],
@@ -67,11 +67,7 @@ async function exitExactTokensOut() {
   );
 
   // Checking balances to confirm success
-  const tokenBalancesBefore = await tokenBalances(
-    balancer,
-    signer,
-    pool.tokensList
-  );
+  const tokenBalancesBefore = await updateBalances(pool, signer, signerAddress, balancer);
 
   // Submit exit tx
   const transactionResponse = await signer.sendTransaction({
@@ -81,17 +77,13 @@ async function exitExactTokensOut() {
     // gasLimit: '2000000', // gas inputs are optional
   });
 
-  const transactionReceipt = await transactionResponse.wait();
+  await transactionResponse.wait();
 
-  const tokenBalancesAfter = await tokenBalances(
-    balancer,
-    signer,
-    pool.tokensList
-  );
+  const tokenBalancesAfter = await updateBalances(pool, signer, signerAddress, balancer);
 
-  console.log('Token balances before exit:          ', tokenBalancesBefore);
-  console.log('Token balances after exit:           ', tokenBalancesAfter);
-  console.log('Token balances expected after exit:  ', minAmountsOut);
+  console.log('Token balances before exit:          ', tokenBalancesBefore.toString());
+  console.log('Token balances after exit:           ', tokenBalancesAfter.toString());
+  console.log('Token balances expected after exit:  ', amountsOut.toString());
 }
 
 // yarn examples:run ./examples/exitExactTokensOut.ts

@@ -208,11 +208,12 @@ export interface PoolModel extends Pool {
     tokensIn: string[],
     amountsIn: string[],
     slippage: string
-  ) => Promise<JoinPoolAttributes>;
+  ) => JoinPoolAttributes;
   buildExitExactBPTIn: (
     exiter: string,
     bptIn: string,
     slippage: string,
+    shouldUnwrapNativeAsset?: boolean,
     singleTokenMaxOut?: string
   ) => ExitPoolAttributes;
   buildExitExactTokensOut: (

@@ -1,9 +1,13 @@
 import { BalancerSDK } from '@/.';
-import { JsonRpcSigner } from '@ethersproject/providers';
+import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
 import { balancerVault } from '@/lib/constants/config';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { keccak256 } from '@ethersproject/solidity';
+import { ERC20 } from '@/modules/contracts/ERC20';
+import { PoolsProvider } from '@/modules/pools/provider';
+import { PoolModel, BalancerError, BalancerErrorCode, Pool } from '@/.';
 
 /**
  * Setup local fork with approved token balance for a given account
@@ -99,24 +103,70 @@ export const approveToken = async (
   return await tokenContract.connect(signer).approve(balancerVault, amount);
 };
 
-/**
- * Return token balances for given account
- *
- * @param {BalancerSDK}   balancer Balancer SDK (used to fetch ERC20 contracts)
- * @param {string}        tokens Token addresses
- * @param {JsonRpcSigner} signer Account that will have token balances returned
- * @returns               Token balances for given account
- */
-export const tokenBalances = async (
-  balancer: BalancerSDK,
+export const setupPool = async (
+  provider: PoolsProvider,
+  poolId: string
+): Promise<PoolModel> => {
+  const pool = await provider.find(poolId);
+  if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
+  return pool;
+};
+
+export const tokenBalance = async (
+  tokenAddress: string,
   signer: JsonRpcSigner,
-  tokens: string[]
-): Promise<string[]> => {
-  const balances: string[] = [];
-  for (let i = 0; i < tokens.length; i++) {
-    const tokenContract = balancer.contracts.ERC20(tokens[i], signer.provider);
-    const signerAddress = await signer.getAddress();
-    balances.push((await tokenContract.balanceOf(signerAddress)).toString());
+  signerAddress: string,
+  balancer: BalancerSDK
+): Promise<BigNumber> => {
+  if (tokenAddress === AddressZero) return await signer.getBalance();
+  const balance: Promise<BigNumber> = balancer.contracts
+    .ERC20(tokenAddress, signer.provider)
+    .balanceOf(signerAddress);
+  return balance;
+};
+
+export const updateBalances = async (
+  pool: Pool,
+  signer: JsonRpcSigner,
+  signerAddress: string,
+  balancer: BalancerSDK
+): Promise<Promise<BigNumber[]>> => {
+  const bptBalance = tokenBalance(
+    pool.address,
+    signer,
+    signerAddress,
+    balancer
+  );
+  const balances = [];
+  for (let i = 0; i < pool.tokensList.length; i++) {
+    balances[i] = tokenBalance(
+      pool.tokensList[i],
+      signer,
+      signerAddress,
+      balancer
+    );
   }
-  return balances;
+  return Promise.all([bptBalance, ...balances]);
+};
+
+export const getErc20Balance = (
+  token: string,
+  provider: JsonRpcProvider,
+  holder: string
+): Promise<BigNumber> => ERC20(token, provider).balanceOf(holder);
+
+export const getBalances = async (
+  tokens: string[],
+  signer: JsonRpcSigner,
+  signerAddress: string
+): Promise<Promise<BigNumber[]>> => {
+  const balances: Promise<BigNumber>[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i] === AddressZero) {
+      balances[i] = signer.getBalance();
+    } else {
+      balances[i] = getErc20Balance(tokens[i], signer.provider, signerAddress);
+    }
+  }
+  return Promise.all(balances);
 };

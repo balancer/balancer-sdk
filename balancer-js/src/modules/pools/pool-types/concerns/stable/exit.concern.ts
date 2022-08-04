@@ -30,6 +30,8 @@ export class StablePoolExit implements ExitConcern {
     pool,
     bptIn,
     slippage,
+    shouldUnwrapNativeAsset,
+    wrappedNativeAsset,
     singleTokenMaxOut,
   }: ExitExactBPTInParameters): ExitPoolAttributes => {
     if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
