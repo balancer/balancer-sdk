@@ -42,9 +42,11 @@ export class BbaUsd1Builder {
     data: string;
   } {
     const relayer = this.addresses.relayer;
-    let calls: string[] = authorisation
-      ? [this.buildSetRelayerApproval(authorisation)]
-      : [];
+    let calls: string[] = [];
+
+    if (authorisation) {
+      calls = [this.buildSetRelayerApproval(authorisation)];
+    }
 
     if (staked) {
       calls = [

@@ -48,15 +48,17 @@ export class StablesBuilder {
     to: string;
     data: string;
   } {
-    const relayer = this.addresses.relayer;
-    let calls: string[] = authorisation
-      ? [this.buildSetRelayerApproval(authorisation)]
-      : [];
-
     if (staked && (from.gauge == undefined || to.gauge == undefined))
       throw new Error(
         'Staked flow migration requires gauge addresses to be provided'
       );
+
+    const relayer = this.addresses.relayer;
+    let calls: string[] = [];
+
+    if (authorisation) {
+      calls = [this.buildSetRelayerApproval(authorisation)];
+    }
 
     if (staked) {
       calls = [
