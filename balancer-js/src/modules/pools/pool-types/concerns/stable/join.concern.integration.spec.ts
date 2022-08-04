@@ -123,6 +123,7 @@ describe('join execution', async () => {
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       const transactionResponse = await signer.sendTransaction(tx);
+
       transactionReceipt = await transactionResponse.wait();
       [bptBalanceAfter, ...tokensBalanceAfter] = await updateBalances(
         pool,
@@ -134,6 +135,12 @@ describe('join execution', async () => {
 
     it('should work', async () => {
       expect(transactionReceipt.status).to.eql(1);
+    });
+
+    it('price impact calculation', async () => {
+      const minBPTOut = bptMinBalanceIncrease.toString();
+      const priceImpact = await pool.calcPriceImpact(amountsIn, minBPTOut);
+      expect(priceImpact).to.eql('669416815724469270');
     });
 
     it('should increase BPT balance', async () => {

@@ -132,6 +132,12 @@ describe('join execution', async () => {
       expect(transactionReceipt.status).to.eql(1);
     });
 
+    it('price impact calculation', async () => {
+      const minBPTOut = bptMinBalanceIncrease.toString();
+      const priceImpact = await pool.calcPriceImpact(amountsIn, minBPTOut);
+      expect(priceImpact).to.eql('100000000010000');
+    });
+
     it('should increase BPT balance', async () => {
       expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
         .to.be.true;
