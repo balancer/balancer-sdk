@@ -126,7 +126,7 @@ export class Migrations {
    * @param {string}                    bptIn Amount of BPT tokens to migrate.
    * @param {string}                    minBptOut Minimum of expected BPT out ot the migration flow.
    * @param {boolean}                   staked Indicates whether tokens are initially staked or not.
-   * @param {string[]}                  tokens Token addresses. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+   * @param {string[]}                  underlyingTokens Underlying token addresses. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
    * @param {string}                    authorisation Encoded authorisation call.
    * @returns Migration transaction request ready to send with signer.sendTransaction
    */
@@ -137,7 +137,7 @@ export class Migrations {
     bptIn: string,
     minBptOut: string,
     staked: boolean,
-    tokens: string[],
+    underlyingTokens: string[],
     authorisation?: string
   ): {
     to: string;
@@ -152,7 +152,7 @@ export class Migrations {
       bptIn,
       minBptOut,
       staked,
-      tokens,
+      underlyingTokens,
       authorisation
     );
 
