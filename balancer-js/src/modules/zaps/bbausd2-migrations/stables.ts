@@ -110,8 +110,7 @@ export class StablesBuilder {
     // Assume gaugeWithdraw returns same amount value
     const userData = StablePoolEncoder.exitExactBPTInForTokensOut(amount);
 
-    // Ask to store exit outputs for batchSwap of exit is used as input to swaps
-    // TODO: check how does tokens order matter between exits and swaps
+    // Store exit outputs to be used as swaps inputs
     const outputReferences = [];
     for (let i = 0; i < underlyingTokens.length; i++) {
       outputReferences[i] = {
