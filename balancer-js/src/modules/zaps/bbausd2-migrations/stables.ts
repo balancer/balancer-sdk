@@ -5,7 +5,7 @@ import { ExitPoolRequest } from '@/types';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
-import { MaxUint256, MaxInt256 } from '@ethersproject/constants';
+import { MaxInt256 } from '@ethersproject/constants';
 // TODO - Ask Nico to update Typechain?
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
@@ -194,7 +194,7 @@ export class StablesBuilder {
       assets,
       funds,
       limits,
-      deadline: MaxUint256,
+      deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
       value: '0',
       outputReferences,
     });

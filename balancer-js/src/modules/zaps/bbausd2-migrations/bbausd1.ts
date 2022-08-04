@@ -2,7 +2,6 @@ import { ADDRESSES } from './addresses';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { Interface } from '@ethersproject/abi';
-import { MaxUint256, Zero } from '@ethersproject/constants';
 // TODO - Ask Nico to update Typechain?
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -259,7 +258,7 @@ export class BbaUsd1Builder {
       assets,
       funds,
       limits,
-      deadline: MaxUint256,
+      deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
       value: '0',
       outputReferences,
     });
