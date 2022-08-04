@@ -43,12 +43,20 @@ const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
+const fromPool = {
+  id: addresses.bbausd1.id,
+  address: addresses.bbausd1.address,
+  gauge: addresses.bbausd1.gauge,
+};
+const toPool = {
+  id: addresses.bbausd2.id,
+  address: addresses.bbausd2.address,
+  gauge: addresses.bbausd2.gauge,
+};
 const { contracts } = new Contracts(network as number, provider);
 const migrations = new Migrations(network);
 
 const holderAddress = '0xd86a11b0c859c18bfc1b4acd072c5afe57e79438';
-const poolAddress = addresses.bbausd1.address;
-const gaugeAddress = addresses.bbausd1.gauge;
 const relayer = addresses.relayer;
 
 const getErc20Balance = (token: string, holder: string): Promise<BigNumber> =>
@@ -119,14 +127,14 @@ const stake = async (
 ): Promise<void> => {
   await (
     await contracts
-      .ERC20(poolAddress, provider)
+      .ERC20(fromPool.address, provider)
       .connect(signer)
-      .approve(gaugeAddress, MaxUint256)
+      .approve(fromPool.gauge, MaxUint256)
   ).wait();
 
   await (
     await signer.sendTransaction({
-      to: gaugeAddress,
+      to: fromPool.gauge,
       data: liquidityGauge.encodeFunctionData('deposit', [balance]),
     })
   ).wait();
@@ -149,7 +157,7 @@ describe('bbausd migration execution', async () => {
     authorisation = await signRelayerApproval(relayer, signerAddress, signer);
     // Transfer tokens from existing user account to signer
     // We need that to test signatures, because hardhat doesn't have impersonated accounts private keys
-    balance = await move(poolAddress, holderAddress, signerAddress);
+    balance = await move(fromPool.address, holderAddress, signerAddress);
 
     const config = {
       network,
@@ -160,7 +168,7 @@ describe('bbausd migration execution', async () => {
       config,
       new SubgraphPoolRepository(subgraph.client)
     );
-    await pools.findBy('address', poolAddress).then((res) => {
+    await pools.findBy('address', fromPool.address).then((res) => {
       if (!res) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
       pool = res;
     });
@@ -168,15 +176,11 @@ describe('bbausd migration execution', async () => {
 
   async function testFlow(
     staked: boolean,
-    authorized = true,
+    authorised = true,
     minBbausd2Out: undefined | string = undefined
   ): Promise<string> {
-    const addressIn = staked
-      ? addresses.bbausd1.gauge
-      : addresses.bbausd1.address;
-    const addressOut = staked
-      ? addresses.bbausd2.gauge
-      : addresses.bbausd2.address;
+    const addressIn = staked ? fromPool.gauge : fromPool.address;
+    const addressOut = staked ? toPool.gauge : toPool.address;
     // Store balance before migration
     const before = {
       from: await getErc20Balance(addressIn, signerAddress),
@@ -214,7 +218,7 @@ describe('bbausd migration execution', async () => {
       pool.tokens
         .filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
         .map((token) => parseFixed(token.balance, token.decimals).toString()),
-      authorized ? authorisation : undefined
+      authorised ? authorisation : undefined
     );
 
     const response = await signer.sendTransaction({
@@ -287,10 +291,10 @@ describe('bbausd migration execution', async () => {
     }).timeout(20000);
   });
 
-  context('authorization', async () => {
+  context('authorisation', async () => {
     // authorisation wihtin relayer is the default case and is already tested on previous scenarios
 
-    it('should transfer tokens from stable to boosted - pre authorized', async () => {
+    it('should transfer tokens from stable to boosted - pre authorised', async () => {
       const approval = contracts.vault.interface.encodeFunctionData(
         'setRelayerApproval',
         [signerAddress, relayer, true]

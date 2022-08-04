@@ -265,10 +265,10 @@ describe('stables migration execution', async () => {
     }).timeout(20000);
   });
 
-  context('authorization', async () => {
+  context('authorisation', async () => {
     // authorisation wihtin relayer is the default case and is already tested on previous scenarios
 
-    it('should transfer tokens from stable to boosted - pre authorized', async () => {
+    it('should transfer tokens from stable to boosted - pre authorised', async () => {
       const approval = contracts.vault.interface.encodeFunctionData(
         'setRelayerApproval',
         [signerAddress, relayer, true]
