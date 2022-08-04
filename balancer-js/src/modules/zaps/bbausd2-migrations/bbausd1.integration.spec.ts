@@ -160,9 +160,10 @@ describe('bbausd migration execution', async () => {
       config,
       new SubgraphPoolRepository(subgraph.client)
     );
-    const _pool = await pools.findBy('address', poolAddress);
-    if (!_pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-    pool = _pool;
+    await pools.findBy('address', poolAddress).then((res) => {
+      if (!res) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
+      pool = res;
+    });
   });
 
   async function testFlow(
