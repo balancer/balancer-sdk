@@ -21,7 +21,7 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
    */
   bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
     if (tokenAmounts.length !== pool.tokensList.length)
-      throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // swapFee, totalShares, totalWeight all scaled up to 18 decimals
     const weightedPool = WeightedPool.fromPool(pool as SubgraphPoolBase);

@@ -21,7 +21,7 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
    */
   bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
     if (tokenAmounts.length !== pool.tokensList.length)
-      throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // const tokensList = cloneDeep(pool.tokensList);
     const { parsedBalances, parsedPriceRates, parsedAmp, parsedTotalShares } =

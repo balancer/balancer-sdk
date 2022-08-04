@@ -226,7 +226,7 @@ describe('join execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain(
-        BalancerError.getMessage(BalancerErrorCode.ARRAY_LENGTH_MISMATCH)
+        BalancerError.getMessage(BalancerErrorCode.INPUT_LENGTH_MISMATCH)
       );
     });
   });

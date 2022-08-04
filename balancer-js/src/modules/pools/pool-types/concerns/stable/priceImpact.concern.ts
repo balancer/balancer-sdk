@@ -20,7 +20,7 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
    */
   bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
     if (tokenAmounts.length !== pool.tokensList.length)
-      throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // upscales amp, swapfee, totalshares
     const { parsedBalances, parsedAmp, parsedTotalShares } =

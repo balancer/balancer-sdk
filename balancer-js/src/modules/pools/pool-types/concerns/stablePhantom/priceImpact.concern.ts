@@ -22,7 +22,7 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
    */
   bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
     if (tokenAmounts.length !== pool.tokensList.length - 1)
-      throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     const tokensList = cloneDeep(pool.tokensList);
     const bptIndex = tokensList.findIndex((token) => token == pool.address);
@@ -35,7 +35,7 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
     const priceRates = parsedPriceRates.map((rate) => BigInt(rate as string));
     tokensList.splice(bptIndex, 1);
     if (tokenAmounts.length !== tokensList.length)
-      throw new BalancerError(BalancerErrorCode.ARRAY_LENGTH_MISMATCH);
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     balances.splice(bptIndex, 1);
     const balancesScaled = balances.map((balance, i) =>
       SolidityMaths.mulDownFixed(balance, priceRates[i])
