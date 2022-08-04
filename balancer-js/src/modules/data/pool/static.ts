@@ -1,7 +1,7 @@
 import { Findable, Pool } from '@/types';
 import { PoolAttribute } from './types';
 
-export class StaticPoolRepository implements Findable<Pool, PoolAttribute> {
+export class PoolsStaticRepository implements Findable<Pool, PoolAttribute> {
   constructor(private pools: Pool[]) {}
 
   async find(id: string): Promise<Pool | undefined> {

@@ -73,6 +73,7 @@
         "fishery": "^2.2.2",
         "hardhat": "^2.9.3",
         "mocha": "^8.2.1",
+        "mockdate": "^3.0.5",
         "prettier": "^2.1.2",
         "rimraf": "^3.0.2",
         "rollup": "^2.52.8",
@@ -82,8 +83,7 @@
         "ts-node": "^10.4.0",
         "tsconfig-paths": "^3.12.0",
         "typechain": "^5.1.1",
-        "typescript": "^4.0.2",
-        "mockdate": "^3.0.5"
+        "typescript": "^4.0.2"
     },
     "dependencies": {
         "@balancer-labs/sor": "^4.0.1-beta.1",
@@ -92,6 +92,7 @@
         "bignumber.js": "^9.0.2",
         "graphql": "^15.6.1",
         "graphql-request": "^3.5.0",
+        "json-to-graphql-query": "^2.2.4",
         "lodash": "^4.17.21"
     },
     "peerDependencies": {

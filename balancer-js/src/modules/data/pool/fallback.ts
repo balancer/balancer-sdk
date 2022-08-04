@@ -1,5 +1,6 @@
+import { Findable } from '../types';
 import { Pool } from '@/types';
-import { PoolAttribute, PoolRepository } from './types';
+import { PoolAttribute } from './types';
 
 /**
  * The fallback provider takes multiple PoolRepository's in an array and uses them in order
@@ -8,13 +9,10 @@ import { PoolAttribute, PoolRepository } from './types';
  * This is useful for using the Balancer API while being able to fall back to the graph if it is down
  * to ensure Balancer is maximally decentralized.
  **/
-export class FallbackPoolRepository implements PoolRepository {
+export class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
   currentProviderIdx: number;
 
-  constructor(
-    private readonly providers: PoolRepository[],
-    private timeout = 10000
-  ) {
+  constructor(private readonly providers: any[], private timeout = 10000) {
     this.currentProviderIdx = 0;
   }
 
