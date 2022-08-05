@@ -28,6 +28,7 @@ export class PoolsBalancerAPIRepository
 
   async fetch(query?: GraphQLQuery): Promise<Pool[]> {
     const defaultArgs: GraphQLArgs = {
+      chainId: 1,
       orderBy: 'totalLiquidity',
       orderDirection: 'desc',
       where: {
@@ -49,7 +50,7 @@ export class PoolsBalancerAPIRepository
     const attrs = query?.attrs || defaultAttributes;
 
     const formattedQuery = {
-      Pools: {
+      pools: {
         __args: formattedArgs,
         ...attrs,
       },

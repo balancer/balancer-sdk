@@ -28,7 +28,7 @@ function LessThan(value: number): PoolQueryFilter {
   };
 }
 
-function Equals(value: number | boolean): PoolQueryFilter {
+function Equals(value: number | boolean | string): PoolQueryFilter {
   return {
     operator: PoolQueryFilterOperator.Equals,
     value,
@@ -71,6 +71,9 @@ export interface GraphQLArgs {
   skip?: number;
   orderBy?: string;
   orderDirection?: string;
+  block?: {
+    number: number;
+  };
   where?: Record<string, PoolQueryFilter>;
 }
 
