@@ -90,13 +90,6 @@ export class MetaStablePoolExit implements ExitConcern {
 
       const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
 
-      console.log(parsedAmp);
-      console.log(scaledBalances);
-      console.log(singleTokenMaxOutIndex);
-      console.log(bptIn);
-      console.log(parsedTotalShares);
-      console.log(parsedSwapFee);
-
       // Calculate amount out given BPT in
       const scaledAmountOut = SDK.StableMath._calcTokenOutGivenExactBptIn(
         new OldBigNumber(parsedAmp as string),
@@ -273,7 +266,7 @@ export class MetaStablePoolExit implements ExitConcern {
     ).toString();
 
     const userData = StablePoolEncoder.exitBPTInForExactTokensOut(
-      ['0', '0'], // must not use scaledAmounts because it should match amountsOut provided by the user
+      sortedAmounts, // must not use scaledAmounts because it should match amountsOut provided by the user
       maxBPTIn
     );
 
