@@ -7,12 +7,14 @@ import {
   OrderDirection,
 } from '@/modules/subgraph/subgraph';
 import {
-  PoolQuery,
+  GraphQLArgs,
+  GraphQLArgsBuilder,
   Op,
-  SubgraphQueryFormatter,
-} from '@/modules/pools/pool-query';
+  BalancerAPIArgsFormatter,
+  SubgraphArgsFormatter,
+} from '@/lib/utils/graphql-args-builder';
 import { PoolAttribute } from './types';
-import { Pool, PoolType } from '@/types';
+import { GraphQLQuery, Pool, PoolType } from '@/types';
 
 /**
  * Access pools using generated subgraph client.
@@ -27,20 +29,22 @@ export class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute> {
     this.client = createSubgraphClient(url);
   }
 
-  async fetch(query?: PoolQuery): Promise<Pool[]> {
-    const defaultQuery = new PoolQuery({
+  async fetch(query?: GraphQLQuery): Promise<Pool[]> {
+    const defaultArgs: GraphQLArgs = {
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
       where: {
         swapEnabled: Op.Equals(true),
         totalShares: Op.GreaterThan(0),
       },
-    });
+    };
 
-    query = query || defaultQuery;
-    const formattedQuery = query.format(new SubgraphQueryFormatter());
+    const args = query?.args || defaultArgs;
+    const formattedQuery = new GraphQLArgsBuilder(args).format(
+      new SubgraphArgsFormatter()
+    );
 
-    const { pool0, pool1000 } = await this.client.Pools(formattedQuery.args);
+    const { pool0, pool1000 } = await this.client.Pools(formattedQuery);
 
     // TODO: how to best convert subgraph type to sdk internal type?
     this.pools = [...pool0, ...pool1000];

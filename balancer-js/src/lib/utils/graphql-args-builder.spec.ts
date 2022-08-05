@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import {
-  BalancerAPIQueryFormatter,
+  BalancerAPIArgsFormatter,
   GraphQLArgsBuilder,
-  SubgraphQueryFormatter,
+  SubgraphArgsFormatter,
   Op,
 } from './graphql-args-builder';
 
@@ -13,12 +13,6 @@ describe('Pool Query', () => {
       skip: 0,
       orderBy: 'totalLiquidity',
       orderDirection: 'desc',
-      // where: [
-      //   new Op.GreaterThan('totalShares', 0.01),
-      //   new Op.NotIn('id', ['0xBAD', '0xDEF']),
-      //   new Op.Contains('tokensList', ['0xBAL']),
-      //   new Op.NotIn('poolType', ['Linear']),
-      // ],
       where: {
         totalShares: Op.GreaterThan(0.01),
         id: Op.NotIn(['0xBAD', '0xDEF']),
@@ -28,22 +22,19 @@ describe('Pool Query', () => {
     });
 
     const expectedSubgraphQuery = {
-      args: {
-        first: 10,
-        skip: 0,
-        orderBy: 'totalLiquidity',
-        orderDirection: 'desc',
-        where: {
-          totalShares_gt: 0.01,
-          id_not_in: ['0xBAD', '0xDEF'],
-          tokensList_contains: ['0xBAL'],
-          poolType_not_in: ['Linear'],
-        },
+      first: 10,
+      skip: 0,
+      orderBy: 'totalLiquidity',
+      orderDirection: 'desc',
+      where: {
+        totalShares_gt: 0.01,
+        id_not_in: ['0xBAD', '0xDEF'],
+        tokensList_contains: ['0xBAL'],
+        poolType_not_in: ['Linear'],
       },
-      attrs: {},
     };
 
-    const result = query.format(new SubgraphQueryFormatter());
+    const result = query.format(new SubgraphArgsFormatter());
     expect(result).to.deep.equal(expectedSubgraphQuery);
   });
 
@@ -62,30 +53,27 @@ describe('Pool Query', () => {
     });
 
     const expectedSubgraphQuery = {
-      args: {
-        first: 10,
-        skip: 0,
-        orderBy: 'totalLiquidity',
-        orderDirection: 'desc',
-        where: {
-          totalShares: {
-            gt: 0.01,
-          },
-          id: {
-            not_in: ['0xBAD', '0xDEF'],
-          },
-          tokensList: {
-            contains: ['0xBAL'],
-          },
-          poolType: {
-            not_in: ['Linear'],
-          },
+      first: 10,
+      skip: 0,
+      orderBy: 'totalLiquidity',
+      orderDirection: 'desc',
+      where: {
+        totalShares: {
+          gt: 0.01,
+        },
+        id: {
+          not_in: ['0xBAD', '0xDEF'],
+        },
+        tokensList: {
+          contains: ['0xBAL'],
+        },
+        poolType: {
+          not_in: ['Linear'],
         },
       },
-      attrs: {},
     };
 
-    const result = query.format(new BalancerAPIQueryFormatter());
+    const result = query.format(new BalancerAPIArgsFormatter());
     expect(result).to.deep.equal(expectedSubgraphQuery);
   });
 });

@@ -10,6 +10,7 @@ import type {
   TokenAttribute,
 } from '@/modules/data/types';
 import type { BaseFeeDistributor } from './modules/data';
+import type { GraphQLArgs } from './lib/utils';
 
 export * from '@/modules/data/types';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
@@ -233,4 +234,9 @@ export interface PoolModel extends Pool {
     slippage: string
   ) => Promise<JoinPoolAttributes>;
   apr: () => Promise<AprBreakdown>;
+}
+
+export interface GraphQLQuery {
+  args: GraphQLArgs;
+  attrs: any;
 }

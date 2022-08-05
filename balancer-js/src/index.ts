@@ -13,7 +13,6 @@ export * from './modules/swaps/swaps.module';
 export * from './modules/subgraph/subgraph.module';
 export * from './modules/sor/sor.module';
 export * from './modules/pools';
-export * from './modules/pools/pool-query';
 export * from './modules/data';
 export * from './balancerErrors';
 export {

@@ -1,14 +1,15 @@
 import { Findable } from '../types';
 import { Pool_OrderBy, OrderDirection } from '@/modules/subgraph/subgraph';
 import { PoolAttribute } from './types';
-import { Pool } from '@/types';
+import { GraphQLQuery, Pool } from '@/types';
 import BalancerAPIClient from '@/modules/api/balancer-api.client';
 import { id } from 'ethers/lib/utils';
 import {
-  PoolQuery,
+  GraphQLArgs,
+  GraphQLArgsBuilder,
   Op,
-  BalancerAPIQueryFormatter,
-} from '@/modules/pools/pool-query';
+  BalancerAPIArgsFormatter,
+} from '@/lib/utils/graphql-args-builder';
 
 /**
  * Access pools using the Balancer GraphQL Api.
@@ -25,18 +26,34 @@ export class PoolsBalancerAPIRepository
     this.client = new BalancerAPIClient(url, apiKey);
   }
 
-  async fetch(query?: PoolQuery): Promise<Pool[]> {
-    const defaultQuery = new PoolQuery({
+  async fetch(query?: GraphQLQuery): Promise<Pool[]> {
+    const defaultArgs: GraphQLArgs = {
       orderBy: 'totalLiquidity',
       orderDirection: 'desc',
       where: {
         swapEnabled: Op.Equals(true),
         totalShares: Op.GreaterThan(0.05),
       },
-    });
+    };
 
-    query = query || defaultQuery;
-    const formattedQuery = query.format(new BalancerAPIQueryFormatter());
+    const defaultAttributes = {
+      id: true,
+      address: true,
+    };
+
+    const args = query?.args || defaultArgs;
+    const formattedArgs = new GraphQLArgsBuilder(args).format(
+      new BalancerAPIArgsFormatter()
+    );
+
+    const attrs = query?.attrs || defaultAttributes;
+
+    const formattedQuery = {
+      Pools: {
+        __args: formattedArgs,
+        ...attrs,
+      },
+    };
 
     const apiResponseData = await this.client.get(formattedQuery);
     this.pools = apiResponseData.pools;
