@@ -17,17 +17,6 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { StablePoolEncoder } from '@/pool-stable';
 
 export class StablePoolExit implements ExitConcern {
-  /**
-   * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
-   * @param {string}  exiter - Account address exiting pool
-   * @param {Pool}    pool - Subgraph pool object of pool being exited
-   * @param {string}  bptIn - BPT provided for exiting pool
-   * @param {string}  slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-   * @param {boolean} shouldUnwrapNativeAsset - Indicates wether wrapped native asset should be unwrapped after exit.
-   * @param {string}  wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting to native asset.
-   * @param {string}  singleTokenMaxOut - Optional: token address that if provided will exit to given token
-   * @returns         transaction request ready to send with signer.sendTransaction
-   */
   buildExitExactBPTIn = ({
     exiter,
     pool,
@@ -175,16 +164,6 @@ export class StablePoolExit implements ExitConcern {
     };
   };
 
-  /**
-   * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
-   * @param {string}    exiter - Account address exiting pool
-   * @param {Pool}      pool - Subgraph pool object of pool being exited
-   * @param {string[]}  tokensOut - Tokens provided for exiting pool
-   * @param {string[]}  amountsOut - Amoutns provided for exiting pool
-   * @param {string}    slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-   * @param {string}    wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting with ETH.
-   * @returns           transaction request ready to send with signer.sendTransaction
-   */
   buildExitExactTokensOut = ({
     exiter,
     pool,
