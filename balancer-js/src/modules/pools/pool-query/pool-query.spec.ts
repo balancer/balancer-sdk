@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import {
-  BalancerApiQueryFormatter,
+  BalancerAPIQueryFormatter,
   PoolQuery,
   SubgraphQueryFormatter,
   Op,
@@ -73,7 +73,7 @@ describe('Pool Query', () => {
       },
     };
 
-    const result = query.format(new BalancerApiQueryFormatter());
+    const result = query.format(new BalancerAPIQueryFormatter());
     expect(result).to.deep.equal(expectedSubgraphQuery);
   });
 });

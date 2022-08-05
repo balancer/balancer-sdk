@@ -7,6 +7,11 @@ enum PoolQueryFilterOperator {
   Contains,
 }
 
+export interface GraphQLQuery {
+  args: any;
+  attrs: Record<string, any>;
+}
+
 export interface PoolQueryFilter {
   operator: PoolQueryFilterOperator;
   name: string;
@@ -25,7 +30,10 @@ class LessThan implements PoolQueryFilter {
 
 class Equals implements PoolQueryFilter {
   operator: PoolQueryFilterOperator = PoolQueryFilterOperator.Equals;
-  constructor(readonly name: string, readonly value: number | string) {}
+  constructor(
+    readonly name: string,
+    readonly value: number | string | boolean
+  ) {}
 }
 
 class In implements PoolQueryFilter {
@@ -53,6 +61,7 @@ export const Op = {
 };
 
 export interface PoolQueryOptions {
+  chainId?: number;
   first?: number;
   skip?: number;
   orderBy?: string;
@@ -61,11 +70,11 @@ export interface PoolQueryOptions {
 }
 
 export interface PoolQueryFormatter {
-  format(options: PoolQueryOptions): any;
+  format(args: PoolQueryOptions, attrs: Record<string, boolean>): GraphQLQuery;
 }
 
-export class BalancerApiQueryFormatter implements PoolQueryFormatter {
-  operatorMap: any;
+export class BalancerAPIQueryFormatter implements PoolQueryFormatter {
+  operatorMap: Record<PoolQueryFilterOperator, string>;
 
   constructor() {
     this.operatorMap = {
@@ -78,10 +87,10 @@ export class BalancerApiQueryFormatter implements PoolQueryFormatter {
     };
   }
 
-  format(options: PoolQueryOptions) {
+  format(args: PoolQueryOptions, attrs: Record<string, any>): GraphQLQuery {
     const whereQuery: Record<string, any> = {};
-    if (options.where) {
-      options.where.forEach((filter: PoolQueryFilter) => {
+    if (args.where) {
+      args.where.forEach((filter: PoolQueryFilter) => {
         whereQuery[filter.name] = {
           [this.operatorMap[filter.operator]]: filter.value,
         };
@@ -89,14 +98,17 @@ export class BalancerApiQueryFormatter implements PoolQueryFormatter {
     }
 
     return {
-      ...options,
-      ...{ where: whereQuery },
+      args: {
+        ...args,
+        ...{ where: whereQuery },
+      },
+      attrs,
     };
   }
 }
 
 export class SubgraphQueryFormatter implements PoolQueryFormatter {
-  operatorMap: any;
+  operatorMap: Record<PoolQueryFilterOperator, string>;
 
   constructor() {
     this.operatorMap = {
@@ -109,26 +121,55 @@ export class SubgraphQueryFormatter implements PoolQueryFormatter {
     };
   }
 
-  format(options: PoolQueryOptions) {
+  format(args: PoolQueryOptions, attrs: Record<string, any>): GraphQLQuery {
     const whereQuery: Record<string, any> = {};
-    if (options.where) {
-      options.where.forEach((filter: PoolQueryFilter) => {
+    if (args.where) {
+      args.where.forEach((filter: PoolQueryFilter) => {
         whereQuery[`${filter.name}_${this.operatorMap[filter.operator]}`] =
           filter.value;
       });
     }
 
     return {
-      ...options,
-      ...{ where: whereQuery },
+      args: {
+        ...args,
+        ...{ where: whereQuery },
+      },
+      attrs,
     };
   }
 }
 
 export class PoolQuery {
-  constructor(private readonly options: PoolQueryOptions) {}
+  constructor(
+    readonly args: PoolQueryOptions,
+    readonly attrs: Record<string, any> = {}
+  ) {}
 
-  format(formatter: PoolQueryFormatter): any {
-    return formatter.format(this.options);
+  merge(query: PoolQuery): PoolQuery {
+    const mergedWhere = query.args.where || [];
+
+    this.args.where?.forEach((option) => {
+      if (!mergedWhere?.find((where) => where.name === option.name)) {
+        mergedWhere.push(option);
+      }
+    });
+
+    const mergedArgs = {
+      ...this.args,
+      ...query.args,
+      ...{ where: mergedWhere },
+    };
+
+    const mergedAttrs = {
+      ...this.attrs,
+      ...query.attrs,
+    };
+
+    return new PoolQuery(mergedArgs, mergedAttrs);
+  }
+
+  format(formatter: PoolQueryFormatter): GraphQLQuery {
+    return formatter.format(this.args, this.attrs);
   }
 }

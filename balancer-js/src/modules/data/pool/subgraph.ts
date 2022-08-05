@@ -6,6 +6,11 @@ import {
   Pool_OrderBy,
   OrderDirection,
 } from '@/modules/subgraph/subgraph';
+import {
+  PoolQuery,
+  Op,
+  SubgraphQueryFormatter,
+} from '@/modules/pools/pool-query';
 import { PoolAttribute } from './types';
 import { Pool, PoolType } from '@/types';
 
@@ -22,17 +27,25 @@ export class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute> {
     this.client = createSubgraphClient(url);
   }
 
-  async fetch(): Promise<SubgraphPool[]> {
-    const { pool0, pool1000 } = await this.client.Pools({
-      where: { swapEnabled: true, totalShares_gt: '0' },
+  async fetch(query?: PoolQuery): Promise<Pool[]> {
+    const defaultQuery = new PoolQuery({
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
+      where: [
+        new Op.Equals('swapEnabled', true),
+        new Op.GreaterThan('totalShares', 0),
+      ],
     });
+
+    query = query || defaultQuery;
+    const formattedQuery = query.format(new SubgraphQueryFormatter());
+
+    const { pool0, pool1000 } = await this.client.Pools(formattedQuery.args);
 
     // TODO: how to best convert subgraph type to sdk internal type?
     this.pools = [...pool0, ...pool1000];
 
-    return this.pools;
+    return this.pools.map(this.mapType);
   }
 
   async find(id: string): Promise<Pool | undefined> {
