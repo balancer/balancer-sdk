@@ -5,15 +5,10 @@ import { Network, RelayerAuthorization } from '@/.';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { ADDRESSES } from './addresses';
-import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
-import { parseEther } from '@ethersproject/units';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256 } from '@ethersproject/constants';
 import { Migrations } from '../migrations';
-
-import { Interface } from '@ethersproject/abi';
-const liquidityGaugeAbi = ['function deposit(uint value) payable'];
-const liquidityGauge = new Interface(liquidityGaugeAbi);
+import { getErc20Balance, move, stake } from '@/test/lib/utils';
 
 /*
  * Testing on GOERLI
@@ -49,19 +44,6 @@ const migrations = new Migrations(network);
 
 const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
 const relayer = addresses.relayer;
-
-const getErc20Balance = (token: string, holder: string): Promise<BigNumber> =>
-  contracts.ERC20(token, provider).balanceOf(holder);
-
-// https://hardhat.org/hardhat-network/docs/guides/forking-other-networks#impersonating-accounts
-// WARNING: don't use hardhat SignerWithAddress to sendTransactions!!
-// It's not working and we didn't have time to figure out why.
-// Use JsonRpcSigner instead
-const impersonateAccount = async (account: string) => {
-  await provider.send('hardhat_impersonateAccount', [account]);
-  await setBalance(account, parseEther('10000'));
-  return provider.getSigner(account);
-};
 
 const signRelayerApproval = async (
   relayerAddress: string,
@@ -100,37 +82,6 @@ const reset = () =>
     },
   ]);
 
-const move = async (
-  token: string,
-  from: string,
-  to: string
-): Promise<BigNumber> => {
-  const holder = await impersonateAccount(from);
-  const balance = await getErc20Balance(token, from);
-  await contracts.ERC20(token, provider).connect(holder).transfer(to, balance);
-
-  return balance;
-};
-
-const stake = async (
-  signer: JsonRpcSigner,
-  balance: BigNumber
-): Promise<void> => {
-  await (
-    await contracts
-      .ERC20(fromPool.address, provider)
-      .connect(signer)
-      .approve(fromPool.gauge, MaxUint256)
-  ).wait();
-
-  await (
-    await signer.sendTransaction({
-      to: fromPool.gauge,
-      data: liquidityGauge.encodeFunctionData('deposit', [balance]),
-    })
-  ).wait();
-};
-
 describe('stabal3 migration execution', async () => {
   let signer: JsonRpcSigner;
   let signerAddress: string;
@@ -147,7 +98,12 @@ describe('stabal3 migration execution', async () => {
 
     // Transfer tokens from existing user account to signer
     // We need that to test signatures, because hardhat doesn't have impersonated accounts private keys
-    balance = await move(fromPool.address, holderAddress, signerAddress);
+    balance = await move(
+      fromPool.address,
+      holderAddress,
+      signerAddress,
+      provider
+    );
   });
 
   async function testFlow(
@@ -159,8 +115,8 @@ describe('stabal3 migration execution', async () => {
     const addressOut = staked ? toPool.gauge : toPool.address;
     // Store balance before migration
     const before = {
-      from: await getErc20Balance(addressIn, signerAddress),
-      to: await getErc20Balance(addressOut, signerAddress),
+      from: await getErc20Balance(addressIn, provider, signerAddress),
+      to: await getErc20Balance(addressOut, provider, signerAddress),
     };
 
     const amount = before.from;
@@ -200,8 +156,8 @@ describe('stabal3 migration execution', async () => {
     console.log('Gas used', receipt.gasUsed.toString());
 
     const after = {
-      from: await getErc20Balance(addressIn, signerAddress),
-      to: await getErc20Balance(addressOut, signerAddress),
+      from: await getErc20Balance(addressIn, provider, signerAddress),
+      to: await getErc20Balance(addressOut, provider, signerAddress),
     };
 
     console.log(bbausd2AmountOut);
@@ -219,7 +175,7 @@ describe('stabal3 migration execution', async () => {
       this.timeout(20000);
 
       // Stake them
-      await stake(signer, balance);
+      await stake(signer, fromPool.address, fromPool.gauge, balance);
     });
 
     it('should transfer tokens from stable to boosted', async () => {

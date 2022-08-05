@@ -1,12 +1,18 @@
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';
-import { AddressZero } from '@ethersproject/constants';
+import { AddressZero, MaxUint256 } from '@ethersproject/constants';
 import { balancerVault } from '@/lib/constants/config';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { keccak256 } from '@ethersproject/solidity';
+import { parseEther } from '@ethersproject/units';
 import { ERC20 } from '@/modules/contracts/ERC20';
 import { PoolsProvider } from '@/modules/pools/provider';
 import { PoolModel, BalancerError, BalancerErrorCode } from '@/.';
+import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
+
+import { Interface } from '@ethersproject/abi';
+const liquidityGaugeAbi = ['function deposit(uint value) payable'];
+const liquidityGauge = new Interface(liquidityGaugeAbi);
 
 export const forkSetup = async (
   signer: JsonRpcSigner,
@@ -135,4 +141,50 @@ export const getBalances = async (
     }
   }
   return Promise.all(balances);
+};
+
+export const move = async (
+  token: string,
+  from: string,
+  to: string,
+  provider: JsonRpcProvider
+): Promise<BigNumber> => {
+  const holder = await impersonateAccount(from, provider);
+  const balance = await getErc20Balance(token, provider, from);
+  await ERC20(token, provider).connect(holder).transfer(to, balance);
+
+  return balance;
+};
+
+// https://hardhat.org/hardhat-network/docs/guides/forking-other-networks#impersonating-accounts
+// WARNING: don't use hardhat SignerWithAddress to sendTransactions!!
+// It's not working and we didn't have time to figure out why.
+// Use JsonRpcSigner instead
+export const impersonateAccount = async (
+  account: string,
+  provider: JsonRpcProvider
+): Promise<JsonRpcSigner> => {
+  await provider.send('hardhat_impersonateAccount', [account]);
+  await setBalance(account, parseEther('10000'));
+  return provider.getSigner(account);
+};
+
+export const stake = async (
+  signer: JsonRpcSigner,
+  pool: string,
+  gauge: string,
+  balance: BigNumber
+): Promise<void> => {
+  await (
+    await ERC20(pool, signer.provider)
+      .connect(signer)
+      .approve(gauge, MaxUint256)
+  ).wait();
+
+  await (
+    await signer.sendTransaction({
+      to: gauge,
+      data: liquidityGauge.encodeFunctionData('deposit', [balance]),
+    })
+  ).wait();
 };
