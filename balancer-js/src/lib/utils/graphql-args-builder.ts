@@ -150,17 +150,15 @@ export class SubgraphQueryFormatter implements PoolQueryFormatter {
   }
 }
 
-export class GraphQLFilter {
+export class GraphQLArgsBuilder {
   constructor(
     readonly args: GraphQLFilterOptions,
     readonly attrs: Record<string, any> = {}
   ) {}
 
-  merge(query: GraphQLFilter): GraphQLFilter {
-    const mergedArgs = merge(this.args, query.args);
-    const mergedAttrs = merge(this.attrs, query.attrs);
-
-    return new GraphQLFilter(mergedArgs, mergedAttrs);
+  merge(other: GraphQLArgsBuilder): GraphQLArgsBuilder {
+    const mergedArgs = merge(this.args, other.args);
+    return new GraphQLArgsBuilder(mergedArgs);
   }
 
   format(formatter: PoolQueryFormatter): GraphQLQuery {

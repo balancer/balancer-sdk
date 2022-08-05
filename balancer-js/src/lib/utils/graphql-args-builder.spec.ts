@@ -1,14 +1,14 @@
 import { expect } from 'chai';
 import {
   BalancerAPIQueryFormatter,
-  GraphQLFilter,
+  GraphQLArgsBuilder,
   SubgraphQueryFormatter,
   Op,
-} from './graphql-filter';
+} from './graphql-args-builder';
 
 describe('Pool Query', () => {
   it('should be able to assemble a query for the subgraph', () => {
-    const query = new GraphQLFilter({
+    const query = new GraphQLArgsBuilder({
       first: 10,
       skip: 0,
       orderBy: 'totalLiquidity',
@@ -48,7 +48,7 @@ describe('Pool Query', () => {
   });
 
   it('should be able to assemble a query for the Balancer API', () => {
-    const query = new GraphQLFilter({
+    const query = new GraphQLArgsBuilder({
       first: 10,
       skip: 0,
       orderBy: 'totalLiquidity',
