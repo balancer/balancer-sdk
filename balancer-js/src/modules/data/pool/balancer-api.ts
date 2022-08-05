@@ -29,10 +29,10 @@ export class PoolsBalancerAPIRepository
     const defaultQuery = new PoolQuery({
       orderBy: 'totalLiquidity',
       orderDirection: 'desc',
-      where: [
-        new Op.Equals('swapEnabled', true),
-        new Op.GreaterThan('totalShares', 0.05),
-      ],
+      where: {
+        swapEnabled: Op.Equals(true),
+        totalShares: Op.GreaterThan(0.05),
+      },
     });
 
     query = query || defaultQuery;

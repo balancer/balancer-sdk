@@ -31,10 +31,10 @@ export class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute> {
     const defaultQuery = new PoolQuery({
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
-      where: [
-        new Op.Equals('swapEnabled', true),
-        new Op.GreaterThan('totalShares', 0),
-      ],
+      where: {
+        swapEnabled: Op.Equals(true),
+        totalShares: Op.GreaterThan(0),
+      },
     });
 
     query = query || defaultQuery;
