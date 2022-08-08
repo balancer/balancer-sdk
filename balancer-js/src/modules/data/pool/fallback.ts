@@ -1,5 +1,5 @@
 import { Findable } from '../types';
-import { Pool } from '@/types';
+import { GraphQLQuery, Pool } from '@/types';
 import { PoolAttribute } from './types';
 
 /**
@@ -16,60 +16,55 @@ export class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
     this.currentProviderIdx = 0;
   }
 
+  async fetch(query?: GraphQLQuery): Promise<Pool[]> {
+    return this.fallbackQuery('fetch', [query]);
+  }
+
   async find(id: string): Promise<Pool | undefined> {
-    if (this.currentProviderIdx >= this.providers.length) {
-      throw new Error('No working providers found');
-    }
-
-    let pool;
-
-    try {
-      pool = await Promise.race<Pool | undefined>([
-        this.providers[this.currentProviderIdx].find(id),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), this.timeout)
-        ),
-      ]);
-    } catch (e) {
-      console.error(
-        'Provider ' +
-          this.currentProviderIdx +
-          ' failed, falling back to next provider'
-      );
-      this.currentProviderIdx++;
-      pool = await this.find(id);
-    }
-
-    return pool;
+    return this.fallbackQuery('find', [id]);
   }
 
   async findBy(
     attribute: PoolAttribute,
     value: string
   ): Promise<Pool | undefined> {
+    return this.fallbackQuery('findBy', [attribute, value]);
+  }
+
+  async fallbackQuery(func: string, args: any[]): Promise<any> {
     if (this.currentProviderIdx >= this.providers.length) {
       throw new Error('No working providers found');
     }
 
-    let pool;
+    let result;
 
     try {
-      pool = await Promise.race<Pool | undefined>([
-        this.providers[this.currentProviderIdx].findBy(attribute, value),
+      const currentProvider = this.providers[this.currentProviderIdx];
+      result = await Promise.race<any | undefined>([
+        // eslint-disable-next-line prefer-spread
+        currentProvider[func].apply(currentProvider, args),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('timeout')), this.timeout)
         ),
       ]);
-    } catch (e) {
-      console.error(
-        'Provider ' +
-          this.currentProviderIdx +
-          ' failed, falling back to next provider'
-      );
+    } catch (e: any) {
+      if (e.message === 'timeout') {
+        console.error(
+          'Provider ' +
+            this.currentProviderIdx +
+            ' timed out, falling back to next provider'
+        );
+      } else {
+        console.error(
+          'Provider ' + this.currentProviderIdx + ' failed with error: ',
+          e.message,
+          ', falling back to next provider'
+        );
+      }
       this.currentProviderIdx++;
-      pool = await this.findBy(attribute, value);
+      result = await this.fallbackQuery.call(this, func, args);
     }
 
-    return pool;
+    return result;
   }
 }
