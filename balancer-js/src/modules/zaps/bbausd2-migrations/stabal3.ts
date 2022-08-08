@@ -27,11 +27,11 @@ export class StaBal3Builder {
    * Migrates tokens from staBal3 to bbausd2 pool.
    * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
    *
-   * @param {string}  userAddress User address.
-   * @param {string}  staBal3Amount Amount of BPT tokens to migrate.
-   * @param {string}  minBbausd2Out Minimum of expected BPT out ot the migration flow.
-   * @param {boolean} staked Indicates whether tokens are initially staked or not.
-   * @param {string}  authorisation Encoded authorisation call.
+   * @param userAddress User address.
+   * @param staBal3Amount Amount of BPT tokens to migrate.
+   * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+   * @param staked Indicates whether tokens are initially staked or not.
+   * @param authorisation Encoded authorisation call.
    * @returns Migration transaction request ready to send with signer.sendTransaction
    */
   calldata(
@@ -79,11 +79,11 @@ export class StaBal3Builder {
 
   /**
    * Encodes exitPool callData.
-   * Exit staBal3 pool proportionally to underlying Linear BPTs. Exits to relayer.
+   * Exit staBal3 pool proportionally to underlying stables. Exits to relayer.
    * Outputreferences are used to store exit amounts for next transaction.
    *
-   * @param {string} sender Sender address.
-   * @param {string} amount Amount of staBal3 BPT to exit with.
+   * @param sender Sender address.
+   * @param amount Amount of staBal3 BPT to exit with.
    * @returns Encoded exitPool call. Output references.
    */
   buildExit(sender: string, amount: string): string {
@@ -127,8 +127,8 @@ export class StaBal3Builder {
    * Creates encoded batchSwap function with following swaps: stables -> linear pools -> boosted pool
    * outputreferences should contain the amount of resulting BPT.
    *
-   * @param {string} expectedBptReturn BPT amount expected out of the swap.
-   * @param {string} recipient Recipient address.
+   * @param expectedBptReturn BPT amount expected out of the swap.
+   * @param recipient Recipient address.
    * @returns Encoded batchSwap call. Output references.
    */
   buildSwap(expectedBptReturn: string, recipient: string): string {
@@ -228,8 +228,8 @@ export class StaBal3Builder {
   /**
    * Uses relayer to withdraw staked BPT from gauge and send to relayer
    *
-   * @param {string} sender Sender address.
-   * @param {string} amount Amount of BPT to exit with.
+   * @param sender Sender address.
+   * @param amount Amount of BPT to exit with.
    * @returns withdraw call
    */
   buildWithdraw(sender: string, amount: string): string {
@@ -244,7 +244,7 @@ export class StaBal3Builder {
   /**
    * Uses relayer to deposit user's BPT to gauge and sends to recipient
    *
-   * @param {string} recipient Recipient address.
+   * @param recipient Recipient address.
    * @returns deposit call
    */
   buildDeposit(recipient: string): string {
@@ -259,7 +259,7 @@ export class StaBal3Builder {
   /**
    * Uses relayer to approve itself to act in behalf of the user
    *
-   * @param {string} authorisation Encoded authorisation call.
+   * @param authorisation Encoded authorisation call.
    * @returns relayer approval call
    */
   buildSetRelayerApproval(authorisation: string): string {
