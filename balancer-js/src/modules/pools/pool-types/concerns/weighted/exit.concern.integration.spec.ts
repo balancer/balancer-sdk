@@ -77,7 +77,6 @@ describe('exit execution', async () => {
     pool = await setupPool(poolsProvider, poolId);
     tokensOut = pool.tokens;
     await forkSetup(
-      balancer,
       signer,
       [pool.address],
       [BPT_SLOT],

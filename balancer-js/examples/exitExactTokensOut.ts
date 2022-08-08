@@ -7,7 +7,7 @@ import {
   Network,
   PoolModel,
 } from '../src/index';
-import { forkSetup, updateBalances } from '../src/test/lib/utils';
+import { forkSetup, getBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
 
 dotenv.config();
@@ -48,17 +48,15 @@ async function exitExactTokensOut() {
   ]; // Tokens that will be provided to pool by joiner
   const amountsOut = ['10000000', '1000000000000000000'];
 
-  const { to, data, maxBPTIn } =
-    await pool.buildExitExactTokensOut(
-      signerAddress,
-      tokensOut as string[],
-      amountsOut,
-      slippage
-    );
+  const { to, data, maxBPTIn } = pool.buildExitExactTokensOut(
+    signerAddress,
+    tokensOut as string[],
+    amountsOut,
+    slippage
+  );
 
   // Sets up local fork granting signer initial balances and token approvals
   await forkSetup(
-    balancer,
     signer,
     [pool.address],
     [BPT_SLOT],
@@ -67,7 +65,9 @@ async function exitExactTokensOut() {
   );
 
   // Checking balances to confirm success
-  const tokenBalancesBefore = await updateBalances(pool, signer, signerAddress, balancer);
+  const tokenBalancesBefore = (
+    await getBalances([pool.address, ...pool.tokensList], signer, signerAddress)
+  ).map((b) => b.toString());
 
   // Submit exit tx
   const transactionResponse = await signer.sendTransaction({
@@ -79,11 +79,13 @@ async function exitExactTokensOut() {
 
   await transactionResponse.wait();
 
-  const tokenBalancesAfter = await updateBalances(pool, signer, signerAddress, balancer);
+  const tokenBalancesAfter = (
+    await getBalances([pool.address, ...pool.tokensList], signer, signerAddress)
+  ).map((b) => b.toString());
 
-  console.log('Token balances before exit:          ', tokenBalancesBefore.toString());
-  console.log('Token balances after exit:           ', tokenBalancesAfter.toString());
-  console.log('Token balances expected after exit:  ', amountsOut.toString());
+  console.log('Balances before exit:                 ', tokenBalancesBefore);
+  console.log('Balances after exit:                  ', tokenBalancesAfter);
+  console.log('Max BPT decrease expected after exit: ', [maxBPTIn.toString()]);
 }
 
 // yarn examples:run ./examples/exitExactTokensOut.ts

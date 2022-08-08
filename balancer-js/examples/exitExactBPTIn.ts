@@ -8,7 +8,7 @@ import {
   PoolModel,
 } from '../src/index';
 import { parseFixed } from '@ethersproject/bignumber';
-import { forkSetup, updateBalances } from '../src/test/lib/utils';
+import { forkSetup, getBalances } from '../src/test/lib/utils';
 
 dotenv.config();
 
@@ -45,7 +45,6 @@ async function exitExactBPTIn() {
 
   // Sets up local fork granting signer initial balances and token approvals
   await forkSetup(
-    balancer,
     signer,
     [pool.address],
     [BPT_SLOT],
@@ -54,9 +53,11 @@ async function exitExactBPTIn() {
   );
 
   // Checking balances to confirm success
-  const tokenBalancesBefore = await updateBalances(pool, signer, signerAddress, balancer);
+  const tokenBalancesBefore = (
+    await getBalances([pool.address, ...pool.tokensList], signer, signerAddress)
+  ).map((b) => b.toString());
 
-  const { to, data, minAmountsOut } = await pool.buildExitExactBPTIn(
+  const { to, data, minAmountsOut } = pool.buildExitExactBPTIn(
     signerAddress,
     bptIn,
     slippage
@@ -72,11 +73,16 @@ async function exitExactBPTIn() {
 
   await transactionResponse.wait();
 
-  const tokenBalancesAfter = await updateBalances(pool, signer, signerAddress, balancer);
+  const tokenBalancesAfter = (
+    await getBalances([pool.address, ...pool.tokensList], signer, signerAddress)
+  ).map((b) => b.toString());
 
-  console.log('Token balances before exit:              ', tokenBalancesBefore.toString());
-  console.log('Token balances after exit:               ', tokenBalancesAfter.toString());
-  console.log('Min token balances expected after exit:  ', minAmountsOut.toString());
+  console.log('Balances before exit:             ', tokenBalancesBefore);
+  console.log('Balances after exit:              ', tokenBalancesAfter);
+  console.log(
+    'Min balances expected after exit: ',
+    minAmountsOut.map((a) => a.toString())
+  );
 }
 
 // yarn examples:run ./examples/exitExactBPTIn.ts
