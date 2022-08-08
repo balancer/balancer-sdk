@@ -1,6 +1,6 @@
 import { merge } from 'lodash';
 
-enum PoolQueryFilterOperator {
+enum GraphQLFilterOperator {
   GreaterThan,
   LessThan,
   Equals,
@@ -9,49 +9,49 @@ enum PoolQueryFilterOperator {
   Contains,
 }
 
-export interface PoolQueryFilter {
-  operator: PoolQueryFilterOperator;
+export interface GraphQLFilter {
+  operator: GraphQLFilterOperator;
   value: any;
 }
 
-function GreaterThan(value: number): PoolQueryFilter {
+function GreaterThan(value: number): GraphQLFilter {
   return {
-    operator: PoolQueryFilterOperator.GreaterThan,
+    operator: GraphQLFilterOperator.GreaterThan,
     value,
   };
 }
 
-function LessThan(value: number): PoolQueryFilter {
+function LessThan(value: number): GraphQLFilter {
   return {
-    operator: PoolQueryFilterOperator.LessThan,
+    operator: GraphQLFilterOperator.LessThan,
     value,
   };
 }
 
-function Equals(value: number | boolean | string): PoolQueryFilter {
+function Equals(value: number | boolean | string): GraphQLFilter {
   return {
-    operator: PoolQueryFilterOperator.Equals,
+    operator: GraphQLFilterOperator.Equals,
     value,
   };
 }
 
-function In(value: (number | string)[]): PoolQueryFilter {
+function In(value: (number | string)[]): GraphQLFilter {
   return {
-    operator: PoolQueryFilterOperator.In,
+    operator: GraphQLFilterOperator.In,
     value,
   };
 }
 
-function NotIn(value: (number | string)[]): PoolQueryFilter {
+function NotIn(value: (number | string)[]): GraphQLFilter {
   return {
-    operator: PoolQueryFilterOperator.NotIn,
+    operator: GraphQLFilterOperator.NotIn,
     value,
   };
 }
 
-function Contains(value: (number | string)[]): PoolQueryFilter {
+function Contains(value: (number | string)[]): GraphQLFilter {
   return {
-    operator: PoolQueryFilterOperator.Contains,
+    operator: GraphQLFilterOperator.Contains,
     value,
   };
 }
@@ -74,7 +74,7 @@ export interface GraphQLArgs {
   block?: {
     number: number;
   };
-  where?: Record<string, PoolQueryFilter>;
+  where?: Record<string, GraphQLFilter>;
 }
 
 export interface GraphQLArgsFormatter {
@@ -82,16 +82,16 @@ export interface GraphQLArgsFormatter {
 }
 
 export class BalancerAPIArgsFormatter implements GraphQLArgsFormatter {
-  operatorMap: Record<PoolQueryFilterOperator, string>;
+  operatorMap: Record<GraphQLFilterOperator, string>;
 
   constructor() {
     this.operatorMap = {
-      [PoolQueryFilterOperator.GreaterThan]: 'gt',
-      [PoolQueryFilterOperator.LessThan]: 'lt',
-      [PoolQueryFilterOperator.Equals]: 'eq',
-      [PoolQueryFilterOperator.In]: 'in',
-      [PoolQueryFilterOperator.NotIn]: 'not_in',
-      [PoolQueryFilterOperator.Contains]: 'contains',
+      [GraphQLFilterOperator.GreaterThan]: 'gt',
+      [GraphQLFilterOperator.LessThan]: 'lt',
+      [GraphQLFilterOperator.Equals]: 'eq',
+      [GraphQLFilterOperator.In]: 'in',
+      [GraphQLFilterOperator.NotIn]: 'not_in',
+      [GraphQLFilterOperator.Contains]: 'contains',
     };
   }
 
@@ -113,16 +113,16 @@ export class BalancerAPIArgsFormatter implements GraphQLArgsFormatter {
 }
 
 export class SubgraphArgsFormatter implements GraphQLArgsFormatter {
-  operatorMap: Record<PoolQueryFilterOperator, string>;
+  operatorMap: Record<GraphQLFilterOperator, string>;
 
   constructor() {
     this.operatorMap = {
-      [PoolQueryFilterOperator.GreaterThan]: 'gt',
-      [PoolQueryFilterOperator.LessThan]: 'lt',
-      [PoolQueryFilterOperator.Equals]: 'eq',
-      [PoolQueryFilterOperator.In]: 'in',
-      [PoolQueryFilterOperator.NotIn]: 'not_in',
-      [PoolQueryFilterOperator.Contains]: 'contains',
+      [GraphQLFilterOperator.GreaterThan]: 'gt',
+      [GraphQLFilterOperator.LessThan]: 'lt',
+      [GraphQLFilterOperator.Equals]: 'eq',
+      [GraphQLFilterOperator.In]: 'in',
+      [GraphQLFilterOperator.NotIn]: 'not_in',
+      [GraphQLFilterOperator.Contains]: 'contains',
     };
   }
 
