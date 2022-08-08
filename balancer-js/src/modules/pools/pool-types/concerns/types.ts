@@ -85,7 +85,6 @@ export interface ExitPoolAttributes {
   functionName: string;
   attributes: ExitPool;
   data: string;
-  value?: BigNumber;
   minAmountsOut: string[];
   maxBPTIn: string;
 }

@@ -77,7 +77,6 @@ export class WeightedPoolExit implements ExitConcern {
 
     let minAmountsOut = Array(sortedTokens.length).fill('0');
     let userData: string;
-    let value: BigNumber | undefined;
 
     if (singleTokenMaxOut) {
       // Exit pool with single token using exact bptIn
@@ -103,10 +102,6 @@ export class WeightedPoolExit implements ExitConcern {
         bptIn,
         singleTokenMaxOutIndex
       );
-
-      if (shouldUnwrapNativeAsset) {
-        value = BigNumber.from(amountOut);
-      }
     } else {
       // Exit pool with all tokens proportinally
 
@@ -127,13 +122,6 @@ export class WeightedPoolExit implements ExitConcern {
       });
 
       userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(bptIn);
-
-      if (shouldUnwrapNativeAsset) {
-        const amount = amountsOut.find(
-          (amount, i) => sortedTokens[i] == AddressZero
-        );
-        value = amount ? BigNumber.from(amount) : undefined;
-      }
     }
 
     const to = balancerVault;
@@ -164,7 +152,6 @@ export class WeightedPoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
-      value,
       minAmountsOut,
       maxBPTIn: bptIn,
     };
@@ -260,14 +247,12 @@ export class WeightedPoolExit implements ExitConcern {
     ]);
 
     const amount = amountsOut.find((amount, i) => tokensOut[i] == AddressZero); // find native asset (e.g. ETH) amount
-    const value = amount ? BigNumber.from(amount) : undefined;
 
     return {
       to,
       functionName,
       attributes,
       data,
-      value,
       minAmountsOut: sortedAmounts,
       maxBPTIn,
     };
