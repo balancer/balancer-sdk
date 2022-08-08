@@ -1,4 +1,4 @@
-import { StaticPoolRepository } from '../data';
+import { PoolsStaticRepository } from '../data';
 import { Pool } from '@/types';
 import { expect } from 'chai';
 import { Liquidity } from './liquidity.module';
@@ -8,7 +8,7 @@ import { StaticTokenPriceProvider } from '../data';
 import { formatFixed, parseFixed } from '@ethersproject/bignumber';
 
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
-const poolProvider = new StaticPoolRepository(pools as Pool[]);
+const poolProvider = new PoolsStaticRepository(pools as Pool[]);
 
 let liquidityProvider: Liquidity;
 

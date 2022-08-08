@@ -76,4 +76,80 @@ describe('Pool Query', () => {
     const result = query.format(new BalancerAPIArgsFormatter());
     expect(result).to.deep.equal(expectedSubgraphQuery);
   });
+
+  describe('merge', () => {
+    it('Should merge both query arguments into one', () => {
+      const query = new GraphQLArgsBuilder({
+        first: 10,
+        orderBy: 'totalLiquidity',
+        where: {
+          totalShares: Op.GreaterThan(0.01),
+          id: Op.NotIn(['0xBAD', '0xDEF']),
+        },
+      });
+
+      const queryToMerge = new GraphQLArgsBuilder({
+        skip: 20,
+        orderDirection: 'asc',
+        where: {
+          tokensList: Op.Contains(['0xBAL']),
+          poolType: Op.NotIn(['Linear']),
+        },
+      });
+
+      const expectedMergedQuery = new GraphQLArgsBuilder({
+        first: 10,
+        orderBy: 'totalLiquidity',
+        skip: 20,
+        orderDirection: 'asc',
+        where: {
+          totalShares: Op.GreaterThan(0.01),
+          id: Op.NotIn(['0xBAD', '0xDEF']),
+          tokensList: Op.Contains(['0xBAL']),
+          poolType: Op.NotIn(['Linear']),
+        },
+      });
+
+      const mergedQuery = query.merge(queryToMerge);
+
+      expect(mergedQuery).to.deep.equal(expectedMergedQuery);
+    });
+
+    it('Should overwrite query arguments from the query being merged in, and merge arrays', () => {
+      const query = new GraphQLArgsBuilder({
+        first: 10,
+        orderBy: 'totalLiquidity',
+        orderDirection: 'desc',
+        where: {
+          totalShares: Op.GreaterThan(0.01),
+          id: Op.NotIn(['0xBAD', '0xDEF']),
+        },
+      });
+
+      const queryToMerge = new GraphQLArgsBuilder({
+        first: 20,
+        orderBy: 'totalShares',
+        orderDirection: 'asc',
+        where: {
+          tokensList: Op.Contains(['0xBAL']),
+          id: Op.NotIn(['0xNEW']),
+        },
+      });
+
+      const expectedMergedQuery = new GraphQLArgsBuilder({
+        first: 20,
+        orderBy: 'totalShares',
+        orderDirection: 'asc',
+        where: {
+          totalShares: Op.GreaterThan(0.01),
+          tokensList: Op.Contains(['0xBAL']),
+          id: Op.NotIn(['0xBAD', '0xDEF', '0xNEW']),
+        },
+      });
+
+      const mergedQuery = query.merge(queryToMerge);
+
+      expect(mergedQuery).to.deep.equal(expectedMergedQuery);
+    });
+  });
 });

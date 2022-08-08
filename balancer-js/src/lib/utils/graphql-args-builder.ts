@@ -1,4 +1,4 @@
-import { merge } from 'lodash';
+import { merge, mergeWith } from 'lodash';
 
 enum GraphQLFilterOperator {
   GreaterThan,
@@ -146,7 +146,16 @@ export class GraphQLArgsBuilder {
   constructor(readonly args: GraphQLArgs) {}
 
   merge(other: GraphQLArgsBuilder): GraphQLArgsBuilder {
-    const mergedArgs = merge(this.args, other.args);
+    const mergedArgs = mergeWith(
+      this.args,
+      other.args,
+      (objValue: any, srcValue: any) => {
+        if (Array.isArray(objValue)) {
+          return objValue.concat(srcValue);
+        }
+      }
+    );
+
     return new GraphQLArgsBuilder(mergedArgs);
   }
 
