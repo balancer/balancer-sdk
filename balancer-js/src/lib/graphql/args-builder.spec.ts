@@ -4,7 +4,7 @@ import {
   GraphQLArgsBuilder,
   SubgraphArgsFormatter,
   Op,
-} from './graphql-args-builder';
+} from './args-builder';
 
 describe('Pool Query', () => {
   it('should be able to assemble a query for the subgraph', () => {

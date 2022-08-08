@@ -1,15 +1,13 @@
 import { Findable } from '../types';
-import { Pool_OrderBy, OrderDirection } from '@/modules/subgraph/subgraph';
 import { PoolAttribute } from './types';
 import { GraphQLQuery, Pool } from '@/types';
 import BalancerAPIClient from '@/modules/api/balancer-api.client';
-import { id } from 'ethers/lib/utils';
 import {
-  GraphQLArgs,
   GraphQLArgsBuilder,
   Op,
   BalancerAPIArgsFormatter,
-} from '@/lib/utils/graphql-args-builder';
+} from '@/lib/graphql/args-builder';
+import { GraphQLArgs } from '@/lib/graphql/types';
 
 /**
  * Access pools using the Balancer GraphQL Api.

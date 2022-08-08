@@ -7,12 +7,11 @@ import {
   OrderDirection,
 } from '@/modules/subgraph/subgraph';
 import {
-  GraphQLArgs,
   GraphQLArgsBuilder,
   Op,
-  BalancerAPIArgsFormatter,
   SubgraphArgsFormatter,
-} from '@/lib/utils/graphql-args-builder';
+} from '@/lib/graphql/args-builder';
+import { GraphQLArgs } from '@/lib/graphql/types';
 import { PoolAttribute } from './types';
 import { GraphQLQuery, Pool, PoolType } from '@/types';
 
