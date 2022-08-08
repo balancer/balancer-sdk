@@ -63,6 +63,12 @@ export const ADDRESSES = {
       gauge: '0x4e4ebf2aa90e41174d716a5168895357762d68af',
       assetOrder: ['USDT', 'DAI', 'USDC'],
     },
+    staBal3_3: {
+      id: '0x3bfc8a0509f1a68aefd446f6c19bf37b3c75a8fc0000000000000000000000a5',
+      address: '0x3bfc8a0509f1a68aefd446f6c19bf37b3c75a8fc',
+      gauge: '0x7776e1008d7c20ab54aa57a7c44fc7de602de29a',
+      assetOrder: ['USDT', 'DAI', 'USDC'],
+    },
     bbausd1: {
       id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
       address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
