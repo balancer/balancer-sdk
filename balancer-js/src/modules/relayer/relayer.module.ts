@@ -9,10 +9,17 @@ import {
   EncodeUnwrapAaveStaticTokenInput,
   OutputReference,
   EncodeExitPoolInput,
+  EncodeJoinPoolInput,
   ExitAndBatchSwapInput,
   ExitPoolData,
+  JoinPoolData,
 } from './types';
-import { TransactionData, ExitPoolRequest, BalancerSdkConfig } from '@/types';
+import {
+  TransactionData,
+  ExitPoolRequest,
+  JoinPoolRequest,
+  BalancerSdkConfig,
+} from '@/types';
 import {
   SwapType,
   FundManagement,
@@ -112,6 +119,17 @@ export class Relayer {
     ]);
   }
 
+  static encodeJoinPool(params: EncodeJoinPoolInput): string {
+    return relayerLibrary.encodeFunctionData('joinPool', [
+      params.poolId,
+      params.poolKind,
+      params.sender,
+      params.recipient,
+      params.joinPoolRequest,
+      params.outputReferences,
+    ]);
+  }
+
   static encodeUnwrapAaveStaticToken(
     params: EncodeUnwrapAaveStaticTokenInput
   ): string {
@@ -166,6 +184,39 @@ export class Relayer {
 
     const exitEncoded = Relayer.encodeExitPool(exitPoolInput);
     return exitEncoded;
+  }
+
+  static constructJoinCall(params: JoinPoolData): string {
+    const {
+      assets,
+      maxAmountsIn,
+      userData,
+      fromInternalBalance,
+      poolId,
+      poolKind,
+      sender,
+      recipient,
+      outputReferences,
+    } = params;
+
+    const joinPoolRequest: JoinPoolRequest = {
+      assets,
+      maxAmountsIn,
+      userData,
+      fromInternalBalance,
+    };
+
+    const joinPoolInput: EncodeJoinPoolInput = {
+      poolId,
+      poolKind,
+      sender,
+      recipient,
+      outputReferences,
+      joinPoolRequest,
+    };
+
+    const joinEncoded = Relayer.encodeJoinPool(joinPoolInput);
+    return joinEncoded;
   }
 
   /**

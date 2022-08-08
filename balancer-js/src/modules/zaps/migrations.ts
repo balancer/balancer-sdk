@@ -2,6 +2,7 @@ import { defaultAbiCoder } from '@ethersproject/abi';
 import { StaBal3Builder } from './bbausd2-migrations/stabal3';
 import { BbaUsd1Builder } from './bbausd2-migrations/bbausd1';
 import { StablesBuilder } from './bbausd2-migrations/stables';
+import { MaiusdBuilder } from './bbausd2-migrations/maiusd';
 
 export class Migrations {
   constructor(private network: 1 | 5) {}
@@ -169,6 +170,54 @@ export class Migrations {
         );
         // bbausd2AmountOut
         return swapDeltas[0][0].abs().toString();
+      },
+    };
+  }
+
+  /**
+   * Builds migration call data.
+   * Migrates tokens from staBal3 to bbausd2 pool.
+   * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+   *
+   * @param userAddress User address.
+   * @param bptIn Amount of BPT tokens to migrate.
+   * @param minBptOut Minimum of expected BPT out ot the migration flow.
+   * @param staked Indicates whether tokens are initially staked or not.
+   * @param authorisation Encoded authorisation call.
+   * @returns Migration transaction request ready to send with signer.sendTransaction
+   */
+  maiusd(
+    userAddress: string,
+    bptIn: string,
+    minBptOut: string,
+    staked: boolean,
+    authorisation?: string
+  ): {
+    to: string;
+    data: string;
+    decode: (output: string, staked: boolean) => string;
+  } {
+    const builder = new MaiusdBuilder(this.network);
+    const request = builder.calldata(
+      userAddress,
+      bptIn,
+      minBptOut,
+      staked,
+      authorisation
+    );
+
+    return {
+      to: request.to,
+      data: request.data,
+      decode: (output, staked) => {
+        let joinIndex = staked ? 3 : 2;
+        if (authorisation) joinIndex += 1;
+        const multicallResult = defaultAbiCoder.decode(['bytes[]'], output);
+        const joinResult = defaultAbiCoder.decode(
+          ['uint256'],
+          multicallResult[0][joinIndex]
+        );
+        return joinResult[0][0].abs().toString(); // bptOut
       },
     };
   }
