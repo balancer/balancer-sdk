@@ -10,7 +10,7 @@ import type {
   TokenAttribute,
 } from '@/modules/data/types';
 import type { BaseFeeDistributor } from './modules/data';
-import type { GraphQLArgs } from './lib/utils';
+import type { GraphQLArgs } from './lib/graphql';
 
 export * from '@/modules/data/types';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';

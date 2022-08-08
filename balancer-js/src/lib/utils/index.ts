@@ -5,7 +5,6 @@ export * from './permit';
 export * from './signatures';
 export * from './assetHelpers';
 export * from './aaveHelpers';
-export * from './graphql-args-builder';
 
 export const isSameAddress = (address1: string, address2: string): boolean =>
   getAddress(address1) === getAddress(address2);
