@@ -73,7 +73,7 @@ export class MaiusdBuilder {
     ]);
 
     return {
-      to: this.addresses.relayer,
+      to: relayer,
       data: callData,
     };
   }

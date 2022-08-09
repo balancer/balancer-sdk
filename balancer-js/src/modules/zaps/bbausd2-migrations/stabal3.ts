@@ -72,7 +72,7 @@ export class StaBal3Builder {
     ]);
 
     return {
-      to: this.addresses.relayer,
+      to: relayer,
       data: callData,
     };
   }

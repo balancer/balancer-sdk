@@ -82,7 +82,7 @@ const reset = () =>
     },
   ]);
 
-describe('stabal3 migration execution', async () => {
+describe('maiusd migration execution', async () => {
   let signer: JsonRpcSigner;
   let signerAddress: string;
   let authorisation: string;
