@@ -1,7 +1,7 @@
 import { StablePoolEncoder } from '@/pool-stable/encoder';
 import { ADDRESSES } from './addresses';
 import { Relayer } from '@/modules/relayer/relayer.module';
-import { ExitPoolRequest, JoinPoolRequest } from '@/types';
+import { ExitPoolRequest } from '@/types';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -14,8 +14,7 @@ const EXIT_MIMATIC = Relayer.toChainedReference('20');
 const EXIT_DAI = Relayer.toChainedReference('21');
 const EXIT_USDC = Relayer.toChainedReference('22');
 const EXIT_USDT = Relayer.toChainedReference('23');
-const SWAP_BBAUSD = Relayer.toChainedReference('24');
-const JOIN_MAIBBAUSD = Relayer.toChainedReference('25');
+const SWAP_RESULT = Relayer.toChainedReference('24');
 
 export class MaiusdBuilder {
   private addresses;
@@ -58,16 +57,14 @@ export class MaiusdBuilder {
         ...calls,
         this.buildWithdraw(userAddress, bptIn),
         this.buildExit(relayer, bptIn),
-        this.buildSwap(),
-        this.buildJoin(relayer, minBptOut),
+        this.buildSwap(relayer, minBptOut),
         this.buildDeposit(userAddress),
       ];
     } else {
       calls = [
         ...calls,
         this.buildExit(userAddress, bptIn),
-        this.buildSwap(),
-        this.buildJoin(userAddress, minBptOut),
+        this.buildSwap(userAddress, minBptOut),
       ];
     }
 
@@ -129,9 +126,11 @@ export class MaiusdBuilder {
    * Creates encoded batchSwap function with following swaps: stables -> linear pools -> boosted pool
    * outputreferences should contain the amount of resulting BPT.
    *
+   * @param recipient Sender address.
+   * @param minBptOut Minimum BPT out expected from the join transaction.
    * @returns Encoded batchSwap call. Output references.
    */
-  buildSwap(): string {
+  buildSwap(recipient: string, minBptOut: string): string {
     const assets = [
       this.addresses.bbausd2.address,
       this.addresses.DAI,
@@ -140,9 +139,11 @@ export class MaiusdBuilder {
       this.addresses.linearUsdc2.address,
       this.addresses.USDT,
       this.addresses.linearUsdt2.address,
+      this.addresses.miMATIC,
+      this.addresses.maibbausd.address,
     ];
 
-    const outputReferences = [{ index: 0, key: SWAP_BBAUSD }];
+    const outputReferences = [{ index: 0, key: SWAP_RESULT }];
 
     const swaps: BatchSwapStep[] = [
       {
@@ -187,25 +188,41 @@ export class MaiusdBuilder {
         amount: '0',
         userData: '0x',
       },
+      {
+        poolId: this.addresses.maibbausd.id,
+        assetInIndex: 0,
+        assetOutIndex: 8,
+        amount: '0',
+        userData: '0x',
+      },
+      {
+        poolId: this.addresses.maibbausd.id,
+        assetInIndex: 7,
+        assetOutIndex: 8,
+        amount: EXIT_MIMATIC.toString(),
+        userData: '0x',
+      },
     ];
 
     // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
     const limits = [
-      MaxInt256.mul(-1).toString(), // limit will be handled by the next transaction, which is the joinPool
-      MaxInt256.toString(),
       '0',
       MaxInt256.toString(),
       '0',
       MaxInt256.toString(),
       '0',
+      MaxInt256.toString(),
+      '0',
+      MaxInt256.toString(),
+      BigNumber.from(minBptOut).mul(-1).toString(),
     ];
 
     // Swap to/from Relayer
     const funds: FundManagement = {
       sender: this.addresses.relayer,
-      recipient: this.addresses.relayer,
+      recipient,
       fromInternalBalance: true,
-      toInternalBalance: true,
+      toInternalBalance: false,
     };
 
     const encodedBatchSwap = Relayer.encodeBatchSwap({
@@ -220,46 +237,6 @@ export class MaiusdBuilder {
     });
 
     return encodedBatchSwap;
-  }
-
-  /**
-   * Encodes joinPool callData.
-   * Join maibbausd pool.
-   * Outputreferences are used to store exit amounts for next transaction.
-   *
-   * @param recipient Sender address.
-   * @param minBptOut Minimum BPT out expected from the join transaction.
-   * @returns Encoded joinPool call. Output references.
-   */
-  buildJoin(recipient: string, minBptOut: string): string {
-    const { assetOrder } = this.addresses.maibbausd;
-    const assets = assetOrder.map(
-      (key) => this.addresses[key as keyof typeof this.addresses] as string
-    );
-
-    const maxAmountsIn = [SWAP_BBAUSD, EXIT_MIMATIC];
-
-    const userData = StablePoolEncoder.joinExactTokensInForBPTOut(
-      maxAmountsIn,
-      minBptOut
-    );
-
-    const outputReferences = [{ index: 0, key: JOIN_MAIBBAUSD }];
-
-    const callData = Relayer.constructJoinCall({
-      poolId: this.addresses.maibbausd.id,
-      poolKind: 0, // TODO: assuming it should be the same value as exit call - check if that's true
-      sender: this.addresses.relayer,
-      recipient,
-      outputReferences,
-      joinPoolRequest: {} as JoinPoolRequest,
-      assets,
-      maxAmountsIn,
-      userData,
-      fromInternalBalance: true,
-    });
-
-    return callData;
   }
 
   /**
@@ -289,7 +266,7 @@ export class MaiusdBuilder {
       this.addresses.maibbausd.gauge,
       this.addresses.relayer,
       recipient,
-      JOIN_MAIBBAUSD.toString()
+      SWAP_RESULT.toString()
     );
   }
 

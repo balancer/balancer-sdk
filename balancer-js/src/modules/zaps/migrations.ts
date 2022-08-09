@@ -210,14 +210,15 @@ export class Migrations {
       to: request.to,
       data: request.data,
       decode: (output, staked) => {
-        let joinIndex = staked ? 3 : 2;
-        if (authorisation) joinIndex += 1;
+        let swapIndex = staked ? 2 : 1;
+        if (authorisation) swapIndex += 1;
         const multicallResult = defaultAbiCoder.decode(['bytes[]'], output);
-        const joinResult = defaultAbiCoder.decode(
-          ['uint256'],
-          multicallResult[0][joinIndex]
+        const swapDeltas = defaultAbiCoder.decode(
+          ['int256[]'],
+          multicallResult[0][swapIndex]
         );
-        return joinResult[0][0].abs().toString(); // bptOut
+        const bptOut = swapDeltas[0][8].abs().toString();
+        return bptOut;
       },
     };
   }

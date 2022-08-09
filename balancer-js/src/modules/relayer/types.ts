@@ -64,5 +64,3 @@ export interface ExitAndBatchSwapInput {
 }
 
 export type ExitPoolData = ExitPoolRequest & EncodeExitPoolInput;
-
-export type JoinPoolData = JoinPoolRequest & EncodeJoinPoolInput;
