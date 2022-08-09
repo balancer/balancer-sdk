@@ -22,7 +22,7 @@ function LessThan(value: number): GraphQLFilter {
   };
 }
 
-function Equals(value: number | boolean | string): GraphQLFilter {
+function Equals(value: unknown): GraphQLFilter {
   return {
     operator: GraphQLFilterOperator.Equals,
     value,
