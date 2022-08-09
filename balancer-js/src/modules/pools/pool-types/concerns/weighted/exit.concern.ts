@@ -246,8 +246,6 @@ export class WeightedPoolExit implements ExitConcern {
       attributes.exitPoolRequest,
     ]);
 
-    const amount = amountsOut.find((amount, i) => tokensOut[i] == AddressZero); // find native asset (e.g. ETH) amount
-
     return {
       to,
       functionName,
