@@ -77,7 +77,7 @@ const reset = () =>
     {
       forking: {
         jsonRpcUrl,
-        blockNumber: (blockNumber && parseInt(blockNumber)) || 7369439,
+        blockNumber: (blockNumber && parseInt(blockNumber)) || 7376670,
       },
     },
   ]);
