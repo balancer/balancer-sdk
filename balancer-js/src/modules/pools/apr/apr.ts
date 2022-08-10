@@ -52,23 +52,18 @@ export class PoolApr {
    * Pool revenue via swap fees.
    * Fees and liquidity are takes from subgraph as USD floats.
    *
-   * @returns APR [bsp] from average daily fees over a pool lifetime
+   * @returns APR [bsp] from fees accumulated over last 24h
    */
   async swapFees(): Promise<number> {
-    const now = Math.floor(Date.now() / 1000);
-    const startingDate = this.pool.createTime || now;
-    const daysLive = Math.ceil((now - startingDate) / 86400);
-
     // 365 * dailyFees * (1 - protocolFees) / totalLiquidity
-    const { totalSwapFee } = this.pool;
+    const { feesSnapshot } = this.pool;
     const totalLiquidity = await this.totalLiquidity();
     // TODO: what to do when we are missing totalSwapFee or totalLiquidity?
-    if (!totalSwapFee || !totalLiquidity) {
+    if (!feesSnapshot || !totalLiquidity) {
       return 0;
     }
     const dailyFees =
-      (parseFloat(totalSwapFee) / daysLive) *
-      (1 - (await this.protocolSwapFeePercentage()));
+      parseFloat(feesSnapshot) * (1 - (await this.protocolSwapFeePercentage()));
     const feesDailyBsp = 10000 * (dailyFees / parseFloat(totalLiquidity));
 
     return Math.round(365 * feesDailyBsp);
