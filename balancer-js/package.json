@@ -28,7 +28,7 @@
         "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
         "subgraph:generate": "graphql-codegen --config src/modules/subgraph/codegen.yml -r dotenv/config",
         "examples:run": "TS_NODE_PROJECT='tsconfig.testing.json' ts-node -r tsconfig-paths/register",
-        "node": "npx hardhat node --fork $(grep ALCHEMY_URL .env | cut -d '=' -f2) --fork-block-number 15150000"
+        "node": "npx hardhat node --fork $(grep ALCHEMY_URL .env | cut -d '=' -f2 | tail -1) --fork-block-number $(grep FORK_BLOCK_NUMBER .env | cut -d '=' -f2 | tail -1)"
     },
     "devDependencies": {
         "@ethersproject/abi": "^5.4.0",
