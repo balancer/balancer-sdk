@@ -90,8 +90,28 @@ export class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute> {
       // unwrappedTokens: subgraphPool.unwrappedTokens,
       // isNew: subgraphPool.isNew,
       // volumeSnapshot: subgraphPool.volumeSnapshot,
-      // feesSnapshot: subgraphPool.feesSnapshot,
+      feesSnapshot: this.last24hFees(subgraphPool.snapshots), // Approximated last 24h fees
       // boost: subgraphPool.boost,
     };
+  }
+
+  /**
+   * Helper function to extract last 24h of fees from last two subgraph snapshots.
+   */
+  private last24hFees(
+    snapshots: SubgraphPool['snapshots']
+  ): string | undefined {
+    if (
+      !snapshots ||
+      snapshots.length < 2 ||
+      Math.floor(Date.now() / 1000) - snapshots[0].timestamp > 86400
+    ) {
+      return undefined;
+    }
+
+    const fees =
+      parseFloat(snapshots[0].swapFees) - parseFloat(snapshots[1].swapFees);
+
+    return fees.toString();
   }
 }
