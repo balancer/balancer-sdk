@@ -20,9 +20,9 @@ const yearAgo = new Date(new Date(now).setFullYear(now.getFullYear() - 1));
 const poolData = factories.poolFactory.build({
   createTime: Math.round(+yearAgo / 1000),
   address: 'pool',
-  totalSwapFee: '100',
-  totalLiquidity: '100',
-  totalShares: '100',
+  feesSnapshot: '1',
+  totalLiquidity: '365',
+  totalShares: '365',
   tokens,
 });
 
@@ -101,8 +101,8 @@ describe('pool apr', () => {
       const pool = factories.poolFactory.build({
         createTime: Math.floor(+yearAgo / 1000),
         address: 'pool1',
-        totalSwapFee: '100',
-        totalLiquidity: '100',
+        feesSnapshot: '1',
+        totalLiquidity: '365',
         tokens: [],
       });
       // Notice weight of the bptToken.
@@ -116,8 +116,8 @@ describe('pool apr', () => {
       const poolWithBpt = factories.poolFactory.build({
         address: 'poolWithBpt',
         tokens: [wETH, bptToken],
-        totalSwapFee: '1',
-        totalLiquidity: '100',
+        feesSnapshot: '1',
+        totalLiquidity: '365',
       });
       poolsMap.set(pool.address, pool);
       poolsMap.set(poolWithBpt.address, poolWithBpt);
