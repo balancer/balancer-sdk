@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import MockDate from 'mockdate';
 import { BalancerSDK } from '@/modules/sdk.module';
 
 const sdk = new BalancerSDK({
@@ -42,6 +43,17 @@ describe('happy case', () => {
   });
 
   describe('veBal pool', () => {
+    // Time when veBal used to recieve procotol revenues
+    const now = new Date('2022-07-01 11:11:11').getTime();
+
+    before(() => {
+      MockDate.set(now);
+    });
+
+    after(() => {
+      MockDate.reset();
+    });
+
     it('receives protocol revenues', async () => {
       const pool = await pools.find(veBalId);
       if (pool) {
@@ -52,7 +64,18 @@ describe('happy case', () => {
   });
 
   describe('weighted pool with gauge', () => {
-    it('receives protocol revenues', async () => {
+    // Time when btcEth pool used to recieve procotol revenues
+    const now = new Date('2022-07-01 11:11:11').getTime();
+
+    before(() => {
+      MockDate.set(now);
+    });
+
+    after(() => {
+      MockDate.reset();
+    });
+
+    it('receives staking rewards', async () => {
       const pool = await pools.find(btcEth);
       if (pool) {
         const apr = await pool.apr();
