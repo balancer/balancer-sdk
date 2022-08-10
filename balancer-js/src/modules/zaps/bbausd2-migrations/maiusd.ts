@@ -143,7 +143,7 @@ export class MaiusdBuilder {
       this.addresses.maibbausd.address,
     ];
 
-    const outputReferences = [{ index: 0, key: SWAP_RESULT }];
+    const outputReferences = [{ index: 8, key: SWAP_RESULT }];
 
     const swaps: BatchSwapStep[] = [
       {
@@ -161,6 +161,13 @@ export class MaiusdBuilder {
         userData: '0x',
       },
       {
+        poolId: this.addresses.maibbausd.id,
+        assetInIndex: 0,
+        assetOutIndex: 8,
+        amount: '0',
+        userData: '0x',
+      },
+      {
         poolId: this.addresses.linearUsdc2.id,
         assetInIndex: 3,
         assetOutIndex: 4,
@@ -171,6 +178,13 @@ export class MaiusdBuilder {
         poolId: this.addresses.bbausd2.id,
         assetInIndex: 4,
         assetOutIndex: 0,
+        amount: '0',
+        userData: '0x',
+      },
+      {
+        poolId: this.addresses.maibbausd.id,
+        assetInIndex: 0,
+        assetOutIndex: 8,
         amount: '0',
         userData: '0x',
       },
