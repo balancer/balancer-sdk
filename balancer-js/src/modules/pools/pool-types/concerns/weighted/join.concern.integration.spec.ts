@@ -111,7 +111,7 @@ describe('join execution', async () => {
 
       const slippage = '100';
 
-      const { to, data, minBPTOut } = await pool.buildJoin(
+      const { to, data, minBPTOut } = pool.buildJoin(
         signerAddress,
         tokensIn.map((t) => t.address),
         amountsIn,
@@ -162,13 +162,12 @@ describe('join execution', async () => {
       );
 
       const slippage = '100';
-      const { functionName, attributes, value, minBPTOut } =
-        await pool.buildJoin(
-          signerAddress,
-          tokensIn.map((t) => t.address),
-          amountsIn,
-          slippage
-        );
+      const { functionName, attributes, value, minBPTOut } = pool.buildJoin(
+        signerAddress,
+        tokensIn.map((t) => t.address),
+        amountsIn,
+        slippage
+      );
       const transactionResponse = await balancer.contracts.vault
         .connect(signer)
         [functionName](...Object.values(attributes), { value });
@@ -226,7 +225,7 @@ describe('join execution', async () => {
       );
 
       const slippage = '100';
-      const { to, data, value, minBPTOut } = await pool.buildJoin(
+      const { to, data, value, minBPTOut } = pool.buildJoin(
         signerAddress,
         tokensWithETH,
         amountsIn,
@@ -285,7 +284,7 @@ describe('join execution', async () => {
       const slippage = '10';
       let errorMessage;
       try {
-        await pool.buildJoin(
+        pool.buildJoin(
           signerAddress,
           tokensIn.map((t) => t.address),
           amountsIn,

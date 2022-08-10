@@ -14,6 +14,16 @@ import { Interface } from '@ethersproject/abi';
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const liquidityGauge = new Interface(liquidityGaugeAbi);
 
+/**
+ * Setup local fork with approved token balance for a given account
+ *
+ * @param {JsonRpcSigner} signer Account that will have token balance set and approved
+ * @param {string[]}      tokens Token addresses which balance will be set and approved
+ * @param {number[]}      slots Slot that stores token balance in memory - use npm package `slot20` to identify which slot to provide
+ * @param {string[]}      balances Balances in EVM amounts
+ * @param {string}        jsonRpcUrl Url with remote node to be forked locally
+ * @param {number}        blockNumber Number of the block that the fork will happen
+ */
 export const forkSetup = async (
   signer: JsonRpcSigner,
   tokens: string[],
@@ -114,10 +124,9 @@ export const approveToken = async (
 export const setupPool = async (
   provider: PoolsProvider,
   poolId: string
-): Promise<PoolModel | undefined> => {
-  const _pool = await provider.find(poolId);
-  if (!_pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-  const pool = _pool;
+): Promise<PoolModel> => {
+  const pool = await provider.find(poolId);
+  if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
   return pool;
 };
 

@@ -11,7 +11,7 @@ import { BalancerSDK, BalancerSdkConfig, Network } from '@balancer-labs/sdk';
 
 const config: BalancerSdkConfig = {
     network: Network.MAINNET,
-    rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+    rpcUrl: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
 };
 const balancer = new BalancerSDK(config);
 ```
@@ -286,6 +286,60 @@ buildJoin: (
 ```
 
 [Example](./examples/join.ts)
+
+## Exit Pool
+
+Exposes Exit functionality allowing user to exit pools.
+
+```js
+const balancer = new BalancerSDK(sdkConfig);
+const pool = await balancer.poolsProvider.find(poolId);
+const { to, functionName, attributes, data } = pool.buildExitExactBPTIn(params);
+```
+
+### #buildExitExactBPTIn
+
+Builds an exit transaction with exact BPT in and minimum token amounts out based on slippage tolerance.
+
+```js
+  /**
+   * @param {string}  exiter - Account address exiting pool
+   * @param {string}  bptIn - BPT provided for exiting pool
+   * @param {string}  slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @param {string}  singleTokenMaxOut - Optional: token address that if provided will exit to given token
+   * @returns         transaction request ready to send with signer.sendTransaction
+   */
+  buildExitExactBPTIn: (
+    exiter: string,
+    bptIn: string,
+    slippage: string,
+    singleTokenMaxOut?: string
+  ) => Promise<ExitPoolAttributes>;
+```
+
+[Example](./examples/exitExactBPTIn.ts)
+
+### #buildExitExactTokensOut
+
+Builds an exit transaction with exact tokens out and maximum BPT in based on slippage tolerance.
+
+```js
+  /**
+   * @param {string}    exiter - Account address exiting pool
+   * @param {string[]}  tokensOut - Tokens provided for exiting pool
+   * @param {string[]}  amountsOut - Amounts provided for exiting pool
+   * @param {string}    slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @returns           transaction request ready to send with signer.sendTransaction
+   */
+  buildExitExactTokensOut: (
+    exiter: string,
+    tokensOut: string[],
+    amountsOut: string[],
+    slippage: string
+  ) => Promise<ExitPoolAttributes>;
+```
+
+[Example](./examples/exitExactTokensOut.ts)
 
 ## RelayerService
 
