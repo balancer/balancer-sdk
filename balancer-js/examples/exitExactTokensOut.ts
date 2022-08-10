@@ -9,6 +9,7 @@ import {
 } from '../src/index';
 import { forkSetup, getBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
+import { BigNumber } from '@ethersproject/bignumber';
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const BPT_SLOT = 0;
 
 /*
-Example showing how to use Pools module to exit pools with exact BPT in method.
+Example showing how to use Pools module to exit pools with exact tokens out method.
 */
 async function exitExactTokensOut() {
   const network = Network.MAINNET;
@@ -85,7 +86,8 @@ async function exitExactTokensOut() {
 
   console.log('Balances before exit:                 ', tokenBalancesBefore);
   console.log('Balances after exit:                  ', tokenBalancesAfter);
-  console.log('Max BPT decrease expected after exit: ', [maxBPTIn.toString()]);
+  console.log('Max BPT input:                        ', [maxBPTIn.toString()]);
+  console.log('Actual BPT input:                     ', [BigNumber.from(tokenBalancesBefore[0]).sub(BigNumber.from(tokenBalancesAfter[0])).toString()]);
 }
 
 // yarn examples:run ./examples/exitExactTokensOut.ts
