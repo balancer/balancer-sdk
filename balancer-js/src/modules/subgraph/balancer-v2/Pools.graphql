@@ -74,6 +74,10 @@ fragment SubgraphPool on Pool {
     tokens(first: 100) {
         ...SubgraphPoolToken
     }
+    snapshots(first: 2, orderBy: timestamp, orderDirection: desc) {
+      swapFees
+      timestamp
+    }
     swapsCount
     holdersCount
     tokensList

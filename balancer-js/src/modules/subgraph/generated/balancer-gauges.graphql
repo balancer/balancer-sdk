@@ -29,6 +29,7 @@ scalar Bytes
 
 enum Chain {
   Arbitrum
+  Optimism
   Polygon
 }
 
