@@ -1,4 +1,4 @@
-import { Findable } from '../types';
+import { Findable, Searchable } from '../types';
 import {
   createSubgraphClient,
   SubgraphClient,
@@ -14,11 +14,22 @@ import { Pool, PoolType } from '@/types';
  *
  * Balancer's subgraph URL: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
  */
-export class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute> {
+export class PoolsSubgraphRepository
+  implements Findable<Pool, PoolAttribute>, Searchable<Pool>
+{
   private client: SubgraphClient;
   public pools: SubgraphPool[] = [];
 
-  constructor(url: string) {
+  /**
+   * Repository with optional lazy loaded blockHeight
+   *
+   * @param url subgraph URL
+   * @param blockHeight lazy loading blockHeigh resolver
+   */
+  constructor(
+    url: string,
+    private blockHeight?: () => Promise<number | undefined>
+  ) {
     this.client = createSubgraphClient(url);
   }
 
@@ -27,6 +38,9 @@ export class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute> {
       where: { swapEnabled: true, totalShares_gt: '0' },
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
+      block: this.blockHeight
+        ? { number: await this.blockHeight() }
+        : undefined,
     });
 
     // TODO: how to best convert subgraph type to sdk internal type?
@@ -55,22 +69,26 @@ export class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute> {
     return undefined;
   }
 
-  // async where(filters: Map<PoolAttribute, string>): Promise<Pool[]> {
-  //   if (this.pools.length == 0) {
-  //     await this.fetch();
-  //   }
-  //   const applyFilters = (pool: SubgraphPool) => {
+  async all(): Promise<Pool[]> {
+    if (this.pools.length == 0) {
+      await this.fetch();
+    }
 
-  //   }
+    return this.pools.map(this.mapType);
+  }
 
-  //   const pools = this.pools.filter((pool) => {
-  //     filters.
-  //   });
-  // }
+  async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
+    if (this.pools.length == 0) {
+      await this.fetch();
+    }
+
+    return (await this.all()).filter(filter);
+  }
 
   private mapType(subgraphPool: SubgraphPool): Pool {
     return {
       id: subgraphPool.id,
+      name: subgraphPool.name || '',
       address: subgraphPool.address,
       poolType: subgraphPool.poolType as PoolType,
       swapFee: subgraphPool.swapFee,
@@ -90,7 +108,7 @@ export class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute> {
       // unwrappedTokens: subgraphPool.unwrappedTokens,
       // isNew: subgraphPool.isNew,
       // volumeSnapshot: subgraphPool.volumeSnapshot,
-      // feesSnapshot: subgraphPool.feesSnapshot,
+      // feesSnapshot: subgraphPool.???, // Approximated last 24h fees
       // boost: subgraphPool.boost,
     };
   }
