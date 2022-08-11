@@ -32,17 +32,24 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
       parsedTotalShares,
     } = parsePoolInfo(pool);
     const totalShares = BigInt(parsedTotalShares);
-    const balances: bigint[] = [];
-    for (let i = 0; i < parsedBalances.length; i++) {
-      const decimals = parsedDecimals[i];
+    const decimals = parsedDecimals.map((decimals) => {
       if (!decimals)
         throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
-      else {
-        const scalingFactor = _computeScalingFactor(BigInt(decimals));
-        balances.push(_upscale(BigInt(parsedBalances[i]), scalingFactor));
-      }
-    }
-    const priceRates = parsedPriceRates.map((rate) => BigInt(rate as string));
+      return BigInt(decimals);
+    });
+    const priceRates = parsedPriceRates.map((rate) => {
+      if (!rate) throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
+      return BigInt(rate);
+    });
+    if (!parsedAmp)
+      throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
+
+    const scalingFactors = decimals.map((decimals) =>
+      _computeScalingFactor(BigInt(decimals))
+    );
+    const balances = parsedBalances.map((balance, i) =>
+      _upscale(BigInt(balance), scalingFactors[i])
+    );
     const balancesScaled = balances.map((balance, i) =>
       SolidityMaths.mulDownFixed(balance, priceRates[i])
     );

@@ -25,29 +25,32 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
     // upscales amp, swapfee, totalshares
     const { parsedBalances, parsedDecimals, parsedAmp, parsedTotalShares } =
       parsePoolInfo(pool);
-    const balances: bigint[] = [];
-    for (let i = 0; i < parsedBalances.length; i++) {
-      const decimals = parsedDecimals[i];
+
+    const decimals = parsedDecimals.map((decimals) => {
       if (!decimals)
         throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
-      else {
-        const scalingFactor = _computeScalingFactor(BigInt(decimals));
-        balances.push(_upscale(BigInt(parsedBalances[i]), scalingFactor));
-      }
-    }
+      return BigInt(decimals);
+    });
+    if (!parsedAmp)
+      throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
     const totalShares = BigInt(parsedTotalShares);
+
+    const scalingFactors = decimals.map((decimals) =>
+      _computeScalingFactor(BigInt(decimals))
+    );
+    const balances = parsedBalances.map((balance, i) =>
+      _upscale(BigInt(balance), scalingFactors[i])
+    );
 
     let bptZeroPriceImpact = BZERO;
     for (let i = 0; i < balances.length; i++) {
       const price = bptSpotPrice(
-        BigInt(parsedAmp as string), // this already includes the extra digits from precision
+        BigInt(parsedAmp), // this already includes the extra digits from precision
         balances,
         totalShares,
         i
       );
-      const scalingFactor = _computeScalingFactor(
-        BigInt(pool.tokens[i].decimals as number)
-      );
+      const scalingFactor = _computeScalingFactor(BigInt(decimals[i]));
       const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
       const newTerm = (price * amountUpscaled) / ONE;
       bptZeroPriceImpact += newTerm;

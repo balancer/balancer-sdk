@@ -28,12 +28,33 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
     const bptIndex = tokensList.findIndex((token) => token == pool.address);
 
     // upscales amp, swapfee, totalshares
-    const { parsedBalances, parsedPriceRates, parsedAmp, parsedTotalShares } =
-      parsePoolInfo(pool);
+    const {
+      parsedBalances,
+      parsedDecimals,
+      parsedPriceRates,
+      parsedAmp,
+      parsedTotalShares,
+    } = parsePoolInfo(pool);
+    const decimals = parsedDecimals.map((decimals) => {
+      if (!decimals)
+        throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+      return BigInt(decimals);
+    });
+    const priceRates = parsedPriceRates.map((rate) => {
+      if (!rate) throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
+      return BigInt(rate);
+    });
+    if (!parsedAmp)
+      throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
     const totalShares = BigInt(parsedTotalShares);
-    const balances = parsedBalances.map((balance) => BigInt(balance));
-    const priceRates = parsedPriceRates.map((rate) => BigInt(rate as string));
     tokensList.splice(bptIndex, 1);
+
+    const scalingFactors = decimals.map((decimals) =>
+      _computeScalingFactor(BigInt(decimals))
+    );
+    const balances = parsedBalances.map((balance, i) =>
+      _upscale(BigInt(balance), scalingFactors[i])
+    );
     if (tokenAmounts.length !== tokensList.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     balances.splice(bptIndex, 1);
@@ -44,17 +65,14 @@ export class PhantomStablePriceImpact implements PriceImpactConcern {
     for (let i = 0; i < tokensList.length; i++) {
       const price =
         (bptSpotPrice(
-          // phantomStablePool.amp.toBigInt(),
-          BigInt(parsedAmp as string), // this already includes the extra digits from precision
+          BigInt(parsedAmp), // this already includes the extra digits from precision
           balancesScaled,
           totalShares,
           i
         ) *
           priceRates[i]) /
         ONE;
-      const scalingFactor = _computeScalingFactor(
-        BigInt(pool.tokens[i].decimals as number)
-      );
+      const scalingFactor = _computeScalingFactor(BigInt(decimals[i]));
       const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
       const newTerm = (price * amountUpscaled) / ONE;
       bptZeroPriceImpact += newTerm;
