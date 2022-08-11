@@ -39,7 +39,7 @@ export class BalancerError extends Error {
       case BalancerErrorCode.NO_POOL_DATA:
         return 'no pool data';
       case BalancerErrorCode.INPUT_LENGTH_MISMATCH:
-        return 'array lengths must match';
+        return 'input length mismatch';
       case BalancerErrorCode.MISSING_AMP:
         return 'missing amp';
       case BalancerErrorCode.MISSING_DECIMALS:

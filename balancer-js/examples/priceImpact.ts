@@ -1,7 +1,7 @@
 import { formatFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import dotenv from 'dotenv';
-import { BalancerSDK, Network, BalancerSdkConfig, PoolModel } from '../src/index';
+import { BalancerSDK, Network, BalancerSdkConfig, PoolModel, BalancerErrorCode, BalancerError } from '../src/index';
 import { ADDRESSES } from '../src/test/lib/constants';
 import { forkSetup } from '../src/test/lib/utils';
 
@@ -31,20 +31,18 @@ async function getPriceImpact() {
 
   // Use SDK to find pool info
   const pool: PoolModel | undefined = await balancer.poolsProvider.find(WBTCWETHId);
-  if (!pool) throw new Error('Pool not found');
-
-  const priceImpactWBTCWETH = await pool.priceImpact(
-    pool,
+  if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
+  
+  const priceImpactWBTCWETH = await pool.calcPriceImpact(
     ['100000000000000000000', '100000000'],
     '99430576622436571714692'
   );
   console.log(priceImpactWBTCWETH); 
 
   const pool2: PoolModel | undefined = await balancer.poolsProvider.find(staBal3Id);
-  if (!pool2) throw new Error('Pool not found');
+  if (!pool2) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
-  const priceImpactStaBal3 = await pool2.priceImpact(
-    pool2,
+  const priceImpactStaBal3 = await pool2.calcPriceImpact(
     ['100000000000000000000', '100000000', '190000000'],
     '376972471880969684010'
   );

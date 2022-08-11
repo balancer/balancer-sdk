@@ -145,7 +145,7 @@ describe('debug join execution', async () => {
     it('price impact calculation', async () => {
       const minBPTOut = bptMinBalanceIncrease.toString();
       const priceImpact = await pool.calcPriceImpact(amountsIn, minBPTOut);
-      expect(priceImpact).to.eql('505195438117528120');
+      expect(priceImpact).to.eql('10002035024956851');
     });
 
     it('should increase BPT balance', async () => {
