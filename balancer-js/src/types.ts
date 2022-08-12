@@ -199,6 +199,8 @@ export interface Pool {
   boost?: string;
   symbol?: string;
   amp?: string;
+  wrappedIndex?: number;
+  mainIndex?: number;
 }
 
 export interface PoolModel extends Pool {
