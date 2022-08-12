@@ -23,7 +23,6 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
     if (tokenAmounts.length !== pool.tokensList.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
-    // const tokensList = cloneDeep(pool.tokensList);
     const {
       parsedBalances,
       parsedDecimals,

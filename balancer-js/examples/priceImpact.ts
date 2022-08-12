@@ -1,12 +1,8 @@
-import { formatFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import dotenv from 'dotenv';
-import { BalancerSDK, Network, BalancerSdkConfig, PoolModel, BalancerErrorCode, BalancerError } from '../src/index';
-import { ADDRESSES } from '../src/test/lib/constants';
-import { forkSetup } from '../src/test/lib/utils';
+import { BalancerSDK, Network, PoolModel, BalancerErrorCode, BalancerError } from '../src/index';
 
 dotenv.config();
-const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 
 /*
 Example showing how to use SDK to get price impact for a join or exit operation.
