@@ -17,7 +17,7 @@ import { TransactionReceipt } from '@ethersproject/providers';
 import { parseFixed, BigNumber } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 
-import { forkSetup, setupPool, tokenBalance } from '@/test/lib/utils';
+import { forkSetup, setupPool, getBalances } from '@/test/lib/utils';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import { PoolsProvider } from '@/modules/pools/provider';
 
@@ -85,7 +85,6 @@ describe('debug join execution', async () => {
       parseFixed(initialBalance, tokensIn[1].decimals).toString(),
     ];
     await forkSetup(
-      balancer,
       signer,
       tokensIn.map((t) => t.address),
       slots,
@@ -103,30 +102,15 @@ describe('debug join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      bptBalanceBefore = await tokenBalance(
-        pool.address,
+      [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
+        [pool.address, ...tokensIn.map((t) => t.address)],
         signer,
-        signerAddress,
-        balancer
+        signerAddress
       );
-      tokensBalanceBefore = [
-        await tokenBalance(
-          tokensIn[0].address,
-          signer,
-          signerAddress,
-          balancer
-        ),
-        await tokenBalance(
-          tokensIn[1].address,
-          signer,
-          signerAddress,
-          balancer
-        ),
-      ];
 
       const slippage = '100';
 
-      const { to, data, minBPTOut } = await pool.buildJoin(
+      const { to, data, minBPTOut } = pool.buildJoin(
         signerAddress,
         tokensIn.map((t) => t.address),
         amountsIn,
@@ -136,6 +120,11 @@ describe('debug join execution', async () => {
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+      [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
+        [pool.address, ...tokensIn.map((t) => t.address)],
+        signer,
+        signerAddress
+      );
     });
 
     it('should work', async () => {
@@ -149,34 +138,12 @@ describe('debug join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(
-        pool.address,
-        signer,
-        signerAddress,
-        balancer
-      );
-
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
       ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
     });
 
     it('should decrease tokens balance', async () => {
-      tokensBalanceAfter = [
-        await tokenBalance(
-          tokensIn[0].address,
-          signer,
-          signerAddress,
-          balancer
-        ),
-        await tokenBalance(
-          tokensIn[1].address,
-          signer,
-          signerAddress,
-          balancer
-        ),
-      ];
-
       for (let i = 0; i < tokensIn.length; i++) {
         expect(
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
@@ -193,41 +160,30 @@ describe('debug join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      bptBalanceBefore = await tokenBalance(
-        pool.address,
+      [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
+        [pool.address, ...tokensIn.map((t) => t.address)],
         signer,
-        signerAddress,
-        balancer
+        signerAddress
       );
-      tokensBalanceBefore = [
-        await tokenBalance(
-          tokensIn[0].address,
-          signer,
-          signerAddress,
-          balancer
-        ),
-        await tokenBalance(
-          tokensIn[1].address,
-          signer,
-          signerAddress,
-          balancer
-        ),
-      ];
 
       const slippage = '100';
-      const { functionName, attributes, value, minBPTOut } =
-        await pool.buildJoin(
-          signerAddress,
-          tokensIn.map((t) => t.address),
-          amountsIn,
-          slippage
-        );
+      const { functionName, attributes, value, minBPTOut } = pool.buildJoin(
+        signerAddress,
+        tokensIn.map((t) => t.address),
+        amountsIn,
+        slippage
+      );
       const transactionResponse = await balancer.contracts.vault
         .connect(signer)
         [functionName](...Object.values(attributes), { value });
       transactionReceipt = await transactionResponse.wait();
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
+      [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
+        [pool.address, ...tokensIn.map((t) => t.address)],
+        signer,
+        signerAddress
+      );
     });
 
     it('should work', async () => {
@@ -235,34 +191,12 @@ describe('debug join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(
-        pool.address,
-        signer,
-        signerAddress,
-        balancer
-      );
-
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
       ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
     });
 
     it('should decrease tokens balance', async () => {
-      tokensBalanceAfter = [
-        await tokenBalance(
-          tokensIn[0].address,
-          signer,
-          signerAddress,
-          balancer
-        ),
-        await tokenBalance(
-          tokensIn[1].address,
-          signer,
-          signerAddress,
-          balancer
-        ),
-      ];
-
       for (let i = 0; i < tokensIn.length; i++) {
         expect(
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
@@ -280,26 +214,25 @@ describe('debug join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      bptBalanceBefore = await tokenBalance(
-        pool.address,
+      const tokensWithETH = tokensIn.map((t) => {
+        if (
+          t.address ===
+          balancer.networkConfig.addresses.tokens.wrappedNativeAsset
+        )
+          return AddressZero;
+        return t.address;
+      });
+
+      [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
+        [pool.address, ...tokensWithETH],
         signer,
-        signerAddress,
-        balancer
+        signerAddress
       );
-      tokensBalanceBefore = [
-        await tokenBalance(
-          tokensIn[0].address,
-          signer,
-          signerAddress,
-          balancer
-        ),
-        await signer.getBalance(),
-      ];
 
       const slippage = '100';
-      const { to, data, value, minBPTOut } = await pool.buildJoin(
+      const { to, data, value, minBPTOut } = pool.buildJoin(
         signerAddress,
-        [tokensIn[0].address, AddressZero],
+        tokensWithETH,
         amountsIn,
         slippage
       );
@@ -310,6 +243,17 @@ describe('debug join execution', async () => {
       transactionCost = transactionReceipt.gasUsed.mul(
         transactionReceipt.effectiveGasPrice
       );
+
+      [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
+        [pool.address, ...tokensWithETH],
+        signer,
+        signerAddress
+      );
+      tokensWithETH.map((t, i) => {
+        if (t === AddressZero) {
+          tokensBalanceAfter[i] = tokensBalanceAfter[i].add(transactionCost);
+        }
+      });
     });
 
     it('should work', async () => {
@@ -317,29 +261,12 @@ describe('debug join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(
-        pool.address,
-        signer,
-        signerAddress,
-        balancer
-      );
-
       expect(
         bptBalanceAfter.sub(bptBalanceBefore).toNumber()
       ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
     });
 
     it('should decrease tokens balance', async () => {
-      tokensBalanceAfter = [
-        await tokenBalance(
-          tokensIn[0].address,
-          signer,
-          signerAddress,
-          balancer
-        ),
-        await (await signer.getBalance()).add(transactionCost),
-      ];
-
       for (let i = 0; i < tokensIn.length; i++) {
         expect(
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
@@ -362,7 +289,7 @@ describe('debug join execution', async () => {
       const slippage = '10';
       let errorMessage;
       try {
-        await pool.buildJoin(
+        pool.buildJoin(
           signerAddress,
           tokensIn.map((t) => t.address),
           amountsIn,

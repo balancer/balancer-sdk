@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { PhantomStablePriceImpact } from '@/modules/pools/pool-types/concerns/stablePhantom/priceImpact.concern';
+import { StablePhantomPriceImpact } from '@/modules/pools/pool-types/concerns/stablePhantom/priceImpact.concern';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import { StaticPoolRepository } from '@/modules/data';
@@ -11,7 +11,7 @@ import { setupPool } from '@/test/lib/utils';
 
 dotenv.config();
 const rpcUrl = 'http://127.0.0.1:8545';
-const priceImpactCalc = new PhantomStablePriceImpact();
+const priceImpactCalc = new StablePhantomPriceImpact();
 const bbaUSDPoolId =
   '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe';
 

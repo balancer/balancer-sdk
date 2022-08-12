@@ -13,7 +13,7 @@ import { bptSpotPrice } from '@/lib/utils/stableMathHelpers';
 import { Pool } from '@/types';
 import { parsePoolInfo } from '@/lib/utils';
 
-export class PhantomStablePriceImpact implements PriceImpactConcern {
+export class StablePhantomPriceImpact implements PriceImpactConcern {
   /**
    * Calculates the BPT return amount when investing with no price impact.
    * @param { Pool } pool Investment pool.
