@@ -1,37 +1,33 @@
 import { LiquidityConcern } from '../types';
 import { PoolToken } from '@/types';
-import { BigNumber, formatFixed } from '@ethersproject/bignumber';
-import { parseFixed } from '@/lib/utils/math';
-import { Zero } from '@ethersproject/constants';
-
-const SCALING_FACTOR = 18;
+import { BigNumber as OldBigNumber } from 'bignumber.js';
 
 export class WeightedPoolLiquidity implements LiquidityConcern {
   calcTotal(tokens: PoolToken[]): string {
-    let sumWeight = Zero;
-    let sumValue = Zero;
+    let sumWeight = new OldBigNumber(0);
+    let sumValue = new OldBigNumber(0);
 
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
       if (!token.price?.usd) {
         continue;
       }
-      const price = parseFixed(token.price.usd, SCALING_FACTOR);
-      const balance = parseFixed(token.balance, SCALING_FACTOR);
+      const price = new OldBigNumber(token.price.usd);
+      const balance = new OldBigNumber(token.balance);
 
-      const value = balance.mul(price);
-      sumValue = sumValue.add(value);
-      sumWeight = sumWeight.add(token.weight || '0');
+      const value = balance.times(price);
+      sumValue = sumValue.plus(value);
+      sumWeight = sumWeight.plus(token.weight || '0');
     }
 
     // Scale the known prices of x% of the pool to get value of 100% of the pool.
     const totalWeight = tokens.reduce(
-      (total: BigNumber, token) => total.add(token.weight || '0'),
-      Zero
+      (total: OldBigNumber, token) => total.plus(token.weight || '0'),
+      new OldBigNumber(0)
     );
     if (sumWeight.gt(0)) {
-      const liquidity = sumValue.mul(totalWeight).div(sumWeight);
-      return formatFixed(liquidity, SCALING_FACTOR * 2);
+      const liquidity = sumValue.times(totalWeight).div(sumWeight);
+      return liquidity.toString();
     }
 
     return '0';
