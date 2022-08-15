@@ -71,9 +71,7 @@ export class Liquidity {
           priceRate: token.priceRate,
           price: tokenPrice,
           balance: token.balance,
-          weight: token.weight
-            ? parseFixed(token.weight, TOKEN_WEIGHT_SCALING_FACTOR).toString()
-            : '0',
+          weight: token.weight,
         };
         return poolToken;
       })
