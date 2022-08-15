@@ -26,8 +26,7 @@ export class WeightedPoolLiquidity implements LiquidityConcern {
 
     // Scale the known prices of x% of the pool to get value of 100% of the pool.
     const totalWeight = tokens.reduce(
-      (total: BigNumber, token) =>
-        total.add(parseFixed(token.weight || '0', SCALING_FACTOR)),
+      (total: BigNumber, token) => total.add(token.weight || '0'),
       Zero
     );
     if (sumWeight.gt(0)) {
