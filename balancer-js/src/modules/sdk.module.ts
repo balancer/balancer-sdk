@@ -1,21 +1,16 @@
-import { BalancerSdkConfig, BalancerNetworkConfig } from '@/types';
+import {
+  BalancerSdkConfig,
+  BalancerNetworkConfig,
+  BalancerDataRepositories,
+} from '@/types';
 import { Swaps } from './swaps/swaps.module';
 import { Relayer } from './relayer/relayer.module';
 import { Subgraph } from './subgraph/subgraph.module';
 import { Sor } from './sor/sor.module';
-import { getNetworkConfig } from './sdk.helpers';
+import { getDataRepositories, getNetworkConfig } from './sdk.helpers';
 import { Pricing } from './pricing/pricing.module';
 import { ContractInstances, Contracts } from './contracts/contracts.module';
 import { Pools } from './pools';
-import {
-  CoingeckoPriceRepository,
-  LiquidityGaugeSubgraphRPCProvider,
-  PoolsSubgraphRepository,
-  StaticTokenProvider,
-  FeeDistributorRepository,
-  FeeCollectorRepository,
-  TokenYieldsRepository,
-} from './data';
 
 export interface BalancerSDKRoot {
   config: BalancerSdkConfig;
@@ -40,30 +35,7 @@ export class BalancerSDK implements BalancerSDKRoot {
     public subgraph = new Subgraph(config)
   ) {
     const networkConfig = getNetworkConfig(config);
-    const repositories = {
-      pools: new PoolsSubgraphRepository(networkConfig.urls.subgraph),
-      tokenPrices: new CoingeckoPriceRepository([], networkConfig.chainId),
-      tokenMeta: new StaticTokenProvider([]),
-      liquidityGauges: new LiquidityGaugeSubgraphRPCProvider(
-        networkConfig.urls.gaugesSubgraph,
-        networkConfig.addresses.contracts.multicall,
-        networkConfig.addresses.contracts.gaugeController,
-        sor.provider
-      ),
-      feeDistributor: new FeeDistributorRepository(
-        networkConfig.addresses.contracts.multicall,
-        networkConfig.addresses.contracts.feeDistributor,
-        networkConfig.addresses.tokens.bal,
-        networkConfig.addresses.tokens.veBal,
-        networkConfig.addresses.tokens.bbaUsd,
-        sor.provider
-      ),
-      feeCollector: new FeeCollectorRepository(
-        networkConfig.addresses.contracts.vault,
-        sor.provider
-      ),
-      tokenYields: new TokenYieldsRepository(),
-    };
+    const repositories = getDataRepositories(config);
 
     this.swaps = new Swaps(this.config);
     this.relayer = new Relayer(this.swaps);
@@ -78,6 +50,10 @@ export class BalancerSDK implements BalancerSDKRoot {
 
   get networkConfig(): BalancerNetworkConfig {
     return getNetworkConfig(this.config);
+  }
+
+  get dataRepositories(): BalancerDataRepositories {
+    return getDataRepositories(this.config);
   }
 
   /**
