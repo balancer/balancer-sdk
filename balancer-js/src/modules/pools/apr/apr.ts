@@ -11,6 +11,7 @@ import type {
 } from '@/types';
 import { BaseFeeDistributor } from '@/modules/data';
 import { ProtocolRevenue } from './protocol-revenue';
+import { PoolTypeConcerns } from '../pool-type-concerns';
 
 export interface AprBreakdown {
   swapFees: number;
@@ -42,6 +43,7 @@ export class PoolApr {
     private tokenPrices: Findable<Price>,
     private tokenMeta: Findable<Token, TokenAttribute>,
     private pools: Findable<Pool, PoolAttribute>,
+    private yesterdaysPools: Findable<Pool, PoolAttribute>,
     private liquidityGauges: Findable<LiquidityGauge>,
     private feeDistributor: BaseFeeDistributor,
     private feeCollector: Findable<number>,
@@ -56,14 +58,14 @@ export class PoolApr {
    */
   async swapFees(): Promise<number> {
     // 365 * dailyFees * (1 - protocolFees) / totalLiquidity
-    const { feesSnapshot } = this.pool;
+    const last24hFees = await this.last24hFees();
     const totalLiquidity = await this.totalLiquidity();
-    // TODO: what to do when we are missing totalSwapFee or totalLiquidity?
-    if (!feesSnapshot || !totalLiquidity) {
+    // TODO: what to do when we are missing last24hFees or totalLiquidity?
+    if (!last24hFees || !totalLiquidity) {
       return 0;
     }
     const dailyFees =
-      parseFloat(feesSnapshot) * (1 - (await this.protocolSwapFeePercentage()));
+      last24hFees * (1 - (await this.protocolSwapFeePercentage()));
     const feesDailyBsp = 10000 * (dailyFees / parseFloat(totalLiquidity));
 
     return Math.round(365 * feesDailyBsp);
@@ -106,6 +108,7 @@ export class PoolApr {
               this.tokenPrices,
               this.tokenMeta,
               this.pools,
+              this.yesterdaysPools,
               this.liquidityGauges,
               this.feeDistributor,
               this.feeCollector,
@@ -309,12 +312,39 @@ export class PoolApr {
     };
   }
 
-  // TODO: move to model class
+  // 🚨 this is adding 1 call to get yesterday's block height and 2nd call to fetch yesterday's pools data from subgraph
+  // TODO: find a better data source for that eg. add blocks to graph, replace with a database, or dune
+  private async last24hFees(): Promise<number> {
+    const yesterdaysPool = await this.yesterdaysPools.find(this.pool.id);
+    if (
+      !this.pool.totalSwapFee ||
+      !yesterdaysPool ||
+      !yesterdaysPool.totalSwapFee
+    ) {
+      return 0;
+    }
+
+    return (
+      parseFloat(this.pool.totalSwapFee) -
+      parseFloat(yesterdaysPool.totalSwapFee)
+    );
+  }
+
+  // 🚨 TODO: replace with liquidity calculations once implemention works for all pool types
   private async totalLiquidity(): Promise<string> {
     if (!this.pool.totalLiquidity) {
       throw `Pool has no liquidity`;
     }
-    return this.pool.totalLiquidity; // || (await this.pool.liquidity());
+
+    return this.pool.totalLiquidity;
+
+    // console.log(this.pool.poolType, this.pool.tokens);
+
+    // const methods = PoolTypeConcerns.from(this.pool.poolType);
+    // const liquidity = methods.liquidity.calcTotal(this.pool.tokens);
+    // console.log(liquidity);
+
+    // return liquidity;
   }
 
   // TODO: move to model class, or even better to a price provider

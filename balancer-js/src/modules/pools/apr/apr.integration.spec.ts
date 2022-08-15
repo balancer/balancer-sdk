@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import MockDate from 'mockdate';
 import { BalancerSDK } from '@/modules/sdk.module';
+import { PoolModel } from '@/types';
 
 const sdk = new BalancerSDK({
   network: 1,
@@ -83,4 +84,27 @@ describe('happy case', () => {
       }
     }).timeout(120000);
   });
+});
+
+describe('mainnet pools', () => {
+  let poolsList: PoolModel[];
+
+  // Getting 10 largest pools
+  before(async () => {
+    poolsList = (await pools.where((pool) => pool.poolType != 'Element'))
+      .sort(
+        (a, b) => parseFloat(b.totalLiquidity) - parseFloat(a.totalLiquidity)
+      )
+      .slice(0, 10);
+  });
+
+  it('has APRs', async () => {
+    if (poolsList.length > 0) {
+      const aprs = await Promise.all(poolsList.map((pool) => pool.apr()));
+      console.log(
+        poolsList.map((pool, i) => [pool.id, JSON.stringify(aprs[i], null, 2)])
+      );
+      expect(aprs.length).to.be.greaterThan(0);
+    }
+  }).timeout(120000);
 });

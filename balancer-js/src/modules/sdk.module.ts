@@ -15,6 +15,7 @@ import {
   FeeDistributorRepository,
   FeeCollectorRepository,
   TokenYieldsRepository,
+  BlockNumberRepository,
 } from './data';
 
 export interface BalancerSDKRoot {
@@ -40,8 +41,17 @@ export class BalancerSDK implements BalancerSDKRoot {
     public subgraph = new Subgraph(config)
   ) {
     const networkConfig = getNetworkConfig(config);
+    const blockDayAgo = () => {
+      return new BlockNumberRepository(networkConfig.chainId).find('dayAgo');
+    };
     const repositories = {
       pools: new PoolsSubgraphRepository(networkConfig.urls.subgraph),
+      // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
+      // TODO: find a better data source for that, eg: maybe DUNE once API is available
+      yesterdaysPools: new PoolsSubgraphRepository(
+        networkConfig.urls.subgraph,
+        blockDayAgo
+      ),
       tokenPrices: new CoingeckoPriceRepository([], networkConfig.chainId),
       tokenMeta: new StaticTokenProvider([]),
       liquidityGauges: new LiquidityGaugeSubgraphRPCProvider(

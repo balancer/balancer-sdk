@@ -7,6 +7,7 @@ export interface Findable<T, P = string> {
   findBy: (attribute: P, value: string) => Promise<T | undefined>;
 }
 
-export interface Searchable<T, P = string> {
-  where: (filters: Map<P, string>) => Promise<T[]>;
+export interface Searchable<T> {
+  all: () => Promise<T[]>;
+  where: (filters: (arg: T) => boolean) => Promise<T[]>;
 }

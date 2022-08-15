@@ -8,6 +8,7 @@ import type {
 } from './modules/pools/pool-types/concerns/types';
 import type {
   Findable,
+  Searchable,
   LiquidityGauge,
   PoolAttribute,
   TokenAttribute,
@@ -74,7 +75,8 @@ export interface BalancerNetworkConfig {
 }
 
 export interface BalancerDataRepositories {
-  pools: Findable<Pool, PoolAttribute>;
+  pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  yesterdaysPools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
   tokenMeta: Findable<Token, TokenAttribute>;
   liquidityGauges: Findable<LiquidityGauge>;
@@ -203,6 +205,7 @@ export enum PoolType {
 
 export interface Pool {
   id: string;
+  name: string;
   address: string;
   poolType: PoolType;
   swapFee: string;
@@ -211,7 +214,7 @@ export interface Pool {
   tokens: PoolToken[];
   tokensList: string[];
   tokenAddresses?: string[];
-  totalLiquidity?: string;
+  totalLiquidity: string;
   totalShares: string;
   totalSwapFee?: string;
   totalSwapVolume?: string;
