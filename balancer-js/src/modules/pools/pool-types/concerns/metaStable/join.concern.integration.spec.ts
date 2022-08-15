@@ -15,8 +15,8 @@ import hardhat from 'hardhat';
 
 import { TransactionReceipt } from '@ethersproject/providers';
 import { parseFixed, BigNumber } from '@ethersproject/bignumber';
-import { AddressZero } from '@ethersproject/constants';
 
+import { ADDRESSES } from '@/test/lib/constants';
 import { forkSetup, setupPool, getBalances } from '@/test/lib/utils';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import { PoolsProvider } from '@/modules/pools/provider';
@@ -28,18 +28,21 @@ const { ethers } = hardhat;
 
 let balancer: BalancerSDK;
 const rpcUrl = 'http://127.0.0.1:8545';
+const network = Network.MAINNET;
+const sdkConfig = {
+  network,
+  rpcUrl,
+};
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
 let signerAddress: string;
 
 // Slots used to set the account balance for each token through hardhat_setStorageAt
 // Info fetched using npm package slot20
-const wBTC_SLOT = 0;
-const wETH_SLOT = 3;
-const slots = [wBTC_SLOT, wETH_SLOT];
+const slots = [ADDRESSES[network].wSTETH.slot, ADDRESSES[network].WETH.slot];
 
 const initialBalance = '100000';
-const amountsInDiv = '100000000';
+const amountsInDiv = '10000'; // TODO: setting amountsInDiv to 1000 will fail test due to stable math convergence issue - check if that's expected from maths
 
 let tokensIn: PoolToken[];
 let amountsIn: string[];
@@ -57,10 +60,6 @@ describe('join execution', async () => {
   // Setup chain
   before(async function () {
     this.timeout(20000);
-    const sdkConfig = {
-      network: Network.MAINNET,
-      rpcUrl,
-    };
     // Using a static repository to make test consistent over time
     const poolsProvider = new PoolsProvider(
       sdkConfig,
@@ -75,15 +74,14 @@ describe('join execution', async () => {
     );
     const poolSetup = await setupPool(
       poolsProvider,
-      '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
+      '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080' // Balancer stETH Stable Pool
     );
     if (!poolSetup) throw Error('Error setting up pool.');
     pool = poolSetup;
     tokensIn = pool.tokens;
-    const balances = [
-      parseFixed(initialBalance, tokensIn[0].decimals).toString(),
-      parseFixed(initialBalance, tokensIn[1].decimals).toString(),
-    ];
+    const balances = pool.tokens.map((token) =>
+      parseFixed(initialBalance, token.decimals).toString()
+    );
     await forkSetup(
       signer,
       tokensIn.map((t) => t.address),
@@ -103,12 +101,12 @@ describe('join execution', async () => {
       );
 
       [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
-        [pool.address, ...tokensIn.map((t) => t.address)],
+        [pool.address, ...pool.tokensList],
         signer,
         signerAddress
       );
 
-      const slippage = '100';
+      const slippage = '1';
 
       const { to, data, minBPTOut } = pool.buildJoin(
         signerAddress,
@@ -121,7 +119,7 @@ describe('join execution', async () => {
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
       [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
-        [pool.address, ...tokensIn.map((t) => t.address)],
+        [pool.address, ...pool.tokensList],
         signer,
         signerAddress
       );
@@ -132,9 +130,8 @@ describe('join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      expect(
-        bptBalanceAfter.sub(bptBalanceBefore).toNumber()
-      ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
+      expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
+        .to.be.true;
     });
 
     it('should decrease tokens balance', async () => {
@@ -155,7 +152,7 @@ describe('join execution', async () => {
       );
 
       [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
-        [pool.address, ...tokensIn.map((t) => t.address)],
+        [pool.address, ...pool.tokensList],
         signer,
         signerAddress
       );
@@ -174,7 +171,7 @@ describe('join execution', async () => {
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
-        [pool.address, ...tokensIn.map((t) => t.address)],
+        [pool.address, ...pool.tokensList],
         signer,
         signerAddress
       );
@@ -185,79 +182,8 @@ describe('join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      expect(
-        bptBalanceAfter.sub(bptBalanceBefore).toNumber()
-      ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
-    });
-
-    it('should decrease tokens balance', async () => {
-      for (let i = 0; i < tokensIn.length; i++) {
-        expect(
-          tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
-        ).to.equal(amountsIn[i]);
-      }
-    });
-  });
-
-  context('join transaction - join with ETH', () => {
-    let transactionCost: BigNumber;
-    before(async function () {
-      this.timeout(20000);
-
-      amountsIn = tokensIn.map((t) =>
-        parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
-      );
-
-      const tokensWithETH = tokensIn.map((t) => {
-        if (
-          t.address ===
-          balancer.networkConfig.addresses.tokens.wrappedNativeAsset
-        )
-          return AddressZero;
-        return t.address;
-      });
-
-      [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
-        [pool.address, ...tokensWithETH],
-        signer,
-        signerAddress
-      );
-
-      const slippage = '100';
-      const { to, data, value, minBPTOut } = pool.buildJoin(
-        signerAddress,
-        tokensWithETH,
-        amountsIn,
-        slippage
-      );
-      const tx = { to, data, value };
-
-      bptMinBalanceIncrease = BigNumber.from(minBPTOut);
-      transactionReceipt = await (await signer.sendTransaction(tx)).wait();
-      transactionCost = transactionReceipt.gasUsed.mul(
-        transactionReceipt.effectiveGasPrice
-      );
-
-      [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
-        [pool.address, ...tokensWithETH],
-        signer,
-        signerAddress
-      );
-      tokensWithETH.map((t, i) => {
-        if (t === AddressZero) {
-          tokensBalanceAfter[i] = tokensBalanceAfter[i].add(transactionCost);
-        }
-      });
-    });
-
-    it('should work', async () => {
-      expect(transactionReceipt.status).to.eql(1);
-    });
-
-    it('should increase BPT balance', async () => {
-      expect(
-        bptBalanceAfter.sub(bptBalanceBefore).toNumber()
-      ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
+      expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
+        .to.be.true;
     });
 
     it('should decrease tokens balance', async () => {
@@ -273,7 +199,7 @@ describe('join execution', async () => {
     before(async function () {
       this.timeout(20000);
       amountsIn = [
-        parseFixed(tokensIn[1].balance, tokensIn[1].decimals)
+        parseFixed(tokensIn[0].balance, tokensIn[0].decimals)
           .div('100')
           .toString(),
       ];

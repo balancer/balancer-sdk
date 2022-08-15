@@ -18,12 +18,37 @@ export class PoolsProvider {
     return {
       ...data,
       liquidity: async () => methods.liquidity.calcTotal(data.tokens),
-      buildJoin: async (joiner, tokensIn, amountsIn, slippage) =>
+      buildJoin: (joiner, tokensIn, amountsIn, slippage) =>
         methods.join.buildJoin({
           joiner,
           pool: data,
           tokensIn,
           amountsIn,
+          slippage,
+          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+        }),
+      buildExitExactBPTIn: (
+        exiter,
+        bptIn,
+        slippage,
+        shouldUnwrapNativeAsset = false,
+        singleTokenMaxOut
+      ) =>
+        methods.exit.buildExitExactBPTIn({
+          exiter,
+          pool: data,
+          bptIn,
+          slippage,
+          shouldUnwrapNativeAsset,
+          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+          singleTokenMaxOut,
+        }),
+      buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) =>
+        methods.exit.buildExitExactTokensOut({
+          exiter,
+          pool: data,
+          tokensOut,
+          amountsOut,
           slippage,
           wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
         }),

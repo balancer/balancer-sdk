@@ -2,7 +2,10 @@ import { BigNumberish } from '@ethersproject/bignumber';
 import { Network } from './lib/constants/network';
 import { Contract } from '@ethersproject/contracts';
 import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
-import { JoinPoolAttributes } from './modules/pools/pool-types/concerns/types';
+import {
+  ExitPoolAttributes,
+  JoinPoolAttributes,
+} from './modules/pools/pool-types/concerns/types';
 
 export type Address = string;
 
@@ -195,6 +198,7 @@ export interface Pool {
   feesSnapshot?: string;
   boost?: string;
   symbol?: string;
+  amp?: string;
 }
 
 export interface PoolModel extends Pool {
@@ -204,5 +208,18 @@ export interface PoolModel extends Pool {
     tokensIn: string[],
     amountsIn: string[],
     slippage: string
-  ) => Promise<JoinPoolAttributes>;
+  ) => JoinPoolAttributes;
+  buildExitExactBPTIn: (
+    exiter: string,
+    bptIn: string,
+    slippage: string,
+    shouldUnwrapNativeAsset?: boolean,
+    singleTokenMaxOut?: string
+  ) => ExitPoolAttributes;
+  buildExitExactTokensOut: (
+    exiter: string,
+    tokensOut: string[],
+    amountsOut: string[],
+    slippage: string
+  ) => ExitPoolAttributes;
 }
