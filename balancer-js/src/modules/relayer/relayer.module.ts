@@ -6,13 +6,21 @@ import { Swaps } from '@/modules/swaps/swaps.module';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
   EncodeBatchSwapInput,
+  EncodeWrapAaveDynamicTokenInput,
   EncodeUnwrapAaveStaticTokenInput,
   OutputReference,
   EncodeExitPoolInput,
+  EncodeJoinPoolInput,
   ExitAndBatchSwapInput,
   ExitPoolData,
+  JoinPoolData,
 } from './types';
-import { TransactionData, ExitPoolRequest, BalancerSdkConfig } from '@/types';
+import {
+  TransactionData,
+  ExitPoolRequest,
+  JoinPoolRequest,
+  BalancerSdkConfig,
+} from '@/types';
 import {
   SwapType,
   FundManagement,
@@ -64,6 +72,35 @@ export class Relayer {
       params.recipient,
       params.exitPoolRequest,
       params.outputReferences,
+    ]);
+  }
+
+  static encodeJoinPool(params: EncodeJoinPoolInput): string {
+    const relayerLibrary = new Interface(relayerLibraryAbi);
+
+    return relayerLibrary.encodeFunctionData('joinPool', [
+      params.poolId,
+      params.poolKind,
+      params.sender,
+      params.recipient,
+      params.joinPoolRequest,
+      params.outputReference,
+      params.value,
+    ]);
+  }
+
+  static encodeWrapAaveDynamicToken(
+    params: EncodeWrapAaveDynamicTokenInput
+  ): string {
+    const aaveWrappingLibrary = new Interface(aaveWrappingAbi);
+
+    return aaveWrappingLibrary.encodeFunctionData('wrapAaveDynamicToken', [
+      params.staticToken,
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.fromUnderlying,
+      params.outputReference,
     ]);
   }
 
@@ -121,6 +158,41 @@ export class Relayer {
 
     const exitEncoded = Relayer.encodeExitPool(exitPoolInput);
     return exitEncoded;
+  }
+
+  static constructJoinCall(params: JoinPoolData): string {
+    const {
+      assets,
+      maxAmountsIn,
+      userData,
+      fromInternalBalance,
+      poolId,
+      poolKind,
+      sender,
+      recipient,
+      value,
+      outputReference,
+    } = params;
+
+    const joinPoolRequest: JoinPoolRequest = {
+      assets,
+      maxAmountsIn,
+      userData,
+      fromInternalBalance,
+    };
+
+    const joinPoolInput: EncodeJoinPoolInput = {
+      poolId,
+      poolKind,
+      sender,
+      recipient,
+      value,
+      outputReference,
+      joinPoolRequest,
+    };
+
+    const joinEncoded = Relayer.encodeJoinPool(joinPoolInput);
+    return joinEncoded;
   }
 
   /**

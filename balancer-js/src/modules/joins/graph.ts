@@ -91,11 +91,11 @@ export class PoolGraph {
     } else {
       for (let i = 0; i < pool.tokens.length; i++) {
         const proportion = BigNumber.from(pool.tokens[i].balance)
-          .mul('1000000000000000000')
+          .mul((1e18).toString())
           .div(tokenTotal);
         const finalProportion = proportion
           .mul(proportionOfParent)
-          .div('1000000000000000000');
+          .div((1e18).toString());
         const childNode = await this.buildGraphFromPool(
           pool.tokens[i].address,
           nodeIndex,

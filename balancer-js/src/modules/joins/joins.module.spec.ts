@@ -95,7 +95,7 @@ describe('Generalised Joins', () => {
       const pools = [linearDAI, linearUSDC, linearUSDT, boostedPool];
       // Create staticPools provider with above pools
       const poolProvider = new StaticPoolRepository(pools as Pool[]);
-      joinModule = new Join(poolProvider);
+      joinModule = new Join(poolProvider, 1);
     });
 
     it('should throw when pool doesnt exist', async () => {
