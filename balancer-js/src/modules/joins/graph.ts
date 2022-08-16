@@ -10,7 +10,7 @@ export interface Node {
   type: string;
   children: Node[];
   marked: boolean;
-  outputAmt: string;
+  outputReference: string;
   proportionOfParent: BigNumber;
 }
 
@@ -51,6 +51,7 @@ export class PoolGraph {
     const bptIndex = pool.tokensList.indexOf(pool.address);
     let total = BigNumber.from('0');
     pool.tokens.forEach((token, i) => {
+      // Ignore phantomBpt balance
       if (bptIndex !== i) {
         total = total.add(token.balance);
       }
@@ -78,7 +79,7 @@ export class PoolGraph {
       action,
       children: [],
       marked: false,
-      outputAmt: nodeIndex.toString(),
+      outputReference: nodeIndex.toString(),
       proportionOfParent,
     };
     nodeIndex++;
@@ -90,6 +91,8 @@ export class PoolGraph {
       );
     } else {
       for (let i = 0; i < pool.tokens.length; i++) {
+        // ignore any phantomBpt tokens
+        if (pool.tokens[i].address === pool.address) continue;
         const proportion = BigNumber.from(pool.tokens[i].balance)
           .mul((1e18).toString())
           .div(tokenTotal);
@@ -145,7 +148,7 @@ export class PoolGraph {
       children: [],
       marked: false,
       action,
-      outputAmt: nodeIndex.toString(),
+      outputReference: nodeIndex.toString(),
       proportionOfParent,
     };
     nodeIndex++;
@@ -175,10 +178,10 @@ export class PoolGraph {
         children: [],
         marked: false,
         action: 'input',
-        outputAmt: nodeIndex.toString(),
+        outputReference: nodeIndex.toString(),
         proportionOfParent: proportionOfParent,
       },
-      nodeIndex++,
+      nodeIndex + 1,
     ];
   }
 

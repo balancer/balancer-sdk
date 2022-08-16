@@ -85,7 +85,7 @@ export class Join {
           break;
         default: {
           const inputs = node.children.map((t) => {
-            return t.outputAmt;
+            return t.outputReference;
           });
           console.log(
             'Unsupported action',
@@ -93,7 +93,7 @@ export class Join {
             node.address,
             node.action,
             `Inputs: ${inputs.toString()}`,
-            `OutputRef: ${node.outputAmt}`,
+            `OutputRef: ${node.outputReference}`,
             node.proportionOfParent.toString()
           );
         }
@@ -134,13 +134,13 @@ export class Join {
     const inputAmount = inputProportion
       .mul(amounts[tokenIndex])
       .div((1e18).toString());
-    node.outputAmt = inputAmount.toString();
+    node.outputReference = inputAmount.toString();
     console.log(
       node.type,
       node.address,
       node.action,
       `Inputs: ${inputAmount.toString()}`,
-      `OutputRef: ${node.outputAmt}`,
+      `OutputRef: ${node.outputReference}`,
       node.proportionOfParent.toString()
     );
   }
@@ -153,8 +153,8 @@ export class Join {
       node.address,
       `${node.action}(staticToken: ${
         node.address
-      }, amount: ${childNode.outputAmt.toString()}, outputRef: ${
-        node.outputAmt
+      }, amount: ${childNode.outputReference.toString()}, outputRef: ${
+        node.outputReference
       }) prop: ${node.proportionOfParent.toString()}`
     );
 
@@ -162,16 +162,16 @@ export class Join {
       staticToken: childNode.address,
       sender: this.relayer,
       recipient: this.relayer,
-      amount: childNode.outputAmt,
+      amount: childNode.outputReference,
       fromUnderlying: true,
-      outputReference: Relayer.toChainedReference(node.outputAmt),
+      outputReference: Relayer.toChainedReference(node.outputReference),
     });
     return call;
   }
 
   createBatchSwap(node: Node, expectedOut: string): string {
     // TO DO - Create actual swap call for Relayer multicall
-    const inputAmt = node.children[0].outputAmt;
+    const inputAmt = node.children[0].outputReference;
     const inputToken = node.children[0].address;
     const outputToken = node.address;
     const expectedOutputAmount = expectedOut; // This could be used if joining a pool via a swap, e.g. Linear
@@ -182,7 +182,7 @@ export class Join {
       `${
         node.action
       }(\n  inputAmt: ${inputAmt},\n  inputToken: ${inputToken},\n  pool: ${poolId},\n  outputToken: ${outputToken},\n  outputRef: ${
-        node.outputAmt
+        node.outputReference
       }\n) prop: ${node.proportionOfParent.toString()}`
     );
 
@@ -202,7 +202,7 @@ export class Join {
         poolId: node.id,
         assetInIndex: assets.indexOf(child.address),
         assetOutIndex: assets.indexOf(node.address),
-        amount: Relayer.toChainedReference(child.outputAmt).toString(),
+        amount: Relayer.toChainedReference(child.outputReference).toString(),
         userData: '0x',
       };
     });
@@ -218,7 +218,7 @@ export class Join {
     const outputReferences = [
       {
         index: assets.indexOf(node.address),
-        key: Relayer.toChainedReference(node.outputAmt),
+        key: Relayer.toChainedReference(node.outputReference),
       },
     ];
 
@@ -239,14 +239,14 @@ export class Join {
   createJoinPool(node: Node, minAmountOut: string): string {
     const poolId = node.id;
     const inputTokens = node.children.map((t) => t.address);
-    const inputAmts = node.children.map((t) => t.outputAmt);
+    const inputAmts = node.children.map((t) => t.outputReference);
     console.log(
       node.type,
       node.address,
       `${
         node.action
       }(\n  poolId: ${poolId},\n  inputTokens: ${inputTokens.toString()},\n  maxAmtsIn: ${inputAmts.toString()},\n  minOut: ${minAmountOut}\n  outputRef: ${
-        node.outputAmt
+        node.outputReference
       }\n) prop: ${node.proportionOfParent.toString()}`
     );
 
@@ -255,7 +255,7 @@ export class Join {
     const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
       node.children.map((child) => child.address),
       node.children.map((child) =>
-        Relayer.toChainedReference(child.outputAmt).toString()
+        Relayer.toChainedReference(child.outputReference).toString()
       )
     ) as [string[], string[]];
 
@@ -273,8 +273,10 @@ export class Join {
       poolKind: 0, // TODO: figure out how to define this number
       sender: this.relayer,
       recipient: this.relayer,
-      value: ethNode ? Relayer.toChainedReference(ethNode.outputAmt) : '0', // TODO: validate if ETH logic applies here
-      outputReference: Relayer.toChainedReference(node.outputAmt),
+      value: ethNode
+        ? Relayer.toChainedReference(ethNode.outputReference)
+        : '0', // TODO: validate if ETH logic applies here
+      outputReference: Relayer.toChainedReference(node.outputReference),
       joinPoolRequest: {} as JoinPoolRequest,
       assets: sortedTokens,
       maxAmountsIn: sortedAmounts,

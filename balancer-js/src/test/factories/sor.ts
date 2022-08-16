@@ -80,8 +80,14 @@ const namedTokens: Record<string, any> = {
 };
 
 const subgraphToken = Factory.define<SubgraphToken>(({ transientParams }) => {
-  const { symbol, balance = '1', weight = '1' } = transientParams;
-  const namedToken = namedTokens[symbol];
+  const { symbol, balance = '1', weight = '1', address } = transientParams;
+  let namedToken = namedTokens[symbol];
+  if (!namedToken) {
+    namedToken = {};
+    if (!address) namedToken.address = `address_${symbol}`;
+    else namedToken.address = address;
+    namedToken.decimals = 18;
+  }
   return {
     ...namedToken,
     balance,
