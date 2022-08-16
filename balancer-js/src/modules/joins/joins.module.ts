@@ -74,7 +74,7 @@ export class Join {
           break;
         default: {
           const inputs = node.children.map((t) => {
-            return t.outputAmt;
+            return t.outputReference;
           });
           console.log(
             'Unsupported action',
@@ -82,7 +82,7 @@ export class Join {
             node.address,
             node.action,
             `Inputs: ${inputs.toString()}`,
-            `OutputRef: ${node.outputAmt}`,
+            `OutputRef: ${node.outputReference}`,
             node.proportionOfParent.toString()
           );
         }
@@ -123,13 +123,13 @@ export class Join {
     const inputAmount = inputProportion
       .mul(amounts[tokenIndex])
       .div('1000000000000000000');
-    node.outputAmt = inputAmount.toString();
+    node.outputReference = inputAmount.toString();
     console.log(
       node.type,
       node.address,
       node.action,
       `Inputs: ${inputAmount.toString()}`,
-      `OutputRef: ${node.outputAmt}`,
+      `OutputRef: ${node.outputReference}`,
       node.proportionOfParent.toString()
     );
   }
@@ -137,7 +137,7 @@ export class Join {
   createAaveWrap(node: Node): void {
     // TO DO - Create actual wrap call for Relayer multicall
     const inputs = node.children.map((t) => {
-      return t.outputAmt;
+      return t.outputReference;
     });
     console.log(
       node.type,
@@ -145,14 +145,14 @@ export class Join {
       `${node.action}(staticToken: ${
         node.address
       }, amount: ${inputs?.toString()}, outputRef: ${
-        node.outputAmt
+        node.outputReference
       }) prop: ${node.proportionOfParent.toString()}`
     );
   }
 
   createBatchSwap(node: Node, expectedOut: string): void {
     // TO DO - Create actual swap call for Relayer multicall
-    const inputAmt = node.children[0].outputAmt;
+    const inputAmt = node.children[0].outputReference;
     const inputToken = node.children[0].address;
     const outputToken = node.address;
     const expectedOutputAmount = expectedOut; // This could be used if joining a pool via a swap, e.g. Linear
@@ -163,7 +163,7 @@ export class Join {
       `${
         node.action
       }(\n  inputAmt: ${inputAmt},\n  inputToken: ${inputToken},\n  pool: ${poolId},\n  outputToken: ${outputToken},\n  outputRef: ${
-        node.outputAmt
+        node.outputReference
       }\n) prop: ${node.proportionOfParent.toString()}`
     );
   }
@@ -190,14 +190,14 @@ export class Join {
     */
     const poolId = node.id;
     const inputTokens = node.children.map((t) => t.address);
-    const inputAmts = node.children.map((t) => t.outputAmt);
+    const inputAmts = node.children.map((t) => t.outputReference);
     console.log(
       node.type,
       node.address,
       `${
         node.action
       }(\n  poolId: ${poolId},\n  inputTokens: ${inputTokens.toString()},\n  maxAmtsIn: ${inputAmts.toString()},\n  minOut: ${minAmountOut}\n  outputRef: ${
-        node.outputAmt
+        node.outputReference
       }\n) prop: ${node.proportionOfParent.toString()}`
     );
   }
