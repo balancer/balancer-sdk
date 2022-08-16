@@ -10,7 +10,7 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   baseTokenAddresses: string[];
 
   constructor(tokenAddresses: string[], chainId = 1) {
-    this.baseTokenAddresses = tokenAddresses;
+    this.baseTokenAddresses = tokenAddresses.map((a) => a.toLowerCase());
     this.urlBase = `https://api.coingecko.com/api/v3/simple/token_price/${this.platform(
       chainId
     )}?vs_currencies=usd,eth`;
@@ -25,7 +25,8 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   }
 
   async find(address: string): Promise<Price | undefined> {
-    const unwrapped = unwrapToken(address);
+    const lowercaseAddress = address.toLowerCase();
+    const unwrapped = unwrapToken(lowercaseAddress);
     if (!Object.keys(this.prices).includes(unwrapped)) {
       await this.fetch(unwrapped);
     }

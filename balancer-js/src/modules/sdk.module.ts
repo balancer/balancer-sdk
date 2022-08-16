@@ -1,7 +1,7 @@
 import { BalancerSdkConfig, BalancerNetworkConfig } from '@/types';
-// vettedTokens are used to get the initial token list for coingecko
+// initialCoingeckoList are used to get the initial token list for coingecko
 // TODO: we might want to replace that with what frontend is using
-import vettedTokens from '@/modules/data/token-prices/list.json';
+import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json';
 import { Swaps } from './swaps/swaps.module';
 import { Relayer } from './relayer/relayer.module';
 import { Subgraph } from './subgraph/subgraph.module';
@@ -47,7 +47,8 @@ export class BalancerSDK implements BalancerSDKRoot {
     const blockDayAgo = () => {
       return new BlockNumberRepository(networkConfig.chainId).find('dayAgo');
     };
-    const tokenAddresses = vettedTokens
+    // const tokenAddresses = [];
+    const tokenAddresses = initialCoingeckoList
       .filter((t) => t.chainId == networkConfig.chainId)
       .map((t) => t.address);
     const repositories = {
