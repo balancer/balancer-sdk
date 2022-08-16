@@ -45,7 +45,7 @@ export class Pools {
         }),
       apr: async function () {
         const aprService = new PoolApr(
-          this,
+          data,
           repositories.tokenPrices,
           repositories.tokenMeta,
           repositories.pools,

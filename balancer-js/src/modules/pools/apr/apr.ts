@@ -11,7 +11,7 @@ import type {
 } from '@/types';
 import { BaseFeeDistributor } from '@/modules/data';
 import { ProtocolRevenue } from './protocol-revenue';
-import { PoolTypeConcerns } from '../pool-type-concerns';
+import { Liquidity } from '@/modules/liquidity/liquidity.module';
 
 export interface AprBreakdown {
   swapFees: number;
@@ -129,6 +129,10 @@ export class PoolApr {
         const tokenPrice =
           token.price?.usd || (await this.tokenPrices.find(token.address))?.usd;
         if (!tokenPrice) {
+          const poolToken = await this.pools.find(token.address);
+          if (poolToken) {
+            console.log('Pool token found');
+          }
           throw `No price for ${token.address}`;
         }
         // using floats assuming frontend purposes with low precision needs
@@ -332,19 +336,16 @@ export class PoolApr {
 
   // 🚨 TODO: replace with liquidity calculations once implemention works for all pool types
   private async totalLiquidity(): Promise<string> {
-    if (!this.pool.totalLiquidity) {
-      throw `Pool has no liquidity`;
-    }
+    // if (!this.pool.totalLiquidity) {
+    //   throw `Pool has no liquidity`;
+    // }
 
-    return this.pool.totalLiquidity;
+    // return this.pool.totalLiquidity;
 
-    // console.log(this.pool.poolType, this.pool.tokens);
+    const liquidityService = new Liquidity(this.pools, this.tokenPrices);
+    const liquidity = await liquidityService.getLiquidity(this.pool);
 
-    // const methods = PoolTypeConcerns.from(this.pool.poolType);
-    // const liquidity = methods.liquidity.calcTotal(this.pool.tokens);
-    // console.log(liquidity);
-
-    // return liquidity;
+    return liquidity;
   }
 
   // TODO: move to model class, or even better to a price provider
