@@ -1,33 +1,39 @@
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero, MaxInt256 } from '@ethersproject/constants';
+
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
-import { AssetHelpers } from '@/lib/utils';
 import { WeightedPoolEncoder } from '@/pool-weighted';
-import { ADDRESSES } from '@/test/lib/constants';
 import { JoinPoolRequest } from '@/types';
 import { PoolRepository } from '../data';
 import { PoolGraph, Node } from './graph';
 
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
+import { Network } from '@/lib/constants/network';
+import { networkAddresses } from '@/lib/constants/config';
+import { AssetHelpers } from '@/lib/utils';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 export class Join {
   totalProportions: Record<string, BigNumber> = {};
-  private addresses;
   private relayer;
-  constructor(private pools: PoolRepository, networkId: 1) {
-    this.addresses = ADDRESSES[networkId]; // TODO: add support to other networks
-    this.relayer = this.addresses.BatchRelayer.address; // TODO: check if this is the best approach
+  private wrappedNativeAsset;
+  constructor(private pools: PoolRepository, chainId: number) {
+    if (chainId !== Network.MAINNET) throw new Error('Unsupported network'); // TODO: figure out which networks should be supported
+
+    const { tokens, contracts } = networkAddresses(chainId);
+    this.relayer = contracts.multicall; // TODO: check if this is indeed the relayer contract
+    this.wrappedNativeAsset = tokens.wrappedNativeAsset;
   }
 
   async joinPool(
     poolId: string,
     expectedBPTOut: string,
     tokens: string[],
-    amounts: string[]
+    amounts: string[],
+    userAddress: string
   ): Promise<{
     to: string;
     data: string;
@@ -43,7 +49,8 @@ export class Join {
       poolId,
       expectedBPTOut,
       tokens,
-      amounts
+      amounts,
+      userAddress
     );
 
     const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
@@ -61,24 +68,30 @@ export class Join {
     rootId: string,
     expectedBPTOut: string,
     tokens: string[],
-    amounts: string[]
+    amounts: string[],
+    userAddress: string
   ): string[] {
     const calls: string[] = [];
     this.updateTotalProportions(orderedNodes);
     // Create actions for each Node and return in multicall array
     orderedNodes.forEach((node) => {
-      let expectedOut = '0';
-      if (node.id === rootId) expectedOut = expectedBPTOut;
+      const expectedOut = node.id === rootId ? expectedBPTOut : '0';
+      const sender = node.children.some((child) => child.action === 'input') // first chained action
+        ? userAddress
+        : this.relayer;
+      const recipient = node.id === rootId ? userAddress : this.relayer; // last chained action
       switch (node.action) {
         // TO DO - Add other Relayer supported Unwraps
         case 'wrapAaveDynamicToken':
-          calls.push(this.createAaveWrap(node));
+          calls.push(this.createAaveWrap(node, sender, recipient));
           break;
         case 'batchSwap':
-          calls.push(this.createBatchSwap(node, expectedOut));
+          calls.push(
+            this.createBatchSwap(node, expectedOut, sender, recipient)
+          );
           break;
         case 'joinPool':
-          calls.push(this.createJoinPool(node, expectedOut));
+          calls.push(this.createJoinPool(node, expectedOut, sender, recipient));
           break;
         case 'input':
           this.createMainToken(node, tokens, amounts);
@@ -145,7 +158,7 @@ export class Join {
     );
   }
 
-  createAaveWrap(node: Node): string {
+  createAaveWrap(node: Node, sender: string, recipient: string): string {
     const childNode = node.children[0]; // TODO: check if it's possible to have more than one child at this type of node
 
     console.log(
@@ -160,16 +173,21 @@ export class Join {
 
     const call = Relayer.encodeWrapAaveDynamicToken({
       staticToken: childNode.address,
-      sender: this.relayer,
-      recipient: this.relayer,
+      sender,
+      recipient,
       amount: childNode.outputReference,
-      fromUnderlying: true,
+      fromUnderlying: true, // TODO: check if we should handle the false case as well
       outputReference: Relayer.toChainedReference(node.outputReference),
     });
     return call;
   }
 
-  createBatchSwap(node: Node, expectedOut: string): string {
+  createBatchSwap(
+    node: Node,
+    expectedOut: string,
+    sender: string,
+    recipient: string
+  ): string {
     // TO DO - Create actual swap call for Relayer multicall
     const inputAmt = node.children[0].outputReference;
     const inputToken = node.children[0].address;
@@ -194,7 +212,7 @@ export class Join {
     // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
     const limits: string[] = [
       BigNumber.from(expectedOut).mul(-1).toString(),
-      ...node.children.map(() => MaxInt256.toString()), // TODO: check if it's worth limiting inputs as well
+      ...node.children.map(() => MaxInt256.toString()), // TODO: check if it's worth limiting inputs as well - if yes, how to get the amount from children nodes?
     ];
 
     const swaps: BatchSwapStep[] = node.children.map((child) => {
@@ -207,12 +225,11 @@ export class Join {
       };
     });
 
-    // TODO: consider having a boolean in the node to check for inner/outter nodes in order to set sender/recipient as relayer/userAddress and to/from internalBalance
     const funds: FundManagement = {
-      sender: this.relayer,
-      recipient: this.relayer,
-      fromInternalBalance: false,
-      toInternalBalance: false,
+      sender,
+      recipient,
+      fromInternalBalance: sender === this.relayer,
+      toInternalBalance: recipient === this.relayer,
     };
 
     const outputReferences = [
@@ -236,7 +253,12 @@ export class Join {
     return call;
   }
 
-  createJoinPool(node: Node, minAmountOut: string): string {
+  createJoinPool(
+    node: Node,
+    minAmountOut: string,
+    sender: string,
+    recipient: string
+  ): string {
     const poolId = node.id;
     const inputTokens = node.children.map((t) => t.address);
     const inputAmts = node.children.map((t) => t.outputReference);
@@ -250,7 +272,7 @@ export class Join {
       }\n) prop: ${node.proportionOfParent.toString()}`
     );
 
-    const assetHelpers = new AssetHelpers(this.addresses.WETH.address); // TODO: check if needs to be wrappedNativeAsset instead
+    const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     // sort inputs
     const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
       node.children.map((child) => child.address),
@@ -271,8 +293,8 @@ export class Join {
     const call = Relayer.constructJoinCall({
       poolId: node.id,
       poolKind: 0, // TODO: figure out how to define this number
-      sender: this.relayer,
-      recipient: this.relayer,
+      sender,
+      recipient,
       value: ethNode
         ? Relayer.toChainedReference(ethNode.outputReference)
         : '0', // TODO: validate if ETH logic applies here
@@ -281,7 +303,7 @@ export class Join {
       assets: sortedTokens,
       maxAmountsIn: sortedAmounts,
       userData,
-      fromInternalBalance: true, // TODO: check if inner/outter node logic works here
+      fromInternalBalance: sender === this.relayer,
     });
 
     return call;

@@ -4,11 +4,13 @@ import { StaticPoolRepository } from '../data';
 import { Pool } from '@/types';
 import { Join } from './joins.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
+import { Network } from '@/lib/constants/network';
 
 describe('Generalised Joins', () => {
   context('boostedPool', () => {
     let joinModule: Join;
     let boostedPool: SubgraphPoolBase;
+    const userAddress = '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965'; // TODO: get a valid user address for testing
     before(() => {
       const linearPools = [
         {
@@ -43,13 +45,13 @@ describe('Generalised Joins', () => {
       const pools = [...boostedPoolInfo.linearPools, boostedPool];
       // // Create staticPools provider with above pools
       const poolProvider = new StaticPoolRepository(pools as Pool[]);
-      joinModule = new Join(poolProvider, 1);
+      joinModule = new Join(poolProvider, Network.MAINNET);
     });
 
     it('should throw when pool doesnt exist', async () => {
       let errorMessage = '';
       try {
-        await joinModule.joinPool('thisisntapool', '0', [], []);
+        await joinModule.joinPool('thisisntapool', '0', [], [], userAddress);
       } catch (error) {
         errorMessage = (error as Error).message;
       }
@@ -63,11 +65,12 @@ describe('Generalised Joins', () => {
         '0xdac17f958d2ee523a2206206994597c13d831ec7',
       ];
       const inputAmounts = ['1000000000000000000', '1000000', '1000000'];
-      const root = await joinModule.joinPool(
+      const { to, data } = await joinModule.joinPool(
         boostedPool.id,
         '7777777',
         inputTokens,
-        inputAmounts
+        inputAmounts,
+        userAddress
       );
       // TO DO - Add tests for correct call/action construction?
       // Ideally integration tests will cover actual call data success
