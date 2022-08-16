@@ -5,13 +5,15 @@ import { Pool } from '@/types';
 import { Join } from './joins.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { Network } from '@/lib/constants/network';
+import { formatBytes32String } from 'ethers/lib/utils';
 
 describe('Generalised Joins', () => {
   context('boostedPool', () => {
     let joinModule: Join;
     let boostedPool: SubgraphPoolBase;
-    const userAddress = '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965'; // TODO: get a valid user address for testing
+    let userAddress: string;
     before(() => {
+      userAddress = formatBytes32String('testAccount').slice(0, 42); // TODO: check if it's worth creating a factory for this userAddress
       const linearPools = [
         {
           wrappedSymbol: 'aDAI',

@@ -84,8 +84,7 @@ const subgraphToken = Factory.define<SubgraphToken>(({ transientParams }) => {
   let namedToken = namedTokens[symbol];
   if (!namedToken) {
     namedToken = {};
-    if (!address) namedToken.address = `address_${symbol}`;
-    else namedToken.address = address;
+    namedToken.address = address ?? `address_${symbol}`;
     namedToken.decimals = 18;
   }
   return {

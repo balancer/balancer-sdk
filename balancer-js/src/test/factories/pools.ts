@@ -1,6 +1,8 @@
 import { Factory } from 'fishery';
 import { SubgraphPoolBase, SubgraphToken } from '@balancer-labs/sor';
+
 import { subgraphToken, subgraphPoolBase } from './sor';
+import { formatBytes32String } from '@ethersproject/strings';
 
 type LinearTokens = {
   wrappedSymbol: string;
@@ -34,7 +36,9 @@ const linearPools = Factory.define<LinearPoolInfo, LinearPoolsParams>(
     const linearTokens: SubgraphToken[] = [];
     const linearProportions: string[] = [];
     pools?.forEach((pool) => {
-      const poolAddress = `address-${pool.mainSymbol}_${pool.wrappedSymbol}`;
+      const poolAddress = formatBytes32String(
+        `address-${pool.mainSymbol}_${pool.wrappedSymbol}`
+      ).slice(0, 42);
       const mainToken = subgraphToken
         .transient({
           symbol: pool.mainSymbol,
@@ -51,11 +55,13 @@ const linearPools = Factory.define<LinearPoolInfo, LinearPoolsParams>(
         .transient({
           symbol: `b${pool.mainSymbol}_${pool.wrappedSymbol}`,
           balance: '5192296829399898',
-          address: `address-${pool.mainSymbol}_${pool.wrappedSymbol}`,
+          address: formatBytes32String(
+            `address-${pool.mainSymbol}_${pool.wrappedSymbol}`
+          ).slice(0, 42),
         })
         .build();
       const linearPool = subgraphPoolBase.build({
-        id: `id-${pool.mainSymbol}_${pool.wrappedSymbol}`,
+        id: formatBytes32String(`id-${pool.mainSymbol}_${pool.wrappedSymbol}`),
         address: poolAddress,
         poolType: 'AaveLinear',
         tokens: [mainToken, wrappedToken, phantomBptToken],
@@ -97,6 +103,8 @@ const boostedPool = Factory.define<BoostedPoolInfo, BoostedPoolParams>(
       address = 'address_boosted',
       id = 'id_boosted',
     } = transientParams;
+    const formattedAddress = formatBytes32String(address).slice(0, 42);
+    const formattedId = formatBytes32String(id);
     let linearPoolInfo;
     if (linearPoolsParams)
       linearPoolInfo = linearPools.transient(linearPoolsParams).build();
@@ -105,13 +113,13 @@ const boostedPool = Factory.define<BoostedPoolInfo, BoostedPoolParams>(
       .transient({
         symbol: `bPhantomStable`,
         balance: '5192296829399898',
-        address,
+        address: formattedAddress,
       })
       .build();
 
     const boostedPool = subgraphPoolBase.build({
-      id,
-      address,
+      id: formattedId,
+      address: formattedAddress,
       poolType: 'StablePhantom',
       totalWeight: undefined,
       tokens: [...linearPoolInfo.linearTokens, phantomBptToken],
