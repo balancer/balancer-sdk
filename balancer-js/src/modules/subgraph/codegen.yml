@@ -32,22 +32,6 @@ generates:
         schema: ${BALANCER_GAUGES_URL:https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges}
         plugins:
             - schema-ast
-    src/modules/subgraph/generated/balancer-api.ts:
-        schema: 'src/modules/subgraph/balancer-api/Pools.graphql' 
-        # documents: 'src/modules/subgraph/balancer-api/**/*.graphql'
-        plugins:
-            - typescript
-            - typescript-operations
-            - typescript-graphql-request
-        config:
-            scalars:
-                BigInt: string
-                Bytes: string
-                BigDecimal: string
-    # src/modules/subgraph/generated/balancer-api.graphql:
-    #     schema: ${BALANCER_API_URL:https://xpbjj5txdbhs5iiw4dnatjwttu.appsync-api.ap-southeast-2.amazonaws.com/graphql}
-    #     plugins:
-    #         - schema-ast
 hooks:
     afterOneFileWrite:
         - eslint --fix
