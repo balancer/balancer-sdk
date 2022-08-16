@@ -1,4 +1,7 @@
 import { BalancerSdkConfig, BalancerNetworkConfig } from '@/types';
+// initialCoingeckoList are used to get the initial token list for coingecko
+// TODO: we might want to replace that with what frontend is using
+import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json';
 import { Swaps } from './swaps/swaps.module';
 import { Relayer } from './relayer/relayer.module';
 import { Subgraph } from './subgraph/subgraph.module';
@@ -44,6 +47,10 @@ export class BalancerSDK implements BalancerSDKRoot {
     const blockDayAgo = () => {
       return new BlockNumberRepository(networkConfig.chainId).find('dayAgo');
     };
+    // const tokenAddresses = [];
+    const tokenAddresses = initialCoingeckoList
+      .filter((t) => t.chainId == networkConfig.chainId)
+      .map((t) => t.address);
     const repositories = {
       pools: new PoolsSubgraphRepository(networkConfig.urls.subgraph),
       // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
@@ -52,7 +59,10 @@ export class BalancerSDK implements BalancerSDKRoot {
         networkConfig.urls.subgraph,
         blockDayAgo
       ),
-      tokenPrices: new CoingeckoPriceRepository([], networkConfig.chainId),
+      tokenPrices: new CoingeckoPriceRepository(
+        tokenAddresses,
+        networkConfig.chainId
+      ),
       tokenMeta: new StaticTokenProvider([]),
       liquidityGauges: new LiquidityGaugeSubgraphRPCProvider(
         networkConfig.urls.gaugesSubgraph,
