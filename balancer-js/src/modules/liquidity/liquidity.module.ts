@@ -1,11 +1,8 @@
 import { BigNumber as OldBigNumber } from 'bignumber.js';
-import { parseFixed } from '@/lib/utils/math';
 import { Pool, PoolToken } from '@/types';
 import { PoolRepository } from '../data';
 import { TokenPriceProvider } from '../data';
 import { PoolTypeConcerns } from '../pools/pool-type-concerns';
-
-const TOKEN_WEIGHT_SCALING_FACTOR = 18;
 
 export interface PoolBPTValue {
   address: string;

@@ -6,6 +6,7 @@ import type {
 } from '@/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
+import { Liquidity } from '../liquidity/liquidity.module';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -24,7 +25,14 @@ export class Pools {
     const methods = PoolTypeConcerns.from(data.poolType);
     return {
       ...data,
-      liquidity: async () => methods.liquidity.calcTotal(data.tokens),
+      liquidity: async function () {
+        const liquidityService = new Liquidity(
+          repositories.pools,
+          repositories.tokenPrices
+        );
+
+        return liquidityService.getLiquidity(this);
+      },
       // Different pool types have different input parameters. weighted / stable / linear..
       buildJoin: async (joiner, tokensIn, amountsIn, slippage) =>
         methods.join.buildJoin({
@@ -35,9 +43,9 @@ export class Pools {
           slippage,
           wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
         }),
-      apr: async () => {
+      apr: async function () {
         const aprService = new PoolApr(
-          data,
+          this,
           repositories.tokenPrices,
           repositories.tokenMeta,
           repositories.pools,
