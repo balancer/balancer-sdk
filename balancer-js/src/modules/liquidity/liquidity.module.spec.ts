@@ -3,9 +3,12 @@ import { Pool } from '@/types';
 import { expect } from 'chai';
 import { Liquidity } from './liquidity.module';
 import pools from '@/test/fixtures/liquidityPools.json';
-import tokenPrices from '@/test/fixtures/liquidityTokenPrices.json';
+import tokens from '@/test/fixtures/liquidityTokens.json';
 import { StaticTokenPriceProvider } from '../data';
 import { formatFixed, parseFixed } from '@ethersproject/bignumber';
+import { tokensToTokenPrices } from '@/lib/utils';
+
+const tokenPrices = tokensToTokenPrices(tokens);
 
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
 const poolProvider = new PoolsStaticRepository(pools as Pool[]);
