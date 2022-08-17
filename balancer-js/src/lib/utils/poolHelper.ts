@@ -11,6 +11,9 @@ const AMP_PRECISION = 3; // number of decimals -> precision 1000
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const parsePoolInfo = (pool: Pool) => {
   const parsedTokens = pool.tokens.map((token) => token.address);
+  const parsedDecimals = pool.tokens.map((token) => {
+    return token.decimals ? token.decimals.toString() : undefined;
+  });
   const parsedBalances = pool.tokens.map((token) =>
     parseFixed(token.balance, token.decimals).toString()
   );
@@ -29,6 +32,7 @@ export const parsePoolInfo = (pool: Pool) => {
   const parsedSwapFee = parseFixed(pool.swapFee, 18).toString();
   return {
     parsedTokens,
+    parsedDecimals,
     parsedBalances,
     parsedWeights,
     parsedPriceRates,
