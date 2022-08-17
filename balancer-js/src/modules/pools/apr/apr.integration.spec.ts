@@ -24,7 +24,21 @@ const usdStable =
 const btcEth =
   '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e';
 
+const ethStEthCopy =
+  '0x851523a36690bf267bbfec389c823072d82921a90002000000000000000001ed';
+
 describe('happy case', () => {
+  describe('duplicated pool with an empty gauge', () => {
+    it('has tokenAprs', async () => {
+      const pool = await pools.find(ethStEthCopy);
+      if (pool) {
+        const apr = await pool.apr();
+        console.log(apr);
+        expect(apr.tokenAprs).to.be.greaterThan(1);
+      }
+    }).timeout(120000);
+  });
+
   describe('pool with yield tokens', () => {
     it('has tokenAprs', async () => {
       const pool = await pools.find(ethStEth);
@@ -98,7 +112,7 @@ describe('mainnet pools', () => {
       .sort(
         (a, b) => parseFloat(b.totalLiquidity) - parseFloat(a.totalLiquidity)
       )
-      .slice(0, 10);
+      .slice(0, 30);
   });
 
   it('has APRs', async () => {
