@@ -210,8 +210,13 @@ export interface PoolModel extends Pool {
     expectedBPTOut: string,
     tokens: string[],
     amounts: string[],
-    userAddress: string
-  ) => Promise<{ to: string; data: string }>;
+    userAddress: string,
+    authorisation?: string
+  ) => Promise<{
+    to: string;
+    data: string;
+    decode: (output: string) => string;
+  }>;
   buildJoin: (
     joiner: string,
     tokensIn: string[],

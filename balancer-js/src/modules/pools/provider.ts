@@ -23,13 +23,20 @@ export class PoolsProvider {
     const joinModule = new Join(repo, networkConfig.chainId);
     return {
       ...data,
-      generalisedJoin: async (expectedBPTOut, tokens, amounts, userAddress) =>
+      generalisedJoin: async (
+        expectedBPTOut,
+        tokens,
+        amounts,
+        userAddress,
+        authorisation
+      ) =>
         joinModule.joinPool(
           data.id,
           expectedBPTOut,
           tokens,
           amounts,
-          userAddress
+          userAddress,
+          authorisation
         ),
       liquidity: async () => methods.liquidity.calcTotal(data.tokens),
       buildJoin: (joiner, tokensIn, amountsIn, slippage) =>
