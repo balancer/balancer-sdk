@@ -33,7 +33,8 @@ export class Join {
     expectedBPTOut: string,
     tokens: string[],
     amounts: string[],
-    userAddress: string
+    userAddress: string,
+    authorisation?: string
   ): Promise<{
     to: string;
     data: string;
@@ -51,7 +52,8 @@ export class Join {
       expectedBPTOut,
       tokens,
       amounts,
-      userAddress
+      userAddress,
+      authorisation
     );
 
     const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
@@ -73,9 +75,13 @@ export class Join {
     expectedBPTOut: string,
     tokens: string[],
     amounts: string[],
-    userAddress: string
+    userAddress: string,
+    authorisation?: string
   ): string[] {
     const calls: string[] = [];
+    if (authorisation) {
+      calls.push(this.createSetRelayerApproval(authorisation));
+    }
     this.updateTotalProportions(orderedNodes);
     // Create actions for each Node and return in multicall array
     orderedNodes.forEach((node) => {
@@ -133,6 +139,16 @@ export class Join {
           node.address
         ].add(node.proportionOfParent); // TODO: check with John if this is indeed node.proportionOfParent
     });
+  }
+
+  /**
+   * Uses relayer to approve itself to act in behalf of the user
+   *
+   * @param authorisation Encoded authorisation call.
+   * @returns relayer approval call
+   */
+  createSetRelayerApproval(authorisation: string): string {
+    return Relayer.encodeSetRelayerApproval(this.relayer, true, authorisation);
   }
 
   /*

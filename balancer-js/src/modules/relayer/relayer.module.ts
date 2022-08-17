@@ -34,6 +34,8 @@ import aaveWrappingAbi from '@/lib/abi/AaveWrapping.json';
 
 export * from './types';
 
+const relayerLibrary = new Interface(relayerLibraryAbi);
+
 export class Relayer {
   private readonly swaps: Swaps;
 
@@ -45,6 +47,18 @@ export class Relayer {
     } else {
       this.swaps = new Swaps(swapsOrConfig);
     }
+  }
+
+  static encodeSetRelayerApproval(
+    relayerAdress: string,
+    approved: boolean,
+    authorisation: string
+  ): string {
+    return relayerLibrary.encodeFunctionData('setRelayerApproval', [
+      relayerAdress,
+      approved,
+      authorisation,
+    ]);
   }
 
   static encodeBatchSwap(params: EncodeBatchSwapInput): string {
