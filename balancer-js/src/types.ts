@@ -206,6 +206,12 @@ export interface Pool {
 
 export interface PoolModel extends Pool {
   liquidity: () => Promise<string>;
+  generalisedJoin: (
+    expectedBPTOut: string,
+    tokens: string[],
+    amounts: string[],
+    userAddress: string
+  ) => Promise<{ to: string; data: string }>;
   buildJoin: (
     joiner: string,
     tokensIn: string[],
