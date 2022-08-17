@@ -37,6 +37,7 @@ export class Join {
   ): Promise<{
     to: string;
     data: string;
+    decode: (output: string) => string;
   }> {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
@@ -60,6 +61,9 @@ export class Join {
     return {
       to: this.relayer,
       data: callData,
+      decode: (output) => {
+        return 'todo'; // TODO: add decode function
+      },
     };
   }
 
