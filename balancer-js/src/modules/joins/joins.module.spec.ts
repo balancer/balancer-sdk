@@ -83,7 +83,10 @@ describe('Generalised Joins', () => {
   context('boostedMetaPool', () => {
     let joinModule: Join;
     let boostedPool: SubgraphPoolBase;
+    let userAddress: string;
     before(() => {
+      userAddress = formatAddress('testAccount');
+
       // The boostedMeta will have:
       // - boosted with linearPools[0], linearPools[1], linearPools[2]
       // - a single linearPool, linearPools[3]
@@ -131,7 +134,7 @@ describe('Generalised Joins', () => {
       ];
       // // Create staticPools provider with above pools
       const poolProvider = new StaticPoolRepository(pools as Pool[]);
-      joinModule = new Join(poolProvider);
+      joinModule = new Join(poolProvider, Network.MAINNET);
     });
 
     it('testing', async () => {
@@ -139,7 +142,7 @@ describe('Generalised Joins', () => {
         '0x6b175474e89094c44da98b954eedeac495271d0f',
         '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         '0xdac17f958d2ee523a2206206994597c13d831ec7',
-        'address_STABLE',
+        formatAddress('address_STABLE'),
       ];
       const inputAmounts = [
         '1000000000000000000',
@@ -151,7 +154,8 @@ describe('Generalised Joins', () => {
         boostedPool.id,
         '7777777',
         inputTokens,
-        inputAmounts
+        inputAmounts,
+        userAddress
       );
 
       // TO DO - Add tests for correct call/action construction?
