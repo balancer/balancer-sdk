@@ -18,13 +18,13 @@ const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 export class Join {
   totalProportions: Record<string, BigNumber> = {};
-  private relayer;
+  private relayer: string;
   private wrappedNativeAsset;
   constructor(private pools: PoolRepository, chainId: number) {
-    if (chainId !== Network.MAINNET) throw new Error('Unsupported network'); // TODO: figure out which networks should be supported
+    if (chainId !== Network.GOERLI) throw new Error('Unsupported network'); // TODO: figure out which networks should be supported
 
     const { tokens, contracts } = networkAddresses(chainId);
-    this.relayer = contracts.multicall; // TODO: check if this is indeed the relayer contract
+    this.relayer = contracts.relayer as string;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
   }
 

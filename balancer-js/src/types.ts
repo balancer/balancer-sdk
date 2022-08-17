@@ -35,6 +35,7 @@ export interface ContractAddresses {
   vault: string;
   multicall: string;
   lidoRelayer?: string;
+  relayer?: string;
 }
 
 export interface BalancerNetworkConfig {

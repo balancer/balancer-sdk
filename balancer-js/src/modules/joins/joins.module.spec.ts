@@ -48,7 +48,7 @@ describe('Generalised Joins', () => {
       const pools = [...boostedPoolInfo.linearPools, boostedPool];
       // // Create staticPools provider with above pools
       const poolProvider = new StaticPoolRepository(pools as Pool[]);
-      joinModule = new Join(poolProvider, Network.MAINNET);
+      joinModule = new Join(poolProvider, Network.GOERLI);
     });
 
     it('should throw when pool doesnt exist', async () => {
@@ -134,7 +134,7 @@ describe('Generalised Joins', () => {
       ];
       // // Create staticPools provider with above pools
       const poolProvider = new StaticPoolRepository(pools as Pool[]);
-      joinModule = new Join(poolProvider, Network.MAINNET);
+      joinModule = new Join(poolProvider, Network.GOERLI);
     });
 
     it('testing', async () => {

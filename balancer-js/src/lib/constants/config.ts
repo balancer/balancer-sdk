@@ -124,6 +124,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
+        relayer: '0x7b9B6f094DC2Bd1c12024b0D9CC63d6993Be1888',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
