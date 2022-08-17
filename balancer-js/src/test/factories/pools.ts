@@ -177,8 +177,8 @@ const boostedMetaPool = Factory.define<BoostedMetaPoolInfo, BoostedPoolParams>(
     const boostedPoolInfo = boostedPool
       .transient({
         linearPoolsParams: linearPoolsParams,
-        id: 'id_boosted_child',
-        address: 'address_boosted_child',
+        id: formatId('id_boosted_child'),
+        address: formatAddress('address_boosted_child'),
       })
       .build();
 
@@ -187,7 +187,7 @@ const boostedMetaPool = Factory.define<BoostedMetaPoolInfo, BoostedPoolParams>(
       .transient({
         symbol: `bPhantomStableBoostedMeta`,
         balance: '5192296829399898',
-        address,
+        address: formatAddress(address),
       })
       .build();
 
@@ -208,8 +208,8 @@ const boostedMetaPool = Factory.define<BoostedMetaPoolInfo, BoostedPoolParams>(
     );
 
     const boostedPoolRoot = subgraphPoolBase.build({
-      id,
-      address,
+      id: formatId(id),
+      address: formatAddress(address),
       poolType: 'StablePhantom',
       totalWeight: undefined,
       tokens: [
