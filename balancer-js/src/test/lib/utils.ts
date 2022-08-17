@@ -1,12 +1,14 @@
-import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';
-import { AddressZero } from '@ethersproject/constants';
-import { balancerVault } from '@/lib/constants/config';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
+import { AddressZero } from '@ethersproject/constants';
+import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
+import { formatBytes32String } from '@ethersproject/strings';
+
+import { PoolModel, BalancerError, BalancerErrorCode } from '@/.';
+import { balancerVault } from '@/lib/constants/config';
 import { ERC20 } from '@/modules/contracts/ERC20';
 import { PoolsProvider } from '@/modules/pools/provider';
-import { PoolModel, BalancerError, BalancerErrorCode } from '@/.';
 
 /**
  * Setup local fork with approved token balance for a given account
@@ -127,4 +129,12 @@ export const getBalances = async (
     }
   }
   return Promise.all(balances);
+};
+
+export const formatAddress = (text: string): string => {
+  return formatBytes32String(text).slice(0, 42);
+};
+
+export const formatId = (text: string): string => {
+  return formatBytes32String(text);
 };

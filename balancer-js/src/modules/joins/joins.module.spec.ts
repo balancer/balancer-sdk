@@ -5,7 +5,7 @@ import { Pool } from '@/types';
 import { Join } from './joins.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { Network } from '@/lib/constants/network';
-import { formatBytes32String } from 'ethers/lib/utils';
+import { formatAddress } from '@/test/lib/utils';
 
 describe('Generalised Joins', () => {
   context('boostedPool', () => {
@@ -13,7 +13,7 @@ describe('Generalised Joins', () => {
     let boostedPool: SubgraphPoolBase;
     let userAddress: string;
     before(() => {
-      userAddress = formatBytes32String('testAccount').slice(0, 42); // TODO: check if it's worth creating a factory for this userAddress
+      userAddress = formatAddress('testAccount');
       const linearPools = [
         {
           wrappedSymbol: 'aDAI',
