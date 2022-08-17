@@ -209,7 +209,11 @@ export class PoolApr {
   async rewardsApr(): Promise<number> {
     // Data resolving
     const gauge = await this.liquidityGauges.findBy('poolId', this.pool.id);
-    if (!gauge || !gauge.rewardTokens) {
+    if (
+      !gauge ||
+      !gauge.rewardTokens ||
+      Object.keys(gauge.rewardTokens).length < 1
+    ) {
       return 0;
     }
 
@@ -240,6 +244,10 @@ export class PoolApr {
     // Get the gauge totalSupplyUsd
     const bptPriceUsd = await this.bptPrice();
     const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
+
+    if (totalSupplyUsd == 0) {
+      return 0;
+    }
 
     let total = 0;
     for await (const reward of Object.values(rewards)) {
