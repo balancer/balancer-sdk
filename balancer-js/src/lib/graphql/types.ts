@@ -19,7 +19,7 @@ export interface GraphQLArgs {
   orderBy?: string;
   orderDirection?: string;
   block?: {
-    number: number;
+    number?: number;
   };
   where?: Record<string, GraphQLFilter>;
 }

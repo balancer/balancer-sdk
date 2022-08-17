@@ -1,4 +1,4 @@
-import { Findable } from '../types';
+import { Findable, Searchable } from '../types';
 import {
   createSubgraphClient,
   SubgraphClient,
@@ -20,11 +20,22 @@ import { GraphQLQuery, Pool, PoolType } from '@/types';
  *
  * Balancer's subgraph URL: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
  */
-export class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute> {
+export class PoolsSubgraphRepository
+  implements Findable<Pool, PoolAttribute>, Searchable<Pool>
+{
   private client: SubgraphClient;
   public pools: SubgraphPool[] = [];
 
-  constructor(url: string) {
+  /**
+   * Repository with optional lazy loaded blockHeight
+   *
+   * @param url subgraph URL
+   * @param blockHeight lazy loading blockHeigh resolver
+   */
+  constructor(
+    url: string,
+    private blockHeight?: () => Promise<number | undefined>
+  ) {
     this.client = createSubgraphClient(url);
   }
 
@@ -32,6 +43,9 @@ export class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute> {
     const defaultArgs: GraphQLArgs = {
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
+      block: this.blockHeight
+        ? { number: await this.blockHeight() }
+        : undefined,
       where: {
         swapEnabled: Op.Equals(true),
         totalShares: Op.GreaterThan(0),
@@ -71,22 +85,26 @@ export class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute> {
     return undefined;
   }
 
-  // async where(filters: Map<PoolAttribute, string>): Promise<Pool[]> {
-  //   if (this.pools.length == 0) {
-  //     await this.fetch();
-  //   }
-  //   const applyFilters = (pool: SubgraphPool) => {
+  async all(): Promise<Pool[]> {
+    if (this.pools.length == 0) {
+      await this.fetch();
+    }
 
-  //   }
+    return this.pools.map(this.mapType);
+  }
 
-  //   const pools = this.pools.filter((pool) => {
-  //     filters.
-  //   });
-  // }
+  async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
+    if (this.pools.length == 0) {
+      await this.fetch();
+    }
+
+    return (await this.all()).filter(filter);
+  }
 
   private mapType(subgraphPool: SubgraphPool): Pool {
     return {
       id: subgraphPool.id,
+      name: subgraphPool.name || '',
       address: subgraphPool.address,
       poolType: subgraphPool.poolType as PoolType,
       swapFee: subgraphPool.swapFee,
@@ -106,28 +124,8 @@ export class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute> {
       // unwrappedTokens: subgraphPool.unwrappedTokens,
       // isNew: subgraphPool.isNew,
       // volumeSnapshot: subgraphPool.volumeSnapshot,
-      feesSnapshot: this.last24hFees(subgraphPool.snapshots), // Approximated last 24h fees
+      // feesSnapshot: subgraphPool.???, // Approximated last 24h fees
       // boost: subgraphPool.boost,
     };
-  }
-
-  /**
-   * Helper function to extract last 24h of fees from last two subgraph snapshots.
-   */
-  private last24hFees(
-    snapshots: SubgraphPool['snapshots']
-  ): string | undefined {
-    if (
-      !snapshots ||
-      snapshots.length < 2 ||
-      Math.floor(Date.now() / 1000) - snapshots[0].timestamp > 86400
-    ) {
-      return undefined;
-    }
-
-    const fees =
-      parseFloat(snapshots[0].swapFees) - parseFloat(snapshots[1].swapFees);
-
-    return fees.toString();
   }
 }

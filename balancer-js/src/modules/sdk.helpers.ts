@@ -5,6 +5,7 @@ import {
   BalancerSdkConfig,
 } from '@/types';
 import {
+  BlockNumberRepository,
   CoingeckoPriceRepository,
   LiquidityGaugeSubgraphRPCProvider,
   PoolsSubgraphRepository,
@@ -14,6 +15,7 @@ import {
   TokenYieldsRepository,
 } from './data';
 import { Sor } from './sor/sor.module';
+import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json';
 
 export function getNetworkConfig(
   config: BalancerSdkConfig
@@ -43,10 +45,24 @@ export function getDataRepositories(
   config: BalancerSdkConfig
 ): BalancerDataRepositories {
   const networkConfig = getNetworkConfig(config);
+  const blockDayAgo = () => {
+    return new BlockNumberRepository(networkConfig.chainId).find('dayAgo');
+  };
+  // const tokenAddresses = [];
+  const tokenAddresses = initialCoingeckoList
+    .filter((t) => t.chainId == networkConfig.chainId)
+    .map((t) => t.address);
   const sor = new Sor(config);
   const repositories = {
     pools: new PoolsSubgraphRepository(networkConfig.urls.subgraph),
-    tokenPrices: new CoingeckoPriceRepository([], networkConfig.chainId),
+    yesterdaysPools: new PoolsSubgraphRepository(
+      networkConfig.urls.subgraph,
+      blockDayAgo
+    ),
+    tokenPrices: new CoingeckoPriceRepository(
+      tokenAddresses,
+      networkConfig.chainId
+    ),
     tokenMeta: new StaticTokenProvider([]),
     liquidityGauges: new LiquidityGaugeSubgraphRPCProvider(
       networkConfig.urls.gaugesSubgraph,
@@ -68,5 +84,6 @@ export function getDataRepositories(
     ),
     tokenYields: new TokenYieldsRepository(),
   };
+
   return repositories;
 }

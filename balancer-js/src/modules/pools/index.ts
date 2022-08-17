@@ -49,6 +49,7 @@ export class Pools {
           repositories.tokenPrices,
           repositories.tokenMeta,
           repositories.pools,
+          repositories.yesterdaysPools,
           repositories.liquidityGauges,
           repositories.feeDistributor,
           repositories.feeCollector,
@@ -82,5 +83,23 @@ export class Pools {
     } else {
       throw `search by ${param} not implemented`;
     }
+  }
+
+  async all(): Promise<PoolModel[]> {
+    const list = await this.repositories.pools.all();
+    if (!list) return [];
+
+    return list.map((data) =>
+      Pools.wrap(data, this.networkConfig, this.repositories)
+    );
+  }
+
+  async where(filter: (pool: Pool) => boolean): Promise<PoolModel[]> {
+    const list = await this.repositories.pools.where(filter);
+    if (!list) return [];
+
+    return list.map((data) =>
+      Pools.wrap(data, this.networkConfig, this.repositories)
+    );
   }
 }
