@@ -29,7 +29,6 @@ import {
 } from '../swaps/types';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 
-import aaveWrappingAbi from '@/lib/abi/AaveWrapping.json';
 import relayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
 
 export * from './types';
@@ -106,9 +105,7 @@ export class Relayer {
   static encodeWrapAaveDynamicToken(
     params: EncodeWrapAaveDynamicTokenInput
   ): string {
-    const aaveWrappingLibrary = new Interface(aaveWrappingAbi);
-
-    return aaveWrappingLibrary.encodeFunctionData('wrapAaveDynamicToken', [
+    return relayerLibrary.encodeFunctionData('wrapAaveDynamicToken', [
       params.staticToken,
       params.sender,
       params.recipient,
@@ -121,9 +118,7 @@ export class Relayer {
   static encodeUnwrapAaveStaticToken(
     params: EncodeUnwrapAaveStaticTokenInput
   ): string {
-    const aaveWrappingLibrary = new Interface(aaveWrappingAbi);
-
-    return aaveWrappingLibrary.encodeFunctionData('unwrapAaveStaticToken', [
+    return relayerLibrary.encodeFunctionData('unwrapAaveStaticToken', [
       params.staticToken,
       params.sender,
       params.recipient,
