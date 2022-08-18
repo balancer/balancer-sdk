@@ -26,7 +26,7 @@ describe('contracts module', () => {
       );
       const wethAddress = await vaultContract.WETH();
       expect(wethAddress).to.eq('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2');
-    });
+    }).timeout(20000);
 
     it('instantiate via SDK', async () => {
       const balancer = new BalancerSDK(sdkConfig);

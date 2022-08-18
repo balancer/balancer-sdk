@@ -79,7 +79,7 @@ jobs:
       - name: Compile
         run: yarn build
       - name: Run node in background for integration tests
-        run: npx hardhat node --hostname 127.0.0.1 &
+        run: npx hardhat node --hostname 127.0.0.1 --fork ${{ secrets.ALCHEMY_URL }} --fork-block-number 15315000 &
       - name: Test
         run: yarn test
 
