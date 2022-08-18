@@ -1,13 +1,14 @@
+import dotenv from 'dotenv';
 import { expect } from 'chai';
 import MockDate from 'mockdate';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { PoolModel } from '@/types';
 
+dotenv.config();
+
 const sdk = new BalancerSDK({
   network: 1,
-  // rpcUrl: 'http://127.0.0.1:8545',
-  rpcUrl:
-    'https://eth-mainnet.alchemyapi.io/v2/7gYoDJEw6-QyVP5hd2UfZyelzDIDemGz',
+  rpcUrl: process.env.RPC_URL || 'http://127.0.0.1:8545',
 });
 
 const { pools } = sdk;
@@ -33,7 +34,6 @@ describe('happy case', () => {
       const pool = await pools.find(ethStEthCopy);
       if (pool) {
         const apr = await pool.apr();
-        console.log(apr);
         expect(apr.tokenAprs).to.be.greaterThan(1);
       }
     }).timeout(120000);

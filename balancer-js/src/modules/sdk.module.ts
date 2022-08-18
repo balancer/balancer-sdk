@@ -1,7 +1,4 @@
 import { BalancerSdkConfig, BalancerNetworkConfig } from '@/types';
-// initialCoingeckoList are used to get the initial token list for coingecko
-// TODO: we might want to replace that with what frontend is using
-import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json';
 import { Swaps } from './swaps/swaps.module';
 import { Relayer } from './relayer/relayer.module';
 import { Subgraph } from './subgraph/subgraph.module';
