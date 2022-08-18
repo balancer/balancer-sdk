@@ -1,62 +1,54 @@
 import type {
   BalancerNetworkConfig,
   BalancerDataRepositories,
+  Findable,
+  Searchable,
   Pool,
-  PoolModel,
+  PoolWithMethods,
 } from '@/types';
+import { JoinPoolAttributes } from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
-import { PoolApr } from './apr/apr';
-import { Liquidity } from '../liquidity/liquidity.module';
+import { ModelProvider } from './model-provider';
 
 /**
  * Controller / use-case layer for interacting with pools data.
  */
-export class Pools {
+export class Pools implements Findable<PoolWithMethods> {
+  liveModelProvider: ModelProvider;
+
   constructor(
     private networkConfig: BalancerNetworkConfig,
-    private repositories: BalancerDataRepositories
-  ) {}
+    repositories: BalancerDataRepositories
+  ) {
+    this.liveModelProvider = new ModelProvider(repositories);
+  }
+
+  dataSource(): Findable<Pool> & Searchable<Pool> {
+    // TODO: Add API data repository to data and use liveModelProvider as fallback
+    return this.liveModelProvider;
+  }
 
   static wrap(
-    data: Pool,
-    networkConfig: BalancerNetworkConfig,
-    repositories: BalancerDataRepositories
-  ): PoolModel {
-    const methods = PoolTypeConcerns.from(data.poolType);
+    pool: Pool,
+    networkConfig: BalancerNetworkConfig
+  ): PoolWithMethods {
+    const methods = PoolTypeConcerns.from(pool.poolType);
     return {
-      ...data,
-      liquidity: async function () {
-        const liquidityService = new Liquidity(
-          repositories.pools,
-          repositories.tokenPrices
-        );
-
-        return liquidityService.getLiquidity(this);
-      },
-      // Different pool types have different input parameters. weighted / stable / linear..
-      buildJoin: async (joiner, tokensIn, amountsIn, slippage) =>
-        methods.join.buildJoin({
+      ...pool,
+      buildJoin: async (
+        joiner: string,
+        tokensIn: string[],
+        amountsIn: string[],
+        slippage: string
+      ): Promise<JoinPoolAttributes> => {
+        return methods.join.buildJoin({
           joiner,
-          pool: data,
+          pool,
           tokensIn,
           amountsIn,
           slippage,
           wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
-        }),
-      apr: async function () {
-        const aprService = new PoolApr(
-          data,
-          repositories.tokenPrices,
-          repositories.tokenMeta,
-          repositories.pools,
-          repositories.yesterdaysPools,
-          repositories.liquidityGauges,
-          repositories.feeDistributor,
-          repositories.feeCollector,
-          repositories.tokenYields
-        );
-
-        return aprService.apr();
+        });
       },
       // TODO: spotPrice fails, because it needs a subgraphType,
       // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
@@ -65,41 +57,40 @@ export class Pools {
     };
   }
 
-  async find(id: string): Promise<PoolModel | undefined> {
-    const data = await this.repositories.pools.find(id);
+  async find(id: string): Promise<PoolWithMethods | undefined> {
+    const data = await this.dataSource().find(id);
     if (!data) return;
 
-    return Pools.wrap(data, this.networkConfig, this.repositories);
+    return Pools.wrap(data, this.networkConfig);
   }
 
-  async findBy(param: string, value: string): Promise<PoolModel | undefined> {
+  async findBy(
+    param: string,
+    value: string
+  ): Promise<PoolWithMethods | undefined> {
     if (param == 'id') {
       return this.find(value);
     } else if (param == 'address') {
-      const data = await this.repositories.pools.findBy('address', value);
+      const data = await this.dataSource().findBy('address', value);
       if (!data) return;
 
-      return Pools.wrap(data, this.networkConfig, this.repositories);
+      return Pools.wrap(data, this.networkConfig);
     } else {
       throw `search by ${param} not implemented`;
     }
   }
 
-  async all(): Promise<PoolModel[]> {
-    const list = await this.repositories.pools.all();
+  async all(): Promise<PoolWithMethods[]> {
+    const list = await this.dataSource().all();
     if (!list) return [];
 
-    return list.map((data) =>
-      Pools.wrap(data, this.networkConfig, this.repositories)
-    );
+    return list.map((data: Pool) => Pools.wrap(data, this.networkConfig));
   }
 
-  async where(filter: (pool: Pool) => boolean): Promise<PoolModel[]> {
-    const list = await this.repositories.pools.where(filter);
+  async where(filter: (pool: Pool) => boolean): Promise<PoolWithMethods[]> {
+    const list = await this.dataSource().where(filter);
     if (!list) return [];
 
-    return list.map((data) =>
-      Pools.wrap(data, this.networkConfig, this.repositories)
-    );
+    return list.map((data: Pool) => Pools.wrap(data, this.networkConfig));
   }
 }
