@@ -23,7 +23,7 @@ const ids = [
 ids.forEach(async (id) => {
   const pool = await pools.find(id);
   if (pool) {
-    const apr = await pool.apr();
+    const apr = await pool.fetchApr();
     console.log(id, apr);
   } else {
     console.log(`pool ${id} not found`);

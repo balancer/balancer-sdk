@@ -226,6 +226,7 @@ export interface Pool {
   feesSnapshot?: string;
   boost?: string;
   symbol?: string;
+  apr?: AprBreakdown;
 }
 
 export interface PoolModel extends Pool {
@@ -236,7 +237,7 @@ export interface PoolModel extends Pool {
     amountsIn: string[],
     slippage: string
   ) => Promise<JoinPoolAttributes>;
-  apr: () => Promise<AprBreakdown>;
+  fetchApr: () => Promise<AprBreakdown>;
 }
 
 export interface GraphQLQuery {

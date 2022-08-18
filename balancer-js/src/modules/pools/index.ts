@@ -43,7 +43,7 @@ export class Pools {
           slippage,
           wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
         }),
-      apr: async function () {
+      fetchApr: async function () {
         const aprService = new PoolApr(
           this,
           repositories.tokenPrices,
@@ -56,7 +56,8 @@ export class Pools {
           repositories.tokenYields
         );
 
-        return aprService.apr();
+        const apr = await aprService.apr();
+        return (this.apr = apr);
       },
       // TODO: spotPrice fails, because it needs a subgraphType,
       // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
