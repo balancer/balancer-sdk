@@ -299,19 +299,19 @@ export const ADDRESSES = {
       address: '0xe0c9275e44ea80ef17579d33c55136b7da269aeb',
       decimals: 6,
       symbol: 'USDC',
-      slot: 9,
+      slot: 0,
     },
     USDT: {
       address: '0x1f1f156e0317167c11aa412e3d1435ea29dc3cce',
       decimals: 6,
       symbol: 'USDT',
-      slot: 2,
+      slot: 0,
     },
     DAI: {
       address: '0x8c9e6c40d3402480ace624730524facc5482798c',
       decimals: 18,
       symbol: 'DAI',
-      slot: 2,
+      slot: 0,
     },
     bbausd: {
       address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
