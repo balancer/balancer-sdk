@@ -20,7 +20,10 @@ export interface AprBreakdown {
     min: number;
     max: number;
   };
-  rewardsApr: number;
+  rewardsApr: {
+    total: number;
+    breakdown: { [address: string]: number };
+  };
   protocolApr: number;
   min: number;
   max: number;
@@ -206,7 +209,7 @@ export class PoolApr {
    *
    * @returns APR [bsp] from token rewards.
    */
-  async rewardsApr(): Promise<number> {
+  async rewardsApr(): Promise<AprBreakdown['rewardsApr']> {
     // Data resolving
     const gauge = await this.liquidityGauges.findBy('poolId', this.pool.id);
     if (
@@ -214,7 +217,7 @@ export class PoolApr {
       !gauge.rewardTokens ||
       Object.keys(gauge.rewardTokens).length < 1
     ) {
-      return 0;
+      return { total: 0, breakdown: {} };
     }
 
     const rewardTokenAddresses = Object.keys(gauge.rewardTokens);
@@ -224,7 +227,10 @@ export class PoolApr {
       /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */
       const data = gauge!.rewardTokens![tAddress];
       if (data.period_finish.toNumber() < Date.now() / 1000) {
-        return 0;
+        return {
+          address: tAddress,
+          value: 0,
+        };
       } else {
         const yearlyReward = data.rate.mul(86400).mul(365);
         const price = await this.tokenPrices.find(tAddress);
@@ -234,7 +240,10 @@ export class PoolApr {
           const yearlyRewardUsd =
             parseFloat(formatUnits(yearlyReward, decimals)) *
             parseFloat(price.usd);
-          return yearlyRewardUsd;
+          return {
+            address: tAddress,
+            value: yearlyRewardUsd,
+          };
         } else {
           throw `No USD price for ${tAddress}`;
         }
@@ -246,15 +255,22 @@ export class PoolApr {
     const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
 
     if (totalSupplyUsd == 0) {
-      return 0;
+      return { total: 0, breakdown: {} };
     }
+
+    const rewardTokensBreakdown: Record<string, number> = {};
 
     let total = 0;
     for await (const reward of Object.values(rewards)) {
-      total += reward / totalSupplyUsd;
+      const rewardValue = reward.value / totalSupplyUsd;
+      total += rewardValue;
+      rewardTokensBreakdown[reward.address] = reward.value;
     }
 
-    return Math.round(10000 * total);
+    return {
+      total: Math.round(10000 * total),
+      breakdown: rewardTokensBreakdown,
+    };
   }
 
   /**
@@ -319,8 +335,10 @@ export class PoolApr {
       },
       rewardsApr,
       protocolApr,
-      min: swapFees + tokenAprs + rewardsApr + protocolApr + minStakingApr,
-      max: swapFees + tokenAprs + rewardsApr + protocolApr + maxStakingApr,
+      min:
+        swapFees + tokenAprs + rewardsApr.total + protocolApr + minStakingApr,
+      max:
+        swapFees + tokenAprs + rewardsApr.total + protocolApr + maxStakingApr,
     };
   }
 
