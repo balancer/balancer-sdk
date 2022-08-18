@@ -230,17 +230,28 @@ export interface Pool {
   symbol?: string;
   swapEnabled: boolean;
   amp?: string;
+  apr?: AprBreakdown;
+  liquidity?: string;
 }
 
+/**
+ * Live data controller used for caching or as a fallback for missing cached data
+ */
 export interface PoolModel extends Pool {
-  liquidity: () => Promise<string>;
+  calcLiquidity: () => Promise<string>;
+  fetchApr: () => Promise<AprBreakdown>;
+}
+
+/**
+ * Pool use-cases / controller layer
+ */
+export interface PoolWithMethods extends Pool {
   buildJoin: (
     joiner: string,
     tokensIn: string[],
     amountsIn: string[],
     slippage: string
-<<<<<<< HEAD
-  ) => JoinPoolAttributes;
+  ) => Promise<JoinPoolAttributes>;
   calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
   buildExitExactBPTIn: (
     exiter: string,
@@ -255,8 +266,5 @@ export interface PoolModel extends Pool {
     amountsOut: string[],
     slippage: string
   ) => ExitPoolAttributes;
-=======
-  ) => Promise<JoinPoolAttributes>;
   apr: () => Promise<AprBreakdown>;
->>>>>>> 88a64ca (pools module)
 }
