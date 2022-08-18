@@ -6,6 +6,7 @@ import {
   LiquidityGauge,
   Pool,
   Price,
+  Searchable,
   Token,
 } from '@/types';
 
@@ -16,9 +17,13 @@ export const findable = <T, P = string>(
   findBy: (param: P, value: string) => Promise.resolve(map.get(value)),
 });
 
-export const stubbed = <T, P = string>(value: unknown): Findable<T, P> => ({
+export const stubbed = <T, P = string>(
+  value: unknown
+): Findable<T, P> & Searchable<T> => ({
   find: (id: string) => Promise.resolve(value as T),
   findBy: (param: P, _: string) => Promise.resolve(value as T),
+  all: () => Promise.resolve([value as T]),
+  where: (filters: (arg: T) => boolean) => Promise.resolve([value as T]),
 });
 
 interface IdentifiableArray {
@@ -35,6 +40,7 @@ export const array2map = <T>(array: T[]): Map<string, T> => {
 
 export const repositores = ({
   pools = stubbed<Pool>(undefined),
+  yesterdaysPools = stubbed<Pool>(undefined),
   tokenPrices = stubbed<Price>({ usd: '1' }),
   tokenMeta = stubbed<Token>({ decimals: 18 }),
   liquidityGauges = stubbed<LiquidityGauge>(undefined),
@@ -52,6 +58,7 @@ export const repositores = ({
   tokenYields = stubbed<number>(100),
 }): BalancerDataRepositories => ({
   pools,
+  yesterdaysPools,
   tokenPrices,
   tokenMeta,
   liquidityGauges,
