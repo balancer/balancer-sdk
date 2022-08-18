@@ -13,22 +13,28 @@ describe('Generalised Joins', () => {
       // The boostedPool will contain these Linear pools.
       const linearPools = [
         {
-          wrappedSymbol: 'aDAI',
-          mainSymbol: 'DAI',
+          tokens: {
+            wrappedSymbol: 'aDAI',
+            mainSymbol: 'DAI',
+          },
           balance: '1000000',
-          proportion: '0.5',
+          parentProportion: '0.5',
         },
         {
-          wrappedSymbol: 'aUSDC',
-          mainSymbol: 'USDC',
+          tokens: {
+            wrappedSymbol: 'aUSDC',
+            mainSymbol: 'USDC',
+          },
           balance: '500000',
-          proportion: '0.25',
+          parentProportion: '0.25',
         },
         {
-          wrappedSymbol: 'aUSDT',
-          mainSymbol: 'USDT',
+          tokens: {
+            wrappedSymbol: 'aUSDT',
+            mainSymbol: 'USDT',
+          },
           balance: '500000',
-          proportion: '0.25',
+          parentProportion: '0.25',
         },
       ];
       const boostedPoolInfo = factories.boostedPool
@@ -85,28 +91,36 @@ describe('Generalised Joins', () => {
       // Note proportions are referenced to parent nodes
       const linearPools = [
         {
-          wrappedSymbol: 'aDAI',
-          mainSymbol: 'DAI',
+          tokens: {
+            wrappedSymbol: 'aDAI',
+            mainSymbol: 'DAI',
+          },
           balance: '1000000',
-          proportion: '0.25',
+          parentProportion: '0.25',
         },
         {
-          wrappedSymbol: 'aUSDC',
-          mainSymbol: 'USDC',
+          tokens: {
+            wrappedSymbol: 'aUSDC',
+            mainSymbol: 'USDC',
+          },
           balance: '500000',
-          proportion: '0.125',
+          parentProportion: '0.125',
         },
         {
-          wrappedSymbol: 'aUSDT',
-          mainSymbol: 'USDT',
+          tokens: {
+            wrappedSymbol: 'aUSDT',
+            mainSymbol: 'USDT',
+          },
           balance: '500000',
-          proportion: '0.125',
+          parentProportion: '0.125',
         },
         {
-          wrappedSymbol: 'aSTABLE',
-          mainSymbol: 'STABLE',
+          tokens: {
+            wrappedSymbol: 'aSTABLE',
+            mainSymbol: 'STABLE',
+          },
           balance: '500000',
-          proportion: '0.5',
+          parentProportion: '0.5',
         },
       ];
       const boostedPoolInfo = factories.boostedMetaPool
