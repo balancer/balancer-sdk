@@ -12,10 +12,14 @@ import type {
 import { BaseFeeDistributor } from '@/modules/data';
 import { ProtocolRevenue } from './protocol-revenue';
 import { Liquidity } from '@/modules/liquidity/liquidity.module';
+import { identity, zipObject, pickBy } from 'lodash';
 
 export interface AprBreakdown {
   swapFees: number;
-  tokenAprs: number;
+  tokenAprs: {
+    total: number;
+    breakdown: { [address: string]: number };
+  };
   stakingApr: {
     min: number;
     max: number;
@@ -79,9 +83,12 @@ export class PoolApr {
    *
    * @returns APR [bsp] from tokens contained in the pool
    */
-  async tokenAprs(): Promise<number> {
+  async tokenAprs(): Promise<AprBreakdown['tokenAprs']> {
     if (!this.pool.tokens) {
-      return 0;
+      return {
+        total: 0,
+        breakdown: {},
+      };
     }
 
     const totalLiquidity = await this.totalLiquidity();
@@ -154,8 +161,18 @@ export class PoolApr {
 
     // sum them up to get pool APRs
     const apr = weightedAprs.reduce((sum, apr) => sum + apr, 0);
+    const breakdown = pickBy(
+      zipObject(
+        bptFreeTokens.map((t) => t.address),
+        weightedAprs
+      ),
+      identity
+    );
 
-    return apr;
+    return {
+      total: apr,
+      breakdown,
+    };
   }
 
   /**
@@ -336,9 +353,17 @@ export class PoolApr {
       rewardsApr,
       protocolApr,
       min:
-        swapFees + tokenAprs + rewardsApr.total + protocolApr + minStakingApr,
+        swapFees +
+        tokenAprs.total +
+        rewardsApr.total +
+        protocolApr +
+        minStakingApr,
       max:
-        swapFees + tokenAprs + rewardsApr.total + protocolApr + maxStakingApr,
+        swapFees +
+        tokenAprs.total +
+        rewardsApr.total +
+        protocolApr +
+        maxStakingApr,
     };
   }
 
