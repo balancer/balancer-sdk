@@ -53,7 +53,11 @@ export async function getOnChainBalances(
     multiPool.call(`${pool.id}.totalSupply`, pool.address, 'totalSupply');
 
     // Pools with pre minted BPT
-    if (pool.poolType.includes('Linear') || pool.poolType === 'StablePhantom') {
+    if (
+      pool.poolType.includes('Linear') ||
+      pool.poolType === 'StablePhantom' ||
+      pool.poolType === 'ComposableStable'
+    ) {
       multiPool.call(
         `${pool.id}.virtualSupply`,
         pool.address,
@@ -80,7 +84,8 @@ export async function getOnChainBalances(
     } else if (
       pool.poolType === 'Stable' ||
       pool.poolType === 'MetaStable' ||
-      pool.poolType === 'StablePhantom'
+      pool.poolType === 'StablePhantom' ||
+      pool.poolType === 'ComposableStable'
     ) {
       // MetaStable & StablePhantom is the same as Stable for multicall purposes
       multiPool.call(
@@ -160,7 +165,8 @@ export async function getOnChainBalances(
       if (
         subgraphPools[index].poolType === 'Stable' ||
         subgraphPools[index].poolType === 'MetaStable' ||
-        subgraphPools[index].poolType === 'StablePhantom'
+        subgraphPools[index].poolType === 'StablePhantom' ||
+        subgraphPools[index].poolType === 'ComposableStable'
       ) {
         if (!onchainData.amp) {
           console.error(`Stable Pool Missing Amp: ${poolId}`);
@@ -218,7 +224,8 @@ export async function getOnChainBalances(
       // Pools with pre minted BPT
       if (
         subgraphPools[index].poolType.includes('Linear') ||
-        subgraphPools[index].poolType === 'StablePhantom'
+        subgraphPools[index].poolType === 'StablePhantom' ||
+        subgraphPools[index].poolType === 'ComposableStable'
       ) {
         if (virtualSupply === undefined) {
           console.error(
