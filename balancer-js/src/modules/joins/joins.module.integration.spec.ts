@@ -13,7 +13,7 @@ import {
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { MaxUint256 } from '@ethersproject/constants';
+import { MaxInt256, MaxUint256 } from '@ethersproject/constants';
 import { PoolsProvider } from '@/modules/pools/provider';
 import { forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
@@ -46,21 +46,21 @@ const fromPool = {
   address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
 }; // bbausd
 const tokensIn = [
+  ADDRESSES[network].USDT.address,
   ADDRESSES[network].DAI.address,
   ADDRESSES[network].USDC.address,
-  ADDRESSES[network].USDT.address,
 ];
 // Slots used to set the account balance for each token through hardhat_setStorageAt
 // Info fetched using npm package slot20
 const slots = [
+  ADDRESSES[network].USDT.slot,
   ADDRESSES[network].DAI.slot,
   ADDRESSES[network].USDC.slot,
-  ADDRESSES[network].USDT.slot,
 ];
 const initialBalances = [
+  parseFixed('100', ADDRESSES[network].USDT.decimals).toString(),
   parseFixed('100', ADDRESSES[network].DAI.decimals).toString(),
   parseFixed('100', ADDRESSES[network].USDC.decimals).toString(),
-  parseFixed('100', ADDRESSES[network].USDT.decimals).toString(),
 ];
 
 const signRelayerApproval = async (
@@ -141,26 +141,25 @@ describe('bbausd generalised join execution', async () => {
       signerAddress
     );
 
-    let query = await pool.generalisedJoin(
-      '0',
-      tokensIn,
-      tokensBalanceBefore.map((b) => b.toString()),
-      signerAddress,
-      authorisation
-    );
-
     const gasLimit = MAX_GAS_LIMIT;
 
+    // let query = await pool.generalisedJoin(
+    //   '0',
+    //   tokensIn,
+    //   tokensBalanceBefore.map((b) => b.toString()),
+    //   signerAddress,
+    //   authorisation
+    // );
     // Static call can be used to simulate tx and get expected BPT in/out deltas
-    const staticResult = await signer.call({
-      to: query.to,
-      data: query.data,
-      gasLimit,
-    });
-    const bptOut = query.decode(staticResult); // pending implementation
-    console.log(bptOut);
+    // const staticResult = await signer.call({
+    //   to: query.to,
+    //   data: query.data,
+    // });
+    // const bptOut = query.decode(staticResult); // pending implementation
+    // console.log(bptOut);
+    const bptOut = '0';
 
-    query = await pool.generalisedJoin(
+    const query = await pool.generalisedJoin(
       minBptOut ? minBptOut : bptOut,
       tokensIn,
       tokensBalanceBefore.map((b) => b.toString()),
@@ -183,53 +182,29 @@ describe('bbausd generalised join execution', async () => {
       signerAddress
     );
 
-    expect(BigNumber.from(bptOut).gt(0)).to.be.true;
-    tokensBalanceBefore.forEach((b) => expect(b.toString()).to.eq('0'));
-    expect(bptBalanceAfter.toString()).to.eq(bptOut);
+    expect(receipt.status).to.eql(1);
+    expect(bptBalanceBefore.eq(0)).to.be.true;
+    expect(bptBalanceAfter.gt(0)).to.be.true;
+    tokensBalanceBefore.forEach((b, i) => expect(b.eq(tokensIn[i])).to.be.true);
+    tokensBalanceAfter.forEach((b) => expect(b.eq(0)).to.be.true);
     return bptOut;
   }
 
   let bptOut: string;
 
   context('not staked', async () => {
-    it('should transfer tokens from stable to boosted - using exact bbausd2AmountOut from static call', async () => {
+    it('should transfer tokens from stable to boosted - without minBPT limit', async () => {
       bptOut = await testFlow();
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
       try {
-        await testFlow(false, BigNumber.from(bptOut).add(1).toString());
+        await testFlow(false, BigNumber.from(bptOut).add(MaxInt256).toString());
       } catch (error) {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
     }).timeout(20000);
   });
-
-  context('authorisation', async () => {
-    // authorisation wihtin relayer is the default case and is already tested on previous scenarios
-
-    it('should transfer tokens from stable to boosted - pre authorised', async () => {
-      const approval = contracts.vault.interface.encodeFunctionData(
-        'setRelayerApproval',
-        [signerAddress, relayer, true]
-      );
-      await signer.sendTransaction({
-        to: contracts.vault.address,
-        data: approval,
-      });
-      await testFlow(true);
-    }).timeout(20000);
-
-    it('should transfer tokens from stable to boosted - auhtorisation should fail', async () => {
-      let errorMessage = '';
-      try {
-        await testFlow(true);
-      } catch (error) {
-        errorMessage = (error as Error).message;
-      }
-      expect(errorMessage).to.contain('BAL#503'); // USER_DOESNT_ALLOW_RELAYER - Relayers must be allowed by both governance and the user account
-    }).timeout(20000);
-  }).timeout(20000);
 }).timeout(20000);

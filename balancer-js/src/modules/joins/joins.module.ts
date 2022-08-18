@@ -180,25 +180,32 @@ export class Join {
 
   createAaveWrap(node: Node, sender: string, recipient: string): string {
     const childNode = node.children[0]; // TODO: check if it's possible to have more than one child at this type of node
+    node.outputReference = childNode.outputReference; // TODO: move this logic to the graph builder
 
+    recipient = sender;
+
+    const staticToken = childNode.address;
+    const amount = childNode.outputReference;
+    const outputReference = node.outputReference;
+    const call = Relayer.encodeWrapAaveDynamicToken({
+      staticToken,
+      sender,
+      recipient,
+      amount,
+      fromUnderlying: true, // TODO: check if we should handle the false case as well
+      outputReference: 0, // This call does not return any output, so setting outputReference has no effect
+    });
+
+    console.log(sender);
+    console.log(recipient);
     console.log(
       node.type,
       node.address,
-      `${node.action}(staticToken: ${
-        node.address
-      }, amount: ${childNode.outputReference.toString()}, outputRef: ${
-        node.outputReference
-      }) prop: ${node.proportionOfParent.toString()}`
+      `${
+        node.action
+      }(staticToken: ${staticToken}, amount: ${amount}, outputRef: ${outputReference.toString()}) prop: ${node.proportionOfParent.toString()}`
     );
 
-    const call = Relayer.encodeWrapAaveDynamicToken({
-      staticToken: childNode.address,
-      sender,
-      recipient,
-      amount: childNode.outputReference,
-      fromUnderlying: true, // TODO: check if we should handle the false case as well
-      outputReference: Relayer.toChainedReference(node.outputReference),
-    });
     return call;
   }
 
@@ -240,7 +247,10 @@ export class Join {
         poolId: node.id,
         assetInIndex: assets.indexOf(child.address),
         assetOutIndex: assets.indexOf(node.address),
-        amount: Relayer.toChainedReference(child.outputReference).toString(),
+        amount:
+          child.type === 'WrappedToken'
+            ? child.outputReference // since wrap action does not have output, the amount is forwarded from its child node (assuming wrapped results are 1:1)
+            : Relayer.toChainedReference(child.outputReference).toString(), // all other cases are able to use the output of the previous call
         userData: '0x',
       };
     });
