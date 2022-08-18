@@ -104,6 +104,12 @@ export async function getOnChainBalances(
 
       multiPool.call(`${pool.id}.targets`, pool.address, 'getTargets');
       multiPool.call(`${pool.id}.rate`, pool.address, 'getWrappedTokenRate');
+    } else if (pool.poolType.toString().includes('Gyro')) {
+      multiPool.call(
+        `${pool.id}.swapFee`,
+        pool.address,
+        'getSwapFeePercentage'
+      );
     }
   });
 
