@@ -29,8 +29,8 @@ import {
 } from '../swaps/types';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 
-import relayerLibraryAbi from '@/lib/abi/VaultActions.json';
 import aaveWrappingAbi from '@/lib/abi/AaveWrapping.json';
+import relayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
 
 export * from './types';
 
