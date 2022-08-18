@@ -1,5 +1,7 @@
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { parsePoolInfo } from '@/lib/utils';
 import { Pool, PoolType } from '@/types';
+import { Zero } from '@ethersproject/constants';
 import { BigNumber } from 'ethers';
 import { PoolRepository } from '../data';
 
@@ -49,11 +51,12 @@ export class PoolGraph {
 
   getTokenTotal(pool: Pool): BigNumber {
     const bptIndex = pool.tokensList.indexOf(pool.address);
-    let total = BigNumber.from('0');
-    pool.tokens.forEach((token, i) => {
+    let total = Zero;
+    const { parsedBalances } = parsePoolInfo(pool);
+    parsedBalances.forEach((balance, i) => {
       // Ignore phantomBpt balance
       if (bptIndex !== i) {
-        total = total.add(token.balance);
+        total = total.add(balance);
       }
     });
     return total;
@@ -90,10 +93,11 @@ export class PoolGraph {
         pool
       );
     } else {
+      const { parsedBalances } = parsePoolInfo(pool);
       for (let i = 0; i < pool.tokens.length; i++) {
         // ignore any phantomBpt tokens
         if (pool.tokens[i].address === pool.address) continue;
-        const proportion = BigNumber.from(pool.tokens[i].balance)
+        const proportion = BigNumber.from(parsedBalances[i])
           .mul((1e18).toString())
           .div(tokenTotal);
         const finalProportion = proportion
