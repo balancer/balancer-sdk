@@ -2,7 +2,6 @@ import dotenv from 'dotenv';
 import { expect } from 'chai';
 import MockDate from 'mockdate';
 import { BalancerSDK } from '@/modules/sdk.module';
-import { PoolModel } from '@/types';
 
 dotenv.config();
 
