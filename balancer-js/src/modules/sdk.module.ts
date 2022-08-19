@@ -51,10 +51,6 @@ export class BalancerSDK implements BalancerSDKRoot {
     return getNetworkConfig(this.config);
   }
 
-  get dataRepositories(): BalancerDataRepositories {
-    return getDataRepositories(this.config);
-  }
-
   /**
    * Expose balancer contracts, e.g. Vault, LidoRelayer.
    */
