@@ -79,13 +79,7 @@ export class Migrations {
   ): {
     to: string;
     data: string;
-    decode: (
-      output: string,
-      staked: boolean
-    ) => {
-      bbausd1AmountIn: string;
-      bbausd2AmountOut: string;
-    };
+    decode: (output: string, staked: boolean) => string;
   } {
     const builder = new BbaUsd1Builder(this.network);
     const request = builder.calldata(
@@ -108,10 +102,7 @@ export class Migrations {
           ['int256[]'],
           multicallResult[0][swapIndex]
         );
-        return {
-          bbausd1AmountIn: swapDeltas[0][10].toString(),
-          bbausd2AmountOut: swapDeltas[0][0].abs().toString(),
-        };
+        return swapDeltas[0][0].abs().toString(); // bptOut
       },
     };
   }

@@ -120,7 +120,7 @@ describe('stabal3 migration execution', async () => {
   async function testFlow(
     staked: boolean,
     authorised = true,
-    minBbausd2Out: undefined | string = undefined
+    minBptOut: undefined | string = undefined
   ): Promise<string> {
     const addressIn = staked ? fromPool.gauge : fromPool.address;
     const addressOut = staked ? toPool.gauge : toPool.address;
@@ -147,12 +147,12 @@ describe('stabal3 migration execution', async () => {
       data: query.data,
       gasLimit,
     });
-    const bbausd2AmountOut = query.decode(staticResult, staked);
+    const bptOut = query.decode(staticResult, staked);
 
     query = migrations.stabal3(
       signerAddress,
       amount.toString(),
-      minBbausd2Out ? minBbausd2Out : bbausd2AmountOut,
+      minBptOut ? minBptOut : bptOut,
       staked,
       authorised ? authorisation : undefined
     );
@@ -171,13 +171,13 @@ describe('stabal3 migration execution', async () => {
       to: await getErc20Balance(addressOut, provider, signerAddress),
     };
 
-    expect(BigNumber.from(bbausd2AmountOut).gt(0)).to.be.true;
+    expect(BigNumber.from(bptOut).gt(0)).to.be.true;
     expect(after.from.toString()).to.eq('0');
-    expect(after.to.toString()).to.eq(bbausd2AmountOut);
-    return bbausd2AmountOut;
+    expect(after.to.toString()).to.eq(bptOut);
+    return bptOut;
   }
 
-  let bbausd2AmountOut: string;
+  let bptOut: string;
 
   context('staked', async () => {
     beforeEach(async function () {
@@ -188,17 +188,13 @@ describe('stabal3 migration execution', async () => {
     });
 
     it('should transfer tokens from stable to boosted', async () => {
-      bbausd2AmountOut = await testFlow(true);
+      bptOut = await testFlow(true);
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
       try {
-        await testFlow(
-          true,
-          true,
-          BigNumber.from(bbausd2AmountOut).add(1).toString()
-        );
+        await testFlow(true, true, BigNumber.from(bptOut).add(1).toString());
       } catch (error) {
         errorMessage = (error as Error).message;
       }
@@ -208,17 +204,13 @@ describe('stabal3 migration execution', async () => {
 
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted', async () => {
-      bbausd2AmountOut = await testFlow(false);
+      bptOut = await testFlow(false);
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
       try {
-        await testFlow(
-          false,
-          true,
-          BigNumber.from(bbausd2AmountOut).add(1).toString()
-        );
+        await testFlow(false, true, BigNumber.from(bptOut).add(1).toString());
       } catch (error) {
         errorMessage = (error as Error).message;
       }
