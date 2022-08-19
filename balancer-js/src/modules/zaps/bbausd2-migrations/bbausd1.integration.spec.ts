@@ -34,7 +34,7 @@ const { ALCHEMY_URL: jsonRpcUrl, FORK_BLOCK_NUMBER: blockNumber } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
-const network = Network.GOERLI;
+const network = Network.MAINNET;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
@@ -51,7 +51,8 @@ const toPool = {
 const { contracts } = new Contracts(network as number, provider);
 const migrations = new Migrations(network);
 
-const holderAddress = '0xd86a11b0c859c18bfc1b4acd072c5afe57e79438';
+// const holderAddress = '0xd86a11b0c859c18bfc1b4acd072c5afe57e79438'; // Goerli
+const holderAddress = '0xec576a26335de1c360d2fc9a68cba6ba37af4a13';
 const relayer = addresses.relayer;
 
 const signRelayerApproval = async (
@@ -108,12 +109,14 @@ describe('bbausd migration execution', async () => {
     authorisation = await signRelayerApproval(relayer, signerAddress, signer);
     // Transfer tokens from existing user account to signer
     // We need that to test signatures, because hardhat doesn't have impersonated accounts private keys
+    console.log('HERE???')
     balance = await move(
       fromPool.address,
       holderAddress,
       signerAddress,
       provider
     );
+    console.log('HERE 2???')
 
     const config = {
       network,

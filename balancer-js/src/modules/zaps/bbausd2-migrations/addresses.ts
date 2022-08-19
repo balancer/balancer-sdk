@@ -1,6 +1,6 @@
 export const ADDRESSES = {
   1: {
-    relayer: 'TODO',
+    relayer: '0x886A3Ec7bcC508B8795990B60Fa21f85F9dB7948',
     staBal3: {
       id: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063',
       address: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42',
@@ -14,8 +14,8 @@ export const ADDRESSES = {
       assetOrder: ['bb-a-USDT', 'bb-a-DAI', 'bb-a-USDC'],
     },
     bbausd2: {
-      id: '',
-      address: '',
+      id: '0x9B532AB955417AFD0D012EB9F7389457CD0EA712000000000000000000000338',
+      address: '0x9B532AB955417AFD0D012EB9F7389457CD0EA712',
       gauge: '',
     },
     linearUsdc1: {
@@ -31,16 +31,16 @@ export const ADDRESSES = {
       address: '0x2BBf681cC4eb09218BEe85EA2a5d3D13Fa40fC0C',
     },
     linearUsdc2: {
-      id: '',
-      address: 'N/A',
+      id: '0x82698AECC9E28E9BB27608BD52CF57F704BD1B83000000000000000000000336',
+      address: '0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83',
     },
     linearDai2: {
-      id: '',
-      address: 'N/A',
+      id: '0xAE37D54AE477268B9997D4161B96B8200755935C000000000000000000000337',
+      address: '0xae37D54Ae477268B9997d4161B96b8200755935c',
     },
     linearUsdt2: {
-      id: '',
-      address: 'N/A',
+      id: '0x2F4EB100552EF93840D5ADC30560E5513DFFFACB000000000000000000000334',
+      address: '0x2F4eb100552ef93840d5aDC30560E5513DFfFACb',
     },
     maiusd: {
       id: '',
