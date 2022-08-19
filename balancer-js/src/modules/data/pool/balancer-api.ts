@@ -80,16 +80,16 @@ export class PoolsBalancerAPIRepository
   }
 
   /** Fixes any formatting issues from the subgraph
-   *  - GraphQL can't store a map so pool.apr.[rewardsApr/tokenAprs].breakdown
+   *  - GraphQL can't store a map so pool.apr.[rewardAprs/tokenAprs].breakdown
    *    is JSON data that needs to be parsed so they match the Pool type correctly.
    */
   private format(pool: Pool): Pool {
-    if (pool.apr?.rewardsApr.breakdown) {
+    if (pool.apr?.rewardAprs.breakdown) {
       // GraphQL can't store this as a map so it's JSON that we must parse
       const rewardsBreakdown = JSON.parse(
-        pool.apr?.rewardsApr.breakdown as unknown as string
+        pool.apr?.rewardAprs.breakdown as unknown as string
       );
-      pool.apr.rewardsApr.breakdown = rewardsBreakdown;
+      pool.apr.rewardAprs.breakdown = rewardsBreakdown;
     }
     if (pool.apr?.tokenAprs.breakdown) {
       // GraphQL can't store this as a map so it's JSON that we must parse
