@@ -11,7 +11,15 @@ export class ModelProvider {
   static async resolve(model: PoolModel): Promise<Pool> {
     return {
       ...model,
-      apr: await model.fetchApr(),
+      apr: await (async () => {
+        try {
+          const apr = await model.calcApr();
+          return apr;
+        } catch (e) {
+          console.log(e);
+          return;
+        }
+      })(),
     };
   }
 
