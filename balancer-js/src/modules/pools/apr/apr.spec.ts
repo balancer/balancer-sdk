@@ -102,7 +102,7 @@ describe('pool apr', () => {
           repositories.feeCollector,
           repositories.tokenYields
         ).tokenAprs();
-        expect(apr).to.eq(100);
+        expect(apr.total).to.eq(100);
       });
     });
 
@@ -141,7 +141,7 @@ describe('pool apr', () => {
           factories.data.stubbed<number>(undefined)
         ).tokenAprs();
 
-        expect(apr).to.eq(10000 / 2);
+        expect(apr.total).to.eq(10000 / 2);
       });
     });
   });

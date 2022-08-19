@@ -13,6 +13,7 @@ import { BaseFeeDistributor } from '@/modules/data';
 import { ProtocolRevenue } from './protocol-revenue';
 import { Liquidity } from '@/modules/liquidity/liquidity.module';
 import { identity, zipObject, pickBy } from 'lodash';
+import { PoolFees } from '../fees/fees';
 
 export interface AprBreakdown {
   swapFees: number;
@@ -367,22 +368,9 @@ export class PoolApr {
     };
   }
 
-  // 🚨 this is adding 1 call to get yesterday's block height and 2nd call to fetch yesterday's pools data from subgraph
-  // TODO: find a better data source for that eg. add blocks to graph, replace with a database, or dune
   private async last24hFees(): Promise<number> {
-    const yesterdaysPool = await this.yesterdaysPools.find(this.pool.id);
-    if (
-      !this.pool.totalSwapFee ||
-      !yesterdaysPool ||
-      !yesterdaysPool.totalSwapFee
-    ) {
-      return 0;
-    }
-
-    return (
-      parseFloat(this.pool.totalSwapFee) -
-      parseFloat(yesterdaysPool.totalSwapFee)
-    );
+    const poolFees = new PoolFees(this.pool, this.yesterdaysPools);
+    return poolFees.last24h();
   }
 
   // 🚨 TODO: replace with liquidity calculations once implemention works for all pool types

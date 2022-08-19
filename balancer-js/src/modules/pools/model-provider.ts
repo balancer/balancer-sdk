@@ -1,6 +1,8 @@
 import type { BalancerDataRepositories, Pool, PoolModel } from '@/types';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
+import { PoolFees } from './fees/fees';
+import { PoolVolume } from './volume/volume';
 
 /**
  * Use-cases layer for generating live pools data
@@ -40,6 +42,19 @@ export class ModelProvider {
         );
 
         return aprService.apr();
+      },
+      calcFees: async function () {
+        const feeService = new PoolFees(data, repositories.yesterdaysPools);
+
+        return feeService.last24h();
+      },
+      calcVolume: async function () {
+        const volumeService = new PoolVolume(
+          data,
+          repositories.yesterdaysPools
+        );
+
+        return volumeService.last24h();
       },
       // TODO: spotPrice fails, because it needs a subgraphType,
       // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
