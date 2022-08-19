@@ -12,7 +12,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         multicall: '0xeefba1e63905ef1d7acba5a8513c70307c1ce441',
         lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
         gaugeController: '0xc128468b7ce63ea702c1f104d55a2566b13d3abd',
-        feeDistributor: '0x26743984e3357eFC59f2fd6C1aFDC310335a61c9',
+        feeDistributor: '0xD3cf852898b21fc233251427c2DC93d3d604F3BB',
       },
       tokens: {
         wrappedNativeAsset: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
