@@ -60,7 +60,7 @@ describe('happy case', () => {
 
   describe('veBal pool', () => {
     // Time when veBal used to recieve procotol revenues
-    const now = new Date('2022-07-01 11:11:11').getTime();
+    const now = new Date('2022-08-19 11:11:11').getTime();
 
     before(() => {
       MockDate.set(now);
