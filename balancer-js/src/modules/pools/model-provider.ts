@@ -2,6 +2,10 @@ import type { BalancerDataRepositories, Pool, PoolModel } from '@/types';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
 
+// Can be changed outside for dependent services rate-limits
+// eslint-disable-next-line prefer-const
+export let POOLS_PER_PAGE = 10;
+
 /**
  * Use-cases layer for generating live pools data
  */
@@ -80,12 +84,17 @@ export class ModelProvider {
     }
   }
 
-  async all(): Promise<Pool[]> {
+  async all(page = 1): Promise<Pool[]> {
     const list = await this.repositories.pools.all();
     if (!list) return [];
 
+    const slice = list.slice(
+      (page - 1) * POOLS_PER_PAGE,
+      page * POOLS_PER_PAGE
+    );
+
     const resolved = Promise.all(
-      list.map(async (data) => {
+      slice.map(async (data) => {
         const model = ModelProvider.wrap(data, this.repositories);
         return await ModelProvider.resolve(model);
       })
@@ -94,12 +103,17 @@ export class ModelProvider {
     return resolved;
   }
 
-  async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
+  async where(filter: (pool: Pool) => boolean, page = 1): Promise<Pool[]> {
     const list = await this.repositories.pools.where(filter);
     if (!list) return [];
 
+    const slice = list.slice(
+      (page - 1) * POOLS_PER_PAGE,
+      page * POOLS_PER_PAGE
+    );
+
     const resolved = Promise.all(
-      list.map(async (data) => {
+      slice.map(async (data) => {
         const model = ModelProvider.wrap(data, this.repositories);
         return await ModelProvider.resolve(model);
       })
