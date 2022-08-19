@@ -57,7 +57,7 @@ export class PoolsBalancerAPIRepository
     const apiResponseData = await this.client.get(formattedQuery);
     this.pools = apiResponseData.pools;
 
-    return this.pools;
+    return this.pools.map(this.format);
   }
 
   async find(id: string): Promise<Pool | undefined> {
@@ -74,6 +74,31 @@ export class PoolsBalancerAPIRepository
     }
 
     const pool = this.pools.find((pool) => pool[param] == value);
+    if (pool) {
+      return this.format(pool);
+    }
+  }
+
+  /** Fixes any formatting issues from the subgraph
+   *  - GraphQL can't store a map so pool.apr.[rewardsApr/tokenAprs].breakdown
+   *    is JSON data that needs to be parsed so they match the Pool type correctly.
+   */
+  private format(pool: Pool): Pool {
+    if (pool.apr?.rewardsApr.breakdown) {
+      // GraphQL can't store this as a map so it's JSON that we must parse
+      const rewardsBreakdown = JSON.parse(
+        pool.apr?.rewardsApr.breakdown as unknown as string
+      );
+      pool.apr.rewardsApr.breakdown = rewardsBreakdown;
+    }
+    if (pool.apr?.tokenAprs.breakdown) {
+      // GraphQL can't store this as a map so it's JSON that we must parse
+      const tokenAprsBreakdown = JSON.parse(
+        pool.apr?.tokenAprs.breakdown as unknown as string
+      );
+      pool.apr.tokenAprs.breakdown = tokenAprsBreakdown;
+    }
+
     return pool;
   }
 }
