@@ -26,7 +26,7 @@ export class ModelProvider {
 
         return liquidityService.getLiquidity(this);
       },
-      fetchApr: async function () {
+      calcApr: async function () {
         const aprService = new PoolApr(
           data,
           repositories.tokenPrices,
