@@ -25,7 +25,7 @@ export interface AprBreakdown {
     min: number;
     max: number;
   };
-  rewardsApr: {
+  rewardAprs: {
     total: number;
     breakdown: { [address: string]: number };
   };
@@ -111,21 +111,22 @@ export class PoolApr {
         // Handle subpool APRs with recursive call to get the subPool APR
         const subPool = await this.pools.findBy('address', token.address);
 
-        // TODO: handle boosting
         if (subPool) {
-          apr = (
-            await new PoolApr(
-              subPool,
-              this.tokenPrices,
-              this.tokenMeta,
-              this.pools,
-              this.yesterdaysPools,
-              this.liquidityGauges,
-              this.feeDistributor,
-              this.feeCollector,
-              this.tokenYields
-            ).apr()
-          ).min;
+          // INFO: Liquidity mining APR can't cascade to other pools
+          const subApr = new PoolApr(
+            subPool,
+            this.tokenPrices,
+            this.tokenMeta,
+            this.pools,
+            this.yesterdaysPools,
+            this.liquidityGauges,
+            this.feeDistributor,
+            this.feeCollector,
+            this.tokenYields
+          );
+          const subSwapFees = await subApr.swapFees();
+          const subtokenAprs = await subApr.tokenAprs();
+          apr = subSwapFees + subtokenAprs.total;
         }
       }
 
@@ -227,7 +228,7 @@ export class PoolApr {
    *
    * @returns APR [bsp] from token rewards.
    */
-  async rewardsApr(): Promise<AprBreakdown['rewardsApr']> {
+  async rewardAprs(): Promise<AprBreakdown['rewardAprs']> {
     // Data resolving
     const gauge = await this.liquidityGauges.findBy('poolId', this.pool.id);
     if (
@@ -240,7 +241,7 @@ export class PoolApr {
 
     const rewardTokenAddresses = Object.keys(gauge.rewardTokens);
 
-    // Get each tokens rate, extrapolate to a year and convert to USD
+    // Gets each tokens rate, extrapolate to a year and convert to USD
     const rewards = rewardTokenAddresses.map(async (tAddress) => {
       /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */
       const data = gauge!.rewardTokens![tAddress];
@@ -333,14 +334,14 @@ export class PoolApr {
       tokenAprs,
       minStakingApr,
       maxStakingApr,
-      rewardsApr,
+      rewardAprs,
       protocolApr,
     ] = await Promise.all([
       this.swapFees(), // pool snapshot for last 24h fees dependency
       this.tokenAprs(),
       this.stakingApr(),
       this.stakingApr(2.5),
-      this.rewardsApr(),
+      this.rewardAprs(),
       this.protocolApr(),
     ]);
 
@@ -351,18 +352,18 @@ export class PoolApr {
         min: minStakingApr,
         max: maxStakingApr,
       },
-      rewardsApr,
+      rewardAprs,
       protocolApr,
       min:
         swapFees +
         tokenAprs.total +
-        rewardsApr.total +
+        rewardAprs.total +
         protocolApr +
         minStakingApr,
       max:
         swapFees +
         tokenAprs.total +
-        rewardsApr.total +
+        rewardAprs.total +
         protocolApr +
         maxStakingApr,
     };
@@ -373,21 +374,13 @@ export class PoolApr {
     return poolFees.last24h();
   }
 
-  // 🚨 TODO: replace with liquidity calculations once implemention works for all pool types
   private async totalLiquidity(): Promise<string> {
-    // if (!this.pool.totalLiquidity) {
-    //   throw `Pool has no liquidity`;
-    // }
-
-    // return this.pool.totalLiquidity;
-
     const liquidityService = new Liquidity(this.pools, this.tokenPrices);
     const liquidity = await liquidityService.getLiquidity(this.pool);
 
     return liquidity;
   }
 
-  // TODO: move to model class, or even better to a price provider
   private async bptPrice() {
     return (
       parseFloat(await this.totalLiquidity()) /

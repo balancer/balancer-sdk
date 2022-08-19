@@ -173,7 +173,7 @@ describe('pool apr', () => {
     });
   });
 
-  describe('.rewardsAprs', () => {
+  describe('.rewardAprs', () => {
     it('has token rewards', async () => {
       const rewardTokens = {
         address1: baseRewardToken,
@@ -194,7 +194,7 @@ describe('pool apr', () => {
         repositories.feeDistributor,
         repositories.feeCollector,
         factories.data.stubbed<number>(undefined)
-      ).rewardsApr();
+      ).rewardAprs();
 
       expect(apr.total).to.eq(20000);
     });

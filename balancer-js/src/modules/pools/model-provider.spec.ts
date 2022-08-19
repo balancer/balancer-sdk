@@ -46,7 +46,7 @@ describe('pools', () => {
       const poolModel = ModelProvider.wrap(pool, repositories);
       const liquidity = await poolModel.calcLiquidity();
       poolModel.totalLiquidity = liquidity;
-      const apr = await poolModel.fetchApr();
+      const apr = await poolModel.calcApr();
       expect(apr.min).to.be.greaterThan(0);
       expect(apr.max).to.be.greaterThan(0);
     }).timeout(20000);
