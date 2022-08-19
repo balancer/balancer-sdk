@@ -20,7 +20,7 @@ export interface AprBreakdown {
     min: number;
     max: number;
   };
-  rewardsApr: {
+  rewardAprs: {
     total: number;
     breakdown: { [address: string]: number };
   };
@@ -210,7 +210,7 @@ export class PoolApr {
    *
    * @returns APR [bsp] from token rewards.
    */
-  async rewardsApr(): Promise<AprBreakdown['rewardsApr']> {
+  async rewardAprs(): Promise<AprBreakdown['rewardAprs']> {
     // Data resolving
     const gauge = await this.liquidityGauges.findBy('poolId', this.pool.id);
     if (
@@ -316,14 +316,14 @@ export class PoolApr {
       tokenAprs,
       minStakingApr,
       maxStakingApr,
-      rewardsApr,
+      rewardAprs,
       protocolApr,
     ] = await Promise.all([
       this.swapFees(), // pool snapshot for last 24h fees dependency
       this.tokenAprs(),
       this.stakingApr(),
       this.stakingApr(2.5),
-      this.rewardsApr(),
+      this.rewardAprs(),
       this.protocolApr(),
     ]);
 
@@ -334,12 +334,12 @@ export class PoolApr {
         min: minStakingApr,
         max: maxStakingApr,
       },
-      rewardsApr,
+      rewardAprs,
       protocolApr,
       min:
-        swapFees + tokenAprs + rewardsApr.total + protocolApr + minStakingApr,
+        swapFees + tokenAprs + rewardAprs.total + protocolApr + minStakingApr,
       max:
-        swapFees + tokenAprs + rewardsApr.total + protocolApr + maxStakingApr,
+        swapFees + tokenAprs + rewardAprs.total + protocolApr + maxStakingApr,
     };
   }
 
