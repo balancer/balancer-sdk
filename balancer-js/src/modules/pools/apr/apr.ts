@@ -103,21 +103,22 @@ export class PoolApr {
         // Handle subpool APRs with recursive call to get the subPool APR
         const subPool = await this.pools.findBy('address', token.address);
 
-        // TODO: handle boosting
         if (subPool) {
-          apr = (
-            await new PoolApr(
-              subPool,
-              this.tokenPrices,
-              this.tokenMeta,
-              this.pools,
-              this.yesterdaysPools,
-              this.liquidityGauges,
-              this.feeDistributor,
-              this.feeCollector,
-              this.tokenYields
-            ).apr()
-          ).min;
+          // INFO: Liquidity mining APR can't cascade to other pools
+          const subApr = new PoolApr(
+            subPool,
+            this.tokenPrices,
+            this.tokenMeta,
+            this.pools,
+            this.yesterdaysPools,
+            this.liquidityGauges,
+            this.feeDistributor,
+            this.feeCollector,
+            this.tokenYields
+          );
+          const subSwapFees = await subApr.swapFees();
+          const subtokenAprs = await subApr.tokenAprs();
+          apr = subSwapFees + subtokenAprs;
         }
       }
 
@@ -222,7 +223,7 @@ export class PoolApr {
 
     const rewardTokenAddresses = Object.keys(gauge.rewardTokens);
 
-    // Get each tokens rate, extrapolate to a year and convert to USD
+    // Gets each tokens rate, extrapolate to a year and convert to USD
     const rewards = rewardTokenAddresses.map(async (tAddress) => {
       /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */
       const data = gauge!.rewardTokens![tAddress];
@@ -360,21 +361,13 @@ export class PoolApr {
     );
   }
 
-  // 🚨 TODO: replace with liquidity calculations once implemention works for all pool types
   private async totalLiquidity(): Promise<string> {
-    // if (!this.pool.totalLiquidity) {
-    //   throw `Pool has no liquidity`;
-    // }
-
-    // return this.pool.totalLiquidity;
-
     const liquidityService = new Liquidity(this.pools, this.tokenPrices);
     const liquidity = await liquidityService.getLiquidity(this.pool);
 
     return liquidity;
   }
 
-  // TODO: move to model class, or even better to a price provider
   private async bptPrice() {
     return (
       parseFloat(await this.totalLiquidity()) /
