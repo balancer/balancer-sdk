@@ -21,7 +21,7 @@ const main = async () => {
 
   list.forEach(async (pool) => {
     try {
-      const apr = await pool.apr();
+      const { apr } = pool;
       console.log(pool.id, apr);
     } catch (e) {
       console.log(e);
