@@ -239,7 +239,7 @@ export interface Pool {
  */
 export interface PoolModel extends Pool {
   calcLiquidity: () => Promise<string>;
-  fetchApr: () => Promise<AprBreakdown>;
+  calcApr: () => Promise<AprBreakdown>;
 }
 
 /**
