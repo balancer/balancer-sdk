@@ -1,11 +1,11 @@
 import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
-import { SubgraphPoolBase, TokenPriceService, PoolDataService, SwapInfo, SOR } from '@balancer-labs/sor';
+import { TokenPriceService, PoolDataService, SwapInfo, SOR, SubgraphPoolBase } from '@balancer-labs/sor';
 export { NewPath, PoolDataService, PoolDictionary, PoolFilter, RouteProposer, SOR, SubgraphPoolBase, SwapInfo, SwapOptions, SwapTypes, SwapV2, formatSequence, getTokenAddressesForSwap, parseToPoolsDict, phantomStableBPTForTokensZeroPriceImpact, queryBatchSwapTokensIn, queryBatchSwapTokensOut, stableBPTForTokensZeroPriceImpact, weightedBPTForTokensZeroPriceImpact } from '@balancer-labs/sor';
-import { Vault, LidoRelayer } from '@balancer-labs/typechain';
+import { Provider, JsonRpcProvider } from '@ethersproject/providers';
 import { GraphQLClient } from 'graphql-request';
 import * as Dom from 'graphql-request/dist/types.dom';
-import { JsonRpcProvider, Provider } from '@ethersproject/providers';
+import { Vault, LidoRelayer } from '@balancer-labs/typechain';
 import { Signer, TypedDataSigner } from '@ethersproject/abstract-signer';
 
 declare enum StablePoolJoinKind {
@@ -155,20 +155,12 @@ declare enum Network {
     RINKEBY = 4,
     GOERLI = 5,
     GÖRLI = 5,
+    OPTIMISM = 10,
     KOVAN = 42,
     POLYGON = 137,
     ARBITRUM = 42161
 }
 
-interface LiquidityConcern {
-    calcTotal: (...args: any[]) => string;
-}
-interface SpotPriceConcern {
-    calcPoolSpotPrice: (tokenIn: string, tokenOut: string, pool: SubgraphPoolBase) => string;
-}
-interface JoinConcern {
-    buildJoin: ({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }: JoinPoolParameters) => Promise<JoinPoolAttributes>;
-}
 interface JoinPool {
     poolId: string;
     sender: string;
@@ -183,13 +175,2713 @@ interface JoinPoolAttributes {
     value?: BigNumber;
     minBPTOut: string;
 }
-interface JoinPoolParameters {
-    joiner: string;
-    pool: Pool;
-    tokensIn: string[];
-    amountsIn: string[];
-    slippage: string;
-    wrappedNativeAsset: string;
+
+declare class GaugeControllerMulticallRepository {
+    private gaugeControllerAddress;
+    multicall: Contract;
+    constructor(multicallAddress: string, gaugeControllerAddress: string, provider: Provider);
+    getRelativeWeights(gaugeAddresses: string[], timestamp?: number): Promise<{
+        [gaugeAddress: string]: number;
+    }>;
+}
+
+interface RewardData {
+    token: string;
+    distributor: string;
+    period_finish: BigNumber;
+    rate: BigNumber;
+    last_update: BigNumber;
+    integral: BigNumber;
+}
+/**
+ * A lot of code to get liquidity gauge state via RPC multicall.
+ * TODO: reseach helper contracts or extend subgraph
+ */
+declare class LiquidityGaugesMulticallRepository {
+    multicall: Contract;
+    constructor(multicallAddress: string, provider: Provider);
+    getTotalSupplies(gaugeAddresses: string[]): Promise<{
+        [gaugeAddress: string]: number;
+    }>;
+    getWorkingSupplies(gaugeAddresses: string[]): Promise<{
+        [gaugeAddress: string]: number;
+    }>;
+    getRewardCounts(gaugeAddresses: string[]): Promise<{
+        [gaugeAddress: string]: number;
+    }>;
+    getRewardTokens(gaugeAddresses: string[], passingRewardCounts?: {
+        [gaugeAddress: string]: number;
+    }): Promise<{
+        [gaugeAddress: string]: string[];
+    }>;
+    getRewardData(gaugeAddresses: string[], passingRewardTokens?: {
+        [gaugeAddress: string]: string[];
+    }): Promise<{
+        [gaugeAddress: string]: {
+            [rewardTokenAddress: string]: RewardData;
+        };
+    }>;
+}
+
+declare type Maybe$1<T> = T | null;
+declare type InputMaybe<T> = Maybe$1<T>;
+declare type Exact<T extends {
+    [key: string]: unknown;
+}> = {
+    [K in keyof T]: T[K];
+};
+/** All built-in and custom scalars, mapped to their actual values */
+declare type Scalars$1 = {
+    ID: string;
+    String: string;
+    Boolean: boolean;
+    Int: number;
+    Float: number;
+    BigDecimal: string;
+    BigInt: string;
+    Bytes: string;
+};
+declare type Balancer_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    poolCount?: InputMaybe<Scalars$1['Int']>;
+    poolCount_gt?: InputMaybe<Scalars$1['Int']>;
+    poolCount_gte?: InputMaybe<Scalars$1['Int']>;
+    poolCount_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    poolCount_lt?: InputMaybe<Scalars$1['Int']>;
+    poolCount_lte?: InputMaybe<Scalars$1['Int']>;
+    poolCount_not?: InputMaybe<Scalars$1['Int']>;
+    poolCount_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    pools_?: InputMaybe<Pool_Filter>;
+    totalLiquidity?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalLiquidity_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalLiquidity_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalLiquidity_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalLiquidity_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalLiquidity_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalLiquidity_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalLiquidity_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalSwapCount?: InputMaybe<Scalars$1['BigInt']>;
+    totalSwapCount_gt?: InputMaybe<Scalars$1['BigInt']>;
+    totalSwapCount_gte?: InputMaybe<Scalars$1['BigInt']>;
+    totalSwapCount_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    totalSwapCount_lt?: InputMaybe<Scalars$1['BigInt']>;
+    totalSwapCount_lte?: InputMaybe<Scalars$1['BigInt']>;
+    totalSwapCount_not?: InputMaybe<Scalars$1['BigInt']>;
+    totalSwapCount_not_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    totalSwapFee?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapFee_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapFee_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapFee_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalSwapFee_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapFee_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapFee_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapFee_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalSwapVolume?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapVolume_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapVolume_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapVolume_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalSwapVolume_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapVolume_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapVolume_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapVolume_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+};
+declare enum Balancer_OrderBy {
+    Id = "id",
+    PoolCount = "poolCount",
+    Pools = "pools",
+    TotalLiquidity = "totalLiquidity",
+    TotalSwapCount = "totalSwapCount",
+    TotalSwapFee = "totalSwapFee",
+    TotalSwapVolume = "totalSwapVolume"
+}
+declare type BlockChangedFilter = {
+    number_gte: Scalars$1['Int'];
+};
+declare type Block_Height = {
+    hash?: InputMaybe<Scalars$1['Bytes']>;
+    number?: InputMaybe<Scalars$1['Int']>;
+    number_gte?: InputMaybe<Scalars$1['Int']>;
+};
+declare type GradualWeightUpdate_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    endTimestamp?: InputMaybe<Scalars$1['BigInt']>;
+    endTimestamp_gt?: InputMaybe<Scalars$1['BigInt']>;
+    endTimestamp_gte?: InputMaybe<Scalars$1['BigInt']>;
+    endTimestamp_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    endTimestamp_lt?: InputMaybe<Scalars$1['BigInt']>;
+    endTimestamp_lte?: InputMaybe<Scalars$1['BigInt']>;
+    endTimestamp_not?: InputMaybe<Scalars$1['BigInt']>;
+    endTimestamp_not_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    endWeights?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    endWeights_contains?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    endWeights_contains_nocase?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    endWeights_not?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    endWeights_not_contains?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    endWeights_not_contains_nocase?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    poolId?: InputMaybe<Scalars$1['String']>;
+    poolId_?: InputMaybe<Pool_Filter>;
+    poolId_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_gt?: InputMaybe<Scalars$1['String']>;
+    poolId_gte?: InputMaybe<Scalars$1['String']>;
+    poolId_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_lt?: InputMaybe<Scalars$1['String']>;
+    poolId_lte?: InputMaybe<Scalars$1['String']>;
+    poolId_not?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    scheduledTimestamp?: InputMaybe<Scalars$1['Int']>;
+    scheduledTimestamp_gt?: InputMaybe<Scalars$1['Int']>;
+    scheduledTimestamp_gte?: InputMaybe<Scalars$1['Int']>;
+    scheduledTimestamp_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    scheduledTimestamp_lt?: InputMaybe<Scalars$1['Int']>;
+    scheduledTimestamp_lte?: InputMaybe<Scalars$1['Int']>;
+    scheduledTimestamp_not?: InputMaybe<Scalars$1['Int']>;
+    scheduledTimestamp_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    startTimestamp?: InputMaybe<Scalars$1['BigInt']>;
+    startTimestamp_gt?: InputMaybe<Scalars$1['BigInt']>;
+    startTimestamp_gte?: InputMaybe<Scalars$1['BigInt']>;
+    startTimestamp_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    startTimestamp_lt?: InputMaybe<Scalars$1['BigInt']>;
+    startTimestamp_lte?: InputMaybe<Scalars$1['BigInt']>;
+    startTimestamp_not?: InputMaybe<Scalars$1['BigInt']>;
+    startTimestamp_not_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    startWeights?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    startWeights_contains?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    startWeights_contains_nocase?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    startWeights_not?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    startWeights_not_contains?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    startWeights_not_contains_nocase?: InputMaybe<Array<Scalars$1['BigInt']>>;
+};
+declare enum InvestType {
+    Exit = "Exit",
+    Join = "Join"
+}
+declare type JoinExit_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    amounts?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    amounts_contains?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    amounts_contains_nocase?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    amounts_not?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    amounts_not_contains?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    amounts_not_contains_nocase?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    pool?: InputMaybe<Scalars$1['String']>;
+    pool_?: InputMaybe<Pool_Filter>;
+    pool_contains?: InputMaybe<Scalars$1['String']>;
+    pool_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_ends_with?: InputMaybe<Scalars$1['String']>;
+    pool_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_gt?: InputMaybe<Scalars$1['String']>;
+    pool_gte?: InputMaybe<Scalars$1['String']>;
+    pool_in?: InputMaybe<Array<Scalars$1['String']>>;
+    pool_lt?: InputMaybe<Scalars$1['String']>;
+    pool_lte?: InputMaybe<Scalars$1['String']>;
+    pool_not?: InputMaybe<Scalars$1['String']>;
+    pool_not_contains?: InputMaybe<Scalars$1['String']>;
+    pool_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    pool_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    pool_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    pool_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_starts_with?: InputMaybe<Scalars$1['String']>;
+    pool_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    sender?: InputMaybe<Scalars$1['Bytes']>;
+    sender_contains?: InputMaybe<Scalars$1['Bytes']>;
+    sender_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    sender_not?: InputMaybe<Scalars$1['Bytes']>;
+    sender_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    sender_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    timestamp?: InputMaybe<Scalars$1['Int']>;
+    timestamp_gt?: InputMaybe<Scalars$1['Int']>;
+    timestamp_gte?: InputMaybe<Scalars$1['Int']>;
+    timestamp_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    timestamp_lt?: InputMaybe<Scalars$1['Int']>;
+    timestamp_lte?: InputMaybe<Scalars$1['Int']>;
+    timestamp_not?: InputMaybe<Scalars$1['Int']>;
+    timestamp_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    tx?: InputMaybe<Scalars$1['Bytes']>;
+    tx_contains?: InputMaybe<Scalars$1['Bytes']>;
+    tx_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tx_not?: InputMaybe<Scalars$1['Bytes']>;
+    tx_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    tx_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    type?: InputMaybe<InvestType>;
+    type_in?: InputMaybe<Array<InvestType>>;
+    type_not?: InputMaybe<InvestType>;
+    type_not_in?: InputMaybe<Array<InvestType>>;
+    user?: InputMaybe<Scalars$1['String']>;
+    user_?: InputMaybe<User_Filter>;
+    user_contains?: InputMaybe<Scalars$1['String']>;
+    user_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    user_ends_with?: InputMaybe<Scalars$1['String']>;
+    user_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    user_gt?: InputMaybe<Scalars$1['String']>;
+    user_gte?: InputMaybe<Scalars$1['String']>;
+    user_in?: InputMaybe<Array<Scalars$1['String']>>;
+    user_lt?: InputMaybe<Scalars$1['String']>;
+    user_lte?: InputMaybe<Scalars$1['String']>;
+    user_not?: InputMaybe<Scalars$1['String']>;
+    user_not_contains?: InputMaybe<Scalars$1['String']>;
+    user_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    user_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    user_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    user_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    user_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    user_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    user_starts_with?: InputMaybe<Scalars$1['String']>;
+    user_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+};
+declare enum JoinExit_OrderBy {
+    Amounts = "amounts",
+    Id = "id",
+    Pool = "pool",
+    Sender = "sender",
+    Timestamp = "timestamp",
+    Tx = "tx",
+    Type = "type",
+    User = "user"
+}
+declare type LatestPrice_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    asset?: InputMaybe<Scalars$1['Bytes']>;
+    asset_contains?: InputMaybe<Scalars$1['Bytes']>;
+    asset_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    asset_not?: InputMaybe<Scalars$1['Bytes']>;
+    asset_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    asset_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    block?: InputMaybe<Scalars$1['BigInt']>;
+    block_gt?: InputMaybe<Scalars$1['BigInt']>;
+    block_gte?: InputMaybe<Scalars$1['BigInt']>;
+    block_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    block_lt?: InputMaybe<Scalars$1['BigInt']>;
+    block_lte?: InputMaybe<Scalars$1['BigInt']>;
+    block_not?: InputMaybe<Scalars$1['BigInt']>;
+    block_not_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    poolId?: InputMaybe<Scalars$1['String']>;
+    poolId_?: InputMaybe<Pool_Filter>;
+    poolId_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_gt?: InputMaybe<Scalars$1['String']>;
+    poolId_gte?: InputMaybe<Scalars$1['String']>;
+    poolId_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_lt?: InputMaybe<Scalars$1['String']>;
+    poolId_lte?: InputMaybe<Scalars$1['String']>;
+    poolId_not?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    price?: InputMaybe<Scalars$1['BigDecimal']>;
+    price_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    price_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    price_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    price_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    price_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    price_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    price_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    pricingAsset?: InputMaybe<Scalars$1['Bytes']>;
+    pricingAsset_contains?: InputMaybe<Scalars$1['Bytes']>;
+    pricingAsset_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    pricingAsset_not?: InputMaybe<Scalars$1['Bytes']>;
+    pricingAsset_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    pricingAsset_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+};
+declare enum LatestPrice_OrderBy {
+    Asset = "asset",
+    Block = "block",
+    Id = "id",
+    PoolId = "poolId",
+    Price = "price",
+    PricingAsset = "pricingAsset"
+}
+declare type ManagementOperation_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    cashDelta?: InputMaybe<Scalars$1['BigDecimal']>;
+    cashDelta_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    cashDelta_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    cashDelta_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    cashDelta_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    cashDelta_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    cashDelta_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    cashDelta_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    managedDelta?: InputMaybe<Scalars$1['BigDecimal']>;
+    managedDelta_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    managedDelta_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    managedDelta_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    managedDelta_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    managedDelta_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    managedDelta_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    managedDelta_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    poolTokenId?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_?: InputMaybe<PoolToken_Filter>;
+    poolTokenId_contains?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_gt?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_gte?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolTokenId_lt?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_lte?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_not?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_not_contains?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolTokenId_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolTokenId_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    timestamp?: InputMaybe<Scalars$1['Int']>;
+    timestamp_gt?: InputMaybe<Scalars$1['Int']>;
+    timestamp_gte?: InputMaybe<Scalars$1['Int']>;
+    timestamp_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    timestamp_lt?: InputMaybe<Scalars$1['Int']>;
+    timestamp_lte?: InputMaybe<Scalars$1['Int']>;
+    timestamp_not?: InputMaybe<Scalars$1['Int']>;
+    timestamp_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    type?: InputMaybe<OperationType>;
+    type_in?: InputMaybe<Array<OperationType>>;
+    type_not?: InputMaybe<OperationType>;
+    type_not_in?: InputMaybe<Array<OperationType>>;
+};
+declare enum OperationType {
+    Deposit = "Deposit",
+    Update = "Update",
+    Withdraw = "Withdraw"
+}
+/** Defines the order direction, either ascending or descending */
+declare enum OrderDirection {
+    Asc = "asc",
+    Desc = "desc"
+}
+declare type PoolHistoricalLiquidity_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    block?: InputMaybe<Scalars$1['BigInt']>;
+    block_gt?: InputMaybe<Scalars$1['BigInt']>;
+    block_gte?: InputMaybe<Scalars$1['BigInt']>;
+    block_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    block_lt?: InputMaybe<Scalars$1['BigInt']>;
+    block_lte?: InputMaybe<Scalars$1['BigInt']>;
+    block_not?: InputMaybe<Scalars$1['BigInt']>;
+    block_not_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    poolId?: InputMaybe<Scalars$1['String']>;
+    poolId_?: InputMaybe<Pool_Filter>;
+    poolId_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_gt?: InputMaybe<Scalars$1['String']>;
+    poolId_gte?: InputMaybe<Scalars$1['String']>;
+    poolId_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_lt?: InputMaybe<Scalars$1['String']>;
+    poolId_lte?: InputMaybe<Scalars$1['String']>;
+    poolId_not?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolLiquidity?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolLiquidity_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolLiquidity_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolLiquidity_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    poolLiquidity_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolLiquidity_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolLiquidity_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolLiquidity_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    poolShareValue?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolShareValue_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolShareValue_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolShareValue_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    poolShareValue_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolShareValue_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolShareValue_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolShareValue_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    poolTotalShares?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolTotalShares_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolTotalShares_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolTotalShares_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    poolTotalShares_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolTotalShares_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolTotalShares_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    poolTotalShares_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    pricingAsset?: InputMaybe<Scalars$1['Bytes']>;
+    pricingAsset_contains?: InputMaybe<Scalars$1['Bytes']>;
+    pricingAsset_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    pricingAsset_not?: InputMaybe<Scalars$1['Bytes']>;
+    pricingAsset_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    pricingAsset_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+};
+declare enum PoolHistoricalLiquidity_OrderBy {
+    Block = "block",
+    Id = "id",
+    PoolId = "poolId",
+    PoolLiquidity = "poolLiquidity",
+    PoolShareValue = "poolShareValue",
+    PoolTotalShares = "poolTotalShares",
+    PricingAsset = "pricingAsset"
+}
+declare type PoolShare_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    balance?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    balance_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    poolId?: InputMaybe<Scalars$1['String']>;
+    poolId_?: InputMaybe<Pool_Filter>;
+    poolId_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_gt?: InputMaybe<Scalars$1['String']>;
+    poolId_gte?: InputMaybe<Scalars$1['String']>;
+    poolId_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_lt?: InputMaybe<Scalars$1['String']>;
+    poolId_lte?: InputMaybe<Scalars$1['String']>;
+    poolId_not?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress?: InputMaybe<Scalars$1['String']>;
+    userAddress_?: InputMaybe<User_Filter>;
+    userAddress_contains?: InputMaybe<Scalars$1['String']>;
+    userAddress_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_ends_with?: InputMaybe<Scalars$1['String']>;
+    userAddress_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_gt?: InputMaybe<Scalars$1['String']>;
+    userAddress_gte?: InputMaybe<Scalars$1['String']>;
+    userAddress_in?: InputMaybe<Array<Scalars$1['String']>>;
+    userAddress_lt?: InputMaybe<Scalars$1['String']>;
+    userAddress_lte?: InputMaybe<Scalars$1['String']>;
+    userAddress_not?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_contains?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    userAddress_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_starts_with?: InputMaybe<Scalars$1['String']>;
+    userAddress_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+};
+declare type PoolSnapshot_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    amounts?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    amounts_contains?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    amounts_contains_nocase?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    amounts_not?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    amounts_not_contains?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    amounts_not_contains_nocase?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    liquidity?: InputMaybe<Scalars$1['BigDecimal']>;
+    liquidity_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    liquidity_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    liquidity_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    liquidity_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    liquidity_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    liquidity_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    liquidity_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    pool?: InputMaybe<Scalars$1['String']>;
+    pool_?: InputMaybe<Pool_Filter>;
+    pool_contains?: InputMaybe<Scalars$1['String']>;
+    pool_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_ends_with?: InputMaybe<Scalars$1['String']>;
+    pool_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_gt?: InputMaybe<Scalars$1['String']>;
+    pool_gte?: InputMaybe<Scalars$1['String']>;
+    pool_in?: InputMaybe<Array<Scalars$1['String']>>;
+    pool_lt?: InputMaybe<Scalars$1['String']>;
+    pool_lte?: InputMaybe<Scalars$1['String']>;
+    pool_not?: InputMaybe<Scalars$1['String']>;
+    pool_not_contains?: InputMaybe<Scalars$1['String']>;
+    pool_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    pool_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    pool_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    pool_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_starts_with?: InputMaybe<Scalars$1['String']>;
+    pool_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    swapFees?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapFees_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapFees_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapFees_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    swapFees_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapFees_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapFees_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapFees_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    swapVolume?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapVolume_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapVolume_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapVolume_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    swapVolume_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapVolume_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapVolume_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapVolume_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    timestamp?: InputMaybe<Scalars$1['Int']>;
+    timestamp_gt?: InputMaybe<Scalars$1['Int']>;
+    timestamp_gte?: InputMaybe<Scalars$1['Int']>;
+    timestamp_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    timestamp_lt?: InputMaybe<Scalars$1['Int']>;
+    timestamp_lte?: InputMaybe<Scalars$1['Int']>;
+    timestamp_not?: InputMaybe<Scalars$1['Int']>;
+    timestamp_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    totalShares?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalShares_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalShares_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalShares_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalShares_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalShares_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalShares_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalShares_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+};
+declare enum PoolSnapshot_OrderBy {
+    Amounts = "amounts",
+    Id = "id",
+    Liquidity = "liquidity",
+    Pool = "pool",
+    SwapFees = "swapFees",
+    SwapVolume = "swapVolume",
+    Timestamp = "timestamp",
+    TotalShares = "totalShares"
+}
+declare type PoolToken_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    address?: InputMaybe<Scalars$1['String']>;
+    address_contains?: InputMaybe<Scalars$1['String']>;
+    address_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    address_ends_with?: InputMaybe<Scalars$1['String']>;
+    address_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    address_gt?: InputMaybe<Scalars$1['String']>;
+    address_gte?: InputMaybe<Scalars$1['String']>;
+    address_in?: InputMaybe<Array<Scalars$1['String']>>;
+    address_lt?: InputMaybe<Scalars$1['String']>;
+    address_lte?: InputMaybe<Scalars$1['String']>;
+    address_not?: InputMaybe<Scalars$1['String']>;
+    address_not_contains?: InputMaybe<Scalars$1['String']>;
+    address_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    address_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    address_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    address_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    address_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    address_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    address_starts_with?: InputMaybe<Scalars$1['String']>;
+    address_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    assetManager?: InputMaybe<Scalars$1['Bytes']>;
+    assetManager_contains?: InputMaybe<Scalars$1['Bytes']>;
+    assetManager_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    assetManager_not?: InputMaybe<Scalars$1['Bytes']>;
+    assetManager_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    assetManager_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    balance?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    balance_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    cashBalance?: InputMaybe<Scalars$1['BigDecimal']>;
+    cashBalance_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    cashBalance_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    cashBalance_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    cashBalance_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    cashBalance_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    cashBalance_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    cashBalance_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    decimals?: InputMaybe<Scalars$1['Int']>;
+    decimals_gt?: InputMaybe<Scalars$1['Int']>;
+    decimals_gte?: InputMaybe<Scalars$1['Int']>;
+    decimals_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    decimals_lt?: InputMaybe<Scalars$1['Int']>;
+    decimals_lte?: InputMaybe<Scalars$1['Int']>;
+    decimals_not?: InputMaybe<Scalars$1['Int']>;
+    decimals_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    managedBalance?: InputMaybe<Scalars$1['BigDecimal']>;
+    managedBalance_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    managedBalance_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    managedBalance_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    managedBalance_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    managedBalance_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    managedBalance_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    managedBalance_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    managements_?: InputMaybe<ManagementOperation_Filter>;
+    name?: InputMaybe<Scalars$1['String']>;
+    name_contains?: InputMaybe<Scalars$1['String']>;
+    name_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    name_ends_with?: InputMaybe<Scalars$1['String']>;
+    name_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    name_gt?: InputMaybe<Scalars$1['String']>;
+    name_gte?: InputMaybe<Scalars$1['String']>;
+    name_in?: InputMaybe<Array<Scalars$1['String']>>;
+    name_lt?: InputMaybe<Scalars$1['String']>;
+    name_lte?: InputMaybe<Scalars$1['String']>;
+    name_not?: InputMaybe<Scalars$1['String']>;
+    name_not_contains?: InputMaybe<Scalars$1['String']>;
+    name_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    name_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    name_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    name_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    name_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    name_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    name_starts_with?: InputMaybe<Scalars$1['String']>;
+    name_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId?: InputMaybe<Scalars$1['String']>;
+    poolId_?: InputMaybe<Pool_Filter>;
+    poolId_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_gt?: InputMaybe<Scalars$1['String']>;
+    poolId_gte?: InputMaybe<Scalars$1['String']>;
+    poolId_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_lt?: InputMaybe<Scalars$1['String']>;
+    poolId_lte?: InputMaybe<Scalars$1['String']>;
+    poolId_not?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    priceRate?: InputMaybe<Scalars$1['BigDecimal']>;
+    priceRate_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    priceRate_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    priceRate_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    priceRate_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    priceRate_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    priceRate_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    priceRate_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    symbol?: InputMaybe<Scalars$1['String']>;
+    symbol_contains?: InputMaybe<Scalars$1['String']>;
+    symbol_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_ends_with?: InputMaybe<Scalars$1['String']>;
+    symbol_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_gt?: InputMaybe<Scalars$1['String']>;
+    symbol_gte?: InputMaybe<Scalars$1['String']>;
+    symbol_in?: InputMaybe<Array<Scalars$1['String']>>;
+    symbol_lt?: InputMaybe<Scalars$1['String']>;
+    symbol_lte?: InputMaybe<Scalars$1['String']>;
+    symbol_not?: InputMaybe<Scalars$1['String']>;
+    symbol_not_contains?: InputMaybe<Scalars$1['String']>;
+    symbol_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    symbol_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    symbol_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    symbol_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_starts_with?: InputMaybe<Scalars$1['String']>;
+    symbol_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    token?: InputMaybe<Scalars$1['String']>;
+    token_?: InputMaybe<Token_Filter>;
+    token_contains?: InputMaybe<Scalars$1['String']>;
+    token_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    token_ends_with?: InputMaybe<Scalars$1['String']>;
+    token_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    token_gt?: InputMaybe<Scalars$1['String']>;
+    token_gte?: InputMaybe<Scalars$1['String']>;
+    token_in?: InputMaybe<Array<Scalars$1['String']>>;
+    token_lt?: InputMaybe<Scalars$1['String']>;
+    token_lte?: InputMaybe<Scalars$1['String']>;
+    token_not?: InputMaybe<Scalars$1['String']>;
+    token_not_contains?: InputMaybe<Scalars$1['String']>;
+    token_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    token_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    token_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    token_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    token_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    token_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    token_starts_with?: InputMaybe<Scalars$1['String']>;
+    token_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    weight?: InputMaybe<Scalars$1['BigDecimal']>;
+    weight_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    weight_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    weight_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    weight_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    weight_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    weight_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    weight_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+};
+declare type Pool_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    address?: InputMaybe<Scalars$1['Bytes']>;
+    address_contains?: InputMaybe<Scalars$1['Bytes']>;
+    address_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    address_not?: InputMaybe<Scalars$1['Bytes']>;
+    address_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    address_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    amp?: InputMaybe<Scalars$1['BigInt']>;
+    amp_gt?: InputMaybe<Scalars$1['BigInt']>;
+    amp_gte?: InputMaybe<Scalars$1['BigInt']>;
+    amp_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    amp_lt?: InputMaybe<Scalars$1['BigInt']>;
+    amp_lte?: InputMaybe<Scalars$1['BigInt']>;
+    amp_not?: InputMaybe<Scalars$1['BigInt']>;
+    amp_not_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    baseToken?: InputMaybe<Scalars$1['Bytes']>;
+    baseToken_contains?: InputMaybe<Scalars$1['Bytes']>;
+    baseToken_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    baseToken_not?: InputMaybe<Scalars$1['Bytes']>;
+    baseToken_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    baseToken_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    createTime?: InputMaybe<Scalars$1['Int']>;
+    createTime_gt?: InputMaybe<Scalars$1['Int']>;
+    createTime_gte?: InputMaybe<Scalars$1['Int']>;
+    createTime_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    createTime_lt?: InputMaybe<Scalars$1['Int']>;
+    createTime_lte?: InputMaybe<Scalars$1['Int']>;
+    createTime_not?: InputMaybe<Scalars$1['Int']>;
+    createTime_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    expiryTime?: InputMaybe<Scalars$1['BigInt']>;
+    expiryTime_gt?: InputMaybe<Scalars$1['BigInt']>;
+    expiryTime_gte?: InputMaybe<Scalars$1['BigInt']>;
+    expiryTime_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    expiryTime_lt?: InputMaybe<Scalars$1['BigInt']>;
+    expiryTime_lte?: InputMaybe<Scalars$1['BigInt']>;
+    expiryTime_not?: InputMaybe<Scalars$1['BigInt']>;
+    expiryTime_not_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    factory?: InputMaybe<Scalars$1['Bytes']>;
+    factory_contains?: InputMaybe<Scalars$1['Bytes']>;
+    factory_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    factory_not?: InputMaybe<Scalars$1['Bytes']>;
+    factory_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    factory_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    historicalValues_?: InputMaybe<PoolHistoricalLiquidity_Filter>;
+    holdersCount?: InputMaybe<Scalars$1['BigInt']>;
+    holdersCount_gt?: InputMaybe<Scalars$1['BigInt']>;
+    holdersCount_gte?: InputMaybe<Scalars$1['BigInt']>;
+    holdersCount_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    holdersCount_lt?: InputMaybe<Scalars$1['BigInt']>;
+    holdersCount_lte?: InputMaybe<Scalars$1['BigInt']>;
+    holdersCount_not?: InputMaybe<Scalars$1['BigInt']>;
+    holdersCount_not_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    lowerTarget?: InputMaybe<Scalars$1['BigDecimal']>;
+    lowerTarget_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    lowerTarget_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    lowerTarget_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    lowerTarget_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    lowerTarget_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    lowerTarget_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    lowerTarget_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    mainIndex?: InputMaybe<Scalars$1['Int']>;
+    mainIndex_gt?: InputMaybe<Scalars$1['Int']>;
+    mainIndex_gte?: InputMaybe<Scalars$1['Int']>;
+    mainIndex_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    mainIndex_lt?: InputMaybe<Scalars$1['Int']>;
+    mainIndex_lte?: InputMaybe<Scalars$1['Int']>;
+    mainIndex_not?: InputMaybe<Scalars$1['Int']>;
+    mainIndex_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    managementFee?: InputMaybe<Scalars$1['BigDecimal']>;
+    managementFee_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    managementFee_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    managementFee_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    managementFee_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    managementFee_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    managementFee_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    managementFee_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    name?: InputMaybe<Scalars$1['String']>;
+    name_contains?: InputMaybe<Scalars$1['String']>;
+    name_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    name_ends_with?: InputMaybe<Scalars$1['String']>;
+    name_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    name_gt?: InputMaybe<Scalars$1['String']>;
+    name_gte?: InputMaybe<Scalars$1['String']>;
+    name_in?: InputMaybe<Array<Scalars$1['String']>>;
+    name_lt?: InputMaybe<Scalars$1['String']>;
+    name_lte?: InputMaybe<Scalars$1['String']>;
+    name_not?: InputMaybe<Scalars$1['String']>;
+    name_not_contains?: InputMaybe<Scalars$1['String']>;
+    name_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    name_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    name_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    name_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    name_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    name_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    name_starts_with?: InputMaybe<Scalars$1['String']>;
+    name_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    oracleEnabled?: InputMaybe<Scalars$1['Boolean']>;
+    oracleEnabled_in?: InputMaybe<Array<Scalars$1['Boolean']>>;
+    oracleEnabled_not?: InputMaybe<Scalars$1['Boolean']>;
+    oracleEnabled_not_in?: InputMaybe<Array<Scalars$1['Boolean']>>;
+    owner?: InputMaybe<Scalars$1['Bytes']>;
+    owner_contains?: InputMaybe<Scalars$1['Bytes']>;
+    owner_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    owner_not?: InputMaybe<Scalars$1['Bytes']>;
+    owner_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    owner_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    poolType?: InputMaybe<Scalars$1['String']>;
+    poolType_contains?: InputMaybe<Scalars$1['String']>;
+    poolType_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolType_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolType_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolType_gt?: InputMaybe<Scalars$1['String']>;
+    poolType_gte?: InputMaybe<Scalars$1['String']>;
+    poolType_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolType_lt?: InputMaybe<Scalars$1['String']>;
+    poolType_lte?: InputMaybe<Scalars$1['String']>;
+    poolType_not?: InputMaybe<Scalars$1['String']>;
+    poolType_not_contains?: InputMaybe<Scalars$1['String']>;
+    poolType_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolType_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolType_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolType_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolType_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolType_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolType_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolType_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    priceRateProviders_?: InputMaybe<PriceRateProvider_Filter>;
+    principalToken?: InputMaybe<Scalars$1['Bytes']>;
+    principalToken_contains?: InputMaybe<Scalars$1['Bytes']>;
+    principalToken_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    principalToken_not?: InputMaybe<Scalars$1['Bytes']>;
+    principalToken_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    principalToken_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    root3Alpha?: InputMaybe<Scalars$1['BigDecimal']>;
+    root3Alpha_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    root3Alpha_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    root3Alpha_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    root3Alpha_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    root3Alpha_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    root3Alpha_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    root3Alpha_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    shares_?: InputMaybe<PoolShare_Filter>;
+    snapshots_?: InputMaybe<PoolSnapshot_Filter>;
+    sqrtAlpha?: InputMaybe<Scalars$1['BigDecimal']>;
+    sqrtAlpha_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    sqrtAlpha_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    sqrtAlpha_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    sqrtAlpha_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    sqrtAlpha_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    sqrtAlpha_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    sqrtAlpha_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    sqrtBeta?: InputMaybe<Scalars$1['BigDecimal']>;
+    sqrtBeta_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    sqrtBeta_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    sqrtBeta_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    sqrtBeta_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    sqrtBeta_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    sqrtBeta_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    sqrtBeta_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    strategyType?: InputMaybe<Scalars$1['Int']>;
+    strategyType_gt?: InputMaybe<Scalars$1['Int']>;
+    strategyType_gte?: InputMaybe<Scalars$1['Int']>;
+    strategyType_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    strategyType_lt?: InputMaybe<Scalars$1['Int']>;
+    strategyType_lte?: InputMaybe<Scalars$1['Int']>;
+    strategyType_not?: InputMaybe<Scalars$1['Int']>;
+    strategyType_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    swapEnabled?: InputMaybe<Scalars$1['Boolean']>;
+    swapEnabled_in?: InputMaybe<Array<Scalars$1['Boolean']>>;
+    swapEnabled_not?: InputMaybe<Scalars$1['Boolean']>;
+    swapEnabled_not_in?: InputMaybe<Array<Scalars$1['Boolean']>>;
+    swapFee?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapFee_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapFee_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapFee_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    swapFee_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapFee_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapFee_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    swapFee_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    swapsCount?: InputMaybe<Scalars$1['BigInt']>;
+    swapsCount_gt?: InputMaybe<Scalars$1['BigInt']>;
+    swapsCount_gte?: InputMaybe<Scalars$1['BigInt']>;
+    swapsCount_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    swapsCount_lt?: InputMaybe<Scalars$1['BigInt']>;
+    swapsCount_lte?: InputMaybe<Scalars$1['BigInt']>;
+    swapsCount_not?: InputMaybe<Scalars$1['BigInt']>;
+    swapsCount_not_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    swaps_?: InputMaybe<Swap_Filter>;
+    symbol?: InputMaybe<Scalars$1['String']>;
+    symbol_contains?: InputMaybe<Scalars$1['String']>;
+    symbol_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_ends_with?: InputMaybe<Scalars$1['String']>;
+    symbol_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_gt?: InputMaybe<Scalars$1['String']>;
+    symbol_gte?: InputMaybe<Scalars$1['String']>;
+    symbol_in?: InputMaybe<Array<Scalars$1['String']>>;
+    symbol_lt?: InputMaybe<Scalars$1['String']>;
+    symbol_lte?: InputMaybe<Scalars$1['String']>;
+    symbol_not?: InputMaybe<Scalars$1['String']>;
+    symbol_not_contains?: InputMaybe<Scalars$1['String']>;
+    symbol_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    symbol_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    symbol_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    symbol_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_starts_with?: InputMaybe<Scalars$1['String']>;
+    symbol_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    tokensList?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tokensList_contains?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tokensList_contains_nocase?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tokensList_not?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tokensList_not_contains?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tokensList_not_contains_nocase?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tokens_?: InputMaybe<PoolToken_Filter>;
+    totalLiquidity?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalLiquidity_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalLiquidity_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalLiquidity_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalLiquidity_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalLiquidity_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalLiquidity_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalLiquidity_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalShares?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalShares_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalShares_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalShares_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalShares_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalShares_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalShares_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalShares_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalSwapFee?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapFee_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapFee_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapFee_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalSwapFee_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapFee_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapFee_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapFee_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalSwapVolume?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapVolume_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapVolume_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapVolume_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalSwapVolume_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapVolume_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapVolume_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalSwapVolume_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalWeight?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalWeight_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalWeight_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalWeight_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalWeight_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalWeight_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalWeight_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalWeight_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    tx?: InputMaybe<Scalars$1['Bytes']>;
+    tx_contains?: InputMaybe<Scalars$1['Bytes']>;
+    tx_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tx_not?: InputMaybe<Scalars$1['Bytes']>;
+    tx_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    tx_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    unitSeconds?: InputMaybe<Scalars$1['BigInt']>;
+    unitSeconds_gt?: InputMaybe<Scalars$1['BigInt']>;
+    unitSeconds_gte?: InputMaybe<Scalars$1['BigInt']>;
+    unitSeconds_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    unitSeconds_lt?: InputMaybe<Scalars$1['BigInt']>;
+    unitSeconds_lte?: InputMaybe<Scalars$1['BigInt']>;
+    unitSeconds_not?: InputMaybe<Scalars$1['BigInt']>;
+    unitSeconds_not_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    upperTarget?: InputMaybe<Scalars$1['BigDecimal']>;
+    upperTarget_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    upperTarget_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    upperTarget_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    upperTarget_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    upperTarget_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    upperTarget_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    upperTarget_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    vaultID?: InputMaybe<Scalars$1['String']>;
+    vaultID_?: InputMaybe<Balancer_Filter>;
+    vaultID_contains?: InputMaybe<Scalars$1['String']>;
+    vaultID_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    vaultID_ends_with?: InputMaybe<Scalars$1['String']>;
+    vaultID_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    vaultID_gt?: InputMaybe<Scalars$1['String']>;
+    vaultID_gte?: InputMaybe<Scalars$1['String']>;
+    vaultID_in?: InputMaybe<Array<Scalars$1['String']>>;
+    vaultID_lt?: InputMaybe<Scalars$1['String']>;
+    vaultID_lte?: InputMaybe<Scalars$1['String']>;
+    vaultID_not?: InputMaybe<Scalars$1['String']>;
+    vaultID_not_contains?: InputMaybe<Scalars$1['String']>;
+    vaultID_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    vaultID_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    vaultID_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    vaultID_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    vaultID_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    vaultID_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    vaultID_starts_with?: InputMaybe<Scalars$1['String']>;
+    vaultID_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    weightUpdates_?: InputMaybe<GradualWeightUpdate_Filter>;
+    wrappedIndex?: InputMaybe<Scalars$1['Int']>;
+    wrappedIndex_gt?: InputMaybe<Scalars$1['Int']>;
+    wrappedIndex_gte?: InputMaybe<Scalars$1['Int']>;
+    wrappedIndex_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    wrappedIndex_lt?: InputMaybe<Scalars$1['Int']>;
+    wrappedIndex_lte?: InputMaybe<Scalars$1['Int']>;
+    wrappedIndex_not?: InputMaybe<Scalars$1['Int']>;
+    wrappedIndex_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+};
+declare enum Pool_OrderBy {
+    Address = "address",
+    Amp = "amp",
+    BaseToken = "baseToken",
+    CreateTime = "createTime",
+    ExpiryTime = "expiryTime",
+    Factory = "factory",
+    HistoricalValues = "historicalValues",
+    HoldersCount = "holdersCount",
+    Id = "id",
+    LowerTarget = "lowerTarget",
+    MainIndex = "mainIndex",
+    ManagementFee = "managementFee",
+    Name = "name",
+    OracleEnabled = "oracleEnabled",
+    Owner = "owner",
+    PoolType = "poolType",
+    PriceRateProviders = "priceRateProviders",
+    PrincipalToken = "principalToken",
+    Root3Alpha = "root3Alpha",
+    Shares = "shares",
+    Snapshots = "snapshots",
+    SqrtAlpha = "sqrtAlpha",
+    SqrtBeta = "sqrtBeta",
+    StrategyType = "strategyType",
+    SwapEnabled = "swapEnabled",
+    SwapFee = "swapFee",
+    Swaps = "swaps",
+    SwapsCount = "swapsCount",
+    Symbol = "symbol",
+    Tokens = "tokens",
+    TokensList = "tokensList",
+    TotalLiquidity = "totalLiquidity",
+    TotalShares = "totalShares",
+    TotalSwapFee = "totalSwapFee",
+    TotalSwapVolume = "totalSwapVolume",
+    TotalWeight = "totalWeight",
+    Tx = "tx",
+    UnitSeconds = "unitSeconds",
+    UpperTarget = "upperTarget",
+    VaultId = "vaultID",
+    WeightUpdates = "weightUpdates",
+    WrappedIndex = "wrappedIndex"
+}
+declare type PriceRateProvider_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    address?: InputMaybe<Scalars$1['Bytes']>;
+    address_contains?: InputMaybe<Scalars$1['Bytes']>;
+    address_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    address_not?: InputMaybe<Scalars$1['Bytes']>;
+    address_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    address_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    cacheDuration?: InputMaybe<Scalars$1['Int']>;
+    cacheDuration_gt?: InputMaybe<Scalars$1['Int']>;
+    cacheDuration_gte?: InputMaybe<Scalars$1['Int']>;
+    cacheDuration_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    cacheDuration_lt?: InputMaybe<Scalars$1['Int']>;
+    cacheDuration_lte?: InputMaybe<Scalars$1['Int']>;
+    cacheDuration_not?: InputMaybe<Scalars$1['Int']>;
+    cacheDuration_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    cacheExpiry?: InputMaybe<Scalars$1['Int']>;
+    cacheExpiry_gt?: InputMaybe<Scalars$1['Int']>;
+    cacheExpiry_gte?: InputMaybe<Scalars$1['Int']>;
+    cacheExpiry_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    cacheExpiry_lt?: InputMaybe<Scalars$1['Int']>;
+    cacheExpiry_lte?: InputMaybe<Scalars$1['Int']>;
+    cacheExpiry_not?: InputMaybe<Scalars$1['Int']>;
+    cacheExpiry_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    lastCached?: InputMaybe<Scalars$1['Int']>;
+    lastCached_gt?: InputMaybe<Scalars$1['Int']>;
+    lastCached_gte?: InputMaybe<Scalars$1['Int']>;
+    lastCached_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    lastCached_lt?: InputMaybe<Scalars$1['Int']>;
+    lastCached_lte?: InputMaybe<Scalars$1['Int']>;
+    lastCached_not?: InputMaybe<Scalars$1['Int']>;
+    lastCached_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    poolId?: InputMaybe<Scalars$1['String']>;
+    poolId_?: InputMaybe<Pool_Filter>;
+    poolId_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_gt?: InputMaybe<Scalars$1['String']>;
+    poolId_gte?: InputMaybe<Scalars$1['String']>;
+    poolId_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_lt?: InputMaybe<Scalars$1['String']>;
+    poolId_lte?: InputMaybe<Scalars$1['String']>;
+    poolId_not?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    rate?: InputMaybe<Scalars$1['BigDecimal']>;
+    rate_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    rate_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    rate_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    rate_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    rate_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    rate_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    rate_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    token?: InputMaybe<Scalars$1['String']>;
+    token_?: InputMaybe<PoolToken_Filter>;
+    token_contains?: InputMaybe<Scalars$1['String']>;
+    token_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    token_ends_with?: InputMaybe<Scalars$1['String']>;
+    token_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    token_gt?: InputMaybe<Scalars$1['String']>;
+    token_gte?: InputMaybe<Scalars$1['String']>;
+    token_in?: InputMaybe<Array<Scalars$1['String']>>;
+    token_lt?: InputMaybe<Scalars$1['String']>;
+    token_lte?: InputMaybe<Scalars$1['String']>;
+    token_not?: InputMaybe<Scalars$1['String']>;
+    token_not_contains?: InputMaybe<Scalars$1['String']>;
+    token_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    token_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    token_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    token_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    token_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    token_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    token_starts_with?: InputMaybe<Scalars$1['String']>;
+    token_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+};
+declare type Swap_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    caller?: InputMaybe<Scalars$1['Bytes']>;
+    caller_contains?: InputMaybe<Scalars$1['Bytes']>;
+    caller_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    caller_not?: InputMaybe<Scalars$1['Bytes']>;
+    caller_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    caller_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    poolId?: InputMaybe<Scalars$1['String']>;
+    poolId_?: InputMaybe<Pool_Filter>;
+    poolId_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_gt?: InputMaybe<Scalars$1['String']>;
+    poolId_gte?: InputMaybe<Scalars$1['String']>;
+    poolId_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_lt?: InputMaybe<Scalars$1['String']>;
+    poolId_lte?: InputMaybe<Scalars$1['String']>;
+    poolId_not?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    timestamp?: InputMaybe<Scalars$1['Int']>;
+    timestamp_gt?: InputMaybe<Scalars$1['Int']>;
+    timestamp_gte?: InputMaybe<Scalars$1['Int']>;
+    timestamp_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    timestamp_lt?: InputMaybe<Scalars$1['Int']>;
+    timestamp_lte?: InputMaybe<Scalars$1['Int']>;
+    timestamp_not?: InputMaybe<Scalars$1['Int']>;
+    timestamp_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    tokenAmountIn?: InputMaybe<Scalars$1['BigDecimal']>;
+    tokenAmountIn_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    tokenAmountIn_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    tokenAmountIn_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    tokenAmountIn_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    tokenAmountIn_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    tokenAmountIn_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    tokenAmountIn_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    tokenAmountOut?: InputMaybe<Scalars$1['BigDecimal']>;
+    tokenAmountOut_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    tokenAmountOut_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    tokenAmountOut_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    tokenAmountOut_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    tokenAmountOut_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    tokenAmountOut_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    tokenAmountOut_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    tokenIn?: InputMaybe<Scalars$1['Bytes']>;
+    tokenInSym?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_contains?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_ends_with?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_gt?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_gte?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_in?: InputMaybe<Array<Scalars$1['String']>>;
+    tokenInSym_lt?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_lte?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_not?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_not_contains?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    tokenInSym_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_starts_with?: InputMaybe<Scalars$1['String']>;
+    tokenInSym_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    tokenIn_contains?: InputMaybe<Scalars$1['Bytes']>;
+    tokenIn_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tokenIn_not?: InputMaybe<Scalars$1['Bytes']>;
+    tokenIn_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    tokenIn_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tokenOut?: InputMaybe<Scalars$1['Bytes']>;
+    tokenOutSym?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_contains?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_ends_with?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_gt?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_gte?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_in?: InputMaybe<Array<Scalars$1['String']>>;
+    tokenOutSym_lt?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_lte?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_not?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_not_contains?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    tokenOutSym_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_starts_with?: InputMaybe<Scalars$1['String']>;
+    tokenOutSym_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    tokenOut_contains?: InputMaybe<Scalars$1['Bytes']>;
+    tokenOut_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tokenOut_not?: InputMaybe<Scalars$1['Bytes']>;
+    tokenOut_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    tokenOut_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tx?: InputMaybe<Scalars$1['Bytes']>;
+    tx_contains?: InputMaybe<Scalars$1['Bytes']>;
+    tx_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    tx_not?: InputMaybe<Scalars$1['Bytes']>;
+    tx_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    tx_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    userAddress?: InputMaybe<Scalars$1['String']>;
+    userAddress_?: InputMaybe<User_Filter>;
+    userAddress_contains?: InputMaybe<Scalars$1['String']>;
+    userAddress_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_ends_with?: InputMaybe<Scalars$1['String']>;
+    userAddress_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_gt?: InputMaybe<Scalars$1['String']>;
+    userAddress_gte?: InputMaybe<Scalars$1['String']>;
+    userAddress_in?: InputMaybe<Array<Scalars$1['String']>>;
+    userAddress_lt?: InputMaybe<Scalars$1['String']>;
+    userAddress_lte?: InputMaybe<Scalars$1['String']>;
+    userAddress_not?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_contains?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    userAddress_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_starts_with?: InputMaybe<Scalars$1['String']>;
+    userAddress_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    valueUSD?: InputMaybe<Scalars$1['BigDecimal']>;
+    valueUSD_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    valueUSD_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    valueUSD_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    valueUSD_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    valueUSD_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    valueUSD_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    valueUSD_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+};
+declare type TokenPrice_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    amount?: InputMaybe<Scalars$1['BigDecimal']>;
+    amount_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    amount_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    amount_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    amount_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    amount_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    amount_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    amount_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    asset?: InputMaybe<Scalars$1['Bytes']>;
+    asset_contains?: InputMaybe<Scalars$1['Bytes']>;
+    asset_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    asset_not?: InputMaybe<Scalars$1['Bytes']>;
+    asset_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    asset_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    block?: InputMaybe<Scalars$1['BigInt']>;
+    block_gt?: InputMaybe<Scalars$1['BigInt']>;
+    block_gte?: InputMaybe<Scalars$1['BigInt']>;
+    block_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    block_lt?: InputMaybe<Scalars$1['BigInt']>;
+    block_lte?: InputMaybe<Scalars$1['BigInt']>;
+    block_not?: InputMaybe<Scalars$1['BigInt']>;
+    block_not_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    poolId?: InputMaybe<Scalars$1['String']>;
+    poolId_?: InputMaybe<Pool_Filter>;
+    poolId_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_gt?: InputMaybe<Scalars$1['String']>;
+    poolId_gte?: InputMaybe<Scalars$1['String']>;
+    poolId_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_lt?: InputMaybe<Scalars$1['String']>;
+    poolId_lte?: InputMaybe<Scalars$1['String']>;
+    poolId_not?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains?: InputMaybe<Scalars$1['String']>;
+    poolId_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    poolId_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with?: InputMaybe<Scalars$1['String']>;
+    poolId_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    price?: InputMaybe<Scalars$1['BigDecimal']>;
+    price_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    price_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    price_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    price_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    price_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    price_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    price_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    pricingAsset?: InputMaybe<Scalars$1['Bytes']>;
+    pricingAsset_contains?: InputMaybe<Scalars$1['Bytes']>;
+    pricingAsset_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    pricingAsset_not?: InputMaybe<Scalars$1['Bytes']>;
+    pricingAsset_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    pricingAsset_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    timestamp?: InputMaybe<Scalars$1['Int']>;
+    timestamp_gt?: InputMaybe<Scalars$1['Int']>;
+    timestamp_gte?: InputMaybe<Scalars$1['Int']>;
+    timestamp_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    timestamp_lt?: InputMaybe<Scalars$1['Int']>;
+    timestamp_lte?: InputMaybe<Scalars$1['Int']>;
+    timestamp_not?: InputMaybe<Scalars$1['Int']>;
+    timestamp_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+};
+declare enum TokenPrice_OrderBy {
+    Amount = "amount",
+    Asset = "asset",
+    Block = "block",
+    Id = "id",
+    PoolId = "poolId",
+    Price = "price",
+    PricingAsset = "pricingAsset",
+    Timestamp = "timestamp"
+}
+declare type Token_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    address?: InputMaybe<Scalars$1['String']>;
+    address_contains?: InputMaybe<Scalars$1['String']>;
+    address_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    address_ends_with?: InputMaybe<Scalars$1['String']>;
+    address_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    address_gt?: InputMaybe<Scalars$1['String']>;
+    address_gte?: InputMaybe<Scalars$1['String']>;
+    address_in?: InputMaybe<Array<Scalars$1['String']>>;
+    address_lt?: InputMaybe<Scalars$1['String']>;
+    address_lte?: InputMaybe<Scalars$1['String']>;
+    address_not?: InputMaybe<Scalars$1['String']>;
+    address_not_contains?: InputMaybe<Scalars$1['String']>;
+    address_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    address_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    address_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    address_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    address_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    address_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    address_starts_with?: InputMaybe<Scalars$1['String']>;
+    address_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    decimals?: InputMaybe<Scalars$1['Int']>;
+    decimals_gt?: InputMaybe<Scalars$1['Int']>;
+    decimals_gte?: InputMaybe<Scalars$1['Int']>;
+    decimals_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    decimals_lt?: InputMaybe<Scalars$1['Int']>;
+    decimals_lte?: InputMaybe<Scalars$1['Int']>;
+    decimals_not?: InputMaybe<Scalars$1['Int']>;
+    decimals_not_in?: InputMaybe<Array<Scalars$1['Int']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    latestPrice?: InputMaybe<Scalars$1['String']>;
+    latestPrice_?: InputMaybe<LatestPrice_Filter>;
+    latestPrice_contains?: InputMaybe<Scalars$1['String']>;
+    latestPrice_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    latestPrice_ends_with?: InputMaybe<Scalars$1['String']>;
+    latestPrice_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    latestPrice_gt?: InputMaybe<Scalars$1['String']>;
+    latestPrice_gte?: InputMaybe<Scalars$1['String']>;
+    latestPrice_in?: InputMaybe<Array<Scalars$1['String']>>;
+    latestPrice_lt?: InputMaybe<Scalars$1['String']>;
+    latestPrice_lte?: InputMaybe<Scalars$1['String']>;
+    latestPrice_not?: InputMaybe<Scalars$1['String']>;
+    latestPrice_not_contains?: InputMaybe<Scalars$1['String']>;
+    latestPrice_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    latestPrice_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    latestPrice_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    latestPrice_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    latestPrice_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    latestPrice_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    latestPrice_starts_with?: InputMaybe<Scalars$1['String']>;
+    latestPrice_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    latestUSDPrice?: InputMaybe<Scalars$1['BigDecimal']>;
+    latestUSDPrice_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    latestUSDPrice_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    latestUSDPrice_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    latestUSDPrice_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    latestUSDPrice_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    latestUSDPrice_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    latestUSDPrice_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    name?: InputMaybe<Scalars$1['String']>;
+    name_contains?: InputMaybe<Scalars$1['String']>;
+    name_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    name_ends_with?: InputMaybe<Scalars$1['String']>;
+    name_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    name_gt?: InputMaybe<Scalars$1['String']>;
+    name_gte?: InputMaybe<Scalars$1['String']>;
+    name_in?: InputMaybe<Array<Scalars$1['String']>>;
+    name_lt?: InputMaybe<Scalars$1['String']>;
+    name_lte?: InputMaybe<Scalars$1['String']>;
+    name_not?: InputMaybe<Scalars$1['String']>;
+    name_not_contains?: InputMaybe<Scalars$1['String']>;
+    name_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    name_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    name_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    name_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    name_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    name_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    name_starts_with?: InputMaybe<Scalars$1['String']>;
+    name_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    pool?: InputMaybe<Scalars$1['String']>;
+    pool_?: InputMaybe<Pool_Filter>;
+    pool_contains?: InputMaybe<Scalars$1['String']>;
+    pool_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_ends_with?: InputMaybe<Scalars$1['String']>;
+    pool_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_gt?: InputMaybe<Scalars$1['String']>;
+    pool_gte?: InputMaybe<Scalars$1['String']>;
+    pool_in?: InputMaybe<Array<Scalars$1['String']>>;
+    pool_lt?: InputMaybe<Scalars$1['String']>;
+    pool_lte?: InputMaybe<Scalars$1['String']>;
+    pool_not?: InputMaybe<Scalars$1['String']>;
+    pool_not_contains?: InputMaybe<Scalars$1['String']>;
+    pool_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    pool_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    pool_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    pool_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    pool_starts_with?: InputMaybe<Scalars$1['String']>;
+    pool_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol?: InputMaybe<Scalars$1['String']>;
+    symbol_contains?: InputMaybe<Scalars$1['String']>;
+    symbol_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_ends_with?: InputMaybe<Scalars$1['String']>;
+    symbol_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_gt?: InputMaybe<Scalars$1['String']>;
+    symbol_gte?: InputMaybe<Scalars$1['String']>;
+    symbol_in?: InputMaybe<Array<Scalars$1['String']>>;
+    symbol_lt?: InputMaybe<Scalars$1['String']>;
+    symbol_lte?: InputMaybe<Scalars$1['String']>;
+    symbol_not?: InputMaybe<Scalars$1['String']>;
+    symbol_not_contains?: InputMaybe<Scalars$1['String']>;
+    symbol_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    symbol_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    symbol_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    symbol_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    symbol_starts_with?: InputMaybe<Scalars$1['String']>;
+    symbol_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    totalBalanceNotional?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalBalanceNotional_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalBalanceNotional_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalBalanceNotional_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalBalanceNotional_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalBalanceNotional_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalBalanceNotional_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalBalanceNotional_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalBalanceUSD?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalBalanceUSD_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalBalanceUSD_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalBalanceUSD_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalBalanceUSD_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalBalanceUSD_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalBalanceUSD_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalBalanceUSD_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalSwapCount?: InputMaybe<Scalars$1['BigInt']>;
+    totalSwapCount_gt?: InputMaybe<Scalars$1['BigInt']>;
+    totalSwapCount_gte?: InputMaybe<Scalars$1['BigInt']>;
+    totalSwapCount_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    totalSwapCount_lt?: InputMaybe<Scalars$1['BigInt']>;
+    totalSwapCount_lte?: InputMaybe<Scalars$1['BigInt']>;
+    totalSwapCount_not?: InputMaybe<Scalars$1['BigInt']>;
+    totalSwapCount_not_in?: InputMaybe<Array<Scalars$1['BigInt']>>;
+    totalVolumeNotional?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalVolumeNotional_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalVolumeNotional_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalVolumeNotional_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalVolumeNotional_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalVolumeNotional_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalVolumeNotional_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalVolumeNotional_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalVolumeUSD?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalVolumeUSD_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalVolumeUSD_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalVolumeUSD_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    totalVolumeUSD_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalVolumeUSD_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalVolumeUSD_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    totalVolumeUSD_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+};
+declare type UserInternalBalance_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    balance?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_gt?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_gte?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    balance_lt?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_lte?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_not?: InputMaybe<Scalars$1['BigDecimal']>;
+    balance_not_in?: InputMaybe<Array<Scalars$1['BigDecimal']>>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    token?: InputMaybe<Scalars$1['Bytes']>;
+    token_contains?: InputMaybe<Scalars$1['Bytes']>;
+    token_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    token_not?: InputMaybe<Scalars$1['Bytes']>;
+    token_not_contains?: InputMaybe<Scalars$1['Bytes']>;
+    token_not_in?: InputMaybe<Array<Scalars$1['Bytes']>>;
+    userAddress?: InputMaybe<Scalars$1['String']>;
+    userAddress_?: InputMaybe<User_Filter>;
+    userAddress_contains?: InputMaybe<Scalars$1['String']>;
+    userAddress_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_ends_with?: InputMaybe<Scalars$1['String']>;
+    userAddress_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_gt?: InputMaybe<Scalars$1['String']>;
+    userAddress_gte?: InputMaybe<Scalars$1['String']>;
+    userAddress_in?: InputMaybe<Array<Scalars$1['String']>>;
+    userAddress_lt?: InputMaybe<Scalars$1['String']>;
+    userAddress_lte?: InputMaybe<Scalars$1['String']>;
+    userAddress_not?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_contains?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_contains_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_ends_with?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_ends_with_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_in?: InputMaybe<Array<Scalars$1['String']>>;
+    userAddress_not_starts_with?: InputMaybe<Scalars$1['String']>;
+    userAddress_not_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+    userAddress_starts_with?: InputMaybe<Scalars$1['String']>;
+    userAddress_starts_with_nocase?: InputMaybe<Scalars$1['String']>;
+};
+declare type User_Filter = {
+    /** Filter for the block changed event. */
+    _change_block?: InputMaybe<BlockChangedFilter>;
+    id?: InputMaybe<Scalars$1['ID']>;
+    id_gt?: InputMaybe<Scalars$1['ID']>;
+    id_gte?: InputMaybe<Scalars$1['ID']>;
+    id_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    id_lt?: InputMaybe<Scalars$1['ID']>;
+    id_lte?: InputMaybe<Scalars$1['ID']>;
+    id_not?: InputMaybe<Scalars$1['ID']>;
+    id_not_in?: InputMaybe<Array<Scalars$1['ID']>>;
+    sharesOwned_?: InputMaybe<PoolShare_Filter>;
+    swaps_?: InputMaybe<Swap_Filter>;
+    userInternalBalances_?: InputMaybe<UserInternalBalance_Filter>;
+};
+declare enum User_OrderBy {
+    Id = "id",
+    SharesOwned = "sharesOwned",
+    Swaps = "swaps",
+    UserInternalBalances = "userInternalBalances"
+}
+declare type PoolsQueryVariables = Exact<{
+    skip?: InputMaybe<Scalars$1['Int']>;
+    first?: InputMaybe<Scalars$1['Int']>;
+    orderBy?: InputMaybe<Pool_OrderBy>;
+    orderDirection?: InputMaybe<OrderDirection>;
+    where?: InputMaybe<Pool_Filter>;
+    block?: InputMaybe<Block_Height>;
+}>;
+declare type PoolsQuery = {
+    __typename?: 'Query';
+    pool0: Array<{
+        __typename?: 'Pool';
+        id: string;
+        address: string;
+        poolType?: string | null;
+        symbol?: string | null;
+        name?: string | null;
+        swapFee: string;
+        totalWeight?: string | null;
+        totalSwapVolume: string;
+        totalSwapFee: string;
+        totalLiquidity: string;
+        totalShares: string;
+        swapsCount: string;
+        holdersCount: string;
+        tokensList: Array<string>;
+        amp?: string | null;
+        expiryTime?: string | null;
+        unitSeconds?: string | null;
+        createTime: number;
+        principalToken?: string | null;
+        baseToken?: string | null;
+        swapEnabled: boolean;
+        wrappedIndex?: number | null;
+        mainIndex?: number | null;
+        lowerTarget?: string | null;
+        upperTarget?: string | null;
+        tokens?: Array<{
+            __typename?: 'PoolToken';
+            id: string;
+            symbol: string;
+            name: string;
+            decimals: number;
+            address: string;
+            balance: string;
+            managedBalance: string;
+            weight?: string | null;
+            priceRate: string;
+        }> | null;
+    }>;
+    pool1000: Array<{
+        __typename?: 'Pool';
+        id: string;
+        address: string;
+        poolType?: string | null;
+        symbol?: string | null;
+        name?: string | null;
+        swapFee: string;
+        totalWeight?: string | null;
+        totalSwapVolume: string;
+        totalSwapFee: string;
+        totalLiquidity: string;
+        totalShares: string;
+        swapsCount: string;
+        holdersCount: string;
+        tokensList: Array<string>;
+        amp?: string | null;
+        expiryTime?: string | null;
+        unitSeconds?: string | null;
+        createTime: number;
+        principalToken?: string | null;
+        baseToken?: string | null;
+        swapEnabled: boolean;
+        wrappedIndex?: number | null;
+        mainIndex?: number | null;
+        lowerTarget?: string | null;
+        upperTarget?: string | null;
+        tokens?: Array<{
+            __typename?: 'PoolToken';
+            id: string;
+            symbol: string;
+            name: string;
+            decimals: number;
+            address: string;
+            balance: string;
+            managedBalance: string;
+            weight?: string | null;
+            priceRate: string;
+        }> | null;
+    }>;
+};
+declare type PoolQueryVariables = Exact<{
+    id: Scalars$1['ID'];
+    block?: InputMaybe<Block_Height>;
+}>;
+declare type PoolQuery = {
+    __typename?: 'Query';
+    pool?: {
+        __typename?: 'Pool';
+        id: string;
+        address: string;
+        poolType?: string | null;
+        symbol?: string | null;
+        name?: string | null;
+        swapFee: string;
+        totalWeight?: string | null;
+        totalSwapVolume: string;
+        totalSwapFee: string;
+        totalLiquidity: string;
+        totalShares: string;
+        swapsCount: string;
+        holdersCount: string;
+        tokensList: Array<string>;
+        amp?: string | null;
+        expiryTime?: string | null;
+        unitSeconds?: string | null;
+        createTime: number;
+        principalToken?: string | null;
+        baseToken?: string | null;
+        swapEnabled: boolean;
+        wrappedIndex?: number | null;
+        mainIndex?: number | null;
+        lowerTarget?: string | null;
+        upperTarget?: string | null;
+        tokens?: Array<{
+            __typename?: 'PoolToken';
+            id: string;
+            symbol: string;
+            name: string;
+            decimals: number;
+            address: string;
+            balance: string;
+            managedBalance: string;
+            weight?: string | null;
+            priceRate: string;
+        }> | null;
+    } | null;
+};
+declare type PoolsWithoutLinearQueryVariables = Exact<{
+    skip?: InputMaybe<Scalars$1['Int']>;
+    first?: InputMaybe<Scalars$1['Int']>;
+    orderBy?: InputMaybe<Pool_OrderBy>;
+    orderDirection?: InputMaybe<OrderDirection>;
+    where?: InputMaybe<Pool_Filter>;
+    block?: InputMaybe<Block_Height>;
+}>;
+declare type PoolsWithoutLinearQuery = {
+    __typename?: 'Query';
+    pools: Array<{
+        __typename?: 'Pool';
+        id: string;
+        address: string;
+        poolType?: string | null;
+        symbol?: string | null;
+        name?: string | null;
+        swapFee: string;
+        totalWeight?: string | null;
+        totalSwapVolume: string;
+        totalSwapFee: string;
+        totalLiquidity: string;
+        totalShares: string;
+        swapsCount: string;
+        holdersCount: string;
+        tokensList: Array<string>;
+        amp?: string | null;
+        expiryTime?: string | null;
+        unitSeconds?: string | null;
+        principalToken?: string | null;
+        baseToken?: string | null;
+        swapEnabled: boolean;
+        tokens?: Array<{
+            __typename?: 'PoolToken';
+            id: string;
+            symbol: string;
+            name: string;
+            decimals: number;
+            address: string;
+            balance: string;
+            managedBalance: string;
+            weight?: string | null;
+            priceRate: string;
+        }> | null;
+    }>;
+};
+declare type PoolWithoutLinearQueryVariables = Exact<{
+    id: Scalars$1['ID'];
+    block?: InputMaybe<Block_Height>;
+}>;
+declare type PoolWithoutLinearQuery = {
+    __typename?: 'Query';
+    pool?: {
+        __typename?: 'Pool';
+        id: string;
+        address: string;
+        poolType?: string | null;
+        symbol?: string | null;
+        name?: string | null;
+        swapFee: string;
+        totalWeight?: string | null;
+        totalSwapVolume: string;
+        totalSwapFee: string;
+        totalLiquidity: string;
+        totalShares: string;
+        swapsCount: string;
+        holdersCount: string;
+        tokensList: Array<string>;
+        amp?: string | null;
+        expiryTime?: string | null;
+        unitSeconds?: string | null;
+        principalToken?: string | null;
+        baseToken?: string | null;
+        swapEnabled: boolean;
+        tokens?: Array<{
+            __typename?: 'PoolToken';
+            id: string;
+            symbol: string;
+            name: string;
+            decimals: number;
+            address: string;
+            balance: string;
+            managedBalance: string;
+            weight?: string | null;
+            priceRate: string;
+        }> | null;
+    } | null;
+};
+declare type SubgraphPoolFragment = {
+    __typename?: 'Pool';
+    id: string;
+    address: string;
+    poolType?: string | null;
+    symbol?: string | null;
+    name?: string | null;
+    swapFee: string;
+    totalWeight?: string | null;
+    totalSwapVolume: string;
+    totalSwapFee: string;
+    totalLiquidity: string;
+    totalShares: string;
+    swapsCount: string;
+    holdersCount: string;
+    tokensList: Array<string>;
+    amp?: string | null;
+    expiryTime?: string | null;
+    unitSeconds?: string | null;
+    createTime: number;
+    principalToken?: string | null;
+    baseToken?: string | null;
+    swapEnabled: boolean;
+    wrappedIndex?: number | null;
+    mainIndex?: number | null;
+    lowerTarget?: string | null;
+    upperTarget?: string | null;
+    tokens?: Array<{
+        __typename?: 'PoolToken';
+        id: string;
+        symbol: string;
+        name: string;
+        decimals: number;
+        address: string;
+        balance: string;
+        managedBalance: string;
+        weight?: string | null;
+        priceRate: string;
+    }> | null;
+};
+declare type PoolHistoricalLiquiditiesQueryVariables = Exact<{
+    skip?: InputMaybe<Scalars$1['Int']>;
+    first?: InputMaybe<Scalars$1['Int']>;
+    orderBy?: InputMaybe<PoolHistoricalLiquidity_OrderBy>;
+    orderDirection?: InputMaybe<OrderDirection>;
+    where?: InputMaybe<PoolHistoricalLiquidity_Filter>;
+    block?: InputMaybe<Block_Height>;
+}>;
+declare type PoolHistoricalLiquiditiesQuery = {
+    __typename?: 'Query';
+    poolHistoricalLiquidities: Array<{
+        __typename?: 'PoolHistoricalLiquidity';
+        id: string;
+        poolTotalShares: string;
+        poolLiquidity: string;
+        poolShareValue: string;
+        pricingAsset: string;
+        block: string;
+        poolId: {
+            __typename?: 'Pool';
+            id: string;
+        };
+    }>;
+};
+declare type PoolSnapshotsQueryVariables = Exact<{
+    skip?: InputMaybe<Scalars$1['Int']>;
+    first?: InputMaybe<Scalars$1['Int']>;
+    orderBy?: InputMaybe<PoolSnapshot_OrderBy>;
+    orderDirection?: InputMaybe<OrderDirection>;
+    where?: InputMaybe<PoolSnapshot_Filter>;
+    block?: InputMaybe<Block_Height>;
+}>;
+declare type PoolSnapshotsQuery = {
+    __typename?: 'Query';
+    poolSnapshots: Array<{
+        __typename?: 'PoolSnapshot';
+        id: string;
+        totalShares: string;
+        swapVolume: string;
+        swapFees: string;
+        timestamp: number;
+        pool: {
+            __typename?: 'Pool';
+            id: string;
+        };
+    }>;
+};
+declare type JoinExitsQueryVariables = Exact<{
+    skip?: InputMaybe<Scalars$1['Int']>;
+    first?: InputMaybe<Scalars$1['Int']>;
+    orderBy?: InputMaybe<JoinExit_OrderBy>;
+    orderDirection?: InputMaybe<OrderDirection>;
+    where?: InputMaybe<JoinExit_Filter>;
+    block?: InputMaybe<Block_Height>;
+}>;
+declare type JoinExitsQuery = {
+    __typename?: 'Query';
+    joinExits: Array<{
+        __typename?: 'JoinExit';
+        amounts: Array<string>;
+        id: string;
+        sender: string;
+        timestamp: number;
+        tx: string;
+        type: InvestType;
+        user: {
+            __typename?: 'User';
+            id: string;
+        };
+        pool: {
+            __typename?: 'Pool';
+            id: string;
+            tokensList: Array<string>;
+        };
+    }>;
+};
+declare type BalancersQueryVariables = Exact<{
+    skip?: InputMaybe<Scalars$1['Int']>;
+    first?: InputMaybe<Scalars$1['Int']>;
+    orderBy?: InputMaybe<Balancer_OrderBy>;
+    orderDirection?: InputMaybe<OrderDirection>;
+    where?: InputMaybe<Balancer_Filter>;
+    block?: InputMaybe<Block_Height>;
+}>;
+declare type BalancersQuery = {
+    __typename?: 'Query';
+    balancers: Array<{
+        __typename?: 'Balancer';
+        id: string;
+        totalLiquidity: string;
+        totalSwapVolume: string;
+        totalSwapFee: string;
+        totalSwapCount: string;
+        poolCount: number;
+    }>;
+};
+declare type TokenPricesQueryVariables = Exact<{
+    skip?: InputMaybe<Scalars$1['Int']>;
+    first?: InputMaybe<Scalars$1['Int']>;
+    orderBy?: InputMaybe<TokenPrice_OrderBy>;
+    orderDirection?: InputMaybe<OrderDirection>;
+    where?: InputMaybe<TokenPrice_Filter>;
+    block?: InputMaybe<Block_Height>;
+}>;
+declare type TokenPricesQuery = {
+    __typename?: 'Query';
+    tokenPrices: Array<{
+        __typename?: 'TokenPrice';
+        id: string;
+        asset: string;
+        amount: string;
+        pricingAsset: string;
+        price: string;
+        block: string;
+        timestamp: number;
+        poolId: {
+            __typename?: 'Pool';
+            id: string;
+        };
+    }>;
+};
+declare type TokenLatestPricesQueryVariables = Exact<{
+    skip?: InputMaybe<Scalars$1['Int']>;
+    first?: InputMaybe<Scalars$1['Int']>;
+    orderBy?: InputMaybe<LatestPrice_OrderBy>;
+    orderDirection?: InputMaybe<OrderDirection>;
+    where?: InputMaybe<LatestPrice_Filter>;
+    block?: InputMaybe<Block_Height>;
+}>;
+declare type TokenLatestPricesQuery = {
+    __typename?: 'Query';
+    latestPrices: Array<{
+        __typename?: 'LatestPrice';
+        id: string;
+        asset: string;
+        price: string;
+        pricingAsset: string;
+        poolId: {
+            __typename?: 'Pool';
+            id: string;
+        };
+    }>;
+};
+declare type TokenLatestPriceQueryVariables = Exact<{
+    id: Scalars$1['ID'];
+}>;
+declare type TokenLatestPriceQuery = {
+    __typename?: 'Query';
+    latestPrice?: {
+        __typename?: 'LatestPrice';
+        id: string;
+        asset: string;
+        price: string;
+        pricingAsset: string;
+        poolId: {
+            __typename?: 'Pool';
+            id: string;
+        };
+    } | null;
+};
+declare type UserQueryVariables = Exact<{
+    id: Scalars$1['ID'];
+    block?: InputMaybe<Block_Height>;
+}>;
+declare type UserQuery = {
+    __typename?: 'Query';
+    user?: {
+        __typename?: 'User';
+        id: string;
+        sharesOwned?: Array<{
+            __typename?: 'PoolShare';
+            balance: string;
+            poolId: {
+                __typename?: 'Pool';
+                id: string;
+            };
+        }> | null;
+    } | null;
+};
+declare type UsersQueryVariables = Exact<{
+    skip?: InputMaybe<Scalars$1['Int']>;
+    first?: InputMaybe<Scalars$1['Int']>;
+    orderBy?: InputMaybe<User_OrderBy>;
+    orderDirection?: InputMaybe<OrderDirection>;
+    where?: InputMaybe<User_Filter>;
+    block?: InputMaybe<Block_Height>;
+}>;
+declare type UsersQuery = {
+    __typename?: 'Query';
+    users: Array<{
+        __typename?: 'User';
+        id: string;
+        sharesOwned?: Array<{
+            __typename?: 'PoolShare';
+            balance: string;
+            poolId: {
+                __typename?: 'Pool';
+                id: string;
+            };
+        }> | null;
+    }>;
+};
+declare type SdkFunctionWrapper = <T>(action: (requestHeaders?: Record<string, string>) => Promise<T>, operationName: string, operationType?: string) => Promise<T>;
+declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionWrapper): {
+    Pools(variables?: PoolsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolsQuery>;
+    Pool(variables: PoolQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolQuery>;
+    PoolsWithoutLinear(variables?: PoolsWithoutLinearQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolsWithoutLinearQuery>;
+    PoolWithoutLinear(variables: PoolWithoutLinearQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolWithoutLinearQuery>;
+    PoolHistoricalLiquidities(variables?: PoolHistoricalLiquiditiesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolHistoricalLiquiditiesQuery>;
+    PoolSnapshots(variables?: PoolSnapshotsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolSnapshotsQuery>;
+    JoinExits(variables?: JoinExitsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<JoinExitsQuery>;
+    Balancers(variables?: BalancersQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<BalancersQuery>;
+    TokenPrices(variables?: TokenPricesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<TokenPricesQuery>;
+    TokenLatestPrices(variables?: TokenLatestPricesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<TokenLatestPricesQuery>;
+    TokenLatestPrice(variables: TokenLatestPriceQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<TokenLatestPriceQuery>;
+    User(variables: UserQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<UserQuery>;
+    Users(variables?: UsersQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<UsersQuery>;
+};
+declare type Sdk = ReturnType<typeof getSdk>;
+
+declare type Maybe<T> = T | null;
+/** All built-in and custom scalars, mapped to their actual values */
+declare type Scalars = {
+    ID: string;
+    String: string;
+    Boolean: boolean;
+    Int: number;
+    Float: number;
+    BigDecimal: string;
+    BigInt: string;
+    Bytes: string;
+};
+declare type GaugeFactory = {
+    __typename?: 'GaugeFactory';
+    gauges?: Maybe<Array<LiquidityGauge$1>>;
+    id: Scalars['ID'];
+    numGauges: Scalars['Int'];
+};
+declare type GaugeShare = {
+    __typename?: 'GaugeShare';
+    balance: Scalars['BigDecimal'];
+    gauge: LiquidityGauge$1;
+    id: Scalars['ID'];
+    user: User;
+};
+declare type GaugeVote = {
+    __typename?: 'GaugeVote';
+    gauge: LiquidityGauge$1;
+    id: Scalars['ID'];
+    timestamp?: Maybe<Scalars['BigInt']>;
+    user: User;
+    weight?: Maybe<Scalars['BigDecimal']>;
+};
+declare type LiquidityGauge$1 = {
+    __typename?: 'LiquidityGauge';
+    factory: GaugeFactory;
+    id: Scalars['ID'];
+    poolAddress: Scalars['Bytes'];
+    poolId?: Maybe<Scalars['Bytes']>;
+    shares?: Maybe<Array<GaugeShare>>;
+    streamer?: Maybe<Scalars['Bytes']>;
+    symbol: Scalars['String'];
+    tokens?: Maybe<Array<RewardToken>>;
+    totalSupply: Scalars['BigDecimal'];
+};
+declare type RewardToken = {
+    __typename?: 'RewardToken';
+    decimals: Scalars['Int'];
+    gauge: LiquidityGauge$1;
+    id: Scalars['ID'];
+    symbol: Scalars['String'];
+    totalDeposited: Scalars['BigDecimal'];
+};
+declare type User = {
+    __typename?: 'User';
+    gaugeShares?: Maybe<Array<GaugeShare>>;
+    gaugeVotes?: Maybe<Array<GaugeVote>>;
+    id: Scalars['ID'];
+    votingLocks?: Maybe<Array<VotingEscrowLock>>;
+};
+declare type VotingEscrow = {
+    __typename?: 'VotingEscrow';
+    id: Scalars['ID'];
+    locks?: Maybe<Array<VotingEscrowLock>>;
+    stakedSupply: Scalars['BigDecimal'];
+};
+declare type VotingEscrowLock = {
+    __typename?: 'VotingEscrowLock';
+    id: Scalars['ID'];
+    lockedBalance: Scalars['BigDecimal'];
+    unlockTime?: Maybe<Scalars['BigInt']>;
+    user: User;
+    votingEscrowID: VotingEscrow;
+};
+
+declare type SubgraphClient = Sdk;
+declare type SubgraphLiquidityGauge = LiquidityGauge$1;
+declare type SubgraphPool = SubgraphPoolFragment;
+
+/**
+ * Access liquidity gauges indexed by subgraph.
+ * Because we have ~100 gauges to save on repeated http calls we cache all results as `gauges` on an instance.
+ * Balancer's subgraph URL: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-gauges
+ */
+declare class LiquidityGaugesSubgraphRepository implements Findable<SubgraphLiquidityGauge> {
+    private client;
+    gauges: SubgraphLiquidityGauge[];
+    constructor(url: string);
+    fetch(): Promise<SubgraphLiquidityGauge[]>;
+    find(id: string): Promise<SubgraphLiquidityGauge | undefined>;
+    findBy(param: string, value: string): Promise<SubgraphLiquidityGauge | undefined>;
+}
+
+interface LiquidityGauge {
+    id: string;
+    address: string;
+    name: string;
+    poolId?: Maybe$1<string>;
+    poolAddress: string;
+    totalSupply: number;
+    workingSupply: number;
+    relativeWeight: number;
+    rewardTokens?: {
+        [tokenAddress: string]: RewardData;
+    };
+}
+declare class LiquidityGaugeSubgraphRPCProvider implements Findable<LiquidityGauge> {
+    gaugeController: GaugeControllerMulticallRepository;
+    multicall: LiquidityGaugesMulticallRepository;
+    subgraph: LiquidityGaugesSubgraphRepository;
+    totalSupplies: {
+        [gaugeAddress: string]: number;
+    };
+    workingSupplies: {
+        [gaugeAddress: string]: number;
+    };
+    relativeWeights: {
+        [gaugeAddress: string]: number;
+    };
+    rewardTokens: {
+        [gaugeAddress: string]: {
+            [tokenAddress: string]: RewardData;
+        };
+    };
+    constructor(subgraphUrl: string, multicallAddress: string, gaugeControllerAddress: string, provider: Provider);
+    fetch(): Promise<void>;
+    find(id: string): Promise<LiquidityGauge | undefined>;
+    findBy(attribute: string, value: string): Promise<LiquidityGauge | undefined>;
+    private compose;
+}
+
+declare type PoolAttribute = 'id' | 'address';
+interface PoolRepository {
+    find: (id: string) => Promise<Pool | undefined>;
+    findBy: (attribute: PoolAttribute, value: string) => Promise<Pool | undefined>;
+}
+
+declare type TokenAttribute = 'address' | 'symbol';
+interface TokenProvider {
+    find: (address: string) => Promise<Token | undefined>;
+    findBy: (attribute: TokenAttribute, value: string) => Promise<Token | undefined>;
+}
+
+interface Findable<T, P = string> {
+    find: (id: string) => Promise<T | undefined>;
+    findBy: (attribute: P, value: string) => Promise<T | undefined>;
+}
+interface Searchable<T> {
+    all: () => Promise<T[]>;
+    where: (filters: (arg: T) => boolean) => Promise<T[]>;
+}
+
+/**
+ * Weekly Bal emissions are fixed / year according to:
+ * https://docs.google.com/spreadsheets/d/1FY0gi596YWBOTeu_mrxhWcdF74SwKMNhmu0qJVgs0KI/edit#gid=0
+ *
+ * Using regular numbers for simplicity assuming frontend use only.
+ *
+ * Calculation source
+ * https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/liquidity-mining/contracts/BalancerTokenAdmin.sol
+ */
+/**
+ * Weekly BAL emissions
+ *
+ * @param currentTimestamp used to get the epoch
+ * @returns BAL emitted in a week
+ */
+declare const weekly: (currentTimestamp?: number) => number;
+/**
+ * Total BAL emitted in epoch (1 year)
+ *
+ * @param epoch starting from 0 for the first year of emissions
+ * @returns BAL emitted in epoch
+ */
+declare const total: (epoch: number) => number;
+/**
+ * Total BAL emitted between two timestamps
+ *
+ * @param start starting timestamp
+ * @param end ending timestamp
+ * @returns BAL emitted in period
+ */
+declare const between: (start: number, end: number) => number;
+
+declare const emissions_weekly: typeof weekly;
+declare const emissions_total: typeof total;
+declare const emissions_between: typeof between;
+declare namespace emissions {
+  export {
+    emissions_weekly as weekly,
+    emissions_total as total,
+    emissions_between as between,
+  };
+}
+
+/**
+ * Access pools using the Balancer GraphQL Api.
+ *
+ * Balancer's API URL: https://api.balancer.fi/query/
+ */
+declare class PoolsBalancerAPIRepository implements Findable<Pool, PoolAttribute> {
+    private client;
+    pools: Pool[];
+    constructor(url: string, apiKey: string);
+    fetch(query?: GraphQLQuery): Promise<Pool[]>;
+    find(id: string): Promise<Pool | undefined>;
+    findBy(param: PoolAttribute, value: string): Promise<Pool | undefined>;
+    /** Fixes any formatting issues from the subgraph
+     *  - GraphQL can't store a map so pool.apr.[rewardsApr/tokenAprs].breakdown
+     *    is JSON data that needs to be parsed so they match the Pool type correctly.
+     */
+    private format;
+}
+
+/**
+ * The fallback provider takes multiple PoolRepository's in an array and uses them in order
+ * falling back to the next one if a request times out.
+ *
+ * This is useful for using the Balancer API while being able to fall back to the graph if it is down
+ * to ensure Balancer is maximally decentralized.
+ **/
+declare class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
+    private readonly providers;
+    private timeout;
+    currentProviderIdx: number;
+    constructor(providers: any[], timeout?: number);
+    fetch(query?: GraphQLQuery): Promise<Pool[]>;
+    find(id: string): Promise<Pool | undefined>;
+    findBy(attribute: PoolAttribute, value: string): Promise<Pool | undefined>;
+    fallbackQuery(func: string, args: any[]): Promise<any>;
+}
+
+declare class PoolsStaticRepository implements Findable<Pool, PoolAttribute>, Searchable<Pool> {
+    private pools;
+    constructor(pools: Pool[]);
+    find(id: string): Promise<Pool | undefined>;
+    findBy(attribute: PoolAttribute, value: string): Promise<Pool | undefined>;
+    all(): Promise<Pool[]>;
+    where(filter: (pool: Pool) => boolean): Promise<Pool[]>;
+}
+
+/**
+ * Access pools using generated subgraph client.
+ *
+ * Balancer's subgraph URL: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
+ */
+declare class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute>, Searchable<Pool> {
+    private blockHeight?;
+    private client;
+    pools: SubgraphPool[];
+    /**
+     * Repository with optional lazy loaded blockHeight
+     *
+     * @param url subgraph URL
+     * @param blockHeight lazy loading blockHeigh resolver
+     */
+    constructor(url: string, blockHeight?: (() => Promise<number | undefined>) | undefined);
+    fetch(query?: GraphQLQuery): Promise<Pool[]>;
+    find(id: string): Promise<Pool | undefined>;
+    findBy(param: PoolAttribute, value: string): Promise<Pool | undefined>;
+    all(): Promise<Pool[]>;
+    where(filter: (pool: Pool) => boolean): Promise<Pool[]>;
+    private mapType;
+}
+
+declare class StaticTokenProvider implements Findable<Token, TokenAttribute> {
+    private tokens;
+    constructor(tokens: Token[]);
+    find(address: string): Promise<Token | undefined>;
+    findBy(attribute: TokenAttribute, value: string): Promise<Token | undefined>;
+}
+
+interface TokenPriceProvider {
+    find: (address: string) => Promise<Price | undefined>;
+}
+
+declare class StaticTokenPriceProvider implements Findable<Price> {
+    private tokenPrices;
+    constructor(tokenPrices: TokenPrices);
+    find(address: string): Promise<Price | undefined>;
+    findBy(attribute: string, value: string): Promise<Price | undefined>;
+}
+
+/**
+ * Simple coingecko price source implementation. Configurable by network and token addresses.
+ */
+declare class CoingeckoPriceRepository implements Findable<Price> {
+    prices: TokenPrices;
+    urlBase: string;
+    baseTokenAddresses: string[];
+    constructor(tokenAddresses: string[], chainId?: number);
+    fetch(address: string): Promise<void>;
+    find(address: string): Promise<Price | undefined>;
+    findBy(attribute: string, value: string): Promise<Price | undefined>;
+    private platform;
+    private url;
+}
+
+interface FeeDistributorData {
+    balAmount: number;
+    bbAUsdAmount: number;
+    veBalSupply: number;
+    bbAUsdPrice: number;
+    balAddress: string;
+}
+interface BaseFeeDistributor {
+    multicallData: (ts: number) => Promise<FeeDistributorData>;
+}
+declare class FeeDistributorRepository implements BaseFeeDistributor {
+    private feeDistributorAddress;
+    private balAddress;
+    private veBalAddress;
+    private bbAUsdAddress;
+    multicall: Contract;
+    data?: FeeDistributorData;
+    constructor(multicallAddress: string, feeDistributorAddress: string, balAddress: string, veBalAddress: string, bbAUsdAddress: string, provider: Provider);
+    fetch(timestamp: number): Promise<FeeDistributorData>;
+    multicallData(timestamp: number): Promise<FeeDistributorData>;
+    getPreviousWeek(fromTimestamp: number): number;
+}
+
+declare class FeeCollectorRepository implements Findable<number> {
+    private provider;
+    vault: Contract;
+    swapFeePercentage?: number;
+    constructor(vaultAddress: string, provider: Provider);
+    fetch(): Promise<number>;
+    find(): Promise<number>;
+    findBy(): Promise<number>;
+}
+
+/**
+ * Common interface for fetching APR from external sources
+ *
+ * @param address is optional, used when same source, eg: aave has multiple tokens and all of them can be fetched in one call.
+ */
+interface AprFetcher {
+    (address?: string): Promise<number>;
+}
+declare const tokenAprMap: Record<string, AprFetcher>;
+declare class TokenYieldsRepository implements Findable<number> {
+    private tokenMap;
+    private yields;
+    constructor(tokenMap?: Record<string, AprFetcher>);
+    fetch(address: string): Promise<void>;
+    find(address: string): Promise<number | undefined>;
+    findBy(attribute: string, value: string): Promise<number | undefined>;
+}
+
+declare class BlockNumberRepository implements Findable<number> {
+    private network;
+    constructor(network: number);
+    find(from: string): Promise<number | undefined>;
+    findBy(attribute?: string, value?: string): Promise<number | undefined>;
+}
+
+declare class Data implements BalancerDataRepositories {
+    pools: PoolsSubgraphRepository;
+    yesterdaysPools: PoolsSubgraphRepository;
+    tokenPrices: CoingeckoPriceRepository;
+    tokenMeta: StaticTokenProvider;
+    liquidityGauges: LiquidityGaugeSubgraphRPCProvider;
+    feeDistributor: FeeDistributorRepository;
+    feeCollector: FeeCollectorRepository;
+    tokenYields: TokenYieldsRepository;
+    constructor(networkConfig: BalancerNetworkConfig, provider: Provider);
+}
+
+declare enum GraphQLFilterOperator {
+    GreaterThan = 0,
+    LessThan = 1,
+    Equals = 2,
+    In = 3,
+    NotIn = 4,
+    Contains = 5
+}
+interface GraphQLFilter {
+    operator: GraphQLFilterOperator;
+    value: any;
+}
+interface GraphQLArgs {
+    chainId?: number;
+    first?: number;
+    skip?: number;
+    orderBy?: string;
+    orderDirection?: string;
+    block?: {
+        number?: number;
+    };
+    where?: Record<string, GraphQLFilter>;
+}
+interface GraphQLArgsFormatter {
+    format(args: GraphQLArgs): any;
+}
+
+declare class BalancerAPIArgsFormatter implements GraphQLArgsFormatter {
+    operatorMap: Record<GraphQLFilterOperator, string>;
+    constructor();
+    format(args: GraphQLArgs): any;
+}
+
+declare class SubgraphArgsFormatter implements GraphQLArgsFormatter {
+    operatorMap: Record<GraphQLFilterOperator, string>;
+    constructor();
+    format(args: GraphQLArgs): any;
+}
+
+declare function GreaterThan(value: number): GraphQLFilter;
+declare function LessThan(value: number): GraphQLFilter;
+declare function Equals(value: unknown): GraphQLFilter;
+declare function In(value: (number | string)[]): GraphQLFilter;
+declare function NotIn(value: (number | string)[]): GraphQLFilter;
+declare function Contains(value: (number | string)[]): GraphQLFilter;
+declare const Op: {
+    GreaterThan: typeof GreaterThan;
+    LessThan: typeof LessThan;
+    Equals: typeof Equals;
+    In: typeof In;
+    NotIn: typeof NotIn;
+    Contains: typeof Contains;
+};
+declare class GraphQLArgsBuilder {
+    readonly args: GraphQLArgs;
+    constructor(args: GraphQLArgs);
+    merge(other: GraphQLArgsBuilder): GraphQLArgsBuilder;
+    format(formatter: GraphQLArgsFormatter): any;
+}
+
+interface AprBreakdown {
+    swapFees: number;
+    tokenAprs: {
+        total: number;
+        breakdown: {
+            [address: string]: number;
+        };
+    };
+    stakingApr: {
+        min: number;
+        max: number;
+    };
+    rewardAprs: {
+        total: number;
+        breakdown: {
+            [address: string]: number;
+        };
+    };
+    protocolApr: number;
+    min: number;
+    max: number;
 }
 
 declare type Address = string;
@@ -208,6 +2900,8 @@ interface ContractAddresses {
     vault: string;
     multicall: string;
     lidoRelayer?: string;
+    gaugeController: string;
+    feeDistributor: string;
 }
 interface BalancerNetworkConfig {
     chainId: Network;
@@ -218,14 +2912,28 @@ interface BalancerNetworkConfig {
             lbpRaisingTokens?: string[];
             stETH?: string;
             wstETH?: string;
+            bal: string;
+            veBal: string;
+            bbaUsd: string;
         };
     };
     urls: {
         subgraph: string;
+        gaugesSubgraph: string;
     };
     pools: {
         wETHwstETH?: PoolReference;
     };
+}
+interface BalancerDataRepositories {
+    pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+    yesterdaysPools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+    tokenPrices: Findable<Price>;
+    tokenMeta: Findable<Token, TokenAttribute>;
+    liquidityGauges: Findable<LiquidityGauge>;
+    feeDistributor: BaseFeeDistributor;
+    feeCollector: Findable<number>;
+    tokenYields: Findable<number>;
 }
 declare type PoolReference = {
     id: string;
@@ -316,7 +3024,7 @@ interface OnchainPoolData {
     swapEnabled: boolean;
     tokenRates?: string[];
 }
-declare enum PoolType$1 {
+declare enum PoolType {
     Weighted = "Weighted",
     Investment = "Investment",
     Stable = "Stable",
@@ -329,15 +3037,16 @@ declare enum PoolType$1 {
 }
 interface Pool {
     id: string;
+    name: string;
     address: string;
-    poolType: PoolType$1;
+    poolType: PoolType;
     swapFee: string;
     owner?: string;
     factory?: string;
     tokens: PoolToken[];
     tokensList: string[];
     tokenAddresses?: string[];
-    totalLiquidity?: string;
+    totalLiquidity: string;
     totalShares: string;
     totalSwapFee?: string;
     totalSwapVolume?: string;
@@ -351,10 +3060,27 @@ interface Pool {
     feesSnapshot?: string;
     boost?: string;
     symbol?: string;
+    apr?: AprBreakdown;
+    liquidity?: string;
 }
+/**
+ * Live data controller used for caching or as a fallback for missing cached data
+ */
 interface PoolModel extends Pool {
-    liquidity: () => Promise<string>;
+    calcLiquidity: () => Promise<string>;
+    calcApr: () => Promise<AprBreakdown>;
+    calcFees: () => Promise<number>;
+    calcVolume: () => Promise<number>;
+}
+/**
+ * Pool use-cases / controller layer
+ */
+interface PoolWithMethods extends Pool {
     buildJoin: (joiner: string, tokensIn: string[], amountsIn: string[], slippage: string) => Promise<JoinPoolAttributes>;
+}
+interface GraphQLQuery {
+    args: GraphQLArgs;
+    attrs: any;
 }
 
 /**
@@ -509,6 +3235,8 @@ declare class AaveHelpers {
     static getRate(rateProviderAddress: string, provider: JsonRpcProvider): Promise<string>;
 }
 
+declare function tokensToTokenPrices(tokens: Token[]): TokenPrices;
+
 declare const isSameAddress: (address1: string, address2: string) => boolean;
 
 declare enum SwapType {
@@ -635,1364 +3363,6 @@ interface SwapAttributes {
  * @returns Returns an array (same length as assets) with limits applied for each asset.
  */
 declare function getLimitsForSlippage(tokensIn: string[], tokensOut: string[], swapType: SwapType, deltas: BigNumberish[], assets: string[], slippage: BigNumberish): BigNumberish[];
-
-declare type PoolAttribute = 'id' | 'address';
-interface PoolRepository {
-    find: (id: string) => Promise<Pool | undefined>;
-    findBy: (attribute: PoolAttribute, value: string) => Promise<Pool | undefined>;
-}
-
-/**
- * The fallback provider takes multiple PoolRepository's in an array and uses them in order
- * falling back to the next one if a request times out.
- *
- * This is useful for using the Balancer API while being able to fall back to the graph if it is down
- * to ensure Balancer is maximally decentralized.
- **/
-declare class FallbackPoolRepository implements PoolRepository {
-    private readonly providers;
-    private timeout;
-    currentProviderIdx: number;
-    constructor(providers: PoolRepository[], timeout?: number);
-    find(id: string): Promise<Pool | undefined>;
-    findBy(attribute: PoolAttribute, value: string): Promise<Pool | undefined>;
-}
-
-declare class StaticPoolRepository implements PoolRepository {
-    private pools;
-    constructor(pools: Pool[]);
-    find(id: string): Promise<Pool | undefined>;
-    findBy(attribute: PoolAttribute, value: string): Promise<Pool | undefined>;
-}
-
-declare type Maybe<T> = T | null;
-declare type InputMaybe<T> = Maybe<T>;
-declare type Exact<T extends {
-    [key: string]: unknown;
-}> = {
-    [K in keyof T]: T[K];
-};
-/** All built-in and custom scalars, mapped to their actual values */
-declare type Scalars = {
-    ID: string;
-    String: string;
-    Boolean: boolean;
-    Int: number;
-    Float: number;
-    BigDecimal: string;
-    BigInt: string;
-    Bytes: string;
-};
-declare type Balancer_Filter = {
-    /** Filter for the block changed event. */
-    _change_block?: InputMaybe<BlockChangedFilter>;
-    id?: InputMaybe<Scalars['ID']>;
-    id_gt?: InputMaybe<Scalars['ID']>;
-    id_gte?: InputMaybe<Scalars['ID']>;
-    id_in?: InputMaybe<Array<Scalars['ID']>>;
-    id_lt?: InputMaybe<Scalars['ID']>;
-    id_lte?: InputMaybe<Scalars['ID']>;
-    id_not?: InputMaybe<Scalars['ID']>;
-    id_not_in?: InputMaybe<Array<Scalars['ID']>>;
-    poolCount?: InputMaybe<Scalars['Int']>;
-    poolCount_gt?: InputMaybe<Scalars['Int']>;
-    poolCount_gte?: InputMaybe<Scalars['Int']>;
-    poolCount_in?: InputMaybe<Array<Scalars['Int']>>;
-    poolCount_lt?: InputMaybe<Scalars['Int']>;
-    poolCount_lte?: InputMaybe<Scalars['Int']>;
-    poolCount_not?: InputMaybe<Scalars['Int']>;
-    poolCount_not_in?: InputMaybe<Array<Scalars['Int']>>;
-    totalLiquidity?: InputMaybe<Scalars['BigDecimal']>;
-    totalLiquidity_gt?: InputMaybe<Scalars['BigDecimal']>;
-    totalLiquidity_gte?: InputMaybe<Scalars['BigDecimal']>;
-    totalLiquidity_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalLiquidity_lt?: InputMaybe<Scalars['BigDecimal']>;
-    totalLiquidity_lte?: InputMaybe<Scalars['BigDecimal']>;
-    totalLiquidity_not?: InputMaybe<Scalars['BigDecimal']>;
-    totalLiquidity_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalSwapCount?: InputMaybe<Scalars['BigInt']>;
-    totalSwapCount_gt?: InputMaybe<Scalars['BigInt']>;
-    totalSwapCount_gte?: InputMaybe<Scalars['BigInt']>;
-    totalSwapCount_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    totalSwapCount_lt?: InputMaybe<Scalars['BigInt']>;
-    totalSwapCount_lte?: InputMaybe<Scalars['BigInt']>;
-    totalSwapCount_not?: InputMaybe<Scalars['BigInt']>;
-    totalSwapCount_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    totalSwapFee?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapFee_gt?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapFee_gte?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapFee_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalSwapFee_lt?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapFee_lte?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapFee_not?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapFee_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalSwapVolume?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapVolume_gt?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapVolume_gte?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapVolume_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalSwapVolume_lt?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapVolume_lte?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapVolume_not?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapVolume_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-};
-declare enum Balancer_OrderBy {
-    Id = "id",
-    PoolCount = "poolCount",
-    Pools = "pools",
-    TotalLiquidity = "totalLiquidity",
-    TotalSwapCount = "totalSwapCount",
-    TotalSwapFee = "totalSwapFee",
-    TotalSwapVolume = "totalSwapVolume"
-}
-declare type BlockChangedFilter = {
-    number_gte: Scalars['Int'];
-};
-declare type Block_Height = {
-    hash?: InputMaybe<Scalars['Bytes']>;
-    number?: InputMaybe<Scalars['Int']>;
-    number_gte?: InputMaybe<Scalars['Int']>;
-};
-declare enum InvestType {
-    Exit = "Exit",
-    Join = "Join"
-}
-declare type JoinExit_Filter = {
-    /** Filter for the block changed event. */
-    _change_block?: InputMaybe<BlockChangedFilter>;
-    amounts?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    amounts_contains?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    amounts_contains_nocase?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    amounts_not?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    amounts_not_contains?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    amounts_not_contains_nocase?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    id?: InputMaybe<Scalars['ID']>;
-    id_gt?: InputMaybe<Scalars['ID']>;
-    id_gte?: InputMaybe<Scalars['ID']>;
-    id_in?: InputMaybe<Array<Scalars['ID']>>;
-    id_lt?: InputMaybe<Scalars['ID']>;
-    id_lte?: InputMaybe<Scalars['ID']>;
-    id_not?: InputMaybe<Scalars['ID']>;
-    id_not_in?: InputMaybe<Array<Scalars['ID']>>;
-    pool?: InputMaybe<Scalars['String']>;
-    pool_contains?: InputMaybe<Scalars['String']>;
-    pool_contains_nocase?: InputMaybe<Scalars['String']>;
-    pool_ends_with?: InputMaybe<Scalars['String']>;
-    pool_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    pool_gt?: InputMaybe<Scalars['String']>;
-    pool_gte?: InputMaybe<Scalars['String']>;
-    pool_in?: InputMaybe<Array<Scalars['String']>>;
-    pool_lt?: InputMaybe<Scalars['String']>;
-    pool_lte?: InputMaybe<Scalars['String']>;
-    pool_not?: InputMaybe<Scalars['String']>;
-    pool_not_contains?: InputMaybe<Scalars['String']>;
-    pool_not_contains_nocase?: InputMaybe<Scalars['String']>;
-    pool_not_ends_with?: InputMaybe<Scalars['String']>;
-    pool_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    pool_not_in?: InputMaybe<Array<Scalars['String']>>;
-    pool_not_starts_with?: InputMaybe<Scalars['String']>;
-    pool_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    pool_starts_with?: InputMaybe<Scalars['String']>;
-    pool_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    sender?: InputMaybe<Scalars['Bytes']>;
-    sender_contains?: InputMaybe<Scalars['Bytes']>;
-    sender_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    sender_not?: InputMaybe<Scalars['Bytes']>;
-    sender_not_contains?: InputMaybe<Scalars['Bytes']>;
-    sender_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    timestamp?: InputMaybe<Scalars['Int']>;
-    timestamp_gt?: InputMaybe<Scalars['Int']>;
-    timestamp_gte?: InputMaybe<Scalars['Int']>;
-    timestamp_in?: InputMaybe<Array<Scalars['Int']>>;
-    timestamp_lt?: InputMaybe<Scalars['Int']>;
-    timestamp_lte?: InputMaybe<Scalars['Int']>;
-    timestamp_not?: InputMaybe<Scalars['Int']>;
-    timestamp_not_in?: InputMaybe<Array<Scalars['Int']>>;
-    tx?: InputMaybe<Scalars['Bytes']>;
-    tx_contains?: InputMaybe<Scalars['Bytes']>;
-    tx_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    tx_not?: InputMaybe<Scalars['Bytes']>;
-    tx_not_contains?: InputMaybe<Scalars['Bytes']>;
-    tx_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    type?: InputMaybe<InvestType>;
-    type_in?: InputMaybe<Array<InvestType>>;
-    type_not?: InputMaybe<InvestType>;
-    type_not_in?: InputMaybe<Array<InvestType>>;
-    user?: InputMaybe<Scalars['String']>;
-    user_contains?: InputMaybe<Scalars['String']>;
-    user_contains_nocase?: InputMaybe<Scalars['String']>;
-    user_ends_with?: InputMaybe<Scalars['String']>;
-    user_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    user_gt?: InputMaybe<Scalars['String']>;
-    user_gte?: InputMaybe<Scalars['String']>;
-    user_in?: InputMaybe<Array<Scalars['String']>>;
-    user_lt?: InputMaybe<Scalars['String']>;
-    user_lte?: InputMaybe<Scalars['String']>;
-    user_not?: InputMaybe<Scalars['String']>;
-    user_not_contains?: InputMaybe<Scalars['String']>;
-    user_not_contains_nocase?: InputMaybe<Scalars['String']>;
-    user_not_ends_with?: InputMaybe<Scalars['String']>;
-    user_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    user_not_in?: InputMaybe<Array<Scalars['String']>>;
-    user_not_starts_with?: InputMaybe<Scalars['String']>;
-    user_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    user_starts_with?: InputMaybe<Scalars['String']>;
-    user_starts_with_nocase?: InputMaybe<Scalars['String']>;
-};
-declare enum JoinExit_OrderBy {
-    Amounts = "amounts",
-    Id = "id",
-    Pool = "pool",
-    Sender = "sender",
-    Timestamp = "timestamp",
-    Tx = "tx",
-    Type = "type",
-    User = "user"
-}
-declare type LatestPrice_Filter = {
-    /** Filter for the block changed event. */
-    _change_block?: InputMaybe<BlockChangedFilter>;
-    asset?: InputMaybe<Scalars['Bytes']>;
-    asset_contains?: InputMaybe<Scalars['Bytes']>;
-    asset_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    asset_not?: InputMaybe<Scalars['Bytes']>;
-    asset_not_contains?: InputMaybe<Scalars['Bytes']>;
-    asset_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    block?: InputMaybe<Scalars['BigInt']>;
-    block_gt?: InputMaybe<Scalars['BigInt']>;
-    block_gte?: InputMaybe<Scalars['BigInt']>;
-    block_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    block_lt?: InputMaybe<Scalars['BigInt']>;
-    block_lte?: InputMaybe<Scalars['BigInt']>;
-    block_not?: InputMaybe<Scalars['BigInt']>;
-    block_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    id?: InputMaybe<Scalars['ID']>;
-    id_gt?: InputMaybe<Scalars['ID']>;
-    id_gte?: InputMaybe<Scalars['ID']>;
-    id_in?: InputMaybe<Array<Scalars['ID']>>;
-    id_lt?: InputMaybe<Scalars['ID']>;
-    id_lte?: InputMaybe<Scalars['ID']>;
-    id_not?: InputMaybe<Scalars['ID']>;
-    id_not_in?: InputMaybe<Array<Scalars['ID']>>;
-    poolId?: InputMaybe<Scalars['String']>;
-    poolId_contains?: InputMaybe<Scalars['String']>;
-    poolId_contains_nocase?: InputMaybe<Scalars['String']>;
-    poolId_ends_with?: InputMaybe<Scalars['String']>;
-    poolId_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    poolId_gt?: InputMaybe<Scalars['String']>;
-    poolId_gte?: InputMaybe<Scalars['String']>;
-    poolId_in?: InputMaybe<Array<Scalars['String']>>;
-    poolId_lt?: InputMaybe<Scalars['String']>;
-    poolId_lte?: InputMaybe<Scalars['String']>;
-    poolId_not?: InputMaybe<Scalars['String']>;
-    poolId_not_contains?: InputMaybe<Scalars['String']>;
-    poolId_not_contains_nocase?: InputMaybe<Scalars['String']>;
-    poolId_not_ends_with?: InputMaybe<Scalars['String']>;
-    poolId_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    poolId_not_in?: InputMaybe<Array<Scalars['String']>>;
-    poolId_not_starts_with?: InputMaybe<Scalars['String']>;
-    poolId_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    poolId_starts_with?: InputMaybe<Scalars['String']>;
-    poolId_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    price?: InputMaybe<Scalars['BigDecimal']>;
-    price_gt?: InputMaybe<Scalars['BigDecimal']>;
-    price_gte?: InputMaybe<Scalars['BigDecimal']>;
-    price_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    price_lt?: InputMaybe<Scalars['BigDecimal']>;
-    price_lte?: InputMaybe<Scalars['BigDecimal']>;
-    price_not?: InputMaybe<Scalars['BigDecimal']>;
-    price_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    pricingAsset?: InputMaybe<Scalars['Bytes']>;
-    pricingAsset_contains?: InputMaybe<Scalars['Bytes']>;
-    pricingAsset_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    pricingAsset_not?: InputMaybe<Scalars['Bytes']>;
-    pricingAsset_not_contains?: InputMaybe<Scalars['Bytes']>;
-    pricingAsset_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-};
-declare enum LatestPrice_OrderBy {
-    Asset = "asset",
-    Block = "block",
-    Id = "id",
-    PoolId = "poolId",
-    Price = "price",
-    PricingAsset = "pricingAsset"
-}
-/** Defines the order direction, either ascending or descending */
-declare enum OrderDirection {
-    Asc = "asc",
-    Desc = "desc"
-}
-declare type PoolHistoricalLiquidity_Filter = {
-    /** Filter for the block changed event. */
-    _change_block?: InputMaybe<BlockChangedFilter>;
-    block?: InputMaybe<Scalars['BigInt']>;
-    block_gt?: InputMaybe<Scalars['BigInt']>;
-    block_gte?: InputMaybe<Scalars['BigInt']>;
-    block_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    block_lt?: InputMaybe<Scalars['BigInt']>;
-    block_lte?: InputMaybe<Scalars['BigInt']>;
-    block_not?: InputMaybe<Scalars['BigInt']>;
-    block_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    id?: InputMaybe<Scalars['ID']>;
-    id_gt?: InputMaybe<Scalars['ID']>;
-    id_gte?: InputMaybe<Scalars['ID']>;
-    id_in?: InputMaybe<Array<Scalars['ID']>>;
-    id_lt?: InputMaybe<Scalars['ID']>;
-    id_lte?: InputMaybe<Scalars['ID']>;
-    id_not?: InputMaybe<Scalars['ID']>;
-    id_not_in?: InputMaybe<Array<Scalars['ID']>>;
-    poolId?: InputMaybe<Scalars['String']>;
-    poolId_contains?: InputMaybe<Scalars['String']>;
-    poolId_contains_nocase?: InputMaybe<Scalars['String']>;
-    poolId_ends_with?: InputMaybe<Scalars['String']>;
-    poolId_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    poolId_gt?: InputMaybe<Scalars['String']>;
-    poolId_gte?: InputMaybe<Scalars['String']>;
-    poolId_in?: InputMaybe<Array<Scalars['String']>>;
-    poolId_lt?: InputMaybe<Scalars['String']>;
-    poolId_lte?: InputMaybe<Scalars['String']>;
-    poolId_not?: InputMaybe<Scalars['String']>;
-    poolId_not_contains?: InputMaybe<Scalars['String']>;
-    poolId_not_contains_nocase?: InputMaybe<Scalars['String']>;
-    poolId_not_ends_with?: InputMaybe<Scalars['String']>;
-    poolId_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    poolId_not_in?: InputMaybe<Array<Scalars['String']>>;
-    poolId_not_starts_with?: InputMaybe<Scalars['String']>;
-    poolId_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    poolId_starts_with?: InputMaybe<Scalars['String']>;
-    poolId_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    poolLiquidity?: InputMaybe<Scalars['BigDecimal']>;
-    poolLiquidity_gt?: InputMaybe<Scalars['BigDecimal']>;
-    poolLiquidity_gte?: InputMaybe<Scalars['BigDecimal']>;
-    poolLiquidity_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    poolLiquidity_lt?: InputMaybe<Scalars['BigDecimal']>;
-    poolLiquidity_lte?: InputMaybe<Scalars['BigDecimal']>;
-    poolLiquidity_not?: InputMaybe<Scalars['BigDecimal']>;
-    poolLiquidity_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    poolShareValue?: InputMaybe<Scalars['BigDecimal']>;
-    poolShareValue_gt?: InputMaybe<Scalars['BigDecimal']>;
-    poolShareValue_gte?: InputMaybe<Scalars['BigDecimal']>;
-    poolShareValue_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    poolShareValue_lt?: InputMaybe<Scalars['BigDecimal']>;
-    poolShareValue_lte?: InputMaybe<Scalars['BigDecimal']>;
-    poolShareValue_not?: InputMaybe<Scalars['BigDecimal']>;
-    poolShareValue_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    poolTotalShares?: InputMaybe<Scalars['BigDecimal']>;
-    poolTotalShares_gt?: InputMaybe<Scalars['BigDecimal']>;
-    poolTotalShares_gte?: InputMaybe<Scalars['BigDecimal']>;
-    poolTotalShares_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    poolTotalShares_lt?: InputMaybe<Scalars['BigDecimal']>;
-    poolTotalShares_lte?: InputMaybe<Scalars['BigDecimal']>;
-    poolTotalShares_not?: InputMaybe<Scalars['BigDecimal']>;
-    poolTotalShares_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    pricingAsset?: InputMaybe<Scalars['Bytes']>;
-    pricingAsset_contains?: InputMaybe<Scalars['Bytes']>;
-    pricingAsset_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    pricingAsset_not?: InputMaybe<Scalars['Bytes']>;
-    pricingAsset_not_contains?: InputMaybe<Scalars['Bytes']>;
-    pricingAsset_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-};
-declare enum PoolHistoricalLiquidity_OrderBy {
-    Block = "block",
-    Id = "id",
-    PoolId = "poolId",
-    PoolLiquidity = "poolLiquidity",
-    PoolShareValue = "poolShareValue",
-    PoolTotalShares = "poolTotalShares",
-    PricingAsset = "pricingAsset"
-}
-declare type PoolSnapshot_Filter = {
-    /** Filter for the block changed event. */
-    _change_block?: InputMaybe<BlockChangedFilter>;
-    amounts?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    amounts_contains?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    amounts_contains_nocase?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    amounts_not?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    amounts_not_contains?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    amounts_not_contains_nocase?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    id?: InputMaybe<Scalars['ID']>;
-    id_gt?: InputMaybe<Scalars['ID']>;
-    id_gte?: InputMaybe<Scalars['ID']>;
-    id_in?: InputMaybe<Array<Scalars['ID']>>;
-    id_lt?: InputMaybe<Scalars['ID']>;
-    id_lte?: InputMaybe<Scalars['ID']>;
-    id_not?: InputMaybe<Scalars['ID']>;
-    id_not_in?: InputMaybe<Array<Scalars['ID']>>;
-    liquidity?: InputMaybe<Scalars['BigDecimal']>;
-    liquidity_gt?: InputMaybe<Scalars['BigDecimal']>;
-    liquidity_gte?: InputMaybe<Scalars['BigDecimal']>;
-    liquidity_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    liquidity_lt?: InputMaybe<Scalars['BigDecimal']>;
-    liquidity_lte?: InputMaybe<Scalars['BigDecimal']>;
-    liquidity_not?: InputMaybe<Scalars['BigDecimal']>;
-    liquidity_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    pool?: InputMaybe<Scalars['String']>;
-    pool_contains?: InputMaybe<Scalars['String']>;
-    pool_contains_nocase?: InputMaybe<Scalars['String']>;
-    pool_ends_with?: InputMaybe<Scalars['String']>;
-    pool_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    pool_gt?: InputMaybe<Scalars['String']>;
-    pool_gte?: InputMaybe<Scalars['String']>;
-    pool_in?: InputMaybe<Array<Scalars['String']>>;
-    pool_lt?: InputMaybe<Scalars['String']>;
-    pool_lte?: InputMaybe<Scalars['String']>;
-    pool_not?: InputMaybe<Scalars['String']>;
-    pool_not_contains?: InputMaybe<Scalars['String']>;
-    pool_not_contains_nocase?: InputMaybe<Scalars['String']>;
-    pool_not_ends_with?: InputMaybe<Scalars['String']>;
-    pool_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    pool_not_in?: InputMaybe<Array<Scalars['String']>>;
-    pool_not_starts_with?: InputMaybe<Scalars['String']>;
-    pool_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    pool_starts_with?: InputMaybe<Scalars['String']>;
-    pool_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    swapFees?: InputMaybe<Scalars['BigDecimal']>;
-    swapFees_gt?: InputMaybe<Scalars['BigDecimal']>;
-    swapFees_gte?: InputMaybe<Scalars['BigDecimal']>;
-    swapFees_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    swapFees_lt?: InputMaybe<Scalars['BigDecimal']>;
-    swapFees_lte?: InputMaybe<Scalars['BigDecimal']>;
-    swapFees_not?: InputMaybe<Scalars['BigDecimal']>;
-    swapFees_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    swapVolume?: InputMaybe<Scalars['BigDecimal']>;
-    swapVolume_gt?: InputMaybe<Scalars['BigDecimal']>;
-    swapVolume_gte?: InputMaybe<Scalars['BigDecimal']>;
-    swapVolume_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    swapVolume_lt?: InputMaybe<Scalars['BigDecimal']>;
-    swapVolume_lte?: InputMaybe<Scalars['BigDecimal']>;
-    swapVolume_not?: InputMaybe<Scalars['BigDecimal']>;
-    swapVolume_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    timestamp?: InputMaybe<Scalars['Int']>;
-    timestamp_gt?: InputMaybe<Scalars['Int']>;
-    timestamp_gte?: InputMaybe<Scalars['Int']>;
-    timestamp_in?: InputMaybe<Array<Scalars['Int']>>;
-    timestamp_lt?: InputMaybe<Scalars['Int']>;
-    timestamp_lte?: InputMaybe<Scalars['Int']>;
-    timestamp_not?: InputMaybe<Scalars['Int']>;
-    timestamp_not_in?: InputMaybe<Array<Scalars['Int']>>;
-    totalShares?: InputMaybe<Scalars['BigDecimal']>;
-    totalShares_gt?: InputMaybe<Scalars['BigDecimal']>;
-    totalShares_gte?: InputMaybe<Scalars['BigDecimal']>;
-    totalShares_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalShares_lt?: InputMaybe<Scalars['BigDecimal']>;
-    totalShares_lte?: InputMaybe<Scalars['BigDecimal']>;
-    totalShares_not?: InputMaybe<Scalars['BigDecimal']>;
-    totalShares_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-};
-declare enum PoolSnapshot_OrderBy {
-    Amounts = "amounts",
-    Id = "id",
-    Liquidity = "liquidity",
-    Pool = "pool",
-    SwapFees = "swapFees",
-    SwapVolume = "swapVolume",
-    Timestamp = "timestamp",
-    TotalShares = "totalShares"
-}
-declare type Pool_Filter = {
-    /** Filter for the block changed event. */
-    _change_block?: InputMaybe<BlockChangedFilter>;
-    address?: InputMaybe<Scalars['Bytes']>;
-    address_contains?: InputMaybe<Scalars['Bytes']>;
-    address_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    address_not?: InputMaybe<Scalars['Bytes']>;
-    address_not_contains?: InputMaybe<Scalars['Bytes']>;
-    address_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    amp?: InputMaybe<Scalars['BigInt']>;
-    amp_gt?: InputMaybe<Scalars['BigInt']>;
-    amp_gte?: InputMaybe<Scalars['BigInt']>;
-    amp_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    amp_lt?: InputMaybe<Scalars['BigInt']>;
-    amp_lte?: InputMaybe<Scalars['BigInt']>;
-    amp_not?: InputMaybe<Scalars['BigInt']>;
-    amp_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    baseToken?: InputMaybe<Scalars['Bytes']>;
-    baseToken_contains?: InputMaybe<Scalars['Bytes']>;
-    baseToken_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    baseToken_not?: InputMaybe<Scalars['Bytes']>;
-    baseToken_not_contains?: InputMaybe<Scalars['Bytes']>;
-    baseToken_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    createTime?: InputMaybe<Scalars['Int']>;
-    createTime_gt?: InputMaybe<Scalars['Int']>;
-    createTime_gte?: InputMaybe<Scalars['Int']>;
-    createTime_in?: InputMaybe<Array<Scalars['Int']>>;
-    createTime_lt?: InputMaybe<Scalars['Int']>;
-    createTime_lte?: InputMaybe<Scalars['Int']>;
-    createTime_not?: InputMaybe<Scalars['Int']>;
-    createTime_not_in?: InputMaybe<Array<Scalars['Int']>>;
-    expiryTime?: InputMaybe<Scalars['BigInt']>;
-    expiryTime_gt?: InputMaybe<Scalars['BigInt']>;
-    expiryTime_gte?: InputMaybe<Scalars['BigInt']>;
-    expiryTime_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    expiryTime_lt?: InputMaybe<Scalars['BigInt']>;
-    expiryTime_lte?: InputMaybe<Scalars['BigInt']>;
-    expiryTime_not?: InputMaybe<Scalars['BigInt']>;
-    expiryTime_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    factory?: InputMaybe<Scalars['Bytes']>;
-    factory_contains?: InputMaybe<Scalars['Bytes']>;
-    factory_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    factory_not?: InputMaybe<Scalars['Bytes']>;
-    factory_not_contains?: InputMaybe<Scalars['Bytes']>;
-    factory_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    holdersCount?: InputMaybe<Scalars['BigInt']>;
-    holdersCount_gt?: InputMaybe<Scalars['BigInt']>;
-    holdersCount_gte?: InputMaybe<Scalars['BigInt']>;
-    holdersCount_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    holdersCount_lt?: InputMaybe<Scalars['BigInt']>;
-    holdersCount_lte?: InputMaybe<Scalars['BigInt']>;
-    holdersCount_not?: InputMaybe<Scalars['BigInt']>;
-    holdersCount_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    id?: InputMaybe<Scalars['ID']>;
-    id_gt?: InputMaybe<Scalars['ID']>;
-    id_gte?: InputMaybe<Scalars['ID']>;
-    id_in?: InputMaybe<Array<Scalars['ID']>>;
-    id_lt?: InputMaybe<Scalars['ID']>;
-    id_lte?: InputMaybe<Scalars['ID']>;
-    id_not?: InputMaybe<Scalars['ID']>;
-    id_not_in?: InputMaybe<Array<Scalars['ID']>>;
-    lowerTarget?: InputMaybe<Scalars['BigDecimal']>;
-    lowerTarget_gt?: InputMaybe<Scalars['BigDecimal']>;
-    lowerTarget_gte?: InputMaybe<Scalars['BigDecimal']>;
-    lowerTarget_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    lowerTarget_lt?: InputMaybe<Scalars['BigDecimal']>;
-    lowerTarget_lte?: InputMaybe<Scalars['BigDecimal']>;
-    lowerTarget_not?: InputMaybe<Scalars['BigDecimal']>;
-    lowerTarget_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    mainIndex?: InputMaybe<Scalars['Int']>;
-    mainIndex_gt?: InputMaybe<Scalars['Int']>;
-    mainIndex_gte?: InputMaybe<Scalars['Int']>;
-    mainIndex_in?: InputMaybe<Array<Scalars['Int']>>;
-    mainIndex_lt?: InputMaybe<Scalars['Int']>;
-    mainIndex_lte?: InputMaybe<Scalars['Int']>;
-    mainIndex_not?: InputMaybe<Scalars['Int']>;
-    mainIndex_not_in?: InputMaybe<Array<Scalars['Int']>>;
-    managementFee?: InputMaybe<Scalars['BigDecimal']>;
-    managementFee_gt?: InputMaybe<Scalars['BigDecimal']>;
-    managementFee_gte?: InputMaybe<Scalars['BigDecimal']>;
-    managementFee_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    managementFee_lt?: InputMaybe<Scalars['BigDecimal']>;
-    managementFee_lte?: InputMaybe<Scalars['BigDecimal']>;
-    managementFee_not?: InputMaybe<Scalars['BigDecimal']>;
-    managementFee_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    name?: InputMaybe<Scalars['String']>;
-    name_contains?: InputMaybe<Scalars['String']>;
-    name_contains_nocase?: InputMaybe<Scalars['String']>;
-    name_ends_with?: InputMaybe<Scalars['String']>;
-    name_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    name_gt?: InputMaybe<Scalars['String']>;
-    name_gte?: InputMaybe<Scalars['String']>;
-    name_in?: InputMaybe<Array<Scalars['String']>>;
-    name_lt?: InputMaybe<Scalars['String']>;
-    name_lte?: InputMaybe<Scalars['String']>;
-    name_not?: InputMaybe<Scalars['String']>;
-    name_not_contains?: InputMaybe<Scalars['String']>;
-    name_not_contains_nocase?: InputMaybe<Scalars['String']>;
-    name_not_ends_with?: InputMaybe<Scalars['String']>;
-    name_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    name_not_in?: InputMaybe<Array<Scalars['String']>>;
-    name_not_starts_with?: InputMaybe<Scalars['String']>;
-    name_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    name_starts_with?: InputMaybe<Scalars['String']>;
-    name_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    owner?: InputMaybe<Scalars['Bytes']>;
-    owner_contains?: InputMaybe<Scalars['Bytes']>;
-    owner_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    owner_not?: InputMaybe<Scalars['Bytes']>;
-    owner_not_contains?: InputMaybe<Scalars['Bytes']>;
-    owner_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    poolType?: InputMaybe<Scalars['String']>;
-    poolType_contains?: InputMaybe<Scalars['String']>;
-    poolType_contains_nocase?: InputMaybe<Scalars['String']>;
-    poolType_ends_with?: InputMaybe<Scalars['String']>;
-    poolType_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    poolType_gt?: InputMaybe<Scalars['String']>;
-    poolType_gte?: InputMaybe<Scalars['String']>;
-    poolType_in?: InputMaybe<Array<Scalars['String']>>;
-    poolType_lt?: InputMaybe<Scalars['String']>;
-    poolType_lte?: InputMaybe<Scalars['String']>;
-    poolType_not?: InputMaybe<Scalars['String']>;
-    poolType_not_contains?: InputMaybe<Scalars['String']>;
-    poolType_not_contains_nocase?: InputMaybe<Scalars['String']>;
-    poolType_not_ends_with?: InputMaybe<Scalars['String']>;
-    poolType_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    poolType_not_in?: InputMaybe<Array<Scalars['String']>>;
-    poolType_not_starts_with?: InputMaybe<Scalars['String']>;
-    poolType_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    poolType_starts_with?: InputMaybe<Scalars['String']>;
-    poolType_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    principalToken?: InputMaybe<Scalars['Bytes']>;
-    principalToken_contains?: InputMaybe<Scalars['Bytes']>;
-    principalToken_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    principalToken_not?: InputMaybe<Scalars['Bytes']>;
-    principalToken_not_contains?: InputMaybe<Scalars['Bytes']>;
-    principalToken_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    strategyType?: InputMaybe<Scalars['Int']>;
-    strategyType_gt?: InputMaybe<Scalars['Int']>;
-    strategyType_gte?: InputMaybe<Scalars['Int']>;
-    strategyType_in?: InputMaybe<Array<Scalars['Int']>>;
-    strategyType_lt?: InputMaybe<Scalars['Int']>;
-    strategyType_lte?: InputMaybe<Scalars['Int']>;
-    strategyType_not?: InputMaybe<Scalars['Int']>;
-    strategyType_not_in?: InputMaybe<Array<Scalars['Int']>>;
-    swapEnabled?: InputMaybe<Scalars['Boolean']>;
-    swapEnabled_in?: InputMaybe<Array<Scalars['Boolean']>>;
-    swapEnabled_not?: InputMaybe<Scalars['Boolean']>;
-    swapEnabled_not_in?: InputMaybe<Array<Scalars['Boolean']>>;
-    swapFee?: InputMaybe<Scalars['BigDecimal']>;
-    swapFee_gt?: InputMaybe<Scalars['BigDecimal']>;
-    swapFee_gte?: InputMaybe<Scalars['BigDecimal']>;
-    swapFee_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    swapFee_lt?: InputMaybe<Scalars['BigDecimal']>;
-    swapFee_lte?: InputMaybe<Scalars['BigDecimal']>;
-    swapFee_not?: InputMaybe<Scalars['BigDecimal']>;
-    swapFee_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    swapsCount?: InputMaybe<Scalars['BigInt']>;
-    swapsCount_gt?: InputMaybe<Scalars['BigInt']>;
-    swapsCount_gte?: InputMaybe<Scalars['BigInt']>;
-    swapsCount_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    swapsCount_lt?: InputMaybe<Scalars['BigInt']>;
-    swapsCount_lte?: InputMaybe<Scalars['BigInt']>;
-    swapsCount_not?: InputMaybe<Scalars['BigInt']>;
-    swapsCount_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    symbol?: InputMaybe<Scalars['String']>;
-    symbol_contains?: InputMaybe<Scalars['String']>;
-    symbol_contains_nocase?: InputMaybe<Scalars['String']>;
-    symbol_ends_with?: InputMaybe<Scalars['String']>;
-    symbol_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    symbol_gt?: InputMaybe<Scalars['String']>;
-    symbol_gte?: InputMaybe<Scalars['String']>;
-    symbol_in?: InputMaybe<Array<Scalars['String']>>;
-    symbol_lt?: InputMaybe<Scalars['String']>;
-    symbol_lte?: InputMaybe<Scalars['String']>;
-    symbol_not?: InputMaybe<Scalars['String']>;
-    symbol_not_contains?: InputMaybe<Scalars['String']>;
-    symbol_not_contains_nocase?: InputMaybe<Scalars['String']>;
-    symbol_not_ends_with?: InputMaybe<Scalars['String']>;
-    symbol_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    symbol_not_in?: InputMaybe<Array<Scalars['String']>>;
-    symbol_not_starts_with?: InputMaybe<Scalars['String']>;
-    symbol_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    symbol_starts_with?: InputMaybe<Scalars['String']>;
-    symbol_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    tokensList?: InputMaybe<Array<Scalars['Bytes']>>;
-    tokensList_contains?: InputMaybe<Array<Scalars['Bytes']>>;
-    tokensList_contains_nocase?: InputMaybe<Array<Scalars['Bytes']>>;
-    tokensList_not?: InputMaybe<Array<Scalars['Bytes']>>;
-    tokensList_not_contains?: InputMaybe<Array<Scalars['Bytes']>>;
-    tokensList_not_contains_nocase?: InputMaybe<Array<Scalars['Bytes']>>;
-    totalLiquidity?: InputMaybe<Scalars['BigDecimal']>;
-    totalLiquidity_gt?: InputMaybe<Scalars['BigDecimal']>;
-    totalLiquidity_gte?: InputMaybe<Scalars['BigDecimal']>;
-    totalLiquidity_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalLiquidity_lt?: InputMaybe<Scalars['BigDecimal']>;
-    totalLiquidity_lte?: InputMaybe<Scalars['BigDecimal']>;
-    totalLiquidity_not?: InputMaybe<Scalars['BigDecimal']>;
-    totalLiquidity_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalShares?: InputMaybe<Scalars['BigDecimal']>;
-    totalShares_gt?: InputMaybe<Scalars['BigDecimal']>;
-    totalShares_gte?: InputMaybe<Scalars['BigDecimal']>;
-    totalShares_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalShares_lt?: InputMaybe<Scalars['BigDecimal']>;
-    totalShares_lte?: InputMaybe<Scalars['BigDecimal']>;
-    totalShares_not?: InputMaybe<Scalars['BigDecimal']>;
-    totalShares_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalSwapFee?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapFee_gt?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapFee_gte?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapFee_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalSwapFee_lt?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapFee_lte?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapFee_not?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapFee_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalSwapVolume?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapVolume_gt?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapVolume_gte?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapVolume_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalSwapVolume_lt?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapVolume_lte?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapVolume_not?: InputMaybe<Scalars['BigDecimal']>;
-    totalSwapVolume_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalWeight?: InputMaybe<Scalars['BigDecimal']>;
-    totalWeight_gt?: InputMaybe<Scalars['BigDecimal']>;
-    totalWeight_gte?: InputMaybe<Scalars['BigDecimal']>;
-    totalWeight_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    totalWeight_lt?: InputMaybe<Scalars['BigDecimal']>;
-    totalWeight_lte?: InputMaybe<Scalars['BigDecimal']>;
-    totalWeight_not?: InputMaybe<Scalars['BigDecimal']>;
-    totalWeight_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    tx?: InputMaybe<Scalars['Bytes']>;
-    tx_contains?: InputMaybe<Scalars['Bytes']>;
-    tx_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    tx_not?: InputMaybe<Scalars['Bytes']>;
-    tx_not_contains?: InputMaybe<Scalars['Bytes']>;
-    tx_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    unitSeconds?: InputMaybe<Scalars['BigInt']>;
-    unitSeconds_gt?: InputMaybe<Scalars['BigInt']>;
-    unitSeconds_gte?: InputMaybe<Scalars['BigInt']>;
-    unitSeconds_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    unitSeconds_lt?: InputMaybe<Scalars['BigInt']>;
-    unitSeconds_lte?: InputMaybe<Scalars['BigInt']>;
-    unitSeconds_not?: InputMaybe<Scalars['BigInt']>;
-    unitSeconds_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    upperTarget?: InputMaybe<Scalars['BigDecimal']>;
-    upperTarget_gt?: InputMaybe<Scalars['BigDecimal']>;
-    upperTarget_gte?: InputMaybe<Scalars['BigDecimal']>;
-    upperTarget_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    upperTarget_lt?: InputMaybe<Scalars['BigDecimal']>;
-    upperTarget_lte?: InputMaybe<Scalars['BigDecimal']>;
-    upperTarget_not?: InputMaybe<Scalars['BigDecimal']>;
-    upperTarget_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    vaultID?: InputMaybe<Scalars['String']>;
-    vaultID_contains?: InputMaybe<Scalars['String']>;
-    vaultID_contains_nocase?: InputMaybe<Scalars['String']>;
-    vaultID_ends_with?: InputMaybe<Scalars['String']>;
-    vaultID_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    vaultID_gt?: InputMaybe<Scalars['String']>;
-    vaultID_gte?: InputMaybe<Scalars['String']>;
-    vaultID_in?: InputMaybe<Array<Scalars['String']>>;
-    vaultID_lt?: InputMaybe<Scalars['String']>;
-    vaultID_lte?: InputMaybe<Scalars['String']>;
-    vaultID_not?: InputMaybe<Scalars['String']>;
-    vaultID_not_contains?: InputMaybe<Scalars['String']>;
-    vaultID_not_contains_nocase?: InputMaybe<Scalars['String']>;
-    vaultID_not_ends_with?: InputMaybe<Scalars['String']>;
-    vaultID_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    vaultID_not_in?: InputMaybe<Array<Scalars['String']>>;
-    vaultID_not_starts_with?: InputMaybe<Scalars['String']>;
-    vaultID_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    vaultID_starts_with?: InputMaybe<Scalars['String']>;
-    vaultID_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    wrappedIndex?: InputMaybe<Scalars['Int']>;
-    wrappedIndex_gt?: InputMaybe<Scalars['Int']>;
-    wrappedIndex_gte?: InputMaybe<Scalars['Int']>;
-    wrappedIndex_in?: InputMaybe<Array<Scalars['Int']>>;
-    wrappedIndex_lt?: InputMaybe<Scalars['Int']>;
-    wrappedIndex_lte?: InputMaybe<Scalars['Int']>;
-    wrappedIndex_not?: InputMaybe<Scalars['Int']>;
-    wrappedIndex_not_in?: InputMaybe<Array<Scalars['Int']>>;
-};
-declare enum Pool_OrderBy {
-    Address = "address",
-    Amp = "amp",
-    BaseToken = "baseToken",
-    CreateTime = "createTime",
-    ExpiryTime = "expiryTime",
-    Factory = "factory",
-    HistoricalValues = "historicalValues",
-    HoldersCount = "holdersCount",
-    Id = "id",
-    LowerTarget = "lowerTarget",
-    MainIndex = "mainIndex",
-    ManagementFee = "managementFee",
-    Name = "name",
-    Owner = "owner",
-    PoolType = "poolType",
-    PriceRateProviders = "priceRateProviders",
-    PrincipalToken = "principalToken",
-    Shares = "shares",
-    StrategyType = "strategyType",
-    SwapEnabled = "swapEnabled",
-    SwapFee = "swapFee",
-    Swaps = "swaps",
-    SwapsCount = "swapsCount",
-    Symbol = "symbol",
-    Tokens = "tokens",
-    TokensList = "tokensList",
-    TotalLiquidity = "totalLiquidity",
-    TotalShares = "totalShares",
-    TotalSwapFee = "totalSwapFee",
-    TotalSwapVolume = "totalSwapVolume",
-    TotalWeight = "totalWeight",
-    Tx = "tx",
-    UnitSeconds = "unitSeconds",
-    UpperTarget = "upperTarget",
-    VaultId = "vaultID",
-    WeightUpdates = "weightUpdates",
-    WrappedIndex = "wrappedIndex"
-}
-declare type TokenPrice_Filter = {
-    /** Filter for the block changed event. */
-    _change_block?: InputMaybe<BlockChangedFilter>;
-    amount?: InputMaybe<Scalars['BigDecimal']>;
-    amount_gt?: InputMaybe<Scalars['BigDecimal']>;
-    amount_gte?: InputMaybe<Scalars['BigDecimal']>;
-    amount_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    amount_lt?: InputMaybe<Scalars['BigDecimal']>;
-    amount_lte?: InputMaybe<Scalars['BigDecimal']>;
-    amount_not?: InputMaybe<Scalars['BigDecimal']>;
-    amount_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    asset?: InputMaybe<Scalars['Bytes']>;
-    asset_contains?: InputMaybe<Scalars['Bytes']>;
-    asset_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    asset_not?: InputMaybe<Scalars['Bytes']>;
-    asset_not_contains?: InputMaybe<Scalars['Bytes']>;
-    asset_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    block?: InputMaybe<Scalars['BigInt']>;
-    block_gt?: InputMaybe<Scalars['BigInt']>;
-    block_gte?: InputMaybe<Scalars['BigInt']>;
-    block_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    block_lt?: InputMaybe<Scalars['BigInt']>;
-    block_lte?: InputMaybe<Scalars['BigInt']>;
-    block_not?: InputMaybe<Scalars['BigInt']>;
-    block_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
-    id?: InputMaybe<Scalars['ID']>;
-    id_gt?: InputMaybe<Scalars['ID']>;
-    id_gte?: InputMaybe<Scalars['ID']>;
-    id_in?: InputMaybe<Array<Scalars['ID']>>;
-    id_lt?: InputMaybe<Scalars['ID']>;
-    id_lte?: InputMaybe<Scalars['ID']>;
-    id_not?: InputMaybe<Scalars['ID']>;
-    id_not_in?: InputMaybe<Array<Scalars['ID']>>;
-    poolId?: InputMaybe<Scalars['String']>;
-    poolId_contains?: InputMaybe<Scalars['String']>;
-    poolId_contains_nocase?: InputMaybe<Scalars['String']>;
-    poolId_ends_with?: InputMaybe<Scalars['String']>;
-    poolId_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    poolId_gt?: InputMaybe<Scalars['String']>;
-    poolId_gte?: InputMaybe<Scalars['String']>;
-    poolId_in?: InputMaybe<Array<Scalars['String']>>;
-    poolId_lt?: InputMaybe<Scalars['String']>;
-    poolId_lte?: InputMaybe<Scalars['String']>;
-    poolId_not?: InputMaybe<Scalars['String']>;
-    poolId_not_contains?: InputMaybe<Scalars['String']>;
-    poolId_not_contains_nocase?: InputMaybe<Scalars['String']>;
-    poolId_not_ends_with?: InputMaybe<Scalars['String']>;
-    poolId_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
-    poolId_not_in?: InputMaybe<Array<Scalars['String']>>;
-    poolId_not_starts_with?: InputMaybe<Scalars['String']>;
-    poolId_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    poolId_starts_with?: InputMaybe<Scalars['String']>;
-    poolId_starts_with_nocase?: InputMaybe<Scalars['String']>;
-    price?: InputMaybe<Scalars['BigDecimal']>;
-    price_gt?: InputMaybe<Scalars['BigDecimal']>;
-    price_gte?: InputMaybe<Scalars['BigDecimal']>;
-    price_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    price_lt?: InputMaybe<Scalars['BigDecimal']>;
-    price_lte?: InputMaybe<Scalars['BigDecimal']>;
-    price_not?: InputMaybe<Scalars['BigDecimal']>;
-    price_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
-    pricingAsset?: InputMaybe<Scalars['Bytes']>;
-    pricingAsset_contains?: InputMaybe<Scalars['Bytes']>;
-    pricingAsset_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    pricingAsset_not?: InputMaybe<Scalars['Bytes']>;
-    pricingAsset_not_contains?: InputMaybe<Scalars['Bytes']>;
-    pricingAsset_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
-    timestamp?: InputMaybe<Scalars['Int']>;
-    timestamp_gt?: InputMaybe<Scalars['Int']>;
-    timestamp_gte?: InputMaybe<Scalars['Int']>;
-    timestamp_in?: InputMaybe<Array<Scalars['Int']>>;
-    timestamp_lt?: InputMaybe<Scalars['Int']>;
-    timestamp_lte?: InputMaybe<Scalars['Int']>;
-    timestamp_not?: InputMaybe<Scalars['Int']>;
-    timestamp_not_in?: InputMaybe<Array<Scalars['Int']>>;
-};
-declare enum TokenPrice_OrderBy {
-    Amount = "amount",
-    Asset = "asset",
-    Block = "block",
-    Id = "id",
-    PoolId = "poolId",
-    Price = "price",
-    PricingAsset = "pricingAsset",
-    Timestamp = "timestamp"
-}
-declare type User_Filter = {
-    /** Filter for the block changed event. */
-    _change_block?: InputMaybe<BlockChangedFilter>;
-    id?: InputMaybe<Scalars['ID']>;
-    id_gt?: InputMaybe<Scalars['ID']>;
-    id_gte?: InputMaybe<Scalars['ID']>;
-    id_in?: InputMaybe<Array<Scalars['ID']>>;
-    id_lt?: InputMaybe<Scalars['ID']>;
-    id_lte?: InputMaybe<Scalars['ID']>;
-    id_not?: InputMaybe<Scalars['ID']>;
-    id_not_in?: InputMaybe<Array<Scalars['ID']>>;
-};
-declare enum User_OrderBy {
-    Id = "id",
-    SharesOwned = "sharesOwned",
-    Swaps = "swaps",
-    UserInternalBalances = "userInternalBalances"
-}
-declare type PoolsQueryVariables = Exact<{
-    skip?: InputMaybe<Scalars['Int']>;
-    first?: InputMaybe<Scalars['Int']>;
-    orderBy?: InputMaybe<Pool_OrderBy>;
-    orderDirection?: InputMaybe<OrderDirection>;
-    where?: InputMaybe<Pool_Filter>;
-    block?: InputMaybe<Block_Height>;
-}>;
-declare type PoolsQuery = {
-    __typename?: 'Query';
-    pool0: Array<{
-        __typename?: 'Pool';
-        id: string;
-        address: string;
-        poolType?: string | null;
-        symbol?: string | null;
-        name?: string | null;
-        swapFee: string;
-        totalWeight?: string | null;
-        totalSwapVolume: string;
-        totalSwapFee: string;
-        totalLiquidity: string;
-        totalShares: string;
-        swapsCount: string;
-        holdersCount: string;
-        tokensList: Array<string>;
-        amp?: string | null;
-        expiryTime?: string | null;
-        unitSeconds?: string | null;
-        principalToken?: string | null;
-        baseToken?: string | null;
-        swapEnabled: boolean;
-        wrappedIndex?: number | null;
-        mainIndex?: number | null;
-        lowerTarget?: string | null;
-        upperTarget?: string | null;
-        tokens?: Array<{
-            __typename?: 'PoolToken';
-            id: string;
-            symbol: string;
-            name: string;
-            decimals: number;
-            address: string;
-            balance: string;
-            managedBalance: string;
-            weight?: string | null;
-            priceRate: string;
-        }> | null;
-    }>;
-    pool1000: Array<{
-        __typename?: 'Pool';
-        id: string;
-        address: string;
-        poolType?: string | null;
-        symbol?: string | null;
-        name?: string | null;
-        swapFee: string;
-        totalWeight?: string | null;
-        totalSwapVolume: string;
-        totalSwapFee: string;
-        totalLiquidity: string;
-        totalShares: string;
-        swapsCount: string;
-        holdersCount: string;
-        tokensList: Array<string>;
-        amp?: string | null;
-        expiryTime?: string | null;
-        unitSeconds?: string | null;
-        principalToken?: string | null;
-        baseToken?: string | null;
-        swapEnabled: boolean;
-        wrappedIndex?: number | null;
-        mainIndex?: number | null;
-        lowerTarget?: string | null;
-        upperTarget?: string | null;
-        tokens?: Array<{
-            __typename?: 'PoolToken';
-            id: string;
-            symbol: string;
-            name: string;
-            decimals: number;
-            address: string;
-            balance: string;
-            managedBalance: string;
-            weight?: string | null;
-            priceRate: string;
-        }> | null;
-    }>;
-};
-declare type PoolQueryVariables = Exact<{
-    id: Scalars['ID'];
-    block?: InputMaybe<Block_Height>;
-}>;
-declare type PoolQuery = {
-    __typename?: 'Query';
-    pool?: {
-        __typename?: 'Pool';
-        id: string;
-        address: string;
-        poolType?: string | null;
-        symbol?: string | null;
-        name?: string | null;
-        swapFee: string;
-        totalWeight?: string | null;
-        totalSwapVolume: string;
-        totalSwapFee: string;
-        totalLiquidity: string;
-        totalShares: string;
-        swapsCount: string;
-        holdersCount: string;
-        tokensList: Array<string>;
-        amp?: string | null;
-        expiryTime?: string | null;
-        unitSeconds?: string | null;
-        principalToken?: string | null;
-        baseToken?: string | null;
-        swapEnabled: boolean;
-        wrappedIndex?: number | null;
-        mainIndex?: number | null;
-        lowerTarget?: string | null;
-        upperTarget?: string | null;
-        tokens?: Array<{
-            __typename?: 'PoolToken';
-            id: string;
-            symbol: string;
-            name: string;
-            decimals: number;
-            address: string;
-            balance: string;
-            managedBalance: string;
-            weight?: string | null;
-            priceRate: string;
-        }> | null;
-    } | null;
-};
-declare type PoolsWithoutLinearQueryVariables = Exact<{
-    skip?: InputMaybe<Scalars['Int']>;
-    first?: InputMaybe<Scalars['Int']>;
-    orderBy?: InputMaybe<Pool_OrderBy>;
-    orderDirection?: InputMaybe<OrderDirection>;
-    where?: InputMaybe<Pool_Filter>;
-    block?: InputMaybe<Block_Height>;
-}>;
-declare type PoolsWithoutLinearQuery = {
-    __typename?: 'Query';
-    pools: Array<{
-        __typename?: 'Pool';
-        id: string;
-        address: string;
-        poolType?: string | null;
-        symbol?: string | null;
-        name?: string | null;
-        swapFee: string;
-        totalWeight?: string | null;
-        totalSwapVolume: string;
-        totalSwapFee: string;
-        totalLiquidity: string;
-        totalShares: string;
-        swapsCount: string;
-        holdersCount: string;
-        tokensList: Array<string>;
-        amp?: string | null;
-        expiryTime?: string | null;
-        unitSeconds?: string | null;
-        principalToken?: string | null;
-        baseToken?: string | null;
-        swapEnabled: boolean;
-        tokens?: Array<{
-            __typename?: 'PoolToken';
-            id: string;
-            symbol: string;
-            name: string;
-            decimals: number;
-            address: string;
-            balance: string;
-            managedBalance: string;
-            weight?: string | null;
-            priceRate: string;
-        }> | null;
-    }>;
-};
-declare type PoolWithoutLinearQueryVariables = Exact<{
-    id: Scalars['ID'];
-    block?: InputMaybe<Block_Height>;
-}>;
-declare type PoolWithoutLinearQuery = {
-    __typename?: 'Query';
-    pool?: {
-        __typename?: 'Pool';
-        id: string;
-        address: string;
-        poolType?: string | null;
-        symbol?: string | null;
-        name?: string | null;
-        swapFee: string;
-        totalWeight?: string | null;
-        totalSwapVolume: string;
-        totalSwapFee: string;
-        totalLiquidity: string;
-        totalShares: string;
-        swapsCount: string;
-        holdersCount: string;
-        tokensList: Array<string>;
-        amp?: string | null;
-        expiryTime?: string | null;
-        unitSeconds?: string | null;
-        principalToken?: string | null;
-        baseToken?: string | null;
-        swapEnabled: boolean;
-        tokens?: Array<{
-            __typename?: 'PoolToken';
-            id: string;
-            symbol: string;
-            name: string;
-            decimals: number;
-            address: string;
-            balance: string;
-            managedBalance: string;
-            weight?: string | null;
-            priceRate: string;
-        }> | null;
-    } | null;
-};
-declare type PoolHistoricalLiquiditiesQueryVariables = Exact<{
-    skip?: InputMaybe<Scalars['Int']>;
-    first?: InputMaybe<Scalars['Int']>;
-    orderBy?: InputMaybe<PoolHistoricalLiquidity_OrderBy>;
-    orderDirection?: InputMaybe<OrderDirection>;
-    where?: InputMaybe<PoolHistoricalLiquidity_Filter>;
-    block?: InputMaybe<Block_Height>;
-}>;
-declare type PoolHistoricalLiquiditiesQuery = {
-    __typename?: 'Query';
-    poolHistoricalLiquidities: Array<{
-        __typename?: 'PoolHistoricalLiquidity';
-        id: string;
-        poolTotalShares: string;
-        poolLiquidity: string;
-        poolShareValue: string;
-        pricingAsset: string;
-        block: string;
-        poolId: {
-            __typename?: 'Pool';
-            id: string;
-        };
-    }>;
-};
-declare type PoolSnapshotsQueryVariables = Exact<{
-    skip?: InputMaybe<Scalars['Int']>;
-    first?: InputMaybe<Scalars['Int']>;
-    orderBy?: InputMaybe<PoolSnapshot_OrderBy>;
-    orderDirection?: InputMaybe<OrderDirection>;
-    where?: InputMaybe<PoolSnapshot_Filter>;
-    block?: InputMaybe<Block_Height>;
-}>;
-declare type PoolSnapshotsQuery = {
-    __typename?: 'Query';
-    poolSnapshots: Array<{
-        __typename?: 'PoolSnapshot';
-        id: string;
-        totalShares: string;
-        swapVolume: string;
-        swapFees: string;
-        timestamp: number;
-        pool: {
-            __typename?: 'Pool';
-            id: string;
-        };
-    }>;
-};
-declare type JoinExitsQueryVariables = Exact<{
-    skip?: InputMaybe<Scalars['Int']>;
-    first?: InputMaybe<Scalars['Int']>;
-    orderBy?: InputMaybe<JoinExit_OrderBy>;
-    orderDirection?: InputMaybe<OrderDirection>;
-    where?: InputMaybe<JoinExit_Filter>;
-    block?: InputMaybe<Block_Height>;
-}>;
-declare type JoinExitsQuery = {
-    __typename?: 'Query';
-    joinExits: Array<{
-        __typename?: 'JoinExit';
-        amounts: Array<string>;
-        id: string;
-        sender: string;
-        timestamp: number;
-        tx: string;
-        type: InvestType;
-        user: {
-            __typename?: 'User';
-            id: string;
-        };
-        pool: {
-            __typename?: 'Pool';
-            id: string;
-            tokensList: Array<string>;
-        };
-    }>;
-};
-declare type BalancersQueryVariables = Exact<{
-    skip?: InputMaybe<Scalars['Int']>;
-    first?: InputMaybe<Scalars['Int']>;
-    orderBy?: InputMaybe<Balancer_OrderBy>;
-    orderDirection?: InputMaybe<OrderDirection>;
-    where?: InputMaybe<Balancer_Filter>;
-    block?: InputMaybe<Block_Height>;
-}>;
-declare type BalancersQuery = {
-    __typename?: 'Query';
-    balancers: Array<{
-        __typename?: 'Balancer';
-        id: string;
-        totalLiquidity: string;
-        totalSwapVolume: string;
-        totalSwapFee: string;
-        totalSwapCount: string;
-        poolCount: number;
-    }>;
-};
-declare type TokenPricesQueryVariables = Exact<{
-    skip?: InputMaybe<Scalars['Int']>;
-    first?: InputMaybe<Scalars['Int']>;
-    orderBy?: InputMaybe<TokenPrice_OrderBy>;
-    orderDirection?: InputMaybe<OrderDirection>;
-    where?: InputMaybe<TokenPrice_Filter>;
-    block?: InputMaybe<Block_Height>;
-}>;
-declare type TokenPricesQuery = {
-    __typename?: 'Query';
-    tokenPrices: Array<{
-        __typename?: 'TokenPrice';
-        id: string;
-        asset: string;
-        amount: string;
-        pricingAsset: string;
-        price: string;
-        block: string;
-        timestamp: number;
-        poolId: {
-            __typename?: 'Pool';
-            id: string;
-        };
-    }>;
-};
-declare type TokenLatestPricesQueryVariables = Exact<{
-    skip?: InputMaybe<Scalars['Int']>;
-    first?: InputMaybe<Scalars['Int']>;
-    orderBy?: InputMaybe<LatestPrice_OrderBy>;
-    orderDirection?: InputMaybe<OrderDirection>;
-    where?: InputMaybe<LatestPrice_Filter>;
-    block?: InputMaybe<Block_Height>;
-}>;
-declare type TokenLatestPricesQuery = {
-    __typename?: 'Query';
-    latestPrices: Array<{
-        __typename?: 'LatestPrice';
-        id: string;
-        asset: string;
-        price: string;
-        pricingAsset: string;
-        poolId: {
-            __typename?: 'Pool';
-            id: string;
-        };
-    }>;
-};
-declare type TokenLatestPriceQueryVariables = Exact<{
-    id: Scalars['ID'];
-}>;
-declare type TokenLatestPriceQuery = {
-    __typename?: 'Query';
-    latestPrice?: {
-        __typename?: 'LatestPrice';
-        id: string;
-        asset: string;
-        price: string;
-        pricingAsset: string;
-        poolId: {
-            __typename?: 'Pool';
-            id: string;
-        };
-    } | null;
-};
-declare type UserQueryVariables = Exact<{
-    id: Scalars['ID'];
-    block?: InputMaybe<Block_Height>;
-}>;
-declare type UserQuery = {
-    __typename?: 'Query';
-    user?: {
-        __typename?: 'User';
-        id: string;
-        sharesOwned?: Array<{
-            __typename?: 'PoolShare';
-            balance: string;
-            poolId: {
-                __typename?: 'Pool';
-                id: string;
-            };
-        }> | null;
-    } | null;
-};
-declare type UsersQueryVariables = Exact<{
-    skip?: InputMaybe<Scalars['Int']>;
-    first?: InputMaybe<Scalars['Int']>;
-    orderBy?: InputMaybe<User_OrderBy>;
-    orderDirection?: InputMaybe<OrderDirection>;
-    where?: InputMaybe<User_Filter>;
-    block?: InputMaybe<Block_Height>;
-}>;
-declare type UsersQuery = {
-    __typename?: 'Query';
-    users: Array<{
-        __typename?: 'User';
-        id: string;
-        sharesOwned?: Array<{
-            __typename?: 'PoolShare';
-            balance: string;
-            poolId: {
-                __typename?: 'Pool';
-                id: string;
-            };
-        }> | null;
-    }>;
-};
-declare type SdkFunctionWrapper = <T>(action: (requestHeaders?: Record<string, string>) => Promise<T>, operationName: string, operationType?: string) => Promise<T>;
-declare function getSdk(client: GraphQLClient, withWrapper?: SdkFunctionWrapper): {
-    Pools(variables?: PoolsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolsQuery>;
-    Pool(variables: PoolQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolQuery>;
-    PoolsWithoutLinear(variables?: PoolsWithoutLinearQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolsWithoutLinearQuery>;
-    PoolWithoutLinear(variables: PoolWithoutLinearQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolWithoutLinearQuery>;
-    PoolHistoricalLiquidities(variables?: PoolHistoricalLiquiditiesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolHistoricalLiquiditiesQuery>;
-    PoolSnapshots(variables?: PoolSnapshotsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolSnapshotsQuery>;
-    JoinExits(variables?: JoinExitsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<JoinExitsQuery>;
-    Balancers(variables?: BalancersQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<BalancersQuery>;
-    TokenPrices(variables?: TokenPricesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<TokenPricesQuery>;
-    TokenLatestPrices(variables?: TokenLatestPricesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<TokenLatestPricesQuery>;
-    TokenLatestPrice(variables: TokenLatestPriceQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<TokenLatestPriceQuery>;
-    User(variables: UserQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<UserQuery>;
-    Users(variables?: UsersQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<UsersQuery>;
-};
-declare type Sdk = ReturnType<typeof getSdk>;
-
-declare type SubgraphClient = Sdk;
-
-declare class SubgraphPoolRepository implements PoolRepository {
-    private client;
-    constructor(client: SubgraphClient);
-    find(id: string): Promise<Pool | undefined>;
-    findBy(attribute: PoolAttribute, value: string): Promise<Pool | undefined>;
-    private mapPool;
-}
-
-declare type TokenAttribute = 'address' | 'symbol';
-interface TokenProvider {
-    find: (address: string) => Promise<Token | undefined>;
-    findBy: (attribute: TokenAttribute, value: string) => Promise<Token | undefined>;
-}
-
-declare class StaticTokenProvider implements TokenProvider {
-    private tokens;
-    constructor(tokens: Token[]);
-    find(address: string): Promise<Token | undefined>;
-    findBy(attribute: TokenAttribute, value: string): Promise<Token | undefined>;
-}
-
-interface TokenPriceProvider {
-    find: (address: string) => Promise<Price | undefined>;
-}
-
-declare class StaticTokenPriceProvider implements TokenPriceProvider {
-    private tokenPrices;
-    constructor(tokenPrices: TokenPrices);
-    /**
-     * Iterates through all tokens and calculates USD prices
-     * based on data the tokens already have.
-     */
-    calculateUSDPrices(): void;
-    find(address: string): Promise<Price | undefined>;
-}
 
 interface PoolBPTValue {
     address: string;
@@ -2270,169 +3640,6 @@ declare class Sor extends SOR {
     private static getTokenPriceService;
 }
 
-declare class StablePoolLiquidity implements LiquidityConcern {
-    calcTotal(tokens: PoolToken[]): string;
-}
-
-declare class StablePoolSpotPrice implements SpotPriceConcern {
-    calcPoolSpotPrice(tokenIn: string, tokenOut: string, pool: SubgraphPoolBase): string;
-}
-
-interface PoolType {
-    liquidity: LiquidityConcern;
-    spotPriceCalculator: SpotPriceConcern;
-    join: JoinConcern;
-}
-
-declare class StablePoolJoin implements JoinConcern {
-    buildJoin({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }: JoinPoolParameters): Promise<JoinPoolAttributes>;
-}
-
-declare class Stable implements PoolType {
-    private liquidityConcern;
-    private spotPriceCalculatorConcern;
-    private joinConcern;
-    liquidity: LiquidityConcern;
-    spotPriceCalculator: SpotPriceConcern;
-    join: JoinConcern;
-    constructor(liquidityConcern?: typeof StablePoolLiquidity, spotPriceCalculatorConcern?: typeof StablePoolSpotPrice, joinConcern?: typeof StablePoolJoin);
-}
-
-declare class WeightedPoolLiquidity implements LiquidityConcern {
-    calcTotal(tokens: PoolToken[]): string;
-}
-
-declare class WeightedPoolSpotPrice implements SpotPriceConcern {
-    calcPoolSpotPrice(tokenIn: string, tokenOut: string, pool: SubgraphPoolBase): string;
-}
-
-declare class WeightedPoolJoin implements JoinConcern {
-    /**
-     * Encode joinPool in an ABI byte string
-     *
-     * [See method for a join pool](https://dev.balancer.fi/references/contracts/apis/the-vault#joinpool).
-     *
-     * _NB: This method doesn't execute a join pool -- it returns an [ABI byte string](https://docs.soliditylang.org/en/latest/abi-spec.html)
-     * containing the data of the function call on a contract, which can then be sent to the network to be executed.
-     * (ex. [sendTransaction](https://web3js.readthedocs.io/en/v1.2.11/web3-eth.html#sendtransaction)).
-     *
-     * @param {JoinPool}          joinPool - join pool information to be encoded
-     * @param {string}            joinPool.poolId - id of pool being joined
-     * @param {string}            joinPool.sender - account address sending tokens to join pool
-     * @param {string}            joinPool.recipient - account address receiving BPT after joining pool
-     * @param {JoinPoolRequest}   joinPool.joinPoolRequest - object containing join pool request information
-     * @returns {string}          encodedJoinPoolData - Returns an ABI byte string containing the data of the function call on a contract
-     */
-    static encodeJoinPool({ poolId, sender, recipient, joinPoolRequest, }: JoinPool): string;
-    /**
-     * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
-     * @param {JoinPoolParameters} params - parameters used to build exact tokens in for bpt out transaction
-     * @param {string}                          params.joiner - Account address joining pool
-     * @param {SubgraphPoolBase}                params.pool - Subgraph pool object of pool being joined
-     * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
-     * @param {string[]}                        params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
-     * @param {string}                          params.slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
-     * @returns                                 transaction request ready to send with signer.sendTransaction
-     */
-    buildJoin({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }: JoinPoolParameters): Promise<JoinPoolAttributes>;
-    /**
-     * Sort BPT calc. inputs alphabetically by token addresses as required by calcBptOutGivenExactTokensIn
-     */
-    private sortCalcInputs;
-    /**
-     * Parse pool info into EVM amounts
-     * @param {Pool}  pool
-     * @returns       parsed pool info
-     */
-    private parsePoolInfo;
-}
-
-declare class Weighted implements PoolType {
-    private liquidityConcern;
-    private spotPriceCalculatorConcern;
-    private joinConcern;
-    liquidity: LiquidityConcern;
-    spotPriceCalculator: SpotPriceConcern;
-    join: JoinConcern;
-    constructor(liquidityConcern?: typeof WeightedPoolLiquidity, spotPriceCalculatorConcern?: typeof WeightedPoolSpotPrice, joinConcern?: typeof WeightedPoolJoin);
-}
-
-declare class MetaStablePoolLiquidity implements LiquidityConcern {
-    calcTotal(tokens: PoolToken[]): string;
-}
-
-declare class MetaStablePoolSpotPrice implements SpotPriceConcern {
-    calcPoolSpotPrice(tokenIn: string, tokenOut: string, pool: SubgraphPoolBase): string;
-}
-
-declare class MetaStablePoolJoin implements JoinConcern {
-    buildJoin({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }: JoinPoolParameters): Promise<JoinPoolAttributes>;
-}
-
-declare class MetaStable implements PoolType {
-    private liquidityConcern;
-    private spotPriceCalculatorConcern;
-    private joinConcern;
-    liquidity: LiquidityConcern;
-    spotPriceCalculator: SpotPriceConcern;
-    join: JoinConcern;
-    constructor(liquidityConcern?: typeof MetaStablePoolLiquidity, spotPriceCalculatorConcern?: typeof MetaStablePoolSpotPrice, joinConcern?: typeof MetaStablePoolJoin);
-}
-
-declare class StablePhantomPoolLiquidity implements LiquidityConcern {
-    calcTotal(tokens: PoolToken[]): string;
-}
-
-declare class StablePhantomPoolSpotPrice implements SpotPriceConcern {
-    calcPoolSpotPrice(tokenIn: string, tokenOut: string, pool: SubgraphPoolBase): string;
-}
-
-declare class StablePhantomPoolJoin implements JoinConcern {
-    buildJoin({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }: JoinPoolParameters): Promise<JoinPoolAttributes>;
-}
-
-declare class StablePhantom implements PoolType {
-    private liquidityConcern;
-    private spotPriceCalculatorConcern;
-    joinConcern: typeof StablePhantomPoolJoin;
-    liquidity: LiquidityConcern;
-    spotPriceCalculator: SpotPriceConcern;
-    join: JoinConcern;
-    constructor(liquidityConcern?: typeof StablePhantomPoolLiquidity, spotPriceCalculatorConcern?: typeof StablePhantomPoolSpotPrice, joinConcern?: typeof StablePhantomPoolJoin);
-}
-
-declare class LinearPoolLiquidity implements LiquidityConcern {
-    calcTotal(tokens: PoolToken[]): string;
-}
-
-declare class LinearPoolSpotPrice implements SpotPriceConcern {
-    calcPoolSpotPrice(tokenIn: string, tokenOut: string, pool: SubgraphPoolBase): string;
-}
-
-declare class LinearPoolJoin implements JoinConcern {
-    buildJoin({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }: JoinPoolParameters): Promise<JoinPoolAttributes>;
-}
-
-declare class Linear implements PoolType {
-    private liquidityConcern;
-    private spotPriceCalculatorConcern;
-    private joinConcern;
-    liquidity: LiquidityConcern;
-    spotPriceCalculator: SpotPriceConcern;
-    join: JoinConcern;
-    constructor(liquidityConcern?: typeof LinearPoolLiquidity, spotPriceCalculatorConcern?: typeof LinearPoolSpotPrice, joinConcern?: typeof LinearPoolJoin);
-}
-
-declare class Pools {
-    weighted: Weighted;
-    stable: Stable;
-    metaStable: MetaStable;
-    stablePhantom: StablePhantom;
-    linear: Linear;
-    constructor(config: BalancerSdkConfig, weighted?: Weighted, stable?: Stable, metaStable?: MetaStable, stablePhantom?: StablePhantom, linear?: Linear);
-    static from(poolType: PoolType$1): Weighted | Stable | MetaStable | StablePhantom | Linear;
-}
-
 declare class Pricing {
     private readonly swaps;
     private pools;
@@ -2489,16 +3696,34 @@ declare class Contracts {
     getErc20(address: string, provider: Provider): Contract;
 }
 
+declare let POOLS_PER_PAGE: number;
 /**
- * Building pools from raw data injecting poolType specific methods
+ * Use-cases layer for generating live pools data
  */
-declare class PoolsProvider {
-    private config;
-    private repository;
-    constructor(config: BalancerSdkConfig, repository: PoolRepository);
-    static wrap(data: Pool, config: BalancerSdkConfig): PoolModel;
-    find(id: string): Promise<PoolModel | undefined>;
-    findBy(param: string, value: string): Promise<PoolModel | undefined>;
+declare class ModelProvider {
+    private repositories;
+    constructor(repositories: BalancerDataRepositories);
+    static resolve(model: PoolModel): Promise<Pool>;
+    static wrap(data: Pool, repositories: BalancerDataRepositories): PoolModel;
+    find(id: string): Promise<Pool | undefined>;
+    findBy(param: string, value: string): Promise<Pool | undefined>;
+    all(page?: number): Promise<Pool[]>;
+    where(filter: (pool: Pool) => boolean, page?: number): Promise<Pool[]>;
+}
+
+/**
+ * Controller / use-case layer for interacting with pools data.
+ */
+declare class Pools implements Findable<PoolWithMethods> {
+    private networkConfig;
+    liveModelProvider: ModelProvider;
+    constructor(networkConfig: BalancerNetworkConfig, repositories: BalancerDataRepositories);
+    dataSource(): Findable<Pool> & Searchable<Pool>;
+    static wrap(pool: Pool, networkConfig: BalancerNetworkConfig): PoolWithMethods;
+    find(id: string): Promise<PoolWithMethods | undefined>;
+    findBy(param: string, value: string): Promise<PoolWithMethods | undefined>;
+    all(): Promise<PoolWithMethods[]>;
+    where(filter: (pool: Pool) => boolean): Promise<PoolWithMethods[]>;
 }
 
 interface BalancerSDKRoot {
@@ -2506,6 +3731,7 @@ interface BalancerSDKRoot {
     sor: Sor;
     subgraph: Subgraph;
     pools: Pools;
+    data: Data;
     swaps: Swaps;
     relayer: Relayer;
     networkConfig: BalancerNetworkConfig;
@@ -2514,13 +3740,13 @@ declare class BalancerSDK implements BalancerSDKRoot {
     config: BalancerSdkConfig;
     sor: Sor;
     subgraph: Subgraph;
-    pools: Pools;
-    poolsProvider: PoolsProvider;
     readonly swaps: Swaps;
     readonly relayer: Relayer;
     readonly pricing: Pricing;
+    readonly pools: Pools;
+    readonly data: Data;
     balancerContracts: Contracts;
-    constructor(config: BalancerSdkConfig, sor?: Sor, subgraph?: Subgraph, pools?: Pools, poolsProvider?: PoolsProvider);
+    constructor(config: BalancerSdkConfig, sor?: Sor, subgraph?: Subgraph);
     get networkConfig(): BalancerNetworkConfig;
     /**
      * Expose balancer contracts, e.g. Vault, LidoRelayer.
@@ -2547,4 +3773,4 @@ declare class BalancerError extends Error {
     static getMessage(code: BalancerErrorCode): string;
 }
 
-export { AaveHelpers, Account, Address, AssetHelpers, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BatchSwap, BatchSwapStep, BuildTransactionParameters, ContractAddresses, Currency, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeUnwrapAaveStaticTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FallbackPoolRepository, FetchPoolsInput, FindRouteParameters, FundManagement, JoinPoolRequest, Liquidity, ManagedPoolEncoder, Network, OnchainPoolData, OnchainTokenData, OutputReference, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolModel, PoolReference, PoolRepository, PoolSpecialization, PoolToken, PoolType$1 as PoolType, Pools, Price, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticPoolRepository, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphPoolRepository, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, signPermit, splitPoolId, toNormalizedWeights };
+export { AaveHelpers, Account, Address, AprBreakdown, AprFetcher, AssetHelpers, BalancerAPIArgsFormatter, BalancerDataRepositories, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BaseFeeDistributor, BatchSwap, BatchSwapStep, BlockNumberRepository, BuildTransactionParameters, CoingeckoPriceRepository, ContractAddresses, Currency, Data, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeUnwrapAaveStaticTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FeeCollectorRepository, FeeDistributorData, FeeDistributorRepository, FetchPoolsInput, FindRouteParameters, Findable, FundManagement, GaugeControllerMulticallRepository, GraphQLArgs, GraphQLArgsBuilder, GraphQLArgsFormatter, GraphQLFilter, GraphQLFilterOperator, GraphQLQuery, JoinPoolRequest, Liquidity, LiquidityGauge, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, ModelProvider, Network, OnchainPoolData, OnchainTokenData, Op, OutputReference, POOLS_PER_PAGE, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolModel, PoolReference, PoolRepository, PoolSpecialization, PoolToken, PoolType, PoolWithMethods, Pools, PoolsBalancerAPIRepository, PoolsFallbackRepository, PoolsStaticRepository, PoolsSubgraphRepository, Price, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, RewardData, Searchable, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphArgsFormatter, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TokenYieldsRepository, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, signPermit, splitPoolId, toNormalizedWeights, tokenAprMap, tokensToTokenPrices };
