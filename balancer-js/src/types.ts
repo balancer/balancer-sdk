@@ -248,7 +248,6 @@ export interface PoolWithMethods extends Pool {
     amountsIn: string[],
     slippage: string
   ) => Promise<JoinPoolAttributes>;
-  fetchApr: () => Promise<AprBreakdown>;
 }
 
 export interface GraphQLQuery {
