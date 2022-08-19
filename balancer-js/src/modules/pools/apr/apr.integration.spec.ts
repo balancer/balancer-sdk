@@ -1,13 +1,13 @@
+import dotenv from 'dotenv';
 import { expect } from 'chai';
 import MockDate from 'mockdate';
 import { BalancerSDK } from '@/modules/sdk.module';
-import { PoolModel } from '@/types';
+
+dotenv.config();
 
 const sdk = new BalancerSDK({
   network: 1,
-  // rpcUrl: 'http://127.0.0.1:8545',
-  rpcUrl:
-    'https://eth-mainnet.alchemyapi.io/v2/7gYoDJEw6-QyVP5hd2UfZyelzDIDemGz',
+  rpcUrl: process.env.RPC_URL || 'http://127.0.0.1:8545',
 });
 
 const { pools } = sdk;
@@ -32,9 +32,8 @@ describe('happy case', () => {
     it('has tokenAprs', async () => {
       const pool = await pools.find(ethStEthCopy);
       if (pool) {
-        const apr = await pool.fetchApr();
-        console.log(apr);
-        expect(apr.tokenAprs).to.be.greaterThan(1);
+        const { apr } = pool;
+        expect(apr && apr.tokenAprs).to.be.greaterThan(1);
       }
     }).timeout(120000);
   });
@@ -43,8 +42,8 @@ describe('happy case', () => {
     it('has tokenAprs', async () => {
       const pool = await pools.find(ethStEth);
       if (pool) {
-        const apr = await pool.fetchApr();
-        expect(apr.tokenAprs).to.be.greaterThan(1);
+        const { apr } = pool;
+        expect(apr && apr.tokenAprs).to.be.greaterThan(1);
       }
     }).timeout(120000);
   });
@@ -53,8 +52,8 @@ describe('happy case', () => {
     it('has tokenAprs', async () => {
       const pool = await pools.find(usdStable);
       if (pool) {
-        const apr = await pool.fetchApr();
-        expect(apr.tokenAprs).to.be.greaterThan(1);
+        const { apr } = pool;
+        expect(apr && apr.tokenAprs).to.be.greaterThan(1);
       }
     }).timeout(120000);
   });
@@ -74,8 +73,8 @@ describe('happy case', () => {
     it('receives protocol revenues', async () => {
       const pool = await pools.find(veBalId);
       if (pool) {
-        const apr = await pool.fetchApr();
-        expect(apr.protocolApr).to.be.greaterThan(1);
+        const { apr } = pool;
+        expect(apr && apr.protocolApr).to.be.greaterThan(1);
       }
     }).timeout(120000);
   });
@@ -95,44 +94,9 @@ describe('happy case', () => {
     it('receives staking rewards', async () => {
       const pool = await pools.find(btcEth);
       if (pool) {
-        const apr = await pool.fetchApr();
-        expect(apr.stakingApr.min).to.be.greaterThan(1);
+        const { apr } = pool;
+        expect(apr && apr.stakingApr.min).to.be.greaterThan(1);
       }
     }).timeout(120000);
   });
-});
-
-describe('mainnet pools', () => {
-  let poolsList: PoolModel[];
-
-  // Getting 10 largest pools
-  before(async () => {
-    console.time('apr');
-    poolsList = (await pools.where((pool) => pool.poolType != 'Element'))
-      .sort(
-        (a, b) => parseFloat(b.totalLiquidity) - parseFloat(a.totalLiquidity)
-      )
-      .slice(0, 30);
-  });
-
-  it('has APRs', async () => {
-    if (poolsList.length > 0) {
-      const aprs = await Promise.all(
-        poolsList.map(async (pool) => {
-          try {
-            return await pool.fetchApr();
-          } catch (e) {
-            console.log(e);
-            return '0';
-          }
-        })
-      );
-      // Optionally move to another test file
-      // console.log(
-      //   poolsList.map((pool, i) => [pool.id, JSON.stringify(aprs[i], null, 2)])
-      // );
-      expect(aprs.length).to.be.greaterThan(0);
-    }
-    console.timeEnd('apr');
-  }).timeout(120000);
 });

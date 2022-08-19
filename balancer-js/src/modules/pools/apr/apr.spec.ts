@@ -8,27 +8,35 @@ import type { LiquidityGauge, Pool } from '@/types';
 
 const wETH = factories.poolTokenFactory
   .transient({ symbol: 'wETH' })
-  .build({ weight: '0.5' });
+  .build({ weight: '0.5', balance: '364' });
 const wstETH = factories.poolTokenFactory
   .transient({ symbol: 'wstETH' })
-  .build({ weight: '0.5' });
+  .build({ weight: '0.5', balance: '1' });
 const tokens = [wstETH, wETH];
 
 const now = new Date();
-const yearAgo = new Date(new Date(now).setFullYear(now.getFullYear() - 1));
 
 const poolData = factories.poolFactory.build({
-  createTime: Math.round(+yearAgo / 1000),
   address: 'pool',
-  feesSnapshot: '1',
-  totalLiquidity: '365',
+  totalSwapFee: '1',
   totalShares: '365',
   tokens,
 });
 
+const yesterdaysPool = {
+  ...poolData,
+  totalSwapFee: '0',
+};
+
 const poolsMap = new Map([[poolData.address, poolData]]);
 const poolRepository = factories.data.findable<Pool>(poolsMap);
-const repositories = factories.data.repositores({ pools: poolRepository });
+const yesterdaysPoolsMap = new Map([[yesterdaysPool.id, yesterdaysPool]]);
+const yesterdaysPoolRepository =
+  factories.data.findable<Pool>(yesterdaysPoolsMap);
+const repositories = factories.data.repositores({
+  pools: poolRepository,
+  yesterdaysPools: yesterdaysPoolRepository,
+});
 
 // TODO: move to factory
 const baseGauge = {
@@ -69,6 +77,7 @@ describe('pool apr', () => {
         repositories.tokenPrices,
         repositories.tokenMeta,
         repositories.pools,
+        repositories.yesterdaysPools,
         repositories.liquidityGauges,
         repositories.feeDistributor,
         repositories.feeCollector,
@@ -87,6 +96,7 @@ describe('pool apr', () => {
           repositories.tokenPrices,
           repositories.tokenMeta,
           repositories.pools,
+          repositories.yesterdaysPools,
           repositories.liquidityGauges,
           repositories.feeDistributor,
           repositories.feeCollector,
@@ -99,25 +109,21 @@ describe('pool apr', () => {
     describe('nested pools', () => {
       // Setting up pool with 100% total APR
       const pool = factories.poolFactory.build({
-        createTime: Math.floor(+yearAgo / 1000),
         address: 'pool1',
-        feesSnapshot: '1',
-        totalLiquidity: '365',
-        tokens: [],
+        totalSwapFee: '1',
+        tokens,
       });
       // Notice weight of the bptToken.
       // It is defining share in tokenAprs
       const bptToken = factories.poolTokenFactory.build({
         address: 'pool1',
         decimals: 18,
-        balance: '1',
+        balance: '365',
         weight: '0.5',
       });
       const poolWithBpt = factories.poolFactory.build({
         address: 'poolWithBpt',
-        tokens: [wETH, bptToken],
-        feesSnapshot: '1',
-        totalLiquidity: '365',
+        tokens: [{ ...wETH, balance: '1' }, bptToken],
       });
       poolsMap.set(pool.address, pool);
       poolsMap.set(poolWithBpt.address, poolWithBpt);
@@ -128,6 +134,7 @@ describe('pool apr', () => {
           repositories.tokenPrices,
           repositories.tokenMeta,
           repositories.pools,
+          repositories.yesterdaysPools,
           repositories.liquidityGauges,
           repositories.feeDistributor,
           factories.data.stubbed<number>(0),
@@ -155,6 +162,7 @@ describe('pool apr', () => {
         repositories.tokenPrices,
         repositories.tokenMeta,
         repositories.pools,
+        repositories.yesterdaysPools,
         factories.data.stubbed<LiquidityGauge>(gauge),
         repositories.feeDistributor,
         repositories.feeCollector,
@@ -181,13 +189,14 @@ describe('pool apr', () => {
         repositories.tokenPrices,
         repositories.tokenMeta,
         repositories.pools,
+        repositories.yesterdaysPools,
         factories.data.stubbed<LiquidityGauge>(gauge),
         repositories.feeDistributor,
         repositories.feeCollector,
         factories.data.stubbed<number>(undefined)
       ).rewardsApr();
 
-      expect(apr).to.eq(20000);
+      expect(apr.total).to.eq(20000);
     });
   });
 });

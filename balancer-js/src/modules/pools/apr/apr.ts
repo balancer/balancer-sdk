@@ -353,6 +353,7 @@ export class PoolApr {
       rewardsApr,
       protocolApr,
       min:
+<<<<<<< HEAD
         swapFees +
         tokenAprs.total +
         rewardsApr.total +
@@ -364,6 +365,11 @@ export class PoolApr {
         rewardsApr.total +
         protocolApr +
         maxStakingApr,
+=======
+        swapFees + tokenAprs + rewardsApr.total + protocolApr + minStakingApr,
+      max:
+        swapFees + tokenAprs + rewardsApr.total + protocolApr + maxStakingApr,
+>>>>>>> origin/bronco/aprs
     };
   }
 

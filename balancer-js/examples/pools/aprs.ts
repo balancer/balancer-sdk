@@ -1,5 +1,6 @@
 /**
  * Display APRs for pool ids hardcoded under `const ids`
+ * Run command: yarn examples:run ./examples/pools/aprs.ts
  */
 import dotenv from 'dotenv';
 import { BalancerSDK } from '../../src/modules/sdk.module';
@@ -13,19 +14,19 @@ const sdk = new BalancerSDK({
 
 const { pools } = sdk;
 
-const ids = [
-  '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080', // ethStEth
-  '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014', // veBal
-  '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe', // usd stable
-  '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e', // btcEth
-];
+const main = async () => {
+  const list = (await pools.where((pool) => pool.poolType != 'Element'))
+    .sort((a, b) => parseFloat(b.totalLiquidity) - parseFloat(a.totalLiquidity))
+    .slice(0, 30);
 
-ids.forEach(async (id) => {
-  const pool = await pools.find(id);
-  if (pool) {
-    const apr = await pool.fetchApr();
-    console.log(id, apr);
-  } else {
-    console.log(`pool ${id} not found`);
-  }
-});
+  list.forEach(async (pool) => {
+    try {
+      const apr = await pool.apr();
+      console.log(pool.id, apr);
+    } catch (e) {
+      console.log(e);
+    }
+  });
+};
+
+main();

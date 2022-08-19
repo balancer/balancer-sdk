@@ -227,10 +227,21 @@ export interface Pool {
   boost?: string;
   symbol?: string;
   apr?: AprBreakdown;
+  liquidity?: string;
 }
 
+/**
+ * Live data controller used for caching or as a fallback for missing cached data
+ */
 export interface PoolModel extends Pool {
-  liquidity: () => Promise<string>;
+  calcLiquidity: () => Promise<string>;
+  fetchApr: () => Promise<AprBreakdown>;
+}
+
+/**
+ * Pool use-cases / controller layer
+ */
+export interface PoolWithMethods extends Pool {
   buildJoin: (
     joiner: string,
     tokensIn: string[],

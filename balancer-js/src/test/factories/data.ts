@@ -12,9 +12,11 @@ import {
 
 export const findable = <T, P = string>(
   map: Map<string, T>
-): Findable<T, P> => ({
+): Findable<T, P> & Searchable<T> => ({
   find: (id: string) => Promise.resolve(map.get(id)),
   findBy: (param: P, value: string) => Promise.resolve(map.get(value)),
+  all: () => Promise.resolve(Object.values(map)),
+  where: (filters: (arg: T) => boolean) => Promise.resolve(Object.values(map)),
 });
 
 export const stubbed = <T, P = string>(

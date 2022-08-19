@@ -1,10 +1,4 @@
-import {
-  BalancerSdkConfig,
-  BalancerNetworkConfig,
-  BalancerDataRepositories,
-} from '@/types';
-// initialCoingeckoList are used to get the initial token list for coingecko
-// TODO: we might want to replace that with what frontend is using
+import { BalancerSdkConfig, BalancerNetworkConfig } from '@/types';
 import { Swaps } from './swaps/swaps.module';
 import { Relayer } from './relayer/relayer.module';
 import { Subgraph } from './subgraph/subgraph.module';
@@ -13,12 +7,14 @@ import { getDataRepositories, getNetworkConfig } from './sdk.helpers';
 import { Pricing } from './pricing/pricing.module';
 import { ContractInstances, Contracts } from './contracts/contracts.module';
 import { Pools } from './pools';
+import { Data } from './data';
 
 export interface BalancerSDKRoot {
   config: BalancerSdkConfig;
   sor: Sor;
   subgraph: Subgraph;
   pools: Pools;
+  data: Data;
   swaps: Swaps;
   relayer: Relayer;
   networkConfig: BalancerNetworkConfig;
@@ -29,6 +25,7 @@ export class BalancerSDK implements BalancerSDKRoot {
   readonly relayer: Relayer;
   readonly pricing: Pricing;
   readonly pools: Pools;
+  readonly data: Data;
   balancerContracts: Contracts;
 
   constructor(
@@ -37,12 +34,12 @@ export class BalancerSDK implements BalancerSDKRoot {
     public subgraph = new Subgraph(config)
   ) {
     const networkConfig = getNetworkConfig(config);
-    const repositories = getDataRepositories(config);
 
+    this.data = new Data(networkConfig, sor.provider);
     this.swaps = new Swaps(this.config);
     this.relayer = new Relayer(this.swaps);
     this.pricing = new Pricing(config, this.swaps);
-    this.pools = new Pools(networkConfig, repositories);
+    this.pools = new Pools(networkConfig, this.data);
 
     this.balancerContracts = new Contracts(
       networkConfig.addresses.contracts,
