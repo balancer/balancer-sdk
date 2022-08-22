@@ -2658,7 +2658,7 @@ declare class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
     private readonly providers;
     private timeout;
     currentProviderIdx: number;
-    constructor(providers: PoolRepository[] & Findable<Pool, PoolAttribute>, timeout?: number);
+    constructor(providers: PoolRepository[], timeout?: number);
     fetch(query?: GraphQLQuery): Promise<Pool[]>;
     get currentProvider(): PoolRepository | undefined;
     find(id: string): Promise<Pool | undefined>;
