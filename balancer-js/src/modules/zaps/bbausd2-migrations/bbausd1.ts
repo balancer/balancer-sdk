@@ -21,12 +21,12 @@ export class BbaUsd1Builder {
    * Migrates tokens from bbausd1 to bbausd2 pool.
    * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
    *
-   * @param {string}    userAddress User address.
-   * @param {string}    bbausd1Amount Amount of BPT tokens to migrate.
-   * @param {string}    minBbausd2Out Minimum of expected BPT out ot the migration flow.
-   * @param {boolean}   staked Indicates whether tokens are initially staked or not.
-   * @param {string[]}  tokenBalances Token balances in EVM scale. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
-   * @param {string}    authorisation Encoded authorisation call.
+   * @param userAddress User address.
+   * @param bbausd1Amount Amount of BPT tokens to migrate.
+   * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+   * @param staked Indicates whether tokens are initially staked or not.
+   * @param tokenBalances Token balances in EVM scale. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+   * @param authorisation Encoded authorisation call.
    * @returns Migration transaction request ready to send with signer.sendTransaction
    */
   calldata(
@@ -87,11 +87,11 @@ export class BbaUsd1Builder {
    * Creates encoded batchSwap function with following swaps: boosted -> linears -> stables -> linears -> boosted
    * outputreferences should contain the amount of resulting BPT.
    *
-   * @param {string}    bbausd1Amount Amount of BPT tokens to migrate.
-   * @param {string}    minBbausd2Out Minimum of expected BPT out ot the migration flow.
-   * @param {string}    sender Sender address.
-   * @param {string}    recipient Recipient address.
-   * @param {string[]}  tokenBalances Token balances in EVM scale.
+   * @param bbausd1Amount Amount of BPT tokens to migrate.
+   * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+   * @param sender Sender address.
+   * @param recipient Recipient address.
+   * @param tokenBalances Token balances in EVM scale.
    * @returns Encoded batchSwap call. Output references.
    */
   buildSwap(
@@ -269,8 +269,8 @@ export class BbaUsd1Builder {
   /**
    * Uses relayer to withdraw staked BPT from gauge and send to relayer
    *
-   * @param {string} sender Sender address.
-   * @param {string} amount Amount of BPT to exit with.
+   * @param sender Sender address.
+   * @param amount Amount of BPT to exit with.
    * @returns withdraw call
    */
   buildWithdraw(sender: string, amount: string): string {
@@ -285,7 +285,7 @@ export class BbaUsd1Builder {
   /**
    * Uses relayer to deposit user's BPT to gauge and sends to recipient
    *
-   * @param {string} recipient Recipient address.
+   * @param recipient Recipient address.
    * @returns deposit call
    */
   buildDeposit(recipient: string): string {
@@ -300,7 +300,7 @@ export class BbaUsd1Builder {
   /**
    * Uses relayer to approve itself to act in behalf of the user
    *
-   * @param {string} authorisation Encoded authorisation call.
+   * @param authorisation Encoded authorisation call.
    * @returns relayer approval call
    */
   buildSetRelayerApproval(authorisation: string): string {

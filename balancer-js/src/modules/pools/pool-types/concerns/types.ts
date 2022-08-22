@@ -1,7 +1,7 @@
 /* eslint @typescript-eslint/no-explicit-any: ["error", { "ignoreRestArgs": true }] */
 
 import { SubgraphPoolBase } from '@balancer-labs/sor';
-import { JoinPoolRequest, Pool } from '@/types';
+import { ExitPoolRequest, JoinPoolRequest, Pool } from '@/types';
 import { BigNumber } from '@ethersproject/bignumber';
 
 export interface LiquidityConcern {
@@ -27,6 +27,27 @@ export interface JoinConcern {
   }: JoinPoolParameters) => JoinPoolAttributes;
 }
 
+export interface ExitConcern {
+  buildExitExactBPTIn: ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+    shouldUnwrapNativeAsset,
+    wrappedNativeAsset,
+    singleTokenMaxOut,
+  }: ExitExactBPTInParameters) => ExitPoolAttributes;
+
+  buildExitExactTokensOut: ({
+    exiter,
+    pool,
+    tokensOut,
+    amountsOut,
+    slippage,
+    wrappedNativeAsset,
+  }: ExitExactTokensOutParameters) => ExitPoolAttributes;
+}
+
 export interface JoinPool {
   poolId: string;
   sender: string;
@@ -48,6 +69,41 @@ export interface JoinPoolParameters {
   pool: Pool;
   tokensIn: string[];
   amountsIn: string[];
+  slippage: string;
+  wrappedNativeAsset: string;
+}
+
+export interface ExitPool {
+  poolId: string;
+  sender: string;
+  recipient: string;
+  exitPoolRequest: ExitPoolRequest;
+}
+
+export interface ExitPoolAttributes {
+  to: string;
+  functionName: string;
+  attributes: ExitPool;
+  data: string;
+  minAmountsOut: string[];
+  maxBPTIn: string;
+}
+
+export interface ExitExactBPTInParameters {
+  exiter: string;
+  pool: Pool;
+  bptIn: string;
+  slippage: string;
+  shouldUnwrapNativeAsset: boolean;
+  wrappedNativeAsset: string;
+  singleTokenMaxOut?: string;
+}
+
+export interface ExitExactTokensOutParameters {
+  exiter: string;
+  pool: Pool;
+  tokensOut: string[];
+  amountsOut: string[];
   slippage: string;
   wrappedNativeAsset: string;
 }

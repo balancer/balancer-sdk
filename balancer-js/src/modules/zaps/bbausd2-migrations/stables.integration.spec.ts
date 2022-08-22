@@ -5,15 +5,10 @@ import { Network, RelayerAuthorization } from '@/.';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { ADDRESSES } from './addresses';
-import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
-import { parseEther } from '@ethersproject/units';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256 } from '@ethersproject/constants';
 import { Migrations } from '../migrations';
-
-import { Interface } from '@ethersproject/abi';
-const liquidityGaugeAbi = ['function deposit(uint value) payable'];
-const liquidityGauge = new Interface(liquidityGaugeAbi);
+import { getErc20Balance, move, stake } from '@/test/lib/utils';
 
 /*
  * Testing on GOERLI
@@ -43,6 +38,13 @@ const fromPool = {
   address: addresses.staBal3.address,
   gauge: addresses.staBal3.gauge,
 };
+// const holderAddress = '0xdc6bd6653ff82946bb94c1d243038c5abf14f2ea';
+// const fromPool = {
+//   id: addresses.staBal3_3.id,
+//   address: addresses.staBal3_3.address,
+//   gauge: addresses.staBal3_3.gauge,
+// };
+// blocknumber = 7352236
 const toPool = {
   id: addresses.staBal3_2.id,
   address: addresses.staBal3_2.address,
@@ -50,19 +52,6 @@ const toPool = {
 };
 const tokens = [addresses.USDT, addresses.DAI, addresses.USDC]; // this order only works for testing with Goerli - change order to test on Mainnet
 const relayer = addresses.relayer;
-
-const getErc20Balance = (token: string, holder: string): Promise<BigNumber> =>
-  contracts.ERC20(token, provider).balanceOf(holder);
-
-// https://hardhat.org/hardhat-network/docs/guides/forking-other-networks#impersonating-accounts
-// WARNING: don't use hardhat SignerWithAddress to sendTransactions!!
-// It's not working and we didn't have time to figure out why.
-// Use JsonRpcSigner instead
-const impersonateAccount = async (account: string) => {
-  await provider.send('hardhat_impersonateAccount', [account]);
-  await setBalance(account, parseEther('10000'));
-  return provider.getSigner(account);
-};
 
 const signRelayerApproval = async (
   relayerAddress: string,
@@ -101,37 +90,6 @@ const reset = () =>
     },
   ]);
 
-const move = async (
-  token: string,
-  from: string,
-  to: string
-): Promise<BigNumber> => {
-  const holder = await impersonateAccount(from);
-  const balance = await getErc20Balance(token, from);
-  await contracts.ERC20(token, provider).connect(holder).transfer(to, balance);
-
-  return balance;
-};
-
-const stake = async (
-  signer: JsonRpcSigner,
-  balance: BigNumber
-): Promise<void> => {
-  await (
-    await contracts
-      .ERC20(fromPool.address, provider)
-      .connect(signer)
-      .approve(fromPool.gauge, MaxUint256)
-  ).wait();
-
-  await (
-    await signer.sendTransaction({
-      to: fromPool.gauge,
-      data: liquidityGauge.encodeFunctionData('deposit', [balance]),
-    })
-  ).wait();
-};
-
 describe('stables migration execution', async () => {
   let signer: JsonRpcSigner;
   let signerAddress: string;
@@ -148,7 +106,12 @@ describe('stables migration execution', async () => {
 
     // Transfer tokens from existing user account to signer
     // We need that to test signatures, because hardhat doesn't have impersonated accounts private keys
-    balance = await move(fromPool.address, holderAddress, signerAddress);
+    balance = await move(
+      fromPool.address,
+      holderAddress,
+      signerAddress,
+      provider
+    );
   });
 
   const testFlow = async (
@@ -160,8 +123,8 @@ describe('stables migration execution', async () => {
     const addressOut = staked ? toPool.gauge : toPool.address;
     // Store balance before migration
     const before = {
-      from: await getErc20Balance(addressIn, signerAddress),
-      to: await getErc20Balance(addressOut, signerAddress),
+      from: await getErc20Balance(addressIn, provider, signerAddress),
+      to: await getErc20Balance(addressOut, provider, signerAddress),
     };
 
     let query = migrations.stables(
@@ -206,8 +169,8 @@ describe('stables migration execution', async () => {
     console.log('Gas used', receipt.gasUsed.toString());
 
     const after = {
-      from: await getErc20Balance(addressIn, signerAddress),
-      to: await getErc20Balance(addressOut, signerAddress),
+      from: await getErc20Balance(addressIn, provider, signerAddress),
+      to: await getErc20Balance(addressOut, provider, signerAddress),
     };
 
     const diffs = {
@@ -230,7 +193,7 @@ describe('stables migration execution', async () => {
       this.timeout(20000);
 
       // Stake them
-      await stake(signer, balance);
+      await stake(signer, fromPool.address, fromPool.gauge, balance);
     });
 
     it('should transfer tokens from stable to boosted', async () => {

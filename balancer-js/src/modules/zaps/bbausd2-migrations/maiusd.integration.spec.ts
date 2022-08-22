@@ -10,50 +10,39 @@ import { MaxUint256 } from '@ethersproject/constants';
 import { Migrations } from '../migrations';
 import { getErc20Balance, move, stake } from '@/test/lib/utils';
 
-dotenv.config();
-const { ALCHEMY_URL: jsonRpcUrl } = process.env;
-
-// /*
-//  * Testing on GOERLI
-//  * - Update hardhat.config.js with chainId = 5
-//  * - Update ALCHEMY_URL on .env with a goerli api key
-//  * - Run node on terminal: yarn run node
-//  * - Uncomment this section
-//  */
-// const network = Network.GOERLI;
-// const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977'; // GOERLI
-// const blockNumber = 7277540;
-
 /*
- * Testing on MAINNET
- * - Update hardhat.config.js with chainId = 1
- * - Update ALCHEMY_URL on .env with a mainnet api key
- * - Run node on terminal: yarn run node
- * - Uncomment this section
+ * Testing on GOERLI
+ * - Update hardhat.config.js with chainId = 5
+ * - Update ALCHEMY_URL on .env with a goerli api key
+ * - Run goerli node on terminal: yarn run node
+ * - Change `network` to Network.GOERLI
+ * - Provide gaugeAddresses from goerli which can be found on subgraph: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-gauges-goerli
  */
-const network = Network.MAINNET;
-const holderAddress = '0xf346592803eb47cb8d8fa9f90b0ef17a82f877e0';
-const blockNumber = 15372650;
 
+dotenv.config();
+
+const { ALCHEMY_URL: jsonRpcUrl, FORK_BLOCK_NUMBER: blockNumber } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
+const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
 const fromPool = {
-  id: addresses.staBal3.id,
-  address: addresses.staBal3.address,
-  gauge: addresses.staBal3.gauge,
+  id: addresses.maiusd.id,
+  address: addresses.maiusd.address,
+  gauge: addresses.maiusd.gauge,
 };
 const toPool = {
-  id: addresses.bbausd2.id,
-  address: addresses.bbausd2.address,
-  gauge: addresses.bbausd2.gauge,
+  id: addresses.maibbausd.id,
+  address: addresses.maibbausd.address,
+  gauge: addresses.maibbausd.gauge,
 };
 const { contracts } = new Contracts(network as number, provider);
 const migrations = new Migrations(network);
 
+const holderAddress = '0x8fe3a2a5ae6baa201c26fc7830eb713f33d6b313';
 const relayer = addresses.relayer;
 
 const signRelayerApproval = async (
@@ -88,12 +77,12 @@ const reset = () =>
     {
       forking: {
         jsonRpcUrl,
-        blockNumber,
+        blockNumber: (blockNumber && parseInt(blockNumber)) || 7376670,
       },
     },
   ]);
 
-describe('stabal3 migration execution', async () => {
+describe('maiusd migration execution', async () => {
   let signer: JsonRpcSigner;
   let signerAddress: string;
   let authorisation: string;
@@ -132,7 +121,7 @@ describe('stabal3 migration execution', async () => {
 
     const amount = before.from;
 
-    let query = migrations.stabal3(
+    let query = migrations.maiusd(
       signerAddress,
       amount.toString(),
       '0',
@@ -149,7 +138,7 @@ describe('stabal3 migration execution', async () => {
     });
     const bptOut = query.decode(staticResult, staked);
 
-    query = migrations.stabal3(
+    query = migrations.maiusd(
       signerAddress,
       amount.toString(),
       minBptOut ? minBptOut : bptOut,
@@ -170,6 +159,8 @@ describe('stabal3 migration execution', async () => {
       from: await getErc20Balance(addressIn, provider, signerAddress),
       to: await getErc20Balance(addressOut, provider, signerAddress),
     };
+
+    console.log(bptOut);
 
     expect(BigNumber.from(bptOut).gt(0)).to.be.true;
     expect(after.from.toString()).to.eq('0');

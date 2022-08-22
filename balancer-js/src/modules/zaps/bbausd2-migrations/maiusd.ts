@@ -10,12 +10,13 @@ import { MaxInt256 } from '@ethersproject/constants';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
+const EXIT_MIMATIC = Relayer.toChainedReference('20');
 const EXIT_DAI = Relayer.toChainedReference('21');
 const EXIT_USDC = Relayer.toChainedReference('22');
 const EXIT_USDT = Relayer.toChainedReference('23');
-const SWAP_RESULT_BBAUSD = Relayer.toChainedReference('24');
+const SWAP_RESULT = Relayer.toChainedReference('24');
 
-export class StaBal3Builder {
+export class MaiusdBuilder {
   private addresses;
 
   constructor(networkId: 1 | 5) {
@@ -24,20 +25,20 @@ export class StaBal3Builder {
 
   /**
    * Builds migration call data.
-   * Migrates tokens from staBal3 to bbausd2 pool.
+   * Migrates tokens from maiusd to maibbausd pool.
    * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
    *
    * @param userAddress User address.
-   * @param staBal3Amount Amount of BPT tokens to migrate.
-   * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+   * @param bptIn Amount of BPT tokens to migrate.
+   * @param minBptOut Minimum of expected BPT out ot the migration flow.
    * @param staked Indicates whether tokens are initially staked or not.
    * @param authorisation Encoded authorisation call.
    * @returns Migration transaction request ready to send with signer.sendTransaction
    */
   calldata(
     userAddress: string,
-    staBal3Amount: string,
-    minBbausd2Out: string,
+    bptIn: string,
+    minBptOut: string,
     staked: boolean,
     authorisation?: string
   ): {
@@ -54,16 +55,16 @@ export class StaBal3Builder {
     if (staked) {
       calls = [
         ...calls,
-        this.buildWithdraw(userAddress, staBal3Amount),
-        this.buildExit(relayer, staBal3Amount),
-        this.buildSwap(minBbausd2Out, relayer),
+        this.buildWithdraw(userAddress, bptIn),
+        this.buildExit(relayer, bptIn),
+        this.buildSwap(relayer, minBptOut),
         this.buildDeposit(userAddress),
       ];
     } else {
       calls = [
         ...calls,
-        this.buildExit(userAddress, staBal3Amount),
-        this.buildSwap(minBbausd2Out, userAddress),
+        this.buildExit(userAddress, bptIn),
+        this.buildSwap(userAddress, minBptOut),
       ];
     }
 
@@ -79,40 +80,38 @@ export class StaBal3Builder {
 
   /**
    * Encodes exitPool callData.
-   * Exit staBal3 pool proportionally to underlying stables. Exits to relayer.
+   * Exit maiusd pool proportionally to underlying stables. Exits to relayer.
    * Outputreferences are used to store exit amounts for next transaction.
    *
    * @param sender Sender address.
-   * @param amount Amount of staBal3 BPT to exit with.
+   * @param amount Amount of BPT to exit with.
    * @returns Encoded exitPool call. Output references.
    */
   buildExit(sender: string, amount: string): string {
-    // Goerli and Mainnet has different assets ordering
-    const { assetOrder } = this.addresses.staBal3;
+    const { assetOrder } = this.addresses.maiusd;
     const assets = assetOrder.map(
       (key) => this.addresses[key as keyof typeof this.addresses] as string
     );
 
     // Assume gaugeWithdraw returns same amount value
     const userData = StablePoolEncoder.exitExactBPTInForTokensOut(amount);
-    // const userData = StablePoolEncoder.exitExactBPTInForOneTokenOut(
-    //   amount,
-    //   assetOrder.indexOf('DAI')
-    // );
 
-    // Ask to store exit outputs for batchSwap of exit is used as input to swaps
+    // Store exit outputs to be used as swaps inputs
     const outputReferences = [
+      { index: assetOrder.indexOf('miMATIC'), key: EXIT_MIMATIC },
       { index: assetOrder.indexOf('DAI'), key: EXIT_DAI },
       { index: assetOrder.indexOf('USDC'), key: EXIT_USDC },
       { index: assetOrder.indexOf('USDT'), key: EXIT_USDT },
     ];
 
+    const minAmountsOut = Array<string>(assets.length).fill('0');
+
     const callData = Relayer.constructExitCall({
       assets,
-      minAmountsOut: ['0', '0', '0'],
+      minAmountsOut,
       userData,
       toInternalBalance: true,
-      poolId: this.addresses.staBal3.id,
+      poolId: this.addresses.maiusd.id,
       poolKind: 0, // This will always be 0 to match supported Relayer types
       sender,
       recipient: this.addresses.relayer,
@@ -127,11 +126,11 @@ export class StaBal3Builder {
    * Creates encoded batchSwap function with following swaps: stables -> linear pools -> boosted pool
    * outputreferences should contain the amount of resulting BPT.
    *
-   * @param expectedBptReturn BPT amount expected out of the swap.
-   * @param recipient Recipient address.
+   * @param recipient Sender address.
+   * @param minBptOut Minimum BPT out expected from the join transaction.
    * @returns Encoded batchSwap call. Output references.
    */
-  buildSwap(expectedBptReturn: string, recipient: string): string {
+  buildSwap(recipient: string, minBptOut: string): string {
     const assets = [
       this.addresses.bbausd2.address,
       this.addresses.DAI,
@@ -140,13 +139,12 @@ export class StaBal3Builder {
       this.addresses.linearUsdc2.address,
       this.addresses.USDT,
       this.addresses.linearUsdt2.address,
+      this.addresses.miMATIC,
+      this.addresses.maibbausd.address,
     ];
 
-    const outputReferences = [{ index: 0, key: SWAP_RESULT_BBAUSD }];
+    const outputReferences = [{ index: 8, key: SWAP_RESULT }];
 
-    // for each linear pool swap -
-    // linear1Bpt[linear1]stable[linear2]linear2bpt[bbausd2]bbausd2 Uses chainedReference from previous action for amount.
-    // TO DO - Will swap order matter here? John to ask Fernando.
     const swaps: BatchSwapStep[] = [
       {
         poolId: this.addresses.linearDai2.id,
@@ -159,6 +157,13 @@ export class StaBal3Builder {
         poolId: this.addresses.bbausd2.id,
         assetInIndex: 2,
         assetOutIndex: 0,
+        amount: '0',
+        userData: '0x',
+      },
+      {
+        poolId: this.addresses.maibbausd.id,
+        assetInIndex: 0,
+        assetOutIndex: 8,
         amount: '0',
         userData: '0x',
       },
@@ -177,6 +182,13 @@ export class StaBal3Builder {
         userData: '0x',
       },
       {
+        poolId: this.addresses.maibbausd.id,
+        assetInIndex: 0,
+        assetOutIndex: 8,
+        amount: '0',
+        userData: '0x',
+      },
+      {
         poolId: this.addresses.linearUsdt2.id,
         assetInIndex: 5,
         assetOutIndex: 6,
@@ -190,17 +202,33 @@ export class StaBal3Builder {
         amount: '0',
         userData: '0x',
       },
+      {
+        poolId: this.addresses.maibbausd.id,
+        assetInIndex: 0,
+        assetOutIndex: 8,
+        amount: '0',
+        userData: '0x',
+      },
+      {
+        poolId: this.addresses.maibbausd.id,
+        assetInIndex: 7,
+        assetOutIndex: 8,
+        amount: EXIT_MIMATIC.toString(),
+        userData: '0x',
+      },
     ];
 
     // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
     const limits = [
-      BigNumber.from(expectedBptReturn).mul(-1).toString(),
-      MaxInt256.toString(),
       '0',
       MaxInt256.toString(),
       '0',
       MaxInt256.toString(),
       '0',
+      MaxInt256.toString(),
+      '0',
+      MaxInt256.toString(),
+      BigNumber.from(minBptOut).mul(-1).toString(),
     ];
 
     // Swap to/from Relayer
@@ -234,7 +262,7 @@ export class StaBal3Builder {
    */
   buildWithdraw(sender: string, amount: string): string {
     return Relayer.encodeGaugeWithdraw(
-      this.addresses.staBal3.gauge,
+      this.addresses.maiusd.gauge,
       sender,
       this.addresses.relayer,
       amount
@@ -249,10 +277,10 @@ export class StaBal3Builder {
    */
   buildDeposit(recipient: string): string {
     return Relayer.encodeGaugeDeposit(
-      this.addresses.bbausd2.gauge,
+      this.addresses.maibbausd.gauge,
       this.addresses.relayer,
       recipient,
-      SWAP_RESULT_BBAUSD.toString()
+      SWAP_RESULT.toString()
     );
   }
 
