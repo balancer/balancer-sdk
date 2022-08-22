@@ -10,22 +10,34 @@ import { MaxUint256 } from '@ethersproject/constants';
 import { Migrations } from '../migrations';
 import { getErc20Balance, move, stake } from '@/test/lib/utils';
 
-/*
- * Testing on GOERLI
- * - Update hardhat.config.js with chainId = 5
- * - Update ALCHEMY_URL on .env with a goerli api key
- * - Run goerli node on terminal: yarn run node
- * - Change `network` to Network.GOERLI
- * - Provide gaugeAddresses from goerli which can be found on subgraph: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-gauges-goerli
- */
-
 dotenv.config();
+const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 
-const { ALCHEMY_URL: jsonRpcUrl, FORK_BLOCK_NUMBER: blockNumber } = process.env;
+// /*
+//  * Testing on GOERLI
+//  * - Update hardhat.config.js with chainId = 5
+//  * - Update ALCHEMY_URL on .env with a goerli api key
+//  * - Run node on terminal: yarn run node
+//  * - Uncomment this section
+//  */
+// const network = Network.GOERLI;
+// const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977'; // GOERLI
+// const blockNumber = 7277540;
+
+/*
+ * Testing on MAINNET
+ * - Update hardhat.config.js with chainId = 1
+ * - Update ALCHEMY_URL on .env with a mainnet api key
+ * - Run node on terminal: yarn run node
+ * - Uncomment this section
+ */
+const network = Network.MAINNET;
+const holderAddress = '0xf346592803eb47cb8d8fa9f90b0ef17a82f877e0';
+const blockNumber = 15372650;
+
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
-const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
@@ -42,7 +54,6 @@ const toPool = {
 const { contracts } = new Contracts(network as number, provider);
 const migrations = new Migrations(network);
 
-const holderAddress = '0xe0a171587b1cae546e069a943eda96916f5ee977';
 const relayer = addresses.relayer;
 
 const signRelayerApproval = async (
@@ -77,7 +88,7 @@ const reset = () =>
     {
       forking: {
         jsonRpcUrl,
-        blockNumber: (blockNumber && parseInt(blockNumber)) || 7277540,
+        blockNumber,
       },
     },
   ]);
@@ -109,7 +120,7 @@ describe('stabal3 migration execution', async () => {
   async function testFlow(
     staked: boolean,
     authorised = true,
-    minBbausd2Out: undefined | string = undefined
+    minBptOut: undefined | string = undefined
   ): Promise<string> {
     const addressIn = staked ? fromPool.gauge : fromPool.address;
     const addressOut = staked ? toPool.gauge : toPool.address;
@@ -136,12 +147,12 @@ describe('stabal3 migration execution', async () => {
       data: query.data,
       gasLimit,
     });
-    const bbausd2AmountOut = query.decode(staticResult, staked);
+    const bptOut = query.decode(staticResult, staked);
 
     query = migrations.stabal3(
       signerAddress,
       amount.toString(),
-      minBbausd2Out ? minBbausd2Out : bbausd2AmountOut,
+      minBptOut ? minBptOut : bptOut,
       staked,
       authorised ? authorisation : undefined
     );
@@ -160,15 +171,13 @@ describe('stabal3 migration execution', async () => {
       to: await getErc20Balance(addressOut, provider, signerAddress),
     };
 
-    console.log(bbausd2AmountOut);
-
-    expect(BigNumber.from(bbausd2AmountOut).gt(0)).to.be.true;
+    expect(BigNumber.from(bptOut).gt(0)).to.be.true;
     expect(after.from.toString()).to.eq('0');
-    expect(after.to.toString()).to.eq(bbausd2AmountOut);
-    return bbausd2AmountOut;
+    expect(after.to.toString()).to.eq(bptOut);
+    return bptOut;
   }
 
-  let bbausd2AmountOut: string;
+  let bptOut: string;
 
   context('staked', async () => {
     beforeEach(async function () {
@@ -179,17 +188,13 @@ describe('stabal3 migration execution', async () => {
     });
 
     it('should transfer tokens from stable to boosted', async () => {
-      bbausd2AmountOut = await testFlow(true);
+      bptOut = await testFlow(true);
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
       try {
-        await testFlow(
-          true,
-          true,
-          BigNumber.from(bbausd2AmountOut).add(1).toString()
-        );
+        await testFlow(true, true, BigNumber.from(bptOut).add(1).toString());
       } catch (error) {
         errorMessage = (error as Error).message;
       }
@@ -199,17 +204,13 @@ describe('stabal3 migration execution', async () => {
 
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted', async () => {
-      bbausd2AmountOut = await testFlow(false);
+      bptOut = await testFlow(false);
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
       try {
-        await testFlow(
-          false,
-          true,
-          BigNumber.from(bbausd2AmountOut).add(1).toString()
-        );
+        await testFlow(false, true, BigNumber.from(bptOut).add(1).toString());
       } catch (error) {
         errorMessage = (error as Error).message;
       }
