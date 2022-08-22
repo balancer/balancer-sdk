@@ -169,6 +169,10 @@ interface SpotPriceConcern {
 interface JoinConcern {
     buildJoin: ({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }: JoinPoolParameters) => JoinPoolAttributes;
 }
+interface ExitConcern {
+    buildExitExactBPTIn: ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }: ExitExactBPTInParameters) => ExitPoolAttributes;
+    buildExitExactTokensOut: ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }: ExitExactTokensOutParameters) => ExitPoolAttributes;
+}
 interface JoinPool {
     poolId: string;
     sender: string;
@@ -188,6 +192,37 @@ interface JoinPoolParameters {
     pool: Pool;
     tokensIn: string[];
     amountsIn: string[];
+    slippage: string;
+    wrappedNativeAsset: string;
+}
+interface ExitPool {
+    poolId: string;
+    sender: string;
+    recipient: string;
+    exitPoolRequest: ExitPoolRequest;
+}
+interface ExitPoolAttributes {
+    to: string;
+    functionName: string;
+    attributes: ExitPool;
+    data: string;
+    minAmountsOut: string[];
+    maxBPTIn: string;
+}
+interface ExitExactBPTInParameters {
+    exiter: string;
+    pool: Pool;
+    bptIn: string;
+    slippage: string;
+    shouldUnwrapNativeAsset: boolean;
+    wrappedNativeAsset: string;
+    singleTokenMaxOut?: string;
+}
+interface ExitExactTokensOutParameters {
+    exiter: string;
+    pool: Pool;
+    tokensOut: string[];
+    amountsOut: string[];
     slippage: string;
     wrappedNativeAsset: string;
 }
@@ -356,6 +391,8 @@ interface Pool {
 interface PoolModel extends Pool {
     liquidity: () => Promise<string>;
     buildJoin: (joiner: string, tokensIn: string[], amountsIn: string[], slippage: string) => JoinPoolAttributes;
+    buildExitExactBPTIn: (exiter: string, bptIn: string, slippage: string, shouldUnwrapNativeAsset?: boolean, singleTokenMaxOut?: string) => ExitPoolAttributes;
+    buildExitExactTokensOut: (exiter: string, tokensOut: string[], amountsOut: string[], slippage: string) => ExitPoolAttributes;
 }
 
 /**
@@ -2181,6 +2218,14 @@ interface EncodeExitPoolInput {
     outputReferences: OutputReference[];
     exitPoolRequest: ExitPoolRequest;
 }
+interface EncodeJoinPoolInput {
+    poolId: string;
+    poolKind: number;
+    sender: string;
+    recipient: string;
+    outputReferences: OutputReference[];
+    joinPoolRequest: JoinPoolRequest;
+}
 interface EncodeUnwrapAaveStaticTokenInput {
     staticToken: string;
     sender: string;
@@ -2290,150 +2335,50 @@ declare class Sor extends SOR {
     private static getTokenPriceService;
 }
 
-declare class StablePoolLiquidity implements LiquidityConcern {
-    calcTotal(tokens: PoolToken[]): string;
-}
-
-declare class StablePoolSpotPrice implements SpotPriceConcern {
-    calcPoolSpotPrice(tokenIn: string, tokenOut: string, pool: SubgraphPoolBase): string;
-}
-
 interface PoolType {
     liquidity: LiquidityConcern;
     spotPriceCalculator: SpotPriceConcern;
     join: JoinConcern;
 }
 
-declare class StablePoolJoin implements JoinConcern {
-    /**
-     * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
-     * @param {JoinPoolParameters}  params - parameters used to build exact tokens in for bpt out transaction
-     * @param {string}              params.joiner - Account address joining pool
-     * @param {Pool}                params.pool - Subgraph pool object of pool being joined
-     * @param {string[]}            params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
-     * @param {string[]}            params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
-     * @param {string}              params.slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
-     * @returns                     transaction request ready to send with signer.sendTransaction
-     */
-    buildJoin: ({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }: JoinPoolParameters) => JoinPoolAttributes;
-}
-
 declare class Stable implements PoolType {
-    private liquidityConcern;
-    private spotPriceCalculatorConcern;
-    private joinConcern;
+    exit: ExitConcern;
+    join: JoinConcern;
     liquidity: LiquidityConcern;
     spotPriceCalculator: SpotPriceConcern;
-    join: JoinConcern;
-    constructor(liquidityConcern?: typeof StablePoolLiquidity, spotPriceCalculatorConcern?: typeof StablePoolSpotPrice, joinConcern?: typeof StablePoolJoin);
-}
-
-declare class WeightedPoolLiquidity implements LiquidityConcern {
-    calcTotal(tokens: PoolToken[]): string;
-}
-
-declare class WeightedPoolSpotPrice implements SpotPriceConcern {
-    calcPoolSpotPrice(tokenIn: string, tokenOut: string, pool: SubgraphPoolBase): string;
-}
-
-declare class WeightedPoolJoin implements JoinConcern {
-    /**
-     * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
-     * @param {JoinPoolParameters} params - parameters used to build exact tokens in for bpt out transaction
-     * @param {string}                          params.joiner - Account address joining pool
-     * @param {SubgraphPoolBase}                params.pool - Subgraph pool object of pool being joined
-     * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
-     * @param {string[]}                        params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
-     * @param {string}                          params.slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
-     * @returns                                 transaction request ready to send with signer.sendTransaction
-     */
-    buildJoin: ({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }: JoinPoolParameters) => JoinPoolAttributes;
+    constructor(exit?: ExitConcern, join?: JoinConcern, liquidity?: LiquidityConcern, spotPriceCalculator?: SpotPriceConcern);
 }
 
 declare class Weighted implements PoolType {
-    private liquidityConcern;
-    private spotPriceCalculatorConcern;
-    private joinConcern;
+    exit: ExitConcern;
+    join: JoinConcern;
     liquidity: LiquidityConcern;
     spotPriceCalculator: SpotPriceConcern;
-    join: JoinConcern;
-    constructor(liquidityConcern?: typeof WeightedPoolLiquidity, spotPriceCalculatorConcern?: typeof WeightedPoolSpotPrice, joinConcern?: typeof WeightedPoolJoin);
-}
-
-declare class MetaStablePoolLiquidity implements LiquidityConcern {
-    calcTotal(tokens: PoolToken[]): string;
-}
-
-declare class MetaStablePoolSpotPrice implements SpotPriceConcern {
-    calcPoolSpotPrice(tokenIn: string, tokenOut: string, pool: SubgraphPoolBase): string;
-}
-
-declare class MetaStablePoolJoin implements JoinConcern {
-    /**
-     * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
-     * @param {JoinPoolParameters}  params - parameters used to build exact tokens in for bpt out transaction
-     * @param {string}              params.joiner - Account address joining pool
-     * @param {Pool}                params.pool - Subgraph pool object of pool being joined
-     * @param {string[]}            params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
-     * @param {string[]}            params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
-     * @param {string}              params.slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
-     * @returns                     transaction request ready to send with signer.sendTransaction
-     */
-    buildJoin: ({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }: JoinPoolParameters) => JoinPoolAttributes;
+    constructor(exit?: ExitConcern, join?: JoinConcern, liquidity?: LiquidityConcern, spotPriceCalculator?: SpotPriceConcern);
 }
 
 declare class MetaStable implements PoolType {
-    private liquidityConcern;
-    private spotPriceCalculatorConcern;
-    private joinConcern;
+    exit: ExitConcern;
+    join: JoinConcern;
     liquidity: LiquidityConcern;
     spotPriceCalculator: SpotPriceConcern;
-    join: JoinConcern;
-    constructor(liquidityConcern?: typeof MetaStablePoolLiquidity, spotPriceCalculatorConcern?: typeof MetaStablePoolSpotPrice, joinConcern?: typeof MetaStablePoolJoin);
-}
-
-declare class StablePhantomPoolLiquidity implements LiquidityConcern {
-    calcTotal(tokens: PoolToken[]): string;
-}
-
-declare class StablePhantomPoolSpotPrice implements SpotPriceConcern {
-    calcPoolSpotPrice(tokenIn: string, tokenOut: string, pool: SubgraphPoolBase): string;
-}
-
-declare class StablePhantomPoolJoin implements JoinConcern {
-    buildJoin: ({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }: JoinPoolParameters) => JoinPoolAttributes;
+    constructor(exit?: ExitConcern, join?: JoinConcern, liquidity?: LiquidityConcern, spotPriceCalculator?: SpotPriceConcern);
 }
 
 declare class StablePhantom implements PoolType {
-    private liquidityConcern;
-    private spotPriceCalculatorConcern;
-    joinConcern: typeof StablePhantomPoolJoin;
+    exit: ExitConcern;
+    join: JoinConcern;
     liquidity: LiquidityConcern;
     spotPriceCalculator: SpotPriceConcern;
-    join: JoinConcern;
-    constructor(liquidityConcern?: typeof StablePhantomPoolLiquidity, spotPriceCalculatorConcern?: typeof StablePhantomPoolSpotPrice, joinConcern?: typeof StablePhantomPoolJoin);
-}
-
-declare class LinearPoolLiquidity implements LiquidityConcern {
-    calcTotal(tokens: PoolToken[]): string;
-}
-
-declare class LinearPoolSpotPrice implements SpotPriceConcern {
-    calcPoolSpotPrice(tokenIn: string, tokenOut: string, pool: SubgraphPoolBase): string;
-}
-
-declare class LinearPoolJoin implements JoinConcern {
-    buildJoin: ({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }: JoinPoolParameters) => JoinPoolAttributes;
+    constructor(exit?: ExitConcern, join?: JoinConcern, liquidity?: LiquidityConcern, spotPriceCalculator?: SpotPriceConcern);
 }
 
 declare class Linear implements PoolType {
-    private liquidityConcern;
-    private spotPriceCalculatorConcern;
-    private joinConcern;
+    exit: ExitConcern;
+    join: JoinConcern;
     liquidity: LiquidityConcern;
     spotPriceCalculator: SpotPriceConcern;
-    join: JoinConcern;
-    constructor(liquidityConcern?: typeof LinearPoolLiquidity, spotPriceCalculatorConcern?: typeof LinearPoolSpotPrice, joinConcern?: typeof LinearPoolJoin);
+    constructor(exit?: ExitConcern, join?: JoinConcern, liquidity?: LiquidityConcern, spotPriceCalculator?: SpotPriceConcern);
 }
 
 declare class Pools {
@@ -2522,11 +2467,11 @@ declare class Migrations {
      * Migrates tokens from staBal3 to bbausd2 pool.
      * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
      *
-     * @param {string}  userAddress User address.
-     * @param {string}  staBal3Amount Amount of BPT tokens to migrate.
-     * @param {string}  minBbausd2Out Minimum of expected BPT out ot the migration flow.
-     * @param {boolean} staked Indicates whether tokens are initially staked or not.
-     * @param {string}  authorisation Encoded authorisation call.
+     * @param userAddress User address.
+     * @param staBal3Amount Amount of BPT tokens to migrate.
+     * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param authorisation Encoded authorisation call.
      * @returns Migration transaction request ready to send with signer.sendTransaction
      */
     stabal3(userAddress: string, staBal3Amount: string, minBbausd2Out: string, staked: boolean, authorisation?: string): {
@@ -2539,35 +2484,32 @@ declare class Migrations {
      * Migrates tokens from bbausd1 to bbausd2 pool.
      * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
      *
-     * @param {string}    userAddress User address.
-     * @param {string}    bbausd1Amount Amount of BPT tokens to migrate.
-     * @param {string}    minBbausd2Out Minimum of expected BPT out ot the migration flow.
-     * @param {boolean}   staked Indicates whether tokens are initially staked or not.
-     * @param {string[]}  tokenBalances Token balances in EVM scale. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
-     * @param {string}    authorisation Encoded authorisation call.
+     * @param userAddress User address.
+     * @param bbausd1Amount Amount of BPT tokens to migrate.
+     * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param tokenBalances Token balances in EVM scale. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+     * @param authorisation Encoded authorisation call.
      * @returns Migration transaction request ready to send with signer.sendTransaction
      */
     bbaUsd(userAddress: string, bbausd1Amount: string, minBbausd2Out: string, staked: boolean, tokenBalances: string[], authorisation?: string): {
         to: string;
         data: string;
-        decode: (output: string, staked: boolean) => {
-            bbausd1AmountIn: string;
-            bbausd2AmountOut: string;
-        };
+        decode: (output: string, staked: boolean) => string;
     };
     /**
      * Builds migration call data.
      * Migrates tokens from old stable to new stable phantom pools with the same underlying tokens.
      * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
      *
-     * @param {string}                    userAddress User address.
-     * @param {{string, string, string}}  from Pool info being migrated from
-     * @param {{string, string, string}}  to Pool info being migrated to
-     * @param {string}                    bptIn Amount of BPT tokens to migrate.
-     * @param {string}                    minBptOut Minimum of expected BPT out ot the migration flow.
-     * @param {boolean}                   staked Indicates whether tokens are initially staked or not.
-     * @param {string[]}                  underlyingTokens Underlying token addresses. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
-     * @param {string}                    authorisation Encoded authorisation call.
+     * @param userAddress User address.
+     * @param from Pool info being migrated from
+     * @param to Pool info being migrated to
+     * @param bptIn Amount of BPT tokens to migrate.
+     * @param minBptOut Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param underlyingTokens Underlying token addresses. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+     * @param authorisation Encoded authorisation call.
      * @returns Migration transaction request ready to send with signer.sendTransaction
      */
     stables(userAddress: string, from: {
@@ -2579,6 +2521,23 @@ declare class Migrations {
         address: string;
         gauge?: string;
     }, bptIn: string, minBptOut: string, staked: boolean, underlyingTokens: string[], authorisation?: string): {
+        to: string;
+        data: string;
+        decode: (output: string, staked: boolean) => string;
+    };
+    /**
+     * Builds migration call data.
+     * Migrates tokens from staBal3 to bbausd2 pool.
+     * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+     *
+     * @param userAddress User address.
+     * @param bptIn Amount of BPT tokens to migrate.
+     * @param minBptOut Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param authorisation Encoded authorisation call.
+     * @returns Migration transaction request ready to send with signer.sendTransaction
+     */
+    maiusd(userAddress: string, bptIn: string, minBptOut: string, staked: boolean, authorisation?: string): {
         to: string;
         data: string;
         decode: (output: string, staked: boolean) => string;
@@ -2628,7 +2587,10 @@ declare enum BalancerErrorCode {
     UNSUPPORTED_POOL_TYPE = "UNSUPPORTED_POOL_TYPE",
     UNSUPPORTED_PAIR = "UNSUPPORTED_PAIR",
     NO_POOL_DATA = "NO_POOL_DATA",
+    INPUT_OUT_OF_BOUNDS = "INPUT_OUT_OF_BOUNDS",
     INPUT_LENGTH_MISMATCH = "INPUT_LENGTH_MISMATCH",
+    TOKEN_MISMATCH = "TOKEN_MISMATCH",
+    MISSING_TOKENS = "MISSING_TOKENS",
     MISSING_AMP = "MISSING_AMP",
     MISSING_DECIMALS = "MISSING_DECIMALS",
     MISSING_PRICE_RATE = "MISSING_PRICE_RATE",
@@ -2640,4 +2602,4 @@ declare class BalancerError extends Error {
     static getMessage(code: BalancerErrorCode): string;
 }
 
-export { AaveHelpers, Account, Address, AssetHelpers, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BatchSwap, BatchSwapStep, BuildTransactionParameters, ContractAddresses, Currency, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeUnwrapAaveStaticTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FallbackPoolRepository, FetchPoolsInput, FindRouteParameters, FundManagement, JoinPoolRequest, Liquidity, ManagedPoolEncoder, Network, OnchainPoolData, OnchainTokenData, OutputReference, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolModel, PoolReference, PoolRepository, PoolSpecialization, PoolToken, PoolType$1 as PoolType, Pools, Price, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticPoolRepository, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphPoolRepository, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, splitPoolId, toNormalizedWeights };
+export { AaveHelpers, Account, Address, AssetHelpers, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BatchSwap, BatchSwapStep, BuildTransactionParameters, ContractAddresses, Currency, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeJoinPoolInput, EncodeUnwrapAaveStaticTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FallbackPoolRepository, FetchPoolsInput, FindRouteParameters, FundManagement, JoinPoolRequest, Liquidity, ManagedPoolEncoder, Network, OnchainPoolData, OnchainTokenData, OutputReference, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolModel, PoolReference, PoolRepository, PoolSpecialization, PoolToken, PoolType$1 as PoolType, Pools, Price, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticPoolRepository, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphPoolRepository, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, splitPoolId, toNormalizedWeights };

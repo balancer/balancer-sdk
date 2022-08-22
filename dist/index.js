@@ -9,10 +9,10 @@ var address = require('@ethersproject/address');
 var bytes = require('@ethersproject/bytes');
 var abstractSigner = require('@ethersproject/abstract-signer');
 var contracts = require('@ethersproject/contracts');
-var sor = require('@balancer-labs/sor');
 var OldBigNumber = require('bignumber.js');
 var require$$0 = require('graphql-request');
 var typechain = require('@balancer-labs/typechain');
+var sor = require('@balancer-labs/sor');
 var providers = require('@ethersproject/providers');
 var graphql = require('graphql');
 var lodash = require('lodash');
@@ -870,51 +870,18 @@ function parseFixed(value, decimals) {
     return bignumber.parseFixed(parsedValue, decimals);
 }
 
-const SCALING_FACTOR$5 = 18;
-class StablePoolLiquidity {
-    calcTotal(tokens) {
-        var _a, _b;
-        let sumBalance = bignumber.BigNumber.from(0);
-        let sumValue = bignumber.BigNumber.from(0);
-        for (let i = 0; i < tokens.length; i++) {
-            const token = tokens[i];
-            // if a token's price is unknown, ignore it
-            // it will be computed at the next step
-            if (!((_a = token.price) === null || _a === void 0 ? void 0 : _a.usd)) {
-                continue;
-            }
-            const price = parseFixed(token.price.usd, SCALING_FACTOR$5);
-            const balance = parseFixed(token.balance, SCALING_FACTOR$5);
-            const value = balance.mul(price);
-            sumValue = sumValue.add(value);
-            sumBalance = sumBalance.add(balance);
-        }
-        // if at least the partial value of the pool is known
-        // then compute the rest of the value of tokens with unknown prices
-        if (sumBalance.gt(0)) {
-            const avgPrice = sumValue.div(sumBalance);
-            for (let i = 0; i < tokens.length; i++) {
-                const token = tokens[i];
-                if ((_b = token.price) === null || _b === void 0 ? void 0 : _b.usd) {
-                    continue;
-                }
-                const balance = parseFixed(token.balance, SCALING_FACTOR$5);
-                const value = balance.mul(avgPrice);
-                sumValue = sumValue.add(value);
-                sumBalance = sumBalance.add(balance);
-            }
-        }
-        return bignumber.formatFixed(sumValue, SCALING_FACTOR$5 * 2).toString();
-    }
-}
-
-class StablePoolSpotPrice {
-    calcPoolSpotPrice(tokenIn, tokenOut, pool) {
-        const poolClass = sor.StablePool.fromPool(pool);
-        const poolPairData = poolClass.parsePoolPairData(tokenIn, tokenOut);
-        return poolClass
-            ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, sor.ZERO)
-            .toString();
+class StablePoolExit {
+    constructor() {
+        this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
+            // TODO implementation
+            console.log(exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut);
+            throw new Error('To be implemented');
+        };
+        this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
+            // TODO implementation
+            console.log(exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset);
+            throw new Error('To be implemented');
+        };
     }
 }
 
@@ -2608,7 +2575,7 @@ class WeightedPool extends base_1.default {
 weighted.default = WeightedPool;
 
 Object.defineProperty(src, "__esModule", { value: true });
-src.WeightedMath = src.WeightedPool = StableMath_1 = src.StableMath = src.StablePool = void 0;
+var WeightedMath_1 = src.WeightedMath = src.WeightedPool = StableMath_1 = src.StableMath = src.StablePool = void 0;
 const stable_1 = stable;
 src.StablePool = stable_1.default;
 const StableMath = math$3;
@@ -2616,7 +2583,7 @@ var StableMath_1 = src.StableMath = StableMath;
 const weighted_1 = weighted;
 src.WeightedPool = weighted_1.default;
 const WeightedMath = math$1;
-src.WeightedMath = WeightedMath;
+WeightedMath_1 = src.WeightedMath = WeightedMath;
 
 const bpsPerOne = bignumber.BigNumber.from('10000'); // number of basis points in 100%
 /**
@@ -2640,6 +2607,17 @@ const mulSlippage = (amount, slippage) => {
 const subSlippage = (amount, slippage) => {
     const delta = mulSlippage(amount, slippage);
     return amount.sub(delta);
+};
+/**
+ * Increase input amount by slippage factor
+ *
+ * @param {BigNumber} amount Input in EVM amounts
+ * @param {BigNumber} slippage Slippage value in bps - i.e. 50 = 0.5%
+ * @returns Result amount adding slippage
+ */
+const addSlippage = (amount, slippage) => {
+    const delta = mulSlippage(amount, slippage);
+    return amount.add(delta);
 };
 
 const balancerVault = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
@@ -2782,7 +2760,10 @@ exports.BalancerErrorCode = void 0;
     BalancerErrorCode["UNSUPPORTED_POOL_TYPE"] = "UNSUPPORTED_POOL_TYPE";
     BalancerErrorCode["UNSUPPORTED_PAIR"] = "UNSUPPORTED_PAIR";
     BalancerErrorCode["NO_POOL_DATA"] = "NO_POOL_DATA";
+    BalancerErrorCode["INPUT_OUT_OF_BOUNDS"] = "INPUT_OUT_OF_BOUNDS";
     BalancerErrorCode["INPUT_LENGTH_MISMATCH"] = "INPUT_LENGTH_MISMATCH";
+    BalancerErrorCode["TOKEN_MISMATCH"] = "TOKEN_MISMATCH";
+    BalancerErrorCode["MISSING_TOKENS"] = "MISSING_TOKENS";
     BalancerErrorCode["MISSING_AMP"] = "MISSING_AMP";
     BalancerErrorCode["MISSING_DECIMALS"] = "MISSING_DECIMALS";
     BalancerErrorCode["MISSING_PRICE_RATE"] = "MISSING_PRICE_RATE";
@@ -2812,12 +2793,18 @@ class BalancerError extends Error {
                 return 'unsupported token pair';
             case exports.BalancerErrorCode.NO_POOL_DATA:
                 return 'no pool data';
+            case exports.BalancerErrorCode.INPUT_OUT_OF_BOUNDS:
+                return 'input out of bounds';
             case exports.BalancerErrorCode.INPUT_LENGTH_MISMATCH:
                 return 'input length mismatch';
-            case exports.BalancerErrorCode.MISSING_AMP:
-                return 'missing amp';
+            case exports.BalancerErrorCode.TOKEN_MISMATCH:
+                return 'token mismatch';
             case exports.BalancerErrorCode.MISSING_DECIMALS:
                 return 'missing decimals';
+            case exports.BalancerErrorCode.MISSING_TOKENS:
+                return 'missing tokens';
+            case exports.BalancerErrorCode.MISSING_AMP:
+                return 'missing amp';
             case exports.BalancerErrorCode.MISSING_PRICE_RATE:
                 return 'missing price rate';
             case exports.BalancerErrorCode.MISSING_WEIGHT:
@@ -2888,51 +2875,202 @@ class StablePoolJoin {
     }
 }
 
-class Stable {
-    constructor(liquidityConcern = StablePoolLiquidity, spotPriceCalculatorConcern = StablePoolSpotPrice, joinConcern = StablePoolJoin) {
-        this.liquidityConcern = liquidityConcern;
-        this.spotPriceCalculatorConcern = spotPriceCalculatorConcern;
-        this.joinConcern = joinConcern;
-        this.liquidity = new this.liquidityConcern();
-        this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-        this.join = new this.joinConcern();
-    }
-}
-
-const SCALING_FACTOR$4 = 18;
-class WeightedPoolLiquidity {
+const SCALING_FACTOR$5 = 18;
+class StablePoolLiquidity {
     calcTotal(tokens) {
-        var _a;
-        let sumWeight = constants.Zero;
-        let sumValue = constants.Zero;
+        var _a, _b;
+        let sumBalance = bignumber.BigNumber.from(0);
+        let sumValue = bignumber.BigNumber.from(0);
         for (let i = 0; i < tokens.length; i++) {
             const token = tokens[i];
+            // if a token's price is unknown, ignore it
+            // it will be computed at the next step
             if (!((_a = token.price) === null || _a === void 0 ? void 0 : _a.usd)) {
                 continue;
             }
-            const price = parseFixed(token.price.usd, SCALING_FACTOR$4);
-            const balance = parseFixed(token.balance, SCALING_FACTOR$4);
+            const price = parseFixed(token.price.usd, SCALING_FACTOR$5);
+            const balance = parseFixed(token.balance, SCALING_FACTOR$5);
             const value = balance.mul(price);
             sumValue = sumValue.add(value);
-            sumWeight = sumWeight.add(token.weight || '0');
+            sumBalance = sumBalance.add(balance);
         }
-        // Scale the known prices of x% of the pool to get value of 100% of the pool.
-        const totalWeight = tokens.reduce((total, token) => total.add(token.weight || '0'), constants.Zero);
-        if (sumWeight.gt(0)) {
-            const liquidity = sumValue.mul(totalWeight).div(sumWeight);
-            return bignumber.formatFixed(liquidity, SCALING_FACTOR$4 * 2);
+        // if at least the partial value of the pool is known
+        // then compute the rest of the value of tokens with unknown prices
+        if (sumBalance.gt(0)) {
+            const avgPrice = sumValue.div(sumBalance);
+            for (let i = 0; i < tokens.length; i++) {
+                const token = tokens[i];
+                if ((_b = token.price) === null || _b === void 0 ? void 0 : _b.usd) {
+                    continue;
+                }
+                const balance = parseFixed(token.balance, SCALING_FACTOR$5);
+                const value = balance.mul(avgPrice);
+                sumValue = sumValue.add(value);
+                sumBalance = sumBalance.add(balance);
+            }
         }
-        return '0';
+        return bignumber.formatFixed(sumValue, SCALING_FACTOR$5 * 2).toString();
     }
 }
 
-class WeightedPoolSpotPrice {
+class StablePoolSpotPrice {
     calcPoolSpotPrice(tokenIn, tokenOut, pool) {
-        const weightedPool = sor.WeightedPool.fromPool(pool);
-        const poolPairData = weightedPool.parsePoolPairData(tokenIn, tokenOut);
-        return weightedPool
+        const poolClass = sor.StablePool.fromPool(pool);
+        const poolPairData = poolClass.parsePoolPairData(tokenIn, tokenOut);
+        return poolClass
             ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, sor.ZERO)
             .toString();
+    }
+}
+
+class Stable {
+    constructor(exit = new StablePoolExit(), join = new StablePoolJoin(), liquidity = new StablePoolLiquidity(), spotPriceCalculator = new StablePoolSpotPrice()) {
+        this.exit = exit;
+        this.join = join;
+        this.liquidity = liquidity;
+        this.spotPriceCalculator = spotPriceCalculator;
+    }
+}
+
+class WeightedPoolExit {
+    constructor() {
+        /**
+         * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
+         * @param {string}  exiter - Account address exiting pool
+         * @param {Pool}    pool - Subgraph pool object of pool being exited
+         * @param {string}  bptIn - BPT provided for exiting pool
+         * @param {string}  slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+         * @param {boolean} shouldUnwrapNativeAsset - Indicates wether wrapped native asset should be unwrapped after exit.
+         * @param {string}  wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting to native asset.
+         * @param {string}  singleTokenMaxOut - Optional: token address that if provided will exit to given token
+         * @returns         transaction request ready to send with signer.sendTransaction
+         */
+        this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
+            if (!bptIn.length || bignumber.parseFixed(bptIn, 18).isNegative()) {
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
+            }
+            if (singleTokenMaxOut &&
+                singleTokenMaxOut !== constants.AddressZero &&
+                !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)) {
+                throw new BalancerError(exports.BalancerErrorCode.TOKEN_MISMATCH);
+            }
+            if (!shouldUnwrapNativeAsset && singleTokenMaxOut === constants.AddressZero)
+                throw new Error('shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values');
+            // Parse pool info into EVM amounts in order to match amountsIn scalling
+            const { parsedTokens, parsedBalances, parsedWeights, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Replace WETH address with ETH - required for exiting with ETH
+            const unwrappedTokens = parsedTokens.map((token) => token === wrappedNativeAsset ? constants.AddressZero : token);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [sortedTokens, sortedBalances, sortedWeights] = assetHelpers.sortTokens(shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens, parsedBalances, parsedWeights);
+            let minAmountsOut = Array(sortedTokens.length).fill('0');
+            let userData;
+            if (singleTokenMaxOut) {
+                // Exit pool with single token using exact bptIn
+                const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
+                // Calculate amount out given BPT in
+                const amountOut = WeightedMath_1._calcTokenOutGivenExactBptIn(new OldBigNumber__default["default"](sortedBalances[singleTokenMaxOutIndex]), new OldBigNumber__default["default"](sortedWeights[singleTokenMaxOutIndex]), new OldBigNumber__default["default"](bptIn), new OldBigNumber__default["default"](parsedTotalShares), new OldBigNumber__default["default"](parsedSwapFee)).toString();
+                // Apply slippage
+                minAmountsOut[singleTokenMaxOutIndex] = subSlippage(bignumber.BigNumber.from(amountOut), bignumber.BigNumber.from(slippage)).toString();
+                userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(bptIn, singleTokenMaxOutIndex);
+            }
+            else {
+                // Exit pool with all tokens proportinally
+                // Calculate amounts out given BPT in
+                const amountsOut = WeightedMath_1._calcTokensOutGivenExactBptIn(sortedBalances.map((b) => new OldBigNumber__default["default"](b)), new OldBigNumber__default["default"](bptIn), new OldBigNumber__default["default"](parsedTotalShares)).map((amount) => amount.toString());
+                // Apply slippage
+                minAmountsOut = amountsOut.map((amount) => {
+                    const minAmount = subSlippage(bignumber.BigNumber.from(amount), bignumber.BigNumber.from(slippage));
+                    return minAmount.toString();
+                });
+                userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(bptIn);
+            }
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = typechain.Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut,
+                maxBPTIn: bptIn,
+            };
+        };
+        /**
+         * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
+         * @param {string}    exiter - Account address exiting pool
+         * @param {Pool}      pool - Subgraph pool object of pool being exited
+         * @param {string[]}  tokensOut - Tokens provided for exiting pool
+         * @param {string[]}  amountsOut - Amoutns provided for exiting pool
+         * @param {string}    slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+         * @param {string}    wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting with ETH.
+         * @returns           transaction request ready to send with signer.sendTransaction
+         */
+        this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
+            if (tokensOut.length != amountsOut.length ||
+                tokensOut.length != pool.tokensList.length) {
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+            }
+            // Parse pool info into EVM amounts in order to match amountsIn scalling
+            const { parsedTokens, parsedBalances, parsedWeights, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Sort pool info and inputs based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [, sortedBalances, sortedWeights] = assetHelpers.sortTokens(parsedTokens, parsedBalances, parsedWeights);
+            const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(tokensOut, amountsOut);
+            // Calculate expected BPT in given tokens out
+            const bptIn = WeightedMath_1._calcBptInGivenExactTokensOut(sortedBalances.map((b) => new OldBigNumber__default["default"](b)), sortedWeights.map((w) => new OldBigNumber__default["default"](w)), sortedAmounts.map((a) => new OldBigNumber__default["default"](a)), new OldBigNumber__default["default"](parsedTotalShares), new OldBigNumber__default["default"](parsedSwapFee)).toString();
+            // Apply slippage
+            const maxBPTIn = addSlippage(bignumber.BigNumber.from(bptIn), bignumber.BigNumber.from(slippage)).toString();
+            const userData = WeightedPoolEncoder.exitBPTInForExactTokensOut(sortedAmounts, maxBPTIn);
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut: sortedAmounts,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = typechain.Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut: sortedAmounts,
+                maxBPTIn,
+            };
+        };
     }
 }
 
@@ -2946,6 +3084,7 @@ class WeightedPoolJoin {
          * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
          * @param {string[]}                        params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
          * @param {string}                          params.slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
+         * @param {string}                          wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for joining with ETH.
          * @returns                                 transaction request ready to send with signer.sendTransaction
          */
         this.buildJoin = ({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }) => {
@@ -2996,62 +3135,64 @@ class WeightedPoolJoin {
     }
 }
 
-class Weighted {
-    constructor(liquidityConcern = WeightedPoolLiquidity, spotPriceCalculatorConcern = WeightedPoolSpotPrice, joinConcern = WeightedPoolJoin) {
-        this.liquidityConcern = liquidityConcern;
-        this.spotPriceCalculatorConcern = spotPriceCalculatorConcern;
-        this.joinConcern = joinConcern;
-        this.liquidity = new this.liquidityConcern();
-        this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-        this.join = new this.joinConcern();
-    }
-}
-
-const SCALING_FACTOR$3 = 18;
-class MetaStablePoolLiquidity {
+const SCALING_FACTOR$4 = 18;
+class WeightedPoolLiquidity {
     calcTotal(tokens) {
-        var _a, _b;
-        let sumBalance = constants.Zero;
+        var _a;
+        let sumWeight = constants.Zero;
         let sumValue = constants.Zero;
         for (let i = 0; i < tokens.length; i++) {
             const token = tokens[i];
-            // if a token's price is unknown, ignore it
-            // it will be computed at the next step
             if (!((_a = token.price) === null || _a === void 0 ? void 0 : _a.usd)) {
                 continue;
             }
-            const price = parseFixed(token.price.usd, SCALING_FACTOR$3);
-            const balance = parseFixed(token.balance, SCALING_FACTOR$3);
+            const price = parseFixed(token.price.usd, SCALING_FACTOR$4);
+            const balance = parseFixed(token.balance, SCALING_FACTOR$4);
             const value = balance.mul(price);
             sumValue = sumValue.add(value);
-            sumBalance = sumBalance.add(balance);
+            sumWeight = sumWeight.add(token.weight || '0');
         }
-        // if at least the partial value of the pool is known
-        // then compute the rest of the value of tokens with unknown prices
-        if (sumBalance.gt(0)) {
-            const avgPrice = sumValue.div(sumBalance);
-            for (let i = 0; i < tokens.length; i++) {
-                const token = tokens[i];
-                if ((_b = token.price) === null || _b === void 0 ? void 0 : _b.usd) {
-                    continue;
-                }
-                const balance = parseFixed(token.balance, SCALING_FACTOR$3);
-                const value = balance.mul(avgPrice);
-                sumValue = sumValue.add(value);
-                sumBalance = sumBalance.add(balance);
-            }
+        // Scale the known prices of x% of the pool to get value of 100% of the pool.
+        const totalWeight = tokens.reduce((total, token) => total.add(token.weight || '0'), constants.Zero);
+        if (sumWeight.gt(0)) {
+            const liquidity = sumValue.mul(totalWeight).div(sumWeight);
+            return bignumber.formatFixed(liquidity, SCALING_FACTOR$4 * 2);
         }
-        return bignumber.formatFixed(sumValue, SCALING_FACTOR$3 * 2).toString();
+        return '0';
     }
 }
 
-class MetaStablePoolSpotPrice {
+class WeightedPoolSpotPrice {
     calcPoolSpotPrice(tokenIn, tokenOut, pool) {
-        const poolClass = sor.MetaStablePool.fromPool(pool);
-        const poolPairData = poolClass.parsePoolPairData(tokenIn, tokenOut);
-        return poolClass
+        const weightedPool = sor.WeightedPool.fromPool(pool);
+        const poolPairData = weightedPool.parsePoolPairData(tokenIn, tokenOut);
+        return weightedPool
             ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, sor.ZERO)
             .toString();
+    }
+}
+
+class Weighted {
+    constructor(exit = new WeightedPoolExit(), join = new WeightedPoolJoin(), liquidity = new WeightedPoolLiquidity(), spotPriceCalculator = new WeightedPoolSpotPrice()) {
+        this.exit = exit;
+        this.join = join;
+        this.liquidity = liquidity;
+        this.spotPriceCalculator = spotPriceCalculator;
+    }
+}
+
+class MetaStablePoolExit {
+    constructor() {
+        this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
+            // TODO implementation
+            console.log(exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut);
+            throw new Error('To be implemented');
+        };
+        this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
+            // TODO implementation
+            console.log(exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset);
+            throw new Error('To be implemented');
+        };
     }
 }
 
@@ -3132,14 +3273,85 @@ class MetaStablePoolJoin {
     }
 }
 
+const SCALING_FACTOR$3 = 18;
+class MetaStablePoolLiquidity {
+    calcTotal(tokens) {
+        var _a, _b;
+        let sumBalance = constants.Zero;
+        let sumValue = constants.Zero;
+        for (let i = 0; i < tokens.length; i++) {
+            const token = tokens[i];
+            // if a token's price is unknown, ignore it
+            // it will be computed at the next step
+            if (!((_a = token.price) === null || _a === void 0 ? void 0 : _a.usd)) {
+                continue;
+            }
+            const price = parseFixed(token.price.usd, SCALING_FACTOR$3);
+            const balance = parseFixed(token.balance, SCALING_FACTOR$3);
+            const value = balance.mul(price);
+            sumValue = sumValue.add(value);
+            sumBalance = sumBalance.add(balance);
+        }
+        // if at least the partial value of the pool is known
+        // then compute the rest of the value of tokens with unknown prices
+        if (sumBalance.gt(0)) {
+            const avgPrice = sumValue.div(sumBalance);
+            for (let i = 0; i < tokens.length; i++) {
+                const token = tokens[i];
+                if ((_b = token.price) === null || _b === void 0 ? void 0 : _b.usd) {
+                    continue;
+                }
+                const balance = parseFixed(token.balance, SCALING_FACTOR$3);
+                const value = balance.mul(avgPrice);
+                sumValue = sumValue.add(value);
+                sumBalance = sumBalance.add(balance);
+            }
+        }
+        return bignumber.formatFixed(sumValue, SCALING_FACTOR$3 * 2).toString();
+    }
+}
+
+class MetaStablePoolSpotPrice {
+    calcPoolSpotPrice(tokenIn, tokenOut, pool) {
+        const poolClass = sor.MetaStablePool.fromPool(pool);
+        const poolPairData = poolClass.parsePoolPairData(tokenIn, tokenOut);
+        return poolClass
+            ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, sor.ZERO)
+            .toString();
+    }
+}
+
 class MetaStable {
-    constructor(liquidityConcern = MetaStablePoolLiquidity, spotPriceCalculatorConcern = MetaStablePoolSpotPrice, joinConcern = MetaStablePoolJoin) {
-        this.liquidityConcern = liquidityConcern;
-        this.spotPriceCalculatorConcern = spotPriceCalculatorConcern;
-        this.joinConcern = joinConcern;
-        this.liquidity = new this.liquidityConcern();
-        this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-        this.join = new this.joinConcern();
+    constructor(exit = new MetaStablePoolExit(), join = new MetaStablePoolJoin(), liquidity = new MetaStablePoolLiquidity(), spotPriceCalculator = new MetaStablePoolSpotPrice()) {
+        this.exit = exit;
+        this.join = join;
+        this.liquidity = liquidity;
+        this.spotPriceCalculator = spotPriceCalculator;
+    }
+}
+
+class StablePhantomPoolExit {
+    constructor() {
+        this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
+            // TODO implementation
+            console.log(exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut);
+            throw new Error('To be implemented');
+        };
+        this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
+            // TODO implementation
+            console.log(exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset);
+            throw new Error('To be implemented');
+        };
+    }
+}
+
+class StablePhantomPoolJoin {
+    constructor() {
+        this.buildJoin = ({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }) => {
+            // TODO implementation
+            console.log(joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset);
+            throw new Error('To be implemented');
+        };
     }
 }
 
@@ -3162,24 +3374,37 @@ class StablePhantomPoolSpotPrice {
     }
 }
 
-class StablePhantomPoolJoin {
+class StablePhantom {
+    constructor(exit = new StablePhantomPoolExit(), join = new StablePhantomPoolJoin(), liquidity = new StablePhantomPoolLiquidity(), spotPriceCalculator = new StablePhantomPoolSpotPrice()) {
+        this.exit = exit;
+        this.join = join;
+        this.liquidity = liquidity;
+        this.spotPriceCalculator = spotPriceCalculator;
+    }
+}
+
+class LinearPoolExit {
+    constructor() {
+        this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
+            // TODO implementation
+            console.log(exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut);
+            throw new Error('To be implemented');
+        };
+        this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
+            // TODO implementation
+            console.log(exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset);
+            throw new Error('To be implemented');
+        };
+    }
+}
+
+class LinearPoolJoin {
     constructor() {
         this.buildJoin = ({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }) => {
             // TODO implementation
             console.log(joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset);
             throw new Error('To be implemented');
         };
-    }
-}
-
-class StablePhantom {
-    constructor(liquidityConcern = StablePhantomPoolLiquidity, spotPriceCalculatorConcern = StablePhantomPoolSpotPrice, joinConcern = StablePhantomPoolJoin) {
-        this.liquidityConcern = liquidityConcern;
-        this.spotPriceCalculatorConcern = spotPriceCalculatorConcern;
-        this.joinConcern = joinConcern;
-        this.liquidity = new this.liquidityConcern();
-        this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-        this.join = new this.joinConcern();
     }
 }
 
@@ -3237,24 +3462,12 @@ class LinearPoolSpotPrice {
     }
 }
 
-class LinearPoolJoin {
-    constructor() {
-        this.buildJoin = ({ joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset, }) => {
-            // TODO implementation
-            console.log(joiner, pool, tokensIn, amountsIn, slippage, wrappedNativeAsset);
-            throw new Error('To be implemented');
-        };
-    }
-}
-
 class Linear {
-    constructor(liquidityConcern = LinearPoolLiquidity, spotPriceCalculatorConcern = LinearPoolSpotPrice, joinConcern = LinearPoolJoin) {
-        this.liquidityConcern = liquidityConcern;
-        this.spotPriceCalculatorConcern = spotPriceCalculatorConcern;
-        this.joinConcern = joinConcern;
-        this.liquidity = new this.liquidityConcern();
-        this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-        this.join = new this.joinConcern();
+    constructor(exit = new LinearPoolExit(), join = new LinearPoolJoin(), liquidity = new LinearPoolLiquidity(), spotPriceCalculator = new LinearPoolSpotPrice()) {
+        this.exit = exit;
+        this.join = join;
+        this.liquidity = liquidity;
+        this.spotPriceCalculator = spotPriceCalculator;
     }
 }
 
@@ -11062,6 +11275,23 @@ class PoolsProvider {
                 slippage,
                 wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
             }),
+            buildExitExactBPTIn: (exiter, bptIn, slippage, shouldUnwrapNativeAsset = false, singleTokenMaxOut) => methods.exit.buildExitExactBPTIn({
+                exiter,
+                pool: data,
+                bptIn,
+                slippage,
+                shouldUnwrapNativeAsset,
+                wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+                singleTokenMaxOut,
+            }),
+            buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) => methods.exit.buildExitExactTokensOut({
+                exiter,
+                pool: data,
+                tokensOut,
+                amountsOut,
+                slippage,
+                wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+            }),
             // TODO: spotPrice fails, because it needs a subgraphType,
             // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
             // spotPrice: async (tokenIn: string, tokenOut: string) =>
@@ -11117,12 +11347,12 @@ class SubgraphPoolRepository {
     mapPool(pool) {
         if (!pool)
             return undefined;
-        const poolType = pool.poolType;
+        const poolType = pool === null || pool === void 0 ? void 0 : pool.poolType;
         if (!poolType)
-            throw new Error('Unknown pool type');
-        const tokens = pool.tokens || [];
+            throw new BalancerError(exports.BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
+        const tokens = (pool === null || pool === void 0 ? void 0 : pool.tokens) || [];
         if (tokens.length === 0)
-            throw new Error('Pool without tokens');
+            throw new BalancerError(exports.BalancerErrorCode.MISSING_TOKENS);
         return {
             ...pool,
             poolType,
@@ -11133,7 +11363,7 @@ class SubgraphPoolRepository {
 
 const ADDRESSES = {
     1: {
-        relayer: 'TODO',
+        relayer: '0x886A3Ec7bcC508B8795990B60Fa21f85F9dB7948',
         staBal3: {
             id: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063',
             address: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42',
@@ -11147,9 +11377,9 @@ const ADDRESSES = {
             assetOrder: ['bb-a-USDT', 'bb-a-DAI', 'bb-a-USDC'],
         },
         bbausd2: {
-            id: '',
-            address: '',
-            gauge: '',
+            id: '0x9B532AB955417AFD0D012EB9F7389457CD0EA712000000000000000000000338',
+            address: '0x9B532AB955417AFD0D012EB9F7389457CD0EA712',
+            gauge: '0x66122c9030030155fb2bbe2e1e9a72588065c4f5',
         },
         linearUsdc1: {
             id: '0x9210f1204b5a24742eba12f710636d76240df3d00000000000000000000000fc',
@@ -11164,16 +11394,28 @@ const ADDRESSES = {
             address: '0x2BBf681cC4eb09218BEe85EA2a5d3D13Fa40fC0C',
         },
         linearUsdc2: {
-            id: '',
-            address: 'N/A',
+            id: '0x82698AECC9E28E9BB27608BD52CF57F704BD1B83000000000000000000000336',
+            address: '0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83',
         },
         linearDai2: {
-            id: '',
-            address: 'N/A',
+            id: '0xAE37D54AE477268B9997D4161B96B8200755935C000000000000000000000337',
+            address: '0xae37D54Ae477268B9997d4161B96b8200755935c',
         },
         linearUsdt2: {
+            id: '0x2F4EB100552EF93840D5ADC30560E5513DFFFACB000000000000000000000334',
+            address: '0x2F4eb100552ef93840d5aDC30560E5513DFfFACb',
+        },
+        maiusd: {
             id: '',
-            address: 'N/A',
+            address: '',
+            gauge: '',
+            assetOrder: ['USDT', 'miMATIC', 'DAI', 'USDC'],
+        },
+        maibbausd: {
+            id: '',
+            address: '',
+            gauge: '',
+            assetOrder: ['bb-a-USD', 'miMATIC'],
         },
         DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
         USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
@@ -11181,6 +11423,7 @@ const ADDRESSES = {
         waDAI: '0x02d60b84491589974263d922d9cc7a3152618ef6',
         waUSDC: '0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de',
         waUSDT: '0xf8fd466f12e236f4c96f7cce6c79eadb819abf58',
+        miMATIC: '',
     },
     5: {
         relayer: '0x7b9B6f094DC2Bd1c12024b0D9CC63d6993Be1888',
@@ -11194,6 +11437,12 @@ const ADDRESSES = {
             id: '0xff9d677474d4344379924e10b68c8fea67e03294000000000000000000000072',
             address: '0xff9d677474d4344379924e10b68c8fea67e03294',
             gauge: '0x4e4ebf2aa90e41174d716a5168895357762d68af',
+            assetOrder: ['USDT', 'DAI', 'USDC'],
+        },
+        staBal3_3: {
+            id: '0x3bfc8a0509f1a68aefd446f6c19bf37b3c75a8fc0000000000000000000000a5',
+            address: '0x3bfc8a0509f1a68aefd446f6c19bf37b3c75a8fc',
+            gauge: '0x7776e1008d7c20ab54aa57a7c44fc7de602de29a',
             assetOrder: ['USDT', 'DAI', 'USDC'],
         },
         bbausd1: {
@@ -11231,12 +11480,25 @@ const ADDRESSES = {
             id: '0xefd681a82970ac5d980b9b2d40499735e7bf3f1f00000000000000000000005e',
             address: '0xefd681a82970ac5d980b9b2d40499735e7bf3f1f',
         },
+        maiusd: {
+            id: '0x6a8f9ab364b85725973d2a33cb9aae2dac43b5e30000000000000000000000a6',
+            address: '0x6a8f9ab364b85725973d2a33cb9aae2dac43b5e3',
+            gauge: '0x58141bdcecb7fbae006964f4131cf6f65c948357',
+            assetOrder: ['USDT', 'miMATIC', 'DAI', 'USDC'],
+        },
+        maibbausd: {
+            id: '0xb04b03b78cf79788a1931545bd2744161029648f0000000000000000000000a8',
+            address: '0xb04b03b78cf79788a1931545bd2744161029648f',
+            gauge: '0xdc3f6fc8898830e53c777543fe252b14f22680d4',
+            assetOrder: ['bb-a-USD', 'miMATIC', 'MAI BSP'],
+        },
         USDT: '0x1f1f156e0317167c11aa412e3d1435ea29dc3cce',
         DAI: '0x8c9e6c40d3402480ace624730524facc5482798c',
         USDC: '0xe0c9275e44ea80ef17579d33c55136b7da269aeb',
         waDAI: '0x89534a24450081aa267c79b07411e9617d984052',
         waUSDC: '0x811151066392fd641fe74a9b55a712670572d161',
         waUSDT: '0x4cb1892fddf14f772b2e39e299f44b2e5da90d04',
+        miMATIC: '0x398106564948feeb1fedea0709ae7d969d62a391',
     },
 };
 
@@ -11310,10 +11572,10 @@ var balancerRelayerAbi = [
 	}
 ];
 
-const balancerRelayerInterface$2 = new abi$1.Interface(balancerRelayerAbi);
-const EXIT_DAI = Relayer.toChainedReference('21');
-const EXIT_USDC = Relayer.toChainedReference('22');
-const EXIT_USDT = Relayer.toChainedReference('23');
+const balancerRelayerInterface$3 = new abi$1.Interface(balancerRelayerAbi);
+const EXIT_DAI$1 = Relayer.toChainedReference('21');
+const EXIT_USDC$1 = Relayer.toChainedReference('22');
+const EXIT_USDT$1 = Relayer.toChainedReference('23');
 const SWAP_RESULT_BBAUSD$1 = Relayer.toChainedReference('24');
 class StaBal3Builder {
     constructor(networkId) {
@@ -11324,11 +11586,11 @@ class StaBal3Builder {
      * Migrates tokens from staBal3 to bbausd2 pool.
      * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
      *
-     * @param {string}  userAddress User address.
-     * @param {string}  staBal3Amount Amount of BPT tokens to migrate.
-     * @param {string}  minBbausd2Out Minimum of expected BPT out ot the migration flow.
-     * @param {boolean} staked Indicates whether tokens are initially staked or not.
-     * @param {string}  authorisation Encoded authorisation call.
+     * @param userAddress User address.
+     * @param staBal3Amount Amount of BPT tokens to migrate.
+     * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param authorisation Encoded authorisation call.
      * @returns Migration transaction request ready to send with signer.sendTransaction
      */
     calldata(userAddress, staBal3Amount, minBbausd2Out, staked, authorisation) {
@@ -11353,21 +11615,21 @@ class StaBal3Builder {
                 this.buildSwap(minBbausd2Out, userAddress),
             ];
         }
-        const callData = balancerRelayerInterface$2.encodeFunctionData('multicall', [
+        const callData = balancerRelayerInterface$3.encodeFunctionData('multicall', [
             calls,
         ]);
         return {
-            to: this.addresses.relayer,
+            to: relayer,
             data: callData,
         };
     }
     /**
      * Encodes exitPool callData.
-     * Exit staBal3 pool proportionally to underlying Linear BPTs. Exits to relayer.
+     * Exit staBal3 pool proportionally to underlying stables. Exits to relayer.
      * Outputreferences are used to store exit amounts for next transaction.
      *
-     * @param {string} sender Sender address.
-     * @param {string} amount Amount of staBal3 BPT to exit with.
+     * @param sender Sender address.
+     * @param amount Amount of staBal3 BPT to exit with.
      * @returns Encoded exitPool call. Output references.
      */
     buildExit(sender, amount) {
@@ -11382,9 +11644,9 @@ class StaBal3Builder {
         // );
         // Ask to store exit outputs for batchSwap of exit is used as input to swaps
         const outputReferences = [
-            { index: assetOrder.indexOf('DAI'), key: EXIT_DAI },
-            { index: assetOrder.indexOf('USDC'), key: EXIT_USDC },
-            { index: assetOrder.indexOf('USDT'), key: EXIT_USDT },
+            { index: assetOrder.indexOf('DAI'), key: EXIT_DAI$1 },
+            { index: assetOrder.indexOf('USDC'), key: EXIT_USDC$1 },
+            { index: assetOrder.indexOf('USDT'), key: EXIT_USDT$1 },
         ];
         const callData = Relayer.constructExitCall({
             assets,
@@ -11404,8 +11666,8 @@ class StaBal3Builder {
      * Creates encoded batchSwap function with following swaps: stables -> linear pools -> boosted pool
      * outputreferences should contain the amount of resulting BPT.
      *
-     * @param {string} expectedBptReturn BPT amount expected out of the swap.
-     * @param {string} recipient Recipient address.
+     * @param expectedBptReturn BPT amount expected out of the swap.
+     * @param recipient Recipient address.
      * @returns Encoded batchSwap call. Output references.
      */
     buildSwap(expectedBptReturn, recipient) {
@@ -11427,7 +11689,7 @@ class StaBal3Builder {
                 poolId: this.addresses.linearDai2.id,
                 assetInIndex: 1,
                 assetOutIndex: 2,
-                amount: EXIT_DAI.toString(),
+                amount: EXIT_DAI$1.toString(),
                 userData: '0x',
             },
             {
@@ -11441,7 +11703,7 @@ class StaBal3Builder {
                 poolId: this.addresses.linearUsdc2.id,
                 assetInIndex: 3,
                 assetOutIndex: 4,
-                amount: EXIT_USDC.toString(),
+                amount: EXIT_USDC$1.toString(),
                 userData: '0x',
             },
             {
@@ -11455,7 +11717,7 @@ class StaBal3Builder {
                 poolId: this.addresses.linearUsdt2.id,
                 assetInIndex: 5,
                 assetOutIndex: 6,
-                amount: EXIT_USDT.toString(),
+                amount: EXIT_USDT$1.toString(),
                 userData: '0x',
             },
             {
@@ -11498,8 +11760,8 @@ class StaBal3Builder {
     /**
      * Uses relayer to withdraw staked BPT from gauge and send to relayer
      *
-     * @param {string} sender Sender address.
-     * @param {string} amount Amount of BPT to exit with.
+     * @param sender Sender address.
+     * @param amount Amount of BPT to exit with.
      * @returns withdraw call
      */
     buildWithdraw(sender, amount) {
@@ -11508,7 +11770,7 @@ class StaBal3Builder {
     /**
      * Uses relayer to deposit user's BPT to gauge and sends to recipient
      *
-     * @param {string} recipient Recipient address.
+     * @param recipient Recipient address.
      * @returns deposit call
      */
     buildDeposit(recipient) {
@@ -11517,7 +11779,7 @@ class StaBal3Builder {
     /**
      * Uses relayer to approve itself to act in behalf of the user
      *
-     * @param {string} authorisation Encoded authorisation call.
+     * @param authorisation Encoded authorisation call.
      * @returns relayer approval call
      */
     buildSetRelayerApproval(authorisation) {
@@ -11525,7 +11787,7 @@ class StaBal3Builder {
     }
 }
 
-const balancerRelayerInterface$1 = new abi$1.Interface(balancerRelayerAbi);
+const balancerRelayerInterface$2 = new abi$1.Interface(balancerRelayerAbi);
 const SWAP_RESULT_BBAUSD = Relayer.toChainedReference('24');
 class BbaUsd1Builder {
     constructor(networkId) {
@@ -11536,12 +11798,12 @@ class BbaUsd1Builder {
      * Migrates tokens from bbausd1 to bbausd2 pool.
      * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
      *
-     * @param {string}    userAddress User address.
-     * @param {string}    bbausd1Amount Amount of BPT tokens to migrate.
-     * @param {string}    minBbausd2Out Minimum of expected BPT out ot the migration flow.
-     * @param {boolean}   staked Indicates whether tokens are initially staked or not.
-     * @param {string[]}  tokenBalances Token balances in EVM scale. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
-     * @param {string}    authorisation Encoded authorisation call.
+     * @param userAddress User address.
+     * @param bbausd1Amount Amount of BPT tokens to migrate.
+     * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param tokenBalances Token balances in EVM scale. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+     * @param authorisation Encoded authorisation call.
      * @returns Migration transaction request ready to send with signer.sendTransaction
      */
     calldata(userAddress, bbausd1Amount, minBbausd2Out, staked, tokenBalances, authorisation) {
@@ -11564,7 +11826,7 @@ class BbaUsd1Builder {
                 this.buildSwap(bbausd1Amount, minBbausd2Out, userAddress, userAddress, tokenBalances),
             ];
         }
-        const callData = balancerRelayerInterface$1.encodeFunctionData('multicall', [
+        const callData = balancerRelayerInterface$2.encodeFunctionData('multicall', [
             calls,
         ]);
         return {
@@ -11576,11 +11838,11 @@ class BbaUsd1Builder {
      * Creates encoded batchSwap function with following swaps: boosted -> linears -> stables -> linears -> boosted
      * outputreferences should contain the amount of resulting BPT.
      *
-     * @param {string}    bbausd1Amount Amount of BPT tokens to migrate.
-     * @param {string}    minBbausd2Out Minimum of expected BPT out ot the migration flow.
-     * @param {string}    sender Sender address.
-     * @param {string}    recipient Recipient address.
-     * @param {string[]}  tokenBalances Token balances in EVM scale.
+     * @param bbausd1Amount Amount of BPT tokens to migrate.
+     * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+     * @param sender Sender address.
+     * @param recipient Recipient address.
+     * @param tokenBalances Token balances in EVM scale.
      * @returns Encoded batchSwap call. Output references.
      */
     buildSwap(bbausd1Amount, minBbausd2Out, sender, recipient, tokenBalances) {
@@ -11739,8 +12001,8 @@ class BbaUsd1Builder {
     /**
      * Uses relayer to withdraw staked BPT from gauge and send to relayer
      *
-     * @param {string} sender Sender address.
-     * @param {string} amount Amount of BPT to exit with.
+     * @param sender Sender address.
+     * @param amount Amount of BPT to exit with.
      * @returns withdraw call
      */
     buildWithdraw(sender, amount) {
@@ -11749,7 +12011,7 @@ class BbaUsd1Builder {
     /**
      * Uses relayer to deposit user's BPT to gauge and sends to recipient
      *
-     * @param {string} recipient Recipient address.
+     * @param recipient Recipient address.
      * @returns deposit call
      */
     buildDeposit(recipient) {
@@ -11758,7 +12020,7 @@ class BbaUsd1Builder {
     /**
      * Uses relayer to approve itself to act in behalf of the user
      *
-     * @param {string} authorisation Encoded authorisation call.
+     * @param authorisation Encoded authorisation call.
      * @returns relayer approval call
      */
     buildSetRelayerApproval(authorisation) {
@@ -11766,8 +12028,8 @@ class BbaUsd1Builder {
     }
 }
 
-const balancerRelayerInterface = new abi$1.Interface(balancerRelayerAbi);
-const SWAP_RESULT = Relayer.toChainedReference('0');
+const balancerRelayerInterface$1 = new abi$1.Interface(balancerRelayerAbi);
+const SWAP_RESULT$1 = Relayer.toChainedReference('0');
 const EXIT_RESULTS = [];
 class StablesBuilder {
     constructor(networkId) {
@@ -11778,14 +12040,14 @@ class StablesBuilder {
      * Migrates tokens from old stable to new stable phantom pools with the same underlying tokens.
      * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
      *
-     * @param {string}                    userAddress User address.
-     * @param {{string, string, string}}  from Pool info being migrated from
-     * @param {{string, string, string}}  to Pool info being migrated to
-     * @param {string}                    bptIn Amount of BPT tokens to migrate.
-     * @param {string}                    minBptOut Minimum of expected BPT out ot the migration flow.
-     * @param {boolean}                   staked Indicates whether tokens are initially staked or not.
-     * @param {string[]}                  underlyingTokens Underlying token addresses. Array must have the same length and order as underlying tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
-     * @param {string}                    authorisation Encoded authorisation call.
+     * @param userAddress User address.
+     * @param from Pool info being migrated from
+     * @param to Pool info being migrated to
+     * @param bptIn Amount of BPT tokens to migrate.
+     * @param minBptOut Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param underlyingTokens Underlying token addresses. Array must have the same length and order as underlying tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+     * @param authorisation Encoded authorisation call.
      * @returns Migration transaction request ready to send with signer.sendTransaction
      */
     calldata(userAddress, from, to, bptIn, minBptOut, staked, underlyingTokens, authorisation) {
@@ -11812,7 +12074,7 @@ class StablesBuilder {
                 this.buildSwap(minBptOut, userAddress, to.id, to.address, underlyingTokens),
             ];
         }
-        const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
+        const callData = balancerRelayerInterface$1.encodeFunctionData('multicall', [
             calls,
         ]);
         return {
@@ -11825,10 +12087,10 @@ class StablesBuilder {
      * Exit stable pool proportionally to underlying stables. Exits to relayer.
      * Outputreferences are used to store exit amounts for next transaction.
      *
-     * @param {string}    poolId Pool id.
-     * @param {string}    sender Sender address.
-     * @param {string}    amount Amount of BPT to exit with.
-     * @param {string[]}  underlyingTokens Token addresses to exit to.
+     * @param poolId Pool id.
+     * @param sender Sender address.
+     * @param amount Amount of BPT to exit with.
+     * @param underlyingTokens Token addresses to exit to.
      * @returns Encoded exitPool call. Output references.
      */
     buildExit(poolId, sender, amount, underlyingTokens) {
@@ -11862,16 +12124,16 @@ class StablesBuilder {
      * Creates encoded batchSwap function to swap stables to new phantom stable pool BPT.
      * outputreferences should contain the amount of resulting BPT.
      *
-     * @param {string}    expectedBptReturn BPT amount expected out of the swap.
-     * @param {string}    recipient Recipient address.
-     * @param {string}    poolId Pool id
-     * @param {string}    poolAddress Pool address
-     * @param {string[]}  tokens Token addresses to swap from.
+     * @param expectedBptReturn BPT amount expected out of the swap.
+     * @param recipient Recipient address.
+     * @param poolId Pool id
+     * @param poolAddress Pool address
+     * @param tokens Token addresses to swap from.
      * @returns BatchSwap call.
      */
     buildSwap(expectedBptReturn, recipient, poolId, poolAddress, tokens) {
         const assets = [poolAddress, ...tokens];
-        const outputReferences = [{ index: 0, key: SWAP_RESULT }];
+        const outputReferences = [{ index: 0, key: SWAP_RESULT$1 }];
         const swaps = [];
         // Add a swap flow for each token provided
         for (let i = 0; i < tokens.length; i++) {
@@ -11910,9 +12172,9 @@ class StablesBuilder {
     /**
      * Uses relayer to withdraw staked BPT from gauge and send to relayer
      *
-     * @param {string} sender Sender address.
-     * @param {string} amount Amount of BPT to exit with.
-     * @param {string} gaugeAddress Gauge address.
+     * @param sender Sender address.
+     * @param amount Amount of BPT to exit with.
+     * @param gaugeAddress Gauge address.
      * @returns withdraw call
      */
     buildWithdraw(sender, amount, gaugeAddress) {
@@ -11921,17 +12183,259 @@ class StablesBuilder {
     /**
      * Uses relayer to deposit user's BPT to gauge and sends to recipient
      *
-     * @param {string} recipient Recipient address.
-     * @param {string} gaugeAddress Gauge address.
+     * @param recipient Recipient address.
+     * @param gaugeAddress Gauge address.
      * @returns deposit call
      */
     buildDeposit(recipient, gaugeAddress) {
-        return Relayer.encodeGaugeDeposit(gaugeAddress, this.addresses.relayer, recipient, SWAP_RESULT.toString());
+        return Relayer.encodeGaugeDeposit(gaugeAddress, this.addresses.relayer, recipient, SWAP_RESULT$1.toString());
     }
     /**
      * Uses relayer to approve itself to act in behalf of the user
      *
-     * @param {string} authorisation Encoded authorisation call.
+     * @param authorisation Encoded authorisation call.
+     * @returns relayer approval call
+     */
+    buildSetRelayerApproval(authorisation) {
+        return Relayer.encodeSetRelayerApproval(this.addresses.relayer, true, authorisation);
+    }
+}
+
+const balancerRelayerInterface = new abi$1.Interface(balancerRelayerAbi);
+const EXIT_MIMATIC = Relayer.toChainedReference('20');
+const EXIT_DAI = Relayer.toChainedReference('21');
+const EXIT_USDC = Relayer.toChainedReference('22');
+const EXIT_USDT = Relayer.toChainedReference('23');
+const SWAP_RESULT = Relayer.toChainedReference('24');
+class MaiusdBuilder {
+    constructor(networkId) {
+        this.addresses = ADDRESSES[networkId];
+    }
+    /**
+     * Builds migration call data.
+     * Migrates tokens from maiusd to maibbausd pool.
+     * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+     *
+     * @param userAddress User address.
+     * @param bptIn Amount of BPT tokens to migrate.
+     * @param minBptOut Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param authorisation Encoded authorisation call.
+     * @returns Migration transaction request ready to send with signer.sendTransaction
+     */
+    calldata(userAddress, bptIn, minBptOut, staked, authorisation) {
+        const relayer = this.addresses.relayer;
+        let calls = [];
+        if (authorisation) {
+            calls = [this.buildSetRelayerApproval(authorisation)];
+        }
+        if (staked) {
+            calls = [
+                ...calls,
+                this.buildWithdraw(userAddress, bptIn),
+                this.buildExit(relayer, bptIn),
+                this.buildSwap(relayer, minBptOut),
+                this.buildDeposit(userAddress),
+            ];
+        }
+        else {
+            calls = [
+                ...calls,
+                this.buildExit(userAddress, bptIn),
+                this.buildSwap(userAddress, minBptOut),
+            ];
+        }
+        const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
+            calls,
+        ]);
+        return {
+            to: relayer,
+            data: callData,
+        };
+    }
+    /**
+     * Encodes exitPool callData.
+     * Exit maiusd pool proportionally to underlying stables. Exits to relayer.
+     * Outputreferences are used to store exit amounts for next transaction.
+     *
+     * @param sender Sender address.
+     * @param amount Amount of BPT to exit with.
+     * @returns Encoded exitPool call. Output references.
+     */
+    buildExit(sender, amount) {
+        const { assetOrder } = this.addresses.maiusd;
+        const assets = assetOrder.map((key) => this.addresses[key]);
+        // Assume gaugeWithdraw returns same amount value
+        const userData = StablePoolEncoder.exitExactBPTInForTokensOut(amount);
+        // Store exit outputs to be used as swaps inputs
+        const outputReferences = [
+            { index: assetOrder.indexOf('miMATIC'), key: EXIT_MIMATIC },
+            { index: assetOrder.indexOf('DAI'), key: EXIT_DAI },
+            { index: assetOrder.indexOf('USDC'), key: EXIT_USDC },
+            { index: assetOrder.indexOf('USDT'), key: EXIT_USDT },
+        ];
+        const minAmountsOut = Array(assets.length).fill('0');
+        const callData = Relayer.constructExitCall({
+            assets,
+            minAmountsOut,
+            userData,
+            toInternalBalance: true,
+            poolId: this.addresses.maiusd.id,
+            poolKind: 0,
+            sender,
+            recipient: this.addresses.relayer,
+            outputReferences,
+            exitPoolRequest: {},
+        });
+        return callData;
+    }
+    /**
+     * Creates encoded batchSwap function with following swaps: stables -> linear pools -> boosted pool
+     * outputreferences should contain the amount of resulting BPT.
+     *
+     * @param recipient Sender address.
+     * @param minBptOut Minimum BPT out expected from the join transaction.
+     * @returns Encoded batchSwap call. Output references.
+     */
+    buildSwap(recipient, minBptOut) {
+        const assets = [
+            this.addresses.bbausd2.address,
+            this.addresses.DAI,
+            this.addresses.linearDai2.address,
+            this.addresses.USDC,
+            this.addresses.linearUsdc2.address,
+            this.addresses.USDT,
+            this.addresses.linearUsdt2.address,
+            this.addresses.miMATIC,
+            this.addresses.maibbausd.address,
+        ];
+        const outputReferences = [{ index: 8, key: SWAP_RESULT }];
+        const swaps = [
+            {
+                poolId: this.addresses.linearDai2.id,
+                assetInIndex: 1,
+                assetOutIndex: 2,
+                amount: EXIT_DAI.toString(),
+                userData: '0x',
+            },
+            {
+                poolId: this.addresses.bbausd2.id,
+                assetInIndex: 2,
+                assetOutIndex: 0,
+                amount: '0',
+                userData: '0x',
+            },
+            {
+                poolId: this.addresses.maibbausd.id,
+                assetInIndex: 0,
+                assetOutIndex: 8,
+                amount: '0',
+                userData: '0x',
+            },
+            {
+                poolId: this.addresses.linearUsdc2.id,
+                assetInIndex: 3,
+                assetOutIndex: 4,
+                amount: EXIT_USDC.toString(),
+                userData: '0x',
+            },
+            {
+                poolId: this.addresses.bbausd2.id,
+                assetInIndex: 4,
+                assetOutIndex: 0,
+                amount: '0',
+                userData: '0x',
+            },
+            {
+                poolId: this.addresses.maibbausd.id,
+                assetInIndex: 0,
+                assetOutIndex: 8,
+                amount: '0',
+                userData: '0x',
+            },
+            {
+                poolId: this.addresses.linearUsdt2.id,
+                assetInIndex: 5,
+                assetOutIndex: 6,
+                amount: EXIT_USDT.toString(),
+                userData: '0x',
+            },
+            {
+                poolId: this.addresses.bbausd2.id,
+                assetInIndex: 6,
+                assetOutIndex: 0,
+                amount: '0',
+                userData: '0x',
+            },
+            {
+                poolId: this.addresses.maibbausd.id,
+                assetInIndex: 0,
+                assetOutIndex: 8,
+                amount: '0',
+                userData: '0x',
+            },
+            {
+                poolId: this.addresses.maibbausd.id,
+                assetInIndex: 7,
+                assetOutIndex: 8,
+                amount: EXIT_MIMATIC.toString(),
+                userData: '0x',
+            },
+        ];
+        // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
+        const limits = [
+            '0',
+            constants.MaxInt256.toString(),
+            '0',
+            constants.MaxInt256.toString(),
+            '0',
+            constants.MaxInt256.toString(),
+            '0',
+            constants.MaxInt256.toString(),
+            bignumber.BigNumber.from(minBptOut).mul(-1).toString(),
+        ];
+        // Swap to/from Relayer
+        const funds = {
+            sender: this.addresses.relayer,
+            recipient,
+            fromInternalBalance: true,
+            toInternalBalance: false,
+        };
+        const encodedBatchSwap = Relayer.encodeBatchSwap({
+            swapType: exports.SwapType.SwapExactIn,
+            swaps,
+            assets,
+            funds,
+            limits,
+            deadline: bignumber.BigNumber.from(Math.ceil(Date.now() / 1000) + 3600),
+            value: '0',
+            outputReferences,
+        });
+        return encodedBatchSwap;
+    }
+    /**
+     * Uses relayer to withdraw staked BPT from gauge and send to relayer
+     *
+     * @param sender Sender address.
+     * @param amount Amount of BPT to exit with.
+     * @returns withdraw call
+     */
+    buildWithdraw(sender, amount) {
+        return Relayer.encodeGaugeWithdraw(this.addresses.maiusd.gauge, sender, this.addresses.relayer, amount);
+    }
+    /**
+     * Uses relayer to deposit user's BPT to gauge and sends to recipient
+     *
+     * @param recipient Recipient address.
+     * @returns deposit call
+     */
+    buildDeposit(recipient) {
+        return Relayer.encodeGaugeDeposit(this.addresses.maibbausd.gauge, this.addresses.relayer, recipient, SWAP_RESULT.toString());
+    }
+    /**
+     * Uses relayer to approve itself to act in behalf of the user
+     *
+     * @param authorisation Encoded authorisation call.
      * @returns relayer approval call
      */
     buildSetRelayerApproval(authorisation) {
@@ -11948,11 +12452,11 @@ class Migrations {
      * Migrates tokens from staBal3 to bbausd2 pool.
      * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
      *
-     * @param {string}  userAddress User address.
-     * @param {string}  staBal3Amount Amount of BPT tokens to migrate.
-     * @param {string}  minBbausd2Out Minimum of expected BPT out ot the migration flow.
-     * @param {boolean} staked Indicates whether tokens are initially staked or not.
-     * @param {string}  authorisation Encoded authorisation call.
+     * @param userAddress User address.
+     * @param staBal3Amount Amount of BPT tokens to migrate.
+     * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param authorisation Encoded authorisation call.
      * @returns Migration transaction request ready to send with signer.sendTransaction
      */
     stabal3(userAddress, staBal3Amount, minBbausd2Out, staked, authorisation) {
@@ -11977,12 +12481,12 @@ class Migrations {
      * Migrates tokens from bbausd1 to bbausd2 pool.
      * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
      *
-     * @param {string}    userAddress User address.
-     * @param {string}    bbausd1Amount Amount of BPT tokens to migrate.
-     * @param {string}    minBbausd2Out Minimum of expected BPT out ot the migration flow.
-     * @param {boolean}   staked Indicates whether tokens are initially staked or not.
-     * @param {string[]}  tokenBalances Token balances in EVM scale. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
-     * @param {string}    authorisation Encoded authorisation call.
+     * @param userAddress User address.
+     * @param bbausd1Amount Amount of BPT tokens to migrate.
+     * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param tokenBalances Token balances in EVM scale. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+     * @param authorisation Encoded authorisation call.
      * @returns Migration transaction request ready to send with signer.sendTransaction
      */
     bbaUsd(userAddress, bbausd1Amount, minBbausd2Out, staked, tokenBalances, authorisation) {
@@ -11997,10 +12501,7 @@ class Migrations {
                     swapIndex += 1;
                 const multicallResult = abi$1.defaultAbiCoder.decode(['bytes[]'], output);
                 const swapDeltas = abi$1.defaultAbiCoder.decode(['int256[]'], multicallResult[0][swapIndex]);
-                return {
-                    bbausd1AmountIn: swapDeltas[0][10].toString(),
-                    bbausd2AmountOut: swapDeltas[0][0].abs().toString(),
-                };
+                return swapDeltas[0][0].abs().toString(); // bptOut
             },
         };
     }
@@ -12009,14 +12510,14 @@ class Migrations {
      * Migrates tokens from old stable to new stable phantom pools with the same underlying tokens.
      * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
      *
-     * @param {string}                    userAddress User address.
-     * @param {{string, string, string}}  from Pool info being migrated from
-     * @param {{string, string, string}}  to Pool info being migrated to
-     * @param {string}                    bptIn Amount of BPT tokens to migrate.
-     * @param {string}                    minBptOut Minimum of expected BPT out ot the migration flow.
-     * @param {boolean}                   staked Indicates whether tokens are initially staked or not.
-     * @param {string[]}                  underlyingTokens Underlying token addresses. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
-     * @param {string}                    authorisation Encoded authorisation call.
+     * @param userAddress User address.
+     * @param from Pool info being migrated from
+     * @param to Pool info being migrated to
+     * @param bptIn Amount of BPT tokens to migrate.
+     * @param minBptOut Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param underlyingTokens Underlying token addresses. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+     * @param authorisation Encoded authorisation call.
      * @returns Migration transaction request ready to send with signer.sendTransaction
      */
     stables(userAddress, from, to, bptIn, minBptOut, staked, underlyingTokens, authorisation) {
@@ -12033,6 +12534,35 @@ class Migrations {
                 const swapDeltas = abi$1.defaultAbiCoder.decode(['int256[]'], multicallResult[0][swapIndex]);
                 // bbausd2AmountOut
                 return swapDeltas[0][0].abs().toString();
+            },
+        };
+    }
+    /**
+     * Builds migration call data.
+     * Migrates tokens from staBal3 to bbausd2 pool.
+     * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+     *
+     * @param userAddress User address.
+     * @param bptIn Amount of BPT tokens to migrate.
+     * @param minBptOut Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param authorisation Encoded authorisation call.
+     * @returns Migration transaction request ready to send with signer.sendTransaction
+     */
+    maiusd(userAddress, bptIn, minBptOut, staked, authorisation) {
+        const builder = new MaiusdBuilder(this.network);
+        const request = builder.calldata(userAddress, bptIn, minBptOut, staked, authorisation);
+        return {
+            to: request.to,
+            data: request.data,
+            decode: (output, staked) => {
+                let swapIndex = staked ? 2 : 1;
+                if (authorisation)
+                    swapIndex += 1;
+                const multicallResult = abi$1.defaultAbiCoder.decode(['bytes[]'], output);
+                const swapDeltas = abi$1.defaultAbiCoder.decode(['int256[]'], multicallResult[0][swapIndex]);
+                const bptOut = swapDeltas[0][8].abs().toString();
+                return bptOut;
             },
         };
     }
