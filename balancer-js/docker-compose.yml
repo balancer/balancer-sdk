@@ -1,0 +1,20 @@
+# Start frontend referencing SDK in development:
+# yarn build
+# FRONTEND_DIR=$(pwd)/../../frontend-v2 docker-compose up
+
+version: "3.7"
+  
+services:
+  web:
+    build:
+      context: ${FRONTEND_DIR}
+      dockerfile: Dockerfile.dev
+    restart: always
+    command: npm run serve
+    volumes: 
+      - ${FRONTEND_DIR}:/app
+      - ./:/app/node_modules/@balancer-labs/sdk/
+    ports:
+      - 8080:8080
+    env_file:
+      - ${FRONTEND_DIR}/.env.development

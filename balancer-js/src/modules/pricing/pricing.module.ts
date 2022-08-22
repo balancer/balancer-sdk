@@ -1,5 +1,5 @@
 import { Swaps } from '@/modules/swaps/swaps.module';
-import { BalancerSdkConfig } from '@/types';
+import { BalancerSdkConfig, PoolType } from '@/types';
 import {
   SubgraphPoolBase,
   ZERO,

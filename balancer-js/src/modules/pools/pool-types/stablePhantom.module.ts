@@ -1,17 +1,23 @@
+import { StablePhantomPoolExit } from './concerns/stablePhantom/exit.concern';
+import { StablePhantomPoolJoin } from './concerns/stablePhantom/join.concern';
 import { StablePhantomPoolLiquidity } from './concerns/stablePhantom/liquidity.concern';
 import { StablePhantomPoolSpotPrice } from './concerns/stablePhantom/spotPrice.concern';
+import { StablePhantomPriceImpact } from './concerns/stablePhantom/priceImpact.concern';
 import { PoolType } from './pool-type.interface';
-import { LiquidityConcern, SpotPriceConcern } from './concerns/types';
+import {
+  ExitConcern,
+  JoinConcern,
+  PriceImpactConcern,
+  LiquidityConcern,
+  SpotPriceConcern,
+} from './concerns/types';
 
 export class StablePhantom implements PoolType {
-  public liquidityCalculator: LiquidityConcern;
-  public spotPriceCalculator: SpotPriceConcern;
-
   constructor(
-    private liquidityCalculatorConcern = StablePhantomPoolLiquidity,
-    private spotPriceCalculatorConcern = StablePhantomPoolSpotPrice
-  ) {
-    this.liquidityCalculator = new this.liquidityCalculatorConcern();
-    this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-  }
+    public exit: ExitConcern = new StablePhantomPoolExit(),
+    public join: JoinConcern = new StablePhantomPoolJoin(),
+    public liquidity: LiquidityConcern = new StablePhantomPoolLiquidity(),
+    public spotPriceCalculator: SpotPriceConcern = new StablePhantomPoolSpotPrice(),
+    public priceImpactCalculator: PriceImpactConcern = new StablePhantomPriceImpact()
+  ) {}
 }

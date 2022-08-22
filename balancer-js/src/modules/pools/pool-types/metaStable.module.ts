@@ -1,17 +1,23 @@
+import { MetaStablePoolExit } from './concerns/metaStable/exit.concern';
+import { MetaStablePoolJoin } from './concerns/metaStable/join.concern';
 import { MetaStablePoolLiquidity } from './concerns/metaStable/liquidity.concern';
 import { MetaStablePoolSpotPrice } from './concerns/metaStable/spotPrice.concern';
+import { MetaStablePoolPriceImpact } from './concerns/metaStable/priceImpact.concern';
 import { PoolType } from './pool-type.interface';
-import { LiquidityConcern, SpotPriceConcern } from './concerns/types';
+import {
+  ExitConcern,
+  JoinConcern,
+  LiquidityConcern,
+  SpotPriceConcern,
+  PriceImpactConcern,
+} from './concerns/types';
 
 export class MetaStable implements PoolType {
-  public liquidityCalculator: LiquidityConcern;
-  public spotPriceCalculator: SpotPriceConcern;
-
   constructor(
-    private liquidityCalculatorConcern = MetaStablePoolLiquidity,
-    private spotPriceCalculatorConcern = MetaStablePoolSpotPrice
-  ) {
-    this.liquidityCalculator = new this.liquidityCalculatorConcern();
-    this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-  }
+    public exit: ExitConcern = new MetaStablePoolExit(),
+    public join: JoinConcern = new MetaStablePoolJoin(),
+    public liquidity: LiquidityConcern = new MetaStablePoolLiquidity(),
+    public spotPriceCalculator: SpotPriceConcern = new MetaStablePoolSpotPrice(),
+    public priceImpactCalculator: PriceImpactConcern = new MetaStablePoolPriceImpact()
+  ) {}
 }

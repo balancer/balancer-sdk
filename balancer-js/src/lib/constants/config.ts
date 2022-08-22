@@ -31,9 +31,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2',
     },
     pools: {
-      bbausd: {
-        id: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe',
-        address: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
+      wETHwstETH: {
+        id: '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080',
+        address: '0x32296969ef14eb0c6d29669c550d4a0449130230',
       },
     },
   },
@@ -95,12 +95,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-kovan-v2',
     },
-    pools: {
-      bbausd: {
-        id: '0x8fd162f338b770f7e879030830cde9173367f3010000000000000000000004d8',
-        address: '0x8fd162f338b770f7e879030830cde9173367f301',
-      },
-    },
+    pools: {},
   },
   [Network.ROPSTEN]: {
     chainId: Network.ROPSTEN, //3
@@ -152,12 +147,29 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         },
       },
       tokens: {
-        wrappedNativeAsset: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6',
+        wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
       },
     },
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2',
+    },
+    pools: {},
+  },
+  [Network.OPTIMISM]: {
+    chainId: Network.OPTIMISM, //10
+    addresses: {
+      contracts: {
+        vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+        multicall: '0x2dc0e2aa608532da689e89e237df582b783e552c',
+      },
+      tokens: {
+        wrappedNativeAsset: '0x4200000000000000000000000000000000000006',
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-optimism',
     },
     pools: {},
   },

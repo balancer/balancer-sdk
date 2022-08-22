@@ -1,10 +1,9 @@
-import { BalancerSdkConfig } from '@/types';
+import { BalancerSdkConfig, PoolType } from '@/types';
 import { Stable } from './pool-types/stable.module';
 import { Weighted } from './pool-types/weighted.module';
 import { MetaStable } from './pool-types/metaStable.module';
 import { StablePhantom } from './pool-types/stablePhantom.module';
 import { Linear } from './pool-types/linear.module';
-import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { PoolInfo } from './types';
 import { BigNumber, ethers, Signer } from 'ethers';
@@ -34,7 +33,7 @@ export class Pools {
     pool: SubgraphPoolBase
   ): Weighted | Stable | MetaStable | StablePhantom | Linear {
     // Calculate spot price using pool type
-    switch (pool.poolType) {
+    switch (poolType) {
       case 'Weighted':
       case 'Investment':
       case 'LiquidityBootstrapping': {

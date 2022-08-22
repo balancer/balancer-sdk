@@ -1,6 +1,6 @@
 import { SwapInfo } from '@balancer-labs/sor';
+import { Vault } from '@balancer-labs/typechain';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
-import { Contract } from '@ethersproject/contracts';
 
 export enum SwapType {
   SwapExactIn,
@@ -82,7 +82,7 @@ export interface QuerySimpleFlashSwapParameters {
   poolIds: string[];
   assets: BatchSwap['assets'];
   flashLoanAmount: string;
-  vaultContract: Contract;
+  vaultContract: Vault;
 }
 
 export interface SimpleFlashSwapParameters {
@@ -107,6 +107,7 @@ export interface FindRouteParameters {
 
 export interface BuildTransactionParameters {
   userAddress: string;
+  recipient?: string;
   swapInfo: SwapInfo;
   kind: SwapType;
   deadline: BigNumber;

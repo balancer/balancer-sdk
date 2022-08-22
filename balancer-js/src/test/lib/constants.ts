@@ -20,21 +20,37 @@ export const ADDRESSES = {
       address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
       decimals: 6,
       symbol: 'USDC',
+      slot: 9,
+    },
+    USDT: {
+      address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+      decimals: 6,
+      symbol: 'USDT',
+      slot: 2,
     },
     WBTC: {
       address: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599',
       decimals: 8,
       symbol: 'WBTC',
+      slot: 0,
+    },
+    renBTC: {
+      address: '0xeb4c2781e4eba804ce9a9803c67d0893436bb27d',
+      decimals: 8,
+      symbol: 'renBTC',
+      slot: 102,
     },
     WETH: {
       address: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
       decimals: 18,
       symbol: 'WETH',
+      slot: 3,
     },
     DAI: {
       address: '0x6b175474e89094c44da98b954eedeac495271d0f',
       decimals: 18,
       symbol: 'DAI',
+      slot: 2,
     },
     STETH: {
       address: '0xae7ab96520de3a18e5e111b5eaab095312d7fe84',
@@ -45,6 +61,7 @@ export const ADDRESSES = {
       address: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
       decimals: 18,
       symbol: 'wSTETH',
+      slot: 0,
     },
     bbausd: {
       address: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
@@ -117,6 +134,11 @@ export const ADDRESSES = {
       decimals: 6,
       symbol: 'USDT_from_AAVE',
     },
+    USDT: {
+      address: '0x13512979ade267ab5100878e2e0f485b568328a4',
+      decimals: 6,
+      symbol: 'USDT',
+    },
     aUSDT: {
       address: '0xe8191aacfcdb32260cda25830dc6c9342142f310',
       decimals: 6,
@@ -151,6 +173,11 @@ export const ADDRESSES = {
       address: '0x8fd162f338b770f7e879030830cde9173367f301',
       decimals: 18,
       symbol: 'STABAL3',
+    },
+    bbausd: {
+      address: 'N/A',
+      decimals: 18,
+      symbol: 'bbausd',
     },
   },
   [Network.POLYGON]: {
@@ -224,6 +251,11 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'dUSD',
     },
+    bbausd: {
+      address: 'N/A',
+      decimals: 18,
+      symbol: 'bbausd',
+    },
   },
   [Network.ARBITRUM]: {
     WETH: {
@@ -241,10 +273,25 @@ export const ADDRESSES = {
       decimals: 6,
       symbol: 'USDC',
     },
+    DAI: {
+      address: '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1',
+      decimals: 18,
+      symbol: 'DAI',
+    },
+    USDT: {
+      address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+      decimals: 6,
+      symbol: 'USDT',
+    },
     STETH: {
       address: 'N/A',
       decimals: 18,
       symbol: 'STETH',
+    },
+    bbausd: {
+      address: 'N/A',
+      decimals: 18,
+      symbol: 'bbausd',
     },
   },
 };

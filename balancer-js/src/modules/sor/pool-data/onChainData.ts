@@ -3,9 +3,9 @@ import { Provider } from '@ethersproject/providers';
 import { PoolFilter, SubgraphPoolBase } from '@balancer-labs/sor';
 import { Multicaller } from '@/lib/utils/multiCaller';
 import { isSameAddress } from '@/lib/utils';
+import { Vault__factory } from '@balancer-labs/typechain';
 
 // TODO: decide whether we want to trim these ABIs down to the relevant functions
-import vaultAbi from '@/lib/abi/Vault.json';
 import aTokenRateProvider from '@/lib/abi/StaticATokenRateProvider.json';
 import weightedPoolAbi from '@/lib/abi/WeightedPool.json';
 import stablePoolAbi from '@/lib/abi/StablePool.json';
@@ -25,7 +25,7 @@ export async function getOnChainBalances(
     // Remove duplicate entries using their names
     Object.fromEntries(
       [
-        ...vaultAbi,
+        ...Vault__factory.abi,
         ...aTokenRateProvider,
         ...weightedPoolAbi,
         ...stablePoolAbi,
@@ -51,6 +51,15 @@ export async function getOnChainBalances(
       pool.id,
     ]);
     multiPool.call(`${pool.id}.totalSupply`, pool.address, 'totalSupply');
+
+    // Pools with pre minted BPT
+    if (pool.poolType.includes('Linear') || pool.poolType === 'StablePhantom') {
+      multiPool.call(
+        `${pool.id}.virtualSupply`,
+        pool.address,
+        'getVirtualSupply'
+      );
+    }
 
     // TO DO - Make this part of class to make more flexible?
     if (
@@ -109,6 +118,8 @@ export async function getOnChainBalances(
         tokens: string[];
         balances: string[];
       };
+      totalSupply: string;
+      virtualSupply?: string;
       rate?: string;
     }
   >;
@@ -124,6 +135,8 @@ export async function getOnChainBalances(
           tokens: string[];
           balances: string[];
         };
+        totalSupply: string;
+        virtualSupply?: string;
         rate?: string;
       }
     >;
@@ -135,7 +148,8 @@ export async function getOnChainBalances(
 
   Object.entries(pools).forEach(([poolId, onchainData], index) => {
     try {
-      const { poolTokens, swapFee, weights } = onchainData;
+      const { poolTokens, swapFee, weights, totalSupply, virtualSupply } =
+        onchainData;
 
       if (
         subgraphPools[index].poolType === 'Stable' ||
@@ -194,6 +208,23 @@ export async function getOnChainBalances(
           T.weight = formatFixed(weights[i], 18);
         }
       });
+
+      // Pools with pre minted BPT
+      if (
+        subgraphPools[index].poolType.includes('Linear') ||
+        subgraphPools[index].poolType === 'StablePhantom'
+      ) {
+        if (virtualSupply === undefined) {
+          console.error(
+            `Pool with pre-minted BPT missing Virtual Supply: ${poolId}`
+          );
+          return;
+        }
+        subgraphPools[index].totalShares = formatFixed(virtualSupply, 18);
+      } else {
+        subgraphPools[index].totalShares = formatFixed(totalSupply, 18);
+      }
+
       onChainPools.push(subgraphPools[index]);
     } catch (err) {
       throw `Issue with pool onchain data: ${err}`;

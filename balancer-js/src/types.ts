@@ -2,6 +2,12 @@ import { BigNumberish } from '@ethersproject/bignumber';
 import { Network } from './lib/constants/network';
 import { Contract } from '@ethersproject/contracts';
 import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
+import {
+  ExitPoolAttributes,
+  JoinPoolAttributes,
+} from './modules/pools/pool-types/concerns/types';
+
+export type Address = string;
 
 export interface BalancerSdkConfig {
   //use a known network or provide an entirely custom config
@@ -25,17 +31,16 @@ export interface BalancerSdkSorConfig {
   fetchOnChainBalances: boolean;
 }
 
+export interface ContractAddresses {
+  vault: string;
+  multicall: string;
+  lidoRelayer?: string;
+}
+
 export interface BalancerNetworkConfig {
   chainId: Network;
   addresses: {
-    contracts: {
-      vault: string;
-      multicall: string;
-      lidoRelayer?: string;
-      poolFactories: {
-        weighted?: string
-      }
-    };
+    contracts: ContractAddresses;
     tokens: {
       wrappedNativeAsset: string;
       lbpRaisingTokens?: string[];
@@ -47,10 +52,7 @@ export interface BalancerNetworkConfig {
     subgraph: string;
   };
   pools: {
-    staBal3Pool?: PoolReference;
-    wethStaBal3?: PoolReference;
-    bbausd?: PoolReference;
-    wethBBausd?: PoolReference;
+    wETHwstETH?: PoolReference;
   };
 }
 
@@ -121,4 +123,105 @@ export interface TransactionData {
     amountsIn?: string[];
     amountsOut?: string[];
   };
+}
+
+export type Currency = 'eth' | 'usd';
+
+export type Price = { [currency in Currency]?: string };
+export type TokenPrices = { [address: string]: Price };
+
+export interface Token {
+  address: string;
+  decimals?: number;
+  symbol?: string;
+  price?: Price;
+}
+
+export interface PoolToken extends Token {
+  balance: string;
+  priceRate?: string;
+  weight?: string | null;
+}
+
+export interface OnchainTokenData {
+  balance: string;
+  weight: number;
+  decimals: number;
+  logoURI: string | undefined;
+  name: string;
+  symbol: string;
+}
+
+export interface OnchainPoolData {
+  tokens: Record<Address, OnchainTokenData>;
+  totalSupply: string;
+  decimals: number;
+  swapFee: string;
+  amp?: string;
+  swapEnabled: boolean;
+  tokenRates?: string[];
+}
+
+export enum PoolType {
+  Weighted = 'Weighted',
+  Investment = 'Investment',
+  Stable = 'Stable',
+  MetaStable = 'MetaStable',
+  StablePhantom = 'StablePhantom',
+  LiquidityBootstrapping = 'LiquidityBootstrapping',
+  AaveLinear = 'AaveLinear',
+  ERC4626Linear = 'ERC4626Linear',
+  Element = 'Element',
+}
+
+export interface Pool {
+  id: string;
+  address: string;
+  poolType: PoolType;
+  swapFee: string;
+  owner?: string;
+  factory?: string;
+  tokens: PoolToken[];
+  tokensList: string[];
+  tokenAddresses?: string[];
+  totalLiquidity?: string;
+  totalShares: string;
+  totalSwapFee?: string;
+  totalSwapVolume?: string;
+  onchain?: OnchainPoolData;
+  createTime?: number;
+  mainTokens?: string[];
+  wrappedTokens?: string[];
+  unwrappedTokens?: string[];
+  isNew?: boolean;
+  volumeSnapshot?: string;
+  feesSnapshot?: string;
+  boost?: string;
+  symbol?: string;
+  swapEnabled: boolean;
+  amp?: string;
+}
+
+export interface PoolModel extends Pool {
+  liquidity: () => Promise<string>;
+  buildJoin: (
+    joiner: string,
+    tokensIn: string[],
+    amountsIn: string[],
+    slippage: string
+  ) => JoinPoolAttributes;
+  calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
+  buildExitExactBPTIn: (
+    exiter: string,
+    bptIn: string,
+    slippage: string,
+    shouldUnwrapNativeAsset?: boolean,
+    singleTokenMaxOut?: string
+  ) => ExitPoolAttributes;
+  buildExitExactTokensOut: (
+    exiter: string,
+    tokensOut: string[],
+    amountsOut: string[],
+    slippage: string
+  ) => ExitPoolAttributes;
 }
