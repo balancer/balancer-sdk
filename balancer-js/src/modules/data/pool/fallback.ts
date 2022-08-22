@@ -13,8 +13,7 @@ export class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
   currentProviderIdx: number;
 
   constructor(
-    private readonly providers: PoolRepository[] &
-      Findable<Pool, PoolAttribute>,
+    private readonly providers: PoolRepository[],
     private timeout = 10000
   ) {
     this.currentProviderIdx = 0;
