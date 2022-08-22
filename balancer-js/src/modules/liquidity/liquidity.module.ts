@@ -1,6 +1,6 @@
 import { BigNumber as OldBigNumber } from 'bignumber.js';
-import { Pool, PoolToken } from '@/types';
-import { PoolRepository } from '../data';
+import { Findable, Pool, PoolToken } from '@/types';
+import { PoolAttribute } from '../data';
 import { TokenPriceProvider } from '../data';
 import { PoolTypeConcerns } from '../pools/pool-type-concerns';
 
@@ -11,7 +11,7 @@ export interface PoolBPTValue {
 
 export class Liquidity {
   constructor(
-    private pools: PoolRepository,
+    private pools: Findable<Pool, PoolAttribute>,
     private tokenPrices: TokenPriceProvider
   ) {}
 

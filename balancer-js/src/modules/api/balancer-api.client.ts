@@ -8,16 +8,20 @@ export default class BalancerAPIClient {
   public async get(query: any): Promise<any> {
     try {
       const payload = this.toPayload(query);
-      const {
-        data: { data },
-      } = await axios.post(this.url, payload, {
+      const { data } = await axios.post(this.url, payload, {
         headers: {
           'x-api-key': this.apiKey,
         },
       });
-      return data;
+      if (data.errors) {
+        throw new Error(
+          data.errors.map((error: any) => error.message).join(',')
+        );
+      }
+      return data.data;
     } catch (error) {
       console.error(error);
+      throw error;
     }
 
     return [];

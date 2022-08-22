@@ -1,6 +1,6 @@
 import { Findable } from '../types';
 import { GraphQLQuery, Pool } from '@/types';
-import { PoolAttribute } from './types';
+import { PoolAttribute, PoolRepository } from './types';
 
 /**
  * The fallback provider takes multiple PoolRepository's in an array and uses them in order
@@ -12,12 +12,27 @@ import { PoolAttribute } from './types';
 export class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
   currentProviderIdx: number;
 
-  constructor(private readonly providers: any[], private timeout = 10000) {
+  constructor(
+    private readonly providers: PoolRepository[] &
+      Findable<Pool, PoolAttribute>,
+    private timeout = 10000
+  ) {
     this.currentProviderIdx = 0;
   }
 
   async fetch(query?: GraphQLQuery): Promise<Pool[]> {
     return this.fallbackQuery('fetch', [query]);
+  }
+
+  get currentProvider(): PoolRepository | undefined {
+    if (
+      !this.providers.length ||
+      this.currentProviderIdx >= this.providers.length
+    ) {
+      return;
+    }
+
+    return this.providers[this.currentProviderIdx];
   }
 
   async find(id: string): Promise<Pool | undefined> {
@@ -39,7 +54,7 @@ export class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
     let result;
 
     try {
-      const currentProvider = this.providers[this.currentProviderIdx];
+      const currentProvider = this.providers[this.currentProviderIdx] as any;
       result = await Promise.race<any | undefined>([
         // eslint-disable-next-line prefer-spread
         currentProvider[func].apply(currentProvider, args),

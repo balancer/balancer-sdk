@@ -19,6 +19,7 @@ export class PoolsBalancerAPIRepository
 {
   private client: BalancerAPIClient;
   public pools: Pool[] = [];
+  public skip: string | undefined; // A token to pass to the next query to retrieve the next page of results.
 
   constructor(url: string, apiKey: string) {
     this.client = new BalancerAPIClient(url, apiKey);
@@ -29,6 +30,7 @@ export class PoolsBalancerAPIRepository
       chainId: 1,
       orderBy: 'totalLiquidity',
       orderDirection: 'desc',
+      first: 10,
       where: {
         swapEnabled: Op.Equals(true),
         totalShares: Op.GreaterThan(0.05),
@@ -54,7 +56,10 @@ export class PoolsBalancerAPIRepository
       },
     };
 
-    const apiResponseData = await this.client.get(formattedQuery);
+    const apiResponse = await this.client.get(formattedQuery);
+    const apiResponseData = apiResponse.pools;
+
+    this.skip = apiResponseData.skip;
     this.pools = apiResponseData.pools;
 
     return this.pools.map(this.format);

@@ -25,6 +25,7 @@ export class PoolsSubgraphRepository
 {
   private client: SubgraphClient;
   public pools: SubgraphPool[] = [];
+  public skip: string | undefined;
 
   /**
    * Repository with optional lazy loaded blockHeight
@@ -46,6 +47,8 @@ export class PoolsSubgraphRepository
       block: this.blockHeight
         ? { number: await this.blockHeight() }
         : undefined,
+      first: query?.args.first,
+      skip: query?.args.skip ? Number(query?.args.skip) : 0,
       where: {
         swapEnabled: Op.Equals(true),
         totalShares: Op.GreaterThan(0),
@@ -61,6 +64,7 @@ export class PoolsSubgraphRepository
 
     // TODO: how to best convert subgraph type to sdk internal type?
     this.pools = [...pool0, ...pool1000];
+    this.skip = this.pools.length.toString();
 
     return this.pools.map(this.mapType);
   }
