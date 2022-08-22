@@ -22333,15 +22333,19 @@
         async get(query) {
             try {
                 const payload = this.toPayload(query);
-                const { data: { data }, } = await axios__default["default"].post(this.url, payload, {
+                const { data } = await axios__default["default"].post(this.url, payload, {
                     headers: {
                         'x-api-key': this.apiKey,
                     },
                 });
-                return data;
+                if (data.errors) {
+                    throw new Error(data.errors.map((error) => error.message).join(','));
+                }
+                return data.data;
             }
             catch (error) {
                 console.error(error);
+                throw error;
             }
             return [];
         }
@@ -22365,6 +22369,7 @@
                 chainId: 1,
                 orderBy: 'totalLiquidity',
                 orderDirection: 'desc',
+                first: 10,
                 where: {
                     swapEnabled: Op.Equals(true),
                     totalShares: Op.GreaterThan(0.05),
@@ -22383,7 +22388,9 @@
                     ...attrs,
                 },
             };
-            const apiResponseData = await this.client.get(formattedQuery);
+            const apiResponse = await this.client.get(formattedQuery);
+            const apiResponseData = apiResponse.pools;
+            this.skip = apiResponseData.skip;
             this.pools = apiResponseData.pools;
             return this.pools.map(this.format);
         }
@@ -22403,7 +22410,7 @@
             }
         }
         /** Fixes any formatting issues from the subgraph
-         *  - GraphQL can't store a map so pool.apr.[rewardsApr/tokenAprs].breakdown
+         *  - GraphQL can't store a map so pool.apr.[rewardAprs/tokenAprs].breakdown
          *    is JSON data that needs to be parsed so they match the Pool type correctly.
          */
         format(pool) {
@@ -22437,6 +22444,13 @@
         }
         async fetch(query) {
             return this.fallbackQuery('fetch', [query]);
+        }
+        get currentProvider() {
+            if (!this.providers.length ||
+                this.currentProviderIdx >= this.providers.length) {
+                return;
+            }
+            return this.providers[this.currentProviderIdx];
         }
         async find(id) {
             return this.fallbackQuery('find', [id]);
@@ -22519,6 +22533,8 @@
                 block: this.blockHeight
                     ? { number: await this.blockHeight() }
                     : undefined,
+                first: query === null || query === void 0 ? void 0 : query.args.first,
+                skip: (query === null || query === void 0 ? void 0 : query.args.skip) ? Number(query === null || query === void 0 ? void 0 : query.args.skip) : 0,
                 where: {
                     swapEnabled: Op.Equals(true),
                     totalShares: Op.GreaterThan(0),
@@ -22529,6 +22545,7 @@
             const { pool0, pool1000 } = await this.client.Pools(formattedQuery);
             // TODO: how to best convert subgraph type to sdk internal type?
             this.pools = [...pool0, ...pool1000];
+            this.skip = this.pools.length.toString();
             return this.pools.map(this.mapType);
         }
         async find(id) {

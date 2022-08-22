@@ -2566,8 +2566,7 @@ declare class LiquidityGaugeSubgraphRPCProvider implements Findable<LiquidityGau
 
 declare type PoolAttribute = 'id' | 'address';
 interface PoolRepository {
-    find: (id: string) => Promise<Pool | undefined>;
-    findBy: (attribute: PoolAttribute, value: string) => Promise<Pool | undefined>;
+    skip?: string | number;
 }
 
 declare type TokenAttribute = 'address' | 'symbol';
@@ -2636,12 +2635,13 @@ declare namespace emissions {
 declare class PoolsBalancerAPIRepository implements Findable<Pool, PoolAttribute> {
     private client;
     pools: Pool[];
+    skip: string | undefined;
     constructor(url: string, apiKey: string);
     fetch(query?: GraphQLQuery): Promise<Pool[]>;
     find(id: string): Promise<Pool | undefined>;
     findBy(param: PoolAttribute, value: string): Promise<Pool | undefined>;
     /** Fixes any formatting issues from the subgraph
-     *  - GraphQL can't store a map so pool.apr.[rewardsApr/tokenAprs].breakdown
+     *  - GraphQL can't store a map so pool.apr.[rewardAprs/tokenAprs].breakdown
      *    is JSON data that needs to be parsed so they match the Pool type correctly.
      */
     private format;
@@ -2658,8 +2658,9 @@ declare class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
     private readonly providers;
     private timeout;
     currentProviderIdx: number;
-    constructor(providers: any[], timeout?: number);
+    constructor(providers: PoolRepository[] & Findable<Pool, PoolAttribute>, timeout?: number);
     fetch(query?: GraphQLQuery): Promise<Pool[]>;
+    get currentProvider(): PoolRepository | undefined;
     find(id: string): Promise<Pool | undefined>;
     findBy(attribute: PoolAttribute, value: string): Promise<Pool | undefined>;
     fallbackQuery(func: string, args: any[]): Promise<any>;
@@ -2683,6 +2684,7 @@ declare class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute>, 
     private blockHeight?;
     private client;
     pools: SubgraphPool[];
+    skip: string | undefined;
     /**
      * Repository with optional lazy loaded blockHeight
      *
@@ -2816,7 +2818,7 @@ interface GraphQLFilter {
 interface GraphQLArgs {
     chainId?: number;
     first?: number;
-    skip?: number;
+    skip?: number | string;
     orderBy?: string;
     orderDirection?: string;
     block?: {
@@ -3077,6 +3079,10 @@ interface PoolModel extends Pool {
  */
 interface PoolWithMethods extends Pool {
     buildJoin: (joiner: string, tokensIn: string[], amountsIn: string[], slippage: string) => Promise<JoinPoolAttributes>;
+}
+interface PaginatedPools {
+    pools: Pool[];
+    skip: string;
 }
 interface GraphQLQuery {
     args: GraphQLArgs;
@@ -3371,7 +3377,7 @@ interface PoolBPTValue {
 declare class Liquidity {
     private pools;
     private tokenPrices;
-    constructor(pools: PoolRepository, tokenPrices: TokenPriceProvider);
+    constructor(pools: Findable<Pool, PoolAttribute>, tokenPrices: TokenPriceProvider);
     getLiquidity(pool: Pool): Promise<string>;
 }
 
@@ -3773,4 +3779,4 @@ declare class BalancerError extends Error {
     static getMessage(code: BalancerErrorCode): string;
 }
 
-export { AaveHelpers, Account, Address, AprBreakdown, AprFetcher, AssetHelpers, BalancerAPIArgsFormatter, BalancerDataRepositories, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BaseFeeDistributor, BatchSwap, BatchSwapStep, BlockNumberRepository, BuildTransactionParameters, CoingeckoPriceRepository, ContractAddresses, Currency, Data, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeUnwrapAaveStaticTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FeeCollectorRepository, FeeDistributorData, FeeDistributorRepository, FetchPoolsInput, FindRouteParameters, Findable, FundManagement, GaugeControllerMulticallRepository, GraphQLArgs, GraphQLArgsBuilder, GraphQLArgsFormatter, GraphQLFilter, GraphQLFilterOperator, GraphQLQuery, JoinPoolRequest, Liquidity, LiquidityGauge, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, ModelProvider, Network, OnchainPoolData, OnchainTokenData, Op, OutputReference, POOLS_PER_PAGE, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolModel, PoolReference, PoolRepository, PoolSpecialization, PoolToken, PoolType, PoolWithMethods, Pools, PoolsBalancerAPIRepository, PoolsFallbackRepository, PoolsStaticRepository, PoolsSubgraphRepository, Price, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, RewardData, Searchable, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphArgsFormatter, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TokenYieldsRepository, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, signPermit, splitPoolId, toNormalizedWeights, tokenAprMap, tokensToTokenPrices };
+export { AaveHelpers, Account, Address, AprBreakdown, AprFetcher, AssetHelpers, BalancerAPIArgsFormatter, BalancerDataRepositories, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BaseFeeDistributor, BatchSwap, BatchSwapStep, BlockNumberRepository, BuildTransactionParameters, CoingeckoPriceRepository, ContractAddresses, Currency, Data, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeUnwrapAaveStaticTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FeeCollectorRepository, FeeDistributorData, FeeDistributorRepository, FetchPoolsInput, FindRouteParameters, Findable, FundManagement, GaugeControllerMulticallRepository, GraphQLArgs, GraphQLArgsBuilder, GraphQLArgsFormatter, GraphQLFilter, GraphQLFilterOperator, GraphQLQuery, JoinPoolRequest, Liquidity, LiquidityGauge, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, ModelProvider, Network, OnchainPoolData, OnchainTokenData, Op, OutputReference, POOLS_PER_PAGE, PaginatedPools, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolModel, PoolReference, PoolRepository, PoolSpecialization, PoolToken, PoolType, PoolWithMethods, Pools, PoolsBalancerAPIRepository, PoolsFallbackRepository, PoolsStaticRepository, PoolsSubgraphRepository, Price, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, RewardData, Searchable, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphArgsFormatter, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TokenYieldsRepository, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, signPermit, splitPoolId, toNormalizedWeights, tokenAprMap, tokensToTokenPrices };
