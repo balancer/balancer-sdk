@@ -35,6 +35,9 @@ export interface ContractAddresses {
   vault: string;
   multicall: string;
   lidoRelayer?: string;
+  poolFactories: {
+    weighted?: string;
+  };
 }
 
 export interface BalancerNetworkConfig {
