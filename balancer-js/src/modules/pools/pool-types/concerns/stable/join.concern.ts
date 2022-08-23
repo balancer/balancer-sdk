@@ -67,7 +67,6 @@ export class StablePoolJoin implements JoinConcern {
       parsedBalances
     ) as [string[], string[]];
 
-    // const expectedBPTOut = SDK.StableMath._calcBptOutGivenExactTokensIn(
     const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp as string),
       sortedBalances.map((b) => BigInt(b)),
