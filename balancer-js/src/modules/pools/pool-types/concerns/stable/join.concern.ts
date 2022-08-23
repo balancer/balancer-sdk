@@ -1,5 +1,4 @@
-import OldBigNumber from 'bignumber.js';
-import * as SDK from '@georgeroman/balancer-v2-pools';
+import * as SOR from '@balancer-labs/sor';
 
 import {
   JoinConcern,
@@ -68,12 +67,13 @@ export class StablePoolJoin implements JoinConcern {
       parsedBalances
     ) as [string[], string[]];
 
-    const expectedBPTOut = SDK.StableMath._calcBptOutGivenExactTokensIn(
-      new OldBigNumber(parsedAmp as string),
-      sortedBalances.map((b) => new OldBigNumber(b)),
-      sortedAmounts.map((a) => new OldBigNumber(a)),
-      new OldBigNumber(parsedTotalShares),
-      new OldBigNumber(parsedSwapFee)
+    // const expectedBPTOut = SDK.StableMath._calcBptOutGivenExactTokensIn(
+    const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
+      BigInt(parsedAmp as string),
+      sortedBalances.map((b) => BigInt(b)),
+      sortedAmounts.map((a) => BigInt(a)),
+      BigInt(parsedTotalShares),
+      BigInt(parsedSwapFee)
     ).toString();
 
     const minBPTOut = subSlippage(
