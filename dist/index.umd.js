@@ -1,13 +1,30 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@ethersproject/abi'), require('@ethersproject/constants'), require('@ethersproject/bignumber'), require('@ethersproject/address'), require('@ethersproject/bytes'), require('@ethersproject/abstract-signer'), require('@ethersproject/contracts'), require('bignumber.js'), require('graphql-request'), require('@balancer-labs/typechain'), require('@balancer-labs/sor'), require('@ethersproject/providers'), require('graphql'), require('lodash'), require('axios')) :
-    typeof define === 'function' && define.amd ? define(['exports', '@ethersproject/abi', '@ethersproject/constants', '@ethersproject/bignumber', '@ethersproject/address', '@ethersproject/bytes', '@ethersproject/abstract-signer', '@ethersproject/contracts', 'bignumber.js', 'graphql-request', '@balancer-labs/typechain', '@balancer-labs/sor', '@ethersproject/providers', 'graphql', 'lodash', 'axios'], factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global["balancer-js"] = {}, global.abi, global.constants, global.bignumber, global.address, global.bytes, global.abstractSigner, global.contracts, global.OldBigNumber, global.graphqlRequest, global.typechain, global.sor, global.providers, global.graphql, global.lodash, global.axios));
-})(this, (function (exports, abi$1, constants, bignumber, address, bytes, abstractSigner, contracts, OldBigNumber, require$$0, typechain, sor, providers, graphql, lodash, axios) { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('@ethersproject/abi'), require('@ethersproject/constants'), require('@ethersproject/bignumber'), require('@ethersproject/address'), require('@ethersproject/bytes'), require('@ethersproject/abstract-signer'), require('@ethersproject/contracts'), require('@balancer-labs/sor'), require('@balancer-labs/typechain'), require('lodash'), require('@ethersproject/providers'), require('graphql-request'), require('graphql'), require('axios')) :
+    typeof define === 'function' && define.amd ? define(['exports', '@ethersproject/abi', '@ethersproject/constants', '@ethersproject/bignumber', '@ethersproject/address', '@ethersproject/bytes', '@ethersproject/abstract-signer', '@ethersproject/contracts', '@balancer-labs/sor', '@balancer-labs/typechain', 'lodash', '@ethersproject/providers', 'graphql-request', 'graphql', 'axios'], factory) :
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global["balancer-js"] = {}, global.abi, global.constants, global.bignumber, global.address, global.bytes, global.abstractSigner, global.contracts, global.sor, global.typechain, global.lodash, global.providers, global.graphqlRequest, global.graphql, global.axios));
+})(this, (function (exports, abi$1, constants, bignumber, address, bytes, abstractSigner, contracts, SOR, typechain, lodash, providers, graphqlRequest, graphql, axios) { 'use strict';
 
     function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
-    var OldBigNumber__default = /*#__PURE__*/_interopDefaultLegacy(OldBigNumber);
-    var require$$0__default = /*#__PURE__*/_interopDefaultLegacy(require$$0);
+    function _interopNamespace(e) {
+        if (e && e.__esModule) return e;
+        var n = Object.create(null);
+        if (e) {
+            Object.keys(e).forEach(function (k) {
+                if (k !== 'default') {
+                    var d = Object.getOwnPropertyDescriptor(e, k);
+                    Object.defineProperty(n, k, d.get ? d : {
+                        enumerable: true,
+                        get: function () { return e[k]; }
+                    });
+                }
+            });
+        }
+        n["default"] = e;
+        return Object.freeze(n);
+    }
+
+    var SOR__namespace = /*#__PURE__*/_interopNamespace(SOR);
     var axios__default = /*#__PURE__*/_interopDefaultLegacy(axios);
 
     exports.StablePoolJoinKind = void 0;
@@ -722,7 +739,7 @@
         }
     }
 
-    const AMP_PRECISION = 3; // number of decimals -> precision 1000
+    const AMP_PRECISION$1 = 3; // number of decimals -> precision 1000
     /**
      * Parse pool info into EVM amounts
      * @param {Pool}  pool
@@ -731,6 +748,9 @@
     // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
     const parsePoolInfo = (pool) => {
         const parsedTokens = pool.tokens.map((token) => token.address);
+        const parsedDecimals = pool.tokens.map((token) => {
+            return token.decimals ? token.decimals.toString() : undefined;
+        });
         const parsedBalances = pool.tokens.map((token) => bignumber.parseFixed(token.balance, token.decimals).toString());
         const parsedWeights = pool.tokens.map((token) => {
             return token.weight ? bignumber.parseFixed(token.weight, 18).toString() : undefined;
@@ -741,12 +761,13 @@
                 : undefined;
         });
         const parsedAmp = pool.amp
-            ? bignumber.parseFixed(pool.amp, AMP_PRECISION).toString() // Solidity maths uses precison method for amp that must be replicated
+            ? bignumber.parseFixed(pool.amp, AMP_PRECISION$1).toString() // Solidity maths uses precison method for amp that must be replicated
             : undefined;
         const parsedTotalShares = bignumber.parseFixed(pool.totalShares, 18).toString();
         const parsedSwapFee = bignumber.parseFixed(pool.swapFee, 18).toString();
         return {
             parsedTokens,
+            parsedDecimals,
             parsedBalances,
             parsedWeights,
             parsedPriceRates,
@@ -841,6 +862,7 @@
         Network[Network["RINKEBY"] = 4] = "RINKEBY";
         Network[Network["GOERLI"] = 5] = "GOERLI";
         Network[Network["G\u00D6RLI"] = 5] = "G\u00D6RLI";
+        Network[Network["OPTIMISM"] = 10] = "OPTIMISM";
         Network[Network["KOVAN"] = 42] = "KOVAN";
         Network[Network["POLYGON"] = 137] = "POLYGON";
         Network[Network["ARBITRUM"] = 42161] = "ARBITRUM";
@@ -870,1706 +892,6 @@
             };
         }
     }
-
-    var src = {};
-
-    var stable = {};
-
-    var subgraph = {};
-
-    Object.defineProperty(subgraph, "__esModule", { value: true });
-    subgraph.getPool = void 0;
-    const graphql_request_1 = require$$0__default["default"];
-    const getPool = async (poolId, blockNumber, testnet) => {
-        const data = `
-    id
-    address
-    poolType
-    swapFee
-    totalShares
-    amp
-    tokens {
-      id
-      address
-      symbol
-      balance
-      decimals
-      weight
-    }
-  `;
-        let query;
-        if (blockNumber) {
-            query = graphql_request_1.gql `
-      query getPool($poolId: ID!, $blockNumber: Int!) {
-        pools(where: { id: $poolId }, block: { number: $blockNumber }) {
-          ${data}
-        }
-      }
-    `;
-        }
-        else {
-            query = graphql_request_1.gql `
-      query getPool($poolId: ID!) {
-        pools(where: { id: $poolId }) {
-          ${data}
-        }
-      }
-    `;
-        }
-        const result = await graphql_request_1.request(testnet
-            ? "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-kovan-v2"
-            : "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2", query, { poolId, blockNumber });
-        if (result && result.pools && result.pools.length) {
-            return result.pools[0];
-        }
-        return null;
-    };
-    subgraph.getPool = getPool;
-
-    var bigNumber = {};
-
-    (function (exports) {
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.scaleAll = exports.scale = exports.bn = void 0;
-    const bignumber_js_1 = OldBigNumber__default["default"];
-    bignumber_js_1.BigNumber.config({
-        EXPONENTIAL_AT: [-100, 100],
-        ROUNDING_MODE: 1,
-        DECIMAL_PLACES: 18,
-    });
-    exports.default = bignumber_js_1.BigNumber;
-    const bn = (value) => new bignumber_js_1.BigNumber(value);
-    exports.bn = bn;
-    const scale = (value, decimalPlaces) => exports.bn(value).times(exports.bn(10).pow(decimalPlaces));
-    exports.scale = scale;
-    const scaleAll = (values, decimalPlaces) => values.map((x) => exports.scale(x, decimalPlaces));
-    exports.scaleAll = scaleAll;
-    }(bigNumber));
-
-    var common = {};
-
-    (function (exports) {
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.shallowCopyAll = exports.shallowCopy = void 0;
-    const shallowCopy = (obj) => {
-        return Object.assign({}, obj);
-    };
-    exports.shallowCopy = shallowCopy;
-    const shallowCopyAll = (objs) => {
-        return objs.map(exports.shallowCopy);
-    };
-    exports.shallowCopyAll = shallowCopyAll;
-    }(common));
-
-    var base = {};
-
-    var math$5 = {};
-
-    (function (exports) {
-    // Ported from Solidity:
-    // https://github.com/balancer-labs/balancer-v2-monorepo/blob/ce70f7663e0ac94b25ed60cb86faaa8199fd9e13/pkg/solidity-utils/contracts/math/Math.sol
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.divUp = exports.divDown = exports.div = exports.mul = exports.min = exports.max = exports.sub = exports.add = exports.TWO = exports.ONE = exports.ZERO = void 0;
-    const big_number_1 = bigNumber;
-    exports.ZERO = big_number_1.bn(0);
-    exports.ONE = big_number_1.bn(1);
-    exports.TWO = big_number_1.bn(2);
-    const add = (a, b) => {
-        return a.plus(b);
-    };
-    exports.add = add;
-    const sub = (a, b) => {
-        if (b.gt(a)) {
-            throw new Error("SUB_OVERFLOW");
-        }
-        return a.minus(b);
-    };
-    exports.sub = sub;
-    const max = (a, b) => {
-        return a.gte(b) ? a : b;
-    };
-    exports.max = max;
-    const min = (a, b) => {
-        return a.lt(b) ? a : b;
-    };
-    exports.min = min;
-    const mul = (a, b) => {
-        return a.times(b);
-    };
-    exports.mul = mul;
-    const div = (a, b, roundUp) => {
-        return roundUp ? exports.divUp(a, b) : exports.divDown(a, b);
-    };
-    exports.div = div;
-    const divDown = (a, b) => {
-        if (b.isZero()) {
-            throw new Error("ZERO_DIVISION");
-        }
-        return a.idiv(b);
-    };
-    exports.divDown = divDown;
-    const divUp = (a, b) => {
-        if (b.isZero()) {
-            throw new Error("ZERO_DIVISION");
-        }
-        return a.isZero() ? exports.ZERO : exports.ONE.plus(a.minus(exports.ONE).idiv(b));
-    };
-    exports.divUp = divUp;
-    }(math$5));
-
-    Object.defineProperty(base, "__esModule", { value: true });
-    const big_number_1$3 = bigNumber;
-    const math$4 = math$5;
-    class BasePool {
-        // ---------------------- Constructor ----------------------
-        constructor(params) {
-            this.MIN_SWAP_FEE_PERCENTAGE = big_number_1$3.bn("0.000001"); // 0.0001%
-            this.MAX_SWAP_FEE_PERCENTAGE = big_number_1$3.bn("0.1"); // 10%
-            this._query = false;
-            this._id = params.id;
-            this._address = params.address;
-            this._bptTotalSupply = params.bptTotalSupply;
-            this.setSwapFeePercentage(params.swapFeePercentage);
-            if (params.query) {
-                this._query = params.query;
-            }
-        }
-        // ---------------------- Getters ----------------------
-        get id() {
-            return this._id;
-        }
-        get address() {
-            return this._address;
-        }
-        get bptTotalSupply() {
-            return this._bptTotalSupply;
-        }
-        get swapFeePercentage() {
-            return this._swapFeePercentage;
-        }
-        get query() {
-            return this._query;
-        }
-        // ---------------------- Setters ----------------------
-        setSwapFeePercentage(swapFeePercentage) {
-            if (big_number_1$3.bn(swapFeePercentage).lt(this.MIN_SWAP_FEE_PERCENTAGE)) {
-                throw new Error("MIN_SWAP_FEE_PERCENTAGE");
-            }
-            if (big_number_1$3.bn(swapFeePercentage).gt(this.MAX_SWAP_FEE_PERCENTAGE)) {
-                throw new Error("MAX_SWAP_FEE_PERCENTAGE");
-            }
-            this._swapFeePercentage = swapFeePercentage;
-        }
-        setQuery(query) {
-            this._query = query;
-        }
-        // ---------------------- Internal ----------------------
-        _upScale(amount, decimals) {
-            return math$4.mul(big_number_1$3.scale(amount, decimals), big_number_1$3.bn(10).pow(18 - decimals));
-        }
-        _downScaleDown(amount, decimals) {
-            return big_number_1$3.scale(math$4.divDown(big_number_1$3.bn(amount), big_number_1$3.bn(10).pow(18 - decimals)), -decimals);
-        }
-        _downScaleUp(amount, decimals) {
-            return big_number_1$3.scale(math$4.divUp(big_number_1$3.bn(amount), big_number_1$3.bn(10).pow(18 - decimals)), -decimals);
-        }
-    }
-    base.default = BasePool;
-
-    var math$3 = {};
-
-    var fixedPoint = {};
-
-    var logExp = {};
-
-    (function (exports) {
-    // Ported from Solidity:
-    // https://github.com/balancer-labs/balancer-core-v2/blob/70843e6a61ad11208c1cfabf5cfe15be216ca8d3/pkg/solidity-utils/contracts/math/LogExpMath.sol
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.ln = exports.log = exports.exp = exports.pow = void 0;
-    const big_number_1 = bigNumber;
-    // All fixed point multiplications and divisions are inlined
-    // This means we need to divide by ONE when multiplying two numbers, and multiply by ONE when dividing them
-    // All arguments and return values are 18 decimal fixed point numbers
-    const ONE_18 = big_number_1.bn("1000000000000000000"); // 1e18
-    // Internally, intermediate values are computed with higher precision as 20 decimal fixed point numbers, and in the case of ln36, 36 decimals
-    const ONE_20 = big_number_1.bn("100000000000000000000"); // 1e20
-    const ONE_36 = big_number_1.bn("1000000000000000000000000000000000000"); // 1e36
-    // The domain of natural exponentiation is bound by the word size and number of decimals used
-    // Because internally the result will be stored using 20 decimals, the largest possible result is
-    // (2^255 - 1) / 10^20, which makes the largest exponent ln((2^255 - 1) / 10^20) = 130.700829182905140221
-    // The smallest possible result is 10^(-18), which makes largest negative argument
-    // ln(10^(-18)) = -41.446531673892822312.
-    // We use 130.0 and -41.0 to have some safety margin
-    const MAX_NATURAL_EXPONENT = big_number_1.bn("130000000000000000000"); // 130e18
-    const MIN_NATURAL_EXPONENT = big_number_1.bn("-41000000000000000000"); // (-41)e18
-    // Bounds for ln_36's argument
-    // Both ln(0.9) and ln(1.1) can be represented with 36 decimal places in a fixed point 256 bit integer
-    const LN_36_LOWER_BOUND = ONE_18.minus(big_number_1.bn("100000000000000000")); // 1e18 - 1e17
-    const LN_36_UPPER_BOUND = ONE_18.plus(big_number_1.bn("100000000000000000")); // 1e18 + 1e17
-    const MILD_EXPONENT_BOUND = big_number_1.bn(2).pow(254).idiv(ONE_20);
-    // 18 decimal constants
-    const x0 = big_number_1.bn("128000000000000000000"); // 2ˆ7
-    const a0 = big_number_1.bn("38877084059945950922200000000000000000000000000000000000"); // eˆ(x0) (no decimals)
-    const x1 = big_number_1.bn("64000000000000000000"); // 2ˆ6
-    const a1 = big_number_1.bn("6235149080811616882910000000"); // eˆ(x1) (no decimals)
-    // 20 decimal constants
-    const x2 = big_number_1.bn("3200000000000000000000"); // 2ˆ5
-    const a2 = big_number_1.bn("7896296018268069516100000000000000"); // eˆ(x2)
-    const x3 = big_number_1.bn("1600000000000000000000"); // 2ˆ4
-    const a3 = big_number_1.bn("888611052050787263676000000"); // eˆ(x3)
-    const x4 = big_number_1.bn("800000000000000000000"); // 2ˆ3
-    const a4 = big_number_1.bn("298095798704172827474000"); // eˆ(x4)
-    const x5 = big_number_1.bn("400000000000000000000"); // 2ˆ2
-    const a5 = big_number_1.bn("5459815003314423907810"); // eˆ(x5)
-    const x6 = big_number_1.bn("200000000000000000000"); // 2ˆ1
-    const a6 = big_number_1.bn("738905609893065022723"); // eˆ(x6)
-    const x7 = big_number_1.bn("100000000000000000000"); // 2ˆ0
-    const a7 = big_number_1.bn("271828182845904523536"); // eˆ(x7)
-    const x8 = big_number_1.bn("50000000000000000000"); // 2ˆ(-1)
-    const a8 = big_number_1.bn("164872127070012814685"); // eˆ(x8)
-    const x9 = big_number_1.bn("25000000000000000000"); // 2ˆ(-2)
-    const a9 = big_number_1.bn("128402541668774148407"); // eˆ(x9)
-    const x10 = big_number_1.bn("12500000000000000000"); // 2ˆ(-3)
-    const a10 = big_number_1.bn("113314845306682631683"); // eˆ(x10)
-    const x11 = big_number_1.bn("6250000000000000000"); // 2ˆ(-4)
-    const a11 = big_number_1.bn("106449445891785942956"); // eˆ(x11)
-    const pow = (x, y) => {
-        if (y.isZero()) {
-            // We solve the 0^0 indetermination by making it equal one.
-            return ONE_18;
-        }
-        if (x.isZero()) {
-            return big_number_1.bn(0);
-        }
-        // Instead of computing x^y directly, we instead rely on the properties of logarithms and exponentiation to
-        // arrive at that result. In particular, exp(ln(x)) = x, and ln(x^y) = y * ln(x). This means
-        // x^y = exp(y * ln(x)).
-        // The ln function takes a signed value, so we need to make sure x fits in the signed 256 bit range.
-        if (x.gte(big_number_1.bn(2).pow(255))) {
-            throw new Error("X_OUT_OF_BOUNDS");
-        }
-        // We will compute y * ln(x) in a single step. Depending on the value of x, we can either use ln or ln_36. In
-        // both cases, we leave the division by ONE_18 (due to fixed point multiplication) to the end.
-        // This prevents y * ln(x) from overflowing, and at the same time guarantees y fits in the signed 256 bit range.
-        if (y.gte(MILD_EXPONENT_BOUND)) {
-            throw new Error("Y_OUT_OF_BOUNDS");
-        }
-        let logx_times_y;
-        if (LN_36_LOWER_BOUND.lt(x) && x.lt(LN_36_UPPER_BOUND)) {
-            let ln_36_x = _ln_36(x);
-            // ln_36_x has 36 decimal places, so multiplying by y_int256 isn't as straightforward, since we can't just
-            // bring y_int256 to 36 decimal places, as it might overflow. Instead, we perform two 18 decimal
-            // multiplications and add the results: one with the first 18 decimals of ln_36_x, and one with the
-            // (downscaled) last 18 decimals.
-            logx_times_y = ln_36_x
-                .idiv(ONE_18)
-                .times(y)
-                .plus(ln_36_x.mod(ONE_18).times(y).idiv(ONE_18));
-        }
-        else {
-            logx_times_y = _ln(x).times(y);
-        }
-        logx_times_y = logx_times_y.idiv(ONE_18);
-        // Finally, we compute exp(y * ln(x)) to arrive at x^y
-        if (logx_times_y.lt(MIN_NATURAL_EXPONENT) ||
-            logx_times_y.gt(MAX_NATURAL_EXPONENT)) {
-            throw new Error("PRODUCT_OUT_OF_BOUNDS");
-        }
-        return exports.exp(logx_times_y);
-    };
-    exports.pow = pow;
-    const exp = (x) => {
-        if (x.lt(MIN_NATURAL_EXPONENT) || x.gt(MAX_NATURAL_EXPONENT)) {
-            throw new Error("INVALID_EXPONENT");
-        }
-        if (x.lt(0)) {
-            // We only handle positive exponents: e^(-x) is computed as 1 / e^x. We can safely make x positive since it
-            // fits in the signed 256 bit range (as it is larger than MIN_NATURAL_EXPONENT).
-            // Fixed point division requires multiplying by ONE_18.
-            return ONE_18.times(ONE_18).idiv(exports.exp(x.negated()));
-        }
-        // First, we use the fact that e^(x+y) = e^x * e^y to decompose x into a sum of powers of two, which we call x_n,
-        // where x_n == 2^(7 - n), and e^x_n = a_n has been precomputed. We choose the first x_n, x0, to equal 2^7
-        // because all larger powers are larger than MAX_NATURAL_EXPONENT, and therefore not present in the
-        // decomposition.
-        // At the end of this process we will have the product of all e^x_n = a_n that apply, and the remainder of this
-        // decomposition, which will be lower than the smallest x_n.
-        // exp(x) = k_0 * a_0 * k_1 * a_1 * ... + k_n * a_n * exp(remainder), where each k_n equals either 0 or 1.
-        // We mutate x by subtracting x_n, making it the remainder of the decomposition.
-        // The first two a_n (e^(2^7) and e^(2^6)) are too large if stored as 18 decimal numbers, and could cause
-        // intermediate overflows. Instead we store them as plain integers, with 0 decimals.
-        // Additionally, x0 + x1 is larger than MAX_NATURAL_EXPONENT, which means they will not both be present in the
-        // decomposition.
-        // For each x_n, we test if that term is present in the decomposition (if x is larger than it), and if so deduct
-        // it and compute the accumulated product.
-        let firstAN;
-        if (x.gte(x0)) {
-            x = x.minus(x0);
-            firstAN = a0;
-        }
-        else if (x.gte(x1)) {
-            x = x.minus(x1);
-            firstAN = a1;
-        }
-        else {
-            firstAN = big_number_1.bn(1); // One with no decimal places
-        }
-        // We now transform x into a 20 decimal fixed point number, to have enhanced precision when computing the
-        // smaller terms.
-        x = x.times(100);
-        // `product` is the accumulated product of all a_n (except a0 and a1), which starts at 20 decimal fixed point
-        // one. Recall that fixed point multiplication requires dividing by ONE_20.
-        let product = ONE_20;
-        if (x.gte(x2)) {
-            x = x.minus(x2);
-            product = product.times(a2).idiv(ONE_20);
-        }
-        if (x.gte(x3)) {
-            x = x.minus(x3);
-            product = product.times(a3).idiv(ONE_20);
-        }
-        if (x.gte(x4)) {
-            x = x.minus(x4);
-            product = product.times(a4).idiv(ONE_20);
-        }
-        if (x.gte(x5)) {
-            x = x.minus(x5);
-            product = product.times(a5).idiv(ONE_20);
-        }
-        if (x.gte(x6)) {
-            x = x.minus(x6);
-            product = product.times(a6).idiv(ONE_20);
-        }
-        if (x.gte(x7)) {
-            x = x.minus(x7);
-            product = product.times(a7).idiv(ONE_20);
-        }
-        if (x.gte(x8)) {
-            x = x.minus(x8);
-            product = product.times(a8).idiv(ONE_20);
-        }
-        if (x.gte(x9)) {
-            x = x.minus(x9);
-            product = product.times(a9).idiv(ONE_20);
-        }
-        // x10 and x11 are unnecessary here since we have high enough precision already.
-        // Now we need to compute e^x, where x is small (in particular, it is smaller than x9). We use the Taylor series
-        // expansion for e^x: 1 + x + (x^2 / 2!) + (x^3 / 3!) + ... + (x^n / n!).
-        let seriesSum = ONE_20; // The initial one in the sum, with 20 decimal places.
-        let term; // Each term in the sum, where the nth term is (x^n / n!).
-        // The first term is simply x.
-        term = x;
-        seriesSum = seriesSum.plus(term);
-        // Each term (x^n / n!) equals the previous one times x, divided by n. Since x is a fixed point number,
-        // multiplying by it requires dividing by ONE_20, but dividing by the non-fixed point n values does not.
-        term = term.times(x).idiv(ONE_20).idiv(2);
-        seriesSum = seriesSum.plus(term);
-        term = term.times(x).idiv(ONE_20).idiv(3);
-        seriesSum = seriesSum.plus(term);
-        term = term.times(x).idiv(ONE_20).idiv(4);
-        seriesSum = seriesSum.plus(term);
-        term = term.times(x).idiv(ONE_20).idiv(5);
-        seriesSum = seriesSum.plus(term);
-        term = term.times(x).idiv(ONE_20).idiv(6);
-        seriesSum = seriesSum.plus(term);
-        term = term.times(x).idiv(ONE_20).idiv(7);
-        seriesSum = seriesSum.plus(term);
-        term = term.times(x).idiv(ONE_20).idiv(8);
-        seriesSum = seriesSum.plus(term);
-        term = term.times(x).idiv(ONE_20).idiv(9);
-        seriesSum = seriesSum.plus(term);
-        term = term.times(x).idiv(ONE_20).idiv(10);
-        seriesSum = seriesSum.plus(term);
-        term = term.times(x).idiv(ONE_20).idiv(11);
-        seriesSum = seriesSum.plus(term);
-        term = term.times(x).idiv(ONE_20).idiv(12);
-        seriesSum = seriesSum.plus(term);
-        // 12 Taylor terms are sufficient for 18 decimal precision.
-        // We now have the first a_n (with no decimals), and the product of all other a_n present, and the Taylor
-        // approximation of the exponentiation of the remainder (both with 20 decimals). All that remains is to multiply
-        // all three (one 20 decimal fixed point multiplication, dividing by ONE_20, and one integer multiplication),
-        // and then drop two digits to return an 18 decimal value.
-        return product.times(seriesSum).idiv(ONE_20).times(firstAN).idiv(100);
-    };
-    exports.exp = exp;
-    const log = (arg, base) => {
-        // This performs a simple base change: log(arg, base) = ln(arg) / ln(base).
-        // Both logBase and logArg are computed as 36 decimal fixed point numbers, either by using ln_36, or by
-        // upscaling.
-        let logBase;
-        if (LN_36_LOWER_BOUND.lt(base) && base.lt(LN_36_UPPER_BOUND)) {
-            logBase = _ln_36(base);
-        }
-        else {
-            logBase = _ln(base).times(ONE_18);
-        }
-        let logArg;
-        if (LN_36_LOWER_BOUND.lt(arg) && arg.lt(LN_36_UPPER_BOUND)) {
-            logArg = _ln_36(arg);
-        }
-        else {
-            logArg = _ln(arg).times(ONE_18);
-        }
-        // When dividing, we multiply by ONE_18 to arrive at a result with 18 decimal places
-        return logArg.times(ONE_18).idiv(logBase);
-    };
-    exports.log = log;
-    const ln = (a) => {
-        // The real natural logarithm is not defined for negative numbers or zero.
-        if (a.lte(0)) {
-            throw new Error("OUT_OF_BOUNDS");
-        }
-        if (LN_36_LOWER_BOUND.lt(a) && a.lt(LN_36_UPPER_BOUND)) {
-            return _ln_36(a).idiv(ONE_18);
-        }
-        else {
-            return _ln(a);
-        }
-    };
-    exports.ln = ln;
-    const _ln = (a) => {
-        if (a.lt(ONE_18)) {
-            // Since ln(a^k) = k * ln(a), we can compute ln(a) as ln(a) = ln((1/a)^(-1)) = - ln((1/a))
-            // If a is less than one, 1/a will be greater than one, and this if statement will not be entered in the recursive call
-            // Fixed point division requires multiplying by ONE_18
-            return _ln(ONE_18.times(ONE_18).idiv(a)).negated();
-        }
-        // First, we use the fact that ln^(a * b) = ln(a) + ln(b) to decompose ln(a) into a sum of powers of two, which
-        // we call x_n, where x_n == 2^(7 - n), which are the natural logarithm of precomputed quantities a_n (that is,
-        // ln(a_n) = x_n). We choose the first x_n, x0, to equal 2^7 because the exponential of all larger powers cannot
-        // be represented as 18 fixed point decimal numbers in 256 bits, and are therefore larger than a.
-        // At the end of this process we will have the sum of all x_n = ln(a_n) that apply, and the remainder of this
-        // decomposition, which will be lower than the smallest a_n.
-        // ln(a) = k_0 * x_0 + k_1 * x_1 + ... + k_n * x_n + ln(remainder), where each k_n equals either 0 or 1
-        // We mutate a by subtracting a_n, making it the remainder of the decomposition
-        // For reasons related to how `exp` works, the first two a_n (e^(2^7) and e^(2^6)) are not stored as fixed point
-        // numbers with 18 decimals, but instead as plain integers with 0 decimals, so we need to multiply them by
-        // ONE_18 to convert them to fixed point.
-        // For each a_n, we test if that term is present in the decomposition (if a is larger than it), and if so divide
-        // by it and compute the accumulated sum.
-        let sum = big_number_1.bn(0);
-        if (a.gte(a0.times(ONE_18))) {
-            a = a.idiv(a0); // Integer, not fixed point division
-            sum = sum.plus(x0);
-        }
-        if (a.gte(a1.times(ONE_18))) {
-            a = a.idiv(a1); // Integer, not fixed point division
-            sum = sum.plus(x1);
-        }
-        // All other a_n and x_n are stored as 20 digit fixed point numbers, so we convert the sum and a to this format.
-        sum = sum.times(100);
-        a = a.times(100);
-        // Because further a_n are  20 digit fixed point numbers, we multiply by ONE_20 when dividing by them.
-        if (a.gte(a2)) {
-            a = a.times(ONE_20).idiv(a2);
-            sum = sum.plus(x2);
-        }
-        if (a.gte(a3)) {
-            a = a.times(ONE_20).idiv(a3);
-            sum = sum.plus(x3);
-        }
-        if (a.gte(a4)) {
-            a = a.times(ONE_20).idiv(a4);
-            sum = sum.plus(x4);
-        }
-        if (a.gte(a5)) {
-            a = a.times(ONE_20).idiv(a5);
-            sum = sum.plus(x5);
-        }
-        if (a.gte(a6)) {
-            a = a.times(ONE_20).idiv(a6);
-            sum = sum.plus(x6);
-        }
-        if (a.gte(a7)) {
-            a = a.times(ONE_20).idiv(a7);
-            sum = sum.plus(x7);
-        }
-        if (a.gte(a8)) {
-            a = a.times(ONE_20).idiv(a8);
-            sum = sum.plus(x8);
-        }
-        if (a.gte(a9)) {
-            a = a.times(ONE_20).idiv(a9);
-            sum = sum.plus(x9);
-        }
-        if (a.gte(a10)) {
-            a = a.times(ONE_20).idiv(a10);
-            sum = sum.plus(x10);
-        }
-        if (a.gte(a11)) {
-            a = a.times(ONE_20).idiv(a11);
-            sum = sum.plus(x11);
-        }
-        // a is now a small number (smaller than a_11, which roughly equals 1.06). This means we can use a Taylor series
-        // that converges rapidly for values of `a` close to one - the same one used in ln_36.
-        // Let z = (a - 1) / (a + 1).
-        // ln(a) = 2 * (z + z^3 / 3 + z^5 / 5 + z^7 / 7 + ... + z^(2 * n + 1) / (2 * n + 1))
-        // Recall that 20 digit fixed point division requires multiplying by ONE_20, and multiplication requires
-        // division by ONE_20.
-        const z = a.minus(ONE_20).times(ONE_20).idiv(a.plus(ONE_20));
-        const z_squared = z.times(z).idiv(ONE_20);
-        // num is the numerator of the series: the z^(2 * n + 1) term
-        let num = z;
-        // seriesSum holds the accumulated sum of each term in the series, starting with the initial z
-        let seriesSum = num;
-        // In each step, the numerator is multiplied by z^2
-        num = num.times(z_squared).idiv(ONE_20);
-        seriesSum = seriesSum.plus(num.idiv(3));
-        num = num.times(z_squared).idiv(ONE_20);
-        seriesSum = seriesSum.plus(num.idiv(5));
-        num = num.times(z_squared).idiv(ONE_20);
-        seriesSum = seriesSum.plus(num.idiv(7));
-        num = num.times(z_squared).idiv(ONE_20);
-        seriesSum = seriesSum.plus(num.idiv(9));
-        num = num.times(z_squared).idiv(ONE_20);
-        seriesSum = seriesSum.plus(num.idiv(11));
-        // 6 Taylor terms are sufficient for 36 decimal precision.
-        // Finally, we multiply by 2 (non fixed point) to compute ln(remainder)
-        seriesSum = seriesSum.times(2);
-        // We now have the sum of all x_n present, and the Taylor approximation of the logarithm of the remainder (both
-        // with 20 decimals). All that remains is to sum these two, and then drop two digits to return a 18 decimal
-        // value.
-        return sum.plus(seriesSum).idiv(100);
-    };
-    const _ln_36 = (x) => {
-        // Since ln(1) = 0, a value of x close to one will yield a very small result, which makes using 36 digits worthwhile
-        // First, we transform x to a 36 digit fixed point value
-        x = x.times(ONE_18);
-        // We will use the following Taylor expansion, which converges very rapidly. Let z = (x - 1) / (x + 1)
-        // ln(x) = 2 * (z + z^3 / 3 + z^5 / 5 + z^7 / 7 + ... + z^(2 * n + 1) / (2 * n + 1))
-        // Recall that 36 digit fixed point division requires multiplying by ONE_36, and multiplication requires division by ONE_36
-        const z = x.minus(ONE_36).times(ONE_36).idiv(x.plus(ONE_36));
-        const z_squared = z.times(z).idiv(ONE_36);
-        // num is the numerator of the series: the z^(2 * n + 1) term
-        let num = z;
-        // seriesSum holds the accumulated sum of each term in the series, starting with the initial z
-        let seriesSum = num;
-        // In each step, the numerator is multiplied by z^2
-        num = num.times(z_squared).idiv(ONE_36);
-        seriesSum = seriesSum.plus(num.idiv(3));
-        num = num.times(z_squared).idiv(ONE_36);
-        seriesSum = seriesSum.plus(num.idiv(5));
-        num = num.times(z_squared).idiv(ONE_36);
-        seriesSum = seriesSum.plus(num.idiv(7));
-        num = num.times(z_squared).idiv(ONE_36);
-        seriesSum = seriesSum.plus(num.idiv(9));
-        num = num.times(z_squared).idiv(ONE_36);
-        seriesSum = seriesSum.plus(num.idiv(11));
-        num = num.times(z_squared).idiv(ONE_36);
-        seriesSum = seriesSum.plus(num.idiv(13));
-        num = num.times(z_squared).idiv(ONE_36);
-        seriesSum = seriesSum.plus(num.idiv(15));
-        // 8 Taylor terms are sufficient for 36 decimal precision
-        // All that remains is multiplying by 2 (non fixed point)
-        return seriesSum.times(2);
-    };
-    }(logExp));
-
-    (function (exports) {
-    // Ported from Solidity:
-    // https://github.com/balancer-labs/balancer-core-v2/blob/70843e6a61ad11208c1cfabf5cfe15be216ca8d3/pkg/solidity-utils/contracts/math/FixedPoint.sol
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.complement = exports.powUp = exports.powDown = exports.divUp = exports.divDown = exports.mulUp = exports.mulDown = exports.sub = exports.add = exports.MIN_POW_BASE_FREE_EXPONENT = exports.MAX_POW_RELATIVE_ERROR = exports.ONE = exports.ZERO = void 0;
-    const big_number_1 = bigNumber;
-    const logExp$1 = logExp;
-    exports.ZERO = big_number_1.bn(0);
-    exports.ONE = big_number_1.bn("1000000000000000000"); // 10^18
-    exports.MAX_POW_RELATIVE_ERROR = big_number_1.bn(10000); // 10^(-14)
-    // Minimum base for the power function when the exponent is 'free' (larger than ONE)
-    exports.MIN_POW_BASE_FREE_EXPONENT = big_number_1.bn("700000000000000000"); // 0.7e18
-    const add = (a, b) => {
-        // Fixed Point addition is the same as regular checked addition
-        return a.plus(b);
-    };
-    exports.add = add;
-    const sub = (a, b) => {
-        // Fixed Point subtraction is the same as regular checked subtraction
-        if (b.gt(a)) {
-            throw new Error("SUB_OVERFLOW");
-        }
-        return a.minus(b);
-    };
-    exports.sub = sub;
-    const mulDown = (a, b) => {
-        return a.times(b).idiv(exports.ONE);
-    };
-    exports.mulDown = mulDown;
-    const mulUp = (a, b) => {
-        const product = a.times(b);
-        if (product.isZero()) {
-            return product;
-        }
-        else {
-            // The traditional divUp formula is:
-            // divUp(x, y) := (x + y - 1) / y
-            // To avoid intermediate overflow in the addition, we distribute the division and get:
-            // divUp(x, y) := (x - 1) / y + 1
-            // Note that this requires x != 0, which we already tested for
-            return product.minus(big_number_1.bn(1)).idiv(exports.ONE).plus(big_number_1.bn(1));
-        }
-    };
-    exports.mulUp = mulUp;
-    const divDown = (a, b) => {
-        if (b.isZero()) {
-            throw new Error("ZERO_DIVISION");
-        }
-        if (a.isZero()) {
-            return a;
-        }
-        else {
-            return a.times(exports.ONE).idiv(b);
-        }
-    };
-    exports.divDown = divDown;
-    const divUp = (a, b) => {
-        if (b.isZero()) {
-            throw new Error("ZERO_DIVISION");
-        }
-        if (a.isZero()) {
-            return a;
-        }
-        else {
-            // The traditional divUp formula is:
-            // divUp(x, y) := (x + y - 1) / y
-            // To avoid intermediate overflow in the addition, we distribute the division and get:
-            // divUp(x, y) := (x - 1) / y + 1
-            // Note that this requires x != 0, which we already tested for.
-            return a.times(exports.ONE).minus(big_number_1.bn(1)).idiv(b).plus(big_number_1.bn(1));
-        }
-    };
-    exports.divUp = divUp;
-    const powDown = (x, y) => {
-        const raw = logExp$1.pow(x, y);
-        const maxError = exports.add(exports.mulUp(raw, exports.MAX_POW_RELATIVE_ERROR), big_number_1.bn(1));
-        if (raw.lt(maxError)) {
-            return big_number_1.bn(0);
-        }
-        else {
-            return exports.sub(raw, maxError);
-        }
-    };
-    exports.powDown = powDown;
-    const powUp = (x, y) => {
-        const raw = logExp$1.pow(x, y);
-        const maxError = exports.add(exports.mulUp(raw, exports.MAX_POW_RELATIVE_ERROR), big_number_1.bn(1));
-        return exports.add(raw, maxError);
-    };
-    exports.powUp = powUp;
-    const complement = (x) => {
-        return x.lt(exports.ONE) ? exports.ONE.minus(x) : big_number_1.bn(0);
-    };
-    exports.complement = complement;
-    }(fixedPoint));
-
-    (function (exports) {
-    // Ported from Solidity:
-    // https://github.com/balancer-labs/balancer-core-v2/blob/70843e6a61ad11208c1cfabf5cfe15be216ca8d3/pkg/pool-stable/contracts/StableMath.sol
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports._calcDueTokenProtocolSwapFeeAmount = exports._calcTokensOutGivenExactBptIn = exports._calcTokenOutGivenExactBptIn = exports._calcBptInGivenExactTokensOut = exports._calcTokenInGivenExactBptOut = exports._calcBptOutGivenExactTokensIn = exports._calcInGivenOut = exports._calcOutGivenIn = exports._calculateInvariant = exports.MAX_STABLE_TOKENS = exports.AMP_PRECISION = exports.MAX_AMP = exports.MIN_AMP = void 0;
-    const big_number_1 = bigNumber;
-    const fp = fixedPoint;
-    const math = math$5;
-    exports.MIN_AMP = big_number_1.bn(1);
-    exports.MAX_AMP = big_number_1.bn(5000);
-    exports.AMP_PRECISION = big_number_1.bn(1000);
-    exports.MAX_STABLE_TOKENS = 5;
-    // Computes the invariant given the current balances, using the Newton-Raphson approximation.
-    // The amplification parameter equals: A n^(n-1)
-    const _calculateInvariant = (amplificationParameter, balances, roundUp) => {
-        /**********************************************************************************************
-        // invariant                                                                                 //
-        // D = invariant                                                  D^(n+1)                    //
-        // A = amplification coefficient      A  n^n S + D = A D n^n + -----------                   //
-        // S = sum of balances                                             n^n P                     //
-        // P = product of balances                                                                   //
-        // n = number of tokens                                                                      //
-        **********************************************************************************************/
-        // We support rounding up or down.
-        let sum = math.ZERO;
-        let numTokens = big_number_1.bn(balances.length);
-        for (let i = 0; i < balances.length; i++) {
-            sum = fp.add(sum, balances[i]);
-        }
-        if (sum.isZero()) {
-            return math.ZERO;
-        }
-        let prevInvariant = math.ZERO;
-        let invariant = sum;
-        let ampTimesTotal = math.mul(amplificationParameter, numTokens);
-        for (let i = 0; i < 255; i++) {
-            let P_D = math.mul(numTokens, balances[0]);
-            for (let j = 1; j < balances.length; j++) {
-                P_D = math.div(math.mul(math.mul(P_D, balances[j]), numTokens), invariant, roundUp);
-            }
-            prevInvariant = invariant;
-            invariant = math.div(fp.add(math.mul(math.mul(numTokens, invariant), invariant), math.div(math.mul(math.mul(ampTimesTotal, sum), P_D), exports.AMP_PRECISION, roundUp)), fp.add(math.mul(fp.add(numTokens, math.ONE), invariant), math.div(math.mul(fp.sub(ampTimesTotal, exports.AMP_PRECISION), P_D), exports.AMP_PRECISION, !roundUp)), roundUp);
-            if (invariant.gt(prevInvariant)) {
-                if (fp.sub(invariant, prevInvariant).lte(math.ONE)) {
-                    return invariant;
-                }
-            }
-            else if (fp.sub(prevInvariant, invariant).lte(math.ONE)) {
-                return invariant;
-            }
-        }
-        throw new Error("STABLE_GET_BALANCE_DIDNT_CONVERGE");
-    };
-    exports._calculateInvariant = _calculateInvariant;
-    // Computes how many tokens can be taken out of a pool if `tokenAmountIn` are sent, given the current balances.
-    // The amplification parameter equals: A n^(n-1)
-    const _calcOutGivenIn = (amplificationParameter, balances, tokenIndexIn, tokenIndexOut, tokenAmountIn, swapFeePercentage) => {
-        /**************************************************************************************************************
-        // outGivenIn token x for y - polynomial equation to solve                                                   //
-        // ay = amount out to calculate                                                                              //
-        // by = balance token out                                                                                    //
-        // y = by - ay (finalBalanceOut)                                                                             //
-        // D = invariant                                               D                     D^(n+1)                 //
-        // A = amplification coefficient               y^2 + ( S - ----------  - D) * y -  ------------- = 0         //
-        // n = number of tokens                                    (A * n^n)               A * n^2n * P              //
-        // S = sum of final balances but y                                                                           //
-        // P = product of final balances but y                                                                       //
-        **************************************************************************************************************/
-        // Subtract the fee from the amount in if requested
-        if (swapFeePercentage) {
-            tokenAmountIn = fp.sub(tokenAmountIn, fp.mulUp(tokenAmountIn, swapFeePercentage));
-        }
-        // Amount out, so we round down overall.
-        // Given that we need to have a greater final balance out, the invariant needs to be rounded up
-        const invariant = exports._calculateInvariant(amplificationParameter, balances, true);
-        balances[tokenIndexIn] = fp.add(balances[tokenIndexIn], tokenAmountIn);
-        const finalBalanceOut = _getTokenBalanceGivenInvariantAndAllOtherBalances(amplificationParameter, balances, invariant, tokenIndexOut);
-        balances[tokenIndexIn] = fp.sub(balances[tokenIndexIn], tokenAmountIn);
-        return fp.sub(fp.sub(balances[tokenIndexOut], finalBalanceOut), math.ONE);
-    };
-    exports._calcOutGivenIn = _calcOutGivenIn;
-    // Computes how many tokens must be sent to a pool if `tokenAmountOut` are sent given the
-    // current balances, using the Newton-Raphson approximation.
-    // The amplification parameter equals: A n^(n-1)
-    const _calcInGivenOut = (amplificationParameter, balances, tokenIndexIn, tokenIndexOut, tokenAmountOut, swapFeePercentage) => {
-        /**************************************************************************************************************
-        // inGivenOut token x for y - polynomial equation to solve                                                   //
-        // ax = amount in to calculate                                                                               //
-        // bx = balance token in                                                                                     //
-        // x = bx + ax (finalBalanceIn)                                                                              //
-        // D = invariant                                                D                     D^(n+1)                //
-        // A = amplification coefficient               x^2 + ( S - ----------  - D) * x -  ------------- = 0         //
-        // n = number of tokens                                     (A * n^n)               A * n^2n * P             //
-        // S = sum of final balances but x                                                                           //
-        // P = product of final balances but x                                                                       //
-        **************************************************************************************************************/
-        // Amount in, so we round up overall.
-        // Given that we need to have a greater final balance in, the invariant needs to be rounded up
-        const invariant = exports._calculateInvariant(amplificationParameter, balances, true);
-        balances[tokenIndexOut] = fp.sub(balances[tokenIndexOut], tokenAmountOut);
-        const finalBalanceIn = _getTokenBalanceGivenInvariantAndAllOtherBalances(amplificationParameter, balances, invariant, tokenIndexIn);
-        balances[tokenIndexOut] = fp.add(balances[tokenIndexOut], tokenAmountOut);
-        let amountIn = fp.add(fp.sub(finalBalanceIn, balances[tokenIndexIn]), math.ONE);
-        // Add the fee to the amount in if requested
-        if (swapFeePercentage) {
-            amountIn = fp.divUp(amountIn, fp.complement(swapFeePercentage));
-        }
-        return amountIn;
-    };
-    exports._calcInGivenOut = _calcInGivenOut;
-    const _calcBptOutGivenExactTokensIn = (amp, balances, amountsIn, bptTotalSupply, swapFeePercentage) => {
-        // BPT out, so we round down overall.
-        // First loop calculates the sum of all token balances, which will be used to calculate
-        // the current weights of each token, relative to this sum
-        let sumBalances = math.ZERO;
-        for (let i = 0; i < balances.length; i++) {
-            sumBalances = fp.add(sumBalances, balances[i]);
-        }
-        // Calculate the weighted balance ratio without considering fees
-        const balanceRatiosWithFee = new Array(amountsIn.length);
-        // The weighted sum of token balance ratios without fee
-        let invariantRatioWithFees = math.ZERO;
-        for (let i = 0; i < balances.length; i++) {
-            const currentWeight = fp.divDown(balances[i], sumBalances);
-            balanceRatiosWithFee[i] = fp.divDown(fp.add(balances[i], amountsIn[i]), balances[i]);
-            invariantRatioWithFees = fp.add(invariantRatioWithFees, fp.mulDown(balanceRatiosWithFee[i], currentWeight));
-        }
-        // Second loop calculates new amounts in, taking into account the fee on the percentage excess
-        const newBalances = new Array(balances.length);
-        for (let i = 0; i < balances.length; i++) {
-            let amountInWithoutFee;
-            // Check if the balance ratio is greater than the ideal ratio to charge fees or not
-            if (balanceRatiosWithFee[i].gt(invariantRatioWithFees)) {
-                const nonTaxableAmount = fp.mulDown(balances[i], fp.sub(invariantRatioWithFees, fp.ONE));
-                const taxableAmount = fp.sub(amountsIn[i], nonTaxableAmount);
-                amountInWithoutFee = fp.add(nonTaxableAmount, fp.mulDown(taxableAmount, fp.sub(fp.ONE, swapFeePercentage)));
-            }
-            else {
-                amountInWithoutFee = amountsIn[i];
-            }
-            newBalances[i] = fp.add(balances[i], amountInWithoutFee);
-        }
-        // Get current and new invariants, taking swap fees into account
-        const currentInvariant = exports._calculateInvariant(amp, balances, true);
-        const newInvariant = exports._calculateInvariant(amp, newBalances, false);
-        const invariantRatio = fp.divDown(newInvariant, currentInvariant);
-        // If the invariant didn't increase for any reason, we simply don't mint BPT
-        if (invariantRatio.gt(fp.ONE)) {
-            return fp.mulDown(bptTotalSupply, fp.sub(invariantRatio, fp.ONE));
-        }
-        else {
-            return math.ZERO;
-        }
-    };
-    exports._calcBptOutGivenExactTokensIn = _calcBptOutGivenExactTokensIn;
-    const _calcTokenInGivenExactBptOut = (amp, balances, tokenIndex, bptAmountOut, bptTotalSupply, swapFeePercentage) => {
-        // Token in, so we round up overall.
-        // Get the current invariant
-        const currentInvariant = exports._calculateInvariant(amp, balances, true);
-        // Calculate new invariant
-        const newInvariant = fp.mulUp(fp.divUp(fp.add(bptTotalSupply, bptAmountOut), bptTotalSupply), currentInvariant);
-        // Calculate amount in without fee.
-        const newBalanceTokenIndex = _getTokenBalanceGivenInvariantAndAllOtherBalances(amp, balances, newInvariant, tokenIndex);
-        const amountInWithoutFee = fp.sub(newBalanceTokenIndex, balances[tokenIndex]);
-        // First calculate the sum of all token balances, which will be used to calculate
-        // the current weight of each token
-        let sumBalances = math.ZERO;
-        for (let i = 0; i < balances.length; i++) {
-            sumBalances = fp.add(sumBalances, balances[i]);
-        }
-        // We can now compute how much extra balance is being deposited and used in virtual swaps, and charge swap fees
-        // accordingly.
-        const currentWeight = fp.divDown(balances[tokenIndex], sumBalances);
-        const taxablePercentage = fp.complement(currentWeight);
-        const taxableAmount = fp.mulUp(amountInWithoutFee, taxablePercentage);
-        const nonTaxableAmount = fp.sub(amountInWithoutFee, taxableAmount);
-        return fp.add(nonTaxableAmount, fp.divUp(taxableAmount, fp.sub(fp.ONE, swapFeePercentage)));
-    };
-    exports._calcTokenInGivenExactBptOut = _calcTokenInGivenExactBptOut;
-    /*
-      Flow of calculations:
-      amountsTokenOut -> amountsOutProportional ->
-      amountOutPercentageExcess -> amountOutBeforeFee -> newInvariant -> amountBPTIn
-    */
-    const _calcBptInGivenExactTokensOut = (amp, balances, amountsOut, bptTotalSupply, swapFeePercentage) => {
-        // BPT in, so we round up overall.
-        // First loop calculates the sum of all token balances, which will be used to calculate
-        // the current weights of each token relative to this sum
-        let sumBalances = math.ZERO;
-        for (let i = 0; i < balances.length; i++) {
-            sumBalances = fp.add(sumBalances, balances[i]);
-        }
-        // Calculate the weighted balance ratio without considering fees
-        const balanceRatiosWithoutFee = new Array(amountsOut.length);
-        let invariantRatioWithoutFees = math.ZERO;
-        for (let i = 0; i < balances.length; i++) {
-            const currentWeight = fp.divUp(balances[i], sumBalances);
-            balanceRatiosWithoutFee[i] = fp.divUp(fp.sub(balances[i], amountsOut[i]), balances[i]);
-            invariantRatioWithoutFees = fp.add(invariantRatioWithoutFees, fp.mulUp(balanceRatiosWithoutFee[i], currentWeight));
-        }
-        // Second loop calculates new amounts in, taking into account the fee on the percentage excess
-        const newBalances = new Array(balances.length);
-        for (let i = 0; i < balances.length; i++) {
-            // Swap fees are typically charged on 'token in', but there is no 'token in' here, so we apply it to
-            // 'token out'. This results in slightly larger price impact.
-            let amountOutWithFee;
-            if (invariantRatioWithoutFees.gt(balanceRatiosWithoutFee[i])) {
-                const nonTaxableAmount = fp.mulDown(balances[i], fp.complement(invariantRatioWithoutFees));
-                const taxableAmount = fp.sub(amountsOut[i], nonTaxableAmount);
-                amountOutWithFee = fp.add(nonTaxableAmount, fp.divUp(taxableAmount, fp.sub(fp.ONE, swapFeePercentage)));
-            }
-            else {
-                amountOutWithFee = amountsOut[i];
-            }
-            newBalances[i] = fp.sub(balances[i], amountOutWithFee);
-        }
-        // Get current and new invariants, taking into account swap fees
-        const currentInvariant = exports._calculateInvariant(amp, balances, true);
-        const newInvariant = exports._calculateInvariant(amp, newBalances, false);
-        const invariantRatio = fp.divDown(newInvariant, currentInvariant);
-        // return amountBPTIn
-        return fp.mulUp(bptTotalSupply, fp.complement(invariantRatio));
-    };
-    exports._calcBptInGivenExactTokensOut = _calcBptInGivenExactTokensOut;
-    const _calcTokenOutGivenExactBptIn = (amp, balances, tokenIndex, bptAmountIn, bptTotalSupply, swapFeePercentage) => {
-        // Token out, so we round down overall.
-        // Get the current and new invariants. Since we need a bigger new invariant, we round the current one up.
-        const currentInvariant = exports._calculateInvariant(amp, balances, true);
-        const newInvariant = fp.mulUp(fp.divUp(fp.sub(bptTotalSupply, bptAmountIn), bptTotalSupply), currentInvariant);
-        // Calculate amount out without fee
-        const newBalanceTokenIndex = _getTokenBalanceGivenInvariantAndAllOtherBalances(amp, balances, newInvariant, tokenIndex);
-        const amountOutWithoutFee = fp.sub(balances[tokenIndex], newBalanceTokenIndex);
-        // First calculate the sum of all token balances, which will be used to calculate
-        // the current weight of each token
-        let sumBalances = math.ZERO;
-        for (let i = 0; i < balances.length; i++) {
-            sumBalances = fp.add(sumBalances, balances[i]);
-        }
-        // We can now compute how much excess balance is being withdrawn as a result of the virtual swaps, which result
-        // in swap fees.
-        const currentWeight = fp.divDown(balances[tokenIndex], sumBalances);
-        const taxablePercentage = fp.complement(currentWeight);
-        // Swap fees are typically charged on 'token in', but there is no 'token in' here, so we apply it
-        // to 'token out'. This results in slightly larger price impact. Fees are rounded up.
-        const taxableAmount = fp.mulUp(amountOutWithoutFee, taxablePercentage);
-        const nonTaxableAmount = fp.sub(amountOutWithoutFee, taxableAmount);
-        return fp.add(nonTaxableAmount, fp.mulDown(taxableAmount, fp.sub(fp.ONE, swapFeePercentage)));
-    };
-    exports._calcTokenOutGivenExactBptIn = _calcTokenOutGivenExactBptIn;
-    const _calcTokensOutGivenExactBptIn = (balances, bptAmountIn, bptTotalSupply) => {
-        /**********************************************************************************************
-        // exactBPTInForTokensOut                                                                    //
-        // (per token)                                                                               //
-        // aO = tokenAmountOut             /        bptIn         \                                  //
-        // b = tokenBalance      a0 = b * | ---------------------  |                                 //
-        // bptIn = bptAmountIn             \     bptTotalSupply    /                                 //
-        // bpt = bptTotalSupply                                                                      //
-        **********************************************************************************************/
-        // Since we're computing an amount out, we round down overall. This means rounding down on both the
-        // multiplication and division.
-        const bptRatio = fp.divDown(bptAmountIn, bptTotalSupply);
-        const amountsOut = new Array(balances.length);
-        for (let i = 0; i < balances.length; i++) {
-            amountsOut[i] = fp.mulDown(balances[i], bptRatio);
-        }
-        return amountsOut;
-    };
-    exports._calcTokensOutGivenExactBptIn = _calcTokensOutGivenExactBptIn;
-    // The amplification parameter equals: A n^(n-1)
-    const _calcDueTokenProtocolSwapFeeAmount = (amplificationParameter, balances, lastInvariant, tokenIndex, protocolSwapFeePercentage) => {
-        /**************************************************************************************************************
-        // oneTokenSwapFee - polynomial equation to solve                                                            //
-        // af = fee amount to calculate in one token                                                                 //
-        // bf = balance of fee token                                                                                 //
-        // f = bf - af (finalBalanceFeeToken)                                                                        //
-        // D = old invariant                                            D                     D^(n+1)                //
-        // A = amplification coefficient               f^2 + ( S - ----------  - D) * f -  ------------- = 0         //
-        // n = number of tokens                                    (A * n^n)               A * n^2n * P              //
-        // S = sum of final balances but f                                                                           //
-        // P = product of final balances but f                                                                       //
-        **************************************************************************************************************/
-        // Protocol swap fee amount, so we round down overall.
-        const finalBalanceFeeToken = _getTokenBalanceGivenInvariantAndAllOtherBalances(amplificationParameter, balances, lastInvariant, tokenIndex);
-        if (balances[tokenIndex].lte(finalBalanceFeeToken)) {
-            // This shouldn't happen outside of rounding errors, but have this safeguard nonetheless to prevent the Pool
-            // from entering a locked state in which joins and exits revert while computing accumulated swap fees.
-            return math.ZERO;
-        }
-        // Result is rounded down
-        const accumulatedTokenSwapFees = fp.sub(balances[tokenIndex], finalBalanceFeeToken);
-        return fp.divDown(fp.mulDown(accumulatedTokenSwapFees, protocolSwapFeePercentage), fp.ONE);
-    };
-    exports._calcDueTokenProtocolSwapFeeAmount = _calcDueTokenProtocolSwapFeeAmount;
-    // This function calculates the balance of a given token (tokenIndex)
-    // given all the other balances and the invariant
-    const _getTokenBalanceGivenInvariantAndAllOtherBalances = (amplificationParameter, balances, invariant, tokenIndex) => {
-        // Rounds result up overall
-        const numTokens = big_number_1.bn(balances.length);
-        const ampTimesTotal = math.mul(amplificationParameter, numTokens);
-        let sum = balances[0];
-        let P_D = math.mul(numTokens, balances[0]);
-        for (let j = 1; j < balances.length; j++) {
-            P_D = math.divDown(math.mul(math.mul(P_D, balances[j]), numTokens), invariant);
-            sum = fp.add(sum, balances[j]);
-        }
-        sum = fp.sub(sum, balances[tokenIndex]);
-        const inv2 = math.mul(invariant, invariant);
-        // We remove the balance fromm c by multiplying it
-        const c = math.mul(math.mul(math.divUp(inv2, math.mul(ampTimesTotal, P_D)), exports.AMP_PRECISION), balances[tokenIndex]);
-        const b = fp.add(sum, math.mul(math.divDown(invariant, ampTimesTotal), exports.AMP_PRECISION));
-        // We iterate to find the balance
-        let prevTokenBalance = math.ZERO;
-        // We multiply the first iteration outside the loop with the invariant to set the value of the
-        // initial approximation.
-        let tokenBalance = math.divUp(fp.add(inv2, c), fp.add(invariant, b));
-        for (let i = 0; i < 255; i++) {
-            prevTokenBalance = tokenBalance;
-            tokenBalance = math.divUp(fp.add(math.mul(tokenBalance, tokenBalance), c), fp.sub(fp.add(math.mul(tokenBalance, math.TWO), b), invariant));
-            if (tokenBalance.gt(prevTokenBalance)) {
-                if (fp.sub(tokenBalance, prevTokenBalance).lte(math.ONE)) {
-                    return tokenBalance;
-                }
-            }
-            else if (fp.sub(prevTokenBalance, tokenBalance).lte(math.ONE)) {
-                return tokenBalance;
-            }
-        }
-        throw new Error("STABLE_GET_BALANCE_DIDNT_CONVERGE");
-    };
-    }(math$3));
-
-    Object.defineProperty(stable, "__esModule", { value: true });
-    const index_1$1 = subgraph;
-    const big_number_1$2 = bigNumber;
-    const common_1$1 = common;
-    const base_1$1 = base;
-    const math$2 = math$3;
-    class StablePool extends base_1$1.default {
-        // ---------------------- Constructor ----------------------
-        constructor(params) {
-            super(params);
-            if (params.tokens.length > math$2.MAX_STABLE_TOKENS) {
-                throw new Error("MAX_STABLE_TOKENS");
-            }
-            this._tokens = common_1$1.shallowCopyAll(params.tokens);
-            if (big_number_1$2.bn(params.amplificationParameter).lt(math$2.MIN_AMP)) {
-                throw new Error("MIN_AMP");
-            }
-            if (big_number_1$2.bn(params.amplificationParameter).gt(math$2.MAX_AMP)) {
-                throw new Error("MAX_AMP");
-            }
-            this._amplificationParameter = big_number_1$2.bn(params.amplificationParameter)
-                .times(math$2.AMP_PRECISION)
-                .toString();
-        }
-        // ---------------------- Getters ----------------------
-        get tokens() {
-            // Shallow-copy to disallow direct changes
-            return common_1$1.shallowCopyAll(this._tokens);
-        }
-        get amplificationParameter() {
-            return big_number_1$2.bn(this._amplificationParameter).idiv(math$2.AMP_PRECISION).toString();
-        }
-        // ---------------------- Subgraph initializer ----------------------
-        static async initFromRealPool(poolId, query = false, blockNumber, testnet) {
-            const pool = await index_1$1.getPool(poolId, blockNumber, testnet);
-            if (!pool) {
-                throw new Error("Could not fetch pool data");
-            }
-            if (pool.poolType !== "Stable") {
-                throw new Error("Pool must be stable");
-            }
-            const id = pool.id;
-            const address = pool.address;
-            const bptTotalSupply = pool.totalShares;
-            const swapFeePercentage = pool.swapFee;
-            const amplificationParameter = pool.amp;
-            const tokens = [];
-            for (const token of pool.tokens) {
-                tokens.push({
-                    address: token.address,
-                    symbol: token.symbol,
-                    balance: token.balance,
-                    decimals: token.decimals,
-                });
-            }
-            return new StablePool({
-                id,
-                address,
-                tokens,
-                bptTotalSupply,
-                swapFeePercentage,
-                amplificationParameter,
-                query,
-            });
-        }
-        // ---------------------- Swap actions ----------------------
-        swapGivenIn(tokenInSymbol, tokenOutSymbol, amountIn) {
-            const tokenIndexIn = this._tokens.findIndex((t) => t.symbol === tokenInSymbol);
-            const tokenIndexOut = this._tokens.findIndex((t) => t.symbol === tokenOutSymbol);
-            const tokenIn = this._tokens[tokenIndexIn];
-            const tokenOut = this._tokens[tokenIndexOut];
-            const scaledAmountOut = math$2._calcOutGivenIn(big_number_1$2.bn(this._amplificationParameter), this._tokens.map((t) => this._upScale(t.balance, t.decimals)), tokenIndexIn, tokenIndexOut, this._upScale(amountIn, tokenIn.decimals), this._upScale(this._swapFeePercentage, 18));
-            const amountOut = this._downScaleDown(scaledAmountOut, tokenOut.decimals);
-            // In-place balance updates
-            if (!this._query) {
-                tokenIn.balance = big_number_1$2.bn(tokenIn.balance).plus(amountIn).toString();
-                tokenOut.balance = big_number_1$2.bn(tokenOut.balance).minus(amountOut).toString();
-            }
-            return amountOut.toString();
-        }
-        swapGivenOut(tokenInSymbol, tokenOutSymbol, amountOut) {
-            const tokenIndexIn = this._tokens.findIndex((t) => t.symbol === tokenInSymbol);
-            const tokenIndexOut = this._tokens.findIndex((t) => t.symbol === tokenOutSymbol);
-            const tokenIn = this._tokens[tokenIndexIn];
-            const tokenOut = this._tokens[tokenIndexOut];
-            const scaledAmountIn = math$2._calcInGivenOut(big_number_1$2.bn(this._amplificationParameter), this._tokens.map((t) => this._upScale(t.balance, t.decimals)), tokenIndexIn, tokenIndexOut, this._upScale(amountOut, tokenOut.decimals), this._upScale(this._swapFeePercentage, 18));
-            const amountIn = this._downScaleUp(scaledAmountIn, tokenIn.decimals);
-            // In-place balance updates
-            if (!this._query) {
-                tokenIn.balance = big_number_1$2.bn(tokenIn.balance).plus(amountIn).toString();
-                tokenOut.balance = big_number_1$2.bn(tokenOut.balance).minus(amountOut).toString();
-            }
-            return amountIn.toString();
-        }
-        // ---------------------- LP actions ----------------------
-        joinExactTokensInForBptOut(amountsIn) {
-            if (Object.keys(amountsIn).length !== this._tokens.length) {
-                throw new Error("Invalid input");
-            }
-            const scaledBptOut = math$2._calcBptOutGivenExactTokensIn(big_number_1$2.bn(this._amplificationParameter), this._tokens.map((t) => this._upScale(t.balance, t.decimals)), this._tokens.map((t) => this._upScale(amountsIn[t.symbol], t.decimals)), this._upScale(this._bptTotalSupply, 18), this._upScale(this._swapFeePercentage, 18));
-            const bptOut = this._downScaleDown(scaledBptOut, 18);
-            // In-place balance updates
-            if (!this._query) {
-                for (let i = 0; i < this._tokens.length; i++) {
-                    const token = this._tokens[i];
-                    token.balance = big_number_1$2.bn(token.balance)
-                        .plus(amountsIn[token.symbol])
-                        .toString();
-                }
-                this._bptTotalSupply = big_number_1$2.bn(this._bptTotalSupply).plus(bptOut).toString();
-            }
-            return bptOut.toString();
-        }
-        joinTokenInForExactBptOut(tokenInSymbol, bptOut) {
-            const tokenIndex = this._tokens.findIndex((t) => t.symbol === tokenInSymbol);
-            const tokenIn = this._tokens[tokenIndex];
-            if (!tokenIn) {
-                throw new Error("Invalid input");
-            }
-            const scaledAmountIn = math$2._calcTokenInGivenExactBptOut(big_number_1$2.bn(this._amplificationParameter), this._tokens.map((t) => this._upScale(t.balance, t.decimals)), tokenIndex, this._upScale(bptOut, 18), this._upScale(this._bptTotalSupply, 18), this._upScale(this._swapFeePercentage, 18));
-            const amountIn = this._downScaleUp(scaledAmountIn, tokenIn.decimals);
-            // In-place balance updates
-            if (!this._query) {
-                tokenIn.balance = big_number_1$2.bn(tokenIn.balance).plus(amountIn).toString();
-                this._bptTotalSupply = big_number_1$2.bn(this._bptTotalSupply).plus(bptOut).toString();
-            }
-            return amountIn.toString();
-        }
-        exitExactBptInForTokenOut(tokenOutSymbol, bptIn) {
-            const tokenIndex = this._tokens.findIndex((t) => t.symbol === tokenOutSymbol);
-            const tokenOut = this._tokens[tokenIndex];
-            if (!tokenOut) {
-                throw new Error("Invalid input");
-            }
-            const scaledAmountOut = math$2._calcTokenOutGivenExactBptIn(big_number_1$2.bn(this._amplificationParameter), this._tokens.map((t) => this._upScale(t.balance, t.decimals)), tokenIndex, this._upScale(bptIn, 18), this._upScale(this._bptTotalSupply, 18), this._upScale(this._swapFeePercentage, 18));
-            const amountOut = this._downScaleDown(scaledAmountOut, tokenOut.decimals);
-            // In-place balance updates
-            if (!this._query) {
-                tokenOut.balance = big_number_1$2.bn(tokenOut.balance).minus(amountOut).toString();
-                this._bptTotalSupply = big_number_1$2.bn(this._bptTotalSupply).minus(bptIn).toString();
-            }
-            return amountOut.toString();
-        }
-        exitExactBptInForTokensOut(bptIn) {
-            // Exactly match the EVM version
-            if (big_number_1$2.bn(bptIn).gt(this._bptTotalSupply)) {
-                throw new Error("BPT in exceeds total supply");
-            }
-            const scaledAmountsOut = math$2._calcTokensOutGivenExactBptIn(this._tokens.map((t) => this._upScale(t.balance, t.decimals)), this._upScale(bptIn, 18), this._upScale(this._bptTotalSupply, 18));
-            const amountsOut = scaledAmountsOut.map((amount, i) => this._downScaleDown(amount, this._tokens[i].decimals));
-            // In-place balance updates
-            if (!this._query) {
-                for (let i = 0; i < this._tokens.length; i++) {
-                    const token = this._tokens[i];
-                    token.balance = big_number_1$2.bn(token.balance).minus(amountsOut[i]).toString();
-                }
-                this._bptTotalSupply = big_number_1$2.bn(this._bptTotalSupply).minus(bptIn).toString();
-            }
-            return amountsOut.map((a) => a.toString());
-        }
-        exitBptInForExactTokensOut(amountsOut) {
-            if (Object.keys(amountsOut).length !== this._tokens.length) {
-                throw new Error("Invalid input");
-            }
-            const scaledBptIn = math$2._calcBptInGivenExactTokensOut(big_number_1$2.bn(this._amplificationParameter), this._tokens.map((t) => this._upScale(t.balance, t.decimals)), this._tokens.map((t) => this._upScale(amountsOut[t.symbol], t.decimals)), this._upScale(this._bptTotalSupply, 18), this._upScale(this._swapFeePercentage, 18));
-            const bptIn = this._downScaleDown(scaledBptIn, 18);
-            // In-place balance updates
-            if (!this._query) {
-                for (let i = 0; i < this._tokens.length; i++) {
-                    const token = this._tokens[i];
-                    token.balance = big_number_1$2.bn(token.balance)
-                        .minus(amountsOut[token.symbol])
-                        .toString();
-                }
-                this._bptTotalSupply = big_number_1$2.bn(this._bptTotalSupply).minus(bptIn).toString();
-            }
-            return bptIn.toString();
-        }
-    }
-    stable.default = StablePool;
-
-    var weighted = {};
-
-    var math$1 = {};
-
-    // Ported from Solidity:
-    // https://github.com/balancer-labs/balancer-core-v2/blob/70843e6a61ad11208c1cfabf5cfe15be216ca8d3/pkg/pool-weighted/contracts/WeightedMath.sol
-    Object.defineProperty(math$1, "__esModule", { value: true });
-    math$1._calcBptInGivenExactTokenOut = math$1._calcBptOutGivenExactTokenIn = math$1._calcDueTokenProtocolSwapFeeAmount = math$1._calcTokensOutGivenExactBptIn = math$1._calcTokenOutGivenExactBptIn = math$1._calcBptInGivenExactTokensOut = math$1._calcTokenInGivenExactBptOut = math$1._calcBptOutGivenExactTokensIn = math$1._calcInGivenOut = math$1._calcOutGivenIn = math$1._calculateInvariant = void 0;
-    const big_number_1$1 = bigNumber;
-    const fp = fixedPoint;
-    // Swap limits: amounts swapped may not be larger than this percentage of total balance
-    const MAX_IN_RATIO = big_number_1$1.bn("300000000000000000"); // 0.3e18
-    const MAX_OUT_RATIO = big_number_1$1.bn("300000000000000000"); // 0.3e18
-    // Invariant growth limit: non-proportional joins cannot cause the invariant to increase by more than this ratio
-    const MAX_INVARIANT_RATIO = big_number_1$1.bn("3000000000000000000"); // 3e18
-    // Invariant shrink limit: non-proportional exits cannot cause the invariant to decrease by less than this ratio
-    const MIN_INVARIANT_RATIO = big_number_1$1.bn("700000000000000000"); // 0.7e18
-    const _calculateInvariant = (normalizedWeights, balances) => {
-        /*****************************************************************************************
-        // invariant               _____                                                        //
-        // wi = weight index i      | |      wi                                                 //
-        // bi = balance index i     | |  bi ^   = i                                             //
-        // i = invariant                                                                        //
-        *****************************************************************************************/
-        let invariant = fp.ONE;
-        for (let i = 0; i < normalizedWeights.length; i++) {
-            invariant = fp.mulDown(invariant, fp.powDown(balances[i], normalizedWeights[i]));
-        }
-        if (invariant.lte(fp.ZERO)) {
-            throw new Error("ZERO_INVARIANT");
-        }
-        return invariant;
-    };
-    math$1._calculateInvariant = _calculateInvariant;
-    // Computes how many tokens can be taken out of a pool if `amountIn` is sent, given the
-    // current balances and weights.
-    const _calcOutGivenIn = (balanceIn, weightIn, balanceOut, weightOut, amountIn, swapFeePercentage) => {
-        /*****************************************************************************************
-        // outGivenIn                                                                           //
-        // ao = amountOut                                                                       //
-        // bo = balanceOut                                                                      //
-        // bi = balanceIn              /      /            bi             \    (wi / wo) \      //
-        // ai = amountIn    ao = bo * |  1 - | --------------------------  | ^            |     //
-        // wi = weightIn               \      \       ( bi + ai )         /              /      //
-        // wo = weightOut                                                                       //
-        *****************************************************************************************/
-        // Subtract the fee from the amount in if requested
-        if (swapFeePercentage) {
-            amountIn = fp.sub(amountIn, fp.mulUp(amountIn, swapFeePercentage));
-        }
-        // Amount out, so we round down overall
-        // The multiplication rounds down, and the subtrahend (power) rounds up (so the base rounds up too)
-        // Because bi / (bi + ai) <= 1, the exponent rounds down
-        // Cannot exceed maximum in ratio
-        if (amountIn.gt(fp.mulDown(balanceIn, MAX_IN_RATIO))) {
-            throw new Error("MAX_IN_RATIO");
-        }
-        const denominator = fp.add(balanceIn, amountIn);
-        const base = fp.divUp(balanceIn, denominator);
-        const exponent = fp.divDown(weightIn, weightOut);
-        const power = fp.powUp(base, exponent);
-        return fp.mulDown(balanceOut, fp.complement(power));
-    };
-    math$1._calcOutGivenIn = _calcOutGivenIn;
-    // Computes how many tokens must be sent to a pool in order to take `amountOut`, given the
-    // current balances and weights.
-    const _calcInGivenOut = (balanceIn, weightIn, balanceOut, weightOut, amountOut, swapFeePercentage) => {
-        /*****************************************************************************************
-        // inGivenOut                                                                           //
-        // ao = amountOut                                                                       //
-        // bo = balanceOut                                                                      //
-        // bi = balanceIn              /  /            bo             \    (wo / wi)      \     //
-        // ai = amountIn    ai = bi * |  | --------------------------  | ^            - 1  |    //
-        // wi = weightIn               \  \       ( bo - ao )         /                   /     //
-        // wo = weightOut                                                                       //
-        *****************************************************************************************/
-        // Amount in, so we round up overall
-        // The multiplication rounds up, and the power rounds up (so the base rounds up too)
-        // Because bo / (bo - ao) >= 1, the exponent rounds up
-        // Cannot exceed maximum out ratio
-        if (amountOut.gt(fp.mulDown(balanceOut, MAX_OUT_RATIO))) {
-            throw new Error("MAX_OUT_RATIO");
-        }
-        const base = fp.divUp(balanceOut, fp.sub(balanceOut, amountOut));
-        const exponent = fp.divUp(weightOut, weightIn);
-        const power = fp.powUp(base, exponent);
-        const ratio = fp.sub(power, fp.ONE);
-        let amountIn = fp.mulUp(balanceIn, ratio);
-        // Add the fee to the amount in if requested
-        if (swapFeePercentage) {
-            amountIn = fp.divUp(amountIn, fp.complement(swapFeePercentage));
-        }
-        return amountIn;
-    };
-    math$1._calcInGivenOut = _calcInGivenOut;
-    const _calcBptOutGivenExactTokensIn = (balances, normalizedWeights, amountsIn, bptTotalSupply, swapFee) => {
-        // BPT out, so we round down overall
-        const balanceRatiosWithFee = new Array(amountsIn.length);
-        let invariantRatioWithFees = fp.ZERO;
-        for (let i = 0; i < balances.length; i++) {
-            balanceRatiosWithFee[i] = fp.divDown(fp.add(balances[i], amountsIn[i]), balances[i]);
-            invariantRatioWithFees = fp.add(invariantRatioWithFees, fp.mulDown(balanceRatiosWithFee[i], normalizedWeights[i]));
-        }
-        let invariantRatio = fp.ONE;
-        for (let i = 0; i < balances.length; i++) {
-            let amountInWithoutFee;
-            if (balanceRatiosWithFee[i].gt(invariantRatioWithFees)) {
-                const nonTaxableAmount = fp.mulDown(balances[i], fp.sub(invariantRatioWithFees, fp.ONE));
-                const taxableAmount = fp.sub(amountsIn[i], nonTaxableAmount);
-                amountInWithoutFee = fp.add(nonTaxableAmount, fp.mulDown(taxableAmount, fp.sub(fp.ONE, swapFee)));
-            }
-            else {
-                amountInWithoutFee = amountsIn[i];
-            }
-            const balanceRatio = fp.divDown(fp.add(balances[i], amountInWithoutFee), balances[i]);
-            invariantRatio = fp.mulDown(invariantRatio, fp.powDown(balanceRatio, normalizedWeights[i]));
-        }
-        if (invariantRatio.gte(fp.ONE)) {
-            return fp.mulDown(bptTotalSupply, fp.sub(invariantRatio, fp.ONE));
-        }
-        else {
-            return fp.ZERO;
-        }
-    };
-    math$1._calcBptOutGivenExactTokensIn = _calcBptOutGivenExactTokensIn;
-    const _calcTokenInGivenExactBptOut = (balance, normalizedWeight, bptAmountOut, bptTotalSupply, swapFee) => {
-        /*****************************************************************************************
-        // tokenInForExactBptOut                                                                //
-        // a = amountIn                                                                         //
-        // b = balance                      /  /     bpt + bptOut     \    (1 / w)      \       //
-        // bptOut = bptAmountOut   a = b * |  | ---------------------- | ^          - 1  |      //
-        // bpt = bptTotalSupply             \  \         bpt          /                 /       //
-        // w = normalizedWeight                                                                 //
-        *****************************************************************************************/
-        // Token in, so we round up overall
-        // Calculate the factor by which the invariant will increase after minting `bptAmountOut`
-        const invariantRatio = fp.divUp(fp.add(bptTotalSupply, bptAmountOut), bptTotalSupply);
-        if (invariantRatio.gt(MAX_INVARIANT_RATIO)) {
-            throw new Error("MAX_OUT_BPT_FOR_TOKEN_IN");
-        }
-        // Calculate by how much the token balance has to increase to cause `invariantRatio`
-        const balanceRatio = fp.powUp(invariantRatio, fp.divUp(fp.ONE, normalizedWeight));
-        const amountInWithoutFee = fp.mulUp(balance, fp.sub(balanceRatio, fp.ONE));
-        // We can now compute how much extra balance is being deposited and used in virtual swaps, and charge swap fees accordingly
-        const taxablePercentage = fp.complement(normalizedWeight);
-        const taxableAmount = fp.mulUp(amountInWithoutFee, taxablePercentage);
-        const nonTaxableAmount = fp.sub(amountInWithoutFee, taxableAmount);
-        return fp.add(nonTaxableAmount, fp.divUp(taxableAmount, fp.complement(swapFee)));
-    };
-    math$1._calcTokenInGivenExactBptOut = _calcTokenInGivenExactBptOut;
-    const _calcBptInGivenExactTokensOut = (balances, normalizedWeights, amountsOut, bptTotalSupply, swapFee) => {
-        // BPT in, so we round up overall
-        const balanceRatiosWithoutFee = new Array(amountsOut.length);
-        let invariantRatioWithoutFees = fp.ZERO;
-        for (let i = 0; i < balances.length; i++) {
-            balanceRatiosWithoutFee[i] = fp.divUp(fp.sub(balances[i], amountsOut[i]), balances[i]);
-            invariantRatioWithoutFees = fp.add(invariantRatioWithoutFees, fp.mulUp(balanceRatiosWithoutFee[i], normalizedWeights[i]));
-        }
-        let invariantRatio = fp.ONE;
-        for (let i = 0; i < balances.length; i++) {
-            // Swap fees are typically charged on 'tokenIn', but there is no 'tokenIn' here, so we apply it to
-            // 'tokenOut' - this results in slightly larger price impact
-            let amountOutWithFee;
-            if (invariantRatioWithoutFees.gt(balanceRatiosWithoutFee[i])) {
-                const nonTaxableAmount = fp.mulDown(balances[i], fp.complement(invariantRatioWithoutFees));
-                const taxableAmount = fp.sub(amountsOut[i], nonTaxableAmount);
-                amountOutWithFee = fp.add(nonTaxableAmount, fp.divUp(taxableAmount, fp.complement(swapFee)));
-            }
-            else {
-                amountOutWithFee = amountsOut[i];
-            }
-            const balanceRatio = fp.divDown(fp.sub(balances[i], amountOutWithFee), balances[i]);
-            invariantRatio = fp.mulDown(invariantRatio, fp.powDown(balanceRatio, normalizedWeights[i]));
-        }
-        return fp.mulUp(bptTotalSupply, fp.complement(invariantRatio));
-    };
-    math$1._calcBptInGivenExactTokensOut = _calcBptInGivenExactTokensOut;
-    const _calcTokenOutGivenExactBptIn = (balance, normalizedWeight, bptAmountIn, bptTotalSupply, swapFee) => {
-        /*****************************************************************************************
-        // exactBptInForTokenOut                                                                //
-        // a = amountOut                                                                        //
-        // b = balance                     /      /    bpt - bptIn    \    (1 / w)  \           //
-        // bptIn = bptAmountIn    a = b * |  1 - | ------------------- | ^           |          //
-        // bpt = bptTotalSupply            \      \        bpt        /             /           //
-        // w = weight                                                                           //
-        *****************************************************************************************/
-        // Token out, so we round down overall
-        // The multiplication rounds down, but the power rounds up (so the base rounds up)
-        // Because (bpt - bptIn) / bpt <= 1, the exponent rounds down
-        // Calculate the factor by which the invariant will decrease after burning `bptAmountIn`
-        const invariantRatio = fp.divUp(fp.sub(bptTotalSupply, bptAmountIn), bptTotalSupply);
-        if (invariantRatio.lt(MIN_INVARIANT_RATIO)) {
-            throw new Error("MIN_BPT_IN_FOR_TOKEN_OUT");
-        }
-        // Calculate by how much the token balance has to increase to cause `invariantRatio`
-        const balanceRatio = fp.powUp(invariantRatio, fp.divDown(fp.ONE, normalizedWeight));
-        // Because of rounding up, `balanceRatio` can be greater than one, so we use its complement
-        const amountOutWithoutFee = fp.mulDown(balance, fp.complement(balanceRatio));
-        // We can now compute how much excess balance is being withdrawn as a result of the virtual swaps,
-        // which result in swap fees
-        const taxablePercentage = fp.complement(normalizedWeight);
-        // Swap fees are typically charged on 'tokenIn', but there is no 'tokenIn' here, so we apply it
-        // to 'tokenOut' - this results in slightly larger price impact (fees are rounded up)
-        const taxableAmount = fp.mulUp(amountOutWithoutFee, taxablePercentage);
-        const nonTaxableAmount = fp.sub(amountOutWithoutFee, taxableAmount);
-        return fp.add(nonTaxableAmount, fp.mulDown(taxableAmount, fp.complement(swapFee)));
-    };
-    math$1._calcTokenOutGivenExactBptIn = _calcTokenOutGivenExactBptIn;
-    const _calcTokensOutGivenExactBptIn = (balances, bptAmountIn, bptTotalSupply) => {
-        /*****************************************************************************************
-        // exactBptInForTokensOut                                                               //
-        // (formula per token)                                                                  //
-        // ao = amountOut                  /   bptIn   \                                        //
-        // b = balance           ao = b * | ----------- |                                       //
-        // bptIn = bptAmountIn             \    bpt    /                                        //
-        // bpt = bptTotalSupply                                                                 //
-        *****************************************************************************************/
-        // Token out, so we round down overall
-        // This means rounding down on both multiplication and division
-        const bptRatio = fp.divDown(bptAmountIn, bptTotalSupply);
-        const amountsOut = new Array(balances.length);
-        for (let i = 0; i < balances.length; i++) {
-            amountsOut[i] = fp.mulDown(balances[i], bptRatio);
-        }
-        return amountsOut;
-    };
-    math$1._calcTokensOutGivenExactBptIn = _calcTokensOutGivenExactBptIn;
-    const _calcDueTokenProtocolSwapFeeAmount = (balance, normalizedWeight, previousInvariant, currentInvariant, protocolSwapFeePercentage) => {
-        /*********************************************************************************
-        /*  protocolSwapFeePercentage * balanceToken * ( 1 - (previousInvariant / currentInvariant) ^ (1 / weightToken))
-        *********************************************************************************/
-        if (currentInvariant.lte(previousInvariant)) {
-            // This shouldn't happen outside of rounding errors, but have this safeguard nonetheless to prevent the Pool
-            // from entering a locked state in which joins and exits revert while computing accumulated swap fees.
-            return fp.ZERO;
-        }
-        // We round down to prevent issues in the Pool's accounting, even if it means paying slightly less in protocol
-        // fees to the Vault.
-        // Fee percentage and balance multiplications round down, while the subtrahend (power) rounds up (as does the
-        // base). Because previousInvariant / currentInvariant <= 1, the exponent rounds down.
-        let base = fp.divUp(previousInvariant, currentInvariant);
-        const exponent = fp.divDown(fp.ONE, normalizedWeight);
-        // Because the exponent is larger than one, the base of the power function has a lower bound. We cap to this
-        // value to avoid numeric issues, which means in the extreme case (where the invariant growth is larger than
-        // 1 / min exponent) the Pool will pay less in protocol fees than it should.
-        base = base.gte(fp.MIN_POW_BASE_FREE_EXPONENT)
-            ? base
-            : fp.MIN_POW_BASE_FREE_EXPONENT;
-        const power = fp.powUp(base, exponent);
-        const tokenAccruedFees = fp.mulDown(balance, fp.complement(power));
-        return fp.mulDown(tokenAccruedFees, protocolSwapFeePercentage);
-    };
-    math$1._calcDueTokenProtocolSwapFeeAmount = _calcDueTokenProtocolSwapFeeAmount;
-    // Convenience method needed by the SOR package (adapted from _calcBptOutGivenExactTokensIn)
-    const _calcBptOutGivenExactTokenIn = (balance, normalizedWeight, amountIn, bptTotalSupply, swapFee) => {
-        // BPT out, so we round down overall
-        const tokenBalanceRatioWithoutFee = fp.divDown(fp.add(balance, amountIn), balance);
-        const weightedBalanceRatio = fp.mulDown(tokenBalanceRatioWithoutFee, normalizedWeight);
-        let invariantRatio = fp.ONE;
-        // Percentage of the amount supplied that will be swapped for other tokens in the pool
-        let tokenBalancePercentageExcess;
-        // Some tokens might have amounts supplied in excess of a 'balanced' join: these are identified if
-        // the token's balance ratio sans fee is larger than the weighted balance ratio, and swap fees charged
-        // on the amount to swap
-        if (weightedBalanceRatio.gte(tokenBalanceRatioWithoutFee)) {
-            tokenBalancePercentageExcess = fp.ZERO;
-        }
-        else {
-            tokenBalancePercentageExcess = fp.divUp(fp.sub(tokenBalanceRatioWithoutFee, weightedBalanceRatio), fp.sub(tokenBalanceRatioWithoutFee, fp.ONE));
-        }
-        const swapFeeExcess = fp.mulUp(swapFee, tokenBalancePercentageExcess);
-        const amountInAfterFee = fp.mulDown(amountIn, fp.complement(swapFeeExcess));
-        const tokenBalanceRatio = fp.add(fp.ONE, fp.divDown(amountInAfterFee, balance));
-        invariantRatio = fp.mulDown(invariantRatio, fp.powDown(tokenBalanceRatio, normalizedWeight));
-        return fp.mulDown(bptTotalSupply, fp.sub(invariantRatio, fp.ONE));
-    };
-    math$1._calcBptOutGivenExactTokenIn = _calcBptOutGivenExactTokenIn;
-    // Convenience method needed by the SOR package (adapted from _calcBptInGivenExactTokensOut)
-    function _calcBptInGivenExactTokenOut(balance, normalizedWeight, amountOut, bptTotalSupply, swapFee) {
-        // BPT in, so we round up overall
-        const tokenBalanceRatioWithoutFee = fp.divUp(fp.sub(balance, amountOut), balance);
-        const weightedBalanceRatio = fp.mulUp(tokenBalanceRatioWithoutFee, normalizedWeight);
-        let invariantRatio = fp.ONE;
-        // Percentage of the amount supplied that will be swapped for other tokens in the pool
-        let tokenBalancePercentageExcess;
-        // For each ratioSansFee, compare with the total weighted ratio (weightedBalanceRatio) and
-        // decrease the fee from what goes above it
-        if (weightedBalanceRatio.lte(tokenBalanceRatioWithoutFee)) {
-            tokenBalancePercentageExcess = fp.ZERO;
-        }
-        else {
-            tokenBalancePercentageExcess = fp.divUp(fp.sub(weightedBalanceRatio, tokenBalanceRatioWithoutFee), fp.complement(tokenBalanceRatioWithoutFee));
-        }
-        const swapFeeExcess = fp.mulUp(swapFee, tokenBalancePercentageExcess);
-        const amountOutBeforeFee = fp.divUp(amountOut, fp.complement(swapFeeExcess));
-        const tokenBalanceRatio = fp.complement(fp.divUp(amountOutBeforeFee, balance));
-        invariantRatio = fp.mulDown(invariantRatio, fp.powDown(tokenBalanceRatio, normalizedWeight));
-        return fp.mulUp(bptTotalSupply, fp.complement(invariantRatio));
-    }
-    math$1._calcBptInGivenExactTokenOut = _calcBptInGivenExactTokenOut;
-
-    Object.defineProperty(weighted, "__esModule", { value: true });
-    const index_1 = subgraph;
-    const big_number_1 = bigNumber;
-    const common_1 = common;
-    const base_1 = base;
-    const math = math$1;
-    class WeightedPool extends base_1.default {
-        // ---------------------- Constructor ----------------------
-        constructor(params) {
-            super(params);
-            this.MIN_TOKENS = 2;
-            this.MAX_TOKENS = 8;
-            // A minimum normalized weight imposes a maximum weight ratio
-            // We need this due to limitations in the implementation of the power function, as these ratios are often exponents
-            this.MIN_WEIGHT = big_number_1.bn("0.01"); // 0.01e18
-            if (params.tokens.length < this.MIN_TOKENS) {
-                throw new Error("MIN_TOKENS");
-            }
-            if (params.tokens.length > this.MAX_TOKENS) {
-                throw new Error("MAX_TOKENS");
-            }
-            this._tokens = common_1.shallowCopyAll(params.tokens);
-            let normalizedSum = big_number_1.bn(0);
-            for (let i = 0; i < params.tokens.length; i++) {
-                if (big_number_1.bn(params.tokens[i].weight).lt(this.MIN_WEIGHT)) {
-                    throw new Error("MIN_WEIGHT");
-                }
-                normalizedSum = normalizedSum.plus(params.tokens[i].weight);
-            }
-            if (!normalizedSum.eq(1)) {
-                throw new Error("NORMALIZED_WEIGHT_INVARIANT");
-            }
-        }
-        // ---------------------- Getters ----------------------
-        get tokens() {
-            // Shallow-copy to disallow direct changes
-            return common_1.shallowCopyAll(this._tokens);
-        }
-        // ---------------------- Subgraph initializer ----------------------
-        static async initFromRealPool(poolId, query = false, blockNumber, testnet) {
-            const pool = await index_1.getPool(poolId, blockNumber, testnet);
-            if (!pool) {
-                throw new Error("Could not fetch pool data");
-            }
-            if (pool.poolType !== "Weighted") {
-                throw new Error("Pool must be weighted");
-            }
-            const id = pool.id;
-            const address = pool.address;
-            const bptTotalSupply = pool.totalShares;
-            const swapFeePercentage = pool.swapFee;
-            const tokens = [];
-            for (const token of pool.tokens) {
-                tokens.push({
-                    address: token.address,
-                    symbol: token.symbol,
-                    balance: token.balance,
-                    decimals: token.decimals,
-                    weight: token.weight,
-                });
-            }
-            return new WeightedPool({
-                id,
-                address,
-                tokens,
-                bptTotalSupply,
-                swapFeePercentage,
-                query,
-            });
-        }
-        // ---------------------- Misc ----------------------
-        getInvariant() {
-            const invariant = math._calculateInvariant(this._tokens.map((t) => this._upScale(t.weight, 18)), this._tokens.map((t) => this._upScale(t.balance, t.decimals)));
-            return invariant.toString();
-        }
-        // ---------------------- Swap actions ----------------------
-        swapGivenIn(tokenInSymbol, tokenOutSymbol, amountIn) {
-            const tokenIn = this._tokens.find((t) => t.symbol === tokenInSymbol);
-            const tokenOut = this._tokens.find((t) => t.symbol === tokenOutSymbol);
-            const scaledAmountOut = math._calcOutGivenIn(this._upScale(tokenIn.balance, tokenIn.decimals), this._upScale(tokenIn.weight, 18), this._upScale(tokenOut.balance, tokenOut.decimals), this._upScale(tokenOut.weight, 18), this._upScale(amountIn, tokenIn.decimals), this._upScale(this._swapFeePercentage, 18));
-            const amountOut = this._downScaleDown(scaledAmountOut, tokenOut.decimals);
-            // In-place balance updates
-            if (!this._query) {
-                tokenIn.balance = big_number_1.bn(tokenIn.balance).plus(amountIn).toString();
-                tokenOut.balance = big_number_1.bn(tokenOut.balance).minus(amountOut).toString();
-            }
-            return amountOut.toString();
-        }
-        swapGivenOut(tokenInSymbol, tokenOutSymbol, amountOut) {
-            const tokenIn = this._tokens.find((t) => t.symbol === tokenInSymbol);
-            const tokenOut = this._tokens.find((t) => t.symbol === tokenOutSymbol);
-            const scaledAmountIn = math._calcInGivenOut(this._upScale(tokenIn.balance, tokenIn.decimals), this._upScale(tokenIn.weight, 18), this._upScale(tokenOut.balance, tokenOut.decimals), this._upScale(tokenOut.weight, 18), this._upScale(amountOut, tokenOut.decimals), this._upScale(this._swapFeePercentage, 18));
-            const amountIn = this._downScaleUp(scaledAmountIn, tokenIn.decimals);
-            // In-place balance updates
-            if (!this._query) {
-                tokenIn.balance = big_number_1.bn(tokenIn.balance).plus(amountIn).toString();
-                tokenOut.balance = big_number_1.bn(tokenOut.balance).minus(amountOut).toString();
-            }
-            return amountIn.toString();
-        }
-        // ---------------------- LP actions ----------------------
-        joinExactTokensInForBptOut(amountsIn) {
-            if (Object.keys(amountsIn).length !== this._tokens.length) {
-                throw new Error("Invalid input");
-            }
-            const scaledBptOut = math._calcBptOutGivenExactTokensIn(this._tokens.map((t) => this._upScale(t.balance, t.decimals)), this._tokens.map((t) => this._upScale(t.weight, 18)), this._tokens.map((t) => this._upScale(amountsIn[t.symbol], t.decimals)), this._upScale(this._bptTotalSupply, 18), this._upScale(this._swapFeePercentage, 18));
-            const bptOut = this._downScaleDown(scaledBptOut, 18);
-            // In-place balance updates
-            if (!this._query) {
-                for (let i = 0; i < this._tokens.length; i++) {
-                    const token = this._tokens[i];
-                    token.balance = big_number_1.bn(token.balance)
-                        .plus(amountsIn[token.symbol])
-                        .toString();
-                }
-                this._bptTotalSupply = big_number_1.bn(this._bptTotalSupply).plus(bptOut).toString();
-            }
-            return bptOut.toString();
-        }
-        joinTokenInForExactBptOut(tokenInSymbol, bptOut) {
-            const tokenIn = this._tokens.find((t) => t.symbol === tokenInSymbol);
-            if (!tokenIn) {
-                throw new Error("Invalid input");
-            }
-            const scaledAmountIn = math._calcTokenInGivenExactBptOut(this._upScale(tokenIn.balance, tokenIn.decimals), this._upScale(tokenIn.weight, 18), this._upScale(bptOut, 18), this._upScale(this._bptTotalSupply, 18), this._upScale(this._swapFeePercentage, 18));
-            const amountIn = this._downScaleUp(scaledAmountIn, tokenIn.decimals);
-            // In-place balance updates
-            if (!this._query) {
-                tokenIn.balance = big_number_1.bn(tokenIn.balance).plus(amountIn).toString();
-                this._bptTotalSupply = big_number_1.bn(this._bptTotalSupply).plus(bptOut).toString();
-            }
-            return amountIn.toString();
-        }
-        exitExactBptInForTokenOut(tokenOutSymbol, bptIn) {
-            const tokenOut = this._tokens.find((t) => t.symbol === tokenOutSymbol);
-            if (!tokenOut) {
-                throw new Error("Invalid input");
-            }
-            const scaledAmountOut = math._calcTokenOutGivenExactBptIn(this._upScale(tokenOut.balance, tokenOut.decimals), this._upScale(tokenOut.weight, 18), this._upScale(bptIn, 18), this._upScale(this._bptTotalSupply, 18), this._upScale(this._swapFeePercentage, 18));
-            const amountOut = this._downScaleDown(scaledAmountOut, tokenOut.decimals);
-            // In-place balance updates
-            if (!this._query) {
-                tokenOut.balance = big_number_1.bn(tokenOut.balance).minus(amountOut).toString();
-                this._bptTotalSupply = big_number_1.bn(this._bptTotalSupply).minus(bptIn).toString();
-            }
-            return amountOut.toString();
-        }
-        exitExactBptInForTokensOut(bptIn) {
-            // Exactly match the EVM version
-            if (big_number_1.bn(bptIn).gt(this._bptTotalSupply)) {
-                throw new Error("BPT in exceeds total supply");
-            }
-            const scaledAmountsOut = math._calcTokensOutGivenExactBptIn(this._tokens.map((t) => this._upScale(t.balance, t.decimals)), this._upScale(bptIn, 18), this._upScale(this._bptTotalSupply, 18));
-            const amountsOut = scaledAmountsOut.map((amount, i) => this._downScaleDown(amount, this._tokens[i].decimals));
-            // In-place balance updates
-            if (!this._query) {
-                for (let i = 0; i < this._tokens.length; i++) {
-                    const token = this._tokens[i];
-                    token.balance = big_number_1.bn(token.balance).minus(amountsOut[i]).toString();
-                }
-                this._bptTotalSupply = big_number_1.bn(this._bptTotalSupply).minus(bptIn).toString();
-            }
-            return amountsOut.map((a) => a.toString());
-        }
-        exitBptInForExactTokensOut(amountsOut) {
-            if (Object.keys(amountsOut).length !== this._tokens.length) {
-                throw new Error("Invalid input");
-            }
-            const scaledBptIn = math._calcBptInGivenExactTokensOut(this._tokens.map((t) => this._upScale(t.balance, t.decimals)), this._tokens.map((t) => this._upScale(t.weight, 18)), this._tokens.map((t) => this._upScale(amountsOut[t.symbol], t.decimals)), this._upScale(this._bptTotalSupply, 18), this._upScale(this._swapFeePercentage, 18));
-            const bptIn = this._downScaleUp(scaledBptIn, 18);
-            // In-place balance updates
-            if (!this._query) {
-                for (let i = 0; i < this._tokens.length; i++) {
-                    const token = this._tokens[i];
-                    token.balance = big_number_1.bn(token.balance)
-                        .minus(amountsOut[token.symbol])
-                        .toString();
-                }
-                this._bptTotalSupply = big_number_1.bn(this._bptTotalSupply).minus(bptIn).toString();
-            }
-            return bptIn.toString();
-        }
-    }
-    weighted.default = WeightedPool;
-
-    Object.defineProperty(src, "__esModule", { value: true });
-    var WeightedMath_1 = src.WeightedMath = src.WeightedPool = StableMath_1 = src.StableMath = src.StablePool = void 0;
-    const stable_1 = stable;
-    src.StablePool = stable_1.default;
-    const StableMath = math$3;
-    var StableMath_1 = src.StableMath = StableMath;
-    const weighted_1 = weighted;
-    src.WeightedPool = weighted_1.default;
-    const WeightedMath = math$1;
-    WeightedMath_1 = src.WeightedMath = WeightedMath;
 
     const bpsPerOne = bignumber.BigNumber.from('10000'); // number of basis points in 100%
     /**
@@ -2733,6 +1055,22 @@
             },
             pools: {},
         },
+        [exports.Network.OPTIMISM]: {
+            chainId: exports.Network.OPTIMISM,
+            addresses: {
+                contracts: {
+                    vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+                    multicall: '0x2dc0e2aa608532da689e89e237df582b783e552c',
+                },
+                tokens: {
+                    wrappedNativeAsset: '0x4200000000000000000000000000000000000006',
+                },
+            },
+            urls: {
+                subgraph: 'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-optimism',
+            },
+            pools: {},
+        },
     };
     const networkAddresses = (chainId) => BALANCER_NETWORK_CONFIG[chainId].addresses;
 
@@ -2748,6 +1086,7 @@
         BalancerErrorCode["NO_POOL_DATA"] = "NO_POOL_DATA";
         BalancerErrorCode["INPUT_OUT_OF_BOUNDS"] = "INPUT_OUT_OF_BOUNDS";
         BalancerErrorCode["INPUT_LENGTH_MISMATCH"] = "INPUT_LENGTH_MISMATCH";
+        BalancerErrorCode["INPUT_ZERO_NOT_ALLOWED"] = "INPUT_ZERO_NOT_ALLOWED";
         BalancerErrorCode["TOKEN_MISMATCH"] = "TOKEN_MISMATCH";
         BalancerErrorCode["MISSING_TOKENS"] = "MISSING_TOKENS";
         BalancerErrorCode["MISSING_AMP"] = "MISSING_AMP";
@@ -2795,6 +1134,8 @@
                     return 'missing price rate';
                 case exports.BalancerErrorCode.MISSING_WEIGHT:
                     return 'missing weight';
+                case exports.BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED:
+                    return 'zero input not allowed';
                 default:
                     return 'Unknown error';
             }
@@ -2830,7 +1171,7 @@
                 const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(tokensIn, amountsIn);
                 // sort pool info
                 const [, sortedBalances] = assetHelpers.sortTokens(parsedTokens, parsedBalances);
-                const expectedBPTOut = StableMath_1._calcBptOutGivenExactTokensIn(new OldBigNumber__default["default"](parsedAmp), sortedBalances.map((b) => new OldBigNumber__default["default"](b)), sortedAmounts.map((a) => new OldBigNumber__default["default"](a)), new OldBigNumber__default["default"](parsedTotalShares), new OldBigNumber__default["default"](parsedSwapFee)).toString();
+                const expectedBPTOut = SOR__namespace.StableMathBigInt._calcBptOutGivenExactTokensIn(BigInt(parsedAmp), sortedBalances.map((b) => BigInt(b)), sortedAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
                 const minBPTOut = subSlippage(bignumber.BigNumber.from(expectedBPTOut), bignumber.BigNumber.from(slippage)).toString();
                 const userData = StablePoolEncoder.joinExactTokensInForBPTOut(sortedAmounts, minBPTOut);
                 const to = balancerVault;
@@ -2901,20 +1242,630 @@
 
     class StablePoolSpotPrice {
         calcPoolSpotPrice(tokenIn, tokenOut, pool) {
-            const poolClass = sor.StablePool.fromPool(pool);
+            const poolClass = SOR.StablePool.fromPool(pool);
             const poolPairData = poolClass.parsePoolPairData(tokenIn, tokenOut);
             return poolClass
-                ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, sor.ZERO)
+                ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, SOR.ZERO)
                 .toString();
         }
     }
 
+    const BZERO = BigInt(0);
+    const BONE = BigInt(1);
+    const ONE$1 = BigInt('1000000000000000000'); // 18 decimal places
+    const _require = (b, message) => {
+        if (!b)
+            throw new Error(message);
+    };
+    /**
+     * @dev Returns a scaling factor that, when multiplied to a token amount for `token`, normalizes its balance as if
+     * it had 18 decimals.
+     */
+    function _computeScalingFactor(tokenDecimals) {
+        // Tokens with more than 18 decimals are not supported.
+        const decimalsDifference = BigInt(18) - tokenDecimals;
+        return ONE$1 * BigInt(10) ** decimalsDifference;
+    }
+    /**
+     * @dev Applies `scalingFactor` to `amount`, resulting in a larger or equal value depending on whether it needed
+     * scaling or not.
+     */
+    function _upscale(amount, scalingFactor) {
+        // Upscale rounding wouldn't necessarily always go in the same direction: in a swap for example the balance of
+        // token in should be rounded up, and that of token out rounded down. This is the only place where we round in
+        // the same direction for all amounts, as the impact of this rounding is expected to be minimal (and there's no
+        // rounding error unless `_scalingFactor()` is overriden).
+        return SolidityMaths.mulDownFixed(amount, scalingFactor);
+    }
+    class SolidityMaths {
+        /**
+         * @dev Returns the addition of two unsigned integers of 256 bits, reverting on overflow.
+         */
+        // add(a: bigint, b: bigint): bigint {
+        //     const c = a + b;
+        //     // _require(c >= a, Errors.ADD_OVERFLOW);
+        //     return c;
+        // }
+        /**
+         * @dev Returns the addition of two signed integers, reverting on overflow.
+         */
+        static add(a, b) {
+            const c = a + b;
+            _require((b >= 0 && c >= a) || (b < 0 && c < a), 'Errors.ADD_OVERFLOW');
+            return c;
+        }
+        /**
+         * @dev Returns the subtraction of two unsigned integers of 256 bits, reverting on overflow.
+         */
+        static sub(a, b) {
+            _require(b <= a, 'Errors.SUB_OVERFLOW');
+            const c = a - b;
+            return c;
+        }
+        /**
+         * @dev Returns the subtraction of two signed integers, reverting on overflow.
+         */
+        // sub(int256 a, int256 b) internal pure returns (int256) {
+        //     int256 c = a - b;
+        //     // _require((b >= 0 && c <= a) || (b < 0 && c > a), Errors.SUB_OVERFLOW);
+        //     return c;
+        // }
+        /**
+         * @dev Returns the largest of two numbers of 256 bits.
+         */
+        static max(a, b) {
+            return a >= b ? a : b;
+        }
+        /**
+         * @dev Returns the smallest of two numbers of 256 bits.
+         */
+        static min(a, b) {
+            return a < b ? a : b;
+        }
+        static mul(a, b) {
+            const c = a * b;
+            _require(a == BZERO || c / a == b, 'Errors.MUL_OVERFLOW');
+            return c;
+        }
+        static div(a, b, roundUp) {
+            return roundUp ? this.divUp(a, b) : this.divDown(a, b);
+        }
+        static divDown(a, b) {
+            _require(b != BZERO, 'Errors.ZERO_DIVISION');
+            return a / b;
+        }
+        static divUp(a, b) {
+            _require(b != BZERO, 'Errors.ZERO_DIVISION');
+            if (a == BZERO) {
+                return BZERO;
+            }
+            else {
+                return BONE + (a - BONE) / b;
+            }
+        }
+        static mulUpFixed(a, b) {
+            const product = a * b;
+            _require(a == BZERO || product / a == b, 'Errors.MUL_OVERFLOW');
+            if (product == BZERO) {
+                return BZERO;
+            }
+            else {
+                // The traditional divUp formula is:
+                // divUp(x, y) := (x + y - 1) / y
+                // To avoid intermediate overflow in the addition, we distribute the division and get:
+                // divUp(x, y) := (x - 1) / y + 1
+                // Note that this requires x != 0, which we already tested for.
+                return (product - BONE) / ONE$1 + BONE;
+            }
+        }
+        // Modification: Taken from the fixed point class
+        static divDownFixed(a, b) {
+            _require(b != BZERO, 'Errors.ZERO_DIVISION');
+            if (a == BZERO) {
+                return BZERO;
+            }
+            else {
+                const aInflated = a * ONE$1;
+                // _require(aInflated / a == ONE, Errors.DIV_INTERNAL); // mul overflow
+                return aInflated / b;
+            }
+        }
+        // Modification: Taken from the fixed point class
+        static divUpFixed(a, b) {
+            _require(b != BZERO, 'Errors.ZERO_DIVISION');
+            if (a == BZERO) {
+                return BZERO;
+            }
+            else {
+                const aInflated = a * ONE$1;
+                _require(aInflated / a == ONE$1, 'Errors.DIV_INTERNAL'); // mul overflow
+                // The traditional divUp formula is:
+                // divUp(x, y) := (x + y - 1) / y
+                // To avoid intermediate overflow in the addition, we distribute the division and get:
+                // divUp(x, y) := (x - 1) / y + 1
+                // Note that this requires x != 0, which we already tested for.
+                return (aInflated - BONE) / b + BONE;
+            }
+        }
+        // Modification: Taken from the fixed point class
+        static powUpFixed(x, y) {
+            const raw = LogExpMath.pow(x, y);
+            const maxError = this.add(this.mulUpFixed(raw, this.MAX_POW_RELATIVE_ERROR), BONE);
+            return this.add(raw, maxError);
+        }
+        // Modification: Taken from the fixed point class
+        static complementFixed(x) {
+            return x < ONE$1 ? ONE$1 - x : BZERO;
+        }
+        static mulDownFixed(a, b) {
+            const product = a * b;
+            _require(a == BZERO || product / a == b, 'Errors.MUL_OVERFLOW');
+            return product / ONE$1;
+        }
+    }
+    // Modification: Taken from the fixed point class
+    SolidityMaths.MAX_POW_RELATIVE_ERROR = BigInt(10000);
+    class LogExpMath {
+        // All arguments and return values are 18 decimal fixed point numbers.
+        static pow(x, y) {
+            if (y === BZERO) {
+                // We solve the 0^0 indetermination by making it equal one.
+                return this.ONE_18;
+            }
+            if (x == BZERO) {
+                return BZERO;
+            }
+            // Instead of computing x^y directly, we instead rely on the properties of logarithms and exponentiation to
+            // arrive at that result. In particular, exp(ln(x)) = x, and ln(x^y) = y * ln(x). This means
+            // x^y = exp(y * ln(x)).
+            // The ln function takes a signed value, so we need to make sure x fits in the signed 256 bit range.
+            _require(x <
+                BigInt('57896044618658097711785492504343953926634992332820282019728792003956564819968'), 'Errors.X_OUT_OF_BOUNDS');
+            const x_int256 = x;
+            // We will compute y * ln(x) in a single step. Depending on the value of x, we can either use ln or ln_36. In
+            // both cases, we leave the division by ONE_18 (due to fixed point multiplication) to the end.
+            // This prevents y * ln(x) from overflowing, and at the same time guarantees y fits in the signed 256 bit range.
+            _require(y < this.MILD_EXPONENT_BOUND, 'Errors.Y_OUT_OF_BOUNDS');
+            const y_int256 = y;
+            let logx_times_y;
+            if (this.LN_36_LOWER_BOUND < x_int256 &&
+                x_int256 < this.LN_36_UPPER_BOUND) {
+                const ln_36_x = this._ln_36(x_int256);
+                // ln_36_x has 36 decimal places, so multiplying by y_int256 isn't as straightforward, since we can't just
+                // bring y_int256 to 36 decimal places, as it might overflow. Instead, we perform two 18 decimal
+                // multiplications and add the results: one with the first 18 decimals of ln_36_x, and one with the
+                // (downscaled) last 18 decimals.
+                logx_times_y =
+                    (ln_36_x / this.ONE_18) * y_int256 +
+                        ((ln_36_x % this.ONE_18) * y_int256) / this.ONE_18;
+            }
+            else {
+                logx_times_y = this._ln(x_int256) * y_int256;
+            }
+            logx_times_y /= this.ONE_18;
+            // Finally, we compute exp(y * ln(x)) to arrive at x^y
+            _require(this.MIN_NATURAL_EXPONENT <= logx_times_y &&
+                logx_times_y <= this.MAX_NATURAL_EXPONENT, 'Errors.PRODUCT_OUT_OF_BOUNDS');
+            // return uint256(exp(logx_times_y));
+            return this.exp(logx_times_y);
+        }
+        static exp(x) {
+            _require(x >= this.MIN_NATURAL_EXPONENT && x <= this.MAX_NATURAL_EXPONENT, 'Errors.INVALID_EXPONENT');
+            if (x < 0) {
+                // We only handle positive exponents: e^(-x) is computed as 1 / e^x. We can safely make x positive since it
+                // fits in the signed 256 bit range (as it is larger than MIN_NATURAL_EXPONENT).
+                // Fixed point division requires multiplying by ONE_18.
+                return (this.ONE_18 * this.ONE_18) / this.exp(BigInt(-1) * x);
+            }
+            // First, we use the fact that e^(x+y) = e^x * e^y to decompose x into a sum of powers of two, which we call x_n,
+            // where x_n == 2^(7 - n), and e^x_n = a_n has been precomputed. We choose the first x_n, x0, to equal 2^7
+            // because all larger powers are larger than MAX_NATURAL_EXPONENT, and therefore not present in the
+            // decomposition.
+            // At the end of this process we will have the product of all e^x_n = a_n that apply, and the remainder of this
+            // decomposition, which will be lower than the smallest x_n.
+            // exp(x) = k_0 * a_0 * k_1 * a_1 * ... + k_n * a_n * exp(remainder), where each k_n equals either 0 or 1.
+            // We mutate x by subtracting x_n, making it the remainder of the decomposition.
+            // The first two a_n (e^(2^7) and e^(2^6)) are too large if stored as 18 decimal numbers, and could cause
+            // intermediate overflows. Instead we store them as plain integers, with 0 decimals.
+            // Additionally, x0 + x1 is larger than MAX_NATURAL_EXPONENT, which means they will not both be present in the
+            // decomposition.
+            // For each x_n, we test if that term is present in the decomposition (if x is larger than it), and if so deduct
+            // it and compute the accumulated product.
+            let firstAN;
+            if (x >= this.x0) {
+                x -= this.x0;
+                firstAN = this.a0;
+            }
+            else if (x >= this.x1) {
+                x -= this.x1;
+                firstAN = this.a1;
+            }
+            else {
+                firstAN = BigInt(1); // One with no decimal places
+            }
+            // We now transform x into a 20 decimal fixed point number, to have enhanced precision when computing the
+            // smaller terms.
+            x *= BigInt(100);
+            // `product` is the accumulated product of all a_n (except a0 and a1), which starts at 20 decimal fixed point
+            // one. Recall that fixed point multiplication requires dividing by ONE_20.
+            let product = this.ONE_20;
+            if (x >= this.x2) {
+                x -= this.x2;
+                product = (product * this.a2) / this.ONE_20;
+            }
+            if (x >= this.x3) {
+                x -= this.x3;
+                product = (product * this.a3) / this.ONE_20;
+            }
+            if (x >= this.x4) {
+                x -= this.x4;
+                product = (product * this.a4) / this.ONE_20;
+            }
+            if (x >= this.x5) {
+                x -= this.x5;
+                product = (product * this.a5) / this.ONE_20;
+            }
+            if (x >= this.x6) {
+                x -= this.x6;
+                product = (product * this.a6) / this.ONE_20;
+            }
+            if (x >= this.x7) {
+                x -= this.x7;
+                product = (product * this.a7) / this.ONE_20;
+            }
+            if (x >= this.x8) {
+                x -= this.x8;
+                product = (product * this.a8) / this.ONE_20;
+            }
+            if (x >= this.x9) {
+                x -= this.x9;
+                product = (product * this.a9) / this.ONE_20;
+            }
+            // x10 and x11 are unnecessary here since we have high enough precision already.
+            // Now we need to compute e^x, where x is small (in particular, it is smaller than x9). We use the Taylor series
+            // expansion for e^x: 1 + x + (x^2 / 2!) + (x^3 / 3!) + ... + (x^n / n!).
+            let seriesSum = this.ONE_20; // The initial one in the sum, with 20 decimal places.
+            let term; // Each term in the sum, where the nth term is (x^n / n!).
+            // The first term is simply x.
+            term = x;
+            seriesSum += term;
+            // Each term (x^n / n!) equals the previous one times x, divided by n. Since x is a fixed point number,
+            // multiplying by it requires dividing by this.ONE_20, but dividing by the non-fixed point n values does not.
+            term = (term * x) / this.ONE_20 / BigInt(2);
+            seriesSum += term;
+            term = (term * x) / this.ONE_20 / BigInt(3);
+            seriesSum += term;
+            term = (term * x) / this.ONE_20 / BigInt(4);
+            seriesSum += term;
+            term = (term * x) / this.ONE_20 / BigInt(5);
+            seriesSum += term;
+            term = (term * x) / this.ONE_20 / BigInt(6);
+            seriesSum += term;
+            term = (term * x) / this.ONE_20 / BigInt(7);
+            seriesSum += term;
+            term = (term * x) / this.ONE_20 / BigInt(8);
+            seriesSum += term;
+            term = (term * x) / this.ONE_20 / BigInt(9);
+            seriesSum += term;
+            term = (term * x) / this.ONE_20 / BigInt(10);
+            seriesSum += term;
+            term = (term * x) / this.ONE_20 / BigInt(11);
+            seriesSum += term;
+            term = (term * x) / this.ONE_20 / BigInt(12);
+            seriesSum += term;
+            // 12 Taylor terms are sufficient for 18 decimal precision.
+            // We now have the first a_n (with no decimals), and the product of all other a_n present, and the Taylor
+            // approximation of the exponentiation of the remainder (both with 20 decimals). All that remains is to multiply
+            // all three (one 20 decimal fixed point multiplication, dividing by this.ONE_20, and one integer multiplication),
+            // and then drop two digits to return an 18 decimal value.
+            return (((product * seriesSum) / this.ONE_20) * firstAN) / BigInt(100);
+        }
+        static _ln_36(x) {
+            // Since ln(1) = 0, a value of x close to one will yield a very small result, which makes using 36 digits
+            // worthwhile.
+            // First, we transform x to a 36 digit fixed point value.
+            x *= this.ONE_18;
+            // We will use the following Taylor expansion, which converges very rapidly. Let z = (x - 1) / (x + 1).
+            // ln(x) = 2 * (z + z^3 / 3 + z^5 / 5 + z^7 / 7 + ... + z^(2 * n + 1) / (2 * n + 1))
+            // Recall that 36 digit fixed point division requires multiplying by ONE_36, and multiplication requires
+            // division by ONE_36.
+            const z = ((x - this.ONE_36) * this.ONE_36) / (x + this.ONE_36);
+            const z_squared = (z * z) / this.ONE_36;
+            // num is the numerator of the series: the z^(2 * n + 1) term
+            let num = z;
+            // seriesSum holds the accumulated sum of each term in the series, starting with the initial z
+            let seriesSum = num;
+            // In each step, the numerator is multiplied by z^2
+            num = (num * z_squared) / this.ONE_36;
+            seriesSum += num / BigInt(3);
+            num = (num * z_squared) / this.ONE_36;
+            seriesSum += num / BigInt(5);
+            num = (num * z_squared) / this.ONE_36;
+            seriesSum += num / BigInt(7);
+            num = (num * z_squared) / this.ONE_36;
+            seriesSum += num / BigInt(9);
+            num = (num * z_squared) / this.ONE_36;
+            seriesSum += num / BigInt(11);
+            num = (num * z_squared) / this.ONE_36;
+            seriesSum += num / BigInt(13);
+            num = (num * z_squared) / this.ONE_36;
+            seriesSum += num / BigInt(15);
+            // 8 Taylor terms are sufficient for 36 decimal precision.
+            // All that remains is multiplying by 2 (non fixed point).
+            return seriesSum * BigInt(2);
+        }
+        /**
+         * @dev Internal natural logarithm (ln(a)) with signed 18 decimal fixed point argument.
+         */
+        static _ln(a) {
+            if (a < this.ONE_18) {
+                // Since ln(a^k) = k * ln(a), we can compute ln(a) as ln(a) = ln((1/a)^(-1)) = - ln((1/a)). If a is less
+                // than one, 1/a will be greater than one, and this if statement will not be entered in the recursive call.
+                // Fixed point division requires multiplying by this.ONE_18.
+                return BigInt(-1) * this._ln((this.ONE_18 * this.ONE_18) / a);
+            }
+            // First, we use the fact that ln^(a * b) = ln(a) + ln(b) to decompose ln(a) into a sum of powers of two, which
+            // we call x_n, where x_n == 2^(7 - n), which are the natural logarithm of precomputed quantities a_n (that is,
+            // ln(a_n) = x_n). We choose the first x_n, x0, to equal 2^7 because the exponential of all larger powers cannot
+            // be represented as 18 fixed point decimal numbers in 256 bits, and are therefore larger than a.
+            // At the end of this process we will have the sum of all x_n = ln(a_n) that apply, and the remainder of this
+            // decomposition, which will be lower than the smallest a_n.
+            // ln(a) = k_0 * x_0 + k_1 * x_1 + ... + k_n * x_n + ln(remainder), where each k_n equals either 0 or 1.
+            // We mutate a by subtracting a_n, making it the remainder of the decomposition.
+            // For reasons related to how `exp` works, the first two a_n (e^(2^7) and e^(2^6)) are not stored as fixed point
+            // numbers with 18 decimals, but instead as plain integers with 0 decimals, so we need to multiply them by
+            // this.ONE_18 to convert them to fixed point.
+            // For each a_n, we test if that term is present in the decomposition (if a is larger than it), and if so divide
+            // by it and compute the accumulated sum.
+            let sum = BZERO;
+            if (a >= this.a0 * this.ONE_18) {
+                a /= this.a0; // Integer, not fixed point division
+                sum += this.x0;
+            }
+            if (a >= this.a1 * this.ONE_18) {
+                a /= this.a1; // Integer, not fixed point division
+                sum += this.x1;
+            }
+            // All other a_n and x_n are stored as 20 digit fixed point numbers, so we convert the sum and a to this format.
+            sum *= BigInt(100);
+            a *= BigInt(100);
+            // Because further a_n are  20 digit fixed point numbers, we multiply by ONE_20 when dividing by them.
+            if (a >= this.a2) {
+                a = (a * this.ONE_20) / this.a2;
+                sum += this.x2;
+            }
+            if (a >= this.a3) {
+                a = (a * this.ONE_20) / this.a3;
+                sum += this.x3;
+            }
+            if (a >= this.a4) {
+                a = (a * this.ONE_20) / this.a4;
+                sum += this.x4;
+            }
+            if (a >= this.a5) {
+                a = (a * this.ONE_20) / this.a5;
+                sum += this.x5;
+            }
+            if (a >= this.a6) {
+                a = (a * this.ONE_20) / this.a6;
+                sum += this.x6;
+            }
+            if (a >= this.a7) {
+                a = (a * this.ONE_20) / this.a7;
+                sum += this.x7;
+            }
+            if (a >= this.a8) {
+                a = (a * this.ONE_20) / this.a8;
+                sum += this.x8;
+            }
+            if (a >= this.a9) {
+                a = (a * this.ONE_20) / this.a9;
+                sum += this.x9;
+            }
+            if (a >= this.a10) {
+                a = (a * this.ONE_20) / this.a10;
+                sum += this.x10;
+            }
+            if (a >= this.a11) {
+                a = (a * this.ONE_20) / this.a11;
+                sum += this.x11;
+            }
+            // a is now a small number (smaller than a_11, which roughly equals 1.06). This means we can use a Taylor series
+            // that converges rapidly for values of `a` close to one - the same one used in ln_36.
+            // Let z = (a - 1) / (a + 1).
+            // ln(a) = 2 * (z + z^3 / 3 + z^5 / 5 + z^7 / 7 + ... + z^(2 * n + 1) / (2 * n + 1))
+            // Recall that 20 digit fixed point division requires multiplying by ONE_20, and multiplication requires
+            // division by ONE_20.
+            const z = ((a - this.ONE_20) * this.ONE_20) / (a + this.ONE_20);
+            const z_squared = (z * z) / this.ONE_20;
+            // num is the numerator of the series: the z^(2 * n + 1) term
+            let num = z;
+            // seriesSum holds the accumulated sum of each term in the series, starting with the initial z
+            let seriesSum = num;
+            // In each step, the numerator is multiplied by z^2
+            num = (num * z_squared) / this.ONE_20;
+            seriesSum += num / BigInt(3);
+            num = (num * z_squared) / this.ONE_20;
+            seriesSum += num / BigInt(5);
+            num = (num * z_squared) / this.ONE_20;
+            seriesSum += num / BigInt(7);
+            num = (num * z_squared) / this.ONE_20;
+            seriesSum += num / BigInt(9);
+            num = (num * z_squared) / this.ONE_20;
+            seriesSum += num / BigInt(11);
+            // 6 Taylor terms are sufficient for 36 decimal precision.
+            // Finally, we multiply by 2 (non fixed point) to compute ln(remainder)
+            seriesSum *= BigInt(2);
+            // We now have the sum of all x_n present, and the Taylor approximation of the logarithm of the remainder (both
+            // with 20 decimals). All that remains is to sum these two, and then drop two digits to return a 18 decimal
+            // value.
+            return (sum + seriesSum) / BigInt(100);
+        }
+    }
+    // All fixed point multiplications and divisions are inlined. This means we need to divide by ONE when multiplying
+    // two numbers, and multiply by ONE when dividing them.
+    // All arguments and return values are 18 decimal fixed point numbers.
+    LogExpMath.ONE_18 = BigInt('1000000000000000000');
+    // Internally, intermediate values are computed with higher precision as 20 decimal fixed point numbers, and in the
+    // case of ln36, 36 decimals.
+    LogExpMath.ONE_20 = BigInt('100000000000000000000');
+    LogExpMath.ONE_36 = BigInt('1000000000000000000000000000000000000');
+    // The domain of natural exponentiation is bound by the word size and number of decimals used.
+    //
+    // Because internally the result will be stored using 20 decimals, the largest possible result is
+    // (2^255 - 1) / 10^20, which makes the largest exponent ln((2^255 - 1) / 10^20) = 130.700829182905140221.
+    // The smallest possible result is 10^(-18), which makes largest negative argument
+    // ln(10^(-18)) = -41.446531673892822312.
+    // We use 130.0 and -41.0 to have some safety margin.
+    LogExpMath.MAX_NATURAL_EXPONENT = BigInt('130000000000000000000');
+    LogExpMath.MIN_NATURAL_EXPONENT = BigInt('-41000000000000000000');
+    // Bounds for ln_36's argument. Both ln(0.9) and ln(1.1) can be represented with 36 decimal places in a fixed point
+    // 256 bit integer.
+    LogExpMath.LN_36_LOWER_BOUND = BigInt(LogExpMath.ONE_18) - BigInt('100000000000000000');
+    LogExpMath.LN_36_UPPER_BOUND = BigInt(LogExpMath.ONE_18) + BigInt('100000000000000000');
+    LogExpMath.MILD_EXPONENT_BOUND = BigInt(2) ** BigInt(254) / LogExpMath.ONE_20;
+    // 18 decimal constants
+    LogExpMath.x0 = BigInt('128000000000000000000'); // 2ˆ7
+    LogExpMath.a0 = BigInt('38877084059945950922200000000000000000000000000000000000'); // eˆ(x0) (no decimals)
+    LogExpMath.x1 = BigInt('64000000000000000000'); // 2ˆ6
+    LogExpMath.a1 = BigInt('6235149080811616882910000000'); // eˆ(x1) (no decimals)
+    // 20 decimal constants
+    LogExpMath.x2 = BigInt('3200000000000000000000'); // 2ˆ5
+    LogExpMath.a2 = BigInt('7896296018268069516100000000000000'); // eˆ(x2)
+    LogExpMath.x3 = BigInt('1600000000000000000000'); // 2ˆ4
+    LogExpMath.a3 = BigInt('888611052050787263676000000'); // eˆ(x3)
+    LogExpMath.x4 = BigInt('800000000000000000000'); // 2ˆ3
+    LogExpMath.a4 = BigInt('298095798704172827474000'); // eˆ(x4)
+    LogExpMath.x5 = BigInt('400000000000000000000'); // 2ˆ2
+    LogExpMath.a5 = BigInt('5459815003314423907810'); // eˆ(x5)
+    LogExpMath.x6 = BigInt('200000000000000000000'); // 2ˆ1
+    LogExpMath.a6 = BigInt('738905609893065022723'); // eˆ(x6)
+    LogExpMath.x7 = BigInt('100000000000000000000'); // 2ˆ0
+    LogExpMath.a7 = BigInt('271828182845904523536'); // eˆ(x7)
+    LogExpMath.x8 = BigInt('50000000000000000000'); // 2ˆ-1
+    LogExpMath.a8 = BigInt('164872127070012814685'); // eˆ(x8)
+    LogExpMath.x9 = BigInt('25000000000000000000'); // 2ˆ-2
+    LogExpMath.a9 = BigInt('128402541668774148407'); // eˆ(x9)
+    LogExpMath.x10 = BigInt('12500000000000000000'); // 2ˆ-3
+    LogExpMath.a10 = BigInt('113314845306682631683'); // eˆ(x10)
+    LogExpMath.x11 = BigInt('6250000000000000000'); // 2ˆ-4
+    LogExpMath.a11 = BigInt('106449445891785942956'); // eˆ(x11)
+
+    function calcPriceImpact(bptAmount, bptZeroPriceImpact) {
+        // 1 - (bptAmount/bptZeroPI)
+        return ONE$1 - SolidityMaths.divDownFixed(bptAmount, bptZeroPriceImpact);
+    }
+
+    const AMP_PRECISION = BigInt(1e3);
+    function bptSpotPrice(amp, balances, bptSupply, tokenIndexIn) {
+        const totalCoins = balances.length;
+        const D = _calculateInvariant(amp, balances, true);
+        let S = BZERO;
+        let D_P = D / BigInt(totalCoins);
+        for (let i = 0; i < totalCoins; i++) {
+            if (i != tokenIndexIn) {
+                S = S + balances[i];
+                D_P = (D_P * D) / (BigInt(totalCoins) * balances[i]);
+            }
+        }
+        const x = balances[tokenIndexIn];
+        const alpha = amp * BigInt(totalCoins);
+        const beta = alpha * S; // units: 10 ** 21
+        const gamma = BigInt(AMP_PRECISION) - alpha;
+        const partial_x = BigInt(2) * alpha * x + beta + gamma * D;
+        const minus_partial_D = D_P * BigInt(totalCoins + 1) * AMP_PRECISION - gamma * x;
+        const ans = SolidityMaths.divUpFixed((partial_x * bptSupply) / minus_partial_D, D);
+        return ans;
+    }
+    function _calculateInvariant(amp, balances, roundUp) {
+        /**********************************************************************************************
+            // invariant                                                                                 //
+            // D = invariant                                                  D^(n+1)                    //
+            // A = amplification coefficient      A  n^n S + D = A D n^n + -----------                   //
+            // S = sum of balances                                             n^n P                     //
+            // P = product of balances                                                                   //
+            // n = number of tokens                                                                      //
+            *********x************************************************************************************/
+        // We support rounding up or down.
+        let sum = BZERO;
+        const numTokens = balances.length;
+        for (let i = 0; i < numTokens; i++) {
+            sum = sum + balances[i];
+        }
+        if (sum == BZERO) {
+            return BZERO;
+        }
+        let prevInvariant = BZERO;
+        let invariant = sum;
+        const ampTimesTotal = amp * BigInt(numTokens);
+        for (let i = 0; i < 255; i++) {
+            let P_D = balances[0] * BigInt(numTokens);
+            for (let j = 1; j < numTokens; j++) {
+                P_D = SolidityMaths.div(SolidityMaths.mul(SolidityMaths.mul(P_D, balances[j]), BigInt(numTokens)), invariant, roundUp);
+            }
+            prevInvariant = invariant;
+            invariant = SolidityMaths.div(SolidityMaths.mul(SolidityMaths.mul(BigInt(numTokens), invariant), invariant) +
+                SolidityMaths.div(SolidityMaths.mul(SolidityMaths.mul(ampTimesTotal, sum), P_D), AMP_PRECISION, roundUp), SolidityMaths.mul(BigInt(numTokens + 1), invariant) +
+                // No need to use checked arithmetic for the amp precision, the amp is guaranteed to be at least 1
+                SolidityMaths.div(SolidityMaths.mul(ampTimesTotal - AMP_PRECISION, P_D), AMP_PRECISION, !roundUp), roundUp);
+            if (invariant > prevInvariant) {
+                if (invariant - prevInvariant <= 1) {
+                    return invariant;
+                }
+            }
+            else if (prevInvariant - invariant <= 1) {
+                return invariant;
+            }
+        }
+        throw new Error('Errors.STABLE_INVARIANT_DIDNT_CONVERGE');
+    }
+
+    class StablePoolPriceImpact {
+        /**
+         * Calculates the BPT return amount when investing with no price impact.
+         * @param { Pool } pool Investment pool.
+         * @param { bigint [] } amounts Token amounts being invested. Needs a value for each pool token.
+         * @returns { bigint } BPT amount.
+         */
+        bptZeroPriceImpact(pool, tokenAmounts) {
+            if (tokenAmounts.length !== pool.tokensList.length)
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+            // upscales amp, swapfee, totalshares
+            const { parsedBalances, parsedDecimals, parsedAmp, parsedTotalShares } = parsePoolInfo(pool);
+            const decimals = parsedDecimals.map((decimals) => {
+                if (!decimals)
+                    throw new BalancerError(exports.BalancerErrorCode.MISSING_DECIMALS);
+                return BigInt(decimals);
+            });
+            if (!parsedAmp)
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_PRICE_RATE);
+            const totalShares = BigInt(parsedTotalShares);
+            const scalingFactors = decimals.map((decimals) => _computeScalingFactor(BigInt(decimals)));
+            const balances = parsedBalances.map((balance, i) => _upscale(BigInt(balance), scalingFactors[i]));
+            let bptZeroPriceImpact = BZERO;
+            for (let i = 0; i < balances.length; i++) {
+                const price = bptSpotPrice(BigInt(parsedAmp), // this already includes the extra digits from precision
+                balances, totalShares, i);
+                const scalingFactor = _computeScalingFactor(BigInt(decimals[i]));
+                const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
+                const newTerm = (price * amountUpscaled) / ONE$1;
+                bptZeroPriceImpact += newTerm;
+            }
+            return bptZeroPriceImpact;
+        }
+        calcPriceImpact(pool, tokenAmounts, bptAmount) {
+            const bptZeroPriceImpact = this.bptZeroPriceImpact(pool, tokenAmounts.map((a) => BigInt(a)));
+            return calcPriceImpact(BigInt(bptAmount), bptZeroPriceImpact).toString();
+        }
+    }
+
     class Stable {
-        constructor(exit = new StablePoolExit(), join = new StablePoolJoin(), liquidity = new StablePoolLiquidity(), spotPriceCalculator = new StablePoolSpotPrice()) {
+        constructor(exit = new StablePoolExit(), join = new StablePoolJoin(), liquidity = new StablePoolLiquidity(), spotPriceCalculator = new StablePoolSpotPrice(), priceImpactCalculator = new StablePoolPriceImpact()) {
             this.exit = exit;
             this.join = join;
             this.liquidity = liquidity;
             this.spotPriceCalculator = spotPriceCalculator;
+            this.priceImpactCalculator = priceImpactCalculator;
         }
     }
 
@@ -2955,7 +1906,7 @@
                     // Exit pool with single token using exact bptIn
                     const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
                     // Calculate amount out given BPT in
-                    const amountOut = WeightedMath_1._calcTokenOutGivenExactBptIn(new OldBigNumber__default["default"](sortedBalances[singleTokenMaxOutIndex]), new OldBigNumber__default["default"](sortedWeights[singleTokenMaxOutIndex]), new OldBigNumber__default["default"](bptIn), new OldBigNumber__default["default"](parsedTotalShares), new OldBigNumber__default["default"](parsedSwapFee)).toString();
+                    const amountOut = SOR__namespace.WeightedMaths._calcTokenOutGivenExactBptIn(BigInt(sortedBalances[singleTokenMaxOutIndex]), BigInt(sortedWeights[singleTokenMaxOutIndex]), BigInt(bptIn), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
                     // Apply slippage
                     minAmountsOut[singleTokenMaxOutIndex] = subSlippage(bignumber.BigNumber.from(amountOut), bignumber.BigNumber.from(slippage)).toString();
                     userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(bptIn, singleTokenMaxOutIndex);
@@ -2963,7 +1914,7 @@
                 else {
                     // Exit pool with all tokens proportinally
                     // Calculate amounts out given BPT in
-                    const amountsOut = WeightedMath_1._calcTokensOutGivenExactBptIn(sortedBalances.map((b) => new OldBigNumber__default["default"](b)), new OldBigNumber__default["default"](bptIn), new OldBigNumber__default["default"](parsedTotalShares)).map((amount) => amount.toString());
+                    const amountsOut = SOR__namespace.WeightedMaths._calcTokensOutGivenExactBptIn(sortedBalances.map((b) => BigInt(b)), BigInt(bptIn), BigInt(parsedTotalShares)).map((amount) => amount.toString());
                     // Apply slippage
                     minAmountsOut = amountsOut.map((amount) => {
                         const minAmount = subSlippage(bignumber.BigNumber.from(amount), bignumber.BigNumber.from(slippage));
@@ -3023,7 +1974,7 @@
                 const [, sortedBalances, sortedWeights] = assetHelpers.sortTokens(parsedTokens, parsedBalances, parsedWeights);
                 const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(tokensOut, amountsOut);
                 // Calculate expected BPT in given tokens out
-                const bptIn = WeightedMath_1._calcBptInGivenExactTokensOut(sortedBalances.map((b) => new OldBigNumber__default["default"](b)), sortedWeights.map((w) => new OldBigNumber__default["default"](w)), sortedAmounts.map((a) => new OldBigNumber__default["default"](a)), new OldBigNumber__default["default"](parsedTotalShares), new OldBigNumber__default["default"](parsedSwapFee)).toString();
+                const bptIn = SOR__namespace.WeightedMaths._calcBptInGivenExactTokensOut(sortedBalances.map((b) => BigInt(b)), sortedWeights.map((w) => BigInt(w)), sortedAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
                 // Apply slippage
                 const maxBPTIn = addSlippage(bignumber.BigNumber.from(bptIn), bignumber.BigNumber.from(slippage)).toString();
                 const userData = WeightedPoolEncoder.exitBPTInForExactTokensOut(sortedAmounts, maxBPTIn);
@@ -3090,7 +2041,7 @@
                 const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(tokensIn, amountsIn);
                 // sort pool info
                 const [, sortedBalances, sortedWeights] = assetHelpers.sortTokens(parsedTokens, parsedBalances, parsedWeights);
-                const expectedBPTOut = sor.WeightedMaths._calcBptOutGivenExactTokensIn(sortedBalances.map((b) => BigInt(b)), sortedWeights.map((w) => BigInt(w)), sortedAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+                const expectedBPTOut = SOR.WeightedMaths._calcBptOutGivenExactTokensIn(sortedBalances.map((b) => BigInt(b)), sortedWeights.map((w) => BigInt(w)), sortedAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
                 const minBPTOut = subSlippage(bignumber.BigNumber.from(expectedBPTOut), bignumber.BigNumber.from(slippage)).toString();
                 const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(sortedAmounts, minBPTOut);
                 const to = balancerVault;
@@ -3150,20 +2101,66 @@
 
     class WeightedPoolSpotPrice {
         calcPoolSpotPrice(tokenIn, tokenOut, pool) {
-            const weightedPool = sor.WeightedPool.fromPool(pool);
+            const weightedPool = SOR.WeightedPool.fromPool(pool);
             const poolPairData = weightedPool.parsePoolPairData(tokenIn, tokenOut);
             return weightedPool
-                ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, sor.ZERO)
+                ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, SOR.ZERO)
                 .toString();
         }
     }
 
+    class WeightedPoolPriceImpact {
+        /**
+         * Calculates the BPT return amount when investing with no price impact.
+         * @param { Pool } pool Investment pool.
+         * @param { bigint [] } amounts Token amounts being invested. EVM Scale. Needs a value for each pool token.
+         * @returns { bigint } BPT amount.
+         */
+        bptZeroPriceImpact(pool, tokenAmounts) {
+            if (tokenAmounts.length !== pool.tokensList.length)
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+            // swapFee, totalShares, totalWeight all scaled up to 18 decimals
+            const { parsedBalances, parsedDecimals, parsedTotalShares, parsedWeights } = parsePoolInfo(pool);
+            const totalShares = BigInt(parsedTotalShares);
+            const tokensList = lodash.cloneDeep(pool.tokensList);
+            let bptZeroPriceImpact = BZERO;
+            for (let i = 0; i < tokensList.length; i++) {
+                const decimals = parsedDecimals[i];
+                let scalingFactor;
+                let balance;
+                if (!decimals)
+                    throw new BalancerError(exports.BalancerErrorCode.MISSING_DECIMALS);
+                else {
+                    scalingFactor = _computeScalingFactor(BigInt(decimals));
+                    balance = _upscale(BigInt(parsedBalances[i]), scalingFactor);
+                }
+                const weightString = parsedWeights[i];
+                let weight;
+                if (!weightString)
+                    throw new BalancerError(exports.BalancerErrorCode.MISSING_WEIGHT);
+                else {
+                    weight = BigInt(weightString);
+                }
+                const price = (weight * totalShares) / balance;
+                const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
+                const newTerm = (price * amountUpscaled) / ONE$1;
+                bptZeroPriceImpact += newTerm;
+            }
+            return bptZeroPriceImpact;
+        }
+        calcPriceImpact(pool, tokenAmounts, bptAmount) {
+            const bptZeroPriceImpact = this.bptZeroPriceImpact(pool, tokenAmounts.map((a) => BigInt(a)));
+            return calcPriceImpact(BigInt(bptAmount), bptZeroPriceImpact).toString();
+        }
+    }
+
     class Weighted {
-        constructor(exit = new WeightedPoolExit(), join = new WeightedPoolJoin(), liquidity = new WeightedPoolLiquidity(), spotPriceCalculator = new WeightedPoolSpotPrice()) {
+        constructor(exit = new WeightedPoolExit(), join = new WeightedPoolJoin(), liquidity = new WeightedPoolLiquidity(), spotPriceCalculator = new WeightedPoolSpotPrice(), priceImpactCalculator = new WeightedPoolPriceImpact()) {
             this.exit = exit;
             this.join = join;
             this.liquidity = liquidity;
             this.spotPriceCalculator = spotPriceCalculator;
+            this.priceImpactCalculator = priceImpactCalculator;
         }
     }
 
@@ -3228,7 +2225,7 @@
                         .toString();
                 });
                 // TODO: check if it's ok to remove amounts/balances scaled logic since it's cancelling itself out
-                const expectedBPTOut = StableMath_1._calcBptOutGivenExactTokensIn(new OldBigNumber__default["default"](parsedAmp), scaledBalances.map((b) => new OldBigNumber__default["default"](b)), scaledAmounts.map((a) => new OldBigNumber__default["default"](a)), new OldBigNumber__default["default"](parsedTotalShares), new OldBigNumber__default["default"](parsedSwapFee)).toString();
+                const expectedBPTOut = SOR__namespace.StableMathBigInt._calcBptOutGivenExactTokensIn(BigInt(parsedAmp), scaledBalances.map((b) => BigInt(b)), scaledAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
                 const minBPTOut = subSlippage(bignumber.BigNumber.from(expectedBPTOut), bignumber.BigNumber.from(slippage)).toString();
                 const userData = StablePoolEncoder.joinExactTokensInForBPTOut(sortedAmounts, minBPTOut);
                 const to = balancerVault;
@@ -3299,20 +2296,67 @@
 
     class MetaStablePoolSpotPrice {
         calcPoolSpotPrice(tokenIn, tokenOut, pool) {
-            const poolClass = sor.MetaStablePool.fromPool(pool);
+            const poolClass = SOR.MetaStablePool.fromPool(pool);
             const poolPairData = poolClass.parsePoolPairData(tokenIn, tokenOut);
             return poolClass
-                ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, sor.ZERO)
+                ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, SOR.ZERO)
                 .toString();
         }
     }
 
+    class MetaStablePoolPriceImpact {
+        /**
+         * Calculates the BPT return amount when investing with no price impact.
+         * @param { Pool } pool Investment pool.
+         * @param { string [] } amounts Token amounts being invested. Needs a value for each pool token.
+         * @returns { string } BPT amount.
+         */
+        bptZeroPriceImpact(pool, tokenAmounts) {
+            if (tokenAmounts.length !== pool.tokensList.length)
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+            const { parsedBalances, parsedDecimals, parsedPriceRates, parsedAmp, parsedTotalShares, } = parsePoolInfo(pool);
+            const totalShares = BigInt(parsedTotalShares);
+            const decimals = parsedDecimals.map((decimals) => {
+                if (!decimals)
+                    throw new BalancerError(exports.BalancerErrorCode.MISSING_DECIMALS);
+                return BigInt(decimals);
+            });
+            const priceRates = parsedPriceRates.map((rate) => {
+                if (!rate)
+                    throw new BalancerError(exports.BalancerErrorCode.MISSING_PRICE_RATE);
+                return BigInt(rate);
+            });
+            if (!parsedAmp)
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_PRICE_RATE);
+            const scalingFactors = decimals.map((decimals) => _computeScalingFactor(BigInt(decimals)));
+            const balances = parsedBalances.map((balance, i) => _upscale(BigInt(balance), scalingFactors[i]));
+            const balancesScaled = balances.map((balance, i) => SolidityMaths.mulDownFixed(balance, priceRates[i]));
+            let bptZeroPriceImpact = BZERO;
+            for (let i = 0; i < balances.length; i++) {
+                const price = (bptSpotPrice(BigInt(parsedAmp), // this already includes the extra digits from precision
+                balancesScaled, totalShares, i) *
+                    priceRates[i]) /
+                    ONE$1;
+                const scalingFactor = _computeScalingFactor(BigInt(pool.tokens[i].decimals));
+                const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
+                const newTerm = (price * amountUpscaled) / ONE$1;
+                bptZeroPriceImpact += newTerm;
+            }
+            return bptZeroPriceImpact;
+        }
+        calcPriceImpact(pool, tokenAmounts, bptAmount) {
+            const bptZeroPriceImpact = this.bptZeroPriceImpact(pool, tokenAmounts.map((a) => BigInt(a)));
+            return calcPriceImpact(BigInt(bptAmount), bptZeroPriceImpact).toString();
+        }
+    }
+
     class MetaStable {
-        constructor(exit = new MetaStablePoolExit(), join = new MetaStablePoolJoin(), liquidity = new MetaStablePoolLiquidity(), spotPriceCalculator = new MetaStablePoolSpotPrice()) {
+        constructor(exit = new MetaStablePoolExit(), join = new MetaStablePoolJoin(), liquidity = new MetaStablePoolLiquidity(), spotPriceCalculator = new MetaStablePoolSpotPrice(), priceImpactCalculator = new MetaStablePoolPriceImpact()) {
             this.exit = exit;
             this.join = join;
             this.liquidity = liquidity;
             this.spotPriceCalculator = spotPriceCalculator;
+            this.priceImpactCalculator = priceImpactCalculator;
         }
     }
 
@@ -3352,20 +2396,74 @@
 
     class StablePhantomPoolSpotPrice {
         calcPoolSpotPrice(tokenIn, tokenOut, pool) {
-            const poolClass = sor.PhantomStablePool.fromPool(pool);
+            const poolClass = SOR.PhantomStablePool.fromPool(pool);
             const poolPairData = poolClass.parsePoolPairData(tokenIn, tokenOut);
             return poolClass
-                ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, sor.ZERO)
+                ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, SOR.ZERO)
                 .toString();
         }
     }
 
+    class StablePhantomPriceImpact {
+        /**
+         * Calculates the BPT return amount when investing with no price impact.
+         * @param { Pool } pool Investment pool.
+         * @param { bigint [] } amounts Token amounts being invested. Needs a value for each pool token that is not a PhantomBpt.
+         * @returns { bigint } BPT amount.
+         */
+        bptZeroPriceImpact(pool, tokenAmounts) {
+            if (tokenAmounts.length !== pool.tokensList.length - 1)
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+            const tokensList = lodash.cloneDeep(pool.tokensList);
+            const bptIndex = tokensList.findIndex((token) => token == pool.address);
+            // upscales amp, swapfee, totalshares
+            const { parsedBalances, parsedDecimals, parsedPriceRates, parsedAmp, parsedTotalShares, } = parsePoolInfo(pool);
+            const decimals = parsedDecimals.map((decimals) => {
+                if (!decimals)
+                    throw new BalancerError(exports.BalancerErrorCode.MISSING_DECIMALS);
+                return BigInt(decimals);
+            });
+            const priceRates = parsedPriceRates.map((rate) => {
+                if (!rate)
+                    throw new BalancerError(exports.BalancerErrorCode.MISSING_PRICE_RATE);
+                return BigInt(rate);
+            });
+            if (!parsedAmp)
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_PRICE_RATE);
+            const totalShares = BigInt(parsedTotalShares);
+            tokensList.splice(bptIndex, 1);
+            const scalingFactors = decimals.map((decimals) => _computeScalingFactor(BigInt(decimals)));
+            const balances = parsedBalances.map((balance, i) => _upscale(BigInt(balance), scalingFactors[i]));
+            if (tokenAmounts.length !== tokensList.length)
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+            balances.splice(bptIndex, 1);
+            const balancesScaled = balances.map((balance, i) => SolidityMaths.mulDownFixed(balance, priceRates[i]));
+            let bptZeroPriceImpact = BZERO;
+            for (let i = 0; i < tokensList.length; i++) {
+                const price = (bptSpotPrice(BigInt(parsedAmp), // this already includes the extra digits from precision
+                balancesScaled, totalShares, i) *
+                    priceRates[i]) /
+                    ONE$1;
+                const scalingFactor = _computeScalingFactor(BigInt(decimals[i]));
+                const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
+                const newTerm = (price * amountUpscaled) / ONE$1;
+                bptZeroPriceImpact += newTerm;
+            }
+            return bptZeroPriceImpact;
+        }
+        calcPriceImpact(pool, tokenAmounts, bptAmount) {
+            const bptZeroPriceImpact = this.bptZeroPriceImpact(pool, tokenAmounts.map((a) => BigInt(a)));
+            return calcPriceImpact(BigInt(bptAmount), bptZeroPriceImpact).toString();
+        }
+    }
+
     class StablePhantom {
-        constructor(exit = new StablePhantomPoolExit(), join = new StablePhantomPoolJoin(), liquidity = new StablePhantomPoolLiquidity(), spotPriceCalculator = new StablePhantomPoolSpotPrice()) {
+        constructor(exit = new StablePhantomPoolExit(), join = new StablePhantomPoolJoin(), liquidity = new StablePhantomPoolLiquidity(), spotPriceCalculator = new StablePhantomPoolSpotPrice(), priceImpactCalculator = new StablePhantomPriceImpact()) {
             this.exit = exit;
             this.join = join;
             this.liquidity = liquidity;
             this.spotPriceCalculator = spotPriceCalculator;
+            this.priceImpactCalculator = priceImpactCalculator;
         }
     }
 
@@ -3440,20 +2538,30 @@
 
     class LinearPoolSpotPrice {
         calcPoolSpotPrice(tokenIn, tokenOut, pool) {
-            const poolClass = sor.LinearPool.fromPool(pool);
+            const poolClass = SOR.LinearPool.fromPool(pool);
             const poolPairData = poolClass.parsePoolPairData(tokenIn, tokenOut);
             return poolClass
-                ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, sor.ZERO)
+                ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, SOR.ZERO)
                 .toString();
         }
     }
 
+    class LinearPriceImpact {
+        bptZeroPriceImpact(pool, amounts) {
+            throw new Error('Linear Pool bptZeroPriceImpact Not Implented');
+        }
+        calcPriceImpact(pool, tokenAmounts, bptAmount) {
+            throw new Error('Linear Pool Price Impact Not Implented');
+        }
+    }
+
     class Linear {
-        constructor(exit = new LinearPoolExit(), join = new LinearPoolJoin(), liquidity = new LinearPoolLiquidity(), spotPriceCalculator = new LinearPoolSpotPrice()) {
+        constructor(exit = new LinearPoolExit(), join = new LinearPoolJoin(), liquidity = new LinearPoolLiquidity(), spotPriceCalculator = new LinearPoolSpotPrice(), priceImpactCalculator = new LinearPriceImpact()) {
             this.exit = exit;
             this.join = join;
             this.liquidity = liquidity;
             this.spotPriceCalculator = spotPriceCalculator;
+            this.priceImpactCalculator = priceImpactCalculator;
         }
     }
 
@@ -3620,11 +2728,11 @@
     Use SOR to get swapInfo for tokenIn>tokenOut.
     SwapInfos.swaps has path information.
     */
-    async function getSorSwapInfo(tokenIn, tokenOut, swapType, amount, sor$1) {
+    async function getSorSwapInfo(tokenIn, tokenOut, swapType, amount, sor) {
         const swapTypeSOR = swapType === exports.SwapType.SwapExactIn
-            ? sor.SwapTypes.SwapExactIn
-            : sor.SwapTypes.SwapExactOut;
-        const swapInfo = await sor$1.getSwaps(tokenIn.toLowerCase(), tokenOut.toLowerCase(), swapTypeSOR, amount);
+            ? SOR.SwapTypes.SwapExactIn
+            : SOR.SwapTypes.SwapExactOut;
+        const swapInfo = await sor.getSwaps(tokenIn.toLowerCase(), tokenOut.toLowerCase(), swapTypeSOR, amount);
         return swapInfo;
     }
     /*
@@ -3836,14 +2944,6 @@
         InvestType["Exit"] = "Exit";
         InvestType["Join"] = "Join";
     })(InvestType || (InvestType = {}));
-    var Investment_OrderBy;
-    (function (Investment_OrderBy) {
-        Investment_OrderBy["Amount"] = "amount";
-        Investment_OrderBy["AssetManagerAddress"] = "assetManagerAddress";
-        Investment_OrderBy["Id"] = "id";
-        Investment_OrderBy["PoolTokenId"] = "poolTokenId";
-        Investment_OrderBy["Timestamp"] = "timestamp";
-    })(Investment_OrderBy || (Investment_OrderBy = {}));
     var JoinExit_OrderBy;
     (function (JoinExit_OrderBy) {
         JoinExit_OrderBy["Amounts"] = "amounts";
@@ -3864,6 +2964,21 @@
         LatestPrice_OrderBy["Price"] = "price";
         LatestPrice_OrderBy["PricingAsset"] = "pricingAsset";
     })(LatestPrice_OrderBy || (LatestPrice_OrderBy = {}));
+    var ManagementOperation_OrderBy;
+    (function (ManagementOperation_OrderBy) {
+        ManagementOperation_OrderBy["CashDelta"] = "cashDelta";
+        ManagementOperation_OrderBy["Id"] = "id";
+        ManagementOperation_OrderBy["ManagedDelta"] = "managedDelta";
+        ManagementOperation_OrderBy["PoolTokenId"] = "poolTokenId";
+        ManagementOperation_OrderBy["Timestamp"] = "timestamp";
+        ManagementOperation_OrderBy["Type"] = "type";
+    })(ManagementOperation_OrderBy || (ManagementOperation_OrderBy = {}));
+    var OperationType;
+    (function (OperationType) {
+        OperationType["Deposit"] = "Deposit";
+        OperationType["Update"] = "Update";
+        OperationType["Withdraw"] = "Withdraw";
+    })(OperationType || (OperationType = {}));
     /** Defines the order direction, either ascending or descending */
     var OrderDirection;
     (function (OrderDirection) {
@@ -3901,10 +3016,12 @@
     var PoolToken_OrderBy;
     (function (PoolToken_OrderBy) {
         PoolToken_OrderBy["Address"] = "address";
+        PoolToken_OrderBy["AssetManager"] = "assetManager";
         PoolToken_OrderBy["Balance"] = "balance";
+        PoolToken_OrderBy["CashBalance"] = "cashBalance";
         PoolToken_OrderBy["Decimals"] = "decimals";
         PoolToken_OrderBy["Id"] = "id";
-        PoolToken_OrderBy["managedBalance"] = "managedBalance";
+        PoolToken_OrderBy["ManagedBalance"] = "managedBalance";
         PoolToken_OrderBy["Managements"] = "managements";
         PoolToken_OrderBy["Name"] = "name";
         PoolToken_OrderBy["PoolId"] = "poolId";
@@ -3928,11 +3045,16 @@
         Pool_OrderBy["MainIndex"] = "mainIndex";
         Pool_OrderBy["ManagementFee"] = "managementFee";
         Pool_OrderBy["Name"] = "name";
+        Pool_OrderBy["OracleEnabled"] = "oracleEnabled";
         Pool_OrderBy["Owner"] = "owner";
         Pool_OrderBy["PoolType"] = "poolType";
         Pool_OrderBy["PriceRateProviders"] = "priceRateProviders";
         Pool_OrderBy["PrincipalToken"] = "principalToken";
+        Pool_OrderBy["Root3Alpha"] = "root3Alpha";
         Pool_OrderBy["Shares"] = "shares";
+        Pool_OrderBy["Snapshots"] = "snapshots";
+        Pool_OrderBy["SqrtAlpha"] = "sqrtAlpha";
+        Pool_OrderBy["SqrtBeta"] = "sqrtBeta";
         Pool_OrderBy["StrategyType"] = "strategyType";
         Pool_OrderBy["SwapEnabled"] = "swapEnabled";
         Pool_OrderBy["SwapFee"] = "swapFee";
@@ -3978,6 +3100,7 @@
         Swap_OrderBy["TokenOutSym"] = "tokenOutSym";
         Swap_OrderBy["Tx"] = "tx";
         Swap_OrderBy["UserAddress"] = "userAddress";
+        Swap_OrderBy["ValueUsd"] = "valueUSD";
     })(Swap_OrderBy || (Swap_OrderBy = {}));
     var TokenPrice_OrderBy;
     (function (TokenPrice_OrderBy) {
@@ -4007,7 +3130,9 @@
         Token_OrderBy["Decimals"] = "decimals";
         Token_OrderBy["Id"] = "id";
         Token_OrderBy["LatestPrice"] = "latestPrice";
+        Token_OrderBy["LatestUsdPrice"] = "latestUSDPrice";
         Token_OrderBy["Name"] = "name";
+        Token_OrderBy["Pool"] = "pool";
         Token_OrderBy["Symbol"] = "symbol";
         Token_OrderBy["TotalBalanceNotional"] = "totalBalanceNotional";
         Token_OrderBy["TotalBalanceUsd"] = "totalBalanceUSD";
@@ -4095,6 +3220,9 @@
   mainIndex
   lowerTarget
   upperTarget
+  sqrtAlpha
+  sqrtBeta
+  root3Alpha
 }
     ${SubgraphPoolTokenFragmentDoc}`;
     const SubgraphPoolWithoutLinearFragmentDoc = gql$1 `
@@ -4417,7 +3545,7 @@
     }
 
     function createSubgraphClient(subgraphUrl) {
-        const client = new require$$0.GraphQLClient(subgraphUrl);
+        const client = new graphqlRequest.GraphQLClient(subgraphUrl);
         return getSdk(client);
     }
 
@@ -8417,7 +7545,7 @@
             ...linearPoolAbi,
         ].map((row) => [row.name, row])));
         const multiPool = new Multicaller(multiAddress, provider, abis);
-        const supportedPoolTypes = Object.values(sor.PoolFilter);
+        const supportedPoolTypes = Object.values(SOR.PoolFilter);
         const subgraphPools = [];
         subgraphPoolsOriginal.forEach((pool) => {
             if (!supportedPoolTypes.includes(pool.poolType)) {
@@ -8430,7 +7558,9 @@
             ]);
             multiPool.call(`${pool.id}.totalSupply`, pool.address, 'totalSupply');
             // Pools with pre minted BPT
-            if (pool.poolType.includes('Linear') || pool.poolType === 'StablePhantom') {
+            if (pool.poolType.includes('Linear') ||
+                pool.poolType === 'StablePhantom' ||
+                pool.poolType === 'ComposableStable') {
                 multiPool.call(`${pool.id}.virtualSupply`, pool.address, 'getVirtualSupply');
             }
             // TO DO - Make this part of class to make more flexible?
@@ -8442,7 +7572,8 @@
             }
             else if (pool.poolType === 'Stable' ||
                 pool.poolType === 'MetaStable' ||
-                pool.poolType === 'StablePhantom') {
+                pool.poolType === 'StablePhantom' ||
+                pool.poolType === 'ComposableStable') {
                 // MetaStable & StablePhantom is the same as Stable for multicall purposes
                 multiPool.call(`${pool.id}.amp`, pool.address, 'getAmplificationParameter');
                 multiPool.call(`${pool.id}.swapFee`, pool.address, 'getSwapFeePercentage');
@@ -8454,6 +7585,9 @@
                 multiPool.call(`${pool.id}.swapFee`, pool.address, 'getSwapFeePercentage');
                 multiPool.call(`${pool.id}.targets`, pool.address, 'getTargets');
                 multiPool.call(`${pool.id}.rate`, pool.address, 'getWrappedTokenRate');
+            }
+            else if (pool.poolType.toString().includes('Gyro')) {
+                multiPool.call(`${pool.id}.swapFee`, pool.address, 'getSwapFeePercentage');
             }
         });
         let pools = {};
@@ -8469,7 +7603,8 @@
                 const { poolTokens, swapFee, weights, totalSupply, virtualSupply } = onchainData;
                 if (subgraphPools[index].poolType === 'Stable' ||
                     subgraphPools[index].poolType === 'MetaStable' ||
-                    subgraphPools[index].poolType === 'StablePhantom') {
+                    subgraphPools[index].poolType === 'StablePhantom' ||
+                    subgraphPools[index].poolType === 'ComposableStable') {
                     if (!onchainData.amp) {
                         console.error(`Stable Pool Missing Amp: ${poolId}`);
                         return;
@@ -8510,7 +7645,8 @@
                 });
                 // Pools with pre minted BPT
                 if (subgraphPools[index].poolType.includes('Linear') ||
-                    subgraphPools[index].poolType === 'StablePhantom') {
+                    subgraphPools[index].poolType === 'StablePhantom' ||
+                    subgraphPools[index].poolType === 'ComposableStable') {
                     if (virtualSupply === undefined) {
                         console.error(`Pool with pre-minted BPT missing Virtual Supply: ${poolId}`);
                         return;
@@ -8713,7 +7849,7 @@
         };
     }
 
-    class Sor extends sor.SOR {
+    class Sor extends SOR.SOR {
         constructor(sdkConfig) {
             const network = getNetworkConfig(sdkConfig);
             const sorConfig = Sor.getSorConfig(sdkConfig);
@@ -10215,7 +9351,7 @@
     class Swaps {
         // TODO: sorOrConfig - let's make it more predictable and always pass configuration explicitly
         constructor(sorOrConfig) {
-            if (sorOrConfig instanceof sor.SOR) {
+            if (sorOrConfig instanceof SOR.SOR) {
                 this.sor = sorOrConfig;
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.chainId = this.sor.provider['_network']['chainId'];
@@ -10243,7 +9379,7 @@
          * @returns Best trade route information
          */
         async findRouteGivenIn({ tokenIn, tokenOut, amount, gasPrice, maxPools = 4, }) {
-            return this.sor.getSwaps(tokenIn, tokenOut, sor.SwapTypes.SwapExactIn, amount, {
+            return this.sor.getSwaps(tokenIn, tokenOut, SOR.SwapTypes.SwapExactIn, amount, {
                 gasPrice,
                 maxPools,
             });
@@ -10260,7 +9396,7 @@
          * @returns Best trade route information
          */
         async findRouteGivenOut({ tokenIn, tokenOut, amount, gasPrice, maxPools, }) {
-            return this.sor.getSwaps(tokenIn, tokenOut, sor.SwapTypes.SwapExactOut, amount, {
+            return this.sor.getSwaps(tokenIn, tokenOut, SOR.SwapTypes.SwapExactOut, amount, {
                 gasPrice,
                 maxPools,
             });
@@ -10903,7 +10039,7 @@
             this.client = this.initClient();
         }
         initClient() {
-            const client = new require$$0.GraphQLClient(this.url);
+            const client = new graphqlRequest.GraphQLClient(this.url);
             return getSdk(client);
         }
     }
@@ -10948,12 +10084,12 @@
             }
             // If a poolId isn't specified we find the path for the pair with the highest liquidity and use this as the ref SP
             if (poolId === '') {
-                const poolsDict = sor.parseToPoolsDict(pools, 0);
+                const poolsDict = SOR.parseToPoolsDict(pools, 0);
                 // This creates all paths for tokenIn>Out ordered by liquidity
                 const paths = this.swaps.sor.routeProposer.getCandidatePathsFromDict(tokenIn, tokenOut, 0, poolsDict, 4);
                 if (paths.length === 0)
                     throw new BalancerError(exports.BalancerErrorCode.UNSUPPORTED_PAIR);
-                return sor.getSpotPriceAfterSwapForPath(paths[0], 0, sor.ZERO).toString();
+                return SOR.getSpotPriceAfterSwapForPath(paths[0], 0, SOR.ZERO).toString();
             }
             else {
                 // Find pool of interest from pools list
@@ -11261,6 +10397,7 @@
                     slippage,
                     wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
                 }),
+                calcPriceImpact: async (amountsIn, minBPTOut) => methods.priceImpactCalculator.calcPriceImpact(data, amountsIn, minBPTOut),
                 buildExitExactBPTIn: (exiter, bptIn, slippage, shouldUnwrapNativeAsset = false, singleTokenMaxOut) => methods.exit.buildExitExactBPTIn({
                     exiter,
                     pool: data,
@@ -11281,7 +10418,7 @@
                 // TODO: spotPrice fails, because it needs a subgraphType,
                 // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
                 // spotPrice: async (tokenIn: string, tokenOut: string) =>
-                //   methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, data),
+                // methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, data),
             };
         }
         async find(id) {
@@ -11580,6 +10717,8 @@
          * @returns Migration transaction request ready to send with signer.sendTransaction
          */
         calldata(userAddress, staBal3Amount, minBbausd2Out, staked, authorisation) {
+            if (bignumber.BigNumber.from(staBal3Amount).lte(0))
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED);
             const relayer = this.addresses.relayer;
             let calls = [];
             if (authorisation) {
@@ -11793,6 +10932,8 @@
          * @returns Migration transaction request ready to send with signer.sendTransaction
          */
         calldata(userAddress, bbausd1Amount, minBbausd2Out, staked, tokenBalances, authorisation) {
+            if (bignumber.BigNumber.from(bbausd1Amount).lte(0))
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED);
             const relayer = this.addresses.relayer;
             let calls = [];
             if (authorisation) {
@@ -12210,6 +11351,8 @@
          * @returns Migration transaction request ready to send with signer.sendTransaction
          */
         calldata(userAddress, bptIn, minBptOut, staked, authorisation) {
+            if (bignumber.BigNumber.from(bptIn).lte(0))
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED);
             const relayer = this.addresses.relayer;
             let calls = [];
             if (authorisation) {
@@ -12726,51 +11869,51 @@
 
     Object.defineProperty(exports, 'PoolFilter', {
         enumerable: true,
-        get: function () { return sor.PoolFilter; }
+        get: function () { return SOR.PoolFilter; }
     });
     Object.defineProperty(exports, 'RouteProposer', {
         enumerable: true,
-        get: function () { return sor.RouteProposer; }
+        get: function () { return SOR.RouteProposer; }
     });
     Object.defineProperty(exports, 'SOR', {
         enumerable: true,
-        get: function () { return sor.SOR; }
+        get: function () { return SOR.SOR; }
     });
     Object.defineProperty(exports, 'SwapTypes', {
         enumerable: true,
-        get: function () { return sor.SwapTypes; }
+        get: function () { return SOR.SwapTypes; }
     });
     Object.defineProperty(exports, 'formatSequence', {
         enumerable: true,
-        get: function () { return sor.formatSequence; }
+        get: function () { return SOR.formatSequence; }
     });
     Object.defineProperty(exports, 'getTokenAddressesForSwap', {
         enumerable: true,
-        get: function () { return sor.getTokenAddressesForSwap; }
+        get: function () { return SOR.getTokenAddressesForSwap; }
     });
     Object.defineProperty(exports, 'parseToPoolsDict', {
         enumerable: true,
-        get: function () { return sor.parseToPoolsDict; }
+        get: function () { return SOR.parseToPoolsDict; }
     });
     Object.defineProperty(exports, 'phantomStableBPTForTokensZeroPriceImpact', {
         enumerable: true,
-        get: function () { return sor.phantomStableBPTForTokensZeroPriceImpact; }
+        get: function () { return SOR.phantomStableBPTForTokensZeroPriceImpact; }
     });
     Object.defineProperty(exports, 'queryBatchSwapTokensIn', {
         enumerable: true,
-        get: function () { return sor.queryBatchSwapTokensIn; }
+        get: function () { return SOR.queryBatchSwapTokensIn; }
     });
     Object.defineProperty(exports, 'queryBatchSwapTokensOut', {
         enumerable: true,
-        get: function () { return sor.queryBatchSwapTokensOut; }
+        get: function () { return SOR.queryBatchSwapTokensOut; }
     });
     Object.defineProperty(exports, 'stableBPTForTokensZeroPriceImpact', {
         enumerable: true,
-        get: function () { return sor.stableBPTForTokensZeroPriceImpact; }
+        get: function () { return SOR.stableBPTForTokensZeroPriceImpact; }
     });
     Object.defineProperty(exports, 'weightedBPTForTokensZeroPriceImpact', {
         enumerable: true,
-        get: function () { return sor.weightedBPTForTokensZeroPriceImpact; }
+        get: function () { return SOR.weightedBPTForTokensZeroPriceImpact; }
     });
     exports.AaveHelpers = AaveHelpers;
     exports.AssetHelpers = AssetHelpers;
