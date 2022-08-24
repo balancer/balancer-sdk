@@ -45,7 +45,7 @@ let tokensIn: PoolToken[];
 let amountsIn: string[];
 // Test scenarios
 
-describe('join execution', async () => {
+describe('debug join execution', async () => {
   let transactionReceipt: TransactionReceipt;
   let bptBalanceBefore: BigNumber;
   let bptMinBalanceIncrease: BigNumber;
@@ -130,6 +130,12 @@ describe('join execution', async () => {
 
     it('should work', async () => {
       expect(transactionReceipt.status).to.eql(1);
+    });
+
+    it('price impact calculation', async () => {
+      const minBPTOut = bptMinBalanceIncrease.toString();
+      const priceImpact = await pool.calcPriceImpact(amountsIn, minBPTOut);
+      expect(priceImpact).to.eql('10002035024956851');
     });
 
     it('should increase BPT balance', async () => {

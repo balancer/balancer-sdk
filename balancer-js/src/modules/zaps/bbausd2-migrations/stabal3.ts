@@ -6,6 +6,7 @@ import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { MaxInt256 } from '@ethersproject/constants';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 // TODO - Ask Nico to update Typechain?
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
@@ -44,6 +45,8 @@ export class StaBal3Builder {
     to: string;
     data: string;
   } {
+    if (BigNumber.from(staBal3Amount).lte(0))
+      throw new BalancerError(BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED);
     const relayer = this.addresses.relayer;
     let calls: string[] = [];
 
