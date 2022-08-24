@@ -77,16 +77,19 @@ export const ADDRESSES = {
       address: '0x02d60b84491589974263d922d9cc7a3152618ef6',
       decimals: 18,
       symbol: 'waDAI',
+      slot: 52,
     },
     waUSDC: {
       address: '0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de',
       decimals: 6,
       symbol: 'waUSDC',
+      slot: 52,
     },
     waUSDT: {
       address: '0xf8Fd466F12e236f4c96F7Cce6c79EAdB819abF58',
       decimals: 6,
       symbol: 'waUSDT',
+      slot: 52,
     },
   },
   [Network.KOVAN]: {
