@@ -495,11 +495,6 @@
   resolved "https://registry.yarnpkg.com/@balancer-labs/typechain/-/typechain-1.0.0.tgz#823eb13b9e166f7b50334c9d70d9ade81344f5c9"
   integrity sha512-/fWxh4UgmHxtRt5e1anVeF8COo6FBNF28X8bd0/55SIdRDyaW7TMC7K4Jbuy58IcaERmEqi089lABlEgoeiWTQ==
 
-"@balancer-labs/v2-deployments@^1.0.0":
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/@balancer-labs/v2-deployments/-/v2-deployments-1.1.1.tgz#bd9c3267f3e068eb04b72e90bead7af91c3c6904"
-  integrity sha512-emB/xHCM/njxpReZQx2BqzHXwrWF+iIwn/hSwnSOxp+P6GH0rOaboio6/+Aapj7f9tCCjqRspetX//9TumX82Q==
-
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz#00629c35a688e05a88b1cda684fb9d5e73f000a1"
@@ -941,17 +936,6 @@
     "@ethersproject/logger" "^5.6.0"
     "@ethersproject/properties" "^5.6.0"
     "@ethersproject/strings" "^5.6.1"
-
-"@georgeroman/balancer-v2-pools@^0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@georgeroman/balancer-v2-pools/-/balancer-v2-pools-0.0.5.tgz#e1a42be638803122196fd1a13b9fbed624f54549"
-  integrity sha512-fx+QmDJ80+E4RoaBfmnKFaOlRLM/FSbzksaTrqXM+0EeWX5Zu99SO03pjTIBDsBifq2WfHBcCU5CW5ulGF/kkg==
-  dependencies:
-    "@balancer-labs/v2-deployments" "^1.0.0"
-    bignumber.js "^9.0.1"
-    ethers "^5.2.0"
-    graphql "^15.5.0"
-    graphql-request "^3.4.0"
 
 "@graphql-codegen/add@^3.1.0":
   version "3.2.0"
@@ -2177,11 +2161,6 @@ bech32@1.1.4:
   resolved "https://registry.yarnpkg.com/bech32/-/bech32-1.1.4.tgz#e38c9f37bf179b8eb16ae3a772b40c356d4832e9"
   integrity sha512-s0IrSOzLlbvX7yp4WBfPITzpAU8sqQcpsmwXDiKwrG4r491vwCO/XpejasRNl0piBMe/DvP4Tz0mIS/X1DPJBQ==
 
-bignumber.js@^9.0.1, bignumber.js@^9.0.2:
-  version "9.0.2"
-  resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-9.0.2.tgz#71c6c6bed38de64e24a65ebe16cfcf23ae693673"
-  integrity sha512-GAcQvbpsM0pUb0zw1EI0KhQEZ+lRwR5fYaAp3vPOYuP7aDvGy6cVN6XHLauvF8SOga2y0dcLcjt3iQDTSEliyw==
-
 binary-extensions@^2.0.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-2.2.0.tgz#75f502eeaf9ffde42fc98829645be4ea76bd9e2d"
@@ -3155,7 +3134,7 @@ ethereumjs-util@^7.1.1, ethereumjs-util@^7.1.4, ethereumjs-util@^7.1.5:
     ethereum-cryptography "^0.1.3"
     rlp "^2.2.4"
 
-ethers@^5.0.0, ethers@^5.2.0:
+ethers@^5.0.0:
   version "5.6.9"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-5.6.9.tgz#4e12f8dfcb67b88ae7a78a9519b384c23c576a4d"
   integrity sha512-lMGC2zv9HC5EC+8r429WaWu3uWJUCgUCt8xxKCFqkrFuBDZXDYIdzDUECxzjf2BMF8IVBByY1EBoGSL3RTm8RA==
@@ -3561,7 +3540,7 @@ graphql-config@^4.3.1:
     minimatch "4.2.1"
     string-env-interpolation "1.0.1"
 
-graphql-request@^3.4.0, graphql-request@^3.5.0:
+graphql-request@^3.5.0:
   version "3.7.0"
   resolved "https://registry.yarnpkg.com/graphql-request/-/graphql-request-3.7.0.tgz#c7406e537084f8b9788541e3e6704340ca13055b"
   integrity sha512-dw5PxHCgBneN2DDNqpWu8QkbbJ07oOziy8z+bK/TAXufsOLaETuVO4GkXrbs0WjhdKhBMN3BkpN/RIvUHkmNUQ==
@@ -3591,7 +3570,7 @@ graphql-ws@^5.4.1:
   resolved "https://registry.yarnpkg.com/graphql-ws/-/graphql-ws-5.9.1.tgz#9c0fa48ceb695d61d574ed3ab21b426729e87f2d"
   integrity sha512-mL/SWGBwIT9Meq0NlfS55yXXTOeWPMbK7bZBEZhFu46bcGk1coTx2Sdtzxdk+9yHWngD+Fk1PZDWaAutQa9tpw==
 
-graphql@^15.5.0, graphql@^15.6.1:
+graphql@^15.6.1:
   version "15.8.0"
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.8.0.tgz#33410e96b012fa3bdb1091cc99a94769db212b38"
   integrity sha512-5gghUc24tP9HRznNpV2+FIoq3xKkj5dTQqf4v0CpdPbFVwFkWoxOM+o+2OC9ZSvjEMTjfmG9QT+gcvggTwW1zw==
