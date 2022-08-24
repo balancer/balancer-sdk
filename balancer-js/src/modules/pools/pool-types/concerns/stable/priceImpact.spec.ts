@@ -1,39 +1,17 @@
-import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { StablePoolPriceImpact } from '@/modules/pools/pool-types/concerns/stable/priceImpact.concern';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import { Pool, PoolModel } from '@/types';
-import { StaticPoolRepository } from '@/modules/data';
-import { PoolsProvider } from '@/modules/pools/provider';
-import { Network } from '@/.';
-import { setupPool } from '@/test/lib/utils';
-
-dotenv.config();
-
-const rpcUrl = 'http://127.0.0.1:8545';
+import { Pool } from '@/types';
 
 const priceImpactCalc = new StablePoolPriceImpact();
 const staBal3Id =
   '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063';
 
+const pool = pools_14717479.find(
+  (pool) => pool.id == staBal3Id
+) as unknown as Pool;
+
 describe('stable pool price impact', () => {
-  let pool: PoolModel;
-
-  // Setup chain
-  before(async function () {
-    this.timeout(20000);
-    const sdkConfig = {
-      network: Network.MAINNET,
-      rpcUrl,
-    };
-    // Using a static repository to make test consistent over time
-    const poolsProvider = new PoolsProvider(
-      sdkConfig,
-      new StaticPoolRepository(pools_14717479 as Pool[])
-    );
-    pool = (await setupPool(poolsProvider, staBal3Id)) as PoolModel;
-  });
-
   context('bpt zero price impact', () => {
     it('proportional case', () => {
       const proportionalTokenAmounts = [

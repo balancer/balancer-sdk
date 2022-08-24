@@ -4,7 +4,7 @@ import type { Contract } from '@ethersproject/contracts';
 import type { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 import type {
   ExitPoolAttributes,
-  JoinPoolAttributes
+  JoinPoolAttributes,
 } from './modules/pools/pool-types/concerns/types';
 import type {
   Findable,
@@ -251,7 +251,7 @@ export interface PoolWithMethods extends Pool {
     tokensIn: string[],
     amountsIn: string[],
     slippage: string
-  ) => Promise<JoinPoolAttributes>;
+  ) => JoinPoolAttributes;
   calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
   buildExitExactBPTIn: (
     exiter: string,
@@ -266,5 +266,4 @@ export interface PoolWithMethods extends Pool {
     amountsOut: string[],
     slippage: string
   ) => ExitPoolAttributes;
-  apr: () => Promise<AprBreakdown>;
 }

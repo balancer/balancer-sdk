@@ -190,14 +190,20 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x2dc0e2aa608532da689e89e237df582b783e552c',
+        gaugeController: '',
+        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0x4200000000000000000000000000000000000006',
+        bal: '',
+        veBal: '',
+        bbaUsd: '',
       },
     },
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-optimism',
+      gaugesSubgraph: '',
     },
     pools: {},
   },

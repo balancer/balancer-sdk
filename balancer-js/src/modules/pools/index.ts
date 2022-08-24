@@ -35,12 +35,12 @@ export class Pools implements Findable<PoolWithMethods> {
     const methods = PoolTypeConcerns.from(pool.poolType);
     return {
       ...pool,
-      buildJoin: async (
+      buildJoin: (
         joiner: string,
         tokensIn: string[],
         amountsIn: string[],
         slippage: string
-      ): Promise<JoinPoolAttributes> => {
+      ): JoinPoolAttributes => {
         return methods.join.buildJoin({
           joiner,
           pool,
@@ -50,6 +50,37 @@ export class Pools implements Findable<PoolWithMethods> {
           wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
         });
       },
+      calcPriceImpact: async (amountsIn: string[], minBPTOut: string) =>
+        methods.priceImpactCalculator.calcPriceImpact(
+          pool,
+          amountsIn,
+          minBPTOut
+        ),
+      buildExitExactBPTIn: (
+        exiter,
+        bptIn,
+        slippage,
+        shouldUnwrapNativeAsset = false,
+        singleTokenMaxOut
+      ) =>
+        methods.exit.buildExitExactBPTIn({
+          exiter,
+          pool,
+          bptIn,
+          slippage,
+          shouldUnwrapNativeAsset,
+          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+          singleTokenMaxOut,
+        }),
+      buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) =>
+        methods.exit.buildExitExactTokensOut({
+          exiter,
+          pool,
+          tokensOut,
+          amountsOut,
+          slippage,
+          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+        }),
       // TODO: spotPrice fails, because it needs a subgraphType,
       // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
       // spotPrice: async (tokenIn: string, tokenOut: string) =>

@@ -92,6 +92,7 @@ export class PoolsSubgraphRepository
       address: subgraphPool.address,
       poolType: subgraphPool.poolType as PoolType,
       swapFee: subgraphPool.swapFee,
+      swapEnabled: subgraphPool.swapEnabled,
       // owner: subgraphPool.owner,
       // factory: subgraphPool.factory,
       tokens: subgraphPool.tokens || [],
