@@ -22,18 +22,32 @@ import { ADDRESSES } from '@/test/lib/constants';
  * Testing on GOERLI
  * - Update hardhat.config.js with chainId = 5
  * - Update ALCHEMY_URL on .env with a goerli api key
- * - Run goerli node on terminal: yarn run node
- * - Change `network` to Network.GOERLI
- * - Provide gaugeAddresses from goerli which can be found on subgraph: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-gauges-goerli
+ * - Run node on terminal: yarn run node
+ * - Uncomment section below:
  */
+// const network = Network.GOERLI;
+// const poolId =
+//   '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f';
+// const blockNumber = 7452900;
+
+/*
+ * Testing on MAINNET
+ * - Update hardhat.config.js with chainId = 1
+ * - Update ALCHEMY_URL on .env with a mainnet api key
+ * - Run node on terminal: yarn run node
+ * - Uncomment section below:
+ */
+const network = Network.MAINNET;
+const poolId =
+  '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe';
+const blockNumber = 15372650;
 
 dotenv.config();
 
-const { ALCHEMY_URL: jsonRpcUrl, FORK_BLOCK_NUMBER: blockNumber } = process.env;
+const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
-const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const { contracts, contractAddresses } = new Contracts(
@@ -42,8 +56,8 @@ const { contracts, contractAddresses } = new Contracts(
 );
 const relayer = contractAddresses.relayer as string; // only currenlty supported on GOERLI
 const fromPool = {
-  id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
-  address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
+  id: poolId,
+  address: ADDRESSES[network].bbausd.address,
 }; // bbausd
 const tokensIn = [
   ADDRESSES[network].USDT.address,
@@ -113,7 +127,7 @@ describe('bbausd generalised join execution', async () => {
       slots,
       initialBalances,
       jsonRpcUrl as string,
-      (blockNumber && parseInt(blockNumber)) || 7369439 // TODO: check if this blocknumber is ok for this test
+      blockNumber
     );
 
     const config = {

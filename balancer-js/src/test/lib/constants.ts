@@ -83,6 +83,11 @@ export const ADDRESSES = {
       decimals: 6,
       symbol: 'waUSDC',
     },
+    waUSDT: {
+      address: '0xf8Fd466F12e236f4c96F7Cce6c79EAdB819abF58',
+      decimals: 6,
+      symbol: 'waUSDT',
+    },
   },
   [Network.KOVAN]: {
     // Visit https://balancer-faucet.on.fleek.co/#/faucet for test tokens

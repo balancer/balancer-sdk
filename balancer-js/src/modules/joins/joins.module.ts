@@ -11,7 +11,6 @@ import { PoolRepository } from '../data';
 import { PoolGraph, Node } from './graph';
 
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
-import { Network } from '@/lib/constants/network';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
@@ -21,8 +20,6 @@ export class Join {
   private relayer: string;
   private wrappedNativeAsset;
   constructor(private pools: PoolRepository, chainId: number) {
-    if (chainId !== Network.GOERLI) throw new Error('Unsupported network'); // TODO: figure out which networks should be supported
-
     const { tokens, contracts } = networkAddresses(chainId);
     this.relayer = contracts.relayer as string;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
@@ -50,7 +47,7 @@ export class Join {
       orderedNodes,
       poolId,
       expectedBPTOut,
-      tokens,
+      tokens.map((token) => token.toLowerCase()),
       amounts,
       userAddress,
       authorisation
@@ -180,30 +177,24 @@ export class Join {
 
   createAaveWrap(node: Node, sender: string, recipient: string): string {
     const childNode = node.children[0]; // TODO: check if it's possible to have more than one child at this type of node
-    node.outputReference = childNode.outputReference; // TODO: move this logic to the graph builder
 
-    recipient = sender;
-
-    const staticToken = childNode.address;
+    const staticToken = node.address;
     const amount = childNode.outputReference;
-    const outputReference = node.outputReference;
     const call = Relayer.encodeWrapAaveDynamicToken({
       staticToken,
       sender,
       recipient,
       amount,
       fromUnderlying: true, // TODO: check if we should handle the false case as well
-      outputReference: 0, // This call does not return any output, so setting outputReference has no effect
+      outputReference: Relayer.toChainedReference(node.outputReference),
     });
 
-    console.log(sender);
-    console.log(recipient);
     console.log(
       node.type,
       node.address,
       `${
         node.action
-      }(staticToken: ${staticToken}, amount: ${amount}, outputRef: ${outputReference.toString()}) prop: ${node.proportionOfParent.toString()}`
+      }(staticToken: ${staticToken}, input: ${amount}, outputRef: ${node.outputReference.toString()}) prop: ${node.proportionOfParent.toString()}`
     );
 
     return call;
@@ -247,10 +238,7 @@ export class Join {
         poolId: node.id,
         assetInIndex: assets.indexOf(child.address),
         assetOutIndex: assets.indexOf(node.address),
-        amount:
-          child.type === 'WrappedToken'
-            ? child.outputReference // since wrap action does not have output, the amount is forwarded from its child node (assuming wrapped results are 1:1)
-            : Relayer.toChainedReference(child.outputReference).toString(), // all other cases are able to use the output of the previous call
+        amount: Relayer.toChainedReference(child.outputReference).toString(),
         userData: '0x',
       };
     });
