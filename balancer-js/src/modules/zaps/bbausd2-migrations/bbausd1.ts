@@ -6,6 +6,7 @@ import { Interface } from '@ethersproject/abi';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Zero } from '@ethersproject/constants';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 const SWAP_RESULT_BBAUSD = Relayer.toChainedReference('24');
@@ -40,6 +41,8 @@ export class BbaUsd1Builder {
     to: string;
     data: string;
   } {
+    if (BigNumber.from(bbausd1Amount).lte(0))
+      throw new BalancerError(BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED);
     const relayer = this.addresses.relayer;
     let calls: string[] = [];
 

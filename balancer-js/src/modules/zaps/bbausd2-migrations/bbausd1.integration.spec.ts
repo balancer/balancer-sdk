@@ -107,7 +107,6 @@ describe('bbausd migration execution', async () => {
   let authorisation: string;
   let balance: BigNumber;
   let pool: PoolModel;
-  let bptOut: string;
 
   beforeEach(async function () {
     this.timeout(20000);
@@ -144,7 +143,7 @@ describe('bbausd migration execution', async () => {
   async function testFlow(
     staked: boolean,
     authorised = true,
-    minBbausd2Out: undefined | string = undefined
+    minOutBuffer: string
   ): Promise<string> {
     const addressIn = staked ? fromPool.gauge : fromPool.address;
     const addressOut = staked ? toPool.gauge : toPool.address;
@@ -185,7 +184,7 @@ describe('bbausd migration execution', async () => {
     query = migrations.bbaUsd(
       signerAddress,
       amount.toString(),
-      minBbausd2Out ? minBbausd2Out : bptOut,
+      BigNumber.from(bptOut).add(minOutBuffer).toString(),
       staked,
       pool.tokens
         .filter((token) => token.symbol !== 'bb-a-USD') // Note that bbausd is removed
@@ -210,10 +209,9 @@ describe('bbausd migration execution', async () => {
       from: await getErc20Balance(addressIn, provider, signerAddress),
       to: await getErc20Balance(addressOut, provider, signerAddress),
     };
-
     expect(BigNumber.from(bptOut).gt(0)).to.be.true;
     expect(after.from.toString()).to.eq('0');
-    expect(after.to.toString()).to.eq(bptOut);
+    expect(after.to.gte(bptOut)).to.be.true;
     return bptOut;
   }
 
@@ -225,13 +223,13 @@ describe('bbausd migration execution', async () => {
     });
 
     it('should transfer tokens from stable to boosted - using exact bbausd2AmountOut from static call', async () => {
-      bptOut = await testFlow(true);
+      await testFlow(true, undefined, '0');
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
       try {
-        await testFlow(true, true, BigNumber.from(bptOut).add(1).toString());
+        await testFlow(true, true, '1000000000000000000');
       } catch (error) {
         errorMessage = (error as Error).message;
       }
@@ -241,13 +239,13 @@ describe('bbausd migration execution', async () => {
 
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted - using exact bbausd2AmountOut from static call', async () => {
-      bptOut = await testFlow(false);
+      await testFlow(false, undefined, '0');
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
       try {
-        await testFlow(false, true, BigNumber.from(bptOut).add(1).toString());
+        await testFlow(false, true, '1000000000000000000');
       } catch (error) {
         errorMessage = (error as Error).message;
       }
@@ -267,13 +265,13 @@ describe('bbausd migration execution', async () => {
         to: contracts.vault.address,
         data: approval,
       });
-      await testFlow(false, false);
+      await testFlow(false, false, '0');
     }).timeout(20000);
 
     it('should transfer tokens from stable to boosted - auhtorisation should fail', async () => {
       let errorMessage = '';
       try {
-        await testFlow(false, false);
+        await testFlow(false, false, '0');
       } catch (error) {
         errorMessage = (error as Error).message;
       }
