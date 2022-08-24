@@ -1,9 +1,13 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { BalancerSdkConfig, BalancerSDK, SeedToken } from '@/.';
+import { BalancerSdkConfig, BalancerSDK, WeightedPoolEncoder } from '@/.';
 import { ADDRESSES } from '@/test/lib/constants';
 import { BigNumber, ethers } from 'ethers';
-import { BalancerHelpers__factory } from '@balancer-labs/typechain';
+import {
+  BalancerHelpers__factory,
+  BalancerHelpers,
+} from '@balancer-labs/typechain';
+import { forkSetup } from '@/test/lib/utils';
 
 dotenv.config();
 
@@ -18,31 +22,29 @@ const sdkConfig: BalancerSdkConfig = {
   rpcUrl: rpcUrl,
 };
 
-const MKR = '0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2';
-const WETH = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
-const USDT = '0xdac17f958d2ee523a2206206994597c13d831ec7';
+const tokens = [ADDRESSES[1].USDT, ADDRESSES[1].DAI, ADDRESSES[1].WBTC];
 
 const SEED_TOKENS: Array<SeedToken> = [
   {
     id: 0,
-    tokenAddress: MKR,
+    tokenAddress: tokens[0].address,
     weight: 40,
     amount: '200000000',
-    symbol: 'MKR',
+    symbol: tokens[0].symbol,
   },
   {
     id: 1,
-    tokenAddress: WETH,
+    tokenAddress: tokens[1].address,
     weight: 30,
     amount: '200000000',
-    symbol: 'WETH',
+    symbol: tokens[1].symbol,
   },
   {
     id: 2,
-    tokenAddress: USDT,
+    tokenAddress: tokens[2].address,
     weight: 30,
     amount: '200000000',
-    symbol: 'USDT',
+    symbol: tokens[2].symbol,
   },
 ];
 
@@ -50,11 +52,7 @@ const INIT_JOIN_PARAMS = {
   poolId: 200,
   sender: '0x0000000000000000000000000000000000000001',
   receiver: '0x0000000000000000000000000000000000000002',
-  tokenAddresses: [
-    ADDRESSES[42].DAI.address,
-    ADDRESSES[42].USDC.address,
-    ADDRESSES[42].WBTC.address,
-  ],
+  tokenAddresses: tokens.map((v) => v.address),
   initialBalancesString: [
     '2000000000000000000',
     '2000000000000000000',
@@ -84,13 +82,14 @@ describe('pool factory module', () => {
   // Setup chain
   before(async function () {
     this.timeout(20000);
-    await provider.send('hardhat_reset', [
-      {
-        forking: {
-          jsonRpcUrl,
-        },
-      },
-    ]);
+    // Sets up local fork granting signer initial balances and token approvals
+    await forkSetup(
+      signer,
+      INIT_JOIN_PARAMS.tokenAddresses,
+      tokens.map((v) => v.slot),
+      INIT_JOIN_PARAMS.initialBalancesString,
+      jsonRpcUrl as string
+    );
   });
 
   context('factory transaction', async function () {
@@ -99,7 +98,7 @@ describe('pool factory module', () => {
       data: string,
       transactionReceipt: ethers.ContractReceipt;
     beforeEach(async function () {
-      this.timeout(20000);
+      this.timeout(40000);
       balancer = new BalancerSDK(sdkConfig);
       const createTx = balancer.pools.weighted.buildCreateTx(POOL_PARAMS);
       if (createTx.error) {
@@ -108,11 +107,7 @@ describe('pool factory module', () => {
         to = createTx.to;
         data = createTx.data;
         const from = await signer.getAddress();
-        const tx = {
-          from,
-          to,
-          data,
-        };
+        const tx = { from, to, data };
         const transactionResponse = await signer.sendTransaction(tx);
         transactionReceipt = await transactionResponse.wait();
       }
@@ -124,7 +119,7 @@ describe('pool factory module', () => {
 
     it('should create a pool with the correct token name', async function () {
       this.timeout(30000);
-      const expectedPoolName = '40MKR-30WETH-30USDT Pool';
+      const expectedPoolName = '40USDT-30DAI-30WBTC Pool';
       const { address } = await balancer.pools.getPoolInfoFromCreateTx(
         transactionReceipt,
         provider
