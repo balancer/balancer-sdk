@@ -72,6 +72,12 @@ async function join() {
     slippage
   );
 
+  // Calculate price impact
+  const priceImpact = await pool.calcPriceImpact(
+    amountsIn as string[],
+    minBPTOut
+  );
+
   // Submit join tx
   const transactionResponse = await signer.sendTransaction({
     to,
