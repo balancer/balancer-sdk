@@ -74,14 +74,12 @@ describe('Liquidity Module', () => {
     it('Should work with this Vita pool', async () => {
       const pool = findPool('0xbaeec99c90e3420ec6c1e7a769d2a856d2898e4d');
       const liquidity = await liquidityProvider.getLiquidity(pool);
-      console.log('Got liquidity: ', liquidity);
       expect(liquidity).to.be.eq('666366.860307633662004');
     });
 
     it('Should work with this NFT/Gaming index pool', async () => {
       const pool = findPool('0x344e8f99a55da2ba6b4b5158df2143374e400df2');
       const liquidity = await liquidityProvider.getLiquidity(pool);
-      console.log('Got liquidity: ', liquidity);
       expect(liquidity).to.be.eq('116.303077211035488');
     });
   });

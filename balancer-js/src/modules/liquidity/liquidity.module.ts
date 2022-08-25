@@ -1,8 +1,11 @@
-import { BigNumber as OldBigNumber } from 'bignumber.js';
 import { Pool, PoolToken } from '@/types';
 import { PoolRepository } from '../data';
 import { TokenPriceProvider } from '../data';
 import { PoolTypeConcerns } from '../pools/pool-type-concerns';
+import { BigNumber } from '@ethersproject/bignumber';
+import { formatFixed, parseFixed } from '@/lib/utils/math';
+
+const SCALE = 18;
 
 export interface PoolBPTValue {
   address: string;
@@ -22,31 +25,31 @@ export class Liquidity {
     });
 
     // For all tokens that are pools, recurse into them and fetch their liquidity
-    const subPoolLiquidity: (PoolBPTValue | undefined)[] = await Promise.all(
+    const subPoolLiquidity = await Promise.all(
       parsedTokens.map(async (token) => {
         const pool = await this.pools.findBy('address', token.address);
         if (!pool) return;
 
-        const liquidity = new OldBigNumber(await this.getLiquidity(pool));
-        const totalBPT = new OldBigNumber(pool.totalShares);
-        const bptValue = liquidity.div(totalBPT);
-
-        const bptInParentPool = new OldBigNumber(token.balance);
-        const liquidityInParentPool = bptValue.times(bptInParentPool);
+        const liquidity = parseFixed(await this.getLiquidity(pool), SCALE);
+        const totalBPT = parseFixed(pool.totalShares, SCALE);
+        const bptInParentPool = parseFixed(token.balance, SCALE);
+        const liquidityInParentPool = liquidity
+          .mul(bptInParentPool)
+          .div(totalBPT);
 
         return {
           address: pool.address,
-          liquidity: liquidityInParentPool.toString(),
+          liquidity: liquidityInParentPool,
         };
       })
     );
 
     const totalSubPoolLiquidity = subPoolLiquidity.reduce(
       (totalLiquidity, subPool) => {
-        if (!subPool) return new OldBigNumber(0);
-        return totalLiquidity.plus(subPool.liquidity);
+        if (!subPool) return BigNumber.from(0);
+        return totalLiquidity.add(subPool.liquidity);
       },
-      new OldBigNumber(0)
+      BigNumber.from(0)
     );
 
     const nonPoolTokens = parsedTokens.filter((token) => {
@@ -72,10 +75,10 @@ export class Liquidity {
       pool.poolType
     ).liquidity.calcTotal(tokenBalances);
 
-    const totalLiquidity = new OldBigNumber(totalSubPoolLiquidity).plus(
-      tokenLiquidity
-    );
+    const tl = parseFixed(tokenLiquidity, SCALE);
 
-    return totalLiquidity.toString();
+    const totalLiquidity = totalSubPoolLiquidity.add(tl);
+
+    return formatFixed(totalLiquidity, SCALE);
   }
 }
