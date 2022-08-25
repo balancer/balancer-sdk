@@ -93,7 +93,7 @@ export class FeeDistributorRepository implements BaseFeeDistributor {
     midnight.setUTCSeconds(0);
     midnight.setUTCMilliseconds(0);
 
-    let daysSinceThursday = midnight.getDay() - 4;
+    let daysSinceThursday = midnight.getUTCDay() - 4;
     if (daysSinceThursday < 0) daysSinceThursday += 7;
 
     daysSinceThursday = daysSinceThursday + weeksToGoBack * 7;
