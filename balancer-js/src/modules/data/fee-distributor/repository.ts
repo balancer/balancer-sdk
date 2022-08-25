@@ -1,7 +1,8 @@
 import { Interface } from '@ethersproject/abi';
 import { Provider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
-import { formatUnits, getAddress } from 'ethers/lib/utils';
+import { getAddress } from '@ethersproject/address';
+import { formatUnits } from '@ethersproject/units';
 import { Multicall } from '@/modules/contracts/multicall';
 
 export interface FeeDistributorData {

@@ -1,4 +1,4 @@
-import { formatUnits } from 'ethers/lib/utils';
+import { formatUnits } from '@ethersproject/units';
 import * as emissions from '@/modules/data/bal/emissions';
 import type {
   Findable,
