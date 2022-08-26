@@ -1,0 +1,97 @@
+[
+  {
+    "chainId": 1,
+    "symbol": "BAL",
+    "decimals": 18,
+    "address": "0xba100000625a3754423978a60c9317c58a424e3d",
+    "price": {
+      "usd": "16",
+      "eth": "0.008"
+    },
+    "lastUpdate": 1648702504302
+  },
+  {
+    "chainId": 1,
+    "symbol": "USDC",
+    "decimals": 6,
+    "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "price": {
+      "usd": "1.01",
+      "eth": "0.000505"
+    },
+    "lastUpdate": 1648702623513
+  },
+  {
+    "chainId": 1,
+    "symbol": "DAI",
+    "decimals": 18,
+    "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+    "price": {
+      "usd": "1",
+      "eth": "0.0005"
+    },
+    "lastUpdate": 1648702385646
+  },
+  {
+    "chainId": 1,
+    "symbol": "USDT",
+    "decimals": 6,
+    "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+    "price": {
+      "usd": "0.99",
+      "eth": "0.000495"
+    },
+    "lastUpdate": 1648702503883
+  },
+  {
+    "chainId": 1,
+    "symbol": "WETH",
+    "decimals": 18,
+    "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    "price": {
+      "usd": "2000",
+      "eth": "1"
+    },
+    "lastUpdate": 1648702384835
+  },
+  {
+    "chainId": 1,
+    "symbol": "WBTC",
+    "decimals": 8,
+    "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+    "price": {
+      "usd": "32000",
+      "eth": "16"
+    }
+  },
+  {
+    "chainId": 1,
+    "symbol": "wstETH",
+    "decimals": 18,
+    "address": "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+    "price": {
+      "usd": "2140",
+      "eth": "1.07"
+    }
+  },
+  {
+    "chainId": 1,
+    "noPriceData": true,
+    "symbol": "bb-a-USD",
+    "decimals": 18,
+    "address": "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2",
+    "price": {},
+    "lastUpdate": 1648700588917
+  },
+  {
+    "chainId": 42161,
+    "symbol": "WETH",
+    "decimals": 18,
+    "address": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+    "price": {
+      "usd": "2000",
+      "eth": "1"
+    },
+    "lastUpdate": 1648702384835
+  }
+]

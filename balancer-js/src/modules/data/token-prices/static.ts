@@ -55,4 +55,12 @@ export class StaticTokenPriceProvider implements TokenPriceProvider {
     if (!price) return;
     return price;
   }
+
+  async findBy(attribute: string, value: string): Promise<Price | undefined> {
+    if (attribute != 'address') {
+      return undefined;
+    }
+
+    return this.find(value);
+  }
 }
