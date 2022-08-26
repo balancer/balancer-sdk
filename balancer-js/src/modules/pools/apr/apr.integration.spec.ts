@@ -28,6 +28,9 @@ const btcEth =
 const ethStEthCopy =
   '0x851523a36690bf267bbfec389c823072d82921a90002000000000000000001ed';
 
+const auraBALveBAL =
+  '0x3dd0843a028c86e0b760b1a76929d1c5ef93a2dd000200000000000000000249';
+
 describe('happy case', () => {
   // Time when veBal used to recieve procotol revenues
   const now = new Date('2022-08-19 11:11:11').getTime();
@@ -88,6 +91,7 @@ describe('happy case', () => {
       const pool = await pools.find(veBalId);
       if (pool) {
         const { apr } = pool;
+        console.log(apr);
         expect(apr && apr.protocolApr).to.be.greaterThan(1);
       }
     }).timeout(120000);
@@ -99,6 +103,16 @@ describe('happy case', () => {
       if (pool) {
         const { apr } = pool;
         expect(apr && apr.stakingApr.min).to.be.greaterThan(1);
+      }
+    }).timeout(120000);
+  });
+
+  describe('auraBAL / veBAL pool', () => {
+    it('has tokenAprs', async () => {
+      const pool = await pools.find(auraBALveBAL);
+      if (pool) {
+        const { apr } = pool;
+        expect(apr && apr.tokenAprs).to.be.greaterThan(1);
       }
     }).timeout(120000);
   });
