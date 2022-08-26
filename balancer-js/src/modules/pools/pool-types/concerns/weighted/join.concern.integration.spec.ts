@@ -70,7 +70,6 @@ describe('join execution', async () => {
       slots,
       balances,
       jsonRpcUrl as string,
-      false,
       14717479 // holds the same state as the static repository
     );
     signerAddress = await signer.getAddress();
