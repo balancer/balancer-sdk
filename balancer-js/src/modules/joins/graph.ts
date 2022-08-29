@@ -178,7 +178,7 @@ export class PoolGraph {
         children: [],
         marked: false,
         action: 'input',
-        outputReference: nodeIndex.toString(),
+        outputReference: '0', // Use 0 ref for all main tokens. This will be updated with real amounts in join construction.
         proportionOfParent: proportionOfParent,
       },
       nodeIndex + 1,

@@ -77,7 +77,7 @@ function checkLinearNode(
     'Underlying',
     'input',
     0,
-    (expectedOutPutReference + 2).toString(),
+    '0',
     linearPools[poolIndex].proportionOfParent
   );
 }

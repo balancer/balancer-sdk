@@ -14,7 +14,7 @@ describe('Generalised Joins', () => {
   context('Boosted', () => {
     let joinModule: Join;
     let rootPool: SubgraphPoolBase;
-    before(() => {
+    beforeEach(() => {
       // The boostedPool will contain these Linear pools.
       const linearPools = [
         {
@@ -65,7 +65,7 @@ describe('Generalised Joins', () => {
       expect(errorMessage).to.eq('balancer pool does not exist');
     });
 
-    it('testing', async () => {
+    it('all leaf tokens', async () => {
       const inputTokens = [
         '0x6b175474e89094c44da98b954eedeac495271d0f',
         '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
@@ -78,9 +78,21 @@ describe('Generalised Joins', () => {
         inputTokens,
         inputAmounts
       );
-      // TO DO - Add tests for correct call/action construction?
-      // Ideally integration tests will cover actual call data success
     });
+
+    it('single leaf token', async () => {
+      const inputTokens = ['0x6b175474e89094c44da98b954eedeac495271d0f'];
+      const inputAmounts = ['1000000000000000000'];
+      const root = await joinModule.joinPool(
+        rootPool.id,
+        '7777777',
+        inputTokens,
+        inputAmounts
+      );
+    });
+
+    // TO DO - Add tests for correct call/action construction?
+    // Ideally integration tests will cover actual call data success
   });
 
   context('boostedMeta', () => {
@@ -153,7 +165,7 @@ describe('Generalised Joins', () => {
       joinModule = new Join(poolProvider);
     });
 
-    it('testing', async () => {
+    it('all leaf tokens', async () => {
       const inputTokens = [
         '0x6b175474e89094c44da98b954eedeac495271d0f',
         '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
@@ -172,13 +184,34 @@ describe('Generalised Joins', () => {
         inputTokens,
         inputAmounts
       );
+    });
 
-      // TO DO - Add tests for correct call/action construction?
-      // Ideally integration tests will cover actual call data success
+    it('single linear token', async () => {
+      const inputTokens = ['address_STABLE'];
+      const inputAmounts = ['1000000000000000000'];
+      const root = await joinModule.joinPool(
+        rootPool.id,
+        '7777777',
+        inputTokens,
+        inputAmounts
+      );
+    });
+
+    it('single boosted leaf token', async () => {
+      const inputTokens = ['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'];
+      const inputAmounts = ['1000000'];
+      const root = await joinModule.joinPool(
+        rootPool.id,
+        '7777777',
+        inputTokens,
+        inputAmounts
+      );
     });
   });
 
-  context('boostedMetaBig', () => {
+  // TO DO - Add boostedMetaBig with different leaf tokens
+
+  context('boostedMetaBig, has same leaf tokens', () => {
     let joinModule: Join;
     let rootPool: SubgraphPoolBase;
     before(() => {
@@ -268,7 +301,7 @@ describe('Generalised Joins', () => {
       joinModule = new Join(poolProvider);
     });
 
-    it('testing', async () => {
+    it('all leaf tokens', async () => {
       const inputTokens = [
         '0x6b175474e89094c44da98b954eedeac495271d0f',
         '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
@@ -281,9 +314,17 @@ describe('Generalised Joins', () => {
         inputTokens,
         inputAmounts
       );
+    });
 
-      // TO DO - Add tests for correct call/action construction?
-      // Ideally integration tests will cover actual call data success
+    it('single boosted leaf token', async () => {
+      const inputTokens = ['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'];
+      const inputAmounts = ['1000000'];
+      const root = await joinModule.joinPool(
+        rootPool.id,
+        '7777777',
+        inputTokens,
+        inputAmounts
+      );
     });
   });
 });

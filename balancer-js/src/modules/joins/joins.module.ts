@@ -115,7 +115,7 @@ export class Join {
   createMainToken(node: Node, tokens: string[], amounts: string[]): void {
     // Update amounts to use actual value based off input and proportions
     const tokenIndex = tokens.indexOf(node.address);
-    if (tokenIndex === -1) throw new Error('Input token doesnt exist');
+    if (tokenIndex === -1) return;
 
     const totalProportion = this.totalProportions[node.address];
     const inputProportion = node.proportionOfParent
@@ -140,6 +140,10 @@ export class Join {
     const inputs = node.children.map((t) => {
       return t.outputReference;
     });
+    if (inputs[0] === '0') {
+      node.outputReference = '0';
+      return;
+    }
     console.log(
       node.type,
       node.address,
@@ -155,6 +159,10 @@ export class Join {
     // TO DO - Create actual swap call for Relayer multicall
     const inputAmt = node.children[0].outputReference;
     const inputToken = node.children[0].address;
+    if (inputAmt === '0') {
+      node.outputReference = '0';
+      return;
+    }
     const outputToken = node.address;
     const expectedOutputAmount = expectedOut; // This could be used if joining a pool via a swap, e.g. Linear
     const poolId = node.id;
@@ -190,8 +198,20 @@ export class Join {
     };
     */
     const poolId = node.id;
-    const inputTokens = node.children.map((t) => t.address);
-    const inputAmts = node.children.map((t) => t.outputReference);
+    const inputTokens: string[] = [];
+    const inputAmts: string[] = [];
+
+    node.children.forEach((child) => {
+      if (child.outputReference !== '0') {
+        inputTokens.push(child.address);
+        inputAmts.push(child.outputReference);
+      }
+    });
+    if (inputAmts.length === 0) {
+      node.outputReference = '0';
+      return;
+    }
+
     console.log(
       node.type,
       node.address,
