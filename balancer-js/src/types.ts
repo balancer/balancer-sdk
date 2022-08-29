@@ -9,6 +9,7 @@ import type {
 import type {
   Findable,
   Searchable,
+  Updatetable,
   LiquidityGauge,
   PoolAttribute,
   TokenAttribute,
@@ -75,7 +76,7 @@ export interface BalancerNetworkConfig {
 }
 
 export interface BalancerDataRepositories {
-  pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  pools: Findable<Pool, PoolAttribute> & Searchable<Pool> & Updatetable<Pool>;
   yesterdaysPools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
   tokenMeta: Findable<Token, TokenAttribute>;
@@ -246,6 +247,8 @@ export interface PoolModel extends Pool {
  * Pool use-cases / controller layer
  */
 export interface PoolWithMethods extends Pool {
+  // NOTE: Temporary way to update pool values in counter cycle way before full data cycle get's implemented
+  update: (id: string) => Promise<PoolWithMethods | undefined>;
   buildJoin: (
     joiner: string,
     tokensIn: string[],

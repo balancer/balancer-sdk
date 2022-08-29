@@ -1,4 +1,4 @@
-import { Findable, Searchable } from '../types';
+import { Findable, Searchable, Updatetable } from '../types';
 import {
   createSubgraphClient,
   SubgraphClient,
@@ -15,7 +15,7 @@ import { Pool, PoolType } from '@/types';
  * Balancer's subgraph URL: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
  */
 export class PoolsSubgraphRepository
-  implements Findable<Pool, PoolAttribute>, Searchable<Pool>
+  implements Findable<Pool, PoolAttribute>, Searchable<Pool>, Updatetable<Pool>
 {
   private client: SubgraphClient;
   public pools: SubgraphPool[] = [];
@@ -47,6 +47,17 @@ export class PoolsSubgraphRepository
     this.pools = [...pool0, ...pool1000];
 
     return this.pools;
+  }
+
+  async update(id: string): Promise<Pool | undefined> {
+    const idx = this.pools.findIndex((pool) => pool.id == id);
+    const { pool } = await this.client.Pool({ id: id });
+    if (pool) {
+      this.pools[idx] = pool;
+      return this.mapType(pool);
+    } else {
+      return undefined;
+    }
   }
 
   async find(id: string): Promise<Pool | undefined> {
