@@ -88,6 +88,9 @@ fragment SubgraphPool on Pool {
     mainIndex
     lowerTarget
     upperTarget
+    sqrtAlpha
+    sqrtBeta
+    root3Alpha
 }
 
 fragment SubgraphPoolWithoutLinear on Pool {
