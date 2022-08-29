@@ -15,25 +15,28 @@ const sdk = new BalancerSDK({
 const { pools } = sdk;
 
 const main = async () => {
-  const list = (
-    await pools.where(
-      (pool) =>
-        pool.poolType != 'Element' &&
-        pool.poolType != 'AaveLinear' &&
-        pool.poolType != 'LiquidityBootstrapping'
-    )
-  )
-    .sort((a, b) => parseFloat(b.totalLiquidity) - parseFloat(a.totalLiquidity))
-    .slice(0, 30);
+  const pool = await pools.find(
+    '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014'
+  );
 
-  list.forEach(async (pool) => {
+  if (pool) {
     try {
-      const { apr } = pool;
-      console.log(pool.id, apr);
+      console.log(pool.apr);
+
+      // Mutate state
+      pool.tokens[0].balance = (
+        parseFloat(pool.tokens[0].balance) * 2
+      ).toString();
+
+      // Calculate new APR
+      const newApr = await pools.apr(pool);
+      console.log(newApr);
     } catch (e) {
       console.log(e);
     }
-  });
+  } else {
+    return;
+  }
 };
 
 main();

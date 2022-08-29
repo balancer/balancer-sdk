@@ -6,10 +6,12 @@ import type {
   Updatetable,
   Pool,
   PoolWithMethods,
+  AprBreakdown,
 } from '@/types';
 import { JoinPoolAttributes } from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
 import { ModelProvider } from './model-provider';
+import { PoolApr } from './apr/apr';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -19,7 +21,7 @@ export class Pools implements Findable<PoolWithMethods> {
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
-    repositories: BalancerDataRepositories
+    private repositories: BalancerDataRepositories
   ) {
     this.liveModelProvider = new ModelProvider(repositories);
   }
@@ -27,6 +29,28 @@ export class Pools implements Findable<PoolWithMethods> {
   dataSource(): Findable<Pool> & Searchable<Pool> & Updatetable<Pool> {
     // TODO: Add API data repository to data and use liveModelProvider as fallback
     return this.liveModelProvider;
+  }
+
+  /**
+   * Calculates APR on any pool data
+   *
+   * @param pool
+   * @returns
+   */
+  async apr(pool: Pool): Promise<AprBreakdown> {
+    const aprService = new PoolApr(
+      pool,
+      this.repositories.tokenPrices,
+      this.repositories.tokenMeta,
+      this.repositories.pools,
+      this.repositories.yesterdaysPools,
+      this.repositories.liquidityGauges,
+      this.repositories.feeDistributor,
+      this.repositories.feeCollector,
+      this.repositories.tokenYields
+    );
+
+    return aprService.apr();
   }
 
   static wrap(
