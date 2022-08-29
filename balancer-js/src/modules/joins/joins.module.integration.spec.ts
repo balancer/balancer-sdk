@@ -72,7 +72,7 @@ const slots = [
   ADDRESSES[network].USDC.slot,
 ];
 const initialBalances = [
-  parseFixed('100', ADDRESSES[network].USDT.decimals).toString(),
+  parseFixed('0', ADDRESSES[network].USDT.decimals).toString(),
   parseFixed('100', ADDRESSES[network].DAI.decimals).toString(),
   parseFixed('100', ADDRESSES[network].USDC.decimals).toString(),
 ];
