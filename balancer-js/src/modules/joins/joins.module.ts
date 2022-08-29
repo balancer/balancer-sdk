@@ -237,7 +237,9 @@ export class Join {
     node.children.forEach((child) => {
       if (child.outputReference !== '0') {
         inputTokens.push(child.address);
-        inputAmts.push(child.outputReference);
+        inputAmts.push(
+          Relayer.toChainedReference(child.outputReference).toString()
+        );
       }
     });
 
@@ -254,7 +256,7 @@ export class Join {
         poolId: node.id,
         assetInIndex: assets.indexOf(token),
         assetOutIndex: assets.indexOf(node.address),
-        amount: Relayer.toChainedReference(inputAmts[i]).toString(),
+        amount: inputAmts[i],
         userData: '0x',
       };
     });
@@ -296,11 +298,15 @@ export class Join {
     const poolId = node.id;
     const inputTokens: string[] = [];
     const inputAmts: string[] = [];
+    const childOutputRefs: string[] = []; // for testing purposes only
 
     node.children.forEach((child) => {
       if (child.outputReference !== '0') {
         inputTokens.push(child.address);
-        inputAmts.push(child.outputReference);
+        inputAmts.push(
+          Relayer.toChainedReference(child.outputReference).toString()
+        );
+        childOutputRefs.push(child.outputReference);
       }
     });
 
@@ -309,7 +315,7 @@ export class Join {
       node.address,
       `${
         node.action
-      }(\n  poolId: ${poolId},\n  inputTokens: ${inputTokens.toString()},\n  maxAmtsIn: ${inputAmts.toString()},\n  minOut: ${minAmountOut}\n  outputRef: ${
+      }(\n  poolId: ${poolId},\n  inputTokens: ${inputTokens.toString()},\n  maxAmtsIn: ${childOutputRefs.toString()},\n  minOut: ${minAmountOut}\n  outputRef: ${
         node.outputReference
       }\n) prop: ${node.proportionOfParent.toString()}`
     );
