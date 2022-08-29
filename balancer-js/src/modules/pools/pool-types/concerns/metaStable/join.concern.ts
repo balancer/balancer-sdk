@@ -1,5 +1,4 @@
-import OldBigNumber from 'bignumber.js';
-import * as SDK from '@georgeroman/balancer-v2-pools';
+import * as SOR from '@balancer-labs/sor';
 
 import {
   JoinConcern,
@@ -89,12 +88,12 @@ export class MetaStablePoolJoin implements JoinConcern {
     });
 
     // TODO: check if it's ok to remove amounts/balances scaled logic since it's cancelling itself out
-    const expectedBPTOut = SDK.StableMath._calcBptOutGivenExactTokensIn(
-      new OldBigNumber(parsedAmp as string),
-      scaledBalances.map((b) => new OldBigNumber(b)),
-      scaledAmounts.map((a) => new OldBigNumber(a)),
-      new OldBigNumber(parsedTotalShares),
-      new OldBigNumber(parsedSwapFee)
+    const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
+      BigInt(parsedAmp as string),
+      scaledBalances.map((b) => BigInt(b)),
+      scaledAmounts.map((a) => BigInt(a)),
+      BigInt(parsedTotalShares),
+      BigInt(parsedSwapFee)
     ).toString();
 
     const minBPTOut = subSlippage(
