@@ -1,85 +1,138 @@
 import { Factory } from 'fishery';
 import { SubgraphPoolBase, SubgraphToken } from '@balancer-labs/sor';
-import { BigNumber, formatFixed } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
 
 import { subgraphToken, subgraphPoolBase } from './sor';
 import { formatAddress, formatId } from '../lib/utils';
+import { Zero, WeiPerEther } from '@ethersproject/constants';
 
 type LinearTokens = {
   wrappedSymbol: string;
   mainSymbol: string;
-  balance: string;
-  proportion: string;
 };
 
-type LinearPoolsParams = {
-  pools: LinearTokens[];
+export type LinearParams = {
+  pools: {
+    tokens: LinearTokens;
+    balance: string;
+  }[];
+  parentsProportion?: string;
 };
 
-export type LinearPoolInfo = {
-  linearPools: SubgraphPoolBase[];
+export interface Pool extends SubgraphPoolBase {
+  proportionOfParent: string;
+}
+
+export type LinearInfo = {
+  linearPools: Pool[];
   mainTokens: SubgraphToken[];
   wrappedTokens: SubgraphToken[];
-  linearTokens: SubgraphToken[];
-  linearProportions: string[];
+  linearPoolTokens: SubgraphToken[];
 };
 
-export interface BoostedPoolInfo extends LinearPoolInfo {
-  boostedPool: SubgraphPoolBase;
-}
-
-export interface BoostedMetaPoolInfo extends BoostedPoolInfo {
-  childBoostedPool: {
-    pool: SubgraphPoolBase;
-    proportion: string;
-  };
-}
-
-interface BoostedPoolParams {
-  linearPoolsParams: LinearPoolsParams;
+export interface PhantomStableParams {
   id: string;
+  symbol: string;
   address: string;
+  childTokens: SubgraphToken[];
+  tokenbalance: string;
+}
+
+export type PhantomStableInfo = {
+  pool: Pool;
+  poolToken: SubgraphToken;
+};
+
+export interface BoostedParams {
+  linearPoolsParams: LinearParams;
+  rootId: string;
+  rootAddress: string;
+  rootBalance: string;
+  parentsProportion?: string;
+}
+
+export interface BoostedInfo extends LinearInfo {
+  rootPool: Pool;
+  rootPoolToken: SubgraphToken;
+}
+
+export interface BoostedMetaParams {
+  childBoostedParams: BoostedParams;
+  childLinearParam: LinearParams;
+  rootId: string;
+  rootAddress: string;
+  rootBalance: string;
+}
+
+export interface ChildBoostedInfo extends BoostedInfo {
+  proportion: string;
+}
+
+export interface BoostedMetaInfo {
+  rootInfo: PhantomStableInfo;
+  childBoostedInfo: ChildBoostedInfo;
+  childLinearInfo: LinearInfo;
+}
+
+export interface BoostedMetaBigParams {
+  rootId: string;
+  rootAddress: string;
+  rootBalance: string;
+  childPools: BoostedParams[];
+}
+
+export interface BoostedMetaBigInfo {
+  rootPool: Pool;
+  rootPoolToken: SubgraphToken;
+  childPoolsInfo: ChildBoostedInfo[];
+  childPools: Pool[];
 }
 
 /*
-Check a set of Linear pools and associated tokens:
+Create a set of Linear pools and associated tokens:
 LinearPools consisting of wrappedToken, mainToken, phantomBpt
 */
-const linearPools = Factory.define<LinearPoolInfo, LinearPoolsParams>(
+const linearPools = Factory.define<LinearInfo, LinearParams>(
   ({ transientParams }) => {
-    const { pools } = transientParams;
-    const linearPools: SubgraphPoolBase[] = [];
+    const { pools, parentsProportion: proportionOfParent = '1' } =
+      transientParams;
+    if (pools === undefined) throw new Error('Need linear pool params');
+    const linearPools: Pool[] = [];
     const mainTokens: SubgraphToken[] = [];
     const wrappedTokens: SubgraphToken[] = [];
-    const linearTokens: SubgraphToken[] = [];
-    const linearProportions: string[] = [];
+    const linearPoolTokens: SubgraphToken[] = [];
+
+    const totalBalance = pools.reduce(
+      (total: BigNumber, pool) => total.add(pool.balance),
+      Zero
+    );
     pools?.forEach((pool) => {
       const poolAddress = formatAddress(
-        `address-${pool.mainSymbol}_${pool.wrappedSymbol}`
+        `address-${pool.tokens.mainSymbol}_${pool.tokens.wrappedSymbol}`
       );
       const mainToken = subgraphToken
         .transient({
-          symbol: pool.mainSymbol,
+          symbol: pool.tokens.mainSymbol,
           balance: '1000000',
         })
         .build();
       const wrappedToken = subgraphToken
         .transient({
-          symbol: pool.wrappedSymbol,
+          symbol: pool.tokens.wrappedSymbol,
           balance: '9711834',
         })
         .build();
       const phantomBptToken = subgraphToken
         .transient({
-          symbol: `b${pool.mainSymbol}_${pool.wrappedSymbol}`,
+          symbol: `b${pool.tokens.mainSymbol}_${pool.tokens.wrappedSymbol}`,
           balance: '5192296829399898',
-          address: formatAddress(
-            `address-${pool.mainSymbol}_${pool.wrappedSymbol}`
-          ),
+          address: poolAddress,
         })
         .build();
       const linearPool = subgraphPoolBase.build({
-        id: formatId(`id-${pool.mainSymbol}_${pool.wrappedSymbol}`),
+        id: formatId(
+          `id-${pool.tokens.mainSymbol}_${pool.tokens.wrappedSymbol}`
+        ),
         address: poolAddress,
         poolType: 'AaveLinear',
         tokens: [mainToken, wrappedToken, phantomBptToken],
@@ -93,63 +146,104 @@ const linearPools = Factory.define<LinearPoolInfo, LinearPoolsParams>(
       });
       // Update the pool token to have the expected balance set in input
       phantomBptToken.balance = pool.balance;
-      linearTokens.push(phantomBptToken);
+      linearPoolTokens.push(phantomBptToken);
       mainTokens.push(mainToken);
       wrappedTokens.push(wrappedToken);
-      linearPools.push(linearPool);
-      linearProportions.push(pool.proportion);
+      const proportion = BigNumber.from(pool.balance)
+        .mul(WeiPerEther)
+        .div(totalBalance);
+      const propOfParent = proportion
+        .mul(parseFixed(proportionOfParent, 18))
+        .div(WeiPerEther);
+      linearPools.push({
+        ...linearPool,
+        proportionOfParent: formatFixed(propOfParent.toString(), 18),
+      });
     });
     return {
       linearPools,
       mainTokens,
       wrappedTokens,
-      linearTokens,
-      linearProportions,
+      linearPoolTokens,
     };
   }
 );
 
 /*
+Create and return a phantomStable pool (with phantomBpt) and token.
+*/
+const phantomStablePool = Factory.define<
+  PhantomStableInfo,
+  PhantomStableParams
+>(({ transientParams }) => {
+  // Create phantomStable BPT
+  const phantomBptToken = subgraphToken
+    .transient({
+      symbol: transientParams.symbol,
+      balance: '5192296829399898', // need phantomBpt balance for pool
+      address: transientParams.address,
+    })
+    .build();
+
+  // Create phantomStable pool
+  const pool = subgraphPoolBase.build({
+    id: transientParams.id,
+    address: transientParams.address,
+    poolType: 'StablePhantom',
+    totalWeight: undefined,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    tokens: [...transientParams.childTokens!, phantomBptToken],
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  phantomBptToken.balance = transientParams.tokenbalance!;
+
+  return {
+    pool: { ...pool, proportionOfParent: '1' },
+    poolToken: phantomBptToken,
+  };
+});
+
+/*
 Check a boostedPool, a phantomStable with all constituents being Linear.
 Also creates associated LinearPools consisting of wrappedToken, mainToken, phantomBpt.
 */
-const boostedPool = Factory.define<BoostedPoolInfo, BoostedPoolParams>(
+const boostedPool = Factory.define<BoostedInfo, BoostedParams>(
   ({ transientParams }) => {
     const {
       linearPoolsParams,
-      address = 'address_boosted',
-      id = 'id_boosted',
+      rootAddress = 'address_root',
+      rootId = 'id_root',
+      rootBalance = '1000000',
+      parentsProportion = '1',
     } = transientParams;
     let linearPoolInfo;
     // Create linear pools and tokens
     if (linearPoolsParams)
-      linearPoolInfo = linearPools.transient(linearPoolsParams).build();
+      linearPoolInfo = linearPools
+        .transient({
+          ...linearPoolsParams,
+          parentsProportion,
+        })
+        .build();
     else linearPoolInfo = linearPools.build();
-    // Create parent phantomStable BPT
-    const phantomBptToken = subgraphToken
-      .transient({
-        symbol: `bPhantomStableBoosted`,
-        balance: '5192296829399898',
-        address: formatAddress(address),
-      })
-      .build();
 
-    // Create parent phantomStable
-    const boostedPool = subgraphPoolBase.build({
-      id: formatId(id),
-      address: formatAddress(address),
-      poolType: 'StablePhantom',
-      totalWeight: undefined,
-      tokens: [...linearPoolInfo.linearTokens, phantomBptToken],
-    });
+    const rootPoolParams = {
+      id: formatId(rootId),
+      symbol: 'bRootPool',
+      address: formatAddress(rootAddress),
+      childTokens: linearPoolInfo.linearPoolTokens,
+      tokenbalance: rootBalance,
+    };
+    const rootInfo = phantomStablePool.build({}, { transient: rootPoolParams });
 
     return {
-      boostedPool: boostedPool,
+      rootPool: rootInfo.pool,
+      rootPoolToken: rootInfo.poolToken,
       linearPools: linearPoolInfo.linearPools,
       mainTokens: linearPoolInfo.mainTokens,
       wrappedTokens: linearPoolInfo.wrappedTokens,
-      linearTokens: linearPoolInfo.linearTokens,
-      linearProportions: linearPoolInfo.linearProportions,
+      linearPoolTokens: linearPoolInfo.linearPoolTokens,
     };
   }
 );
@@ -158,95 +252,133 @@ const boostedPool = Factory.define<BoostedPoolInfo, BoostedPoolParams>(
 Check a boostedMetaPool, a phantomStable with one Linear and one boosted.
 Also creates associated boosted and LinearPools consisting of wrappedToken, mainToken, phantomBpt.
 */
-const boostedMetaPool = Factory.define<BoostedMetaPoolInfo, BoostedPoolParams>(
+const boostedMetaPool = Factory.define<BoostedMetaInfo, BoostedMetaParams>(
   ({ transientParams }) => {
     const {
-      linearPoolsParams,
-      address = 'address_boostedMeta',
-      id = 'id_boostedMeta',
+      childBoostedParams,
+      childLinearParam,
+      rootAddress,
+      rootId,
+      rootBalance,
     } = transientParams;
 
-    // Build separate Linear pool
-    const childLinearToken = linearPoolsParams?.pools.pop();
-    if (!childLinearToken) throw Error('Issue creating Child Linear Pool');
-    // Create child Linear pool with associated tokens
-    const childLinearPool = linearPools
-      .transient({ pools: [childLinearToken] })
-      .build();
-    // Build boostedPool with child id and address
-    const boostedPoolInfo = boostedPool
-      .transient({
-        linearPoolsParams: linearPoolsParams,
-        id: formatId('id_boosted_child'),
-        address: formatAddress('address_boosted_child'),
-      })
-      .build();
+    if (childBoostedParams === undefined || childLinearParam === undefined)
+      throw Error('Missing Pool Params.');
 
-    // Create parent phantomStable
-    const phantomBptToken = subgraphToken
-      .transient({
-        symbol: `bPhantomStableBoostedMeta`,
-        balance: '5192296829399898',
-        address: formatAddress(address),
-      })
-      .build();
-
-    // Child Boosted token will be part of parent tokens
-    const childBoostedBpt =
-      boostedPoolInfo.boostedPool.tokens[
-        boostedPoolInfo.boostedPool.tokens.length - 1
-      ];
-    childBoostedBpt.balance = '500000'; // Make this an input param?
-    const boostedBalanceBn = BigNumber.from(childBoostedBpt.balance);
-    const total = BigNumber.from(childBoostedBpt.balance).add(
-      childLinearPool.linearTokens[0].balance
+    const rootTokenBalanceBoosted = BigNumber.from(
+      childBoostedParams.rootBalance
     );
-    // Used for tests
+    const rootTokenBalanceLiner = BigNumber.from(
+      childLinearParam.pools[0].balance
+    );
+    const totalTokenBalance = rootTokenBalanceBoosted.add(
+      rootTokenBalanceLiner
+    );
+
     const childBoostedProportion = formatFixed(
-      boostedBalanceBn.mul(BigNumber.from('1000000000000000000')).div(total),
+      rootTokenBalanceBoosted
+        .mul(BigNumber.from(WeiPerEther))
+        .div(totalTokenBalance),
       18
     );
 
-    const boostedPoolRoot = subgraphPoolBase.build({
-      id: formatId(id),
-      address: formatAddress(address),
-      poolType: 'StablePhantom',
-      totalWeight: undefined,
-      tokens: [
-        childBoostedBpt,
-        ...childLinearPool.linearTokens,
-        phantomBptToken,
-      ],
-    });
+    // Build child boostedPool
+    const childBoostedInfo = boostedPool
+      .transient({
+        ...childBoostedParams,
+        parentsProportion: childBoostedProportion,
+      })
+      .build();
+    const childBoostedBpt = childBoostedInfo.rootPoolToken;
+
+    const childLinearProportion = formatFixed(
+      rootTokenBalanceLiner.mul(WeiPerEther).div(totalTokenBalance),
+      18
+    );
+
+    // Build child Linear pool
+    const childLinearInfo = linearPools
+      .transient({
+        pools: childLinearParam.pools,
+        parentsProportion: childLinearProportion,
+      })
+      .build();
+
+    const rootPoolParams = {
+      id: formatId(rootId as string),
+      symbol: 'rootPool',
+      address: formatAddress(rootAddress as string),
+      childTokens: [childBoostedBpt, ...childLinearInfo.linearPoolTokens],
+      tokenbalance: rootBalance,
+    };
+    const rootInfo = phantomStablePool.build({}, { transient: rootPoolParams });
 
     return {
-      boostedPool: boostedPoolRoot,
-      childBoostedPool: {
-        pool: boostedPoolInfo.boostedPool,
+      rootInfo,
+      childBoostedInfo: {
+        ...childBoostedInfo,
         proportion: childBoostedProportion,
       },
-      linearPools: [
-        ...boostedPoolInfo.linearPools,
-        ...childLinearPool.linearPools,
-      ],
-      mainTokens: [
-        ...boostedPoolInfo.mainTokens,
-        ...childLinearPool.mainTokens,
-      ],
-      wrappedTokens: [
-        ...boostedPoolInfo.wrappedTokens,
-        ...childLinearPool.wrappedTokens,
-      ],
-      linearTokens: [
-        ...boostedPoolInfo.linearTokens,
-        ...childLinearPool.linearTokens,
-      ],
-      linearProportions: [
-        ...boostedPoolInfo.linearProportions,
-        ...childLinearPool.linearProportions,
-      ],
+      childLinearInfo,
     };
   }
 );
 
-export { linearPools, boostedPool, boostedMetaPool };
+/*
+Check a boostedMetaBigPool, a phantomStable with two boosted.
+Also creates associated boosted and LinearPools consisting of wrappedToken, mainToken, phantomBpt.
+*/
+const boostedMetaBigPool = Factory.define<
+  BoostedMetaBigInfo,
+  BoostedMetaBigParams
+>(({ transientParams }) => {
+  const childPoolsInfo: ChildBoostedInfo[] = [];
+  // These will be used in parent pool
+  const childPoolTokens: SubgraphToken[] = [];
+  // These will include phantomStables and linear pools
+  const childPools: Pool[] = [];
+
+  if (transientParams.childPools === undefined)
+    throw new Error(`Can't create boostedMetaBig without child pools.`);
+
+  // TO DO - need proportions
+  let totalTokenBalance = Zero;
+  for (let i = 0; i < transientParams.childPools.length; i++) {
+    const balance = transientParams.childPools[i].rootBalance;
+    totalTokenBalance = totalTokenBalance.add(balance);
+  }
+
+  // Create each child boostedPool
+  for (let i = 0; i < transientParams.childPools.length; i++) {
+    const childPool = transientParams.childPools[i];
+    const proportion = formatFixed(
+      BigNumber.from(childPool.rootBalance)
+        .mul(WeiPerEther)
+        .div(totalTokenBalance),
+      18
+    );
+    childPool.parentsProportion = proportion;
+    const childBoosted = boostedPool.transient(childPool).build();
+    childPoolsInfo.push({ ...childBoosted, proportion });
+    childPools.push(childBoosted.rootPool, ...childBoosted.linearPools);
+    childPoolTokens.push(childBoosted.rootPoolToken);
+  }
+
+  const phantomParams = {
+    id: transientParams.rootId,
+    symbol: 'parentPhantom',
+    address: transientParams.rootAddress,
+    childTokens: childPoolTokens,
+    tokenbalance: transientParams.rootBalance,
+  };
+  const rootInfo = phantomStablePool.build({}, { transient: phantomParams });
+
+  return {
+    rootPool: rootInfo.pool,
+    rootPoolToken: rootInfo.poolToken,
+    childPoolsInfo,
+    childPools,
+  };
+});
+
+export { linearPools, boostedPool, boostedMetaPool, boostedMetaBigPool };

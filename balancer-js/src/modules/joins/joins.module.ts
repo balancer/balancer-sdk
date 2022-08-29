@@ -82,6 +82,11 @@ export class Join {
     this.updateTotalProportions(orderedNodes);
     // Create actions for each Node and return in multicall array
     orderedNodes.forEach((node) => {
+      // if all child nodes have 0 output amount, then forward it to outputRef and skip adding current call
+      if (node.children.filter((c) => c.outputReference !== '0').length === 0) {
+        node.outputReference = '0';
+        return;
+      }
       const expectedOut = node.id === rootId ? expectedBPTOut : '0';
       const sender = node.children.some((child) => child.action === 'input') // first chained action
         ? userAddress
@@ -131,10 +136,11 @@ export class Join {
     nodes.forEach((node) => {
       if (!this.totalProportions[node.address])
         this.totalProportions[node.address] = node.proportionOfParent;
-      else
+      else {
         this.totalProportions[node.address] = this.totalProportions[
           node.address
-        ].add(node.proportionOfParent); // TODO: check with John if this is indeed node.proportionOfParent
+        ].add(node.proportionOfParent);
+      }
     });
   }
 
@@ -155,7 +161,7 @@ export class Join {
   createMainToken(node: Node, tokens: string[], amounts: string[]): void {
     // Update amounts to use actual value based off input and proportions
     const tokenIndex = tokens.indexOf(node.address);
-    if (tokenIndex === -1) throw new Error('Input token doesnt exist');
+    if (tokenIndex === -1) return;
 
     const totalProportion = this.totalProportions[node.address];
     const inputProportion = node.proportionOfParent
@@ -222,23 +228,30 @@ export class Join {
       }\n) prop: ${node.proportionOfParent.toString()}`
     );
 
-    const assets = [
-      node.address,
-      ...node.children.map((child) => child.address),
-    ];
+    const inputTokens: string[] = [];
+    const inputAmts: string[] = [];
+
+    node.children.forEach((child) => {
+      if (child.outputReference !== '0') {
+        inputTokens.push(child.address);
+        inputAmts.push(child.outputReference);
+      }
+    });
+
+    const assets = [node.address, ...inputTokens];
 
     // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
     const limits: string[] = [
       BigNumber.from(expectedOut).mul(-1).toString(),
-      ...node.children.map(() => MaxInt256.toString()), // TODO: check if it's worth limiting inputs as well - if yes, how to get the amount from children nodes?
+      ...inputAmts.map(() => MaxInt256.toString()), // TODO: check if it's worth limiting inputs as well - if yes, how to get the amount from children nodes?
     ];
 
-    const swaps: BatchSwapStep[] = node.children.map((child) => {
+    const swaps: BatchSwapStep[] = inputTokens.map((token, i) => {
       return {
         poolId: node.id,
-        assetInIndex: assets.indexOf(child.address),
+        assetInIndex: assets.indexOf(token),
         assetOutIndex: assets.indexOf(node.address),
-        amount: Relayer.toChainedReference(child.outputReference).toString(),
+        amount: Relayer.toChainedReference(inputAmts[i]).toString(),
         userData: '0x',
       };
     });
@@ -278,8 +291,16 @@ export class Join {
     recipient: string
   ): string {
     const poolId = node.id;
-    const inputTokens = node.children.map((t) => t.address);
-    const inputAmts = node.children.map((t) => t.outputReference);
+    const inputTokens: string[] = [];
+    const inputAmts: string[] = [];
+
+    node.children.forEach((child) => {
+      if (child.outputReference !== '0') {
+        inputTokens.push(child.address);
+        inputAmts.push(child.outputReference);
+      }
+    });
+
     console.log(
       node.type,
       node.address,
@@ -293,10 +314,8 @@ export class Join {
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     // sort inputs
     const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
-      node.children.map((child) => child.address),
-      node.children.map((child) =>
-        Relayer.toChainedReference(child.outputReference).toString()
-      )
+      inputTokens,
+      inputAmts
     ) as [string[], string[]];
 
     const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
@@ -304,18 +323,16 @@ export class Join {
       minAmountOut
     );
 
-    const ethNode = node.children.find(
-      (child) => child.address === AddressZero
-    );
+    // TODO: validate if ETH logic applies here
+    const ethIndex = sortedTokens.indexOf(AddressZero);
+    const value = ethIndex === -1 ? '0' : sortedAmounts[ethIndex];
 
     const call = Relayer.constructJoinCall({
       poolId: node.id,
       poolKind: 0, // TODO: figure out how to define this number
       sender,
       recipient,
-      value: ethNode
-        ? Relayer.toChainedReference(ethNode.outputReference)
-        : '0', // TODO: validate if ETH logic applies here
+      value,
       outputReference: Relayer.toChainedReference(node.outputReference),
       joinPoolRequest: {} as JoinPoolRequest,
       assets: sortedTokens,

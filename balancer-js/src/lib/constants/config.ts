@@ -137,6 +137,23 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     pools: {},
   },
+  [Network.OPTIMISM]: {
+    chainId: Network.OPTIMISM, //10
+    addresses: {
+      contracts: {
+        vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+        multicall: '0x2dc0e2aa608532da689e89e237df582b783e552c',
+      },
+      tokens: {
+        wrappedNativeAsset: '0x4200000000000000000000000000000000000006',
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-optimism',
+    },
+    pools: {},
+  },
 };
 
 export const networkAddresses = (
