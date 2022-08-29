@@ -365,9 +365,9 @@ const boostedMetaBigPool = Factory.define<
   }
 
   const phantomParams = {
-    id: transientParams.rootId,
+    id: formatId(transientParams.rootId as string),
     symbol: 'parentPhantom',
-    address: transientParams.rootAddress,
+    address: formatAddress(transientParams.rootAddress as string),
     childTokens: childPoolTokens,
     tokenbalance: transientParams.rootBalance,
   };
