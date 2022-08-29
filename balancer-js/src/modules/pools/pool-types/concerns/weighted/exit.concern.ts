@@ -1,6 +1,5 @@
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import OldBigNumber from 'bignumber.js';
-import * as SDK from '@georgeroman/balancer-v2-pools';
+import * as SOR from '@balancer-labs/sor';
 import {
   ExitConcern,
   ExitExactBPTInParameters,
@@ -84,12 +83,12 @@ export class WeightedPoolExit implements ExitConcern {
       const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
 
       // Calculate amount out given BPT in
-      const amountOut = SDK.WeightedMath._calcTokenOutGivenExactBptIn(
-        new OldBigNumber(sortedBalances[singleTokenMaxOutIndex]),
-        new OldBigNumber(sortedWeights[singleTokenMaxOutIndex]),
-        new OldBigNumber(bptIn),
-        new OldBigNumber(parsedTotalShares),
-        new OldBigNumber(parsedSwapFee)
+      const amountOut = SOR.WeightedMaths._calcTokenOutGivenExactBptIn(
+        BigInt(sortedBalances[singleTokenMaxOutIndex]),
+        BigInt(sortedWeights[singleTokenMaxOutIndex]),
+        BigInt(bptIn),
+        BigInt(parsedTotalShares),
+        BigInt(parsedSwapFee)
       ).toString();
 
       // Apply slippage
@@ -106,10 +105,10 @@ export class WeightedPoolExit implements ExitConcern {
       // Exit pool with all tokens proportinally
 
       // Calculate amounts out given BPT in
-      const amountsOut = SDK.WeightedMath._calcTokensOutGivenExactBptIn(
-        sortedBalances.map((b) => new OldBigNumber(b)),
-        new OldBigNumber(bptIn),
-        new OldBigNumber(parsedTotalShares)
+      const amountsOut = SOR.WeightedMaths._calcTokensOutGivenExactBptIn(
+        sortedBalances.map((b) => BigInt(b)),
+        BigInt(bptIn),
+        BigInt(parsedTotalShares)
       ).map((amount) => amount.toString());
 
       // Apply slippage
@@ -204,12 +203,12 @@ export class WeightedPoolExit implements ExitConcern {
     ) as [string[], string[]];
 
     // Calculate expected BPT in given tokens out
-    const bptIn = SDK.WeightedMath._calcBptInGivenExactTokensOut(
-      sortedBalances.map((b) => new OldBigNumber(b)),
-      sortedWeights.map((w) => new OldBigNumber(w)),
-      sortedAmounts.map((a) => new OldBigNumber(a)),
-      new OldBigNumber(parsedTotalShares),
-      new OldBigNumber(parsedSwapFee)
+    const bptIn = SOR.WeightedMaths._calcBptInGivenExactTokensOut(
+      sortedBalances.map((b) => BigInt(b)),
+      sortedWeights.map((w) => BigInt(w)),
+      sortedAmounts.map((a) => BigInt(a)),
+      BigInt(parsedTotalShares),
+      BigInt(parsedSwapFee)
     ).toString();
 
     // Apply slippage
