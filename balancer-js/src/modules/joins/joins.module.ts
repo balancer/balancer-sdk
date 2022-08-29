@@ -83,7 +83,10 @@ export class Join {
     // Create actions for each Node and return in multicall array
     orderedNodes.forEach((node) => {
       // if all child nodes have 0 output amount, then forward it to outputRef and skip adding current call
-      if (node.children.filter((c) => c.outputReference !== '0').length === 0) {
+      if (
+        node.action !== 'input' &&
+        node.children.filter((c) => c.outputReference !== '0').length === 0
+      ) {
         node.outputReference = '0';
         return;
       }
