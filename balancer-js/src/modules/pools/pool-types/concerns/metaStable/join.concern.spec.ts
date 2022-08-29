@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Pool } from '@/.';
+import { Network, Pool } from '@/.';
 import { parseFixed } from '@ethersproject/bignumber';
 import { MetaStablePoolJoin } from './join.concern';
 
@@ -9,7 +9,7 @@ import pools_14717479 from '@/test/lib/pools_14717479.json';
 const stETH_stable_pool_id =
   '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080'; // Balancer stETH Stable Pool
 
-const wrappedNativeAsset = ADDRESSES[1].WETH.address;
+const wrappedNativeAsset = ADDRESSES[Network.MAINNET].WETH.address;
 
 const pool = pools_14717479.find(
   (pool) => pool.id == stETH_stable_pool_id
@@ -21,7 +21,10 @@ describe('joining metaStable pool', () => {
   describe('.buildJoin', async () => {
     it('should return encoded params', async () => {
       const joiner = '0x35f5a330fd2f8e521ebd259fa272ba8069590741';
-      const tokensIn = [ADDRESSES[1].wSTETH.address, ADDRESSES[1].WETH.address];
+      const tokensIn = [
+        ADDRESSES[Network.MAINNET].wSTETH.address,
+        ADDRESSES[Network.MAINNET].WETH.address,
+      ];
       const amountsIn = [
         parseFixed('1', 18).toString(),
         parseFixed('1', 18).toString(),

@@ -64,6 +64,7 @@ export class PoolApr {
     const last24hFees = await this.last24hFees();
     const totalLiquidity = await this.totalLiquidity(this.pool);
     // TODO: what to do when we are missing last24hFees or totalLiquidity?
+    // eg: stable phantom returns 0
     if (!last24hFees || !totalLiquidity) {
       return 0;
     }
@@ -188,7 +189,7 @@ export class PoolApr {
     }
 
     const [balPrice, bptPriceUsd] = await Promise.all([
-      this.tokenPrices.find('0xba100000625a3754423978a60c9317c58a424e3d'),
+      this.tokenPrices.find('0xba100000625a3754423978a60c9317c58a424e3d'), // BAL
       this.bptPrice(this.pool),
     ]);
     const balPriceUsd = parseFloat(balPrice?.usd || '0');
@@ -360,6 +361,12 @@ export class PoolApr {
     );
   }
 
+  /**
+   * Total Liquidity based on USD token prices taken from external price feed, eg: coingecko.
+   *
+   * @param pool
+   * @returns Pool liquidity in USD
+   */
   private async totalLiquidity(pool: Pool): Promise<string> {
     const liquidityService = new Liquidity(this.pools, this.tokenPrices);
     const liquidity = await liquidityService.getLiquidity(pool);
@@ -367,6 +374,13 @@ export class PoolApr {
     return liquidity;
   }
 
+  /**
+   * BPT price as pool totalLiquidity / pool total Shares
+   * Total Liquidity is calculated based on USD token prices taken from external price feed, eg: coingecko.
+   *
+   * @param pool
+   * @returns BPT price in USD
+   */
   private async bptPrice(pool: Pool) {
     return (
       parseFloat(await this.totalLiquidity(pool)) / parseFloat(pool.totalShares)

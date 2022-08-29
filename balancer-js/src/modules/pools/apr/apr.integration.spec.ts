@@ -62,6 +62,8 @@ describe('happy case', () => {
       if (pool) {
         const { apr } = pool;
         expect(apr && apr.tokenAprs).to.be.greaterThan(1);
+      } else {
+        throw 'no pool found';
       }
     }).timeout(120000);
   });
@@ -72,6 +74,8 @@ describe('happy case', () => {
       if (pool) {
         const { apr } = pool;
         expect(apr && apr.tokenAprs).to.be.greaterThan(1);
+      } else {
+        throw 'no pool found';
       }
     }).timeout(120000);
   });
@@ -82,6 +86,8 @@ describe('happy case', () => {
       if (pool) {
         const { apr } = pool;
         expect(apr && apr.tokenAprs).to.be.greaterThan(1);
+      } else {
+        throw 'no pool found';
       }
     }).timeout(120000);
   });
@@ -91,8 +97,9 @@ describe('happy case', () => {
       const pool = await pools.find(veBalId);
       if (pool) {
         const { apr } = pool;
-        console.log(apr);
         expect(apr && apr.protocolApr).to.be.greaterThan(1);
+      } else {
+        throw 'no pool found';
       }
     }).timeout(120000);
   });
@@ -103,6 +110,8 @@ describe('happy case', () => {
       if (pool) {
         const { apr } = pool;
         expect(apr && apr.stakingApr.min).to.be.greaterThan(1);
+      } else {
+        throw 'no pool found';
       }
     }).timeout(120000);
   });
@@ -113,6 +122,8 @@ describe('happy case', () => {
       if (pool) {
         const { apr } = pool;
         expect(apr && apr.tokenAprs).to.be.greaterThan(1);
+      } else {
+        throw 'no pool found';
       }
     }).timeout(120000);
   });
