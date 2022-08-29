@@ -2,10 +2,19 @@ import { expect } from 'chai';
 import { parseFixed } from '@ethersproject/bignumber';
 import { factories } from '@/test/factories';
 import { StaticPoolRepository } from '../data';
-import { Pool } from '@/types';
-import { SubgraphPoolBase, SubgraphToken } from '@balancer-labs/sor';
+import { SubgraphToken } from '@balancer-labs/sor';
 import { PoolGraph, Node } from './graph';
-import { BoostedPoolInfo, BoostedMetaPoolInfo } from '@/test/factories/pools';
+import {
+  BoostedInfo,
+  BoostedMetaInfo,
+  BoostedMetaBigInfo,
+  BoostedParams,
+  LinearParams,
+  BoostedMetaBigParams,
+  Pool,
+  LinearInfo,
+} from '@/test/factories/pools';
+import { Pool as SdkPool } from '@/types';
 
 function checkNode(
   node: Node,
@@ -36,10 +45,9 @@ LinearPool -> wrappedToken -> mainToken
 function checkLinearNode(
   linearNode: Node,
   poolIndex: number,
-  linearPools: SubgraphPoolBase[],
+  linearPools: Pool[],
   wrappedTokens: SubgraphToken[],
   mainTokens: SubgraphToken[],
-  expectedProportion: string,
   expectedOutPutReference: number
 ): void {
   checkNode(
@@ -50,7 +58,7 @@ function checkLinearNode(
     'batchSwap',
     1,
     expectedOutPutReference.toString(),
-    expectedProportion
+    linearPools[poolIndex].proportionOfParent
   );
   checkNode(
     linearNode.children[0],
@@ -60,7 +68,7 @@ function checkLinearNode(
     'wrapAaveDynamicToken',
     1,
     (expectedOutPutReference + 1).toString(),
-    expectedProportion
+    linearPools[poolIndex].proportionOfParent
   );
   checkNode(
     linearNode.children[0].children[0],
@@ -70,7 +78,7 @@ function checkLinearNode(
     'input',
     0,
     (expectedOutPutReference + 2).toString(),
-    expectedProportion
+    linearPools[poolIndex].proportionOfParent
   );
 }
 
@@ -79,8 +87,8 @@ Checks a boostedPool, a phantomStable with all constituents being Linear.
 */
 function checkBoosted(
   boostedNode: Node,
-  boostedPool: SubgraphPoolBase,
-  boostedPoolInfo: BoostedPoolInfo,
+  boostedPool: Pool,
+  boostedPoolInfo: BoostedInfo,
   boostedIndex: number,
   expectedProportionOfParent: string
 ): void {
@@ -102,7 +110,6 @@ function checkBoosted(
       boostedPoolInfo.linearPools,
       boostedPoolInfo.wrappedTokens,
       boostedPoolInfo.mainTokens,
-      boostedPoolInfo.linearProportions[i],
       linearInputRef
     );
   });
@@ -112,48 +119,125 @@ function checkBoosted(
 Checks a boostedMeta, a phantomStable with one Linear and one boosted.
 */
 function checkBoostedMeta(
-  boostedNode: Node,
-  boostedPoolInfo: BoostedMetaPoolInfo
+  rootNode: Node,
+  boostedMetaInfo: BoostedMetaInfo
 ): void {
   // Check parent node
   checkNode(
-    boostedNode,
-    boostedPoolInfo.boostedPool.id,
-    boostedPoolInfo.boostedPool.address,
+    rootNode,
+    boostedMetaInfo.rootInfo.pool.id,
+    boostedMetaInfo.rootInfo.pool.address,
     'StablePhantom',
     'joinPool',
     2,
     '0',
     '1'
   );
-  // Check child Linear node
-  checkLinearNode(
-    boostedNode.children[1],
-    3,
-    boostedPoolInfo.linearPools,
-    boostedPoolInfo.wrappedTokens,
-    boostedPoolInfo.mainTokens,
-    boostedPoolInfo.linearProportions[3],
-    11
-  );
   // Check child Boosted node
   checkBoosted(
-    boostedNode.children[0],
-    boostedPoolInfo.childBoostedPool.pool,
-    boostedPoolInfo,
+    rootNode.children[0],
+    boostedMetaInfo.childBoostedInfo.rootPool,
+    boostedMetaInfo.childBoostedInfo,
     1,
-    boostedPoolInfo.childBoostedPool.proportion
+    boostedMetaInfo.childBoostedInfo.proportion
+  );
+  // Check child Linear node
+  checkLinearNode(
+    rootNode.children[1],
+    0,
+    boostedMetaInfo.childLinearInfo.linearPools,
+    boostedMetaInfo.childLinearInfo.wrappedTokens,
+    boostedMetaInfo.childLinearInfo.mainTokens,
+    11
   );
 }
 
-// TO DO - checkMetaBig, phantomStable with two boosted
+/*
+Checks a boostedBig, a phantomStable with two Boosted.
+*/
+function checkBoostedMetaBig(
+  rootNode: Node,
+  boostedMetaBigInfo: BoostedMetaBigInfo
+): void {
+  // Check parent node
+  checkNode(
+    rootNode,
+    boostedMetaBigInfo.rootPool.id,
+    boostedMetaBigInfo.rootPool.address,
+    'StablePhantom',
+    'joinPool',
+    2,
+    '0',
+    '1'
+  );
+  let numberOfNodes = 1;
+  rootNode.children.forEach((childBoosted, i) => {
+    checkBoosted(
+      rootNode.children[i],
+      boostedMetaBigInfo.childPoolsInfo[i].rootPool,
+      boostedMetaBigInfo.childPoolsInfo[i],
+      numberOfNodes,
+      boostedMetaBigInfo.childPoolsInfo[i].proportion
+    );
+    numberOfNodes =
+      boostedMetaBigInfo.childPoolsInfo[i].linearPools.length * 3 + 2;
+  });
+}
 
 describe('Graph', () => {
   // Single weightedPool - the algo should work for single pools too?
 
+  context('linearPool', () => {
+    let linearInfo: LinearInfo;
+    let poolsGraph: PoolGraph;
+
+    before(() => {
+      const linearPool = {
+        tokens: {
+          wrappedSymbol: 'aDAI',
+          mainSymbol: 'DAI',
+        },
+        balance: '1000000',
+      };
+
+      linearInfo = factories.linearPools
+        .transient({ pools: [linearPool] })
+        .build();
+      const poolProvider = new StaticPoolRepository(
+        linearInfo.linearPools as SdkPool[]
+      );
+      poolsGraph = new PoolGraph(poolProvider);
+    });
+
+    it('should build single linearPool graph', async () => {
+      const rootNode = await poolsGraph.buildGraphFromRootPool(
+        linearInfo.linearPools[0].id
+      );
+      // console.log(JSON.stringify(rootNode, null, 2));
+      checkLinearNode(
+        rootNode,
+        0,
+        linearInfo.linearPools,
+        linearInfo.wrappedTokens,
+        linearInfo.mainTokens,
+        0
+      );
+    });
+
+    it('should sort in breadth first order', async () => {
+      const rootNode = await poolsGraph.buildGraphFromRootPool(
+        linearInfo.linearPools[0].id
+      );
+      const orderedNodes = poolsGraph.orderByBfs(rootNode);
+      expect(orderedNodes[0].type).to.eq('Underlying');
+      expect(orderedNodes[1].type).to.eq('WrappedToken');
+      expect(orderedNodes[2].type).to.eq('AaveLinear');
+    });
+  });
+
   context('boostedPool', () => {
-    let boostedPoolInfo: BoostedPoolInfo;
-    let boostedPool: SubgraphPoolBase;
+    let boostedPoolInfo: BoostedInfo;
+    let boostedPool: Pool;
     let poolsGraph: PoolGraph;
 
     before(() => {
@@ -165,7 +249,6 @@ describe('Graph', () => {
             mainSymbol: 'DAI',
           },
           balance: '1000000',
-          parentProportion: '0.5',
         },
         {
           tokens: {
@@ -173,7 +256,6 @@ describe('Graph', () => {
             mainSymbol: 'USDC',
           },
           balance: '500000',
-          parentProportion: '0.25',
         },
         {
           tokens: {
@@ -181,7 +263,6 @@ describe('Graph', () => {
             mainSymbol: 'USDT',
           },
           balance: '500000',
-          parentProportion: '0.25',
         },
       ];
       boostedPoolInfo = factories.boostedPool
@@ -189,14 +270,14 @@ describe('Graph', () => {
           linearPoolsParams: {
             pools: linearPools,
           },
-          id: 'phantom_boosted_1',
-          address: 'address_phantom_boosted_1',
+          rootId: 'phantom_boosted_1',
+          rootAddress: 'address_phantom_boosted_1',
         })
         .build();
-      boostedPool = boostedPoolInfo.boostedPool;
+      boostedPool = boostedPoolInfo.rootPool;
       const pools = [...boostedPoolInfo.linearPools, boostedPool];
       // Create staticPools provider with boosted and linear pools
-      const poolProvider = new StaticPoolRepository(pools as Pool[]);
+      const poolProvider = new StaticPoolRepository(pools as SdkPool[]);
       poolsGraph = new PoolGraph(poolProvider);
     });
 
@@ -210,22 +291,6 @@ describe('Graph', () => {
       expect(errorMessage).to.eq('balancer pool does not exist');
     });
 
-    it('should build single linearPool graph', async () => {
-      const rootNode = await poolsGraph.buildGraphFromRootPool(
-        boostedPoolInfo.linearPools[0].id
-      );
-      // console.log(JSON.stringify(rootNode, null, 2));
-      checkLinearNode(
-        rootNode,
-        0,
-        boostedPoolInfo.linearPools,
-        boostedPoolInfo.wrappedTokens,
-        boostedPoolInfo.mainTokens,
-        '1',
-        0
-      );
-    });
-
     it('should build boostedPool graph', async () => {
       const boostedNode = await poolsGraph.buildGraphFromRootPool(
         boostedPool.id
@@ -233,7 +298,7 @@ describe('Graph', () => {
       // console.log(JSON.stringify(boostedNode, null, 2));
       checkBoosted(
         boostedNode,
-        boostedPoolInfo.boostedPool,
+        boostedPoolInfo.rootPool,
         boostedPoolInfo,
         0,
         '1'
@@ -257,8 +322,8 @@ describe('Graph', () => {
   });
 
   context('boostedMetaPool', () => {
-    let boostedPoolInfo: BoostedMetaPoolInfo;
-    let boostedPool: SubgraphPoolBase;
+    let boostedMetaInfo: BoostedMetaInfo;
+    let rootPool: Pool;
     let poolsGraph: PoolGraph;
 
     before(() => {
@@ -266,70 +331,77 @@ describe('Graph', () => {
       // - boosted with linearPools[0], linearPools[1], linearPools[2]
       // - a single linearPool, linearPools[3]
       // Note proportions are referenced to parent nodes
-      const linearPools = [
-        {
-          tokens: {
-            wrappedSymbol: 'aDAI',
-            mainSymbol: 'DAI',
-          },
-          balance: '1000000',
-          parentProportion: '0.25', // 25% of boosted child
+      const childBoostedParams: BoostedParams = {
+        rootId: 'id-child',
+        rootAddress: 'address-child',
+        rootBalance: '500000',
+        linearPoolsParams: {
+          pools: [
+            {
+              tokens: {
+                wrappedSymbol: 'aDAI',
+                mainSymbol: 'DAI',
+              },
+              balance: '1000000',
+            },
+            {
+              tokens: {
+                wrappedSymbol: 'aUSDC',
+                mainSymbol: 'USDC',
+              },
+              balance: '500000',
+            },
+            {
+              tokens: {
+                wrappedSymbol: 'aUSDT',
+                mainSymbol: 'USDT',
+              },
+              balance: '500000',
+            },
+          ],
         },
-        {
-          tokens: {
-            wrappedSymbol: 'aUSDC',
-            mainSymbol: 'USDC',
+      };
+      const childLinearParam: LinearParams = {
+        pools: [
+          {
+            tokens: {
+              wrappedSymbol: 'aSTABLE',
+              mainSymbol: 'STABLE',
+            },
+            balance: '500000',
           },
-          balance: '500000',
-          parentProportion: '0.125',
-        },
-        {
-          tokens: {
-            wrappedSymbol: 'aUSDT',
-            mainSymbol: 'USDT',
-          },
-          balance: '500000',
-          parentProportion: '0.125',
-        },
-        {
-          tokens: {
-            wrappedSymbol: 'aSTABLE',
-            mainSymbol: 'STABLE',
-          },
-          balance: '500000',
-          parentProportion: '0.5', // 50% of root stablePool
-        },
-      ];
-      boostedPoolInfo = factories.boostedMetaPool
+        ],
+      };
+      boostedMetaInfo = factories.boostedMetaPool
         .transient({
-          linearPoolsParams: {
-            pools: linearPools,
-          },
-          id: 'address-parent',
-          address: 'id-parent',
+          rootId: 'id-parent',
+          rootAddress: 'address-parent',
+          rootBalance: '1000000',
+          childBoostedParams,
+          childLinearParam,
         })
         .build();
-      boostedPool = boostedPoolInfo.boostedPool;
+
+      rootPool = boostedMetaInfo.rootInfo.pool;
       const pools = [
-        ...boostedPoolInfo.linearPools,
-        boostedPoolInfo.childBoostedPool.pool,
-        boostedPool,
+        ...boostedMetaInfo.childLinearInfo.linearPools,
+        boostedMetaInfo.childBoostedInfo.rootPool,
+        ...boostedMetaInfo.childBoostedInfo.linearPools,
+        rootPool,
       ];
       // // Create staticPools provider with above pools
-      const poolProvider = new StaticPoolRepository(pools as Pool[]);
+      const poolProvider = new StaticPoolRepository(pools as SdkPool[]);
       poolsGraph = new PoolGraph(poolProvider);
     });
 
     it('should build boostedPool graph', async () => {
-      const boostedNode = await poolsGraph.buildGraphFromRootPool(
-        boostedPool.id
-      );
+      const boostedNode = await poolsGraph.buildGraphFromRootPool(rootPool.id);
       // console.log(JSON.stringify(boostedNode, null, 2));
-      checkBoostedMeta(boostedNode, boostedPoolInfo);
+      checkBoostedMeta(boostedNode, boostedMetaInfo);
     });
 
     it('should sort in breadth first order', async () => {
-      const rootNode = await poolsGraph.buildGraphFromRootPool(boostedPool.id);
+      const rootNode = await poolsGraph.buildGraphFromRootPool(rootPool.id);
       const orderedNodes = poolsGraph.orderByBfs(rootNode);
       expect(orderedNodes[0].type).to.eq('Underlying');
       expect(orderedNodes[1].type).to.eq('Underlying');
@@ -346,6 +418,134 @@ describe('Graph', () => {
       expect(orderedNodes[12].type).to.eq('StablePhantom');
       expect(orderedNodes[11].type).to.eq('AaveLinear');
       expect(orderedNodes[12].type).to.eq('StablePhantom');
+    });
+  });
+
+  context('boostedMetaBigPool', () => {
+    let boostedMetaBigInfo: BoostedMetaBigInfo;
+    let boostedPool: Pool;
+    let poolsGraph: PoolGraph;
+
+    before(() => {
+      // The boostedMetaBig will have a phantomStable with two boosted.
+      // Note:
+      // first pool will be parent
+      // proportions are referenced to parent nodes
+      const child1LinearPools: LinearParams = {
+        pools: [
+          {
+            tokens: {
+              wrappedSymbol: 'aDAI',
+              mainSymbol: 'DAI',
+            },
+            balance: '1000000',
+          },
+          {
+            tokens: {
+              wrappedSymbol: 'aUSDC',
+              mainSymbol: 'USDC',
+            },
+            balance: '500000',
+          },
+          {
+            tokens: {
+              wrappedSymbol: 'aUSDT',
+              mainSymbol: 'USDT',
+            },
+            balance: '500000',
+          },
+        ],
+      };
+      const childBoosted1: BoostedParams = {
+        linearPoolsParams: child1LinearPools,
+        rootId: 'childBoosted1-id',
+        rootAddress: 'childBoosted1-address',
+        rootBalance: '1000000',
+      };
+      const child2LinearPools: LinearParams = {
+        pools: [
+          {
+            tokens: {
+              wrappedSymbol: 'cDAI',
+              mainSymbol: 'DAI',
+            },
+            balance: '4000000',
+          },
+          {
+            tokens: {
+              wrappedSymbol: 'cUSDC',
+              mainSymbol: 'USDC',
+            },
+            balance: '4000000',
+          },
+          {
+            tokens: {
+              wrappedSymbol: 'cUSDT',
+              mainSymbol: 'USDT',
+            },
+            balance: '2000000',
+          },
+        ],
+      };
+      const childBoosted2: BoostedParams = {
+        linearPoolsParams: child2LinearPools,
+        rootId: 'childBoosted2-id',
+        rootAddress: 'childBoosted2-address',
+        rootBalance: '1000000',
+      };
+      const parentPool: BoostedMetaBigParams = {
+        rootId: 'parentBoosted-id',
+        rootAddress: 'parentBoosted-address',
+        rootBalance: '7777777',
+        childPools: [childBoosted1, childBoosted2],
+      };
+
+      boostedMetaBigInfo = factories.boostedMetaBigPool
+        .transient(parentPool)
+        .build();
+      boostedPool = boostedMetaBigInfo.rootPool;
+      const pools = [
+        ...boostedMetaBigInfo.childPools,
+        boostedMetaBigInfo.rootPool,
+      ];
+      // // Create staticPools provider with above pools
+      const poolProvider = new StaticPoolRepository(pools as SdkPool[]);
+      poolsGraph = new PoolGraph(poolProvider);
+    });
+
+    it('should build boostedPool graph', async () => {
+      const boostedNode = await poolsGraph.buildGraphFromRootPool(
+        boostedPool.id
+      );
+      // console.log(JSON.stringify(boostedNode, null, 2));
+      checkBoostedMetaBig(boostedNode, boostedMetaBigInfo);
+    });
+
+    it('should sort in breadth first order', async () => {
+      const rootNode = await poolsGraph.buildGraphFromRootPool(boostedPool.id);
+      const orderedNodes = poolsGraph.orderByBfs(rootNode);
+      expect(orderedNodes.length).to.eq(21);
+      expect(orderedNodes[0].type).to.eq('Underlying');
+      expect(orderedNodes[1].type).to.eq('Underlying');
+      expect(orderedNodes[2].type).to.eq('Underlying');
+      expect(orderedNodes[3].type).to.eq('Underlying');
+      expect(orderedNodes[4].type).to.eq('Underlying');
+      expect(orderedNodes[5].type).to.eq('Underlying');
+      expect(orderedNodes[6].type).to.eq('WrappedToken');
+      expect(orderedNodes[7].type).to.eq('WrappedToken');
+      expect(orderedNodes[8].type).to.eq('WrappedToken');
+      expect(orderedNodes[9].type).to.eq('WrappedToken');
+      expect(orderedNodes[10].type).to.eq('WrappedToken');
+      expect(orderedNodes[11].type).to.eq('WrappedToken');
+      expect(orderedNodes[12].type).to.eq('AaveLinear');
+      expect(orderedNodes[13].type).to.eq('AaveLinear');
+      expect(orderedNodes[14].type).to.eq('AaveLinear');
+      expect(orderedNodes[15].type).to.eq('AaveLinear');
+      expect(orderedNodes[16].type).to.eq('AaveLinear');
+      expect(orderedNodes[17].type).to.eq('AaveLinear');
+      expect(orderedNodes[18].type).to.eq('StablePhantom');
+      expect(orderedNodes[19].type).to.eq('StablePhantom');
+      expect(orderedNodes[20].type).to.eq('StablePhantom');
     });
   });
 });

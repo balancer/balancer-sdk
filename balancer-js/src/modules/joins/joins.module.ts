@@ -100,10 +100,11 @@ export class Join {
     nodes.forEach((node) => {
       if (!this.totalProportions[node.address])
         this.totalProportions[node.address] = node.proportionOfParent;
-      else
+      else {
         this.totalProportions[node.address] = this.totalProportions[
           node.address
-        ].add(this.totalProportions.proportionOfParent);
+        ].add(node.proportionOfParent);
+      }
     });
   }
 
