@@ -11,3 +11,7 @@ export interface Searchable<T> {
   all: () => Promise<T[]>;
   where: (filters: (arg: T) => boolean) => Promise<T[]>;
 }
+
+export interface Updatetable<T> {
+  update: (id: string) => Promise<T | undefined>;
+}

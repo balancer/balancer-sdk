@@ -21,7 +21,7 @@ describe('Liquidity gauge multicall', () => {
     expect(supplies['0x9f65d476dd77e24445a48b4fecdea81afaa63480']).to.satisfy(
       (n: number) => n >= 0
     );
-  }).timeout(20000);
+  }).timeout(60000);
 
   it('is fetching working supplies', async () => {
     const supplies = await fetcher.getWorkingSupplies([
@@ -34,7 +34,7 @@ describe('Liquidity gauge multicall', () => {
     expect(supplies['0x9f65d476dd77e24445a48b4fecdea81afaa63480']).to.satisfy(
       (n: number) => n >= 0
     );
-  }).timeout(20000);
+  }).timeout(60000);
 
   describe('with all gauges from subgraph', () => {
     const gauges = new LiquidityGaugesSubgraphRepository(
@@ -47,7 +47,7 @@ describe('Liquidity gauge multicall', () => {
       const rewardCounts = await fetcher.getRewardCounts(gaugeAddresses);
 
       expect(rewardCounts[Object.keys(rewardCounts)[0]]).to.be.gte(0);
-    }).timeout(20000);
+    }).timeout(60000);
 
     it('is fetching reward data', async () => {
       const list = await gauges.fetch();
@@ -58,6 +58,6 @@ describe('Liquidity gauge multicall', () => {
       expect(firstToken[Object.keys(firstToken)[0]].token).to.eq(
         '0x0000000000000000000000000000000000000000'
       );
-    }).timeout(20000);
+    }).timeout(60000);
   });
 });

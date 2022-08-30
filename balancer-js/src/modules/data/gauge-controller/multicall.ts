@@ -1,7 +1,8 @@
 import { Interface } from '@ethersproject/abi';
-import { Provider } from '@ethersproject/providers';
+import { getAddress } from '@ethersproject/address';
 import { Contract } from '@ethersproject/contracts';
-import { formatUnits, getAddress } from 'ethers/lib/utils';
+import { Provider } from '@ethersproject/providers';
+import { formatUnits } from '@ethersproject/units';
 import { Multicall } from '@/modules/contracts/multicall';
 
 const gaugeControllerInterface = new Interface([

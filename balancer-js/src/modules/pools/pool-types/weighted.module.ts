@@ -1,25 +1,23 @@
+import { WeightedPoolExit } from './concerns/weighted/exit.concern';
+import { WeightedPoolJoin } from './concerns/weighted/join.concern';
 import { WeightedPoolLiquidity } from './concerns/weighted/liquidity.concern';
 import { WeightedPoolSpotPrice } from './concerns/weighted/spotPrice.concern';
-import { WeightedPoolJoin } from './concerns/weighted/join.concern';
+import { WeightedPoolPriceImpact } from './concerns/weighted/priceImpact.concern';
 import { PoolType } from './pool-type.interface';
 import {
+  ExitConcern,
   JoinConcern,
   LiquidityConcern,
+  PriceImpactConcern,
   SpotPriceConcern,
 } from './concerns/types';
 
 export class Weighted implements PoolType {
-  public liquidity: LiquidityConcern;
-  public spotPriceCalculator: SpotPriceConcern;
-  public join: JoinConcern;
-
   constructor(
-    private liquidityConcern = WeightedPoolLiquidity,
-    private spotPriceCalculatorConcern = WeightedPoolSpotPrice,
-    private joinConcern = WeightedPoolJoin
-  ) {
-    this.liquidity = new this.liquidityConcern();
-    this.spotPriceCalculator = new this.spotPriceCalculatorConcern();
-    this.join = new this.joinConcern();
-  }
+    public exit: ExitConcern = new WeightedPoolExit(),
+    public join: JoinConcern = new WeightedPoolJoin(),
+    public liquidity: LiquidityConcern = new WeightedPoolLiquidity(),
+    public spotPriceCalculator: SpotPriceConcern = new WeightedPoolSpotPrice(),
+    public priceImpactCalculator: PriceImpactConcern = new WeightedPoolPriceImpact()
+  ) {}
 }

@@ -15,7 +15,14 @@ const sdk = new BalancerSDK({
 const { pools } = sdk;
 
 const main = async () => {
-  const list = (await pools.where((pool) => pool.poolType != 'Element'))
+  const list = (
+    await pools.where(
+      (pool) =>
+        pool.poolType != 'Element' &&
+        pool.poolType != 'AaveLinear' &&
+        pool.poolType != 'LiquidityBootstrapping'
+    )
+  )
     .sort((a, b) => parseFloat(b.totalLiquidity) - parseFloat(a.totalLiquidity))
     .slice(0, 30);
 

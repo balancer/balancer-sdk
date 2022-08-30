@@ -1,7 +1,6 @@
 import { LiquidityConcern } from '../types';
 import { PoolToken } from '@/types';
-import { formatFixed } from '@ethersproject/bignumber';
-import { parseFixed } from '@/lib/utils/math';
+import { parseFixed, formatFixed } from '@/lib/utils/math';
 import { Zero } from '@ethersproject/constants';
 
 const SCALING_FACTOR = 18;
@@ -55,7 +54,6 @@ export class LinearPoolLiquidity implements LiquidityConcern {
       }
     }
 
-    const totalLiquidity = formatFixed(sumValue, SCALING_FACTOR * 2).toString();
-    return totalLiquidity;
+    return formatFixed(sumValue, SCALING_FACTOR * 2);
   }
 }

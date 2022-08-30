@@ -1,14 +1,14 @@
 import { JoinPoolParameters, JoinConcern, JoinPoolAttributes } from '../types';
 
 export class LinearPoolJoin implements JoinConcern {
-  async buildJoin({
+  buildJoin = ({
     joiner,
     pool,
     tokensIn,
     amountsIn,
     slippage,
     wrappedNativeAsset,
-  }: JoinPoolParameters): Promise<JoinPoolAttributes> {
+  }: JoinPoolParameters): JoinPoolAttributes => {
     // TODO implementation
     console.log(
       joiner,
@@ -19,5 +19,5 @@ export class LinearPoolJoin implements JoinConcern {
       wrappedNativeAsset
     );
     throw new Error('To be implemented');
-  }
+  };
 }

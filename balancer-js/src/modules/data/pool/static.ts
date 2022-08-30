@@ -1,7 +1,7 @@
 import { Findable, Pool, Searchable } from '@/types';
 import { PoolAttribute } from './types';
 
-export class PoolsStaticRepository
+export class StaticPoolRepository
   implements Findable<Pool, PoolAttribute>, Searchable<Pool>
 {
   constructor(private pools: Pool[]) {}

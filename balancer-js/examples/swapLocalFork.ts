@@ -1,5 +1,6 @@
 /**
  *  Example showing how to find a swap and send it using ethers.
+ *  Uses local fork so swaps can be made without using real funds.
  */
 import dotenv from 'dotenv';
 import { BalancerSDK, Network } from '../src/index';
@@ -25,7 +26,7 @@ const wallet = new Wallet(TRADER_KEY as string, provider);
 
 const tokenOut = '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'; // wBTC
 
-async function executePoolFetching() {
+async function swap() {
   const pools = mapPools(mainnetTop10);
 
   const onchain = await getOnChainBalances(
@@ -99,5 +100,5 @@ async function executePoolFetching() {
   }
 }
 
-// yarn examples:run ./examples/swap.ts
-executePoolFetching();
+// yarn examples:run ./examples/swapLocalFork.ts
+swap();

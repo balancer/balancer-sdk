@@ -57,8 +57,6 @@ describe('pools', () => {
       const poolModel = ModelProvider.wrap(pool, repositories);
       const poolData = await ModelProvider.resolve(poolModel);
       expect(typeof poolData.apr).to.equal('object');
-      expect(poolData?.apr?.min).to.be.greaterThan(0);
-      expect(poolData?.apr?.max).to.be.greaterThan(0);
     }).timeout(20000);
   });
 });

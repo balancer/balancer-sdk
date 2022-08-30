@@ -1,7 +1,6 @@
 import { AprFetcher } from '../repository';
-import { BigNumber } from 'ethers';
-import { utils } from 'ethers';
-const { formatUnits } = utils;
+import { BigNumber } from '@ethersproject/bignumber';
+import { formatUnits } from '@ethersproject/units';
 
 // can be fetched from subgraph
 // aave-js: supplyAPR = graph.liquidityRate = core.getReserveCurrentLiquidityRate(_reserve)

@@ -2,7 +2,7 @@ import { Multicall } from '@/modules/contracts/multicall';
 import { Provider } from '@ethersproject/providers';
 import { Interface } from '@ethersproject/abi';
 import { Contract } from '@ethersproject/contracts';
-import { formatUnits } from 'ethers/lib/utils';
+import { formatUnits } from '@ethersproject/units';
 import { BigNumber } from '@ethersproject/bignumber';
 
 const liquidityGaugeV5Interface = new Interface([

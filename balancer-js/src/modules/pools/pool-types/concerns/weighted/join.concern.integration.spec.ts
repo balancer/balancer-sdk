@@ -7,8 +7,6 @@ import {
   BalancerSDK,
   Network,
   Pool,
-  PoolModel,
-  PoolToken,
 } from '@/.';
 import hardhat from 'hardhat';
 
@@ -16,11 +14,9 @@ import { TransactionReceipt } from '@ethersproject/providers';
 import { parseFixed, BigNumber } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 
-import { forkSetup } from '@/test/lib/utils';
+import { forkSetup, getBalances } from '@/test/lib/utils';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import { Pools } from '@/modules/pools';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { factories } from '@/test/factories';
+import { Pools } from '../../../';
 
 dotenv.config();
 
@@ -28,14 +24,13 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 
 const rpcUrl = 'http://127.0.0.1:8545';
+const network = Network.MAINNET;
+const sdk = new BalancerSDK({ network, rpcUrl });
+const { networkConfig } = sdk;
+
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
 let signerAddress: string;
-
-const balancer = new BalancerSDK({
-  network: Network.MAINNET,
-  rpcUrl,
-});
 
 // Slots used to set the account balance for each token through hardhat_setStorageAt
 // Info fetched using npm package slot20
@@ -46,34 +41,25 @@ const slots = [wBTC_SLOT, wETH_SLOT];
 const initialBalance = '100000';
 const amountsInDiv = '100000000';
 
-let tokensIn: PoolToken[];
 let amountsIn: string[];
-
-// Setup
-
-// Using a static repository to make test consistent over time
-const poolsRepository = factories.data.findable(
-  factories.data.array2map(pools_14717479 as Pool[])
-);
-const repositories = factories.data.repositores({
-  pools: poolsRepository,
-});
-const pools = new Pools(BALANCER_NETWORK_CONFIG[1], repositories);
-
-const setupPool = async (poolId: string) => {
-  const pool = await pools.find(poolId);
-  if (!pool) throw new Error('Pool not found');
-  return pool;
-};
-
-const tokenBalance = async (tokenAddress: string) => {
-  const balance: Promise<BigNumber> = balancer.contracts
-    .ERC20(tokenAddress, signer.provider)
-    .balanceOf(signerAddress);
-  return balance;
-};
-
 // Test scenarios
+
+const pool = pools_14717479.find(
+  (pool) =>
+    pool.id ==
+    '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
+) as unknown as Pool;
+const tokensIn = pool.tokens;
+
+const controller = Pools.wrap(
+  pool,
+  {
+    update: async () => {
+      return {} as unknown as Pool;
+    },
+  },
+  networkConfig
+);
 
 describe('join execution', async () => {
   let transactionReceipt: TransactionReceipt;
@@ -82,22 +68,15 @@ describe('join execution', async () => {
   let bptBalanceAfter: BigNumber;
   let tokensBalanceBefore: BigNumber[];
   let tokensBalanceAfter: BigNumber[];
-  let pool: PoolModel;
 
   // Setup chain
   before(async function () {
     this.timeout(20000);
-    pool = await setupPool(
-      '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
+    const balances = tokensIn.map((token) =>
+      parseFixed(initialBalance, token.decimals).toString()
     );
-    tokensIn = pool.tokens;
-    const balances = [
-      parseFixed(initialBalance, tokensIn[0].decimals).toString(),
-      parseFixed(initialBalance, tokensIn[1].decimals).toString(),
-    ];
     await forkSetup(
-      balancer,
-      provider,
+      signer,
       tokensIn.map((t) => t.address),
       slots,
       balances,
@@ -114,44 +93,51 @@ describe('join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      bptBalanceBefore = await tokenBalance(pool.address);
-      tokensBalanceBefore = [
-        await tokenBalance(tokensIn[0].address),
-        await tokenBalance(tokensIn[1].address),
-      ];
+      [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
+        [pool.address, ...pool.tokensList],
+        signer,
+        signerAddress
+      );
 
-      const slippage = '100';
+      const slippage = '1';
 
-      const { to, data, minBPTOut } = await pool.buildJoin(
+      const { to, data, minBPTOut } = controller.buildJoin(
         signerAddress,
         tokensIn.map((t) => t.address),
         amountsIn,
         slippage
       );
+
       const tx = { to, data };
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+      [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
+        [pool.address, ...pool.tokensList],
+        signer,
+        signerAddress
+      );
     });
 
     it('should work', async () => {
       expect(transactionReceipt.status).to.eql(1);
     });
 
-    it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(pool.address);
+    it('price impact calculation', async () => {
+      const minBPTOut = bptMinBalanceIncrease.toString();
+      const priceImpact = await controller.calcPriceImpact(
+        amountsIn,
+        minBPTOut
+      );
+      expect(priceImpact).to.eq('102055375201527');
+    });
 
-      expect(
-        bptBalanceAfter.sub(bptBalanceBefore).toNumber()
-      ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
+    it('should increase BPT balance', async () => {
+      expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
+        .to.be.true;
     });
 
     it('should decrease tokens balance', async () => {
-      tokensBalanceAfter = [
-        await tokenBalance(tokensIn[0].address),
-        await tokenBalance(tokensIn[1].address),
-      ];
-
       for (let i = 0; i < tokensIn.length; i++) {
         expect(
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
@@ -168,36 +154,31 @@ describe('join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      bptBalanceBefore = await tokenBalance(pool.address);
-      tokensBalanceBefore = [
-        await tokenBalance(tokensIn[0].address),
-        await tokenBalance(tokensIn[1].address),
-      ];
+      [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
+        [pool.address, ...pool.tokensList],
+        signer,
+        signerAddress
+      );
 
       const slippage = '100';
-
       const { functionName, attributes, value, minBPTOut } =
-        await pool.buildJoin(
+        controller.buildJoin(
           signerAddress,
           tokensIn.map((t) => t.address),
           amountsIn,
           slippage
         );
-
-      if (functionName == 'joinPool') {
-        const transactionResponse = await balancer.contracts.vault
-          .connect(signer)
-          .joinPool(
-            attributes.poolId,
-            attributes.sender,
-            attributes.recipient,
-            attributes.joinPoolRequest,
-            { value }
-          );
-        transactionReceipt = await transactionResponse.wait();
-      }
+      const transactionResponse = await sdk.contracts.vault
+        .connect(signer)
+        [functionName](...Object.values(attributes), { value });
+      transactionReceipt = await transactionResponse.wait();
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
+      [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
+        [pool.address, ...pool.tokensList],
+        signer,
+        signerAddress
+      );
     });
 
     it('should work', async () => {
@@ -205,19 +186,11 @@ describe('join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(pool.address);
-
-      expect(
-        bptBalanceAfter.sub(bptBalanceBefore).toNumber()
-      ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
+      expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
+        .to.be.true;
     });
 
     it('should decrease tokens balance', async () => {
-      tokensBalanceAfter = [
-        await tokenBalance(tokensIn[0].address),
-        await tokenBalance(tokensIn[1].address),
-      ];
-
       for (let i = 0; i < tokensIn.length; i++) {
         expect(
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
@@ -235,16 +208,22 @@ describe('join execution', async () => {
         parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
       );
 
-      bptBalanceBefore = await tokenBalance(pool.address);
-      tokensBalanceBefore = [
-        await tokenBalance(tokensIn[0].address),
-        await signer.getBalance(),
-      ];
+      const tokensWithETH = tokensIn.map((t) => {
+        if (t.address === networkConfig.addresses.tokens.wrappedNativeAsset)
+          return AddressZero;
+        return t.address;
+      });
+
+      [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
+        [pool.address, ...tokensWithETH],
+        signer,
+        signerAddress
+      );
 
       const slippage = '100';
-      const { to, data, value, minBPTOut } = await pool.buildJoin(
+      const { to, data, value, minBPTOut } = controller.buildJoin(
         signerAddress,
-        [tokensIn[0].address, AddressZero],
+        tokensWithETH,
         amountsIn,
         slippage
       );
@@ -255,6 +234,17 @@ describe('join execution', async () => {
       transactionCost = transactionReceipt.gasUsed.mul(
         transactionReceipt.effectiveGasPrice
       );
+
+      [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
+        [pool.address, ...tokensWithETH],
+        signer,
+        signerAddress
+      );
+      tokensWithETH.map((t, i) => {
+        if (t === AddressZero) {
+          tokensBalanceAfter[i] = tokensBalanceAfter[i].add(transactionCost);
+        }
+      });
     });
 
     it('should work', async () => {
@@ -262,19 +252,11 @@ describe('join execution', async () => {
     });
 
     it('should increase BPT balance', async () => {
-      bptBalanceAfter = await tokenBalance(pool.address);
-
-      expect(
-        bptBalanceAfter.sub(bptBalanceBefore).toNumber()
-      ).to.greaterThanOrEqual(bptMinBalanceIncrease.toNumber());
+      expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
+        .to.be.true;
     });
 
     it('should decrease tokens balance', async () => {
-      tokensBalanceAfter = [
-        await tokenBalance(tokensIn[0].address),
-        await (await signer.getBalance()).add(transactionCost),
-      ];
-
       for (let i = 0; i < tokensIn.length; i++) {
         expect(
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
@@ -287,7 +269,7 @@ describe('join execution', async () => {
     before(async function () {
       this.timeout(20000);
       amountsIn = [
-        parseFixed(tokensIn[1].balance, tokensIn[1].decimals)
+        parseFixed(tokensIn[0].balance, tokensIn[0].decimals)
           .div('100')
           .toString(),
       ];
@@ -297,7 +279,7 @@ describe('join execution', async () => {
       const slippage = '10';
       let errorMessage;
       try {
-        await pool.buildJoin(
+        controller.buildJoin(
           signerAddress,
           tokensIn.map((t) => t.address),
           amountsIn,

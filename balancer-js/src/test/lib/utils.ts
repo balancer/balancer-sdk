@@ -1,20 +1,32 @@
-import { BalancerSDK } from '@/.';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
 import { balancerVault } from '@/lib/constants/config';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { keccak256 } from '@ethersproject/solidity';
+import { ERC20 } from '@/modules/contracts/ERC20';
+import { Pools as PoolsProvider } from '@/modules/pools';
+import { PoolWithMethods, BalancerError, BalancerErrorCode } from '@/.';
 
+/**
+ * Setup local fork with approved token balance for a given account
+ *
+ * @param {JsonRpcSigner} signer Account that will have token balance set and approved
+ * @param {string[]}      tokens Token addresses which balance will be set and approved
+ * @param {number[]}      slots Slot that stores token balance in memory - use npm package `slot20` to identify which slot to provide
+ * @param {string[]}      balances Balances in EVM amounts
+ * @param {string}        jsonRpcUrl Url with remote node to be forked locally
+ * @param {number}        blockNumber Number of the block that the fork will happen
+ */
 export const forkSetup = async (
-  balancer: BalancerSDK,
-  provider: JsonRpcProvider,
+  signer: JsonRpcSigner,
   tokens: string[],
   slots: number[],
   balances: string[],
   jsonRpcUrl: string,
   blockNumber?: number
 ): Promise<void> => {
-  await provider.send('hardhat_reset', [
+  await signer.provider.send('hardhat_reset', [
     {
       forking: {
         jsonRpcUrl,
@@ -25,14 +37,9 @@ export const forkSetup = async (
 
   for (let i = 0; i < tokens.length; i++) {
     // Set initial account balance for each token that will be used to join pool
-    await setTokenBalance(
-      provider.getSigner(),
-      tokens[i],
-      slots[i],
-      balances[i]
-    );
+    await setTokenBalance(signer, tokens[i], slots[i], balances[i]);
     // Approve appropriate allowances so that vault contract can move tokens
-    await approveToken(balancer, tokens[i], balances[i], provider.getSigner());
+    await approveToken(tokens[i], balances[i], signer);
   }
 };
 
@@ -78,17 +85,46 @@ export const setTokenBalance = async (
 /**
  * Approve token balance for vault contract
  *
- * @param {BalancerSDK}   balancer Balancer SDK (used to fetch contracts)
  * @param {string}        token Token address to be approved
  * @param {string}        amount Amount to be approved
  * @param {JsonRpcSigner} signer Account that will have tokens approved
  */
 export const approveToken = async (
-  balancer: BalancerSDK,
   token: string,
   amount: string,
   signer: JsonRpcSigner
 ): Promise<boolean> => {
-  const tokenContract = balancer.contracts.ERC20(token, signer.provider);
+  const tokenContract = ERC20(token, signer.provider);
   return await tokenContract.connect(signer).approve(balancerVault, amount);
+};
+
+export const setupPool = async (
+  provider: PoolsProvider,
+  poolId: string
+): Promise<PoolWithMethods> => {
+  const pool = await provider.find(poolId);
+  if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
+  return pool;
+};
+
+export const getErc20Balance = (
+  token: string,
+  provider: JsonRpcProvider,
+  holder: string
+): Promise<BigNumber> => ERC20(token, provider).balanceOf(holder);
+
+export const getBalances = async (
+  tokens: string[],
+  signer: JsonRpcSigner,
+  signerAddress: string
+): Promise<Promise<BigNumber[]>> => {
+  const balances: Promise<BigNumber>[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i] === AddressZero) {
+      balances[i] = signer.getBalance();
+    } else {
+      balances[i] = getErc20Balance(tokens[i], signer.provider, signerAddress);
+    }
+  }
+  return Promise.all(balances);
 };

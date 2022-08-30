@@ -1,7 +1,8 @@
 import { Interface } from '@ethersproject/abi';
 import { Provider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
-import { formatUnits, getAddress } from 'ethers/lib/utils';
+import { getAddress } from '@ethersproject/address';
+import { formatUnits } from '@ethersproject/units';
 import { Multicall } from '@/modules/contracts/multicall';
 
 export interface FeeDistributorData {
@@ -92,7 +93,7 @@ export class FeeDistributorRepository implements BaseFeeDistributor {
     midnight.setUTCSeconds(0);
     midnight.setUTCMilliseconds(0);
 
-    let daysSinceThursday = midnight.getDay() - 4;
+    let daysSinceThursday = midnight.getUTCDay() - 4;
     if (daysSinceThursday < 0) daysSinceThursday += 7;
 
     daysSinceThursday = daysSinceThursday + weeksToGoBack * 7;

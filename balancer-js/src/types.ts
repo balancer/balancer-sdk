@@ -2,10 +2,14 @@ import type { BigNumberish } from '@ethersproject/bignumber';
 import type { Network } from './lib/constants/network';
 import type { Contract } from '@ethersproject/contracts';
 import type { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
-import type { JoinPoolAttributes } from './modules/pools/pool-types/concerns/types';
+import type {
+  ExitPoolAttributes,
+  JoinPoolAttributes,
+} from './modules/pools/pool-types/concerns/types';
 import type {
   Findable,
   Searchable,
+  Updatetable,
   LiquidityGauge,
   PoolAttribute,
   TokenAttribute,
@@ -66,6 +70,7 @@ export interface BalancerNetworkConfig {
   urls: {
     subgraph: string;
     gaugesSubgraph: string;
+    blockNumberSubgraph?: string;
   };
   pools: {
     wETHwstETH?: PoolReference;
@@ -73,7 +78,7 @@ export interface BalancerNetworkConfig {
 }
 
 export interface BalancerDataRepositories {
-  pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  pools: Findable<Pool, PoolAttribute> & Searchable<Pool> & Updatetable<Pool>;
   yesterdaysPools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
   tokenMeta: Findable<Token, TokenAttribute>;
@@ -226,6 +231,8 @@ export interface Pool {
   feesSnapshot?: string;
   boost?: string;
   symbol?: string;
+  swapEnabled: boolean;
+  amp?: string;
   apr?: AprBreakdown;
   liquidity?: string;
 }
@@ -244,12 +251,28 @@ export interface PoolModel extends Pool {
  * Pool use-cases / controller layer
  */
 export interface PoolWithMethods extends Pool {
+  // NOTE: Temporary way to update pool values in counter cycle way before full data cycle get's implemented
+  update: (id: string) => Promise<PoolWithMethods | undefined>;
   buildJoin: (
     joiner: string,
     tokensIn: string[],
     amountsIn: string[],
     slippage: string
-  ) => Promise<JoinPoolAttributes>;
+  ) => JoinPoolAttributes;
+  calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
+  buildExitExactBPTIn: (
+    exiter: string,
+    bptIn: string,
+    slippage: string,
+    shouldUnwrapNativeAsset?: boolean,
+    singleTokenMaxOut?: string
+  ) => ExitPoolAttributes;
+  buildExitExactTokensOut: (
+    exiter: string,
+    tokensOut: string[],
+    amountsOut: string[],
+    slippage: string
+  ) => ExitPoolAttributes;
 }
 
 export interface GraphQLQuery {

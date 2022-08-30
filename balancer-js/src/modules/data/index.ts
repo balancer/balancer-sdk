@@ -37,7 +37,13 @@ export class Data implements BalancerDataRepositories {
   constructor(networkConfig: BalancerNetworkConfig, provider: Provider) {
     // Config data
     const blockDayAgo = () => {
-      return new BlockNumberRepository(networkConfig.chainId).find('dayAgo');
+      if (networkConfig.urls.blockNumberSubgraph) {
+        return new BlockNumberRepository(
+          networkConfig.urls.blockNumberSubgraph
+        ).find('dayAgo');
+      } else {
+        throw 'Block number subgraph not defined';
+      }
     };
     const tokenAddresses = initialCoingeckoList
       .filter((t) => t.chainId == networkConfig.chainId)

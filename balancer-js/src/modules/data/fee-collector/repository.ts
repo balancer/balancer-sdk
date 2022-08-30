@@ -1,7 +1,7 @@
 import { Interface } from '@ethersproject/abi';
 import { Provider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
-import { formatUnits } from 'ethers/lib/utils';
+import { formatUnits } from '@ethersproject/units';
 import { Findable } from '../types';
 
 const vaultInterface = new Interface([

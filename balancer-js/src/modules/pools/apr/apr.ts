@@ -1,4 +1,4 @@
-import { formatUnits } from 'ethers/lib/utils';
+import { formatUnits } from '@ethersproject/units';
 import * as emissions from '@/modules/data/bal/emissions';
 import type {
   Findable,
@@ -67,7 +67,7 @@ export class PoolApr {
   async swapFees(): Promise<number> {
     // 365 * dailyFees * (1 - protocolFees) / totalLiquidity
     const last24hFees = await this.last24hFees();
-    const totalLiquidity = await this.totalLiquidity();
+    const totalLiquidity = await this.totalLiquidity(this.pool);
     // TODO: what to do when we are missing last24hFees or totalLiquidity?
     if (!last24hFees || !totalLiquidity) {
       return 0;
@@ -92,7 +92,7 @@ export class PoolApr {
       };
     }
 
-    const totalLiquidity = await this.totalLiquidity();
+    const totalLiquidity = await this.totalLiquidity(this.pool);
 
     // Filter out BPT: token with the same address as the pool
     // TODO: move this to data layer
@@ -138,14 +138,15 @@ export class PoolApr {
       if (token.weight) {
         return parseFloat(token.weight);
       } else {
-        const tokenPrice =
+        let tokenPrice =
           token.price?.usd || (await this.tokenPrices.find(token.address))?.usd;
         if (!tokenPrice) {
-          const poolToken = await this.pools.find(token.address);
+          const poolToken = await this.pools.findBy('address', token.address);
           if (poolToken) {
-            console.log('Pool token found');
+            tokenPrice = (await this.bptPrice(poolToken)).toString();
+          } else {
+            throw `No price for ${token.address}`;
           }
-          throw `No price for ${token.address}`;
         }
         // using floats assuming frontend purposes with low precision needs
         const tokenValue = parseFloat(token.balance) * parseFloat(tokenPrice);
@@ -206,7 +207,7 @@ export class PoolApr {
 
     const [balPrice, bptPriceUsd] = await Promise.all([
       this.tokenPrices.find('0xba100000625a3754423978a60c9317c58a424e3d'),
-      this.bptPrice(),
+      this.bptPrice(this.pool),
     ]);
     const balPriceUsd = parseFloat(balPrice?.usd || '0');
 
@@ -270,7 +271,7 @@ export class PoolApr {
     });
 
     // Get the gauge totalSupplyUsd
-    const bptPriceUsd = await this.bptPrice();
+    const bptPriceUsd = await this.bptPrice(this.pool);
     const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
 
     if (totalSupplyUsd == 0) {
@@ -308,12 +309,10 @@ export class PoolApr {
     const { lastWeekBalRevenue, lastWeekBBAUsdRevenue, veBalSupply } =
       await revenue.data();
 
-    const { totalShares } = this.pool;
-    const totalLiquidity = await this.totalLiquidity();
-    if (!totalLiquidity) {
-      throw 'totalLiquidity for veBal pool missing';
+    const bptPrice = await this.bptPrice(this.pool);
+    if (!bptPrice) {
+      throw 'bptPrice for veBal pool missing';
     }
-    const bptPrice = parseFloat(totalLiquidity) / parseFloat(totalShares);
 
     const dailyRevenue = (lastWeekBalRevenue + lastWeekBBAUsdRevenue) / 7;
     const apr = Math.round(
@@ -374,17 +373,28 @@ export class PoolApr {
     return poolFees.last24h();
   }
 
-  private async totalLiquidity(): Promise<string> {
+  /**
+   * Total Liquidity based on USD token prices taken from external price feed, eg: coingecko.
+   *
+   * @param pool
+   * @returns Pool liquidity in USD
+   */
+  private async totalLiquidity(pool: Pool): Promise<string> {
     const liquidityService = new Liquidity(this.pools, this.tokenPrices);
-    const liquidity = await liquidityService.getLiquidity(this.pool);
-
+    const liquidity = await liquidityService.getLiquidity(pool);
     return liquidity;
   }
 
-  private async bptPrice() {
+  /**
+   * BPT price as pool totalLiquidity / pool total Shares
+   * Total Liquidity is calculated based on USD token prices taken from external price feed, eg: coingecko.
+   *
+   * @param pool
+   * @returns BPT price in USD
+   */
+  private async bptPrice(pool: Pool) {
     return (
-      parseFloat(await this.totalLiquidity()) /
-      parseFloat(this.pool.totalShares)
+      parseFloat(await this.totalLiquidity(pool)) / parseFloat(pool.totalShares)
     );
   }
 
