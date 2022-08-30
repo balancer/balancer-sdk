@@ -11,6 +11,7 @@ import { Pools } from './';
 import { BalancerSDK } from '../sdk.module';
 import { expect } from 'chai';
 import nock from 'nock';
+import { ModelProvider } from './model-provider';
 
 // nock.disableNetConnect();
 
@@ -51,7 +52,7 @@ const balancerConfig: BalancerSdkConfig = {
 
 const balancerSdk = new BalancerSDK(balancerConfig);
 const networkConfig = balancerSdk.networkConfig;
-const dataRepositories = balancerSdk.dataRepositories;
+const dataRepositories = balancerSdk.data;
 
 const poolsRepositories: BalancerDataRepositories = {
   ...dataRepositories,
@@ -74,24 +75,22 @@ describe('pools', () => {
   describe('wrap', () => {
     it('Should be able to wrap a pool', () => {
       const pool = findPool('0xa6f548df93de924d73be7d25dc02554c6bd66db5');
-      const poolModel = Pools.wrap(pool, networkConfig, poolsRepositories);
+      const poolModel = ModelProvider.wrap(pool, dataRepositories);
       expect(poolModel.address).to.equal(pool.address);
     });
 
     it('Should be able to calculate liquidity for the wrapped pool', async () => {
       const pool = findPool('0xa6f548df93de924d73be7d25dc02554c6bd66db5');
-      const poolModel = Pools.wrap(pool, networkConfig, poolsRepositories);
-      const liquidity = await poolModel.liquidity();
+      const poolModel = ModelProvider.wrap(pool, dataRepositories);
+      const liquidity = await poolModel.calcLiquidity();
       expect(liquidity).to.equal('640000');
     });
 
     it('Should be able to calculate APR for the wrapped pool', async () => {
       const pool = findPool('0xa6f548df93de924d73be7d25dc02554c6bd66db5');
-      const poolModel = Pools.wrap(pool, networkConfig, poolsRepositories);
-      const liquidity = await poolModel.liquidity();
-      poolModel.totalLiquidity = liquidity;
-      const apr = await poolModel.apr();
-      console.log('APR is: ', apr);
+      const poolModel = ModelProvider.wrap(pool, dataRepositories);
+      pool.totalLiquidity = await poolModel.calcLiquidity();
+      const apr = await poolModel.calcApr();
       expect(apr.min).to.be.greaterThan(0);
       expect(apr.max).to.be.greaterThan(0);
     });

@@ -75,16 +75,6 @@ export class ModelProvider {
     };
   }
 
-  async update(id: string): Promise<Pool | undefined> {
-    const pool = await this.repositories.pools.update(id);
-    if (pool) {
-      const model = ModelProvider.wrap(pool, this.repositories);
-      return await ModelProvider.resolve(model);
-    } else {
-      return undefined;
-    }
-  }
-
   async find(id: string): Promise<Pool | undefined> {
     const data = await this.repositories.pools.find(id);
     if (!data) return;

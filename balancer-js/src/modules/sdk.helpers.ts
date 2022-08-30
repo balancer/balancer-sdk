@@ -46,7 +46,9 @@ export function getDataRepositories(
 ): BalancerDataRepositories {
   const networkConfig = getNetworkConfig(config);
   const blockDayAgo = () => {
-    return new BlockNumberRepository(networkConfig.chainId).find('dayAgo');
+    return new BlockNumberRepository(
+      networkConfig.urls.blockNumberSubgraph || ''
+    ).find('dayAgo');
   };
   // const tokenAddresses = [];
   const tokenAddresses = initialCoingeckoList

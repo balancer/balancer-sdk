@@ -55,22 +55,11 @@ export class Pools implements Findable<PoolWithMethods> {
 
   static wrap(
     pool: Pool,
-    dataSource: Updatetable<Pool>,
     networkConfig: BalancerNetworkConfig
   ): PoolWithMethods {
     const methods = PoolTypeConcerns.from(pool.poolType);
     return {
       ...pool,
-      // // NOTE: 🚨🚨🚨 - this is wrong
-      // // Temporary way to update pool values upstream before downstream data cycle get's implemented
-      update: async (id: string): Promise<PoolWithMethods | undefined> => {
-        const pool = await dataSource.update(id);
-        if (pool) {
-          return Pools.wrap(pool, dataSource, networkConfig);
-        } else {
-          return undefined;
-        }
-      },
       buildJoin: (
         joiner: string,
         tokensIn: string[],
@@ -128,7 +117,7 @@ export class Pools implements Findable<PoolWithMethods> {
     const data = await this.dataSource().find(id);
     if (!data) return;
 
-    return Pools.wrap(data, this.dataSource(), this.networkConfig);
+    return Pools.wrap(data, this.networkConfig);
   }
 
   async findBy(
@@ -141,7 +130,7 @@ export class Pools implements Findable<PoolWithMethods> {
       const data = await this.dataSource().findBy('address', value);
       if (!data) return;
 
-      return Pools.wrap(data, this.dataSource(), this.networkConfig);
+      return Pools.wrap(data, this.networkConfig);
     } else {
       throw `search by ${param} not implemented`;
     }
@@ -151,17 +140,13 @@ export class Pools implements Findable<PoolWithMethods> {
     const list = await this.dataSource().all();
     if (!list) return [];
 
-    return list.map((data: Pool) =>
-      Pools.wrap(data, this.dataSource(), this.networkConfig)
-    );
+    return list.map((data: Pool) => Pools.wrap(data, this.networkConfig));
   }
 
   async where(filter: (pool: Pool) => boolean): Promise<PoolWithMethods[]> {
     const list = await this.dataSource().where(filter);
     if (!list) return [];
 
-    return list.map((data: Pool) =>
-      Pools.wrap(data, this.dataSource(), this.networkConfig)
-    );
+    return list.map((data: Pool) => Pools.wrap(data, this.networkConfig));
   }
 }
