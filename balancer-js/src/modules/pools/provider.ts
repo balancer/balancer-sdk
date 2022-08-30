@@ -2,6 +2,7 @@ import { BalancerSdkConfig, Pool, PoolModel } from '@/types';
 import { PoolRepository } from '@/modules/data';
 import { Pools as PoolMethods } from './pools.module';
 import { getNetworkConfig } from '../sdk.helpers';
+import { Join } from '../joins/joins.module';
 
 /**
  * Building pools from raw data injecting poolType specific methods
@@ -12,11 +13,31 @@ export class PoolsProvider {
     private repository: PoolRepository
   ) {}
 
-  static wrap(data: Pool, config: BalancerSdkConfig): PoolModel {
+  static wrap(
+    data: Pool,
+    config: BalancerSdkConfig,
+    repo: PoolRepository
+  ): PoolModel {
     const methods = PoolMethods.from(data.poolType);
     const networkConfig = getNetworkConfig(config);
+    const joinModule = new Join(repo, networkConfig.chainId);
     return {
       ...data,
+      generalisedJoin: async (
+        expectedBPTOut,
+        tokens,
+        amounts,
+        userAddress,
+        authorisation
+      ) =>
+        joinModule.joinPool(
+          data.id,
+          expectedBPTOut,
+          tokens,
+          amounts,
+          userAddress,
+          authorisation
+        ),
       liquidity: async () => methods.liquidity.calcTotal(data.tokens),
       buildJoin: (joiner, tokensIn, amountsIn, slippage) =>
         methods.join.buildJoin({
@@ -71,7 +92,7 @@ export class PoolsProvider {
     const data = await this.repository.find(id);
     if (!data) return;
 
-    return PoolsProvider.wrap(data, this.config);
+    return PoolsProvider.wrap(data, this.config, this.repository);
   }
 
   async findBy(param: string, value: string): Promise<PoolModel | undefined> {
@@ -81,7 +102,7 @@ export class PoolsProvider {
       const data = await this.repository.findBy('address', value);
       if (!data) return;
 
-      return PoolsProvider.wrap(data, this.config);
+      return PoolsProvider.wrap(data, this.config, this.repository);
     } else {
       throw `search by ${param} not implemented`;
     }

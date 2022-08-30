@@ -77,11 +77,19 @@ export const ADDRESSES = {
       address: '0x02d60b84491589974263d922d9cc7a3152618ef6',
       decimals: 18,
       symbol: 'waDAI',
+      slot: 52,
     },
     waUSDC: {
       address: '0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de',
       decimals: 6,
       symbol: 'waUSDC',
+      slot: 52,
+    },
+    waUSDT: {
+      address: '0xf8Fd466F12e236f4c96F7Cce6c79EAdB819abF58',
+      decimals: 6,
+      symbol: 'waUSDT',
+      slot: 52,
     },
   },
   [Network.KOVAN]: {
@@ -290,6 +298,31 @@ export const ADDRESSES = {
     },
     bbausd: {
       address: 'N/A',
+      decimals: 18,
+      symbol: 'bbausd',
+    },
+  },
+  [Network.GOERLI]: {
+    USDC: {
+      address: '0xe0c9275e44ea80ef17579d33c55136b7da269aeb',
+      decimals: 6,
+      symbol: 'USDC',
+      slot: 0,
+    },
+    USDT: {
+      address: '0x1f1f156e0317167c11aa412e3d1435ea29dc3cce',
+      decimals: 6,
+      symbol: 'USDT',
+      slot: 0,
+    },
+    DAI: {
+      address: '0x8c9e6c40d3402480ace624730524facc5482798c',
+      decimals: 18,
+      symbol: 'DAI',
+      slot: 0,
+    },
+    bbausd: {
+      address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
       decimals: 18,
       symbol: 'bbausd',
     },

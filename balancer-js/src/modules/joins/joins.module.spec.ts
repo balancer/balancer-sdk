@@ -9,12 +9,16 @@ import { StaticPoolRepository } from '../data';
 import { Pool } from '@/types';
 import { Join } from './joins.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
+import { Network } from '@/lib/constants/network';
+import { formatAddress } from '@/test/lib/utils';
 
 describe('Generalised Joins', () => {
   context('Boosted', () => {
     let joinModule: Join;
     let rootPool: SubgraphPoolBase;
+    let userAddress: string;
     beforeEach(() => {
+      userAddress = formatAddress('testAccount');
       // The boostedPool will contain these Linear pools.
       const linearPools = [
         {
@@ -52,13 +56,13 @@ describe('Generalised Joins', () => {
       const pools = [...boostedInfo.linearPools, rootPool];
       // // Create staticPools provider with above pools
       const poolProvider = new StaticPoolRepository(pools as Pool[]);
-      joinModule = new Join(poolProvider);
+      joinModule = new Join(poolProvider, Network.GOERLI);
     });
 
     it('should throw when pool doesnt exist', async () => {
       let errorMessage = '';
       try {
-        await joinModule.joinPool('thisisntapool', '0', [], []);
+        await joinModule.joinPool('thisisntapool', '0', [], [], userAddress);
       } catch (error) {
         errorMessage = (error as Error).message;
       }
@@ -76,7 +80,8 @@ describe('Generalised Joins', () => {
         rootPool.id,
         '7777777',
         inputTokens,
-        inputAmounts
+        inputAmounts,
+        userAddress
       );
     });
 
@@ -87,7 +92,8 @@ describe('Generalised Joins', () => {
         rootPool.id,
         '7777777',
         inputTokens,
-        inputAmounts
+        inputAmounts,
+        userAddress
       );
     });
 
@@ -98,7 +104,10 @@ describe('Generalised Joins', () => {
   context('boostedMeta', () => {
     let joinModule: Join;
     let rootPool: SubgraphPoolBase;
+    let userAddress: string;
     before(() => {
+      userAddress = formatAddress('testAccount');
+
       // The boostedMeta will have:
       // - boosted with linearPools[0], linearPools[1], linearPools[2]
       // - a single linearPool, linearPools[3]
@@ -162,7 +171,7 @@ describe('Generalised Joins', () => {
       ];
       // // Create staticPools provider with above pools
       const poolProvider = new StaticPoolRepository(pools as Pool[]);
-      joinModule = new Join(poolProvider);
+      joinModule = new Join(poolProvider, Network.GOERLI);
     });
 
     it('all leaf tokens', async () => {
@@ -170,7 +179,7 @@ describe('Generalised Joins', () => {
         '0x6b175474e89094c44da98b954eedeac495271d0f',
         '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         '0xdac17f958d2ee523a2206206994597c13d831ec7',
-        'address_STABLE',
+        formatAddress('address_STABLE'),
       ];
       const inputAmounts = [
         '1000000000000000000',
@@ -182,7 +191,8 @@ describe('Generalised Joins', () => {
         rootPool.id,
         '7777777',
         inputTokens,
-        inputAmounts
+        inputAmounts,
+        userAddress
       );
     });
 
@@ -193,7 +203,8 @@ describe('Generalised Joins', () => {
         rootPool.id,
         '7777777',
         inputTokens,
-        inputAmounts
+        inputAmounts,
+        userAddress
       );
     });
 
@@ -204,7 +215,8 @@ describe('Generalised Joins', () => {
         rootPool.id,
         '7777777',
         inputTokens,
-        inputAmounts
+        inputAmounts,
+        userAddress
       );
     });
   });
@@ -214,7 +226,9 @@ describe('Generalised Joins', () => {
   context('boostedMetaBig, has same leaf tokens', () => {
     let joinModule: Join;
     let rootPool: SubgraphPoolBase;
+    let userAddress: string;
     before(() => {
+      userAddress = formatAddress('testAccount');
       // The boostedMetaBig will have a phantomStable with two boosted.
       // Note:
       // first pool will be parent
@@ -298,7 +312,7 @@ describe('Generalised Joins', () => {
       ];
       // // Create staticPools provider with above pools
       const poolProvider = new StaticPoolRepository(pools as Pool[]);
-      joinModule = new Join(poolProvider);
+      joinModule = new Join(poolProvider, 1);
     });
 
     it('all leaf tokens', async () => {
@@ -312,7 +326,8 @@ describe('Generalised Joins', () => {
         rootPool.id,
         '7777777',
         inputTokens,
-        inputAmounts
+        inputAmounts,
+        userAddress
       );
     });
 
@@ -323,7 +338,8 @@ describe('Generalised Joins', () => {
         rootPool.id,
         '7777777',
         inputTokens,
-        inputAmounts
+        inputAmounts,
+        userAddress
       );
     });
   });

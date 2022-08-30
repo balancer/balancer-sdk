@@ -6,6 +6,7 @@ import {
   SwapV2,
 } from '@balancer-labs/sor';
 import { BigNumber } from '@ethersproject/bignumber';
+import { formatAddress } from '../lib/utils';
 
 const swapV2 = Factory.define<SwapV2>(() => ({
   poolId: '0xe2957c36816c1033e15dd3149ddf2508c3cfe79076ce4bde6cb3ecd34d4084b4',
@@ -84,8 +85,7 @@ const subgraphToken = Factory.define<SubgraphToken>(({ transientParams }) => {
   let namedToken = namedTokens[symbol];
   if (!namedToken) {
     namedToken = {};
-    if (!address) namedToken.address = `address_${symbol}`;
-    else namedToken.address = address;
+    namedToken.address = formatAddress(address ?? `address_${symbol}`);
     namedToken.decimals = 18;
   }
   return {

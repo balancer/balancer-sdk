@@ -23,7 +23,7 @@ export class SubgraphPoolRepository implements PoolRepository {
         const { pool0 } = await this.client.Pools({
           where: { address: value },
         });
-        return this.mapPool(pool0);
+        return this.mapPool(pool0[0]);
       default:
         return undefined;
     }
