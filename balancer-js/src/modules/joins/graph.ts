@@ -2,7 +2,7 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { parsePoolInfo } from '@/lib/utils';
 import { Pool, PoolType } from '@/types';
 import { Zero } from '@ethersproject/constants';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { PoolRepository } from '../data';
 
 export interface Node {

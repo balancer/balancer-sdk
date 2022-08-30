@@ -228,6 +228,7 @@ describe('Generalised Joins', () => {
     let rootPool: SubgraphPoolBase;
     let userAddress: string;
     before(() => {
+      userAddress = formatAddress('testAccount');
       // The boostedMetaBig will have a phantomStable with two boosted.
       // Note:
       // first pool will be parent
