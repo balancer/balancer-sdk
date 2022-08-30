@@ -6,13 +6,21 @@ import { Swaps } from '@/modules/swaps/swaps.module';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
   EncodeBatchSwapInput,
+  EncodeWrapAaveDynamicTokenInput,
   EncodeUnwrapAaveStaticTokenInput,
   OutputReference,
   EncodeExitPoolInput,
+  EncodeJoinPoolInput,
   ExitAndBatchSwapInput,
   ExitPoolData,
+  JoinPoolData,
 } from './types';
-import { TransactionData, ExitPoolRequest, BalancerSdkConfig } from '@/types';
+import {
+  TransactionData,
+  ExitPoolRequest,
+  JoinPoolRequest,
+  BalancerSdkConfig,
+} from '@/types';
 import {
   SwapType,
   FundManagement,
@@ -21,10 +29,11 @@ import {
 } from '../swaps/types';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 
-import relayerLibraryAbi from '@/lib/abi/VaultActions.json';
-import aaveWrappingAbi from '@/lib/abi/AaveWrapping.json';
+import relayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
 
 export * from './types';
+
+const relayerLibrary = new Interface(relayerLibraryAbi);
 
 export class Relayer {
   private readonly swaps: Swaps;
@@ -37,6 +46,18 @@ export class Relayer {
     } else {
       this.swaps = new Swaps(swapsOrConfig);
     }
+  }
+
+  static encodeSetRelayerApproval(
+    relayerAdress: string,
+    approved: boolean,
+    authorisation: string
+  ): string {
+    return relayerLibrary.encodeFunctionData('setRelayerApproval', [
+      relayerAdress,
+      approved,
+      authorisation,
+    ]);
   }
 
   static encodeBatchSwap(params: EncodeBatchSwapInput): string {
@@ -67,12 +88,37 @@ export class Relayer {
     ]);
   }
 
+  static encodeJoinPool(params: EncodeJoinPoolInput): string {
+    const relayerLibrary = new Interface(relayerLibraryAbi);
+
+    return relayerLibrary.encodeFunctionData('joinPool', [
+      params.poolId,
+      params.poolKind,
+      params.sender,
+      params.recipient,
+      params.joinPoolRequest,
+      params.outputReference,
+      params.value,
+    ]);
+  }
+
+  static encodeWrapAaveDynamicToken(
+    params: EncodeWrapAaveDynamicTokenInput
+  ): string {
+    return relayerLibrary.encodeFunctionData('wrapAaveDynamicToken', [
+      params.staticToken,
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.fromUnderlying,
+      params.outputReference,
+    ]);
+  }
+
   static encodeUnwrapAaveStaticToken(
     params: EncodeUnwrapAaveStaticTokenInput
   ): string {
-    const aaveWrappingLibrary = new Interface(aaveWrappingAbi);
-
-    return aaveWrappingLibrary.encodeFunctionData('unwrapAaveStaticToken', [
+    return relayerLibrary.encodeFunctionData('unwrapAaveStaticToken', [
       params.staticToken,
       params.sender,
       params.recipient,
@@ -121,6 +167,41 @@ export class Relayer {
 
     const exitEncoded = Relayer.encodeExitPool(exitPoolInput);
     return exitEncoded;
+  }
+
+  static constructJoinCall(params: JoinPoolData): string {
+    const {
+      assets,
+      maxAmountsIn,
+      userData,
+      fromInternalBalance,
+      poolId,
+      poolKind,
+      sender,
+      recipient,
+      value,
+      outputReference,
+    } = params;
+
+    const joinPoolRequest: JoinPoolRequest = {
+      assets,
+      maxAmountsIn,
+      userData,
+      fromInternalBalance,
+    };
+
+    const joinPoolInput: EncodeJoinPoolInput = {
+      poolId,
+      poolKind,
+      sender,
+      recipient,
+      value,
+      outputReference,
+      joinPoolRequest,
+    };
+
+    const joinEncoded = Relayer.encodeJoinPool(joinPoolInput);
+    return joinEncoded;
   }
 
   /**

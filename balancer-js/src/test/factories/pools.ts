@@ -1,8 +1,9 @@
 import { Factory } from 'fishery';
 import { SubgraphPoolBase, SubgraphToken } from '@balancer-labs/sor';
+import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
+
 import { subgraphToken, subgraphPoolBase } from './sor';
-import { BigNumber } from 'ethers';
-import { formatFixed, parseFixed } from '@ethersproject/bignumber';
+import { formatAddress, formatId } from '../lib/utils';
 import { Zero, WeiPerEther } from '@ethersproject/constants';
 
 type LinearTokens = {
@@ -106,7 +107,9 @@ const linearPools = Factory.define<LinearInfo, LinearParams>(
       Zero
     );
     pools?.forEach((pool) => {
-      const poolAddress = `address-${pool.tokens.mainSymbol}_${pool.tokens.wrappedSymbol}`;
+      const poolAddress = formatAddress(
+        `address-${pool.tokens.mainSymbol}_${pool.tokens.wrappedSymbol}`
+      );
       const mainToken = subgraphToken
         .transient({
           symbol: pool.tokens.mainSymbol,
@@ -127,7 +130,9 @@ const linearPools = Factory.define<LinearInfo, LinearParams>(
         })
         .build();
       const linearPool = subgraphPoolBase.build({
-        id: `id-${pool.tokens.mainSymbol}_${pool.tokens.wrappedSymbol}`,
+        id: formatId(
+          `id-${pool.tokens.mainSymbol}_${pool.tokens.wrappedSymbol}`
+        ),
         address: poolAddress,
         poolType: 'AaveLinear',
         tokens: [mainToken, wrappedToken, phantomBptToken],
@@ -224,9 +229,9 @@ const boostedPool = Factory.define<BoostedInfo, BoostedParams>(
     else linearPoolInfo = linearPools.build();
 
     const rootPoolParams = {
-      id: rootId,
+      id: formatId(rootId),
       symbol: 'bRootPool',
-      address: rootAddress,
+      address: formatAddress(rootAddress),
       childTokens: linearPoolInfo.linearPoolTokens,
       tokenbalance: rootBalance,
     };
@@ -300,9 +305,9 @@ const boostedMetaPool = Factory.define<BoostedMetaInfo, BoostedMetaParams>(
       .build();
 
     const rootPoolParams = {
-      id: rootId,
+      id: formatId(rootId as string),
       symbol: 'rootPool',
-      address: rootAddress,
+      address: formatAddress(rootAddress as string),
       childTokens: [childBoostedBpt, ...childLinearInfo.linearPoolTokens],
       tokenbalance: rootBalance,
     };
@@ -360,9 +365,9 @@ const boostedMetaBigPool = Factory.define<
   }
 
   const phantomParams = {
-    id: transientParams.rootId,
+    id: formatId(transientParams.rootId as string),
     symbol: 'parentPhantom',
-    address: transientParams.rootAddress,
+    address: formatAddress(transientParams.rootAddress as string),
     childTokens: childPoolTokens,
     tokenbalance: transientParams.rootBalance,
   };

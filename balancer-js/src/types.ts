@@ -35,6 +35,7 @@ export interface ContractAddresses {
   vault: string;
   multicall: string;
   lidoRelayer?: string;
+  relayer?: string;
 }
 
 export interface BalancerNetworkConfig {
@@ -198,6 +199,7 @@ export interface Pool {
   feesSnapshot?: string;
   boost?: string;
   symbol?: string;
+  swapEnabled: boolean;
   amp?: string;
   wrappedIndex?: number;
   mainIndex?: number;
@@ -205,12 +207,24 @@ export interface Pool {
 
 export interface PoolModel extends Pool {
   liquidity: () => Promise<string>;
+  generalisedJoin: (
+    expectedBPTOut: string,
+    tokens: string[],
+    amounts: string[],
+    userAddress: string,
+    authorisation?: string
+  ) => Promise<{
+    to: string;
+    data: string;
+    decode: (output: string) => string;
+  }>;
   buildJoin: (
     joiner: string,
     tokensIn: string[],
     amountsIn: string[],
     slippage: string
   ) => JoinPoolAttributes;
+  calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
   buildExitExactBPTIn: (
     exiter: string,
     bptIn: string,

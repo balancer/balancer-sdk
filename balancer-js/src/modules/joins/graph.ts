@@ -1,6 +1,8 @@
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { parsePoolInfo } from '@/lib/utils';
 import { Pool, PoolType } from '@/types';
-import { BigNumber } from 'ethers';
+import { Zero } from '@ethersproject/constants';
+import { BigNumber } from '@ethersproject/bignumber';
 import { PoolRepository } from '../data';
 
 export interface Node {
@@ -49,11 +51,12 @@ export class PoolGraph {
 
   getTokenTotal(pool: Pool): BigNumber {
     const bptIndex = pool.tokensList.indexOf(pool.address);
-    let total = BigNumber.from('0');
-    pool.tokens.forEach((token, i) => {
+    let total = Zero;
+    const { parsedBalances } = parsePoolInfo(pool);
+    parsedBalances.forEach((balance, i) => {
       // Ignore phantomBpt balance
       if (bptIndex !== i) {
-        total = total.add(token.balance);
+        total = total.add(balance);
       }
     });
     return total;
@@ -90,15 +93,16 @@ export class PoolGraph {
         pool
       );
     } else {
+      const { parsedBalances } = parsePoolInfo(pool);
       for (let i = 0; i < pool.tokens.length; i++) {
         // ignore any phantomBpt tokens
         if (pool.tokens[i].address === pool.address) continue;
-        const proportion = BigNumber.from(pool.tokens[i].balance)
-          .mul('1000000000000000000')
+        const proportion = BigNumber.from(parsedBalances[i])
+          .mul((1e18).toString())
           .div(tokenTotal);
         const finalProportion = proportion
           .mul(proportionOfParent)
-          .div('1000000000000000000');
+          .div((1e18).toString());
         const childNode = await this.buildGraphFromPool(
           pool.tokens[i].address,
           nodeIndex,
