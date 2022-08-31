@@ -6,7 +6,7 @@ import { PoolsProvider } from '@/modules/pools/provider';
 import { PoolModel, Pool } from '@/types';
 import { Network } from '@/.';
 import { setupPool } from '@/test/lib/utils';
-import { WeightedPoolSpotPrice } from './spotPrice.concern';
+import { StablePoolSpotPrice } from './spotPrice.concern';
 import { ADDRESSES } from '@/test/lib/constants';
 
 dotenv.config();
@@ -14,11 +14,11 @@ dotenv.config();
 const network = Network.MAINNET;
 const rpcUrl = 'http://127.0.0.1:8545';
 
-const spotPriceCalc = new WeightedPoolSpotPrice();
-const weth_bal_pool_id =
-  '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014';
+const spotPriceCalc = new StablePoolSpotPrice();
+const stable_pool_id =
+  '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063';
 
-describe('weighted pool spot price', () => {
+describe('stable pool spot price', () => {
   let pool: PoolModel | undefined;
 
   // Setup chain
@@ -32,18 +32,17 @@ describe('weighted pool spot price', () => {
       sdkConfig,
       new StaticPoolRepository(pools_14717479 as Pool[])
     );
-    pool = await setupPool(poolsProvider, weth_bal_pool_id);
+    pool = await setupPool(poolsProvider, stable_pool_id);
   });
 
   context('calcPoolSpotPrice', () => {
     it('should calculate spot price for pair', () => {
       const spotPrice = spotPriceCalc.calcPoolSpotPrice(
-        ADDRESSES[network].WETH.address,
-        ADDRESSES[network].BAL.address,
+        ADDRESSES[network].DAI.address,
+        ADDRESSES[network].USDC.address,
         pool as PoolModel
       );
-
-      expect(spotPrice).to.eq('0.004981212133448337');
+      expect(spotPrice).to.eq('1.000051911328148725');
     });
   });
 });
