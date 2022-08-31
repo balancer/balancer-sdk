@@ -4,7 +4,7 @@ import type { Contract } from '@ethersproject/contracts';
 import type { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 import type {
   ExitPoolAttributes,
-  JoinPoolAttributes
+  JoinPoolAttributes,
 } from './modules/pools/pool-types/concerns/types';
 import type {
   Findable,
@@ -47,8 +47,8 @@ export interface ContractAddresses {
   vault: string;
   multicall: string;
   lidoRelayer?: string;
-  gaugeController: string;
-  feeDistributor: string;
+  gaugeController?: string;
+  feeDistributor?: string;
 }
 
 export interface BalancerNetworkConfig {
@@ -60,14 +60,14 @@ export interface BalancerNetworkConfig {
       lbpRaisingTokens?: string[];
       stETH?: string;
       wstETH?: string;
-      bal: string;
-      veBal: string;
-      bbaUsd: string;
+      bal?: string;
+      veBal?: string;
+      bbaUsd?: string;
     };
   };
   urls: {
     subgraph: string;
-    gaugesSubgraph: string;
+    gaugesSubgraph?: string;
     blockNumberSubgraph?: string;
   };
   pools: {
@@ -80,8 +80,8 @@ export interface BalancerDataRepositories {
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
   tokenMeta: Findable<Token, TokenAttribute>;
-  liquidityGauges: Findable<LiquidityGauge>;
-  feeDistributor: BaseFeeDistributor;
+  liquidityGauges?: Findable<LiquidityGauge>;
+  feeDistributor?: BaseFeeDistributor;
   feeCollector: Findable<number>;
   tokenYields: Findable<number>;
 }
@@ -244,7 +244,7 @@ export interface PoolWithMethods extends Pool {
     tokensIn: string[],
     amountsIn: string[],
     slippage: string
-  ) => Promise<JoinPoolAttributes>;
+  ) => JoinPoolAttributes;
   calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
   buildExitExactBPTIn: (
     exiter: string,
