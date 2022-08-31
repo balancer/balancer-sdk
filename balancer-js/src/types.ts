@@ -173,6 +173,7 @@ export enum PoolType {
   AaveLinear = 'AaveLinear',
   ERC4626Linear = 'ERC4626Linear',
   Element = 'Element',
+  ComposableStable = 'ComposableStable',
 }
 
 export interface Pool {

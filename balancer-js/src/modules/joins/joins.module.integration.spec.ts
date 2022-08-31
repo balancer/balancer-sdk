@@ -7,15 +7,14 @@ import {
   Network,
   RelayerAuthorization,
   PoolModel,
-  Subgraph,
-  SubgraphPoolRepository,
+  BalancerSdkConfig,
+  BalancerSDK,
 } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { MaxInt256, MaxUint256 } from '@ethersproject/constants';
-import { PoolsProvider } from '@/modules/pools/provider';
-import { forkSetup, getBalances } from '@/test/lib/utils';
+import { MaxUint256 } from '@ethersproject/constants';
+import { forkSetup, getBalances, approveToken } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 
 /*
@@ -39,7 +38,7 @@ import { ADDRESSES } from '@/test/lib/constants';
  */
 const network = Network.MAINNET;
 const poolId =
-  '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe';
+  '0x9b532ab955417afd0d012eb9f7389457cd0ea712000000000000000000000338';
 const blockNumber = 15372650;
 
 dotenv.config();
@@ -57,7 +56,7 @@ const { contracts, contractAddresses } = new Contracts(
 const relayer = contractAddresses.relayer as string; // only currenlty supported on GOERLI
 const fromPool = {
   id: poolId,
-  address: ADDRESSES[network].bbausd.address,
+  address: '0x9b532ab955417afd0d012eb9f7389457cd0ea712',
 }; // bbausd
 const tokensIn = [
   ADDRESSES[network].USDT.address,
@@ -119,7 +118,6 @@ describe('bbausd generalised join execution', async () => {
 
     signer = provider.getSigner();
     signerAddress = await signer.getAddress();
-    authorisation = await signRelayerApproval(relayer, signerAddress, signer);
 
     await forkSetup(
       signer,
@@ -130,19 +128,33 @@ describe('bbausd generalised join execution', async () => {
       blockNumber
     );
 
-    const config = {
+    // waUSDC
+    await approveToken(
+      '0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de',
+      MaxUint256.toString(),
+      signer
+    );
+    // waDAI
+    await approveToken(
+      '0x02d60b84491589974263d922D9cC7a3152618Ef6',
+      MaxUint256.toString(),
+      signer
+    );
+
+    authorisation = await signRelayerApproval(relayer, signerAddress, signer);
+
+    const sdkConfig: BalancerSdkConfig = {
       network,
       rpcUrl,
+      customSubgraphUrl: `https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta`,
     };
-    const subgraph = new Subgraph(config);
-    const pools = new PoolsProvider(
-      config,
-      new SubgraphPoolRepository(subgraph.client)
-    );
-    await pools.findBy('address', fromPool.address).then((res) => {
-      if (!res) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-      pool = res;
-    });
+    const balancer = new BalancerSDK(sdkConfig);
+    await balancer.poolsProvider
+      .findBy('address', fromPool.address)
+      .then((res) => {
+        if (!res) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
+        pool = res;
+      });
   });
 
   async function testFlow(
@@ -199,7 +211,9 @@ describe('bbausd generalised join execution', async () => {
     expect(receipt.status).to.eql(1);
     expect(bptBalanceBefore.eq(0)).to.be.true;
     expect(bptBalanceAfter.gt(0)).to.be.true;
-    tokensBalanceBefore.forEach((b, i) => expect(b.eq(tokensIn[i])).to.be.true);
+    tokensBalanceBefore.forEach(
+      (b, i) => expect(b.eq(initialBalances[i])).to.be.true
+    );
     tokensBalanceAfter.forEach((b) => expect(b.eq(0)).to.be.true);
     return bptOut;
   }
@@ -211,14 +225,15 @@ describe('bbausd generalised join execution', async () => {
       bptOut = await testFlow();
     }).timeout(20000);
 
-    it('should transfer tokens from stable to boosted - limit should fail', async () => {
-      let errorMessage = '';
-      try {
-        await testFlow(false, BigNumber.from(bptOut).add(MaxInt256).toString());
-      } catch (error) {
-        errorMessage = (error as Error).message;
-      }
-      expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
-    }).timeout(20000);
+    // TODO - Reimplement
+    // it('should transfer tokens from stable to boosted - limit should fail', async () => {
+    //   let errorMessage = '';
+    //   try {
+    //     await testFlow(false, BigNumber.from(bptOut).add(MaxInt256).toString());
+    //   } catch (error) {
+    //     errorMessage = (error as Error).message;
+    //   }
+    //   expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
+    // }).timeout(20000);
   });
 }).timeout(20000);

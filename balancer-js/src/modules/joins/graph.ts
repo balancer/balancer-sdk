@@ -33,6 +33,7 @@ joinActions.set(PoolType.MetaStable, 'joinPool');
 joinActions.set(PoolType.Stable, 'joinPool');
 joinActions.set(PoolType.StablePhantom, 'joinPool');
 joinActions.set(PoolType.Weighted, 'joinPool');
+joinActions.set(PoolType.ComposableStable, 'joinPool');
 
 export class PoolGraph {
   constructor(private pools: PoolRepository) {}

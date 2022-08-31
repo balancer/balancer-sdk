@@ -1,11 +1,11 @@
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
-import { AddressZero, MaxInt256 } from '@ethersproject/constants';
+import { AddressZero, MaxInt256, MaxUint256 } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
-import { WeightedPoolEncoder } from '@/pool-weighted';
+import { StablePoolEncoder } from '@/pool-stable';
 import { JoinPoolRequest } from '@/types';
 import { PoolRepository } from '../data';
 import { PoolGraph, Node } from './graph';
@@ -96,17 +96,20 @@ export class Join {
         : this.relayer;
       const recipient = node.id === rootId ? userAddress : this.relayer; // last chained action
       switch (node.action) {
-        // TO DO - Add other Relayer supported Unwraps
+        // TODO - Add other Relayer supported Unwraps
+        // TODO - Change batchSwap receiver to be Relayer internal, joinPool sender to be Relayer internal (will be interesting to see if this causes issues)
         case 'wrapAaveDynamicToken':
-          calls.push(this.createAaveWrap(node, sender, recipient));
+          calls.push(this.createAaveWrap(node, userAddress, userAddress));
           break;
         case 'batchSwap':
           calls.push(
-            this.createBatchSwap(node, expectedOut, sender, recipient)
+            this.createBatchSwap(node, expectedOut, userAddress, userAddress)
           );
           break;
         case 'joinPool':
-          calls.push(this.createJoinPool(node, expectedOut, sender, recipient));
+          calls.push(
+            this.createJoinPool(node, expectedOut, userAddress, userAddress)
+          );
           break;
         case 'input':
           this.createMainToken(node, tokens, amounts);
@@ -185,7 +188,7 @@ export class Join {
   }
 
   createAaveWrap(node: Node, sender: string, recipient: string): string {
-    const childNode = node.children[0]; // TODO: check if it's possible to have more than one child at this type of node
+    const childNode = node.children[0]; // TODO: check if it's possible to have more than one child at this type of node - This might be the case for joining with non-leaf tokens
 
     const staticToken = node.address;
     const amount = childNode.outputReference;
@@ -194,7 +197,7 @@ export class Join {
       sender,
       recipient,
       amount,
-      fromUnderlying: true, // TODO: check if we should handle the false case as well
+      fromUnderlying: true, // TODO: check if we should handle the false case as well - Not required
       outputReference: Relayer.toChainedReference(node.outputReference),
     });
 
@@ -300,15 +303,22 @@ export class Join {
     const inputAmts: string[] = [];
     const childOutputRefs: string[] = []; // for testing purposes only
 
+    // inputTokens needs to include each asset even if it has 0 amount
     node.children.forEach((child) => {
+      inputTokens.push(child.address);
+      childOutputRefs.push(child.outputReference);
+
       if (child.outputReference !== '0') {
-        inputTokens.push(child.address);
         inputAmts.push(
           Relayer.toChainedReference(child.outputReference).toString()
         );
-        childOutputRefs.push(child.outputReference);
-      }
+      } else inputAmts.push('0');
     });
+
+    // assets need to include the phantomPoolToken
+    inputTokens.push(node.address);
+    // need to add a placeholder so sorting works
+    inputAmts.push('0');
 
     console.log(
       node.type,
@@ -326,26 +336,34 @@ export class Join {
       inputTokens,
       inputAmts
     ) as [string[], string[]];
+    // the amounts should only include the non phantom tokens
+    const bptIndex = sortedTokens.indexOf(node.address);
+    sortedAmounts.splice(bptIndex, 1);
 
-    const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
-      sortedAmounts,
+    const userData = StablePoolEncoder.joinExactTokensInForBPTOut(
+      sortedAmounts, // Should NOT include amount for phantom BPT
       minAmountOut
     );
 
-    // TODO: validate if ETH logic applies here
+    // TODO: validate if ETH logic applies here - It will apply in the case someone is joining something like a weth/wsteth pool using ETH. We should add a test for this at some point.
     const ethIndex = sortedTokens.indexOf(AddressZero);
     const value = ethIndex === -1 ? '0' : sortedAmounts[ethIndex];
 
     const call = Relayer.constructJoinCall({
       poolId: node.id,
-      poolKind: 0, // TODO: figure out how to define this number
+      poolKind: 0, // TODO: figure out how to define this number. For the Relayer this is always 0 for now.
       sender,
       recipient,
       value,
-      outputReference: Relayer.toChainedReference(node.outputReference),
+      outputReference: '0', // TO DO - This caused issue before, not sure if it will now - Relayer.toChainedReference(node.outputReference),
       joinPoolRequest: {} as JoinPoolRequest,
-      assets: sortedTokens,
-      maxAmountsIn: sortedAmounts,
+      assets: sortedTokens, // Must include BPT token
+      maxAmountsIn: [
+        MaxUint256.toString(),
+        MaxUint256.toString(),
+        MaxUint256.toString(),
+        MaxUint256.toString(),
+      ], // TODO - Must include BPT limit - These need to be set correctly, set to amounts in apart from phantomBpt which should be 0
       userData,
       fromInternalBalance: sender === this.relayer,
     });
