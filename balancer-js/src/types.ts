@@ -1,13 +1,23 @@
-import { BigNumberish } from '@ethersproject/bignumber';
-import { Network } from './lib/constants/network';
-import { Contract } from '@ethersproject/contracts';
-import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
-import {
+import type { BigNumberish } from '@ethersproject/bignumber';
+import type { Network } from './lib/constants/network';
+import type { Contract } from '@ethersproject/contracts';
+import type { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
+import type {
   ExitPoolAttributes,
-  JoinPoolAttributes,
+  JoinPoolAttributes
 } from './modules/pools/pool-types/concerns/types';
+import type {
+  Findable,
+  Searchable,
+  LiquidityGauge,
+  PoolAttribute,
+  TokenAttribute,
+} from '@/modules/data/types';
+import type { BaseFeeDistributor } from './modules/data';
 
 export * from '@/modules/data/types';
+import type { AprBreakdown } from '@/modules/pools/apr/apr';
+export { AprBreakdown };
 
 export type Address = string;
 
@@ -50,6 +60,9 @@ export interface BalancerNetworkConfig {
       lbpRaisingTokens?: string[];
       stETH?: string;
       wstETH?: string;
+      bal: string;
+      veBal: string;
+      bbaUsd: string;
     };
   };
   urls: {
@@ -60,6 +73,17 @@ export interface BalancerNetworkConfig {
   pools: {
     wETHwstETH?: PoolReference;
   };
+}
+
+export interface BalancerDataRepositories {
+  pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  tokenPrices: Findable<Price>;
+  tokenMeta: Findable<Token, TokenAttribute>;
+  liquidityGauges: Findable<LiquidityGauge>;
+  feeDistributor: BaseFeeDistributor;
+  feeCollector: Findable<number>;
+  tokenYields: Findable<number>;
 }
 
 export type PoolReference = {
@@ -182,6 +206,7 @@ export enum PoolType {
 
 export interface Pool {
   id: string;
+  name: string;
   address: string;
   poolType: PoolType;
   swapFee: string;
@@ -190,7 +215,7 @@ export interface Pool {
   tokens: PoolToken[];
   tokensList: string[];
   tokenAddresses?: string[];
-  totalLiquidity?: string;
+  totalLiquidity: string;
   totalShares: string;
   totalSwapFee?: string;
   totalSwapVolume?: string;
@@ -206,16 +231,20 @@ export interface Pool {
   symbol?: string;
   swapEnabled: boolean;
   amp?: string;
+  apr?: AprBreakdown;
+  liquidity?: string;
 }
 
-export interface PoolModel extends Pool {
-  liquidity: () => Promise<string>;
+/**
+ * Pool use-cases / controller layer
+ */
+export interface PoolWithMethods extends Pool {
   buildJoin: (
     joiner: string,
     tokensIn: string[],
     amountsIn: string[],
     slippage: string
-  ) => JoinPoolAttributes;
+  ) => Promise<JoinPoolAttributes>;
   calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
   buildExitExactBPTIn: (
     exiter: string,
