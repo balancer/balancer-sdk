@@ -1,6 +1,5 @@
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import OldBigNumber from 'bignumber.js';
-import * as SDK from '@georgeroman/balancer-v2-pools';
+import * as SOR from '@balancer-labs/sor';
 import {
   ExitConcern,
   ExitExactBPTInParameters,
@@ -66,7 +65,6 @@ export class WeightedPoolExit implements ExitConcern {
 
     let minAmountsOut = Array(sortedTokens.length).fill('0');
     let userData: string;
-    let value: BigNumber | undefined;
 
     if (singleTokenMaxOut) {
       // Exit pool with single token using exact bptIn
@@ -74,12 +72,12 @@ export class WeightedPoolExit implements ExitConcern {
       const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
 
       // Calculate amount out given BPT in
-      const amountOut = SDK.WeightedMath._calcTokenOutGivenExactBptIn(
-        new OldBigNumber(sortedBalances[singleTokenMaxOutIndex]),
-        new OldBigNumber(sortedWeights[singleTokenMaxOutIndex]),
-        new OldBigNumber(bptIn),
-        new OldBigNumber(parsedTotalShares),
-        new OldBigNumber(parsedSwapFee)
+      const amountOut = SOR.WeightedMaths._calcTokenOutGivenExactBptIn(
+        BigInt(sortedBalances[singleTokenMaxOutIndex]),
+        BigInt(sortedWeights[singleTokenMaxOutIndex]),
+        BigInt(bptIn),
+        BigInt(parsedTotalShares),
+        BigInt(parsedSwapFee)
       ).toString();
 
       // Apply slippage tolerance
@@ -92,18 +90,14 @@ export class WeightedPoolExit implements ExitConcern {
         bptIn,
         singleTokenMaxOutIndex
       );
-
-      if (shouldUnwrapNativeAsset) {
-        value = BigNumber.from(amountOut);
-      }
     } else {
       // Exit pool with all tokens proportinally
 
       // Calculate amounts out given BPT in
-      const amountsOut = SDK.WeightedMath._calcTokensOutGivenExactBptIn(
-        sortedBalances.map((b) => new OldBigNumber(b)),
-        new OldBigNumber(bptIn),
-        new OldBigNumber(parsedTotalShares)
+      const amountsOut = SOR.WeightedMaths._calcTokensOutGivenExactBptIn(
+        sortedBalances.map((b) => BigInt(b)),
+        BigInt(bptIn),
+        BigInt(parsedTotalShares)
       ).map((amount) => amount.toString());
 
       // Apply slippage tolerance
@@ -116,13 +110,6 @@ export class WeightedPoolExit implements ExitConcern {
       });
 
       userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(bptIn);
-
-      if (shouldUnwrapNativeAsset) {
-        const amount = amountsOut.find(
-          (amount, i) => sortedTokens[i] == AddressZero
-        );
-        value = amount ? BigNumber.from(amount) : undefined;
-      }
     }
 
     const to = balancerVault;
@@ -153,7 +140,6 @@ export class WeightedPoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
-      value,
       minAmountsOut,
       maxBPTIn: bptIn,
     };
@@ -196,12 +182,12 @@ export class WeightedPoolExit implements ExitConcern {
     ) as [string[], string[]];
 
     // Calculate expected BPT in given tokens out
-    const bptIn = SDK.WeightedMath._calcBptInGivenExactTokensOut(
-      sortedBalances.map((b) => new OldBigNumber(b)),
-      sortedWeights.map((w) => new OldBigNumber(w)),
-      sortedAmounts.map((a) => new OldBigNumber(a)),
-      new OldBigNumber(parsedTotalShares),
-      new OldBigNumber(parsedSwapFee)
+    const bptIn = SOR.WeightedMaths._calcBptInGivenExactTokensOut(
+      sortedBalances.map((b) => BigInt(b)),
+      sortedWeights.map((w) => BigInt(w)),
+      sortedAmounts.map((a) => BigInt(a)),
+      BigInt(parsedTotalShares),
+      BigInt(parsedSwapFee)
     ).toString();
 
     // Apply slippage tolerance
@@ -238,15 +224,11 @@ export class WeightedPoolExit implements ExitConcern {
       attributes.exitPoolRequest,
     ]);
 
-    const amount = amountsOut.find((amount, i) => tokensOut[i] == AddressZero); // find native asset (e.g. ETH) amount
-    const value = amount ? BigNumber.from(amount) : undefined;
-
     return {
       to,
       functionName,
       attributes,
       data,
-      value,
       minAmountsOut: sortedAmounts,
       maxBPTIn,
     };

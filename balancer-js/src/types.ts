@@ -198,6 +198,7 @@ export interface Pool {
   feesSnapshot?: string;
   boost?: string;
   symbol?: string;
+  swapEnabled: boolean;
   amp?: string;
 }
 
@@ -209,6 +210,7 @@ export interface PoolModel extends Pool {
     amountsIn: string[],
     slippage: string
   ) => JoinPoolAttributes;
+  calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
   buildExitExactBPTIn: (
     exiter: string,
     bptIn: string,

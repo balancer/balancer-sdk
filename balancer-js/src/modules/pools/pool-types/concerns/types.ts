@@ -16,6 +16,15 @@ export interface SpotPriceConcern {
   ) => string;
 }
 
+export interface PriceImpactConcern {
+  bptZeroPriceImpact: (pool: Pool, tokenAmounts: bigint[]) => bigint;
+  calcPriceImpact: (
+    pool: Pool,
+    tokenAmounts: string[],
+    bptAmount: string
+  ) => string;
+}
+
 export interface JoinConcern {
   buildJoin: ({
     joiner,
@@ -106,7 +115,6 @@ export interface ExitPoolAttributes {
   functionName: string;
   attributes: ExitPool;
   data: string;
-  value?: BigNumber;
   minAmountsOut: string[];
   maxBPTIn: string;
 }

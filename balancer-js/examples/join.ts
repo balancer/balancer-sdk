@@ -7,8 +7,7 @@ import {
   Network,
   PoolModel,
 } from '../src/index';
-import { formatFixed } from '@ethersproject/bignumber';
-import { forkSetup, updateBalances } from '../src/test/lib/utils';
+import { forkSetup, getBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
 
 dotenv.config();
@@ -49,7 +48,6 @@ async function join() {
 
   // Sets up local fork granting signer initial balances and token approvals
   await forkSetup(
-    balancer,
     signer,
     tokensIn as string[],
     slots,
@@ -62,7 +60,9 @@ async function join() {
   if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
   // Checking balances to confirm success
-  const tokenBalancesBefore = await updateBalances(pool, signer, signerAddress, balancer)
+  const tokenBalancesBefore = (
+    await getBalances([pool.address, ...pool.tokensList], signer, signerAddress)
+  ).map((b) => b.toString());
 
   // Use SDK to create join
   const { to, data, minBPTOut } = pool.buildJoin(
@@ -70,6 +70,12 @@ async function join() {
     tokensIn as string[],
     amountsIn,
     slippage
+  );
+
+  // Calculate price impact
+  const priceImpact = await pool.calcPriceImpact(
+    amountsIn as string[],
+    minBPTOut
   );
 
   // Submit join tx
@@ -81,11 +87,13 @@ async function join() {
   });
 
   await transactionResponse.wait();
-  const tokenBalancesAfter = await updateBalances(pool, signer, signerAddress, balancer);
-  console.log('Token balances before exit:          ', tokenBalancesBefore.toString());
-  console.log('Token balances after exit:           ', tokenBalancesAfter.toString());
-  console.log('Minimum expected BPT balance:        ', minBPTOut.toString());
+  const tokenBalancesAfter = (
+    await getBalances([pool.address, ...pool.tokensList], signer, signerAddress)
+  ).map((b) => b.toString());
 
+  console.log('Balances before exit:        ', tokenBalancesBefore);
+  console.log('Balances after exit:         ', tokenBalancesAfter);
+  console.log('Min BPT expected after exit: ', [minBPTOut.toString()]);
 }
 
 // yarn examples:run ./examples/join.ts
