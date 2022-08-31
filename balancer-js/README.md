@@ -228,11 +228,10 @@ const pricing = new Pricing(sdkConfig);
 
 ### #getSpotPrice
 
-Calculates Spot Price for a token pair - for specific pool if ID otherwise finds most liquid path and uses this as reference SP.
+Calculates Spot Price for a token pair - finds most liquid path and uses this as reference SP.
 
 @param { string } tokenIn Token in address.
 @param { string } tokenOut Token out address.
-@param { string } poolId Optional - if specified this pool will be used for SP calculation.
 @param { SubgraphPoolBase[] } pools Optional - Pool data. Will be fetched via dataProvider if not supplied.
 @returns  { string } Spot price.
 
@@ -240,7 +239,6 @@ Calculates Spot Price for a token pair - for specific pool if ID otherwise finds
 async getSpotPrice(
     tokenIn: string,
     tokenOut: string,
-    poolId = '',
     pools: SubgraphPoolBase[] = []
 ): Promise<string>
 ```
