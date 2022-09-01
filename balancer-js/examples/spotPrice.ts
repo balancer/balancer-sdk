@@ -22,7 +22,7 @@ async function getSpotPricePool() {
   const daiWethPool: PoolModel | undefined = await balancer.poolsProvider.find(wethDaiPoolId);
   if (!daiWethPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
-  const spotPriceEthDai = await balancer.pricing.getSpotPrice(
+  const spotPriceEthDai = await daiWethPool.calcSpotPrice(
     ADDRESSES[network].DAI.address,
     ADDRESSES[network].WETH.address,
   );

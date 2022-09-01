@@ -218,17 +218,30 @@ swaps.querySimpleFlashSwap(batchSwap: {
 
 [Example](./examples/querySimpleFlashSwap.ts)
 
-## Pricing Module
+## Pricing
 
-Exposes Spot Price functionality allowing user to query spot price for token pair.
+Spot Price functionality allowing user to query spot price for token pair.
+
+### calcSpotPrice
+
+Find Spot Price for pair in specific pool.
 
 ```js
-const pricing = new Pricing(sdkConfig);
+const balancer = new BalancerSDK(sdkConfig);
+const pool = await balancer.poolsProvider.find(poolId);
+const spotPrice = await balDaiPool.calcSpotPrice(
+    ADDRESSES[network].DAI.address,
+    ADDRESSES[network].BAL.address,
+  );
 ```
 
 ### #getSpotPrice
 
-Calculates Spot Price for a token pair - finds most liquid path and uses this as reference SP.
+Find Spot Price for a token pair - finds most liquid path and uses this as reference SP.
+
+```js
+const pricing = new Pricing(sdkConfig);
+```
 
 @param { string } tokenIn Token in address.
 @param { string } tokenOut Token out address.
