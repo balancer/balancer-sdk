@@ -91,25 +91,24 @@ export class Join {
         return;
       }
       const expectedOut = node.id === rootId ? expectedBPTOut : '0';
-      const sender = node.children.some((child) => child.action === 'input') // first chained action
+      const sender = node.children.some(
+        (c) => c.action === 'input' || c.action === 'wrapAaveDynamicToken'
+      )
         ? userAddress
         : this.relayer;
       const recipient = node.id === rootId ? userAddress : this.relayer; // last chained action
       switch (node.action) {
         // TODO - Add other Relayer supported Unwraps
-        // TODO - Change batchSwap receiver to be Relayer internal, joinPool sender to be Relayer internal (will be interesting to see if this causes issues)
         case 'wrapAaveDynamicToken':
-          calls.push(this.createAaveWrap(node, userAddress, userAddress));
+          calls.push(this.createAaveWrap(node, sender, userAddress)); // relayer is not allowed to spend its own wrapped tokens, so recipient must be the user
           break;
         case 'batchSwap':
           calls.push(
-            this.createBatchSwap(node, expectedOut, userAddress, userAddress)
+            this.createBatchSwap(node, expectedOut, sender, recipient)
           );
           break;
         case 'joinPool':
-          calls.push(
-            this.createJoinPool(node, expectedOut, userAddress, userAddress)
-          );
+          calls.push(this.createJoinPool(node, expectedOut, sender, recipient));
           break;
         case 'input':
           this.createMainToken(node, tokens, amounts);
