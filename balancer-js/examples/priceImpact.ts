@@ -11,7 +11,6 @@ Example showing how to use SDK to get price impact for a join or exit operation.
 async function getPriceImpact() {
   const network = Network.MAINNET;
   const rpcUrl = 'http://127.0.0.1:8545';
-  const provider = new JsonRpcProvider(rpcUrl, network);
 
   const WBTCWETHId =
     '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e'; // 50/50 WBTC/WETH Pool

@@ -200,6 +200,7 @@ export interface Pool {
   symbol?: string;
   swapEnabled: boolean;
   amp?: string;
+  totalWeight: string;
 }
 
 export interface PoolModel extends Pool {
@@ -224,4 +225,5 @@ export interface PoolModel extends Pool {
     amountsOut: string[],
     slippage: string
   ) => ExitPoolAttributes;
+  calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
 }

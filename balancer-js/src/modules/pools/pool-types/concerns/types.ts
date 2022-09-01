@@ -1,6 +1,4 @@
 /* eslint @typescript-eslint/no-explicit-any: ["error", { "ignoreRestArgs": true }] */
-
-import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { ExitPoolRequest, JoinPoolRequest, Pool } from '@/types';
 import { BigNumber } from '@ethersproject/bignumber';
 
@@ -9,11 +7,7 @@ export interface LiquidityConcern {
 }
 
 export interface SpotPriceConcern {
-  calcPoolSpotPrice: (
-    tokenIn: string,
-    tokenOut: string,
-    pool: SubgraphPoolBase
-  ) => string;
+  calcPoolSpotPrice: (tokenIn: string, tokenOut: string, pool: Pool) => string;
 }
 
 export interface PriceImpactConcern {
