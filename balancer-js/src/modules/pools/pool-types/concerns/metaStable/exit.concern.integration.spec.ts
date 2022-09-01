@@ -287,28 +287,4 @@ describe('exit execution', async () => {
       });
     });
   });
-
-  context('exit with ETH - conflicting inputs', async () => {
-    it('should fail', async () => {
-      let errorMessage = '';
-      try {
-        const bptIn = parseFixed('10', 18).toString();
-        await testFlow(
-          pool.buildExitExactBPTIn(
-            signerAddress,
-            bptIn,
-            slippage,
-            false,
-            AddressZero
-          ),
-          pool.tokensList
-        );
-      } catch (error) {
-        errorMessage = (error as Error).message;
-      }
-      expect(errorMessage).to.eql(
-        'shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values'
-      );
-    });
-  });
 }).timeout(20000);
