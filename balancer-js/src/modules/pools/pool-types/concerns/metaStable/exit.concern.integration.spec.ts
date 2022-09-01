@@ -1,13 +1,6 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import {
-  BalancerSDK,
-  Network,
-  Pool,
-  PoolModel,
-  PoolToken,
-  StaticPoolRepository,
-} from '@/.';
+import { Network, Pool, PoolModel, PoolToken, StaticPoolRepository } from '@/.';
 import hardhat from 'hardhat';
 
 import { TransactionReceipt } from '@ethersproject/providers';
