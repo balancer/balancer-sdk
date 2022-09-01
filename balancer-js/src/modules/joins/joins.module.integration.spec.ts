@@ -13,7 +13,7 @@ import {
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { MaxUint256 } from '@ethersproject/constants';
+import { MaxInt256, MaxUint256 } from '@ethersproject/constants';
 import { forkSetup, getBalances, approveToken } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 
@@ -157,10 +157,10 @@ describe('bbausd generalised join execution', async () => {
       });
   });
 
-  async function testFlow(
+  const testFlow = async (
     previouslyAuthorised = false,
     minBptOut: undefined | string = undefined
-  ): Promise<string> {
+  ) => {
     [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
       [fromPool.address, ...tokensIn],
       signer,
@@ -215,25 +215,21 @@ describe('bbausd generalised join execution', async () => {
       (b, i) => expect(b.eq(initialBalances[i])).to.be.true
     );
     tokensBalanceAfter.forEach((b) => expect(b.eq(0)).to.be.true);
-    return bptOut;
-  }
+  };
 
-  let bptOut: string;
-
-  context('not staked', async () => {
-    it('should transfer tokens from stable to boosted - without minBPT limit', async () => {
-      bptOut = await testFlow();
+  context('without minBPT limit', async () => {
+    it('should transfer tokens from stable to boosted', async () => {
+      await testFlow();
     }).timeout(20000);
 
-    // TODO - Reimplement
-    // it('should transfer tokens from stable to boosted - limit should fail', async () => {
-    //   let errorMessage = '';
-    //   try {
-    //     await testFlow(false, BigNumber.from(bptOut).add(MaxInt256).toString());
-    //   } catch (error) {
-    //     errorMessage = (error as Error).message;
-    //   }
-    //   expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
-    // }).timeout(20000);
+    it('should transfer tokens from stable to boosted - limit should fail', async () => {
+      let errorMessage = '';
+      try {
+        await testFlow(false, MaxInt256.toString());
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain('BAL#208'); // BPT_OUT_MIN_AMOUNT - BPT out below minimum expected
+    }).timeout(20000);
   });
 }).timeout(20000);
