@@ -186,7 +186,10 @@ export class Join {
   }
 
   createAaveWrap(node: Node, sender: string, recipient: string): string {
-    const childNode = node.children[0]; // TODO: check if it's possible to have more than one child at this type of node - This might be the case for joining with non-leaf tokens
+    // TODO: check if it's possible to have more than one child at this type of node
+    // This might be the case for joining with non-leaf tokens
+    // Can aaveWraps be applied to tokens other than stables? Is it possible for stables to be non-leaf nodes? If not, then there will always be 1 child for this type of node.
+    const childNode = node.children[0];
 
     const staticToken = node.address;
     const amount = childNode.outputReference;
@@ -195,7 +198,7 @@ export class Join {
       sender,
       recipient,
       amount,
-      fromUnderlying: true, // TODO: check if we should handle the false case as well - Not required
+      fromUnderlying: true,
       outputReference: Relayer.toChainedReference(node.outputReference),
     });
 
@@ -217,11 +220,9 @@ export class Join {
     sender: string,
     recipient: string
   ): string {
-    // TO DO - Create actual swap call for Relayer multicall
     const inputAmt = node.children[0].outputReference;
     const inputToken = node.children[0].address;
     const outputToken = node.address;
-    const expectedOutputAmount = expectedOut; // This could be used if joining a pool via a swap, e.g. Linear
     const poolId = node.id;
     console.log(
       `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
@@ -344,17 +345,17 @@ export class Join {
       minAmountOut
     );
 
-    // TODO: validate if ETH logic applies here - It will apply in the case someone is joining something like a weth/wsteth pool using ETH. We should add a test for this at some point.
+    // TODO: add test to join weth/wsteth pool using ETH
     const ethIndex = sortedTokens.indexOf(AddressZero);
     const value = ethIndex === -1 ? '0' : sortedAmounts[ethIndex];
 
     const call = Relayer.constructJoinCall({
       poolId: node.id,
-      poolKind: 0, // TODO: figure out how to define this number. For the Relayer this is always 0 for now.
+      poolKind: 0,
       sender,
       recipient,
       value,
-      outputReference: '0', // TO DO - This caused issue before, not sure if it will now - Relayer.toChainedReference(node.outputReference),
+      outputReference: '0',
       joinPoolRequest: {} as JoinPoolRequest,
       assets: sortedTokens, // Must include BPT token
       maxAmountsIn: [
