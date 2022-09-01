@@ -40,7 +40,7 @@ export interface ExitConcern {
   /**
    * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
    * @param exiter Account address exiting pool
-   * @param pool Subgraph pool object of pool being exited
+   * @param pool Pool being exited
    * @param bptIn BPT provided for exiting pool
    * @param slippage Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
    * @param shouldUnwrapNativeAsset Indicates whether wrapped native asset should be unwrapped after exit.
@@ -61,7 +61,7 @@ export interface ExitConcern {
   /**
    * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
    * @param exiter Account address exiting pool
-   * @param pool Subgraph pool object of pool being exited
+   * @param pool Pool being exited
    * @param tokensOut Tokens provided for exiting pool
    * @param amountsOut Amounts provided for exiting pool
    * @param slippage Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
