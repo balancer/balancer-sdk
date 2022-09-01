@@ -1,6 +1,5 @@
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import OldBigNumber from 'bignumber.js';
-import * as SDK from '@georgeroman/balancer-v2-pools';
+import * as SOR from '@balancer-labs/sor';
 import {
   ExitConcern,
   ExitExactBPTInParameters,
@@ -83,7 +82,6 @@ export class MetaStablePoolExit implements ExitConcern {
 
     let minAmountsOut = Array(parsedTokens.length).fill('0');
     let userData: string;
-    let value: BigNumber | undefined;
 
     if (singleTokenMaxOut) {
       // Exit pool with single token using exact bptIn
@@ -91,13 +89,13 @@ export class MetaStablePoolExit implements ExitConcern {
       const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
 
       // Calculate amount out given BPT in
-      const scaledAmountOut = SDK.StableMath._calcTokenOutGivenExactBptIn(
-        new OldBigNumber(parsedAmp as string),
-        scaledBalances.map((b) => new OldBigNumber(b)),
+      const scaledAmountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
+        BigInt(parsedAmp as string),
+        scaledBalances.map((b) => BigInt(b)),
         singleTokenMaxOutIndex,
-        new OldBigNumber(bptIn),
-        new OldBigNumber(parsedTotalShares),
-        new OldBigNumber(parsedSwapFee)
+        BigInt(bptIn),
+        BigInt(parsedTotalShares),
+        BigInt(parsedSwapFee)
       ).toString();
 
       // Reverse scaled amount out based on token price rate
@@ -115,19 +113,16 @@ export class MetaStablePoolExit implements ExitConcern {
         bptIn,
         singleTokenMaxOutIndex
       );
-
-      if (shouldUnwrapNativeAsset) {
-        value = BigNumber.from(amountOut);
-      }
     } else {
       // Exit pool with all tokens proportinally
 
       // Calculate amount out given BPT in
-      const scaledAmountsOut = SDK.StableMath._calcTokensOutGivenExactBptIn(
-        scaledBalances.map((b) => new OldBigNumber(b)),
-        new OldBigNumber(bptIn),
-        new OldBigNumber(parsedTotalShares)
-      ).map((amount) => amount.toString());
+      const scaledAmountsOut =
+        SOR.StableMathBigInt._calcTokensOutGivenExactBptIn(
+          scaledBalances.map((b) => BigInt(b)),
+          BigInt(bptIn),
+          BigInt(parsedTotalShares)
+        ).map((amount) => amount.toString());
 
       // Reverse scaled amounts out based on token price rate
       const amountsOut = scaledAmountsOut.map((amount, i) => {
@@ -147,13 +142,6 @@ export class MetaStablePoolExit implements ExitConcern {
       });
 
       userData = StablePoolEncoder.exitExactBPTInForTokensOut(bptIn);
-
-      if (shouldUnwrapNativeAsset) {
-        const amount = amountsOut.find(
-          (amount, i) => sortedTokens[i] == AddressZero
-        );
-        value = amount ? BigNumber.from(amount) : undefined;
-      }
     }
 
     const to = balancerVault;
@@ -184,7 +172,6 @@ export class MetaStablePoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
-      value,
       minAmountsOut,
       maxBPTIn: bptIn,
     };
@@ -251,12 +238,12 @@ export class MetaStablePoolExit implements ExitConcern {
     });
 
     // Calculate expected BPT in given tokens out
-    const bptIn = SDK.StableMath._calcBptInGivenExactTokensOut(
-      new OldBigNumber(parsedAmp as string),
-      scaledBalances.map((b) => new OldBigNumber(b)),
-      scaledAmounts.map((a) => new OldBigNumber(a)),
-      new OldBigNumber(parsedTotalShares),
-      new OldBigNumber(parsedSwapFee)
+    const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(
+      BigInt(parsedAmp as string),
+      scaledBalances.map((b) => BigInt(b)),
+      scaledAmounts.map((a) => BigInt(a)),
+      BigInt(parsedTotalShares),
+      BigInt(parsedSwapFee)
     ).toString();
 
     // Apply slippage tolerance
@@ -293,15 +280,11 @@ export class MetaStablePoolExit implements ExitConcern {
       attributes.exitPoolRequest,
     ]);
 
-    const amount = amountsOut.find((amount, i) => tokensOut[i] == AddressZero); // find native asset (e.g. ETH) amount
-    const value = amount ? BigNumber.from(amount) : undefined;
-
     return {
       to,
       functionName,
       attributes,
       data,
-      value,
       minAmountsOut: sortedAmounts,
       maxBPTIn,
     };
