@@ -257,6 +257,12 @@ export class MetaStablePoolExit implements ExitConcern {
       maxBPTIn
     );
 
+    // This is a hack to get around rounding issues for scaled amounts on MetaStable pools
+    // TODO: do this more elegantly
+    const minAmountsOut = sortedAmounts.map((a, i) =>
+      a === scaledAmounts[i] ? a : BigNumber.from(a).sub(1).toString()
+    );
+
     const to = balancerVault;
     const functionName = 'exitPool';
     const attributes: ExitPool = {
@@ -265,7 +271,7 @@ export class MetaStablePoolExit implements ExitConcern {
       recipient: exiter,
       exitPoolRequest: {
         assets: sortedTokens,
-        minAmountsOut: sortedAmounts,
+        minAmountsOut,
         userData,
         toInternalBalance: false,
       },
@@ -285,7 +291,7 @@ export class MetaStablePoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
-      minAmountsOut: sortedAmounts,
+      minAmountsOut,
       maxBPTIn,
     };
   };
