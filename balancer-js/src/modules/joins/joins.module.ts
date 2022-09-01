@@ -177,12 +177,11 @@ export class Join {
       .div((1e18).toString());
     node.outputReference = inputAmount.toString();
     console.log(
-      node.type,
-      node.address,
-      node.action,
-      `Inputs: ${inputAmount.toString()}`,
-      `OutputRef: ${node.outputReference}`,
-      node.proportionOfParent.toString()
+      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+      ${node.action} (
+        Inputs: ${inputAmount.toString()}
+        OutputRef: ${node.outputReference}
+      )`
     );
   }
 
@@ -201,11 +200,12 @@ export class Join {
     });
 
     console.log(
-      node.type,
-      node.address,
-      `${
-        node.action
-      }(staticToken: ${staticToken}, input: ${amount}, outputRef: ${node.outputReference.toString()}) prop: ${node.proportionOfParent.toString()}`
+      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+      ${node.action} (
+        staticToken: ${staticToken},
+        input: ${amount},
+        outputRef: ${node.outputReference.toString()}
+      )`
     );
 
     return call;
@@ -224,13 +224,14 @@ export class Join {
     const expectedOutputAmount = expectedOut; // This could be used if joining a pool via a swap, e.g. Linear
     const poolId = node.id;
     console.log(
-      node.type,
-      node.address,
-      `${
-        node.action
-      }(\n  inputAmt: ${inputAmt},\n  inputToken: ${inputToken},\n  pool: ${poolId},\n  outputToken: ${outputToken},\n  outputRef: ${
-        node.outputReference
-      }\n) prop: ${node.proportionOfParent.toString()}`
+      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+      ${node.action}(
+        inputAmt: ${inputAmt},
+        inputToken: ${inputToken},
+        pool: ${poolId},
+        outputToken: ${outputToken},
+        outputRef: ${node.outputReference}
+      )`
     );
 
     const inputTokens: string[] = [];
@@ -300,12 +301,10 @@ export class Join {
     const poolId = node.id;
     const inputTokens: string[] = [];
     const inputAmts: string[] = [];
-    const childOutputRefs: string[] = []; // for testing purposes only
 
     // inputTokens needs to include each asset even if it has 0 amount
     node.children.forEach((child) => {
       inputTokens.push(child.address);
-      childOutputRefs.push(child.outputReference);
 
       if (child.outputReference !== '0') {
         inputAmts.push(
@@ -320,13 +319,14 @@ export class Join {
     inputAmts.push('0');
 
     console.log(
-      node.type,
-      node.address,
-      `${
-        node.action
-      }(\n  poolId: ${poolId},\n  inputTokens: ${inputTokens.toString()},\n  maxAmtsIn: ${childOutputRefs.toString()},\n  minOut: ${minAmountOut}\n  outputRef: ${
-        node.outputReference
-      }\n) prop: ${node.proportionOfParent.toString()}`
+      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+      ${node.action}(
+        poolId: ${poolId},
+        inputTokens: ${inputTokens.toString()},
+        maxAmtsIn: ${node.children.map((c) => c.outputReference).toString()},
+        minOut: ${minAmountOut}
+        outputRef: ${node.outputReference}
+      )`
     );
 
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
