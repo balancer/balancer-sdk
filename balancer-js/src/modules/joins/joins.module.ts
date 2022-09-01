@@ -41,7 +41,7 @@ export class Join {
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
     const poolsGraph = new PoolGraph(this.pools);
 
-    const rootNode = await poolsGraph.buildGraphFromRootPool(poolId);
+    const rootNode = await poolsGraph.buildGraphFromRootPool(poolId, true);
     const orderedNodes = poolsGraph.orderByBfs(rootNode);
     const calls = this.createActionCalls(
       orderedNodes,

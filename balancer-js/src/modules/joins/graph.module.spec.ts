@@ -48,7 +48,8 @@ function checkLinearNode(
   linearPools: Pool[],
   wrappedTokens: SubgraphToken[],
   mainTokens: SubgraphToken[],
-  expectedOutPutReference: number
+  expectedOutPutReference: number,
+  wrapMainTokens: boolean
 ): void {
   checkNode(
     linearNode,
@@ -60,26 +61,39 @@ function checkLinearNode(
     expectedOutPutReference.toString(),
     linearPools[poolIndex].proportionOfParent
   );
-  checkNode(
-    linearNode.children[0],
-    'N/A',
-    wrappedTokens[poolIndex].address,
-    'WrappedToken',
-    'wrapAaveDynamicToken',
-    1,
-    (expectedOutPutReference + 1).toString(),
-    linearPools[poolIndex].proportionOfParent
-  );
-  checkNode(
-    linearNode.children[0].children[0],
-    'N/A',
-    mainTokens[poolIndex].address,
-    'Underlying',
-    'input',
-    0,
-    '0',
-    linearPools[poolIndex].proportionOfParent
-  );
+  if (wrapMainTokens) {
+    checkNode(
+      linearNode.children[0],
+      'N/A',
+      wrappedTokens[poolIndex].address,
+      'WrappedToken',
+      'wrapAaveDynamicToken',
+      1,
+      (expectedOutPutReference + 1).toString(),
+      linearPools[poolIndex].proportionOfParent
+    );
+    checkNode(
+      linearNode.children[0].children[0],
+      'N/A',
+      mainTokens[poolIndex].address,
+      'Underlying',
+      'input',
+      0,
+      '0',
+      linearPools[poolIndex].proportionOfParent
+    );
+  } else {
+    checkNode(
+      linearNode.children[0],
+      'N/A',
+      mainTokens[poolIndex].address,
+      'Underlying',
+      'input',
+      0,
+      '0',
+      linearPools[poolIndex].proportionOfParent
+    );
+  }
 }
 
 /*
@@ -90,7 +104,8 @@ function checkBoosted(
   boostedPool: Pool,
   boostedPoolInfo: BoostedInfo,
   boostedIndex: number,
-  expectedProportionOfParent: string
+  expectedProportionOfParent: string,
+  wrapMainTokens: boolean
 ): void {
   checkNode(
     boostedNode,
@@ -103,14 +118,17 @@ function checkBoosted(
     expectedProportionOfParent
   );
   boostedNode.children.forEach((linearNode, i) => {
-    const linearInputRef = boostedIndex + 1 + i * 3;
+    let linearInputRef;
+    if (wrapMainTokens) linearInputRef = boostedIndex + 1 + i * 3;
+    else linearInputRef = boostedIndex + 1 + i * 2;
     checkLinearNode(
       linearNode,
       i,
       boostedPoolInfo.linearPools,
       boostedPoolInfo.wrappedTokens,
       boostedPoolInfo.mainTokens,
-      linearInputRef
+      linearInputRef,
+      wrapMainTokens
     );
   });
 }
@@ -120,7 +138,8 @@ Checks a boostedMeta, a phantomStable with one Linear and one boosted.
 */
 function checkBoostedMeta(
   rootNode: Node,
-  boostedMetaInfo: BoostedMetaInfo
+  boostedMetaInfo: BoostedMetaInfo,
+  wrapMainTokens: boolean
 ): void {
   // Check parent node
   checkNode(
@@ -139,8 +158,11 @@ function checkBoostedMeta(
     boostedMetaInfo.childBoostedInfo.rootPool,
     boostedMetaInfo.childBoostedInfo,
     1,
-    boostedMetaInfo.childBoostedInfo.proportion
+    boostedMetaInfo.childBoostedInfo.proportion,
+    wrapMainTokens
   );
+  let expectedOutputReference = 11;
+  if (!wrapMainTokens) expectedOutputReference = 8;
   // Check child Linear node
   checkLinearNode(
     rootNode.children[1],
@@ -148,7 +170,8 @@ function checkBoostedMeta(
     boostedMetaInfo.childLinearInfo.linearPools,
     boostedMetaInfo.childLinearInfo.wrappedTokens,
     boostedMetaInfo.childLinearInfo.mainTokens,
-    11
+    expectedOutputReference,
+    wrapMainTokens
   );
 }
 
@@ -157,7 +180,8 @@ Checks a boostedBig, a phantomStable with two Boosted.
 */
 function checkBoostedMetaBig(
   rootNode: Node,
-  boostedMetaBigInfo: BoostedMetaBigInfo
+  boostedMetaBigInfo: BoostedMetaBigInfo,
+  wrapMainTokens: boolean
 ): void {
   // Check parent node
   checkNode(
@@ -177,10 +201,15 @@ function checkBoostedMetaBig(
       boostedMetaBigInfo.childPoolsInfo[i].rootPool,
       boostedMetaBigInfo.childPoolsInfo[i],
       numberOfNodes,
-      boostedMetaBigInfo.childPoolsInfo[i].proportion
+      boostedMetaBigInfo.childPoolsInfo[i].proportion,
+      wrapMainTokens
     );
-    numberOfNodes =
-      boostedMetaBigInfo.childPoolsInfo[i].linearPools.length * 3 + 2;
+    if (wrapMainTokens)
+      numberOfNodes =
+        boostedMetaBigInfo.childPoolsInfo[i].linearPools.length * 3 + 2;
+    else
+      numberOfNodes =
+        boostedMetaBigInfo.childPoolsInfo[i].linearPools.length * 2 + 2;
   });
 }
 
@@ -190,8 +219,9 @@ describe('Graph', () => {
   context('linearPool', () => {
     let linearInfo: LinearInfo;
     let poolsGraph: PoolGraph;
+    let rootNode: Node;
 
-    before(() => {
+    before(async () => {
       const linearPool = {
         tokens: {
           wrappedSymbol: 'aDAI',
@@ -208,30 +238,58 @@ describe('Graph', () => {
       );
       poolsGraph = new PoolGraph(poolProvider);
     });
+    context('using wrapped tokens', () => {
+      before(async () => {
+        rootNode = await poolsGraph.buildGraphFromRootPool(
+          linearInfo.linearPools[0].id,
+          true
+        );
+      });
+      it('should build single linearPool graph', async () => {
+        checkLinearNode(
+          rootNode,
+          0,
+          linearInfo.linearPools,
+          linearInfo.wrappedTokens,
+          linearInfo.mainTokens,
+          0,
+          true
+        );
+      });
 
-    it('should build single linearPool graph', async () => {
-      const rootNode = await poolsGraph.buildGraphFromRootPool(
-        linearInfo.linearPools[0].id
-      );
-      // console.log(JSON.stringify(rootNode, null, 2));
-      checkLinearNode(
-        rootNode,
-        0,
-        linearInfo.linearPools,
-        linearInfo.wrappedTokens,
-        linearInfo.mainTokens,
-        0
-      );
+      it('should sort in breadth first order', async () => {
+        const orderedNodes = poolsGraph.orderByBfs(rootNode);
+        expect(orderedNodes.length).to.eq(3);
+        expect(orderedNodes[0].type).to.eq('Underlying');
+        expect(orderedNodes[1].type).to.eq('WrappedToken');
+        expect(orderedNodes[2].type).to.eq('AaveLinear');
+      });
     });
+    context('using non-wrapped tokens', () => {
+      before(async () => {
+        rootNode = await poolsGraph.buildGraphFromRootPool(
+          linearInfo.linearPools[0].id,
+          false
+        );
+      });
+      it('should build single linearPool graph', async () => {
+        checkLinearNode(
+          rootNode,
+          0,
+          linearInfo.linearPools,
+          linearInfo.wrappedTokens,
+          linearInfo.mainTokens,
+          0,
+          false
+        );
+      });
 
-    it('should sort in breadth first order', async () => {
-      const rootNode = await poolsGraph.buildGraphFromRootPool(
-        linearInfo.linearPools[0].id
-      );
-      const orderedNodes = poolsGraph.orderByBfs(rootNode);
-      expect(orderedNodes[0].type).to.eq('Underlying');
-      expect(orderedNodes[1].type).to.eq('WrappedToken');
-      expect(orderedNodes[2].type).to.eq('AaveLinear');
+      it('should sort in breadth first order', async () => {
+        const orderedNodes = poolsGraph.orderByBfs(rootNode);
+        expect(orderedNodes.length).to.eq(2);
+        expect(orderedNodes[0].type).to.eq('Underlying');
+        expect(orderedNodes[1].type).to.eq('AaveLinear');
+      });
     });
   });
 
@@ -239,6 +297,7 @@ describe('Graph', () => {
     let boostedPoolInfo: BoostedInfo;
     let boostedPool: Pool;
     let poolsGraph: PoolGraph;
+    let boostedNode: Node;
 
     before(() => {
       // The boostedPool will contain these Linear pools.
@@ -284,40 +343,78 @@ describe('Graph', () => {
     it('should throw when pool doesnt exist', async () => {
       let errorMessage = '';
       try {
-        await poolsGraph.buildGraphFromRootPool('thisisntapool');
+        await poolsGraph.buildGraphFromRootPool('thisisntapool', true);
       } catch (error) {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.eq('balancer pool does not exist');
     });
 
-    it('should build boostedPool graph', async () => {
-      const boostedNode = await poolsGraph.buildGraphFromRootPool(
-        boostedPool.id
-      );
-      // console.log(JSON.stringify(boostedNode, null, 2));
-      checkBoosted(
-        boostedNode,
-        boostedPoolInfo.rootPool,
-        boostedPoolInfo,
-        0,
-        '1'
-      );
+    context('using wrapped tokens', () => {
+      before(async () => {
+        boostedNode = await poolsGraph.buildGraphFromRootPool(
+          boostedPool.id,
+          true
+        );
+      });
+
+      it('should build boostedPool graph', async () => {
+        checkBoosted(
+          boostedNode,
+          boostedPoolInfo.rootPool,
+          boostedPoolInfo,
+          0,
+          '1',
+          true
+        );
+      });
+
+      it('should sort in breadth first order', async () => {
+        const orderedNodes = poolsGraph.orderByBfs(boostedNode);
+        expect(orderedNodes.length).to.eq(10);
+        expect(orderedNodes[0].type).to.eq('Underlying');
+        expect(orderedNodes[1].type).to.eq('Underlying');
+        expect(orderedNodes[2].type).to.eq('Underlying');
+        expect(orderedNodes[3].type).to.eq('WrappedToken');
+        expect(orderedNodes[4].type).to.eq('WrappedToken');
+        expect(orderedNodes[5].type).to.eq('WrappedToken');
+        expect(orderedNodes[6].type).to.eq('AaveLinear');
+        expect(orderedNodes[7].type).to.eq('AaveLinear');
+        expect(orderedNodes[8].type).to.eq('AaveLinear');
+        expect(orderedNodes[9].type).to.eq('StablePhantom');
+      });
     });
 
-    it('should sort in breadth first order', async () => {
-      const rootNode = await poolsGraph.buildGraphFromRootPool(boostedPool.id);
-      const orderedNodes = poolsGraph.orderByBfs(rootNode);
-      expect(orderedNodes[0].type).to.eq('Underlying');
-      expect(orderedNodes[1].type).to.eq('Underlying');
-      expect(orderedNodes[2].type).to.eq('Underlying');
-      expect(orderedNodes[3].type).to.eq('WrappedToken');
-      expect(orderedNodes[4].type).to.eq('WrappedToken');
-      expect(orderedNodes[5].type).to.eq('WrappedToken');
-      expect(orderedNodes[6].type).to.eq('AaveLinear');
-      expect(orderedNodes[7].type).to.eq('AaveLinear');
-      expect(orderedNodes[8].type).to.eq('AaveLinear');
-      expect(orderedNodes[9].type).to.eq('StablePhantom');
+    context('using non-wrapped tokens', () => {
+      before(async () => {
+        boostedNode = await poolsGraph.buildGraphFromRootPool(
+          boostedPool.id,
+          false
+        );
+      });
+
+      it('should build boostedPool graph', async () => {
+        checkBoosted(
+          boostedNode,
+          boostedPoolInfo.rootPool,
+          boostedPoolInfo,
+          0,
+          '1',
+          false
+        );
+      });
+
+      it('should sort in breadth first order', async () => {
+        const orderedNodes = poolsGraph.orderByBfs(boostedNode);
+        expect(orderedNodes.length).to.eq(7);
+        expect(orderedNodes[0].type).to.eq('Underlying');
+        expect(orderedNodes[1].type).to.eq('Underlying');
+        expect(orderedNodes[2].type).to.eq('Underlying');
+        expect(orderedNodes[3].type).to.eq('AaveLinear');
+        expect(orderedNodes[4].type).to.eq('AaveLinear');
+        expect(orderedNodes[5].type).to.eq('AaveLinear');
+        expect(orderedNodes[6].type).to.eq('StablePhantom');
+      });
     });
   });
 
@@ -325,6 +422,7 @@ describe('Graph', () => {
     let boostedMetaInfo: BoostedMetaInfo;
     let rootPool: Pool;
     let poolsGraph: PoolGraph;
+    let boostedNode: Node;
 
     before(() => {
       // The boostedMeta will have:
@@ -394,30 +492,64 @@ describe('Graph', () => {
       poolsGraph = new PoolGraph(poolProvider);
     });
 
-    it('should build boostedPool graph', async () => {
-      const boostedNode = await poolsGraph.buildGraphFromRootPool(rootPool.id);
-      // console.log(JSON.stringify(boostedNode, null, 2));
-      checkBoostedMeta(boostedNode, boostedMetaInfo);
+    context('using wrapped tokens', () => {
+      before(async () => {
+        boostedNode = await poolsGraph.buildGraphFromRootPool(
+          rootPool.id,
+          true
+        );
+      });
+
+      it('should build boostedPool graph', async () => {
+        checkBoostedMeta(boostedNode, boostedMetaInfo, true);
+      });
+
+      it('should sort in breadth first order', async () => {
+        const orderedNodes = poolsGraph.orderByBfs(boostedNode);
+        expect(orderedNodes.length).to.eq(14);
+        expect(orderedNodes[0].type).to.eq('Underlying');
+        expect(orderedNodes[1].type).to.eq('Underlying');
+        expect(orderedNodes[2].type).to.eq('Underlying');
+        expect(orderedNodes[3].type).to.eq('Underlying');
+        expect(orderedNodes[4].type).to.eq('WrappedToken');
+        expect(orderedNodes[5].type).to.eq('WrappedToken');
+        expect(orderedNodes[6].type).to.eq('WrappedToken');
+        expect(orderedNodes[7].type).to.eq('WrappedToken');
+        expect(orderedNodes[8].type).to.eq('AaveLinear');
+        expect(orderedNodes[9].type).to.eq('AaveLinear');
+        expect(orderedNodes[10].type).to.eq('AaveLinear');
+        expect(orderedNodes[11].type).to.eq('AaveLinear');
+        expect(orderedNodes[12].type).to.eq('StablePhantom');
+        expect(orderedNodes[13].type).to.eq('StablePhantom');
+      });
     });
 
-    it('should sort in breadth first order', async () => {
-      const rootNode = await poolsGraph.buildGraphFromRootPool(rootPool.id);
-      const orderedNodes = poolsGraph.orderByBfs(rootNode);
-      expect(orderedNodes[0].type).to.eq('Underlying');
-      expect(orderedNodes[1].type).to.eq('Underlying');
-      expect(orderedNodes[2].type).to.eq('Underlying');
-      expect(orderedNodes[3].type).to.eq('Underlying');
-      expect(orderedNodes[4].type).to.eq('WrappedToken');
-      expect(orderedNodes[5].type).to.eq('WrappedToken');
-      expect(orderedNodes[6].type).to.eq('WrappedToken');
-      expect(orderedNodes[7].type).to.eq('WrappedToken');
-      expect(orderedNodes[8].type).to.eq('AaveLinear');
-      expect(orderedNodes[9].type).to.eq('AaveLinear');
-      expect(orderedNodes[10].type).to.eq('AaveLinear');
-      expect(orderedNodes[11].type).to.eq('AaveLinear');
-      expect(orderedNodes[12].type).to.eq('StablePhantom');
-      expect(orderedNodes[11].type).to.eq('AaveLinear');
-      expect(orderedNodes[12].type).to.eq('StablePhantom');
+    context('using non-wrapped tokens', () => {
+      before(async () => {
+        boostedNode = await poolsGraph.buildGraphFromRootPool(
+          rootPool.id,
+          false
+        );
+      });
+
+      it('should build boostedPool graph', async () => {
+        checkBoostedMeta(boostedNode, boostedMetaInfo, false);
+      });
+
+      it('should sort in breadth first order', async () => {
+        const orderedNodes = poolsGraph.orderByBfs(boostedNode);
+        expect(orderedNodes.length).to.eq(10);
+        expect(orderedNodes[0].type).to.eq('Underlying');
+        expect(orderedNodes[1].type).to.eq('Underlying');
+        expect(orderedNodes[2].type).to.eq('Underlying');
+        expect(orderedNodes[3].type).to.eq('Underlying');
+        expect(orderedNodes[4].type).to.eq('AaveLinear');
+        expect(orderedNodes[5].type).to.eq('AaveLinear');
+        expect(orderedNodes[6].type).to.eq('AaveLinear');
+        expect(orderedNodes[7].type).to.eq('AaveLinear');
+        expect(orderedNodes[8].type).to.eq('StablePhantom');
+        expect(orderedNodes[9].type).to.eq('StablePhantom');
+      });
     });
   });
 
@@ -425,6 +557,7 @@ describe('Graph', () => {
     let boostedMetaBigInfo: BoostedMetaBigInfo;
     let boostedPool: Pool;
     let poolsGraph: PoolGraph;
+    let boostedNode: Node;
 
     before(() => {
       // The boostedMetaBig will have a phantomStable with two boosted.
@@ -513,39 +646,76 @@ describe('Graph', () => {
       poolsGraph = new PoolGraph(poolProvider);
     });
 
-    it('should build boostedPool graph', async () => {
-      const boostedNode = await poolsGraph.buildGraphFromRootPool(
-        boostedPool.id
-      );
-      // console.log(JSON.stringify(boostedNode, null, 2));
-      checkBoostedMetaBig(boostedNode, boostedMetaBigInfo);
+    context('using wrapped tokens', () => {
+      before(async () => {
+        boostedNode = await poolsGraph.buildGraphFromRootPool(
+          boostedPool.id,
+          true
+        );
+      });
+
+      it('should build boostedPool graph', async () => {
+        checkBoostedMetaBig(boostedNode, boostedMetaBigInfo, true);
+      });
+
+      it('should sort in breadth first order', async () => {
+        const orderedNodes = poolsGraph.orderByBfs(boostedNode);
+        expect(orderedNodes.length).to.eq(21);
+        expect(orderedNodes[0].type).to.eq('Underlying');
+        expect(orderedNodes[1].type).to.eq('Underlying');
+        expect(orderedNodes[2].type).to.eq('Underlying');
+        expect(orderedNodes[3].type).to.eq('Underlying');
+        expect(orderedNodes[4].type).to.eq('Underlying');
+        expect(orderedNodes[5].type).to.eq('Underlying');
+        expect(orderedNodes[6].type).to.eq('WrappedToken');
+        expect(orderedNodes[7].type).to.eq('WrappedToken');
+        expect(orderedNodes[8].type).to.eq('WrappedToken');
+        expect(orderedNodes[9].type).to.eq('WrappedToken');
+        expect(orderedNodes[10].type).to.eq('WrappedToken');
+        expect(orderedNodes[11].type).to.eq('WrappedToken');
+        expect(orderedNodes[12].type).to.eq('AaveLinear');
+        expect(orderedNodes[13].type).to.eq('AaveLinear');
+        expect(orderedNodes[14].type).to.eq('AaveLinear');
+        expect(orderedNodes[15].type).to.eq('AaveLinear');
+        expect(orderedNodes[16].type).to.eq('AaveLinear');
+        expect(orderedNodes[17].type).to.eq('AaveLinear');
+        expect(orderedNodes[18].type).to.eq('StablePhantom');
+        expect(orderedNodes[19].type).to.eq('StablePhantom');
+        expect(orderedNodes[20].type).to.eq('StablePhantom');
+      });
     });
 
-    it('should sort in breadth first order', async () => {
-      const rootNode = await poolsGraph.buildGraphFromRootPool(boostedPool.id);
-      const orderedNodes = poolsGraph.orderByBfs(rootNode);
-      expect(orderedNodes.length).to.eq(21);
-      expect(orderedNodes[0].type).to.eq('Underlying');
-      expect(orderedNodes[1].type).to.eq('Underlying');
-      expect(orderedNodes[2].type).to.eq('Underlying');
-      expect(orderedNodes[3].type).to.eq('Underlying');
-      expect(orderedNodes[4].type).to.eq('Underlying');
-      expect(orderedNodes[5].type).to.eq('Underlying');
-      expect(orderedNodes[6].type).to.eq('WrappedToken');
-      expect(orderedNodes[7].type).to.eq('WrappedToken');
-      expect(orderedNodes[8].type).to.eq('WrappedToken');
-      expect(orderedNodes[9].type).to.eq('WrappedToken');
-      expect(orderedNodes[10].type).to.eq('WrappedToken');
-      expect(orderedNodes[11].type).to.eq('WrappedToken');
-      expect(orderedNodes[12].type).to.eq('AaveLinear');
-      expect(orderedNodes[13].type).to.eq('AaveLinear');
-      expect(orderedNodes[14].type).to.eq('AaveLinear');
-      expect(orderedNodes[15].type).to.eq('AaveLinear');
-      expect(orderedNodes[16].type).to.eq('AaveLinear');
-      expect(orderedNodes[17].type).to.eq('AaveLinear');
-      expect(orderedNodes[18].type).to.eq('StablePhantom');
-      expect(orderedNodes[19].type).to.eq('StablePhantom');
-      expect(orderedNodes[20].type).to.eq('StablePhantom');
+    context('using non-wrapped tokens', () => {
+      before(async () => {
+        boostedNode = await poolsGraph.buildGraphFromRootPool(
+          boostedPool.id,
+          false
+        );
+      });
+
+      it('should build boostedPool graph', async () => {
+        checkBoostedMetaBig(boostedNode, boostedMetaBigInfo, false);
+      });
+
+      it('should sort in breadth first order', async () => {
+        const orderedNodes = poolsGraph.orderByBfs(boostedNode);
+        expect(orderedNodes.length).to.eq(15);
+        expect(orderedNodes[0].type).to.eq('Underlying');
+        expect(orderedNodes[1].type).to.eq('Underlying');
+        expect(orderedNodes[2].type).to.eq('Underlying');
+        expect(orderedNodes[3].type).to.eq('Underlying');
+        expect(orderedNodes[4].type).to.eq('Underlying');
+        expect(orderedNodes[5].type).to.eq('Underlying');
+        expect(orderedNodes[6].type).to.eq('AaveLinear');
+        expect(orderedNodes[7].type).to.eq('AaveLinear');
+        expect(orderedNodes[8].type).to.eq('AaveLinear');
+        expect(orderedNodes[9].type).to.eq('AaveLinear');
+        expect(orderedNodes[10].type).to.eq('AaveLinear');
+        expect(orderedNodes[11].type).to.eq('AaveLinear');
+        expect(orderedNodes[12].type).to.eq('StablePhantom');
+        expect(orderedNodes[13].type).to.eq('StablePhantom');
+        expect(orderedNodes[14].type).to.eq('StablePhantom');
+      });
     });
   });
 });
