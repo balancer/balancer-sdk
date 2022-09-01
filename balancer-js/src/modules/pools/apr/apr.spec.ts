@@ -73,16 +73,15 @@ describe('pool apr', () => {
     // With totalLiquidity and totalSwapFees = 100, it's 100% apr
     it('are 10000 bsp APR', async () => {
       const apr = await new PoolApr(
-        poolData,
+        repositories.pools,
         repositories.tokenPrices,
         repositories.tokenMeta,
-        repositories.pools,
+        repositories.tokenYields,
+        repositories.feeCollector,
         repositories.yesterdaysPools,
         repositories.liquidityGauges,
-        repositories.feeDistributor,
-        repositories.feeCollector,
-        repositories.tokenYields
-      ).swapFees();
+        repositories.feeDistributor
+      ).swapFees(poolData);
       expect(apr).to.eq(10000);
     });
   });
@@ -92,17 +91,16 @@ describe('pool apr', () => {
       // It will equal 1%, because rate is 2% but weight is 50%
       it('are 100 bsp (1%)', async () => {
         const apr = await new PoolApr(
-          poolData,
+          repositories.pools,
           repositories.tokenPrices,
           repositories.tokenMeta,
-          repositories.pools,
+          repositories.tokenYields,
+          repositories.feeCollector,
           repositories.yesterdaysPools,
           repositories.liquidityGauges,
-          repositories.feeDistributor,
-          repositories.feeCollector,
-          repositories.tokenYields
-        ).tokenAprs();
-        expect(apr.total).to.eq(100);
+          repositories.feeDistributor
+        ).tokenAprs(poolData);
+        expect(apr).to.eq(100);
       });
     });
 
@@ -130,18 +128,17 @@ describe('pool apr', () => {
 
       it('are 5000 bsp (50%) half of pool1 APR', async () => {
         const apr = await new PoolApr(
-          poolWithBpt,
+          repositories.pools,
           repositories.tokenPrices,
           repositories.tokenMeta,
-          repositories.pools,
+          factories.data.stubbed<number>(undefined),
+          factories.data.stubbed<number>(0),
           repositories.yesterdaysPools,
           repositories.liquidityGauges,
-          repositories.feeDistributor,
-          factories.data.stubbed<number>(0),
-          factories.data.stubbed<number>(undefined)
-        ).tokenAprs();
+          repositories.feeDistributor
+        ).tokenAprs(poolWithBpt);
 
-        expect(apr.total).to.eq(10000 / 2);
+        expect(apr).to.eq(10000 / 2);
       });
     });
   });
@@ -158,16 +155,15 @@ describe('pool apr', () => {
       };
 
       const apr = await new PoolApr(
-        poolData,
+        repositories.pools,
         repositories.tokenPrices,
         repositories.tokenMeta,
-        repositories.pools,
+        factories.data.stubbed<number>(undefined),
+        repositories.feeCollector,
         repositories.yesterdaysPools,
         factories.data.stubbed<LiquidityGauge>(gauge),
-        repositories.feeDistributor,
-        repositories.feeCollector,
-        factories.data.stubbed<number>(undefined)
-      ).stakingApr();
+        repositories.feeDistributor
+      ).stakingApr(poolData);
 
       expect(apr).to.eq(4000);
     });
@@ -185,16 +181,15 @@ describe('pool apr', () => {
       };
 
       const apr = await new PoolApr(
-        poolData,
+        repositories.pools,
         repositories.tokenPrices,
         repositories.tokenMeta,
-        repositories.pools,
+        factories.data.stubbed<number>(undefined),
+        repositories.feeCollector,
         repositories.yesterdaysPools,
         factories.data.stubbed<LiquidityGauge>(gauge),
-        repositories.feeDistributor,
-        repositories.feeCollector,
-        factories.data.stubbed<number>(undefined)
-      ).rewardAprs();
+        repositories.feeDistributor
+      ).rewardAprs(poolData);
 
       expect(apr.total).to.eq(20000);
     });

@@ -3,7 +3,6 @@
 import {
   BalancerDataRepositories,
   Findable,
-  Updatetable,
   LiquidityGauge,
   Pool,
   Price,
@@ -22,12 +21,11 @@ export const findable = <T, P = string>(
 
 export const stubbed = <T, P = string>(
   value: unknown
-): Findable<T, P> & Searchable<T> & Updatetable<T> => ({
+): Findable<T, P> & Searchable<T> => ({
   find: (id: string) => Promise.resolve(value as T),
   findBy: (param: P, _: string) => Promise.resolve(value as T),
   all: () => Promise.resolve([value as T]),
   where: (filters: (arg: T) => boolean) => Promise.resolve([value as T]),
-  update: () => Promise.resolve({} as T),
 });
 
 interface IdentifiableArray {

@@ -1,21 +1,28 @@
 import { expect } from 'chai';
-import { lido, cache } from './lido';
-import fetchMock from 'fetch-mock';
+import { lido, yieldTokens } from './lido';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
+
+const mockedResponse = {
+  data: { eth: '1', steth: '1' },
+};
 
 describe('lido apr', () => {
+  let mock: MockAdapter;
+
   before(() => {
-    cache(false);
-    fetchMock.get('https://stake.lido.fi/api/apr', {
-      data: { eth: '1', steth: '1' },
-    });
+    mock = new MockAdapter(axios);
+    mock
+      .onGet('https://stake.lido.fi/api/apr')
+      .reply(() => [200, mockedResponse]);
   });
+
   after(() => {
-    fetchMock.reset();
-    cache(true);
+    mock.restore();
   });
 
   it('is getting fetched', async () => {
-    const apr = await lido();
+    const apr = (await lido())[yieldTokens.stETH];
     expect(apr).to.eq(100);
   });
 });

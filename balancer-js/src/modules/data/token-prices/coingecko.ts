@@ -1,11 +1,13 @@
 import { Price, Findable, TokenPrices } from '@/types';
 import { wrappedTokensMap as aaveWrappedMap } from '../token-yields/tokens/aave';
+import axios from 'axios';
 
 /**
  * Simple coingecko price source implementation. Configurable by network and token addresses.
  */
 export class CoingeckoPriceRepository implements Findable<Price> {
   prices: TokenPrices = {};
+  fetching: { [address: string]: Promise<TokenPrices> } = {};
   urlBase: string;
   baseTokenAddresses: string[];
 
@@ -16,19 +18,40 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     )}?vs_currencies=usd,eth`;
   }
 
-  async fetch(address: string): Promise<void> {
-    const prices = await (await fetch(this.url(address))).json();
-    this.prices = {
-      ...this.prices,
-      ...prices,
-    };
+  fetch(address: string): { [address: string]: Promise<TokenPrices> } {
+    console.time(`fetching coingecko ${address}`);
+    const addresses = this.addresses(address);
+    const prices = axios
+      .get(this.url(addresses))
+      .then(({ data }) => {
+        addresses.forEach((address) => {
+          delete this.fetching[address];
+        });
+        this.prices = {
+          ...this.prices,
+          ...(Object.keys(data).length == 0 ? { [address]: {} } : data),
+        };
+        return this.prices;
+      })
+      .catch((error) => {
+        console.error(error);
+        return this.prices;
+      });
+    console.timeEnd(`fetching coingecko ${address}`);
+    return Object.fromEntries(addresses.map((a) => [a, prices]));
   }
 
   async find(address: string): Promise<Price | undefined> {
     const lowercaseAddress = address.toLowerCase();
     const unwrapped = unwrapToken(lowercaseAddress);
-    if (!Object.keys(this.prices).includes(unwrapped)) {
-      await this.fetch(unwrapped);
+    if (Object.keys(this.fetching).includes(unwrapped)) {
+      await this.fetching[unwrapped];
+    } else if (!Object.keys(this.prices).includes(unwrapped)) {
+      this.fetching = {
+        ...this.fetching,
+        ...this.fetch(unwrapped),
+      };
+      await this.fetching[unwrapped];
     }
 
     return this.prices[unwrapped];
@@ -57,13 +80,15 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     return '2';
   }
 
-  private url(address: string): string {
+  private url(addresses: string[]): string {
+    return `${this.urlBase}&contract_addresses=${addresses.join(',')}`;
+  }
+
+  private addresses(address: string): string[] {
     if (this.baseTokenAddresses.includes(address)) {
-      return `${this.urlBase}&contract_addresses=${this.baseTokenAddresses.join(
-        ','
-      )}`;
+      return this.baseTokenAddresses;
     } else {
-      return `${this.urlBase}&contract_addresses=${address}`;
+      return [address];
     }
   }
 }

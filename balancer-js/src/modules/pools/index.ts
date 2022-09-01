@@ -3,32 +3,46 @@ import type {
   BalancerDataRepositories,
   Findable,
   Searchable,
-  Updatetable,
   Pool,
   PoolWithMethods,
   AprBreakdown,
+  PoolAttribute,
 } from '@/types';
 import { JoinPoolAttributes } from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
-import { ModelProvider } from './model-provider';
 import { PoolApr } from './apr/apr';
+import { Liquidity } from '../liquidity/liquidity.module';
 
 /**
  * Controller / use-case layer for interacting with pools data.
  */
 export class Pools implements Findable<PoolWithMethods> {
-  liveModelProvider: ModelProvider;
+  aprService;
+  liquidityService;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
     private repositories: BalancerDataRepositories
   ) {
-    this.liveModelProvider = new ModelProvider(repositories);
+    this.aprService = new PoolApr(
+      this.repositories.pools,
+      this.repositories.tokenPrices,
+      this.repositories.tokenMeta,
+      this.repositories.tokenYields,
+      this.repositories.feeCollector,
+      this.repositories.yesterdaysPools,
+      this.repositories.liquidityGauges,
+      this.repositories.feeDistributor
+    );
+    this.liquidityService = new Liquidity(
+      repositories.pools,
+      repositories.tokenPrices
+    );
   }
 
-  dataSource(): Findable<Pool> & Searchable<Pool> {
+  dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
     // TODO: Add API data repository to data and use liveModelProvider as fallback
-    return this.liveModelProvider;
+    return this.repositories.pools;
   }
 
   /**
@@ -38,19 +52,17 @@ export class Pools implements Findable<PoolWithMethods> {
    * @returns
    */
   async apr(pool: Pool): Promise<AprBreakdown> {
-    const aprService = new PoolApr(
-      pool,
-      this.repositories.tokenPrices,
-      this.repositories.tokenMeta,
-      this.repositories.pools,
-      this.repositories.yesterdaysPools,
-      this.repositories.liquidityGauges,
-      this.repositories.feeDistributor,
-      this.repositories.feeCollector,
-      this.repositories.tokenYields
-    );
+    return this.aprService.apr(pool);
+  }
 
-    return aprService.apr();
+  /**
+   * Calculates total liquidity of the pool
+   *
+   * @param pool
+   * @returns
+   */
+  async liquidity(pool: Pool): Promise<string> {
+    return this.liquidityService.getLiquidity(pool);
   }
 
   static wrap(

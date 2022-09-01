@@ -47,15 +47,14 @@ export interface AprBreakdown {
  */
 export class PoolApr {
   constructor(
-    private pool: Pool,
+    private pools: Findable<Pool, PoolAttribute>,
     private tokenPrices: Findable<Price>,
     private tokenMeta: Findable<Token, TokenAttribute>,
-    private pools: Findable<Pool, PoolAttribute>,
-    private yesterdaysPools: Findable<Pool, PoolAttribute>,
-    private liquidityGauges: Findable<LiquidityGauge>,
-    private feeDistributor: BaseFeeDistributor,
+    private tokenYields: Findable<number>,
     private feeCollector: Findable<number>,
-    private tokenYields: Findable<number>
+    private yesterdaysPools?: Findable<Pool, PoolAttribute>,
+    private liquidityGauges?: Findable<LiquidityGauge>,
+    private feeDistributor?: BaseFeeDistributor
   ) {}
 
   /**
@@ -64,11 +63,12 @@ export class PoolApr {
    *
    * @returns APR [bsp] from fees accumulated over last 24h
    */
-  async swapFees(): Promise<number> {
+  async swapFees(pool: Pool): Promise<number> {
     // 365 * dailyFees * (1 - protocolFees) / totalLiquidity
-    const last24hFees = await this.last24hFees();
-    const totalLiquidity = await this.totalLiquidity(this.pool);
+    const last24hFees = await this.last24hFees(pool);
+    const totalLiquidity = await this.totalLiquidity(pool);
     // TODO: what to do when we are missing last24hFees or totalLiquidity?
+    // eg: stable phantom returns 0
     if (!last24hFees || !totalLiquidity) {
       return 0;
     }
@@ -84,20 +84,20 @@ export class PoolApr {
    *
    * @returns APR [bsp] from tokens contained in the pool
    */
-  async tokenAprs(): Promise<AprBreakdown['tokenAprs']> {
-    if (!this.pool.tokens) {
+  async tokenAprs(pool: Pool): Promise<AprBreakdown['tokenAprs']> {
+    if (!pool.tokens) {
       return {
         total: 0,
         breakdown: {},
       };
     }
 
-    const totalLiquidity = await this.totalLiquidity(this.pool);
+    const totalLiquidity = await this.totalLiquidity(pool);
 
     // Filter out BPT: token with the same address as the pool
     // TODO: move this to data layer
-    const bptFreeTokens = this.pool.tokens.filter((token) => {
-      return token.address !== this.pool.address;
+    const bptFreeTokens = pool.tokens.filter((token) => {
+      return token.address !== pool.address;
     });
 
     // Get each token APRs
@@ -113,19 +113,8 @@ export class PoolApr {
 
         if (subPool) {
           // INFO: Liquidity mining APR can't cascade to other pools
-          const subApr = new PoolApr(
-            subPool,
-            this.tokenPrices,
-            this.tokenMeta,
-            this.pools,
-            this.yesterdaysPools,
-            this.liquidityGauges,
-            this.feeDistributor,
-            this.feeCollector,
-            this.tokenYields
-          );
-          const subSwapFees = await subApr.swapFees();
-          const subtokenAprs = await subApr.tokenAprs();
+          const subSwapFees = await this.swapFees(subPool);
+          const subtokenAprs = await this.tokenAprs(subPool);
           apr = subSwapFees + subtokenAprs.total;
         }
       }
@@ -196,18 +185,24 @@ export class PoolApr {
    *    https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/liquidity-mining/contracts/gauges/ethereum/LiquidityGaugeV5.vy#L641
    *    rate: amount of token per second
    *
+   * @param pool
+   * @param boost range between 1 and 2.5
    * @returns APR [bsp] from protocol rewards.
    */
-  async stakingApr(boost = 1): Promise<number> {
+  async stakingApr(pool: Pool, boost = 1): Promise<number> {
+    if (!this.liquidityGauges) {
+      return 0;
+    }
+
     // Data resolving
-    const gauge = await this.liquidityGauges.findBy('poolId', this.pool.id);
+    const gauge = await this.liquidityGauges.findBy('poolId', pool.id);
     if (!gauge) {
       return 0;
     }
 
     const [balPrice, bptPriceUsd] = await Promise.all([
-      this.tokenPrices.find('0xba100000625a3754423978a60c9317c58a424e3d'),
-      this.bptPrice(this.pool),
+      this.tokenPrices.find('0xba100000625a3754423978a60c9317c58a424e3d'), // BAL
+      this.bptPrice(pool),
     ]);
     const balPriceUsd = parseFloat(balPrice?.usd || '0');
 
@@ -227,11 +222,16 @@ export class PoolApr {
   /**
    * Some gauges are holding tokens distributed as rewards to LPs.
    *
+   * @param pool
    * @returns APR [bsp] from token rewards.
    */
-  async rewardAprs(): Promise<AprBreakdown['rewardAprs']> {
+  async rewardAprs(pool: Pool): Promise<AprBreakdown['rewardAprs']> {
+    if (!this.liquidityGauges) {
+      return { total: 0, breakdown: {} };
+    }
+
     // Data resolving
-    const gauge = await this.liquidityGauges.findBy('poolId', this.pool.id);
+    const gauge = await this.liquidityGauges.findBy('poolId', pool.id);
     if (
       !gauge ||
       !gauge.rewardTokens ||
@@ -271,7 +271,7 @@ export class PoolApr {
     });
 
     // Get the gauge totalSupplyUsd
-    const bptPriceUsd = await this.bptPrice(this.pool);
+    const bptPriceUsd = await this.bptPrice(pool);
     const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
 
     if (totalSupplyUsd == 0) {
@@ -295,12 +295,15 @@ export class PoolApr {
 
   /**
    * 80BAL-20WETH pool is accruing protocol revenue.
+   *
+   * @param pool
+   * @returns accrued protocol revenue as APR [bsp]
    */
-  async protocolApr(): Promise<number> {
+  async protocolApr(pool: Pool): Promise<number> {
     const veBalPoolId =
       '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014';
 
-    if (this.pool.id != veBalPoolId) {
+    if (pool.id != veBalPoolId || !this.feeDistributor) {
       return 0;
     }
 
@@ -309,7 +312,7 @@ export class PoolApr {
     const { lastWeekBalRevenue, lastWeekBBAUsdRevenue, veBalSupply } =
       await revenue.data();
 
-    const bptPrice = await this.bptPrice(this.pool);
+    const bptPrice = await this.bptPrice(pool);
     if (!bptPrice) {
       throw 'bptPrice for veBal pool missing';
     }
@@ -327,7 +330,8 @@ export class PoolApr {
    *
    * @returns pool APR split [bsp]
    */
-  async apr(): Promise<AprBreakdown> {
+  async apr(pool: Pool): Promise<AprBreakdown> {
+    console.time(`APR for ${pool.id}`);
     const [
       swapFees,
       tokenAprs,
@@ -336,13 +340,14 @@ export class PoolApr {
       rewardAprs,
       protocolApr,
     ] = await Promise.all([
-      this.swapFees(), // pool snapshot for last 24h fees dependency
-      this.tokenAprs(),
-      this.stakingApr(),
-      this.stakingApr(2.5),
-      this.rewardAprs(),
-      this.protocolApr(),
+      this.swapFees(pool), // pool snapshot for last 24h fees dependency
+      this.tokenAprs(pool),
+      this.stakingApr(pool),
+      this.stakingApr(pool, 2.5),
+      this.rewardAprs(pool),
+      this.protocolApr(pool),
     ]);
+    console.timeEnd(`APR for ${pool.id}`);
 
     return {
       swapFees,
@@ -368,8 +373,8 @@ export class PoolApr {
     };
   }
 
-  private async last24hFees(): Promise<number> {
-    const poolFees = new PoolFees(this.pool, this.yesterdaysPools);
+  private async last24hFees(pool: Pool): Promise<number> {
+    const poolFees = new PoolFees(pool, this.yesterdaysPools);
     return poolFees.last24h();
   }
 
@@ -382,6 +387,7 @@ export class PoolApr {
   private async totalLiquidity(pool: Pool): Promise<string> {
     const liquidityService = new Liquidity(this.pools, this.tokenPrices);
     const liquidity = await liquidityService.getLiquidity(pool);
+
     return liquidity;
   }
 

@@ -53,15 +53,7 @@ const pool = pools_14717479.find(
 ) as unknown as Pool;
 const tokensIn = pool.tokens;
 
-const controller = Pools.wrap(
-  pool,
-  {
-    update: async () => {
-      return {} as unknown as Pool;
-    },
-  },
-  networkConfig
-);
+const controller = Pools.wrap(pool, networkConfig);
 
 describe('join execution', async () => {
   let transactionReceipt: TransactionReceipt;

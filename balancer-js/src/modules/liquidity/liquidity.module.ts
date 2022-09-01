@@ -1,6 +1,5 @@
 import { Findable, Pool, PoolToken } from '@/types';
 import { PoolAttribute } from '../data';
-import { PoolRepository } from '../data';
 import { TokenPriceProvider } from '../data';
 import { PoolTypeConcerns } from '../pools/pool-type-concerns';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -77,7 +76,9 @@ export class Liquidity {
     ).liquidity.calcTotal(tokenBalances);
 
     const tl = parseFixed(tokenLiquidity, SCALE);
+
     const totalLiquidity = totalSubPoolLiquidity.add(tl);
+
     return formatFixed(totalLiquidity, SCALE);
   }
 }

@@ -420,6 +420,21 @@
     "symbol": "yfi"
   },
   {
+    "chainId": 1,
+    "address": "0xbcca60bb61934080951369a648fb03df4f96263c",
+    "symbol": "ausdc"
+  },
+  {
+    "chainId": 1,
+    "address": "0x028171bca77440897b824ca71d1c56cac55b68a3",
+    "symbol": "adai"
+  },
+  {
+    "chainId": 1,
+    "address": "0x3ed3b47dd13ec9a98b44e6204a523e766b225811",
+    "symbol": "ausdt"
+  },
+  {
     "chainId": 137,
     "address": "0x9c2c5fd7b07e95ee044ddeba0e97a665f142394f",
     "symbol": "1inch"
