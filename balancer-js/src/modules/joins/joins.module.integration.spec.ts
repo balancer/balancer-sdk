@@ -149,6 +149,9 @@ describe('bbausd generalised join execution', async () => {
     previouslyAuthorised = false,
     minBptOut: undefined | string = undefined
   ): Promise<string> {
+    // TODO - Add cases for wrapped and non-wrapped
+    const isWrapped = true;
+
     [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
       [fromPool.address, ...tokensIn],
       signer,
@@ -178,6 +181,7 @@ describe('bbausd generalised join execution', async () => {
       tokensIn,
       tokensBalanceBefore.map((b) => b.toString()),
       signerAddress,
+      isWrapped,
       previouslyAuthorised ? undefined : authorisation
     );
 
