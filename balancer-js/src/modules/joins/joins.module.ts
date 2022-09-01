@@ -6,7 +6,7 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { StablePoolEncoder } from '@/pool-stable';
-import { JoinPoolRequest } from '@/types';
+import { JoinPoolRequest, PoolType } from '@/types';
 import { PoolRepository } from '../data';
 import { PoolGraph, Node } from './graph';
 
@@ -306,18 +306,24 @@ export class Join {
     // inputTokens needs to include each asset even if it has 0 amount
     node.children.forEach((child) => {
       inputTokens.push(child.address);
-
-      if (child.outputReference !== '0') {
-        inputAmts.push(
-          Relayer.toChainedReference(child.outputReference).toString()
-        );
-      } else inputAmts.push('0');
+      inputAmts.push(
+        child.outputReference !== '0'
+          ? Relayer.toChainedReference(child.outputReference).toString()
+          : '0'
+      );
     });
 
-    // assets need to include the phantomPoolToken
-    inputTokens.push(node.address);
-    // need to add a placeholder so sorting works
-    inputAmts.push('0');
+    // TODO: check which types of pools should include their BPT in the input tokens
+    // TODO: check if isn't easier to move that logic to the graph
+    if (
+      node.type === PoolType.ComposableStable ||
+      node.type === PoolType.StablePhantom
+    ) {
+      // assets need to include the phantomPoolToken
+      inputTokens.push(node.address);
+      // need to add a placeholder so sorting works
+      inputAmts.push('0');
+    }
 
     console.log(
       `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
@@ -330,18 +336,27 @@ export class Join {
       )`
     );
 
-    const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     // sort inputs
+    const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
       inputTokens,
       inputAmts
     ) as [string[], string[]];
-    // the amounts should only include the non phantom tokens
+
+    // userData amounts should not include the BPT of the pool being joined
+    let userDataAmounts = [];
     const bptIndex = sortedTokens.indexOf(node.address);
-    sortedAmounts.splice(bptIndex, 1);
+    if (bptIndex === -1) {
+      userDataAmounts = sortedAmounts;
+    } else {
+      userDataAmounts = [
+        ...sortedAmounts.slice(0, bptIndex),
+        ...sortedAmounts.slice(bptIndex + 1),
+      ];
+    }
 
     const userData = StablePoolEncoder.joinExactTokensInForBPTOut(
-      sortedAmounts, // Should NOT include amount for phantom BPT
+      userDataAmounts,
       minAmountOut
     );
 
@@ -358,12 +373,7 @@ export class Join {
       outputReference: '0',
       joinPoolRequest: {} as JoinPoolRequest,
       assets: sortedTokens, // Must include BPT token
-      maxAmountsIn: [
-        MaxUint256.toString(),
-        MaxUint256.toString(),
-        MaxUint256.toString(),
-        MaxUint256.toString(),
-      ], // TODO - Must include BPT limit - These need to be set correctly, set to amounts in apart from phantomBpt which should be 0
+      maxAmountsIn: sortedAmounts,
       userData,
       fromInternalBalance: sender === this.relayer,
     });
