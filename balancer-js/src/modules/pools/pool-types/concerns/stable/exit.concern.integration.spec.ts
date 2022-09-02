@@ -1,11 +1,11 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { BalancerSDK, Network, Pool, PoolToken } from '@/.';
+import { BalancerSDK, Network, Pool } from '@/.';
 import hardhat from 'hardhat';
 
 import { TransactionReceipt } from '@ethersproject/providers';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { forkSetup, setupPool, getBalances } from '@/test/lib/utils';
+import { forkSetup, getBalances } from '@/test/lib/utils';
 import { Pools } from '@/modules/pools';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
