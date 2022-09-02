@@ -1,17 +1,16 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { Network, Pool, PoolModel, PoolToken, StaticPoolRepository } from '@/.';
+import { BalancerSDK, Network, Pool } from '@/.';
 import hardhat from 'hardhat';
 
 import { TransactionReceipt } from '@ethersproject/providers';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { forkSetup, setupPool, getBalances } from '@/test/lib/utils';
-import { PoolsProvider } from '@/modules/pools/provider';
+import { forkSetup, getBalances } from '@/test/lib/utils';
+import { Pools } from '@/modules/pools';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import { ExitPoolAttributes } from '../types';
 import { AddressZero } from '@ethersproject/constants';
-import { networkAddresses } from '@/lib/constants/config';
 
 dotenv.config();
 
@@ -20,10 +19,12 @@ const { ethers } = hardhat;
 
 const rpcUrl = 'http://127.0.0.1:8545';
 const network = Network.MAINNET;
+const { networkConfig } = new BalancerSDK({ network, rpcUrl });
+const wrappedNativeAsset =
+  networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
+
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
-
-const { tokens } = networkAddresses(network);
 
 // Slots used to set the account balance for each token through hardhat_setStorageAt
 // Info fetched using npm package slot20
@@ -31,38 +32,29 @@ const BPT_SLOT = 0;
 const initialBalance = '10000000';
 const amountsOutDiv = (1e7).toString(); // FIXME: depending on this number, exitExactTokenOut (single token) throws Errors.STABLE_INVARIANT_DIDNT_CONVERGE
 const slippage = '100';
-const poolId =
-  '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080'; // Balancer stETH Stable Pool
 
-let tokensOut: PoolToken[];
-let amountsOut: string[];
-let transactionReceipt: TransactionReceipt;
-let bptBalanceBefore: BigNumber;
-let bptBalanceAfter: BigNumber;
-let bptMaxBalanceDecrease: BigNumber;
-let tokensBalanceBefore: BigNumber[];
-let tokensBalanceAfter: BigNumber[];
-let tokensMinBalanceIncrease: BigNumber[];
-let transactionCost: BigNumber;
-let signerAddress: string;
-let pool: PoolModel;
+const pool = pools_14717479.find(
+  (pool) =>
+    pool.id ==
+    '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080' // Balancer stETH Stable Pool
+) as unknown as Pool;
+const tokensOut = pool.tokens;
+const controller = Pools.wrap(pool, networkConfig);
 
 describe('exit execution', async () => {
+  let amountsOut: string[];
+  let transactionReceipt: TransactionReceipt;
+  let bptBalanceBefore: BigNumber;
+  let bptBalanceAfter: BigNumber;
+  let bptMaxBalanceDecrease: BigNumber;
+  let tokensBalanceBefore: BigNumber[];
+  let tokensBalanceAfter: BigNumber[];
+  let tokensMinBalanceIncrease: BigNumber[];
+  let transactionCost: BigNumber;
+  let signerAddress: string;
+
   // Setup chain
   before(async function () {
-    this.timeout(20000);
-
-    const sdkConfig = {
-      network,
-      rpcUrl,
-    };
-    // Using a static repository to make test consistent over time
-    const poolsProvider = new PoolsProvider(
-      sdkConfig,
-      new StaticPoolRepository(pools_14717479 as Pool[])
-    );
-    pool = await setupPool(poolsProvider, poolId);
-    tokensOut = pool.tokens;
     await forkSetup(
       signer,
       [pool.address],
@@ -107,7 +99,7 @@ describe('exit execution', async () => {
         transactionReceipt.effectiveGasPrice
       );
       tokensBalanceAfter = tokensBalanceAfter.map((balance, i) => {
-        if (pool.tokensList[i] === tokens.wrappedNativeAsset.toLowerCase()) {
+        if (pool.tokensList[i] === wrappedNativeAsset) {
           return balance.add(transactionCost);
         }
         return balance;
@@ -117,10 +109,9 @@ describe('exit execution', async () => {
   context('exitExactBPTIn', async () => {
     context('proportional amounts out', async () => {
       before(async function () {
-        this.timeout(20000);
         const bptIn = parseFixed('10', 18).toString();
         await testFlow(
-          pool.buildExitExactBPTIn(signerAddress, bptIn, slippage),
+          controller.buildExitExactBPTIn(signerAddress, bptIn, slippage),
           pool.tokensList
         );
       });
@@ -146,10 +137,9 @@ describe('exit execution', async () => {
     });
     context('single token max out', async () => {
       before(async function () {
-        this.timeout(20000);
         const bptIn = parseFixed('10', 18).toString();
         await testFlow(
-          pool.buildExitExactBPTIn(
+          controller.buildExitExactBPTIn(
             signerAddress,
             bptIn,
             slippage,
@@ -194,7 +184,7 @@ describe('exit execution', async () => {
     //     );
 
     //     await testFlow(
-    //       pool.buildExitExactTokensOut(
+    //       controller.buildExitExactTokensOut(
     //         signerAddress,
     //         tokensOut.map((t) => t.address),
     //         amountsOut,
@@ -237,7 +227,7 @@ describe('exit execution', async () => {
         });
 
         await testFlow(
-          pool.buildExitExactTokensOut(
+          controller.buildExitExactTokensOut(
             signerAddress,
             tokensOut.map((t) => t.address),
             amountsOut,
@@ -269,12 +259,8 @@ describe('exit execution', async () => {
 
     context('exit with ETH', async () => {
       before(async function () {
-        this.timeout(20000);
-
         const exitTokens = pool.tokensList.map((token) =>
-          token === tokens.wrappedNativeAsset.toLowerCase()
-            ? AddressZero
-            : token
+          token === wrappedNativeAsset ? AddressZero : token
         );
 
         amountsOut = exitTokens.map((t, i) => {
@@ -287,7 +273,7 @@ describe('exit execution', async () => {
         });
 
         await testFlow(
-          pool.buildExitExactTokensOut(
+          controller.buildExitExactTokensOut(
             signerAddress,
             exitTokens,
             amountsOut,
@@ -318,4 +304,4 @@ describe('exit execution', async () => {
       });
     });
   });
-}).timeout(20000);
+});
