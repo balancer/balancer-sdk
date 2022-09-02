@@ -13,7 +13,6 @@ import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
 import { Join } from '../joins/joins.module';
-import { PoolRepository } from '@/modules/data';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -21,6 +20,7 @@ import { PoolRepository } from '@/modules/data';
 export class Pools implements Findable<PoolWithMethods> {
   aprService;
   liquidityService;
+  joinService;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -40,6 +40,7 @@ export class Pools implements Findable<PoolWithMethods> {
       repositories.pools,
       repositories.tokenPrices
     );
+    this.joinService = new Join(this.repositories.pools, networkConfig.chainId);
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
@@ -67,32 +68,49 @@ export class Pools implements Findable<PoolWithMethods> {
     return this.liquidityService.getLiquidity(pool);
   }
 
+  /**
+   * Builds generalised join transaction
+   *
+   * @param poolId          Pool id
+   * @param expectedBPTOut  Minimum BPT expected out of the join transaction
+   * @param tokens          Token addresses
+   * @param amounts         Token amounts in EVM scale
+   * @param userAddress     User address
+   * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
+   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+   * @returns transaction data ready to be sent to the network
+   */
+  async generalisedJoin(
+    poolId: string,
+    expectedBPTOut: string,
+    tokens: string[],
+    amounts: string[],
+    userAddress: string,
+    wrapMainTokens: boolean,
+    authorisation?: string
+  ): Promise<{
+    to: string;
+    data: string;
+    decode: (output: string) => string;
+  }> {
+    return this.joinService.joinPool(
+      poolId,
+      expectedBPTOut,
+      tokens,
+      amounts,
+      userAddress,
+      wrapMainTokens,
+      authorisation
+    );
+  }
+
   static wrap(
     pool: Pool,
-    networkConfig: BalancerNetworkConfig,
-    repo: PoolRepository
+    networkConfig: BalancerNetworkConfig
   ): PoolWithMethods {
     const methods = PoolTypeConcerns.from(pool.poolType);
-    const joinModule = new Join(repo, networkConfig.chainId);
     return {
       ...pool,
-      generalisedJoin: async (
-        expectedBPTOut,
-        tokens,
-        amounts,
-        userAddress,
-        wrapMainTokens,
-        authorisation
-      ) =>
-        joinModule.joinPool(
-          pool.id,
-          expectedBPTOut,
-          tokens,
-          amounts,
-          userAddress,
-          wrapMainTokens,
-          authorisation
-        ),
       buildJoin: (
         joiner: string,
         tokensIn: string[],
@@ -152,7 +170,7 @@ export class Pools implements Findable<PoolWithMethods> {
     const data = await this.dataSource().find(id);
     if (!data) return;
 
-    return Pools.wrap(data, this.networkConfig, this.repositories.pools);
+    return Pools.wrap(data, this.networkConfig);
   }
 
   async findBy(
@@ -165,7 +183,7 @@ export class Pools implements Findable<PoolWithMethods> {
       const data = await this.dataSource().findBy('address', value);
       if (!data) return;
 
-      return Pools.wrap(data, this.networkConfig, this.repositories.pools);
+      return Pools.wrap(data, this.networkConfig);
     } else {
       throw `search by ${param} not implemented`;
     }
@@ -175,17 +193,13 @@ export class Pools implements Findable<PoolWithMethods> {
     const list = await this.dataSource().all();
     if (!list) return [];
 
-    return list.map((data: Pool) =>
-      Pools.wrap(data, this.networkConfig, this.repositories.pools)
-    );
+    return list.map((data: Pool) => Pools.wrap(data, this.networkConfig));
   }
 
   async where(filter: (pool: Pool) => boolean): Promise<PoolWithMethods[]> {
     const list = await this.dataSource().where(filter);
     if (!list) return [];
 
-    return list.map((data: Pool) =>
-      Pools.wrap(data, this.networkConfig, this.repositories.pools)
-    );
+    return list.map((data: Pool) => Pools.wrap(data, this.networkConfig));
   }
 }

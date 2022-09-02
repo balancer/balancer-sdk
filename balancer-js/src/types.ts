@@ -243,18 +243,6 @@ export interface Pool {
  * Pool use-cases / controller layer
  */
 export interface PoolWithMethods extends Pool {
-  generalisedJoin: (
-    expectedBPTOut: string,
-    tokens: string[],
-    amounts: string[],
-    userAddress: string,
-    wrapMainTokens: boolean,
-    authorisation?: string
-  ) => Promise<{
-    to: string;
-    data: string;
-    decode: (output: string) => string;
-  }>;
   buildJoin: (
     joiner: string,
     tokensIn: string[],
