@@ -2,7 +2,7 @@ import {
   BigNumber,
   BigNumberish,
   parseFixed as _parseFixed,
-  formatFixed,
+  formatFixed as _formatFixed,
 } from '@ethersproject/bignumber';
 
 export function parseFixed(value: string, decimals?: BigNumberish): BigNumber {
@@ -16,10 +16,15 @@ export function parseFixed(value: string, decimals?: BigNumberish): BigNumber {
   return _parseFixed(parsedValue, decimals);
 }
 
+export function formatFixed(value: BigNumber, decimals: BigNumberish): string {
+  const ethersFormat = _formatFixed(value, decimals);
+  return ethersFormat.replace(/(.0$)/, '');
+}
+
 export function parseToBigInt18(value: string): bigint {
   return parseFixed(value, 18).toBigInt();
 }
 
 export function formatFromBigInt18(value: bigint): string {
-  return formatFixed(BigNumber.from(value), 18);
+  return _formatFixed(BigNumber.from(value), 18);
 }
