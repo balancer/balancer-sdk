@@ -234,6 +234,7 @@ export interface Pool {
   amp?: string;
   apr?: AprBreakdown;
   liquidity?: string;
+  totalWeight: string;
 }
 
 /**
@@ -260,6 +261,7 @@ export interface PoolWithMethods extends Pool {
     amountsOut: string[],
     slippage: string
   ) => ExitPoolAttributes;
+  calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
 }
 
 export interface GraphQLQuery {
