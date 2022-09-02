@@ -31,6 +31,7 @@ export class Join {
     tokens: string[],
     amounts: string[],
     userAddress: string,
+    wrapMainTokens: boolean,
     authorisation?: string
   ): Promise<{
     to: string;
@@ -41,7 +42,10 @@ export class Join {
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
     const poolsGraph = new PoolGraph(this.pools);
 
-    const rootNode = await poolsGraph.buildGraphFromRootPool(poolId);
+    const rootNode = await poolsGraph.buildGraphFromRootPool(
+      poolId,
+      wrapMainTokens
+    );
     const orderedNodes = poolsGraph.orderByBfs(rootNode);
     const calls = this.createActionCalls(
       orderedNodes,

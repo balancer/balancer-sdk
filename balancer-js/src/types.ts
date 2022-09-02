@@ -213,6 +213,7 @@ export interface PoolModel extends Pool {
     tokens: string[],
     amounts: string[],
     userAddress: string,
+    wrapMainTokens: boolean,
     authorisation?: string
   ) => Promise<{
     to: string;

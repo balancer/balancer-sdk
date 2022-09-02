@@ -62,43 +62,88 @@ describe('Generalised Joins', () => {
     it('should throw when pool doesnt exist', async () => {
       let errorMessage = '';
       try {
-        await joinModule.joinPool('thisisntapool', '0', [], [], userAddress);
+        await joinModule.joinPool(
+          'thisisntapool',
+          '0',
+          [],
+          [],
+          userAddress,
+          true
+        );
       } catch (error) {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.eq('balancer pool does not exist');
     });
 
-    it('all leaf tokens', async () => {
-      const inputTokens = [
-        '0x6b175474e89094c44da98b954eedeac495271d0f',
-        '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-        '0xdac17f958d2ee523a2206206994597c13d831ec7',
-      ];
-      const inputAmounts = ['1000000000000000000', '1000000', '1000000'];
-      const root = await joinModule.joinPool(
-        rootPool.id,
-        '7777777',
-        inputTokens,
-        inputAmounts,
-        userAddress
-      );
+    context('with wrapped tokens', () => {
+      const isWrapped = true;
+      it('all leaf tokens', async () => {
+        const inputTokens = [
+          '0x6b175474e89094c44da98b954eedeac495271d0f',
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+          '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        ];
+        const inputAmounts = ['1000000000000000000', '1000000', '1000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
+
+      it('single leaf token', async () => {
+        const inputTokens = ['0x6b175474e89094c44da98b954eedeac495271d0f'];
+        const inputAmounts = ['1000000000000000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
     });
 
-    it('single leaf token', async () => {
-      const inputTokens = ['0x6b175474e89094c44da98b954eedeac495271d0f'];
-      const inputAmounts = ['1000000000000000000'];
-      const root = await joinModule.joinPool(
-        rootPool.id,
-        '7777777',
-        inputTokens,
-        inputAmounts,
-        userAddress
-      );
-    });
+    context('with non-wrapped tokens', () => {
+      const isWrapped = false;
+      it('all leaf tokens', async () => {
+        const inputTokens = [
+          '0x6b175474e89094c44da98b954eedeac495271d0f',
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+          '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        ];
+        const inputAmounts = ['1000000000000000000', '1000000', '1000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
 
-    // TO DO - Add tests for correct call/action construction?
-    // Ideally integration tests will cover actual call data success
+      it('single leaf token', async () => {
+        const inputTokens = ['0x6b175474e89094c44da98b954eedeac495271d0f'];
+        const inputAmounts = ['1000000000000000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
+    });
+    // TODO - Add tests for correct call/action construction?
+    // TODO - Ideally integration tests will cover actual call data success
+    // TODO - Lots of repeated code, could be refactored.
   });
 
   context('boostedMeta', () => {
@@ -174,50 +219,109 @@ describe('Generalised Joins', () => {
       joinModule = new Join(poolProvider, Network.GOERLI);
     });
 
-    it('all leaf tokens', async () => {
-      const inputTokens = [
-        '0x6b175474e89094c44da98b954eedeac495271d0f',
-        '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-        '0xdac17f958d2ee523a2206206994597c13d831ec7',
-        formatAddress('address_STABLE'),
-      ];
-      const inputAmounts = [
-        '1000000000000000000',
-        '1000000',
-        '1000000',
-        '1000000000000000000',
-      ];
-      const root = await joinModule.joinPool(
-        rootPool.id,
-        '7777777',
-        inputTokens,
-        inputAmounts,
-        userAddress
-      );
+    context('with wrapped tokens', () => {
+      const isWrapped = true;
+
+      it('all leaf tokens', async () => {
+        const inputTokens = [
+          '0x6b175474e89094c44da98b954eedeac495271d0f',
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+          '0xdac17f958d2ee523a2206206994597c13d831ec7',
+          formatAddress('address_STABLE'),
+        ];
+        const inputAmounts = [
+          '1000000000000000000',
+          '1000000',
+          '1000000',
+          '1000000000000000000',
+        ];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
+
+      it('single linear token', async () => {
+        const inputTokens = ['address_STABLE'];
+        const inputAmounts = ['1000000000000000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
+
+      it('single boosted leaf token', async () => {
+        const inputTokens = ['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'];
+        const inputAmounts = ['1000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
     });
 
-    it('single linear token', async () => {
-      const inputTokens = ['address_STABLE'];
-      const inputAmounts = ['1000000000000000000'];
-      const root = await joinModule.joinPool(
-        rootPool.id,
-        '7777777',
-        inputTokens,
-        inputAmounts,
-        userAddress
-      );
-    });
+    context('with non-wrapped tokens', () => {
+      const isWrapped = false;
+      it('all leaf tokens', async () => {
+        const inputTokens = [
+          '0x6b175474e89094c44da98b954eedeac495271d0f',
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+          '0xdac17f958d2ee523a2206206994597c13d831ec7',
+          formatAddress('address_STABLE'),
+        ];
+        const inputAmounts = [
+          '1000000000000000000',
+          '1000000',
+          '1000000',
+          '1000000000000000000',
+        ];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
 
-    it('single boosted leaf token', async () => {
-      const inputTokens = ['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'];
-      const inputAmounts = ['1000000'];
-      const root = await joinModule.joinPool(
-        rootPool.id,
-        '7777777',
-        inputTokens,
-        inputAmounts,
-        userAddress
-      );
+      it('single linear token', async () => {
+        const inputTokens = ['address_STABLE'];
+        const inputAmounts = ['1000000000000000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
+
+      it('single boosted leaf token', async () => {
+        const inputTokens = ['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'];
+        const inputAmounts = ['1000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
     });
   });
 
@@ -315,32 +419,70 @@ describe('Generalised Joins', () => {
       joinModule = new Join(poolProvider, 1);
     });
 
-    it('all leaf tokens', async () => {
-      const inputTokens = [
-        '0x6b175474e89094c44da98b954eedeac495271d0f',
-        '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-        '0xdac17f958d2ee523a2206206994597c13d831ec7',
-      ];
-      const inputAmounts = ['1000000000000000000', '1000000', '1000000'];
-      const root = await joinModule.joinPool(
-        rootPool.id,
-        '7777777',
-        inputTokens,
-        inputAmounts,
-        userAddress
-      );
+    context('with wrapped tokens', () => {
+      const isWrapped = true;
+      it('all leaf tokens', async () => {
+        const inputTokens = [
+          '0x6b175474e89094c44da98b954eedeac495271d0f',
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+          '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        ];
+        const inputAmounts = ['1000000000000000000', '1000000', '1000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
+
+      it('single boosted leaf token', async () => {
+        const inputTokens = ['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'];
+        const inputAmounts = ['1000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
     });
 
-    it('single boosted leaf token', async () => {
-      const inputTokens = ['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'];
-      const inputAmounts = ['1000000'];
-      const root = await joinModule.joinPool(
-        rootPool.id,
-        '7777777',
-        inputTokens,
-        inputAmounts,
-        userAddress
-      );
+    context('with non-wrapped tokens', () => {
+      const isWrapped = false;
+      it('all leaf tokens', async () => {
+        const inputTokens = [
+          '0x6b175474e89094c44da98b954eedeac495271d0f',
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+          '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        ];
+        const inputAmounts = ['1000000000000000000', '1000000', '1000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
+
+      it('single boosted leaf token', async () => {
+        const inputTokens = ['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'];
+        const inputAmounts = ['1000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
     });
   });
 });

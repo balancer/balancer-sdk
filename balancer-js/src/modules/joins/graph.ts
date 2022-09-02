@@ -38,14 +38,18 @@ joinActions.set(PoolType.ComposableStable, 'joinPool');
 export class PoolGraph {
   constructor(private pools: PoolRepository) {}
 
-  async buildGraphFromRootPool(poolId: string): Promise<Node> {
+  async buildGraphFromRootPool(
+    poolId: string,
+    wrapMainTokens: boolean
+  ): Promise<Node> {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
     const nodeIndex = 0;
     const rootNode = await this.buildGraphFromPool(
       rootPool.address,
       nodeIndex,
-      BigNumber.from('1000000000000000000')
+      BigNumber.from('1000000000000000000'), // TODO - Add constant
+      wrapMainTokens
     );
     return rootNode[0];
   }
@@ -66,7 +70,8 @@ export class PoolGraph {
   async buildGraphFromPool(
     address: string,
     nodeIndex: number,
-    proportionOfParent: BigNumber
+    proportionOfParent: BigNumber,
+    wrapMainTokens: boolean
   ): Promise<[Node, number]> {
     const pool = await this.pools.findBy('address', address);
     if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
@@ -91,7 +96,8 @@ export class PoolGraph {
       [poolNode, nodeIndex] = this.createLinearNodeChildren(
         poolNode,
         nodeIndex,
-        pool
+        pool,
+        wrapMainTokens
       );
     } else {
       const { parsedBalances } = parsePoolInfo(pool);
@@ -107,7 +113,8 @@ export class PoolGraph {
         const childNode = await this.buildGraphFromPool(
           pool.tokens[i].address,
           nodeIndex,
-          finalProportion
+          finalProportion,
+          wrapMainTokens
         );
         nodeIndex = childNode[1];
         if (childNode[0]) poolNode.children.push(childNode[0]);
@@ -119,16 +126,29 @@ export class PoolGraph {
   createLinearNodeChildren(
     linearPoolNode: Node,
     nodeIndex: number,
-    linearPool: Pool
+    linearPool: Pool,
+    wrapMainTokens: boolean
   ): [Node, number] {
-    // Linear pool will be joined via wrapped token. This will be the child node.
-    const wrappedNodeInfo = this.createWrappedTokenNode(
-      linearPool,
-      nodeIndex,
-      linearPoolNode.proportionOfParent
-    );
-    linearPoolNode.children.push(wrappedNodeInfo[0]);
-    return [linearPoolNode, wrappedNodeInfo[1]];
+    if (wrapMainTokens) {
+      // Linear pool will be joined via wrapped token. This will be the child node.
+      const wrappedNodeInfo = this.createWrappedTokenNode(
+        linearPool,
+        nodeIndex,
+        linearPoolNode.proportionOfParent
+      );
+      linearPoolNode.children.push(wrappedNodeInfo[0]);
+      return [linearPoolNode, wrappedNodeInfo[1]];
+    } else {
+      // Main token
+      const nodeInfo = this.createMainTokenNode(
+        linearPool,
+        nodeIndex,
+        linearPoolNode.proportionOfParent
+      );
+      linearPoolNode.children.push(nodeInfo[0]);
+      nodeIndex = nodeInfo[1];
+      return [linearPoolNode, nodeIndex];
+    }
   }
 
   createWrappedTokenNode(

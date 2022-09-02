@@ -28,6 +28,7 @@ export class PoolsProvider {
         tokens,
         amounts,
         userAddress,
+        wrapMainTokens,
         authorisation
       ) =>
         joinModule.joinPool(
@@ -36,6 +37,7 @@ export class PoolsProvider {
           tokens,
           amounts,
           userAddress,
+          wrapMainTokens,
           authorisation
         ),
       liquidity: async () => methods.liquidity.calcTotal(data.tokens),
