@@ -14,7 +14,7 @@ import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxInt256, MaxUint256 } from '@ethersproject/constants';
-import { forkSetup, getBalances, approveToken } from '@/test/lib/utils';
+import { forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 
 /*
@@ -37,8 +37,6 @@ import { ADDRESSES } from '@/test/lib/constants';
  * - Uncomment section below:
  */
 const network = Network.MAINNET;
-const poolId =
-  '0x9b532ab955417afd0d012eb9f7389457cd0ea712000000000000000000000338';
 const blockNumber = 15372650;
 
 dotenv.config();
@@ -49,32 +47,39 @@ const MAX_GAS_LIMIT = 8e6;
 
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
+const signer = provider.getSigner();
 const { contracts, contractAddresses } = new Contracts(
   network as number,
   provider
 );
-const relayer = contractAddresses.relayer as string; // only currenlty supported on GOERLI
+const relayer = contractAddresses.relayer as string;
+const addresses = ADDRESSES[network];
 const fromPool = {
-  id: poolId,
-  address: '0x9b532ab955417afd0d012eb9f7389457cd0ea712',
-}; // bbausd
+  id: '0x9b532ab955417afd0d012eb9f7389457cd0ea712000000000000000000000338', // bbausd2
+  address: addresses.bbausd2.address,
+};
 const tokensIn = [
-  ADDRESSES[network].USDT.address,
-  ADDRESSES[network].DAI.address,
-  ADDRESSES[network].USDC.address,
+  addresses.USDT.address,
+  addresses.DAI.address,
+  addresses.USDC.address,
 ];
-// Slots used to set the account balance for each token through hardhat_setStorageAt
-// Info fetched using npm package slot20
-const slots = [
-  ADDRESSES[network].USDT.slot,
-  ADDRESSES[network].DAI.slot,
-  ADDRESSES[network].USDC.slot,
+const wrappedTokensIn = [
+  addresses.waUSDT.address,
+  addresses.waDAI.address,
+  addresses.waUSDC.address,
+];
+const slots = [addresses.USDT.slot, addresses.DAI.slot, addresses.USDC.slot];
+const wrappedSlots = [
+  addresses.waUSDT.slot,
+  addresses.waDAI.slot,
+  addresses.waUSDC.slot,
 ];
 const initialBalances = [
-  parseFixed('0', ADDRESSES[network].USDT.decimals).toString(),
-  parseFixed('100', ADDRESSES[network].DAI.decimals).toString(),
-  parseFixed('100', ADDRESSES[network].USDC.decimals).toString(),
+  parseFixed('0', addresses.USDT.decimals).toString(),
+  parseFixed('100', addresses.DAI.decimals).toString(),
+  parseFixed('100', addresses.USDC.decimals).toString(),
 ];
+const wrappedInitialBalances = ['0', '0', '0'];
 
 const signRelayerApproval = async (
   relayerAddress: string,
@@ -104,7 +109,6 @@ const signRelayerApproval = async (
 };
 
 describe('bbausd generalised join execution', async () => {
-  let signer: JsonRpcSigner;
   let signerAddress: string;
   let authorisation: string;
   let pool: PoolModel;
@@ -116,29 +120,15 @@ describe('bbausd generalised join execution', async () => {
   beforeEach(async function () {
     this.timeout(20000);
 
-    signer = provider.getSigner();
     signerAddress = await signer.getAddress();
 
     await forkSetup(
       signer,
-      tokensIn,
-      slots,
-      initialBalances,
+      [...tokensIn, ...wrappedTokensIn],
+      [...slots, ...wrappedSlots],
+      [...initialBalances, ...wrappedInitialBalances],
       jsonRpcUrl as string,
       blockNumber
-    );
-
-    // waUSDC
-    await approveToken(
-      '0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de',
-      MaxUint256.toString(),
-      signer
-    );
-    // waDAI
-    await approveToken(
-      '0x02d60b84491589974263d922D9cC7a3152618Ef6',
-      MaxUint256.toString(),
-      signer
     );
 
     authorisation = await signRelayerApproval(relayer, signerAddress, signer);

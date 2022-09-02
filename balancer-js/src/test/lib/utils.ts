@@ -1,6 +1,6 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
-import { AddressZero } from '@ethersproject/constants';
+import { AddressZero, MaxUint256 } from '@ethersproject/constants';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
 import { formatBytes32String } from '@ethersproject/strings';
@@ -41,7 +41,7 @@ export const forkSetup = async (
     // Set initial account balance for each token that will be used to join pool
     await setTokenBalance(signer, tokens[i], slots[i], balances[i]);
     // Approve appropriate allowances so that vault contract can move tokens
-    await approveToken(tokens[i], balances[i], signer);
+    await approveToken(tokens[i], MaxUint256.toString(), signer);
   }
 };
 
