@@ -1,6 +1,6 @@
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
-import { AddressZero, MaxInt256, MaxUint256 } from '@ethersproject/constants';
+import { AddressZero, MaxInt256 } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
@@ -65,7 +65,7 @@ export class Join {
       to: this.relayer,
       data: callData,
       decode: (output) => {
-        return 'todo'; // TODO: add decode function
+        return output; // TODO: add decode function
       },
     };
   }
