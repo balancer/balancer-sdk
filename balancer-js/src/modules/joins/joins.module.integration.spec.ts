@@ -1,15 +1,8 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import hardhat from 'hardhat';
-import {
-  BalancerError,
-  BalancerErrorCode,
-  Network,
-  RelayerAuthorization,
-  PoolModel,
-  BalancerSdkConfig,
-  BalancerSDK,
-} from '@/.';
+
+import { BalancerSDK, Network, RelayerAuthorization } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
@@ -46,6 +39,12 @@ const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
 const rpcUrl = 'http://127.0.0.1:8545';
+const sdk = new BalancerSDK({
+  network,
+  rpcUrl,
+  customSubgraphUrl: `https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta`,
+});
+const { pools } = sdk;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 const { contracts, contractAddresses } = new Contracts(
@@ -111,7 +110,6 @@ const signRelayerApproval = async (
 describe('bbausd generalised join execution', async () => {
   let signerAddress: string;
   let authorisation: string;
-  let pool: PoolModel;
   let bptBalanceBefore: BigNumber;
   let bptBalanceAfter: BigNumber;
   let tokensBalanceBefore: BigNumber[];
@@ -132,19 +130,6 @@ describe('bbausd generalised join execution', async () => {
     );
 
     authorisation = await signRelayerApproval(relayer, signerAddress, signer);
-
-    const sdkConfig: BalancerSdkConfig = {
-      network,
-      rpcUrl,
-      customSubgraphUrl: `https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta`,
-    };
-    const balancer = new BalancerSDK(sdkConfig);
-    await balancer.poolsProvider
-      .findBy('address', fromPool.address)
-      .then((res) => {
-        if (!res) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-        pool = res;
-      });
   });
 
   const testFlow = async (
@@ -152,7 +137,7 @@ describe('bbausd generalised join execution', async () => {
     minBptOut: undefined | string = undefined
   ) => {
     // TODO - Add cases for wrapped and non-wrapped
-    const isWrapped = true;
+    const wrapMainTokens = true;
 
     [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
       [fromPool.address, ...tokensIn],
@@ -178,12 +163,13 @@ describe('bbausd generalised join execution', async () => {
     // console.log(bptOut);
     const bptOut = '0';
 
-    const query = await pool.generalisedJoin(
+    const query = await pools.generalisedJoin(
+      fromPool.id,
       minBptOut ? minBptOut : bptOut,
       tokensIn,
       tokensBalanceBefore.map((b) => b.toString()),
       signerAddress,
-      isWrapped,
+      wrapMainTokens,
       previouslyAuthorised ? undefined : authorisation
     );
 
