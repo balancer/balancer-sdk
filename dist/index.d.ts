@@ -175,6 +175,20 @@ interface JoinPoolAttributes {
     value?: BigNumber;
     minBPTOut: string;
 }
+interface ExitPool {
+    poolId: string;
+    sender: string;
+    recipient: string;
+    exitPoolRequest: ExitPoolRequest;
+}
+interface ExitPoolAttributes {
+    to: string;
+    functionName: string;
+    attributes: ExitPool;
+    data: string;
+    minAmountsOut: string[];
+    maxBPTIn: string;
+}
 
 declare class GaugeControllerMulticallRepository {
     private gaugeControllerAddress;
@@ -1984,6 +1998,9 @@ declare type PoolsQuery = {
         mainIndex?: number | null;
         lowerTarget?: string | null;
         upperTarget?: string | null;
+        sqrtAlpha?: string | null;
+        sqrtBeta?: string | null;
+        root3Alpha?: string | null;
         tokens?: Array<{
             __typename?: 'PoolToken';
             id: string;
@@ -2024,6 +2041,9 @@ declare type PoolsQuery = {
         mainIndex?: number | null;
         lowerTarget?: string | null;
         upperTarget?: string | null;
+        sqrtAlpha?: string | null;
+        sqrtBeta?: string | null;
+        root3Alpha?: string | null;
         tokens?: Array<{
             __typename?: 'PoolToken';
             id: string;
@@ -2071,6 +2091,9 @@ declare type PoolQuery = {
         mainIndex?: number | null;
         lowerTarget?: string | null;
         upperTarget?: string | null;
+        sqrtAlpha?: string | null;
+        sqrtBeta?: string | null;
+        root3Alpha?: string | null;
         tokens?: Array<{
             __typename?: 'PoolToken';
             id: string;
@@ -2200,6 +2223,9 @@ declare type SubgraphPoolFragment = {
     mainIndex?: number | null;
     lowerTarget?: string | null;
     upperTarget?: string | null;
+    sqrtAlpha?: string | null;
+    sqrtBeta?: string | null;
+    root3Alpha?: string | null;
     tokens?: Array<{
         __typename?: 'PoolToken';
         id: string;
@@ -2593,6 +2619,8 @@ interface Searchable<T> {
  * Calculation source
  * https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/liquidity-mining/contracts/BalancerTokenAdmin.sol
  */
+declare const INITIAL_RATE = 145000;
+declare const START_EPOCH_TIME = 1648465251;
 /**
  * Weekly BAL emissions
  *
@@ -2616,11 +2644,15 @@ declare const total: (epoch: number) => number;
  */
 declare const between: (start: number, end: number) => number;
 
+declare const emissions_INITIAL_RATE: typeof INITIAL_RATE;
+declare const emissions_START_EPOCH_TIME: typeof START_EPOCH_TIME;
 declare const emissions_weekly: typeof weekly;
 declare const emissions_total: typeof total;
 declare const emissions_between: typeof between;
 declare namespace emissions {
   export {
+    emissions_INITIAL_RATE as INITIAL_RATE,
+    emissions_START_EPOCH_TIME as START_EPOCH_TIME,
     emissions_weekly as weekly,
     emissions_total as total,
     emissions_between as between,
@@ -2711,9 +2743,14 @@ interface TokenPriceProvider {
     find: (address: string) => Promise<Price | undefined>;
 }
 
-declare class StaticTokenPriceProvider implements Findable<Price> {
+declare class StaticTokenPriceProvider implements TokenPriceProvider {
     private tokenPrices;
     constructor(tokenPrices: TokenPrices);
+    /**
+     * Iterates through all tokens and calculates USD prices
+     * based on data the tokens already have.
+     */
+    calculateUSDPrices(): void;
     find(address: string): Promise<Price | undefined>;
     findBy(attribute: string, value: string): Promise<Price | undefined>;
 }
@@ -2723,14 +2760,20 @@ declare class StaticTokenPriceProvider implements Findable<Price> {
  */
 declare class CoingeckoPriceRepository implements Findable<Price> {
     prices: TokenPrices;
+    fetching: {
+        [address: string]: Promise<TokenPrices>;
+    };
     urlBase: string;
     baseTokenAddresses: string[];
     constructor(tokenAddresses: string[], chainId?: number);
-    fetch(address: string): Promise<void>;
+    fetch(address: string): {
+        [address: string]: Promise<TokenPrices>;
+    };
     find(address: string): Promise<Price | undefined>;
     findBy(attribute: string, value: string): Promise<Price | undefined>;
     private platform;
     private url;
+    private addresses;
 }
 
 interface FeeDistributorData {
@@ -2772,34 +2815,38 @@ declare class FeeCollectorRepository implements Findable<number> {
  * @param address is optional, used when same source, eg: aave has multiple tokens and all of them can be fetched in one call.
  */
 interface AprFetcher {
-    (address?: string): Promise<number>;
+    (): Promise<{
+        [address: string]: number;
+    }>;
 }
-declare const tokenAprMap: Record<string, AprFetcher>;
 declare class TokenYieldsRepository implements Findable<number> {
-    private tokenMap;
+    private sources;
     private yields;
-    constructor(tokenMap?: Record<string, AprFetcher>);
+    constructor(sources?: {
+        [address: string]: AprFetcher;
+    });
     fetch(address: string): Promise<void>;
     find(address: string): Promise<number | undefined>;
     findBy(attribute: string, value: string): Promise<number | undefined>;
 }
 
 declare class BlockNumberRepository implements Findable<number> {
-    private network;
-    constructor(network: number);
+    private endpoint;
+    constructor(endpoint: string);
     find(from: string): Promise<number | undefined>;
     findBy(attribute?: string, value?: string): Promise<number | undefined>;
 }
 
 declare class Data implements BalancerDataRepositories {
     pools: PoolsSubgraphRepository;
-    yesterdaysPools: PoolsSubgraphRepository;
+    yesterdaysPools: PoolsSubgraphRepository | undefined;
     tokenPrices: CoingeckoPriceRepository;
     tokenMeta: StaticTokenProvider;
-    liquidityGauges: LiquidityGaugeSubgraphRPCProvider;
-    feeDistributor: FeeDistributorRepository;
+    liquidityGauges: LiquidityGaugeSubgraphRPCProvider | undefined;
+    feeDistributor: FeeDistributorRepository | undefined;
     feeCollector: FeeCollectorRepository;
     tokenYields: TokenYieldsRepository;
+    blockNumbers: BlockNumberRepository | undefined;
     constructor(networkConfig: BalancerNetworkConfig, provider: Provider);
 }
 
@@ -2885,6 +2932,101 @@ interface AprBreakdown {
     min: number;
     max: number;
 }
+/**
+ * Calculates pool APR via summing up sources of APR:
+ *
+ * 1. Swap fees (pool level) data coming from subgraph
+ * 2. Yield bearing pool tokens, with data from external sources eg: http endpoints, subgraph, onchain
+ *    * stETH
+ *    * aave
+ *    * usd+
+ *    map token: calculatorFn
+ * 3. Staking rewards based from veBal gauges
+ */
+declare class PoolApr {
+    private pools;
+    private tokenPrices;
+    private tokenMeta;
+    private tokenYields;
+    private feeCollector;
+    private yesterdaysPools?;
+    private liquidityGauges?;
+    private feeDistributor?;
+    constructor(pools: Findable<Pool, PoolAttribute>, tokenPrices: Findable<Price>, tokenMeta: Findable<Token, TokenAttribute>, tokenYields: Findable<number>, feeCollector: Findable<number>, yesterdaysPools?: Findable<Pool, PoolAttribute> | undefined, liquidityGauges?: Findable<LiquidityGauge, string> | undefined, feeDistributor?: BaseFeeDistributor | undefined);
+    /**
+     * Pool revenue via swap fees.
+     * Fees and liquidity are takes from subgraph as USD floats.
+     *
+     * @returns APR [bsp] from fees accumulated over last 24h
+     */
+    swapFees(pool: Pool): Promise<number>;
+    /**
+     * Pool revenue from holding yield-bearing wrapped tokens.
+     *
+     * @returns APR [bsp] from tokens contained in the pool
+     */
+    tokenAprs(pool: Pool): Promise<AprBreakdown['tokenAprs']>;
+    /**
+     * Calculates staking rewards based on veBal gauges deployed with Curve Finance contracts.
+     * https://curve.readthedocs.io/dao-gauges.html
+     *
+     * Terminology:
+     *  - LP token of a gauge is a BPT of a pool
+     *  - Depositing into a gauge is called staking on the frontend
+     *  - gauge totalSupply - BPT tokens deposited to a gauge
+     *  - gauge workingSupply - effective BPT tokens participating in reward distribution. sum of 40% deposit + 60% boost from individual user's veBal
+     *  - gauge relative weight - weight of this gauge in bal inflation distribution [0..1] scaled to 1e18
+     *
+     * APR sources:
+     *  - gauge BAL emissions = min: 40% of totalSupply, max: 40% of totalSupply + 60% of totalSupply * gauge LPs voting power
+     *    https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/liquidity-mining/contracts/gauges/ethereum/LiquidityGaugeV5.vy#L338
+     *  - gauge reward tokens: Admin or designated depositor has an option to deposit additional reward with a weekly accruing cadence.
+     *    https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/liquidity-mining/contracts/gauges/ethereum/LiquidityGaugeV5.vy#L641
+     *    rate: amount of token per second
+     *
+     * @param pool
+     * @param boost range between 1 and 2.5
+     * @returns APR [bsp] from protocol rewards.
+     */
+    stakingApr(pool: Pool, boost?: number): Promise<number>;
+    /**
+     * Some gauges are holding tokens distributed as rewards to LPs.
+     *
+     * @param pool
+     * @returns APR [bsp] from token rewards.
+     */
+    rewardAprs(pool: Pool): Promise<AprBreakdown['rewardAprs']>;
+    /**
+     * 80BAL-20WETH pool is accruing protocol revenue.
+     *
+     * @param pool
+     * @returns accrued protocol revenue as APR [bsp]
+     */
+    protocolApr(pool: Pool): Promise<number>;
+    /**
+     * Composes all sources for total pool APR.
+     *
+     * @returns pool APR split [bsp]
+     */
+    apr(pool: Pool): Promise<AprBreakdown>;
+    private last24hFees;
+    /**
+     * Total Liquidity based on USD token prices taken from external price feed, eg: coingecko.
+     *
+     * @param pool
+     * @returns Pool liquidity in USD
+     */
+    private totalLiquidity;
+    /**
+     * BPT price as pool totalLiquidity / pool total Shares
+     * Total Liquidity is calculated based on USD token prices taken from external price feed, eg: coingecko.
+     *
+     * @param pool
+     * @returns BPT price in USD
+     */
+    private bptPrice;
+    private protocolSwapFeePercentage;
+}
 
 declare type Address = string;
 interface BalancerSdkConfig {
@@ -2902,8 +3044,8 @@ interface ContractAddresses {
     vault: string;
     multicall: string;
     lidoRelayer?: string;
-    gaugeController: string;
-    feeDistributor: string;
+    gaugeController?: string;
+    feeDistributor?: string;
 }
 interface BalancerNetworkConfig {
     chainId: Network;
@@ -2914,14 +3056,15 @@ interface BalancerNetworkConfig {
             lbpRaisingTokens?: string[];
             stETH?: string;
             wstETH?: string;
-            bal: string;
-            veBal: string;
-            bbaUsd: string;
+            bal?: string;
+            veBal?: string;
+            bbaUsd?: string;
         };
     };
     urls: {
         subgraph: string;
-        gaugesSubgraph: string;
+        gaugesSubgraph?: string;
+        blockNumberSubgraph?: string;
     };
     pools: {
         wETHwstETH?: PoolReference;
@@ -2929,11 +3072,11 @@ interface BalancerNetworkConfig {
 }
 interface BalancerDataRepositories {
     pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
-    yesterdaysPools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+    yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
     tokenPrices: Findable<Price>;
     tokenMeta: Findable<Token, TokenAttribute>;
-    liquidityGauges: Findable<LiquidityGauge>;
-    feeDistributor: BaseFeeDistributor;
+    liquidityGauges?: Findable<LiquidityGauge>;
+    feeDistributor?: BaseFeeDistributor;
     feeCollector: Findable<number>;
     tokenYields: Findable<number>;
 }
@@ -3062,23 +3205,21 @@ interface Pool {
     feesSnapshot?: string;
     boost?: string;
     symbol?: string;
+    swapEnabled: boolean;
+    amp?: string;
     apr?: AprBreakdown;
     liquidity?: string;
-}
-/**
- * Live data controller used for caching or as a fallback for missing cached data
- */
-interface PoolModel extends Pool {
-    calcLiquidity: () => Promise<string>;
-    calcApr: () => Promise<AprBreakdown>;
-    calcFees: () => Promise<number>;
-    calcVolume: () => Promise<number>;
+    totalWeight: string;
 }
 /**
  * Pool use-cases / controller layer
  */
 interface PoolWithMethods extends Pool {
-    buildJoin: (joiner: string, tokensIn: string[], amountsIn: string[], slippage: string) => Promise<JoinPoolAttributes>;
+    buildJoin: (joiner: string, tokensIn: string[], amountsIn: string[], slippage: string) => JoinPoolAttributes;
+    calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
+    buildExitExactBPTIn: (exiter: string, bptIn: string, slippage: string, shouldUnwrapNativeAsset?: boolean, singleTokenMaxOut?: string) => ExitPoolAttributes;
+    buildExitExactTokensOut: (exiter: string, tokensOut: string[], amountsOut: string[], slippage: string) => ExitPoolAttributes;
+    calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
 }
 interface GraphQLQuery {
     args: GraphQLArgs;
@@ -3236,6 +3377,22 @@ declare class AssetHelpers {
 declare class AaveHelpers {
     static getRate(rateProviderAddress: string, provider: JsonRpcProvider): Promise<string>;
 }
+
+/**
+ * Parse pool info into EVM amounts
+ * @param {Pool}  pool
+ * @returns       parsed pool info
+ */
+declare const parsePoolInfo: (pool: Pool) => {
+    parsedTokens: string[];
+    parsedDecimals: (string | undefined)[];
+    parsedBalances: string[];
+    parsedWeights: (string | undefined)[];
+    parsedPriceRates: (string | undefined)[];
+    parsedAmp: string | undefined;
+    parsedTotalShares: string;
+    parsedSwapFee: string;
+};
 
 declare function tokensToTokenPrices(tokens: Token[]): TokenPrices;
 
@@ -3644,7 +3801,6 @@ declare class Sor extends SOR {
 
 declare class Pricing {
     private readonly swaps;
-    private pools;
     constructor(config: BalancerSdkConfig, swaps?: Swaps);
     /**
      * Retrieves pools using poolDataService.
@@ -3657,14 +3813,13 @@ declare class Pricing {
      */
     getPools(): SubgraphPoolBase[];
     /**
-     * Calculates Spot Price for a token pair - for specific pool if ID otherwise finds most liquid path and uses this as reference SP.
+     * Calculates Spot Price for a token pair - finds most liquid path and uses this as reference SP.
      * @param { string } tokenIn Token in address.
      * @param { string } tokenOut Token out address.
-     * @param { string } poolId Optional - if specified this pool will be used for SP calculation.
      * @param { SubgraphPoolBase[] } pools Optional - Pool data. Will be fetched via dataProvider if not supplied.
      * @returns  { string } Spot price.
      */
-    getSpotPrice(tokenIn: string, tokenOut: string, poolId?: string, pools?: SubgraphPoolBase[]): Promise<string>;
+    getSpotPrice(tokenIn: string, tokenOut: string, pools?: SubgraphPoolBase[]): Promise<string>;
 }
 
 declare type ERC20Helper = (address: string, provider: Provider) => Contract;
@@ -3698,19 +3853,28 @@ declare class Contracts {
     getErc20(address: string, provider: Provider): Contract;
 }
 
-declare let POOLS_PER_PAGE: number;
 /**
- * Use-cases layer for generating live pools data
+ * Calculates pool fees
+ *
+ * 1. Pool fees in last 24hrs
  */
-declare class ModelProvider {
-    private repositories;
-    constructor(repositories: BalancerDataRepositories);
-    static resolve(model: PoolModel): Promise<Pool>;
-    static wrap(data: Pool, repositories: BalancerDataRepositories): PoolModel;
-    find(id: string): Promise<Pool | undefined>;
-    findBy(param: string, value: string): Promise<Pool | undefined>;
-    all(page?: number): Promise<Pool[]>;
-    where(filter: (pool: Pool) => boolean, page?: number): Promise<Pool[]>;
+
+declare class PoolVolume {
+    private yesterdaysPools;
+    constructor(yesterdaysPools: Findable<Pool, PoolAttribute> | undefined);
+    last24h(pool: Pool): Promise<number>;
+}
+
+/**
+ * Calculates pool fees
+ *
+ * 1. Pool fees in last 24hrs
+ */
+
+declare class PoolFees {
+    private yesterdaysPools;
+    constructor(yesterdaysPools: Findable<Pool, PoolAttribute> | undefined);
+    last24h(pool: Pool): Promise<number>;
 }
 
 /**
@@ -3718,9 +3882,41 @@ declare class ModelProvider {
  */
 declare class Pools implements Findable<PoolWithMethods> {
     private networkConfig;
-    liveModelProvider: ModelProvider;
+    private repositories;
+    aprService: PoolApr;
+    liquidityService: Liquidity;
+    feesService: PoolFees;
+    volumeService: PoolVolume;
     constructor(networkConfig: BalancerNetworkConfig, repositories: BalancerDataRepositories);
-    dataSource(): Findable<Pool> & Searchable<Pool>;
+    dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool>;
+    /**
+     * Calculates APR on any pool data
+     *
+     * @param pool
+     * @returns
+     */
+    apr(pool: Pool): Promise<AprBreakdown>;
+    /**
+     * Calculates total liquidity of the pool
+     *
+     * @param pool
+     * @returns
+     */
+    liquidity(pool: Pool): Promise<string>;
+    /**
+     * Calculates total fees for the pool in the last 24 hours
+     *
+     * @param pool
+     * @returns
+     */
+    fees(pool: Pool): Promise<number>;
+    /**
+     * Calculates total volume of the pool in the last 24 hours
+     *
+     * @param pool
+     * @returns
+     */
+    volume(pool: Pool): Promise<number>;
     static wrap(pool: Pool, networkConfig: BalancerNetworkConfig): PoolWithMethods;
     find(id: string): Promise<PoolWithMethods | undefined>;
     findBy(param: string, value: string): Promise<PoolWithMethods | undefined>;
@@ -3737,6 +3933,7 @@ interface BalancerSDKRoot {
     swaps: Swaps;
     relayer: Relayer;
     networkConfig: BalancerNetworkConfig;
+    rpcProvider: Provider;
 }
 declare class BalancerSDK implements BalancerSDKRoot {
     config: BalancerSdkConfig;
@@ -3748,8 +3945,9 @@ declare class BalancerSDK implements BalancerSDKRoot {
     readonly pools: Pools;
     readonly data: Data;
     balancerContracts: Contracts;
+    readonly networkConfig: BalancerNetworkConfig;
     constructor(config: BalancerSdkConfig, sor?: Sor, subgraph?: Subgraph);
-    get networkConfig(): BalancerNetworkConfig;
+    get rpcProvider(): Provider;
     /**
      * Expose balancer contracts, e.g. Vault, LidoRelayer.
      */
@@ -3765,8 +3963,13 @@ declare enum BalancerErrorCode {
     UNSUPPORTED_POOL_TYPE = "UNSUPPORTED_POOL_TYPE",
     UNSUPPORTED_PAIR = "UNSUPPORTED_PAIR",
     NO_POOL_DATA = "NO_POOL_DATA",
+    INPUT_OUT_OF_BOUNDS = "INPUT_OUT_OF_BOUNDS",
     INPUT_LENGTH_MISMATCH = "INPUT_LENGTH_MISMATCH",
+    TOKEN_MISMATCH = "TOKEN_MISMATCH",
+    MISSING_TOKENS = "MISSING_TOKENS",
+    MISSING_AMP = "MISSING_AMP",
     MISSING_DECIMALS = "MISSING_DECIMALS",
+    MISSING_PRICE_RATE = "MISSING_PRICE_RATE",
     MISSING_WEIGHT = "MISSING_WEIGHT"
 }
 declare class BalancerError extends Error {
@@ -3775,4 +3978,4 @@ declare class BalancerError extends Error {
     static getMessage(code: BalancerErrorCode): string;
 }
 
-export { AaveHelpers, Account, Address, AprBreakdown, AprFetcher, AssetHelpers, BalancerAPIArgsFormatter, BalancerDataRepositories, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BaseFeeDistributor, BatchSwap, BatchSwapStep, BlockNumberRepository, BuildTransactionParameters, CoingeckoPriceRepository, ContractAddresses, Currency, Data, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeUnwrapAaveStaticTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FeeCollectorRepository, FeeDistributorData, FeeDistributorRepository, FetchPoolsInput, FindRouteParameters, Findable, FundManagement, GaugeControllerMulticallRepository, GraphQLArgs, GraphQLArgsBuilder, GraphQLArgsFormatter, GraphQLFilter, GraphQLFilterOperator, GraphQLQuery, JoinPoolRequest, Liquidity, LiquidityGauge, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, ModelProvider, Network, OnchainPoolData, OnchainTokenData, Op, OutputReference, POOLS_PER_PAGE, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolModel, PoolReference, PoolRepository, PoolSpecialization, PoolToken, PoolType, PoolWithMethods, Pools, PoolsBalancerAPIRepository, PoolsFallbackRepository, PoolsStaticRepository, PoolsSubgraphRepository, Price, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, RewardData, Searchable, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphArgsFormatter, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TokenYieldsRepository, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, signPermit, splitPoolId, toNormalizedWeights, tokenAprMap, tokensToTokenPrices };
+export { AaveHelpers, Account, Address, AprBreakdown, AprFetcher, AssetHelpers, BalancerAPIArgsFormatter, BalancerDataRepositories, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BaseFeeDistributor, BatchSwap, BatchSwapStep, BlockNumberRepository, BuildTransactionParameters, CoingeckoPriceRepository, ContractAddresses, Currency, Data, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeUnwrapAaveStaticTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FeeCollectorRepository, FeeDistributorData, FeeDistributorRepository, FetchPoolsInput, FindRouteParameters, Findable, FundManagement, GaugeControllerMulticallRepository, GraphQLArgs, GraphQLArgsBuilder, GraphQLArgsFormatter, GraphQLFilter, GraphQLFilterOperator, GraphQLQuery, JoinPoolRequest, Liquidity, LiquidityGauge, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, Network, OnchainPoolData, OnchainTokenData, Op, OutputReference, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolReference, PoolRepository, PoolSpecialization, PoolToken, PoolType, PoolWithMethods, Pools, PoolsBalancerAPIRepository, PoolsFallbackRepository, PoolsStaticRepository, PoolsSubgraphRepository, Price, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, RewardData, Searchable, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphArgsFormatter, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TokenYieldsRepository, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, splitPoolId, toNormalizedWeights, tokensToTokenPrices };
