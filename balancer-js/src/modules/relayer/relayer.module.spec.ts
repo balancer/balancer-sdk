@@ -18,8 +18,8 @@ const sorConfig: BalancerSdkSorConfig = {
 };
 
 const sdkConfig: BalancerSdkConfig = {
-  network: Network.KOVAN,
-  rpcUrl: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+  network: Network.GOERLI,
+  rpcUrl: `https://goerli.infura.io/v3/${process.env.INFURA}`,
   sor: sorConfig,
 };
 

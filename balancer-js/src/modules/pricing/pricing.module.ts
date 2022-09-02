@@ -7,11 +7,9 @@ import {
   getSpotPriceAfterSwapForPath,
 } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { Pools } from '@/modules/pools/pools.module';
 
 export class Pricing {
   private readonly swaps: Swaps;
-  private pools: Pools;
 
   constructor(config: BalancerSdkConfig, swaps?: Swaps) {
     if (swaps) {
@@ -19,7 +17,6 @@ export class Pricing {
     } else {
       this.swaps = new Swaps(config);
     }
-    this.pools = new Pools(config);
   }
 
   /**
