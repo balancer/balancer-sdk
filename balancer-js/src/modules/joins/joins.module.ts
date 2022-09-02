@@ -317,8 +317,6 @@ export class Join {
       );
     });
 
-    // TODO: check which types of pools should include their BPT in the input tokens
-    // TODO: check if isn't easier to move that logic to the graph
     if (
       node.type === PoolType.ComposableStable ||
       node.type === PoolType.StablePhantom
