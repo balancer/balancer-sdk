@@ -374,8 +374,8 @@ export class PoolApr {
   }
 
   private async last24hFees(pool: Pool): Promise<number> {
-    const poolFees = new PoolFees(pool, this.yesterdaysPools);
-    return poolFees.last24h();
+    const poolFees = new PoolFees(this.yesterdaysPools);
+    return poolFees.last24h(pool);
   }
 
   /**

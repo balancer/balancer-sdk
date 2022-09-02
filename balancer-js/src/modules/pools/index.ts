@@ -12,6 +12,8 @@ import { JoinPoolAttributes } from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
+import { PoolVolume } from './volume/volume';
+import { PoolFees } from './fees/fees';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -19,6 +21,8 @@ import { Liquidity } from '../liquidity/liquidity.module';
 export class Pools implements Findable<PoolWithMethods> {
   aprService;
   liquidityService;
+  feesService;
+  volumeService;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -38,6 +42,8 @@ export class Pools implements Findable<PoolWithMethods> {
       repositories.pools,
       repositories.tokenPrices
     );
+    this.feesService = new PoolFees(repositories.yesterdaysPools);
+    this.volumeService = new PoolVolume(repositories.yesterdaysPools);
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
@@ -63,6 +69,26 @@ export class Pools implements Findable<PoolWithMethods> {
    */
   async liquidity(pool: Pool): Promise<string> {
     return this.liquidityService.getLiquidity(pool);
+  }
+
+  /**
+   * Calculates total fees for the pool in the last 24 hours
+   *
+   * @param pool
+   * @returns
+   */
+  async fees(pool: Pool): Promise<number> {
+    return this.feesService.last24h(pool);
+  }
+
+  /**
+   * Calculates total volume of the pool in the last 24 hours
+   *
+   * @param pool
+   * @returns
+   */
+  async volume(pool: Pool): Promise<number> {
+    return this.volumeService.last24h(pool);
   }
 
   static wrap(
