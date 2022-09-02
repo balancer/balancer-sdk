@@ -1,47 +1,26 @@
-import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { MetaStablePoolPriceImpact } from '@/modules/pools/pool-types/concerns/metaStable/priceImpact.concern';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import { PoolsProvider } from '@/modules/pools/provider';
-import { StaticPoolRepository } from '@/modules/data';
-import { PoolModel, Pool } from '@/types';
-import { Network } from '@/.';
-import { setupPool } from '@/test/lib/utils';
-
-dotenv.config();
-
-const rpcUrl = 'http://127.0.0.1:8545';
+import { Pool } from '@/types';
 
 const priceImpactCalc = new MetaStablePoolPriceImpact();
 const wstETHwETH =
   '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080';
 
+const pool = pools_14717479.find(
+  (pool) => pool.id == wstETHwETH
+) as unknown as Pool;
+
+const tokenAmounts = [
+  BigInt('629870162919981039400158'),
+  BigInt('615159929697'),
+];
+
 describe('metastable pool price impact', () => {
-  let pool: PoolModel | undefined;
-
-  // Setup chain
-  before(async function () {
-    this.timeout(20000);
-    const sdkConfig = {
-      network: Network.MAINNET,
-      rpcUrl,
-    };
-    // Using a static repository to make test consistent over time
-    const poolsProvider = new PoolsProvider(
-      sdkConfig,
-      new StaticPoolRepository(pools_14717479 as Pool[])
-    );
-    pool = await setupPool(poolsProvider, wstETHwETH);
-  });
-
-  const tokenAmounts = [
-    BigInt('629870162919981039400158'),
-    BigInt('615159929697'),
-  ];
   context('bpt zero price impact', () => {
     it('non-proportional case', () => {
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
-        pool as PoolModel,
+        pool,
         tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('662816325116386208862285');
@@ -56,7 +35,7 @@ describe('metastable pool price impact', () => {
       ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
-        pool as PoolModel,
+        pool,
         proportionalTokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('1696871032806568300470');
@@ -66,7 +45,7 @@ describe('metastable pool price impact', () => {
   context('price impact', () => {
     it('calculate price impact', () => {
       const priceImpact = priceImpactCalc.calcPriceImpact(
-        pool as PoolModel,
+        pool,
         tokenAmounts.map((amount) => amount.toString()),
         '660816325116386208862285'
       );

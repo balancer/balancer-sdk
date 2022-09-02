@@ -1,6 +1,10 @@
-import { JsonRpcProvider } from '@ethersproject/providers';
 import dotenv from 'dotenv';
-import { BalancerSDK, Network, PoolModel, BalancerErrorCode, BalancerError } from '../src/index';
+import {
+  BalancerSDK,
+  Network,
+  BalancerErrorCode,
+  BalancerError,
+} from '../src/index';
 
 dotenv.config();
 
@@ -17,7 +21,6 @@ async function getPriceImpact() {
   const staBal3Id =
     '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063';
 
-
   const sdkConfig = {
     network,
     rpcUrl,
@@ -25,23 +28,24 @@ async function getPriceImpact() {
   const balancer = new BalancerSDK(sdkConfig);
 
   // Use SDK to find pool info
-  const pool: PoolModel | undefined = await balancer.poolsProvider.find(WBTCWETHId);
+  const pool = await balancer.pools.find(WBTCWETHId);
   if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-  
+
   const priceImpactWBTCWETH = await pool.calcPriceImpact(
     ['100000000000000000000', '100000000'],
     '99430576622436571714692'
   );
-  console.log(priceImpactWBTCWETH); 
+  console.log(priceImpactWBTCWETH);
 
-  const pool2: PoolModel | undefined = await balancer.poolsProvider.find(staBal3Id);
+  const pool2 = await balancer.pools.find(staBal3Id);
+  console.log(pool2);
   if (!pool2) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
   const priceImpactStaBal3 = await pool2.calcPriceImpact(
     ['100000000000000000000', '100000000', '190000000'],
     '376972471880969684010'
   );
-  console.log(priceImpactStaBal3); 
+  console.log(priceImpactStaBal3);
 }
 
 // yarn examples:run ./examples/priceImpact.ts

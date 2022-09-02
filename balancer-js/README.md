@@ -251,8 +251,8 @@ Find Spot Price for pair in specific pool.
 
 ```js
 const balancer = new BalancerSDK(sdkConfig);
-const pool = await balancer.poolsProvider.find(poolId);
-const spotPrice = await balDaiPool.calcSpotPrice(
+const pool = await balancer.pools.find(poolId);
+const spotPrice = await pool.calcSpotPrice(
     ADDRESSES[network].DAI.address,
     ADDRESSES[network].BAL.address,
   );
@@ -287,7 +287,7 @@ Exposes Join functionality allowing user to join pools.
 
 ```js
 const balancer = new BalancerSDK(sdkConfig);
-const pool = await balancer.poolsProvider.find(poolId);
+const pool = await balancer.pools.find(poolId);
 const { to, functionName, attributes, data } = pool.buildJoin(params);
 ```
 
@@ -319,7 +319,7 @@ Exposes Exit functionality allowing user to exit pools.
 
 ```js
 const balancer = new BalancerSDK(sdkConfig);
-const pool = await balancer.poolsProvider.find(poolId);
+const pool = await balancer.pools.find(poolId);
 const { to, functionName, attributes, data } = pool.buildExitExactBPTIn(params);
 ```
 
