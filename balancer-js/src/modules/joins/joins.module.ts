@@ -317,10 +317,7 @@ export class Join {
       );
     });
 
-    if (
-      node.type === PoolType.ComposableStable ||
-      node.type === PoolType.StablePhantom
-    ) {
+    if (node.type === PoolType.ComposableStable) {
       // assets need to include the phantomPoolToken
       inputTokens.push(node.address);
       // need to add a placeholder so sorting works
