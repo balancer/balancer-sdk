@@ -100,19 +100,24 @@ export class Join {
     orderedNodes.forEach((node) => {
       // if all child nodes have 0 output amount, then forward it to outputRef and skip adding current call
       if (
-        node.action !== 'input' &&
+        node.children.length > 0 &&
         node.children.filter((c) => c.outputReference !== '0').length === 0
       ) {
         node.outputReference = '0';
         return;
       }
-      const expectedOut = node.id === rootId ? expectedBPTOut : '0';
-      const sender = node.children.some(
-        (c) => c.action === 'input' || c.action === 'wrapAaveDynamicToken'
-      )
-        ? userAddress
-        : this.relayer;
-      const recipient = node.id === rootId ? userAddress : this.relayer; // last chained action
+
+      const hasLeafNodeAsChild = node.children.some(
+        (children) =>
+          children.action === 'input' ||
+          children.action === 'wrapAaveDynamicToken'
+      );
+      const sender = hasLeafNodeAsChild ? userAddress : this.relayer;
+
+      const isLastChainedCall = node.id === rootId;
+      const recipient = isLastChainedCall ? userAddress : this.relayer;
+      const expectedOut = isLastChainedCall ? expectedBPTOut : '0';
+
       switch (node.action) {
         // TODO - Add other Relayer supported Unwraps
         case 'wrapAaveDynamicToken':
