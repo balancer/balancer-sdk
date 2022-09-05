@@ -3,6 +3,7 @@ import { GraphQLQuery, Pool } from '@/types';
 import {
   PoolAttribute,
   PoolRepository,
+  PoolsFallbackRepositoryOptions,
   PoolsRepositoryFetchOptions,
 } from './types';
 
@@ -15,12 +16,14 @@ import {
  **/
 export class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
   currentProviderIdx: number;
+  timeout: number;
 
   constructor(
     private readonly providers: PoolRepository[],
-    private timeout = 10000
+    options: PoolsFallbackRepositoryOptions = {}
   ) {
     this.currentProviderIdx = 0;
+    this.timeout = options.timeout || 10000;
   }
 
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {

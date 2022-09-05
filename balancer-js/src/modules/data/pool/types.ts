@@ -8,3 +8,7 @@ export interface PoolsRepositoryFetchOptions {
   first?: number;
   skip?: number;
 }
+
+export interface PoolsFallbackRepositoryOptions {
+  timeout?: number;
+}
