@@ -38,6 +38,9 @@ export class Join {
     data: string;
     decode: (output: string) => string;
   }> {
+    if (tokens.length != amounts.length)
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
     const poolsGraph = new PoolGraph(this.pools);
@@ -47,6 +50,15 @@ export class Join {
       wrapMainTokens
     );
     const orderedNodes = poolsGraph.orderByBfs(rootNode);
+
+    // Throws error if non-leaf tokens were provided as input
+    const inputNodes = orderedNodes.filter((node) => node.action === 'input');
+    const nonInputTokens = tokens.filter(
+      (token) => !inputNodes.some((inputNode) => token === inputNode.address)
+    );
+    if (nonInputTokens.length > 0)
+      throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
+
     const calls = this.createActionCalls(
       orderedNodes,
       poolId,

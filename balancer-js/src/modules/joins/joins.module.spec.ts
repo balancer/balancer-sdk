@@ -76,6 +76,25 @@ describe('Generalised Joins', () => {
       expect(errorMessage).to.eq('balancer pool does not exist');
     });
 
+    it('should throw when non-leaf token is provided as input', async () => {
+      let errorMessage = '';
+      try {
+        const inputTokens = [formatAddress('this is not a leaf token')];
+        const inputAmounts = ['1000000000000000000'];
+        await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          true
+        );
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.eq('token mismatch');
+    });
+
     context('with wrapped tokens', () => {
       const isWrapped = true;
       it('all leaf tokens', async () => {
@@ -246,7 +265,7 @@ describe('Generalised Joins', () => {
       });
 
       it('single linear token', async () => {
-        const inputTokens = ['address_STABLE'];
+        const inputTokens = [formatAddress('address_STABLE')];
         const inputAmounts = ['1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
@@ -298,7 +317,7 @@ describe('Generalised Joins', () => {
       });
 
       it('single linear token', async () => {
-        const inputTokens = ['address_STABLE'];
+        const inputTokens = [formatAddress('address_STABLE')];
         const inputAmounts = ['1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
