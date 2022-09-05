@@ -31,7 +31,7 @@ joinActions.set(PoolType.Investment, 'joinPool');
 joinActions.set(PoolType.LiquidityBootstrapping, 'joinPool');
 joinActions.set(PoolType.MetaStable, 'joinPool');
 joinActions.set(PoolType.Stable, 'joinPool');
-joinActions.set(PoolType.StablePhantom, 'joinPool');
+joinActions.set(PoolType.StablePhantom, 'batchSwap');
 joinActions.set(PoolType.Weighted, 'joinPool');
 joinActions.set(PoolType.ComposableStable, 'joinPool');
 
