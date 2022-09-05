@@ -57,24 +57,19 @@ const fromPool = {
   id: '0x9b532ab955417afd0d012eb9f7389457cd0ea712000000000000000000000338', // bbausd2
   address: addresses.bbausd2.address,
 };
-const tokensIn = [
-  addresses.USDT.address,
-  addresses.DAI.address,
-  addresses.USDC.address,
-];
+const tokensIn = [addresses.DAI.address, addresses.USDC.address];
 const wrappedTokensIn = [
   addresses.waUSDT.address,
   addresses.waDAI.address,
   addresses.waUSDC.address,
 ];
-const slots = [addresses.USDT.slot, addresses.DAI.slot, addresses.USDC.slot];
+const slots = [addresses.DAI.slot, addresses.USDC.slot];
 const wrappedSlots = [
   addresses.waUSDT.slot,
   addresses.waDAI.slot,
   addresses.waUSDC.slot,
 ];
 const initialBalances = [
-  parseFixed('0', addresses.USDT.decimals).toString(),
   parseFixed('100', addresses.DAI.decimals).toString(),
   parseFixed('100', addresses.USDC.decimals).toString(),
 ];
@@ -116,8 +111,6 @@ describe('bbausd generalised join execution', async () => {
   let tokensBalanceAfter: BigNumber[];
 
   beforeEach(async function () {
-    this.timeout(20000);
-
     signerAddress = await signer.getAddress();
 
     await forkSetup(
@@ -200,7 +193,7 @@ describe('bbausd generalised join execution', async () => {
   context('without minBPT limit', async () => {
     it('should transfer tokens from stable to boosted', async () => {
       await testFlow();
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
@@ -210,6 +203,6 @@ describe('bbausd generalised join execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#208'); // BPT_OUT_MIN_AMOUNT - BPT out below minimum expected
-    }).timeout(20000);
+    });
   });
-}).timeout(20000);
+});
