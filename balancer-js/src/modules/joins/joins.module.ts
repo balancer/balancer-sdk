@@ -190,9 +190,10 @@ export class Join {
   }
 
   createAaveWrap(node: Node, sender: string, recipient: string): string {
-    // TODO: check if it's possible to have more than one child at this type of node
-    // This might be the case for joining with non-leaf tokens
-    // Can aaveWraps be applied to tokens other than stables? Is it possible for stables to be non-leaf nodes? If not, then there will always be 1 child for this type of node.
+    // Throws error based on the assumption that aaveWrap apply only to input tokens from leaf nodes
+    if (node.children.length !== 1)
+      throw new Error('aaveWrap nodes should always have a single child node');
+
     const childNode = node.children[0];
 
     const staticToken = node.address;
