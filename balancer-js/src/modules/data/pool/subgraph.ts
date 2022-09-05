@@ -12,7 +12,7 @@ import {
   SubgraphArgsFormatter,
 } from '@/lib/graphql/args-builder';
 import { GraphQLArgs } from '@/lib/graphql/types';
-import { PoolAttribute } from './types';
+import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
 import { GraphQLQuery, Pool, PoolType } from '@/types';
 
 /**
@@ -25,7 +25,7 @@ export class PoolsSubgraphRepository
 {
   private client: SubgraphClient;
   public pools: SubgraphPool[] = [];
-  public skip: string | undefined;
+  public skip = 0;
 
   /**
    * Repository with optional lazy loaded blockHeight
@@ -40,22 +40,22 @@ export class PoolsSubgraphRepository
     this.client = createSubgraphClient(url);
   }
 
-  async fetch(query?: GraphQLQuery): Promise<Pool[]> {
+  async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
     const defaultArgs: GraphQLArgs = {
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
       block: this.blockHeight
         ? { number: await this.blockHeight() }
         : undefined,
-      first: query?.args.first,
-      skip: query?.args.skip ? Number(query?.args.skip) : 0,
+      first: options?.first,
+      skip: options?.skip ? options.skip : 0,
       where: {
         swapEnabled: Op.Equals(true),
         totalShares: Op.GreaterThan(0),
       },
     };
 
-    const args = query?.args || defaultArgs;
+    const args = defaultArgs;
     const formattedQuery = new GraphQLArgsBuilder(args).format(
       new SubgraphArgsFormatter()
     );
@@ -64,7 +64,7 @@ export class PoolsSubgraphRepository
 
     // TODO: how to best convert subgraph type to sdk internal type?
     this.pools = [...pool0, ...pool1000];
-    this.skip = this.pools.length.toString();
+    this.skip = this.pools.length;
 
     return this.pools.map(this.mapType);
   }

@@ -1,5 +1,5 @@
 import { Findable } from '../types';
-import { PoolAttribute } from './types';
+import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
 import { GraphQLQuery, Pool } from '@/types';
 import BalancerAPIClient from '@/modules/api/balancer-api.client';
 import {
@@ -8,6 +8,12 @@ import {
   BalancerAPIArgsFormatter,
 } from '@/lib/graphql/args-builder';
 import { GraphQLArgs } from '@/lib/graphql/types';
+
+interface PoolsBalancerAPIOptions {
+  url: string;
+  apiKey: string;
+  query?: GraphQLQuery;
+}
 
 /**
  * Access pools using the Balancer GraphQL Api.
@@ -19,18 +25,17 @@ export class PoolsBalancerAPIRepository
 {
   private client: BalancerAPIClient;
   public pools: Pool[] = [];
-  public skip: string | undefined; // A token to pass to the next query to retrieve the next page of results.
+  public skip = 0; // Keep track of how many pools to skip on next fetch, so this functions similar to subgraph repository.
+  public nextToken: string | undefined; // A token to pass to the next query to retrieve the next page of results.
+  private query: GraphQLQuery;
 
-  constructor(url: string, apiKey: string) {
-    this.client = new BalancerAPIClient(url, apiKey);
-  }
+  constructor(options: PoolsBalancerAPIOptions) {
+    this.client = new BalancerAPIClient(options.url, options.apiKey);
 
-  async fetch(query?: GraphQLQuery): Promise<Pool[]> {
     const defaultArgs: GraphQLArgs = {
       chainId: 1,
       orderBy: 'totalLiquidity',
       orderDirection: 'desc',
-      first: 10,
       where: {
         swapEnabled: Op.Equals(true),
         totalShares: Op.GreaterThan(0.05),
@@ -42,12 +47,34 @@ export class PoolsBalancerAPIRepository
       address: true,
     };
 
-    const args = query?.args || defaultArgs;
-    const formattedArgs = new GraphQLArgsBuilder(args).format(
+    this.query = {
+      args: options.query?.args || defaultArgs,
+      attrs: options.query?.attrs || defaultAttributes,
+    };
+  }
+
+  fetchFromCache(options?: PoolsRepositoryFetchOptions): Pool[] {
+    const first = options?.first || 10;
+    const skip = options?.skip || 0;
+
+    if (this.pools.length > skip + first) {
+      const pools = this.pools.slice(skip, first + skip);
+      this.skip = skip + first;
+      return pools;
+    }
+
+    return [];
+  }
+
+  async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
+    const poolsFromCache = this.fetchFromCache(options);
+    if (poolsFromCache.length) return poolsFromCache;
+
+    const formattedArgs = new GraphQLArgsBuilder(this.query.args).format(
       new BalancerAPIArgsFormatter()
     );
 
-    const attrs = query?.attrs || defaultAttributes;
+    const attrs = this.query.attrs;
 
     const formattedQuery = {
       pools: {
@@ -59,10 +86,10 @@ export class PoolsBalancerAPIRepository
     const apiResponse = await this.client.get(formattedQuery);
     const apiResponseData = apiResponse.pools;
 
-    this.skip = apiResponseData.skip;
-    this.pools = apiResponseData.pools;
+    this.nextToken = apiResponseData.skip;
+    this.pools = apiResponseData.pools.map(this.format);
 
-    return this.pools.map(this.format);
+    return this.fetchFromCache(options);
   }
 
   async find(id: string): Promise<Pool | undefined> {

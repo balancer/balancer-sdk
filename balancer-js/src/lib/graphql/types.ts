@@ -15,7 +15,7 @@ export interface GraphQLFilter {
 export interface GraphQLArgs {
   chainId?: number;
   first?: number;
-  skip?: number | string;
+  skip?: number;
   orderBy?: string;
   orderDirection?: string;
   block?: {

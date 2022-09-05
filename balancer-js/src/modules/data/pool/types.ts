@@ -1,5 +1,10 @@
 export type PoolAttribute = 'id' | 'address';
 
 export interface PoolRepository {
-  skip?: string | number;
+  skip?: number;
+}
+
+export interface PoolsRepositoryFetchOptions {
+  first?: number;
+  skip?: number;
 }
