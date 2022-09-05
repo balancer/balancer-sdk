@@ -1,11 +1,23 @@
-import { BigNumberish } from '@ethersproject/bignumber';
-import { Network } from './lib/constants/network';
-import { Contract } from '@ethersproject/contracts';
-import { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
-import {
+import type { BigNumberish } from '@ethersproject/bignumber';
+import type { Network } from './lib/constants/network';
+import type { Contract } from '@ethersproject/contracts';
+import type { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
+import type {
   ExitPoolAttributes,
   JoinPoolAttributes,
 } from './modules/pools/pool-types/concerns/types';
+import type {
+  Findable,
+  Searchable,
+  LiquidityGauge,
+  PoolAttribute,
+  TokenAttribute,
+} from '@/modules/data/types';
+import type { BaseFeeDistributor } from './modules/data';
+
+export * from '@/modules/data/types';
+import type { AprBreakdown } from '@/modules/pools/apr/apr';
+export { AprBreakdown };
 
 export type Address = string;
 
@@ -36,6 +48,8 @@ export interface ContractAddresses {
   multicall: string;
   lidoRelayer?: string;
   relayer?: string;
+  gaugeController?: string;
+  feeDistributor?: string;
 }
 
 export interface BalancerNetworkConfig {
@@ -47,14 +61,30 @@ export interface BalancerNetworkConfig {
       lbpRaisingTokens?: string[];
       stETH?: string;
       wstETH?: string;
+      bal?: string;
+      veBal?: string;
+      bbaUsd?: string;
     };
   };
   urls: {
     subgraph: string;
+    gaugesSubgraph?: string;
+    blockNumberSubgraph?: string;
   };
   pools: {
     wETHwstETH?: PoolReference;
   };
+}
+
+export interface BalancerDataRepositories {
+  pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  tokenPrices: Findable<Price>;
+  tokenMeta: Findable<Token, TokenAttribute>;
+  liquidityGauges?: Findable<LiquidityGauge>;
+  feeDistributor?: BaseFeeDistributor;
+  feeCollector: Findable<number>;
+  tokenYields: Findable<number>;
 }
 
 export type PoolReference = {
@@ -177,6 +207,7 @@ export enum PoolType {
 
 export interface Pool {
   id: string;
+  name: string;
   address: string;
   poolType: PoolType;
   swapFee: string;
@@ -185,7 +216,7 @@ export interface Pool {
   tokens: PoolToken[];
   tokensList: string[];
   tokenAddresses?: string[];
-  totalLiquidity?: string;
+  totalLiquidity: string;
   totalShares: string;
   totalSwapFee?: string;
   totalSwapVolume?: string;
@@ -203,22 +234,15 @@ export interface Pool {
   amp?: string;
   wrappedIndex?: number;
   mainIndex?: number;
+  apr?: AprBreakdown;
+  liquidity?: string;
+  totalWeight: string;
 }
 
-export interface PoolModel extends Pool {
-  liquidity: () => Promise<string>;
-  generalisedJoin: (
-    expectedBPTOut: string,
-    tokens: string[],
-    amounts: string[],
-    userAddress: string,
-    wrapMainTokens: boolean,
-    authorisation?: string
-  ) => Promise<{
-    to: string;
-    data: string;
-    decode: (output: string) => string;
-  }>;
+/**
+ * Pool use-cases / controller layer
+ */
+export interface PoolWithMethods extends Pool {
   buildJoin: (
     joiner: string,
     tokensIn: string[],
@@ -239,4 +263,5 @@ export interface PoolModel extends Pool {
     amountsOut: string[],
     slippage: string
   ) => ExitPoolAttributes;
+  calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
 }
