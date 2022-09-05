@@ -11298,16 +11298,15 @@ class BalancerAPIClient {
  * Balancer's API URL: https://api.balancer.fi/query/
  */
 class PoolsBalancerAPIRepository {
-    constructor(url, apiKey) {
+    constructor(options) {
+        var _a, _b;
         this.pools = [];
-        this.client = new BalancerAPIClient(url, apiKey);
-    }
-    async fetch(query) {
+        this.skip = 0; // Keep track of how many pools to skip on next fetch, so this functions similar to subgraph repository.
+        this.client = new BalancerAPIClient(options.url, options.apiKey);
         const defaultArgs = {
             chainId: 1,
             orderBy: 'totalLiquidity',
             orderDirection: 'desc',
-            first: 10,
             where: {
                 swapEnabled: Op.Equals(true),
                 totalShares: Op.GreaterThan(0.05),
@@ -11317,9 +11316,27 @@ class PoolsBalancerAPIRepository {
             id: true,
             address: true,
         };
-        const args = (query === null || query === void 0 ? void 0 : query.args) || defaultArgs;
-        const formattedArgs = new GraphQLArgsBuilder(args).format(new BalancerAPIArgsFormatter());
-        const attrs = (query === null || query === void 0 ? void 0 : query.attrs) || defaultAttributes;
+        this.query = {
+            args: ((_a = options.query) === null || _a === void 0 ? void 0 : _a.args) || defaultArgs,
+            attrs: ((_b = options.query) === null || _b === void 0 ? void 0 : _b.attrs) || defaultAttributes,
+        };
+    }
+    fetchFromCache(options) {
+        const first = (options === null || options === void 0 ? void 0 : options.first) || 10;
+        const skip = (options === null || options === void 0 ? void 0 : options.skip) || 0;
+        if (this.pools.length > skip + first) {
+            const pools = this.pools.slice(skip, first + skip);
+            this.skip = skip + first;
+            return pools;
+        }
+        return [];
+    }
+    async fetch(options) {
+        const poolsFromCache = this.fetchFromCache(options);
+        if (poolsFromCache.length)
+            return poolsFromCache;
+        const formattedArgs = new GraphQLArgsBuilder(this.query.args).format(new BalancerAPIArgsFormatter());
+        const attrs = this.query.attrs;
         const formattedQuery = {
             pools: {
                 __args: formattedArgs,
@@ -11328,9 +11345,9 @@ class PoolsBalancerAPIRepository {
         };
         const apiResponse = await this.client.get(formattedQuery);
         const apiResponseData = apiResponse.pools;
-        this.skip = apiResponseData.skip;
-        this.pools = apiResponseData.pools;
-        return this.pools.map(this.format);
+        this.nextToken = apiResponseData.skip;
+        this.pools = apiResponseData.pools.map(this.format);
+        return this.fetchFromCache(options);
     }
     async find(id) {
         if (this.pools.length == 0) {
@@ -11380,8 +11397,8 @@ class PoolsFallbackRepository {
         this.timeout = timeout;
         this.currentProviderIdx = 0;
     }
-    async fetch(query) {
-        return this.fallbackQuery('fetch', [query]);
+    async fetch(options) {
+        return this.fallbackQuery('fetch', [options]);
     }
     get currentProvider() {
         if (!this.providers.length ||
@@ -11462,28 +11479,29 @@ class PoolsSubgraphRepository {
     constructor(url, blockHeight) {
         this.blockHeight = blockHeight;
         this.pools = [];
+        this.skip = 0;
         this.client = createSubgraphClient(url);
     }
-    async fetch(query) {
+    async fetch(options) {
         const defaultArgs = {
             orderBy: Pool_OrderBy.TotalLiquidity,
             orderDirection: OrderDirection$1.Desc,
             block: this.blockHeight
                 ? { number: await this.blockHeight() }
                 : undefined,
-            first: query === null || query === void 0 ? void 0 : query.args.first,
-            skip: (query === null || query === void 0 ? void 0 : query.args.skip) ? Number(query === null || query === void 0 ? void 0 : query.args.skip) : 0,
+            first: options === null || options === void 0 ? void 0 : options.first,
+            skip: (options === null || options === void 0 ? void 0 : options.skip) ? options.skip : 0,
             where: {
                 swapEnabled: Op.Equals(true),
                 totalShares: Op.GreaterThan(0),
             },
         };
-        const args = (query === null || query === void 0 ? void 0 : query.args) || defaultArgs;
+        const args = defaultArgs;
         const formattedQuery = new GraphQLArgsBuilder(args).format(new SubgraphArgsFormatter());
         const { pool0, pool1000 } = await this.client.Pools(formattedQuery);
         // TODO: how to best convert subgraph type to sdk internal type?
         this.pools = [...pool0, ...pool1000];
-        this.skip = this.pools.length.toString();
+        this.skip = this.pools.length;
         return this.pools.map(this.mapType);
     }
     async find(id) {
