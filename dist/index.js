@@ -10842,11 +10842,7 @@ class PoolApr {
             },
             rewardAprs,
             protocolApr,
-            min: swapFees +
-                tokenAprs.total +
-                rewardAprs.total +
-                protocolApr +
-                minStakingApr,
+            min: swapFees + tokenAprs.total + rewardAprs.total + minStakingApr,
             max: swapFees +
                 tokenAprs.total +
                 rewardAprs.total +
@@ -11417,10 +11413,10 @@ class PoolsBalancerAPIRepository {
  * to ensure Balancer is maximally decentralized.
  **/
 class PoolsFallbackRepository {
-    constructor(providers, timeout = 10000) {
+    constructor(providers, options = {}) {
         this.providers = providers;
-        this.timeout = timeout;
         this.currentProviderIdx = 0;
+        this.timeout = options.timeout || 10000;
     }
     async fetch(options) {
         return this.fallbackQuery('fetch', [options]);
@@ -11501,28 +11497,37 @@ class PoolsSubgraphRepository {
      * @param url subgraph URL
      * @param blockHeight lazy loading blockHeigh resolver
      */
-    constructor(url, blockHeight) {
-        this.blockHeight = blockHeight;
+    constructor(options) {
+        var _a;
         this.pools = [];
         this.skip = 0;
-        this.client = createSubgraphClient(url);
-    }
-    async fetch(options) {
+        this.client = createSubgraphClient(options.url);
+        this.blockHeight = options.blockHeight;
         const defaultArgs = {
             orderBy: Pool_OrderBy.TotalLiquidity,
             orderDirection: OrderDirection$1.Desc,
-            block: this.blockHeight
-                ? { number: await this.blockHeight() }
-                : undefined,
-            first: options === null || options === void 0 ? void 0 : options.first,
-            skip: (options === null || options === void 0 ? void 0 : options.skip) ? options.skip : 0,
             where: {
                 swapEnabled: Op.Equals(true),
                 totalShares: Op.GreaterThan(0),
             },
         };
-        const args = defaultArgs;
-        const formattedQuery = new GraphQLArgsBuilder(args).format(new SubgraphArgsFormatter());
+        const args = ((_a = options.query) === null || _a === void 0 ? void 0 : _a.args) || defaultArgs;
+        this.query = {
+            args,
+            attrs: {},
+        };
+    }
+    async fetch(options) {
+        if (options === null || options === void 0 ? void 0 : options.first) {
+            this.query.args.first = options.first;
+        }
+        if (options === null || options === void 0 ? void 0 : options.skip) {
+            this.query.args.skip = options.skip;
+        }
+        if (this.blockHeight) {
+            this.query.args.block = { number: await this.blockHeight() };
+        }
+        const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(new SubgraphArgsFormatter());
         const { pool0, pool1000 } = await this.client.Pools(formattedQuery);
         // TODO: how to best convert subgraph type to sdk internal type?
         this.pools = [...pool0, ...pool1000];
@@ -12947,7 +12952,9 @@ var initialCoingeckoList = [
 
 class Data {
     constructor(networkConfig, provider) {
-        this.pools = new PoolsSubgraphRepository(networkConfig.urls.subgraph);
+        this.pools = new PoolsSubgraphRepository({
+            url: networkConfig.urls.subgraph,
+        });
         // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
         // TODO: find a better data source for that, eg: maybe DUNE once API is available
         if (networkConfig.urls.blockNumberSubgraph) {
@@ -12957,7 +12964,10 @@ class Data {
                     return await this.blockNumbers.find('dayAgo');
                 }
             };
-            this.yesterdaysPools = new PoolsSubgraphRepository(networkConfig.urls.subgraph, blockDayAgo);
+            this.yesterdaysPools = new PoolsSubgraphRepository({
+                url: networkConfig.urls.subgraph,
+                blockHeight: blockDayAgo,
+            });
         }
         const tokenAddresses = initialCoingeckoList
             .filter((t) => t.chainId == networkConfig.chainId)
