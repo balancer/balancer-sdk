@@ -358,12 +358,7 @@ export class PoolApr {
       },
       rewardAprs,
       protocolApr,
-      min:
-        swapFees +
-        tokenAprs.total +
-        rewardAprs.total +
-        protocolApr +
-        minStakingApr,
+      min: swapFees + tokenAprs.total + rewardAprs.total + minStakingApr,
       max:
         swapFees +
         tokenAprs.total +
