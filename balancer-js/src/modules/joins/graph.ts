@@ -15,6 +15,7 @@ export interface Node {
   outputReference: string;
   proportionOfParent: BigNumber;
   parent: Node | undefined;
+  isLeaf: boolean;
 }
 
 type Actions =
@@ -93,6 +94,7 @@ export class PoolGraph {
       outputReference: nodeIndex.toString(),
       parent,
       proportionOfParent,
+      isLeaf: false,
     };
     nodeIndex++;
     if (pool.poolType.toString().includes('Linear')) {
@@ -148,7 +150,7 @@ export class PoolGraph {
       if (linearPool.mainIndex === undefined)
         throw new Error('Issue With Linear Pool');
 
-      const nodeInfo = this.createInputTokenNode(
+      const nodeInfo = PoolGraph.createInputTokenNode(
         nodeIndex,
         linearPool.tokensList[linearPool.mainIndex],
         linearPoolNode,
@@ -189,10 +191,11 @@ export class PoolGraph {
       outputReference: nodeIndex.toString(),
       parent,
       proportionOfParent,
+      isLeaf: false,
     };
     nodeIndex++;
 
-    const inputNode = this.createInputTokenNode(
+    const inputNode = PoolGraph.createInputTokenNode(
       nodeIndex,
       linearPool.tokensList[linearPool.mainIndex],
       wrappedTokenNode,
@@ -203,7 +206,7 @@ export class PoolGraph {
     return [wrappedTokenNode, nodeIndex];
   }
 
-  createInputTokenNode(
+  static createInputTokenNode(
     nodeIndex: number,
     address: string,
     parent: Node | undefined,
@@ -220,12 +223,13 @@ export class PoolGraph {
         outputReference: '0', // Use 0 ref for all main tokens. This will be updated with real amounts in join construction.
         parent,
         proportionOfParent,
+        isLeaf: true,
       },
       nodeIndex + 1,
     ];
   }
 
-  orderByBfs(root: Node): Node[] {
+  static orderByBfs(root: Node): Node[] {
     // Breadth first traversal of graph
     const nodes: Node[] = [];
     const orderedNodes: Node[] = [];
@@ -244,7 +248,8 @@ export class PoolGraph {
     return orderedNodes.reverse();
   }
 
-  getNodesToRoot(
+  // From a starting node traverse up graph until root
+  static getNodesToRoot(
     orderedNodes: Node[],
     inputToken: string,
     startingIndex: number
@@ -293,5 +298,10 @@ export class PoolGraph {
       parentNode = parentNode.parent;
     }
     return nodesToRoot;
+  }
+
+  // Return a list of leaf token addresses
+  static getLeafAddresses(nodes: Node[]): string[] {
+    return nodes.filter((n) => n.isLeaf).map((n) => n.address);
   }
 }

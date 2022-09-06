@@ -38,16 +38,11 @@ export class Join {
     data: string;
     decode: (output: string) => string;
   }> {
-    const rootPool = await this.pools.find(poolId);
-    if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-    const poolsGraph = new PoolGraph(this.pools);
+    // Create nodes for each pool/token interaction and order by breadth first
+    const orderedNodes = await this.getGraphNodes(poolId, wrapMainTokens);
 
-    const rootNode = await poolsGraph.buildGraphFromRootPool(
-      poolId,
-      wrapMainTokens
-    );
-    const orderedNodes = poolsGraph.orderByBfs(rootNode);
-    const calls = this.createActionCalls(
+    // Create calls for leaf token actions
+    let calls = this.createActionCalls(
       orderedNodes,
       poolId,
       expectedBPTOut,
@@ -56,6 +51,33 @@ export class Join {
       userAddress,
       authorisation
     );
+
+    const leafTokens = PoolGraph.getLeafAddresses(orderedNodes);
+    const nonLeafInputs = tokens.filter((t) => !leafTokens.includes(t));
+    let opRefIndex = orderedNodes.length;
+    // For each non-leaf input create a call chain to root
+    nonLeafInputs.forEach((tokenInput, i) => {
+      console.log(`------- Non-leaf input ${tokenInput}`);
+      // Create path to root
+      const nodes = PoolGraph.getNodesToRoot(
+        orderedNodes,
+        tokenInput,
+        opRefIndex
+      );
+      // outPutRef needs to be unique
+      opRefIndex = orderedNodes.length + nodes.length;
+      // Create calls for path
+      const inputCalls = this.createActionCalls(
+        nodes,
+        poolId,
+        '0', // TODO We will have to pass in the expected amounts for each input
+        [tokenInput],
+        [amounts[i]],
+        userAddress
+      );
+      // Add chain calls to previous list of calls
+      calls = [...calls, ...inputCalls];
+    });
 
     const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
       calls,
@@ -68,6 +90,21 @@ export class Join {
         return 'todo'; // TODO: add decode function
       },
     };
+  }
+
+  async getGraphNodes(
+    poolId: string,
+    wrapMainTokens: boolean
+  ): Promise<Node[]> {
+    const rootPool = await this.pools.find(poolId);
+    if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
+    const poolsGraph = new PoolGraph(this.pools);
+
+    const rootNode = await poolsGraph.buildGraphFromRootPool(
+      poolId,
+      wrapMainTokens
+    );
+    return PoolGraph.orderByBfs(rootNode);
   }
 
   createActionCalls(
@@ -113,7 +150,7 @@ export class Join {
           calls.push(this.createJoinPool(node, expectedOut, sender, recipient));
           break;
         case 'input':
-          this.createMainToken(node, tokens, amounts);
+          this.createInputToken(node, tokens, amounts);
           break;
         default: {
           const inputs = node.children.map((t) => {
@@ -165,7 +202,7 @@ export class Join {
   These nodes don't have an action but create the correct proportional inputs for each token.
   These input amounts are then copied to the outputRef which the parent node will use.
   */
-  createMainToken(node: Node, tokens: string[], amounts: string[]): void {
+  createInputToken(node: Node, tokens: string[], amounts: string[]): void {
     // Update amounts to use actual value based off input and proportions
     const tokenIndex = tokens.indexOf(node.address);
     if (tokenIndex === -1) return;
@@ -292,6 +329,8 @@ export class Join {
 
     return call;
   }
+
+  // TODO - Add check for final output token as safety.
 
   createJoinPool(
     node: Node,
