@@ -1,7 +1,7 @@
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { parsePoolInfo } from '@/lib/utils';
 import { Pool, PoolType } from '@/types';
-import { Zero } from '@ethersproject/constants';
+import { Zero, WeiPerEther } from '@ethersproject/constants';
 import { BigNumber } from '@ethersproject/bignumber';
 import { PoolRepository } from '../data';
 
@@ -14,6 +14,7 @@ export interface Node {
   marked: boolean;
   outputReference: string;
   proportionOfParent: BigNumber;
+  parent: Node | undefined;
 }
 
 type Actions =
@@ -47,7 +48,8 @@ export class PoolGraph {
     const rootNode = await this.buildGraphFromPool(
       rootPool.address,
       nodeIndex,
-      BigNumber.from('1000000000000000000'), // TODO - Add constant
+      undefined,
+      WeiPerEther,
       wrapMainTokens
     );
     return rootNode[0];
@@ -69,6 +71,7 @@ export class PoolGraph {
   async buildGraphFromPool(
     address: string,
     nodeIndex: number,
+    parent: Node | undefined,
     proportionOfParent: BigNumber,
     wrapMainTokens: boolean
   ): Promise<[Node, number]> {
@@ -88,6 +91,7 @@ export class PoolGraph {
       children: [],
       marked: false,
       outputReference: nodeIndex.toString(),
+      parent,
       proportionOfParent,
     };
     nodeIndex++;
@@ -112,6 +116,7 @@ export class PoolGraph {
         const childNode = await this.buildGraphFromPool(
           pool.tokens[i].address,
           nodeIndex,
+          poolNode,
           finalProportion,
           wrapMainTokens
         );
@@ -133,15 +138,20 @@ export class PoolGraph {
       const wrappedNodeInfo = this.createWrappedTokenNode(
         linearPool,
         nodeIndex,
+        linearPoolNode,
         linearPoolNode.proportionOfParent
       );
       linearPoolNode.children.push(wrappedNodeInfo[0]);
       return [linearPoolNode, wrappedNodeInfo[1]];
     } else {
       // Main token
-      const nodeInfo = this.createMainTokenNode(
-        linearPool,
+      if (linearPool.mainIndex === undefined)
+        throw new Error('Issue With Linear Pool');
+
+      const nodeInfo = this.createInputTokenNode(
         nodeIndex,
+        linearPool.tokensList[linearPool.mainIndex],
+        linearPoolNode,
         linearPoolNode.proportionOfParent
       );
       linearPoolNode.children.push(nodeInfo[0]);
@@ -153,9 +163,13 @@ export class PoolGraph {
   createWrappedTokenNode(
     linearPool: Pool,
     nodeIndex: number,
+    parent: Node | undefined,
     proportionOfParent: BigNumber
   ): [Node, number] {
-    if (linearPool.wrappedIndex === undefined)
+    if (
+      linearPool.wrappedIndex === undefined ||
+      linearPool.mainIndex === undefined
+    )
       throw new Error('Issue With Linear Pool');
 
     // Relayer can support different wrapped tokens
@@ -173,37 +187,39 @@ export class PoolGraph {
       marked: false,
       action,
       outputReference: nodeIndex.toString(),
+      parent,
       proportionOfParent,
     };
     nodeIndex++;
-    // Wrapped token will be wrapped via the main token. This will be the child node.
-    const nodeInfo = this.createMainTokenNode(
-      linearPool,
+
+    const inputNode = this.createInputTokenNode(
       nodeIndex,
+      linearPool.tokensList[linearPool.mainIndex],
+      wrappedTokenNode,
       proportionOfParent
     );
-    wrappedTokenNode.children = [nodeInfo[0]];
-    nodeIndex = nodeInfo[1];
+    wrappedTokenNode.children = [inputNode[0]];
+    nodeIndex = inputNode[1];
     return [wrappedTokenNode, nodeIndex];
   }
 
-  createMainTokenNode(
-    linearPool: Pool,
+  createInputTokenNode(
     nodeIndex: number,
+    address: string,
+    parent: Node | undefined,
     proportionOfParent: BigNumber
   ): [Node, number] {
-    if (linearPool.mainIndex === undefined)
-      throw new Error('Issue With Linear Pool');
     return [
       {
-        address: linearPool.tokensList[linearPool.mainIndex],
+        address,
         id: 'N/A',
-        type: 'Underlying',
+        type: 'Input',
         children: [],
         marked: false,
         action: 'input',
         outputReference: '0', // Use 0 ref for all main tokens. This will be updated with real amounts in join construction.
-        proportionOfParent: proportionOfParent,
+        parent,
+        proportionOfParent,
       },
       nodeIndex + 1,
     ];
@@ -226,5 +242,56 @@ export class PoolGraph {
       });
     }
     return orderedNodes.reverse();
+  }
+
+  getNodesToRoot(
+    orderedNodes: Node[],
+    inputToken: string,
+    startingIndex: number
+  ): Node[] {
+    let index = startingIndex;
+    // Can't join using the root token itself
+    if (
+      inputToken.toLowerCase() ===
+      orderedNodes[orderedNodes.length - 1].address.toLowerCase()
+    )
+      throw new BalancerError(BalancerErrorCode.INPUT_TOKEN_INVALID);
+    // Find the node matching input token
+    const inputNode = orderedNodes.find(
+      (node) => node.address.toLowerCase() === inputToken.toLowerCase()
+    );
+    if (inputNode === undefined)
+      throw new BalancerError(BalancerErrorCode.INPUT_TOKEN_INVALID);
+    const nodesToRoot: Node[] = [];
+    if (inputNode.action !== 'input') {
+      // Create an input node for the input token
+      const [inputTokenNode] = this.createInputTokenNode(
+        startingIndex,
+        inputToken,
+        inputNode.parent,
+        WeiPerEther
+      );
+      nodesToRoot.push(inputTokenNode);
+    } else {
+      // Joining with a leaf token
+      const inputTokenNode = { ...inputNode };
+      inputTokenNode.proportionOfParent = WeiPerEther;
+      inputTokenNode.outputReference = '0';
+      nodesToRoot.push(inputNode);
+    }
+    index++;
+
+    let parentNode: Node | undefined = inputNode.parent;
+    // Traverse up graph until we reach root adding each node
+    while (parentNode !== undefined) {
+      const node: Node = { ...parentNode };
+      node.proportionOfParent = BigNumber.from('0'); // TODO - Will this cause issues?
+      node.outputReference = index.toString();
+      if (index - 1 === startingIndex) node.children = [nodesToRoot[0]];
+      index++;
+      nodesToRoot.push(node);
+      parentNode = parentNode.parent;
+    }
+    return nodesToRoot;
   }
 }

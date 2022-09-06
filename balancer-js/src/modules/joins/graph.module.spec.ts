@@ -15,6 +15,8 @@ import {
   LinearInfo,
 } from '@/test/factories/pools';
 import { Pool as SdkPool } from '@/types';
+import { ADDRESSES } from '@/test/lib/constants';
+import { Network } from '@/lib/constants/network';
 
 function checkNode(
   node: Node,
@@ -76,7 +78,7 @@ function checkLinearNode(
       linearNode.children[0].children[0],
       'N/A',
       mainTokens[poolIndex].address,
-      'Underlying',
+      'Input',
       'input',
       0,
       '0',
@@ -87,7 +89,7 @@ function checkLinearNode(
       linearNode.children[0],
       'N/A',
       mainTokens[poolIndex].address,
-      'Underlying',
+      'Input',
       'input',
       0,
       '0',
@@ -260,7 +262,7 @@ describe('Graph', () => {
       it('should sort in breadth first order', async () => {
         const orderedNodes = poolsGraph.orderByBfs(rootNode);
         expect(orderedNodes.length).to.eq(3);
-        expect(orderedNodes[0].type).to.eq('Underlying');
+        expect(orderedNodes[0].type).to.eq('Input');
         expect(orderedNodes[1].type).to.eq('WrappedToken');
         expect(orderedNodes[2].type).to.eq('AaveLinear');
       });
@@ -287,7 +289,7 @@ describe('Graph', () => {
       it('should sort in breadth first order', async () => {
         const orderedNodes = poolsGraph.orderByBfs(rootNode);
         expect(orderedNodes.length).to.eq(2);
-        expect(orderedNodes[0].type).to.eq('Underlying');
+        expect(orderedNodes[0].type).to.eq('Input');
         expect(orderedNodes[1].type).to.eq('AaveLinear');
       });
     });
@@ -372,9 +374,9 @@ describe('Graph', () => {
       it('should sort in breadth first order', async () => {
         const orderedNodes = poolsGraph.orderByBfs(boostedNode);
         expect(orderedNodes.length).to.eq(10);
-        expect(orderedNodes[0].type).to.eq('Underlying');
-        expect(orderedNodes[1].type).to.eq('Underlying');
-        expect(orderedNodes[2].type).to.eq('Underlying');
+        expect(orderedNodes[0].type).to.eq('Input');
+        expect(orderedNodes[1].type).to.eq('Input');
+        expect(orderedNodes[2].type).to.eq('Input');
         expect(orderedNodes[3].type).to.eq('WrappedToken');
         expect(orderedNodes[4].type).to.eq('WrappedToken');
         expect(orderedNodes[5].type).to.eq('WrappedToken');
@@ -407,9 +409,9 @@ describe('Graph', () => {
       it('should sort in breadth first order', async () => {
         const orderedNodes = poolsGraph.orderByBfs(boostedNode);
         expect(orderedNodes.length).to.eq(7);
-        expect(orderedNodes[0].type).to.eq('Underlying');
-        expect(orderedNodes[1].type).to.eq('Underlying');
-        expect(orderedNodes[2].type).to.eq('Underlying');
+        expect(orderedNodes[0].type).to.eq('Input');
+        expect(orderedNodes[1].type).to.eq('Input');
+        expect(orderedNodes[2].type).to.eq('Input');
         expect(orderedNodes[3].type).to.eq('AaveLinear');
         expect(orderedNodes[4].type).to.eq('AaveLinear');
         expect(orderedNodes[5].type).to.eq('AaveLinear');
@@ -507,10 +509,10 @@ describe('Graph', () => {
       it('should sort in breadth first order', async () => {
         const orderedNodes = poolsGraph.orderByBfs(boostedNode);
         expect(orderedNodes.length).to.eq(14);
-        expect(orderedNodes[0].type).to.eq('Underlying');
-        expect(orderedNodes[1].type).to.eq('Underlying');
-        expect(orderedNodes[2].type).to.eq('Underlying');
-        expect(orderedNodes[3].type).to.eq('Underlying');
+        expect(orderedNodes[0].type).to.eq('Input');
+        expect(orderedNodes[1].type).to.eq('Input');
+        expect(orderedNodes[2].type).to.eq('Input');
+        expect(orderedNodes[3].type).to.eq('Input');
         expect(orderedNodes[4].type).to.eq('WrappedToken');
         expect(orderedNodes[5].type).to.eq('WrappedToken');
         expect(orderedNodes[6].type).to.eq('WrappedToken');
@@ -539,16 +541,70 @@ describe('Graph', () => {
       it('should sort in breadth first order', async () => {
         const orderedNodes = poolsGraph.orderByBfs(boostedNode);
         expect(orderedNodes.length).to.eq(10);
-        expect(orderedNodes[0].type).to.eq('Underlying');
-        expect(orderedNodes[1].type).to.eq('Underlying');
-        expect(orderedNodes[2].type).to.eq('Underlying');
-        expect(orderedNodes[3].type).to.eq('Underlying');
+        expect(orderedNodes[0].type).to.eq('Input');
+        expect(orderedNodes[1].type).to.eq('Input');
+        expect(orderedNodes[2].type).to.eq('Input');
+        expect(orderedNodes[3].type).to.eq('Input');
         expect(orderedNodes[4].type).to.eq('AaveLinear');
         expect(orderedNodes[5].type).to.eq('AaveLinear');
         expect(orderedNodes[6].type).to.eq('AaveLinear');
         expect(orderedNodes[7].type).to.eq('AaveLinear');
         expect(orderedNodes[8].type).to.eq('StablePhantom');
         expect(orderedNodes[9].type).to.eq('StablePhantom');
+      });
+    });
+
+    context('nodes to root', () => {
+      let orderedNodes: Node[];
+      before(async () => {
+        const boostedNode = await poolsGraph.buildGraphFromRootPool(
+          rootPool.id,
+          false
+        );
+        orderedNodes = poolsGraph.orderByBfs(boostedNode);
+      });
+
+      it('should throw when token not in tree', () => {
+        const inputToken = ADDRESSES[Network.MAINNET].BAL.address;
+        let reason = '';
+        try {
+          poolsGraph.getNodesToRoot(orderedNodes, inputToken, 0);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+          reason = err.message;
+        }
+        expect(reason).to.eq('input token invalid');
+      });
+      it('should throw when trying to join with root token', () => {
+        const inputToken = rootPool.address;
+        let reason = '';
+        try {
+          poolsGraph.getNodesToRoot(orderedNodes, inputToken, 0);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+          reason = err.message;
+        }
+        expect(reason).to.eq('input token invalid');
+      });
+      it('leaf input', () => {
+        const inputToken = ADDRESSES[Network.MAINNET].DAI.address;
+        const nodes = poolsGraph.getNodesToRoot(orderedNodes, inputToken, 0);
+        expect(nodes.length).to.eq(4);
+        expect(nodes[0].action).to.eq('input');
+        expect(nodes[0].address).to.eq(inputToken);
+        expect(nodes[1].action).to.eq('batchSwap');
+        expect(nodes[2].action).to.eq('joinPool');
+        expect(nodes[3].action).to.eq('joinPool');
+        expect(nodes[3].address).to.eq(rootPool.address);
+      });
+      it('child boosted bpt input', () => {
+        const inputToken = boostedMetaInfo.childBoostedInfo.rootPool.address;
+        const nodes = poolsGraph.getNodesToRoot(orderedNodes, inputToken, 0);
+        expect(nodes.length).to.eq(2);
+        expect(nodes[0].action).to.eq('input');
+        expect(nodes[0].address).to.eq(inputToken);
+        expect(nodes[1].action).to.eq('joinPool');
+        expect(nodes[1].address).to.eq(rootPool.address);
       });
     });
   });
@@ -661,12 +717,12 @@ describe('Graph', () => {
       it('should sort in breadth first order', async () => {
         const orderedNodes = poolsGraph.orderByBfs(boostedNode);
         expect(orderedNodes.length).to.eq(21);
-        expect(orderedNodes[0].type).to.eq('Underlying');
-        expect(orderedNodes[1].type).to.eq('Underlying');
-        expect(orderedNodes[2].type).to.eq('Underlying');
-        expect(orderedNodes[3].type).to.eq('Underlying');
-        expect(orderedNodes[4].type).to.eq('Underlying');
-        expect(orderedNodes[5].type).to.eq('Underlying');
+        expect(orderedNodes[0].type).to.eq('Input');
+        expect(orderedNodes[1].type).to.eq('Input');
+        expect(orderedNodes[2].type).to.eq('Input');
+        expect(orderedNodes[3].type).to.eq('Input');
+        expect(orderedNodes[4].type).to.eq('Input');
+        expect(orderedNodes[5].type).to.eq('Input');
         expect(orderedNodes[6].type).to.eq('WrappedToken');
         expect(orderedNodes[7].type).to.eq('WrappedToken');
         expect(orderedNodes[8].type).to.eq('WrappedToken');
@@ -700,12 +756,12 @@ describe('Graph', () => {
       it('should sort in breadth first order', async () => {
         const orderedNodes = poolsGraph.orderByBfs(boostedNode);
         expect(orderedNodes.length).to.eq(15);
-        expect(orderedNodes[0].type).to.eq('Underlying');
-        expect(orderedNodes[1].type).to.eq('Underlying');
-        expect(orderedNodes[2].type).to.eq('Underlying');
-        expect(orderedNodes[3].type).to.eq('Underlying');
-        expect(orderedNodes[4].type).to.eq('Underlying');
-        expect(orderedNodes[5].type).to.eq('Underlying');
+        expect(orderedNodes[0].type).to.eq('Input');
+        expect(orderedNodes[1].type).to.eq('Input');
+        expect(orderedNodes[2].type).to.eq('Input');
+        expect(orderedNodes[3].type).to.eq('Input');
+        expect(orderedNodes[4].type).to.eq('Input');
+        expect(orderedNodes[5].type).to.eq('Input');
         expect(orderedNodes[6].type).to.eq('AaveLinear');
         expect(orderedNodes[7].type).to.eq('AaveLinear');
         expect(orderedNodes[8].type).to.eq('AaveLinear');
@@ -715,6 +771,36 @@ describe('Graph', () => {
         expect(orderedNodes[12].type).to.eq('StablePhantom');
         expect(orderedNodes[13].type).to.eq('StablePhantom');
         expect(orderedNodes[14].type).to.eq('StablePhantom');
+      });
+    });
+    context('nodes to root', () => {
+      let orderedNodes: Node[];
+      before(async () => {
+        const boostedNode = await poolsGraph.buildGraphFromRootPool(
+          boostedPool.id,
+          false
+        );
+        orderedNodes = poolsGraph.orderByBfs(boostedNode);
+      });
+      it('leaf input', () => {
+        const inputToken = ADDRESSES[Network.MAINNET].DAI.address;
+        const nodes = poolsGraph.getNodesToRoot(orderedNodes, inputToken, 0);
+        expect(nodes.length).to.eq(4);
+        expect(nodes[0].action).to.eq('input');
+        expect(nodes[0].address).to.eq(inputToken);
+        expect(nodes[1].action).to.eq('batchSwap');
+        expect(nodes[2].action).to.eq('joinPool');
+        expect(nodes[3].action).to.eq('joinPool');
+        expect(nodes[3].address).to.eq(boostedPool.address);
+      });
+      it('child boosted bpt input', () => {
+        const inputToken = boostedMetaBigInfo.childPools[0].address;
+        const nodes = poolsGraph.getNodesToRoot(orderedNodes, inputToken, 0);
+        expect(nodes.length).to.eq(2);
+        expect(nodes[0].action).to.eq('input');
+        expect(nodes[0].address).to.eq(inputToken);
+        expect(nodes[1].action).to.eq('joinPool');
+        expect(nodes[1].address).to.eq(boostedPool.address);
       });
     });
   });
