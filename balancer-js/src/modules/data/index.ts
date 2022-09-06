@@ -36,7 +36,9 @@ export class Data implements BalancerDataRepositories {
   blockNumbers;
 
   constructor(networkConfig: BalancerNetworkConfig, provider: Provider) {
-    this.pools = new PoolsSubgraphRepository(networkConfig.urls.subgraph);
+    this.pools = new PoolsSubgraphRepository({
+      url: networkConfig.urls.subgraph,
+    });
 
     // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
     // TODO: find a better data source for that, eg: maybe DUNE once API is available
@@ -51,10 +53,10 @@ export class Data implements BalancerDataRepositories {
         }
       };
 
-      this.yesterdaysPools = new PoolsSubgraphRepository(
-        networkConfig.urls.subgraph,
-        blockDayAgo
-      );
+      this.yesterdaysPools = new PoolsSubgraphRepository({
+        url: networkConfig.urls.subgraph,
+        blockHeight: blockDayAgo,
+      });
     }
 
     const tokenAddresses = initialCoingeckoList

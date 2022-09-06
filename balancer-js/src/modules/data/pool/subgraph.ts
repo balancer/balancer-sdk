@@ -15,6 +15,12 @@ import { GraphQLArgs } from '@/lib/graphql/types';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
 import { GraphQLQuery, Pool, PoolType } from '@/types';
 
+interface PoolsSubgraphRepositoryOptions {
+  url: string;
+  blockHeight?: () => Promise<number | undefined>;
+  query?: GraphQLQuery;
+}
+
 /**
  * Access pools using generated subgraph client.
  *
@@ -26,6 +32,8 @@ export class PoolsSubgraphRepository
   private client: SubgraphClient;
   public pools: SubgraphPool[] = [];
   public skip = 0;
+  private blockHeight: undefined | (() => Promise<number | undefined>);
+  private query: GraphQLQuery;
 
   /**
    * Repository with optional lazy loaded blockHeight
@@ -33,30 +41,38 @@ export class PoolsSubgraphRepository
    * @param url subgraph URL
    * @param blockHeight lazy loading blockHeigh resolver
    */
-  constructor(
-    url: string,
-    private blockHeight?: () => Promise<number | undefined>
-  ) {
-    this.client = createSubgraphClient(url);
-  }
+  constructor(options: PoolsSubgraphRepositoryOptions) {
+    this.client = createSubgraphClient(options.url);
+    this.blockHeight = options.blockHeight;
 
-  async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
     const defaultArgs: GraphQLArgs = {
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
-      block: this.blockHeight
-        ? { number: await this.blockHeight() }
-        : undefined,
-      first: options?.first,
-      skip: options?.skip ? options.skip : 0,
       where: {
         swapEnabled: Op.Equals(true),
         totalShares: Op.GreaterThan(0),
       },
     };
 
-    const args = defaultArgs;
-    const formattedQuery = new GraphQLArgsBuilder(args).format(
+    const args = options.query?.args || defaultArgs;
+    this.query = {
+      args,
+      attrs: {},
+    };
+  }
+
+  async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
+    if (options?.first) {
+      this.query.args.first = options.first;
+    }
+    if (options?.skip) {
+      this.query.args.skip = options.skip;
+    }
+    if (this.blockHeight) {
+      this.query.args.block = { number: await this.blockHeight() };
+    }
+
+    const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
       new SubgraphArgsFormatter()
     );
 
