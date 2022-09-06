@@ -126,12 +126,10 @@ describe('bbausd generalised join execution', async () => {
   });
 
   const testFlow = async (
-    previouslyAuthorised = false,
-    minBptOut: undefined | string = undefined
+    wrapMainTokens = true,
+    minBptOut: undefined | string = undefined,
+    previouslyAuthorised = false
   ) => {
-    // TODO - Add cases for wrapped and non-wrapped
-    const wrapMainTokens = true;
-
     [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
       [fromPool.address, ...tokensIn],
       signer,
@@ -190,7 +188,7 @@ describe('bbausd generalised join execution', async () => {
     tokensBalanceAfter.forEach((b) => expect(b.eq(0)).to.be.true);
   };
 
-  context('without minBPT limit', async () => {
+  context('wrapped tokens as input', async () => {
     it('should transfer tokens from stable to boosted', async () => {
       await testFlow();
     });
@@ -199,6 +197,22 @@ describe('bbausd generalised join execution', async () => {
       let errorMessage = '';
       try {
         await testFlow(false, MaxInt256.toString());
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain('BAL#208'); // BPT_OUT_MIN_AMOUNT - BPT out below minimum expected
+    });
+  });
+
+  context('main tokens as input', async () => {
+    it('should transfer tokens from stable to boosted', async () => {
+      await testFlow(true);
+    });
+
+    it('should transfer tokens from stable to boosted - limit should fail', async () => {
+      let errorMessage = '';
+      try {
+        await testFlow(true, MaxInt256.toString());
       } catch (error) {
         errorMessage = (error as Error).message;
       }

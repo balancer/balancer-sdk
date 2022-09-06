@@ -59,7 +59,10 @@ export class Join {
     // Throws error if non-leaf tokens were provided as input
     const inputNodes = orderedNodes.filter((node) => node.action === 'input');
     const nonInputTokens = tokens.filter(
-      (token) => !inputNodes.some((inputNode) => token === inputNode.address)
+      (token) =>
+        !inputNodes.some(
+          (inputNode) => token.toLowerCase() === inputNode.address.toLowerCase()
+        )
     );
     if (nonInputTokens.length > 0)
       throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
@@ -202,13 +205,13 @@ export class Join {
       .mul(amounts[tokenIndex])
       .div((1e18).toString());
     node.outputReference = inputAmount.toString();
-    console.log(
-      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-      ${node.action} (
-        Inputs: ${inputAmount.toString()}
-        OutputRef: ${node.outputReference}
-      )`
-    );
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+    //   ${node.action} (
+    //     Inputs: ${inputAmount.toString()}
+    //     OutputRef: ${node.outputReference}
+    //   )`
+    // );
   }
 
   createAaveWrap(node: Node, sender: string, recipient: string): string {
@@ -229,14 +232,14 @@ export class Join {
       outputReference: Relayer.toChainedReference(node.outputReference),
     });
 
-    console.log(
-      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-      ${node.action} (
-        staticToken: ${staticToken},
-        input: ${amount},
-        outputRef: ${node.outputReference.toString()}
-      )`
-    );
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+    //   ${node.action} (
+    //     staticToken: ${staticToken},
+    //     input: ${amount},
+    //     outputRef: ${node.outputReference.toString()}
+    //   )`
+    // );
 
     return call;
   }
@@ -247,20 +250,16 @@ export class Join {
     sender: string,
     recipient: string
   ): string {
-    const inputAmt = node.children[0].outputReference;
-    const inputToken = node.children[0].address;
-    const outputToken = node.address;
-    const poolId = node.id;
-    console.log(
-      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-      ${node.action}(
-        inputAmt: ${inputAmt},
-        inputToken: ${inputToken},
-        pool: ${poolId},
-        outputToken: ${outputToken},
-        outputRef: ${node.outputReference}
-      )`
-    );
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+    //   ${node.action}(
+    //     inputAmt: ${node.children[0].outputReference},
+    //     inputToken: ${node.children[0].address},
+    //     pool: ${node.id},
+    //     outputToken: ${node.address},
+    //     outputRef: ${node.outputReference}
+    //   )`
+    // );
 
     const inputTokens: string[] = [];
     const inputAmts: string[] = [];
@@ -269,7 +268,9 @@ export class Join {
       if (child.outputReference !== '0') {
         inputTokens.push(child.address);
         inputAmts.push(
-          Relayer.toChainedReference(child.outputReference).toString()
+          child.action === 'input'
+            ? child.outputReference
+            : Relayer.toChainedReference(child.outputReference).toString()
         );
       }
     });
@@ -326,7 +327,6 @@ export class Join {
     sender: string,
     recipient: string
   ): string {
-    const poolId = node.id;
     const inputTokens: string[] = [];
     const inputAmts: string[] = [];
 
@@ -347,16 +347,16 @@ export class Join {
       inputAmts.push('0');
     }
 
-    console.log(
-      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-      ${node.action}(
-        poolId: ${poolId},
-        inputTokens: ${inputTokens.toString()},
-        maxAmtsIn: ${node.children.map((c) => c.outputReference).toString()},
-        minOut: ${minAmountOut}
-        outputRef: ${node.outputReference}
-      )`
-    );
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+    //   ${node.action}(
+    //     poolId: ${node.id},
+    //     inputTokens: ${inputTokens.toString()},
+    //     maxAmtsIn: ${node.children.map((c) => c.outputReference).toString()},
+    //     minOut: ${minAmountOut}
+    //     outputRef: ${node.outputReference}
+    //   )`
+    // );
 
     // sort inputs
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
