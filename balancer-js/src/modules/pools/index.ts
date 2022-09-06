@@ -5,27 +5,64 @@ import type {
   Searchable,
   Pool,
   PoolWithMethods,
+  AprBreakdown,
+  PoolAttribute,
 } from '@/types';
 import { JoinPoolAttributes } from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
-import { ModelProvider } from './model-provider';
+import { PoolApr } from './apr/apr';
+import { Liquidity } from '../liquidity/liquidity.module';
 
 /**
  * Controller / use-case layer for interacting with pools data.
  */
 export class Pools implements Findable<PoolWithMethods> {
-  liveModelProvider: ModelProvider;
+  aprService;
+  liquidityService;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
-    repositories: BalancerDataRepositories
+    private repositories: BalancerDataRepositories
   ) {
-    this.liveModelProvider = new ModelProvider(repositories);
+    this.aprService = new PoolApr(
+      this.repositories.pools,
+      this.repositories.tokenPrices,
+      this.repositories.tokenMeta,
+      this.repositories.tokenYields,
+      this.repositories.feeCollector,
+      this.repositories.yesterdaysPools,
+      this.repositories.liquidityGauges,
+      this.repositories.feeDistributor
+    );
+    this.liquidityService = new Liquidity(
+      repositories.pools,
+      repositories.tokenPrices
+    );
   }
 
-  dataSource(): Findable<Pool> & Searchable<Pool> {
+  dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
     // TODO: Add API data repository to data and use liveModelProvider as fallback
-    return this.liveModelProvider;
+    return this.repositories.pools;
+  }
+
+  /**
+   * Calculates APR on any pool data
+   *
+   * @param pool
+   * @returns
+   */
+  async apr(pool: Pool): Promise<AprBreakdown> {
+    return this.aprService.apr(pool);
+  }
+
+  /**
+   * Calculates total liquidity of the pool
+   *
+   * @param pool
+   * @returns
+   */
+  async liquidity(pool: Pool): Promise<string> {
+    return this.liquidityService.getLiquidity(pool);
   }
 
   static wrap(
@@ -85,6 +122,8 @@ export class Pools implements Findable<PoolWithMethods> {
       // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
       // spotPrice: async (tokenIn: string, tokenOut: string) =>
       //   methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, data),
+      calcSpotPrice: (tokenIn: string, tokenOut: string) =>
+        methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, pool),
     };
   }
 

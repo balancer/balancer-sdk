@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { WeightedPoolPriceImpact } from '@/modules/pools/pool-types/concerns/weighted/priceImpact.concern';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import { PoolModel, Pool } from '@/types';
+import { Pool } from '@/types';
 
 const priceImpactCalc = new WeightedPoolPriceImpact();
 const wethDaiId =
@@ -26,7 +26,7 @@ describe('weighted pool price impact', () => {
       ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
-        pool as PoolModel,
+        pool,
         tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('2362847643421361281550');
@@ -36,7 +36,7 @@ describe('weighted pool price impact', () => {
         BigInt('125240456379058423162'),
       ];
       const proportionalBptZeroPI = priceImpactCalc.bptZeroPriceImpact(
-        pool as PoolModel,
+        pool,
         proportionalTokenAmounts
       );
       expect(proportionalBptZeroPI.toString()).to.eq('4931900186642428185328');
@@ -49,7 +49,7 @@ describe('weighted pool price impact', () => {
       ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
-        threeTokensPool as PoolModel,
+        threeTokensPool,
         tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('876361770363362937782');
@@ -60,7 +60,7 @@ describe('weighted pool price impact', () => {
         BigInt('383499316375739080555'),
       ];
       const proportionalBptZeroPI = priceImpactCalc.bptZeroPriceImpact(
-        threeTokensPool as PoolModel,
+        threeTokensPool,
         proportionalTokenAmounts
       );
       expect(proportionalBptZeroPI.toString()).to.eq('279707470176761335097');
@@ -74,7 +74,7 @@ describe('weighted pool price impact', () => {
         '125240456379058423162',
       ];
       const priceImpact = priceImpactCalc.calcPriceImpact(
-        pool as PoolModel,
+        pool,
         proportionalTokenAmounts,
         '4931900186642428185328'
       );

@@ -36,8 +36,6 @@ describe('happy case', () => {
   const now = new Date('2022-08-19 11:11:11').getTime();
 
   before(async function () {
-    this.timeout(2e4);
-
     MockDate.set(now);
 
     const rpcProvider = sdk.rpcProvider as JsonRpcProvider;
@@ -60,8 +58,10 @@ describe('happy case', () => {
     it('has tokenAprs', async () => {
       const pool = await pools.find(ethStEthCopy);
       if (pool) {
-        const { apr } = pool;
+        const apr = await pools.apr(pool);
         expect(apr && apr.tokenAprs).to.be.greaterThan(1);
+      } else {
+        throw 'no pool found';
       }
     }).timeout(120000);
   });
@@ -70,8 +70,10 @@ describe('happy case', () => {
     it('has tokenAprs', async () => {
       const pool = await pools.find(ethStEth);
       if (pool) {
-        const { apr } = pool;
+        const apr = await pools.apr(pool);
         expect(apr && apr.tokenAprs).to.be.greaterThan(1);
+      } else {
+        throw 'no pool found';
       }
     }).timeout(120000);
   });
@@ -80,8 +82,10 @@ describe('happy case', () => {
     it('has tokenAprs', async () => {
       const pool = await pools.find(usdStable);
       if (pool) {
-        const { apr } = pool;
+        const apr = await pools.apr(pool);
         expect(apr && apr.tokenAprs).to.be.greaterThan(1);
+      } else {
+        throw 'no pool found';
       }
     }).timeout(120000);
   });
@@ -90,9 +94,10 @@ describe('happy case', () => {
     it('receives protocol revenues', async () => {
       const pool = await pools.find(veBalId);
       if (pool) {
-        const { apr } = pool;
-        console.log(apr);
+        const apr = await pools.apr(pool);
         expect(apr && apr.protocolApr).to.be.greaterThan(1);
+      } else {
+        throw 'no pool found';
       }
     }).timeout(120000);
   });
@@ -101,8 +106,10 @@ describe('happy case', () => {
     it('receives staking rewards', async () => {
       const pool = await pools.find(btcEth);
       if (pool) {
-        const { apr } = pool;
+        const apr = await pools.apr(pool);
         expect(apr && apr.stakingApr.min).to.be.greaterThan(1);
+      } else {
+        throw 'no pool found';
       }
     }).timeout(120000);
   });
@@ -111,8 +118,10 @@ describe('happy case', () => {
     it('has tokenAprs', async () => {
       const pool = await pools.find(auraBALveBAL);
       if (pool) {
-        const { apr } = pool;
+        const apr = await pools.apr(pool);
         expect(apr && apr.tokenAprs).to.be.greaterThan(1);
+      } else {
+        throw 'no pool found';
       }
     }).timeout(120000);
   });

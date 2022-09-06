@@ -1,19 +1,24 @@
 import { expect } from 'chai';
-import { overnight, cache } from './overnight';
-import fetchMock from 'fetch-mock';
+import { overnight, yieldTokens } from './overnight';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
 
 describe('overnight apr', () => {
+  let mock: MockAdapter;
+
   before(() => {
-    cache(false);
-    fetchMock.get('https://app.overnight.fi/api/balancer/week/apr', '0.01');
+    mock = new MockAdapter(axios);
+    mock
+      .onGet('https://app.overnight.fi/api/balancer/week/apr')
+      .reply(() => [200, '0.01']);
   });
+
   after(() => {
-    fetchMock.reset();
-    cache(true);
+    mock.restore();
   });
 
   it('is getting fetched', async () => {
-    const apr = await overnight();
+    const apr = (await overnight())[yieldTokens.usdcUSDplus];
     expect(apr).to.eq(1);
   });
 });

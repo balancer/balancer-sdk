@@ -93,6 +93,7 @@ export class PoolsSubgraphRepository
       poolType: subgraphPool.poolType as PoolType,
       swapFee: subgraphPool.swapFee,
       swapEnabled: subgraphPool.swapEnabled,
+      amp: subgraphPool.amp || undefined,
       // owner: subgraphPool.owner,
       // factory: subgraphPool.factory,
       tokens: subgraphPool.tokens || [],
@@ -111,6 +112,7 @@ export class PoolsSubgraphRepository
       // volumeSnapshot: subgraphPool.volumeSnapshot,
       // feesSnapshot: subgraphPool.???, // Approximated last 24h fees
       // boost: subgraphPool.boost,
+      totalWeight: subgraphPool.totalWeight || '1',
     };
   }
 }

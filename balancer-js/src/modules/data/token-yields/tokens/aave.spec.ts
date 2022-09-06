@@ -1,32 +1,40 @@
 import { expect } from 'chai';
-import { aave, cache } from './aave';
-import fetchMock from 'fetch-mock';
+import { aave, yieldTokens, wrappedTokensMap } from './aave';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
 
-const wrappedAUsdt = '0xf8fd466f12e236f4c96f7cce6c79eadb819abf58';
-const underlyingUsdt = '0xdac17f958d2ee523a2206206994597c13d831ec7';
+const mockedResponse = {
+  data: {
+    reserves: [
+      {
+        underlyingAsset: wrappedTokensMap[yieldTokens.waUSDT].underlying,
+        liquidityRate: '16633720952291480781459657',
+      },
+    ],
+  },
+};
 
 describe('aave apr', () => {
+  let mock: MockAdapter;
+
   before(() => {
-    cache(false);
-    fetchMock.post('https://api.thegraph.com/subgraphs/name/aave/protocol-v2', {
-      data: {
-        reserves: [
-          {
-            underlyingAsset: underlyingUsdt,
-            liquidityRate: '16633720952291480781459657',
-          },
-        ],
-      },
-    });
+    mock = new MockAdapter(axios);
+    mock
+      .onPost('https://api.thegraph.com/subgraphs/name/aave/protocol-v2')
+      .reply(() => [200, mockedResponse]);
   });
 
   after(() => {
-    fetchMock.reset();
-    cache(true);
+    mock.restore();
   });
 
   it('is getting fetched', async () => {
-    const apr = await aave(wrappedAUsdt);
+    const apr = (await aave())[yieldTokens.waUSDT];
     expect(apr).to.eq(166);
   });
 });
+
+// Mocking for fetch in case we migrate at some point:
+// import fetchMock from 'fetch-mock';
+// fetchMock.post('https://api.thegraph.com/subgraphs/name/aave/protocol-v2', mockedResponse);
+// fetchMock.reset();

@@ -1,15 +1,8 @@
 import { Findable } from '../types';
-
-const endpoints = {
-  1: 'https://api.thegraph.com/subgraphs/name/blocklytics/ethereum-blocks',
-  5: 'https://api.thegraph.com/subgraphs/name/blocklytics/goerli-blocks',
-  137: 'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
-  42161:
-    'https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-one-blocks',
-};
+import axios from 'axios';
 
 const query = (timestamp: string) => `{
-  blocks(first: 1, orderBy: number, orderDirection: asc, where: { timestamp_gt: ${timestamp} }) {
+  blocks(first: 1, orderBy: timestamp, orderDirection: asc, where: { timestamp_gt: ${timestamp} }) {
     number
   }
 }`;
@@ -25,36 +18,39 @@ interface BlockNumberResponse {
 }
 
 const fetchBlockByTime = async (
-  network: number,
+  endpoint: string,
   timestamp: string
 ): Promise<number> => {
-  const endpoint = endpoints[network as keyof typeof endpoints];
+  console.time(`fetching blocks ${timestamp}`);
   const payload = {
     query: query(timestamp),
   };
 
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+  const response = await axios.post(endpoint, payload);
+  console.timeEnd(`fetching blocks ${timestamp}`);
 
   const {
     data: { blocks },
-  } = (await response.json()) as BlockNumberResponse;
+  } = response.data as BlockNumberResponse;
 
   return parseInt(blocks[0].number);
 };
 
 export class BlockNumberRepository implements Findable<number> {
-  constructor(private network: number) {}
+  blocks: { [ts: string]: Promise<number> } = {};
+
+  constructor(private endpoint: string) {}
 
   async find(from: string): Promise<number | undefined> {
     if (from == 'dayAgo') {
       const dayAgo = `${Math.floor(Date.now() / 1000) - 86400}`;
-      return fetchBlockByTime(this.network, dayAgo);
+      if (!this.blocks[dayAgo]) {
+        this.blocks = {
+          ...this.blocks,
+          [dayAgo]: fetchBlockByTime(this.endpoint, dayAgo),
+        };
+      }
+      return this.blocks[dayAgo];
     }
   }
 

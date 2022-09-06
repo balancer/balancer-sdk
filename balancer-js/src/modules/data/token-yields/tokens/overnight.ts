@@ -1,46 +1,28 @@
 import { AprFetcher } from '../repository';
+import axios from 'axios';
 
-let aprTtl = 0;
-let apr: number;
-let bustCache = false;
-
-/**
- * Controls API response 1h auto-caching, when true (default) it will return APR cached value.
- */
-export const cache = (state = true): void => {
-  bustCache = !state;
+export const yieldTokens = {
+  usdcUSDplus: '0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425',
+  usdcUSDplus2: '0x6933ec1ca55c06a894107860c92acdfd2dd8512f',
 };
 
 /**
- * Gets Lido APR
- *
- * @returns lido apr in bps
- */
-const getApr = async (): Promise<number> => {
-  try {
-    const response = await fetch(
-      'https://app.overnight.fi/api/balancer/week/apr'
-    );
-    const apr = await response.text();
-
-    return Math.round((parseFloat(apr) * 10000) / 100);
-  } catch (error) {
-    console.error('Failed to fetch USD+ APR:', error);
-    return 0;
-  }
-};
-
-/**
- * Business logic around APR fetching
+ * Overnight token APR fetching
  *
  * @returns cached APR for USD+
  */
 export const overnight: AprFetcher = async () => {
-  // cache for 1h
-  if (bustCache || Date.now() > aprTtl) {
-    apr = await getApr();
-    aprTtl = Date.now() + 1 * 60 * 60 * 1000;
+  let bsp = 0;
+  try {
+    const { data: rate } = await axios.get(
+      'https://app.overnight.fi/api/balancer/week/apr'
+    );
+    bsp = Math.round((parseFloat(rate) * 10000) / 100);
+  } catch (error) {
+    console.error('Failed to fetch USD+ APR:', error);
   }
 
-  return apr;
+  return Object.fromEntries(
+    Object.values(yieldTokens).map((address) => [address, bsp])
+  );
 };

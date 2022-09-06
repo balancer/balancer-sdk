@@ -33,24 +33,33 @@ export class Data implements BalancerDataRepositories {
   feeDistributor;
   feeCollector;
   tokenYields;
+  blockNumbers;
 
   constructor(networkConfig: BalancerNetworkConfig, provider: Provider) {
-    // Config data
-    const blockDayAgo = () => {
-      return new BlockNumberRepository(networkConfig.chainId).find('dayAgo');
-    };
-    const tokenAddresses = initialCoingeckoList
-      .filter((t) => t.chainId == networkConfig.chainId)
-      .map((t) => t.address);
-
     this.pools = new PoolsSubgraphRepository(networkConfig.urls.subgraph);
 
     // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
     // TODO: find a better data source for that, eg: maybe DUNE once API is available
-    this.yesterdaysPools = new PoolsSubgraphRepository(
-      networkConfig.urls.subgraph,
-      blockDayAgo
-    );
+    if (networkConfig.urls.blockNumberSubgraph) {
+      this.blockNumbers = new BlockNumberRepository(
+        networkConfig.urls.blockNumberSubgraph
+      );
+
+      const blockDayAgo = async () => {
+        if (this.blockNumbers) {
+          return await this.blockNumbers.find('dayAgo');
+        }
+      };
+
+      this.yesterdaysPools = new PoolsSubgraphRepository(
+        networkConfig.urls.subgraph,
+        blockDayAgo
+      );
+    }
+
+    const tokenAddresses = initialCoingeckoList
+      .filter((t) => t.chainId == networkConfig.chainId)
+      .map((t) => t.address);
 
     this.tokenPrices = new CoingeckoPriceRepository(
       tokenAddresses,
@@ -59,21 +68,33 @@ export class Data implements BalancerDataRepositories {
 
     this.tokenMeta = new StaticTokenProvider([]);
 
-    this.liquidityGauges = new LiquidityGaugeSubgraphRPCProvider(
-      networkConfig.urls.gaugesSubgraph,
-      networkConfig.addresses.contracts.multicall,
-      networkConfig.addresses.contracts.gaugeController,
-      provider
-    );
+    if (
+      networkConfig.urls.gaugesSubgraph &&
+      networkConfig.addresses.contracts.gaugeController
+    ) {
+      this.liquidityGauges = new LiquidityGaugeSubgraphRPCProvider(
+        networkConfig.urls.gaugesSubgraph,
+        networkConfig.addresses.contracts.multicall,
+        networkConfig.addresses.contracts.gaugeController,
+        provider
+      );
+    }
 
-    this.feeDistributor = new FeeDistributorRepository(
-      networkConfig.addresses.contracts.multicall,
-      networkConfig.addresses.contracts.feeDistributor,
-      networkConfig.addresses.tokens.bal,
-      networkConfig.addresses.tokens.veBal,
-      networkConfig.addresses.tokens.bbaUsd,
-      provider
-    );
+    if (
+      networkConfig.addresses.contracts.feeDistributor &&
+      networkConfig.addresses.tokens.bal &&
+      networkConfig.addresses.tokens.veBal &&
+      networkConfig.addresses.tokens.bbaUsd
+    ) {
+      this.feeDistributor = new FeeDistributorRepository(
+        networkConfig.addresses.contracts.multicall,
+        networkConfig.addresses.contracts.feeDistributor,
+        networkConfig.addresses.tokens.bal,
+        networkConfig.addresses.tokens.veBal,
+        networkConfig.addresses.tokens.bbaUsd,
+        provider
+      );
+    }
 
     this.feeCollector = new FeeCollectorRepository(
       networkConfig.addresses.contracts.vault,

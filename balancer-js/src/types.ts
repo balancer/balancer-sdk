@@ -47,8 +47,8 @@ export interface ContractAddresses {
   vault: string;
   multicall: string;
   lidoRelayer?: string;
-  gaugeController: string;
-  feeDistributor: string;
+  gaugeController?: string;
+  feeDistributor?: string;
 }
 
 export interface BalancerNetworkConfig {
@@ -60,14 +60,15 @@ export interface BalancerNetworkConfig {
       lbpRaisingTokens?: string[];
       stETH?: string;
       wstETH?: string;
-      bal: string;
-      veBal: string;
-      bbaUsd: string;
+      bal?: string;
+      veBal?: string;
+      bbaUsd?: string;
     };
   };
   urls: {
     subgraph: string;
-    gaugesSubgraph: string;
+    gaugesSubgraph?: string;
+    blockNumberSubgraph?: string;
   };
   pools: {
     wETHwstETH?: PoolReference;
@@ -76,11 +77,11 @@ export interface BalancerNetworkConfig {
 
 export interface BalancerDataRepositories {
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
-  yesterdaysPools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
   tokenMeta: Findable<Token, TokenAttribute>;
-  liquidityGauges: Findable<LiquidityGauge>;
-  feeDistributor: BaseFeeDistributor;
+  liquidityGauges?: Findable<LiquidityGauge>;
+  feeDistributor?: BaseFeeDistributor;
   feeCollector: Findable<number>;
   tokenYields: Findable<number>;
 }
@@ -232,14 +233,7 @@ export interface Pool {
   amp?: string;
   apr?: AprBreakdown;
   liquidity?: string;
-}
-
-/**
- * Live data controller used for caching or as a fallback for missing cached data
- */
-export interface PoolModel extends Pool {
-  calcLiquidity: () => Promise<string>;
-  calcApr: () => Promise<AprBreakdown>;
+  totalWeight: string;
 }
 
 /**
@@ -266,4 +260,5 @@ export interface PoolWithMethods extends Pool {
     amountsOut: string[],
     slippage: string
   ) => ExitPoolAttributes;
+  calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
 }
