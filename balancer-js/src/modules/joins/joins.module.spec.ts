@@ -4,6 +4,7 @@ import {
   BoostedParams,
   LinearParams,
   BoostedMetaBigParams,
+  BoostedMetaBigInfo,
 } from '@/test/factories/pools';
 import { StaticPoolRepository } from '../data';
 import { Pool } from '@/types';
@@ -11,6 +12,7 @@ import { Join } from './joins.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { Network } from '@/lib/constants/network';
 import { formatAddress } from '@/test/lib/utils';
+import { ADDRESSES } from '@/test/lib/constants';
 
 describe('Generalised Joins', () => {
   context('Boosted', () => {
@@ -246,7 +248,7 @@ describe('Generalised Joins', () => {
       });
 
       it('single linear token', async () => {
-        const inputTokens = ['address_STABLE'];
+        const inputTokens = [formatAddress('address_STABLE')];
         const inputAmounts = ['1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
@@ -298,7 +300,7 @@ describe('Generalised Joins', () => {
       });
 
       it('single linear token', async () => {
-        const inputTokens = ['address_STABLE'];
+        const inputTokens = [formatAddress('address_STABLE')];
         const inputAmounts = ['1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
@@ -323,6 +325,38 @@ describe('Generalised Joins', () => {
         );
       });
     });
+
+    context('bpt input', () => {
+      const isWrapped = false;
+      it('only bpt in', async () => {
+        const inputTokens = ['0x616464726573732d6368696c6400000000000000'];
+        const inputAmounts = ['1000000000000000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
+
+      it('bpt and leaf', async () => {
+        const inputTokens = [
+          '0x616464726573732d6368696c6400000000000000',
+          ADDRESSES[Network.MAINNET].DAI.address,
+        ];
+        const inputAmounts = ['1000000000000000000', '1000000000000000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
+    });
   });
 
   // TO DO - Add boostedMetaBig with different leaf tokens
@@ -331,6 +365,7 @@ describe('Generalised Joins', () => {
     let joinModule: Join;
     let rootPool: SubgraphPoolBase;
     let userAddress: string;
+    let boostedMetaBigInfo: BoostedMetaBigInfo;
     before(() => {
       userAddress = formatAddress('testAccount');
       // The boostedMetaBig will have a phantomStable with two boosted.
@@ -406,7 +441,7 @@ describe('Generalised Joins', () => {
         childPools: [childBoosted1, childBoosted2],
       };
 
-      const boostedMetaBigInfo = factories.boostedMetaBigPool
+      boostedMetaBigInfo = factories.boostedMetaBigPool
         .transient(parentPool)
         .build();
       rootPool = boostedMetaBigInfo.rootPool;
@@ -474,6 +509,55 @@ describe('Generalised Joins', () => {
       it('single boosted leaf token', async () => {
         const inputTokens = ['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'];
         const inputAmounts = ['1000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
+    });
+    context('bpt input', () => {
+      const isWrapped = false;
+      it('single bpt in', async () => {
+        const inputTokens = [
+          boostedMetaBigInfo.childPoolsInfo[0].rootPool.address,
+        ];
+        const inputAmounts = ['1000000000000000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
+
+      it('two bpt in', async () => {
+        const inputTokens = [
+          boostedMetaBigInfo.childPoolsInfo[0].rootPool.address,
+          boostedMetaBigInfo.childPoolsInfo[1].rootPool.address,
+        ];
+        const inputAmounts = ['1000000000000000000', '2000000000000000000'];
+        const root = await joinModule.joinPool(
+          rootPool.id,
+          '7777777',
+          inputTokens,
+          inputAmounts,
+          userAddress,
+          isWrapped
+        );
+      });
+
+      it('bpt and leaf', async () => {
+        const inputTokens = [
+          boostedMetaBigInfo.childPools[0].address,
+          ADDRESSES[Network.MAINNET].DAI.address,
+        ];
+        const inputAmounts = ['1000000000000000000', '1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
           '7777777',
