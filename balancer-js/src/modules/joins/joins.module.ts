@@ -49,6 +49,11 @@ export class Join {
       poolId,
       wrapMainTokens
     );
+
+    if (rootNode.type !== PoolType.ComposableStable) {
+      throw new Error('root pool type should be ComposableStable');
+    }
+
     const orderedNodes = poolsGraph.orderByBfs(rootNode);
 
     // Throws error if non-leaf tokens were provided as input
