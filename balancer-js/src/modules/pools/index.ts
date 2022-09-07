@@ -70,6 +70,8 @@ export class Pools implements Findable<PoolWithMethods> {
     networkConfig: BalancerNetworkConfig
   ): PoolWithMethods {
     const methods = PoolTypeConcerns.from(pool.poolType);
+    const wrappedNativeAsset =
+      networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
     return {
       ...pool,
       buildJoin: (
@@ -84,7 +86,7 @@ export class Pools implements Findable<PoolWithMethods> {
           tokensIn,
           amountsIn,
           slippage,
-          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+          wrappedNativeAsset,
         });
       },
       calcPriceImpact: async (amountsIn: string[], minBPTOut: string) =>
@@ -106,7 +108,7 @@ export class Pools implements Findable<PoolWithMethods> {
           bptIn,
           slippage,
           shouldUnwrapNativeAsset,
-          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+          wrappedNativeAsset,
           singleTokenMaxOut,
         }),
       buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) =>
@@ -116,7 +118,7 @@ export class Pools implements Findable<PoolWithMethods> {
           tokensOut,
           amountsOut,
           slippage,
-          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+          wrappedNativeAsset,
         }),
       // TODO: spotPrice fails, because it needs a subgraphType,
       // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
