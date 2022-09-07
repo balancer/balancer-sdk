@@ -1,0 +1,22 @@
+query PoolShare($id: ID!, $block: Block_height) {
+  poolShare(id: $id, block: $block) {
+    ...SubgraphPoolShare
+  }
+}
+
+query PoolShares {
+  poolShares {
+    ...SubgraphPoolShare
+  }
+}
+
+fragment SubgraphPoolShare on PoolShare {
+    id
+    balance
+    userAddress {
+      id
+    }
+    poolId {
+      id
+    }
+}
