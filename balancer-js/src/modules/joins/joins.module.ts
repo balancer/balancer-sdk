@@ -45,15 +45,15 @@ export class Join {
     const orderedNodes = await this.getGraphNodes(poolId, wrapMainTokens);
 
     // Throws error if non-leaf tokens were provided as input
-    const inputNodes = orderedNodes.filter((node) => node.action === 'input');
-    const nonInputTokens = tokens.filter(
-      (token) =>
-        !inputNodes.some(
-          (inputNode) => token.toLowerCase() === inputNode.address.toLowerCase()
-        )
-    );
-    if (nonInputTokens.length > 0)
-      throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
+    // const inputNodes = orderedNodes.filter((node) => node.action === 'input');
+    // const nonInputTokens = tokens.filter(
+    //   (token) =>
+    //     !inputNodes.some(
+    //       (inputNode) => token.toLowerCase() === inputNode.address.toLowerCase()
+    //     )
+    // );
+    // if (nonInputTokens.length > 0)
+    //   throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
 
     // Create calls for leaf token actions
     let calls = this.createActionCalls(
