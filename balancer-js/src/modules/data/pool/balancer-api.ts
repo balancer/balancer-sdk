@@ -85,6 +85,7 @@ export class PoolsBalancerAPIRepository
     );
 
     const attrs = this.query.attrs;
+    attrs.nextToken = true;
 
     const formattedQuery = {
       pools: {
@@ -98,6 +99,7 @@ export class PoolsBalancerAPIRepository
 
     this.nextToken = apiResponseData.nextToken;
     this.pools = this.pools.concat(apiResponseData.pools.map(this.format));
+    this.skip = this.pools.length;
 
     return this.fetchFromCache(options);
   }
