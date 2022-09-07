@@ -39,7 +39,7 @@ export class Join {
     minOut: string;
   }> {
     /*
-    - Create calls with 0 expected for each root join
+    - Create calls with 0 min bpt for each root join
     - static call (or V4 special call) to get actual amounts for each root join
     - Apply slippage to amounts
     - Recreate calls with minAmounts === actualAmountsWithSlippage
@@ -67,7 +67,6 @@ export class Join {
       minOut = minOut.add(expectedAmountsWithSlippage[key]);
     }
 
-    console.log(`\n ---------------------- NON-ZERO AMOUNTS --------`);
     // Create calls with minAmounts === actualAmountsWithSlippage
     const calls = await this.createCalls(
       poolId,
@@ -104,17 +103,6 @@ export class Join {
 
     // Create nodes for each pool/token interaction and order by breadth first
     const orderedNodes = await this.getGraphNodes(poolId, wrapMainTokens);
-
-    // Throws error if non-leaf tokens were provided as input
-    // const inputNodes = orderedNodes.filter((node) => node.action === 'input');
-    // const nonInputTokens = tokens.filter(
-    //   (token) =>
-    //     !inputNodes.some(
-    //       (inputNode) => token.toLowerCase() === inputNode.address.toLowerCase()
-    //     )
-    // );
-    // if (nonInputTokens.length > 0)
-    //   throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
 
     // Create calls for leaf token actions
     let calls = this.createActionCalls(

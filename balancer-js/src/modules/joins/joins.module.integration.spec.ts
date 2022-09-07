@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import hardhat from 'hardhat';
 
 import { BalancerSDK, Network, RelayerAuthorization } from '@/.';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256 } from '@ethersproject/constants';
@@ -57,23 +57,29 @@ const fromPool = {
   id: '0x9b532ab955417afd0d012eb9f7389457cd0ea712000000000000000000000338', // bbausd2
   address: addresses.bbausd2.address,
 };
-const tokensIn = [addresses.DAI.address, addresses.USDC.address];
+const mainTokens = [addresses.DAI.address, addresses.USDC.address];
+// joins with wrapping require token approvals. These are taken care of as part of fork setup when wrappedTokens passed in.
 const wrappedTokensIn = [
   addresses.waUSDT.address,
   addresses.waDAI.address,
   addresses.waUSDC.address,
 ];
+const linearPoolTokens = ['0xae37d54ae477268b9997d4161b96b8200755935c'];
 const slots = [addresses.DAI.slot, addresses.USDC.slot];
 const wrappedSlots = [
   addresses.waUSDT.slot,
   addresses.waDAI.slot,
   addresses.waUSDC.slot,
 ];
-const initialBalances = [
+const linearPoolSlots = [0];
+const mainInitialBalances = [
   parseFixed('100', addresses.DAI.decimals).toString(),
   parseFixed('100', addresses.USDC.decimals).toString(),
 ];
 const wrappedInitialBalances = ['0', '0', '0'];
+const linearInitialBalances = [
+  parseFixed('100', addresses.DAI.decimals).toString(),
+];
 
 const signRelayerApproval = async (
   relayerAddress: string,
@@ -105,19 +111,19 @@ const signRelayerApproval = async (
 describe('bbausd generalised join execution', async () => {
   let signerAddress: string;
   let authorisation: string;
-  let bptBalanceBefore: BigNumber;
-  let bptBalanceAfter: BigNumber;
-  let tokensBalanceBefore: BigNumber[];
-  let tokensBalanceAfter: BigNumber[];
 
   beforeEach(async function () {
     signerAddress = await signer.getAddress();
 
     await forkSetup(
       signer,
-      [...tokensIn, ...wrappedTokensIn],
-      [...slots, ...wrappedSlots],
-      [...initialBalances, ...wrappedInitialBalances],
+      [...mainTokens, ...wrappedTokensIn, ...linearPoolTokens],
+      [...slots, ...wrappedSlots, ...linearPoolSlots],
+      [
+        ...mainInitialBalances,
+        ...wrappedInitialBalances,
+        ...linearInitialBalances,
+      ],
       jsonRpcUrl as string,
       blockNumber
     );
@@ -126,23 +132,24 @@ describe('bbausd generalised join execution', async () => {
   });
 
   const testFlow = async (
-    wrapMainTokens = true,
+    tokensIn: string[],
+    amountIn: string[],
+    wrapMainTokens: boolean,
     previouslyAuthorised = false
   ) => {
-    [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
+    const [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
       [fromPool.address, ...tokensIn],
       signer,
       signerAddress
     );
 
     const gasLimit = MAX_GAS_LIMIT;
-
     const slippage = '0';
 
     const query = await pools.generalisedJoin(
       fromPool.id,
       tokensIn,
-      tokensBalanceBefore.map((b) => b.toString()),
+      amountIn,
       signerAddress,
       wrapMainTokens,
       slippage,
@@ -158,7 +165,7 @@ describe('bbausd generalised join execution', async () => {
     const receipt = await response.wait();
     console.log('Gas used', receipt.gasUsed.toString());
 
-    [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
+    const [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
       [fromPool.address, ...tokensIn],
       signer,
       signerAddress
@@ -167,7 +174,7 @@ describe('bbausd generalised join execution', async () => {
     expect(receipt.status).to.eql(1);
     expect(bptBalanceBefore.eq(0)).to.be.true;
     tokensBalanceBefore.forEach(
-      (b, i) => expect(b.eq(initialBalances[i])).to.be.true
+      (b, i) => expect(b.eq(mainInitialBalances[i])).to.be.true
     );
     tokensBalanceAfter.forEach((b) => expect(b.eq(0)).to.be.true);
     console.log(bptBalanceAfter.toString());
@@ -175,15 +182,18 @@ describe('bbausd generalised join execution', async () => {
     expect(bptBalanceAfter.gte(query.minOut)).to.be.true;
   };
 
-  context('wrapped tokens as input', async () => {
-    it('should transfer tokens from stable to boosted', async () => {
-      await testFlow();
+  context('leaf token input', async () => {
+    it('joins with no wrapping', async () => {
+      await testFlow(mainTokens, mainInitialBalances, false);
+    });
+    it('joins with wrapping', async () => {
+      await testFlow(mainTokens, mainInitialBalances, true);
     });
   });
 
-  context('main tokens as input', async () => {
-    it('should transfer tokens from stable to boosted', async () => {
-      await testFlow(true);
+  context('linear pool token as input', async () => {
+    it('joins boosted pool', async () => {
+      await testFlow(linearPoolTokens, linearInitialBalances, false);
     });
   });
 });
