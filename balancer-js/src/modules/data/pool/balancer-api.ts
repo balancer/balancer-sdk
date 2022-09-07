@@ -53,21 +53,24 @@ export class PoolsBalancerAPIRepository
     };
   }
 
-  fetchFromCache(options?: PoolsRepositoryFetchOptions): Pool[] {
+  fetchFromCache(
+    options?: PoolsRepositoryFetchOptions,
+    onlyFetchFullResultSet = false
+  ): Pool[] {
     const first = options?.first || 10;
     const skip = options?.skip || 0;
 
-    if (this.pools.length > skip + first) {
-      const pools = this.pools.slice(skip, first + skip);
-      this.skip = skip + first;
-      return pools;
+    if (onlyFetchFullResultSet && this.pools.length < skip + first) {
+      return [];
     }
 
-    return [];
+    const pools = this.pools.slice(skip, first + skip);
+    this.skip = skip + first;
+    return pools;
   }
 
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
-    const poolsFromCache = this.fetchFromCache(options);
+    const poolsFromCache = this.fetchFromCache(options, true);
     if (poolsFromCache.length) return poolsFromCache;
 
     if (this.nextToken) {
