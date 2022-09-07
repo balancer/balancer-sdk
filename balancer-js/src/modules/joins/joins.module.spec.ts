@@ -14,6 +14,8 @@ import { Network } from '@/lib/constants/network';
 import { formatAddress } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 
+const slippage = '0';
+
 describe('Generalised Joins', () => {
   context('Boosted', () => {
     let joinModule: Join;
@@ -64,7 +66,14 @@ describe('Generalised Joins', () => {
     it('should throw when pool doesnt exist', async () => {
       let errorMessage = '';
       try {
-        await joinModule.joinPool('thisisntapool', [], [], userAddress, true);
+        await joinModule.joinPool(
+          'thisisntapool',
+          [],
+          [],
+          userAddress,
+          true,
+          slippage
+        );
       } catch (error) {
         errorMessage = (error as Error).message;
       }
@@ -99,11 +108,11 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000000000000000'];
         await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
-          true
+          true,
+          slippage
         );
       } catch (error) {
         errorMessage = (error as Error).message;
@@ -125,7 +134,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
 
@@ -137,7 +147,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
     });
@@ -156,7 +167,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
 
@@ -168,7 +180,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
     });
@@ -271,7 +284,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
 
@@ -283,7 +297,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
 
@@ -295,7 +310,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
     });
@@ -320,7 +336,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
 
@@ -332,7 +349,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
 
@@ -344,7 +362,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
     });
@@ -359,7 +378,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
 
@@ -374,7 +394,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
     });
@@ -489,7 +510,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
 
@@ -501,7 +523,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
     });
@@ -520,7 +543,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
 
@@ -532,7 +556,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
       });
     });
@@ -548,7 +573,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
         console.log(root.minOut, 'minOut');
       });
@@ -563,7 +589,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
         expect(root.minOut).to.eq('3000000000000000000');
       });
@@ -579,7 +606,8 @@ describe('Generalised Joins', () => {
           inputTokens,
           inputAmounts,
           userAddress,
-          isWrapped
+          isWrapped,
+          slippage
         );
         expect(root.minOut).to.eq('3000000000000000000');
       });

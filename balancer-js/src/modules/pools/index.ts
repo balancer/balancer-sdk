@@ -82,24 +82,24 @@ export class Pools implements Findable<PoolWithMethods> {
    */
   async generalisedJoin(
     poolId: string,
-    expectedBPTOut: string,
     tokens: string[],
     amounts: string[],
     userAddress: string,
     wrapMainTokens: boolean,
+    slippage: string,
     authorisation?: string
   ): Promise<{
     to: string;
-    data: string;
-    decode: (output: string) => string;
+    callData: string;
+    minOut: string;
   }> {
     return this.joinService.joinPool(
       poolId,
-      expectedBPTOut,
       tokens,
       amounts,
       userAddress,
       wrapMainTokens,
+      slippage,
       authorisation
     );
   }

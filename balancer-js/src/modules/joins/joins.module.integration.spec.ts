@@ -6,7 +6,7 @@ import { BalancerSDK, Network, RelayerAuthorization } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { MaxInt256, MaxUint256 } from '@ethersproject/constants';
+import { MaxUint256 } from '@ethersproject/constants';
 import { forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 
@@ -127,7 +127,6 @@ describe('bbausd generalised join execution', async () => {
 
   const testFlow = async (
     wrapMainTokens = true,
-    minBptOut: undefined | string = undefined,
     previouslyAuthorised = false
   ) => {
     [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
@@ -138,35 +137,21 @@ describe('bbausd generalised join execution', async () => {
 
     const gasLimit = MAX_GAS_LIMIT;
 
-    // let query = await pool.generalisedJoin(
-    //   '0',
-    //   tokensIn,
-    //   tokensBalanceBefore.map((b) => b.toString()),
-    //   signerAddress,
-    //   authorisation
-    // );
-    // Static call can be used to simulate tx and get expected BPT in/out deltas
-    // const staticResult = await signer.call({
-    //   to: query.to,
-    //   data: query.data,
-    // });
-    // const bptOut = query.decode(staticResult); // pending implementation
-    // console.log(bptOut);
-    const bptOut = '0';
+    const slippage = '0';
 
     const query = await pools.generalisedJoin(
       fromPool.id,
-      minBptOut ? minBptOut : bptOut,
       tokensIn,
       tokensBalanceBefore.map((b) => b.toString()),
       signerAddress,
       wrapMainTokens,
+      slippage,
       previouslyAuthorised ? undefined : authorisation
     );
 
     const response = await signer.sendTransaction({
       to: query.to,
-      data: query.data,
+      data: query.callData,
       gasLimit,
     });
 
@@ -181,42 +166,24 @@ describe('bbausd generalised join execution', async () => {
 
     expect(receipt.status).to.eql(1);
     expect(bptBalanceBefore.eq(0)).to.be.true;
-    expect(bptBalanceAfter.gt(0)).to.be.true;
     tokensBalanceBefore.forEach(
       (b, i) => expect(b.eq(initialBalances[i])).to.be.true
     );
     tokensBalanceAfter.forEach((b) => expect(b.eq(0)).to.be.true);
+    console.log(bptBalanceAfter.toString());
+    console.log(query.minOut);
+    expect(bptBalanceAfter.gte(query.minOut)).to.be.true;
   };
 
   context('wrapped tokens as input', async () => {
     it('should transfer tokens from stable to boosted', async () => {
       await testFlow();
     });
-
-    it('should transfer tokens from stable to boosted - limit should fail', async () => {
-      let errorMessage = '';
-      try {
-        await testFlow(false, MaxInt256.toString());
-      } catch (error) {
-        errorMessage = (error as Error).message;
-      }
-      expect(errorMessage).to.contain('BAL#208'); // BPT_OUT_MIN_AMOUNT - BPT out below minimum expected
-    });
   });
 
   context('main tokens as input', async () => {
     it('should transfer tokens from stable to boosted', async () => {
       await testFlow(true);
-    });
-
-    it('should transfer tokens from stable to boosted - limit should fail', async () => {
-      let errorMessage = '';
-      try {
-        await testFlow(true, MaxInt256.toString());
-      } catch (error) {
-        errorMessage = (error as Error).message;
-      }
-      expect(errorMessage).to.contain('BAL#208'); // BPT_OUT_MIN_AMOUNT - BPT out below minimum expected
     });
   });
 });

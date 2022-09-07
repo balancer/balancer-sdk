@@ -31,8 +31,8 @@ export class Join {
     amounts: string[],
     userAddress: string,
     wrapMainTokens: boolean,
-    authorisation?: string,
-    slippage?: string // TODO change to non-conditional
+    slippage: string,
+    authorisation?: string
   ): Promise<{
     to: string;
     callData: string;
