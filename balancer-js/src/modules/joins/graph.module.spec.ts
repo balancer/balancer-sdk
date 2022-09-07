@@ -114,7 +114,7 @@ function checkBoosted(
     boostedPool.id,
     boostedPool.address,
     'StablePhantom',
-    'joinPool',
+    'batchSwap',
     3,
     boostedIndex.toString(),
     expectedProportionOfParent
@@ -149,7 +149,7 @@ function checkBoostedMeta(
     boostedMetaInfo.rootInfo.pool.id,
     boostedMetaInfo.rootInfo.pool.address,
     'StablePhantom',
-    'joinPool',
+    'batchSwap',
     2,
     '0',
     '1'
@@ -191,7 +191,7 @@ function checkBoostedMetaBig(
     boostedMetaBigInfo.rootPool.id,
     boostedMetaBigInfo.rootPool.address,
     'StablePhantom',
-    'joinPool',
+    'batchSwap',
     2,
     '0',
     '1'

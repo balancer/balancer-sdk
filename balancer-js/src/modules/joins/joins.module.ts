@@ -5,8 +5,8 @@ import { AddressZero, MaxInt256 } from '@ethersproject/constants';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
-import { WeightedPoolEncoder } from '@/pool-weighted';
-import { JoinPoolRequest } from '@/types';
+import { StablePoolEncoder } from '@/pool-stable';
+import { JoinPoolRequest, PoolType } from '@/types';
 import { PoolRepository } from '../data';
 import { PoolGraph, Node } from './graph';
 
@@ -38,8 +38,22 @@ export class Join {
     data: string;
     decode: (output: string) => string;
   }> {
+    if (tokens.length != amounts.length)
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+
     // Create nodes for each pool/token interaction and order by breadth first
     const orderedNodes = await this.getGraphNodes(poolId, wrapMainTokens);
+
+    // Throws error if non-leaf tokens were provided as input
+    const inputNodes = orderedNodes.filter((node) => node.action === 'input');
+    const nonInputTokens = tokens.filter(
+      (token) =>
+        !inputNodes.some(
+          (inputNode) => token.toLowerCase() === inputNode.address.toLowerCase()
+        )
+    );
+    if (nonInputTokens.length > 0)
+      throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
 
     // Create calls for leaf token actions
     let calls = this.createActionCalls(
@@ -87,7 +101,7 @@ export class Join {
       to: this.relayer,
       data: callData,
       decode: (output) => {
-        return 'todo'; // TODO: add decode function
+        return output; // TODO: add decode function
       },
     };
   }
@@ -104,6 +118,11 @@ export class Join {
       poolId,
       wrapMainTokens
     );
+
+    if (rootNode.type !== PoolType.ComposableStable) {
+      throw new Error('root pool type should be ComposableStable');
+    }
+
     return PoolGraph.orderByBfs(rootNode);
   }
 
@@ -125,21 +144,28 @@ export class Join {
     orderedNodes.forEach((node) => {
       // if all child nodes have 0 output amount, then forward it to outputRef and skip adding current call
       if (
-        node.action !== 'input' &&
+        node.children.length > 0 &&
         node.children.filter((c) => c.outputReference !== '0').length === 0
       ) {
         node.outputReference = '0';
         return;
       }
-      const expectedOut = node.id === rootId ? expectedBPTOut : '0';
-      const sender = node.children.some((child) => child.action === 'input') // first chained action
-        ? userAddress
-        : this.relayer;
-      const recipient = node.id === rootId ? userAddress : this.relayer; // last chained action
+
+      const hasLeafNodeAsChild = node.children.some(
+        (children) =>
+          children.action === 'input' ||
+          children.action === 'wrapAaveDynamicToken'
+      );
+      const sender = hasLeafNodeAsChild ? userAddress : this.relayer;
+
+      const isLastChainedCall = node.id === rootId;
+      const recipient = isLastChainedCall ? userAddress : this.relayer;
+      const expectedOut = isLastChainedCall ? expectedBPTOut : '0';
+
       switch (node.action) {
-        // TO DO - Add other Relayer supported Unwraps
+        // TODO - Add other Relayer supported Unwraps
         case 'wrapAaveDynamicToken':
-          calls.push(this.createAaveWrap(node, sender, recipient));
+          calls.push(this.createAaveWrap(node, sender, userAddress)); // relayer is not allowed to spend its own wrapped tokens, so recipient must be the user
           break;
         case 'batchSwap':
           calls.push(
@@ -215,18 +241,21 @@ export class Join {
       .mul(amounts[tokenIndex])
       .div((1e18).toString());
     node.outputReference = inputAmount.toString();
-    console.log(
-      node.type,
-      node.address,
-      node.action,
-      `Inputs: ${inputAmount.toString()}`,
-      `OutputRef: ${node.outputReference}`,
-      node.proportionOfParent.toString()
-    );
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+    //   ${node.action} (
+    //     Inputs: ${inputAmount.toString()}
+    //     OutputRef: ${node.outputReference}
+    //   )`
+    // );
   }
 
   createAaveWrap(node: Node, sender: string, recipient: string): string {
-    const childNode = node.children[0]; // TODO: check if it's possible to have more than one child at this type of node
+    // Throws error based on the assumption that aaveWrap apply only to input tokens from leaf nodes
+    if (node.children.length !== 1)
+      throw new Error('aaveWrap nodes should always have a single child node');
+
+    const childNode = node.children[0];
 
     const staticToken = node.address;
     const amount = childNode.outputReference;
@@ -235,17 +264,18 @@ export class Join {
       sender,
       recipient,
       amount,
-      fromUnderlying: true, // TODO: check if we should handle the false case as well
+      fromUnderlying: true,
       outputReference: Relayer.toChainedReference(node.outputReference),
     });
 
-    console.log(
-      node.type,
-      node.address,
-      `${
-        node.action
-      }(staticToken: ${staticToken}, input: ${amount}, outputRef: ${node.outputReference.toString()}) prop: ${node.proportionOfParent.toString()}`
-    );
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+    //   ${node.action} (
+    //     staticToken: ${staticToken},
+    //     input: ${amount},
+    //     outputRef: ${node.outputReference.toString()}
+    //   )`
+    // );
 
     return call;
   }
@@ -256,21 +286,16 @@ export class Join {
     sender: string,
     recipient: string
   ): string {
-    // TO DO - Create actual swap call for Relayer multicall
-    const inputAmt = node.children[0].outputReference;
-    const inputToken = node.children[0].address;
-    const outputToken = node.address;
-    const expectedOutputAmount = expectedOut; // This could be used if joining a pool via a swap, e.g. Linear
-    const poolId = node.id;
-    console.log(
-      node.type,
-      node.address,
-      `${
-        node.action
-      }(\n  inputAmt: ${inputAmt},\n  inputToken: ${inputToken},\n  pool: ${poolId},\n  outputToken: ${outputToken},\n  outputRef: ${
-        node.outputReference
-      }\n) prop: ${node.proportionOfParent.toString()}`
-    );
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+    //   ${node.action}(
+    //     inputAmt: ${node.children[0].outputReference},
+    //     inputToken: ${node.children[0].address},
+    //     pool: ${node.id},
+    //     outputToken: ${node.address},
+    //     outputRef: ${node.outputReference}
+    //   )`
+    // );
 
     const inputTokens: string[] = [];
     const inputAmts: string[] = [];
@@ -279,7 +304,9 @@ export class Join {
       if (child.outputReference !== '0') {
         inputTokens.push(child.address);
         inputAmts.push(
-          Relayer.toChainedReference(child.outputReference).toString()
+          child.action === 'input'
+            ? child.outputReference
+            : Relayer.toChainedReference(child.outputReference).toString()
         );
       }
     });
@@ -338,56 +365,74 @@ export class Join {
     sender: string,
     recipient: string
   ): string {
-    const poolId = node.id;
     const inputTokens: string[] = [];
     const inputAmts: string[] = [];
-    const childOutputRefs: string[] = []; // for testing purposes only
 
+    // inputTokens needs to include each asset even if it has 0 amount
     node.children.forEach((child) => {
-      if (child.outputReference !== '0') {
-        inputTokens.push(child.address);
-        inputAmts.push(
-          Relayer.toChainedReference(child.outputReference).toString()
-        );
-        childOutputRefs.push(child.outputReference);
-      }
+      inputTokens.push(child.address);
+      inputAmts.push(
+        child.outputReference !== '0'
+          ? Relayer.toChainedReference(child.outputReference).toString()
+          : '0'
+      );
     });
 
-    console.log(
-      node.type,
-      node.address,
-      `${
-        node.action
-      }(\n  poolId: ${poolId},\n  inputTokens: ${inputTokens.toString()},\n  maxAmtsIn: ${childOutputRefs.toString()},\n  minOut: ${minAmountOut}\n  outputRef: ${
-        node.outputReference
-      }\n) prop: ${node.proportionOfParent.toString()}`
-    );
+    if (node.type === PoolType.ComposableStable) {
+      // assets need to include the phantomPoolToken
+      inputTokens.push(node.address);
+      // need to add a placeholder so sorting works
+      inputAmts.push('0');
+    }
 
-    const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+    //   ${node.action}(
+    //     poolId: ${node.id},
+    //     inputTokens: ${inputTokens.toString()},
+    //     maxAmtsIn: ${node.children.map((c) => c.outputReference).toString()},
+    //     minOut: ${minAmountOut}
+    //     outputRef: ${node.outputReference}
+    //   )`
+    // );
+
     // sort inputs
+    const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
       inputTokens,
       inputAmts
     ) as [string[], string[]];
 
-    const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
-      sortedAmounts,
+    // userData amounts should not include the BPT of the pool being joined
+    let userDataAmounts = [];
+    const bptIndex = sortedTokens.indexOf(node.address);
+    if (bptIndex === -1) {
+      userDataAmounts = sortedAmounts;
+    } else {
+      userDataAmounts = [
+        ...sortedAmounts.slice(0, bptIndex),
+        ...sortedAmounts.slice(bptIndex + 1),
+      ];
+    }
+
+    const userData = StablePoolEncoder.joinExactTokensInForBPTOut(
+      userDataAmounts,
       minAmountOut
     );
 
-    // TODO: validate if ETH logic applies here
+    // TODO: add test to join weth/wsteth pool using ETH
     const ethIndex = sortedTokens.indexOf(AddressZero);
     const value = ethIndex === -1 ? '0' : sortedAmounts[ethIndex];
 
     const call = Relayer.constructJoinCall({
       poolId: node.id,
-      poolKind: 0, // TODO: figure out how to define this number
+      poolKind: 0,
       sender,
       recipient,
       value,
-      outputReference: Relayer.toChainedReference(node.outputReference),
+      outputReference: '0',
       joinPoolRequest: {} as JoinPoolRequest,
-      assets: sortedTokens,
+      assets: sortedTokens, // Must include BPT token
       maxAmountsIn: sortedAmounts,
       userData,
       fromInternalBalance: sender === this.relayer,

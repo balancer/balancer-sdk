@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import hardhat from 'hardhat';
+
 import { BalancerSDK, Network, RelayerAuthorization } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
@@ -29,8 +30,6 @@ import { ADDRESSES } from '@/test/lib/constants';
  * - Uncomment section below:
  */
 const network = Network.MAINNET;
-const poolId =
-  '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe';
 const blockNumber = 15372650;
 
 dotenv.config();
@@ -43,35 +42,38 @@ const rpcUrl = 'http://127.0.0.1:8545';
 const sdk = new BalancerSDK({
   network,
   rpcUrl,
+  customSubgraphUrl: `https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta`,
 });
 const { pools } = sdk;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
+const signer = provider.getSigner();
 const { contracts, contractAddresses } = new Contracts(
   network as number,
   provider
 );
-const relayer = contractAddresses.relayer as string; // only currenlty supported on GOERLI
+const relayer = contractAddresses.relayer as string;
+const addresses = ADDRESSES[network];
 const fromPool = {
-  id: poolId,
-  address: ADDRESSES[network].bbausd.address,
-}; // bbausd
-const tokensIn = [
-  ADDRESSES[network].USDT.address,
-  ADDRESSES[network].DAI.address,
-  ADDRESSES[network].USDC.address,
+  id: '0x9b532ab955417afd0d012eb9f7389457cd0ea712000000000000000000000338', // bbausd2
+  address: addresses.bbausd2.address,
+};
+const tokensIn = [addresses.DAI.address, addresses.USDC.address];
+const wrappedTokensIn = [
+  addresses.waUSDT.address,
+  addresses.waDAI.address,
+  addresses.waUSDC.address,
 ];
-// Slots used to set the account balance for each token through hardhat_setStorageAt
-// Info fetched using npm package slot20
-const slots = [
-  ADDRESSES[network].USDT.slot,
-  ADDRESSES[network].DAI.slot,
-  ADDRESSES[network].USDC.slot,
+const slots = [addresses.DAI.slot, addresses.USDC.slot];
+const wrappedSlots = [
+  addresses.waUSDT.slot,
+  addresses.waDAI.slot,
+  addresses.waUSDC.slot,
 ];
 const initialBalances = [
-  parseFixed('0', ADDRESSES[network].USDT.decimals).toString(),
-  parseFixed('100', ADDRESSES[network].DAI.decimals).toString(),
-  parseFixed('100', ADDRESSES[network].USDC.decimals).toString(),
+  parseFixed('100', addresses.DAI.decimals).toString(),
+  parseFixed('100', addresses.USDC.decimals).toString(),
 ];
+const wrappedInitialBalances = ['0', '0', '0'];
 
 const signRelayerApproval = async (
   relayerAddress: string,
@@ -101,7 +103,6 @@ const signRelayerApproval = async (
 };
 
 describe('bbausd generalised join execution', async () => {
-  let signer: JsonRpcSigner;
   let signerAddress: string;
   let authorisation: string;
   let bptBalanceBefore: BigNumber;
@@ -110,29 +111,25 @@ describe('bbausd generalised join execution', async () => {
   let tokensBalanceAfter: BigNumber[];
 
   beforeEach(async function () {
-    this.timeout(20000);
-
-    signer = provider.getSigner();
     signerAddress = await signer.getAddress();
-    authorisation = await signRelayerApproval(relayer, signerAddress, signer);
 
     await forkSetup(
       signer,
-      tokensIn,
-      slots,
-      initialBalances,
+      [...tokensIn, ...wrappedTokensIn],
+      [...slots, ...wrappedSlots],
+      [...initialBalances, ...wrappedInitialBalances],
       jsonRpcUrl as string,
       blockNumber
     );
+
+    authorisation = await signRelayerApproval(relayer, signerAddress, signer);
   });
 
-  async function testFlow(
-    previouslyAuthorised = false,
-    minBptOut: undefined | string = undefined
-  ): Promise<string> {
-    // TODO - Add cases for wrapped and non-wrapped
-    const wrapMainTokens = true;
-
+  const testFlow = async (
+    wrapMainTokens = true,
+    minBptOut: undefined | string = undefined,
+    previouslyAuthorised = false
+  ) => {
     [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
       [fromPool.address, ...tokensIn],
       signer,
@@ -185,26 +182,41 @@ describe('bbausd generalised join execution', async () => {
     expect(receipt.status).to.eql(1);
     expect(bptBalanceBefore.eq(0)).to.be.true;
     expect(bptBalanceAfter.gt(0)).to.be.true;
-    tokensBalanceBefore.forEach((b, i) => expect(b.eq(tokensIn[i])).to.be.true);
+    tokensBalanceBefore.forEach(
+      (b, i) => expect(b.eq(initialBalances[i])).to.be.true
+    );
     tokensBalanceAfter.forEach((b) => expect(b.eq(0)).to.be.true);
-    return bptOut;
-  }
+  };
 
-  let bptOut: string;
-
-  context('not staked', async () => {
-    it('should transfer tokens from stable to boosted - without minBPT limit', async () => {
-      bptOut = await testFlow();
-    }).timeout(20000);
+  context('wrapped tokens as input', async () => {
+    it('should transfer tokens from stable to boosted', async () => {
+      await testFlow();
+    });
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
       try {
-        await testFlow(false, BigNumber.from(bptOut).add(MaxInt256).toString());
+        await testFlow(false, MaxInt256.toString());
       } catch (error) {
         errorMessage = (error as Error).message;
       }
-      expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
-    }).timeout(20000);
+      expect(errorMessage).to.contain('BAL#208'); // BPT_OUT_MIN_AMOUNT - BPT out below minimum expected
+    });
   });
-}).timeout(20000);
+
+  context('main tokens as input', async () => {
+    it('should transfer tokens from stable to boosted', async () => {
+      await testFlow(true);
+    });
+
+    it('should transfer tokens from stable to boosted - limit should fail', async () => {
+      let errorMessage = '';
+      try {
+        await testFlow(true, MaxInt256.toString());
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain('BAL#208'); // BPT_OUT_MIN_AMOUNT - BPT out below minimum expected
+    });
+  });
+});

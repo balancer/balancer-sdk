@@ -68,6 +68,11 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'bbausd',
     },
+    bbausd2: {
+      address: '0x9b532ab955417afd0d012eb9f7389457cd0ea712',
+      decimals: 18,
+      symbol: 'bbausd2',
+    },
     bbausdc: {
       address: '0x9210F1204b5a24742Eba12f710636D76240dF3d0',
       decimals: 18,
