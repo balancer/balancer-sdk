@@ -16,6 +16,7 @@ export interface GraphQLArgs {
   chainId?: number;
   first?: number;
   skip?: number;
+  nextToken?: string;
   orderBy?: string;
   orderDirection?: string;
   block?: {
