@@ -11356,8 +11356,17 @@ class PoolsBalancerAPIRepository {
         const poolsFromCache = this.fetchFromCache(options);
         if (poolsFromCache.length)
             return poolsFromCache;
+        if (this.nextToken) {
+            this.query.args.nextToken = this.nextToken;
+        }
+        if (options === null || options === void 0 ? void 0 : options.first) {
+            // We need to request more than they specified because filtering is done post limit
+            // e.g. if we ask for 10 we may get 7 because 3 were filtered out.
+            this.query.args.first = options.first * 2;
+        }
         const formattedArgs = new GraphQLArgsBuilder(this.query.args).format(new BalancerAPIArgsFormatter());
         const attrs = this.query.attrs;
+        attrs.nextToken = true;
         const formattedQuery = {
             pools: {
                 __args: formattedArgs,
@@ -11366,8 +11375,9 @@ class PoolsBalancerAPIRepository {
         };
         const apiResponse = await this.client.get(formattedQuery);
         const apiResponseData = apiResponse.pools;
-        this.nextToken = apiResponseData.skip;
-        this.pools = apiResponseData.pools.map(this.format);
+        this.nextToken = apiResponseData.nextToken;
+        this.pools = this.pools.concat(apiResponseData.pools.map(this.format));
+        this.skip = this.pools.length;
         return this.fetchFromCache(options);
     }
     async find(id) {
