@@ -1,6 +1,6 @@
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
-import { AddressZero, MaxInt256 } from '@ethersproject/constants';
+import { AddressZero, MaxInt256, WeiPerEther } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
@@ -27,16 +27,77 @@ export class Join {
 
   async joinPool(
     poolId: string,
-    expectedBPTOut: string,
     tokens: string[],
     amounts: string[],
     userAddress: string,
     wrapMainTokens: boolean,
+    authorisation?: string,
+    slippage?: string // TODO change to non-conditional
+  ): Promise<{
+    to: string;
+    callData: string;
+    minOut: string;
+  }> {
+    /*
+    - Create calls with 0 expected for each root join
+    - static call (or V4 special call) to get actual amounts for each root join
+    - Apply slippage to amounts
+    - Recreate calls with minAmounts === actualAmountsWithSlippage
+    - Return minAmoutOut (sum actualAmountsWithSlippage), UI would use this to display to user
+    - Return updatedCalls, UI would use this to execute tx
+    */
+    // Create calls with 0 expected for each root join
+    const info = await this.createCalls(
+      poolId,
+      tokens,
+      amounts,
+      userAddress,
+      wrapMainTokens,
+      undefined,
+      authorisation
+    );
+
+    // static call (or V4 special call) to get actual amounts for each root join
+    const expectedAmounts = await this.queryOutputRefs(info.outputRefs);
+    // TODO Apply slippage to amounts
+    const expectedAmountsWithSlippage = expectedAmounts;
+    // minAmoutOut (sum actualAmountsWithSlippage), UI would use this to display to user
+    let minOut = BigNumber.from('0');
+    for (const key in expectedAmountsWithSlippage) {
+      minOut = minOut.add(expectedAmountsWithSlippage[key]);
+    }
+
+    console.log(`\n ---------------------- NON-ZERO AMOUNTS --------`);
+    // Create calls with minAmounts === actualAmountsWithSlippage
+    const calls = await this.createCalls(
+      poolId,
+      tokens,
+      amounts,
+      userAddress,
+      wrapMainTokens,
+      expectedAmountsWithSlippage,
+      authorisation
+    );
+
+    return {
+      to: this.relayer,
+      callData: calls.data,
+      minOut: minOut.toString(),
+    };
+  }
+
+  async createCalls(
+    poolId: string,
+    tokens: string[],
+    amounts: string[],
+    userAddress: string,
+    wrapMainTokens: boolean,
+    expectedAmounts?: Record<string, string>,
     authorisation?: string
   ): Promise<{
     to: string;
     data: string;
-    decode: (output: string) => string;
+    outputRefs: string[];
   }> {
     // Create nodes for each pool/token interaction and order by breadth first
     const orderedNodes = await this.getGraphNodes(poolId, wrapMainTokens);
@@ -45,12 +106,16 @@ export class Join {
     let calls = this.createActionCalls(
       orderedNodes,
       poolId,
-      expectedBPTOut,
+      expectedAmounts ? expectedAmounts['0'] : '0',
       tokens.map((token) => token.toLowerCase()),
       amounts,
       userAddress,
       authorisation
     );
+
+    // List of outputRefs for each path that finishes on Root node
+    const rootOutputRefs: string[] = [];
+    if (calls.length > 0) rootOutputRefs.push('0');
 
     const leafTokens = PoolGraph.getLeafAddresses(orderedNodes);
     const nonLeafInputs = tokens.filter((t) => !leafTokens.includes(t));
@@ -64,13 +129,18 @@ export class Join {
         tokenInput,
         opRefIndex
       );
+      console.log(nodes[nodes.length - 1].outputReference, 'NODE REFERENCE');
+      rootOutputRefs.push(nodes[nodes.length - 1].outputReference);
+      // TODO find outputnode ref
       // outPutRef needs to be unique
       opRefIndex = orderedNodes.length + nodes.length;
       // Create calls for path
       const inputCalls = this.createActionCalls(
         nodes,
         poolId,
-        '0', // TODO We will have to pass in the expected amounts for each input
+        expectedAmounts
+          ? expectedAmounts[nodes[nodes.length - 1].outputReference]
+          : '0',
         [tokenInput],
         [amounts[i]],
         userAddress
@@ -86,10 +156,17 @@ export class Join {
     return {
       to: this.relayer,
       data: callData,
-      decode: (output) => {
-        return 'todo'; // TODO: add decode function
-      },
+      outputRefs: rootOutputRefs,
     };
+  }
+
+  async queryOutputRefs(outputRefs: string[]): Promise<Record<string, string>> {
+    // TODO Add method to query relayer (waiting for SC)
+    const results: Record<string, string> = {};
+    outputRefs.forEach(
+      (op, i) => (results[op] = WeiPerEther.mul(i + 1).toString())
+    );
+    return results;
   }
 
   async getGraphNodes(
@@ -132,6 +209,7 @@ export class Join {
         return;
       }
       const expectedOut = node.id === rootId ? expectedBPTOut : '0';
+
       const sender = node.children.some((child) => child.action === 'input') // first chained action
         ? userAddress
         : this.relayer;

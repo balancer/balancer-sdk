@@ -64,14 +64,7 @@ describe('Generalised Joins', () => {
     it('should throw when pool doesnt exist', async () => {
       let errorMessage = '';
       try {
-        await joinModule.joinPool(
-          'thisisntapool',
-          '0',
-          [],
-          [],
-          userAddress,
-          true
-        );
+        await joinModule.joinPool('thisisntapool', [], [], userAddress, true);
       } catch (error) {
         errorMessage = (error as Error).message;
       }
@@ -89,7 +82,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000000000000000', '1000000', '1000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -102,7 +94,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -122,7 +113,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000000000000000', '1000000', '1000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -135,7 +125,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -239,7 +228,6 @@ describe('Generalised Joins', () => {
         ];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -252,7 +240,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -265,7 +252,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -291,7 +277,6 @@ describe('Generalised Joins', () => {
         ];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -304,7 +289,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -317,7 +301,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -333,7 +316,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -349,7 +331,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000000000000000', '1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -465,7 +446,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000000000000000', '1000000', '1000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -478,7 +458,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -498,7 +477,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000000000000000', '1000000', '1000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -511,7 +489,6 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
@@ -528,28 +505,27 @@ describe('Generalised Joins', () => {
         const inputAmounts = ['1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
           isWrapped
         );
+        console.log(root.minOut, 'minOut');
       });
-
       it('two bpt in', async () => {
         const inputTokens = [
           boostedMetaBigInfo.childPoolsInfo[0].rootPool.address,
           boostedMetaBigInfo.childPoolsInfo[1].rootPool.address,
         ];
-        const inputAmounts = ['1000000000000000000', '2000000000000000000'];
+        const inputAmounts = ['7000000000000000000', '8000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
           isWrapped
         );
+        expect(root.minOut).to.eq('3000000000000000000');
       });
 
       it('bpt and leaf', async () => {
@@ -557,15 +533,15 @@ describe('Generalised Joins', () => {
           boostedMetaBigInfo.childPools[0].address,
           ADDRESSES[Network.MAINNET].DAI.address,
         ];
-        const inputAmounts = ['1000000000000000000', '1000000000000000000'];
+        const inputAmounts = ['7000000000000000000', '8000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,
-          '7777777',
           inputTokens,
           inputAmounts,
           userAddress,
           isWrapped
         );
+        expect(root.minOut).to.eq('3000000000000000000');
       });
     });
   });
