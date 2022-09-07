@@ -11328,18 +11328,18 @@
                 attrs: ((_b = options.query) === null || _b === void 0 ? void 0 : _b.attrs) || defaultAttributes,
             };
         }
-        fetchFromCache(options) {
+        fetchFromCache(options, onlyFetchFullResultSet = false) {
             const first = (options === null || options === void 0 ? void 0 : options.first) || 10;
             const skip = (options === null || options === void 0 ? void 0 : options.skip) || 0;
-            if (this.pools.length > skip + first) {
-                const pools = this.pools.slice(skip, first + skip);
-                this.skip = skip + first;
-                return pools;
+            if (onlyFetchFullResultSet && this.pools.length < skip + first) {
+                return [];
             }
-            return [];
+            const pools = this.pools.slice(skip, first + skip);
+            this.skip = skip + first;
+            return pools;
         }
         async fetch(options) {
-            const poolsFromCache = this.fetchFromCache(options);
+            const poolsFromCache = this.fetchFromCache(options, true);
             if (poolsFromCache.length)
                 return poolsFromCache;
             if (this.nextToken) {

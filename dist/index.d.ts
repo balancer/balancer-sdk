@@ -2683,7 +2683,7 @@ declare class PoolsBalancerAPIRepository implements Findable<Pool, PoolAttribute
     nextToken: string | undefined;
     private query;
     constructor(options: PoolsBalancerAPIOptions);
-    fetchFromCache(options?: PoolsRepositoryFetchOptions): Pool[];
+    fetchFromCache(options?: PoolsRepositoryFetchOptions, onlyFetchFullResultSet?: boolean): Pool[];
     fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]>;
     find(id: string): Promise<Pool | undefined>;
     findBy(param: PoolAttribute, value: string): Promise<Pool | undefined>;
