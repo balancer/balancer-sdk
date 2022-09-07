@@ -22,13 +22,13 @@
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "dev": "rollup -c -w",
-    "test": "ts-mocha --paths --recursive -p tsconfig.testing.json 'src/**/*.spec.ts'",
-    "test:only": "ts-mocha --paths --recursive -p tsconfig.testing.json",
+    "test": "ts-mocha --paths --recursive -p tsconfig.testing.json 'src/**/*.spec.ts' --timeout 20000",
+    "test:only": "ts-mocha --paths --recursive -p tsconfig.testing.json --timeout 20000",
     "lint": "eslint ./src --ext .ts --max-warnings 0",
     "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
     "subgraph:generate": "graphql-codegen --config src/modules/subgraph/codegen.yml -r dotenv/config",
     "examples:run": "TS_NODE_PROJECT='tsconfig.testing.json' ts-node -r tsconfig-paths/register",
-    "node": "npx hardhat node --fork $(grep ALCHEMY_URL .env | cut -d '=' -f2)"
+    "node": "npx hardhat node --fork $(grep ALCHEMY_URL .env | cut -d '=' -f2 | tail -1)"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.0",
@@ -40,6 +40,7 @@
     "@ethersproject/contracts": "^5.4.0",
     "@ethersproject/providers": "^5.4.5",
     "@ethersproject/solidity": "^5.6.1",
+    "@ethersproject/units": "^5.7.0",
     "@ethersproject/wallet": "^5.5.0",
     "@graphql-codegen/add": "^3.1.0",
     "@graphql-codegen/cli": "^2.3.0",
@@ -62,6 +63,7 @@
     "@types/node": "^15.12.4",
     "@typescript-eslint/eslint-plugin": "^4.1.1",
     "@typescript-eslint/parser": "^4.1.1",
+    "axios-mock-adapter": "^1.21.2",
     "chai": "^4.2.0",
     "dotenv": "^10.0.0",
     "eslint": "^7.9.0",
@@ -71,6 +73,7 @@
     "fishery": "^2.2.2",
     "hardhat": "^2.9.3",
     "mocha": "^8.2.1",
+    "mockdate": "^3.0.5",
     "prettier": "^2.1.2",
     "rimraf": "^3.0.2",
     "rollup": "^2.52.8",

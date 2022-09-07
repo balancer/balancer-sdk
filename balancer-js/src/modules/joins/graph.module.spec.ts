@@ -113,7 +113,7 @@ function checkBoosted(
     boostedNode,
     boostedPool.id,
     boostedPool.address,
-    'StablePhantom',
+    'ComposableStable',
     'joinPool',
     3,
     boostedIndex.toString(),
@@ -148,7 +148,7 @@ function checkBoostedMeta(
     rootNode,
     boostedMetaInfo.rootInfo.pool.id,
     boostedMetaInfo.rootInfo.pool.address,
-    'StablePhantom',
+    'ComposableStable',
     'joinPool',
     2,
     '0',
@@ -190,7 +190,7 @@ function checkBoostedMetaBig(
     rootNode,
     boostedMetaBigInfo.rootPool.id,
     boostedMetaBigInfo.rootPool.address,
-    'StablePhantom',
+    'ComposableStable',
     'joinPool',
     2,
     '0',
@@ -383,7 +383,7 @@ describe('Graph', () => {
         expect(orderedNodes[6].type).to.eq('AaveLinear');
         expect(orderedNodes[7].type).to.eq('AaveLinear');
         expect(orderedNodes[8].type).to.eq('AaveLinear');
-        expect(orderedNodes[9].type).to.eq('StablePhantom');
+        expect(orderedNodes[9].type).to.eq('ComposableStable');
       });
     });
 
@@ -415,7 +415,7 @@ describe('Graph', () => {
         expect(orderedNodes[3].type).to.eq('AaveLinear');
         expect(orderedNodes[4].type).to.eq('AaveLinear');
         expect(orderedNodes[5].type).to.eq('AaveLinear');
-        expect(orderedNodes[6].type).to.eq('StablePhantom');
+        expect(orderedNodes[6].type).to.eq('ComposableStable');
       });
     });
   });
@@ -521,8 +521,8 @@ describe('Graph', () => {
         expect(orderedNodes[9].type).to.eq('AaveLinear');
         expect(orderedNodes[10].type).to.eq('AaveLinear');
         expect(orderedNodes[11].type).to.eq('AaveLinear');
-        expect(orderedNodes[12].type).to.eq('StablePhantom');
-        expect(orderedNodes[13].type).to.eq('StablePhantom');
+        expect(orderedNodes[12].type).to.eq('ComposableStable');
+        expect(orderedNodes[13].type).to.eq('ComposableStable');
       });
     });
 
@@ -549,8 +549,8 @@ describe('Graph', () => {
         expect(orderedNodes[5].type).to.eq('AaveLinear');
         expect(orderedNodes[6].type).to.eq('AaveLinear');
         expect(orderedNodes[7].type).to.eq('AaveLinear');
-        expect(orderedNodes[8].type).to.eq('StablePhantom');
-        expect(orderedNodes[9].type).to.eq('StablePhantom');
+        expect(orderedNodes[8].type).to.eq('ComposableStable');
+        expect(orderedNodes[9].type).to.eq('ComposableStable');
       });
     });
 
@@ -735,9 +735,9 @@ describe('Graph', () => {
         expect(orderedNodes[15].type).to.eq('AaveLinear');
         expect(orderedNodes[16].type).to.eq('AaveLinear');
         expect(orderedNodes[17].type).to.eq('AaveLinear');
-        expect(orderedNodes[18].type).to.eq('StablePhantom');
-        expect(orderedNodes[19].type).to.eq('StablePhantom');
-        expect(orderedNodes[20].type).to.eq('StablePhantom');
+        expect(orderedNodes[18].type).to.eq('ComposableStable');
+        expect(orderedNodes[19].type).to.eq('ComposableStable');
+        expect(orderedNodes[20].type).to.eq('ComposableStable');
       });
     });
 
@@ -768,9 +768,9 @@ describe('Graph', () => {
         expect(orderedNodes[9].type).to.eq('AaveLinear');
         expect(orderedNodes[10].type).to.eq('AaveLinear');
         expect(orderedNodes[11].type).to.eq('AaveLinear');
-        expect(orderedNodes[12].type).to.eq('StablePhantom');
-        expect(orderedNodes[13].type).to.eq('StablePhantom');
-        expect(orderedNodes[14].type).to.eq('StablePhantom');
+        expect(orderedNodes[12].type).to.eq('ComposableStable');
+        expect(orderedNodes[13].type).to.eq('ComposableStable');
+        expect(orderedNodes[14].type).to.eq('ComposableStable');
       });
     });
     context('nodes to root', () => {

@@ -7,9 +7,6 @@ import {
   BalancerSDK,
   Network,
   Pool,
-  PoolModel,
-  PoolToken,
-  StaticPoolRepository,
 } from '@/.';
 import hardhat from 'hardhat';
 
@@ -17,22 +14,20 @@ import { TransactionReceipt } from '@ethersproject/providers';
 import { parseFixed, BigNumber } from '@ethersproject/bignumber';
 
 import { ADDRESSES } from '@/test/lib/constants';
-import { forkSetup, setupPool, getBalances } from '@/test/lib/utils';
+import { forkSetup, getBalances } from '@/test/lib/utils';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import { PoolsProvider } from '@/modules/pools/provider';
+import { Pools } from '../../../';
 
 dotenv.config();
 
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 
-let balancer: BalancerSDK;
 const rpcUrl = 'http://127.0.0.1:8545';
 const network = Network.MAINNET;
-const sdkConfig = {
-  network,
-  rpcUrl,
-};
+const sdk = new BalancerSDK({ network, rpcUrl });
+const { networkConfig } = sdk;
+
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
 let signerAddress: string;
@@ -44,9 +39,17 @@ const slots = [ADDRESSES[network].wSTETH.slot, ADDRESSES[network].WETH.slot];
 const initialBalance = '100000';
 const amountsInDiv = '10000'; // TODO: setting amountsInDiv to 1000 will fail test due to stable math convergence issue - check if that's expected from maths
 
-let tokensIn: PoolToken[];
 let amountsIn: string[];
 // Test scenarios
+
+const pool = pools_14717479.find(
+  (pool) =>
+    pool.id ==
+    '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080' // stETH_stable_pool_id
+) as unknown as Pool;
+const tokensIn = pool.tokens;
+
+const controller = Pools.wrap(pool, networkConfig);
 
 describe('join execution', async () => {
   let transactionReceipt: TransactionReceipt;
@@ -55,31 +58,11 @@ describe('join execution', async () => {
   let bptBalanceAfter: BigNumber;
   let tokensBalanceBefore: BigNumber[];
   let tokensBalanceAfter: BigNumber[];
-  let pool: PoolModel;
 
   // Setup chain
   before(async function () {
     this.timeout(20000);
-    // Using a static repository to make test consistent over time
-    const poolsProvider = new PoolsProvider(
-      sdkConfig,
-      new StaticPoolRepository(pools_14717479 as Pool[])
-    );
-    balancer = new BalancerSDK(
-      sdkConfig,
-      undefined,
-      undefined,
-      undefined,
-      poolsProvider
-    );
-    const poolSetup = await setupPool(
-      poolsProvider,
-      '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080' // Balancer stETH Stable Pool
-    );
-    if (!poolSetup) throw Error('Error setting up pool.');
-    pool = poolSetup;
-    tokensIn = pool.tokens;
-    const balances = pool.tokens.map((token) =>
+    const balances = tokensIn.map((token) =>
       parseFixed(initialBalance, token.decimals).toString()
     );
     await forkSetup(
@@ -108,12 +91,13 @@ describe('join execution', async () => {
 
       const slippage = '1';
 
-      const { to, data, minBPTOut } = pool.buildJoin(
+      const { to, data, minBPTOut } = controller.buildJoin(
         signerAddress,
         tokensIn.map((t) => t.address),
         amountsIn,
         slippage
       );
+
       const tx = { to, data };
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
@@ -131,7 +115,10 @@ describe('join execution', async () => {
 
     it('price impact calculation', async () => {
       const minBPTOut = bptMinBalanceIncrease.toString();
-      const priceImpact = await pool.calcPriceImpact(amountsIn, minBPTOut);
+      const priceImpact = await controller.calcPriceImpact(
+        amountsIn,
+        minBPTOut
+      );
       expect(priceImpact).to.eql('100000000010000');
     });
 
@@ -164,13 +151,14 @@ describe('join execution', async () => {
       );
 
       const slippage = '100';
-      const { functionName, attributes, value, minBPTOut } = pool.buildJoin(
-        signerAddress,
-        tokensIn.map((t) => t.address),
-        amountsIn,
-        slippage
-      );
-      const transactionResponse = await balancer.contracts.vault
+      const { functionName, attributes, value, minBPTOut } =
+        controller.buildJoin(
+          signerAddress,
+          tokensIn.map((t) => t.address),
+          amountsIn,
+          slippage
+        );
+      const transactionResponse = await sdk.contracts.vault
         .connect(signer)
         [functionName](...Object.values(attributes), { value });
       transactionReceipt = await transactionResponse.wait();
@@ -215,7 +203,7 @@ describe('join execution', async () => {
       const slippage = '10';
       let errorMessage;
       try {
-        pool.buildJoin(
+        controller.buildJoin(
           signerAddress,
           tokensIn.map((t) => t.address),
           amountsIn,

@@ -1,14 +1,14 @@
 import { BigNumber } from '@ethersproject/bignumber';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
-import { AddressZero } from '@ethersproject/constants';
+import { AddressZero, MaxUint256 } from '@ethersproject/constants';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
 import { formatBytes32String } from '@ethersproject/strings';
 
-import { PoolModel, BalancerError, BalancerErrorCode } from '@/.';
+import { PoolWithMethods, BalancerError, BalancerErrorCode } from '@/.';
 import { balancerVault } from '@/lib/constants/config';
 import { ERC20 } from '@/modules/contracts/ERC20';
-import { PoolsProvider } from '@/modules/pools/provider';
+import { Pools as PoolsProvider } from '@/modules/pools';
 
 /**
  * Setup local fork with approved token balance for a given account
@@ -41,7 +41,7 @@ export const forkSetup = async (
     // Set initial account balance for each token that will be used to join pool
     await setTokenBalance(signer, tokens[i], slots[i], balances[i]);
     // Approve appropriate allowances so that vault contract can move tokens
-    await approveToken(tokens[i], balances[i], signer);
+    await approveToken(tokens[i], MaxUint256.toString(), signer);
   }
 };
 
@@ -103,7 +103,7 @@ export const approveToken = async (
 export const setupPool = async (
   provider: PoolsProvider,
   poolId: string
-): Promise<PoolModel> => {
+): Promise<PoolWithMethods> => {
   const pool = await provider.find(poolId);
   if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
   return pool;

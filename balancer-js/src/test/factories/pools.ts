@@ -30,7 +30,7 @@ export type LinearInfo = {
   linearPoolTokens: SubgraphToken[];
 };
 
-export interface PhantomStableParams {
+export interface ComposableStableParams {
   id: string;
   symbol: string;
   address: string;
@@ -38,7 +38,7 @@ export interface PhantomStableParams {
   tokenbalance: string;
 }
 
-export type PhantomStableInfo = {
+export type ComposableStableInfo = {
   pool: Pool;
   poolToken: SubgraphToken;
 };
@@ -69,7 +69,7 @@ export interface ChildBoostedInfo extends BoostedInfo {
 }
 
 export interface BoostedMetaInfo {
-  rootInfo: PhantomStableInfo;
+  rootInfo: ComposableStableInfo;
   childBoostedInfo: ChildBoostedInfo;
   childLinearInfo: LinearInfo;
 }
@@ -90,7 +90,7 @@ export interface BoostedMetaBigInfo {
 
 /*
 Create a set of Linear pools and associated tokens:
-LinearPools consisting of wrappedToken, mainToken, phantomBpt
+LinearPools consisting of wrappedToken, mainToken, composableBpt
 */
 const linearPools = Factory.define<LinearInfo, LinearParams>(
   ({ transientParams }) => {
@@ -122,7 +122,7 @@ const linearPools = Factory.define<LinearInfo, LinearParams>(
           balance: '9711834',
         })
         .build();
-      const phantomBptToken = subgraphToken
+      const composableBptToken = subgraphToken
         .transient({
           symbol: `b${pool.tokens.mainSymbol}_${pool.tokens.wrappedSymbol}`,
           balance: '5192296829399898',
@@ -135,18 +135,18 @@ const linearPools = Factory.define<LinearInfo, LinearParams>(
         ),
         address: poolAddress,
         poolType: 'AaveLinear',
-        tokens: [mainToken, wrappedToken, phantomBptToken],
+        tokens: [mainToken, wrappedToken, composableBptToken],
         wrappedIndex: 1,
         mainIndex: 0,
         tokensList: [
           mainToken.address,
           wrappedToken.address,
-          phantomBptToken.address,
+          composableBptToken.address,
         ],
       });
       // Update the pool token to have the expected balance set in input
-      phantomBptToken.balance = pool.balance;
-      linearPoolTokens.push(phantomBptToken);
+      composableBptToken.balance = pool.balance;
+      linearPoolTokens.push(composableBptToken);
       mainTokens.push(mainToken);
       wrappedTokens.push(wrappedToken);
       const proportion = BigNumber.from(pool.balance)
@@ -170,43 +170,44 @@ const linearPools = Factory.define<LinearInfo, LinearParams>(
 );
 
 /*
-Create and return a phantomStable pool (with phantomBpt) and token.
+Create and return a composableStable pool (with composableBpt) and token.
 */
-const phantomStablePool = Factory.define<
-  PhantomStableInfo,
-  PhantomStableParams
+const composableStablePool = Factory.define<
+  ComposableStableInfo,
+  ComposableStableParams
 >(({ transientParams }) => {
-  // Create phantomStable BPT
-  const phantomBptToken = subgraphToken
+  const { id, address, symbol, childTokens, tokenbalance } = transientParams;
+  // Create composableStable BPT
+  const composableBptToken = subgraphToken
     .transient({
-      symbol: transientParams.symbol,
-      balance: '5192296829399898', // need phantomBpt balance for pool
-      address: transientParams.address,
+      symbol,
+      balance: '5192296829399898', // need composableBpt balance for pool
+      address,
     })
     .build();
 
-  // Create phantomStable pool
+  // Create composableStable pool
   const pool = subgraphPoolBase.build({
-    id: transientParams.id,
-    address: transientParams.address,
-    poolType: 'StablePhantom',
+    poolType: 'ComposableStable',
+    id,
+    address,
     totalWeight: undefined,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    tokens: [...transientParams.childTokens!, phantomBptToken],
+    tokens: [...childTokens!, composableBptToken],
   });
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  phantomBptToken.balance = transientParams.tokenbalance!;
+  composableBptToken.balance = tokenbalance!;
 
   return {
     pool: { ...pool, proportionOfParent: '1' },
-    poolToken: phantomBptToken,
+    poolToken: composableBptToken,
   };
 });
 
 /*
-Check a boostedPool, a phantomStable with all constituents being Linear.
-Also creates associated LinearPools consisting of wrappedToken, mainToken, phantomBpt.
+Check a boostedPool, a composableStable with all constituents being Linear.
+Also creates associated LinearPools consisting of wrappedToken, mainToken, composableBpt.
 */
 const boostedPool = Factory.define<BoostedInfo, BoostedParams>(
   ({ transientParams }) => {
@@ -235,7 +236,10 @@ const boostedPool = Factory.define<BoostedInfo, BoostedParams>(
       childTokens: linearPoolInfo.linearPoolTokens,
       tokenbalance: rootBalance,
     };
-    const rootInfo = phantomStablePool.build({}, { transient: rootPoolParams });
+    const rootInfo = composableStablePool.build(
+      {},
+      { transient: rootPoolParams }
+    );
 
     return {
       rootPool: rootInfo.pool,
@@ -249,8 +253,8 @@ const boostedPool = Factory.define<BoostedInfo, BoostedParams>(
 );
 
 /*
-Check a boostedMetaPool, a phantomStable with one Linear and one boosted.
-Also creates associated boosted and LinearPools consisting of wrappedToken, mainToken, phantomBpt.
+Check a boostedMetaPool, a composableStable with one Linear and one boosted.
+Also creates associated boosted and LinearPools consisting of wrappedToken, mainToken, composableBpt.
 */
 const boostedMetaPool = Factory.define<BoostedMetaInfo, BoostedMetaParams>(
   ({ transientParams }) => {
@@ -311,7 +315,10 @@ const boostedMetaPool = Factory.define<BoostedMetaInfo, BoostedMetaParams>(
       childTokens: [childBoostedBpt, ...childLinearInfo.linearPoolTokens],
       tokenbalance: rootBalance,
     };
-    const rootInfo = phantomStablePool.build({}, { transient: rootPoolParams });
+    const rootInfo = composableStablePool.build(
+      {},
+      { transient: rootPoolParams }
+    );
 
     return {
       rootInfo,
@@ -325,8 +332,8 @@ const boostedMetaPool = Factory.define<BoostedMetaInfo, BoostedMetaParams>(
 );
 
 /*
-Check a boostedMetaBigPool, a phantomStable with two boosted.
-Also creates associated boosted and LinearPools consisting of wrappedToken, mainToken, phantomBpt.
+Check a boostedMetaBigPool, a composableStable with two boosted.
+Also creates associated boosted and LinearPools consisting of wrappedToken, mainToken, composableBpt.
 */
 const boostedMetaBigPool = Factory.define<
   BoostedMetaBigInfo,
@@ -335,7 +342,7 @@ const boostedMetaBigPool = Factory.define<
   const childPoolsInfo: ChildBoostedInfo[] = [];
   // These will be used in parent pool
   const childPoolTokens: SubgraphToken[] = [];
-  // These will include phantomStables and linear pools
+  // These will include composableStables and linear pools
   const childPools: Pool[] = [];
 
   if (transientParams.childPools === undefined)
@@ -364,14 +371,17 @@ const boostedMetaBigPool = Factory.define<
     childPoolTokens.push(childBoosted.rootPoolToken);
   }
 
-  const phantomParams = {
+  const composableParams = {
     id: formatId(transientParams.rootId as string),
-    symbol: 'parentPhantom',
+    symbol: 'parentComposable',
     address: formatAddress(transientParams.rootAddress as string),
     childTokens: childPoolTokens,
     tokenbalance: transientParams.rootBalance,
   };
-  const rootInfo = phantomStablePool.build({}, { transient: phantomParams });
+  const rootInfo = composableStablePool.build(
+    {},
+    { transient: composableParams }
+  );
 
   return {
     rootPool: rootInfo.pool,
