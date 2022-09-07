@@ -7,6 +7,7 @@ describe('Liquidity gauge multicall', () => {
   const provider = new JsonRpcProvider('http://127.0.0.1:8545', 1);
   const fetcher = new LiquidityGaugesMulticallRepository(
     '0xeefba1e63905ef1d7acba5a8513c70307c1ce441',
+    1,
     provider
   );
 

@@ -4,6 +4,7 @@ import { Interface } from '@ethersproject/abi';
 import { Contract } from '@ethersproject/contracts';
 import { formatUnits } from '@ethersproject/units';
 import { BigNumber } from '@ethersproject/bignumber';
+import type { Network } from '@/types';
 
 const liquidityGaugeV5Interface = new Interface([
   'function totalSupply() view returns (uint)',
@@ -29,7 +30,11 @@ export interface RewardData {
 export class LiquidityGaugesMulticallRepository {
   multicall: Contract;
 
-  constructor(multicallAddress: string, provider: Provider) {
+  constructor(
+    multicallAddress: string,
+    private chainId: Network,
+    provider: Provider
+  ) {
     this.multicall = Multicall(multicallAddress, provider);
   }
 
@@ -58,9 +63,13 @@ export class LiquidityGaugesMulticallRepository {
   async getWorkingSupplies(
     gaugeAddresses: string[]
   ): Promise<{ [gaugeAddress: string]: number }> {
+    let functionName = 'working_supply';
+    if (this.chainId != 1) {
+      functionName = 'totalSupply';
+    }
     const payload = gaugeAddresses.map((gaugeAddress) => [
       gaugeAddress,
-      liquidityGaugeV5Interface.encodeFunctionData('working_supply', []),
+      liquidityGaugeV5Interface.encodeFunctionData(functionName, []),
     ]);
     const [, res] = await this.multicall.aggregate(payload);
     // Handle 0x
@@ -80,21 +89,32 @@ export class LiquidityGaugesMulticallRepository {
   async getRewardCounts(
     gaugeAddresses: string[]
   ): Promise<{ [gaugeAddress: string]: number }> {
-    const payload = gaugeAddresses.map((gaugeAddress) => [
-      gaugeAddress,
-      liquidityGaugeV5Interface.encodeFunctionData('reward_count', []),
-    ]);
-    const [, res] = await this.multicall.aggregate(payload);
-    // Handle 0x return values
-    const res0x = res.map((r: string) => (r == '0x' ? '0x0' : r));
+    let rewardCounts;
+    if (this.chainId == 1) {
+      const payload = gaugeAddresses.map((gaugeAddress) => [
+        gaugeAddress,
+        liquidityGaugeV5Interface.encodeFunctionData('reward_count', []),
+      ]);
+      const [, res] = await this.multicall.aggregate(payload);
+      // Handle 0x return values
+      const res0x = res.map((r: string) => (r == '0x' ? '0x0' : r));
 
-    const rewardCounts = gaugeAddresses.reduce(
-      (p: { [key: string]: number }, a, i) => {
-        p[a] ||= parseInt(res0x[i]);
-        return p;
-      },
-      {}
-    );
+      rewardCounts = gaugeAddresses.reduce(
+        (p: { [key: string]: number }, a, i) => {
+          p[a] ||= parseInt(res0x[i]);
+          return p;
+        },
+        {}
+      );
+    } else {
+      rewardCounts = gaugeAddresses.reduce(
+        (p: { [key: string]: number }, a) => {
+          p[a] ||= 1;
+          return p;
+        },
+        {}
+      );
+    }
 
     return rewardCounts;
   }

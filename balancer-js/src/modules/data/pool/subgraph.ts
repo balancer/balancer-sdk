@@ -8,6 +8,7 @@ import {
 } from '@/modules/subgraph/subgraph';
 import { PoolAttribute } from './types';
 import { Pool, PoolType } from '@/types';
+import { Network } from '@/lib/constants/network';
 
 /**
  * Access pools using generated subgraph client.
@@ -24,10 +25,12 @@ export class PoolsSubgraphRepository
    * Repository with optional lazy loaded blockHeight
    *
    * @param url subgraph URL
+   * @param chainId current network, needed for L2s logic
    * @param blockHeight lazy loading blockHeigh resolver
    */
   constructor(
     url: string,
+    private chainId: Network,
     private blockHeight?: () => Promise<number | undefined>
   ) {
     this.client = createSubgraphClient(url);
@@ -74,7 +77,7 @@ export class PoolsSubgraphRepository
       await this.fetch();
     }
 
-    return this.pools.map(this.mapType);
+    return this.pools.map(this.mapType.bind(this));
   }
 
   async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
@@ -90,6 +93,7 @@ export class PoolsSubgraphRepository
       id: subgraphPool.id,
       name: subgraphPool.name || '',
       address: subgraphPool.address,
+      chainId: this.chainId,
       poolType: subgraphPool.poolType as PoolType,
       swapFee: subgraphPool.swapFee,
       swapEnabled: subgraphPool.swapEnabled,

@@ -28,6 +28,7 @@ const poolFactory = Factory.define<Pool>(({ params, afterBuild }) => {
     id: '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e',
     name: 'Test Pool',
     address: '0xa6f548df93de924d73be7d25dc02554c6bd66db5',
+    chainId: 1,
     poolType: PoolType.Weighted,
     swapFee: '0.001',
     swapEnabled: true,

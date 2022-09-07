@@ -63,7 +63,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-polygon',
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
     },

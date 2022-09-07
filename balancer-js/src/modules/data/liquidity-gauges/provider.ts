@@ -7,6 +7,7 @@ import type {
 } from '@/modules/subgraph/subgraph';
 import type { Findable } from '../types';
 import type { Provider } from '@ethersproject/providers';
+import type { Network } from '@/types';
 
 export interface LiquidityGauge {
   id: string;
@@ -23,7 +24,7 @@ export interface LiquidityGauge {
 export class LiquidityGaugeSubgraphRPCProvider
   implements Findable<LiquidityGauge>
 {
-  gaugeController: GaugeControllerMulticallRepository;
+  gaugeController?: GaugeControllerMulticallRepository;
   multicall: LiquidityGaugesMulticallRepository;
   subgraph: LiquidityGaugesSubgraphRepository;
   totalSupplies: { [gaugeAddress: string]: number } = {};
@@ -37,15 +38,19 @@ export class LiquidityGaugeSubgraphRPCProvider
     subgraphUrl: string,
     multicallAddress: string,
     gaugeControllerAddress: string,
+    chainId: Network,
     provider: Provider
   ) {
-    this.gaugeController = new GaugeControllerMulticallRepository(
-      multicallAddress,
-      gaugeControllerAddress,
-      provider
-    );
+    if (gaugeControllerAddress) {
+      this.gaugeController = new GaugeControllerMulticallRepository(
+        multicallAddress,
+        gaugeControllerAddress,
+        provider
+      );
+    }
     this.multicall = new LiquidityGaugesMulticallRepository(
       multicallAddress,
+      chainId,
       provider
     );
     this.subgraph = new LiquidityGaugesSubgraphRepository(subgraphUrl);
@@ -59,9 +64,11 @@ export class LiquidityGaugeSubgraphRPCProvider
       gaugeAddresses
     );
     this.rewardTokens = await this.multicall.getRewardData(gaugeAddresses);
-    this.relativeWeights = await this.gaugeController.getRelativeWeights(
-      gaugeAddresses
-    );
+    if (this.gaugeController) {
+      this.relativeWeights = await this.gaugeController.getRelativeWeights(
+        gaugeAddresses
+      );
+    }
   }
 
   async find(id: string): Promise<LiquidityGauge | undefined> {

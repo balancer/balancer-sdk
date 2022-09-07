@@ -9,7 +9,7 @@ import type {
   TokenAttribute,
   LiquidityGauge,
 } from '@/types';
-import { BaseFeeDistributor } from '@/modules/data';
+import { BaseFeeDistributor, RewardData } from '@/modules/data';
 import { ProtocolRevenue } from './protocol-revenue';
 import { Liquidity } from '@/modules/liquidity/liquidity.module';
 
@@ -173,7 +173,8 @@ export class PoolApr {
    * @returns APR [bsp] from protocol rewards.
    */
   async stakingApr(pool: Pool, boost = 1): Promise<number> {
-    if (!this.liquidityGauges) {
+    // For L2s BAL is emmited as a reward token
+    if (!this.liquidityGauges || pool.chainId != 1) {
       return 0;
     }
 
@@ -229,28 +230,7 @@ export class PoolApr {
     const rewards = rewardTokenAddresses.map(async (tAddress) => {
       /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */
       const data = gauge!.rewardTokens![tAddress];
-      if (data.period_finish.toNumber() < Date.now() / 1000) {
-        return {
-          address: tAddress,
-          value: 0,
-        };
-      } else {
-        const yearlyReward = data.rate.mul(86400).mul(365);
-        const price = await this.tokenPrices.find(tAddress);
-        if (price && price.usd) {
-          const meta = await this.tokenMeta.find(tAddress);
-          const decimals = meta?.decimals || 18;
-          const yearlyRewardUsd =
-            parseFloat(formatUnits(yearlyReward, decimals)) *
-            parseFloat(price.usd);
-          return {
-            address: tAddress,
-            value: yearlyRewardUsd,
-          };
-        } else {
-          throw `No USD price for ${tAddress}`;
-        }
-      }
+      return this.rewardTokenApr(tAddress, data);
     });
 
     // Get the gauge totalSupplyUsd
@@ -396,5 +376,30 @@ export class PoolApr {
     const fee = await this.feeCollector.find('');
 
     return fee ? fee : 0;
+  }
+
+  private async rewardTokenApr(tokenAddress: string, rewardData: RewardData) {
+    if (rewardData.period_finish.toNumber() < Date.now() / 1000) {
+      return {
+        address: tokenAddress,
+        value: 0,
+      };
+    } else {
+      const yearlyReward = rewardData.rate.mul(86400).mul(365);
+      const price = await this.tokenPrices.find(tokenAddress);
+      if (price && price.usd) {
+        const meta = await this.tokenMeta.find(tokenAddress);
+        const decimals = meta?.decimals || 18;
+        const yearlyRewardUsd =
+          parseFloat(formatUnits(yearlyReward, decimals)) *
+          parseFloat(price.usd);
+        return {
+          address: tokenAddress,
+          value: yearlyRewardUsd,
+        };
+      } else {
+        throw `No USD price for ${tokenAddress}`;
+      }
+    }
   }
 }
