@@ -1,6 +1,6 @@
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
-import { AddressZero, MaxInt256, WeiPerEther } from '@ethersproject/constants';
+import { AddressZero, MaxInt256 } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
@@ -47,7 +47,7 @@ export class Join {
     - Return updatedCalls, UI would use this to execute tx
     */
     // Create calls with 0 expected for each root join
-    const info = await this.createCalls(
+    const callsWithNoMin = await this.createCalls(
       poolId,
       tokens,
       amounts,
@@ -58,29 +58,31 @@ export class Join {
     );
 
     // static call (or V4 special call) to get actual amounts for each root join
-    const expectedAmounts = await this.queryOutputRefs(info.outputRefs);
+    const expectedAmounts = await this.queryOutputRefs(
+      callsWithNoMin.outputRefs
+    );
     // TODO Apply slippage to amounts
-    const expectedAmountsWithSlippage = expectedAmounts;
+    const minAmounts = expectedAmounts;
     // minAmoutOut (sum actualAmountsWithSlippage), UI would use this to display to user
     let minOut = BigNumber.from('0');
-    for (const key in expectedAmountsWithSlippage) {
-      minOut = minOut.add(expectedAmountsWithSlippage[key]);
+    for (const key in minAmounts) {
+      minOut = minOut.add(minAmounts[key]);
     }
 
     // Create calls with minAmounts === actualAmountsWithSlippage
-    const calls = await this.createCalls(
+    const callsWithMin = await this.createCalls(
       poolId,
       tokens,
       amounts,
       userAddress,
       wrapMainTokens,
-      expectedAmountsWithSlippage,
+      minAmounts,
       authorisation
     );
 
     return {
       to: this.relayer,
-      callData: calls.data,
+      callData: callsWithMin.callData,
       minOut: minOut.toString(),
     };
   }
@@ -95,22 +97,25 @@ export class Join {
     authorisation?: string
   ): Promise<{
     to: string;
-    data: string;
+    callData: string;
     outputRefs: string[];
   }> {
     if (tokensIn.length != amountsIn.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodes = await this.getGraphNodes(poolId, wrapMainTokens);
+    const orderedNodes = await this.getGraphNodes(
+      poolId,
+      tokensIn,
+      amountsIn,
+      wrapMainTokens
+    );
 
     // Create calls for leaf token actions - this considers full tree.
     let leafCalls = this.createActionCalls(
       orderedNodes,
       poolId,
       minBptAmounts ? minBptAmounts['0'] : '0',
-      tokensIn.map((token) => token.toLowerCase()),
-      amountsIn,
       userAddress,
       authorisation
     );
@@ -123,36 +128,31 @@ export class Join {
     const nonLeafInputs = tokensIn.filter((t) => !leafTokens.includes(t));
     let opRefIndex = orderedNodes.length;
     // For each non-leaf input create a call chain to root
-    nonLeafInputs.forEach((tokenInput, i) => {
+    nonLeafInputs.forEach((tokenInput) => {
       console.log(`------- Non-leaf input ${tokenInput}`);
-      // Find path to root
-      const nodes = PoolGraph.getNodesToRoot(
+      // Find path to root and update amounts
+      const nodesToRoot = this.getNodesToRootFromToken(
         orderedNodes,
+        tokensIn,
+        amountsIn,
         tokenInput,
         opRefIndex
       );
-      // console.log(nodes);
-
-      if (nodes.length === 0 || nodes[nodes.length - 1].id !== poolId)
-        throw new Error('No join path for token');
-      // The last node will be joining root and we want this reference to find amount out
-      rootOutputRefs.push(nodes[nodes.length - 1].outputReference);
-      // Update ref index to be unique for next path
-      opRefIndex = orderedNodes.length + nodes.length;
+      // The last node will be joining root and we want this reference to find final amount out
+      const rootNode = nodesToRoot[nodesToRoot.length - 1];
+      rootOutputRefs.push(rootNode.outputReference);
       // Create calls for path, use value stored in minBptAmounts if available
       const inputCalls = this.createActionCalls(
-        nodes,
+        nodesToRoot,
         poolId,
-        minBptAmounts
-          ? minBptAmounts[nodes[nodes.length - 1].outputReference]
-          : '0',
-        [tokenInput],
-        [amountsIn[i]],
+        minBptAmounts ? minBptAmounts[rootNode.outputReference] : '0',
         userAddress
       );
       // TODO Need to add authorisation to first if no leafCalls
       // Add chain calls to previous list of calls
       leafCalls = [...leafCalls, ...inputCalls];
+      // Update ref index to be unique for next path
+      opRefIndex = orderedNodes.length + nodesToRoot.length;
     });
 
     // TODO - Some kind of check that each token has a valid path?
@@ -163,16 +163,32 @@ export class Join {
 
     return {
       to: this.relayer,
-      data: callData,
+      callData: callData,
       outputRefs: rootOutputRefs,
     };
+  }
+
+  updateInputAmounts(
+    nodes: Node[],
+    tokensIn: string[],
+    amountsIn: string[]
+  ): void {
+    // Update input proportions so inputs are shared correctly
+    this.updateTotalProportions(nodes);
+
+    // Updates and input node to have correct input amount
+    nodes.forEach((node) => {
+      if (node.action === 'input')
+        node = this.updateNodeAmount(node, tokensIn, amountsIn);
+    });
   }
 
   async queryOutputRefs(outputRefs: string[]): Promise<Record<string, string>> {
     // TODO Add method to query relayer (waiting for SC)
     const results: Record<string, string> = {};
     outputRefs.forEach(
-      (op, i) => (results[op] = WeiPerEther.mul(i + 1).toString())
+      // (op, i) => (results[op] = WeiPerEther.mul(i + 1).toString())
+      (op, i) => (results[op] = '0')
     );
     return results;
   }
@@ -180,6 +196,8 @@ export class Join {
   // Get full graph from root pool and return ordered nodes
   async getGraphNodes(
     poolId: string,
+    tokensIn: string[],
+    amountsIn: string[],
     wrapMainTokens: boolean
   ): Promise<Node[]> {
     const rootPool = await this.pools.find(poolId);
@@ -195,24 +213,43 @@ export class Join {
       throw new Error('root pool type should be ComposableStable');
     }
 
-    return PoolGraph.orderByBfs(rootNode);
+    // TODO check for id match
+
+    const orderedNodes = PoolGraph.orderByBfs(rootNode);
+    // Update each input node with relevant amount (proportionally)
+    this.updateInputAmounts(orderedNodes, tokensIn, amountsIn);
+    return orderedNodes;
+  }
+
+  getNodesToRootFromToken(
+    orderedNodes: Node[],
+    tokensIn: string[],
+    amountsIn: string[],
+    tokenInput: string,
+    startingIndex: number
+  ): Node[] {
+    const nodes = PoolGraph.getNodesToRoot(
+      orderedNodes,
+      tokenInput,
+      startingIndex
+    );
+    // Update each input node with relevant amount (proportionally)
+    this.updateInputAmounts(nodes, tokensIn, amountsIn);
+    if (nodes.length === 0) throw new Error('No join path for token');
+    return nodes;
   }
 
   createActionCalls(
     orderedNodes: Node[],
     rootId: string,
     minBPTOut: string,
-    tokensIn: string[],
-    amountsIn: string[],
     userAddress: string,
     authorisation?: string
   ): string[] {
     const calls: string[] = [];
     if (authorisation) {
-      calls.push(this.createSetRelayerApproval(authorisation));
+      calls.push(this.createSetRelayerApproval(authorisation)); // TODO Move this out and handle appropriately
     }
-    // Update input proportions so inputs are shared correctly
-    this.updateTotalProportions(orderedNodes);
     // Create actions for each Node and return in multicall array
     orderedNodes.forEach((node, i) => {
       // if all child nodes have 0 output amount, then forward it to outputRef and skip adding current call
@@ -221,14 +258,12 @@ export class Join {
         node.children.filter((c) => c.outputReference !== '0').length === 0
       ) {
         node.outputReference = '0'; // TODO Why is this neccessary?
-        // console.log('OHOH');
-        // console.log(node.children);
         return;
       }
 
       // Input tokens will come from user
       // wrapped tokens will come from user (Relayer has no approval for wrapped tokens)
-      const fromUser = node.children.some(
+      const fromUser = node.children.some( // TODO Refactor to make clearer
         (children) =>
           children.action === 'input' ||
           children.action === 'wrapAaveDynamicToken'
@@ -255,22 +290,19 @@ export class Join {
         case 'joinPool':
           calls.push(this.createJoinPool(node, expectedOut, sender, recipient));
           break;
-        case 'input':
-          this.createInputToken(node, tokensIn, amountsIn);
-          break;
         default: {
-          const inputs = node.children.map((t) => {
-            return t.outputReference;
-          });
-          console.log(
-            'Unsupported action',
-            node.type,
-            node.address,
-            node.action,
-            `Inputs: ${inputs.toString()}`,
-            `OutputRef: ${node.outputReference}`,
-            node.proportionOfParent.toString()
-          );
+          // const inputs = node.children.map((t) => {
+          //   return t.outputReference;
+          // });
+          // console.log(
+          //   'Unsupported action',
+          //   node.type,
+          //   node.address,
+          //   node.action,
+          //   `Inputs: ${inputs.toString()}`,
+          //   `OutputRef: ${node.outputReference}`,
+          //   node.proportionOfParent.toString()
+          // );
         }
       }
     });
@@ -280,7 +312,7 @@ export class Join {
   /**
    * Creates a map of node address and total proportion. Used for the case where there may be multiple inputs using same token, e.g. DAI input to 2 pools.
    * @param nodes nodes to consider.
-  */
+   */
   updateTotalProportions(nodes: Node[]): void {
     this.totalProportions = {};
     nodes.forEach((node) => {
@@ -304,22 +336,24 @@ export class Join {
     return Relayer.encodeSetRelayerApproval(this.relayer, true, authorisation);
   }
 
-  /*
-  These nodes don't have an action but create the correct proportional inputs for each token.
-  These input amounts are then copied to the outputRef which the parent node will use.
-  */
-  createInputToken(node: Node, tokens: string[], amounts: string[]): void {
-    // Update amounts to use actual value based off input and proportions
-    const tokenIndex = tokens.indexOf(node.address);
-    if (tokenIndex === -1) return;
+  updateNodeAmount(node: Node, tokensIn: string[], amountsIn: string[]): Node {
+    /*
+    An input node requires a real amount (not an outputRef) as it is first node in chain.
+    This amount will be used when chaining to parent.
+    Amounts are split proportionally between all inputs with same token.
+    */
+    const tokenIndex = tokensIn.indexOf(node.address);
+    if (tokenIndex === -1) return node; // TODO proper error, change to '0'?
 
+    // Calculate proportional split
     const totalProportion = this.totalProportions[node.address];
     const inputProportion = node.proportionOfParent
       .mul((1e18).toString())
       .div(totalProportion);
     const inputAmount = inputProportion
-      .mul(amounts[tokenIndex])
+      .mul(amountsIn[tokenIndex])
       .div((1e18).toString());
+    // Update outputReference with actual value
     node.outputReference = inputAmount.toString();
     console.log(
       `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
@@ -328,6 +362,7 @@ export class Join {
         OutputRef: ${node.outputReference}
       )`
     );
+    return node;
   }
 
   createAaveWrap(node: Node, sender: string, recipient: string): string {
@@ -380,14 +415,12 @@ export class Join {
     const inputTokens: string[] = [];
     const inputAmts: string[] = [];
 
+    // For each child with a non-zero amount create an input for swap
     node.children.forEach((child) => {
-      if (child.outputReference !== '0') {
+      const amount = this.getOutputRefValue(child);
+      if (amount !== '0') {
         inputTokens.push(child.address);
-        inputAmts.push(
-          child.action === 'input'
-            ? child.outputReference
-            : Relayer.toChainedReference(child.outputReference).toString()
-        );
+        inputAmts.push(amount);
       }
     });
 
@@ -403,7 +436,7 @@ export class Join {
       return {
         poolId: node.id,
         assetInIndex: assets.indexOf(token),
-        assetOutIndex: assets.indexOf(node.address),
+        assetOutIndex: assets.indexOf(node.address), // TODO - Is this right?
         amount: inputAmts[i],
         userData: '0x',
       };
@@ -439,6 +472,13 @@ export class Join {
 
   // TODO - Add check for final output token as safety.
 
+  getOutputRefValue(node: Node): string {
+    if (node.action === 'input') return node.outputReference;
+    else if (node.outputReference !== '0')
+      return Relayer.toChainedReference(node.outputReference).toString();
+    else return '0';
+  }
+
   createJoinPool(
     node: Node,
     minAmountOut: string,
@@ -451,11 +491,7 @@ export class Join {
     // inputTokens needs to include each asset even if it has 0 amount
     node.children.forEach((child) => {
       inputTokens.push(child.address);
-      inputAmts.push(
-        child.outputReference !== '0'
-          ? Relayer.toChainedReference(child.outputReference).toString()
-          : '0'
-      );
+      inputAmts.push(this.getOutputRefValue(child));
     });
 
     if (node.type === PoolType.ComposableStable) {
@@ -464,17 +500,6 @@ export class Join {
       // need to add a placeholder so sorting works
       inputAmts.push('0');
     }
-
-    console.log(
-      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-      ${node.action}(
-        poolId: ${node.id},
-        inputTokens: ${inputTokens.toString()},
-        maxAmtsIn: ${node.children.map((c) => c.outputReference).toString()},
-        minOut: ${minAmountOut}
-        outputRef: ${node.outputReference}
-      )`
-    );
 
     // sort inputs
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
@@ -504,13 +529,25 @@ export class Join {
     const ethIndex = sortedTokens.indexOf(AddressZero);
     const value = ethIndex === -1 ? '0' : sortedAmounts[ethIndex];
 
+    console.log(
+      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+      ${node.action}(
+        poolId: ${node.id},
+        assets: ${sortedTokens.toString()},
+        maxAmtsIn: ${sortedAmounts.toString()},
+        amountsIn: ${userDataAmounts.toString()},
+        minOut: ${minAmountOut},
+        outputRef: ${node.outputReference}
+      )`
+    );
+
     const call = Relayer.constructJoinCall({
       poolId: node.id,
       poolKind: 0,
       sender,
       recipient,
       value,
-      outputReference: '0',
+      outputReference: '0', // node.outputReference, TODO Why does this cause tx to fail?
       joinPoolRequest: {} as JoinPoolRequest,
       assets: sortedTokens, // Must include BPT token
       maxAmountsIn: sortedAmounts,

@@ -271,6 +271,7 @@ export class PoolGraph {
     const nodesToRoot: Node[] = [];
     if (inputNode.action !== 'input') {
       // Create an input node for the input token
+      // For a non-leaf join we will use 100% of token amount in path
       const [inputTokenNode] = this.createInputTokenNode(
         startingIndex,
         inputToken,
@@ -281,6 +282,7 @@ export class PoolGraph {
     } else {
       // Joining with a leaf token
       const inputTokenNode = { ...inputNode };
+      // For a non-leaf join we will use 100% of token amount in path
       inputTokenNode.proportionOfParent = WeiPerEther;
       inputTokenNode.outputReference = '0';
       nodesToRoot.push(inputNode);
@@ -293,7 +295,14 @@ export class PoolGraph {
       const node: Node = { ...parentNode };
       node.proportionOfParent = BigNumber.from('0'); // TODO - Will this cause issues?
       node.outputReference = index.toString();
-      if (index - 1 === startingIndex) node.children = [nodesToRoot[0]];
+      if (index - 1 === startingIndex) {
+        // The first non-input node must have its child input node updated
+        const childrenWithoutRoot = node.children.filter(
+          (n) => n.address !== nodesToRoot[0].address
+        );
+        childrenWithoutRoot.push(nodesToRoot[0]);
+        node.children = childrenWithoutRoot;
+      }
       index++;
       nodesToRoot.push(node);
       parentNode = parentNode.parent;

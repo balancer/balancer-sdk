@@ -30,7 +30,7 @@ import { ADDRESSES } from '@/test/lib/constants';
  * - Uncomment section below:
  */
 const network = Network.MAINNET;
-const blockNumber = 15372650;
+const blockNumber = 15495943;
 
 dotenv.config();
 
@@ -54,8 +54,8 @@ const { contracts, contractAddresses } = new Contracts(
 const relayer = contractAddresses.relayer as string;
 const addresses = ADDRESSES[network];
 const fromPool = {
-  id: '0x9b532ab955417afd0d012eb9f7389457cd0ea712000000000000000000000338', // bbausd2
-  address: addresses.bbausd2.address,
+  id: '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d', // bbausd2
+  address: '0xa13a9247ea42d743238089903570127dda72fe44',
 };
 const mainTokens = [addresses.DAI.address, addresses.USDC.address];
 // joins with wrapping require token approvals. These are taken care of as part of fork setup when wrappedTokens passed in.
@@ -77,9 +77,7 @@ const mainInitialBalances = [
   parseFixed('100', addresses.USDC.decimals).toString(),
 ];
 const wrappedInitialBalances = ['0', '0', '0'];
-const linearInitialBalances = [
-  parseFixed('100', addresses.DAI.decimals).toString(),
-];
+const linearInitialBalances = [parseFixed('100', 18).toString()];
 
 const signRelayerApproval = async (
   relayerAddress: string,
@@ -176,7 +174,7 @@ describe('bbausd generalised join execution', async () => {
     tokensBalanceBefore.forEach(
       (b, i) => expect(b.eq(mainInitialBalances[i])).to.be.true
     );
-    tokensBalanceAfter.forEach((b) => expect(b.eq(0)).to.be.true);
+    tokensBalanceAfter.forEach((b) => expect(b.toString()).to.eq('0'));
     console.log(bptBalanceAfter.toString());
     console.log(query.minOut);
     expect(bptBalanceAfter.gte(query.minOut)).to.be.true;
@@ -185,15 +183,17 @@ describe('bbausd generalised join execution', async () => {
   context('leaf token input', async () => {
     it('joins with no wrapping', async () => {
       await testFlow(mainTokens, mainInitialBalances, false);
-    });
+    }).timeout(2000000);
     it('joins with wrapping', async () => {
       await testFlow(mainTokens, mainInitialBalances, true);
     });
   });
 
+  //describe.only('', () => {
   context('linear pool token as input', async () => {
     it('joins boosted pool', async () => {
       await testFlow(linearPoolTokens, linearInitialBalances, false);
     });
   });
+  //});
 });

@@ -5,14 +5,18 @@ import {
   LinearParams,
   BoostedMetaBigParams,
   BoostedMetaBigInfo,
+  BoostedInfo,
 } from '@/test/factories/pools';
 import { StaticPoolRepository } from '../data';
 import { Pool } from '@/types';
 import { Join } from './joins.module';
+import { Node, PoolGraph } from './graph';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { Network } from '@/lib/constants/network';
 import { formatAddress } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
+import { WeiPerEther } from '@ethersproject/constants';
+import { parseFixed } from '@/lib/utils/math';
 
 const slippage = '0';
 
@@ -21,6 +25,7 @@ describe('Generalised Joins', () => {
     let joinModule: Join;
     let rootPool: SubgraphPoolBase;
     let userAddress: string;
+    let boostedInfo: BoostedInfo;
     beforeEach(() => {
       userAddress = formatAddress('testAccount');
       // The boostedPool will contain these Linear pools.
@@ -47,7 +52,7 @@ describe('Generalised Joins', () => {
           balance: '500000',
         },
       ];
-      const boostedInfo = factories.boostedPool
+      boostedInfo = factories.boostedPool
         .transient({
           linearPoolsParams: {
             pools: linearPools,
@@ -63,61 +68,96 @@ describe('Generalised Joins', () => {
       joinModule = new Join(poolProvider, Network.GOERLI);
     });
 
-    it('should throw when pool doesnt exist', async () => {
-      let errorMessage = '';
-      try {
-        await joinModule.joinPool(
-          'thisisntapool',
-          [],
-          [],
-          userAddress,
-          true,
-          slippage
-        );
-      } catch (error) {
-        errorMessage = (error as Error).message;
-      }
-      expect(errorMessage).to.eq('balancer pool does not exist');
+    context('Error conditions', () => {
+      it('should throw when pool doesnt exist', async () => {
+        let errorMessage = '';
+        try {
+          await joinModule.joinPool(
+            'thisisntapool',
+            [],
+            [],
+            userAddress,
+            true,
+            slippage
+          );
+        } catch (error) {
+          errorMessage = (error as Error).message;
+        }
+        expect(errorMessage).to.eq('balancer pool does not exist');
+      });
+
+      it('should throw when root pool is not ComposableStable', async () => {
+        let errorMessage = '';
+        try {
+          rootPool.poolType = 'StablePhantom'; // changing type to test error handling
+          const inputTokens = [formatAddress('tokenAddress')];
+          const inputAmounts = ['1000000000000000000'];
+          await joinModule.joinPool(
+            rootPool.id,
+            inputTokens,
+            inputAmounts,
+            userAddress,
+            true,
+            slippage
+          );
+        } catch (error) {
+          errorMessage = (error as Error).message;
+        }
+        expect(errorMessage).to.eq('root pool type should be ComposableStable');
+      });
     });
 
-    // TODO - Remove when updated
-    // it('should throw when non-leaf token is provided as input', async () => {
-    //   let errorMessage = '';
-    //   try {
-    //     const inputTokens = [formatAddress('this is not a leaf token')];
-    //     const inputAmounts = ['1000000000000000000'];
-    //     await joinModule.joinPool(
-    //       rootPool.id,
-    //       '7777777',
-    //       inputTokens,
-    //       inputAmounts,
-    //       userAddress,
-    //       true
-    //     );
-    //   } catch (error) {
-    //     errorMessage = (error as Error).message;
-    //   }
-    //   expect(errorMessage).to.eq('token mismatch');
-    // });
-
-    it('should throw when root pool is not ComposableStable', async () => {
-      let errorMessage = '';
-      try {
-        rootPool.poolType = 'StablePhantom'; // changing type to test error handling
-        const inputTokens = [formatAddress('tokenAddress')];
-        const inputAmounts = ['1000000000000000000'];
-        await joinModule.joinPool(
+    context('Input amounts', () => {
+      it('should update input amounts, leaf nodes', async () => {
+        const inputTokens = [
+          ADDRESSES[Network.MAINNET].DAI.address,
+          ADDRESSES[Network.MAINNET].USDC.address,
+        ];
+        const inputAmounts = [
+          parseFixed('0.07', 18).toString(),
+          parseFixed('1', 6).toString(),
+        ];
+        const orderedNodes = await joinModule.getGraphNodes(
           rootPool.id,
           inputTokens,
           inputAmounts,
-          userAddress,
-          true,
-          slippage
+          false
         );
-      } catch (error) {
-        errorMessage = (error as Error).message;
-      }
-      expect(errorMessage).to.eq('root pool type should be ComposableStable');
+        inputTokens.forEach((input, i) => {
+          const inputNode = orderedNodes.find((node) => node.address === input);
+          expect(inputNode).to.not.be.undefined;
+          expect(inputNode?.outputReference).to.eq(inputAmounts[i]);
+        });
+      });
+      it('should update input amounts, bpt', async () => {
+        const inputTokens = [
+          ADDRESSES[Network.MAINNET].DAI.address,
+          boostedInfo.linearPools[0].address,
+        ];
+        const inputAmounts = [
+          parseFixed('0.07', 18).toString(),
+          parseFixed('3', 18).toString(),
+        ];
+        const index = 1;
+        const orderedNodes = await joinModule.getGraphNodes(
+          rootPool.id,
+          inputTokens,
+          inputAmounts,
+          false
+        );
+        const nodes = joinModule.getNodesToRootFromToken(
+          orderedNodes,
+          inputTokens,
+          inputAmounts,
+          inputTokens[index],
+          0
+        );
+        const inputNode = nodes.find(
+          (node) => node.address === inputTokens[index]
+        );
+        expect(inputNode).to.not.be.undefined;
+        expect(inputNode?.outputReference).to.eq(inputAmounts[index]);
+      });
     });
 
     context('with wrapped tokens', () => {
@@ -547,7 +587,6 @@ describe('Generalised Joins', () => {
           slippage
         );
       });
-
       it('single boosted leaf token', async () => {
         const inputTokens = ['0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'];
         const inputAmounts = ['1000000'];
@@ -577,6 +616,7 @@ describe('Generalised Joins', () => {
           slippage
         );
         console.log(root.minOut, 'minOut');
+        console.log(inputTokens.toString());
       });
       it('two bpt in', async () => {
         const inputTokens = [
