@@ -119,17 +119,55 @@ export class Join {
       userAddress
     );
 
-    // List of outputRefs for each path that finishes on Root node
-    const rootOutputRefs: string[] = [];
-    if (leafCalls.length > 0) rootOutputRefs.push('0');
+    // Create calls for non-leaf inputs
+    const nonLeafInfo = this.createNonLeafInputCalls(
+      orderedNodes,
+      poolId,
+      tokensIn,
+      amountsIn,
+      userAddress,
+      minBptAmounts
+    );
 
+    // List of outputRefs for each path that finishes on Root node
+    const rootOutputRefs: string[] = [...nonLeafInfo.rootOutputRefs];
+    if (leafCalls.length > 0) rootOutputRefs.unshift('0');
+
+    // TODO - Some kind of check that each token has a valid path?
+
+    let callsCombined = [];
+    if (authorisation) {
+      callsCombined.push(this.createSetRelayerApproval(authorisation));
+    }
+    callsCombined = [...callsCombined, ...leafCalls, ...nonLeafInfo.calls];
+
+    const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
+      callsCombined,
+    ]);
+
+    return {
+      to: this.relayer,
+      callData: callData,
+      outputRefs: rootOutputRefs,
+    };
+  }
+
+  createNonLeafInputCalls(
+    orderedNodes: Node[],
+    poolId: string,
+    tokensIn: string[],
+    amountsIn: string[],
+    userAddress: string,
+    minBptAmounts?: Record<string, string>
+  ): { calls: string[]; rootOutputRefs: string[] } {
+    let nonLeafCalls: string[] = [];
+    const rootOutputRefs: string[] = [];
     const leafTokens = PoolGraph.getLeafAddresses(orderedNodes);
     const nonLeafInputs = tokensIn.filter((t) => !leafTokens.includes(t));
     let opRefIndex = orderedNodes.length;
-    let nonLeafCalls: string[] = [];
-    // For each non-leaf input create a call chain to root
+
     nonLeafInputs.forEach((tokenInput) => {
-      console.log(`------- Non-leaf input ${tokenInput}`);
+      // console.log(`------- Non-leaf input ${tokenInput}`);
       // Find path to root and update amounts
       const nodesToRoot = this.getNodesToRootFromToken(
         orderedNodes,
@@ -153,23 +191,9 @@ export class Join {
       // Update ref index to be unique for next path
       opRefIndex = orderedNodes.length + nodesToRoot.length;
     });
-
-    // TODO - Some kind of check that each token has a valid path?
-
-    let callsCombined = [];
-    if (authorisation) {
-      callsCombined.push(this.createSetRelayerApproval(authorisation));
-    }
-    callsCombined = [...callsCombined, ...leafCalls, ...nonLeafCalls];
-
-    const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
-      callsCombined,
-    ]);
-
     return {
-      to: this.relayer,
-      callData: callData,
-      outputRefs: rootOutputRefs,
+      calls: nonLeafCalls,
+      rootOutputRefs,
     };
   }
 
@@ -264,7 +288,8 @@ export class Join {
 
       // Input tokens will come from user
       // wrapped tokens will come from user (Relayer has no approval for wrapped tokens)
-      const fromUser = node.children.some( // TODO Refactor to make clearer
+      const fromUser = node.children.some(
+        // TODO Refactor to make clearer
         (children) =>
           children.action === 'input' ||
           children.action === 'wrapAaveDynamicToken'
