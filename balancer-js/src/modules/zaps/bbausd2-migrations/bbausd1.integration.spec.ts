@@ -39,7 +39,7 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
  * - Uncomment section below
  */
 const network = Network.MAINNET;
-const blockNumber = 15372650;
+const blockNumber = 15496800;
 const holderAddress = '0xec576a26335de1c360d2fc9a68cba6ba37af4a13';
 
 const { ethers } = hardhat;
