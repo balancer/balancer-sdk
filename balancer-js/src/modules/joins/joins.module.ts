@@ -112,12 +112,11 @@ export class Join {
     );
 
     // Create calls for leaf token actions - this considers full tree.
-    let leafCalls = this.createActionCalls(
+    const leafCalls = this.createActionCalls(
       orderedNodes,
       poolId,
       minBptAmounts ? minBptAmounts['0'] : '0',
-      userAddress,
-      authorisation
+      userAddress
     );
 
     // List of outputRefs for each path that finishes on Root node
@@ -127,6 +126,7 @@ export class Join {
     const leafTokens = PoolGraph.getLeafAddresses(orderedNodes);
     const nonLeafInputs = tokensIn.filter((t) => !leafTokens.includes(t));
     let opRefIndex = orderedNodes.length;
+    let nonLeafCalls: string[] = [];
     // For each non-leaf input create a call chain to root
     nonLeafInputs.forEach((tokenInput) => {
       console.log(`------- Non-leaf input ${tokenInput}`);
@@ -148,17 +148,22 @@ export class Join {
         minBptAmounts ? minBptAmounts[rootNode.outputReference] : '0',
         userAddress
       );
-      // TODO Need to add authorisation to first if no leafCalls
       // Add chain calls to previous list of calls
-      leafCalls = [...leafCalls, ...inputCalls];
+      nonLeafCalls = [...nonLeafCalls, ...inputCalls];
       // Update ref index to be unique for next path
       opRefIndex = orderedNodes.length + nodesToRoot.length;
     });
 
     // TODO - Some kind of check that each token has a valid path?
 
+    let callsCombined = [];
+    if (authorisation) {
+      callsCombined.push(this.createSetRelayerApproval(authorisation));
+    }
+    callsCombined = [...callsCombined, ...leafCalls, ...nonLeafCalls];
+
     const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
-      leafCalls,
+      callsCombined,
     ]);
 
     return {
@@ -243,13 +248,9 @@ export class Join {
     orderedNodes: Node[],
     rootId: string,
     minBPTOut: string,
-    userAddress: string,
-    authorisation?: string
+    userAddress: string
   ): string[] {
     const calls: string[] = [];
-    if (authorisation) {
-      calls.push(this.createSetRelayerApproval(authorisation)); // TODO Move this out and handle appropriately
-    }
     // Create actions for each Node and return in multicall array
     orderedNodes.forEach((node, i) => {
       // if all child nodes have 0 output amount, then forward it to outputRef and skip adding current call
