@@ -27,7 +27,6 @@ export class LiquidityGaugeSubgraphRPCProvider
   gaugeController?: GaugeControllerMulticallRepository;
   multicall: LiquidityGaugesMulticallRepository;
   subgraph: LiquidityGaugesSubgraphRepository;
-  totalSupplies: { [gaugeAddress: string]: number } = {};
   workingSupplies: { [gaugeAddress: string]: number } = {};
   relativeWeights: { [gaugeAddress: string]: number } = {};
   rewardTokens: {
@@ -38,7 +37,7 @@ export class LiquidityGaugeSubgraphRPCProvider
     subgraphUrl: string,
     multicallAddress: string,
     gaugeControllerAddress: string,
-    chainId: Network,
+    private chainId: Network,
     provider: Provider
   ) {
     if (gaugeControllerAddress) {
@@ -59,11 +58,12 @@ export class LiquidityGaugeSubgraphRPCProvider
   async fetch(): Promise<void> {
     const gauges = await this.subgraph.fetch();
     const gaugeAddresses = gauges.map((g) => g.id);
-    this.totalSupplies = await this.multicall.getTotalSupplies(gaugeAddresses);
-    this.workingSupplies = await this.multicall.getWorkingSupplies(
-      gaugeAddresses
-    );
     this.rewardTokens = await this.multicall.getRewardData(gaugeAddresses);
+    if (this.chainId == 1) {
+      this.workingSupplies = await this.multicall.getWorkingSupplies(
+        gaugeAddresses
+      );
+    }
     if (this.gaugeController) {
       this.relativeWeights = await this.gaugeController.getRelativeWeights(
         gaugeAddresses
@@ -118,7 +118,7 @@ export class LiquidityGaugeSubgraphRPCProvider
       name: subgraphGauge.symbol,
       poolId: subgraphGauge.poolId,
       poolAddress: subgraphGauge.poolAddress,
-      totalSupply: this.totalSupplies[subgraphGauge.id],
+      totalSupply: parseFloat(subgraphGauge.totalSupply),
       workingSupply: this.workingSupplies[subgraphGauge.id],
       relativeWeight: this.relativeWeights[subgraphGauge.id],
       rewardTokens: this.rewardTokens[subgraphGauge.id],

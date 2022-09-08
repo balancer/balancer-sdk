@@ -63,13 +63,9 @@ export class LiquidityGaugesMulticallRepository {
   async getWorkingSupplies(
     gaugeAddresses: string[]
   ): Promise<{ [gaugeAddress: string]: number }> {
-    let functionName = 'working_supply';
-    if (this.chainId != 1) {
-      functionName = 'totalSupply';
-    }
     const payload = gaugeAddresses.map((gaugeAddress) => [
       gaugeAddress,
-      liquidityGaugeV5Interface.encodeFunctionData(functionName, []),
+      liquidityGaugeV5Interface.encodeFunctionData('working_supply', []),
     ]);
     const [, res] = await this.multicall.aggregate(payload);
     // Handle 0x
