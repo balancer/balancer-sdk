@@ -16,7 +16,7 @@ const EXIT_RESULTS: BigNumber[] = [];
 export class StablesBuilder {
   private addresses;
 
-  constructor(networkId: 1 | 5) {
+  constructor(networkId: 1 | 5 | 137) {
     this.addresses = ADDRESSES[networkId];
   }
 

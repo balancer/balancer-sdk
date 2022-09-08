@@ -1,19 +1,12 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import {
-  BalancerSDK,
-  Network,
-  Pool,
-  PoolModel,
-  PoolToken,
-  StaticPoolRepository,
-} from '@/.';
+import { BalancerSDK, Network, Pool, PoolToken } from '@/.';
 import hardhat from 'hardhat';
 
 import { TransactionReceipt } from '@ethersproject/providers';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { forkSetup, setupPool, getBalances } from '@/test/lib/utils';
-import { PoolsProvider } from '@/modules/pools/provider';
+import { forkSetup, getBalances } from '@/test/lib/utils';
+import { Pools } from '@/modules/pools';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import { ExitPoolAttributes } from '../types';
@@ -24,9 +17,10 @@ dotenv.config();
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 
-let balancer: BalancerSDK;
 const rpcUrl = 'http://127.0.0.1:8545';
 const network = Network.MAINNET;
+const sdk = new BalancerSDK({ network, rpcUrl });
+const { networkConfig } = sdk;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 
@@ -41,6 +35,12 @@ const poolId =
   // '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e'; // B_50WBTC_50WETH
   '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019'; // Balancer 50 USDC 50 WETH
 
+const pool = pools_14717479.find(
+  (pool) => pool.id == poolId
+) as unknown as Pool;
+
+const controller = Pools.wrap(pool, networkConfig);
+
 let tokensOut: PoolToken[];
 let amountsOut: string[];
 let transactionReceipt: TransactionReceipt;
@@ -52,30 +52,12 @@ let tokensBalanceAfter: BigNumber[];
 let tokensMinBalanceIncrease: BigNumber[];
 let transactionCost: BigNumber;
 let signerAddress: string;
-let pool: PoolModel;
 
-describe('exit execution', async () => {
+describe('exit weighted pools execution', async () => {
   // Setup chain
   before(async function () {
     this.timeout(20000);
 
-    const sdkConfig = {
-      network,
-      rpcUrl,
-    };
-    // Using a static repository to make test consistent over time
-    const poolsProvider = new PoolsProvider(
-      sdkConfig,
-      new StaticPoolRepository(pools_14717479 as Pool[])
-    );
-    balancer = new BalancerSDK(
-      sdkConfig,
-      undefined,
-      undefined,
-      undefined,
-      poolsProvider
-    );
-    pool = await setupPool(poolsProvider, poolId);
     tokensOut = pool.tokens;
     await forkSetup(
       signer,
@@ -123,7 +105,7 @@ describe('exit execution', async () => {
       tokensBalanceAfter = tokensBalanceAfter.map((balance, i) => {
         if (
           pool.tokensList[i] ===
-          balancer.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase()
+          networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase()
         ) {
           return balance.add(transactionCost);
         }
@@ -137,7 +119,7 @@ describe('exit execution', async () => {
       this.timeout(20000);
       const bptIn = parseFixed('10', 18).toString();
       await testFlow(
-        pool.buildExitExactBPTIn(signerAddress, bptIn, slippage),
+        controller.buildExitExactBPTIn(signerAddress, bptIn, slippage),
         pool.tokensList
       );
     });
@@ -173,7 +155,7 @@ describe('exit execution', async () => {
       );
 
       await testFlow(
-        pool.buildExitExactTokensOut(
+        controller.buildExitExactTokensOut(
           signerAddress,
           tokensOut.map((t) => t.address),
           amountsOut,
@@ -213,13 +195,13 @@ describe('exit execution', async () => {
 
       const exitTokens = pool.tokensList.map((token) =>
         token ===
-        balancer.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase()
+        networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase()
           ? AddressZero
           : token
       );
 
       await testFlow(
-        pool.buildExitExactTokensOut(
+        controller.buildExitExactTokensOut(
           signerAddress,
           exitTokens,
           amountsOut,
@@ -256,7 +238,7 @@ describe('exit execution', async () => {
       try {
         const bptIn = parseFixed('10', 18).toString();
         await testFlow(
-          pool.buildExitExactBPTIn(
+          controller.buildExitExactBPTIn(
             signerAddress,
             bptIn,
             slippage,

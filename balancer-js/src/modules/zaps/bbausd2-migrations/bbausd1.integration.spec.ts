@@ -4,11 +4,10 @@ import hardhat from 'hardhat';
 import {
   BalancerError,
   BalancerErrorCode,
+  BalancerSDK,
   Network,
   RelayerAuthorization,
-  PoolModel,
-  Subgraph,
-  SubgraphPoolRepository,
+  PoolWithMethods,
 } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
@@ -16,7 +15,6 @@ import { ADDRESSES } from './addresses';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256, WeiPerEther } from '@ethersproject/constants';
 import { Migrations } from '../migrations';
-import { PoolsProvider } from '@/modules/pools/provider';
 import { getErc20Balance, move, stake } from '@/test/lib/utils';
 
 dotenv.config();
@@ -41,7 +39,7 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
  * - Uncomment section below
  */
 const network = Network.MAINNET;
-const blockNumber = 15372650;
+const blockNumber = 15496800;
 const holderAddress = '0xec576a26335de1c360d2fc9a68cba6ba37af4a13';
 
 const { ethers } = hardhat;
@@ -106,11 +104,9 @@ describe('bbausd migration execution', async () => {
   let signerAddress: string;
   let authorisation: string;
   let balance: BigNumber;
-  let pool: PoolModel;
+  let pool: PoolWithMethods;
 
   beforeEach(async function () {
-    this.timeout(20000);
-
     await reset();
 
     signer = provider.getSigner();
@@ -125,15 +121,11 @@ describe('bbausd migration execution', async () => {
       provider
     );
 
-    const config = {
+    const sdk = new BalancerSDK({
       network,
       rpcUrl,
-    };
-    const subgraph = new Subgraph(config);
-    const pools = new PoolsProvider(
-      config,
-      new SubgraphPoolRepository(subgraph.client)
-    );
+    });
+    const { pools } = sdk;
     await pools.findBy('address', fromPool.address).then((res) => {
       if (!res) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
       pool = res;
@@ -217,14 +209,13 @@ describe('bbausd migration execution', async () => {
 
   context('staked', async () => {
     beforeEach(async function () {
-      this.timeout(20000);
       // Stake them
       await stake(signer, fromPool.address, fromPool.gauge, balance);
     });
 
     it('should transfer tokens from stable to boosted - using exact bbausd2AmountOut from static call', async () => {
       await testFlow(true, undefined, '0');
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
@@ -234,13 +225,13 @@ describe('bbausd migration execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
-    }).timeout(20000);
+    });
   });
 
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted - using exact bbausd2AmountOut from static call', async () => {
       await testFlow(false, undefined, '0');
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
@@ -250,7 +241,7 @@ describe('bbausd migration execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
-    }).timeout(20000);
+    });
   });
 
   context('authorisation', async () => {
@@ -266,7 +257,7 @@ describe('bbausd migration execution', async () => {
         data: approval,
       });
       await testFlow(false, false, '0');
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - auhtorisation should fail', async () => {
       let errorMessage = '';
@@ -276,6 +267,6 @@ describe('bbausd migration execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#503'); // USER_DOESNT_ALLOW_RELAYER - Relayers must be allowed by both governance and the user account
-    }).timeout(20000);
-  }).timeout(20000);
-}).timeout(20000);
+    });
+  });
+});

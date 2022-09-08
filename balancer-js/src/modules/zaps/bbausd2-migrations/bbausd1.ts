@@ -13,7 +13,7 @@ const SWAP_RESULT_BBAUSD = Relayer.toChainedReference('24');
 export class BbaUsd1Builder {
   private addresses;
 
-  constructor(networkId: 1 | 5) {
+  constructor(networkId: 1 | 5 | 137) {
     this.addresses = ADDRESSES[networkId];
   }
 

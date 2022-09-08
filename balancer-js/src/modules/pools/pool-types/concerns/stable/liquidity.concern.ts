@@ -19,7 +19,7 @@ export class StablePoolLiquidity implements LiquidityConcern {
         continue;
       }
 
-      const price = parseFixed(token.price.usd, SCALING_FACTOR);
+      const price = parseFixed(token.price.usd.toString(), SCALING_FACTOR);
       const balance = parseFixed(token.balance, SCALING_FACTOR);
 
       const value = balance.mul(price);
