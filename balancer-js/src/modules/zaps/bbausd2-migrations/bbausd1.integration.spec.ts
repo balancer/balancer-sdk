@@ -107,8 +107,6 @@ describe('bbausd migration execution', async () => {
   let pool: PoolModel;
 
   beforeEach(async function () {
-    this.timeout(20000);
-
     await reset();
 
     signer = provider.getSigner();
@@ -211,14 +209,13 @@ describe('bbausd migration execution', async () => {
 
   context('staked', async () => {
     beforeEach(async function () {
-      this.timeout(20000);
       // Stake them
       await stake(signer, fromPool.address, fromPool.gauge, balance);
     });
 
     it('should transfer tokens from stable to boosted - using exact bbausd2AmountOut from static call', async () => {
       await testFlow(true, undefined, '0');
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
@@ -228,13 +225,13 @@ describe('bbausd migration execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
-    }).timeout(20000);
+    });
   });
 
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted - using exact bbausd2AmountOut from static call', async () => {
       await testFlow(false, undefined, '0');
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
@@ -244,7 +241,7 @@ describe('bbausd migration execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
-    }).timeout(20000);
+    });
   });
 
   context('authorisation', async () => {
@@ -260,7 +257,7 @@ describe('bbausd migration execution', async () => {
         data: approval,
       });
       await testFlow(false, false, '0');
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - auhtorisation should fail', async () => {
       let errorMessage = '';
@@ -270,6 +267,6 @@ describe('bbausd migration execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#503'); // USER_DOESNT_ALLOW_RELAYER - Relayers must be allowed by both governance and the user account
-    }).timeout(20000);
-  }).timeout(20000);
-}).timeout(20000);
+    });
+  });
+});
