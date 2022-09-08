@@ -6,13 +6,13 @@ import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { keccak256 } from '@ethersproject/solidity';
 import { parseEther } from '@ethersproject/units';
 import { ERC20 } from '@/modules/contracts/ERC20';
-import { PoolsProvider } from '@/modules/pools/provider';
-import { PoolModel, BalancerError, BalancerErrorCode } from '@/.';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 
 import { Interface } from '@ethersproject/abi';
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const liquidityGauge = new Interface(liquidityGaugeAbi);
+import { Pools as PoolsProvider } from '@/modules/pools';
+import { PoolWithMethods, BalancerError, BalancerErrorCode } from '@/.';
 
 /**
  * Setup local fork with approved token balance for a given account
@@ -124,7 +124,7 @@ export const approveToken = async (
 export const setupPool = async (
   provider: PoolsProvider,
   poolId: string
-): Promise<PoolModel> => {
+): Promise<PoolWithMethods> => {
   const pool = await provider.find(poolId);
   if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
   return pool;
