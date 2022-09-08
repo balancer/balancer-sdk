@@ -5,7 +5,7 @@ import { StablesBuilder } from './bbausd2-migrations/stables';
 import { MaiusdBuilder } from './bbausd2-migrations/maiusd';
 
 export class Migrations {
-  constructor(private network: 1 | 5) {}
+  constructor(private network: 1 | 5 | 137) {}
 
   /**
    * Builds migration call data.

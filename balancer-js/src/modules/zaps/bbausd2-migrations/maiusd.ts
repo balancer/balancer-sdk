@@ -20,7 +20,7 @@ const SWAP_RESULT = Relayer.toChainedReference('24');
 export class MaiusdBuilder {
   private addresses;
 
-  constructor(networkId: 1 | 5) {
+  constructor(networkId: 1 | 5 | 137) {
     this.addresses = ADDRESSES[networkId];
   }
 

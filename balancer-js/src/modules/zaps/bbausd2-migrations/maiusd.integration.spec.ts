@@ -14,18 +14,30 @@ import { getErc20Balance, move, stake } from '@/test/lib/utils';
  * Testing on GOERLI
  * - Update hardhat.config.js with chainId = 5
  * - Update ALCHEMY_URL on .env with a goerli api key
- * - Run goerli node on terminal: yarn run node
- * - Change `network` to Network.GOERLI
- * - Provide gaugeAddresses from goerli which can be found on subgraph: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-gauges-goerli
+ * - Run node on terminal: yarn run node
+ * - Uncomment section below
  */
+const network = Network.GOERLI;
+const blockNumber = 7376670;
+const holderAddress = '0x8fe3a2a5ae6baa201c26fc7830eb713f33d6b313';
+
+/*
+ * Testing on POLYGON
+ * - Update hardhat.config.js with chainId = 137
+ * - Update ALCHEMY_URL on .env with a goerli api key
+ * - Run node on terminal: yarn run node
+ * - Uncomment section below
+ */
+// const network = Network.POLYGON;
+// const blockNumber = 32856000;
+// const holderAddress = '0xfb0272990728a967ecaf702a1291fcd64c38ed25';
 
 dotenv.config();
 
-const { ALCHEMY_URL: jsonRpcUrl, FORK_BLOCK_NUMBER: blockNumber } = process.env;
+const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
-const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
@@ -42,7 +54,6 @@ const toPool = {
 const { contracts } = new Contracts(network as number, provider);
 const migrations = new Migrations(network);
 
-const holderAddress = '0x8fe3a2a5ae6baa201c26fc7830eb713f33d6b313';
 const relayer = addresses.relayer;
 
 const signRelayerApproval = async (
@@ -77,7 +88,7 @@ const reset = () =>
     {
       forking: {
         jsonRpcUrl,
-        blockNumber: (blockNumber && parseInt(blockNumber)) || 7376670,
+        blockNumber,
       },
     },
   ]);

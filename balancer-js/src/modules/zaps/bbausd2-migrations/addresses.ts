@@ -137,4 +137,67 @@ export const ADDRESSES = {
     waUSDT: '0x4cb1892fddf14f772b2e39e299f44b2e5da90d04',
     miMATIC: '0x398106564948feeb1fedea0709ae7d969d62a391',
   },
+  137: {
+    relayer: '0x4574ccBcC09A00C9eE55fB92Fe353699A4fA800e',
+    staBal3: {
+      id: '',
+      address: '',
+      gauge: '',
+      assetOrder: [],
+    },
+    bbausd1: {
+      id: '',
+      address: '',
+      gauge: '',
+      assetOrder: [],
+    },
+    bbausd2: {
+      id: '0x48e6b98ef6329f8f0a30ebb8c7c960330d64808500000000000000000000075b',
+      address: '0x48e6b98ef6329f8f0a30ebb8c7c960330d648085',
+      gauge: '',
+    },
+    linearUsdc1: {
+      id: '',
+      address: '',
+    },
+    linearDai1: {
+      id: '',
+      address: '',
+    },
+    linearUsdt1: {
+      id: '',
+      address: '',
+    },
+    linearUsdc2: {
+      id: '0xf93579002dbe8046c43fefe86ec78b1112247bb8000000000000000000000759',
+      address: '0xf93579002dbe8046c43fefe86ec78b1112247bb8',
+    },
+    linearDai2: {
+      id: '0x178e029173417b1f9c8bc16dcec6f697bc323746000000000000000000000758',
+      address: '0x178e029173417b1f9c8bc16dcec6f697bc323746',
+    },
+    linearUsdt2: {
+      id: '0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea600000000000000000000075a',
+      address: '0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea6',
+    },
+    maiusd: {
+      id: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000012',
+      address: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42',
+      gauge: '0x72843281394e68de5d55bcf7072bb9b2ebc24150',
+      assetOrder: ['USDC', 'DAI', 'miMATIC', 'USDT'],
+    },
+    maibbausd: {
+      id: '0xb54b2125b711cd183edd3dd09433439d5396165200000000000000000000075e',
+      address: '0xb54b2125b711cd183edd3dd09433439d53961652',
+      gauge: '0x9a105ef22a59484aa2731c357049f6a13d0891f5',
+      assetOrder: ['bb-a-USD', 'miMATIC'],
+    },
+    USDT: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
+    DAI: '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063',
+    USDC: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+    waDAI: '0xEE029120c72b0607344f35B17cdD90025e647B00',
+    waUSDC: '0x221836a597948Dce8F3568E044fF123108aCc42A',
+    waUSDT: '0x19C60a251e525fa88Cd6f3768416a8024e98fC19',
+    miMATIC: '0xa3fa99a148fa48d14ed51d610c367c61876997f1',
+  },
 };
