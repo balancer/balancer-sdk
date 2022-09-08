@@ -296,10 +296,13 @@ export class PoolGraph {
       node.proportionOfParent = BigNumber.from('0'); // TODO - Will this cause issues?
       node.outputReference = index.toString();
       if (index - 1 === startingIndex) {
-        // The first non-input node must have its child input node updated
-        const childrenWithoutRoot = node.children.filter(
-          (n) => n.address !== nodesToRoot[0].address
-        );
+        // The first non-input node must have its child input node updated and other to 0 amounts
+        const childrenWithoutRoot = node.children
+          .filter((n) => n.address !== nodesToRoot[0].address)
+          .map((n) => {
+            n.outputReference = '0';
+            return n;
+          });
         childrenWithoutRoot.push(nodesToRoot[0]);
         node.children = childrenWithoutRoot;
       }

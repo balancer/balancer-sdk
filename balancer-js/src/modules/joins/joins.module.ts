@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero, MaxInt256 } from '@ethersproject/constants';
@@ -113,7 +114,7 @@ export class Join {
 
     // Create calls for leaf token actions - this considers full tree.
     const leafCalls = this.createActionCalls(
-      orderedNodes,
+      cloneDeep(orderedNodes),
       poolId,
       minBptAmounts ? minBptAmounts['0'] : '0',
       userAddress
@@ -121,7 +122,7 @@ export class Join {
 
     // Create calls for non-leaf inputs
     const nonLeafInfo = this.createNonLeafInputCalls(
-      orderedNodes,
+      cloneDeep(orderedNodes),
       poolId,
       tokensIn,
       amountsIn,
@@ -307,10 +308,12 @@ export class Join {
       switch (node.action) {
         // TODO - Add other Relayer supported Unwraps
         case 'wrapAaveDynamicToken':
+          // console.log(`wrap`);
           // relayer has no allowance to spend its own wrapped tokens so recipient must be the user
           calls.push(this.createAaveWrap(node, sender, userAddress));
           break;
         case 'batchSwap':
+          // console.log(`batchSwap`);
           calls.push(this.createBatchSwap(node, minOut, sender, recipient));
           break;
         case 'joinPool':
@@ -370,13 +373,13 @@ export class Join {
       .div((1e18).toString());
     // Update outputReference with actual value
     node.outputReference = inputAmount.toString();
-    console.log(
-      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-      ${node.action} (
-        Inputs: ${inputAmount.toString()}
-        OutputRef: ${node.outputReference}
-      )`
-    );
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+    //   ${node.action} (
+    //     Inputs: ${inputAmount.toString()}
+    //     OutputRef: ${node.outputReference}
+    //   )`
+    // );
     return node;
   }
 
@@ -546,17 +549,17 @@ export class Join {
     const ethIndex = sortedTokens.indexOf(AddressZero);
     const value = ethIndex === -1 ? '0' : sortedAmounts[ethIndex];
 
-    console.log(
-      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-      ${node.action}(
-        poolId: ${node.id},
-        assets: ${sortedTokens.toString()},
-        maxAmtsIn: ${sortedAmounts.toString()},
-        amountsIn: ${userDataAmounts.toString()},
-        minOut: ${minAmountOut},
-        outputRef: ${node.outputReference}
-      )`
-    );
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+    //   ${node.action}(
+    //     poolId: ${node.id},
+    //     assets: ${sortedTokens.toString()},
+    //     maxAmtsIn: ${sortedAmounts.toString()},
+    //     amountsIn: ${userDataAmounts.toString()},
+    //     minOut: ${minAmountOut},
+    //     outputRef: ${node.outputReference}
+    //   )`
+    // );
 
     const call = Relayer.constructJoinCall({
       poolId: node.id,
