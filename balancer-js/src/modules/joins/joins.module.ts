@@ -133,8 +133,6 @@ export class Join {
     const rootOutputRefs: string[] = [...nonLeafInfo.rootOutputRefs];
     if (leafCalls.length > 0) rootOutputRefs.unshift('0');
 
-    // TODO - Some kind of check that each token has a valid path?
-
     let callsCombined = [];
     if (authorisation) {
       callsCombined.push(this.createSetRelayerApproval(authorisation));
@@ -178,6 +176,8 @@ export class Join {
       );
       // The last node will be joining root and we want this reference to find final amount out
       const rootNode = nodesToRoot[nodesToRoot.length - 1];
+      if (rootNode.id !== poolId)
+        throw new Error('Error creating non-leaf join.');
       rootOutputRefs.push(rootNode.outputReference);
       // Create calls for path, use value stored in minBptAmounts if available
       const inputCalls = this.createActionCalls(
@@ -242,7 +242,7 @@ export class Join {
       throw new Error('root pool type should be ComposableStable');
     }
 
-    // TODO check for id match
+    if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
 
     const orderedNodes = PoolGraph.orderByBfs(rootNode);
     // Update each input node with relevant amount (proportionally)
@@ -286,10 +286,9 @@ export class Join {
         return;
       }
 
-      // Input tokens will come from user
-      // wrapped tokens will come from user (Relayer has no approval for wrapped tokens)
+      // If child node was input the tokens come from user not relayer
+      // wrapped tokens have to come from user (Relayer has no approval for wrapped tokens)
       const fromUser = node.children.some(
-        // TODO Refactor to make clearer
         (children) =>
           children.action === 'input' ||
           children.action === 'wrapAaveDynamicToken'
@@ -299,8 +298,10 @@ export class Join {
       const isLastChainedCall = i === orderedNodes.length - 1;
       if (isLastChainedCall && node.id !== rootId)
         throw Error('Last call must be to root');
+      // Always send to user on last call otherwise send to relayer
       const recipient = isLastChainedCall ? userAddress : this.relayer;
-      const expectedOut = isLastChainedCall ? minBPTOut : '0';
+      // Last action will use minBptOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
+      const minOut = isLastChainedCall ? minBPTOut : '0';
 
       switch (node.action) {
         // TODO - Add other Relayer supported Unwraps
@@ -309,12 +310,10 @@ export class Join {
           calls.push(this.createAaveWrap(node, sender, userAddress));
           break;
         case 'batchSwap':
-          calls.push(
-            this.createBatchSwap(node, expectedOut, sender, recipient)
-          );
+          calls.push(this.createBatchSwap(node, minOut, sender, recipient));
           break;
         case 'joinPool':
-          calls.push(this.createJoinPool(node, expectedOut, sender, recipient));
+          calls.push(this.createJoinPool(node, minOut, sender, recipient));
           break;
         default: {
           // const inputs = node.children.map((t) => {
@@ -369,7 +368,10 @@ export class Join {
     Amounts are split proportionally between all inputs with same token.
     */
     const tokenIndex = tokensIn.indexOf(node.address);
-    if (tokenIndex === -1) return node; // TODO proper error, change to '0'?
+    if (tokenIndex === -1) {
+      node.outputReference = '0';
+      return node;
+    }
 
     // Calculate proportional split
     const totalProportion = this.totalProportions[node.address];
@@ -495,8 +497,6 @@ export class Join {
 
     return call;
   }
-
-  // TODO - Add check for final output token as safety.
 
   getOutputRefValue(node: Node): string {
     if (node.action === 'input') return node.outputReference;
