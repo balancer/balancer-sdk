@@ -29,7 +29,7 @@ export class LiquidityGaugeSubgraphRPCProvider
   subgraph: LiquidityGaugesSubgraphRepository;
   workingSupplies: { [gaugeAddress: string]: number } = {};
   relativeWeights: { [gaugeAddress: string]: number } = {};
-  rewardTokens: {
+  rewardData: {
     [gaugeAddress: string]: { [tokenAddress: string]: RewardData };
   } = {};
   gauges?: Promise<LiquidityGauge[]>;
@@ -60,7 +60,6 @@ export class LiquidityGaugeSubgraphRPCProvider
     console.time('fetching liquidity gauges');
     const gauges = await this.subgraph.fetch();
     const gaugeAddresses = gauges.map((g) => g.id);
-    this.rewardTokens = await this.multicall.getRewardData(gaugeAddresses);
     if (this.chainId == 1) {
       this.workingSupplies = await this.multicall.getWorkingSupplies(
         gaugeAddresses
@@ -71,6 +70,15 @@ export class LiquidityGaugeSubgraphRPCProvider
         gaugeAddresses
       );
     }
+    // TODO: Switch to getting rewards tokens from subgraph when indexer on polygon is fixed
+    // const rewardTokens = gauges.reduce((r: { [key: string]: string[] }, g) => {
+    //   r[g.id] ||= g.tokens ? g.tokens.map((t) => t.id.split('-')[0]) : [];
+    //   return r;
+    // }, {});
+    this.rewardData = await this.multicall.getRewardData(
+      gaugeAddresses //,
+      // rewardTokens
+    );
     console.timeEnd('fetching liquidity gauges');
     return gauges.map(this.compose.bind(this));
   }
@@ -117,7 +125,7 @@ export class LiquidityGaugeSubgraphRPCProvider
       totalSupply: parseFloat(subgraphGauge.totalSupply),
       workingSupply: this.workingSupplies[subgraphGauge.id],
       relativeWeight: this.relativeWeights[subgraphGauge.id],
-      rewardTokens: this.rewardTokens[subgraphGauge.id],
+      rewardTokens: this.rewardData[subgraphGauge.id],
     };
   }
 }
