@@ -10,12 +10,10 @@ import {
 import { StaticPoolRepository } from '../data';
 import { Pool } from '@/types';
 import { Join } from './joins.module';
-import { Node, PoolGraph } from './graph';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { Network } from '@/lib/constants/network';
 import { formatAddress } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
-import { WeiPerEther } from '@ethersproject/constants';
 import { parseFixed } from '@/lib/utils/math';
 
 const slippage = '0';
@@ -180,7 +178,7 @@ describe('Generalised Joins', () => {
       });
 
       it('single leaf token', async () => {
-        const inputTokens = ['0x6b175474e89094c44da98b954eedeac495271d0f'];
+        const inputTokens = [ADDRESSES[Network.MAINNET].DAI.address];
         const inputAmounts = ['1000000000000000000'];
         const root = await joinModule.joinPool(
           rootPool.id,

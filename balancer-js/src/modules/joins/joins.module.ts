@@ -278,11 +278,12 @@ export class Join {
     // Create actions for each Node and return in multicall array
     orderedNodes.forEach((node, i) => {
       // if all child nodes have 0 output amount, then forward it to outputRef and skip adding current call
+      // TODO Check logic of this with Bruno
       if (
         node.children.length > 0 &&
         node.children.filter((c) => c.outputReference !== '0').length === 0
       ) {
-        node.outputReference = '0'; // TODO Why is this neccessary?
+        node.outputReference = '0';
         return;
       }
 
@@ -315,20 +316,6 @@ export class Join {
         case 'joinPool':
           calls.push(this.createJoinPool(node, minOut, sender, recipient));
           break;
-        default: {
-          // const inputs = node.children.map((t) => {
-          //   return t.outputReference;
-          // });
-          // console.log(
-          //   'Unsupported action',
-          //   node.type,
-          //   node.address,
-          //   node.action,
-          //   `Inputs: ${inputs.toString()}`,
-          //   `OutputRef: ${node.outputReference}`,
-          //   node.proportionOfParent.toString()
-          // );
-        }
       }
     });
     return calls;
@@ -429,46 +416,31 @@ export class Join {
     sender: string,
     recipient: string
   ): string {
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.action}(
-    //     inputAmt: ${node.children[0].outputReference},
-    //     inputToken: ${node.children[0].address},
-    //     pool: ${node.id},
-    //     outputToken: ${node.address},
-    //     outputRef: ${node.outputReference}
-    //   )`
-    // );
-
-    const inputTokens: string[] = [];
-    const inputAmts: string[] = [];
-
-    // For each child with a non-zero amount create an input for swap
-    node.children.forEach((child) => {
-      const amount = this.getOutputRefValue(child);
-      if (amount !== '0') {
-        inputTokens.push(child.address);
-        inputAmts.push(amount);
-      }
-    });
-
-    const assets = [node.address, ...inputTokens];
+    // We only need batchSwaps for main/wrapped > linearBpt so shouldn't be more than token > token
+    if (node.children.length !== 1) throw new Error('Unsupported batchswap');
+    const inputToken = node.children[0].address;
+    const inputValue = this.getOutputRefValue(node.children[0]);
+    const assets = [node.address, inputToken];
 
     // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
+    // First asset will always be the output token so use expectedOut to set limit
+    // We don't know input amounts if they are part of a chain so set to max input
+    // TODO can we be safer?
     const limits: string[] = [
       BigNumber.from(expectedOut).mul(-1).toString(),
-      ...inputAmts.map(() => MaxInt256.toString()), // TODO: check if it's worth limiting inputs as well - if yes, how to get the amount from children nodes?
+      inputValue.isRef ? MaxInt256.toString() : inputValue.value,
     ];
 
-    const swaps: BatchSwapStep[] = inputTokens.map((token, i) => {
-      return {
+    // TODO Change to single swap to save gas
+    const swaps: BatchSwapStep[] = [
+      {
         poolId: node.id,
-        assetInIndex: assets.indexOf(token),
-        assetOutIndex: assets.indexOf(node.address), // TODO - Is this right?
-        amount: inputAmts[i],
+        assetInIndex: 1,
+        assetOutIndex: 0,
+        amount: inputValue.value,
         userData: '0x',
-      };
-    });
+      },
+    ];
 
     const funds: FundManagement = {
       sender,
@@ -484,6 +456,17 @@ export class Join {
       },
     ];
 
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+    //   ${node.action}(
+    //     inputAmt: ${node.children[0].outputReference},
+    //     inputToken: ${node.children[0].address},
+    //     pool: ${node.id},
+    //     outputToken: ${node.address},
+    //     outputRef: ${node.outputReference}
+    //   )`
+    // );
+
     const call = Relayer.encodeBatchSwap({
       swapType: SwapType.SwapExactIn,
       swaps,
@@ -498,11 +481,19 @@ export class Join {
     return call;
   }
 
-  getOutputRefValue(node: Node): string {
-    if (node.action === 'input') return node.outputReference;
+  getOutputRefValue(node: Node): { value: string; isRef: boolean } {
+    if (node.action === 'input')
+      return { value: node.outputReference, isRef: false };
     else if (node.outputReference !== '0')
-      return Relayer.toChainedReference(node.outputReference).toString();
-    else return '0';
+      return {
+        value: Relayer.toChainedReference(node.outputReference).toString(),
+        isRef: true,
+      };
+    else
+      return {
+        value: '0',
+        isRef: true,
+      };
   }
 
   createJoinPool(
@@ -517,7 +508,7 @@ export class Join {
     // inputTokens needs to include each asset even if it has 0 amount
     node.children.forEach((child) => {
       inputTokens.push(child.address);
-      inputAmts.push(this.getOutputRefValue(child));
+      inputAmts.push(this.getOutputRefValue(child).value);
     });
 
     if (node.type === PoolType.ComposableStable) {
