@@ -41,7 +41,7 @@ const pool = pools_14717479.find(
 const tokensOut = pool.tokens;
 const controller = Pools.wrap(pool, networkConfig);
 
-describe('exit execution', async () => {
+describe('exit meta stable pools execution', async () => {
   let amountsOut: string[];
   let transactionReceipt: TransactionReceipt;
   let bptBalanceBefore: BigNumber;

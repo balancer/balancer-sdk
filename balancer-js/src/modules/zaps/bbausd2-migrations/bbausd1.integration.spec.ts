@@ -4,11 +4,10 @@ import hardhat from 'hardhat';
 import {
   BalancerError,
   BalancerErrorCode,
+  BalancerSDK,
   Network,
   RelayerAuthorization,
   PoolModel,
-  Subgraph,
-  SubgraphPoolRepository,
 } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
@@ -16,7 +15,6 @@ import { ADDRESSES } from './addresses';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256, WeiPerEther } from '@ethersproject/constants';
 import { Migrations } from '../migrations';
-import { PoolsProvider } from '@/modules/pools/provider';
 import { getErc20Balance, move, stake } from '@/test/lib/utils';
 
 dotenv.config();
@@ -125,15 +123,11 @@ describe('bbausd migration execution', async () => {
       provider
     );
 
-    const config = {
+    const sdk = new BalancerSDK({
       network,
       rpcUrl,
-    };
-    const subgraph = new Subgraph(config);
-    const pools = new PoolsProvider(
-      config,
-      new SubgraphPoolRepository(subgraph.client)
-    );
+    });
+    const { pools } = sdk;
     await pools.findBy('address', fromPool.address).then((res) => {
       if (!res) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
       pool = res;

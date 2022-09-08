@@ -30,8 +30,8 @@ export const forkSetup = async (
   slots: number[],
   balances: string[],
   jsonRpcUrl: string,
-  isVyperMapping = false,
-  blockNumber?: number
+  blockNumber?: number,
+  isVyperMapping = false
 ): Promise<void> => {
   await signer.provider.send('hardhat_reset', [
     {

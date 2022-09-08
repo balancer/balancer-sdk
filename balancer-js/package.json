@@ -51,6 +51,7 @@
     "@graphql-codegen/typescript-graphql-request": "^4.3.0",
     "@graphql-codegen/typescript-operations": "^2.2.0",
     "@graphql-codegen/typescript-resolvers": "2.4.1",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.4",
     "@nomiclabs/hardhat-ethers": "^2.0.5",
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-json": "^4.1.0",
