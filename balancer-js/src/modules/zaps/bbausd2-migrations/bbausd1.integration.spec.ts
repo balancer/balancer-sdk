@@ -7,7 +7,7 @@ import {
   BalancerSDK,
   Network,
   RelayerAuthorization,
-  PoolModel,
+  PoolWithMethods,
 } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
@@ -104,7 +104,7 @@ describe('bbausd migration execution', async () => {
   let signerAddress: string;
   let authorisation: string;
   let balance: BigNumber;
-  let pool: PoolModel;
+  let pool: PoolWithMethods;
 
   beforeEach(async function () {
     await reset();
