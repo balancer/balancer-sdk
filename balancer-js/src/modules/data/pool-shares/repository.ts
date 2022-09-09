@@ -1,5 +1,6 @@
 import { PoolShare } from '@/types';
-import { PoolShareAttributes } from './types';
+import { PoolShareAttribute, PoolShareAttributes } from './types';
+import { Findable } from '../types';
 import {
     createSubgraphClient,
     SubgraphClient
@@ -10,7 +11,7 @@ import {
     OrderDirection
 } from '@/modules/subgraph/generated/balancer-subgraph-types';
 
-export class PoolSharesRepository {
+export class PoolSharesRepository implements Findable<PoolShare, PoolShareAttribute> {
     
     private client: SubgraphClient;
   
@@ -18,24 +19,19 @@ export class PoolSharesRepository {
         this.client = createSubgraphClient(url);
     }
     
-    async findById(id: string): Promise<PoolShare | undefined> {
+    async find(id: string): Promise<PoolShare | undefined> {
         const { poolShare } = await this.client.PoolShare({ id: id });
         return poolShare ? this.mapType(poolShare) : undefined;
     }
-
-    async findByUser(userAddress: string, 
-            first: number = 200, 
-            skip: number = 0):  Promise<PoolShare[]> {
-        return this.findBy(PoolShareAttributes.UserAddress, userAddress, first, skip);
-    }
-
-    async findByPool(poolId: string, 
-            first: number = 1000, 
-            skip: number = 0):  Promise<PoolShare[]> {
-        return this.findBy(PoolShareAttributes.PoolId, poolId, first, skip);
+    
+    async findBy(attribute: PoolShareAttribute, 
+        value: string): Promise<PoolShare | undefined> {
+        if (attribute != PoolShareAttributes.Id) return undefined;
+        const { poolShare } = await this.client.PoolShare( { [attribute]: value });
+        return poolShare ? this.mapType(poolShare) : undefined;
     }
     
-    async findBy(attribute: string, 
+    async findAllBy(attribute: PoolShareAttribute, 
             value: string,
             first: number, 
             skip: number):  Promise<PoolShare[]> {
@@ -47,6 +43,18 @@ export class PoolSharesRepository {
             orderDirection: OrderDirection.Desc
         });
         return poolShares.map(this.mapType);
+    }
+    
+    async findByUser(userAddress: string, 
+            first: number = 200, 
+            skip: number = 0):  Promise<PoolShare[]> {
+        return this.findAllBy(PoolShareAttributes.UserAddress, userAddress, first, skip);
+    }
+    
+    async findByPool(poolId: string, 
+            first: number = 1000, 
+            skip: number = 0):  Promise<PoolShare[]> {
+        return this.findAllBy(PoolShareAttributes.PoolId, poolId, first, skip);
     }
     
     private mapType(subgraphPoolShare: SubgraphPoolShareFragment): PoolShare {

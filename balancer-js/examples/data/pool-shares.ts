@@ -15,8 +15,8 @@ const { data } = sdk;
   const USER_ADDR = '0xba12222222228d8ba445958a75a0704d566bf2c8';
   
   let result;
-  
-  result = await data.poolShares.findById(POOLSHARE_ID);
+
+  result = await data.poolShares.find(POOLSHARE_ID);
   console.log('Pool share by id', result);
   
   result = await data.poolShares.findByUser(USER_ADDR);
@@ -30,6 +30,7 @@ const { data } = sdk;
   
   result = await data.poolShares.findByPool(POOL_ID, 2, 1);
   console.log('Pool shares by pool (#2 & #3)', result);
+  
 })();
 
 // npm run examples:exec -- ./examples/data/pool-shares.ts
