@@ -262,3 +262,10 @@ export interface PoolWithMethods extends Pool {
   ) => ExitPoolAttributes;
   calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
 }
+
+export interface PoolShare {
+  id: string,
+  userAddress: string,
+  poolId: string,
+  balance: string
+}

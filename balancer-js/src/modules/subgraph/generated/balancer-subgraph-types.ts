@@ -3544,17 +3544,25 @@ export enum _SubgraphErrorPolicy_ {
 
 export type PoolShareQueryVariables = Exact<{
   id: Scalars['ID'];
+  block?: InputMaybe<Block_Height>;
 }>;
 
 
-export type PoolShareQuery = { __typename?: 'Query', poolShare?: { __typename?: 'PoolShare', id: string, balance: string, userAddress: { __typename?: 'User', id: string }, poolId: { __typename?: 'Pool', id: string } } | null };
+export type PoolShareQuery = { __typename?: 'Query', poolShare?: { __typename?: 'PoolShare', id: string, balance: string, userAddress: { __typename?: 'User', id: string }, poolId: { __typename?: 'Pool', id: string, address: string } } | null };
 
-export type PoolSharesQueryVariables = Exact<{ [key: string]: never; }>;
+export type PoolSharesQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<PoolShare_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  where?: InputMaybe<PoolShare_Filter>;
+  block?: InputMaybe<Block_Height>;
+}>;
 
 
-export type PoolSharesQuery = { __typename?: 'Query', poolShares: Array<{ __typename?: 'PoolShare', id: string, balance: string, userAddress: { __typename?: 'User', id: string }, poolId: { __typename?: 'Pool', id: string } }> };
+export type PoolSharesQuery = { __typename?: 'Query', poolShares: Array<{ __typename?: 'PoolShare', id: string, balance: string, userAddress: { __typename?: 'User', id: string }, poolId: { __typename?: 'Pool', id: string, address: string } }> };
 
-export type SubgraphPoolShareFragment = { __typename?: 'PoolShare', id: string, balance: string, userAddress: { __typename?: 'User', id: string }, poolId: { __typename?: 'Pool', id: string } };
+export type SubgraphPoolShareFragment = { __typename?: 'PoolShare', id: string, balance: string, userAddress: { __typename?: 'User', id: string }, poolId: { __typename?: 'Pool', id: string, address: string } };
 
 export type PoolsQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']>;
@@ -3722,6 +3730,7 @@ export const SubgraphPoolShareFragmentDoc = gql`
   }
   poolId {
     id
+    address
   }
 }
     `;
@@ -3878,15 +3887,22 @@ export const SubgraphUserFragmentDoc = gql`
 }
     `;
 export const PoolShareDocument = gql`
-    query PoolShare($id: ID!) {
-  poolShare(id: $id) {
+    query PoolShare($id: ID!, $block: Block_height) {
+  poolShare(id: $id, block: $block) {
     ...SubgraphPoolShare
   }
 }
     ${SubgraphPoolShareFragmentDoc}`;
 export const PoolSharesDocument = gql`
-    query PoolShares {
-  poolShares {
+    query PoolShares($first: Int, $orderBy: PoolShare_orderBy, $orderDirection: OrderDirection, $skip: Int, $where: PoolShare_filter, $block: Block_height) {
+  poolShares(
+    first: $first
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    skip: $skip
+    where: $where
+    block: $block
+  ) {
     ...SubgraphPoolShare
   }
 }

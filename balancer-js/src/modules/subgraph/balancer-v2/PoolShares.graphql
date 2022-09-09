@@ -4,8 +4,22 @@ query PoolShare($id: ID!, $block: Block_height) {
   }
 }
 
-query PoolShares {
-  poolShares {
+query PoolShares(
+      $first: Int
+      $orderBy: PoolShare_orderBy 
+      $orderDirection: OrderDirection
+      $skip: Int 
+      $where: PoolShare_filter
+      $block: Block_height
+  ) {
+  poolShares(
+    first: $first
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    skip: $skip
+    where: $where
+    block: $block
+  ) {
     ...SubgraphPoolShare
   }
 }
@@ -18,5 +32,6 @@ fragment SubgraphPoolShare on PoolShare {
     }
     poolId {
       id
+      address
     }
 }
