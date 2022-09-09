@@ -483,10 +483,10 @@
     "@babel/helper-validator-identifier" "^7.18.6"
     to-fast-properties "^2.0.0"
 
-"@balancer-labs/sor@^4.0.1-beta.3":
-  version "4.0.1-beta.4"
-  resolved "https://registry.yarnpkg.com/@balancer-labs/sor/-/sor-4.0.1-beta.4.tgz#284b81123e90f2d29ae032cf5c03110de94eff39"
-  integrity sha512-5HPxdleLcQe2uVW8f1QJxyXo502CTW9BaR0oGTgbGicos34YrmxwlDIvplssiCXSPhVbWp24WGi8/pc54C84Cg==
+"@balancer-labs/sor@^4.0.1-beta.5":
+  version "4.0.1-beta.5"
+  resolved "https://registry.yarnpkg.com/@balancer-labs/sor/-/sor-4.0.1-beta.5.tgz#a65efd0cbfbf9ce41694387f9c89e617f5c3d07a"
+  integrity sha512-HRww8+5MtV+cTNiAVgpeEBAHCFrsXApibkkKZxB9Lazv5imhM/f0/RYDie+I9S+p57m82njQOr1L0k5MSUSrPw==
   dependencies:
     isomorphic-fetch "^2.2.1"
 
@@ -1449,13 +1449,6 @@
   dependencies:
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
-
-"@nomicfoundation/hardhat-network-helpers@^1.0.4":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@nomicfoundation/hardhat-network-helpers/-/hardhat-network-helpers-1.0.6.tgz#5e2026ddde5ca539f70a2bf498528afd08bd0827"
-  integrity sha512-a35iVD4ycF6AoTfllAnKm96IPIzzHpgKX/ep4oKc2bsUKFfMlacWdyntgC/7d5blyCTXfFssgNAvXDZfzNWVGQ==
-  dependencies:
-    ethereumjs-util "^7.1.4"
 
 "@nomiclabs/hardhat-ethers@^2.0.5":
   version "2.1.1"
