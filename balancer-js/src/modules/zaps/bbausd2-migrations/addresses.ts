@@ -143,13 +143,13 @@ export const ADDRESSES = {
       id: '',
       address: '',
       gauge: '',
-      assetOrder: [],
+      assetOrder: ['USDT', 'DAI', 'USDC'],
     },
     bbausd1: {
       id: '',
       address: '',
       gauge: '',
-      assetOrder: [],
+      assetOrder: ['bb-a-USDC', 'bb-a-DAI', 'bb-a-USDT'],
     },
     bbausd2: {
       id: '0x48e6b98ef6329f8f0a30ebb8c7c960330d64808500000000000000000000075b',
