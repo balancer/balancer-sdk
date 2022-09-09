@@ -2,6 +2,28 @@
 
 A JavaScript SDK which provides commonly used utilties for interacting with Balancer Protocol V2.
 
+## How to run the examples (Javascript)?
+
+**In order to run the examples provided, you need to follow the next steps:**
+
+1. git clone https://github.com/balancer-labs/balancer-sdk.git
+2. cd balancer-sdk
+3. cd balancer-js
+4. Create a .env file in the balancer-js folder
+5. In the .env file you will need to define and initialize the following variables
+
+   ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT]  
+   INFURA=[Infura API KEY]  
+   TRADER_KEY=[MetaMask PRIVATE KEY]  
+   We have defined both Alchemy and Infura, because some of the examples use Infura, others use Alchemy. However, feel free to modify accordingly and use your favourite one.
+
+6. Run 'npm run node', this runs a local Hardhat Network
+7. Open a new terminal
+8. cd to balancer-js
+9. Install ts-node using: npm install ts-node
+10. Install tsconfig-paths using: npm install --save-dev tsconfig-paths
+11. Run one of the provided examples (eg: npm run examples:run -- examples/join.ts)
+
 ## Installation
 
 ## Getting Started
@@ -10,8 +32,8 @@ A JavaScript SDK which provides commonly used utilties for interacting with Bala
 import { BalancerSDK, BalancerSdkConfig, Network } from '@balancer-labs/sdk';
 
 const config: BalancerSdkConfig = {
-    network: Network.MAINNET,
-    rpcUrl: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
+  network: Network.MAINNET,
+  rpcUrl: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
 };
 const balancer = new BalancerSDK(config);
 ```
@@ -20,16 +42,18 @@ In some examples we present a way to make end to end trades against mainnet stat
 
 Installation instructions for:
 
-* [Hardhat](https://hardhat.org/getting-started/#installation)
+- [Hardhat](https://hardhat.org/getting-started/#installation)
 
   To start a forked node:
+
   ```
   npm run node
   ```
 
-* [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation) - use with caution, still experimental.
-  
+- [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation) - use with caution, still experimental.
+
   To start a forked node:
+
   ```
   anvil -f FORKABLE_RPC_URL (optional pinned block: --fork-block-number XXX)
   ```
@@ -41,29 +65,28 @@ Exposes complete functionality for token swapping. An example of using the modul
 ```js
 // Uses SOR to find optimal route for a trading pair and amount
 const route = balancer.swaps.findRouteGivenIn({
-    tokenIn,
-    tokenOut,
-    amount,
-    gasPrice,
-    maxPools,
-})
+  tokenIn,
+  tokenOut,
+  amount,
+  gasPrice,
+  maxPools,
+});
 
 // Prepares transaction attributes based on the route
 const transactionAttributes = balancer.swaps.buildSwap({
-    userAddress,
-    swapInfo: route,
-    kind: 0, // 0 - givenIn, 1 - givenOut
-    deadline,
-    maxSlippage,
-})
+  userAddress,
+  swapInfo: route,
+  kind: 0, // 0 - givenIn, 1 - givenOut
+  deadline,
+  maxSlippage,
+});
 
 // Extract parameters required for sendTransaction
-const { to, data, value } = transactionAttributes
+const { to, data, value } = transactionAttributes;
 
 // Execution with ethers.js
-const transactionResponse = await signer.sendTransaction({ to, data, value })
+const transactionResponse = await signer.sendTransaction({ to, data, value });
 ```
-
 
 ## SwapsService
 
@@ -168,9 +191,9 @@ complex flash swaps, you will have to use batch swap directly.
 
 Gotchas:
 
--   Both pools must have both assets (tokens) for swaps to work
--   No pool token balances can be zero
--   If the flash swap isn't profitable, the internal flash loan will fail.
+- Both pools must have both assets (tokens) for swaps to work
+- No pool token balances can be zero
+- If the flash swap isn't profitable, the internal flash loan will fail.
 
 ### #encodeSimpleFlashSwap
 
@@ -218,29 +241,40 @@ swaps.querySimpleFlashSwap(batchSwap: {
 
 [Example](./examples/querySimpleFlashSwap.ts)
 
-## Pricing Module
+## Pricing
 
-Exposes Spot Price functionality allowing user to query spot price for token pair.
+Spot Price functionality allowing user to query spot price for token pair.
+
+### calcSpotPrice
+
+Find Spot Price for pair in specific pool.
+
+```js
+const balancer = new BalancerSDK(sdkConfig);
+const pool = await balancer.pools.find(poolId);
+const spotPrice = await pool.calcSpotPrice(
+    ADDRESSES[network].DAI.address,
+    ADDRESSES[network].BAL.address,
+  );
+```
+
+### #getSpotPrice
+
+Find Spot Price for a token pair - finds most liquid path and uses this as reference SP.
 
 ```js
 const pricing = new Pricing(sdkConfig);
 ```
 
-### #getSpotPrice
-
-Calculates Spot Price for a token pair - for specific pool if ID otherwise finds most liquid path and uses this as reference SP.
-
 @param { string } tokenIn Token in address.
 @param { string } tokenOut Token out address.
-@param { string } poolId Optional - if specified this pool will be used for SP calculation.
 @param { SubgraphPoolBase[] } pools Optional - Pool data. Will be fetched via dataProvider if not supplied.
-@returns  { string } Spot price.
+@returns { string } Spot price.
 
 ```js
 async getSpotPrice(
     tokenIn: string,
     tokenOut: string,
-    poolId = '',
     pools: SubgraphPoolBase[] = []
 ): Promise<string>
 ```
@@ -253,7 +287,7 @@ Exposes Join functionality allowing user to join pools.
 
 ```js
 const balancer = new BalancerSDK(sdkConfig);
-const pool = await balancer.poolsProvider.find(poolId);
+const pool = await balancer.pools.find(poolId);
 const { to, functionName, attributes, data } = pool.buildJoin(params);
 ```
 
@@ -285,7 +319,7 @@ Exposes Exit functionality allowing user to exit pools.
 
 ```js
 const balancer = new BalancerSDK(sdkConfig);
-const pool = await balancer.poolsProvider.find(poolId);
+const pool = await balancer.pools.find(poolId);
 const { to, functionName, attributes, data } = pool.buildExitExactBPTIn(params);
 ```
 
