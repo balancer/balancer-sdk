@@ -36,3 +36,31 @@ fragment SubgraphLiquidityGauge on LiquidityGauge {
     totalDeposited
   }
 }
+
+query Pools(
+  $skip: Int
+  $first: Int
+  $orderBy: Pool_orderBy
+  $orderDirection: OrderDirection
+  $where: Pool_filter
+  $block: Block_height
+) {
+  pools(
+    skip: $skip
+    first: $first
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    ...SubgraphPoolWithPreferentialGauge
+  }
+}
+
+fragment SubgraphPoolWithPreferentialGauge on Pool {
+  id
+  poolId
+  preferentialGauge {
+    ...SubgraphLiquidityGauge
+  }
+}

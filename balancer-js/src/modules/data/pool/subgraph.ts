@@ -8,6 +8,7 @@ import {
 } from '@/modules/subgraph/subgraph';
 import { PoolAttribute } from './types';
 import { Pool, PoolType } from '@/types';
+import { Network } from '@/lib/constants/network';
 
 /**
  * Access pools using generated subgraph client.
@@ -18,22 +19,25 @@ export class PoolsSubgraphRepository
   implements Findable<Pool, PoolAttribute>, Searchable<Pool>
 {
   private client: SubgraphClient;
-  public pools: SubgraphPool[] = [];
+  private pools?: Promise<Pool[]>;
 
   /**
    * Repository with optional lazy loaded blockHeight
    *
    * @param url subgraph URL
+   * @param chainId current network, needed for L2s logic
    * @param blockHeight lazy loading blockHeigh resolver
    */
   constructor(
     url: string,
+    private chainId: Network,
     private blockHeight?: () => Promise<number | undefined>
   ) {
     this.client = createSubgraphClient(url);
   }
 
-  async fetch(): Promise<SubgraphPool[]> {
+  async fetch(): Promise<Pool[]> {
+    console.time('fetching pools');
     const { pool0, pool1000 } = await this.client.Pools({
       where: { swapEnabled: true, totalShares_gt: '0' },
       orderBy: Pool_OrderBy.TotalLiquidity,
@@ -42,47 +46,37 @@ export class PoolsSubgraphRepository
         ? { number: await this.blockHeight() }
         : undefined,
     });
+    console.timeEnd('fetching pools');
 
     // TODO: how to best convert subgraph type to sdk internal type?
-    this.pools = [...pool0, ...pool1000];
-
-    return this.pools;
+    return [...pool0, ...pool1000].map(this.mapType.bind(this));
   }
 
   async find(id: string): Promise<Pool | undefined> {
-    if (this.pools.length == 0) {
-      await this.fetch();
-    }
-
-    return this.findBy('id', id);
+    return await this.findBy('id', id);
   }
 
   async findBy(param: PoolAttribute, value: string): Promise<Pool | undefined> {
-    if (this.pools.length == 0) {
-      await this.fetch();
+    if (!this.pools) {
+      this.pools = this.fetch();
     }
 
-    const pool = this.pools.find((pool) => pool[param] == value);
-    if (pool) {
-      return this.mapType(pool);
-    }
-    return undefined;
+    return (await this.pools).find((pool) => pool[param] == value);
   }
 
   async all(): Promise<Pool[]> {
-    if (this.pools.length == 0) {
-      await this.fetch();
+    if (!this.pools) {
+      this.pools = this.fetch();
     }
-
-    return this.pools.map(this.mapType);
+    return this.pools;
   }
 
   async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
-    if (this.pools.length == 0) {
-      await this.fetch();
+    if (!this.pools) {
+      this.pools = this.fetch();
     }
 
-    return (await this.all()).filter(filter);
+    return (await this.pools).filter(filter);
   }
 
   private mapType(subgraphPool: SubgraphPool): Pool {
@@ -90,6 +84,7 @@ export class PoolsSubgraphRepository
       id: subgraphPool.id,
       name: subgraphPool.name || '',
       address: subgraphPool.address,
+      chainId: this.chainId,
       poolType: subgraphPool.poolType as PoolType,
       swapFee: subgraphPool.swapFee,
       swapEnabled: subgraphPool.swapEnabled,
