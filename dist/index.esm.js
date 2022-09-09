@@ -777,6 +777,19 @@ function tokensToTokenPrices(tokens) {
 
 const isSameAddress = (address1, address2) => getAddress(address1) === getAddress(address2);
 
+var Network;
+(function (Network) {
+    Network[Network["MAINNET"] = 1] = "MAINNET";
+    Network[Network["ROPSTEN"] = 3] = "ROPSTEN";
+    Network[Network["RINKEBY"] = 4] = "RINKEBY";
+    Network[Network["GOERLI"] = 5] = "GOERLI";
+    Network[Network["G\u00D6RLI"] = 5] = "G\u00D6RLI";
+    Network[Network["OPTIMISM"] = 10] = "OPTIMISM";
+    Network[Network["KOVAN"] = 42] = "KOVAN";
+    Network[Network["POLYGON"] = 137] = "POLYGON";
+    Network[Network["ARBITRUM"] = 42161] = "ARBITRUM";
+})(Network || (Network = {}));
+
 var PoolSpecialization;
 (function (PoolSpecialization) {
     PoolSpecialization[PoolSpecialization["GeneralPool"] = 0] = "GeneralPool";
@@ -808,6 +821,8 @@ var PoolType;
     PoolType["AaveLinear"] = "AaveLinear";
     PoolType["ERC4626Linear"] = "ERC4626Linear";
     PoolType["Element"] = "Element";
+    PoolType["Gyro2"] = "Gyro2";
+    PoolType["Gyro3"] = "Gyro3";
 })(PoolType || (PoolType = {}));
 
 var SwapType;
@@ -852,19 +867,6 @@ function getLimitsForSlippage(tokensIn, tokensOut, swapType, deltas, assets, sli
     });
     return limits;
 }
-
-var Network;
-(function (Network) {
-    Network[Network["MAINNET"] = 1] = "MAINNET";
-    Network[Network["ROPSTEN"] = 3] = "ROPSTEN";
-    Network[Network["RINKEBY"] = 4] = "RINKEBY";
-    Network[Network["GOERLI"] = 5] = "GOERLI";
-    Network[Network["G\u00D6RLI"] = 5] = "G\u00D6RLI";
-    Network[Network["OPTIMISM"] = 10] = "OPTIMISM";
-    Network[Network["KOVAN"] = 42] = "KOVAN";
-    Network[Network["POLYGON"] = 137] = "POLYGON";
-    Network[Network["ARBITRUM"] = 42161] = "ARBITRUM";
-})(Network || (Network = {}));
 
 const bpsPerOne = BigNumber.from('10000'); // number of basis points in 100%
 /**
@@ -957,7 +959,7 @@ const BALANCER_NETWORK_CONFIG = {
         },
         urls: {
             subgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2',
-            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-polygon',
             blockNumberSubgraph: 'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
         },
         pools: {},
@@ -980,7 +982,7 @@ const BALANCER_NETWORK_CONFIG = {
         },
         urls: {
             subgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-arbitrum-v2',
-            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-arbitrum',
             blockNumberSubgraph: 'https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-one-blocks',
         },
         pools: {},
@@ -3332,7 +3334,7 @@ var PoolToken_OrderBy;
     PoolToken_OrderBy["Token"] = "token";
     PoolToken_OrderBy["Weight"] = "weight";
 })(PoolToken_OrderBy || (PoolToken_OrderBy = {}));
-var Pool_OrderBy;
+var Pool_OrderBy$1;
 (function (Pool_OrderBy) {
     Pool_OrderBy["Address"] = "address";
     Pool_OrderBy["Amp"] = "amp";
@@ -3376,7 +3378,7 @@ var Pool_OrderBy;
     Pool_OrderBy["VaultId"] = "vaultID";
     Pool_OrderBy["WeightUpdates"] = "weightUpdates";
     Pool_OrderBy["WrappedIndex"] = "wrappedIndex";
-})(Pool_OrderBy || (Pool_OrderBy = {}));
+})(Pool_OrderBy$1 || (Pool_OrderBy$1 = {}));
 var PriceRateProvider_OrderBy;
 (function (PriceRateProvider_OrderBy) {
     PriceRateProvider_OrderBy["Address"] = "address";
@@ -3631,7 +3633,7 @@ const SubgraphUserFragmentDoc = gql$1 `
   }
 }
     `;
-const PoolsDocument = gql$1 `
+const PoolsDocument$1 = gql$1 `
     query Pools($skip: Int, $first: Int, $orderBy: Pool_orderBy, $orderDirection: OrderDirection, $where: Pool_filter, $block: Block_height) {
   pool0: pools(
     first: 1000
@@ -3806,7 +3808,7 @@ const defaultWrapper$1 = (action, _operationName, _operationType) => action();
 function getSdk$1(client, withWrapper = defaultWrapper$1) {
     return {
         Pools(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(PoolsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), 'Pools', 'query');
+            return withWrapper((wrappedRequestHeaders) => client.request(PoolsDocument$1, variables, { ...requestHeaders, ...wrappedRequestHeaders }), 'Pools', 'query');
         },
         Pool(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(PoolDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), 'Pool', 'query');
@@ -3881,16 +3883,23 @@ var GaugeVote_OrderBy;
 })(GaugeVote_OrderBy || (GaugeVote_OrderBy = {}));
 var Gauge_OrderBy;
 (function (Gauge_OrderBy) {
+    Gauge_OrderBy["AddedTimestamp"] = "addedTimestamp";
     Gauge_OrderBy["Address"] = "address";
     Gauge_OrderBy["Id"] = "id";
+    Gauge_OrderBy["LiquidityGauge"] = "liquidityGauge";
+    Gauge_OrderBy["RootGauge"] = "rootGauge";
     Gauge_OrderBy["Type"] = "type";
 })(Gauge_OrderBy || (Gauge_OrderBy = {}));
 var LiquidityGauge_OrderBy;
 (function (LiquidityGauge_OrderBy) {
     LiquidityGauge_OrderBy["Factory"] = "factory";
+    LiquidityGauge_OrderBy["Gauge"] = "gauge";
     LiquidityGauge_OrderBy["Id"] = "id";
+    LiquidityGauge_OrderBy["IsKilled"] = "isKilled";
+    LiquidityGauge_OrderBy["Pool"] = "pool";
     LiquidityGauge_OrderBy["PoolAddress"] = "poolAddress";
     LiquidityGauge_OrderBy["PoolId"] = "poolId";
+    LiquidityGauge_OrderBy["RelativeWeightCap"] = "relativeWeightCap";
     LiquidityGauge_OrderBy["Shares"] = "shares";
     LiquidityGauge_OrderBy["Streamer"] = "streamer";
     LiquidityGauge_OrderBy["Symbol"] = "symbol";
@@ -3903,6 +3912,15 @@ var OrderDirection;
     OrderDirection["Asc"] = "asc";
     OrderDirection["Desc"] = "desc";
 })(OrderDirection || (OrderDirection = {}));
+var Pool_OrderBy;
+(function (Pool_OrderBy) {
+    Pool_OrderBy["Address"] = "address";
+    Pool_OrderBy["Gauges"] = "gauges";
+    Pool_OrderBy["GaugesList"] = "gaugesList";
+    Pool_OrderBy["Id"] = "id";
+    Pool_OrderBy["PoolId"] = "poolId";
+    Pool_OrderBy["PreferentialGauge"] = "preferentialGauge";
+})(Pool_OrderBy || (Pool_OrderBy = {}));
 var RewardToken_OrderBy;
 (function (RewardToken_OrderBy) {
     RewardToken_OrderBy["Decimals"] = "decimals";
@@ -3914,8 +3932,12 @@ var RewardToken_OrderBy;
 var RootGauge_OrderBy;
 (function (RootGauge_OrderBy) {
     RootGauge_OrderBy["Chain"] = "chain";
+    RootGauge_OrderBy["Factory"] = "factory";
+    RootGauge_OrderBy["Gauge"] = "gauge";
     RootGauge_OrderBy["Id"] = "id";
+    RootGauge_OrderBy["IsKilled"] = "isKilled";
     RootGauge_OrderBy["Recipient"] = "recipient";
+    RootGauge_OrderBy["RelativeWeightCap"] = "relativeWeightCap";
 })(RootGauge_OrderBy || (RootGauge_OrderBy = {}));
 var User_OrderBy;
 (function (User_OrderBy) {
@@ -3929,6 +3951,7 @@ var VotingEscrowLock_OrderBy;
     VotingEscrowLock_OrderBy["Id"] = "id";
     VotingEscrowLock_OrderBy["LockedBalance"] = "lockedBalance";
     VotingEscrowLock_OrderBy["UnlockTime"] = "unlockTime";
+    VotingEscrowLock_OrderBy["UpdatedAt"] = "updatedAt";
     VotingEscrowLock_OrderBy["User"] = "user";
     VotingEscrowLock_OrderBy["VotingEscrowId"] = "votingEscrowID";
 })(VotingEscrowLock_OrderBy || (VotingEscrowLock_OrderBy = {}));
@@ -3965,6 +3988,15 @@ const SubgraphLiquidityGaugeFragmentDoc = gql$1 `
   }
 }
     `;
+const SubgraphPoolWithPreferentialGaugeFragmentDoc = gql$1 `
+    fragment SubgraphPoolWithPreferentialGauge on Pool {
+  id
+  poolId
+  preferentialGauge {
+    ...SubgraphLiquidityGauge
+  }
+}
+    ${SubgraphLiquidityGaugeFragmentDoc}`;
 const LiquidityGaugesDocument = gql$1 `
     query LiquidityGauges($skip: Int, $first: Int, $orderBy: LiquidityGauge_orderBy, $orderDirection: OrderDirection, $where: LiquidityGauge_filter, $block: Block_height) {
   liquidityGauges(
@@ -3979,11 +4011,28 @@ const LiquidityGaugesDocument = gql$1 `
   }
 }
     ${SubgraphLiquidityGaugeFragmentDoc}`;
+const PoolsDocument = gql$1 `
+    query Pools($skip: Int, $first: Int, $orderBy: Pool_orderBy, $orderDirection: OrderDirection, $where: Pool_filter, $block: Block_height) {
+  pools(
+    skip: $skip
+    first: $first
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    ...SubgraphPoolWithPreferentialGauge
+  }
+}
+    ${SubgraphPoolWithPreferentialGaugeFragmentDoc}`;
 const defaultWrapper = (action, _operationName, _operationType) => action();
 function getSdk(client, withWrapper = defaultWrapper) {
     return {
         LiquidityGauges(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(LiquidityGaugesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), 'LiquidityGauges', 'query');
+        },
+        Pools(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(PoolsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), 'Pools', 'query');
         }
     };
 }
@@ -8162,7 +8211,7 @@ class SubgraphPoolDataService {
     async getLinearPools() {
         const { pool0, pool1000 } = await this.client.Pools({
             where: { swapEnabled: true, totalShares_gt: '0' },
-            orderBy: Pool_OrderBy.TotalLiquidity,
+            orderBy: Pool_OrderBy$1.TotalLiquidity,
             orderDirection: OrderDirection$1.Desc,
         });
         const pools = [...pool0, ...pool1000];
@@ -8171,7 +8220,7 @@ class SubgraphPoolDataService {
     async getNonLinearPools() {
         const { pools } = await this.client.PoolsWithoutLinear({
             where: { swapEnabled: true, totalShares_gt: '0' },
-            orderBy: Pool_OrderBy.TotalLiquidity,
+            orderBy: Pool_OrderBy$1.TotalLiquidity,
             orderDirection: OrderDirection$1.Desc,
             first: 1000,
         });
@@ -12694,7 +12743,8 @@ class PoolApr {
      * @returns APR [bsp] from protocol rewards.
      */
     async stakingApr(pool, boost = 1) {
-        if (!this.liquidityGauges) {
+        // For L2s BAL is emmited as a reward token
+        if (!this.liquidityGauges || pool.chainId != 1) {
             return 0;
         }
         // Data resolving
@@ -12738,29 +12788,7 @@ class PoolApr {
         const rewards = rewardTokenAddresses.map(async (tAddress) => {
             /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */
             const data = gauge.rewardTokens[tAddress];
-            if (data.period_finish.toNumber() < Date.now() / 1000) {
-                return {
-                    address: tAddress,
-                    value: 0,
-                };
-            }
-            else {
-                const yearlyReward = data.rate.mul(86400).mul(365);
-                const price = await this.tokenPrices.find(tAddress);
-                if (price && price.usd) {
-                    const meta = await this.tokenMeta.find(tAddress);
-                    const decimals = (meta === null || meta === void 0 ? void 0 : meta.decimals) || 18;
-                    const yearlyRewardUsd = parseFloat(formatUnits(yearlyReward, decimals)) *
-                        parseFloat(price.usd);
-                    return {
-                        address: tAddress,
-                        value: yearlyRewardUsd,
-                    };
-                }
-                else {
-                    throw `No USD price for ${tAddress}`;
-                }
-            }
+            return this.rewardTokenApr(tAddress, data);
         });
         // Get the gauge totalSupplyUsd
         const bptPriceUsd = await this.bptPrice(pool);
@@ -12826,7 +12854,7 @@ class PoolApr {
             },
             rewardAprs,
             protocolApr,
-            min: swapFees + tokenAprs + rewardAprs.total + protocolApr + minStakingApr,
+            min: swapFees + tokenAprs + rewardAprs.total + minStakingApr,
             max: swapFees + tokenAprs + rewardAprs.total + protocolApr + maxStakingApr,
         };
     }
@@ -12869,6 +12897,31 @@ class PoolApr {
     async protocolSwapFeePercentage() {
         const fee = await this.feeCollector.find('');
         return fee ? fee : 0;
+    }
+    async rewardTokenApr(tokenAddress, rewardData) {
+        if (rewardData.period_finish.toNumber() < Date.now() / 1000) {
+            return {
+                address: tokenAddress,
+                value: 0,
+            };
+        }
+        else {
+            const yearlyReward = rewardData.rate.mul(86400).mul(365);
+            const price = await this.tokenPrices.find(tokenAddress);
+            if (price && price.usd) {
+                const meta = await this.tokenMeta.find(tokenAddress);
+                const decimals = (meta === null || meta === void 0 ? void 0 : meta.decimals) || 18;
+                const yearlyRewardUsd = parseFloat(formatUnits(yearlyReward, decimals)) *
+                    parseFloat(price.usd);
+                return {
+                    address: tokenAddress,
+                    value: yearlyRewardUsd,
+                };
+            }
+            else {
+                throw `No USD price for ${tokenAddress}`;
+            }
+        }
     }
 }
 
@@ -13015,7 +13068,8 @@ const liquidityGaugeV5Interface = new Interface([
  * TODO: reseach helper contracts or extend subgraph
  */
 class LiquidityGaugesMulticallRepository {
-    constructor(multicallAddress, provider) {
+    constructor(multicallAddress, chainId, provider) {
+        this.chainId = chainId;
         this.multicall = Multicall(multicallAddress, provider);
     }
     async getTotalSupplies(gaugeAddresses) {
@@ -13047,17 +13101,26 @@ class LiquidityGaugesMulticallRepository {
         return workingSupplies;
     }
     async getRewardCounts(gaugeAddresses) {
-        const payload = gaugeAddresses.map((gaugeAddress) => [
-            gaugeAddress,
-            liquidityGaugeV5Interface.encodeFunctionData('reward_count', []),
-        ]);
-        const [, res] = await this.multicall.aggregate(payload);
-        // Handle 0x return values
-        const res0x = res.map((r) => (r == '0x' ? '0x0' : r));
-        const rewardCounts = gaugeAddresses.reduce((p, a, i) => {
-            p[a] || (p[a] = parseInt(res0x[i]));
-            return p;
-        }, {});
+        let rewardCounts;
+        if (this.chainId == 1) {
+            const payload = gaugeAddresses.map((gaugeAddress) => [
+                gaugeAddress,
+                liquidityGaugeV5Interface.encodeFunctionData('reward_count', []),
+            ]);
+            const [, res] = await this.multicall.aggregate(payload);
+            // Handle 0x return values
+            const res0x = res.map((r) => (r == '0x' ? '0x0' : r));
+            rewardCounts = gaugeAddresses.reduce((p, a, i) => {
+                p[a] || (p[a] = parseInt(res0x[i]));
+                return p;
+            }, {});
+        }
+        else {
+            rewardCounts = gaugeAddresses.reduce((p, a) => {
+                p[a] || (p[a] = 1);
+                return p;
+            }, {});
+        }
         return rewardCounts;
     }
     async getRewardTokens(gaugeAddresses, passingRewardCounts) {
@@ -13136,9 +13199,14 @@ class LiquidityGaugesSubgraphRepository {
         this.client = createGaugesClient(url);
     }
     async fetch() {
-        const queryResult = await this.client.LiquidityGauges();
+        const queryResult = await this.client.Pools({
+            where: {
+                preferentialGauge_not: null,
+            },
+        });
+        const qauges = queryResult.pools.map((pool) => pool.preferentialGauge);
         // TODO: optionally convert subgraph type to sdk internal type
-        this.gauges = queryResult.liquidityGauges;
+        this.gauges = qauges;
         return this.gauges;
     }
     async find(id) {
@@ -13167,36 +13235,47 @@ class LiquidityGaugesSubgraphRepository {
 }
 
 class LiquidityGaugeSubgraphRPCProvider {
-    constructor(subgraphUrl, multicallAddress, gaugeControllerAddress, provider) {
-        this.totalSupplies = {};
+    constructor(subgraphUrl, multicallAddress, gaugeControllerAddress, chainId, provider) {
+        this.chainId = chainId;
         this.workingSupplies = {};
         this.relativeWeights = {};
-        this.rewardTokens = {};
-        this.gaugeController = new GaugeControllerMulticallRepository(multicallAddress, gaugeControllerAddress, provider);
-        this.multicall = new LiquidityGaugesMulticallRepository(multicallAddress, provider);
+        this.rewardData = {};
+        if (gaugeControllerAddress) {
+            this.gaugeController = new GaugeControllerMulticallRepository(multicallAddress, gaugeControllerAddress, provider);
+        }
+        this.multicall = new LiquidityGaugesMulticallRepository(multicallAddress, chainId, provider);
         this.subgraph = new LiquidityGaugesSubgraphRepository(subgraphUrl);
     }
     async fetch() {
+        console.time('fetching liquidity gauges');
         const gauges = await this.subgraph.fetch();
         const gaugeAddresses = gauges.map((g) => g.id);
-        this.totalSupplies = await this.multicall.getTotalSupplies(gaugeAddresses);
-        this.workingSupplies = await this.multicall.getWorkingSupplies(gaugeAddresses);
-        this.rewardTokens = await this.multicall.getRewardData(gaugeAddresses);
-        this.relativeWeights = await this.gaugeController.getRelativeWeights(gaugeAddresses);
+        if (this.chainId == 1) {
+            this.workingSupplies = await this.multicall.getWorkingSupplies(gaugeAddresses);
+        }
+        if (this.gaugeController) {
+            this.relativeWeights = await this.gaugeController.getRelativeWeights(gaugeAddresses);
+        }
+        // TODO: Switch to getting rewards tokens from subgraph when indexer on polygon is fixed
+        // const rewardTokens = gauges.reduce((r: { [key: string]: string[] }, g) => {
+        //   r[g.id] ||= g.tokens ? g.tokens.map((t) => t.id.split('-')[0]) : [];
+        //   return r;
+        // }, {});
+        this.rewardData = await this.multicall.getRewardData(gaugeAddresses //,
+        // rewardTokens
+        );
+        console.timeEnd('fetching liquidity gauges');
+        return gauges.map(this.compose.bind(this));
     }
     async find(id) {
-        if (Object.keys(this.relativeWeights).length == 0) {
-            await this.fetch();
+        if (!this.gauges) {
+            this.gauges = this.fetch();
         }
-        const gauge = await this.subgraph.find(id);
-        if (!gauge) {
-            return;
-        }
-        return this.compose(gauge);
+        return (await this.gauges).find((g) => g.id == id);
     }
     async findBy(attribute, value) {
-        if (Object.keys(this.relativeWeights).length == 0) {
-            await this.fetch();
+        if (!this.gauges) {
+            this.gauges = this.fetch();
         }
         let gauge;
         if (attribute == 'id') {
@@ -13206,18 +13285,15 @@ class LiquidityGaugeSubgraphRPCProvider {
             return this.find(value);
         }
         else if (attribute == 'poolId') {
-            gauge = await this.subgraph.findBy('poolId', value);
+            gauge = (await this.gauges).find((g) => g.poolId == value);
         }
         else if (attribute == 'poolAddress') {
-            gauge = await this.subgraph.findBy('poolAddress', value);
+            gauge = (await this.gauges).find((g) => g.poolAddress == value);
         }
         else {
             throw `search by ${attribute} not implemented`;
         }
-        if (!gauge) {
-            return undefined;
-        }
-        return this.compose(gauge);
+        return gauge;
     }
     compose(subgraphGauge) {
         return {
@@ -13226,10 +13302,10 @@ class LiquidityGaugeSubgraphRPCProvider {
             name: subgraphGauge.symbol,
             poolId: subgraphGauge.poolId,
             poolAddress: subgraphGauge.poolAddress,
-            totalSupply: this.totalSupplies[subgraphGauge.id],
+            totalSupply: parseFloat(subgraphGauge.totalSupply),
             workingSupply: this.workingSupplies[subgraphGauge.id],
             relativeWeight: this.relativeWeights[subgraphGauge.id],
-            rewardTokens: this.rewardTokens[subgraphGauge.id],
+            rewardTokens: this.rewardData[subgraphGauge.id],
         };
     }
 }
@@ -13321,59 +13397,55 @@ class PoolsSubgraphRepository {
      * Repository with optional lazy loaded blockHeight
      *
      * @param url subgraph URL
+     * @param chainId current network, needed for L2s logic
      * @param blockHeight lazy loading blockHeigh resolver
      */
-    constructor(url, blockHeight) {
+    constructor(url, chainId, blockHeight) {
+        this.chainId = chainId;
         this.blockHeight = blockHeight;
-        this.pools = [];
         this.client = createSubgraphClient(url);
     }
     async fetch() {
+        console.time('fetching pools');
         const { pool0, pool1000 } = await this.client.Pools({
             where: { swapEnabled: true, totalShares_gt: '0' },
-            orderBy: Pool_OrderBy.TotalLiquidity,
+            orderBy: Pool_OrderBy$1.TotalLiquidity,
             orderDirection: OrderDirection$1.Desc,
             block: this.blockHeight
                 ? { number: await this.blockHeight() }
                 : undefined,
         });
+        console.timeEnd('fetching pools');
         // TODO: how to best convert subgraph type to sdk internal type?
-        this.pools = [...pool0, ...pool1000];
-        return this.pools;
+        return [...pool0, ...pool1000].map(this.mapType.bind(this));
     }
     async find(id) {
-        if (this.pools.length == 0) {
-            await this.fetch();
-        }
-        return this.findBy('id', id);
+        return await this.findBy('id', id);
     }
     async findBy(param, value) {
-        if (this.pools.length == 0) {
-            await this.fetch();
+        if (!this.pools) {
+            this.pools = this.fetch();
         }
-        const pool = this.pools.find((pool) => pool[param] == value);
-        if (pool) {
-            return this.mapType(pool);
-        }
-        return undefined;
+        return (await this.pools).find((pool) => pool[param] == value);
     }
     async all() {
-        if (this.pools.length == 0) {
-            await this.fetch();
+        if (!this.pools) {
+            this.pools = this.fetch();
         }
-        return this.pools.map(this.mapType);
+        return this.pools;
     }
     async where(filter) {
-        if (this.pools.length == 0) {
-            await this.fetch();
+        if (!this.pools) {
+            this.pools = this.fetch();
         }
-        return (await this.all()).filter(filter);
+        return (await this.pools).filter(filter);
     }
     mapType(subgraphPool) {
         return {
             id: subgraphPool.id,
             name: subgraphPool.name || '',
             address: subgraphPool.address,
+            chainId: this.chainId,
             poolType: subgraphPool.poolType,
             swapFee: subgraphPool.swapFee,
             swapEnabled: subgraphPool.swapEnabled,
@@ -14762,7 +14834,7 @@ var initialCoingeckoList = [
 
 class Data {
     constructor(networkConfig, provider) {
-        this.pools = new PoolsSubgraphRepository(networkConfig.urls.subgraph);
+        this.pools = new PoolsSubgraphRepository(networkConfig.urls.subgraph, networkConfig.chainId);
         // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
         // TODO: find a better data source for that, eg: maybe DUNE once API is available
         if (networkConfig.urls.blockNumberSubgraph) {
@@ -14772,16 +14844,15 @@ class Data {
                     return await this.blockNumbers.find('dayAgo');
                 }
             };
-            this.yesterdaysPools = new PoolsSubgraphRepository(networkConfig.urls.subgraph, blockDayAgo);
+            this.yesterdaysPools = new PoolsSubgraphRepository(networkConfig.urls.subgraph, networkConfig.chainId, blockDayAgo);
         }
         const tokenAddresses = initialCoingeckoList
             .filter((t) => t.chainId == networkConfig.chainId)
             .map((t) => t.address);
         this.tokenPrices = new CoingeckoPriceRepository(tokenAddresses, networkConfig.chainId);
         this.tokenMeta = new StaticTokenProvider([]);
-        if (networkConfig.urls.gaugesSubgraph &&
-            networkConfig.addresses.contracts.gaugeController) {
-            this.liquidityGauges = new LiquidityGaugeSubgraphRPCProvider(networkConfig.urls.gaugesSubgraph, networkConfig.addresses.contracts.multicall, networkConfig.addresses.contracts.gaugeController, provider);
+        if (networkConfig.urls.gaugesSubgraph) {
+            this.liquidityGauges = new LiquidityGaugeSubgraphRPCProvider(networkConfig.urls.gaugesSubgraph, networkConfig.addresses.contracts.multicall, networkConfig.addresses.contracts.gaugeController || '', networkConfig.chainId, provider);
         }
         if (networkConfig.addresses.contracts.feeDistributor &&
             networkConfig.addresses.tokens.bal &&
