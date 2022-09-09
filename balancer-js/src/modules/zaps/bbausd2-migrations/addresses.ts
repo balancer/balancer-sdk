@@ -138,7 +138,7 @@ export const ADDRESSES = {
     miMATIC: '0x398106564948feeb1fedea0709ae7d969d62a391',
   },
   137: {
-    relayer: '0x4574ccBcC09A00C9eE55fB92Fe353699A4fA800e',
+    relayer: '0xcf6a66E32dCa0e26AcC3426b851FD8aCbF12Dac7',
     staBal3: {
       id: '',
       address: '',
