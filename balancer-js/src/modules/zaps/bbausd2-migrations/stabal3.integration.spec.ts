@@ -100,7 +100,6 @@ describe('stabal3 migration execution', async () => {
   let balance: BigNumber;
 
   beforeEach(async function () {
-    this.timeout(20000);
     await reset();
 
     signer = provider.getSigner();
@@ -181,15 +180,13 @@ describe('stabal3 migration execution', async () => {
 
   context('staked', async () => {
     beforeEach(async function () {
-      this.timeout(20000);
-
       // Stake them
       await stake(signer, fromPool.address, fromPool.gauge, balance);
     });
 
     it('should transfer tokens from stable to boosted', async () => {
       bptOut = await testFlow(true);
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
@@ -199,13 +196,13 @@ describe('stabal3 migration execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
-    }).timeout(20000);
+    });
   });
 
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted', async () => {
       bptOut = await testFlow(false);
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
@@ -215,7 +212,7 @@ describe('stabal3 migration execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
-    }).timeout(20000);
+    });
   });
 
   context('authorisation', async () => {
@@ -231,7 +228,7 @@ describe('stabal3 migration execution', async () => {
         data: approval,
       });
       await testFlow(false, false);
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - auhtorisation should fail', async () => {
       let errorMessage = '';
@@ -241,6 +238,6 @@ describe('stabal3 migration execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#503'); // USER_DOESNT_ALLOW_RELAYER - Relayers must be allowed by both governance and the user account
-    }).timeout(20000);
-  }).timeout(20000);
-}).timeout(20000);
+    });
+  });
+});

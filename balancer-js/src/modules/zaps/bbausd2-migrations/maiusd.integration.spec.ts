@@ -14,18 +14,30 @@ import { getErc20Balance, move, stake } from '@/test/lib/utils';
  * Testing on GOERLI
  * - Update hardhat.config.js with chainId = 5
  * - Update ALCHEMY_URL on .env with a goerli api key
- * - Run goerli node on terminal: yarn run node
- * - Change `network` to Network.GOERLI
- * - Provide gaugeAddresses from goerli which can be found on subgraph: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-gauges-goerli
+ * - Run node on terminal: yarn run node
+ * - Uncomment section below
  */
+const network = Network.GOERLI;
+const blockNumber = 7376670;
+const holderAddress = '0x8fe3a2a5ae6baa201c26fc7830eb713f33d6b313';
+
+/*
+ * Testing on POLYGON
+ * - Update hardhat.config.js with chainId = 137
+ * - Update ALCHEMY_URL on .env with a goerli api key
+ * - Run node on terminal: yarn run node
+ * - Uncomment section below
+ */
+// const network = Network.POLYGON;
+// const blockNumber = 32856000;
+// const holderAddress = '0xfb0272990728a967ecaf702a1291fcd64c38ed25';
 
 dotenv.config();
 
-const { ALCHEMY_URL: jsonRpcUrl, FORK_BLOCK_NUMBER: blockNumber } = process.env;
+const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
-const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
@@ -42,7 +54,6 @@ const toPool = {
 const { contracts } = new Contracts(network as number, provider);
 const migrations = new Migrations(network);
 
-const holderAddress = '0x8fe3a2a5ae6baa201c26fc7830eb713f33d6b313';
 const relayer = addresses.relayer;
 
 const signRelayerApproval = async (
@@ -77,7 +88,7 @@ const reset = () =>
     {
       forking: {
         jsonRpcUrl,
-        blockNumber: (blockNumber && parseInt(blockNumber)) || 7376670,
+        blockNumber,
       },
     },
   ]);
@@ -89,7 +100,6 @@ describe('maiusd migration execution', async () => {
   let balance: BigNumber;
 
   beforeEach(async function () {
-    this.timeout(20000);
     await reset();
 
     signer = provider.getSigner();
@@ -172,15 +182,13 @@ describe('maiusd migration execution', async () => {
 
   context('staked', async () => {
     beforeEach(async function () {
-      this.timeout(20000);
-
       // Stake them
       await stake(signer, fromPool.address, fromPool.gauge, balance);
     });
 
     it('should transfer tokens from stable to boosted', async () => {
       bptOut = await testFlow(true);
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
@@ -190,13 +198,13 @@ describe('maiusd migration execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
-    }).timeout(20000);
+    });
   });
 
   context('not staked', async () => {
     it('should transfer tokens from stable to boosted', async () => {
       bptOut = await testFlow(false);
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - limit should fail', async () => {
       let errorMessage = '';
@@ -206,7 +214,7 @@ describe('maiusd migration execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#507'); // SWAP_LIMIT - Swap violates user-supplied limits (min out or max in)
-    }).timeout(20000);
+    });
   });
 
   context('authorisation', async () => {
@@ -222,7 +230,7 @@ describe('maiusd migration execution', async () => {
         data: approval,
       });
       await testFlow(false, false);
-    }).timeout(20000);
+    });
 
     it('should transfer tokens from stable to boosted - auhtorisation should fail', async () => {
       let errorMessage = '';
@@ -232,6 +240,6 @@ describe('maiusd migration execution', async () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.contain('BAL#503'); // USER_DOESNT_ALLOW_RELAYER - Relayers must be allowed by both governance and the user account
-    }).timeout(20000);
-  }).timeout(20000);
-}).timeout(20000);
+    });
+  });
+});
