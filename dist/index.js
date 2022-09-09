@@ -790,6 +790,16 @@ const parsePoolInfo = (pool) => {
     };
 };
 
+function tokensToTokenPrices(tokens) {
+    const tokenPrices = {};
+    tokens.forEach((token) => {
+        if (token.price) {
+            tokenPrices[token.address] = token.price;
+        }
+    });
+    return tokenPrices;
+}
+
 const isSameAddress = (address1, address2) => address.getAddress(address1) === address.getAddress(address2);
 
 exports.PoolSpecialization = void 0;
@@ -881,31 +891,6 @@ exports.Network = void 0;
     Network[Network["ARBITRUM"] = 42161] = "ARBITRUM";
 })(exports.Network || (exports.Network = {}));
 
-function parseFixed(value, decimals) {
-    const valueWithTrimmedDecimals = new RegExp(`[0-9]+\\.?[0-9]{0,${decimals}}`);
-    const result = value.match(valueWithTrimmedDecimals);
-    let parsedValue = value;
-    if (result) {
-        parsedValue = result[0];
-    }
-    return bignumber.parseFixed(parsedValue, decimals);
-}
-
-class StablePoolExit {
-    constructor() {
-        this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
-            // TODO implementation
-            console.log(exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut);
-            throw new Error('To be implemented');
-        };
-        this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
-            // TODO implementation
-            console.log(exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset);
-            throw new Error('To be implemented');
-        };
-    }
-}
-
 const bpsPerOne = bignumber.BigNumber.from('10000'); // number of basis points in 100%
 /**
  * Multiplies input by slippage amount
@@ -950,6 +935,8 @@ const BALANCER_NETWORK_CONFIG = {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0xeefba1e63905ef1d7acba5a8513c70307c1ce441',
                 lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
+                gaugeController: '0xc128468b7ce63ea702c1f104d55a2566b13d3abd',
+                feeDistributor: '0xD3cf852898b21fc233251427c2DC93d3d604F3BB',
             },
             tokens: {
                 wrappedNativeAsset: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -960,10 +947,15 @@ const BALANCER_NETWORK_CONFIG = {
                 ],
                 stETH: '0xae7ab96520de3a18e5e111b5eaab095312d7fe84',
                 wstETH: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+                bal: '0xba100000625a3754423978a60c9317c58a424e3d',
+                veBal: '0xC128a9954e6c874eA3d62ce62B468bA073093F25',
+                bbaUsd: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
             },
         },
         urls: {
             subgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2',
+            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+            blockNumberSubgraph: 'https://api.thegraph.com/subgraphs/name/blocklytics/ethereum-blocks',
         },
         pools: {
             wETHwstETH: {
@@ -978,13 +970,20 @@ const BALANCER_NETWORK_CONFIG = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
+                gaugeController: '',
+                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
+                bal: '',
+                veBal: '',
+                bbaUsd: '',
             },
         },
         urls: {
             subgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2',
+            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+            blockNumberSubgraph: 'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
         },
         pools: {},
     },
@@ -994,13 +993,20 @@ const BALANCER_NETWORK_CONFIG = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
+                gaugeController: '',
+                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+                bal: '',
+                veBal: '',
+                bbaUsd: '',
             },
         },
         urls: {
             subgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-arbitrum-v2',
+            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+            blockNumberSubgraph: 'https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-one-blocks',
         },
         pools: {},
     },
@@ -1010,13 +1016,19 @@ const BALANCER_NETWORK_CONFIG = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0x2cc8688C5f75E365aaEEb4ea8D6a480405A48D2A',
+                gaugeController: '',
+                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+                bal: '',
+                veBal: '',
+                bbaUsd: '',
             },
         },
         urls: {
             subgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-kovan-v2',
+            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
         },
         pools: {},
     },
@@ -1026,13 +1038,19 @@ const BALANCER_NETWORK_CONFIG = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0x53c43764255c17bd724f74c4ef150724ac50a3ed',
+                gaugeController: '',
+                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+                bal: '',
+                veBal: '',
+                bbaUsd: '',
             },
         },
         urls: {
             subgraph: '',
+            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
         },
         pools: {},
     },
@@ -1042,13 +1060,19 @@ const BALANCER_NETWORK_CONFIG = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0x42ad527de7d4e9d9d011ac45b31d8551f8fe9821',
+                gaugeController: '',
+                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+                bal: '',
+                veBal: '',
+                bbaUsd: '',
             },
         },
         urls: {
             subgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-rinkeby-v2',
+            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
         },
         pools: {},
     },
@@ -1058,13 +1082,20 @@ const BALANCER_NETWORK_CONFIG = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
+                gaugeController: '0xBB1CE49b16d55A1f2c6e88102f32144C7334B116',
+                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+                bal: '',
+                veBal: '',
+                bbaUsd: '',
             },
         },
         urls: {
             subgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2',
+            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+            blockNumberSubgraph: 'https://api.thegraph.com/subgraphs/name/blocklytics/goerli-blocks',
         },
         pools: {},
     },
@@ -1155,6 +1186,137 @@ class BalancerError extends Error {
     }
 }
 
+class StablePoolExit {
+    constructor() {
+        this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
+            if (!bptIn.length || bignumber.parseFixed(bptIn, 18).isNegative()) {
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
+            }
+            if (singleTokenMaxOut &&
+                singleTokenMaxOut !== constants.AddressZero &&
+                !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)) {
+                throw new BalancerError(exports.BalancerErrorCode.TOKEN_MISMATCH);
+            }
+            if (!shouldUnwrapNativeAsset && singleTokenMaxOut === constants.AddressZero)
+                throw new Error('shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values');
+            // Check if there's any relevant stable pool info missing
+            if (pool.tokens.some((token) => !token.decimals))
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_DECIMALS);
+            if (!pool.amp)
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_AMP);
+            // Parse pool info into EVM amounts in order to match amountsIn scalling
+            const { parsedTokens, parsedBalances, parsedAmp, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Replace WETH address with ETH - required for exiting with ETH
+            const unwrappedTokens = parsedTokens.map((token) => token === wrappedNativeAsset ? constants.AddressZero : token);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [sortedTokens, sortedBalances] = assetHelpers.sortTokens(shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens, parsedBalances);
+            let minAmountsOut = Array(parsedTokens.length).fill('0');
+            let userData;
+            if (singleTokenMaxOut) {
+                // Exit pool with single token using exact bptIn
+                const singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
+                // Calculate amount out given BPT in
+                const amountOut = SOR__namespace.StableMathBigInt._calcTokenOutGivenExactBptIn(BigInt(parsedAmp), sortedBalances.map((b) => BigInt(b)), singleTokenMaxOutIndex, BigInt(bptIn), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+                // Apply slippage tolerance
+                minAmountsOut[singleTokenMaxOutIndex] = subSlippage(bignumber.BigNumber.from(amountOut), bignumber.BigNumber.from(slippage)).toString();
+                userData = StablePoolEncoder.exitExactBPTInForOneTokenOut(bptIn, singleTokenMaxOutIndex);
+            }
+            else {
+                // Exit pool with all tokens proportinally
+                // Calculate amount out given BPT in
+                const amountsOut = SOR__namespace.StableMathBigInt._calcTokensOutGivenExactBptIn(sortedBalances.map((b) => BigInt(b)), BigInt(bptIn), BigInt(parsedTotalShares)).map((amount) => amount.toString());
+                // Apply slippage tolerance
+                minAmountsOut = amountsOut.map((amount) => {
+                    const minAmount = subSlippage(bignumber.BigNumber.from(amount), bignumber.BigNumber.from(slippage));
+                    return minAmount.toString();
+                });
+                userData = StablePoolEncoder.exitExactBPTInForTokensOut(bptIn);
+            }
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // Encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = typechain.Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut,
+                maxBPTIn: bptIn,
+            };
+        };
+        this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
+            if (tokensOut.length != amountsOut.length ||
+                tokensOut.length != pool.tokensList.length) {
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+            }
+            // Check if there's any relevant stable pool info missing
+            if (pool.tokens.some((token) => !token.decimals))
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_DECIMALS);
+            if (!pool.amp)
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_AMP);
+            // Parse pool info into EVM amounts in order to match amountsOut scalling
+            const { parsedTokens, parsedBalances, parsedAmp, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [, sortedBalances] = assetHelpers.sortTokens(parsedTokens, parsedBalances);
+            const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(tokensOut, amountsOut);
+            // Calculate expected BPT in given tokens out
+            const bptIn = SOR__namespace.StableMathBigInt._calcBptInGivenExactTokensOut(BigInt(parsedAmp), sortedBalances.map((b) => BigInt(b)), sortedAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+            // Apply slippage tolerance
+            const maxBPTIn = addSlippage(bignumber.BigNumber.from(bptIn), bignumber.BigNumber.from(slippage)).toString();
+            const userData = StablePoolEncoder.exitBPTInForExactTokensOut(sortedAmounts, maxBPTIn);
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut: sortedAmounts,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = typechain.Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut: sortedAmounts,
+                maxBPTIn,
+            };
+        };
+    }
+}
+
 class StablePoolJoin {
     constructor() {
         /**
@@ -1215,7 +1377,21 @@ class StablePoolJoin {
     }
 }
 
-const SCALING_FACTOR$5 = 18;
+function parseFixed(value, decimals) {
+    const valueWithTrimmedDecimals = new RegExp(`[0-9]+\\.?[0-9]{0,${decimals}}`);
+    const result = value.match(valueWithTrimmedDecimals);
+    let parsedValue = value;
+    if (result) {
+        parsedValue = result[0];
+    }
+    return bignumber.parseFixed(parsedValue, decimals);
+}
+function formatFixed(value, decimals) {
+    const ethersFormat = bignumber.formatFixed(value, decimals);
+    return ethersFormat.replace(/(.0$)/, '');
+}
+
+const SCALING_FACTOR$4 = 18;
 class StablePoolLiquidity {
     calcTotal(tokens) {
         var _a, _b;
@@ -1228,8 +1404,8 @@ class StablePoolLiquidity {
             if (!((_a = token.price) === null || _a === void 0 ? void 0 : _a.usd)) {
                 continue;
             }
-            const price = parseFixed(token.price.usd, SCALING_FACTOR$5);
-            const balance = parseFixed(token.balance, SCALING_FACTOR$5);
+            const price = parseFixed(token.price.usd.toString(), SCALING_FACTOR$4);
+            const balance = parseFixed(token.balance, SCALING_FACTOR$4);
             const value = balance.mul(price);
             sumValue = sumValue.add(value);
             sumBalance = sumBalance.add(balance);
@@ -1243,21 +1419,21 @@ class StablePoolLiquidity {
                 if ((_b = token.price) === null || _b === void 0 ? void 0 : _b.usd) {
                     continue;
                 }
-                const balance = parseFixed(token.balance, SCALING_FACTOR$5);
+                const balance = parseFixed(token.balance, SCALING_FACTOR$4);
                 const value = balance.mul(avgPrice);
                 sumValue = sumValue.add(value);
                 sumBalance = sumBalance.add(balance);
             }
         }
-        return bignumber.formatFixed(sumValue, SCALING_FACTOR$5 * 2).toString();
+        return bignumber.formatFixed(sumValue, SCALING_FACTOR$4 * 2).toString();
     }
 }
 
 class StablePoolSpotPrice {
     calcPoolSpotPrice(tokenIn, tokenOut, pool) {
-        const poolClass = SOR.StablePool.fromPool(pool);
-        const poolPairData = poolClass.parsePoolPairData(tokenIn, tokenOut);
-        return poolClass
+        const stablePool = SOR.StablePool.fromPool(pool);
+        const poolPairData = stablePool.parsePoolPairData(tokenIn, tokenOut);
+        return stablePool
             ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, SOR.ZERO)
             .toString();
     }
@@ -1884,17 +2060,6 @@ class Stable {
 
 class WeightedPoolExit {
     constructor() {
-        /**
-         * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
-         * @param {string}  exiter - Account address exiting pool
-         * @param {Pool}    pool - Subgraph pool object of pool being exited
-         * @param {string}  bptIn - BPT provided for exiting pool
-         * @param {string}  slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-         * @param {boolean} shouldUnwrapNativeAsset - Indicates wether wrapped native asset should be unwrapped after exit.
-         * @param {string}  wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting to native asset.
-         * @param {string}  singleTokenMaxOut - Optional: token address that if provided will exit to given token
-         * @returns         transaction request ready to send with signer.sendTransaction
-         */
         this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
             if (!bptIn.length || bignumber.parseFixed(bptIn, 18).isNegative()) {
                 throw new BalancerError(exports.BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
@@ -1920,7 +2085,7 @@ class WeightedPoolExit {
                 const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
                 // Calculate amount out given BPT in
                 const amountOut = SOR__namespace.WeightedMaths._calcTokenOutGivenExactBptIn(BigInt(sortedBalances[singleTokenMaxOutIndex]), BigInt(sortedWeights[singleTokenMaxOutIndex]), BigInt(bptIn), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
-                // Apply slippage
+                // Apply slippage tolerance
                 minAmountsOut[singleTokenMaxOutIndex] = subSlippage(bignumber.BigNumber.from(amountOut), bignumber.BigNumber.from(slippage)).toString();
                 userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(bptIn, singleTokenMaxOutIndex);
             }
@@ -1928,7 +2093,7 @@ class WeightedPoolExit {
                 // Exit pool with all tokens proportinally
                 // Calculate amounts out given BPT in
                 const amountsOut = SOR__namespace.WeightedMaths._calcTokensOutGivenExactBptIn(sortedBalances.map((b) => BigInt(b)), BigInt(bptIn), BigInt(parsedTotalShares)).map((amount) => amount.toString());
-                // Apply slippage
+                // Apply slippage tolerance
                 minAmountsOut = amountsOut.map((amount) => {
                     const minAmount = subSlippage(bignumber.BigNumber.from(amount), bignumber.BigNumber.from(slippage));
                     return minAmount.toString();
@@ -1965,16 +2130,6 @@ class WeightedPoolExit {
                 maxBPTIn: bptIn,
             };
         };
-        /**
-         * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
-         * @param {string}    exiter - Account address exiting pool
-         * @param {Pool}      pool - Subgraph pool object of pool being exited
-         * @param {string[]}  tokensOut - Tokens provided for exiting pool
-         * @param {string[]}  amountsOut - Amoutns provided for exiting pool
-         * @param {string}    slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-         * @param {string}    wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting with ETH.
-         * @returns           transaction request ready to send with signer.sendTransaction
-         */
         this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
             if (tokensOut.length != amountsOut.length ||
                 tokensOut.length != pool.tokensList.length) {
@@ -1988,7 +2143,7 @@ class WeightedPoolExit {
             const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(tokensOut, amountsOut);
             // Calculate expected BPT in given tokens out
             const bptIn = SOR__namespace.WeightedMaths._calcBptInGivenExactTokensOut(sortedBalances.map((b) => BigInt(b)), sortedWeights.map((w) => BigInt(w)), sortedAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
-            // Apply slippage
+            // Apply slippage tolerance
             const maxBPTIn = addSlippage(bignumber.BigNumber.from(bptIn), bignumber.BigNumber.from(slippage)).toString();
             const userData = WeightedPoolEncoder.exitBPTInForExactTokensOut(sortedAmounts, maxBPTIn);
             const to = balancerVault;
@@ -2085,28 +2240,29 @@ class WeightedPoolJoin {
     }
 }
 
-const SCALING_FACTOR$4 = 18;
+const SCALING_FACTOR$3 = 18;
 class WeightedPoolLiquidity {
     calcTotal(tokens) {
         var _a;
-        let sumWeight = constants.Zero;
-        let sumValue = constants.Zero;
+        let sumWeight = bignumber.BigNumber.from(0);
+        let sumValue = bignumber.BigNumber.from(0);
         for (let i = 0; i < tokens.length; i++) {
             const token = tokens[i];
             if (!((_a = token.price) === null || _a === void 0 ? void 0 : _a.usd)) {
                 continue;
             }
-            const price = parseFixed(token.price.usd, SCALING_FACTOR$4);
-            const balance = parseFixed(token.balance, SCALING_FACTOR$4);
+            const price = parseFixed(token.price.usd.toString(), SCALING_FACTOR$3);
+            const balance = parseFixed(token.balance, SCALING_FACTOR$3);
+            const weight = parseFixed(token.weight || '0', SCALING_FACTOR$3);
             const value = balance.mul(price);
             sumValue = sumValue.add(value);
-            sumWeight = sumWeight.add(token.weight || '0');
+            sumWeight = sumWeight.add(weight);
         }
         // Scale the known prices of x% of the pool to get value of 100% of the pool.
-        const totalWeight = tokens.reduce((total, token) => total.add(token.weight || '0'), constants.Zero);
+        const totalWeight = tokens.reduce((total, token) => total.add(parseFixed(token.weight || '0', SCALING_FACTOR$3)), bignumber.BigNumber.from(0));
         if (sumWeight.gt(0)) {
             const liquidity = sumValue.mul(totalWeight).div(sumWeight);
-            return bignumber.formatFixed(liquidity, SCALING_FACTOR$4 * 2);
+            return formatFixed(liquidity, SCALING_FACTOR$3 * 2);
         }
         return '0';
     }
@@ -2180,14 +2336,170 @@ class Weighted {
 class MetaStablePoolExit {
     constructor() {
         this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
-            // TODO implementation
-            console.log(exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut);
-            throw new Error('To be implemented');
+            if (!bptIn.length || bignumber.parseFixed(bptIn, 18).isNegative()) {
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
+            }
+            if (singleTokenMaxOut &&
+                singleTokenMaxOut !== constants.AddressZero &&
+                !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)) {
+                throw new BalancerError(exports.BalancerErrorCode.TOKEN_MISMATCH);
+            }
+            if (!shouldUnwrapNativeAsset && singleTokenMaxOut === constants.AddressZero)
+                throw new Error('shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values');
+            // Check if there's any relevant meta stable pool info missing
+            if (pool.tokens.some((token) => !token.decimals))
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_DECIMALS);
+            if (!pool.amp)
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_AMP);
+            if (pool.tokens.some((token) => !token.priceRate))
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_PRICE_RATE);
+            // Parse pool info into EVM amounts in order to match amountsIn scalling
+            const { parsedTokens, parsedBalances, parsedAmp, parsedPriceRates, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Replace WETH address with ETH - required for exiting with ETH
+            const unwrappedTokens = parsedTokens.map((token) => token === wrappedNativeAsset ? constants.AddressZero : token);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [sortedTokens, sortedBalances, sortedPriceRates] = assetHelpers.sortTokens(shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens, parsedBalances, parsedPriceRates);
+            // Scale balances based on price rate for each token
+            const scaledBalances = sortedBalances.map((balance, i) => {
+                return bignumber.BigNumber.from(balance)
+                    .mul(bignumber.BigNumber.from(sortedPriceRates[i]))
+                    .div(bignumber.parseFixed('1', 18))
+                    .toString();
+            });
+            let minAmountsOut = Array(parsedTokens.length).fill('0');
+            let userData;
+            if (singleTokenMaxOut) {
+                // Exit pool with single token using exact bptIn
+                const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
+                // Calculate amount out given BPT in
+                const scaledAmountOut = SOR__namespace.StableMathBigInt._calcTokenOutGivenExactBptIn(BigInt(parsedAmp), scaledBalances.map((b) => BigInt(b)), singleTokenMaxOutIndex, BigInt(bptIn), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+                // Reverse scaled amount out based on token price rate
+                const amountOut = bignumber.BigNumber.from(scaledAmountOut)
+                    .div(bignumber.BigNumber.from(sortedPriceRates[singleTokenMaxOutIndex]))
+                    .mul(bignumber.parseFixed('1', 18))
+                    .toString();
+                minAmountsOut[singleTokenMaxOutIndex] = subSlippage(bignumber.BigNumber.from(amountOut), bignumber.BigNumber.from(slippage)).toString();
+                userData = StablePoolEncoder.exitExactBPTInForOneTokenOut(bptIn, singleTokenMaxOutIndex);
+            }
+            else {
+                // Exit pool with all tokens proportinally
+                // Calculate amount out given BPT in
+                const scaledAmountsOut = SOR__namespace.StableMathBigInt._calcTokensOutGivenExactBptIn(scaledBalances.map((b) => BigInt(b)), BigInt(bptIn), BigInt(parsedTotalShares)).map((amount) => amount.toString());
+                // Reverse scaled amounts out based on token price rate
+                const amountsOut = scaledAmountsOut.map((amount, i) => {
+                    return bignumber.BigNumber.from(amount)
+                        .div(bignumber.BigNumber.from(sortedPriceRates[i]))
+                        .mul(bignumber.parseFixed('1', 18))
+                        .toString();
+                });
+                // Apply slippage tolerance
+                minAmountsOut = amountsOut.map((amount) => {
+                    const minAmount = subSlippage(bignumber.BigNumber.from(amount), bignumber.BigNumber.from(slippage));
+                    return minAmount.toString();
+                });
+                userData = StablePoolEncoder.exitExactBPTInForTokensOut(bptIn);
+            }
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = typechain.Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut,
+                maxBPTIn: bptIn,
+            };
         };
         this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
-            // TODO implementation
-            console.log(exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset);
-            throw new Error('To be implemented');
+            if (tokensOut.length != amountsOut.length ||
+                tokensOut.length != pool.tokensList.length) {
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+            }
+            // Check if there's any relevant meta stable pool info missing
+            if (pool.tokens.some((token) => !token.decimals))
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_DECIMALS);
+            if (!pool.amp)
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_AMP);
+            if (pool.tokens.some((token) => !token.priceRate))
+                throw new BalancerError(exports.BalancerErrorCode.MISSING_PRICE_RATE);
+            // Parse pool info into EVM amounts in order to match amountsOut scalling
+            const { parsedTokens, parsedBalances, parsedPriceRates, parsedAmp, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [, sortedBalances, sortedPriceRates] = assetHelpers.sortTokens(parsedTokens, parsedBalances, parsedPriceRates);
+            const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(tokensOut, amountsOut);
+            // Scale amounts out based on price rate for each token
+            const scaledAmounts = sortedAmounts.map((amount, i) => {
+                return bignumber.BigNumber.from(amount)
+                    .mul(bignumber.BigNumber.from(sortedPriceRates[i]))
+                    .div(bignumber.parseFixed('1', 18))
+                    .toString();
+            });
+            // Scale balances based on price rate for each token
+            const scaledBalances = sortedBalances.map((balance, i) => {
+                return bignumber.BigNumber.from(balance)
+                    .mul(bignumber.BigNumber.from(sortedPriceRates[i]))
+                    .div(bignumber.parseFixed('1', 18))
+                    .toString();
+            });
+            // Calculate expected BPT in given tokens out
+            const bptIn = SOR__namespace.StableMathBigInt._calcBptInGivenExactTokensOut(BigInt(parsedAmp), scaledBalances.map((b) => BigInt(b)), scaledAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+            // Apply slippage tolerance
+            const maxBPTIn = addSlippage(bignumber.BigNumber.from(bptIn), bignumber.BigNumber.from(slippage)).toString();
+            const userData = StablePoolEncoder.exitBPTInForExactTokensOut(sortedAmounts, // must not use scaledAmounts because it should match amountsOut provided by the user
+            maxBPTIn);
+            // This is a hack to get around rounding issues for scaled amounts on MetaStable pools
+            // TODO: do this more elegantly
+            const minAmountsOut = sortedAmounts.map((a, i) => a === scaledAmounts[i] ? a : bignumber.BigNumber.from(a).sub(1).toString());
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = typechain.Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut,
+                maxBPTIn,
+            };
         };
     }
 }
@@ -2269,7 +2581,7 @@ class MetaStablePoolJoin {
     }
 }
 
-const SCALING_FACTOR$3 = 18;
+const SCALING_FACTOR$2 = 18;
 class MetaStablePoolLiquidity {
     calcTotal(tokens) {
         var _a, _b;
@@ -2282,8 +2594,8 @@ class MetaStablePoolLiquidity {
             if (!((_a = token.price) === null || _a === void 0 ? void 0 : _a.usd)) {
                 continue;
             }
-            const price = parseFixed(token.price.usd, SCALING_FACTOR$3);
-            const balance = parseFixed(token.balance, SCALING_FACTOR$3);
+            const price = parseFixed(token.price.usd.toString(), SCALING_FACTOR$2);
+            const balance = parseFixed(token.balance, SCALING_FACTOR$2);
             const value = balance.mul(price);
             sumValue = sumValue.add(value);
             sumBalance = sumBalance.add(balance);
@@ -2297,21 +2609,21 @@ class MetaStablePoolLiquidity {
                 if ((_b = token.price) === null || _b === void 0 ? void 0 : _b.usd) {
                     continue;
                 }
-                const balance = parseFixed(token.balance, SCALING_FACTOR$3);
+                const balance = parseFixed(token.balance, SCALING_FACTOR$2);
                 const value = balance.mul(avgPrice);
                 sumValue = sumValue.add(value);
                 sumBalance = sumBalance.add(balance);
             }
         }
-        return bignumber.formatFixed(sumValue, SCALING_FACTOR$3 * 2).toString();
+        return bignumber.formatFixed(sumValue, SCALING_FACTOR$2 * 2).toString();
     }
 }
 
 class MetaStablePoolSpotPrice {
     calcPoolSpotPrice(tokenIn, tokenOut, pool) {
-        const poolClass = SOR.MetaStablePool.fromPool(pool);
-        const poolPairData = poolClass.parsePoolPairData(tokenIn, tokenOut);
-        return poolClass
+        const metaStablePool = SOR.MetaStablePool.fromPool(pool);
+        const poolPairData = metaStablePool.parsePoolPairData(tokenIn, tokenOut);
+        return metaStablePool
             ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, SOR.ZERO)
             .toString();
     }
@@ -2407,11 +2719,11 @@ class StablePhantomPoolLiquidity {
     }
 }
 
-class StablePhantomPoolSpotPrice {
+class PhantomStablePoolSpotPrice {
     calcPoolSpotPrice(tokenIn, tokenOut, pool) {
-        const poolClass = SOR.PhantomStablePool.fromPool(pool);
-        const poolPairData = poolClass.parsePoolPairData(tokenIn, tokenOut);
-        return poolClass
+        const metaStablePool = SOR.PhantomStablePool.fromPool(pool);
+        const poolPairData = metaStablePool.parsePoolPairData(tokenIn, tokenOut);
+        return metaStablePool
             ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, SOR.ZERO)
             .toString();
     }
@@ -2471,7 +2783,7 @@ class StablePhantomPriceImpact {
 }
 
 class StablePhantom {
-    constructor(exit = new StablePhantomPoolExit(), join = new StablePhantomPoolJoin(), liquidity = new StablePhantomPoolLiquidity(), spotPriceCalculator = new StablePhantomPoolSpotPrice(), priceImpactCalculator = new StablePhantomPriceImpact()) {
+    constructor(exit = new StablePhantomPoolExit(), join = new StablePhantomPoolJoin(), liquidity = new StablePhantomPoolLiquidity(), spotPriceCalculator = new PhantomStablePoolSpotPrice(), priceImpactCalculator = new StablePhantomPriceImpact()) {
         this.exit = exit;
         this.join = join;
         this.liquidity = liquidity;
@@ -2505,8 +2817,8 @@ class LinearPoolJoin {
     }
 }
 
-const SCALING_FACTOR$2 = 18;
-const ONE = parseFixed('1', SCALING_FACTOR$2);
+const SCALING_FACTOR$1 = 18;
+const ONE = parseFixed('1', SCALING_FACTOR$1);
 class LinearPoolLiquidity {
     calcTotal(tokens) {
         var _a, _b;
@@ -2519,8 +2831,8 @@ class LinearPoolLiquidity {
             if (!((_a = token.price) === null || _a === void 0 ? void 0 : _a.usd)) {
                 continue;
             }
-            const price = parseFixed(token.price.usd, SCALING_FACTOR$2);
-            const balance = parseFixed(token.balance, SCALING_FACTOR$2);
+            const price = parseFixed(token.price.usd.toString(), SCALING_FACTOR$1);
+            const balance = parseFixed(token.balance, SCALING_FACTOR$1);
             const value = balance.mul(price);
             sumValue = sumValue.add(value);
             sumBalance = sumBalance.add(balance);
@@ -2534,9 +2846,9 @@ class LinearPoolLiquidity {
                 if ((_b = token.price) === null || _b === void 0 ? void 0 : _b.usd) {
                     continue;
                 }
-                const priceRate = parseFixed(token.priceRate || '1', SCALING_FACTOR$2);
+                const priceRate = parseFixed(token.priceRate || '1', SCALING_FACTOR$1);
                 // Apply priceRate to scale the balance correctly
-                const balance = parseFixed(token.balance, SCALING_FACTOR$2)
+                const balance = parseFixed(token.balance, SCALING_FACTOR$1)
                     .mul(priceRate)
                     .div(ONE);
                 const value = balance.mul(avgPrice);
@@ -2544,16 +2856,15 @@ class LinearPoolLiquidity {
                 sumBalance = sumBalance.add(balance);
             }
         }
-        const totalLiquidity = bignumber.formatFixed(sumValue, SCALING_FACTOR$2 * 2).toString();
-        return totalLiquidity;
+        return formatFixed(sumValue, SCALING_FACTOR$1 * 2);
     }
 }
 
 class LinearPoolSpotPrice {
     calcPoolSpotPrice(tokenIn, tokenOut, pool) {
-        const poolClass = SOR.LinearPool.fromPool(pool);
-        const poolPairData = poolClass.parsePoolPairData(tokenIn, tokenOut);
-        return poolClass
+        const linearPool = SOR.LinearPool.fromPool(pool);
+        const poolPairData = linearPool.parsePoolPairData(tokenIn, tokenOut);
+        return linearPool
             ._spotPriceAfterSwapExactTokenInForTokenOut(poolPairData, SOR.ZERO)
             .toString();
     }
@@ -2578,7 +2889,12 @@ class Linear {
     }
 }
 
-class Pools {
+/**
+ * Wrapper around pool type specific methods.
+ *
+ * Returns a class instance of a type specific method handlers.
+ */
+class PoolTypeConcerns {
     constructor(config, weighted = new Weighted(), stable = new Stable(), metaStable = new MetaStable(), stablePhantom = new StablePhantom(), linear = new Linear()) {
         this.weighted = weighted;
         this.stable = stable;
@@ -2613,8 +2929,7 @@ class Pools {
     }
 }
 
-const SCALING_FACTOR$1 = 36;
-const TOKEN_WEIGHT_SCALING_FACTOR = 18;
+const SCALE = 18;
 class Liquidity {
     constructor(pools, tokenPrices) {
         this.pools = pools;
@@ -2630,12 +2945,12 @@ class Liquidity {
             const pool = await this.pools.findBy('address', token.address);
             if (!pool)
                 return;
-            const liquidity = await this.getLiquidity(pool);
-            const scaledLiquidity = parseFixed(liquidity, SCALING_FACTOR$1 * 2);
-            const totalBPT = parseFixed(pool.totalShares, SCALING_FACTOR$1);
-            const bptValue = scaledLiquidity.div(totalBPT);
-            const bptInParentPool = parseFixed(token.balance, SCALING_FACTOR$1);
-            const liquidityInParentPool = bignumber.formatFixed(bptValue.mul(bptInParentPool), SCALING_FACTOR$1).replace(/\.[0-9]+/, ''); // strip trailing decimals, we don't need them as we're already scaled up by 1e36
+            const liquidity = parseFixed(await this.getLiquidity(pool), SCALE);
+            const totalBPT = parseFixed(pool.totalShares, SCALE);
+            const bptInParentPool = parseFixed(token.balance, SCALE);
+            const liquidityInParentPool = liquidity
+                .mul(bptInParentPool)
+                .div(totalBPT);
             return {
                 address: pool.address,
                 liquidity: liquidityInParentPool,
@@ -2643,9 +2958,9 @@ class Liquidity {
         }));
         const totalSubPoolLiquidity = subPoolLiquidity.reduce((totalLiquidity, subPool) => {
             if (!subPool)
-                return constants.Zero;
+                return bignumber.BigNumber.from(0);
             return totalLiquidity.add(subPool.liquidity);
-        }, constants.Zero);
+        }, bignumber.BigNumber.from(0));
         const nonPoolTokens = parsedTokens.filter((token) => {
             return !subPoolLiquidity.find((pool) => (pool === null || pool === void 0 ? void 0 : pool.address) === token.address);
         });
@@ -2657,15 +2972,14 @@ class Liquidity {
                 priceRate: token.priceRate,
                 price: tokenPrice,
                 balance: token.balance,
-                weight: token.weight
-                    ? parseFixed(token.weight, TOKEN_WEIGHT_SCALING_FACTOR).toString()
-                    : '0',
+                weight: token.weight,
             };
             return poolToken;
         }));
-        const tokenLiquidity = Pools.from(pool.poolType).liquidity.calcTotal(tokenBalances);
-        const totalLiquidity = bignumber.formatFixed(bignumber.BigNumber.from(totalSubPoolLiquidity).add(parseFixed(tokenLiquidity, SCALING_FACTOR$1)), SCALING_FACTOR$1);
-        return totalLiquidity;
+        const tokenLiquidity = PoolTypeConcerns.from(pool.poolType).liquidity.calcTotal(tokenBalances);
+        const tl = parseFixed(tokenLiquidity, SCALE);
+        const totalLiquidity = totalSubPoolLiquidity.add(tl);
+        return formatFixed(totalLiquidity, SCALE);
     }
 }
 
@@ -2993,11 +3307,11 @@ var OperationType;
     OperationType["Withdraw"] = "Withdraw";
 })(OperationType || (OperationType = {}));
 /** Defines the order direction, either ascending or descending */
-var OrderDirection;
+var OrderDirection$1;
 (function (OrderDirection) {
     OrderDirection["Asc"] = "asc";
     OrderDirection["Desc"] = "desc";
-})(OrderDirection || (OrderDirection = {}));
+})(OrderDirection$1 || (OrderDirection$1 = {}));
 var PoolHistoricalLiquidity_OrderBy;
 (function (PoolHistoricalLiquidity_OrderBy) {
     PoolHistoricalLiquidity_OrderBy["Block"] = "block";
@@ -3176,20 +3490,20 @@ var UserInternalBalance_OrderBy;
     UserInternalBalance_OrderBy["Token"] = "token";
     UserInternalBalance_OrderBy["UserAddress"] = "userAddress";
 })(UserInternalBalance_OrderBy || (UserInternalBalance_OrderBy = {}));
-var User_OrderBy;
+var User_OrderBy$1;
 (function (User_OrderBy) {
     User_OrderBy["Id"] = "id";
     User_OrderBy["SharesOwned"] = "sharesOwned";
     User_OrderBy["Swaps"] = "swaps";
     User_OrderBy["UserInternalBalances"] = "userInternalBalances";
-})(User_OrderBy || (User_OrderBy = {}));
-var _SubgraphErrorPolicy_;
+})(User_OrderBy$1 || (User_OrderBy$1 = {}));
+var _SubgraphErrorPolicy_$1;
 (function (_SubgraphErrorPolicy_) {
     /** Data will be returned even if the subgraph has indexing errors */
     _SubgraphErrorPolicy_["Allow"] = "allow";
     /** If the subgraph has indexing errors, data will be omitted. The default. */
     _SubgraphErrorPolicy_["Deny"] = "deny";
-})(_SubgraphErrorPolicy_ || (_SubgraphErrorPolicy_ = {}));
+})(_SubgraphErrorPolicy_$1 || (_SubgraphErrorPolicy_$1 = {}));
 const SubgraphPoolTokenFragmentDoc = gql$1 `
     fragment SubgraphPoolToken on PoolToken {
   id
@@ -3226,6 +3540,7 @@ const SubgraphPoolFragmentDoc = gql$1 `
   amp
   expiryTime
   unitSeconds
+  createTime
   principalToken
   baseToken
   swapEnabled
@@ -3512,8 +3827,8 @@ const UsersDocument = gql$1 `
   }
 }
     ${SubgraphUserFragmentDoc}`;
-const defaultWrapper = (action, _operationName, _operationType) => action();
-function getSdk(client, withWrapper = defaultWrapper) {
+const defaultWrapper$1 = (action, _operationName, _operationType) => action();
+function getSdk$1(client, withWrapper = defaultWrapper$1) {
     return {
         Pools(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(PoolsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), 'Pools', 'query');
@@ -3557,8 +3872,153 @@ function getSdk(client, withWrapper = defaultWrapper) {
     };
 }
 
+var Chain;
+(function (Chain) {
+    Chain["Arbitrum"] = "Arbitrum";
+    Chain["Optimism"] = "Optimism";
+    Chain["Polygon"] = "Polygon";
+})(Chain || (Chain = {}));
+var GaugeFactory_OrderBy;
+(function (GaugeFactory_OrderBy) {
+    GaugeFactory_OrderBy["Gauges"] = "gauges";
+    GaugeFactory_OrderBy["Id"] = "id";
+    GaugeFactory_OrderBy["NumGauges"] = "numGauges";
+})(GaugeFactory_OrderBy || (GaugeFactory_OrderBy = {}));
+var GaugeShare_OrderBy;
+(function (GaugeShare_OrderBy) {
+    GaugeShare_OrderBy["Balance"] = "balance";
+    GaugeShare_OrderBy["Gauge"] = "gauge";
+    GaugeShare_OrderBy["Id"] = "id";
+    GaugeShare_OrderBy["User"] = "user";
+})(GaugeShare_OrderBy || (GaugeShare_OrderBy = {}));
+var GaugeType_OrderBy;
+(function (GaugeType_OrderBy) {
+    GaugeType_OrderBy["Id"] = "id";
+    GaugeType_OrderBy["Name"] = "name";
+})(GaugeType_OrderBy || (GaugeType_OrderBy = {}));
+var GaugeVote_OrderBy;
+(function (GaugeVote_OrderBy) {
+    GaugeVote_OrderBy["Gauge"] = "gauge";
+    GaugeVote_OrderBy["Id"] = "id";
+    GaugeVote_OrderBy["Timestamp"] = "timestamp";
+    GaugeVote_OrderBy["User"] = "user";
+    GaugeVote_OrderBy["Weight"] = "weight";
+})(GaugeVote_OrderBy || (GaugeVote_OrderBy = {}));
+var Gauge_OrderBy;
+(function (Gauge_OrderBy) {
+    Gauge_OrderBy["Address"] = "address";
+    Gauge_OrderBy["Id"] = "id";
+    Gauge_OrderBy["Type"] = "type";
+})(Gauge_OrderBy || (Gauge_OrderBy = {}));
+var LiquidityGauge_OrderBy;
+(function (LiquidityGauge_OrderBy) {
+    LiquidityGauge_OrderBy["Factory"] = "factory";
+    LiquidityGauge_OrderBy["Id"] = "id";
+    LiquidityGauge_OrderBy["PoolAddress"] = "poolAddress";
+    LiquidityGauge_OrderBy["PoolId"] = "poolId";
+    LiquidityGauge_OrderBy["Shares"] = "shares";
+    LiquidityGauge_OrderBy["Streamer"] = "streamer";
+    LiquidityGauge_OrderBy["Symbol"] = "symbol";
+    LiquidityGauge_OrderBy["Tokens"] = "tokens";
+    LiquidityGauge_OrderBy["TotalSupply"] = "totalSupply";
+})(LiquidityGauge_OrderBy || (LiquidityGauge_OrderBy = {}));
+/** Defines the order direction, either ascending or descending */
+var OrderDirection;
+(function (OrderDirection) {
+    OrderDirection["Asc"] = "asc";
+    OrderDirection["Desc"] = "desc";
+})(OrderDirection || (OrderDirection = {}));
+var RewardToken_OrderBy;
+(function (RewardToken_OrderBy) {
+    RewardToken_OrderBy["Decimals"] = "decimals";
+    RewardToken_OrderBy["Gauge"] = "gauge";
+    RewardToken_OrderBy["Id"] = "id";
+    RewardToken_OrderBy["Symbol"] = "symbol";
+    RewardToken_OrderBy["TotalDeposited"] = "totalDeposited";
+})(RewardToken_OrderBy || (RewardToken_OrderBy = {}));
+var RootGauge_OrderBy;
+(function (RootGauge_OrderBy) {
+    RootGauge_OrderBy["Chain"] = "chain";
+    RootGauge_OrderBy["Id"] = "id";
+    RootGauge_OrderBy["Recipient"] = "recipient";
+})(RootGauge_OrderBy || (RootGauge_OrderBy = {}));
+var User_OrderBy;
+(function (User_OrderBy) {
+    User_OrderBy["GaugeShares"] = "gaugeShares";
+    User_OrderBy["GaugeVotes"] = "gaugeVotes";
+    User_OrderBy["Id"] = "id";
+    User_OrderBy["VotingLocks"] = "votingLocks";
+})(User_OrderBy || (User_OrderBy = {}));
+var VotingEscrowLock_OrderBy;
+(function (VotingEscrowLock_OrderBy) {
+    VotingEscrowLock_OrderBy["Id"] = "id";
+    VotingEscrowLock_OrderBy["LockedBalance"] = "lockedBalance";
+    VotingEscrowLock_OrderBy["UnlockTime"] = "unlockTime";
+    VotingEscrowLock_OrderBy["User"] = "user";
+    VotingEscrowLock_OrderBy["VotingEscrowId"] = "votingEscrowID";
+})(VotingEscrowLock_OrderBy || (VotingEscrowLock_OrderBy = {}));
+var VotingEscrow_OrderBy;
+(function (VotingEscrow_OrderBy) {
+    VotingEscrow_OrderBy["Id"] = "id";
+    VotingEscrow_OrderBy["Locks"] = "locks";
+    VotingEscrow_OrderBy["StakedSupply"] = "stakedSupply";
+})(VotingEscrow_OrderBy || (VotingEscrow_OrderBy = {}));
+var _SubgraphErrorPolicy_;
+(function (_SubgraphErrorPolicy_) {
+    /** Data will be returned even if the subgraph has indexing errors */
+    _SubgraphErrorPolicy_["Allow"] = "allow";
+    /** If the subgraph has indexing errors, data will be omitted. The default. */
+    _SubgraphErrorPolicy_["Deny"] = "deny";
+})(_SubgraphErrorPolicy_ || (_SubgraphErrorPolicy_ = {}));
+const SubgraphLiquidityGaugeFragmentDoc = gql$1 `
+    fragment SubgraphLiquidityGauge on LiquidityGauge {
+  id
+  symbol
+  poolAddress
+  poolId
+  streamer
+  factory {
+    id
+    numGauges
+  }
+  totalSupply
+  tokens {
+    id
+    symbol
+    decimals
+    totalDeposited
+  }
+}
+    `;
+const LiquidityGaugesDocument = gql$1 `
+    query LiquidityGauges($skip: Int, $first: Int, $orderBy: LiquidityGauge_orderBy, $orderDirection: OrderDirection, $where: LiquidityGauge_filter, $block: Block_height) {
+  liquidityGauges(
+    skip: $skip
+    first: $first
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    ...SubgraphLiquidityGauge
+  }
+}
+    ${SubgraphLiquidityGaugeFragmentDoc}`;
+const defaultWrapper = (action, _operationName, _operationType) => action();
+function getSdk(client, withWrapper = defaultWrapper) {
+    return {
+        LiquidityGauges(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(LiquidityGaugesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), 'LiquidityGauges', 'query');
+        }
+    };
+}
+
 function createSubgraphClient(subgraphUrl) {
     const client = new graphqlRequest.GraphQLClient(subgraphUrl);
+    return getSdk$1(client);
+}
+function createGaugesClient(url) {
+    const client = new graphqlRequest.GraphQLClient(url);
     return getSdk(client);
 }
 
@@ -7728,7 +8188,7 @@ class SubgraphPoolDataService {
         const { pool0, pool1000 } = await this.client.Pools({
             where: { swapEnabled: true, totalShares_gt: '0' },
             orderBy: Pool_OrderBy.TotalLiquidity,
-            orderDirection: OrderDirection.Desc,
+            orderDirection: OrderDirection$1.Desc,
         });
         const pools = [...pool0, ...pool1000];
         return pools;
@@ -7737,7 +8197,7 @@ class SubgraphPoolDataService {
         const { pools } = await this.client.PoolsWithoutLinear({
             where: { swapEnabled: true, totalShares_gt: '0' },
             orderBy: Pool_OrderBy.TotalLiquidity,
-            orderDirection: OrderDirection.Desc,
+            orderDirection: OrderDirection$1.Desc,
             first: 1000,
         });
         return pools;
@@ -10053,7 +10513,7 @@ class Subgraph {
     }
     initClient() {
         const client = new graphqlRequest.GraphQLClient(this.url);
-        return getSdk(client);
+        return getSdk$1(client);
     }
 }
 
@@ -10065,7 +10525,6 @@ class Pricing {
         else {
             this.swaps = new Swaps(config);
         }
-        this.pools = new Pools(config);
     }
     /**
      * Retrieves pools using poolDataService.
@@ -10082,36 +10541,25 @@ class Pricing {
         return this.swaps.getPools();
     }
     /**
-     * Calculates Spot Price for a token pair - for specific pool if ID otherwise finds most liquid path and uses this as reference SP.
+     * Calculates Spot Price for a token pair - finds most liquid path and uses this as reference SP.
      * @param { string } tokenIn Token in address.
      * @param { string } tokenOut Token out address.
-     * @param { string } poolId Optional - if specified this pool will be used for SP calculation.
      * @param { SubgraphPoolBase[] } pools Optional - Pool data. Will be fetched via dataProvider if not supplied.
      * @returns  { string } Spot price.
      */
-    async getSpotPrice(tokenIn, tokenOut, poolId = '', pools = []) {
+    async getSpotPrice(tokenIn, tokenOut, pools = []) {
         // If pools list isn't supplied fetch it from swaps data provider
         if (pools.length === 0) {
             await this.fetchPools();
             pools = this.getPools();
         }
-        // If a poolId isn't specified we find the path for the pair with the highest liquidity and use this as the ref SP
-        if (poolId === '') {
-            const poolsDict = SOR.parseToPoolsDict(pools, 0);
-            // This creates all paths for tokenIn>Out ordered by liquidity
-            const paths = this.swaps.sor.routeProposer.getCandidatePathsFromDict(tokenIn, tokenOut, 0, poolsDict, 4);
-            if (paths.length === 0)
-                throw new BalancerError(exports.BalancerErrorCode.UNSUPPORTED_PAIR);
-            return SOR.getSpotPriceAfterSwapForPath(paths[0], 0, SOR.ZERO).toString();
-        }
-        else {
-            // Find pool of interest from pools list
-            const poolData = pools.find((p) => p.id.toLowerCase() === poolId.toLowerCase());
-            if (!poolData)
-                throw new BalancerError(exports.BalancerErrorCode.POOL_DOESNT_EXIST);
-            const pool = Pools.from(poolData.poolType);
-            return pool.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, poolData);
-        }
+        // We find the path for the pair with the highest liquidity and use this as the ref SP
+        const poolsDict = SOR.parseToPoolsDict(pools, 0);
+        // This creates all paths for tokenIn>Out ordered by liquidity
+        const paths = this.swaps.sor.routeProposer.getCandidatePathsFromDict(tokenIn, tokenOut, 0, poolsDict, 4);
+        if (paths.length === 0)
+            throw new BalancerError(exports.BalancerErrorCode.UNSUPPORTED_PAIR);
+        return SOR.getSpotPriceAfterSwapForPath(paths[0], 0, SOR.ZERO).toString();
     }
 }
 
@@ -10388,115 +10836,6 @@ class Contracts {
     }
 }
 
-/**
- * Building pools from raw data injecting poolType specific methods
- */
-class PoolsProvider {
-    constructor(config, repository) {
-        this.config = config;
-        this.repository = repository;
-    }
-    static wrap(data, config) {
-        const methods = Pools.from(data.poolType);
-        const networkConfig = getNetworkConfig(config);
-        return {
-            ...data,
-            liquidity: async () => methods.liquidity.calcTotal(data.tokens),
-            buildJoin: (joiner, tokensIn, amountsIn, slippage) => methods.join.buildJoin({
-                joiner,
-                pool: data,
-                tokensIn,
-                amountsIn,
-                slippage,
-                wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
-            }),
-            calcPriceImpact: async (amountsIn, minBPTOut) => methods.priceImpactCalculator.calcPriceImpact(data, amountsIn, minBPTOut),
-            buildExitExactBPTIn: (exiter, bptIn, slippage, shouldUnwrapNativeAsset = false, singleTokenMaxOut) => methods.exit.buildExitExactBPTIn({
-                exiter,
-                pool: data,
-                bptIn,
-                slippage,
-                shouldUnwrapNativeAsset,
-                wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
-                singleTokenMaxOut,
-            }),
-            buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) => methods.exit.buildExitExactTokensOut({
-                exiter,
-                pool: data,
-                tokensOut,
-                amountsOut,
-                slippage,
-                wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
-            }),
-            // TODO: spotPrice fails, because it needs a subgraphType,
-            // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
-            // spotPrice: async (tokenIn: string, tokenOut: string) =>
-            // methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, data),
-        };
-    }
-    async find(id) {
-        const data = await this.repository.find(id);
-        if (!data)
-            return;
-        return PoolsProvider.wrap(data, this.config);
-    }
-    async findBy(param, value) {
-        if (param == 'id') {
-            return this.find(value);
-        }
-        else if (param == 'address') {
-            const data = await this.repository.findBy('address', value);
-            if (!data)
-                return;
-            return PoolsProvider.wrap(data, this.config);
-        }
-        else {
-            throw `search by ${param} not implemented`;
-        }
-    }
-}
-
-class SubgraphPoolRepository {
-    constructor(client) {
-        this.client = client;
-    }
-    async find(id) {
-        const { pool } = await this.client.Pool({ id });
-        return this.mapPool(pool);
-    }
-    async findBy(attribute, value) {
-        switch (attribute) {
-            case 'id':
-                return this.find(value);
-            case 'address':
-                // eslint-disable-next-line no-case-declarations
-                const { pool0 } = await this.client.Pools({
-                    where: { address: value },
-                });
-                return this.mapPool(pool0[0]);
-            default:
-                return undefined;
-        }
-    }
-    // Helper methods
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mapPool(pool) {
-        if (!pool)
-            return undefined;
-        const poolType = pool === null || pool === void 0 ? void 0 : pool.poolType;
-        if (!poolType)
-            throw new BalancerError(exports.BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
-        const tokens = (pool === null || pool === void 0 ? void 0 : pool.tokens) || [];
-        if (tokens.length === 0)
-            throw new BalancerError(exports.BalancerErrorCode.MISSING_TOKENS);
-        return {
-            ...pool,
-            poolType,
-            tokens,
-        };
-    }
-}
-
 const ADDRESSES = {
     1: {
         relayer: '0x886A3Ec7bcC508B8795990B60Fa21f85F9dB7948',
@@ -10513,9 +10852,9 @@ const ADDRESSES = {
             assetOrder: ['bb-a-USDT', 'bb-a-DAI', 'bb-a-USDC'],
         },
         bbausd2: {
-            id: '0x9B532AB955417AFD0D012EB9F7389457CD0EA712000000000000000000000338',
-            address: '0x9B532AB955417AFD0D012EB9F7389457CD0EA712',
-            gauge: '0x66122c9030030155fb2bbe2e1e9a72588065c4f5',
+            id: '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d',
+            address: '0xa13a9247ea42d743238089903570127dda72fe44',
+            gauge: '0xa6325e799d266632d347e41265a69af111b05403',
         },
         linearUsdc1: {
             id: '0x9210f1204b5a24742eba12f710636d76240df3d00000000000000000000000fc',
@@ -10635,6 +10974,69 @@ const ADDRESSES = {
         waUSDC: '0x811151066392fd641fe74a9b55a712670572d161',
         waUSDT: '0x4cb1892fddf14f772b2e39e299f44b2e5da90d04',
         miMATIC: '0x398106564948feeb1fedea0709ae7d969d62a391',
+    },
+    137: {
+        relayer: '0xcf6a66E32dCa0e26AcC3426b851FD8aCbF12Dac7',
+        staBal3: {
+            id: '',
+            address: '',
+            gauge: '',
+            assetOrder: ['USDT', 'DAI', 'USDC'],
+        },
+        bbausd1: {
+            id: '',
+            address: '',
+            gauge: '',
+            assetOrder: ['bb-a-USDC', 'bb-a-DAI', 'bb-a-USDT'],
+        },
+        bbausd2: {
+            id: '0x48e6b98ef6329f8f0a30ebb8c7c960330d64808500000000000000000000075b',
+            address: '0x48e6b98ef6329f8f0a30ebb8c7c960330d648085',
+            gauge: '',
+        },
+        linearUsdc1: {
+            id: '',
+            address: '',
+        },
+        linearDai1: {
+            id: '',
+            address: '',
+        },
+        linearUsdt1: {
+            id: '',
+            address: '',
+        },
+        linearUsdc2: {
+            id: '0xf93579002dbe8046c43fefe86ec78b1112247bb8000000000000000000000759',
+            address: '0xf93579002dbe8046c43fefe86ec78b1112247bb8',
+        },
+        linearDai2: {
+            id: '0x178e029173417b1f9c8bc16dcec6f697bc323746000000000000000000000758',
+            address: '0x178e029173417b1f9c8bc16dcec6f697bc323746',
+        },
+        linearUsdt2: {
+            id: '0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea600000000000000000000075a',
+            address: '0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea6',
+        },
+        maiusd: {
+            id: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000012',
+            address: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42',
+            gauge: '0x72843281394e68de5d55bcf7072bb9b2ebc24150',
+            assetOrder: ['USDC', 'DAI', 'miMATIC', 'USDT'],
+        },
+        maibbausd: {
+            id: '0xb54b2125b711cd183edd3dd09433439d5396165200000000000000000000075e',
+            address: '0xb54b2125b711cd183edd3dd09433439d53961652',
+            gauge: '0x9a105ef22a59484aa2731c357049f6a13d0891f5',
+            assetOrder: ['bb-a-USD', 'miMATIC'],
+        },
+        USDT: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
+        DAI: '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063',
+        USDC: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+        waDAI: '0xEE029120c72b0607344f35B17cdD90025e647B00',
+        waUSDC: '0x221836a597948Dce8F3568E044fF123108aCc42A',
+        waUSDT: '0x19C60a251e525fa88Cd6f3768416a8024e98fC19',
+        miMATIC: '0xa3fa99a148fa48d14ed51d610c367c61876997f1',
     },
 };
 
@@ -11717,28 +12119,1143 @@ class Zaps {
     }
 }
 
-class BalancerSDK {
-    constructor(config, sor = new Sor(config), subgraph = new Subgraph(config), pools = new Pools(config), poolsProvider = new PoolsProvider(config, new SubgraphPoolRepository(subgraph.client))) {
-        this.config = config;
-        this.sor = sor;
-        this.subgraph = subgraph;
-        this.pools = pools;
-        this.poolsProvider = poolsProvider;
-        this.swaps = new Swaps(this.config);
-        this.relayer = new Relayer(this.swaps);
-        this.pricing = new Pricing(config, this.swaps);
-        const networkConfig = getNetworkConfig(config);
-        this.balancerContracts = new Contracts(networkConfig.addresses.contracts, sor.provider);
-        this.zaps = new Zaps(networkConfig.chainId);
+const version$1 = "logger/5.7.0";
+
+let _permanentCensorErrors = false;
+let _censorErrors = false;
+const LogLevels = { debug: 1, "default": 2, info: 2, warning: 3, error: 4, off: 5 };
+let _logLevel = LogLevels["default"];
+let _globalLogger = null;
+function _checkNormalize() {
+    try {
+        const missing = [];
+        // Make sure all forms of normalization are supported
+        ["NFD", "NFC", "NFKD", "NFKC"].forEach((form) => {
+            try {
+                if ("test".normalize(form) !== "test") {
+                    throw new Error("bad normalize");
+                }
+                ;
+            }
+            catch (error) {
+                missing.push(form);
+            }
+        });
+        if (missing.length) {
+            throw new Error("missing " + missing.join(", "));
+        }
+        if (String.fromCharCode(0xe9).normalize("NFD") !== String.fromCharCode(0x65, 0x0301)) {
+            throw new Error("broken implementation");
+        }
     }
-    get networkConfig() {
-        return getNetworkConfig(this.config);
+    catch (error) {
+        return error.message;
+    }
+    return null;
+}
+const _normalizeError = _checkNormalize();
+var LogLevel;
+(function (LogLevel) {
+    LogLevel["DEBUG"] = "DEBUG";
+    LogLevel["INFO"] = "INFO";
+    LogLevel["WARNING"] = "WARNING";
+    LogLevel["ERROR"] = "ERROR";
+    LogLevel["OFF"] = "OFF";
+})(LogLevel || (LogLevel = {}));
+var ErrorCode;
+(function (ErrorCode) {
+    ///////////////////
+    // Generic Errors
+    // Unknown Error
+    ErrorCode["UNKNOWN_ERROR"] = "UNKNOWN_ERROR";
+    // Not Implemented
+    ErrorCode["NOT_IMPLEMENTED"] = "NOT_IMPLEMENTED";
+    // Unsupported Operation
+    //   - operation
+    ErrorCode["UNSUPPORTED_OPERATION"] = "UNSUPPORTED_OPERATION";
+    // Network Error (i.e. Ethereum Network, such as an invalid chain ID)
+    //   - event ("noNetwork" is not re-thrown in provider.ready; otherwise thrown)
+    ErrorCode["NETWORK_ERROR"] = "NETWORK_ERROR";
+    // Some sort of bad response from the server
+    ErrorCode["SERVER_ERROR"] = "SERVER_ERROR";
+    // Timeout
+    ErrorCode["TIMEOUT"] = "TIMEOUT";
+    ///////////////////
+    // Operational  Errors
+    // Buffer Overrun
+    ErrorCode["BUFFER_OVERRUN"] = "BUFFER_OVERRUN";
+    // Numeric Fault
+    //   - operation: the operation being executed
+    //   - fault: the reason this faulted
+    ErrorCode["NUMERIC_FAULT"] = "NUMERIC_FAULT";
+    ///////////////////
+    // Argument Errors
+    // Missing new operator to an object
+    //  - name: The name of the class
+    ErrorCode["MISSING_NEW"] = "MISSING_NEW";
+    // Invalid argument (e.g. value is incompatible with type) to a function:
+    //   - argument: The argument name that was invalid
+    //   - value: The value of the argument
+    ErrorCode["INVALID_ARGUMENT"] = "INVALID_ARGUMENT";
+    // Missing argument to a function:
+    //   - count: The number of arguments received
+    //   - expectedCount: The number of arguments expected
+    ErrorCode["MISSING_ARGUMENT"] = "MISSING_ARGUMENT";
+    // Too many arguments
+    //   - count: The number of arguments received
+    //   - expectedCount: The number of arguments expected
+    ErrorCode["UNEXPECTED_ARGUMENT"] = "UNEXPECTED_ARGUMENT";
+    ///////////////////
+    // Blockchain Errors
+    // Call exception
+    //  - transaction: the transaction
+    //  - address?: the contract address
+    //  - args?: The arguments passed into the function
+    //  - method?: The Solidity method signature
+    //  - errorSignature?: The EIP848 error signature
+    //  - errorArgs?: The EIP848 error parameters
+    //  - reason: The reason (only for EIP848 "Error(string)")
+    ErrorCode["CALL_EXCEPTION"] = "CALL_EXCEPTION";
+    // Insufficient funds (< value + gasLimit * gasPrice)
+    //   - transaction: the transaction attempted
+    ErrorCode["INSUFFICIENT_FUNDS"] = "INSUFFICIENT_FUNDS";
+    // Nonce has already been used
+    //   - transaction: the transaction attempted
+    ErrorCode["NONCE_EXPIRED"] = "NONCE_EXPIRED";
+    // The replacement fee for the transaction is too low
+    //   - transaction: the transaction attempted
+    ErrorCode["REPLACEMENT_UNDERPRICED"] = "REPLACEMENT_UNDERPRICED";
+    // The gas limit could not be estimated
+    //   - transaction: the transaction passed to estimateGas
+    ErrorCode["UNPREDICTABLE_GAS_LIMIT"] = "UNPREDICTABLE_GAS_LIMIT";
+    // The transaction was replaced by one with a higher gas price
+    //   - reason: "cancelled", "replaced" or "repriced"
+    //   - cancelled: true if reason == "cancelled" or reason == "replaced")
+    //   - hash: original transaction hash
+    //   - replacement: the full TransactionsResponse for the replacement
+    //   - receipt: the receipt of the replacement
+    ErrorCode["TRANSACTION_REPLACED"] = "TRANSACTION_REPLACED";
+    ///////////////////
+    // Interaction Errors
+    // The user rejected the action, such as signing a message or sending
+    // a transaction
+    ErrorCode["ACTION_REJECTED"] = "ACTION_REJECTED";
+})(ErrorCode || (ErrorCode = {}));
+const HEX = "0123456789abcdef";
+class Logger {
+    constructor(version) {
+        Object.defineProperty(this, "version", {
+            enumerable: true,
+            value: version,
+            writable: false
+        });
+    }
+    _log(logLevel, args) {
+        const level = logLevel.toLowerCase();
+        if (LogLevels[level] == null) {
+            this.throwArgumentError("invalid log level name", "logLevel", logLevel);
+        }
+        if (_logLevel > LogLevels[level]) {
+            return;
+        }
+        console.log.apply(console, args);
+    }
+    debug(...args) {
+        this._log(Logger.levels.DEBUG, args);
+    }
+    info(...args) {
+        this._log(Logger.levels.INFO, args);
+    }
+    warn(...args) {
+        this._log(Logger.levels.WARNING, args);
+    }
+    makeError(message, code, params) {
+        // Errors are being censored
+        if (_censorErrors) {
+            return this.makeError("censored error", code, {});
+        }
+        if (!code) {
+            code = Logger.errors.UNKNOWN_ERROR;
+        }
+        if (!params) {
+            params = {};
+        }
+        const messageDetails = [];
+        Object.keys(params).forEach((key) => {
+            const value = params[key];
+            try {
+                if (value instanceof Uint8Array) {
+                    let hex = "";
+                    for (let i = 0; i < value.length; i++) {
+                        hex += HEX[value[i] >> 4];
+                        hex += HEX[value[i] & 0x0f];
+                    }
+                    messageDetails.push(key + "=Uint8Array(0x" + hex + ")");
+                }
+                else {
+                    messageDetails.push(key + "=" + JSON.stringify(value));
+                }
+            }
+            catch (error) {
+                messageDetails.push(key + "=" + JSON.stringify(params[key].toString()));
+            }
+        });
+        messageDetails.push(`code=${code}`);
+        messageDetails.push(`version=${this.version}`);
+        const reason = message;
+        let url = "";
+        switch (code) {
+            case ErrorCode.NUMERIC_FAULT: {
+                url = "NUMERIC_FAULT";
+                const fault = message;
+                switch (fault) {
+                    case "overflow":
+                    case "underflow":
+                    case "division-by-zero":
+                        url += "-" + fault;
+                        break;
+                    case "negative-power":
+                    case "negative-width":
+                        url += "-unsupported";
+                        break;
+                    case "unbound-bitwise-result":
+                        url += "-unbound-result";
+                        break;
+                }
+                break;
+            }
+            case ErrorCode.CALL_EXCEPTION:
+            case ErrorCode.INSUFFICIENT_FUNDS:
+            case ErrorCode.MISSING_NEW:
+            case ErrorCode.NONCE_EXPIRED:
+            case ErrorCode.REPLACEMENT_UNDERPRICED:
+            case ErrorCode.TRANSACTION_REPLACED:
+            case ErrorCode.UNPREDICTABLE_GAS_LIMIT:
+                url = code;
+                break;
+        }
+        if (url) {
+            message += " [ See: https:/\/links.ethers.org/v5-errors-" + url + " ]";
+        }
+        if (messageDetails.length) {
+            message += " (" + messageDetails.join(", ") + ")";
+        }
+        // @TODO: Any??
+        const error = new Error(message);
+        error.reason = reason;
+        error.code = code;
+        Object.keys(params).forEach(function (key) {
+            error[key] = params[key];
+        });
+        return error;
+    }
+    throwError(message, code, params) {
+        throw this.makeError(message, code, params);
+    }
+    throwArgumentError(message, name, value) {
+        return this.throwError(message, Logger.errors.INVALID_ARGUMENT, {
+            argument: name,
+            value: value
+        });
+    }
+    assert(condition, message, code, params) {
+        if (!!condition) {
+            return;
+        }
+        this.throwError(message, code, params);
+    }
+    assertArgument(condition, message, name, value) {
+        if (!!condition) {
+            return;
+        }
+        this.throwArgumentError(message, name, value);
+    }
+    checkNormalize(message) {
+        if (_normalizeError) {
+            this.throwError("platform missing String.prototype.normalize", Logger.errors.UNSUPPORTED_OPERATION, {
+                operation: "String.prototype.normalize", form: _normalizeError
+            });
+        }
+    }
+    checkSafeUint53(value, message) {
+        if (typeof (value) !== "number") {
+            return;
+        }
+        if (message == null) {
+            message = "value not safe";
+        }
+        if (value < 0 || value >= 0x1fffffffffffff) {
+            this.throwError(message, Logger.errors.NUMERIC_FAULT, {
+                operation: "checkSafeInteger",
+                fault: "out-of-safe-range",
+                value: value
+            });
+        }
+        if (value % 1) {
+            this.throwError(message, Logger.errors.NUMERIC_FAULT, {
+                operation: "checkSafeInteger",
+                fault: "non-integer",
+                value: value
+            });
+        }
+    }
+    checkArgumentCount(count, expectedCount, message) {
+        if (message) {
+            message = ": " + message;
+        }
+        else {
+            message = "";
+        }
+        if (count < expectedCount) {
+            this.throwError("missing argument" + message, Logger.errors.MISSING_ARGUMENT, {
+                count: count,
+                expectedCount: expectedCount
+            });
+        }
+        if (count > expectedCount) {
+            this.throwError("too many arguments" + message, Logger.errors.UNEXPECTED_ARGUMENT, {
+                count: count,
+                expectedCount: expectedCount
+            });
+        }
+    }
+    checkNew(target, kind) {
+        if (target === Object || target == null) {
+            this.throwError("missing new", Logger.errors.MISSING_NEW, { name: kind.name });
+        }
+    }
+    checkAbstract(target, kind) {
+        if (target === kind) {
+            this.throwError("cannot instantiate abstract class " + JSON.stringify(kind.name) + " directly; use a sub-class", Logger.errors.UNSUPPORTED_OPERATION, { name: target.name, operation: "new" });
+        }
+        else if (target === Object || target == null) {
+            this.throwError("missing new", Logger.errors.MISSING_NEW, { name: kind.name });
+        }
+    }
+    static globalLogger() {
+        if (!_globalLogger) {
+            _globalLogger = new Logger(version$1);
+        }
+        return _globalLogger;
+    }
+    static setCensorship(censorship, permanent) {
+        if (!censorship && permanent) {
+            this.globalLogger().throwError("cannot permanently disable censorship", Logger.errors.UNSUPPORTED_OPERATION, {
+                operation: "setCensorship"
+            });
+        }
+        if (_permanentCensorErrors) {
+            if (!censorship) {
+                return;
+            }
+            this.globalLogger().throwError("error censorship permanent", Logger.errors.UNSUPPORTED_OPERATION, {
+                operation: "setCensorship"
+            });
+        }
+        _censorErrors = !!censorship;
+        _permanentCensorErrors = !!permanent;
+    }
+    static setLogLevel(logLevel) {
+        const level = LogLevels[logLevel.toLowerCase()];
+        if (level == null) {
+            Logger.globalLogger().warn("invalid log level - " + logLevel);
+            return;
+        }
+        _logLevel = level;
+    }
+    static from(version) {
+        return new Logger(version);
+    }
+}
+Logger.errors = ErrorCode;
+Logger.levels = LogLevel;
+
+const version = "units/5.7.0";
+
+new Logger(version);
+const names = [
+    "wei",
+    "kwei",
+    "mwei",
+    "gwei",
+    "szabo",
+    "finney",
+    "ether",
+];
+function formatUnits(value, unitName) {
+    if (typeof (unitName) === "string") {
+        const index = names.indexOf(unitName);
+        if (index !== -1) {
+            unitName = 3 * index;
+        }
+    }
+    return bignumber.formatFixed(value, (unitName != null) ? unitName : 18);
+}
+
+/**
+ * Weekly Bal emissions are fixed / year according to:
+ * https://docs.google.com/spreadsheets/d/1FY0gi596YWBOTeu_mrxhWcdF74SwKMNhmu0qJVgs0KI/edit#gid=0
+ *
+ * Using regular numbers for simplicity assuming frontend use only.
+ *
+ * Calculation source
+ * https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/liquidity-mining/contracts/BalancerTokenAdmin.sol
+ */
+const INITIAL_RATE = 145000;
+const START_EPOCH_TIME = 1648465251;
+const RATE_REDUCTION_TIME = 365 * 86400;
+const RATE_REDUCTION_COEFFICIENT = 2 ** (1 / 4);
+/**
+ * Weekly BAL emissions
+ *
+ * @param currentTimestamp used to get the epoch
+ * @returns BAL emitted in a week
+ */
+const weekly = (currentTimestamp = Math.round(new Date().getTime() / 1000)) => {
+    const miningEpoch = Math.floor((currentTimestamp - START_EPOCH_TIME) / RATE_REDUCTION_TIME);
+    const rate = INITIAL_RATE * RATE_REDUCTION_COEFFICIENT ** -miningEpoch;
+    return rate;
+};
+/**
+ * Total BAL emitted in epoch (1 year)
+ *
+ * @param epoch starting from 0 for the first year of emissions
+ * @returns BAL emitted in epoch
+ */
+const total = (epoch) => {
+    const weeklyRate = INITIAL_RATE * RATE_REDUCTION_COEFFICIENT ** -epoch;
+    const dailyRate = weeklyRate / 7;
+    return dailyRate * 365;
+};
+/**
+ * Total BAL emitted between two timestamps
+ *
+ * @param start starting timestamp
+ * @param end ending timestamp
+ * @returns BAL emitted in period
+ */
+const between = (start, end) => {
+    if (start < START_EPOCH_TIME) {
+        throw 'start timestamp before emission schedule deployment';
+    }
+    if (end < start) {
+        throw 'cannot finish before starting';
+    }
+    let totalEmissions = 0;
+    const startingEpoch = Math.floor((start - START_EPOCH_TIME) / RATE_REDUCTION_TIME);
+    const endingEpoch = Math.floor((end - START_EPOCH_TIME) / RATE_REDUCTION_TIME);
+    for (let currentEpoch = startingEpoch; currentEpoch <= endingEpoch; currentEpoch++) {
+        totalEmissions += total(currentEpoch);
+    }
+    // Subtract what isn't emmited within the time range
+    const startingEpochEnd = START_EPOCH_TIME + RATE_REDUCTION_TIME * (startingEpoch + 1);
+    const endingEpochStart = START_EPOCH_TIME + RATE_REDUCTION_TIME * endingEpoch;
+    const secondsInStartingEpoch = startingEpochEnd - start;
+    const secondsInEndingEpoch = end - endingEpochStart;
+    totalEmissions -=
+        (total(startingEpoch) * (RATE_REDUCTION_TIME - secondsInStartingEpoch)) /
+            RATE_REDUCTION_TIME;
+    totalEmissions -=
+        (total(endingEpoch) * (RATE_REDUCTION_TIME - secondsInEndingEpoch)) /
+            RATE_REDUCTION_TIME;
+    return totalEmissions;
+};
+
+var emissions = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    INITIAL_RATE: INITIAL_RATE,
+    START_EPOCH_TIME: START_EPOCH_TIME,
+    weekly: weekly,
+    total: total,
+    between: between
+});
+
+class ProtocolRevenue {
+    constructor(repository, tokenPrices) {
+        this.repository = repository;
+        this.tokenPrices = tokenPrices;
+    }
+    async data(now = Date.now()) {
+        const data = await this.repository.multicallData(now);
+        const balPrice = await this.tokenPrices.find(data.balAddress);
+        if (!balPrice || !balPrice.usd) {
+            throw `No BAL USD price found`;
+        }
+        return {
+            lastWeekBalRevenue: data.balAmount * parseFloat(balPrice.usd),
+            lastWeekBBAUsdRevenue: data.bbAUsdAmount * data.bbAUsdPrice,
+            veBalSupply: data.veBalSupply,
+        };
+    }
+}
+
+/**
+ * Calculates pool APR via summing up sources of APR:
+ *
+ * 1. Swap fees (pool level) data coming from subgraph
+ * 2. Yield bearing pool tokens, with data from external sources eg: http endpoints, subgraph, onchain
+ *    * stETH
+ *    * aave
+ *    * usd+
+ *    map token: calculatorFn
+ * 3. Staking rewards based from veBal gauges
+ */
+class PoolApr {
+    constructor(pools, tokenPrices, tokenMeta, tokenYields, feeCollector, yesterdaysPools, liquidityGauges, feeDistributor) {
+        this.pools = pools;
+        this.tokenPrices = tokenPrices;
+        this.tokenMeta = tokenMeta;
+        this.tokenYields = tokenYields;
+        this.feeCollector = feeCollector;
+        this.yesterdaysPools = yesterdaysPools;
+        this.liquidityGauges = liquidityGauges;
+        this.feeDistributor = feeDistributor;
     }
     /**
-     * Expose balancer contracts, e.g. Vault, LidoRelayer.
+     * Pool revenue via swap fees.
+     * Fees and liquidity are takes from subgraph as USD floats.
+     *
+     * @returns APR [bsp] from fees accumulated over last 24h
      */
-    get contracts() {
-        return this.balancerContracts.contracts;
+    async swapFees(pool) {
+        // 365 * dailyFees * (1 - protocolFees) / totalLiquidity
+        const last24hFees = await this.last24hFees(pool);
+        const totalLiquidity = await this.totalLiquidity(pool);
+        // TODO: what to do when we are missing last24hFees or totalLiquidity?
+        // eg: stable phantom returns 0
+        if (!last24hFees || !totalLiquidity) {
+            return 0;
+        }
+        const dailyFees = last24hFees * (1 - (await this.protocolSwapFeePercentage()));
+        const feesDailyBsp = 10000 * (dailyFees / parseFloat(totalLiquidity));
+        return Math.round(365 * feesDailyBsp);
+    }
+    /**
+     * Pool revenue from holding yield-bearing wrapped tokens.
+     *
+     * @param pool
+     * @returns APR [bsp] from tokens contained in the pool
+     */
+    async tokenAprs(pool) {
+        if (!pool.tokens) {
+            return 0;
+        }
+        const totalLiquidity = await this.totalLiquidity(pool);
+        // Filter out BPT: token with the same address as the pool
+        // TODO: move this to data layer
+        const bptFreeTokens = pool.tokens.filter((token) => {
+            return token.address !== pool.address;
+        });
+        // Get each token APRs
+        const aprs = bptFreeTokens.map(async (token) => {
+            let apr = 0;
+            const tokenYield = await this.tokenYields.find(token.address);
+            if (tokenYield) {
+                apr = tokenYield;
+            }
+            else {
+                // Handle subpool APRs with recursive call to get the subPool APR
+                const subPool = await this.pools.findBy('address', token.address);
+                if (subPool) {
+                    // INFO: Liquidity mining APR can't cascade to other pools
+                    const subSwapFees = await this.swapFees(subPool);
+                    const subtokenAprs = await this.tokenAprs(subPool);
+                    apr = subSwapFees + subtokenAprs;
+                }
+            }
+            return apr;
+        });
+        // Get token weights normalised by usd price
+        const weights = bptFreeTokens.map(async (token) => {
+            var _a, _b;
+            if (token.weight) {
+                return parseFloat(token.weight);
+            }
+            else {
+                let tokenPrice = ((_a = token.price) === null || _a === void 0 ? void 0 : _a.usd) || ((_b = (await this.tokenPrices.find(token.address))) === null || _b === void 0 ? void 0 : _b.usd);
+                if (!tokenPrice) {
+                    const poolToken = await this.pools.findBy('address', token.address);
+                    if (poolToken) {
+                        tokenPrice = (await this.bptPrice(poolToken)).toString();
+                    }
+                    else {
+                        throw `No price for ${token.address}`;
+                    }
+                }
+                // using floats assuming frontend purposes with low precision needs
+                const tokenValue = parseFloat(token.balance) * parseFloat(tokenPrice);
+                return tokenValue / parseFloat(totalLiquidity);
+            }
+        });
+        // Normalise tokenAPRs according to weights
+        const weightedAprs = await Promise.all(aprs.map(async (apr, idx) => {
+            const [a, w] = await Promise.all([apr, weights[idx]]);
+            return Math.round(a * w);
+        }));
+        // sum them up to get pool APRs
+        const apr = weightedAprs.reduce((sum, apr) => sum + apr, 0);
+        return apr;
+    }
+    /**
+     * Calculates staking rewards based on veBal gauges deployed with Curve Finance contracts.
+     * https://curve.readthedocs.io/dao-gauges.html
+     *
+     * Terminology:
+     *  - LP token of a gauge is a BPT of a pool
+     *  - Depositing into a gauge is called staking on the frontend
+     *  - gauge totalSupply - BPT tokens deposited to a gauge
+     *  - gauge workingSupply - effective BPT tokens participating in reward distribution. sum of 40% deposit + 60% boost from individual user's veBal
+     *  - gauge relative weight - weight of this gauge in bal inflation distribution [0..1] scaled to 1e18
+     *
+     * APR sources:
+     *  - gauge BAL emissions = min: 40% of totalSupply, max: 40% of totalSupply + 60% of totalSupply * gauge LPs voting power
+     *    https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/liquidity-mining/contracts/gauges/ethereum/LiquidityGaugeV5.vy#L338
+     *  - gauge reward tokens: Admin or designated depositor has an option to deposit additional reward with a weekly accruing cadence.
+     *    https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/liquidity-mining/contracts/gauges/ethereum/LiquidityGaugeV5.vy#L641
+     *    rate: amount of token per second
+     *
+     * @param pool
+     * @param boost range between 1 and 2.5
+     * @returns APR [bsp] from protocol rewards.
+     */
+    async stakingApr(pool, boost = 1) {
+        if (!this.liquidityGauges) {
+            return 0;
+        }
+        // Data resolving
+        const gauge = await this.liquidityGauges.findBy('poolId', pool.id);
+        if (!gauge) {
+            return 0;
+        }
+        const [balPrice, bptPriceUsd] = await Promise.all([
+            this.tokenPrices.find('0xba100000625a3754423978a60c9317c58a424e3d'),
+            this.bptPrice(pool),
+        ]);
+        const balPriceUsd = parseFloat((balPrice === null || balPrice === void 0 ? void 0 : balPrice.usd) || '0');
+        const now = Math.round(new Date().getTime() / 1000);
+        const totalBalEmissions = between(now, now + 365 * 86400);
+        const gaugeBalEmissions = totalBalEmissions * gauge.relativeWeight;
+        const gaugeBalEmissionsUsd = gaugeBalEmissions * balPriceUsd;
+        const gaugeSupply = (gauge.workingSupply + 0.4) / 0.4; // Only 40% of LP token staked accrue emissions, totalSupply = workingSupply * 2.5
+        const gaugeSupplyUsd = gaugeSupply * bptPriceUsd;
+        const gaugeBalAprBps = Math.round((boost * 10000 * gaugeBalEmissionsUsd) / gaugeSupplyUsd);
+        return gaugeBalAprBps;
+    }
+    /**
+     * Some gauges are holding tokens distributed as rewards to LPs.
+     *
+     * @param pool
+     * @returns APR [bsp] from token rewards.
+     */
+    async rewardAprs(pool) {
+        if (!this.liquidityGauges) {
+            return { total: 0, breakdown: {} };
+        }
+        // Data resolving
+        const gauge = await this.liquidityGauges.findBy('poolId', pool.id);
+        if (!gauge ||
+            !gauge.rewardTokens ||
+            Object.keys(gauge.rewardTokens).length < 1) {
+            return { total: 0, breakdown: {} };
+        }
+        const rewardTokenAddresses = Object.keys(gauge.rewardTokens);
+        // Gets each tokens rate, extrapolate to a year and convert to USD
+        const rewards = rewardTokenAddresses.map(async (tAddress) => {
+            /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */
+            const data = gauge.rewardTokens[tAddress];
+            if (data.period_finish.toNumber() < Date.now() / 1000) {
+                return {
+                    address: tAddress,
+                    value: 0,
+                };
+            }
+            else {
+                const yearlyReward = data.rate.mul(86400).mul(365);
+                const price = await this.tokenPrices.find(tAddress);
+                if (price && price.usd) {
+                    const meta = await this.tokenMeta.find(tAddress);
+                    const decimals = (meta === null || meta === void 0 ? void 0 : meta.decimals) || 18;
+                    const yearlyRewardUsd = parseFloat(formatUnits(yearlyReward, decimals)) *
+                        parseFloat(price.usd);
+                    return {
+                        address: tAddress,
+                        value: yearlyRewardUsd,
+                    };
+                }
+                else {
+                    throw `No USD price for ${tAddress}`;
+                }
+            }
+        });
+        // Get the gauge totalSupplyUsd
+        const bptPriceUsd = await this.bptPrice(pool);
+        const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
+        if (totalSupplyUsd == 0) {
+            return { total: 0, breakdown: {} };
+        }
+        const rewardTokensBreakdown = {};
+        let total = 0;
+        for await (const reward of Object.values(rewards)) {
+            const rewardValue = reward.value / totalSupplyUsd;
+            total += rewardValue;
+            rewardTokensBreakdown[reward.address] = reward.value;
+        }
+        return {
+            total: Math.round(10000 * total),
+            breakdown: rewardTokensBreakdown,
+        };
+    }
+    /**
+     * 80BAL-20WETH pool is accruing protocol revenue.
+     *
+     * @param pool
+     * @returns accrued protocol revenue as APR [bsp]
+     */
+    async protocolApr(pool) {
+        const veBalPoolId = '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014';
+        if (pool.id != veBalPoolId || !this.feeDistributor) {
+            return 0;
+        }
+        const revenue = new ProtocolRevenue(this.feeDistributor, this.tokenPrices);
+        const { lastWeekBalRevenue, lastWeekBBAUsdRevenue, veBalSupply } = await revenue.data();
+        const bptPrice = await this.bptPrice(pool);
+        if (!bptPrice) {
+            throw 'bptPrice for veBal pool missing';
+        }
+        const dailyRevenue = (lastWeekBalRevenue + lastWeekBBAUsdRevenue) / 7;
+        const apr = Math.round((10000 * (365 * dailyRevenue)) / (bptPrice * veBalSupply));
+        return apr;
+    }
+    /**
+     * Composes all sources for total pool APR.
+     *
+     * @returns pool APR split [bsp]
+     */
+    async apr(pool) {
+        console.time(`APR for ${pool.id}`);
+        const [swapFees, tokenAprs, minStakingApr, maxStakingApr, rewardAprs, protocolApr,] = await Promise.all([
+            this.swapFees(pool),
+            this.tokenAprs(pool),
+            this.stakingApr(pool),
+            this.stakingApr(pool, 2.5),
+            this.rewardAprs(pool),
+            this.protocolApr(pool),
+        ]);
+        console.timeEnd(`APR for ${pool.id}`);
+        return {
+            swapFees,
+            tokenAprs,
+            stakingApr: {
+                min: minStakingApr,
+                max: maxStakingApr,
+            },
+            rewardAprs,
+            protocolApr,
+            min: swapFees + tokenAprs + rewardAprs.total + protocolApr + minStakingApr,
+            max: swapFees + tokenAprs + rewardAprs.total + protocolApr + maxStakingApr,
+        };
+    }
+    // 🚨 this is adding 1 call to get yesterday's block height and 2nd call to fetch yesterday's pools data from subgraph
+    // TODO: find a better data source for that eg. add blocks to graph, replace with a database, or dune
+    async last24hFees(pool) {
+        let yesterdaysPool;
+        if (this.yesterdaysPools) {
+            yesterdaysPool = await this.yesterdaysPools.find(pool.id);
+        }
+        if (!pool.totalSwapFee) {
+            return 0;
+        }
+        if (!yesterdaysPool || !yesterdaysPool.totalSwapFee) {
+            return parseFloat(pool.totalSwapFee);
+        }
+        return (parseFloat(pool.totalSwapFee) - parseFloat(yesterdaysPool.totalSwapFee));
+    }
+    /**
+     * Total Liquidity based on USD token prices taken from external price feed, eg: coingecko.
+     *
+     * @param pool
+     * @returns Pool liquidity in USD
+     */
+    async totalLiquidity(pool) {
+        const liquidityService = new Liquidity(this.pools, this.tokenPrices);
+        const liquidity = await liquidityService.getLiquidity(pool);
+        return liquidity;
+    }
+    /**
+     * BPT price as pool totalLiquidity / pool total Shares
+     * Total Liquidity is calculated based on USD token prices taken from external price feed, eg: coingecko.
+     *
+     * @param pool
+     * @returns BPT price in USD
+     */
+    async bptPrice(pool) {
+        return (parseFloat(await this.totalLiquidity(pool)) / parseFloat(pool.totalShares));
+    }
+    async protocolSwapFeePercentage() {
+        const fee = await this.feeCollector.find('');
+        return fee ? fee : 0;
+    }
+}
+
+/**
+ * Controller / use-case layer for interacting with pools data.
+ */
+class Pools {
+    constructor(networkConfig, repositories) {
+        this.networkConfig = networkConfig;
+        this.repositories = repositories;
+        this.aprService = new PoolApr(this.repositories.pools, this.repositories.tokenPrices, this.repositories.tokenMeta, this.repositories.tokenYields, this.repositories.feeCollector, this.repositories.yesterdaysPools, this.repositories.liquidityGauges, this.repositories.feeDistributor);
+        this.liquidityService = new Liquidity(repositories.pools, repositories.tokenPrices);
+    }
+    dataSource() {
+        // TODO: Add API data repository to data and use liveModelProvider as fallback
+        return this.repositories.pools;
+    }
+    /**
+     * Calculates APR on any pool data
+     *
+     * @param pool
+     * @returns
+     */
+    async apr(pool) {
+        return this.aprService.apr(pool);
+    }
+    /**
+     * Calculates total liquidity of the pool
+     *
+     * @param pool
+     * @returns
+     */
+    async liquidity(pool) {
+        return this.liquidityService.getLiquidity(pool);
+    }
+    static wrap(pool, networkConfig) {
+        const methods = PoolTypeConcerns.from(pool.poolType);
+        const wrappedNativeAsset = networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
+        return {
+            ...pool,
+            buildJoin: (joiner, tokensIn, amountsIn, slippage) => {
+                return methods.join.buildJoin({
+                    joiner,
+                    pool,
+                    tokensIn,
+                    amountsIn,
+                    slippage,
+                    wrappedNativeAsset,
+                });
+            },
+            calcPriceImpact: async (amountsIn, minBPTOut) => methods.priceImpactCalculator.calcPriceImpact(pool, amountsIn, minBPTOut),
+            buildExitExactBPTIn: (exiter, bptIn, slippage, shouldUnwrapNativeAsset = false, singleTokenMaxOut) => methods.exit.buildExitExactBPTIn({
+                exiter,
+                pool,
+                bptIn,
+                slippage,
+                shouldUnwrapNativeAsset,
+                wrappedNativeAsset,
+                singleTokenMaxOut,
+            }),
+            buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) => methods.exit.buildExitExactTokensOut({
+                exiter,
+                pool,
+                tokensOut,
+                amountsOut,
+                slippage,
+                wrappedNativeAsset,
+            }),
+            // TODO: spotPrice fails, because it needs a subgraphType,
+            // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
+            // spotPrice: async (tokenIn: string, tokenOut: string) =>
+            //   methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, data),
+            calcSpotPrice: (tokenIn, tokenOut) => methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, pool),
+        };
+    }
+    async find(id) {
+        const data = await this.dataSource().find(id);
+        if (!data)
+            return;
+        return Pools.wrap(data, this.networkConfig);
+    }
+    async findBy(param, value) {
+        if (param == 'id') {
+            return this.find(value);
+        }
+        else if (param == 'address') {
+            const data = await this.dataSource().findBy('address', value);
+            if (!data)
+                return;
+            return Pools.wrap(data, this.networkConfig);
+        }
+        else {
+            throw `search by ${param} not implemented`;
+        }
+    }
+    async all() {
+        const list = await this.dataSource().all();
+        if (!list)
+            return [];
+        return list.map((data) => Pools.wrap(data, this.networkConfig));
+    }
+    async where(filter) {
+        const list = await this.dataSource().where(filter);
+        if (!list)
+            return [];
+        return list.map((data) => Pools.wrap(data, this.networkConfig));
+    }
+}
+
+const gaugeControllerInterface = new abi$1.Interface([
+    'function gauge_relative_weight(address gauge, uint timestamp) view returns (uint)',
+]);
+class GaugeControllerMulticallRepository {
+    constructor(multicallAddress, gaugeControllerAddress, provider) {
+        this.gaugeControllerAddress = gaugeControllerAddress;
+        this.multicall = Multicall(multicallAddress, provider);
+    }
+    async getRelativeWeights(gaugeAddresses, timestamp) {
+        const payload = gaugeAddresses.map((gaugeAddress) => [
+            this.gaugeControllerAddress,
+            gaugeControllerInterface.encodeFunctionData('gauge_relative_weight', [
+                address.getAddress(gaugeAddress),
+                timestamp || Math.floor(Date.now() / 1000),
+            ]),
+        ]);
+        const [, res] = await this.multicall.aggregate(payload);
+        const weights = gaugeAddresses.reduce((p, a, i) => {
+            p[a] || (p[a] = parseFloat(formatUnits(res[i], 18)));
+            return p;
+        }, {});
+        return weights;
+    }
+}
+
+const liquidityGaugeV5Interface = new abi$1.Interface([
+    'function totalSupply() view returns (uint)',
+    'function working_supply() view returns (uint)',
+    'function reward_count() view returns (uint)',
+    'function reward_tokens(uint rewardIndex) view returns (address)',
+    'function reward_data(address rewardToken) view returns (tuple(address token, address distributor, uint period_finish, uint rate, uint last_update, uint integral) data)',
+]);
+/**
+ * A lot of code to get liquidity gauge state via RPC multicall.
+ * TODO: reseach helper contracts or extend subgraph
+ */
+class LiquidityGaugesMulticallRepository {
+    constructor(multicallAddress, provider) {
+        this.multicall = Multicall(multicallAddress, provider);
+    }
+    async getTotalSupplies(gaugeAddresses) {
+        const payload = gaugeAddresses.map((gaugeAddress) => [
+            gaugeAddress,
+            liquidityGaugeV5Interface.encodeFunctionData('totalSupply', []),
+        ]);
+        const [, res] = await this.multicall.aggregate(payload);
+        // Handle 0x
+        const res0x = res.map((r) => (r == '0x' ? '0x0' : r));
+        const totalSupplies = gaugeAddresses.reduce((p, a, i) => {
+            p[a] || (p[a] = parseFloat(formatUnits(res0x[i], 18)));
+            return p;
+        }, {});
+        return totalSupplies;
+    }
+    async getWorkingSupplies(gaugeAddresses) {
+        const payload = gaugeAddresses.map((gaugeAddress) => [
+            gaugeAddress,
+            liquidityGaugeV5Interface.encodeFunctionData('working_supply', []),
+        ]);
+        const [, res] = await this.multicall.aggregate(payload);
+        // Handle 0x
+        const res0x = res.map((r) => (r == '0x' ? '0x0' : r));
+        const workingSupplies = gaugeAddresses.reduce((p, a, i) => {
+            p[a] || (p[a] = parseFloat(formatUnits(res0x[i], 18)));
+            return p;
+        }, {});
+        return workingSupplies;
+    }
+    async getRewardCounts(gaugeAddresses) {
+        const payload = gaugeAddresses.map((gaugeAddress) => [
+            gaugeAddress,
+            liquidityGaugeV5Interface.encodeFunctionData('reward_count', []),
+        ]);
+        const [, res] = await this.multicall.aggregate(payload);
+        // Handle 0x return values
+        const res0x = res.map((r) => (r == '0x' ? '0x0' : r));
+        const rewardCounts = gaugeAddresses.reduce((p, a, i) => {
+            p[a] || (p[a] = parseInt(res0x[i]));
+            return p;
+        }, {});
+        return rewardCounts;
+    }
+    async getRewardTokens(gaugeAddresses, passingRewardCounts) {
+        const rewardCounts = passingRewardCounts || (await this.getRewardCounts(gaugeAddresses));
+        const gaugesWithRewards = gaugeAddresses.filter((gaugeAddress) => rewardCounts[gaugeAddress] > 0);
+        const startIndexes = [0];
+        const payload = gaugesWithRewards
+            .map((gaugeAddress, gaugeIndex) => {
+            const calls = [];
+            for (let i = 0; i < rewardCounts[gaugeAddress]; i++) {
+                calls.push([
+                    gaugeAddress,
+                    liquidityGaugeV5Interface.encodeFunctionData('reward_tokens', [i]),
+                ]);
+            }
+            startIndexes[gaugeIndex + 1] =
+                startIndexes[gaugeIndex] + rewardCounts[gaugeAddress];
+            return calls;
+        })
+            .flat();
+        const [, res] = await this.multicall.aggregate(payload);
+        const rewardTokens = gaugesWithRewards.reduce((p, a, i) => {
+            const start = startIndexes[i];
+            const end = startIndexes[i + 1];
+            const tokens = [];
+            for (let i = start; i < end; i++) {
+                tokens.push(liquidityGaugeV5Interface.decodeFunctionResult('reward_tokens', res[i])[0]);
+            }
+            p[a] || (p[a] = tokens);
+            return p;
+        }, {});
+        return rewardTokens;
+    }
+    async getRewardData(gaugeAddresses, passingRewardTokens) {
+        const rewardTokens = passingRewardTokens || (await this.getRewardTokens(gaugeAddresses));
+        const startIndexes = [0];
+        const payload = Object.keys(rewardTokens)
+            .map((gaugeAddress, gaugeIndex) => {
+            const calls = [];
+            for (let i = 0; i < rewardTokens[gaugeAddress].length; i++) {
+                calls.push([
+                    gaugeAddress,
+                    liquidityGaugeV5Interface.encodeFunctionData('reward_data', [
+                        rewardTokens[gaugeAddress][i],
+                    ]),
+                ]);
+            }
+            startIndexes[gaugeIndex + 1] =
+                startIndexes[gaugeIndex] + rewardTokens[gaugeAddress].length;
+            return calls;
+        })
+            .flat();
+        const [, res] = (await this.multicall.aggregate(payload));
+        const decoded = res.map((r) => liquidityGaugeV5Interface.decodeFunctionResult('reward_data', r)[0]);
+        const rewardData = Object.keys(rewardTokens).reduce((p, a, i) => {
+            const start = startIndexes[i];
+            const data = rewardTokens[a].reduce((d, t, x) => {
+                d[t] || (d[t] = decoded[start + x]);
+                return d;
+            }, {});
+            p[a] || (p[a] = data);
+            return p;
+        }, {});
+        return rewardData;
+    }
+}
+
+/**
+ * Access liquidity gauges indexed by subgraph.
+ * Because we have ~100 gauges to save on repeated http calls we cache all results as `gauges` on an instance.
+ * Balancer's subgraph URL: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-gauges
+ */
+class LiquidityGaugesSubgraphRepository {
+    constructor(url) {
+        this.gauges = [];
+        this.client = createGaugesClient(url);
+    }
+    async fetch() {
+        const queryResult = await this.client.LiquidityGauges();
+        // TODO: optionally convert subgraph type to sdk internal type
+        this.gauges = queryResult.liquidityGauges;
+        return this.gauges;
+    }
+    async find(id) {
+        if (this.gauges.length == 0) {
+            await this.fetch();
+        }
+        return this.gauges.find((gauge) => gauge.id == id);
+    }
+    async findBy(param, value) {
+        if (this.gauges.length == 0) {
+            await this.fetch();
+        }
+        if (param == 'id') {
+            return this.find(value);
+        }
+        else if (param == 'poolId') {
+            return this.gauges.find((gauge) => gauge.poolId == value);
+        }
+        else if (param == 'poolAddress') {
+            return this.gauges.find((gauge) => gauge.poolAddress == value);
+        }
+        else {
+            throw `search by ${param} not implemented`;
+        }
+    }
+}
+
+class LiquidityGaugeSubgraphRPCProvider {
+    constructor(subgraphUrl, multicallAddress, gaugeControllerAddress, provider) {
+        this.totalSupplies = {};
+        this.workingSupplies = {};
+        this.relativeWeights = {};
+        this.rewardTokens = {};
+        this.gaugeController = new GaugeControllerMulticallRepository(multicallAddress, gaugeControllerAddress, provider);
+        this.multicall = new LiquidityGaugesMulticallRepository(multicallAddress, provider);
+        this.subgraph = new LiquidityGaugesSubgraphRepository(subgraphUrl);
+    }
+    async fetch() {
+        const gauges = await this.subgraph.fetch();
+        const gaugeAddresses = gauges.map((g) => g.id);
+        this.totalSupplies = await this.multicall.getTotalSupplies(gaugeAddresses);
+        this.workingSupplies = await this.multicall.getWorkingSupplies(gaugeAddresses);
+        this.rewardTokens = await this.multicall.getRewardData(gaugeAddresses);
+        this.relativeWeights = await this.gaugeController.getRelativeWeights(gaugeAddresses);
+    }
+    async find(id) {
+        if (Object.keys(this.relativeWeights).length == 0) {
+            await this.fetch();
+        }
+        const gauge = await this.subgraph.find(id);
+        if (!gauge) {
+            return;
+        }
+        return this.compose(gauge);
+    }
+    async findBy(attribute, value) {
+        if (Object.keys(this.relativeWeights).length == 0) {
+            await this.fetch();
+        }
+        let gauge;
+        if (attribute == 'id') {
+            return this.find(value);
+        }
+        else if (attribute == 'address') {
+            return this.find(value);
+        }
+        else if (attribute == 'poolId') {
+            gauge = await this.subgraph.findBy('poolId', value);
+        }
+        else if (attribute == 'poolAddress') {
+            gauge = await this.subgraph.findBy('poolAddress', value);
+        }
+        else {
+            throw `search by ${attribute} not implemented`;
+        }
+        if (!gauge) {
+            return undefined;
+        }
+        return this.compose(gauge);
+    }
+    compose(subgraphGauge) {
+        return {
+            id: subgraphGauge.id,
+            address: subgraphGauge.id,
+            name: subgraphGauge.symbol,
+            poolId: subgraphGauge.poolId,
+            poolAddress: subgraphGauge.poolAddress,
+            totalSupply: this.totalSupplies[subgraphGauge.id],
+            workingSupply: this.workingSupplies[subgraphGauge.id],
+            relativeWeight: this.relativeWeights[subgraphGauge.id],
+            rewardTokens: this.rewardTokens[subgraphGauge.id],
+        };
     }
 }
 
@@ -11811,6 +13328,102 @@ class StaticPoolRepository {
             return pool[attribute] === value;
         });
     }
+    async all() {
+        return this.pools;
+    }
+    async where(filter) {
+        return (await this.all()).filter(filter);
+    }
+}
+
+/**
+ * Access pools using generated subgraph client.
+ *
+ * Balancer's subgraph URL: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
+ */
+class PoolsSubgraphRepository {
+    /**
+     * Repository with optional lazy loaded blockHeight
+     *
+     * @param url subgraph URL
+     * @param blockHeight lazy loading blockHeigh resolver
+     */
+    constructor(url, blockHeight) {
+        this.blockHeight = blockHeight;
+        this.pools = [];
+        this.client = createSubgraphClient(url);
+    }
+    async fetch() {
+        const { pool0, pool1000 } = await this.client.Pools({
+            where: { swapEnabled: true, totalShares_gt: '0' },
+            orderBy: Pool_OrderBy.TotalLiquidity,
+            orderDirection: OrderDirection$1.Desc,
+            block: this.blockHeight
+                ? { number: await this.blockHeight() }
+                : undefined,
+        });
+        // TODO: how to best convert subgraph type to sdk internal type?
+        this.pools = [...pool0, ...pool1000];
+        return this.pools;
+    }
+    async find(id) {
+        if (this.pools.length == 0) {
+            await this.fetch();
+        }
+        return this.findBy('id', id);
+    }
+    async findBy(param, value) {
+        if (this.pools.length == 0) {
+            await this.fetch();
+        }
+        const pool = this.pools.find((pool) => pool[param] == value);
+        if (pool) {
+            return this.mapType(pool);
+        }
+        return undefined;
+    }
+    async all() {
+        if (this.pools.length == 0) {
+            await this.fetch();
+        }
+        return this.pools.map(this.mapType);
+    }
+    async where(filter) {
+        if (this.pools.length == 0) {
+            await this.fetch();
+        }
+        return (await this.all()).filter(filter);
+    }
+    mapType(subgraphPool) {
+        return {
+            id: subgraphPool.id,
+            name: subgraphPool.name || '',
+            address: subgraphPool.address,
+            poolType: subgraphPool.poolType,
+            swapFee: subgraphPool.swapFee,
+            swapEnabled: subgraphPool.swapEnabled,
+            amp: subgraphPool.amp || undefined,
+            // owner: subgraphPool.owner,
+            // factory: subgraphPool.factory,
+            tokens: subgraphPool.tokens || [],
+            tokensList: subgraphPool.tokensList,
+            tokenAddresses: (subgraphPool.tokens || []).map((t) => t.address),
+            totalLiquidity: subgraphPool.totalLiquidity,
+            totalShares: subgraphPool.totalShares,
+            totalSwapFee: subgraphPool.totalSwapFee,
+            totalSwapVolume: subgraphPool.totalSwapVolume,
+            // onchain: subgraphPool.onchain,
+            createTime: subgraphPool.createTime,
+            // mainTokens: subgraphPool.mainTokens,
+            // wrappedTokens: subgraphPool.wrappedTokens,
+            // unwrappedTokens: subgraphPool.unwrappedTokens,
+            // isNew: subgraphPool.isNew,
+            // volumeSnapshot: subgraphPool.volumeSnapshot,
+            // feesSnapshot: subgraphPool.???, // Approximated last 24h fees
+            // boost: subgraphPool.boost,
+            totalWeight: subgraphPool.totalWeight || '1',
+        };
+    }
 }
 
 class StaticTokenProvider {
@@ -11878,6 +13491,1357 @@ class StaticTokenPriceProvider {
             return;
         return price;
     }
+    async findBy(attribute, value) {
+        if (attribute != 'address') {
+            return undefined;
+        }
+        return this.find(value);
+    }
+}
+
+// can be fetched from subgraph
+// aave-js: supplyAPR = graph.liquidityRate = core.getReserveCurrentLiquidityRate(_reserve)
+// or directly from RPC:
+// wrappedAaveToken.LENDING_POOL.getReserveCurrentLiquidityRate(mainTokenAddress)
+const yieldTokens$2 = {
+    waUSDT: '0xf8fd466f12e236f4c96f7cce6c79eadb819abf58',
+    waUSDC: '0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de',
+    waDAI: '0x02d60b84491589974263d922d9cc7a3152618ef6',
+};
+const wrappedTokensMap = {
+    // USDT
+    [yieldTokens$2.waUSDT]: {
+        aToken: '0x3ed3b47dd13ec9a98b44e6204a523e766b225811',
+        underlying: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+    },
+    // USDC
+    [yieldTokens$2.waUSDC]: {
+        aToken: '0xbcca60bb61934080951369a648fb03df4f96263c',
+        underlying: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    },
+    // DAI
+    [yieldTokens$2.waDAI]: {
+        aToken: '0x028171bca77440897b824ca71d1c56cac55b68a3',
+        underlying: '0x6b175474e89094c44da98b954eedeac495271d0f',
+    },
+};
+const aTokens = Object.values(wrappedTokensMap).map((t) => t.aToken);
+const underlyingAssets = Object.values(wrappedTokensMap).map((t) => t.underlying);
+const underlyingToWrapped = Object.fromEntries(Object.keys(wrappedTokensMap).map((wrapped) => [
+    wrappedTokensMap[wrapped].underlying,
+    wrapped,
+]));
+// Subgraph
+// liquidityRate, depositors APR (in rays - 27 digits)
+const endpoint = 'https://api.thegraph.com/subgraphs/name/aave/protocol-v2';
+const query$1 = `
+  query getReserves($aTokens: [String!], $underlyingAssets: [Bytes!]) {
+    reserves(
+      where: {
+        aToken_in: $aTokens
+        underlyingAsset_in: $underlyingAssets
+        isActive: true
+      }
+    ) {
+      underlyingAsset
+      liquidityRate
+    }
+  }
+`;
+/**
+ * Fetching and parsing aave APRs from a subgraph
+ *
+ * @returns APRs for aave tokens
+ */
+const aave = async () => {
+    try {
+        const graphqlQuery = {
+            operationName: 'getReserves',
+            query: query$1,
+            variables: { aTokens, underlyingAssets },
+        };
+        const response = await axios__default["default"].post(endpoint, graphqlQuery);
+        const { data: { reserves }, } = response.data;
+        const aprEntries = reserves.map((r) => [
+            underlyingToWrapped[r.underlyingAsset],
+            // Note: our assumption is frontend usage, this service is not a good source where more accuracy is needed.
+            // Converting from aave ray number (27 digits) to bsp
+            // essentially same as here:
+            // https://github.com/aave/aave-utilities/blob/master/packages/math-utils/src/formatters/reserve/index.ts#L231
+            Math.round(parseFloat(formatUnits(bignumber.BigNumber.from(r.liquidityRate), 27)) * 10000),
+        ]);
+        return Object.fromEntries(aprEntries);
+    }
+    catch (error) {
+        console.log(error);
+        return Object.fromEntries(Object.keys(wrappedTokensMap).map((key) => [key, 0]));
+    }
+};
+// TODO: RPC multicall
+// always upto date
+// const lendingPoolAddress = '0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9';
+
+/**
+ * Simple coingecko price source implementation. Configurable by network and token addresses.
+ */
+class CoingeckoPriceRepository {
+    constructor(tokenAddresses, chainId = 1) {
+        this.prices = {};
+        this.fetching = {};
+        this.baseTokenAddresses = tokenAddresses.map((a) => a.toLowerCase());
+        this.urlBase = `https://api.coingecko.com/api/v3/simple/token_price/${this.platform(chainId)}?vs_currencies=usd,eth`;
+    }
+    fetch(address) {
+        console.time(`fetching coingecko ${address}`);
+        const addresses = this.addresses(address);
+        const prices = axios__default["default"]
+            .get(this.url(addresses))
+            .then(({ data }) => {
+            addresses.forEach((address) => {
+                delete this.fetching[address];
+            });
+            this.prices = {
+                ...this.prices,
+                ...(Object.keys(data).length == 0 ? { [address]: {} } : data),
+            };
+            return this.prices;
+        })
+            .catch((error) => {
+            console.error(error);
+            return this.prices;
+        });
+        console.timeEnd(`fetching coingecko ${address}`);
+        return Object.fromEntries(addresses.map((a) => [a, prices]));
+    }
+    async find(address) {
+        const lowercaseAddress = address.toLowerCase();
+        const unwrapped = unwrapToken(lowercaseAddress);
+        if (Object.keys(this.fetching).includes(unwrapped)) {
+            await this.fetching[unwrapped];
+        }
+        else if (!Object.keys(this.prices).includes(unwrapped)) {
+            this.fetching = {
+                ...this.fetching,
+                ...this.fetch(unwrapped),
+            };
+            await this.fetching[unwrapped];
+        }
+        return this.prices[unwrapped];
+    }
+    async findBy(attribute, value) {
+        if (attribute != 'address') {
+            return undefined;
+        }
+        return this.find(value);
+    }
+    platform(chainId) {
+        switch (chainId) {
+            case 1:
+            case 42:
+            case 31337:
+                return 'ethereum';
+            case 137:
+                return 'polygon-pos';
+            case 42161:
+                return 'arbitrum-one';
+        }
+        return '2';
+    }
+    url(addresses) {
+        return `${this.urlBase}&contract_addresses=${addresses.join(',')}`;
+    }
+    addresses(address) {
+        if (this.baseTokenAddresses.includes(address)) {
+            return this.baseTokenAddresses;
+        }
+        else {
+            return [address];
+        }
+    }
+}
+const unwrapToken = (wrappedAddress) => {
+    const lowercase = wrappedAddress.toLocaleLowerCase();
+    if (Object.keys(wrappedTokensMap).includes(lowercase)) {
+        return wrappedTokensMap[lowercase].aToken;
+    }
+    else {
+        return lowercase;
+    }
+};
+
+const feeDistributorInterface = new abi$1.Interface([
+    'function getTokensDistributedInWeek(address token, uint timestamp) view returns (uint)',
+]);
+const veBalInterface = new abi$1.Interface([
+    'function totalSupply() view returns (uint)',
+]);
+const bbAUsdInterface = new abi$1.Interface([
+    'function getRate() view returns (uint)',
+]);
+class FeeDistributorRepository {
+    constructor(multicallAddress, feeDistributorAddress, balAddress, veBalAddress, bbAUsdAddress, provider) {
+        this.feeDistributorAddress = feeDistributorAddress;
+        this.balAddress = balAddress;
+        this.veBalAddress = veBalAddress;
+        this.bbAUsdAddress = bbAUsdAddress;
+        this.multicall = Multicall(multicallAddress, provider);
+    }
+    async fetch(timestamp) {
+        const previousWeek = this.getPreviousWeek(timestamp);
+        const payload = [
+            [
+                this.feeDistributorAddress,
+                feeDistributorInterface.encodeFunctionData('getTokensDistributedInWeek', [address.getAddress(this.balAddress), previousWeek]),
+            ],
+            [
+                this.feeDistributorAddress,
+                feeDistributorInterface.encodeFunctionData('getTokensDistributedInWeek', [address.getAddress(this.bbAUsdAddress), previousWeek]),
+            ],
+            [this.veBalAddress, veBalInterface.encodeFunctionData('totalSupply', [])],
+            [this.bbAUsdAddress, bbAUsdInterface.encodeFunctionData('getRate', [])],
+        ];
+        const [, res] = await this.multicall.aggregate(payload);
+        const data = {
+            balAmount: parseFloat(formatUnits(res[0], 18)),
+            bbAUsdAmount: parseFloat(formatUnits(res[1], 18)),
+            veBalSupply: parseFloat(formatUnits(res[2], 18)),
+            bbAUsdPrice: parseFloat(formatUnits(res[3], 18)),
+            balAddress: this.balAddress,
+        };
+        return data;
+    }
+    async multicallData(timestamp) {
+        if (!this.data) {
+            this.data = await this.fetch(timestamp);
+        }
+        return this.data;
+    }
+    getPreviousWeek(fromTimestamp) {
+        const weeksToGoBack = 1;
+        const midnight = new Date(fromTimestamp);
+        midnight.setUTCHours(0);
+        midnight.setUTCMinutes(0);
+        midnight.setUTCSeconds(0);
+        midnight.setUTCMilliseconds(0);
+        let daysSinceThursday = midnight.getUTCDay() - 4;
+        if (daysSinceThursday < 0)
+            daysSinceThursday += 7;
+        daysSinceThursday = daysSinceThursday + weeksToGoBack * 7;
+        return Math.floor(midnight.getTime() / 1000) - daysSinceThursday * 86400;
+    }
+}
+
+const vaultInterface = new abi$1.Interface([
+    'function getProtocolFeesCollector() view returns (address)',
+]);
+const protocolFeesCollectorInterface = new abi$1.Interface([
+    'function getSwapFeePercentage() view returns (uint)',
+]);
+// Using singleton here, so subsequent calls will return the same promise
+let swapFeePercentagePromise;
+class FeeCollectorRepository {
+    constructor(vaultAddress, provider) {
+        this.provider = provider;
+        this.vault = new contracts.Contract(vaultAddress, vaultInterface, this.provider);
+    }
+    async fetch() {
+        const address = (await this.vault.getProtocolFeesCollector());
+        const collector = new contracts.Contract(address, protocolFeesCollectorInterface, this.provider);
+        const fees = (await collector.getSwapFeePercentage());
+        return parseFloat(formatUnits(fees, 18));
+    }
+    async find() {
+        if (!swapFeePercentagePromise) {
+            swapFeePercentagePromise = this.fetch();
+        }
+        this.swapFeePercentage = await swapFeePercentagePromise;
+        return this.swapFeePercentage;
+    }
+    async findBy() {
+        return this.find();
+    }
+}
+
+const yieldTokens$1 = {
+    stETH: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+};
+/**
+ * Lido APR fetching
+ *
+ * @returns lido APR for stETH
+ */
+const lido = async () => {
+    let apr = 0;
+    try {
+        const response = await axios__default["default"].get('https://stake.lido.fi/api/apr');
+        const { data: aprs } = response.data;
+        apr = Math.round(parseFloat(aprs.steth) * 100);
+    }
+    catch (error) {
+        console.error('Failed to fetch stETH APR:', error);
+    }
+    return {
+        [yieldTokens$1.stETH]: apr,
+    };
+};
+
+const yieldTokens = {
+    usdcUSDplus: '0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425',
+    usdcUSDplus2: '0x6933ec1ca55c06a894107860c92acdfd2dd8512f',
+};
+/**
+ * Overnight token APR fetching
+ *
+ * @returns cached APR for USD+
+ */
+const overnight = async () => {
+    let bsp = 0;
+    try {
+        const { data: rate } = await axios__default["default"].get('https://app.overnight.fi/api/balancer/week/apr');
+        bsp = Math.round((parseFloat(rate) * 10000) / 100);
+    }
+    catch (error) {
+        console.error('Failed to fetch USD+ APR:', error);
+    }
+    return Object.fromEntries(Object.values(yieldTokens).map((address) => [address, bsp]));
+};
+
+const yieldSourceMap = Object.fromEntries([
+    ...Object.values(yieldTokens$1).map((k) => [k, lido]),
+    ...Object.values(yieldTokens$2).map((k) => [k, aave]),
+    ...Object.values(yieldTokens).map((k) => [k, overnight]),
+]);
+class TokenYieldsRepository {
+    constructor(sources = yieldSourceMap) {
+        this.sources = sources;
+        this.yields = {};
+    }
+    async fetch(address) {
+        const tokenYields = await this.sources[address]();
+        this.yields = {
+            ...this.yields,
+            ...tokenYields,
+        };
+    }
+    async find(address) {
+        const lowercase = address.toLocaleLowerCase();
+        if (Object.keys(this.sources).includes(lowercase) &&
+            !Object.keys(this.yields).includes(lowercase)) {
+            await this.fetch(address);
+        }
+        return this.yields[lowercase];
+    }
+    async findBy(attribute, value) {
+        if (attribute != 'address') {
+            return undefined;
+        }
+        return this.find(value);
+    }
+}
+
+const query = (timestamp) => `{
+  blocks(first: 1, orderBy: timestamp, orderDirection: asc, where: { timestamp_gt: ${timestamp} }) {
+    number
+  }
+}`;
+const fetchBlockByTime = async (endpoint, timestamp) => {
+    console.time(`fetching blocks ${timestamp}`);
+    const payload = {
+        query: query(timestamp),
+    };
+    const response = await axios__default["default"].post(endpoint, payload);
+    console.timeEnd(`fetching blocks ${timestamp}`);
+    const { data: { blocks }, } = response.data;
+    return parseInt(blocks[0].number);
+};
+class BlockNumberRepository {
+    constructor(endpoint) {
+        this.endpoint = endpoint;
+        this.blocks = {};
+    }
+    async find(from) {
+        if (from == 'dayAgo') {
+            const dayAgo = `${Math.floor(Date.now() / 1000) - 86400}`;
+            if (!this.blocks[dayAgo]) {
+                this.blocks = {
+                    ...this.blocks,
+                    [dayAgo]: fetchBlockByTime(this.endpoint, dayAgo),
+                };
+            }
+            return this.blocks[dayAgo];
+        }
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async findBy(attribute = '', value = '') {
+        return;
+    }
+}
+
+var initialCoingeckoList = [
+	{
+		chainId: 1,
+		address: "0x8888801af4d980682e47f1a9036e589479e835c5",
+		symbol: "mph"
+	},
+	{
+		chainId: 1,
+		address: "0x27054b13b1b798b345b591a4d22e6562d47ea75a",
+		symbol: "ast"
+	},
+	{
+		chainId: 1,
+		address: "0x3301ee63fb29f863f2333bd4466acb46cd8323e6",
+		symbol: "akita"
+	},
+	{
+		chainId: 1,
+		address: "0x616e8bfa43f920657b3497dbf40d6b1a02d4608d",
+		symbol: "aurabal"
+	},
+	{
+		chainId: 1,
+		address: "0xc0c293ce456ff0ed870add98a0828dd4d2903dbf",
+		symbol: "aura"
+	},
+	{
+		chainId: 1,
+		address: "0x3472a5a71965499acd81997a54bba8d852c6e53d",
+		symbol: "badger"
+	},
+	{
+		chainId: 1,
+		address: "0xba100000625a3754423978a60c9317c58a424e3d",
+		symbol: "bal"
+	},
+	{
+		chainId: 1,
+		address: "0x804cdb9116a10bb78768d3252355a1b18067bf8f",
+		symbol: "bb-a-dai"
+	},
+	{
+		chainId: 1,
+		address: "0x9210f1204b5a24742eba12f710636d76240df3d0",
+		symbol: "bb-a-usdc"
+	},
+	{
+		chainId: 1,
+		address: "0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c",
+		symbol: "bb-a-usdt"
+	},
+	{
+		chainId: 1,
+		address: "0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2",
+		symbol: "bb-a-usd"
+	},
+	{
+		chainId: 1,
+		address: "0x2d94aa3e47d9d5024503ca8491fce9a2fb4da198",
+		symbol: "bank"
+	},
+	{
+		chainId: 1,
+		address: "0x0d8775f648430679a709e98d2b0cb6250d2887ef",
+		symbol: "bat"
+	},
+	{
+		chainId: 1,
+		address: "0xf17e65822b568b3903685a7c9f496cf7656cc6c2",
+		symbol: "bico"
+	},
+	{
+		chainId: 1,
+		address: "0x799ebfabe77a6e34311eeee9825190b9ece32824",
+		symbol: "btrst"
+	},
+	{
+		chainId: 1,
+		address: "0x514910771af9ca656af840dff83e8264ecf986ca",
+		symbol: "link"
+	},
+	{
+		chainId: 1,
+		address: "0x3506424f91fd33084466f402d5d97f05f8e3b4af",
+		symbol: "chz"
+	},
+	{
+		chainId: 1,
+		address: "0x41e5560054824ea6b0732e656e3ad64e20e94e45",
+		symbol: "cvc"
+	},
+	{
+		chainId: 1,
+		address: "0xc00e94cb662c3520282e6f5717214004a7f26888",
+		symbol: "comp"
+	},
+	{
+		chainId: 1,
+		address: "0xdef1ca1fb7fbcdc777520aa7f396b4e015f497ab",
+		symbol: "cow"
+	},
+	{
+		chainId: 1,
+		address: "0xd533a949740bb3306d119cc777fa900ba034cd52",
+		symbol: "crv"
+	},
+	{
+		chainId: 1,
+		address: "0x6b175474e89094c44da98b954eedeac495271d0f",
+		symbol: "dai"
+	},
+	{
+		chainId: 1,
+		address: "0xf2051511b9b121394fa75b8f7d4e7424337af687",
+		symbol: "haus"
+	},
+	{
+		chainId: 1,
+		address: "0x888888435fde8e7d4c54cab67f206e4199454c60",
+		symbol: "dfx"
+	},
+	{
+		chainId: 1,
+		address: "0x798d1be841a82a273720ce31c822c61a67a601c3",
+		symbol: "digg"
+	},
+	{
+		chainId: 1,
+		address: "0xf629cbd94d3791c9250152bd8dfbdf380e2a3b9c",
+		symbol: "enj"
+	},
+	{
+		chainId: 1,
+		address: "0xc18360217d8f7ab5e7c516566761ea12ce7f9d72",
+		symbol: "ens"
+	},
+	{
+		chainId: 1,
+		address: "0x4e15361fd6b4bb609fa63c81a2be19d873717870",
+		symbol: "ftm"
+	},
+	{
+		chainId: 1,
+		address: "0x956f47f50a910163d8bf957cf5846d573e7f87ca",
+		symbol: "fei"
+	},
+	{
+		chainId: 1,
+		address: "0xed1480d12be41d92f36f5f7bdd88212e381a3677",
+		symbol: "fdt"
+	},
+	{
+		chainId: 1,
+		address: "0x586aa273f262909eef8fa02d90ab65f5015e0516",
+		symbol: "fiat"
+	},
+	{
+		chainId: 1,
+		address: "0xde30da39c46104798bb5aa3fe8b9e0e1f348163f",
+		symbol: "gtc"
+	},
+	{
+		chainId: 1,
+		address: "0x900db999074d9277c5da2a43f252d74366230da0",
+		symbol: "giv"
+	},
+	{
+		chainId: 1,
+		address: "0x6810e776880c02933d47db1b9fc05908e5386b96",
+		symbol: "gno"
+	},
+	{
+		chainId: 1,
+		address: "0xba485b556399123261a5f9c95d413b4f93107407",
+		symbol: "graviaura"
+	},
+	{
+		chainId: 1,
+		address: "0x3ec8798b81485a254928b70cda1cf0a2bb0b74d7",
+		symbol: "gro"
+	},
+	{
+		chainId: 1,
+		address: "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
+		symbol: "snx"
+	},
+	{
+		chainId: 1,
+		address: "0x5a98fcbea516cf06857215779fd812ca3bef1b32",
+		symbol: "ldo"
+	},
+	{
+		chainId: 1,
+		address: "0x6dea81c8171d0ba574754ef6f8b412f2ed88c54d",
+		symbol: "lqty"
+	},
+	{
+		chainId: 1,
+		address: "0x5f98805a4e8be255a32880fdec7f6728c6568ba0",
+		symbol: "lusd"
+	},
+	{
+		chainId: 1,
+		address: "0x965d79f1a1016b574a62986e13ca8ab04dfdd15c",
+		symbol: "m2"
+	},
+	{
+		chainId: 1,
+		address: "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
+		symbol: "mkr"
+	},
+	{
+		chainId: 1,
+		address: "0xd084944d3c05cd115c09d072b9f44ba3e0e45921",
+		symbol: "fold"
+	},
+	{
+		chainId: 1,
+		address: "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
+		symbol: "matic"
+	},
+	{
+		chainId: 1,
+		address: "0xa3bed4e1c75d00fa6f4e5e6922db7261b5e9acd2",
+		symbol: "mta"
+	},
+	{
+		chainId: 1,
+		address: "0x4b13006980acb09645131b91d259eaa111eaf5ba",
+		symbol: "myc"
+	},
+	{
+		chainId: 1,
+		address: "0x333a4823466879eef910a04d473505da62142069",
+		symbol: "nation"
+	},
+	{
+		chainId: 1,
+		address: "0xcfeaead4947f0705a14ec42ac3d44129e1ef3ed5",
+		symbol: "note"
+	},
+	{
+		chainId: 1,
+		address: "0x967da4048cd07ab37855c090aaf366e4ce1b9f48",
+		symbol: "ocean"
+	},
+	{
+		chainId: 1,
+		address: "0x64aa3364f17a4d01c6f1751fd97c2bd3d7e7f1d5",
+		symbol: "ohm"
+	},
+	{
+		chainId: 1,
+		address: "0xab846fb6c81370327e784ae7cbb6d6a6af6ff4bf",
+		symbol: "pal"
+	},
+	{
+		chainId: 1,
+		address: "0xcafe001067cdef266afb7eb5a286dcfd277f3de5",
+		symbol: "psp"
+	},
+	{
+		chainId: 1,
+		address: "0x68037790a0229e9ce6eaa8a99ea92964106c4703",
+		symbol: "par"
+	},
+	{
+		chainId: 1,
+		address: "0x45804880de22913dafe09f4980848ece6ecbaf78",
+		symbol: "paxg"
+	},
+	{
+		chainId: 1,
+		address: "0x89ab32156e46f46d02ade3fecbe5fc4243b9aaed",
+		symbol: "pnt"
+	},
+	{
+		chainId: 1,
+		address: "0x9992ec3cf6a55b00978cddf2b27bc6882d88d1ec",
+		symbol: "poly"
+	},
+	{
+		chainId: 1,
+		address: "0x43d4a3cd90ddd2f8f4f693170c9c8098163502ad",
+		symbol: "d2d"
+	},
+	{
+		chainId: 1,
+		address: "0xeb4c2781e4eba804ce9a9803c67d0893436bb27d",
+		symbol: "renbtc"
+	},
+	{
+		chainId: 1,
+		address: "0x408e41876cccdc0f92210600ef50372656052a38",
+		symbol: "ren"
+	},
+	{
+		chainId: 1,
+		address: "0xfb5453340c03db5ade474b27e68b6a9c6b2823eb",
+		symbol: "robot"
+	},
+	{
+		chainId: 1,
+		address: "0xd33526068d116ce69f19a9ee46f0bd304f21a51f",
+		symbol: "rpl"
+	},
+	{
+		chainId: 1,
+		address: "0xae78736cd615f374d3085123a210448e74fc6393",
+		symbol: "reth"
+	},
+	{
+		chainId: 1,
+		address: "0xfe18be6b3bd88a2d2a7f928d00292e7a9963cfc6",
+		symbol: "sbtc"
+	},
+	{
+		chainId: 1,
+		address: "0x476c5e26a75bd202a9683ffd34359c0cc15be0ff",
+		symbol: "srm"
+	},
+	{
+		chainId: 1,
+		address: "0x35e78b3982e87ecfd5b3f3265b601c046cdbe232",
+		symbol: "xai"
+	},
+	{
+		chainId: 1,
+		address: "0x3affcca64c2a6f4e3b6bd9c64cd2c969efd1ecbe",
+		symbol: "dsla"
+	},
+	{
+		chainId: 1,
+		address: "0xf24d8651578a55b0c119b9910759a351a3458895",
+		symbol: "sdbal"
+	},
+	{
+		chainId: 1,
+		address: "0x11c1a6b3ed6bb362954b29d3183cfa97a0c806aa",
+		symbol: "str"
+	},
+	{
+		chainId: 1,
+		address: "0x8f693ca8d21b157107184d29d398a8d082b38b76",
+		symbol: "data"
+	},
+	{
+		chainId: 1,
+		address: "0x470ebf5f030ed85fc1ed4c2d36b9dd02e77cf1b7",
+		symbol: "temple"
+	},
+	{
+		chainId: 1,
+		address: "0xa36fdbbae3c9d55a1d67ee5821d53b50b63a1ab9",
+		symbol: "temp"
+	},
+	{
+		chainId: 1,
+		address: "0xdac17f958d2ee523a2206206994597c13d831ec7",
+		symbol: "usdt"
+	},
+	{
+		chainId: 1,
+		address: "0x9c4a4204b79dd291d6b6571c5be8bbcd0622f050",
+		symbol: "tcr"
+	},
+	{
+		chainId: 1,
+		address: "0x226f7b842e0f0120b7e194d05432b3fd14773a9d",
+		symbol: "unn"
+	},
+	{
+		chainId: 1,
+		address: "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+		symbol: "uni"
+	},
+	{
+		chainId: 1,
+		address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+		symbol: "usdc"
+	},
+	{
+		chainId: 1,
+		address: "0x81f8f0bb1cb2a06649e51913a151f0e7ef6fa321",
+		symbol: "vita"
+	},
+	{
+		chainId: 1,
+		address: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+		symbol: "weth"
+	},
+	{
+		chainId: 1,
+		address: "0xedb171c18ce90b633db442f2a6f72874093b49ef",
+		symbol: "wampl"
+	},
+	{
+		chainId: 1,
+		address: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+		symbol: "wbtc"
+	},
+	{
+		chainId: 1,
+		address: "0xf203ca1769ca8e9e8fe1da9d147db68b6c919817",
+		symbol: "wncg"
+	},
+	{
+		chainId: 1,
+		address: "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0",
+		symbol: "wsteth"
+	},
+	{
+		chainId: 1,
+		address: "0x79c71d3436f39ce382d0f58f1b011d88100b9d91",
+		symbol: "xns"
+	},
+	{
+		chainId: 1,
+		address: "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e",
+		symbol: "yfi"
+	},
+	{
+		chainId: 1,
+		address: "0xbcca60bb61934080951369a648fb03df4f96263c",
+		symbol: "ausdc"
+	},
+	{
+		chainId: 1,
+		address: "0x028171bca77440897b824ca71d1c56cac55b68a3",
+		symbol: "adai"
+	},
+	{
+		chainId: 1,
+		address: "0x3ed3b47dd13ec9a98b44e6204a523e766b225811",
+		symbol: "ausdt"
+	},
+	{
+		chainId: 137,
+		address: "0x9c2c5fd7b07e95ee044ddeba0e97a665f142394f",
+		symbol: "1inch"
+	},
+	{
+		chainId: 137,
+		address: "0xd6df932a45c0f255f85145f286ea0b292b21c90b",
+		symbol: "aave"
+	},
+	{
+		chainId: 137,
+		address: "0xc3fdbadc7c795ef1d6ba111e06ff8f16a20ea539",
+		symbol: "addy"
+	},
+	{
+		chainId: 137,
+		address: "0xf84bd51eab957c2e7b7d646a3427c5a50848281d",
+		symbol: "agar"
+	},
+	{
+		chainId: 137,
+		address: "0x033d942a6b495c4071083f4cde1f17e986fe856c",
+		symbol: "aga"
+	},
+	{
+		chainId: 137,
+		address: "0x0e9b89007eee9c958c0eda24ef70723c2c93dd58",
+		symbol: "amaticc"
+	},
+	{
+		chainId: 137,
+		address: "0x034b2090b579228482520c589dbd397c53fc51cc",
+		symbol: "vision"
+	},
+	{
+		chainId: 137,
+		address: "0x2c89bbc92bd86f8075d1decc58c7f4e0107f286b",
+		symbol: "avax"
+	},
+	{
+		chainId: 137,
+		address: "0x49690541e3f6e933a9aa3cffee6010a7bb5b72d7",
+		symbol: "axiav3"
+	},
+	{
+		chainId: 137,
+		address: "0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3",
+		symbol: "bal"
+	},
+	{
+		chainId: 137,
+		address: "0xdb7cb471dd0b49b29cab4a1c14d070f27216a0ab",
+		symbol: "bank"
+	},
+	{
+		chainId: 137,
+		address: "0xfbdd194376de19a88118e84e279b977f165d01b8",
+		symbol: "bifi"
+	},
+	{
+		chainId: 137,
+		address: "0xd6ca869a4ec9ed2c7e618062cdc45306d8dbbc14",
+		symbol: "btc2x-fli-p"
+	},
+	{
+		chainId: 137,
+		address: "0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39",
+		symbol: "link"
+	},
+	{
+		chainId: 137,
+		address: "0x172370d5cd63279efa6d502dab29171933a610af",
+		symbol: "crv"
+	},
+	{
+		chainId: 137,
+		address: "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+		symbol: "dai"
+	},
+	{
+		chainId: 137,
+		address: "0x1d607faa0a51518a7728580c238d912747e71f7a",
+		symbol: "data"
+	},
+	{
+		chainId: 137,
+		address: "0x85955046df4668e1dd369d2de9f3aeb98dd2a369",
+		symbol: "dpi"
+	},
+	{
+		chainId: 137,
+		address: "0xe7804d91dfcde7f776c90043e03eaa6df87e6395",
+		symbol: "dfx"
+	},
+	{
+		chainId: 137,
+		address: "0xf28164a485b0b2c90639e47b0f377b4a438a16b1",
+		symbol: "dquick"
+	},
+	{
+		chainId: 137,
+		address: "0x45c32fa6df82ead1e2ef74d17b76547eddfaff89",
+		symbol: "frax"
+	},
+	{
+		chainId: 137,
+		address: "0x50b728d8d964fd00c2d0aad81718b71311fef68a",
+		symbol: "snx"
+	},
+	{
+		chainId: 137,
+		address: "0x72928d5436ff65e57f72d5566dcd3baedc649a88",
+		symbol: "hdao"
+	},
+	{
+		chainId: 137,
+		address: "0x3ad707da309f3845cd602059901e39c4dcd66473",
+		symbol: "eth2x-fli-p"
+	},
+	{
+		chainId: 137,
+		address: "0x4f025829c4b13df652f38abd2ab901185ff1e609",
+		symbol: "ieth-fli-p"
+	},
+	{
+		chainId: 137,
+		address: "0x340f412860da7b7823df372a2b59ff78b7ae6abc",
+		symbol: "imatic-fli-p"
+	},
+	{
+		chainId: 137,
+		address: "0xf287d97b6345bad3d88856b26fb7c0ab3f2c7976",
+		symbol: "matic2x-fli-p"
+	},
+	{
+		chainId: 137,
+		address: "0x130ce4e4f76c2265f94a961d70618562de0bb8d2",
+		symbol: "ibtc-fli-p"
+	},
+	{
+		chainId: 137,
+		address: "0x596ebe76e2db4470966ea395b0d063ac6197a8c5",
+		symbol: "jrt"
+	},
+	{
+		chainId: 137,
+		address: "0x3a58a54c066fdc0f2d55fc9c89f0415c92ebf3c4",
+		symbol: "stmatic"
+	},
+	{
+		chainId: 137,
+		address: "0xf501dd45a1198c2e1b5aef5314a68b9006d842e0",
+		symbol: "mta"
+	},
+	{
+		chainId: 137,
+		address: "0xeaecc18198a475c921b24b8a6c1c1f0f5f3f7ea0",
+		symbol: "seed"
+	},
+	{
+		chainId: 137,
+		address: "0xfe712251173a2cd5f5be2b46bb528328ea3565e1",
+		symbol: "mvi"
+	},
+	{
+		chainId: 137,
+		address: "0xa3fa99a148fa48d14ed51d610c367c61876997f1",
+		symbol: "mimatic"
+	},
+	{
+		chainId: 137,
+		address: "0xa486c6bc102f409180ccb8a94ba045d39f8fc7cb",
+		symbol: "nex"
+	},
+	{
+		chainId: 137,
+		address: "0xe2aa7db6da1dae97c5f5c6914d285fbfcc32a128",
+		symbol: "par"
+	},
+	{
+		chainId: 137,
+		address: "0x580a84c73811e1839f75d86d75d88cca0c241ff4",
+		symbol: "qi"
+	},
+	{
+		chainId: 137,
+		address: "0x831753dd7087cac61ab5644b308642cc1c33dc13",
+		symbol: "quick"
+	},
+	{
+		chainId: 137,
+		address: "0xb5c064f955d8e7f38fe0460c556a72987494ee17",
+		symbol: "quick"
+	},
+	{
+		chainId: 137,
+		address: "0x00e5646f60ac6fb446f621d146b6e1886f002905",
+		symbol: "rai"
+	},
+	{
+		chainId: 137,
+		address: "0x431cd3c9ac9fc73644bf68bf5691f4b83f9e104f",
+		symbol: "rbw"
+	},
+	{
+		chainId: 137,
+		address: "0xdbf31df14b66535af65aac99c32e9ea844e14501",
+		symbol: "renbtc"
+	},
+	{
+		chainId: 137,
+		address: "0x501ace9c35e60f03a2af4d484f49f9b1efde9f40",
+		symbol: "solace"
+	},
+	{
+		chainId: 137,
+		address: "0xfa68fb4628dff1028cfec22b4162fccd0d45efb6",
+		symbol: "maticx"
+	},
+	{
+		chainId: 137,
+		address: "0x0b3f868e0be5597d5db7feb59e1cadbb0fdda50a",
+		symbol: "sushi"
+	},
+	{
+		chainId: 137,
+		address: "0xdf7837de1f2fa4631d716cf2502f8b230f1dcc32",
+		symbol: "tel"
+	},
+	{
+		chainId: 137,
+		address: "0xe6469ba6d2fd6130788e0ea9c0a0515900563b59",
+		symbol: "ust"
+	},
+	{
+		chainId: 137,
+		address: "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+		symbol: "usdt"
+	},
+	{
+		chainId: 137,
+		address: "0x5fe2b58c013d7601147dcdd68c143a77499f5531",
+		symbol: "grt"
+	},
+	{
+		chainId: 137,
+		address: "0xbbba073c31bf03b8acf7c28ef0738decf3695683",
+		symbol: "sand"
+	},
+	{
+		chainId: 137,
+		address: "0x2934b36ca9a4b31e633c5be670c8c8b28b6aa015",
+		symbol: "thx"
+	},
+	{
+		chainId: 137,
+		address: "0x2f800db0fdb5223b3c3f354886d907a671414a7f",
+		symbol: "bct"
+	},
+	{
+		chainId: 137,
+		address: "0x2e1ad108ff1d8c782fcbbb89aad783ac49586756",
+		symbol: "tusd"
+	},
+	{
+		chainId: 137,
+		address: "0x3809dcdd5dde24b37abe64a5a339784c3323c44f",
+		symbol: "swap"
+	},
+	{
+		chainId: 137,
+		address: "0x7fbc10850cae055b27039af31bd258430e714c62",
+		symbol: "ubt"
+	},
+	{
+		chainId: 137,
+		address: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+		symbol: "usdc"
+	},
+	{
+		chainId: 137,
+		address: "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+		symbol: "weth"
+	},
+	{
+		chainId: 137,
+		address: "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+		symbol: "wmatic"
+	},
+	{
+		chainId: 137,
+		address: "0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6",
+		symbol: "wbtc"
+	},
+	{
+		chainId: 137,
+		address: "0x24834bbec7e39ef42f4a75eaf8e5b6486d3f0e57",
+		symbol: "lunc"
+	},
+	{
+		chainId: 137,
+		address: "0xf153eff70dc0bf3b085134928daeea248d9b30d0",
+		symbol: "xmark"
+	},
+	{
+		chainId: 42161,
+		address: "0x9f20de1fc9b161b34089cbeae888168b44b03461",
+		symbol: "arbis"
+	},
+	{
+		chainId: 42161,
+		address: "0x040d1edc9569d4bab2d15287dc5a4f10f56a56b8",
+		symbol: "bal"
+	},
+	{
+		chainId: 42161,
+		address: "0x031d35296154279dc1984dcd93e392b1f946737b",
+		symbol: "cap"
+	},
+	{
+		chainId: 42161,
+		address: "0xf97f4df75117a78c1a5a0dbb814af92458539fb4",
+		symbol: "link"
+	},
+	{
+		chainId: 42161,
+		address: "0x354a6da3fcde098f8389cad84b0182725c6c91de",
+		symbol: "comp"
+	},
+	{
+		chainId: 42161,
+		address: "0xf4d48ce3ee1ac3651998971541badbb9a14d7234",
+		symbol: "cream"
+	},
+	{
+		chainId: 42161,
+		address: "0x11cdb42b0eb46d95f990bedd4695a6e3fa034978",
+		symbol: "crv"
+	},
+	{
+		chainId: 42161,
+		address: "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
+		symbol: "dai"
+	},
+	{
+		chainId: 42161,
+		address: "0x8038f3c971414fd1fc220ba727f2d4a0fc98cb65",
+		symbol: "dht"
+	},
+	{
+		chainId: 42161,
+		address: "0xf0b5ceefc89684889e5f7e0a7775bd100fcd3709",
+		symbol: "dusd"
+	},
+	{
+		chainId: 42161,
+		address: "0x6c2c06790b3e3e3c38e12ee22f8183b37a13ee55",
+		symbol: "dpx"
+	},
+	{
+		chainId: 42161,
+		address: "0x32eb7902d4134bf98a28b963d26de779af92a212",
+		symbol: "rdpx"
+	},
+	{
+		chainId: 42161,
+		address: "0xc3ae0333f0f34aa734d5493276223d95b8f9cb37",
+		symbol: "dxd"
+	},
+	{
+		chainId: 42161,
+		address: "0xfc5a1a6eb076a2c7ad06ed22c90d7e710e35ad0a",
+		symbol: "gmx"
+	},
+	{
+		chainId: 42161,
+		address: "0xa0b862f60edef4452f25b4160f177db44deb6cf1",
+		symbol: "gno"
+	},
+	{
+		chainId: 42161,
+		address: "0xb965029343d55189c25a7f3e0c9394dc0f5d41b1",
+		symbol: "ndx"
+	},
+	{
+		chainId: 42161,
+		address: "0x539bde0d7dbd336b79148aa742883198bbf60342",
+		symbol: "magic"
+	},
+	{
+		chainId: 42161,
+		address: "0x4e352cf164e64adcbad318c3a1e222e9eba4ce42",
+		symbol: "mcb"
+	},
+	{
+		chainId: 42161,
+		address: "0x3f56e0c36d275367b8c502090edf38289b3dea0d",
+		symbol: "mimatic"
+	},
+	{
+		chainId: 42161,
+		address: "0x965772e0e9c84b6f359c8597c891108dcf1c5b1a",
+		symbol: "pickle"
+	},
+	{
+		chainId: 42161,
+		address: "0x6694340fc020c5e6b96567843da2df01b2ce1eb6",
+		symbol: "stg"
+	},
+	{
+		chainId: 42161,
+		address: "0xd4d42f0b6def4ce0383636770ef773390d85c61a",
+		symbol: "sushi"
+	},
+	{
+		chainId: 42161,
+		address: "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9",
+		symbol: "usdt"
+	},
+	{
+		chainId: 42161,
+		address: "0x23a941036ae778ac51ab04cea08ed6e2fe103614",
+		symbol: "grt"
+	},
+	{
+		chainId: 42161,
+		address: "0xa72159fc390f0e3c6d415e658264c7c4051e9b87",
+		symbol: "tcr"
+	},
+	{
+		chainId: 42161,
+		address: "0x4d15a3a2286d883af0aa1b3f21367843fac63e07",
+		symbol: "tusd"
+	},
+	{
+		chainId: 42161,
+		address: "0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0",
+		symbol: "uni"
+	},
+	{
+		chainId: 42161,
+		address: "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
+		symbol: "usdc"
+	},
+	{
+		chainId: 42161,
+		address: "0xa684cd057951541187f288294a1e1c2646aa2d24",
+		symbol: "vsta"
+	},
+	{
+		chainId: 42161,
+		address: "0x64343594ab9b56e99087bfa6f2335db24c2d1f17",
+		symbol: "vst"
+	},
+	{
+		chainId: 42161,
+		address: "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+		symbol: "weth"
+	},
+	{
+		chainId: 42161,
+		address: "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f",
+		symbol: "wbtc"
+	},
+	{
+		chainId: 42161,
+		address: "0x82e3a8f066a6989666b031d916c43672085b1582",
+		symbol: "yfi"
+	}
+];
+
+class Data {
+    constructor(networkConfig, provider) {
+        this.pools = new PoolsSubgraphRepository(networkConfig.urls.subgraph);
+        // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
+        // TODO: find a better data source for that, eg: maybe DUNE once API is available
+        if (networkConfig.urls.blockNumberSubgraph) {
+            this.blockNumbers = new BlockNumberRepository(networkConfig.urls.blockNumberSubgraph);
+            const blockDayAgo = async () => {
+                if (this.blockNumbers) {
+                    return await this.blockNumbers.find('dayAgo');
+                }
+            };
+            this.yesterdaysPools = new PoolsSubgraphRepository(networkConfig.urls.subgraph, blockDayAgo);
+        }
+        const tokenAddresses = initialCoingeckoList
+            .filter((t) => t.chainId == networkConfig.chainId)
+            .map((t) => t.address);
+        this.tokenPrices = new CoingeckoPriceRepository(tokenAddresses, networkConfig.chainId);
+        this.tokenMeta = new StaticTokenProvider([]);
+        if (networkConfig.urls.gaugesSubgraph &&
+            networkConfig.addresses.contracts.gaugeController) {
+            this.liquidityGauges = new LiquidityGaugeSubgraphRPCProvider(networkConfig.urls.gaugesSubgraph, networkConfig.addresses.contracts.multicall, networkConfig.addresses.contracts.gaugeController, provider);
+        }
+        if (networkConfig.addresses.contracts.feeDistributor &&
+            networkConfig.addresses.tokens.bal &&
+            networkConfig.addresses.tokens.veBal &&
+            networkConfig.addresses.tokens.bbaUsd) {
+            this.feeDistributor = new FeeDistributorRepository(networkConfig.addresses.contracts.multicall, networkConfig.addresses.contracts.feeDistributor, networkConfig.addresses.tokens.bal, networkConfig.addresses.tokens.veBal, networkConfig.addresses.tokens.bbaUsd, provider);
+        }
+        this.feeCollector = new FeeCollectorRepository(networkConfig.addresses.contracts.vault, provider);
+        this.tokenYields = new TokenYieldsRepository();
+    }
+}
+
+class BalancerSDK {
+    constructor(config, sor = new Sor(config), subgraph = new Subgraph(config)) {
+        this.config = config;
+        this.sor = sor;
+        this.subgraph = subgraph;
+        this.networkConfig = getNetworkConfig(config);
+        this.data = new Data(this.networkConfig, sor.provider);
+        this.swaps = new Swaps(this.config);
+        this.relayer = new Relayer(this.swaps);
+        this.pricing = new Pricing(config, this.swaps);
+        this.pools = new Pools(this.networkConfig, this.data);
+        this.balancerContracts = new Contracts(this.networkConfig.addresses.contracts, sor.provider);
+        this.zaps = new Zaps(this.networkConfig.chainId);
+    }
+    get rpcProvider() {
+        return this.sor.provider;
+    }
+    /**
+     * Expose balancer contracts, e.g. Vault, LidoRelayer.
+     */
+    get contracts() {
+        return this.balancerContracts.contracts;
+    }
 }
 
 Object.defineProperty(exports, 'PoolFilter', {
@@ -11934,10 +14898,20 @@ exports.BalancerError = BalancerError;
 exports.BalancerErrors = BalancerErrors;
 exports.BalancerMinterAuthorization = BalancerMinterAuthorization;
 exports.BalancerSDK = BalancerSDK;
+exports.BlockNumberRepository = BlockNumberRepository;
+exports.CoingeckoPriceRepository = CoingeckoPriceRepository;
+exports.Data = Data;
 exports.FallbackPoolRepository = FallbackPoolRepository;
+exports.FeeCollectorRepository = FeeCollectorRepository;
+exports.FeeDistributorRepository = FeeDistributorRepository;
+exports.GaugeControllerMulticallRepository = GaugeControllerMulticallRepository;
 exports.Liquidity = Liquidity;
+exports.LiquidityGaugeSubgraphRPCProvider = LiquidityGaugeSubgraphRPCProvider;
+exports.LiquidityGaugesMulticallRepository = LiquidityGaugesMulticallRepository;
+exports.LiquidityGaugesSubgraphRepository = LiquidityGaugesSubgraphRepository;
 exports.ManagedPoolEncoder = ManagedPoolEncoder;
 exports.Pools = Pools;
+exports.PoolsSubgraphRepository = PoolsSubgraphRepository;
 exports.Relayer = Relayer;
 exports.RelayerAuthorization = RelayerAuthorization;
 exports.Sor = Sor;
@@ -11946,10 +14920,11 @@ exports.StaticPoolRepository = StaticPoolRepository;
 exports.StaticTokenPriceProvider = StaticTokenPriceProvider;
 exports.StaticTokenProvider = StaticTokenProvider;
 exports.Subgraph = Subgraph;
-exports.SubgraphPoolRepository = SubgraphPoolRepository;
 exports.Swaps = Swaps;
+exports.TokenYieldsRepository = TokenYieldsRepository;
 exports.WeightedPoolEncoder = WeightedPoolEncoder;
 exports.accountToAddress = accountToAddress;
+exports.balEmissions = emissions;
 exports.getLimitsForSlippage = getLimitsForSlippage;
 exports.getPoolAddress = getPoolAddress;
 exports.getPoolNonce = getPoolNonce;
@@ -11960,4 +14935,5 @@ exports.parsePoolInfo = parsePoolInfo;
 exports.signPermit = signPermit;
 exports.splitPoolId = splitPoolId;
 exports.toNormalizedWeights = toNormalizedWeights;
+exports.tokensToTokenPrices = tokensToTokenPrices;
 //# sourceMappingURL=index.js.map
