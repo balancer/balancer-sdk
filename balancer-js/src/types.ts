@@ -235,6 +235,8 @@ export interface Pool {
   apr?: AprBreakdown;
   liquidity?: string;
   totalWeight: string;
+  mainIndex?: number;
+  wrappedIndex?: number;
 }
 
 /**

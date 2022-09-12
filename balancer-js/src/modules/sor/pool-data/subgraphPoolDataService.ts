@@ -70,13 +70,11 @@ export class SubgraphPoolDataService implements PoolDataService {
   }
 
   private async getLinearPools() {
-    const { pool0, pool1000 } = await this.client.Pools({
+    const { pools } = await this.client.Pools({
       where: { swapEnabled: true, totalShares_gt: '0' },
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
     });
-
-    const pools = [...pool0, ...pool1000];
 
     return pools;
   }

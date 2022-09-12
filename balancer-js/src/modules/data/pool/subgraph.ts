@@ -55,9 +55,11 @@ export class PoolsSubgraphRepository
     };
 
     const args = options.query?.args || defaultArgs;
+    const attrs = options.query?.attrs || {};
+
     this.query = {
       args,
-      attrs: {},
+      attrs,
     };
   }
 
@@ -76,10 +78,10 @@ export class PoolsSubgraphRepository
       new SubgraphArgsFormatter()
     );
 
-    const { pool0, pool1000 } = await this.client.Pools(formattedQuery);
+    const { pools } = await this.client.Pools(formattedQuery);
 
     // TODO: how to best convert subgraph type to sdk internal type?
-    this.pools = [...pool0, ...pool1000];
+    this.pools = pools;
     this.skip = this.pools.length;
 
     return this.pools.map(this.mapType);
@@ -129,7 +131,7 @@ export class PoolsSubgraphRepository
       poolType: subgraphPool.poolType as PoolType,
       swapFee: subgraphPool.swapFee,
       swapEnabled: subgraphPool.swapEnabled,
-      amp: subgraphPool.amp || undefined,
+      amp: subgraphPool.amp ?? undefined,
       // owner: subgraphPool.owner,
       // factory: subgraphPool.factory,
       tokens: subgraphPool.tokens || [],
@@ -141,6 +143,8 @@ export class PoolsSubgraphRepository
       totalSwapVolume: subgraphPool.totalSwapVolume,
       // onchain: subgraphPool.onchain,
       createTime: subgraphPool.createTime,
+      mainIndex: subgraphPool.mainIndex ?? undefined,
+      wrappedIndex: subgraphPool.wrappedIndex ?? undefined,
       // mainTokens: subgraphPool.mainTokens,
       // wrappedTokens: subgraphPool.wrappedTokens,
       // unwrappedTokens: subgraphPool.unwrappedTokens,

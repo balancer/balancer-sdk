@@ -3514,6 +3514,8 @@ export type _Block_ = {
   hash?: Maybe<Scalars['Bytes']>;
   /** The block number */
   number: Scalars['Int'];
+  /** Timestamp of the block if available, format depends on the chain */
+  timestamp?: Maybe<Scalars['String']>;
 };
 
 /** The type for the top-level _meta field */
@@ -3550,7 +3552,7 @@ export type PoolsQueryVariables = Exact<{
 }>;
 
 
-export type PoolsQuery = { __typename?: 'Query', pool0: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, symbol?: string | null, name?: string | null, swapFee: string, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, swapEnabled: boolean, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string }> | null }>, pool1000: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, symbol?: string | null, name?: string | null, swapFee: string, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, swapEnabled: boolean, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string }> | null }> };
+export type PoolsQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, symbol?: string | null, name?: string | null, swapFee: string, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, swapEnabled: boolean, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string }> | null }> };
 
 export type PoolQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3851,18 +3853,9 @@ export const SubgraphUserFragmentDoc = gql`
     `;
 export const PoolsDocument = gql`
     query Pools($skip: Int, $first: Int, $orderBy: Pool_orderBy, $orderDirection: OrderDirection, $where: Pool_filter, $block: Block_height) {
-  pool0: pools(
-    first: 1000
-    orderBy: $orderBy
-    orderDirection: $orderDirection
-    where: $where
-    block: $block
-  ) {
-    ...SubgraphPool
-  }
-  pool1000: pools(
-    skip: 1000
-    first: 1000
+  pools(
+    skip: $skip
+    first: $first
     orderBy: $orderBy
     orderDirection: $orderDirection
     where: $where
