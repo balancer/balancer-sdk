@@ -21,6 +21,13 @@ import { ADDRESSES } from '@/test/lib/constants';
 // const poolId =
 //   '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f';
 // const blockNumber = 7452900;
+const network = Network.GOERLI;
+const blockNumber = 7577109;
+const subgraph = `https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta`;
+const bbausd2id =
+  '0x3d5981bdd8d3e49eb7bbdc1d2b156a3ee019c18e0000000000000000000001a7';
+const bbausd2address = '0x3d5981bdd8d3e49eb7bbdc1d2b156a3ee019c18e';
+const bbadai = '0x594920068382f64e4bc06879679bd474118b97b1';
 
 /*
  * Testing on MAINNET
@@ -29,8 +36,13 @@ import { ADDRESSES } from '@/test/lib/constants';
  * - Run node on terminal: yarn run node
  * - Uncomment section below:
  */
-const network = Network.MAINNET;
-const blockNumber = 15495943;
+// const network = Network.MAINNET;
+// const blockNumber = 15519886;
+// const subgraph = `https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta`;
+// const bbausd2id =
+//   '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d';
+// const bbausd2address = '0xa13a9247ea42d743238089903570127dda72fe44';
+// const bbadai = '0xae37d54ae477268b9997d4161b96b8200755935c';
 
 dotenv.config();
 
@@ -42,7 +54,7 @@ const rpcUrl = 'http://127.0.0.1:8545';
 const sdk = new BalancerSDK({
   network,
   rpcUrl,
-  customSubgraphUrl: `https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta`,
+  customSubgraphUrl: subgraph,
 });
 const { pools } = sdk;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
@@ -54,8 +66,8 @@ const { contracts, contractAddresses } = new Contracts(
 const relayer = contractAddresses.relayer as string;
 const addresses = ADDRESSES[network];
 const fromPool = {
-  id: '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d', // bbausd2
-  address: '0xa13a9247ea42d743238089903570127dda72fe44',
+  id: bbausd2id,
+  address: bbausd2address,
 };
 const mainTokens = [addresses.DAI.address, addresses.USDC.address];
 // joins with wrapping require token approvals. These are taken care of as part of fork setup when wrappedTokens passed in.
@@ -64,7 +76,7 @@ const wrappedTokensIn = [
   addresses.waDAI.address,
   addresses.waUSDC.address,
 ];
-const linearPoolTokens = ['0xae37d54ae477268b9997d4161b96b8200755935c'];
+const linearPoolTokens = [bbadai];
 const slots = [addresses.DAI.slot, addresses.USDC.slot];
 const wrappedSlots = [
   addresses.waUSDT.slot,

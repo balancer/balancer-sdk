@@ -6,7 +6,7 @@ require('@nomiclabs/hardhat-ethers');
 module.exports = {
   networks: {
     hardhat: {
-      chainId: 1,
+      chainId: 5,
     },
   },
 };
