@@ -6,7 +6,7 @@ const sdk = new BalancerSDK(
     network: Network.MAINNET, 
     rpcUrl: `${process.env.ALCHEMY_URL}` 
   });
-const { data } = sdk;
+const { poolShares } = sdk.data;
 
 (async function() {
   
@@ -16,21 +16,20 @@ const { data } = sdk;
   
   let result;
 
-  result = await data.poolShares.find(POOLSHARE_ID);
+  result = await poolShares.find(POOLSHARE_ID);
   console.log('Pool share by id', result);
   
-  result = await data.poolShares.findByUser(USER_ADDR);
+  result = await poolShares.findByUser(USER_ADDR);
   console.log('Pool shares by user', result);
+
+  result = await poolShares.findByUser(USER_ADDR, 5);
+  console.log('Pool shares by user (first 5)', result);
   
-  result = await data.poolShares.findByPool(POOL_ID);
+  result = await poolShares.findByPool(POOL_ID);
   console.log('Pool shares by pool', result);
   
-  result = await data.poolShares.findByPool(POOL_ID, 5);
-  console.log('Pool shares by pool (first 5)', result);
-  
-  result = await data.poolShares.findByPool(POOL_ID, 2, 1);
+  result = await poolShares.findByPool(POOL_ID, 2, 1);
   console.log('Pool shares by pool (#2 & #3)', result);
-  
 })();
 
 // npm run examples:exec -- ./examples/data/pool-shares.ts

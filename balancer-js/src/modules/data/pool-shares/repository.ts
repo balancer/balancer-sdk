@@ -46,7 +46,7 @@ export class PoolSharesRepository implements Findable<PoolShare, PoolShareAttrib
     }
     
     async findByUser(userAddress: string, 
-            first: number = 200, 
+            first: number = 500, 
             skip: number = 0):  Promise<PoolShare[]> {
         return this.findAllBy(PoolShareAttributes.UserAddress, userAddress, first, skip);
     }
