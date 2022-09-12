@@ -10,48 +10,87 @@ import { MaxUint256 } from '@ethersproject/constants';
 import { Migrations } from '../migrations';
 import { getErc20Balance, move, stake } from '@/test/lib/utils';
 
+dotenv.config();
+
 /*
  * Testing on GOERLI
  * - Update hardhat.config.js with chainId = 5
  * - Update ALCHEMY_URL on .env with a goerli api key
- * - Run goerli node on terminal: yarn run node
- * - Change `network` to Network.GOERLI
- * - Provide gaugeAddresses from goerli which can be found on subgraph: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-gauges-goerli
+ * - Run node on terminal: yarn run node
+ * - Uncomment section below
  */
-
-dotenv.config();
-
-const { ALCHEMY_URL: jsonRpcUrl, FORK_BLOCK_NUMBER: blockNumber } = process.env;
-const { ethers } = hardhat;
-const MAX_GAS_LIMIT = 8e6;
-
 const network = Network.GOERLI;
-const rpcUrl = 'http://127.0.0.1:8545';
-const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
-const { contracts } = new Contracts(network as number, provider);
-const migrations = new Migrations(network);
-
+const blockNumber = 7300090;
 const holderAddress = '0xd86a11b0c859c18bfc1b4acd072c5afe57e79438';
+// stabal3
 const fromPool = {
   id: addresses.staBal3.id,
   address: addresses.staBal3.address,
   gauge: addresses.staBal3.gauge,
 };
-// const holderAddress = '0xdc6bd6653ff82946bb94c1d243038c5abf14f2ea';
-// const fromPool = {
-//   id: addresses.staBal3_3.id,
-//   address: addresses.staBal3_3.address,
-//   gauge: addresses.staBal3_3.gauge,
-// };
-// blocknumber = 7352236
+// new stabal3
 const toPool = {
   id: addresses.staBal3_2.id,
   address: addresses.staBal3_2.address,
   gauge: addresses.staBal3_2.gauge,
 };
 const tokens = [addresses.USDT, addresses.DAI, addresses.USDC]; // this order only works for testing with Goerli - change order to test on Mainnet
+
+/*
+ * Testing on POLYGON
+ * - Update hardhat.config.js with chainId = 137
+ * - Update ALCHEMY_URL on .env with a goerli api key
+ * - Run node on terminal: yarn run node
+ * - Uncomment section below
+ */
+// const network = Network.POLYGON;
+// const addresses = ADDRESSES[network];
+// const blockNumber = 32856000;
+// const holderAddress = '0x8df33a75e5cc9d71db97fb1248cc8bdac316fe09';
+// // MaticX
+// const fromPool = {
+//   id: '0xc17636e36398602dd37bb5d1b3a9008c7629005f0002000000000000000004c4',
+//   address: '0xc17636e36398602dd37bb5d1b3a9008c7629005f',
+//   gauge: '0x48534d027f8962692122db440714ffe88ab1fa85',
+// };
+// // new MaticX
+// const toPool = {
+//   id: '0xb20fc01d21a50d2c734c4a1262b4404d41fa7bf000000000000000000000075c',
+//   address: '0xb20fc01d21a50d2c734c4a1262b4404d41fa7bf0',
+//   gauge: '0xdffe97094394680362ec9706a759eb9366d804c2',
+// };
+// const tokens = [
+//   '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270', // wMATIC
+//   '0xfa68FB4628DFF1028CFEc22b4162FCcd0d45efb6', // MaticX
+// ];
+// const holderAddress = '0x70d04384b5c3a466ec4d8cfb8213efc31c6a9d15';
+// // stMATIC
+// const fromPool = {
+//   id: '0xaf5e0b5425de1f5a630a8cb5aa9d97b8141c908d000200000000000000000366',
+//   address: '0xaf5e0b5425de1f5a630a8cb5aa9d97b8141c908d',
+//   gauge: '0x9928340f9e1aaad7df1d95e27bd9a5c715202a56',
+// };
+// // new stMATIC
+// const toPool = {
+//   id: '0x8159462d255c1d24915cb51ec361f700174cd99400000000000000000000075d',
+//   address: '0x8159462d255c1d24915cb51ec361f700174cd994',
+//   gauge: '0x2aa6fb79efe19a3fce71c46ae48efc16372ed6dd',
+// };
+// const tokens = [
+//   '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270', // wMATIC
+//   '0x3a58a54c066fdc0f2d55fc9c89f0415c92ebf3c4', // stMATIC
+// ];
+
+const { ALCHEMY_URL: jsonRpcUrl } = process.env;
+const { ethers } = hardhat;
+const MAX_GAS_LIMIT = 8e6;
+
+const rpcUrl = 'http://127.0.0.1:8545';
+const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const relayer = addresses.relayer;
+const { contracts } = new Contracts(network as number, provider);
+const migrations = new Migrations(network);
 
 const signRelayerApproval = async (
   relayerAddress: string,
@@ -85,7 +124,7 @@ const reset = () =>
     {
       forking: {
         jsonRpcUrl,
-        blockNumber: (blockNumber && parseInt(blockNumber)) || 7300090,
+        blockNumber,
       },
     },
   ]);
