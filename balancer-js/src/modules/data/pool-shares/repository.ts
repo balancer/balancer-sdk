@@ -1,6 +1,7 @@
 import { PoolShare } from '@/types';
 import { PoolShareAttribute, PoolShareAttributes } from './types';
 import { Findable } from '../types';
+import { Network } from '@/lib/constants/network';
 import {
     createSubgraphClient,
     SubgraphClient
@@ -15,12 +16,17 @@ export class PoolSharesRepository implements Findable<PoolShare, PoolShareAttrib
     
     private client: SubgraphClient;
   
-    constructor(url: string) {
+    constructor(url: string, 
+        private chainId: Network,     
+        private blockHeight?: () => Promise<number | undefined>    
+    ) {
         this.client = createSubgraphClient(url);
     }
     
     async find(id: string): Promise<PoolShare | undefined> {
-        const { poolShare } = await this.client.PoolShare({ id: id });
+        const { poolShare } = await this.client.PoolShare({ id: id, block: this.blockHeight 
+            ? { number: await this.blockHeight() }
+            : undefined });
         return poolShare ? this.mapType(poolShare) : undefined;
     }
     
@@ -40,7 +46,10 @@ export class PoolSharesRepository implements Findable<PoolShare, PoolShareAttrib
             first: first,
             skip: skip,
             orderBy: PoolShare_OrderBy.Balance, 
-            orderDirection: OrderDirection.Desc
+            orderDirection: OrderDirection.Desc,
+            block: this.blockHeight
+            ? { number: await this.blockHeight() }
+            : undefined
         });
         return poolShares.map(this.mapType);
     }

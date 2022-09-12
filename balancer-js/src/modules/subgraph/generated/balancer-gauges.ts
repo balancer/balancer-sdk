@@ -1669,6 +1669,20 @@ export type LiquidityGaugesQuery = { __typename?: 'Query', liquidityGauges: Arra
 
 export type SubgraphLiquidityGaugeFragment = { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string }> | null };
 
+export type PoolsQueryVariables = Exact<{
+  skip?: InputMaybe<Scalars['Int']>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Pool_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  where?: InputMaybe<Pool_Filter>;
+  block?: InputMaybe<Block_Height>;
+}>;
+
+
+export type PoolsQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, poolId?: string | null, preferentialGauge?: { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string }> | null } | null }> };
+
+export type SubgraphPoolWithPreferentialGaugeFragment = { __typename?: 'Pool', id: string, poolId?: string | null, preferentialGauge?: { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string }> | null } | null };
+
 export const SubgraphLiquidityGaugeFragmentDoc = gql`
     fragment SubgraphLiquidityGauge on LiquidityGauge {
   id
@@ -1689,6 +1703,15 @@ export const SubgraphLiquidityGaugeFragmentDoc = gql`
   }
 }
     `;
+export const SubgraphPoolWithPreferentialGaugeFragmentDoc = gql`
+    fragment SubgraphPoolWithPreferentialGauge on Pool {
+  id
+  poolId
+  preferentialGauge {
+    ...SubgraphLiquidityGauge
+  }
+}
+    ${SubgraphLiquidityGaugeFragmentDoc}`;
 export const LiquidityGaugesDocument = gql`
     query LiquidityGauges($skip: Int, $first: Int, $orderBy: LiquidityGauge_orderBy, $orderDirection: OrderDirection, $where: LiquidityGauge_filter, $block: Block_height) {
   liquidityGauges(
@@ -1703,6 +1726,20 @@ export const LiquidityGaugesDocument = gql`
   }
 }
     ${SubgraphLiquidityGaugeFragmentDoc}`;
+export const PoolsDocument = gql`
+    query Pools($skip: Int, $first: Int, $orderBy: Pool_orderBy, $orderDirection: OrderDirection, $where: Pool_filter, $block: Block_height) {
+  pools(
+    skip: $skip
+    first: $first
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    ...SubgraphPoolWithPreferentialGauge
+  }
+}
+    ${SubgraphPoolWithPreferentialGaugeFragmentDoc}`;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string) => Promise<T>;
 
@@ -1713,6 +1750,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
   return {
     LiquidityGauges(variables?: LiquidityGaugesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<LiquidityGaugesQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<LiquidityGaugesQuery>(LiquidityGaugesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'LiquidityGauges', 'query');
+    },
+    Pools(variables?: PoolsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PoolsQuery>(PoolsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'Pools', 'query');
     }
   };
 }

@@ -39,9 +39,14 @@ export class Data implements BalancerDataRepositories {
   blockNumbers;
 
   constructor(networkConfig: BalancerNetworkConfig, provider: Provider) {
-    this.pools = new PoolsSubgraphRepository(networkConfig.urls.subgraph);
-    
-    this.poolShares = new PoolSharesRepository(networkConfig.urls.subgraph);
+    this.pools = new PoolsSubgraphRepository(
+      networkConfig.urls.subgraph,
+      networkConfig.chainId
+    );    
+    this.poolShares = new PoolSharesRepository(
+      networkConfig.urls.subgraph, 
+      networkConfig.chainId
+    );
 
     // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
     // TODO: find a better data source for that, eg: maybe DUNE once API is available
@@ -58,6 +63,7 @@ export class Data implements BalancerDataRepositories {
 
       this.yesterdaysPools = new PoolsSubgraphRepository(
         networkConfig.urls.subgraph,
+        networkConfig.chainId,
         blockDayAgo
       );
     }
@@ -73,14 +79,12 @@ export class Data implements BalancerDataRepositories {
 
     this.tokenMeta = new StaticTokenProvider([]);
 
-    if (
-      networkConfig.urls.gaugesSubgraph &&
-      networkConfig.addresses.contracts.gaugeController
-    ) {
+    if (networkConfig.urls.gaugesSubgraph) {
       this.liquidityGauges = new LiquidityGaugeSubgraphRPCProvider(
         networkConfig.urls.gaugesSubgraph,
         networkConfig.addresses.contracts.multicall,
-        networkConfig.addresses.contracts.gaugeController,
+        networkConfig.addresses.contracts.gaugeController || '',
+        networkConfig.chainId,
         provider
       );
     }
