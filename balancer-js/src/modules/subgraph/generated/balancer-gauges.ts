@@ -1655,6 +1655,28 @@ export enum _SubgraphErrorPolicy_ {
   Deny = 'deny'
 }
 
+export type GaugeShareQueryVariables = Exact<{
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_Height>;
+}>;
+
+
+export type GaugeShareQuery = { __typename?: 'Query', gaugeShare?: { __typename?: 'GaugeShare', id: string, balance: string, user: { __typename?: 'User', id: string }, gauge: { __typename?: 'LiquidityGauge', id: string, isKilled: boolean, poolId?: string | null, poolAddress: string } } | null };
+
+export type GaugeSharesQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<GaugeShare_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  where?: InputMaybe<GaugeShare_Filter>;
+  block?: InputMaybe<Block_Height>;
+}>;
+
+
+export type GaugeSharesQuery = { __typename?: 'Query', gaugeShares: Array<{ __typename?: 'GaugeShare', id: string, balance: string, user: { __typename?: 'User', id: string }, gauge: { __typename?: 'LiquidityGauge', id: string, isKilled: boolean, poolId?: string | null, poolAddress: string } }> };
+
+export type SubgraphGaugeShareFragment = { __typename?: 'GaugeShare', id: string, balance: string, user: { __typename?: 'User', id: string }, gauge: { __typename?: 'LiquidityGauge', id: string, isKilled: boolean, poolId?: string | null, poolAddress: string } };
+
 export type LiquidityGaugesQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -1683,6 +1705,21 @@ export type PoolsQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Po
 
 export type SubgraphPoolWithPreferentialGaugeFragment = { __typename?: 'Pool', id: string, poolId?: string | null, preferentialGauge?: { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string }> | null } | null };
 
+export const SubgraphGaugeShareFragmentDoc = gql`
+    fragment SubgraphGaugeShare on GaugeShare {
+  id
+  balance
+  user {
+    id
+  }
+  gauge {
+    id
+    isKilled
+    poolId
+    poolAddress
+  }
+}
+    `;
 export const SubgraphLiquidityGaugeFragmentDoc = gql`
     fragment SubgraphLiquidityGauge on LiquidityGauge {
   id
@@ -1712,6 +1749,27 @@ export const SubgraphPoolWithPreferentialGaugeFragmentDoc = gql`
   }
 }
     ${SubgraphLiquidityGaugeFragmentDoc}`;
+export const GaugeShareDocument = gql`
+    query GaugeShare($id: ID!, $block: Block_height) {
+  gaugeShare(id: $id, block: $block) {
+    ...SubgraphGaugeShare
+  }
+}
+    ${SubgraphGaugeShareFragmentDoc}`;
+export const GaugeSharesDocument = gql`
+    query GaugeShares($first: Int, $orderBy: GaugeShare_orderBy, $orderDirection: OrderDirection, $skip: Int, $where: GaugeShare_filter, $block: Block_height) {
+  gaugeShares(
+    first: $first
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    skip: $skip
+    where: $where
+    block: $block
+  ) {
+    ...SubgraphGaugeShare
+  }
+}
+    ${SubgraphGaugeShareFragmentDoc}`;
 export const LiquidityGaugesDocument = gql`
     query LiquidityGauges($skip: Int, $first: Int, $orderBy: LiquidityGauge_orderBy, $orderDirection: OrderDirection, $where: LiquidityGauge_filter, $block: Block_height) {
   liquidityGauges(
@@ -1748,6 +1806,12 @@ const defaultWrapper: SdkFunctionWrapper = (action, _operationName, _operationTy
 
 export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = defaultWrapper) {
   return {
+    GaugeShare(variables: GaugeShareQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GaugeShareQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GaugeShareQuery>(GaugeShareDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'GaugeShare', 'query');
+    },
+    GaugeShares(variables?: GaugeSharesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<GaugeSharesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<GaugeSharesQuery>(GaugeSharesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'GaugeShares', 'query');
+    },
     LiquidityGauges(variables?: LiquidityGaugesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<LiquidityGaugesQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<LiquidityGaugesQuery>(LiquidityGaugesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'LiquidityGauges', 'query');
     },

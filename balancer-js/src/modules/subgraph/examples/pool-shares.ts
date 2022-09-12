@@ -26,7 +26,7 @@ dotenv.config();
         });
     console.log(poolSharesByUser);
     
-    const poolSharesByPool = await client.PoolShares({ where: { poolId: POOL_ID }, first: 500 });
+    const poolSharesByPool = await client.PoolShares({ where: { poolId: POOL_ID }, first: 20 });
     console.log(poolSharesByPool);
 
 })();

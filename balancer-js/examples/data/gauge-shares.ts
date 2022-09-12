@@ -1,0 +1,34 @@
+import { Network } from '../../src/index';
+import { BalancerSDK } from '../../src/modules/sdk.module';
+
+const sdk = new BalancerSDK(
+  { 
+    network: Network.MAINNET, 
+    rpcUrl: `${process.env.ALCHEMY_URL}` 
+  });
+const { gaugeShares } = sdk.data;
+
+(async function() {
+
+    if (!gaugeShares) throw 'Gauge Subgraph must be initialized';
+
+    const USER_ADDR = '0x00676e437f1945b85ec3a3c90aae35e0352115ed';
+    const GAUGE_ID = '0xc5f8b1de80145e3a74524a3d1a772a31ed2b50cc';
+    const GAUGESHARE_ID = `${USER_ADDR}-${GAUGE_ID}`;
+
+    let result;
+
+    result = await gaugeShares.find(GAUGESHARE_ID);
+    console.log('Gauge share by id', result);
+
+    result = await gaugeShares.findByUser(USER_ADDR);
+    console.log('Gauge shares by user', result);
+  
+    result = await gaugeShares.findByGauge(GAUGE_ID, 5);
+    console.log('Gauge shares by gauge (first 5)', result);
+    
+    result = await gaugeShares.findByGauge(GAUGE_ID, 2, 1);
+    console.log('Gauge shares by gauge (#2 & #3)', result);
+})();
+  
+  // npm run examples:exec -- ./examples/data/gauge-shares.ts

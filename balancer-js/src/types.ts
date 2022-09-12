@@ -272,3 +272,11 @@ export interface PoolShare {
   poolId: string,
   balance: string
 }
+
+export interface GaugeShare {
+  id: string,
+  balance: string,
+  userAddress: string,
+  gaugeId: string,
+  gaugeIsKilled: boolean
+}

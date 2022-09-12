@@ -41,12 +41,15 @@ export class PoolSharesRepository implements Findable<PoolShare, PoolShareAttrib
             value: string,
             first: number, 
             skip: number):  Promise<PoolShare[]> {
+        const orderBy = {
+            orderBy: PoolShare_OrderBy.Balance, 
+            orderDirection: OrderDirection.Desc,
+        };
         const { poolShares } = await this.client.PoolShares({ 
             where: { [attribute]: value }, 
             first: first,
             skip: skip,
-            orderBy: PoolShare_OrderBy.Balance, 
-            orderDirection: OrderDirection.Desc,
+            ...orderBy,
             block: this.blockHeight
             ? { number: await this.blockHeight() }
             : undefined

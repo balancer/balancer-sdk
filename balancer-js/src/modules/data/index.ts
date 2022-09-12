@@ -1,5 +1,6 @@
 export * as balEmissions from './bal/emissions';
 export * from './gauge-controller/multicall';
+export * from './gauge-shares';
 export * from './liquidity-gauges';
 export * from './pool';
 export * from './pool-shares';
@@ -13,6 +14,7 @@ export * from './block-number';
 import { BalancerNetworkConfig, BalancerDataRepositories } from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
 import { PoolSharesRepository } from './pool-shares/repository';
+import { GaugeSharesRepository } from './gauge-shares/repository';
 import { BlockNumberRepository } from './block-number';
 import { CoingeckoPriceRepository } from './token-prices/coingecko';
 import { StaticTokenProvider } from './token/static';
@@ -28,8 +30,9 @@ import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json'
 
 export class Data implements BalancerDataRepositories {
   pools;
-  poolShares;
   yesterdaysPools;
+  poolShares;
+  gaugeShares;
   tokenPrices;
   tokenMeta;
   liquidityGauges;
@@ -42,11 +45,19 @@ export class Data implements BalancerDataRepositories {
     this.pools = new PoolsSubgraphRepository(
       networkConfig.urls.subgraph,
       networkConfig.chainId
-    );    
+    );  
+
     this.poolShares = new PoolSharesRepository(
       networkConfig.urls.subgraph, 
       networkConfig.chainId
     );
+
+    if (networkConfig.urls.gaugesSubgraph) {
+      this.gaugeShares = new GaugeSharesRepository(
+        networkConfig.urls.gaugesSubgraph, 
+        networkConfig.chainId
+      )
+    }
 
     // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
     // TODO: find a better data source for that, eg: maybe DUNE once API is available
