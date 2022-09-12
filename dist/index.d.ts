@@ -1971,50 +1971,7 @@ declare type PoolsQueryVariables = Exact<{
 }>;
 declare type PoolsQuery = {
     __typename?: 'Query';
-    pool0: Array<{
-        __typename?: 'Pool';
-        id: string;
-        address: string;
-        poolType?: string | null;
-        symbol?: string | null;
-        name?: string | null;
-        swapFee: string;
-        totalWeight?: string | null;
-        totalSwapVolume: string;
-        totalSwapFee: string;
-        totalLiquidity: string;
-        totalShares: string;
-        swapsCount: string;
-        holdersCount: string;
-        tokensList: Array<string>;
-        amp?: string | null;
-        expiryTime?: string | null;
-        unitSeconds?: string | null;
-        createTime: number;
-        principalToken?: string | null;
-        baseToken?: string | null;
-        swapEnabled: boolean;
-        wrappedIndex?: number | null;
-        mainIndex?: number | null;
-        lowerTarget?: string | null;
-        upperTarget?: string | null;
-        sqrtAlpha?: string | null;
-        sqrtBeta?: string | null;
-        root3Alpha?: string | null;
-        tokens?: Array<{
-            __typename?: 'PoolToken';
-            id: string;
-            symbol: string;
-            name: string;
-            decimals: number;
-            address: string;
-            balance: string;
-            managedBalance: string;
-            weight?: string | null;
-            priceRate: string;
-        }> | null;
-    }>;
-    pool1000: Array<{
+    pools: Array<{
         __typename?: 'Pool';
         id: string;
         address: string;
@@ -2471,66 +2428,172 @@ declare type Scalars = {
     BigInt: string;
     Bytes: string;
 };
+declare enum Chain {
+    Arbitrum = "Arbitrum",
+    Optimism = "Optimism",
+    Polygon = "Polygon"
+}
+declare type Gauge = {
+    __typename?: 'Gauge';
+    /**  Timestamp at which Balancer DAO added the gauge to GaugeController [seconds]  */
+    addedTimestamp: Scalars['Int'];
+    /**  Address of the gauge  */
+    address: Scalars['Bytes'];
+    /**  Equal to: <gaugeAddress>-<typeID>  */
+    id: Scalars['ID'];
+    /**  Reference to LiquidityGauge  */
+    liquidityGauge?: Maybe<LiquidityGauge$1>;
+    /**  Reference to RootGauge  */
+    rootGauge?: Maybe<RootGauge>;
+    /**  Type of the gauge  */
+    type: GaugeType;
+};
 declare type GaugeFactory = {
     __typename?: 'GaugeFactory';
+    /**  List of gauges created through the factory  */
     gauges?: Maybe<Array<LiquidityGauge$1>>;
+    /**  Factory contract address  */
     id: Scalars['ID'];
+    /**  Number of gauges created through the factory  */
     numGauges: Scalars['Int'];
 };
 declare type GaugeShare = {
     __typename?: 'GaugeShare';
+    /**  User's balance of gauge deposit tokens  */
     balance: Scalars['BigDecimal'];
+    /**  Reference to LiquidityGauge entity  */
     gauge: LiquidityGauge$1;
+    /**  Equal to: <userAddress>-<gaugeAddress>  */
     id: Scalars['ID'];
+    /**  Reference to User entity  */
     user: User;
+};
+declare type GaugeType = {
+    __typename?: 'GaugeType';
+    /**  Type ID  */
+    id: Scalars['ID'];
+    /**  Name of the type - empty string if call reverts  */
+    name: Scalars['String'];
 };
 declare type GaugeVote = {
     __typename?: 'GaugeVote';
-    gauge: LiquidityGauge$1;
+    /**  Reference to Gauge entity  */
+    gauge: Gauge;
+    /**  Equal to: <userAddress>-<gaugeAddress>  */
     id: Scalars['ID'];
+    /**  Timestamp at which user voted [seconds]  */
     timestamp?: Maybe<Scalars['BigInt']>;
+    /**  Reference to User entity  */
     user: User;
+    /**  Weight of veBAL power user has used to vote  */
     weight?: Maybe<Scalars['BigDecimal']>;
 };
 declare type LiquidityGauge$1 = {
     __typename?: 'LiquidityGauge';
+    /**  Factory contract address  */
     factory: GaugeFactory;
+    /**  Reference to Gauge entity - created when LiquidityGauge is added to GaugeController */
+    gauge?: Maybe<Gauge>;
+    /**  LiquidityGauge contract address  */
     id: Scalars['ID'];
+    /**  Whether Balancer DAO killed the gauge  */
+    isKilled: Scalars['Boolean'];
+    /**  Reference to Pool entity  */
+    pool: Pool$1;
+    /**  Address of the pool (lp_token of the gauge)  */
     poolAddress: Scalars['Bytes'];
+    /**  Pool ID if lp_token is a Balancer pool; null otherwise  */
     poolId?: Maybe<Scalars['Bytes']>;
+    /**  Relative weight cap of the gauge (0.01 = 1%) - V2 factories only  */
+    relativeWeightCap?: Maybe<Scalars['BigDecimal']>;
+    /**  List of user shares  */
     shares?: Maybe<Array<GaugeShare>>;
+    /**  Address of the contract that streams reward tokens to the gauge - ChildChainLiquidityGauge only  */
     streamer?: Maybe<Scalars['Bytes']>;
+    /**  ERC20 token symbol  */
     symbol: Scalars['String'];
+    /**  List of reward tokens depositted in the gauge  */
     tokens?: Maybe<Array<RewardToken>>;
+    /**  Total of BPTs users have staked in the LiquidityGauge  */
     totalSupply: Scalars['BigDecimal'];
+};
+declare type Pool$1 = {
+    __typename?: 'Pool';
+    /**  Address of the pool (lp_token of the gauge)  */
+    address: Scalars['Bytes'];
+    /**  List of gauges created for the pool  */
+    gauges?: Maybe<Array<LiquidityGauge$1>>;
+    /**  List of the pool's gauges addresses  */
+    gaugesList: Array<Scalars['Bytes']>;
+    /**  Address of the pool (lp_token of the gauge)  */
+    id: Scalars['ID'];
+    /**  Pool ID if lp_token is a Balancer pool; null otherwise  */
+    poolId?: Maybe<Scalars['Bytes']>;
+    /**  Most recent, unkilled gauge in the GaugeController  */
+    preferentialGauge?: Maybe<LiquidityGauge$1>;
 };
 declare type RewardToken = {
     __typename?: 'RewardToken';
+    /**  ERC20 token decimals - zero if call to decimals() reverts  */
     decimals: Scalars['Int'];
+    /**  Reference to LiquidityGauge entity  */
     gauge: LiquidityGauge$1;
+    /**  Equal to: <tokenAddress>-<gaugeAddress>  */
     id: Scalars['ID'];
+    /**  ERC20 token symbol - empty string if call to symbol() reverts  */
     symbol: Scalars['String'];
+    /**  Amount of reward tokens that has been deposited into the gauge  */
     totalDeposited: Scalars['BigDecimal'];
+};
+declare type RootGauge = {
+    __typename?: 'RootGauge';
+    /**  Chain where emissions by this gauge will be bridged to  */
+    chain: Chain;
+    /**  Factory contract address  */
+    factory: GaugeFactory;
+    /**  Reference to Gauge entity - created when LiquidityGauge is added to GaugeController */
+    gauge?: Maybe<Gauge>;
+    /**  RootGauge contract address */
+    id: Scalars['ID'];
+    /**  Whether Balancer DAO killed the gauge  */
+    isKilled: Scalars['Boolean'];
+    /**  Address where emissions by this gauge will be bridged to  */
+    recipient: Scalars['Bytes'];
+    /**  Relative weight cap of the gauge (0.01 = 1%) - V2 factories only  */
+    relativeWeightCap?: Maybe<Scalars['BigDecimal']>;
 };
 declare type User = {
     __typename?: 'User';
+    /**  List of gauge the user has shares  */
     gaugeShares?: Maybe<Array<GaugeShare>>;
+    /**  List of votes on gauges  */
     gaugeVotes?: Maybe<Array<GaugeVote>>;
+    /**  User address  */
     id: Scalars['ID'];
+    /**  List of locks the user created  */
     votingLocks?: Maybe<Array<VotingEscrowLock>>;
 };
 declare type VotingEscrow = {
     __typename?: 'VotingEscrow';
+    /**  VotingEscrow contract address  */
     id: Scalars['ID'];
+    /**  List of veBAL locks created  */
     locks?: Maybe<Array<VotingEscrowLock>>;
+    /**  Amount of B-80BAL-20WETH BPT locked  */
     stakedSupply: Scalars['BigDecimal'];
 };
 declare type VotingEscrowLock = {
     __typename?: 'VotingEscrowLock';
+    /**  Equal to: <userAdress>-<votingEscrow>  */
     id: Scalars['ID'];
+    /**  Amount of B-80BAL-20WETH BPT the user has locked  */
     lockedBalance: Scalars['BigDecimal'];
+    /**  Timestamp at which B-80BAL-20WETH BPT can be unlocked by user [seconds]  */
     unlockTime?: Maybe<Scalars['BigInt']>;
+    updatedAt: Scalars['Int'];
+    /**  Reference to User entity  */
     user: User;
+    /**  Reference to VotingEscrow entity  */
     votingEscrowID: VotingEscrow;
 };
 
@@ -3232,6 +3295,8 @@ interface Pool {
     apr?: AprBreakdown;
     liquidity?: string;
     totalWeight: string;
+    mainIndex?: number;
+    wrappedIndex?: number;
 }
 /**
  * Pool use-cases / controller layer

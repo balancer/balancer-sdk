@@ -3234,7 +3234,7 @@ var PoolToken_OrderBy;
     PoolToken_OrderBy["Token"] = "token";
     PoolToken_OrderBy["Weight"] = "weight";
 })(PoolToken_OrderBy || (PoolToken_OrderBy = {}));
-var Pool_OrderBy;
+var Pool_OrderBy$1;
 (function (Pool_OrderBy) {
     Pool_OrderBy["Address"] = "address";
     Pool_OrderBy["Amp"] = "amp";
@@ -3278,7 +3278,7 @@ var Pool_OrderBy;
     Pool_OrderBy["VaultId"] = "vaultID";
     Pool_OrderBy["WeightUpdates"] = "weightUpdates";
     Pool_OrderBy["WrappedIndex"] = "wrappedIndex";
-})(Pool_OrderBy || (Pool_OrderBy = {}));
+})(Pool_OrderBy$1 || (Pool_OrderBy$1 = {}));
 var PriceRateProvider_OrderBy;
 (function (PriceRateProvider_OrderBy) {
     PriceRateProvider_OrderBy["Address"] = "address";
@@ -3535,18 +3535,9 @@ const SubgraphUserFragmentDoc = gql$1 `
     `;
 const PoolsDocument = gql$1 `
     query Pools($skip: Int, $first: Int, $orderBy: Pool_orderBy, $orderDirection: OrderDirection, $where: Pool_filter, $block: Block_height) {
-  pool0: pools(
-    first: 1000
-    orderBy: $orderBy
-    orderDirection: $orderDirection
-    where: $where
-    block: $block
-  ) {
-    ...SubgraphPool
-  }
-  pool1000: pools(
-    skip: 1000
-    first: 1000
+  pools(
+    skip: $skip
+    first: $first
     orderBy: $orderBy
     orderDirection: $orderDirection
     where: $where
@@ -3783,16 +3774,23 @@ var GaugeVote_OrderBy;
 })(GaugeVote_OrderBy || (GaugeVote_OrderBy = {}));
 var Gauge_OrderBy;
 (function (Gauge_OrderBy) {
+    Gauge_OrderBy["AddedTimestamp"] = "addedTimestamp";
     Gauge_OrderBy["Address"] = "address";
     Gauge_OrderBy["Id"] = "id";
+    Gauge_OrderBy["LiquidityGauge"] = "liquidityGauge";
+    Gauge_OrderBy["RootGauge"] = "rootGauge";
     Gauge_OrderBy["Type"] = "type";
 })(Gauge_OrderBy || (Gauge_OrderBy = {}));
 var LiquidityGauge_OrderBy;
 (function (LiquidityGauge_OrderBy) {
     LiquidityGauge_OrderBy["Factory"] = "factory";
+    LiquidityGauge_OrderBy["Gauge"] = "gauge";
     LiquidityGauge_OrderBy["Id"] = "id";
+    LiquidityGauge_OrderBy["IsKilled"] = "isKilled";
+    LiquidityGauge_OrderBy["Pool"] = "pool";
     LiquidityGauge_OrderBy["PoolAddress"] = "poolAddress";
     LiquidityGauge_OrderBy["PoolId"] = "poolId";
+    LiquidityGauge_OrderBy["RelativeWeightCap"] = "relativeWeightCap";
     LiquidityGauge_OrderBy["Shares"] = "shares";
     LiquidityGauge_OrderBy["Streamer"] = "streamer";
     LiquidityGauge_OrderBy["Symbol"] = "symbol";
@@ -3805,6 +3803,15 @@ var OrderDirection;
     OrderDirection["Asc"] = "asc";
     OrderDirection["Desc"] = "desc";
 })(OrderDirection || (OrderDirection = {}));
+var Pool_OrderBy;
+(function (Pool_OrderBy) {
+    Pool_OrderBy["Address"] = "address";
+    Pool_OrderBy["Gauges"] = "gauges";
+    Pool_OrderBy["GaugesList"] = "gaugesList";
+    Pool_OrderBy["Id"] = "id";
+    Pool_OrderBy["PoolId"] = "poolId";
+    Pool_OrderBy["PreferentialGauge"] = "preferentialGauge";
+})(Pool_OrderBy || (Pool_OrderBy = {}));
 var RewardToken_OrderBy;
 (function (RewardToken_OrderBy) {
     RewardToken_OrderBy["Decimals"] = "decimals";
@@ -3816,8 +3823,12 @@ var RewardToken_OrderBy;
 var RootGauge_OrderBy;
 (function (RootGauge_OrderBy) {
     RootGauge_OrderBy["Chain"] = "chain";
+    RootGauge_OrderBy["Factory"] = "factory";
+    RootGauge_OrderBy["Gauge"] = "gauge";
     RootGauge_OrderBy["Id"] = "id";
+    RootGauge_OrderBy["IsKilled"] = "isKilled";
     RootGauge_OrderBy["Recipient"] = "recipient";
+    RootGauge_OrderBy["RelativeWeightCap"] = "relativeWeightCap";
 })(RootGauge_OrderBy || (RootGauge_OrderBy = {}));
 var User_OrderBy;
 (function (User_OrderBy) {
@@ -3831,6 +3842,7 @@ var VotingEscrowLock_OrderBy;
     VotingEscrowLock_OrderBy["Id"] = "id";
     VotingEscrowLock_OrderBy["LockedBalance"] = "lockedBalance";
     VotingEscrowLock_OrderBy["UnlockTime"] = "unlockTime";
+    VotingEscrowLock_OrderBy["UpdatedAt"] = "updatedAt";
     VotingEscrowLock_OrderBy["User"] = "user";
     VotingEscrowLock_OrderBy["VotingEscrowId"] = "votingEscrowID";
 })(VotingEscrowLock_OrderBy || (VotingEscrowLock_OrderBy = {}));
@@ -8062,18 +8074,17 @@ class SubgraphPoolDataService {
         return NETWORKS_WITH_LINEAR_POOLS.includes(this.network.chainId);
     }
     async getLinearPools() {
-        const { pool0, pool1000 } = await this.client.Pools({
+        const { pools } = await this.client.Pools({
             where: { swapEnabled: true, totalShares_gt: '0' },
-            orderBy: Pool_OrderBy.TotalLiquidity,
+            orderBy: Pool_OrderBy$1.TotalLiquidity,
             orderDirection: OrderDirection$1.Desc,
         });
-        const pools = [...pool0, ...pool1000];
         return pools;
     }
     async getNonLinearPools() {
         const { pools } = await this.client.PoolsWithoutLinear({
             where: { swapEnabled: true, totalShares_gt: '0' },
-            orderBy: Pool_OrderBy.TotalLiquidity,
+            orderBy: Pool_OrderBy$1.TotalLiquidity,
             orderDirection: OrderDirection$1.Desc,
             first: 1000,
         });
@@ -11508,13 +11519,13 @@ class PoolsSubgraphRepository {
      * @param blockHeight lazy loading blockHeigh resolver
      */
     constructor(options) {
-        var _a;
+        var _a, _b;
         this.pools = [];
         this.skip = 0;
         this.client = createSubgraphClient(options.url);
         this.blockHeight = options.blockHeight;
         const defaultArgs = {
-            orderBy: Pool_OrderBy.TotalLiquidity,
+            orderBy: Pool_OrderBy$1.TotalLiquidity,
             orderDirection: OrderDirection$1.Desc,
             where: {
                 swapEnabled: Op.Equals(true),
@@ -11522,9 +11533,10 @@ class PoolsSubgraphRepository {
             },
         };
         const args = ((_a = options.query) === null || _a === void 0 ? void 0 : _a.args) || defaultArgs;
+        const attrs = ((_b = options.query) === null || _b === void 0 ? void 0 : _b.attrs) || {};
         this.query = {
             args,
-            attrs: {},
+            attrs,
         };
     }
     async fetch(options) {
@@ -11538,9 +11550,9 @@ class PoolsSubgraphRepository {
             this.query.args.block = { number: await this.blockHeight() };
         }
         const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(new SubgraphArgsFormatter());
-        const { pool0, pool1000 } = await this.client.Pools(formattedQuery);
+        const { pools } = await this.client.Pools(formattedQuery);
         // TODO: how to best convert subgraph type to sdk internal type?
-        this.pools = [...pool0, ...pool1000];
+        this.pools = pools;
         this.skip = this.pools.length;
         return this.pools.map(this.mapType);
     }
@@ -11573,6 +11585,7 @@ class PoolsSubgraphRepository {
         return (await this.all()).filter(filter);
     }
     mapType(subgraphPool) {
+        var _a, _b, _c;
         return {
             id: subgraphPool.id,
             name: subgraphPool.name || '',
@@ -11580,7 +11593,7 @@ class PoolsSubgraphRepository {
             poolType: subgraphPool.poolType,
             swapFee: subgraphPool.swapFee,
             swapEnabled: subgraphPool.swapEnabled,
-            amp: subgraphPool.amp || undefined,
+            amp: (_a = subgraphPool.amp) !== null && _a !== void 0 ? _a : undefined,
             // owner: subgraphPool.owner,
             // factory: subgraphPool.factory,
             tokens: subgraphPool.tokens || [],
@@ -11592,6 +11605,8 @@ class PoolsSubgraphRepository {
             totalSwapVolume: subgraphPool.totalSwapVolume,
             // onchain: subgraphPool.onchain,
             createTime: subgraphPool.createTime,
+            mainIndex: (_b = subgraphPool.mainIndex) !== null && _b !== void 0 ? _b : undefined,
+            wrappedIndex: (_c = subgraphPool.wrappedIndex) !== null && _c !== void 0 ? _c : undefined,
             // mainTokens: subgraphPool.mainTokens,
             // wrappedTokens: subgraphPool.wrappedTokens,
             // unwrappedTokens: subgraphPool.unwrappedTokens,
