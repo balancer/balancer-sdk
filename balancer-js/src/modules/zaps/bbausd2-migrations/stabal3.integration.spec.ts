@@ -9,6 +9,7 @@ import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256 } from '@ethersproject/constants';
 import { Migrations } from '../migrations';
 import { getErc20Balance, move, stake } from '@/test/lib/utils';
+import { subSlippage } from '@/lib/utils/slippageHelper';
 
 dotenv.config();
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
@@ -33,7 +34,7 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
  */
 const network = Network.MAINNET;
 const holderAddress = '0xf346592803eb47cb8d8fa9f90b0ef17a82f877e0';
-const blockNumber = 15372650;
+const blockNumber = 15526452;
 
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
@@ -146,12 +147,17 @@ describe('stabal3 migration execution', async () => {
       data: query.data,
       gasLimit,
     });
-    const bptOut = query.decode(staticResult, staked);
+    const expectedBptOut = query.decode(staticResult, staked);
+    const slippageAsBasisPoints = BigNumber.from('1'); // 0.01%
+    const expectedWithSlippage = subSlippage(
+      BigNumber.from(expectedBptOut),
+      slippageAsBasisPoints
+    );
 
     query = migrations.stabal3(
       signerAddress,
       amount.toString(),
-      minBptOut ? minBptOut : bptOut,
+      minBptOut ? minBptOut : expectedWithSlippage.toString(),
       staked,
       authorised ? authorisation : undefined
     );
@@ -170,10 +176,10 @@ describe('stabal3 migration execution', async () => {
       to: await getErc20Balance(addressOut, provider, signerAddress),
     };
 
-    expect(BigNumber.from(bptOut).gt(0)).to.be.true;
+    expect(BigNumber.from(expectedBptOut).gt(0)).to.be.true;
     expect(after.from.toString()).to.eq('0');
-    expect(after.to.toString()).to.eq(bptOut);
-    return bptOut;
+    expect(after.to.gte(expectedWithSlippage)).to.be.true;
+    return expectedBptOut;
   }
 
   let bptOut: string;
