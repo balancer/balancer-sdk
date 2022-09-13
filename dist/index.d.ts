@@ -149,6 +149,55 @@ declare function toNormalizedWeights(weights: BigNumber[]): BigNumber[];
  */
 declare const isNormalizedWeights: (weights: BigNumberish[]) => boolean;
 
+declare enum ComposableStablePoolJoinKind {
+    INIT = 0,
+    EXACT_TOKENS_IN_FOR_BPT_OUT = 1,
+    TOKEN_IN_FOR_EXACT_BPT_OUT = 2
+}
+declare enum ComposableStablePoolExitKind {
+    EXACT_BPT_IN_FOR_ONE_TOKEN_OUT = 0,
+    BPT_IN_FOR_EXACT_TOKENS_OUT = 1
+}
+declare class ComposableStablePoolEncoder {
+    /**
+     * Cannot be constructed.
+     */
+    private constructor();
+    /**
+     * Encodes the userData parameter for providing the initial liquidity to a ComposableStablePool
+     * @param initialBalances - the amounts of tokens to send to the pool to form the initial balances
+     */
+    static joinInit: (amountsIn: BigNumberish[]) => string;
+    /**
+     * Encodes the userData parameter for collecting protocol fees for StablePhantomPool
+     */
+    static joinCollectProtocolFees: () => string;
+    /**
+     * Encodes the userData parameter for joining a ComposableStablePool with exact token inputs
+     * @param amountsIn - the amounts each of token to deposit in the pool as liquidity
+     * @param minimumBPT - the minimum acceptable BPT to receive in return for deposited tokens
+     */
+    static joinExactTokensInForBPTOut: (amountsIn: BigNumberish[], minimumBPT: BigNumberish) => string;
+    /**
+     * Encodes the userData parameter for joining a ComposableStablePool with to receive an exact amount of BPT
+     * @param bptAmountOut - the amount of BPT to be minted
+     * @param enterTokenIndex - the index of the token to be provided as liquidity
+     */
+    static joinTokenInForExactBPTOut: (bptAmountOut: BigNumberish, enterTokenIndex: number) => string;
+    /**
+     * Encodes the userData parameter for exiting a ComposableStablePool by removing a single token in return for an exact amount of BPT
+     * @param bptAmountIn - the amount of BPT to be burned
+     * @param enterTokenIndex - the index of the token to removed from the pool
+     */
+    static exitExactBPTInForOneTokenOut: (bptAmountIn: BigNumberish, exitTokenIndex: number) => string;
+    /**
+     * Encodes the userData parameter for exiting a ComposableStablePool by removing exact amounts of tokens
+     * @param amountsOut - the amounts of each token to be withdrawn from the pool
+     * @param maxBPTAmountIn - the minimum acceptable BPT to burn in return for withdrawn tokens
+     */
+    static exitBPTInForExactTokensOut: (amountsOut: BigNumberish[], maxBPTAmountIn: BigNumberish) => string;
+}
+
 declare enum Network {
     MAINNET = 1,
     ROPSTEN = 3,
@@ -4024,4 +4073,4 @@ declare class BalancerError extends Error {
     static getMessage(code: BalancerErrorCode): string;
 }
 
-export { AaveHelpers, Account, Address, AprBreakdown, AprFetcher, AssetHelpers, BalancerDataRepositories, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BaseFeeDistributor, BatchSwap, BatchSwapStep, BlockNumberRepository, BuildTransactionParameters, CoingeckoPriceRepository, ContractAddresses, Currency, Data, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeJoinPoolInput, EncodeUnwrapAaveStaticTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FallbackPoolRepository, FeeCollectorRepository, FeeDistributorData, FeeDistributorRepository, FetchPoolsInput, FindRouteParameters, Findable, FundManagement, GaugeControllerMulticallRepository, JoinPoolRequest, Liquidity, LiquidityGauge, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, Network, OnchainPoolData, OnchainTokenData, OutputReference, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolReference, PoolRepository, PoolSpecialization, PoolToken, PoolType, PoolWithMethods, Pools, PoolsSubgraphRepository, Price, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, RewardData, Searchable, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticPoolRepository, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TokenYieldsRepository, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, splitPoolId, toNormalizedWeights, tokensToTokenPrices };
+export { AaveHelpers, Account, Address, AprBreakdown, AprFetcher, AssetHelpers, BalancerDataRepositories, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BaseFeeDistributor, BatchSwap, BatchSwapStep, BlockNumberRepository, BuildTransactionParameters, CoingeckoPriceRepository, ComposableStablePoolEncoder, ComposableStablePoolExitKind, ComposableStablePoolJoinKind, ContractAddresses, Currency, Data, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeJoinPoolInput, EncodeUnwrapAaveStaticTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FallbackPoolRepository, FeeCollectorRepository, FeeDistributorData, FeeDistributorRepository, FetchPoolsInput, FindRouteParameters, Findable, FundManagement, GaugeControllerMulticallRepository, JoinPoolRequest, Liquidity, LiquidityGauge, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, Network, OnchainPoolData, OnchainTokenData, OutputReference, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolReference, PoolRepository, PoolSpecialization, PoolToken, PoolType, PoolWithMethods, Pools, PoolsSubgraphRepository, Price, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, RewardData, Searchable, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticPoolRepository, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TokenYieldsRepository, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, splitPoolId, toNormalizedWeights, tokensToTokenPrices };

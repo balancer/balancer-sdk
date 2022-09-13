@@ -230,6 +230,75 @@
         return totalWeight.eq(constants.WeiPerEther);
     };
 
+    exports.ComposableStablePoolJoinKind = void 0;
+    (function (ComposableStablePoolJoinKind) {
+        ComposableStablePoolJoinKind[ComposableStablePoolJoinKind["INIT"] = 0] = "INIT";
+        ComposableStablePoolJoinKind[ComposableStablePoolJoinKind["EXACT_TOKENS_IN_FOR_BPT_OUT"] = 1] = "EXACT_TOKENS_IN_FOR_BPT_OUT";
+        ComposableStablePoolJoinKind[ComposableStablePoolJoinKind["TOKEN_IN_FOR_EXACT_BPT_OUT"] = 2] = "TOKEN_IN_FOR_EXACT_BPT_OUT";
+    })(exports.ComposableStablePoolJoinKind || (exports.ComposableStablePoolJoinKind = {}));
+    exports.ComposableStablePoolExitKind = void 0;
+    (function (ComposableStablePoolExitKind) {
+        ComposableStablePoolExitKind[ComposableStablePoolExitKind["EXACT_BPT_IN_FOR_ONE_TOKEN_OUT"] = 0] = "EXACT_BPT_IN_FOR_ONE_TOKEN_OUT";
+        ComposableStablePoolExitKind[ComposableStablePoolExitKind["BPT_IN_FOR_EXACT_TOKENS_OUT"] = 1] = "BPT_IN_FOR_EXACT_TOKENS_OUT";
+    })(exports.ComposableStablePoolExitKind || (exports.ComposableStablePoolExitKind = {}));
+    class ComposableStablePoolEncoder {
+        /**
+         * Cannot be constructed.
+         */
+        constructor() {
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+        }
+    }
+    /**
+     * Encodes the userData parameter for providing the initial liquidity to a ComposableStablePool
+     * @param initialBalances - the amounts of tokens to send to the pool to form the initial balances
+     */
+    ComposableStablePoolEncoder.joinInit = (amountsIn) => abi$1.defaultAbiCoder.encode(['uint256', 'uint256[]'], [exports.ComposableStablePoolJoinKind.INIT, amountsIn]);
+    /**
+     * Encodes the userData parameter for collecting protocol fees for StablePhantomPool
+     */
+    ComposableStablePoolEncoder.joinCollectProtocolFees = () => abi$1.defaultAbiCoder.encode(['uint256'], [exports.StablePhantomPoolJoinKind.COLLECT_PROTOCOL_FEES]);
+    /**
+     * Encodes the userData parameter for joining a ComposableStablePool with exact token inputs
+     * @param amountsIn - the amounts each of token to deposit in the pool as liquidity
+     * @param minimumBPT - the minimum acceptable BPT to receive in return for deposited tokens
+     */
+    ComposableStablePoolEncoder.joinExactTokensInForBPTOut = (amountsIn, minimumBPT) => abi$1.defaultAbiCoder.encode(['uint256', 'uint256[]', 'uint256'], [
+        exports.ComposableStablePoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
+        amountsIn,
+        minimumBPT,
+    ]);
+    /**
+     * Encodes the userData parameter for joining a ComposableStablePool with to receive an exact amount of BPT
+     * @param bptAmountOut - the amount of BPT to be minted
+     * @param enterTokenIndex - the index of the token to be provided as liquidity
+     */
+    ComposableStablePoolEncoder.joinTokenInForExactBPTOut = (bptAmountOut, enterTokenIndex) => abi$1.defaultAbiCoder.encode(['uint256', 'uint256', 'uint256'], [
+        exports.ComposableStablePoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT,
+        bptAmountOut,
+        enterTokenIndex,
+    ]);
+    /**
+     * Encodes the userData parameter for exiting a ComposableStablePool by removing a single token in return for an exact amount of BPT
+     * @param bptAmountIn - the amount of BPT to be burned
+     * @param enterTokenIndex - the index of the token to removed from the pool
+     */
+    ComposableStablePoolEncoder.exitExactBPTInForOneTokenOut = (bptAmountIn, exitTokenIndex) => abi$1.defaultAbiCoder.encode(['uint256', 'uint256', 'uint256'], [
+        exports.ComposableStablePoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
+        bptAmountIn,
+        exitTokenIndex,
+    ]);
+    /**
+     * Encodes the userData parameter for exiting a ComposableStablePool by removing exact amounts of tokens
+     * @param amountsOut - the amounts of each token to be withdrawn from the pool
+     * @param maxBPTAmountIn - the minimum acceptable BPT to burn in return for withdrawn tokens
+     */
+    ComposableStablePoolEncoder.exitBPTInForExactTokensOut = (amountsOut, maxBPTAmountIn) => abi$1.defaultAbiCoder.encode(['uint256', 'uint256[]', 'uint256'], [
+        exports.ComposableStablePoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT,
+        amountsOut,
+        maxBPTAmountIn,
+    ]);
+
     var isProduction = process.env.NODE_ENV === 'production';
     var prefix = 'Invariant failed';
     function invariant(condition, message) {
@@ -2047,80 +2116,6 @@
             this.priceImpactCalculator = priceImpactCalculator;
         }
     }
-
-    var ComposableStablePoolJoinKind;
-    (function (ComposableStablePoolJoinKind) {
-        ComposableStablePoolJoinKind[ComposableStablePoolJoinKind["INIT"] = 0] = "INIT";
-        ComposableStablePoolJoinKind[ComposableStablePoolJoinKind["EXACT_TOKENS_IN_FOR_BPT_OUT"] = 1] = "EXACT_TOKENS_IN_FOR_BPT_OUT";
-        ComposableStablePoolJoinKind[ComposableStablePoolJoinKind["TOKEN_IN_FOR_EXACT_BPT_OUT"] = 2] = "TOKEN_IN_FOR_EXACT_BPT_OUT";
-    })(ComposableStablePoolJoinKind || (ComposableStablePoolJoinKind = {}));
-    var StablePhantomPoolJoinKind;
-    (function (StablePhantomPoolJoinKind) {
-        StablePhantomPoolJoinKind[StablePhantomPoolJoinKind["INIT"] = 0] = "INIT";
-        StablePhantomPoolJoinKind[StablePhantomPoolJoinKind["COLLECT_PROTOCOL_FEES"] = 1] = "COLLECT_PROTOCOL_FEES";
-    })(StablePhantomPoolJoinKind || (StablePhantomPoolJoinKind = {}));
-    var ComposableStablePoolExitKind;
-    (function (ComposableStablePoolExitKind) {
-        ComposableStablePoolExitKind[ComposableStablePoolExitKind["EXACT_BPT_IN_FOR_ONE_TOKEN_OUT"] = 0] = "EXACT_BPT_IN_FOR_ONE_TOKEN_OUT";
-        ComposableStablePoolExitKind[ComposableStablePoolExitKind["BPT_IN_FOR_EXACT_TOKENS_OUT"] = 1] = "BPT_IN_FOR_EXACT_TOKENS_OUT";
-    })(ComposableStablePoolExitKind || (ComposableStablePoolExitKind = {}));
-    class ComposableStablePoolEncoder {
-        /**
-         * Cannot be constructed.
-         */
-        constructor() {
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-        }
-    }
-    /**
-     * Encodes the userData parameter for providing the initial liquidity to a ComposableStablePool
-     * @param initialBalances - the amounts of tokens to send to the pool to form the initial balances
-     */
-    ComposableStablePoolEncoder.joinInit = (amountsIn) => abi$1.defaultAbiCoder.encode(['uint256', 'uint256[]'], [ComposableStablePoolJoinKind.INIT, amountsIn]);
-    /**
-     * Encodes the userData parameter for collecting protocol fees for StablePhantomPool
-     */
-    ComposableStablePoolEncoder.joinCollectProtocolFees = () => abi$1.defaultAbiCoder.encode(['uint256'], [StablePhantomPoolJoinKind.COLLECT_PROTOCOL_FEES]);
-    /**
-     * Encodes the userData parameter for joining a ComposableStablePool with exact token inputs
-     * @param amountsIn - the amounts each of token to deposit in the pool as liquidity
-     * @param minimumBPT - the minimum acceptable BPT to receive in return for deposited tokens
-     */
-    ComposableStablePoolEncoder.joinExactTokensInForBPTOut = (amountsIn, minimumBPT) => abi$1.defaultAbiCoder.encode(['uint256', 'uint256[]', 'uint256'], [
-        ComposableStablePoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
-        amountsIn,
-        minimumBPT,
-    ]);
-    /**
-     * Encodes the userData parameter for joining a ComposableStablePool with to receive an exact amount of BPT
-     * @param bptAmountOut - the amount of BPT to be minted
-     * @param enterTokenIndex - the index of the token to be provided as liquidity
-     */
-    ComposableStablePoolEncoder.joinTokenInForExactBPTOut = (bptAmountOut, enterTokenIndex) => abi$1.defaultAbiCoder.encode(['uint256', 'uint256', 'uint256'], [
-        ComposableStablePoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT,
-        bptAmountOut,
-        enterTokenIndex,
-    ]);
-    /**
-     * Encodes the userData parameter for exiting a ComposableStablePool by removing a single token in return for an exact amount of BPT
-     * @param bptAmountIn - the amount of BPT to be burned
-     * @param enterTokenIndex - the index of the token to removed from the pool
-     */
-    ComposableStablePoolEncoder.exitExactBPTInForOneTokenOut = (bptAmountIn, exitTokenIndex) => abi$1.defaultAbiCoder.encode(['uint256', 'uint256', 'uint256'], [
-        ComposableStablePoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
-        bptAmountIn,
-        exitTokenIndex,
-    ]);
-    /**
-     * Encodes the userData parameter for exiting a ComposableStablePool by removing exact amounts of tokens
-     * @param amountsOut - the amounts of each token to be withdrawn from the pool
-     * @param maxBPTAmountIn - the minimum acceptable BPT to burn in return for withdrawn tokens
-     */
-    ComposableStablePoolEncoder.exitBPTInForExactTokensOut = (amountsOut, maxBPTAmountIn) => abi$1.defaultAbiCoder.encode(['uint256', 'uint256[]', 'uint256'], [
-        ComposableStablePoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT,
-        amountsOut,
-        maxBPTAmountIn,
-    ]);
 
     class ComposableStablePoolExit {
         constructor() {
@@ -16622,6 +16617,7 @@
     exports.BalancerSDK = BalancerSDK;
     exports.BlockNumberRepository = BlockNumberRepository;
     exports.CoingeckoPriceRepository = CoingeckoPriceRepository;
+    exports.ComposableStablePoolEncoder = ComposableStablePoolEncoder;
     exports.Data = Data;
     exports.FallbackPoolRepository = FallbackPoolRepository;
     exports.FeeCollectorRepository = FeeCollectorRepository;
