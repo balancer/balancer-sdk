@@ -1,5 +1,6 @@
 export * from './pool-stable';
 export * from './pool-weighted';
+export * from './pool-composable-stable';
 export * from './pool-utils';
 export * from './lib/utils';
 export * from './types';

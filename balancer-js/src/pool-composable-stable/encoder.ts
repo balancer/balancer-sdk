@@ -1,15 +1,11 @@
 import { defaultAbiCoder } from '@ethersproject/abi';
 import { BigNumberish } from '@ethersproject/bignumber';
+import { StablePhantomPoolJoinKind } from '../pool-stable/index';
 
 export enum ComposableStablePoolJoinKind {
   INIT = 0,
   EXACT_TOKENS_IN_FOR_BPT_OUT,
   TOKEN_IN_FOR_EXACT_BPT_OUT,
-}
-
-export enum StablePhantomPoolJoinKind {
-  INIT = 0,
-  COLLECT_PROTOCOL_FEES,
 }
 
 export enum ComposableStablePoolExitKind {
