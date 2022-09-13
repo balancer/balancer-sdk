@@ -42,7 +42,7 @@ export interface ExitConcern {
    * @param singleTokenMaxOut Optional: token address that if provided will exit to given token
    * @returns transaction request ready to send with signer.sendTransaction
    */
-  buildExitExactBPTIn: ({
+  buildExitExactBPTIn?: ({
     exiter,
     pool,
     bptIn,
@@ -70,6 +70,16 @@ export interface ExitConcern {
     slippage,
     wrappedNativeAsset,
   }: ExitExactTokensOutParameters) => ExitPoolAttributes;
+
+  buildExitSingleTokenOut?: ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+    shouldUnwrapNativeAsset,
+    wrappedNativeAsset,
+    singleTokenMaxOut,
+  }: ExitExactBPTInSingleTokenOutParameters) => ExitPoolAttributes;
 }
 
 export interface JoinPool {
@@ -121,6 +131,16 @@ export interface ExitExactBPTInParameters {
   shouldUnwrapNativeAsset: boolean;
   wrappedNativeAsset: string;
   singleTokenMaxOut?: string;
+}
+
+export interface ExitExactBPTInSingleTokenOutParameters {
+  exiter: string;
+  pool: Pool;
+  bptIn: string;
+  slippage: string;
+  shouldUnwrapNativeAsset: boolean;
+  wrappedNativeAsset: string;
+  singleTokenMaxOut: string;
 }
 
 export interface ExitExactTokensOutParameters {
