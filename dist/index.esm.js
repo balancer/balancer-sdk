@@ -21,11 +21,11 @@ var StablePoolJoinKind;
     StablePoolJoinKind[StablePoolJoinKind["EXACT_TOKENS_IN_FOR_BPT_OUT"] = 1] = "EXACT_TOKENS_IN_FOR_BPT_OUT";
     StablePoolJoinKind[StablePoolJoinKind["TOKEN_IN_FOR_EXACT_BPT_OUT"] = 2] = "TOKEN_IN_FOR_EXACT_BPT_OUT";
 })(StablePoolJoinKind || (StablePoolJoinKind = {}));
-var StablePhantomPoolJoinKind;
+var StablePhantomPoolJoinKind$1;
 (function (StablePhantomPoolJoinKind) {
     StablePhantomPoolJoinKind[StablePhantomPoolJoinKind["INIT"] = 0] = "INIT";
     StablePhantomPoolJoinKind[StablePhantomPoolJoinKind["COLLECT_PROTOCOL_FEES"] = 1] = "COLLECT_PROTOCOL_FEES";
-})(StablePhantomPoolJoinKind || (StablePhantomPoolJoinKind = {}));
+})(StablePhantomPoolJoinKind$1 || (StablePhantomPoolJoinKind$1 = {}));
 var StablePoolExitKind;
 (function (StablePoolExitKind) {
     StablePoolExitKind[StablePoolExitKind["EXACT_BPT_IN_FOR_ONE_TOKEN_OUT"] = 0] = "EXACT_BPT_IN_FOR_ONE_TOKEN_OUT";
@@ -48,7 +48,7 @@ StablePoolEncoder.joinInit = (amountsIn) => defaultAbiCoder.encode(['uint256', '
 /**
  * Encodes the userData parameter for collecting protocol fees for StablePhantomPool
  */
-StablePoolEncoder.joinCollectProtocolFees = () => defaultAbiCoder.encode(['uint256'], [StablePhantomPoolJoinKind.COLLECT_PROTOCOL_FEES]);
+StablePoolEncoder.joinCollectProtocolFees = () => defaultAbiCoder.encode(['uint256'], [StablePhantomPoolJoinKind$1.COLLECT_PROTOCOL_FEES]);
 /**
  * Encodes the userData parameter for joining a StablePool with exact token inputs
  * @param amountsIn - the amounts each of token to deposit in the pool as liquidity
@@ -815,6 +815,7 @@ var PoolType;
     PoolType["Weighted"] = "Weighted";
     PoolType["Investment"] = "Investment";
     PoolType["Stable"] = "Stable";
+    PoolType["ComposableStable"] = "ComposableStable";
     PoolType["MetaStable"] = "MetaStable";
     PoolType["StablePhantom"] = "StablePhantom";
     PoolType["LiquidityBootstrapping"] = "LiquidityBootstrapping";
@@ -2035,6 +2036,207 @@ class Stable {
     }
 }
 
+var ComposableStablePoolJoinKind;
+(function (ComposableStablePoolJoinKind) {
+    ComposableStablePoolJoinKind[ComposableStablePoolJoinKind["INIT"] = 0] = "INIT";
+    ComposableStablePoolJoinKind[ComposableStablePoolJoinKind["EXACT_TOKENS_IN_FOR_BPT_OUT"] = 1] = "EXACT_TOKENS_IN_FOR_BPT_OUT";
+    ComposableStablePoolJoinKind[ComposableStablePoolJoinKind["TOKEN_IN_FOR_EXACT_BPT_OUT"] = 2] = "TOKEN_IN_FOR_EXACT_BPT_OUT";
+})(ComposableStablePoolJoinKind || (ComposableStablePoolJoinKind = {}));
+var StablePhantomPoolJoinKind;
+(function (StablePhantomPoolJoinKind) {
+    StablePhantomPoolJoinKind[StablePhantomPoolJoinKind["INIT"] = 0] = "INIT";
+    StablePhantomPoolJoinKind[StablePhantomPoolJoinKind["COLLECT_PROTOCOL_FEES"] = 1] = "COLLECT_PROTOCOL_FEES";
+})(StablePhantomPoolJoinKind || (StablePhantomPoolJoinKind = {}));
+var ComposableStablePoolExitKind;
+(function (ComposableStablePoolExitKind) {
+    ComposableStablePoolExitKind[ComposableStablePoolExitKind["EXACT_BPT_IN_FOR_ONE_TOKEN_OUT"] = 0] = "EXACT_BPT_IN_FOR_ONE_TOKEN_OUT";
+    ComposableStablePoolExitKind[ComposableStablePoolExitKind["BPT_IN_FOR_EXACT_TOKENS_OUT"] = 1] = "BPT_IN_FOR_EXACT_TOKENS_OUT";
+})(ComposableStablePoolExitKind || (ComposableStablePoolExitKind = {}));
+class ComposableStablePoolEncoder {
+    /**
+     * Cannot be constructed.
+     */
+    constructor() {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+    }
+}
+/**
+ * Encodes the userData parameter for providing the initial liquidity to a ComposableStablePool
+ * @param initialBalances - the amounts of tokens to send to the pool to form the initial balances
+ */
+ComposableStablePoolEncoder.joinInit = (amountsIn) => defaultAbiCoder.encode(['uint256', 'uint256[]'], [ComposableStablePoolJoinKind.INIT, amountsIn]);
+/**
+ * Encodes the userData parameter for collecting protocol fees for StablePhantomPool
+ */
+ComposableStablePoolEncoder.joinCollectProtocolFees = () => defaultAbiCoder.encode(['uint256'], [StablePhantomPoolJoinKind.COLLECT_PROTOCOL_FEES]);
+/**
+ * Encodes the userData parameter for joining a ComposableStablePool with exact token inputs
+ * @param amountsIn - the amounts each of token to deposit in the pool as liquidity
+ * @param minimumBPT - the minimum acceptable BPT to receive in return for deposited tokens
+ */
+ComposableStablePoolEncoder.joinExactTokensInForBPTOut = (amountsIn, minimumBPT) => defaultAbiCoder.encode(['uint256', 'uint256[]', 'uint256'], [
+    ComposableStablePoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
+    amountsIn,
+    minimumBPT,
+]);
+/**
+ * Encodes the userData parameter for joining a ComposableStablePool with to receive an exact amount of BPT
+ * @param bptAmountOut - the amount of BPT to be minted
+ * @param enterTokenIndex - the index of the token to be provided as liquidity
+ */
+ComposableStablePoolEncoder.joinTokenInForExactBPTOut = (bptAmountOut, enterTokenIndex) => defaultAbiCoder.encode(['uint256', 'uint256', 'uint256'], [
+    ComposableStablePoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT,
+    bptAmountOut,
+    enterTokenIndex,
+]);
+/**
+ * Encodes the userData parameter for exiting a ComposableStablePool by removing a single token in return for an exact amount of BPT
+ * @param bptAmountIn - the amount of BPT to be burned
+ * @param enterTokenIndex - the index of the token to removed from the pool
+ */
+ComposableStablePoolEncoder.exitExactBPTInForOneTokenOut = (bptAmountIn, exitTokenIndex) => defaultAbiCoder.encode(['uint256', 'uint256', 'uint256'], [
+    ComposableStablePoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
+    bptAmountIn,
+    exitTokenIndex,
+]);
+/**
+ * Encodes the userData parameter for exiting a ComposableStablePool by removing exact amounts of tokens
+ * @param amountsOut - the amounts of each token to be withdrawn from the pool
+ * @param maxBPTAmountIn - the minimum acceptable BPT to burn in return for withdrawn tokens
+ */
+ComposableStablePoolEncoder.exitBPTInForExactTokensOut = (amountsOut, maxBPTAmountIn) => defaultAbiCoder.encode(['uint256', 'uint256[]', 'uint256'], [
+    ComposableStablePoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT,
+    amountsOut,
+    maxBPTAmountIn,
+]);
+
+class ComposableStablePoolExit {
+    constructor() {
+        this.buildExitSingleTokenOut = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
+            if (!bptIn.length || parseFixed$1(bptIn, 18).isNegative()) {
+                throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
+            }
+            if (singleTokenMaxOut &&
+                singleTokenMaxOut !== AddressZero &&
+                !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)) {
+                throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
+            }
+            if (!shouldUnwrapNativeAsset && singleTokenMaxOut === AddressZero)
+                throw new Error('shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values');
+            // Check if there's any relevant stable pool info missing
+            if (pool.tokens.some((token) => !token.decimals))
+                throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+            if (!pool.amp)
+                throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+            // Parse pool info into EVM amounts in order to match amountsIn scalling
+            const { parsedTokens, parsedBalances, parsedAmp, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Replace WETH address with ETH - required for exiting with ETH
+            const unwrappedTokens = parsedTokens.map((token) => token === wrappedNativeAsset ? AddressZero : token);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [sortedTokens, sortedBalances] = assetHelpers.sortTokens(shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens, parsedBalances);
+            const minAmountsOut = Array(parsedTokens.length).fill('0');
+            // Exit pool with single token using exact bptIn
+            const singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
+            // Calculate amount out given BPT in
+            const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(BigInt(parsedAmp), sortedBalances.map((b) => BigInt(b)), singleTokenMaxOutIndex, BigInt(bptIn), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+            // Apply slippage tolerance
+            minAmountsOut[singleTokenMaxOutIndex] = subSlippage(BigNumber.from(amountOut), BigNumber.from(slippage)).toString();
+            const userData = ComposableStablePoolEncoder.exitExactBPTInForOneTokenOut(bptIn, singleTokenMaxOutIndex);
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // Encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut,
+                maxBPTIn: bptIn,
+            };
+        };
+        this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
+            if (tokensOut.length != amountsOut.length ||
+                tokensOut.length != pool.tokensList.length) {
+                throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+            }
+            // Check if there's any relevant stable pool info missing
+            if (pool.tokens.some((token) => !token.decimals))
+                throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+            if (!pool.amp)
+                throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+            // Parse pool info into EVM amounts in order to match amountsOut scalling
+            const { parsedTokens, parsedBalances, parsedAmp, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [, sortedBalances] = assetHelpers.sortTokens(parsedTokens, parsedBalances);
+            const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(tokensOut, amountsOut);
+            // Calculate expected BPT in given tokens out
+            const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(BigInt(parsedAmp), sortedBalances.map((b) => BigInt(b)), sortedAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+            // Apply slippage tolerance
+            const maxBPTIn = addSlippage(BigNumber.from(bptIn), BigNumber.from(slippage)).toString();
+            const userData = ComposableStablePoolEncoder.exitBPTInForExactTokensOut(sortedAmounts, maxBPTIn);
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut: sortedAmounts,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut: sortedAmounts,
+                maxBPTIn,
+            };
+        };
+    }
+}
+
+class ComposableStable {
+    constructor(exit = new ComposableStablePoolExit(), join = new StablePoolJoin(), liquidity = new StablePoolLiquidity(), spotPriceCalculator = new StablePoolSpotPrice(), priceImpactCalculator = new StablePoolPriceImpact()) {
+        this.exit = exit;
+        this.join = join;
+        this.liquidity = liquidity;
+        this.spotPriceCalculator = spotPriceCalculator;
+        this.priceImpactCalculator = priceImpactCalculator;
+    }
+}
+
 class WeightedPoolExit {
     constructor() {
         this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
@@ -2872,9 +3074,10 @@ class Linear {
  * Returns a class instance of a type specific method handlers.
  */
 class PoolTypeConcerns {
-    constructor(config, weighted = new Weighted(), stable = new Stable(), metaStable = new MetaStable(), stablePhantom = new StablePhantom(), linear = new Linear()) {
+    constructor(config, weighted = new Weighted(), stable = new Stable(), composableStable = new ComposableStable(), metaStable = new MetaStable(), stablePhantom = new StablePhantom(), linear = new Linear()) {
         this.weighted = weighted;
         this.stable = stable;
+        this.composableStable = composableStable;
         this.metaStable = metaStable;
         this.stablePhantom = stablePhantom;
         this.linear = linear;
@@ -2889,6 +3092,9 @@ class PoolTypeConcerns {
             }
             case 'Stable': {
                 return new Stable();
+            }
+            case 'ComposableStable': {
+                return new ComposableStable();
             }
             case 'MetaStable': {
                 return new MetaStable();
@@ -14424,15 +14630,22 @@ class Pools {
                 });
             },
             calcPriceImpact: async (amountsIn, minBPTOut) => methods.priceImpactCalculator.calcPriceImpact(pool, amountsIn, minBPTOut),
-            buildExitExactBPTIn: (exiter, bptIn, slippage, shouldUnwrapNativeAsset = false, singleTokenMaxOut) => methods.exit.buildExitExactBPTIn({
-                exiter,
-                pool,
-                bptIn,
-                slippage,
-                shouldUnwrapNativeAsset,
-                wrappedNativeAsset,
-                singleTokenMaxOut,
-            }),
+            buildExitExactBPTIn: (exiter, bptIn, slippage, shouldUnwrapNativeAsset = false, singleTokenMaxOut) => {
+                if (methods.exit.buildExitExactBPTIn) {
+                    return methods.exit.buildExitExactBPTIn({
+                        exiter,
+                        pool,
+                        bptIn,
+                        slippage,
+                        shouldUnwrapNativeAsset,
+                        wrappedNativeAsset,
+                        singleTokenMaxOut,
+                    });
+                }
+                else {
+                    throw 'ExitExactBPTIn not supported';
+                }
+            },
             buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) => methods.exit.buildExitExactTokensOut({
                 exiter,
                 pool,
@@ -16341,5 +16554,5 @@ class BalancerSDK {
     }
 }
 
-export { AaveHelpers, AssetHelpers, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerSDK, BlockNumberRepository, CoingeckoPriceRepository, Data, FallbackPoolRepository, FeeCollectorRepository, FeeDistributorRepository, GaugeControllerMulticallRepository, Liquidity, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, Network, PoolBalanceOpKind, PoolSpecialization, PoolType, Pools, PoolsSubgraphRepository, Relayer, RelayerAction, RelayerAuthorization, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticPoolRepository, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SwapType, Swaps, TokenYieldsRepository, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, splitPoolId, toNormalizedWeights, tokensToTokenPrices };
+export { AaveHelpers, AssetHelpers, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerSDK, BlockNumberRepository, CoingeckoPriceRepository, Data, FallbackPoolRepository, FeeCollectorRepository, FeeDistributorRepository, GaugeControllerMulticallRepository, Liquidity, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, Network, PoolBalanceOpKind, PoolSpecialization, PoolType, Pools, PoolsSubgraphRepository, Relayer, RelayerAction, RelayerAuthorization, Sor, StablePhantomPoolJoinKind$1 as StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticPoolRepository, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SwapType, Swaps, TokenYieldsRepository, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, splitPoolId, toNormalizedWeights, tokensToTokenPrices };
 //# sourceMappingURL=index.esm.js.map

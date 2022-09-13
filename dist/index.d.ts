@@ -3154,6 +3154,7 @@ declare enum PoolType {
     Weighted = "Weighted",
     Investment = "Investment",
     Stable = "Stable",
+    ComposableStable = "ComposableStable",
     MetaStable = "MetaStable",
     StablePhantom = "StablePhantom",
     LiquidityBootstrapping = "LiquidityBootstrapping",
