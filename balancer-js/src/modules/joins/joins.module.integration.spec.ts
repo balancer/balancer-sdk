@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import hardhat from 'hardhat';
 
 import { BalancerSDK, Network, RelayerAuthorization } from '@/.';
-import { parseFixed } from '@ethersproject/bignumber';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { MaxUint256 } from '@ethersproject/constants';
@@ -143,11 +143,11 @@ describe('bbausd generalised join execution', async () => {
 
   const testFlow = async (
     tokensIn: string[],
-    amountIn: string[],
+    amountsIn: string[],
     wrapMainTokens: boolean,
     previouslyAuthorised = false
   ) => {
-    const [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
+    const [bptBalanceBefore, ...tokensInBalanceBefore] = await getBalances(
       [fromPool.address, ...tokensIn],
       signer,
       signerAddress
@@ -159,10 +159,11 @@ describe('bbausd generalised join execution', async () => {
     const query = await pools.generalisedJoin(
       fromPool.id,
       tokensIn,
-      amountIn,
+      amountsIn,
       signerAddress,
       wrapMainTokens,
       slippage,
+      signer,
       previouslyAuthorised ? undefined : authorisation
     );
 
@@ -175,21 +176,23 @@ describe('bbausd generalised join execution', async () => {
     const receipt = await response.wait();
     console.log('Gas used', receipt.gasUsed.toString());
 
-    const [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
+    const [bptBalanceAfter, ...tokensInBalanceAfter] = await getBalances(
       [fromPool.address, ...tokensIn],
       signer,
       signerAddress
     );
-
     expect(receipt.status).to.eql(1);
+    expect(BigNumber.from(query.minOut).gte('0')).to.be.true;
+    tokensInBalanceAfter.forEach((balanceAfter, i) => {
+      expect(balanceAfter.toString()).to.eq(
+        tokensInBalanceBefore[i].sub(amountsIn[i]).toString()
+      );
+    });
+    tokensInBalanceAfter.forEach((b) => expect(b.toString()).to.eq('0'));
     expect(bptBalanceBefore.eq(0)).to.be.true;
-    // tokensBalanceBefore.forEach(
-    //   (b, i) => expect(b.eq(mainInitialBalances[i])).to.be.true
-    // );
-    tokensBalanceAfter.forEach((b) => expect(b.toString()).to.eq('0'));
-    console.log(bptBalanceAfter.toString());
-    console.log(query.minOut);
     expect(bptBalanceAfter.gte(query.minOut)).to.be.true;
+    console.log(bptBalanceAfter.toString(), 'bpt after');
+    console.log(query.minOut, 'expectedMinOut');
   };
   context('leaf token input', async () => {
     it('joins with no wrapping', async () => {
