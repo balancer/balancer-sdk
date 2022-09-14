@@ -298,7 +298,11 @@ export class PoolGraph {
       if (index - 1 === startingIndex) {
         // The first non-input node must have its child input node updated and other to 0 amounts
         const childrenWithoutRoot = node.children
-          .filter((n) => n.address !== nodesToRoot[0].address)
+          .filter(
+            (node) =>
+              node.address.toLowerCase() !==
+              nodesToRoot[0].address.toLowerCase()
+          )
           .map((n) => {
             n.outputReference = '0';
             return n;
