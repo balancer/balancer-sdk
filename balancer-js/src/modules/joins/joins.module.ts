@@ -381,13 +381,13 @@ export class Join {
       .div((1e18).toString());
     // Update outputReference with actual value
     node.outputReference = inputAmount.toString();
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.action} (
-    //     Inputs: ${inputAmount.toString()}
-    //     OutputRef: ${node.outputReference}
-    //   )`
-    // );
+    console.log(
+      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+      ${node.action} (
+        Inputs: ${inputAmount.toString()}
+        OutputRef: ${node.outputReference}
+      )`
+    );
     return node;
   }
 
@@ -409,14 +409,14 @@ export class Join {
       outputReference: Relayer.toChainedReference(node.outputReference),
     });
 
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.action} (
-    //     staticToken: ${staticToken},
-    //     input: ${amount},
-    //     outputRef: ${node.outputReference.toString()}
-    //   )`
-    // );
+    console.log(
+      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+      ${node.action} (
+        staticToken: ${staticToken},
+        input: ${amount},
+        outputRef: ${node.outputReference.toString()}
+      )`
+    );
 
     return call;
   }
@@ -469,16 +469,16 @@ export class Join {
       },
     ];
 
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.action}(
-    //     inputAmt: ${node.children[0].outputReference},
-    //     inputToken: ${node.children[0].address},
-    //     pool: ${node.id},
-    //     outputToken: ${node.address},
-    //     outputRef: ${node.outputReference}
-    //   )`
-    // );
+    console.log(
+      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+      ${node.action}(
+        inputAmt: ${node.children[0].outputReference},
+        inputToken: ${node.children[0].address},
+        pool: ${node.id},
+        outputToken: ${node.address},
+        outputRef: ${node.outputReference}
+      )`
+    );
 
     const call = Relayer.encodeBatchSwap({
       swapType: SwapType.SwapExactIn,
@@ -561,17 +561,17 @@ export class Join {
     const ethIndex = sortedTokens.indexOf(AddressZero);
     const value = ethIndex === -1 ? '0' : sortedAmounts[ethIndex];
 
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.action}(
-    //     poolId: ${node.id},
-    //     assets: ${sortedTokens.toString()},
-    //     maxAmtsIn: ${sortedAmounts.toString()},
-    //     amountsIn: ${userDataAmounts.toString()},
-    //     minOut: ${minAmountOut},
-    //     outputRef: ${node.outputReference}
-    //   )`
-    // );
+    console.log(
+      `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+      ${node.action}(
+        poolId: ${node.id},
+        assets: ${sortedTokens.toString()},
+        maxAmtsIn: ${sortedAmounts.toString()},
+        amountsIn: ${userDataAmounts.toString()},
+        minOut: ${minAmountOut},
+        outputRef: ${node.outputReference}
+      )`
+    );
 
     const call = Relayer.constructJoinCall({
       poolId: node.id,

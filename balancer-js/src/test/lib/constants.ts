@@ -309,19 +309,19 @@ export const ADDRESSES = {
   },
   [Network.GOERLI]: {
     USDC: {
-      address: '0xe0c9275e44ea80ef17579d33c55136b7da269aeb',
+      address: '0xDabD33683bAfDd448968Ab6d6f47C3535c64bf0c',
       decimals: 6,
       symbol: 'USDC',
       slot: 0,
     },
     USDT: {
-      address: '0x1f1f156e0317167c11aa412e3d1435ea29dc3cce',
+      address: '0x14468FD5E1de5A5a4882fa5f4e2217C5A8dDcadb',
       decimals: 6,
       symbol: 'USDT',
       slot: 0,
     },
     DAI: {
-      address: '0x8c9e6c40d3402480ace624730524facc5482798c',
+      address: '0xB8096bC53c3cE4c11Ebb0069Da0341d75264B104',
       decimals: 18,
       symbol: 'DAI',
       slot: 0,
@@ -330,6 +330,74 @@ export const ADDRESSES = {
       address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
       decimals: 18,
       symbol: 'bbausd',
+    },
+    waDAI: {
+      address: '0x0b61329839d2ebea96e21f45d4b065dbf38a7af6',
+      decimals: 18,
+      symbol: 'waDAI',
+      slot: 52, // TODO: check after mike b mints some
+    },
+    waUSDC: {
+      address: '0xb8b3c69687ac048f607d75d89145bc82232098ca',
+      decimals: 6,
+      symbol: 'waUSDC',
+      slot: 52, // TODO: check after mike b mints some
+    },
+    waUSDT: {
+      address: '0x014c0b2b8c4ed33231f9b33aca21735c8f71bbfb',
+      decimals: 6,
+      symbol: 'waUSDT',
+      slot: 52, // TODO: check after mike b mints some
+    },
+    MAI: {
+      address: '0x398106564948fEeb1fEdeA0709AE7D969D62a391',
+      decimals: 18,
+      symbol: 'MAI',
+      slot: 0,
+    },
+    waMAI: {
+      address: '0x6B53E04299124217ebb46c2830e00DFafd0d86d6',
+      decimals: 18,
+      symbol: 'aMAI',
+      slot: 0,
+    },
+    WETH: {
+      address: '0xdfcea9088c8a88a76ff74892c1457c17dfeef9c1',
+      decimals: 18,
+      symbol: 'WETH',
+      slot: 4,
+    },
+    waWETH: {
+      address: '0xAB1Ec6011332A431d3fFA597681C29E28FeFe065',
+      decimals: 18,
+      symbol: 'aWETH',
+      slot: 0,
+    },
+    WBTC: {
+      address: '0x37f03a12241E9FD3658ad6777d289c3fb8512Bc9',
+      decimals: 18,
+      symbol: 'WBTC',
+      slot: 0,
+    },
+    waWBTC: {
+      address: '0xB846B79562Bc238b1919c665AB49F6217c072D11',
+      decimals: 18,
+      symbol: 'aWBTC',
+      slot: 0,
+    },
+    bbamai: {
+      id: '0x24c52fee349194f68a998ac4e2ce170d780d010c0000000000000000000001a1',
+      address: '0x24C52feE349194f68A998aC4E2ce170D780D010c',
+      decimals: 18,
+      symbol: 'bb-a-mai',
+      slot: 0,
+    },
+    bbamaiweth: {
+      id: '0x45631a4b3cab78e6dfdd21a7025a61fac76839190000000000000000000001a8',
+      address: '0x45631A4b3CaB78E6DFDd21a7025A61fAC7683919',
+      decimals: 18,
+      symbol: 'bb-a-mai-weth',
+      slot: 0,
     },
   },
 };

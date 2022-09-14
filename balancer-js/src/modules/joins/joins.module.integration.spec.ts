@@ -17,10 +17,10 @@ import { ADDRESSES } from '@/test/lib/constants';
  * - Run node on terminal: yarn run node
  * - Uncomment section below:
  */
-// const network = Network.GOERLI;
-// const poolId =
-//   '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f';
-// const blockNumber = 7452900;
+const network = Network.GOERLI;
+const blockNumber = 7590000;
+const customSubgraphUrl =
+  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
 
 /*
  * Testing on MAINNET
@@ -29,8 +29,10 @@ import { ADDRESSES } from '@/test/lib/constants';
  * - Run node on terminal: yarn run node
  * - Uncomment section below:
  */
-const network = Network.MAINNET;
-const blockNumber = 15495943;
+// const network = Network.MAINNET;
+// const blockNumber = 15495943;
+// const customSubgraphUrl =
+//   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta';
 
 dotenv.config();
 
@@ -42,7 +44,7 @@ const rpcUrl = 'http://127.0.0.1:8545';
 const sdk = new BalancerSDK({
   network,
   rpcUrl,
-  customSubgraphUrl: `https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta`,
+  customSubgraphUrl,
 });
 const { pools } = sdk;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
@@ -53,31 +55,6 @@ const { contracts, contractAddresses } = new Contracts(
 );
 const relayer = contractAddresses.relayer as string;
 const addresses = ADDRESSES[network];
-const fromPool = {
-  id: '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d', // bbausd2
-  address: '0xa13a9247ea42d743238089903570127dda72fe44',
-};
-const mainTokens = [addresses.DAI.address, addresses.USDC.address];
-// joins with wrapping require token approvals. These are taken care of as part of fork setup when wrappedTokens passed in.
-const wrappedTokensIn = [
-  addresses.waUSDT.address,
-  addresses.waDAI.address,
-  addresses.waUSDC.address,
-];
-const linearPoolTokens = ['0xae37d54ae477268b9997d4161b96b8200755935c'];
-const slots = [addresses.DAI.slot, addresses.USDC.slot];
-const wrappedSlots = [
-  addresses.waUSDT.slot,
-  addresses.waDAI.slot,
-  addresses.waUSDC.slot,
-];
-const linearPoolSlots = [0];
-const mainInitialBalances = [
-  parseFixed('100', addresses.DAI.decimals).toString(),
-  parseFixed('100', addresses.USDC.decimals).toString(),
-];
-const wrappedInitialBalances = ['0', '0', '0'];
-const linearInitialBalances = [parseFixed('100', 18).toString()];
 
 const signRelayerApproval = async (
   relayerAddress: string,
@@ -106,100 +83,203 @@ const signRelayerApproval = async (
   return calldata;
 };
 
-describe('bbausd generalised join execution', async () => {
-  let signerAddress: string;
-  let authorisation: string;
+const testFlow = async (
+  pool: { id: string; address: string },
+  tokens: string[],
+  slots: number[],
+  balances: string[],
+  tokensIn: string[],
+  amountIn: string[],
+  wrapMainTokens: boolean,
+  previouslyAuthorised = false
+) => {
+  const signerAddress = await signer.getAddress();
 
-  beforeEach(async function () {
-    signerAddress = await signer.getAddress();
+  await forkSetup(
+    signer,
+    tokens,
+    slots,
+    balances,
+    jsonRpcUrl as string,
+    blockNumber
+  );
 
-    await forkSetup(
-      signer,
-      [...mainTokens, ...wrappedTokensIn, ...linearPoolTokens],
-      [...slots, ...wrappedSlots, ...linearPoolSlots],
-      [
-        ...mainInitialBalances,
-        ...wrappedInitialBalances,
-        ...linearInitialBalances,
-      ],
-      jsonRpcUrl as string,
-      blockNumber
-    );
+  const authorisation = await signRelayerApproval(
+    relayer,
+    signerAddress,
+    signer
+  );
+  const [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
+    [pool.address, ...tokensIn],
+    signer,
+    signerAddress
+  );
 
-    authorisation = await signRelayerApproval(relayer, signerAddress, signer);
+  const gasLimit = MAX_GAS_LIMIT;
+  const slippage = '0';
+
+  const query = await pools.generalisedJoin(
+    pool.id,
+    tokensIn,
+    amountIn,
+    signerAddress,
+    wrapMainTokens,
+    slippage,
+    previouslyAuthorised ? undefined : authorisation
+  );
+
+  const response = await signer.sendTransaction({
+    to: query.to,
+    data: query.callData,
+    gasLimit,
   });
 
-  const testFlow = async (
-    tokensIn: string[],
-    amountIn: string[],
-    wrapMainTokens: boolean,
-    previouslyAuthorised = false
-  ) => {
-    const [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
-      [fromPool.address, ...tokensIn],
-      signer,
-      signerAddress
-    );
+  const receipt = await response.wait();
+  console.log('Gas used', receipt.gasUsed.toString());
 
-    const gasLimit = MAX_GAS_LIMIT;
-    const slippage = '0';
+  const [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
+    [pool.address, ...tokensIn],
+    signer,
+    signerAddress
+  );
 
-    const query = await pools.generalisedJoin(
-      fromPool.id,
-      tokensIn,
-      amountIn,
-      signerAddress,
-      wrapMainTokens,
-      slippage,
-      previouslyAuthorised ? undefined : authorisation
-    );
+  expect(receipt.status).to.eql(1);
+  expect(bptBalanceBefore.eq(0)).to.be.true;
+  // tokensBalanceBefore.forEach(
+  //   (b, i) => expect(b.eq(mainInitialBalances[i])).to.be.true
+  // );
+  tokensBalanceAfter.forEach((b) => expect(b.toString()).to.eq('0'));
+  console.log(bptBalanceAfter.toString());
+  console.log(query.minOut);
+  expect(bptBalanceAfter.gte(query.minOut)).to.be.true;
+};
 
-    const response = await signer.sendTransaction({
-      to: query.to,
-      data: query.callData,
-      gasLimit,
-    });
+const testScenario = async (params: {
+  pool: { id: string; address: string };
+  mainTokens: string[];
+  wrappedTokens: string[];
+  linearTokens: string[];
+  mainSlots: number[];
+  wrappedSlots: number[];
+  linearSlots: number[];
+  mainBalances: string[];
+  wrappedBalances: string[];
+  linearBalances: string[];
+}) => {
+  const {
+    pool,
+    mainTokens,
+    wrappedTokens,
+    linearTokens,
+    mainSlots,
+    wrappedSlots,
+    linearSlots,
+    mainBalances,
+    wrappedBalances,
+    linearBalances,
+  } = params;
 
-    const receipt = await response.wait();
-    console.log('Gas used', receipt.gasUsed.toString());
-
-    const [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
-      [fromPool.address, ...tokensIn],
-      signer,
-      signerAddress
-    );
-
-    expect(receipt.status).to.eql(1);
-    expect(bptBalanceBefore.eq(0)).to.be.true;
-    // tokensBalanceBefore.forEach(
-    //   (b, i) => expect(b.eq(mainInitialBalances[i])).to.be.true
-    // );
-    tokensBalanceAfter.forEach((b) => expect(b.toString()).to.eq('0'));
-    console.log(bptBalanceAfter.toString());
-    console.log(query.minOut);
-    expect(bptBalanceAfter.gte(query.minOut)).to.be.true;
-  };
   context('leaf token input', async () => {
     it('joins with no wrapping', async () => {
-      await testFlow(mainTokens, mainInitialBalances, false);
+      await testFlow(
+        pool,
+        [...mainTokens, ...wrappedTokens, ...linearTokens],
+        [...mainSlots, ...wrappedSlots, ...linearSlots],
+        [...mainBalances, ...wrappedBalances, ...linearBalances],
+        mainTokens,
+        mainBalances,
+        false
+      );
     }).timeout(2000000);
     it('joins with wrapping', async () => {
-      await testFlow(mainTokens, mainInitialBalances, true);
+      await testFlow(
+        pool,
+        [...mainTokens, ...wrappedTokens, ...linearTokens],
+        [...mainSlots, ...wrappedSlots, ...linearSlots],
+        [...mainBalances, ...wrappedBalances, ...linearBalances],
+        mainTokens,
+        mainBalances,
+        true
+      );
     });
   });
   context('linear pool token as input', async () => {
     it('joins boosted pool', async () => {
-      await testFlow(linearPoolTokens, linearInitialBalances, false);
+      await testFlow(
+        pool,
+        [...mainTokens, ...wrappedTokens, ...linearTokens],
+        [...mainSlots, ...wrappedSlots, ...linearSlots],
+        [...mainBalances, ...wrappedBalances, ...linearBalances],
+        linearTokens,
+        linearBalances,
+        false
+      );
     });
   });
-
   context('leaf and linear pool token as input', async () => {
     it('joins boosted pool', async () => {
       await testFlow(
-        [mainTokens[1], linearPoolTokens[0]],
-        [mainInitialBalances[1], linearInitialBalances[0]],
+        pool,
+        [...mainTokens, ...wrappedTokens, ...linearTokens],
+        [...mainSlots, ...wrappedSlots, ...linearSlots],
+        [...mainBalances, ...wrappedBalances, ...linearBalances],
+        [mainTokens[1], linearTokens[0]],
+        [mainBalances[1], linearBalances[0]],
         false
       );
+    });
+  });
+};
+
+describe('generalised join execution', async () => {
+  // // this context currently applies to MAINNET only
+  // context('bb-a-usd', async () => {
+  //   await testScenario({
+  //     pool: {
+  //       id: '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d', // bbausd2
+  //       address: '0xa13a9247ea42d743238089903570127dda72fe44',
+  //     },
+  //     mainTokens: [addresses.DAI.address, addresses.USDC.address],
+  //     mainSlots: [addresses.DAI.slot, addresses.USDC.slot],
+  //     mainBalances: [
+  //       parseFixed('100', addresses.DAI.decimals).toString(),
+  //       parseFixed('100', addresses.USDC.decimals).toString(),
+  //     ],
+  //     wrappedTokens: [
+  //       addresses.waUSDT.address,
+  //       addresses.waDAI.address,
+  //       addresses.waUSDC.address,
+  //     ], // joins with wrapping require token approvals. These are taken care of as part of fork setup when wrappedTokens passed in.
+  //     wrappedSlots: [
+  //       addresses.waUSDT.slot,
+  //       addresses.waDAI.slot,
+  //       addresses.waUSDC.slot,
+  //     ],
+  //     wrappedBalances: ['0', '0', '0'],
+  //     linearTokens: ['0xae37d54ae477268b9997d4161b96b8200755935c'],
+  //     linearSlots: [0],
+  //     linearBalances: [parseFixed('100', 18).toString()],
+  //   });
+  // });
+  // this context currently applies to GOERLI only
+  context('bb-a-mai-weth', async () => {
+    await testScenario({
+      pool: {
+        id: addresses.bbamaiweth.id,
+        address: addresses.bbamaiweth.address,
+      },
+      mainTokens: [addresses.MAI.address, addresses.WETH.address],
+      mainSlots: [addresses.MAI.slot, addresses.WETH.slot],
+      mainBalances: [
+        parseFixed('100', 18).toString(),
+        parseFixed('100', 18).toString(),
+      ],
+      wrappedTokens: [addresses.waMAI.address, addresses.waWETH.address], // joins with wrapping require token approvals. These are taken care of as part of fork setup when wrappedTokens passed in.
+      wrappedSlots: [addresses.waMAI.slot, addresses.waWETH.slot],
+      wrappedBalances: ['0', '0'],
+      linearTokens: [addresses.bbamai.address],
+      linearSlots: [addresses.bbamai.slot],
+      linearBalances: [parseFixed('100', 18).toString()],
     });
   });
 });
