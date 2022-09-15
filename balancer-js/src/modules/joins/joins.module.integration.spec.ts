@@ -17,12 +17,8 @@ import { ADDRESSES } from '@/test/lib/constants';
  * - Run node on terminal: yarn run node
  * - Uncomment section below:
  */
-// const network = Network.GOERLI;
-// const poolId =
-//   '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f';
-// const blockNumber = 7452900;
 const network = Network.GOERLI;
-const blockNumber = 7577109;
+const blockNumber = 7596322;
 const subgraph = `https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta`;
 const bbausd2id =
   '0x3d5981bdd8d3e49eb7bbdc1d2b156a3ee019c18e0000000000000000000001a7';

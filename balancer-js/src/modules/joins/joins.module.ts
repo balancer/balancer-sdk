@@ -683,7 +683,7 @@ export class Join {
     // );
 
     const peekCall = Relayer.encodePeekChainedReferenceValue(
-      Relayer.toChainedReference(node.outputReference)
+      Relayer.toChainedReference(node.outputReference, false)
     );
 
     const call = Relayer.constructJoinCall({

@@ -173,7 +173,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
-        relayer: '0x4B1635c7D3D1FC353298f92083e82dF69e1E9158',
+        relayer: '0x2Fb8aD26faDC971464A17407e9213D1A22befc8a',
         gaugeController: '0xBB1CE49b16d55A1f2c6e88102f32144C7334B116',
         feeDistributor: '',
       },
