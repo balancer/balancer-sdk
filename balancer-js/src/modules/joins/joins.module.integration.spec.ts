@@ -262,7 +262,8 @@ describe('generalised join execution', async () => {
   //     linearBalances: [parseFixed('100', 18).toString()],
   //   });
   // });
-  // this context currently applies to GOERLI only
+
+  // following contexts currently applies to GOERLI only
   context('bb-a-mai-weth', async () => {
     await testScenario({
       pool: {
@@ -282,6 +283,101 @@ describe('generalised join execution', async () => {
       linearTokens: [addresses.bbamai.address],
       linearSlots: [addresses.bbamai.slot],
       linearBalances: [parseFixed('100', 18).toString()],
+    });
+  });
+
+  context('boostedMeta1', async () => {
+    await testScenario({
+      pool: {
+        id: addresses.boostedMeta1.id,
+        address: addresses.boostedMeta1.address,
+      },
+      mainTokens: [
+        addresses.DAI.address,
+        addresses.USDC.address,
+        addresses.USDT.address,
+        addresses.MAI.address,
+      ],
+      mainSlots: [
+        addresses.DAI.slot,
+        addresses.USDC.slot,
+        addresses.USDT.slot,
+        addresses.MAI.slot,
+      ],
+      mainBalances: [
+        parseFixed('10', addresses.DAI.decimals).toString(),
+        parseFixed('10', addresses.USDC.decimals).toString(),
+        parseFixed('10', addresses.USDT.decimals).toString(),
+        parseFixed('10', addresses.MAI.decimals).toString(),
+      ],
+      // joins with wrapping require token approvals. These are taken care of as part of fork setup when wrappedTokens passed in.
+      wrappedTokens: [
+        addresses.waDAI.address,
+        addresses.waUSDC.address,
+        addresses.waUSDT.address,
+        addresses.waMAI.address,
+      ],
+      wrappedSlots: [
+        addresses.waDAI.slot,
+        addresses.waUSDC.slot,
+        addresses.waUSDT.slot,
+        addresses.waMAI.slot,
+      ],
+      wrappedBalances: ['0', '0', '0', '0'],
+      linearTokens: [addresses.bbamai.address],
+      linearSlots: [addresses.bbamai.slot],
+      linearBalances: [parseFixed('10', addresses.bbamai.decimals).toString()],
+    });
+  });
+
+  context('boostedMetaBig1', async () => {
+    await testScenario({
+      pool: {
+        id: addresses.boostedMetaBig1.id,
+        address: addresses.boostedMetaBig1.address,
+      },
+      mainTokens: [
+        addresses.DAI.address,
+        addresses.USDC.address,
+        addresses.USDT.address,
+        addresses.MAI.address,
+        addresses.WETH.address,
+      ],
+      mainSlots: [
+        addresses.DAI.slot,
+        addresses.USDC.slot,
+        addresses.USDT.slot,
+        addresses.MAI.slot,
+        addresses.WETH.slot,
+      ],
+      mainBalances: [
+        parseFixed('10', addresses.DAI.decimals).toString(),
+        parseFixed('10', addresses.USDC.decimals).toString(),
+        parseFixed('10', addresses.USDT.decimals).toString(),
+        parseFixed('10', addresses.MAI.decimals).toString(),
+        parseFixed('10', addresses.WETH.decimals).toString(),
+      ],
+      // joins with wrapping require token approvals. These are taken care of as part of fork setup when wrappedTokens passed in.
+      wrappedTokens: [
+        addresses.waDAI.address,
+        addresses.waUSDC.address,
+        addresses.waUSDT.address,
+        addresses.waMAI.address,
+        addresses.waWETH.address,
+      ],
+      wrappedSlots: [
+        addresses.waDAI.slot,
+        addresses.waUSDC.slot,
+        addresses.waUSDT.slot,
+        addresses.waMAI.slot,
+        addresses.waWETH.slot,
+      ],
+      wrappedBalances: ['0', '0', '0', '0', '0'],
+      linearTokens: [addresses.bbamaiweth.address],
+      linearSlots: [addresses.bbamaiweth.slot],
+      linearBalances: [
+        parseFixed('10', addresses.bbamaiweth.decimals).toString(),
+      ],
     });
   });
 });

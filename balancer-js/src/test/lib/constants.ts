@@ -358,7 +358,7 @@ export const ADDRESSES = {
     waMAI: {
       address: '0x6B53E04299124217ebb46c2830e00DFafd0d86d6',
       decimals: 18,
-      symbol: 'aMAI',
+      symbol: 'waMAI',
       slot: 0,
     },
     WETH: {
@@ -370,7 +370,7 @@ export const ADDRESSES = {
     waWETH: {
       address: '0xAB1Ec6011332A431d3fFA597681C29E28FeFe065',
       decimals: 18,
-      symbol: 'aWETH',
+      symbol: 'waWETH',
       slot: 0,
     },
     WBTC: {
@@ -382,7 +382,7 @@ export const ADDRESSES = {
     waWBTC: {
       address: '0xB846B79562Bc238b1919c665AB49F6217c072D11',
       decimals: 18,
-      symbol: 'aWBTC',
+      symbol: 'waWBTC',
       slot: 0,
     },
     bbamai: {
@@ -398,6 +398,18 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'bb-a-mai-weth',
       slot: 0,
+    },
+    boostedMeta1: {
+      id: '0x48e984db5f9ba1bf2ee21d0a207a96c944d807e30000000000000000000001a9',
+      address: '0x48e984DB5F9BA1Bf2Ee21d0A207a96C944D807E3',
+      decimals: 18,
+      symbol: 'boostedMeta1',
+    },
+    boostedMetaBig1: {
+      id: '0xae5bfce463ab4689e9353d13b537e9896f13c7420000000000000000000001aa',
+      address: '0xae5bfce463ab4689e9353d13b537e9896f13c742',
+      decimals: 18,
+      symbol: 'boostedMetaBig1',
     },
   },
 };
