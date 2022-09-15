@@ -28,6 +28,7 @@ const bbausd2id =
   '0x3d5981bdd8d3e49eb7bbdc1d2b156a3ee019c18e0000000000000000000001a7';
 const bbausd2address = '0x3d5981bdd8d3e49eb7bbdc1d2b156a3ee019c18e';
 const bbadai = '0x594920068382f64e4bc06879679bd474118b97b1';
+const bbausdc = '0x4d983081b9b9f3393409a4cdf5504d0aea9cd94c';
 
 /*
  * Testing on MAINNET
@@ -76,20 +77,23 @@ const wrappedTokensIn = [
   addresses.waDAI.address,
   addresses.waUSDC.address,
 ];
-const linearPoolTokens = [bbadai];
+const linearPoolTokens = [bbadai, bbausdc];
 const slots = [addresses.DAI.slot, addresses.USDC.slot];
 const wrappedSlots = [
   addresses.waUSDT.slot,
   addresses.waDAI.slot,
   addresses.waUSDC.slot,
 ];
-const linearPoolSlots = [0];
+const linearPoolSlots = [0, 0];
 const mainInitialBalances = [
   parseFixed('100', addresses.DAI.decimals).toString(),
   parseFixed('100', addresses.USDC.decimals).toString(),
 ];
 const wrappedInitialBalances = ['0', '0', '0'];
-const linearInitialBalances = [parseFixed('100', 18).toString()];
+const linearInitialBalances = [
+  parseFixed('100', 18).toString(),
+  parseFixed('100', 18).toString(),
+];
 
 const signRelayerApproval = async (
   relayerAddress: string,
@@ -205,16 +209,19 @@ describe('bbausd generalised join execution', async () => {
     });
   });
   context('linear pool token as input', async () => {
-    it('joins boosted pool', async () => {
+    it('joins boosted pool with single linear input', async () => {
+      await testFlow([linearPoolTokens[0]], [linearInitialBalances[0]], false);
+    });
+    it('joins boosted pool with 2 linear input', async () => {
       await testFlow(linearPoolTokens, linearInitialBalances, false);
     });
   });
 
-  context('leaf and linear pool token as input', async () => {
+  context('leaf and linear pool tokens as input', async () => {
     it('joins boosted pool', async () => {
       await testFlow(
-        [mainTokens[1], linearPoolTokens[0]],
-        [mainInitialBalances[1], linearInitialBalances[0]],
+        [mainTokens[1], ...linearPoolTokens],
+        [mainInitialBalances[1], ...linearInitialBalances],
         false
       );
     });
