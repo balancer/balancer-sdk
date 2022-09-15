@@ -22,8 +22,6 @@ const subgraph = `https://api.thegraph.com/subgraphs/name/balancer-labs/balancer
 const bbausd2id =
   '0x3d5981bdd8d3e49eb7bbdc1d2b156a3ee019c18e0000000000000000000001a7';
 const bbausd2address = '0x3d5981bdd8d3e49eb7bbdc1d2b156a3ee019c18e';
-const bbadai = '0x594920068382f64e4bc06879679bd474118b97b1';
-const bbausdc = '0x4d983081b9b9f3393409a4cdf5504d0aea9cd94c';
 
 /*
  * Testing on MAINNET
@@ -72,7 +70,7 @@ const wrappedTokensIn = [
   addresses.waDAI.address,
   addresses.waUSDC.address,
 ];
-const linearPoolTokens = [bbadai, bbausdc];
+const linearPoolTokens = [addresses.bbadai.address, addresses.bbausdc.address];
 const slots = [addresses.DAI.slot, addresses.USDC.slot];
 const wrappedSlots = [
   addresses.waUSDT.slot,
@@ -89,7 +87,6 @@ const linearInitialBalances = [
   parseFixed('100', 18).toString(),
   parseFixed('100', 18).toString(),
 ];
-
 
 describe('bbausd generalised join execution', async () => {
   let signerAddress: string;
