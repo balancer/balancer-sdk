@@ -73,13 +73,14 @@ export class Pools implements Findable<PoolWithMethods> {
    * Builds generalised join transaction
    *
    * @param poolId          Pool id
-   * @param expectedBPTOut  Minimum BPT expected out of the join transaction
    * @param tokens          Token addresses
    * @param amounts         Token amounts in EVM scale
    * @param userAddress     User address
    * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          Signer (used for simulating tx to get accurate amounts)
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
-   * @returns transaction data ready to be sent to the network
+   * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
    */
   async generalisedJoin(
     poolId: string,

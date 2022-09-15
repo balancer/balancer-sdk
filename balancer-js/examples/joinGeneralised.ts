@@ -59,7 +59,15 @@ async function setUp(provider: JsonRpcProvider): Promise<string> {
 }
 
 /*
-Example showing how to use Pools module to join pools.
+Example showing how to use the SDK generalisedJoin method.
+This allows joining of a ComposableStable that has nested pools, e.g.:
+                  CS0
+              /        \
+            CS1        CS2
+          /    \      /   \
+         DAI   USDC  USDT  FRAX
+
+Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
 */
 async function join() {
   const provider = new JsonRpcProvider(rpcUrl, network);
