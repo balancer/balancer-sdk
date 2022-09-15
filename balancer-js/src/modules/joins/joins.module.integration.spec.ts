@@ -154,7 +154,7 @@ describe('bbausd generalised join execution', async () => {
     );
 
     const gasLimit = MAX_GAS_LIMIT;
-    const slippage = '0';
+    const slippage = '10'; // 10 bps = 0.1%
 
     const query = await pools.generalisedJoin(
       fromPool.id,
@@ -183,6 +183,7 @@ describe('bbausd generalised join execution', async () => {
     );
     expect(receipt.status).to.eql(1);
     expect(BigNumber.from(query.minOut).gte('0')).to.be.true;
+    expect(BigNumber.from(query.expectedOut).gt(query.minOut)).to.be.true;
     tokensInBalanceAfter.forEach((balanceAfter, i) => {
       expect(balanceAfter.toString()).to.eq(
         tokensInBalanceBefore[i].sub(amountsIn[i]).toString()
@@ -192,7 +193,8 @@ describe('bbausd generalised join execution', async () => {
     expect(bptBalanceBefore.eq(0)).to.be.true;
     expect(bptBalanceAfter.gte(query.minOut)).to.be.true;
     console.log(bptBalanceAfter.toString(), 'bpt after');
-    console.log(query.minOut, 'expectedMinOut');
+    console.log(query.minOut, 'minOut');
+    console.log(query.expectedOut, 'expectedOut');
   };
   context('leaf token input', async () => {
     it('joins with no wrapping', async () => {

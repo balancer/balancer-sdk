@@ -94,6 +94,7 @@ export class Pools implements Findable<PoolWithMethods> {
     to: string;
     callData: string;
     minOut: string;
+    expectedOut: string;
   }> {
     return this.joinService.joinPool(
       poolId,
