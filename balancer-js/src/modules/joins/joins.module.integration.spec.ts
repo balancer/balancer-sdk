@@ -2,13 +2,12 @@ import dotenv from 'dotenv';
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 
-import { BalancerSDK, Network, RelayerAuthorization } from '@/.';
+import { BalancerSDK, Network } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { JsonRpcSigner } from '@ethersproject/providers';
-import { MaxUint256 } from '@ethersproject/constants';
 import { forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
+import { Relayer } from '@/modules/relayer/relayer.module';
 
 /*
  * Testing on GOERLI
@@ -91,32 +90,6 @@ const linearInitialBalances = [
   parseFixed('100', 18).toString(),
 ];
 
-const signRelayerApproval = async (
-  relayerAddress: string,
-  signerAddress: string,
-  signer: JsonRpcSigner
-): Promise<string> => {
-  const approval = contracts.vault.interface.encodeFunctionData(
-    'setRelayerApproval',
-    [signerAddress, relayerAddress, true]
-  );
-
-  const signature =
-    await RelayerAuthorization.signSetRelayerApprovalAuthorization(
-      contracts.vault,
-      signer,
-      relayerAddress,
-      approval
-    );
-
-  const calldata = RelayerAuthorization.encodeCalldataAuthorization(
-    '0x',
-    MaxUint256,
-    signature
-  );
-
-  return calldata;
-};
 
 describe('bbausd generalised join execution', async () => {
   let signerAddress: string;
@@ -138,7 +111,12 @@ describe('bbausd generalised join execution', async () => {
       blockNumber
     );
 
-    authorisation = await signRelayerApproval(relayer, signerAddress, signer);
+    authorisation = await Relayer.signRelayerApproval(
+      relayer,
+      signerAddress,
+      signer,
+      contracts.vault
+    );
   });
 
   const testFlow = async (
