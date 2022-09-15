@@ -335,19 +335,19 @@ export const ADDRESSES = {
       address: '0x0b61329839d2ebea96e21f45d4b065dbf38a7af6',
       decimals: 18,
       symbol: 'waDAI',
-      slot: 52, // TODO: check after mike b mints some
+      slot: 52,
     },
     waUSDC: {
       address: '0xb8b3c69687ac048f607d75d89145bc82232098ca',
       decimals: 6,
       symbol: 'waUSDC',
-      slot: 52, // TODO: check after mike b mints some
+      slot: 52,
     },
     waUSDT: {
       address: '0x014c0b2b8c4ed33231f9b33aca21735c8f71bbfb',
       decimals: 6,
       symbol: 'waUSDT',
-      slot: 52, // TODO: check after mike b mints some
+      slot: 52,
     },
     MAI: {
       address: '0x398106564948fEeb1fEdeA0709AE7D969D62a391',
