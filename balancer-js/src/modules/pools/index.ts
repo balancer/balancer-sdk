@@ -13,6 +13,7 @@ import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
 import { Join } from '../joins/joins.module';
+import { JsonRpcSigner } from '@ethersproject/providers';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -87,6 +88,7 @@ export class Pools implements Findable<PoolWithMethods> {
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
+    signer: JsonRpcSigner,
     authorisation?: string
   ): Promise<{
     to: string;
@@ -100,6 +102,7 @@ export class Pools implements Findable<PoolWithMethods> {
       userAddress,
       wrapMainTokens,
       slippage,
+      signer,
       authorisation
     );
   }

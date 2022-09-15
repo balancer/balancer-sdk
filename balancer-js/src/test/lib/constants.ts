@@ -309,19 +309,19 @@ export const ADDRESSES = {
   },
   [Network.GOERLI]: {
     USDC: {
-      address: '0xe0c9275e44ea80ef17579d33c55136b7da269aeb',
+      address: '0xdabd33683bafdd448968ab6d6f47c3535c64bf0c',
       decimals: 6,
       symbol: 'USDC',
       slot: 0,
     },
     USDT: {
-      address: '0x1f1f156e0317167c11aa412e3d1435ea29dc3cce',
+      address: '0x14468fd5e1de5a5a4882fa5f4e2217c5a8ddcadb',
       decimals: 6,
       symbol: 'USDT',
       slot: 0,
     },
     DAI: {
-      address: '0x8c9e6c40d3402480ace624730524facc5482798c',
+      address: '0xb8096bc53c3ce4c11ebb0069da0341d75264b104',
       decimals: 18,
       symbol: 'DAI',
       slot: 0,
@@ -330,6 +330,24 @@ export const ADDRESSES = {
       address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
       decimals: 18,
       symbol: 'bbausd',
+    },
+    waDAI: {
+      address: '0x0b61329839d2ebea96e21f45d4b065dbf38a7af6',
+      decimals: 18,
+      symbol: 'waDAI',
+      slot: 52,
+    },
+    waUSDC: {
+      address: '0xb8b3c69687ac048f607d75d89145bc82232098ca',
+      decimals: 6,
+      symbol: 'waUSDC',
+      slot: 52,
+    },
+    waUSDT: {
+      address: '0x014c0b2b8c4ed33231f9b33aca21735c8f71bbfb',
+      decimals: 6,
+      symbol: 'waUSDT',
+      slot: 52,
     },
   },
 };
