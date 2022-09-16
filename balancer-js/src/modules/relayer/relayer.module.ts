@@ -1,6 +1,8 @@
+import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Interface } from '@ethersproject/abi';
 import { MaxUint256, WeiPerEther, Zero } from '@ethersproject/constants';
+import { Vault } from '@balancer-labs/typechain';
 
 import { Swaps } from '@/modules/swaps/swaps.module';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
@@ -28,6 +30,7 @@ import {
   FetchPoolsInput,
 } from '../swaps/types';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
+import { RelayerAuthorization } from '@/lib/utils';
 
 import relayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
 
@@ -38,7 +41,8 @@ const relayerLibrary = new Interface(relayerLibraryAbi);
 export class Relayer {
   private readonly swaps: Swaps;
 
-  static CHAINED_REFERENCE_PREFIX = 'ba10';
+  static CHAINED_REFERENCE_TEMP_PREFIX = 'ba10'; // Temporary reference: it is deleted after a read.
+  static CHAINED_REFERENCE_READONLY_PREFIX = 'ba11'; // Read-only reference: it is not deleted after a read.
 
   constructor(swapsOrConfig: Swaps | BalancerSdkConfig) {
     if (swapsOrConfig instanceof Swaps) {
@@ -97,8 +101,8 @@ export class Relayer {
       params.sender,
       params.recipient,
       params.joinPoolRequest,
-      params.outputReference,
       params.value,
+      params.outputReference,
     ]);
   }
 
@@ -128,11 +132,18 @@ export class Relayer {
     ]);
   }
 
-  static toChainedReference(key: BigNumberish): BigNumber {
+  static encodePeekChainedReferenceValue(reference: BigNumberish): string {
+    return relayerLibrary.encodeFunctionData('peekChainedReferenceValue', [
+      reference,
+    ]);
+  }
+
+  static toChainedReference(key: BigNumberish, isTemporary = true): BigNumber {
+    const prefix = isTemporary
+      ? Relayer.CHAINED_REFERENCE_TEMP_PREFIX
+      : Relayer.CHAINED_REFERENCE_READONLY_PREFIX;
     // The full padded prefix is 66 characters long, with 64 hex characters and the 0x prefix.
-    const paddedPrefix = `0x${Relayer.CHAINED_REFERENCE_PREFIX}${'0'.repeat(
-      64 - Relayer.CHAINED_REFERENCE_PREFIX.length
-    )}`;
+    const paddedPrefix = `0x${prefix}${'0'.repeat(64 - prefix.length)}`;
     return BigNumber.from(paddedPrefix).add(key);
   }
 
@@ -565,7 +576,35 @@ export class Relayer {
       value: '0',
       outputReferences: outputReferences,
     });
-
     return [encodedBatchSwap, ...unwrapCalls];
   }
+
+  static signRelayerApproval = async (
+    relayerAddress: string,
+    signerAddress: string,
+    signer: JsonRpcSigner,
+    vault: Vault
+  ): Promise<string> => {
+    const approval = vault.interface.encodeFunctionData('setRelayerApproval', [
+      signerAddress,
+      relayerAddress,
+      true,
+    ]);
+
+    const signature =
+      await RelayerAuthorization.signSetRelayerApprovalAuthorization(
+        vault,
+        signer,
+        relayerAddress,
+        approval
+      );
+
+    const calldata = RelayerAuthorization.encodeCalldataAuthorization(
+      '0x',
+      MaxUint256,
+      signature
+    );
+
+    return calldata;
+  };
 }

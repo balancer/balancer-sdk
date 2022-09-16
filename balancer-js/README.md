@@ -281,9 +281,11 @@ async getSpotPrice(
 
 [Example](./examples/spotPrice.ts)
 
-## Join Pool
+## Joining Pools
 
-Exposes Join functionality allowing user to join pools.
+### Joining with pool tokens
+
+Exposes Join functionality allowing user to join pools with its pool tokens.
 
 ```js
 const balancer = new BalancerSDK(sdkConfig);
@@ -291,7 +293,7 @@ const pool = await balancer.pools.find(poolId);
 const { to, functionName, attributes, data } = pool.buildJoin(params);
 ```
 
-### #buildJoin
+#### #buildJoin
 
 Builds a join transaction.
 
@@ -312,6 +314,52 @@ buildJoin: (
 ```
 
 [Example](./examples/join.ts)
+
+### Joining nested pools
+
+Exposes Join functionality allowing user to join a pool that has pool tokens that are BPTs of other pools, e.g.:
+```
+                  CS0
+              /        \
+            CS1        CS2
+          /    \      /   \
+         DAI   USDC  USDT  FRAX
+
+Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
+```
+
+```js
+  /**
+   * Builds generalised join transaction
+   *
+   * @param poolId          Pool id
+   * @param tokens          Token addresses
+   * @param amounts         Token amounts in EVM scale
+   * @param userAddress     User address
+   * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          Signer (used for simulating tx to get accurate amounts)
+   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+   * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
+   */
+  async generalisedJoin(
+    poolId: string,
+    tokens: string[],
+    amounts: string[],
+    userAddress: string,
+    wrapMainTokens: boolean,
+    slippage: string,
+    signer: JsonRpcSigner,
+    authorisation?: string
+  ): Promise<{
+    to: string;
+    callData: string;
+    minOut: string;
+    expectedOut: string;
+  }>
+```
+
+[Example](./examples/joinGeneralised.ts)
 
 ## Exit Pool
 

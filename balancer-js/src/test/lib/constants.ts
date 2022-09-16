@@ -192,6 +192,24 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'bbausd',
     },
+    waDAI: {
+      address: '',
+      decimals: 18,
+      symbol: 'waDAI',
+      slot: 52,
+    },
+    waUSDC: {
+      address: '',
+      decimals: 6,
+      symbol: 'waUSDC',
+      slot: 52,
+    },
+    waUSDT: {
+      address: '',
+      decimals: 6,
+      symbol: 'waUSDT',
+      slot: 52,
+    },
   },
   [Network.POLYGON]: {
     MATIC: {
@@ -269,6 +287,24 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'bbausd',
     },
+    waDAI: {
+      address: '',
+      decimals: 18,
+      symbol: 'waDAI',
+      slot: 52,
+    },
+    waUSDC: {
+      address: '',
+      decimals: 6,
+      symbol: 'waUSDC',
+      slot: 52,
+    },
+    waUSDT: {
+      address: '',
+      decimals: 6,
+      symbol: 'waUSDT',
+      slot: 52,
+    },
   },
   [Network.ARBITRUM]: {
     WETH: {
@@ -306,22 +342,40 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'bbausd',
     },
+    waDAI: {
+      address: '',
+      decimals: 18,
+      symbol: 'waDAI',
+      slot: 52,
+    },
+    waUSDC: {
+      address: '',
+      decimals: 6,
+      symbol: 'waUSDC',
+      slot: 52,
+    },
+    waUSDT: {
+      address: '',
+      decimals: 6,
+      symbol: 'waUSDT',
+      slot: 52,
+    },
   },
   [Network.GOERLI]: {
     USDC: {
-      address: '0xDabD33683bAfDd448968Ab6d6f47C3535c64bf0c',
+      address: '0xdabd33683bafdd448968ab6d6f47c3535c64bf0c',
       decimals: 6,
       symbol: 'USDC',
       slot: 0,
     },
     USDT: {
-      address: '0x14468FD5E1de5A5a4882fa5f4e2217C5A8dDcadb',
+      address: '0x14468fd5e1de5a5a4882fa5f4e2217c5a8ddcadb',
       decimals: 6,
       symbol: 'USDT',
       slot: 0,
     },
     DAI: {
-      address: '0xB8096bC53c3cE4c11Ebb0069Da0341d75264B104',
+      address: '0xb8096bc53c3ce4c11ebb0069da0341d75264b104',
       decimals: 18,
       symbol: 'DAI',
       slot: 0,
@@ -383,6 +437,18 @@ export const ADDRESSES = {
       address: '0xB846B79562Bc238b1919c665AB49F6217c072D11',
       decimals: 18,
       symbol: 'waWBTC',
+      slot: 0,
+    },
+    bbadai: {
+      address: '0x594920068382f64e4bc06879679bd474118b97b1',
+      decimals: 18,
+      symbol: 'bbadai',
+      slot: 0,
+    },
+    bbausdc: {
+      address: '0x4d983081b9b9f3393409a4cdf5504d0aea9cd94c',
+      decimals: 18,
+      symbol: 'bbausdc',
       slot: 0,
     },
     bbamai: {

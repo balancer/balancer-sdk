@@ -1,3 +1,4 @@
+import { defaultAbiCoder } from '@ethersproject/abi';
 import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -11,10 +12,24 @@ import { JoinPoolRequest, PoolType } from '@/types';
 import { PoolRepository } from '../data';
 import { PoolGraph, Node } from './graph';
 
+import { subSlippage } from '@/lib/utils/slippageHelper';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
+import { JsonRpcSigner } from '@ethersproject/providers';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
+
+interface RootOutputInfo {
+  outputRef: string;
+  callIndex: number;
+}
+
+type ReferenceAmounts = { [outputReference: string]: string };
+
+interface RootAmounts {
+  refAmounts: ReferenceAmounts;
+  total: string;
+}
 
 export class Join {
   totalProportions: Record<string, BigNumber> = {};
@@ -33,10 +48,12 @@ export class Join {
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
+    signer: JsonRpcSigner,
     authorisation?: string
   ): Promise<{
     to: string;
     callData: string;
+    expectedOut: string;
     minOut: string;
   }> {
     /*
@@ -48,43 +65,68 @@ export class Join {
     - Return updatedCalls, UI would use this to execute tx
     */
     // Create calls with 0 expected for each root join
+    // Peek is enabled here so we can static call the returned amounts and use these to set limits
     const callsWithNoMin = await this.createCalls(
       poolId,
       tokens,
       amounts,
       userAddress,
       wrapMainTokens,
+      true,
       undefined,
       authorisation
     );
 
     // static call (or V4 special call) to get actual amounts for each root join
-    const expectedAmounts = await this.queryOutputRefs(
-      callsWithNoMin.outputRefs
+    const queryAmounts = await this.queryRootOutputRefs(
+      callsWithNoMin.callData,
+      callsWithNoMin.rootOutputInfo,
+      signer
     );
-    // TODO Apply slippage to amounts
-    const minAmounts = expectedAmounts;
-    // minAmoutOut (sum actualAmountsWithSlippage), UI would use this to display to user
-    let minOut = BigNumber.from('0');
-    for (const key in minAmounts) {
-      minOut = minOut.add(minAmounts[key]);
-    }
+
+    const amountsWithSlippage = this.getAmountsWithSlippage(
+      slippage,
+      queryAmounts
+    );
 
     // Create calls with minAmounts === actualAmountsWithSlippage
+    // No peek required here (saves gas)
     const callsWithMin = await this.createCalls(
       poolId,
       tokens,
       amounts,
       userAddress,
       wrapMainTokens,
-      minAmounts,
+      false,
+      amountsWithSlippage.refAmounts,
       authorisation
     );
 
     return {
       to: this.relayer,
       callData: callsWithMin.callData,
-      minOut: minOut.toString(),
+      expectedOut: queryAmounts.total,
+      minOut: amountsWithSlippage.total,
+    };
+  }
+
+  getAmountsWithSlippage(slippage: string, amounts: RootAmounts): RootAmounts {
+    // Apply slippage to amounts
+    const refAmountsWithSlippage: ReferenceAmounts = {};
+    for (const outputRef in amounts.refAmounts) {
+      refAmountsWithSlippage[outputRef] = subSlippage(
+        BigNumber.from(amounts.refAmounts[outputRef]),
+        BigNumber.from(slippage)
+      ).toString();
+    }
+    const totalWithSlippage = subSlippage(
+      BigNumber.from(amounts.total),
+      BigNumber.from(slippage)
+    ).toString();
+
+    return {
+      refAmounts: refAmountsWithSlippage,
+      total: totalWithSlippage,
     };
   }
 
@@ -94,12 +136,13 @@ export class Join {
     amountsIn: string[],
     userAddress: string,
     wrapMainTokens: boolean,
-    minBptAmounts?: Record<string, string>,
+    isPeek: boolean,
+    minBptAmounts?: ReferenceAmounts,
     authorisation?: string
   ): Promise<{
     to: string;
     callData: string;
-    outputRefs: string[];
+    rootOutputInfo: RootOutputInfo[];
   }> {
     if (tokensIn.length != amountsIn.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
@@ -117,7 +160,8 @@ export class Join {
       cloneDeep(orderedNodes),
       poolId,
       minBptAmounts ? minBptAmounts['0'] : '0',
-      userAddress
+      userAddress,
+      isPeek
     );
 
     // Create calls for non-leaf inputs
@@ -127,18 +171,20 @@ export class Join {
       tokensIn,
       amountsIn,
       userAddress,
+      isPeek,
       minBptAmounts
     );
 
-    // List of outputRefs for each path that finishes on Root node
-    const rootOutputRefs: string[] = [...nonLeafInfo.rootOutputRefs];
-    if (leafCalls.length > 0) rootOutputRefs.unshift('0');
+    const rootOutputInfo = this.updateOutputInfo(
+      nonLeafInfo.rootOutputInfo,
+      leafCalls,
+      authorisation
+    );
 
-    let callsCombined = [];
+    const callsCombined = [...leafCalls, ...nonLeafInfo.calls];
     if (authorisation) {
-      callsCombined.push(this.createSetRelayerApproval(authorisation));
+      callsCombined.unshift(this.createSetRelayerApproval(authorisation));
     }
-    callsCombined = [...callsCombined, ...leafCalls, ...nonLeafInfo.calls];
 
     const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
       callsCombined,
@@ -147,8 +193,35 @@ export class Join {
     return {
       to: this.relayer,
       callData: callData,
-      outputRefs: rootOutputRefs,
+      rootOutputInfo,
     };
+  }
+
+  /*
+  Combines outputs from leaf, non-leaf and auth calls
+  */
+  updateOutputInfo(
+    nonLeafOutputInfo: RootOutputInfo[],
+    leafCalls: string[],
+    authorisation?: string
+  ): RootOutputInfo[] {
+    // Auth call will be added to start if it exists
+    const auth = authorisation ? 1 : 0;
+    const additional = leafCalls.length + auth;
+    const info = nonLeafOutputInfo.map((originalInfo) => {
+      return {
+        outputRef: originalInfo.outputRef,
+        callIndex: originalInfo.callIndex + additional,
+      };
+    });
+    if (leafCalls.length > 0) {
+      // Any leaf calls will end on root pool with default ref of 0
+      info.unshift({
+        outputRef: '0',
+        callIndex: leafCalls.length - 1 + auth,
+      });
+    }
+    return info;
   }
 
   createNonLeafInputCalls(
@@ -157,50 +230,54 @@ export class Join {
     tokensIn: string[],
     amountsIn: string[],
     userAddress: string,
-    minBptAmounts?: Record<string, string>
-  ): { calls: string[]; rootOutputRefs: string[] } {
-    let nonLeafCalls: string[] = [];
-    const rootOutputRefs: string[] = [];
+    isPeek: boolean,
+    minBptAmounts?: ReferenceAmounts
+  ): { calls: string[]; rootOutputInfo: RootOutputInfo[] } {
+    const allCalls: string[] = [];
+    const rootOutputInfo: RootOutputInfo[] = [];
     const leafTokens = PoolGraph.getLeafAddresses(orderedNodes);
 
     const nonLeafInputs = tokensIn.filter(
-      (t) =>
+      (tokenIn) =>
         !leafTokens
           .map((leafToken) => leafToken.toLowerCase())
-          .includes(t.toLowerCase())
+          .includes(tokenIn.toLowerCase())
     );
-    let opRefIndex = orderedNodes.length;
+    let startingIndex = orderedNodes.length;
 
     nonLeafInputs.forEach((tokenInput) => {
-      // console.log(`------- Non-leaf input ${tokenInput}`);
       // Find path to root and update amounts
       const nodesToRoot = this.getNodesToRootFromToken(
         orderedNodes,
         tokensIn,
         amountsIn,
         tokenInput,
-        opRefIndex
+        startingIndex
       );
       // The last node will be joining root and we want this reference to find final amount out
       const rootNode = nodesToRoot[nodesToRoot.length - 1];
       if (rootNode.id !== poolId)
         throw new Error('Error creating non-leaf join.');
-      rootOutputRefs.push(rootNode.outputReference);
       // Create calls for path, use value stored in minBptAmounts if available
       const inputCalls = this.createActionCalls(
         nodesToRoot,
         poolId,
         minBptAmounts ? minBptAmounts[rootNode.outputReference] : '0',
-        userAddress
+        userAddress,
+        isPeek
       );
       // Add chain calls to previous list of calls
-      nonLeafCalls = [...nonLeafCalls, ...inputCalls];
-      // Update ref index to be unique for next path
-      opRefIndex = orderedNodes.length + nodesToRoot.length;
+      allCalls.push(...inputCalls);
+      rootOutputInfo.push({
+        outputRef: rootNode.outputReference,
+        callIndex: allCalls.length - 1, // Last call will be root for this token in
+      });
+      // Update starting ref index to be unique for next path
+      startingIndex = orderedNodes.length + nodesToRoot.length;
     });
     return {
-      calls: nonLeafCalls,
-      rootOutputRefs,
+      calls: allCalls,
+      rootOutputInfo,
     };
   }
 
@@ -219,14 +296,49 @@ export class Join {
     });
   }
 
-  async queryOutputRefs(outputRefs: string[]): Promise<Record<string, string>> {
-    // TODO Add method to query relayer (waiting for SC)
-    const results: Record<string, string> = {};
-    outputRefs.forEach(
-      // (op, i) => (results[op] = WeiPerEther.mul(i + 1).toString())
-      (op, i) => (results[op] = '0')
-    );
-    return results;
+  async staticMulticall(
+    signer: JsonRpcSigner,
+    encodedMulticalls: string
+  ): Promise<string[]> {
+    const MAX_GAS_LIMIT = 8e6;
+    const gasLimit = MAX_GAS_LIMIT;
+
+    const staticResult = await signer.call({
+      to: this.relayer,
+      data: encodedMulticalls,
+      gasLimit,
+    });
+    // console.log(staticResult);
+
+    return defaultAbiCoder.decode(['bytes[]'], staticResult)[0] as string[];
+  }
+
+  /*
+  Static calls multicall and decodes each output of interest.
+  */
+  async queryRootOutputRefs(
+    callData: string,
+    rootOutputInfo: RootOutputInfo[],
+    signer: JsonRpcSigner
+  ): Promise<RootAmounts> {
+    const outputRefAmounts: ReferenceAmounts = {};
+    const multicallResult = await this.staticMulticall(signer, callData);
+
+    let total = BigNumber.from('0');
+    // Decode each root output
+    rootOutputInfo.forEach((rootOutput) => {
+      const value = defaultAbiCoder.decode(
+        ['uint256'],
+        multicallResult[rootOutput.callIndex]
+      );
+      outputRefAmounts[rootOutput.outputRef] = value.toString();
+      total = total.add(value.toString());
+    });
+
+    return {
+      refAmounts: outputRefAmounts,
+      total: total.toString(),
+    };
   }
 
   // Get full graph from root pool and return ordered nodes
@@ -279,7 +391,8 @@ export class Join {
     orderedNodes: Node[],
     rootId: string,
     minBPTOut: string,
-    userAddress: string
+    userAddress: string,
+    isPeek: boolean
   ): string[] {
     const calls: string[] = [];
     // Create actions for each Node and return in multicall array
@@ -314,16 +427,23 @@ export class Join {
       switch (node.action) {
         // TODO - Add other Relayer supported Unwraps
         case 'wrapAaveDynamicToken':
-          // console.log(`wrap`);
           // relayer has no allowance to spend its own wrapped tokens so recipient must be the user
           calls.push(this.createAaveWrap(node, sender, userAddress));
           break;
         case 'batchSwap':
-          // console.log(`batchSwap`);
           calls.push(this.createBatchSwap(node, minOut, sender, recipient));
           break;
         case 'joinPool':
-          calls.push(this.createJoinPool(node, minOut, sender, recipient));
+          // Only need to peek at joinPool result for final node
+          if (isPeek && node.id === rootId)
+            calls.push(
+              ...this.createJoinPool(node, minOut, sender, recipient, true)
+            );
+          else
+            calls.push(
+              ...this.createJoinPool(node, minOut, sender, recipient, false)
+            );
+
           break;
       }
     });
@@ -513,8 +633,9 @@ export class Join {
     node: Node,
     minAmountOut: string,
     sender: string,
-    recipient: string
-  ): string {
+    recipient: string,
+    isPeek: boolean
+  ): string[] {
     const inputTokens: string[] = [];
     const inputAmts: string[] = [];
 
@@ -573,13 +694,17 @@ export class Join {
     //   )`
     // );
 
+    const peekCall = Relayer.encodePeekChainedReferenceValue(
+      Relayer.toChainedReference(node.outputReference, false)
+    );
+
     const call = Relayer.constructJoinCall({
       poolId: node.id,
       poolKind: 0,
       sender,
       recipient,
       value,
-      outputReference: '0', // node.outputReference, TODO Why does this cause tx to fail?
+      outputReference: Relayer.toChainedReference(node.outputReference),
       joinPoolRequest: {} as JoinPoolRequest,
       assets: sortedTokens, // Must include BPT token
       maxAmountsIn: sortedAmounts,
@@ -587,6 +712,7 @@ export class Join {
       fromInternalBalance: sender === this.relayer,
     });
 
-    return call;
+    if (isPeek) return [call, peekCall];
+    else return [call];
   }
 }

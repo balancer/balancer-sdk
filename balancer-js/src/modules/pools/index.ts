@@ -13,6 +13,7 @@ import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
 import { Join } from '../joins/joins.module';
+import { JsonRpcSigner } from '@ethersproject/providers';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -72,13 +73,14 @@ export class Pools implements Findable<PoolWithMethods> {
    * Builds generalised join transaction
    *
    * @param poolId          Pool id
-   * @param expectedBPTOut  Minimum BPT expected out of the join transaction
    * @param tokens          Token addresses
    * @param amounts         Token amounts in EVM scale
    * @param userAddress     User address
    * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          Signer (used for simulating tx to get accurate amounts)
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
-   * @returns transaction data ready to be sent to the network
+   * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
    */
   async generalisedJoin(
     poolId: string,
@@ -87,11 +89,13 @@ export class Pools implements Findable<PoolWithMethods> {
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
+    signer: JsonRpcSigner,
     authorisation?: string
   ): Promise<{
     to: string;
     callData: string;
     minOut: string;
+    expectedOut: string;
   }> {
     return this.joinService.joinPool(
       poolId,
@@ -100,6 +104,7 @@ export class Pools implements Findable<PoolWithMethods> {
       userAddress,
       wrapMainTokens,
       slippage,
+      signer,
       authorisation
     );
   }
