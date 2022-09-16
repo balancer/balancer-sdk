@@ -458,6 +458,13 @@ export const ADDRESSES = {
       symbol: 'bb-a-mai',
       slot: 0,
     },
+    bbaweth: {
+      id: '0xd8143b8e7a6e452e5e1bc42a3cef43590a2300310000000000000000000001a2',
+      address: '0xD8143B8E7a6e452E5E1BC42A3ceF43590A230031',
+      decimals: 18,
+      symbol: 'bb-a-weth',
+      slot: 0,
+    },
     bbamaiweth: {
       id: '0x45631a4b3cab78e6dfdd21a7025a61fac76839190000000000000000000001a8',
       address: '0x45631A4b3CaB78E6DFDd21a7025A61fAC7683919',

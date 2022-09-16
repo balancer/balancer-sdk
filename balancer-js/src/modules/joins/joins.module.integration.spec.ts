@@ -202,6 +202,17 @@ const testScenario = async (params: {
         false
       );
     });
+    it('joins boosted pool with single linear input', async () => {
+      await testFlow(
+        pool,
+        [...mainTokens, ...wrappedTokens, ...linearTokens],
+        [...mainSlots, ...wrappedSlots, ...linearSlots],
+        [...mainBalances, ...wrappedBalances, ...linearBalances],
+        [linearTokens[1]],
+        [linearBalances[1]],
+        false
+      );
+    });
     it('joins boosted pool with 2 linear input', async () => {
       await testFlow(
         pool,
@@ -215,7 +226,7 @@ const testScenario = async (params: {
     });
   });
   context('leaf and linear pool token as input', async () => {
-    it('joins boosted pool', async () => {
+    it('joins boosted pool with both leaf and linear tokens', async () => {
       await testFlow(
         pool,
         [...mainTokens, ...wrappedTokens, ...linearTokens],
@@ -280,9 +291,12 @@ describe('generalised join execution', async () => {
       wrappedTokens: [addresses.waMAI.address, addresses.waWETH.address],
       wrappedSlots: [addresses.waMAI.slot, addresses.waWETH.slot],
       wrappedBalances: ['0', '0'],
-      linearTokens: [addresses.bbamai.address],
-      linearSlots: [addresses.bbamai.slot],
-      linearBalances: [parseFixed('100', 18).toString()],
+      linearTokens: [addresses.bbamai.address, addresses.bbaweth.address],
+      linearSlots: [addresses.bbamai.slot, addresses.bbaweth.slot],
+      linearBalances: [
+        parseFixed('100', addresses.bbamai.decimals).toString(),
+        parseFixed('100', addresses.bbaweth.decimals).toString(),
+      ],
     });
   });
 
@@ -324,9 +338,12 @@ describe('generalised join execution', async () => {
         addresses.waMAI.slot,
       ],
       wrappedBalances: ['0', '0', '0', '0'],
-      linearTokens: [addresses.bbamai.address],
-      linearSlots: [addresses.bbamai.slot],
-      linearBalances: [parseFixed('10', addresses.bbamai.decimals).toString()],
+      linearTokens: [addresses.bbamai.address, addresses.bbadai.address],
+      linearSlots: [addresses.bbamai.slot, addresses.bbadai.slot],
+      linearBalances: [
+        parseFixed('10', addresses.bbamai.decimals).toString(),
+        parseFixed('10', addresses.bbadai.decimals).toString(),
+      ],
     });
   });
 
@@ -373,10 +390,20 @@ describe('generalised join execution', async () => {
         addresses.waWETH.slot,
       ],
       wrappedBalances: ['0', '0', '0', '0', '0'],
-      linearTokens: [addresses.bbamaiweth.address],
-      linearSlots: [addresses.bbamaiweth.slot],
+      linearTokens: [
+        addresses.bbamai.address,
+        addresses.bbamaiweth.address,
+        addresses.bbadai.address,
+      ],
+      linearSlots: [
+        addresses.bbamai.slot,
+        addresses.bbamaiweth.slot,
+        addresses.bbadai.slot,
+      ],
       linearBalances: [
+        parseFixed('10', addresses.bbamai.decimals).toString(),
         parseFixed('10', addresses.bbamaiweth.decimals).toString(),
+        parseFixed('10', addresses.bbadai.decimals).toString(),
       ],
     });
   });
