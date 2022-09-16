@@ -35,7 +35,7 @@ export class Join {
   totalProportions: Record<string, BigNumber> = {};
   private relayer: string;
   private wrappedNativeAsset;
-  constructor(private pools: PoolRepository, chainId: number) {
+  constructor(private pools: PoolRepository, private chainId: number) {
     const { tokens, contracts } = networkAddresses(chainId);
     this.relayer = contracts.relayer as string;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
@@ -344,7 +344,10 @@ export class Join {
   ): Promise<Node[]> {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-    const poolsGraph = new PoolGraph(this.pools);
+    const poolsGraph = new PoolGraph(this.pools, {
+      network: this.chainId,
+      rpcUrl: '',
+    });
 
     const rootNode = await poolsGraph.buildGraphFromRootPool(
       poolId,

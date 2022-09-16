@@ -1,9 +1,11 @@
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { parsePoolInfo } from '@/lib/utils';
-import { Pool, PoolType } from '@/types';
+import { BalancerSdkConfig, Pool, PoolType } from '@/types';
 import { Zero, WeiPerEther } from '@ethersproject/constants';
 import { BigNumber } from '@ethersproject/bignumber';
 import { PoolRepository } from '../data';
+import { Pools } from '../pools';
+import { getNetworkConfig } from '../sdk.helpers';
 
 export interface Node {
   address: string;
@@ -38,7 +40,10 @@ joinActions.set(PoolType.Weighted, 'joinPool');
 joinActions.set(PoolType.ComposableStable, 'joinPool');
 
 export class PoolGraph {
-  constructor(private pools: PoolRepository) {}
+  constructor(
+    private pools: PoolRepository,
+    private sdkConfig: BalancerSdkConfig
+  ) {}
 
   async buildGraphFromRootPool(
     poolId: string,
@@ -84,6 +89,14 @@ export class PoolGraph {
       throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
 
     const tokenTotal = this.getTokenTotal(pool);
+    const network = getNetworkConfig(this.sdkConfig);
+    const controller = Pools.wrap(pool, network);
+    pool.tokens.forEach((token) => {
+      if (token.address === pool.address) return;
+      console.log(pool);
+      const sp = controller.calcSpotPrice(token.address, pool.address);
+      console.log(token.address, sp);
+    });
 
     let poolNode: Node = {
       address: pool.address,

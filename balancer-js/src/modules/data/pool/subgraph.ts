@@ -115,6 +115,8 @@ export class PoolsSubgraphRepository
       totalWeight: subgraphPool.totalWeight || '1',
       mainIndex: subgraphPool.mainIndex ?? undefined,
       wrappedIndex: subgraphPool.wrappedIndex ?? undefined,
+      lowerTarget: subgraphPool.lowerTarget ?? '0',
+      upperTarget: subgraphPool.upperTarget ?? '0',
     };
   }
 }

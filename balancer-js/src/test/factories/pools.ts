@@ -143,6 +143,8 @@ const linearPools = Factory.define<LinearInfo, LinearParams>(
           wrappedToken.address,
           composableBptToken.address,
         ],
+        lowerTarget: '1',
+        upperTarget: '1',
       });
       // Update the pool token to have the expected balance set in input
       composableBptToken.balance = pool.balance;
@@ -194,6 +196,7 @@ const composableStablePool = Factory.define<
     totalWeight: undefined,
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     tokens: [...childTokens!, composableBptToken],
+    amp: '1',
   });
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

@@ -238,6 +238,8 @@ export interface Pool {
   apr?: AprBreakdown;
   liquidity?: string;
   totalWeight: string;
+  lowerTarget: string;
+  upperTarget: string;
 }
 
 /**
