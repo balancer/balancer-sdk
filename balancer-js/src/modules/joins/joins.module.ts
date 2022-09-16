@@ -12,6 +12,7 @@ import { JoinPoolRequest, PoolType } from '@/types';
 import { PoolRepository } from '../data';
 import { PoolGraph, Node } from './graph';
 
+import { subSlippage } from '@/lib/utils/slippageHelper';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
@@ -21,6 +22,13 @@ const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 interface RootOutputInfo {
   outputRef: string;
   callIndex: number;
+}
+
+type ReferenceAmounts = { [outputReference: string]: string };
+
+interface RootAmounts {
+  refAmounts: ReferenceAmounts;
+  total: string;
 }
 
 export class Join {
@@ -45,6 +53,7 @@ export class Join {
   ): Promise<{
     to: string;
     callData: string;
+    expectedOut: string;
     minOut: string;
   }> {
     /*
@@ -69,14 +78,16 @@ export class Join {
     );
 
     // static call (or V4 special call) to get actual amounts for each root join
-    const expectedAmounts = await this.queryOutputRefs(
+    const queryAmounts = await this.queryRootOutputRefs(
       callsWithNoMin.callData,
       callsWithNoMin.rootOutputInfo,
       signer
     );
-    // TODO Apply slippage to amounts
-    const minAmounts = expectedAmounts.outputs;
-    const minOut = expectedAmounts.total;
+
+    const amountsWithSlippage = this.getAmountsWithSlippage(
+      slippage,
+      queryAmounts
+    );
 
     // Create calls with minAmounts === actualAmountsWithSlippage
     // No peek required here (saves gas)
@@ -87,14 +98,35 @@ export class Join {
       userAddress,
       wrapMainTokens,
       false,
-      minAmounts, // TODO use amount with slippage
+      amountsWithSlippage.refAmounts,
       authorisation
     );
 
     return {
       to: this.relayer,
       callData: callsWithMin.callData,
-      minOut, // TODO use amount with slippage
+      expectedOut: queryAmounts.total,
+      minOut: amountsWithSlippage.total,
+    };
+  }
+
+  getAmountsWithSlippage(slippage: string, amounts: RootAmounts): RootAmounts {
+    // Apply slippage to amounts
+    const refAmountsWithSlippage: ReferenceAmounts = {};
+    for (const outputRef in amounts.refAmounts) {
+      refAmountsWithSlippage[outputRef] = subSlippage(
+        BigNumber.from(amounts.refAmounts[outputRef]),
+        BigNumber.from(slippage)
+      ).toString();
+    }
+    const totalWithSlippage = subSlippage(
+      BigNumber.from(amounts.total),
+      BigNumber.from(slippage)
+    ).toString();
+
+    return {
+      refAmounts: refAmountsWithSlippage,
+      total: totalWithSlippage,
     };
   }
 
@@ -105,7 +137,7 @@ export class Join {
     userAddress: string,
     wrapMainTokens: boolean,
     isPeek: boolean,
-    minBptAmounts?: Record<string, string>,
+    minBptAmounts?: ReferenceAmounts,
     authorisation?: string
   ): Promise<{
     to: string;
@@ -199,7 +231,7 @@ export class Join {
     amountsIn: string[],
     userAddress: string,
     isPeek: boolean,
-    minBptAmounts?: Record<string, string>
+    minBptAmounts?: ReferenceAmounts
   ): { calls: string[]; rootOutputInfo: RootOutputInfo[] } {
     const allCalls: string[] = [];
     const rootOutputInfo: RootOutputInfo[] = [];
@@ -278,12 +310,12 @@ export class Join {
   /*
   Static calls multicall and decodes each output of interest.
   */
-  async queryOutputRefs(
+  async queryRootOutputRefs(
     callData: string,
     rootOutputInfo: RootOutputInfo[],
     signer: JsonRpcSigner
-  ): Promise<{ outputs: Record<string, string>; total: string }> {
-    const outputs: Record<string, string> = {};
+  ): Promise<RootAmounts> {
+    const outputRefAmounts: ReferenceAmounts = {};
     const multicallResult = await this.staticMulticall(signer, callData);
 
     let total = BigNumber.from('0');
@@ -293,12 +325,12 @@ export class Join {
         ['uint256'],
         multicallResult[rootOutput.callIndex]
       );
-      outputs[rootOutput.outputRef] = value.toString();
+      outputRefAmounts[rootOutput.outputRef] = value.toString();
       total = total.add(value.toString());
     });
 
     return {
-      outputs,
+      refAmounts: outputRefAmounts,
       total: total.toString(),
     };
   }
@@ -651,7 +683,7 @@ export class Join {
     // );
 
     const peekCall = Relayer.encodePeekChainedReferenceValue(
-      Relayer.toChainedReference(node.outputReference)
+      Relayer.toChainedReference(node.outputReference, false)
     );
 
     const call = Relayer.constructJoinCall({

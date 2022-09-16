@@ -1,6 +1,8 @@
+import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Interface } from '@ethersproject/abi';
 import { MaxUint256, WeiPerEther, Zero } from '@ethersproject/constants';
+import { Vault } from '@balancer-labs/typechain';
 
 import { Swaps } from '@/modules/swaps/swaps.module';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
@@ -28,6 +30,7 @@ import {
   FetchPoolsInput,
 } from '../swaps/types';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
+import { RelayerAuthorization } from '@/lib/utils';
 
 import relayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
 
@@ -573,7 +576,35 @@ export class Relayer {
       value: '0',
       outputReferences: outputReferences,
     });
-
     return [encodedBatchSwap, ...unwrapCalls];
   }
+
+  static signRelayerApproval = async (
+    relayerAddress: string,
+    signerAddress: string,
+    signer: JsonRpcSigner,
+    vault: Vault
+  ): Promise<string> => {
+    const approval = vault.interface.encodeFunctionData('setRelayerApproval', [
+      signerAddress,
+      relayerAddress,
+      true,
+    ]);
+
+    const signature =
+      await RelayerAuthorization.signSetRelayerApprovalAuthorization(
+        vault,
+        signer,
+        relayerAddress,
+        approval
+      );
+
+    const calldata = RelayerAuthorization.encodeCalldataAuthorization(
+      '0x',
+      MaxUint256,
+      signature
+    );
+
+    return calldata;
+  };
 }

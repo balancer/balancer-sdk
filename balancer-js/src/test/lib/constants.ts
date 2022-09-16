@@ -192,6 +192,24 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'bbausd',
     },
+    waDAI: {
+      address: '',
+      decimals: 18,
+      symbol: 'waDAI',
+      slot: 52,
+    },
+    waUSDC: {
+      address: '',
+      decimals: 6,
+      symbol: 'waUSDC',
+      slot: 52,
+    },
+    waUSDT: {
+      address: '',
+      decimals: 6,
+      symbol: 'waUSDT',
+      slot: 52,
+    },
   },
   [Network.POLYGON]: {
     MATIC: {
@@ -269,6 +287,24 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'bbausd',
     },
+    waDAI: {
+      address: '',
+      decimals: 18,
+      symbol: 'waDAI',
+      slot: 52,
+    },
+    waUSDC: {
+      address: '',
+      decimals: 6,
+      symbol: 'waUSDC',
+      slot: 52,
+    },
+    waUSDT: {
+      address: '',
+      decimals: 6,
+      symbol: 'waUSDT',
+      slot: 52,
+    },
   },
   [Network.ARBITRUM]: {
     WETH: {
@@ -305,6 +341,24 @@ export const ADDRESSES = {
       address: 'N/A',
       decimals: 18,
       symbol: 'bbausd',
+    },
+    waDAI: {
+      address: '',
+      decimals: 18,
+      symbol: 'waDAI',
+      slot: 52,
+    },
+    waUSDC: {
+      address: '',
+      decimals: 6,
+      symbol: 'waUSDC',
+      slot: 52,
+    },
+    waUSDT: {
+      address: '',
+      decimals: 6,
+      symbol: 'waUSDT',
+      slot: 52,
     },
   },
   [Network.GOERLI]: {
@@ -348,6 +402,18 @@ export const ADDRESSES = {
       decimals: 6,
       symbol: 'waUSDT',
       slot: 52,
+    },
+    bbadai: {
+      address: '0x594920068382f64e4bc06879679bd474118b97b1',
+      decimals: 18,
+      symbol: 'bbadai',
+      slot: 0,
+    },
+    bbausdc: {
+      address: '0x4d983081b9b9f3393409a4cdf5504d0aea9cd94c',
+      decimals: 18,
+      symbol: 'bbausdc',
+      slot: 0,
     },
   },
 };
