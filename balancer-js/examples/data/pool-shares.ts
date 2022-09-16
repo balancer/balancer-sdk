@@ -30,6 +30,9 @@ const { poolShares } = sdk.data;
   
   result = await poolShares.findByPool(POOL_ID, 2, 1);
   console.log('Pool shares by pool (#2 & #3)', result);
+    
+  result = await poolShares.query({ where: { poolId: POOL_ID,  balance_gt: '0' }, first: 3 });
+  console.log('Pool shares query', result);
 })();
 
 // npm run examples:exec -- ./examples/data/pool-shares.ts

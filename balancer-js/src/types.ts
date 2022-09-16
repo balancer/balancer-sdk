@@ -268,16 +268,16 @@ export interface PoolWithMethods extends Pool {
 }
 
 export interface PoolShare {
-  id: string,
-  userAddress: string,
-  poolId: string,
-  balance: string
+  id: string;
+  userAddress: string;
+  poolId: string;
+  balance: string;
 }
 
 export interface GaugeShare {
-  id: string,
-  balance: string,
-  userAddress: string,
-  gaugeId: string,
-  gaugeIsKilled: boolean
+  id: string;
+  balance: string;
+  userAddress: string;
+  gaugeId: string;
+  gaugeIsKilled: boolean;
 }

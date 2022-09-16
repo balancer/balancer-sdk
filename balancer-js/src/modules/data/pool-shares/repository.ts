@@ -1,40 +1,27 @@
 import { PoolShare } from '@/types';
 import { PoolShareAttribute, PoolShareAttributes } from './types';
 import { Findable } from '../types';
-import { Network } from '@/lib/constants/network';
-import {
-    createSubgraphClient,
-    SubgraphClient
-} from '@/modules/subgraph/subgraph';
+import { BalancerSubgraphRepository } from '@/modules/subgraph/repository';
 import {
     SubgraphPoolShareFragment,
     PoolShare_OrderBy,
     OrderDirection
 } from '@/modules/subgraph/generated/balancer-subgraph-types';
 
-export class PoolSharesRepository implements Findable<PoolShare, PoolShareAttribute> {
-    
-    private client: SubgraphClient;
-  
-    constructor(url: string, 
-        private chainId: Network,     
-        private blockHeight?: () => Promise<number | undefined>    
-    ) {
-        this.client = createSubgraphClient(url);
-    }
+export class PoolSharesRepository extends BalancerSubgraphRepository<PoolShare> 
+    implements Findable<PoolShare, PoolShareAttribute> {
     
     async find(id: string): Promise<PoolShare | undefined> {
-        const { poolShare } = await this.client.PoolShare({ id: id, block: this.blockHeight 
+        const args = { id: id, block: this.blockHeight 
             ? { number: await this.blockHeight() }
-            : undefined });
-        return poolShare ? this.mapType(poolShare) : undefined;
+            : undefined };
+        return this.get(args);
     }
     
     async findBy(attribute: PoolShareAttribute, 
         value: string): Promise<PoolShare | undefined> {
-        if (attribute != PoolShareAttributes.Id) return undefined;
-        const { poolShare } = await this.client.PoolShare( { [attribute]: value });
-        return poolShare ? this.mapType(poolShare) : undefined;
+        const args = { [attribute]: value };
+        return this.get(args);
     }
     
     async findAllBy(attribute: PoolShareAttribute, 
@@ -45,7 +32,7 @@ export class PoolSharesRepository implements Findable<PoolShare, PoolShareAttrib
             orderBy: PoolShare_OrderBy.Balance, 
             orderDirection: OrderDirection.Desc,
         };
-        const { poolShares } = await this.client.PoolShares({ 
+        const args = { 
             where: { [attribute]: value }, 
             first: first,
             skip: skip,
@@ -53,8 +40,18 @@ export class PoolSharesRepository implements Findable<PoolShare, PoolShareAttrib
             block: this.blockHeight
             ? { number: await this.blockHeight() }
             : undefined
-        });
+        };
+        return this.query(args);
+    }
+
+    async query(args = {}): Promise<PoolShare[]> {
+        const { poolShares } = await this.client.PoolShares(args);
         return poolShares.map(this.mapType);
+    }
+
+    async get(args = {}): Promise<PoolShare | undefined> {
+        const { poolShares } = await this.client.PoolShares(args);
+        return (poolShares && poolShares.length > 0) ? this.mapType(poolShares[0]) : undefined; 
     }
     
     async findByUser(userAddress: string, 
@@ -69,7 +66,7 @@ export class PoolSharesRepository implements Findable<PoolShare, PoolShareAttrib
         return this.findAllBy(PoolShareAttributes.PoolId, poolId, first, skip);
     }
     
-    private mapType(subgraphPoolShare: SubgraphPoolShareFragment): PoolShare {
+    mapType(subgraphPoolShare: SubgraphPoolShareFragment): PoolShare {
         return {
             id: subgraphPoolShare.id,
             userAddress: subgraphPoolShare.userAddress.id,

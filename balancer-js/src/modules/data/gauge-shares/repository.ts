@@ -1,40 +1,27 @@
 import { GaugeShare } from '@/types';
 import { GaugeShareAttribute, GaugeShareAttributes } from './types';
 import { Findable } from '../types';
-import { Network } from '@/lib/constants/network';
-import {
-    createGaugesClient,
-    GaugesClient
-} from '@/modules/subgraph/subgraph';
+import { GaugesSubgraphRepository } from '@/modules/subgraph/repository';
 import {
     SubgraphGaugeShareFragment,
     GaugeShare_OrderBy,
     OrderDirection
 } from '@/modules/subgraph/generated/balancer-gauges';
 
-export class GaugeSharesRepository implements Findable<GaugeShare, GaugeShareAttribute> {
-
-    private client: GaugesClient;
-  
-    constructor(url: string, 
-        private chainId: Network,     
-        private blockHeight?: () => Promise<number | undefined>    
-    ) {
-        this.client = createGaugesClient(url);
-    }
+export class GaugeSharesRepository extends GaugesSubgraphRepository<GaugeShare> 
+    implements Findable<GaugeShare, GaugeShareAttribute> {
 
     async find(id: string): Promise<GaugeShare | undefined> {
-        const { gaugeShare } = await this.client.GaugeShare({ id: id, block: this.blockHeight 
+        const args = { id: id, block: this.blockHeight 
             ? { number: await this.blockHeight() }
-            : undefined });
-        return gaugeShare ? this.mapType(gaugeShare) : undefined;
+            : undefined };
+        return this.get(args);
     }
         
     async findBy(attribute: GaugeShareAttribute, 
         value: string): Promise<GaugeShare | undefined> {
-        if (attribute != GaugeShareAttributes.Id) return undefined;
-        const { gaugeShare } = await this.client.GaugeShare( { [attribute]: value });
-        return gaugeShare ? this.mapType(gaugeShare) : undefined;
+        const args = { [attribute]: value };
+        return this.get(args);
     }
     
     async findAllBy(attribute: GaugeShareAttribute, 
@@ -45,7 +32,7 @@ export class GaugeSharesRepository implements Findable<GaugeShare, GaugeShareAtt
             orderBy: GaugeShare_OrderBy.Balance, 
             orderDirection: OrderDirection.Desc
         };
-        const { gaugeShares } = await this.client.GaugeShares({ 
+        const args = { 
             where: { [attribute]: value }, 
             first: first,
             skip: skip,
@@ -53,8 +40,8 @@ export class GaugeSharesRepository implements Findable<GaugeShare, GaugeShareAtt
             block: this.blockHeight
             ? { number: await this.blockHeight() }
             : undefined
-        });
-        return gaugeShares.map(this.mapType);
+        };
+        return this.query(args);
     }
 
     async findByUser(userAddress: string, 
@@ -69,7 +56,17 @@ export class GaugeSharesRepository implements Findable<GaugeShare, GaugeShareAtt
         return this.findAllBy(GaugeShareAttributes.GaugeId, gaugeId, first, skip);
     }
 
-    private mapType(subgraphGaugeShare: SubgraphGaugeShareFragment): GaugeShare {
+    async query(args = {}): Promise<GaugeShare[]> {
+        const { gaugeShares } = await this.client.GaugeShares(args);
+        return gaugeShares.map(this.mapType);
+    }
+
+    async get(args = {}): Promise<GaugeShare | undefined> {
+        const { gaugeShares } = await this.client.GaugeShares(args);
+        return (gaugeShares && gaugeShares.length > 0) ? this.mapType(gaugeShares[0]) : undefined; 
+    }
+
+    mapType(subgraphGaugeShare: SubgraphGaugeShareFragment): GaugeShare {
         return {
             id: subgraphGaugeShare.id,
             userAddress: subgraphGaugeShare.user.id,
