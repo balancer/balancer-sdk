@@ -7,6 +7,7 @@ import { PoolRepository } from '../data';
 import { Pools } from '../pools';
 import { getNetworkConfig } from '../sdk.helpers';
 
+type SpotPrices = { [tokenIn: string]: string };
 export interface Node {
   address: string;
   id: string;
@@ -18,6 +19,8 @@ export interface Node {
   proportionOfParent: BigNumber;
   parent: Node | undefined;
   isLeaf: boolean;
+  spotPrices: SpotPrices;
+  decimals: number;
 }
 
 type Actions =
@@ -91,11 +94,17 @@ export class PoolGraph {
     const tokenTotal = this.getTokenTotal(pool);
     const network = getNetworkConfig(this.sdkConfig);
     const controller = Pools.wrap(pool, network);
+    const spotPrices: SpotPrices = {};
+    let decimals = 18;
+    // Spot price of a path is product of the sp of each pool in path. We calculate the sp for each pool token here to use as required later.
     pool.tokens.forEach((token) => {
-      if (token.address === pool.address) return;
-      console.log(pool);
+      if (token.address === pool.address) {
+        // Updated node with BPT token decimal
+        decimals = token.decimals ? token.decimals : 18;
+        return;
+      }
       const sp = controller.calcSpotPrice(token.address, pool.address);
-      console.log(token.address, sp);
+      spotPrices[token.address] = sp;
     });
 
     let poolNode: Node = {
@@ -109,6 +118,8 @@ export class PoolGraph {
       parent,
       proportionOfParent,
       isLeaf: false,
+      spotPrices,
+      decimals,
     };
     nodeIndex++;
     if (pool.poolType.toString().includes('Linear')) {
@@ -164,9 +175,13 @@ export class PoolGraph {
       if (linearPool.mainIndex === undefined)
         throw new Error('Issue With Linear Pool');
 
+      const mainTokenDecimals =
+        linearPool.tokens[linearPool.mainIndex].decimals ?? 18;
+
       const nodeInfo = PoolGraph.createInputTokenNode(
         nodeIndex,
         linearPool.tokensList[linearPool.mainIndex],
+        mainTokenDecimals,
         linearPoolNode,
         linearPoolNode.proportionOfParent
       );
@@ -206,12 +221,18 @@ export class PoolGraph {
       parent,
       proportionOfParent,
       isLeaf: false,
+      spotPrices: {},
+      decimals: 18,
     };
     nodeIndex++;
+
+    const mainTokenDecimals =
+      linearPool.tokens[linearPool.mainIndex].decimals ?? 18;
 
     const inputNode = PoolGraph.createInputTokenNode(
       nodeIndex,
       linearPool.tokensList[linearPool.mainIndex],
+      mainTokenDecimals,
       wrappedTokenNode,
       proportionOfParent
     );
@@ -223,6 +244,7 @@ export class PoolGraph {
   static createInputTokenNode(
     nodeIndex: number,
     address: string,
+    decimals: number,
     parent: Node | undefined,
     proportionOfParent: BigNumber
   ): [Node, number] {
@@ -238,6 +260,8 @@ export class PoolGraph {
         parent,
         proportionOfParent,
         isLeaf: true,
+        spotPrices: {},
+        decimals,
       },
       nodeIndex + 1,
     ];
@@ -288,6 +312,7 @@ export class PoolGraph {
       const [inputTokenNode] = this.createInputTokenNode(
         startingIndex,
         inputToken,
+        inputNode.decimals,
         inputNode.parent,
         WeiPerEther
       );
