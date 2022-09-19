@@ -54,9 +54,13 @@ fragment SubgraphPool on Pool {
     id
     address
     poolType
+    factory
+    strategyType
     symbol
     name
+    swapEnabled
     swapFee
+    owner
     totalWeight
     totalSwapVolume
     totalSwapFee
@@ -68,14 +72,12 @@ fragment SubgraphPool on Pool {
     swapsCount
     holdersCount
     tokensList
-    totalWeight
     amp
     expiryTime
     unitSeconds
     createTime
     principalToken
     baseToken
-    swapEnabled
     wrappedIndex
     mainIndex
     lowerTarget
