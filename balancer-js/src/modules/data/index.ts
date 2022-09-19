@@ -38,6 +38,7 @@ export class Data implements BalancerDataRepositories {
   constructor(networkConfig: BalancerNetworkConfig, provider: Provider) {
     this.pools = new PoolsSubgraphRepository({
       url: networkConfig.urls.subgraph,
+      chainId: networkConfig.chainId,
     });
 
     // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
@@ -55,6 +56,7 @@ export class Data implements BalancerDataRepositories {
 
       this.yesterdaysPools = new PoolsSubgraphRepository({
         url: networkConfig.urls.subgraph,
+        chainId: networkConfig.chainId,
         blockHeight: blockDayAgo,
       });
     }
@@ -70,14 +72,12 @@ export class Data implements BalancerDataRepositories {
 
     this.tokenMeta = new StaticTokenProvider([]);
 
-    if (
-      networkConfig.urls.gaugesSubgraph &&
-      networkConfig.addresses.contracts.gaugeController
-    ) {
+    if (networkConfig.urls.gaugesSubgraph) {
       this.liquidityGauges = new LiquidityGaugeSubgraphRPCProvider(
         networkConfig.urls.gaugesSubgraph,
         networkConfig.addresses.contracts.multicall,
-        networkConfig.addresses.contracts.gaugeController,
+        networkConfig.addresses.contracts.gaugeController || '',
+        networkConfig.chainId,
         provider
       );
     }

@@ -1,22 +1,22 @@
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
 import * as SOR from '@balancer-labs/sor';
 import {
   ExitConcern,
-  ExitExactBPTInParameters,
+  ExitExactBPTInSingleTokenOutParameters,
   ExitExactTokensOutParameters,
   ExitPool,
   ExitPoolAttributes,
 } from '../types';
 import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
 import { Vault__factory } from '@balancer-labs/typechain';
-import { WeightedPoolEncoder } from '@/pool-weighted';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { balancerVault } from '@/lib/constants/config';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { AddressZero } from '@ethersproject/constants';
+import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 
-export class WeightedPoolExit implements ExitConcern {
-  buildExitExactBPTIn = ({
+export class ComposableStablePoolExit implements ExitConcern {
+  buildExitSingleTokenOut = ({
     exiter,
     pool,
     bptIn,
@@ -24,7 +24,7 @@ export class WeightedPoolExit implements ExitConcern {
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenMaxOut,
-  }: ExitExactBPTInParameters): ExitPoolAttributes => {
+  }: ExitExactBPTInSingleTokenOutParameters): ExitPoolAttributes => {
     if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
       throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
     }
@@ -35,16 +35,22 @@ export class WeightedPoolExit implements ExitConcern {
     ) {
       throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
     }
+
     if (!shouldUnwrapNativeAsset && singleTokenMaxOut === AddressZero)
       throw new Error(
         'shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values'
       );
 
+    // Check if there's any relevant stable pool info missing
+    if (pool.tokens.some((token) => !token.decimals))
+      throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+    if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+
     // Parse pool info into EVM amounts in order to match amountsIn scalling
     const {
       parsedTokens,
       parsedBalances,
-      parsedWeights,
+      parsedAmp,
       parsedTotalShares,
       parsedSwapFee,
     } = parsePoolInfo(pool);
@@ -56,61 +62,36 @@ export class WeightedPoolExit implements ExitConcern {
 
     // Sort pool info based on tokens addresses
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    const [sortedTokens, sortedBalances, sortedWeights] =
-      assetHelpers.sortTokens(
-        shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens,
-        parsedBalances,
-        parsedWeights
-      ) as [string[], string[], string[]];
+    const [sortedTokens, sortedBalances] = assetHelpers.sortTokens(
+      shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens,
+      parsedBalances
+    ) as [string[], string[]];
 
-    let minAmountsOut = Array(sortedTokens.length).fill('0');
-    let userData: string;
+    const minAmountsOut = Array(parsedTokens.length).fill('0');
 
-    if (singleTokenMaxOut) {
-      // Exit pool with single token using exact bptIn
+    // Exit pool with single token using exact bptIn
+    const singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
 
-      const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
+    // Calculate amount out given BPT in
+    const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
+      BigInt(parsedAmp as string),
+      sortedBalances.map((b) => BigInt(b)),
+      singleTokenMaxOutIndex,
+      BigInt(bptIn),
+      BigInt(parsedTotalShares),
+      BigInt(parsedSwapFee)
+    ).toString();
 
-      // Calculate amount out given BPT in
-      const amountOut = SOR.WeightedMaths._calcTokenOutGivenExactBptIn(
-        BigInt(sortedBalances[singleTokenMaxOutIndex]),
-        BigInt(sortedWeights[singleTokenMaxOutIndex]),
-        BigInt(bptIn),
-        BigInt(parsedTotalShares),
-        BigInt(parsedSwapFee)
-      ).toString();
+    // Apply slippage tolerance
+    minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
+      BigNumber.from(amountOut),
+      BigNumber.from(slippage)
+    ).toString();
 
-      // Apply slippage tolerance
-      minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
-        BigNumber.from(amountOut),
-        BigNumber.from(slippage)
-      ).toString();
-
-      userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(
-        bptIn,
-        singleTokenMaxOutIndex
-      );
-    } else {
-      // Exit pool with all tokens proportinally
-
-      // Calculate amounts out given BPT in
-      const amountsOut = SOR.WeightedMaths._calcTokensOutGivenExactBptIn(
-        sortedBalances.map((b) => BigInt(b)),
-        BigInt(bptIn),
-        BigInt(parsedTotalShares)
-      ).map((amount) => amount.toString());
-
-      // Apply slippage tolerance
-      minAmountsOut = amountsOut.map((amount) => {
-        const minAmount = subSlippage(
-          BigNumber.from(amount),
-          BigNumber.from(slippage)
-        );
-        return minAmount.toString();
-      });
-
-      userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(bptIn);
-    }
+    const userData = ComposableStablePoolEncoder.exitExactBPTInForOneTokenOut(
+      bptIn,
+      singleTokenMaxOutIndex
+    );
 
     const to = balancerVault;
     const functionName = 'exitPool';
@@ -126,7 +107,7 @@ export class WeightedPoolExit implements ExitConcern {
       },
     };
 
-    // encode transaction data into an ABI byte string which can be sent to the network to be executed
+    // Encode transaction data into an ABI byte string which can be sent to the network to be executed
     const vaultInterface = Vault__factory.createInterface();
     const data = vaultInterface.encodeFunctionData(functionName, [
       attributes.poolId,
@@ -160,31 +141,35 @@ export class WeightedPoolExit implements ExitConcern {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
 
-    // Parse pool info into EVM amounts in order to match amountsIn scalling
+    // Check if there's any relevant stable pool info missing
+    if (pool.tokens.some((token) => !token.decimals))
+      throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+    if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+
+    // Parse pool info into EVM amounts in order to match amountsOut scalling
     const {
       parsedTokens,
       parsedBalances,
-      parsedWeights,
+      parsedAmp,
       parsedTotalShares,
       parsedSwapFee,
     } = parsePoolInfo(pool);
 
-    // Sort pool info and inputs based on tokens addresses
+    // Sort pool info based on tokens addresses
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    const [, sortedBalances, sortedWeights] = assetHelpers.sortTokens(
+    const [, sortedBalances] = assetHelpers.sortTokens(
       parsedTokens,
-      parsedBalances,
-      parsedWeights
-    ) as [string[], string[], string[]];
+      parsedBalances
+    ) as [string[], string[]];
     const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
       tokensOut,
       amountsOut
     ) as [string[], string[]];
 
     // Calculate expected BPT in given tokens out
-    const bptIn = SOR.WeightedMaths._calcBptInGivenExactTokensOut(
+    const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(
+      BigInt(parsedAmp as string),
       sortedBalances.map((b) => BigInt(b)),
-      sortedWeights.map((w) => BigInt(w)),
       sortedAmounts.map((a) => BigInt(a)),
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
@@ -196,7 +181,7 @@ export class WeightedPoolExit implements ExitConcern {
       BigNumber.from(slippage)
     ).toString();
 
-    const userData = WeightedPoolEncoder.exitBPTInForExactTokensOut(
+    const userData = ComposableStablePoolEncoder.exitBPTInForExactTokensOut(
       sortedAmounts,
       maxBPTIn
     );

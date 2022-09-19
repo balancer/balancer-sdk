@@ -31,7 +31,18 @@ export interface JoinConcern {
 }
 
 export interface ExitConcern {
-  buildExitExactBPTIn: ({
+  /**
+   * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
+   * @param exiter Account address exiting pool
+   * @param pool Pool being exited
+   * @param bptIn BPT provided for exiting pool
+   * @param slippage Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @param shouldUnwrapNativeAsset Indicates whether wrapped native asset should be unwrapped after exit.
+   * @param wrappedNativeAsset Wrapped native asset address for network being used. Required for exiting with native asset.
+   * @param singleTokenMaxOut Optional: token address that if provided will exit to given token
+   * @returns transaction request ready to send with signer.sendTransaction
+   */
+  buildExitExactBPTIn?: ({
     exiter,
     pool,
     bptIn,
@@ -41,6 +52,16 @@ export interface ExitConcern {
     singleTokenMaxOut,
   }: ExitExactBPTInParameters) => ExitPoolAttributes;
 
+  /**
+   * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
+   * @param exiter Account address exiting pool
+   * @param pool Pool being exited
+   * @param tokensOut Tokens provided for exiting pool
+   * @param amountsOut Amounts provided for exiting pool
+   * @param slippage Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @param wrappedNativeAsset Wrapped native asset address for network being used. Required for exiting with native asset.
+   * @returns transaction request ready to send with signer.sendTransaction
+   */
   buildExitExactTokensOut: ({
     exiter,
     pool,
@@ -49,6 +70,16 @@ export interface ExitConcern {
     slippage,
     wrappedNativeAsset,
   }: ExitExactTokensOutParameters) => ExitPoolAttributes;
+
+  buildExitSingleTokenOut?: ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+    shouldUnwrapNativeAsset,
+    wrappedNativeAsset,
+    singleTokenMaxOut,
+  }: ExitExactBPTInSingleTokenOutParameters) => ExitPoolAttributes;
 }
 
 export interface JoinPool {
@@ -100,6 +131,16 @@ export interface ExitExactBPTInParameters {
   shouldUnwrapNativeAsset: boolean;
   wrappedNativeAsset: string;
   singleTokenMaxOut?: string;
+}
+
+export interface ExitExactBPTInSingleTokenOutParameters {
+  exiter: string;
+  pool: Pool;
+  bptIn: string;
+  slippage: string;
+  shouldUnwrapNativeAsset: boolean;
+  wrappedNativeAsset: string;
+  singleTokenMaxOut: string;
 }
 
 export interface ExitExactTokensOutParameters {

@@ -96,6 +96,8 @@ export class Pools implements Findable<PoolWithMethods> {
     networkConfig: BalancerNetworkConfig
   ): PoolWithMethods {
     const methods = PoolTypeConcerns.from(pool.poolType);
+    const wrappedNativeAsset =
+      networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
     return {
       ...pool,
       buildJoin: (
@@ -110,7 +112,7 @@ export class Pools implements Findable<PoolWithMethods> {
           tokensIn,
           amountsIn,
           slippage,
-          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+          wrappedNativeAsset,
         });
       },
       calcPriceImpact: async (amountsIn: string[], minBPTOut: string) =>
@@ -125,16 +127,21 @@ export class Pools implements Findable<PoolWithMethods> {
         slippage,
         shouldUnwrapNativeAsset = false,
         singleTokenMaxOut
-      ) =>
-        methods.exit.buildExitExactBPTIn({
-          exiter,
-          pool,
-          bptIn,
-          slippage,
-          shouldUnwrapNativeAsset,
-          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
-          singleTokenMaxOut,
-        }),
+      ) => {
+        if (methods.exit.buildExitExactBPTIn) {
+          return methods.exit.buildExitExactBPTIn({
+            exiter,
+            pool,
+            bptIn,
+            slippage,
+            shouldUnwrapNativeAsset,
+            wrappedNativeAsset,
+            singleTokenMaxOut,
+          });
+        } else {
+          throw 'ExitExactBPTIn not supported';
+        }
+      },
       buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) =>
         methods.exit.buildExitExactTokensOut({
           exiter,
@@ -142,7 +149,7 @@ export class Pools implements Findable<PoolWithMethods> {
           tokensOut,
           amountsOut,
           slippage,
-          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+          wrappedNativeAsset,
         }),
       // TODO: spotPrice fails, because it needs a subgraphType,
       // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)

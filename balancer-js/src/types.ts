@@ -1,5 +1,5 @@
+import { Network } from './lib/constants/network';
 import type { BigNumberish } from '@ethersproject/bignumber';
-import type { Network } from './lib/constants/network';
 import type { Contract } from '@ethersproject/contracts';
 import type { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 import type {
@@ -16,9 +16,9 @@ import type {
 import type { BaseFeeDistributor } from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
 
-export * from '@/modules/data/types';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
-export { AprBreakdown };
+export * from '@/modules/data/types';
+export { Network, AprBreakdown };
 
 export type Address = string;
 
@@ -197,18 +197,22 @@ export enum PoolType {
   Weighted = 'Weighted',
   Investment = 'Investment',
   Stable = 'Stable',
+  ComposableStable = 'ComposableStable',
   MetaStable = 'MetaStable',
   StablePhantom = 'StablePhantom',
   LiquidityBootstrapping = 'LiquidityBootstrapping',
   AaveLinear = 'AaveLinear',
   ERC4626Linear = 'ERC4626Linear',
   Element = 'Element',
+  Gyro2 = 'Gyro2',
+  Gyro3 = 'Gyro3',
 }
 
 export interface Pool {
   id: string;
   name: string;
   address: string;
+  chainId: number;
   poolType: PoolType;
   swapFee: string;
   owner?: string;
