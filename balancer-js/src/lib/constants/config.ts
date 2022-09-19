@@ -49,14 +49,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
-        gaugeController: '',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
@@ -75,14 +70,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
-        gaugeController: '',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
@@ -101,14 +91,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x2cc8688C5f75E365aaEEb4ea8D6a480405A48D2A',
-        gaugeController: '',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
@@ -125,14 +110,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x53c43764255c17bd724f74c4ef150724ac50a3ed',
-        gaugeController: '',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
@@ -148,14 +128,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x42ad527de7d4e9d9d011ac45b31d8551f8fe9821',
-        gaugeController: '',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
@@ -173,13 +148,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
         gaugeController: '0xBB1CE49b16d55A1f2c6e88102f32144C7334B116',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
@@ -198,14 +169,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x2dc0e2aa608532da689e89e237df582b783e552c',
-        gaugeController: '',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0x4200000000000000000000000000000000000006',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
