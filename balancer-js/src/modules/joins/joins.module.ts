@@ -236,7 +236,13 @@ export class Join {
     const allCalls: string[] = [];
     const rootOutputInfo: RootOutputInfo[] = [];
     const leafTokens = PoolGraph.getLeafAddresses(orderedNodes);
-    const nonLeafInputs = tokensIn.filter((t) => !leafTokens.includes(t));
+
+    const nonLeafInputs = tokensIn.filter(
+      (tokenIn) =>
+        !leafTokens
+          .map((leafToken) => leafToken.toLowerCase())
+          .includes(tokenIn.toLowerCase())
+    );
     let startingIndex = orderedNodes.length;
 
     nonLeafInputs.forEach((tokenInput) => {
@@ -477,7 +483,9 @@ export class Join {
     This amount will be used when chaining to parent.
     Amounts are split proportionally between all inputs with same token.
     */
-    const tokenIndex = tokensIn.indexOf(node.address);
+    const tokenIndex = tokensIn
+      .map((t) => t.toLowerCase())
+      .indexOf(node.address.toLowerCase());
     if (tokenIndex === -1) {
       node.outputReference = '0';
       return node;
@@ -574,7 +582,9 @@ export class Join {
 
     const outputReferences = [
       {
-        index: assets.indexOf(node.address),
+        index: assets
+          .map((a) => a.toLowerCase())
+          .indexOf(node.address.toLowerCase()),
         key: Relayer.toChainedReference(node.outputReference),
       },
     ];
@@ -651,7 +661,9 @@ export class Join {
 
     // userData amounts should not include the BPT of the pool being joined
     let userDataAmounts = [];
-    const bptIndex = sortedTokens.indexOf(node.address);
+    const bptIndex = sortedTokens
+      .map((t) => t.toLowerCase())
+      .indexOf(node.address.toLowerCase());
     if (bptIndex === -1) {
       userDataAmounts = sortedAmounts;
     } else {
