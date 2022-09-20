@@ -1,5 +1,6 @@
 export * from './pool-stable';
 export * from './pool-weighted';
+export * from './pool-composable-stable';
 export * from './pool-utils';
 export * from './lib/utils';
 export * from './types';
@@ -15,6 +16,7 @@ export * from './modules/sor/sor.module';
 export * from './modules/pools';
 export * from './modules/data';
 export * from './balancerErrors';
+export * from './lib/utils/signatures';
 export {
   SwapInfo,
   SubgraphPoolBase,

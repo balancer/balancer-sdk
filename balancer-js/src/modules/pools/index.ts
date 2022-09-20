@@ -101,16 +101,21 @@ export class Pools implements Findable<PoolWithMethods> {
         slippage,
         shouldUnwrapNativeAsset = false,
         singleTokenMaxOut
-      ) =>
-        methods.exit.buildExitExactBPTIn({
-          exiter,
-          pool,
-          bptIn,
-          slippage,
-          shouldUnwrapNativeAsset,
-          wrappedNativeAsset,
-          singleTokenMaxOut,
-        }),
+      ) => {
+        if (methods.exit.buildExitExactBPTIn) {
+          return methods.exit.buildExitExactBPTIn({
+            exiter,
+            pool,
+            bptIn,
+            slippage,
+            shouldUnwrapNativeAsset,
+            wrappedNativeAsset,
+            singleTokenMaxOut,
+          });
+        } else {
+          throw 'ExitExactBPTIn not supported';
+        }
+      },
       buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) =>
         methods.exit.buildExitExactTokensOut({
           exiter,
