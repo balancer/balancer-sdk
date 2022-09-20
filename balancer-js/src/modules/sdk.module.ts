@@ -6,6 +6,7 @@ import { Sor } from './sor/sor.module';
 import { getNetworkConfig } from './sdk.helpers';
 import { Pricing } from './pricing/pricing.module';
 import { ContractInstances, Contracts } from './contracts/contracts.module';
+import { Zaps } from './zaps/zaps.module';
 import { Pools } from './pools';
 import { Data } from './data';
 import { Provider } from '@ethersproject/providers';
@@ -29,6 +30,7 @@ export class BalancerSDK implements BalancerSDKRoot {
   readonly pools: Pools;
   readonly data: Data;
   balancerContracts: Contracts;
+  zaps: Zaps;
   readonly networkConfig: BalancerNetworkConfig;
 
   constructor(
@@ -48,6 +50,7 @@ export class BalancerSDK implements BalancerSDKRoot {
       this.networkConfig.addresses.contracts,
       sor.provider
     );
+    this.zaps = new Zaps(this.networkConfig.chainId);
   }
 
   get rpcProvider(): Provider {
