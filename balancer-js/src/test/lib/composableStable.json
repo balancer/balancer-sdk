@@ -1,0 +1,81 @@
+{
+  "id": "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d",
+  "address": "0xa13a9247ea42d743238089903570127dda72fe44",
+  "poolType": "ComposableStable",
+  "symbol": "bb-a-USD",
+  "name": "Balancer Aave Boosted StablePool",
+  "swapFee": "0.0001",
+  "totalWeight": "0",
+  "totalSwapVolume": "0",
+  "totalSwapFee": "0",
+  "totalLiquidity": "21032.16138855676948903802787007574",
+  "totalShares": "21030.211856258222307264",
+  "tokens": [
+    {
+      "id": "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d-0x2f4eb100552ef93840d5adc30560e5513dfffacb",
+      "symbol": "bb-a-USDT",
+      "name": "Balancer Aave Boosted Pool (USDT)",
+      "decimals": 18,
+      "address": "0x2f4eb100552ef93840d5adc30560e5513dfffacb",
+      "balance": "6451.704326159201219047",
+      "managedBalance": "0",
+      "weight": null,
+      "priceRate": "1.000453227041260251"
+    },
+    {
+      "id": "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d-0x82698aecc9e28e9bb27608bd52cf57f704bd1b83",
+      "symbol": "bb-a-USDC",
+      "name": "Balancer Aave Boosted Pool (USDC)",
+      "decimals": 18,
+      "address": "0x82698aecc9e28e9bb27608bd52cf57f704bd1b83",
+      "balance": "7467.988193452182074684",
+      "managedBalance": "0",
+      "weight": null,
+      "priceRate": "1.00011533904904668"
+    },
+    {
+      "id": "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d-0xa13a9247ea42d743238089903570127dda72fe44",
+      "symbol": "bb-a-USD",
+      "name": "Balancer Aave Boosted StablePool",
+      "decimals": 18,
+      "address": "0xa13a9247ea42d743238089903570127dda72fe44",
+      "balance": "2596148429246384.482249163880637227",
+      "managedBalance": "0",
+      "weight": null,
+      "priceRate": "1"
+    },
+    {
+      "id": "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d-0xae37d54ae477268b9997d4161b96b8200755935c",
+      "symbol": "bb-a-DAI",
+      "name": "Balancer Aave Boosted Pool (DAI)",
+      "decimals": 18,
+      "address": "0xae37d54ae477268b9997d4161b96b8200755935c",
+      "balance": "7110.248192693297670978",
+      "managedBalance": "0",
+      "weight": null,
+      "priceRate": "1.000422371949213661"
+    }
+  ],
+  "swapsCount": "27",
+  "holdersCount": "10",
+  "tokensList": [
+    "0x2f4eb100552ef93840d5adc30560e5513dfffacb",
+    "0x82698aecc9e28e9bb27608bd52cf57f704bd1b83",
+    "0xa13a9247ea42d743238089903570127dda72fe44",
+    "0xae37d54ae477268b9997d4161b96b8200755935c"
+  ],
+  "amp": "1472",
+  "expiryTime": null,
+  "unitSeconds": null,
+  "createTime": 1662537668,
+  "principalToken": null,
+  "baseToken": null,
+  "swapEnabled": true,
+  "wrappedIndex": 0,
+  "mainIndex": 0,
+  "lowerTarget": null,
+  "upperTarget": null,
+  "sqrtAlpha": null,
+  "sqrtBeta": null,
+  "root3Alpha": null
+}

@@ -3,7 +3,7 @@ import { parseFixed } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 
 import { BalancerSDK, Network, Pool } from '@/.';
-import pools_14717479 from '@/test/lib/pools_14717479.json';
+import composableStablePoolData from '@/test/lib/composableStable.json';
 import { ComposableStablePoolExit } from './exit.concern';
 
 const concern = new ComposableStablePoolExit();
@@ -14,11 +14,7 @@ const { networkConfig } = new BalancerSDK({ network, rpcUrl });
 const wrappedNativeAsset =
   networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
 
-const pool = pools_14717479.find(
-  (pool) =>
-    pool.id ==
-    '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063' // Balancer USD Stable Pool - staBAL3
-) as unknown as Pool;
+const pool = composableStablePoolData as unknown as Pool;
 
 describe('exit module', () => {
   describe('buildExitExactBPTIn', () => {

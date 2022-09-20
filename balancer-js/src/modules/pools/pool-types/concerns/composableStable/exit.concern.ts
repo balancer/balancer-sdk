@@ -181,8 +181,21 @@ export class ComposableStablePoolExit implements ExitConcern {
       BigNumber.from(slippage)
     ).toString();
 
+    const bptIndex = sortedTokens
+      .map((t) => t.toLowerCase())
+      .indexOf(pool.address.toLowerCase());
+
+    let userDataAmounts = sortedAmounts;
+    if (bptIndex > -1) {
+      userDataAmounts = [
+        ...sortedAmounts.slice(0, bptIndex),
+        ...sortedAmounts.slice(bptIndex + 1),
+      ];
+    }
+
+    console.log('maxBPTIn', maxBPTIn);
     const userData = ComposableStablePoolEncoder.exitBPTInForExactTokensOut(
-      sortedAmounts,
+      userDataAmounts,
       maxBPTIn
     );
 

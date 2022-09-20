@@ -35,9 +35,12 @@ export const forkSetup = async (
     },
   ]);
 
+  const account = await signer.getAddress();
+  const provider = signer.provider;
+
   for (let i = 0; i < tokens.length; i++) {
     // Set initial account balance for each token that will be used to join pool
-    await setTokenBalance(signer, tokens[i], slots[i], balances[i]);
+    await setTokenBalance(account, provider, tokens[i], slots[i], balances[i]);
     // Approve appropriate allowances so that vault contract can move tokens
     await approveToken(tokens[i], balances[i], signer);
   }
@@ -46,13 +49,15 @@ export const forkSetup = async (
 /**
  * Set token balance for a given account
  *
- * @param {JsonRpcSigner} signer Account that will have token balance set
- * @param {string}        token Token address which balance will be set
- * @param {number}        slot Slot memory that stores balance - use npm package `slot20` to identify which slot to provide
- * @param {string}        balance Balance in EVM amounts
+ * @param {string}          account Account that will have token balance set
+ * @param {JsonRpcProvider} provider RPC provider
+ * @param {string}          token Token address which balance will be set
+ * @param {number}          slot Slot memory that stores balance - use npm package `slot20` to identify which slot to provide
+ * @param {string}          balance Balance in EVM amounts
  */
 export const setTokenBalance = async (
-  signer: JsonRpcSigner,
+  account: string,
+  provider: JsonRpcProvider,
   token: string,
   slot: number,
   balance: string
@@ -62,16 +67,14 @@ export const setTokenBalance = async (
   };
 
   const setStorageAt = async (token: string, index: string, value: string) => {
-    await signer.provider.send('hardhat_setStorageAt', [token, index, value]);
-    await signer.provider.send('evm_mine', []); // Just mines to the next block
+    await provider.send('hardhat_setStorageAt', [token, index, value]);
+    await provider.send('evm_mine', []); // Just mines to the next block
   };
-
-  const signerAddress = await signer.getAddress();
 
   // Get storage slot index
   const index = keccak256(
     ['uint256', 'uint256'],
-    [signerAddress, slot] // key, slot
+    [account, slot] // key, slot
   );
 
   // Manipulate local balance (needs to be bytes32 string)
