@@ -14,7 +14,7 @@ export class SubgraphArgsFormatter implements GraphQLArgsFormatter {
     };
   }
 
-  format(args: GraphQLArgs): unknown {
+  format(args: GraphQLArgs): GraphQLArgs {
     const whereQuery: Record<string, GraphQLFilter> = {};
     if (args.where) {
       Object.entries(args.where).forEach(([name, filter]) => {

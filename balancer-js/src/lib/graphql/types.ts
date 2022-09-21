@@ -7,7 +7,8 @@ export type GraphQLFilterOperator =
   | 'contains';
 
 export type GraphQLFilter = {
-  [operator in GraphQLFilterOperator]?: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [operator in GraphQLFilterOperator]?: any;
 };
 
 export interface GraphQLArgs {

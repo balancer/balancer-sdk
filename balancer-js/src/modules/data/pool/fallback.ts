@@ -70,8 +70,9 @@ export class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
           setTimeout(() => reject(new Error('timeout')), this.timeout)
         ),
       ]);
-    } catch (e) {
-      if (e.message === 'timeout') {
+    } catch (e: unknown) {
+      const message = (e as Error).message;
+      if (message === 'timeout') {
         console.error(
           'Provider ' +
             this.currentProviderIdx +
@@ -80,7 +81,7 @@ export class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
       } else {
         console.error(
           'Provider ' + this.currentProviderIdx + ' failed with error: ',
-          e.message,
+          message,
           ', falling back to next provider'
         );
       }

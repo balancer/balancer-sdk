@@ -14,6 +14,7 @@ import { GraphQLArgs } from '@/lib/graphql/types';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
 import { GraphQLQuery, Pool, PoolType } from '@/types';
 import { Network } from '@/lib/constants/network';
+import { PoolsQueryVariables } from '../../subgraph/subgraph';
 
 interface PoolsSubgraphRepositoryOptions {
   url: string;
@@ -84,7 +85,7 @@ export class PoolsSubgraphRepository
 
     const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
       new SubgraphArgsFormatter()
-    );
+    ) as PoolsQueryVariables;
 
     const { pools } = await this.client.Pools(formattedQuery);
 

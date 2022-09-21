@@ -4,7 +4,8 @@ import { jsonToGraphQLQuery } from 'json-to-graphql-query';
 export default class BalancerAPIClient {
   constructor(private readonly url: string, private readonly apiKey: string) {}
 
-  public async get(query: unknown): Promise<unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public async get(query: unknown): Promise<any> {
     try {
       const payload = this.toPayload(query);
       const { data } = await axios.post(this.url, payload, {
