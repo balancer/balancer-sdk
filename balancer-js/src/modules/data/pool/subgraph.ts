@@ -73,15 +73,14 @@ export class PoolsSubgraphRepository
   }
 
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
-    if (options?.first) {
-      this.query.args.first = options.first;
-    }
     if (options?.skip) {
       this.query.args.skip = options.skip;
     }
     if (this.blockHeight) {
       this.query.args.block = { number: await this.blockHeight() };
     }
+
+    this.query.args.first = options?.first || 1000;
 
     const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
       new SubgraphArgsFormatter()
