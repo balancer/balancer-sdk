@@ -484,5 +484,11 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'boostedMetaBig1',
     },
+    bbausd2: {
+      address: '0x3d5981BDD8D3E49EB7BBDC1d2B156a3eE019c18e',
+      decimals: 18,
+      symbol: 'bbausd2',
+      slot: 0,
+    },
   },
 };

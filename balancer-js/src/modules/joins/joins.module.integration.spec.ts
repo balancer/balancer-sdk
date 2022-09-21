@@ -260,6 +260,7 @@ describe('generalised join execution', async () => {
         addresses.waMAI.address,
         addresses.bbamai.address,
         addresses.bbadai.address,
+        addresses.bbausd2.address,
       ];
       const slots = [
         addresses.DAI.slot,
@@ -272,6 +273,7 @@ describe('generalised join execution', async () => {
         addresses.waMAI.slot,
         addresses.bbamai.slot,
         addresses.bbadai.slot,
+        addresses.bbausd2.slot,
       ];
       const balances = [
         parseFixed('10', addresses.DAI.decimals).toString(),
@@ -284,6 +286,7 @@ describe('generalised join execution', async () => {
         '0',
         parseFixed('10', addresses.bbamai.decimals).toString(),
         parseFixed('10', addresses.bbadai.decimals).toString(),
+        parseFixed('10', addresses.bbausd2.decimals).toString(),
       ];
       await forkSetup(
         signer,
@@ -332,7 +335,7 @@ describe('generalised join execution', async () => {
       },
       {
         signer,
-        description: 'join withleaf and child linear',
+        description: 'join with leaf and child linear',
         pool: {
           id: addresses.boostedMeta1.id,
           address: addresses.boostedMeta1.address,
@@ -345,8 +348,42 @@ describe('generalised join execution', async () => {
         authorisation: authorisation,
         wrapMainTokens: false,
       },
-      // TODO child boosted
-      // TODO child boosted and leaf
+      {
+        signer,
+        description: 'join with child boosted',
+        pool: {
+          id: addresses.boostedMeta1.id,
+          address: addresses.boostedMeta1.address,
+        },
+        tokensIn: [addresses.bbausd2.address],
+        amountsIn: [parseFixed('10', addresses.bbausd2.decimals).toString()],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      {
+        signer,
+        description: 'join with child boosted and leaves',
+        pool: {
+          id: addresses.boostedMeta1.id,
+          address: addresses.boostedMeta1.address,
+        },
+        tokensIn: [
+          addresses.bbausd2.address,
+          addresses.DAI.address,
+          addresses.USDC.address,
+          addresses.USDT.address,
+          addresses.MAI.address,
+        ],
+        amountsIn: [
+          parseFixed('10', addresses.bbausd2.decimals).toString(),
+          parseFixed('10', addresses.DAI.decimals).toString(),
+          parseFixed('10', addresses.USDC.decimals).toString(),
+          parseFixed('10', addresses.USDT.decimals).toString(),
+          parseFixed('10', addresses.MAI.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
     ]);
   });
   // following contexts currently applies to GOERLI only
@@ -440,11 +477,33 @@ describe('generalised join execution', async () => {
         authorisation: authorisation,
         wrapMainTokens: false,
       },
-      // TODO child boosted
-      // TODO child boosted and leaf
+      {
+        signer,
+        description: 'join with child boosted',
+        pool: {
+          id: addresses.boostedMetaBig1.id,
+          address: addresses.boostedMetaBig1.address,
+        },
+        tokensIn: [addresses.bbamaiweth.address],
+        amountsIn: [parseFixed('10', addresses.bbamaiweth.decimals).toString()],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      {
+        signer,
+        description: 'join with leaf and child boosted',
+        pool: {
+          id: addresses.boostedMetaBig1.id,
+          address: addresses.boostedMetaBig1.address,
+        },
+        tokensIn: [addresses.DAI.address, addresses.bbamaiweth.address],
+        amountsIn: [
+          parseFixed('10', addresses.DAI.decimals).toString(),
+          parseFixed('10', addresses.bbamaiweth.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
     ]);
   });
 });
-
-// 'joins boosted pool with 2 linear input'
-// 'joins boosted pool with both leaf and linear tokens'
