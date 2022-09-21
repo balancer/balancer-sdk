@@ -3779,6 +3779,14 @@ interface EncodeExitPoolInput {
     outputReferences: OutputReference[];
     exitPoolRequest: ExitPoolRequest;
 }
+interface EncodeJoinPoolInput {
+    poolId: string;
+    poolKind: number;
+    sender: string;
+    recipient: string;
+    outputReferences: OutputReference[];
+    joinPoolRequest: JoinPoolRequest;
+}
 interface EncodeUnwrapAaveStaticTokenInput {
     staticToken: string;
     sender: string;
@@ -3804,6 +3812,10 @@ declare class Relayer {
     private readonly swaps;
     static CHAINED_REFERENCE_PREFIX: string;
     constructor(swapsOrConfig: Swaps | BalancerSdkConfig);
+    static encodeApproveVault(tokenAddress: string, maxAmount: string): string;
+    static encodeSetRelayerApproval(relayerAdress: string, approved: boolean, authorisation: string): string;
+    static encodeGaugeWithdraw(gaugeAddress: string, sender: string, recipient: string, amount: string): string;
+    static encodeGaugeDeposit(gaugeAddress: string, sender: string, recipient: string, amount: string): string;
     static encodeBatchSwap(params: EncodeBatchSwapInput): string;
     static encodeExitPool(params: EncodeExitPoolInput): string;
     static encodeUnwrapAaveStaticToken(params: EncodeUnwrapAaveStaticTokenInput): string;
@@ -3938,6 +3950,97 @@ declare class Contracts {
     getErc20(address: string, provider: Provider): Contract;
 }
 
+declare class Migrations {
+    private network;
+    constructor(network: 1 | 5 | 137);
+    /**
+     * Builds migration call data.
+     * Migrates tokens from staBal3 to bbausd2 pool.
+     * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+     *
+     * @param userAddress User address.
+     * @param staBal3Amount Amount of BPT tokens to migrate.
+     * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param authorisation Encoded authorisation call.
+     * @returns Migration transaction request ready to send with signer.sendTransaction
+     */
+    stabal3(userAddress: string, staBal3Amount: string, minBbausd2Out: string, staked: boolean, authorisation?: string): {
+        to: string;
+        data: string;
+        decode: (output: string, staked: boolean) => string;
+    };
+    /**
+     * Builds migration call data.
+     * Migrates tokens from bbausd1 to bbausd2 pool.
+     * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+     *
+     * @param userAddress User address.
+     * @param bbausd1Amount Amount of BPT tokens to migrate.
+     * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param tokenBalances Token balances in EVM scale. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+     * @param authorisation Encoded authorisation call.
+     * @returns Migration transaction request ready to send with signer.sendTransaction
+     */
+    bbaUsd(userAddress: string, bbausd1Amount: string, minBbausd2Out: string, staked: boolean, tokenBalances: string[], authorisation?: string): {
+        to: string;
+        data: string;
+        decode: (output: string, staked: boolean) => string;
+    };
+    /**
+     * Builds migration call data.
+     * Migrates tokens from old stable to new stable phantom pools with the same underlying tokens.
+     * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+     *
+     * @param userAddress User address.
+     * @param from Pool info being migrated from
+     * @param to Pool info being migrated to
+     * @param bptIn Amount of BPT tokens to migrate.
+     * @param minBptOut Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param underlyingTokens Underlying token addresses. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+     * @param authorisation Encoded authorisation call.
+     * @returns Migration transaction request ready to send with signer.sendTransaction
+     */
+    stables(userAddress: string, from: {
+        id: string;
+        address: string;
+        gauge?: string;
+    }, to: {
+        id: string;
+        address: string;
+        gauge?: string;
+    }, bptIn: string, minBptOut: string, staked: boolean, underlyingTokens: string[], authorisation?: string): {
+        to: string;
+        data: string;
+        decode: (output: string, staked: boolean) => string;
+    };
+    /**
+     * Builds migration call data.
+     * Migrates tokens from staBal3 to bbausd2 pool.
+     * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+     *
+     * @param userAddress User address.
+     * @param bptIn Amount of BPT tokens to migrate.
+     * @param minBptOut Minimum of expected BPT out ot the migration flow.
+     * @param staked Indicates whether tokens are initially staked or not.
+     * @param authorisation Encoded authorisation call.
+     * @returns Migration transaction request ready to send with signer.sendTransaction
+     */
+    maiusd(userAddress: string, bptIn: string, minBptOut: string, staked: boolean, authorisation?: string): {
+        to: string;
+        data: string;
+        decode: (output: string, staked: boolean) => string;
+    };
+}
+
+declare class Zaps {
+    network: Network;
+    migrations: Migrations;
+    constructor(network: Network);
+}
+
 /**
  * Calculates pool fees
  *
@@ -4030,6 +4133,7 @@ declare class BalancerSDK implements BalancerSDKRoot {
     readonly pools: Pools;
     readonly data: Data;
     balancerContracts: Contracts;
+    zaps: Zaps;
     readonly networkConfig: BalancerNetworkConfig;
     constructor(config: BalancerSdkConfig, sor?: Sor, subgraph?: Subgraph);
     get rpcProvider(): Provider;
@@ -4050,6 +4154,7 @@ declare enum BalancerErrorCode {
     NO_POOL_DATA = "NO_POOL_DATA",
     INPUT_OUT_OF_BOUNDS = "INPUT_OUT_OF_BOUNDS",
     INPUT_LENGTH_MISMATCH = "INPUT_LENGTH_MISMATCH",
+    INPUT_ZERO_NOT_ALLOWED = "INPUT_ZERO_NOT_ALLOWED",
     TOKEN_MISMATCH = "TOKEN_MISMATCH",
     MISSING_TOKENS = "MISSING_TOKENS",
     MISSING_AMP = "MISSING_AMP",
@@ -4063,4 +4168,4 @@ declare class BalancerError extends Error {
     static getMessage(code: BalancerErrorCode): string;
 }
 
-export { AaveHelpers, Account, Address, AprBreakdown, AprFetcher, AssetHelpers, BalancerAPIArgsFormatter, BalancerDataRepositories, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BaseFeeDistributor, BatchSwap, BatchSwapStep, BlockNumberRepository, BuildTransactionParameters, CoingeckoPriceRepository, ComposableStablePoolEncoder, ComposableStablePoolExitKind, ComposableStablePoolJoinKind, ContractAddresses, Currency, Data, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeUnwrapAaveStaticTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FeeCollectorRepository, FeeDistributorData, FeeDistributorRepository, FetchPoolsInput, FindRouteParameters, Findable, FundManagement, GaugeControllerMulticallRepository, GraphQLArgs, GraphQLArgsBuilder, GraphQLArgsFormatter, GraphQLFilter, GraphQLFilterOperator, GraphQLQuery, JoinPoolRequest, Liquidity, LiquidityGauge, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, Network, OnchainPoolData, OnchainTokenData, OutputReference, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolReference, PoolRepository, PoolSpecialization, PoolToken, PoolType, PoolWithMethods, Pools, PoolsBalancerAPIRepository, PoolsFallbackRepository, PoolsFallbackRepositoryOptions, PoolsRepositoryFetchOptions, PoolsStaticRepository, PoolsSubgraphRepository, Price, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, RewardData, Searchable, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphArgsFormatter, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TokenYieldsRepository, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, splitPoolId, toNormalizedWeights, tokensToTokenPrices };
+export { AaveHelpers, Account, Address, AprBreakdown, AprFetcher, AssetHelpers, BalancerAPIArgsFormatter, BalancerDataRepositories, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BaseFeeDistributor, BatchSwap, BatchSwapStep, BlockNumberRepository, BuildTransactionParameters, CoingeckoPriceRepository, ComposableStablePoolEncoder, ComposableStablePoolExitKind, ComposableStablePoolJoinKind, ContractAddresses, Currency, Data, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeJoinPoolInput, EncodeUnwrapAaveStaticTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FeeCollectorRepository, FeeDistributorData, FeeDistributorRepository, FetchPoolsInput, FindRouteParameters, Findable, FundManagement, GaugeControllerMulticallRepository, GraphQLArgs, GraphQLArgsBuilder, GraphQLArgsFormatter, GraphQLFilter, GraphQLFilterOperator, GraphQLQuery, JoinPoolRequest, Liquidity, LiquidityGauge, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, Network, OnchainPoolData, OnchainTokenData, OutputReference, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolReference, PoolRepository, PoolSpecialization, PoolToken, PoolType, PoolWithMethods, Pools, PoolsBalancerAPIRepository, PoolsFallbackRepository, PoolsFallbackRepositoryOptions, PoolsRepositoryFetchOptions, PoolsStaticRepository, PoolsSubgraphRepository, Price, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, RewardData, Searchable, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphArgsFormatter, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TokenYieldsRepository, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, splitPoolId, toNormalizedWeights, tokensToTokenPrices };

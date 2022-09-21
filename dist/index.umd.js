@@ -1211,6 +1211,7 @@
         BalancerErrorCode["NO_POOL_DATA"] = "NO_POOL_DATA";
         BalancerErrorCode["INPUT_OUT_OF_BOUNDS"] = "INPUT_OUT_OF_BOUNDS";
         BalancerErrorCode["INPUT_LENGTH_MISMATCH"] = "INPUT_LENGTH_MISMATCH";
+        BalancerErrorCode["INPUT_ZERO_NOT_ALLOWED"] = "INPUT_ZERO_NOT_ALLOWED";
         BalancerErrorCode["TOKEN_MISMATCH"] = "TOKEN_MISMATCH";
         BalancerErrorCode["MISSING_TOKENS"] = "MISSING_TOKENS";
         BalancerErrorCode["MISSING_AMP"] = "MISSING_AMP";
@@ -1258,6 +1259,8 @@
                     return 'missing price rate';
                 case exports.BalancerErrorCode.MISSING_WEIGHT:
                     return 'missing weight';
+                case exports.BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED:
+                    return 'zero input not allowed';
                 default:
                     return 'Unknown error';
             }
@@ -10159,6 +10162,27 @@
     	{
     		inputs: [
     			{
+    				internalType: "contract IVault",
+    				name: "vault",
+    				type: "address"
+    			},
+    			{
+    				internalType: "contract IERC20",
+    				name: "wstETH",
+    				type: "address"
+    			},
+    			{
+    				internalType: "contract IBalancerMinter",
+    				name: "minter",
+    				type: "address"
+    			}
+    		],
+    		stateMutability: "nonpayable",
+    		type: "constructor"
+    	},
+    	{
+    		inputs: [
+    			{
     				internalType: "contract IERC20",
     				name: "token",
     				type: "address"
@@ -10365,6 +10389,150 @@
     	},
     	{
     		inputs: [
+    			{
+    				internalType: "contract IStakingLiquidityGauge[]",
+    				name: "gauges",
+    				type: "address[]"
+    			}
+    		],
+    		name: "gaugeClaimRewards",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "contract IStakingLiquidityGauge",
+    				name: "gauge",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "sender",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "recipient",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "amount",
+    				type: "uint256"
+    			}
+    		],
+    		name: "gaugeDeposit",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "address[]",
+    				name: "gauges",
+    				type: "address[]"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "outputReference",
+    				type: "uint256"
+    			}
+    		],
+    		name: "gaugeMint",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "bool",
+    				name: "approval",
+    				type: "bool"
+    			},
+    			{
+    				internalType: "address",
+    				name: "user",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "deadline",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "uint8",
+    				name: "v",
+    				type: "uint8"
+    			},
+    			{
+    				internalType: "bytes32",
+    				name: "r",
+    				type: "bytes32"
+    			},
+    			{
+    				internalType: "bytes32",
+    				name: "s",
+    				type: "bytes32"
+    			}
+    		],
+    		name: "gaugeSetMinterApproval",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "contract IStakingLiquidityGauge",
+    				name: "gauge",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "sender",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "recipient",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "amount",
+    				type: "uint256"
+    			}
+    		],
+    		name: "gaugeWithdraw",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    		],
+    		name: "getEntrypoint",
+    		outputs: [
+    			{
+    				internalType: "contract IBalancerRelayer",
+    				name: "",
+    				type: "address"
+    			}
+    		],
+    		stateMutability: "view",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
     		],
     		name: "getVault",
     		outputs: [
@@ -10492,6 +10660,78 @@
     	{
     		inputs: [
     			{
+    				internalType: "address",
+    				name: "relayer",
+    				type: "address"
+    			},
+    			{
+    				internalType: "bool",
+    				name: "approved",
+    				type: "bool"
+    			},
+    			{
+    				internalType: "bytes",
+    				name: "authorisation",
+    				type: "bytes"
+    			}
+    		],
+    		name: "setRelayerApproval",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "address",
+    				name: "recipient",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "amount",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "outputReference",
+    				type: "uint256"
+    			}
+    		],
+    		name: "stakeETH",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "address",
+    				name: "recipient",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "amount",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "outputReference",
+    				type: "uint256"
+    			}
+    		],
+    		name: "stakeETHAndWrap",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
     				components: [
     					{
     						internalType: "bytes32",
@@ -10583,6 +10823,371 @@
     				name: "",
     				type: "uint256"
     			}
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "contract IStaticATokenLM",
+    				name: "staticToken",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "sender",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "recipient",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "amount",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "bool",
+    				name: "toUnderlying",
+    				type: "bool"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "outputReference",
+    				type: "uint256"
+    			}
+    		],
+    		name: "unwrapAaveStaticToken",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "contract IERC4626",
+    				name: "wrappedToken",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "sender",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "recipient",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "amount",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "outputReference",
+    				type: "uint256"
+    			}
+    		],
+    		name: "unwrapERC4626",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "contract IUnbuttonToken",
+    				name: "wrapperToken",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "sender",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "recipient",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "amount",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "outputReference",
+    				type: "uint256"
+    			}
+    		],
+    		name: "unwrapUnbuttonToken",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "address",
+    				name: "sender",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "recipient",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "amount",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "outputReference",
+    				type: "uint256"
+    			}
+    		],
+    		name: "unwrapWstETH",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "contract IERC20Permit",
+    				name: "token",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "owner",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "value",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "deadline",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "uint8",
+    				name: "v",
+    				type: "uint8"
+    			},
+    			{
+    				internalType: "bytes32",
+    				name: "r",
+    				type: "bytes32"
+    			},
+    			{
+    				internalType: "bytes32",
+    				name: "s",
+    				type: "bytes32"
+    			}
+    		],
+    		name: "vaultPermit",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "contract IERC20PermitDAI",
+    				name: "token",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "holder",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "nonce",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "expiry",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "bool",
+    				name: "allowed",
+    				type: "bool"
+    			},
+    			{
+    				internalType: "uint8",
+    				name: "v",
+    				type: "uint8"
+    			},
+    			{
+    				internalType: "bytes32",
+    				name: "r",
+    				type: "bytes32"
+    			},
+    			{
+    				internalType: "bytes32",
+    				name: "s",
+    				type: "bytes32"
+    			}
+    		],
+    		name: "vaultPermitDAI",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "contract IStaticATokenLM",
+    				name: "staticToken",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "sender",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "recipient",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "amount",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "bool",
+    				name: "fromUnderlying",
+    				type: "bool"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "outputReference",
+    				type: "uint256"
+    			}
+    		],
+    		name: "wrapAaveDynamicToken",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "contract IERC4626",
+    				name: "wrappedToken",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "sender",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "recipient",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "amount",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "outputReference",
+    				type: "uint256"
+    			}
+    		],
+    		name: "wrapERC4626",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "address",
+    				name: "sender",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "recipient",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "amount",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "outputReference",
+    				type: "uint256"
+    			}
+    		],
+    		name: "wrapStETH",
+    		outputs: [
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "contract IUnbuttonToken",
+    				name: "wrapperToken",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "sender",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "recipient",
+    				type: "address"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "uAmount",
+    				type: "uint256"
+    			},
+    			{
+    				internalType: "uint256",
+    				name: "outputReference",
+    				type: "uint256"
+    			}
+    		],
+    		name: "wrapUnbuttonToken",
+    		outputs: [
     		],
     		stateMutability: "payable",
     		type: "function"
@@ -11236,6 +11841,7 @@
     	}
     ];
 
+    const relayerLibrary = new abi$1.Interface(relayerLibraryAbi);
     class Relayer {
         constructor(swapsOrConfig) {
             if (swapsOrConfig instanceof Swaps) {
@@ -11245,8 +11851,36 @@
                 this.swaps = new Swaps(swapsOrConfig);
             }
         }
+        static encodeApproveVault(tokenAddress, maxAmount) {
+            return relayerLibrary.encodeFunctionData('approveVault', [
+                tokenAddress,
+                maxAmount,
+            ]);
+        }
+        static encodeSetRelayerApproval(relayerAdress, approved, authorisation) {
+            return relayerLibrary.encodeFunctionData('setRelayerApproval', [
+                relayerAdress,
+                approved,
+                authorisation,
+            ]);
+        }
+        static encodeGaugeWithdraw(gaugeAddress, sender, recipient, amount) {
+            return relayerLibrary.encodeFunctionData('gaugeWithdraw', [
+                gaugeAddress,
+                sender,
+                recipient,
+                amount,
+            ]);
+        }
+        static encodeGaugeDeposit(gaugeAddress, sender, recipient, amount) {
+            return relayerLibrary.encodeFunctionData('gaugeDeposit', [
+                gaugeAddress,
+                sender,
+                recipient,
+                amount,
+            ]);
+        }
         static encodeBatchSwap(params) {
-            const relayerLibrary = new abi$1.Interface(relayerLibraryAbi);
             return relayerLibrary.encodeFunctionData('batchSwap', [
                 params.swapType,
                 params.swaps,
@@ -11259,7 +11893,6 @@
             ]);
         }
         static encodeExitPool(params) {
-            const relayerLibrary = new abi$1.Interface(relayerLibraryAbi);
             return relayerLibrary.encodeFunctionData('exitPool', [
                 params.poolId,
                 params.poolKind,
@@ -11902,6 +12535,1289 @@
          */
         getErc20(address, provider) {
             return ERC20(address, provider);
+        }
+    }
+
+    const ADDRESSES = {
+        1: {
+            relayer: '0x886A3Ec7bcC508B8795990B60Fa21f85F9dB7948',
+            staBal3: {
+                id: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063',
+                address: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42',
+                gauge: '0x34f33cdaed8ba0e1ceece80e5f4a73bcf234cfac',
+                assetOrder: ['DAI', 'USDC', 'USDT'],
+            },
+            bbausd1: {
+                id: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe',
+                address: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
+                gauge: '0x68d019f64a7aa97e2d4e7363aee42251d08124fb',
+                assetOrder: ['bb-a-USDT', 'bb-a-DAI', 'bb-a-USDC'],
+            },
+            bbausd2: {
+                id: '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d',
+                address: '0xa13a9247ea42d743238089903570127dda72fe44',
+                gauge: '0xa6325e799d266632d347e41265a69af111b05403',
+            },
+            linearUsdc1: {
+                id: '0x9210f1204b5a24742eba12f710636d76240df3d00000000000000000000000fc',
+                address: '0x9210F1204b5a24742Eba12f710636D76240dF3d0',
+            },
+            linearDai1: {
+                id: '0x804cdb9116a10bb78768d3252355a1b18067bf8f0000000000000000000000fb',
+                address: '0x804CdB9116a10bB78768D3252355a1b18067bF8f',
+            },
+            linearUsdt1: {
+                id: '0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c0000000000000000000000fd',
+                address: '0x2BBf681cC4eb09218BEe85EA2a5d3D13Fa40fC0C',
+            },
+            linearUsdc2: {
+                id: '0x82698AECC9E28E9BB27608BD52CF57F704BD1B83000000000000000000000336',
+                address: '0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83',
+            },
+            linearDai2: {
+                id: '0xAE37D54AE477268B9997D4161B96B8200755935C000000000000000000000337',
+                address: '0xae37D54Ae477268B9997d4161B96b8200755935c',
+            },
+            linearUsdt2: {
+                id: '0x2F4EB100552EF93840D5ADC30560E5513DFFFACB000000000000000000000334',
+                address: '0x2F4eb100552ef93840d5aDC30560E5513DFfFACb',
+            },
+            maiusd: {
+                id: '',
+                address: '',
+                gauge: '',
+                assetOrder: ['USDT', 'miMATIC', 'DAI', 'USDC'],
+            },
+            maibbausd: {
+                id: '',
+                address: '',
+                gauge: '',
+                assetOrder: ['bb-a-USD', 'miMATIC'],
+            },
+            DAI: '0x6b175474e89094c44da98b954eedeac495271d0f',
+            USDC: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+            USDT: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+            waDAI: '0x02d60b84491589974263d922d9cc7a3152618ef6',
+            waUSDC: '0xd093fa4fb80d09bb30817fdcd442d4d02ed3e5de',
+            waUSDT: '0xf8fd466f12e236f4c96f7cce6c79eadb819abf58',
+            miMATIC: '',
+        },
+        5: {
+            relayer: '0x7b9B6f094DC2Bd1c12024b0D9CC63d6993Be1888',
+            staBal3: {
+                id: '0xdcdd4a3d36dec8d57594e89763d069a7e9b223e2000000000000000000000062',
+                address: '0xdcdd4a3d36dec8d57594e89763d069a7e9b223e2',
+                gauge: '0xfd364cda96bb7db06b65706182c448a73f0a5f9a',
+                assetOrder: ['USDT', 'DAI', 'USDC'],
+            },
+            staBal3_2: {
+                id: '0xff9d677474d4344379924e10b68c8fea67e03294000000000000000000000072',
+                address: '0xff9d677474d4344379924e10b68c8fea67e03294',
+                gauge: '0x4e4ebf2aa90e41174d716a5168895357762d68af',
+                assetOrder: ['USDT', 'DAI', 'USDC'],
+            },
+            staBal3_3: {
+                id: '0x3bfc8a0509f1a68aefd446f6c19bf37b3c75a8fc0000000000000000000000a5',
+                address: '0x3bfc8a0509f1a68aefd446f6c19bf37b3c75a8fc',
+                gauge: '0x7776e1008d7c20ab54aa57a7c44fc7de602de29a',
+                assetOrder: ['USDT', 'DAI', 'USDC'],
+            },
+            bbausd1: {
+                id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
+                address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
+                gauge: '0xa2d0ea81a47d68598922cd54c59249ff58c2a3ff',
+                assetOrder: ['bb-a-USDC', 'bb-a-DAI', 'bb-a-USDT'],
+            },
+            bbausd2: {
+                id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
+                address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
+                gauge: '0xa2d0ea81a47d68598922cd54c59249ff58c2a3ff',
+            },
+            linearUsdc1: {
+                id: '0x0595d1df64279ddb51f1bdc405fe2d0b4cc8668100000000000000000000005c',
+                address: '0x0595d1df64279ddb51f1bdc405fe2d0b4cc86681',
+            },
+            linearDai1: {
+                id: '0x5cea6a84ed13590ed14903925fa1a73c36297d9900000000000000000000005d',
+                address: '0x5cea6a84ed13590ed14903925fa1a73c36297d99',
+            },
+            linearUsdt1: {
+                id: '0xefd681a82970ac5d980b9b2d40499735e7bf3f1f00000000000000000000005e',
+                address: '0xefd681a82970ac5d980b9b2d40499735e7bf3f1f',
+            },
+            linearUsdc2: {
+                id: '0x0595d1df64279ddb51f1bdc405fe2d0b4cc8668100000000000000000000005c',
+                address: '0x0595d1df64279ddb51f1bdc405fe2d0b4cc86681',
+            },
+            linearDai2: {
+                id: '0x5cea6a84ed13590ed14903925fa1a73c36297d9900000000000000000000005d',
+                address: '0x5cea6a84ed13590ed14903925fa1a73c36297d99',
+            },
+            linearUsdt2: {
+                id: '0xefd681a82970ac5d980b9b2d40499735e7bf3f1f00000000000000000000005e',
+                address: '0xefd681a82970ac5d980b9b2d40499735e7bf3f1f',
+            },
+            maiusd: {
+                id: '0x6a8f9ab364b85725973d2a33cb9aae2dac43b5e30000000000000000000000a6',
+                address: '0x6a8f9ab364b85725973d2a33cb9aae2dac43b5e3',
+                gauge: '0x58141bdcecb7fbae006964f4131cf6f65c948357',
+                assetOrder: ['USDT', 'miMATIC', 'DAI', 'USDC'],
+            },
+            maibbausd: {
+                id: '0xb04b03b78cf79788a1931545bd2744161029648f0000000000000000000000a8',
+                address: '0xb04b03b78cf79788a1931545bd2744161029648f',
+                gauge: '0xdc3f6fc8898830e53c777543fe252b14f22680d4',
+                assetOrder: ['bb-a-USD', 'miMATIC', 'MAI BSP'],
+            },
+            USDT: '0x1f1f156e0317167c11aa412e3d1435ea29dc3cce',
+            DAI: '0x8c9e6c40d3402480ace624730524facc5482798c',
+            USDC: '0xe0c9275e44ea80ef17579d33c55136b7da269aeb',
+            waDAI: '0x89534a24450081aa267c79b07411e9617d984052',
+            waUSDC: '0x811151066392fd641fe74a9b55a712670572d161',
+            waUSDT: '0x4cb1892fddf14f772b2e39e299f44b2e5da90d04',
+            miMATIC: '0x398106564948feeb1fedea0709ae7d969d62a391',
+        },
+        137: {
+            relayer: '0xcf6a66E32dCa0e26AcC3426b851FD8aCbF12Dac7',
+            staBal3: {
+                id: '',
+                address: '',
+                gauge: '',
+                assetOrder: ['USDT', 'DAI', 'USDC'],
+            },
+            bbausd1: {
+                id: '',
+                address: '',
+                gauge: '',
+                assetOrder: ['bb-a-USDC', 'bb-a-DAI', 'bb-a-USDT'],
+            },
+            bbausd2: {
+                id: '0x48e6b98ef6329f8f0a30ebb8c7c960330d64808500000000000000000000075b',
+                address: '0x48e6b98ef6329f8f0a30ebb8c7c960330d648085',
+                gauge: '',
+            },
+            linearUsdc1: {
+                id: '',
+                address: '',
+            },
+            linearDai1: {
+                id: '',
+                address: '',
+            },
+            linearUsdt1: {
+                id: '',
+                address: '',
+            },
+            linearUsdc2: {
+                id: '0xf93579002dbe8046c43fefe86ec78b1112247bb8000000000000000000000759',
+                address: '0xf93579002dbe8046c43fefe86ec78b1112247bb8',
+            },
+            linearDai2: {
+                id: '0x178e029173417b1f9c8bc16dcec6f697bc323746000000000000000000000758',
+                address: '0x178e029173417b1f9c8bc16dcec6f697bc323746',
+            },
+            linearUsdt2: {
+                id: '0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea600000000000000000000075a',
+                address: '0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea6',
+            },
+            maiusd: {
+                id: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000012',
+                address: '0x06df3b2bbb68adc8b0e302443692037ed9f91b42',
+                gauge: '0x72843281394e68de5d55bcf7072bb9b2ebc24150',
+                assetOrder: ['USDC', 'DAI', 'miMATIC', 'USDT'],
+            },
+            maibbausd: {
+                id: '0xb54b2125b711cd183edd3dd09433439d5396165200000000000000000000075e',
+                address: '0xb54b2125b711cd183edd3dd09433439d53961652',
+                gauge: '0x9a105ef22a59484aa2731c357049f6a13d0891f5',
+                assetOrder: ['bb-a-USD', 'miMATIC'],
+            },
+            USDT: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
+            DAI: '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063',
+            USDC: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+            waDAI: '0xEE029120c72b0607344f35B17cdD90025e647B00',
+            waUSDC: '0x221836a597948Dce8F3568E044fF123108aCc42A',
+            waUSDT: '0x19C60a251e525fa88Cd6f3768416a8024e98fC19',
+            miMATIC: '0xa3fa99a148fa48d14ed51d610c367c61876997f1',
+        },
+    };
+
+    var balancerRelayerAbi = [
+    	{
+    		inputs: [
+    			{
+    				internalType: "contract IVault",
+    				name: "vault",
+    				type: "address"
+    			},
+    			{
+    				internalType: "address",
+    				name: "libraryAddress",
+    				type: "address"
+    			}
+    		],
+    		stateMutability: "nonpayable",
+    		type: "constructor"
+    	},
+    	{
+    		inputs: [
+    		],
+    		name: "getLibrary",
+    		outputs: [
+    			{
+    				internalType: "address",
+    				name: "",
+    				type: "address"
+    			}
+    		],
+    		stateMutability: "view",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    		],
+    		name: "getVault",
+    		outputs: [
+    			{
+    				internalType: "contract IVault",
+    				name: "",
+    				type: "address"
+    			}
+    		],
+    		stateMutability: "view",
+    		type: "function"
+    	},
+    	{
+    		inputs: [
+    			{
+    				internalType: "bytes[]",
+    				name: "data",
+    				type: "bytes[]"
+    			}
+    		],
+    		name: "multicall",
+    		outputs: [
+    			{
+    				internalType: "bytes[]",
+    				name: "results",
+    				type: "bytes[]"
+    			}
+    		],
+    		stateMutability: "payable",
+    		type: "function"
+    	},
+    	{
+    		stateMutability: "payable",
+    		type: "receive"
+    	}
+    ];
+
+    const balancerRelayerInterface$3 = new abi$1.Interface(balancerRelayerAbi);
+    const EXIT_DAI$1 = Relayer.toChainedReference('21');
+    const EXIT_USDC$1 = Relayer.toChainedReference('22');
+    const EXIT_USDT$1 = Relayer.toChainedReference('23');
+    const SWAP_RESULT_BBAUSD$1 = Relayer.toChainedReference('24');
+    class StaBal3Builder {
+        constructor(networkId) {
+            this.addresses = ADDRESSES[networkId];
+        }
+        /**
+         * Builds migration call data.
+         * Migrates tokens from staBal3 to bbausd2 pool.
+         * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+         *
+         * @param userAddress User address.
+         * @param staBal3Amount Amount of BPT tokens to migrate.
+         * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+         * @param staked Indicates whether tokens are initially staked or not.
+         * @param authorisation Encoded authorisation call.
+         * @returns Migration transaction request ready to send with signer.sendTransaction
+         */
+        calldata(userAddress, staBal3Amount, minBbausd2Out, staked, authorisation) {
+            if (bignumber.BigNumber.from(staBal3Amount).lte(0))
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED);
+            const relayer = this.addresses.relayer;
+            let calls = [];
+            if (authorisation) {
+                calls = [this.buildSetRelayerApproval(authorisation)];
+            }
+            if (staked) {
+                calls = [
+                    ...calls,
+                    this.buildWithdraw(userAddress, staBal3Amount),
+                    this.buildExit(relayer, staBal3Amount),
+                    this.buildSwap(minBbausd2Out, relayer),
+                    this.buildDeposit(userAddress),
+                ];
+            }
+            else {
+                calls = [
+                    ...calls,
+                    this.buildExit(userAddress, staBal3Amount),
+                    this.buildSwap(minBbausd2Out, userAddress),
+                ];
+            }
+            const callData = balancerRelayerInterface$3.encodeFunctionData('multicall', [
+                calls,
+            ]);
+            return {
+                to: relayer,
+                data: callData,
+            };
+        }
+        /**
+         * Encodes exitPool callData.
+         * Exit staBal3 pool proportionally to underlying stables. Exits to relayer.
+         * Outputreferences are used to store exit amounts for next transaction.
+         *
+         * @param sender Sender address.
+         * @param amount Amount of staBal3 BPT to exit with.
+         * @returns Encoded exitPool call. Output references.
+         */
+        buildExit(sender, amount) {
+            // Goerli and Mainnet has different assets ordering
+            const { assetOrder } = this.addresses.staBal3;
+            const assets = assetOrder.map((key) => this.addresses[key]);
+            // Assume gaugeWithdraw returns same amount value
+            const userData = StablePoolEncoder.exitExactBPTInForTokensOut(amount);
+            // const userData = StablePoolEncoder.exitExactBPTInForOneTokenOut(
+            //   amount,
+            //   assetOrder.indexOf('DAI')
+            // );
+            // Ask to store exit outputs for batchSwap of exit is used as input to swaps
+            const outputReferences = [
+                { index: assetOrder.indexOf('DAI'), key: EXIT_DAI$1 },
+                { index: assetOrder.indexOf('USDC'), key: EXIT_USDC$1 },
+                { index: assetOrder.indexOf('USDT'), key: EXIT_USDT$1 },
+            ];
+            const callData = Relayer.constructExitCall({
+                assets,
+                minAmountsOut: ['0', '0', '0'],
+                userData,
+                toInternalBalance: true,
+                poolId: this.addresses.staBal3.id,
+                poolKind: 0,
+                sender,
+                recipient: this.addresses.relayer,
+                outputReferences,
+                exitPoolRequest: {},
+            });
+            return callData;
+        }
+        /**
+         * Creates encoded batchSwap function with following swaps: stables -> linear pools -> boosted pool
+         * outputreferences should contain the amount of resulting BPT.
+         *
+         * @param expectedBptReturn BPT amount expected out of the swap.
+         * @param recipient Recipient address.
+         * @returns Encoded batchSwap call. Output references.
+         */
+        buildSwap(expectedBptReturn, recipient) {
+            const assets = [
+                this.addresses.bbausd2.address,
+                this.addresses.DAI,
+                this.addresses.linearDai2.address,
+                this.addresses.USDC,
+                this.addresses.linearUsdc2.address,
+                this.addresses.USDT,
+                this.addresses.linearUsdt2.address,
+            ];
+            const outputReferences = [{ index: 0, key: SWAP_RESULT_BBAUSD$1 }];
+            // for each linear pool swap -
+            // linear1Bpt[linear1]stable[linear2]linear2bpt[bbausd2]bbausd2 Uses chainedReference from previous action for amount.
+            // TO DO - Will swap order matter here? John to ask Fernando.
+            const swaps = [
+                {
+                    poolId: this.addresses.linearDai2.id,
+                    assetInIndex: 1,
+                    assetOutIndex: 2,
+                    amount: EXIT_DAI$1.toString(),
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.bbausd2.id,
+                    assetInIndex: 2,
+                    assetOutIndex: 0,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.linearUsdc2.id,
+                    assetInIndex: 3,
+                    assetOutIndex: 4,
+                    amount: EXIT_USDC$1.toString(),
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.bbausd2.id,
+                    assetInIndex: 4,
+                    assetOutIndex: 0,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.linearUsdt2.id,
+                    assetInIndex: 5,
+                    assetOutIndex: 6,
+                    amount: EXIT_USDT$1.toString(),
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.bbausd2.id,
+                    assetInIndex: 6,
+                    assetOutIndex: 0,
+                    amount: '0',
+                    userData: '0x',
+                },
+            ];
+            // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
+            const limits = [
+                bignumber.BigNumber.from(expectedBptReturn).mul(-1).toString(),
+                constants.MaxInt256.toString(),
+                '0',
+                constants.MaxInt256.toString(),
+                '0',
+                constants.MaxInt256.toString(),
+                '0',
+            ];
+            // Swap to/from Relayer
+            const funds = {
+                sender: this.addresses.relayer,
+                recipient,
+                fromInternalBalance: true,
+                toInternalBalance: false,
+            };
+            const encodedBatchSwap = Relayer.encodeBatchSwap({
+                swapType: exports.SwapType.SwapExactIn,
+                swaps,
+                assets,
+                funds,
+                limits,
+                deadline: bignumber.BigNumber.from(Math.ceil(Date.now() / 1000) + 3600),
+                value: '0',
+                outputReferences,
+            });
+            return encodedBatchSwap;
+        }
+        /**
+         * Uses relayer to withdraw staked BPT from gauge and send to relayer
+         *
+         * @param sender Sender address.
+         * @param amount Amount of BPT to exit with.
+         * @returns withdraw call
+         */
+        buildWithdraw(sender, amount) {
+            return Relayer.encodeGaugeWithdraw(this.addresses.staBal3.gauge, sender, this.addresses.relayer, amount);
+        }
+        /**
+         * Uses relayer to deposit user's BPT to gauge and sends to recipient
+         *
+         * @param recipient Recipient address.
+         * @returns deposit call
+         */
+        buildDeposit(recipient) {
+            return Relayer.encodeGaugeDeposit(this.addresses.bbausd2.gauge, this.addresses.relayer, recipient, SWAP_RESULT_BBAUSD$1.toString());
+        }
+        /**
+         * Uses relayer to approve itself to act in behalf of the user
+         *
+         * @param authorisation Encoded authorisation call.
+         * @returns relayer approval call
+         */
+        buildSetRelayerApproval(authorisation) {
+            return Relayer.encodeSetRelayerApproval(this.addresses.relayer, true, authorisation);
+        }
+    }
+
+    const balancerRelayerInterface$2 = new abi$1.Interface(balancerRelayerAbi);
+    const SWAP_RESULT_BBAUSD = Relayer.toChainedReference('24');
+    class BbaUsd1Builder {
+        constructor(networkId) {
+            this.addresses = ADDRESSES[networkId];
+        }
+        /**
+         * Builds migration call data.
+         * Migrates tokens from bbausd1 to bbausd2 pool.
+         * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+         *
+         * @param userAddress User address.
+         * @param bbausd1Amount Amount of BPT tokens to migrate.
+         * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+         * @param staked Indicates whether tokens are initially staked or not.
+         * @param tokenBalances Token balances in EVM scale. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+         * @param authorisation Encoded authorisation call.
+         * @returns Migration transaction request ready to send with signer.sendTransaction
+         */
+        calldata(userAddress, bbausd1Amount, minBbausd2Out, staked, tokenBalances, authorisation) {
+            if (bignumber.BigNumber.from(bbausd1Amount).lte(0))
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED);
+            const relayer = this.addresses.relayer;
+            let calls = [];
+            if (authorisation) {
+                calls = [this.buildSetRelayerApproval(authorisation)];
+            }
+            if (staked) {
+                calls = [
+                    ...calls,
+                    this.buildWithdraw(userAddress, bbausd1Amount),
+                    this.buildSwap(bbausd1Amount, minBbausd2Out, relayer, relayer, tokenBalances),
+                    this.buildDeposit(userAddress),
+                ];
+            }
+            else {
+                calls = [
+                    ...calls,
+                    this.buildSwap(bbausd1Amount, minBbausd2Out, userAddress, userAddress, tokenBalances),
+                ];
+            }
+            const callData = balancerRelayerInterface$2.encodeFunctionData('multicall', [
+                calls,
+            ]);
+            return {
+                to: this.addresses.relayer,
+                data: callData,
+            };
+        }
+        /**
+         * Creates encoded batchSwap function with following swaps: boosted -> linears -> stables -> linears -> boosted
+         * outputreferences should contain the amount of resulting BPT.
+         *
+         * @param bbausd1Amount Amount of BPT tokens to migrate.
+         * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+         * @param sender Sender address.
+         * @param recipient Recipient address.
+         * @param tokenBalances Token balances in EVM scale.
+         * @returns Encoded batchSwap call. Output references.
+         */
+        buildSwap(bbausd1Amount, minBbausd2Out, sender, recipient, tokenBalances) {
+            const assets = [
+                this.addresses.bbausd2.address,
+                this.addresses.waDAI,
+                this.addresses.linearDai1.address,
+                this.addresses.linearDai2.address,
+                this.addresses.waUSDC,
+                this.addresses.linearUsdc1.address,
+                this.addresses.linearUsdc2.address,
+                this.addresses.waUSDT,
+                this.addresses.linearUsdt1.address,
+                this.addresses.linearUsdt2.address,
+                this.addresses.bbausd1.address,
+            ];
+            const outputReferences = [{ index: 0, key: SWAP_RESULT_BBAUSD }];
+            // Calculate proportional token amounts
+            // Assuming 1:1 exchange rates between tokens
+            // TODO: Fetch current prices, or use price or priceRate from subgraph?
+            const totalLiquidity = tokenBalances.reduce((sum, tokenBalance) => sum.add(bignumber.BigNumber.from(tokenBalance)), constants.Zero);
+            // bbausd1[bbausd1]blinear1[linear1]stable[linear2]blinear2[bbausd2]bbausd2 and then do that proportionally for each underlying stable.
+            // Split BPT amount proportionally:
+            const { assetOrder } = this.addresses.bbausd1;
+            const usdcBptAmt = bignumber.BigNumber.from(bbausd1Amount)
+                .mul(tokenBalances[assetOrder.indexOf('bb-a-USDC')])
+                .div(totalLiquidity)
+                .toString();
+            const daiBptAmt = bignumber.BigNumber.from(bbausd1Amount)
+                .mul(tokenBalances[assetOrder.indexOf('bb-a-DAI')])
+                .div(totalLiquidity)
+                .toString();
+            const usdtBptAmt = bignumber.BigNumber.from(bbausd1Amount)
+                .sub(usdcBptAmt)
+                .sub(daiBptAmt)
+                .toString();
+            const swaps = [
+                {
+                    poolId: this.addresses.bbausd1.id,
+                    assetInIndex: 10,
+                    assetOutIndex: 2,
+                    amount: daiBptAmt,
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.linearDai1.id,
+                    assetInIndex: 2,
+                    assetOutIndex: 1,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.linearDai2.id,
+                    assetInIndex: 1,
+                    assetOutIndex: 3,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.bbausd2.id,
+                    assetInIndex: 3,
+                    assetOutIndex: 0,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.bbausd1.id,
+                    assetInIndex: 10,
+                    assetOutIndex: 5,
+                    amount: usdcBptAmt,
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.linearUsdc1.id,
+                    assetInIndex: 5,
+                    assetOutIndex: 4,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.linearUsdc2.id,
+                    assetInIndex: 4,
+                    assetOutIndex: 6,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.bbausd2.id,
+                    assetInIndex: 6,
+                    assetOutIndex: 0,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.bbausd1.id,
+                    assetInIndex: 10,
+                    assetOutIndex: 8,
+                    amount: usdtBptAmt,
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.linearUsdt1.id,
+                    assetInIndex: 8,
+                    assetOutIndex: 7,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.linearUsdt2.id,
+                    assetInIndex: 7,
+                    assetOutIndex: 9,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.bbausd2.id,
+                    assetInIndex: 9,
+                    assetOutIndex: 0,
+                    amount: '0',
+                    userData: '0x',
+                },
+            ];
+            // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
+            const limits = [
+                bignumber.BigNumber.from(minBbausd2Out).mul(-1).toString(),
+                '0',
+                '0',
+                '0',
+                '0',
+                '0',
+                '0',
+                '0',
+                '0',
+                '0',
+                bbausd1Amount, // Max in should be bbausd1 amount
+            ];
+            // Swap to/from Relayer
+            const funds = {
+                sender,
+                recipient,
+                fromInternalBalance: false,
+                toInternalBalance: false,
+            };
+            const encodedBatchSwap = Relayer.encodeBatchSwap({
+                swapType: exports.SwapType.SwapExactIn,
+                swaps,
+                assets,
+                funds,
+                limits,
+                deadline: bignumber.BigNumber.from(Math.ceil(Date.now() / 1000) + 3600),
+                value: '0',
+                outputReferences,
+            });
+            return encodedBatchSwap;
+        }
+        /**
+         * Uses relayer to withdraw staked BPT from gauge and send to relayer
+         *
+         * @param sender Sender address.
+         * @param amount Amount of BPT to exit with.
+         * @returns withdraw call
+         */
+        buildWithdraw(sender, amount) {
+            return Relayer.encodeGaugeWithdraw(this.addresses.bbausd1.gauge, sender, this.addresses.relayer, amount);
+        }
+        /**
+         * Uses relayer to deposit user's BPT to gauge and sends to recipient
+         *
+         * @param recipient Recipient address.
+         * @returns deposit call
+         */
+        buildDeposit(recipient) {
+            return Relayer.encodeGaugeDeposit(this.addresses.bbausd2.gauge, this.addresses.relayer, recipient, SWAP_RESULT_BBAUSD.toString());
+        }
+        /**
+         * Uses relayer to approve itself to act in behalf of the user
+         *
+         * @param authorisation Encoded authorisation call.
+         * @returns relayer approval call
+         */
+        buildSetRelayerApproval(authorisation) {
+            return Relayer.encodeSetRelayerApproval(this.addresses.relayer, true, authorisation);
+        }
+    }
+
+    const balancerRelayerInterface$1 = new abi$1.Interface(balancerRelayerAbi);
+    const SWAP_RESULT$1 = Relayer.toChainedReference('0');
+    const EXIT_RESULTS = [];
+    class StablesBuilder {
+        constructor(networkId) {
+            this.addresses = ADDRESSES[networkId];
+        }
+        /**
+         * Builds migration call data.
+         * Migrates tokens from old stable to new stable phantom pools with the same underlying tokens.
+         * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+         *
+         * @param userAddress User address.
+         * @param from Pool info being migrated from
+         * @param to Pool info being migrated to
+         * @param bptIn Amount of BPT tokens to migrate.
+         * @param minBptOut Minimum of expected BPT out ot the migration flow.
+         * @param staked Indicates whether tokens are initially staked or not.
+         * @param underlyingTokens Underlying token addresses. Array must have the same length and order as underlying tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+         * @param authorisation Encoded authorisation call.
+         * @returns Migration transaction request ready to send with signer.sendTransaction
+         */
+        calldata(userAddress, from, to, bptIn, minBptOut, staked, underlyingTokens, authorisation) {
+            if (staked && (from.gauge == undefined || to.gauge == undefined))
+                throw new Error('Staked flow migration requires gauge addresses to be provided');
+            const relayer = this.addresses.relayer;
+            let calls = [];
+            if (authorisation) {
+                calls = [this.buildSetRelayerApproval(authorisation)];
+            }
+            if (staked) {
+                calls = [
+                    ...calls,
+                    this.buildWithdraw(userAddress, bptIn, from.gauge),
+                    this.buildExit(from.id, relayer, bptIn, underlyingTokens),
+                    this.buildSwap(minBptOut, relayer, to.id, to.address, underlyingTokens),
+                    this.buildDeposit(userAddress, to.gauge),
+                ];
+            }
+            else {
+                calls = [
+                    ...calls,
+                    this.buildExit(from.id, userAddress, bptIn, underlyingTokens),
+                    this.buildSwap(minBptOut, userAddress, to.id, to.address, underlyingTokens),
+                ];
+            }
+            const callData = balancerRelayerInterface$1.encodeFunctionData('multicall', [
+                calls,
+            ]);
+            return {
+                to: this.addresses.relayer,
+                data: callData,
+            };
+        }
+        /**
+         * Encodes exitPool call data.
+         * Exit stable pool proportionally to underlying stables. Exits to relayer.
+         * Outputreferences are used to store exit amounts for next transaction.
+         *
+         * @param poolId Pool id.
+         * @param sender Sender address.
+         * @param amount Amount of BPT to exit with.
+         * @param underlyingTokens Token addresses to exit to.
+         * @returns Encoded exitPool call. Output references.
+         */
+        buildExit(poolId, sender, amount, underlyingTokens) {
+            // Assume gaugeWithdraw returns same amount value
+            const userData = StablePoolEncoder.exitExactBPTInForTokensOut(amount);
+            // Store exit outputs to be used as swaps inputs
+            const outputReferences = [];
+            for (let i = 0; i < underlyingTokens.length; i++) {
+                outputReferences[i] = {
+                    index: i,
+                    key: Relayer.toChainedReference(`${i + 1}`), // index 0 will be used by swap result
+                };
+                EXIT_RESULTS.push(outputReferences[i].key);
+            }
+            const minAmountsOut = Array(underlyingTokens.length).fill('0');
+            const callData = Relayer.constructExitCall({
+                assets: underlyingTokens,
+                minAmountsOut,
+                userData,
+                toInternalBalance: true,
+                poolId,
+                poolKind: 0,
+                sender,
+                recipient: this.addresses.relayer,
+                outputReferences,
+                exitPoolRequest: {},
+            });
+            return callData;
+        }
+        /**
+         * Creates encoded batchSwap function to swap stables to new phantom stable pool BPT.
+         * outputreferences should contain the amount of resulting BPT.
+         *
+         * @param expectedBptReturn BPT amount expected out of the swap.
+         * @param recipient Recipient address.
+         * @param poolId Pool id
+         * @param poolAddress Pool address
+         * @param tokens Token addresses to swap from.
+         * @returns BatchSwap call.
+         */
+        buildSwap(expectedBptReturn, recipient, poolId, poolAddress, tokens) {
+            const assets = [poolAddress, ...tokens];
+            const outputReferences = [{ index: 0, key: SWAP_RESULT$1 }];
+            const swaps = [];
+            // Add a swap flow for each token provided
+            for (let i = 0; i < tokens.length; i++) {
+                swaps.push({
+                    poolId,
+                    assetInIndex: i + 1,
+                    assetOutIndex: 0,
+                    amount: EXIT_RESULTS[i].toString(),
+                    userData: '0x',
+                });
+            }
+            // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
+            const limits = [bignumber.BigNumber.from(expectedBptReturn).mul(-1).toString()];
+            for (let i = 0; i < tokens.length; i++) {
+                limits.push(constants.MaxInt256.toString());
+            }
+            // Swap to/from Relayer
+            const funds = {
+                sender: this.addresses.relayer,
+                recipient,
+                fromInternalBalance: true,
+                toInternalBalance: false,
+            };
+            const encodedBatchSwap = Relayer.encodeBatchSwap({
+                swapType: exports.SwapType.SwapExactIn,
+                swaps,
+                assets,
+                funds,
+                limits,
+                deadline: bignumber.BigNumber.from(Math.ceil(Date.now() / 1000) + 3600),
+                value: '0',
+                outputReferences,
+            });
+            return encodedBatchSwap;
+        }
+        /**
+         * Uses relayer to withdraw staked BPT from gauge and send to relayer
+         *
+         * @param sender Sender address.
+         * @param amount Amount of BPT to exit with.
+         * @param gaugeAddress Gauge address.
+         * @returns withdraw call
+         */
+        buildWithdraw(sender, amount, gaugeAddress) {
+            return Relayer.encodeGaugeWithdraw(gaugeAddress, sender, this.addresses.relayer, amount);
+        }
+        /**
+         * Uses relayer to deposit user's BPT to gauge and sends to recipient
+         *
+         * @param recipient Recipient address.
+         * @param gaugeAddress Gauge address.
+         * @returns deposit call
+         */
+        buildDeposit(recipient, gaugeAddress) {
+            return Relayer.encodeGaugeDeposit(gaugeAddress, this.addresses.relayer, recipient, SWAP_RESULT$1.toString());
+        }
+        /**
+         * Uses relayer to approve itself to act in behalf of the user
+         *
+         * @param authorisation Encoded authorisation call.
+         * @returns relayer approval call
+         */
+        buildSetRelayerApproval(authorisation) {
+            return Relayer.encodeSetRelayerApproval(this.addresses.relayer, true, authorisation);
+        }
+    }
+
+    const balancerRelayerInterface = new abi$1.Interface(balancerRelayerAbi);
+    const EXIT_MIMATIC = Relayer.toChainedReference('20');
+    const EXIT_DAI = Relayer.toChainedReference('21');
+    const EXIT_USDC = Relayer.toChainedReference('22');
+    const EXIT_USDT = Relayer.toChainedReference('23');
+    const SWAP_RESULT = Relayer.toChainedReference('24');
+    class MaiusdBuilder {
+        constructor(networkId) {
+            this.addresses = ADDRESSES[networkId];
+        }
+        /**
+         * Builds migration call data.
+         * Migrates tokens from maiusd to maibbausd pool.
+         * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+         *
+         * @param userAddress User address.
+         * @param bptIn Amount of BPT tokens to migrate.
+         * @param minBptOut Minimum of expected BPT out ot the migration flow.
+         * @param staked Indicates whether tokens are initially staked or not.
+         * @param authorisation Encoded authorisation call.
+         * @returns Migration transaction request ready to send with signer.sendTransaction
+         */
+        calldata(userAddress, bptIn, minBptOut, staked, authorisation) {
+            if (bignumber.BigNumber.from(bptIn).lte(0))
+                throw new BalancerError(exports.BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED);
+            const relayer = this.addresses.relayer;
+            let calls = [];
+            if (authorisation) {
+                calls = [this.buildSetRelayerApproval(authorisation)];
+            }
+            if (staked) {
+                calls = [
+                    ...calls,
+                    this.buildWithdraw(userAddress, bptIn),
+                    this.buildExit(relayer, bptIn),
+                    this.buildSwap(relayer, minBptOut),
+                    this.buildDeposit(userAddress),
+                ];
+            }
+            else {
+                calls = [
+                    ...calls,
+                    this.buildExit(userAddress, bptIn),
+                    this.buildSwap(userAddress, minBptOut),
+                ];
+            }
+            const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
+                calls,
+            ]);
+            return {
+                to: relayer,
+                data: callData,
+            };
+        }
+        /**
+         * Encodes exitPool callData.
+         * Exit maiusd pool proportionally to underlying stables. Exits to relayer.
+         * Outputreferences are used to store exit amounts for next transaction.
+         *
+         * @param sender Sender address.
+         * @param amount Amount of BPT to exit with.
+         * @returns Encoded exitPool call. Output references.
+         */
+        buildExit(sender, amount) {
+            const { assetOrder } = this.addresses.maiusd;
+            const assets = assetOrder.map((key) => this.addresses[key]);
+            // Assume gaugeWithdraw returns same amount value
+            const userData = StablePoolEncoder.exitExactBPTInForTokensOut(amount);
+            // Store exit outputs to be used as swaps inputs
+            const outputReferences = [
+                { index: assetOrder.indexOf('miMATIC'), key: EXIT_MIMATIC },
+                { index: assetOrder.indexOf('DAI'), key: EXIT_DAI },
+                { index: assetOrder.indexOf('USDC'), key: EXIT_USDC },
+                { index: assetOrder.indexOf('USDT'), key: EXIT_USDT },
+            ];
+            const minAmountsOut = Array(assets.length).fill('0');
+            const callData = Relayer.constructExitCall({
+                assets,
+                minAmountsOut,
+                userData,
+                toInternalBalance: true,
+                poolId: this.addresses.maiusd.id,
+                poolKind: 0,
+                sender,
+                recipient: this.addresses.relayer,
+                outputReferences,
+                exitPoolRequest: {},
+            });
+            return callData;
+        }
+        /**
+         * Creates encoded batchSwap function with following swaps: stables -> linear pools -> boosted pool
+         * outputreferences should contain the amount of resulting BPT.
+         *
+         * @param recipient Sender address.
+         * @param minBptOut Minimum BPT out expected from the join transaction.
+         * @returns Encoded batchSwap call. Output references.
+         */
+        buildSwap(recipient, minBptOut) {
+            const assets = [
+                this.addresses.bbausd2.address,
+                this.addresses.DAI,
+                this.addresses.linearDai2.address,
+                this.addresses.USDC,
+                this.addresses.linearUsdc2.address,
+                this.addresses.USDT,
+                this.addresses.linearUsdt2.address,
+                this.addresses.miMATIC,
+                this.addresses.maibbausd.address,
+            ];
+            const outputReferences = [{ index: 8, key: SWAP_RESULT }];
+            const swaps = [
+                {
+                    poolId: this.addresses.linearDai2.id,
+                    assetInIndex: 1,
+                    assetOutIndex: 2,
+                    amount: EXIT_DAI.toString(),
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.bbausd2.id,
+                    assetInIndex: 2,
+                    assetOutIndex: 0,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.maibbausd.id,
+                    assetInIndex: 0,
+                    assetOutIndex: 8,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.linearUsdc2.id,
+                    assetInIndex: 3,
+                    assetOutIndex: 4,
+                    amount: EXIT_USDC.toString(),
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.bbausd2.id,
+                    assetInIndex: 4,
+                    assetOutIndex: 0,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.maibbausd.id,
+                    assetInIndex: 0,
+                    assetOutIndex: 8,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.linearUsdt2.id,
+                    assetInIndex: 5,
+                    assetOutIndex: 6,
+                    amount: EXIT_USDT.toString(),
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.bbausd2.id,
+                    assetInIndex: 6,
+                    assetOutIndex: 0,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.maibbausd.id,
+                    assetInIndex: 0,
+                    assetOutIndex: 8,
+                    amount: '0',
+                    userData: '0x',
+                },
+                {
+                    poolId: this.addresses.maibbausd.id,
+                    assetInIndex: 7,
+                    assetOutIndex: 8,
+                    amount: EXIT_MIMATIC.toString(),
+                    userData: '0x',
+                },
+            ];
+            // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
+            const limits = [
+                '0',
+                constants.MaxInt256.toString(),
+                '0',
+                constants.MaxInt256.toString(),
+                '0',
+                constants.MaxInt256.toString(),
+                '0',
+                constants.MaxInt256.toString(),
+                bignumber.BigNumber.from(minBptOut).mul(-1).toString(),
+            ];
+            // Swap to/from Relayer
+            const funds = {
+                sender: this.addresses.relayer,
+                recipient,
+                fromInternalBalance: true,
+                toInternalBalance: false,
+            };
+            const encodedBatchSwap = Relayer.encodeBatchSwap({
+                swapType: exports.SwapType.SwapExactIn,
+                swaps,
+                assets,
+                funds,
+                limits,
+                deadline: bignumber.BigNumber.from(Math.ceil(Date.now() / 1000) + 3600),
+                value: '0',
+                outputReferences,
+            });
+            return encodedBatchSwap;
+        }
+        /**
+         * Uses relayer to withdraw staked BPT from gauge and send to relayer
+         *
+         * @param sender Sender address.
+         * @param amount Amount of BPT to exit with.
+         * @returns withdraw call
+         */
+        buildWithdraw(sender, amount) {
+            return Relayer.encodeGaugeWithdraw(this.addresses.maiusd.gauge, sender, this.addresses.relayer, amount);
+        }
+        /**
+         * Uses relayer to deposit user's BPT to gauge and sends to recipient
+         *
+         * @param recipient Recipient address.
+         * @returns deposit call
+         */
+        buildDeposit(recipient) {
+            return Relayer.encodeGaugeDeposit(this.addresses.maibbausd.gauge, this.addresses.relayer, recipient, SWAP_RESULT.toString());
+        }
+        /**
+         * Uses relayer to approve itself to act in behalf of the user
+         *
+         * @param authorisation Encoded authorisation call.
+         * @returns relayer approval call
+         */
+        buildSetRelayerApproval(authorisation) {
+            return Relayer.encodeSetRelayerApproval(this.addresses.relayer, true, authorisation);
+        }
+    }
+
+    class Migrations {
+        constructor(network) {
+            this.network = network;
+        }
+        /**
+         * Builds migration call data.
+         * Migrates tokens from staBal3 to bbausd2 pool.
+         * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+         *
+         * @param userAddress User address.
+         * @param staBal3Amount Amount of BPT tokens to migrate.
+         * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+         * @param staked Indicates whether tokens are initially staked or not.
+         * @param authorisation Encoded authorisation call.
+         * @returns Migration transaction request ready to send with signer.sendTransaction
+         */
+        stabal3(userAddress, staBal3Amount, minBbausd2Out, staked, authorisation) {
+            const builder = new StaBal3Builder(this.network);
+            const request = builder.calldata(userAddress, staBal3Amount, minBbausd2Out, staked, authorisation);
+            return {
+                to: request.to,
+                data: request.data,
+                decode: (output, staked) => {
+                    let swapIndex = staked ? 2 : 1;
+                    if (authorisation)
+                        swapIndex += 1;
+                    const multicallResult = abi$1.defaultAbiCoder.decode(['bytes[]'], output);
+                    const swapDeltas = abi$1.defaultAbiCoder.decode(['int256[]'], multicallResult[0][swapIndex]);
+                    // bbausd2AmountOut
+                    return swapDeltas[0][0].abs().toString();
+                },
+            };
+        }
+        /**
+         * Builds migration call data.
+         * Migrates tokens from bbausd1 to bbausd2 pool.
+         * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+         *
+         * @param userAddress User address.
+         * @param bbausd1Amount Amount of BPT tokens to migrate.
+         * @param minBbausd2Out Minimum of expected BPT out ot the migration flow.
+         * @param staked Indicates whether tokens are initially staked or not.
+         * @param tokenBalances Token balances in EVM scale. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+         * @param authorisation Encoded authorisation call.
+         * @returns Migration transaction request ready to send with signer.sendTransaction
+         */
+        bbaUsd(userAddress, bbausd1Amount, minBbausd2Out, staked, tokenBalances, authorisation) {
+            const builder = new BbaUsd1Builder(this.network);
+            const request = builder.calldata(userAddress, bbausd1Amount, minBbausd2Out, staked, tokenBalances, authorisation);
+            return {
+                to: request.to,
+                data: request.data,
+                decode: (output, staked) => {
+                    let swapIndex = staked ? 1 : 0;
+                    if (authorisation)
+                        swapIndex += 1;
+                    const multicallResult = abi$1.defaultAbiCoder.decode(['bytes[]'], output);
+                    const swapDeltas = abi$1.defaultAbiCoder.decode(['int256[]'], multicallResult[0][swapIndex]);
+                    return swapDeltas[0][0].abs().toString(); // bptOut
+                },
+            };
+        }
+        /**
+         * Builds migration call data.
+         * Migrates tokens from old stable to new stable phantom pools with the same underlying tokens.
+         * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+         *
+         * @param userAddress User address.
+         * @param from Pool info being migrated from
+         * @param to Pool info being migrated to
+         * @param bptIn Amount of BPT tokens to migrate.
+         * @param minBptOut Minimum of expected BPT out ot the migration flow.
+         * @param staked Indicates whether tokens are initially staked or not.
+         * @param underlyingTokens Underlying token addresses. Array must have the same length and order as tokens in pool being migrated from. Refer to [getPoolTokens](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/interfaces/contracts/vault/IVault.sol#L334).
+         * @param authorisation Encoded authorisation call.
+         * @returns Migration transaction request ready to send with signer.sendTransaction
+         */
+        stables(userAddress, from, to, bptIn, minBptOut, staked, underlyingTokens, authorisation) {
+            const builder = new StablesBuilder(this.network);
+            const request = builder.calldata(userAddress, from, to, bptIn, minBptOut, staked, underlyingTokens, authorisation);
+            return {
+                to: request.to,
+                data: request.data,
+                decode: (output, staked) => {
+                    let swapIndex = staked ? 2 : 1;
+                    if (authorisation)
+                        swapIndex += 1;
+                    const multicallResult = abi$1.defaultAbiCoder.decode(['bytes[]'], output);
+                    const swapDeltas = abi$1.defaultAbiCoder.decode(['int256[]'], multicallResult[0][swapIndex]);
+                    // bbausd2AmountOut
+                    return swapDeltas[0][0].abs().toString();
+                },
+            };
+        }
+        /**
+         * Builds migration call data.
+         * Migrates tokens from staBal3 to bbausd2 pool.
+         * Tokens that are initially staked are re-staked at the end of migration. Non-staked are not.
+         *
+         * @param userAddress User address.
+         * @param bptIn Amount of BPT tokens to migrate.
+         * @param minBptOut Minimum of expected BPT out ot the migration flow.
+         * @param staked Indicates whether tokens are initially staked or not.
+         * @param authorisation Encoded authorisation call.
+         * @returns Migration transaction request ready to send with signer.sendTransaction
+         */
+        maiusd(userAddress, bptIn, minBptOut, staked, authorisation) {
+            const builder = new MaiusdBuilder(this.network);
+            const request = builder.calldata(userAddress, bptIn, minBptOut, staked, authorisation);
+            return {
+                to: request.to,
+                data: request.data,
+                decode: (output, staked) => {
+                    let swapIndex = staked ? 2 : 1;
+                    if (authorisation)
+                        swapIndex += 1;
+                    const multicallResult = abi$1.defaultAbiCoder.decode(['bytes[]'], output);
+                    const swapDeltas = abi$1.defaultAbiCoder.decode(['int256[]'], multicallResult[0][swapIndex]);
+                    const bptOut = swapDeltas[0][8].abs().toString();
+                    return bptOut;
+                },
+            };
+        }
+    }
+
+    class Zaps {
+        constructor(network) {
+            this.network = network;
+            this.migrations = new Migrations(network);
         }
     }
 
@@ -12624,7 +14540,6 @@
          * @returns pool APR split [bsp]
          */
         async apr(pool) {
-            console.time(`APR for ${pool.id}`);
             const [swapFees, tokenAprs, minStakingApr, maxStakingApr, rewardAprs, protocolApr,] = await Promise.all([
                 this.swapFees(pool),
                 this.tokenAprs(pool),
@@ -12633,7 +14548,6 @@
                 this.rewardAprs(pool),
                 this.protocolApr(pool),
             ]);
-            console.timeEnd(`APR for ${pool.id}`);
             return {
                 swapFees,
                 tokenAprs,
@@ -13078,7 +14992,6 @@
             this.subgraph = new LiquidityGaugesSubgraphRepository(subgraphUrl);
         }
         async fetch() {
-            console.time('fetching liquidity gauges');
             const gauges = await this.subgraph.fetch();
             const gaugeAddresses = gauges.map((g) => g.id);
             if (this.chainId == 1) {
@@ -13095,7 +15008,6 @@
             this.rewardData = await this.multicall.getRewardData(gaugeAddresses //,
             // rewardTokens
             );
-            console.timeEnd('fetching liquidity gauges');
             return gauges.map(this.compose.bind(this));
         }
         async find(id) {
@@ -13632,7 +15544,6 @@
             this.urlBase = `https://api.coingecko.com/api/v3/simple/token_price/${this.platform(chainId)}?vs_currencies=usd,eth`;
         }
         fetch(address) {
-            console.time(`fetching coingecko ${address}`);
             const addresses = this.addresses(address);
             const prices = axios__default["default"]
                 .get(this.url(addresses))
@@ -13650,7 +15561,6 @@
                 console.error(error);
                 return this.prices;
             });
-            console.timeEnd(`fetching coingecko ${address}`);
             return Object.fromEntries(addresses.map((a) => [a, prices]));
         }
         async find(address) {
@@ -13885,12 +15795,10 @@
   }
 }`;
     const fetchBlockByTime = async (endpoint, timestamp) => {
-        console.time(`fetching blocks ${timestamp}`);
         const payload = {
             query: query(timestamp),
         };
         const response = await axios__default["default"].post(endpoint, payload);
-        console.timeEnd(`fetching blocks ${timestamp}`);
         const { data: { blocks }, } = response.data;
         return parseInt(blocks[0].number);
     };
@@ -14877,6 +16785,7 @@
             this.pricing = new Pricing(config, this.swaps);
             this.pools = new Pools(this.networkConfig, this.data);
             this.balancerContracts = new Contracts(this.networkConfig.addresses.contracts, sor.provider);
+            this.zaps = new Zaps(this.networkConfig.chainId);
         }
         get rpcProvider() {
             return this.sor.provider;
