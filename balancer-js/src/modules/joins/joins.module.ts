@@ -173,7 +173,7 @@ export class Join {
     const leafTokens = PoolGraph.getLeafAddresses(orderedNodes);
     leafTokens.forEach((leafToken) => {
       const leafInputNodes = orderedNodes.filter(
-        (node) => node.address === leafToken
+        (node) => node.address.toLowerCase() === leafToken.toLowerCase()
       );
       leafInputNodes.forEach((inputNode) => {
         const bptOut = this.bptOutZeroPiForInputNode(inputNode);
@@ -338,7 +338,7 @@ export class Join {
       });
 
       const inputNodes = nodesToRoot.filter(
-        (node) => node.address === tokenInput
+        (node) => node.address.toLowerCase() === tokenInput.toLowerCase()
       );
       inputNodes.forEach((inputNode) => {
         const bptOut = this.bptOutZeroPiForInputNode(inputNode);
