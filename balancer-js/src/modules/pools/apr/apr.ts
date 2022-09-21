@@ -311,7 +311,6 @@ export class PoolApr {
    * @returns pool APR split [bsp]
    */
   async apr(pool: Pool): Promise<AprBreakdown> {
-    console.time(`APR for ${pool.id}`);
     const [
       swapFees,
       tokenAprs,
@@ -327,7 +326,6 @@ export class PoolApr {
       this.rewardAprs(pool),
       this.protocolApr(pool),
     ]);
-    console.timeEnd(`APR for ${pool.id}`);
 
     return {
       swapFees,

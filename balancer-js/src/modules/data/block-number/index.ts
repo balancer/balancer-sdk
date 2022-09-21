@@ -21,13 +21,11 @@ const fetchBlockByTime = async (
   endpoint: string,
   timestamp: string
 ): Promise<number> => {
-  console.time(`fetching blocks ${timestamp}`);
   const payload = {
     query: query(timestamp),
   };
 
   const response = await axios.post(endpoint, payload);
-  console.timeEnd(`fetching blocks ${timestamp}`);
 
   const {
     data: { blocks },
