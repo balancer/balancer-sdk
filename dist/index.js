@@ -15336,7 +15336,7 @@ class PoolsSubgraphRepository {
         }
         const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(new SubgraphArgsFormatter());
         const { pools } = await this.client.Pools(formattedQuery);
-        this.skip = pools.length;
+        this.skip = ((options === null || options === void 0 ? void 0 : options.skip) || 0) + pools.length;
         return pools.map(this.mapType.bind(this));
     }
     async find(id) {
