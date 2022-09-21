@@ -89,7 +89,7 @@ export class PoolsSubgraphRepository
 
     const { pools } = await this.client.Pools(formattedQuery);
 
-    this.skip = pools.length;
+    this.skip = (options?.skip || 0) + pools.length;
 
     return pools.map(this.mapType.bind(this));
   }
