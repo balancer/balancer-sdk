@@ -87,7 +87,7 @@ export class PoolsSubgraphRepository
 
     this.skip = pools.length;
 
-    return pools.map(this.mapType);
+    return pools.map(this.mapType.bind(this));
   }
 
   async find(id: string): Promise<Pool | undefined> {
