@@ -1,11 +1,10 @@
 import axios from 'axios';
-import { Pool } from '@/types';
 import { jsonToGraphQLQuery } from 'json-to-graphql-query';
 
 export default class BalancerAPIClient {
   constructor(private readonly url: string, private readonly apiKey: string) {}
 
-  public async get(query: any): Promise<any> {
+  public async get(query: unknown): Promise<unknown> {
     try {
       const payload = this.toPayload(query);
       const { data } = await axios.post(this.url, payload, {
@@ -15,7 +14,7 @@ export default class BalancerAPIClient {
       });
       if (data.errors) {
         throw new Error(
-          data.errors.map((error: any) => error.message).join(',')
+          data.errors.map((error: Error) => error.message).join(',')
         );
       }
       return data.data;
@@ -27,7 +26,7 @@ export default class BalancerAPIClient {
     return [];
   }
 
-  public toPayload(query: any): any {
+  public toPayload(query: unknown): unknown {
     return JSON.stringify({ query: jsonToGraphQLQuery({ query }) });
   }
 }

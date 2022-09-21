@@ -59,7 +59,7 @@ describe('happy case', () => {
       const pool = await pools.find(ethStEthCopy);
       if (pool) {
         const apr = await pools.apr(pool);
-        expect(apr && apr.tokenAprs).to.be.greaterThan(1);
+        expect(apr && apr.tokenAprs.total).to.be.greaterThan(1);
       } else {
         throw 'no pool found';
       }
@@ -71,7 +71,7 @@ describe('happy case', () => {
       const pool = await pools.find(ethStEth);
       if (pool) {
         const apr = await pools.apr(pool);
-        expect(apr && apr.tokenAprs).to.be.greaterThan(1);
+        expect(apr && apr.tokenAprs.total).to.be.greaterThan(1);
       } else {
         throw 'no pool found';
       }
@@ -83,7 +83,7 @@ describe('happy case', () => {
       const pool = await pools.find(usdStable);
       if (pool) {
         const apr = await pools.apr(pool);
-        expect(apr && apr.tokenAprs).to.be.greaterThan(1);
+        expect(apr && apr.tokenAprs.total).to.be.greaterThan(1);
       } else {
         throw 'no pool found';
       }
@@ -119,7 +119,7 @@ describe('happy case', () => {
       const pool = await pools.find(auraBALveBAL);
       if (pool) {
         const apr = await pools.apr(pool);
-        expect(apr && apr.tokenAprs).to.be.greaterThan(1);
+        expect(apr && apr.tokenAprs.total).to.be.greaterThan(1);
       } else {
         throw 'no pool found';
       }

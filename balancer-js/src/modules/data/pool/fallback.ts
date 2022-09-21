@@ -1,5 +1,5 @@
 import { Findable } from '../types';
-import { GraphQLQuery, Pool } from '@/types';
+import { Pool } from '@/types';
 import {
   PoolAttribute,
   PoolRepository,
@@ -52,7 +52,8 @@ export class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
     return this.fallbackQuery('findBy', [attribute, value]);
   }
 
-  async fallbackQuery(func: string, args: any[]): Promise<any> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async fallbackQuery(func: string, args: unknown[]): Promise<any> {
     if (this.currentProviderIdx >= this.providers.length) {
       throw new Error('No working providers found');
     }
@@ -60,15 +61,16 @@ export class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
     let result;
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const currentProvider = this.providers[this.currentProviderIdx] as any;
-      result = await Promise.race<any | undefined>([
+      result = await Promise.race<unknown | undefined>([
         // eslint-disable-next-line prefer-spread
         currentProvider[func].apply(currentProvider, args),
         new Promise((_, reject) =>
           setTimeout(() => reject(new Error('timeout')), this.timeout)
         ),
       ]);
-    } catch (e: any) {
+    } catch (e) {
       if (e.message === 'timeout') {
         console.error(
           'Provider ' +

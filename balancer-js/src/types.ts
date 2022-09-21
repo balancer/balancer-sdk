@@ -272,5 +272,5 @@ export interface PoolWithMethods extends Pool {
 
 export interface GraphQLQuery {
   args: GraphQLArgs;
-  attrs: any;
+  attrs: unknown;
 }

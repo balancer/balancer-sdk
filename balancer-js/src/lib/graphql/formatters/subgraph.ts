@@ -1,4 +1,4 @@
-import { GraphQLArgs, GraphQLArgsFormatter } from '../types';
+import { GraphQLArgs, GraphQLArgsFormatter, GraphQLFilter } from '../types';
 
 export class SubgraphArgsFormatter implements GraphQLArgsFormatter {
   operatorMap: Record<string, string>;
@@ -14,8 +14,8 @@ export class SubgraphArgsFormatter implements GraphQLArgsFormatter {
     };
   }
 
-  format(args: GraphQLArgs): any {
-    const whereQuery: Record<string, any> = {};
+  format(args: GraphQLArgs): unknown {
+    const whereQuery: Record<string, GraphQLFilter> = {};
     if (args.where) {
       Object.entries(args.where).forEach(([name, filter]) => {
         Object.entries(filter).forEach(([operator, value]) => {

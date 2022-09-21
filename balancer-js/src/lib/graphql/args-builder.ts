@@ -1,10 +1,5 @@
 import { mergeWith } from 'lodash';
-import {
-  GraphQLArgs,
-  GraphQLArgsFormatter,
-  GraphQLFilter,
-  GraphQLFilterOperator,
-} from './types';
+import { GraphQLArgs, GraphQLArgsFormatter } from './types';
 
 export * from './formatters';
 
@@ -15,7 +10,7 @@ export class GraphQLArgsBuilder {
     const mergedArgs = mergeWith(
       this.args,
       other.args,
-      (objValue: any, srcValue: any) => {
+      (objValue: unknown, srcValue: unknown) => {
         if (Array.isArray(objValue)) {
           return objValue.concat(srcValue);
         }
@@ -25,7 +20,7 @@ export class GraphQLArgsBuilder {
     return new GraphQLArgsBuilder(mergedArgs);
   }
 
-  format(formatter: GraphQLArgsFormatter): any {
+  format(formatter: GraphQLArgsFormatter): unknown {
     return formatter.format(this.args);
   }
 }

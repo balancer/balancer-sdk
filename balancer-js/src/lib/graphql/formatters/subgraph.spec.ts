@@ -1,5 +1,4 @@
 import { GraphQLArgs } from '../types';
-import { Op } from '../args-builder';
 import { SubgraphArgsFormatter } from './subgraph';
 import { expect } from 'chai';
 

@@ -7,7 +7,7 @@ export type GraphQLFilterOperator =
   | 'contains';
 
 export type GraphQLFilter = {
-  [operator in GraphQLFilterOperator]?: any;
+  [operator in GraphQLFilterOperator]?: unknown;
 };
 
 export interface GraphQLArgs {
@@ -24,5 +24,5 @@ export interface GraphQLArgs {
 }
 
 export interface GraphQLArgsFormatter {
-  format(args: GraphQLArgs): any;
+  format(args: GraphQLArgs): unknown;
 }
