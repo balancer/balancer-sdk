@@ -15058,6 +15058,7 @@
             this.url = url;
             this.apiKey = apiKey;
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         async get(query) {
             try {
                 const payload = this.toPayload(query);
@@ -15082,6 +15083,8 @@
         }
     }
 
+    const DEFAULT_SKIP = 0;
+    const DEFAULT_FIRST = 10;
     /**
      * Access pools using the Balancer GraphQL Api.
      *
@@ -15115,20 +15118,18 @@
                 attrs: ((_b = options.query) === null || _b === void 0 ? void 0 : _b.attrs) || defaultAttributes,
             };
         }
-        fetchFromCache(options, onlyFetchFullResultSet = false) {
-            const first = (options === null || options === void 0 ? void 0 : options.first) || 10;
-            const skip = (options === null || options === void 0 ? void 0 : options.skip) || 0;
-            if (onlyFetchFullResultSet && this.pools.length < skip + first) {
-                return [];
-            }
+        fetchFromCache(options) {
+            const first = (options === null || options === void 0 ? void 0 : options.first) || DEFAULT_FIRST;
+            const skip = (options === null || options === void 0 ? void 0 : options.skip) || DEFAULT_SKIP;
             const pools = this.pools.slice(skip, first + skip);
             this.skip = skip + first;
             return pools;
         }
         async fetch(options) {
-            const poolsFromCache = this.fetchFromCache(options, true);
-            if (poolsFromCache.length)
-                return poolsFromCache;
+            if (this.pools.length >
+                ((options === null || options === void 0 ? void 0 : options.first) || DEFAULT_FIRST) + ((options === null || options === void 0 ? void 0 : options.skip) || DEFAULT_SKIP)) {
+                return this.fetchFromCache(options);
+            }
             if (this.nextToken) {
                 this.query.args.nextToken = this.nextToken;
             }
@@ -15217,12 +15218,14 @@
         async findBy(attribute, value) {
             return this.fallbackQuery('findBy', [attribute, value]);
         }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         async fallbackQuery(func, args) {
             if (this.currentProviderIdx >= this.providers.length) {
                 throw new Error('No working providers found');
             }
             let result;
             try {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const currentProvider = this.providers[this.currentProviderIdx];
                 result = await Promise.race([
                     // eslint-disable-next-line prefer-spread
@@ -15231,13 +15234,14 @@
                 ]);
             }
             catch (e) {
-                if (e.message === 'timeout') {
+                const message = e.message;
+                if (message === 'timeout') {
                     console.error('Provider ' +
                         this.currentProviderIdx +
                         ' timed out, falling back to next provider');
                 }
                 else {
-                    console.error('Provider ' + this.currentProviderIdx + ' failed with error: ', e.message, ', falling back to next provider');
+                    console.error('Provider ' + this.currentProviderIdx + ' failed with error: ', message, ', falling back to next provider');
                 }
                 this.currentProviderIdx++;
                 result = await this.fallbackQuery.call(this, func, args);

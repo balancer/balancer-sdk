@@ -2757,7 +2757,7 @@ declare class PoolsBalancerAPIRepository implements Findable<Pool, PoolAttribute
     nextToken: string | undefined;
     private query;
     constructor(options: PoolsBalancerAPIOptions);
-    fetchFromCache(options?: PoolsRepositoryFetchOptions, onlyFetchFullResultSet?: boolean): Pool[];
+    fetchFromCache(options?: PoolsRepositoryFetchOptions): Pool[];
     fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]>;
     find(id: string): Promise<Pool | undefined>;
     findBy(param: PoolAttribute, value: string): Promise<Pool | undefined>;
@@ -2784,7 +2784,7 @@ declare class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
     get currentProvider(): PoolRepository | undefined;
     find(id: string): Promise<Pool | undefined>;
     findBy(attribute: PoolAttribute, value: string): Promise<Pool | undefined>;
-    fallbackQuery(func: string, args: any[]): Promise<any>;
+    fallbackQuery(func: string, args: unknown[]): Promise<any>;
 }
 
 declare class PoolsStaticRepository implements Findable<Pool, PoolAttribute>, Searchable<Pool> {
@@ -2968,24 +2968,24 @@ interface GraphQLArgs {
     where?: Record<string, GraphQLFilter>;
 }
 interface GraphQLArgsFormatter {
-    format(args: GraphQLArgs): any;
+    format(args: GraphQLArgs): unknown;
 }
 
 declare class BalancerAPIArgsFormatter implements GraphQLArgsFormatter {
-    format(args: GraphQLArgs): any;
+    format(args: GraphQLArgs): GraphQLArgs;
 }
 
 declare class SubgraphArgsFormatter implements GraphQLArgsFormatter {
     operatorMap: Record<string, string>;
     constructor();
-    format(args: GraphQLArgs): any;
+    format(args: GraphQLArgs): GraphQLArgs;
 }
 
 declare class GraphQLArgsBuilder {
     readonly args: GraphQLArgs;
     constructor(args: GraphQLArgs);
     merge(other: GraphQLArgsBuilder): GraphQLArgsBuilder;
-    format(formatter: GraphQLArgsFormatter): any;
+    format(formatter: GraphQLArgsFormatter): unknown;
 }
 
 interface AprBreakdown {
