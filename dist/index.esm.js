@@ -219,6 +219,75 @@ const isNormalizedWeights = (weights) => {
     return totalWeight.eq(WeiPerEther);
 };
 
+var ComposableStablePoolJoinKind;
+(function (ComposableStablePoolJoinKind) {
+    ComposableStablePoolJoinKind[ComposableStablePoolJoinKind["INIT"] = 0] = "INIT";
+    ComposableStablePoolJoinKind[ComposableStablePoolJoinKind["EXACT_TOKENS_IN_FOR_BPT_OUT"] = 1] = "EXACT_TOKENS_IN_FOR_BPT_OUT";
+    ComposableStablePoolJoinKind[ComposableStablePoolJoinKind["TOKEN_IN_FOR_EXACT_BPT_OUT"] = 2] = "TOKEN_IN_FOR_EXACT_BPT_OUT";
+})(ComposableStablePoolJoinKind || (ComposableStablePoolJoinKind = {}));
+var ComposableStablePoolExitKind;
+(function (ComposableStablePoolExitKind) {
+    ComposableStablePoolExitKind[ComposableStablePoolExitKind["EXACT_BPT_IN_FOR_ONE_TOKEN_OUT"] = 0] = "EXACT_BPT_IN_FOR_ONE_TOKEN_OUT";
+    ComposableStablePoolExitKind[ComposableStablePoolExitKind["BPT_IN_FOR_EXACT_TOKENS_OUT"] = 1] = "BPT_IN_FOR_EXACT_TOKENS_OUT";
+})(ComposableStablePoolExitKind || (ComposableStablePoolExitKind = {}));
+class ComposableStablePoolEncoder {
+    /**
+     * Cannot be constructed.
+     */
+    constructor() {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+    }
+}
+/**
+ * Encodes the userData parameter for providing the initial liquidity to a ComposableStablePool
+ * @param initialBalances - the amounts of tokens to send to the pool to form the initial balances
+ */
+ComposableStablePoolEncoder.joinInit = (amountsIn) => defaultAbiCoder.encode(['uint256', 'uint256[]'], [ComposableStablePoolJoinKind.INIT, amountsIn]);
+/**
+ * Encodes the userData parameter for collecting protocol fees for StablePhantomPool
+ */
+ComposableStablePoolEncoder.joinCollectProtocolFees = () => defaultAbiCoder.encode(['uint256'], [StablePhantomPoolJoinKind.COLLECT_PROTOCOL_FEES]);
+/**
+ * Encodes the userData parameter for joining a ComposableStablePool with exact token inputs
+ * @param amountsIn - the amounts each of token to deposit in the pool as liquidity
+ * @param minimumBPT - the minimum acceptable BPT to receive in return for deposited tokens
+ */
+ComposableStablePoolEncoder.joinExactTokensInForBPTOut = (amountsIn, minimumBPT) => defaultAbiCoder.encode(['uint256', 'uint256[]', 'uint256'], [
+    ComposableStablePoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT,
+    amountsIn,
+    minimumBPT,
+]);
+/**
+ * Encodes the userData parameter for joining a ComposableStablePool with to receive an exact amount of BPT
+ * @param bptAmountOut - the amount of BPT to be minted
+ * @param enterTokenIndex - the index of the token to be provided as liquidity
+ */
+ComposableStablePoolEncoder.joinTokenInForExactBPTOut = (bptAmountOut, enterTokenIndex) => defaultAbiCoder.encode(['uint256', 'uint256', 'uint256'], [
+    ComposableStablePoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT,
+    bptAmountOut,
+    enterTokenIndex,
+]);
+/**
+ * Encodes the userData parameter for exiting a ComposableStablePool by removing a single token in return for an exact amount of BPT
+ * @param bptAmountIn - the amount of BPT to be burned
+ * @param enterTokenIndex - the index of the token to removed from the pool
+ */
+ComposableStablePoolEncoder.exitExactBPTInForOneTokenOut = (bptAmountIn, exitTokenIndex) => defaultAbiCoder.encode(['uint256', 'uint256', 'uint256'], [
+    ComposableStablePoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
+    bptAmountIn,
+    exitTokenIndex,
+]);
+/**
+ * Encodes the userData parameter for exiting a ComposableStablePool by removing exact amounts of tokens
+ * @param amountsOut - the amounts of each token to be withdrawn from the pool
+ * @param maxBPTAmountIn - the minimum acceptable BPT to burn in return for withdrawn tokens
+ */
+ComposableStablePoolEncoder.exitBPTInForExactTokensOut = (amountsOut, maxBPTAmountIn) => defaultAbiCoder.encode(['uint256', 'uint256[]', 'uint256'], [
+    ComposableStablePoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT,
+    amountsOut,
+    maxBPTAmountIn,
+]);
+
 var isProduction = process.env.NODE_ENV === 'production';
 var prefix = 'Invariant failed';
 function invariant(condition, message) {
@@ -778,60 +847,30 @@ function tokensToTokenPrices(tokens) {
 
 const isSameAddress = (address1, address2) => getAddress(address1) === getAddress(address2);
 
-var GraphQLFilterOperator;
-(function (GraphQLFilterOperator) {
-    GraphQLFilterOperator[GraphQLFilterOperator["GreaterThan"] = 0] = "GreaterThan";
-    GraphQLFilterOperator[GraphQLFilterOperator["LessThan"] = 1] = "LessThan";
-    GraphQLFilterOperator[GraphQLFilterOperator["Equals"] = 2] = "Equals";
-    GraphQLFilterOperator[GraphQLFilterOperator["In"] = 3] = "In";
-    GraphQLFilterOperator[GraphQLFilterOperator["NotIn"] = 4] = "NotIn";
-    GraphQLFilterOperator[GraphQLFilterOperator["Contains"] = 5] = "Contains";
-})(GraphQLFilterOperator || (GraphQLFilterOperator = {}));
-
 class BalancerAPIArgsFormatter {
-    constructor() {
-        this.operatorMap = {
-            [GraphQLFilterOperator.GreaterThan]: 'gt',
-            [GraphQLFilterOperator.LessThan]: 'lt',
-            [GraphQLFilterOperator.Equals]: 'eq',
-            [GraphQLFilterOperator.In]: 'in',
-            [GraphQLFilterOperator.NotIn]: 'not_in',
-            [GraphQLFilterOperator.Contains]: 'contains',
-        };
-    }
     format(args) {
-        const whereQuery = {};
-        if (args.where) {
-            Object.entries(args.where).forEach(([name, filter]) => {
-                whereQuery[name] = {
-                    [this.operatorMap[filter.operator]]: filter.value,
-                };
-            });
-        }
-        return {
-            ...args,
-            ...{ where: whereQuery },
-        };
+        return args;
     }
 }
 
 class SubgraphArgsFormatter {
     constructor() {
         this.operatorMap = {
-            [GraphQLFilterOperator.GreaterThan]: '_gt',
-            [GraphQLFilterOperator.LessThan]: '_lt',
-            [GraphQLFilterOperator.Equals]: '',
-            [GraphQLFilterOperator.In]: '_in',
-            [GraphQLFilterOperator.NotIn]: '_not_in',
-            [GraphQLFilterOperator.Contains]: '_contains',
+            gt: '_gt',
+            lt: '_lt',
+            eq: '',
+            in: '_in',
+            not_in: '_not_in',
+            contains: '_contains',
         };
     }
     format(args) {
         const whereQuery = {};
         if (args.where) {
             Object.entries(args.where).forEach(([name, filter]) => {
-                whereQuery[`${name}${this.operatorMap[filter.operator]}`] =
-                    filter.value;
+                Object.entries(filter).forEach(([operator, value]) => {
+                    whereQuery[`${name}${this.operatorMap[operator]}`] = value;
+                });
             });
         }
         return {
@@ -841,50 +880,6 @@ class SubgraphArgsFormatter {
     }
 }
 
-function GreaterThan(value) {
-    return {
-        operator: GraphQLFilterOperator.GreaterThan,
-        value,
-    };
-}
-function LessThan(value) {
-    return {
-        operator: GraphQLFilterOperator.LessThan,
-        value,
-    };
-}
-function Equals(value) {
-    return {
-        operator: GraphQLFilterOperator.Equals,
-        value,
-    };
-}
-function In(value) {
-    return {
-        operator: GraphQLFilterOperator.In,
-        value,
-    };
-}
-function NotIn(value) {
-    return {
-        operator: GraphQLFilterOperator.NotIn,
-        value,
-    };
-}
-function Contains(value) {
-    return {
-        operator: GraphQLFilterOperator.Contains,
-        value,
-    };
-}
-const Op = {
-    GreaterThan,
-    LessThan,
-    Equals,
-    In,
-    NotIn,
-    Contains,
-};
 class GraphQLArgsBuilder {
     constructor(args) {
         this.args = args;
@@ -901,6 +896,19 @@ class GraphQLArgsBuilder {
         return formatter.format(this.args);
     }
 }
+
+var Network;
+(function (Network) {
+    Network[Network["MAINNET"] = 1] = "MAINNET";
+    Network[Network["ROPSTEN"] = 3] = "ROPSTEN";
+    Network[Network["RINKEBY"] = 4] = "RINKEBY";
+    Network[Network["GOERLI"] = 5] = "GOERLI";
+    Network[Network["G\u00D6RLI"] = 5] = "G\u00D6RLI";
+    Network[Network["OPTIMISM"] = 10] = "OPTIMISM";
+    Network[Network["KOVAN"] = 42] = "KOVAN";
+    Network[Network["POLYGON"] = 137] = "POLYGON";
+    Network[Network["ARBITRUM"] = 42161] = "ARBITRUM";
+})(Network || (Network = {}));
 
 var PoolSpecialization;
 (function (PoolSpecialization) {
@@ -927,12 +935,15 @@ var PoolType;
     PoolType["Weighted"] = "Weighted";
     PoolType["Investment"] = "Investment";
     PoolType["Stable"] = "Stable";
+    PoolType["ComposableStable"] = "ComposableStable";
     PoolType["MetaStable"] = "MetaStable";
     PoolType["StablePhantom"] = "StablePhantom";
     PoolType["LiquidityBootstrapping"] = "LiquidityBootstrapping";
     PoolType["AaveLinear"] = "AaveLinear";
     PoolType["ERC4626Linear"] = "ERC4626Linear";
     PoolType["Element"] = "Element";
+    PoolType["Gyro2"] = "Gyro2";
+    PoolType["Gyro3"] = "Gyro3";
 })(PoolType || (PoolType = {}));
 
 var SwapType;
@@ -976,34 +987,6 @@ function getLimitsForSlippage(tokensIn, tokensOut, swapType, deltas, assets, sli
         }
     });
     return limits;
-}
-
-var Network;
-(function (Network) {
-    Network[Network["MAINNET"] = 1] = "MAINNET";
-    Network[Network["ROPSTEN"] = 3] = "ROPSTEN";
-    Network[Network["RINKEBY"] = 4] = "RINKEBY";
-    Network[Network["GOERLI"] = 5] = "GOERLI";
-    Network[Network["G\u00D6RLI"] = 5] = "G\u00D6RLI";
-    Network[Network["OPTIMISM"] = 10] = "OPTIMISM";
-    Network[Network["KOVAN"] = 42] = "KOVAN";
-    Network[Network["POLYGON"] = 137] = "POLYGON";
-    Network[Network["ARBITRUM"] = 42161] = "ARBITRUM";
-})(Network || (Network = {}));
-
-class StablePoolExit {
-    constructor() {
-        this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
-            // TODO implementation
-            console.log(exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut);
-            throw new Error('To be implemented');
-        };
-        this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
-            // TODO implementation
-            console.log(exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset);
-            throw new Error('To be implemented');
-        };
-    }
 }
 
 const bpsPerOne = BigNumber.from('10000'); // number of basis points in 100%
@@ -1085,19 +1068,14 @@ const BALANCER_NETWORK_CONFIG = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
-                gaugeController: '',
-                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
-                bal: '',
-                veBal: '',
-                bbaUsd: '',
             },
         },
         urls: {
             subgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2',
-            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-polygon',
             blockNumberSubgraph: 'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
         },
         pools: {},
@@ -1108,19 +1086,14 @@ const BALANCER_NETWORK_CONFIG = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
-                gaugeController: '',
-                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
-                bal: '',
-                veBal: '',
-                bbaUsd: '',
             },
         },
         urls: {
             subgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-arbitrum-v2',
-            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+            gaugesSubgraph: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-arbitrum',
             blockNumberSubgraph: 'https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-one-blocks',
         },
         pools: {},
@@ -1131,14 +1104,9 @@ const BALANCER_NETWORK_CONFIG = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0x2cc8688C5f75E365aaEEb4ea8D6a480405A48D2A',
-                gaugeController: '',
-                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-                bal: '',
-                veBal: '',
-                bbaUsd: '',
             },
         },
         urls: {
@@ -1153,14 +1121,9 @@ const BALANCER_NETWORK_CONFIG = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0x53c43764255c17bd724f74c4ef150724ac50a3ed',
-                gaugeController: '',
-                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-                bal: '',
-                veBal: '',
-                bbaUsd: '',
             },
         },
         urls: {
@@ -1175,14 +1138,9 @@ const BALANCER_NETWORK_CONFIG = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0x42ad527de7d4e9d9d011ac45b31d8551f8fe9821',
-                gaugeController: '',
-                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-                bal: '',
-                veBal: '',
-                bbaUsd: '',
             },
         },
         urls: {
@@ -1198,13 +1156,9 @@ const BALANCER_NETWORK_CONFIG = {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
                 gaugeController: '0xBB1CE49b16d55A1f2c6e88102f32144C7334B116',
-                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-                bal: '',
-                veBal: '',
-                bbaUsd: '',
             },
         },
         urls: {
@@ -1220,14 +1174,9 @@ const BALANCER_NETWORK_CONFIG = {
             contracts: {
                 vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
                 multicall: '0x2dc0e2aa608532da689e89e237df582b783e552c',
-                gaugeController: '',
-                feeDistributor: '',
             },
             tokens: {
                 wrappedNativeAsset: '0x4200000000000000000000000000000000000006',
-                bal: '',
-                veBal: '',
-                bbaUsd: '',
             },
         },
         urls: {
@@ -1301,6 +1250,137 @@ class BalancerError extends Error {
             default:
                 return 'Unknown error';
         }
+    }
+}
+
+class StablePoolExit {
+    constructor() {
+        this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
+            if (!bptIn.length || parseFixed$1(bptIn, 18).isNegative()) {
+                throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
+            }
+            if (singleTokenMaxOut &&
+                singleTokenMaxOut !== AddressZero &&
+                !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)) {
+                throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
+            }
+            if (!shouldUnwrapNativeAsset && singleTokenMaxOut === AddressZero)
+                throw new Error('shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values');
+            // Check if there's any relevant stable pool info missing
+            if (pool.tokens.some((token) => !token.decimals))
+                throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+            if (!pool.amp)
+                throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+            // Parse pool info into EVM amounts in order to match amountsIn scalling
+            const { parsedTokens, parsedBalances, parsedAmp, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Replace WETH address with ETH - required for exiting with ETH
+            const unwrappedTokens = parsedTokens.map((token) => token === wrappedNativeAsset ? AddressZero : token);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [sortedTokens, sortedBalances] = assetHelpers.sortTokens(shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens, parsedBalances);
+            let minAmountsOut = Array(parsedTokens.length).fill('0');
+            let userData;
+            if (singleTokenMaxOut) {
+                // Exit pool with single token using exact bptIn
+                const singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
+                // Calculate amount out given BPT in
+                const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(BigInt(parsedAmp), sortedBalances.map((b) => BigInt(b)), singleTokenMaxOutIndex, BigInt(bptIn), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+                // Apply slippage tolerance
+                minAmountsOut[singleTokenMaxOutIndex] = subSlippage(BigNumber.from(amountOut), BigNumber.from(slippage)).toString();
+                userData = StablePoolEncoder.exitExactBPTInForOneTokenOut(bptIn, singleTokenMaxOutIndex);
+            }
+            else {
+                // Exit pool with all tokens proportinally
+                // Calculate amount out given BPT in
+                const amountsOut = SOR.StableMathBigInt._calcTokensOutGivenExactBptIn(sortedBalances.map((b) => BigInt(b)), BigInt(bptIn), BigInt(parsedTotalShares)).map((amount) => amount.toString());
+                // Apply slippage tolerance
+                minAmountsOut = amountsOut.map((amount) => {
+                    const minAmount = subSlippage(BigNumber.from(amount), BigNumber.from(slippage));
+                    return minAmount.toString();
+                });
+                userData = StablePoolEncoder.exitExactBPTInForTokensOut(bptIn);
+            }
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // Encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut,
+                maxBPTIn: bptIn,
+            };
+        };
+        this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
+            if (tokensOut.length != amountsOut.length ||
+                tokensOut.length != pool.tokensList.length) {
+                throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+            }
+            // Check if there's any relevant stable pool info missing
+            if (pool.tokens.some((token) => !token.decimals))
+                throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+            if (!pool.amp)
+                throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+            // Parse pool info into EVM amounts in order to match amountsOut scalling
+            const { parsedTokens, parsedBalances, parsedAmp, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [, sortedBalances] = assetHelpers.sortTokens(parsedTokens, parsedBalances);
+            const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(tokensOut, amountsOut);
+            // Calculate expected BPT in given tokens out
+            const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(BigInt(parsedAmp), sortedBalances.map((b) => BigInt(b)), sortedAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+            // Apply slippage tolerance
+            const maxBPTIn = addSlippage(BigNumber.from(bptIn), BigNumber.from(slippage)).toString();
+            const userData = StablePoolEncoder.exitBPTInForExactTokensOut(sortedAmounts, maxBPTIn);
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut: sortedAmounts,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut: sortedAmounts,
+                maxBPTIn,
+            };
+        };
     }
 }
 
@@ -2045,19 +2125,135 @@ class Stable {
     }
 }
 
+class ComposableStablePoolExit {
+    constructor() {
+        this.buildExitSingleTokenOut = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
+            if (!bptIn.length || parseFixed$1(bptIn, 18).isNegative()) {
+                throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
+            }
+            if (singleTokenMaxOut &&
+                singleTokenMaxOut !== AddressZero &&
+                !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)) {
+                throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
+            }
+            if (!shouldUnwrapNativeAsset && singleTokenMaxOut === AddressZero)
+                throw new Error('shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values');
+            // Check if there's any relevant stable pool info missing
+            if (pool.tokens.some((token) => !token.decimals))
+                throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+            if (!pool.amp)
+                throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+            // Parse pool info into EVM amounts in order to match amountsIn scalling
+            const { parsedTokens, parsedBalances, parsedAmp, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Replace WETH address with ETH - required for exiting with ETH
+            const unwrappedTokens = parsedTokens.map((token) => token === wrappedNativeAsset ? AddressZero : token);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [sortedTokens, sortedBalances] = assetHelpers.sortTokens(shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens, parsedBalances);
+            const minAmountsOut = Array(parsedTokens.length).fill('0');
+            // Exit pool with single token using exact bptIn
+            const singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
+            // Calculate amount out given BPT in
+            const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(BigInt(parsedAmp), sortedBalances.map((b) => BigInt(b)), singleTokenMaxOutIndex, BigInt(bptIn), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+            // Apply slippage tolerance
+            minAmountsOut[singleTokenMaxOutIndex] = subSlippage(BigNumber.from(amountOut), BigNumber.from(slippage)).toString();
+            const userData = ComposableStablePoolEncoder.exitExactBPTInForOneTokenOut(bptIn, singleTokenMaxOutIndex);
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // Encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut,
+                maxBPTIn: bptIn,
+            };
+        };
+        this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
+            if (tokensOut.length != amountsOut.length ||
+                tokensOut.length != pool.tokensList.length) {
+                throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+            }
+            // Check if there's any relevant stable pool info missing
+            if (pool.tokens.some((token) => !token.decimals))
+                throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+            if (!pool.amp)
+                throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+            // Parse pool info into EVM amounts in order to match amountsOut scalling
+            const { parsedTokens, parsedBalances, parsedAmp, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [, sortedBalances] = assetHelpers.sortTokens(parsedTokens, parsedBalances);
+            const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(tokensOut, amountsOut);
+            // Calculate expected BPT in given tokens out
+            const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(BigInt(parsedAmp), sortedBalances.map((b) => BigInt(b)), sortedAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+            // Apply slippage tolerance
+            const maxBPTIn = addSlippage(BigNumber.from(bptIn), BigNumber.from(slippage)).toString();
+            const userData = ComposableStablePoolEncoder.exitBPTInForExactTokensOut(sortedAmounts, maxBPTIn);
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut: sortedAmounts,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut: sortedAmounts,
+                maxBPTIn,
+            };
+        };
+    }
+}
+
+class ComposableStable {
+    constructor(exit = new ComposableStablePoolExit(), join = new StablePoolJoin(), liquidity = new StablePoolLiquidity(), spotPriceCalculator = new StablePoolSpotPrice(), priceImpactCalculator = new StablePoolPriceImpact()) {
+        this.exit = exit;
+        this.join = join;
+        this.liquidity = liquidity;
+        this.spotPriceCalculator = spotPriceCalculator;
+        this.priceImpactCalculator = priceImpactCalculator;
+    }
+}
+
 class WeightedPoolExit {
     constructor() {
-        /**
-         * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
-         * @param {string}  exiter - Account address exiting pool
-         * @param {Pool}    pool - Subgraph pool object of pool being exited
-         * @param {string}  bptIn - BPT provided for exiting pool
-         * @param {string}  slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-         * @param {boolean} shouldUnwrapNativeAsset - Indicates wether wrapped native asset should be unwrapped after exit.
-         * @param {string}  wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting to native asset.
-         * @param {string}  singleTokenMaxOut - Optional: token address that if provided will exit to given token
-         * @returns         transaction request ready to send with signer.sendTransaction
-         */
         this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
             if (!bptIn.length || parseFixed$1(bptIn, 18).isNegative()) {
                 throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
@@ -2083,7 +2279,7 @@ class WeightedPoolExit {
                 const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
                 // Calculate amount out given BPT in
                 const amountOut = SOR.WeightedMaths._calcTokenOutGivenExactBptIn(BigInt(sortedBalances[singleTokenMaxOutIndex]), BigInt(sortedWeights[singleTokenMaxOutIndex]), BigInt(bptIn), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
-                // Apply slippage
+                // Apply slippage tolerance
                 minAmountsOut[singleTokenMaxOutIndex] = subSlippage(BigNumber.from(amountOut), BigNumber.from(slippage)).toString();
                 userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(bptIn, singleTokenMaxOutIndex);
             }
@@ -2091,7 +2287,7 @@ class WeightedPoolExit {
                 // Exit pool with all tokens proportinally
                 // Calculate amounts out given BPT in
                 const amountsOut = SOR.WeightedMaths._calcTokensOutGivenExactBptIn(sortedBalances.map((b) => BigInt(b)), BigInt(bptIn), BigInt(parsedTotalShares)).map((amount) => amount.toString());
-                // Apply slippage
+                // Apply slippage tolerance
                 minAmountsOut = amountsOut.map((amount) => {
                     const minAmount = subSlippage(BigNumber.from(amount), BigNumber.from(slippage));
                     return minAmount.toString();
@@ -2128,16 +2324,6 @@ class WeightedPoolExit {
                 maxBPTIn: bptIn,
             };
         };
-        /**
-         * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
-         * @param {string}    exiter - Account address exiting pool
-         * @param {Pool}      pool - Subgraph pool object of pool being exited
-         * @param {string[]}  tokensOut - Tokens provided for exiting pool
-         * @param {string[]}  amountsOut - Amoutns provided for exiting pool
-         * @param {string}    slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-         * @param {string}    wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting with ETH.
-         * @returns           transaction request ready to send with signer.sendTransaction
-         */
         this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
             if (tokensOut.length != amountsOut.length ||
                 tokensOut.length != pool.tokensList.length) {
@@ -2151,7 +2337,7 @@ class WeightedPoolExit {
             const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(tokensOut, amountsOut);
             // Calculate expected BPT in given tokens out
             const bptIn = SOR.WeightedMaths._calcBptInGivenExactTokensOut(sortedBalances.map((b) => BigInt(b)), sortedWeights.map((w) => BigInt(w)), sortedAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
-            // Apply slippage
+            // Apply slippage tolerance
             const maxBPTIn = addSlippage(BigNumber.from(bptIn), BigNumber.from(slippage)).toString();
             const userData = WeightedPoolEncoder.exitBPTInForExactTokensOut(sortedAmounts, maxBPTIn);
             const to = balancerVault;
@@ -2344,14 +2530,170 @@ class Weighted {
 class MetaStablePoolExit {
     constructor() {
         this.buildExitExactBPTIn = ({ exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut, }) => {
-            // TODO implementation
-            console.log(exiter, pool, bptIn, slippage, shouldUnwrapNativeAsset, wrappedNativeAsset, singleTokenMaxOut);
-            throw new Error('To be implemented');
+            if (!bptIn.length || parseFixed$1(bptIn, 18).isNegative()) {
+                throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
+            }
+            if (singleTokenMaxOut &&
+                singleTokenMaxOut !== AddressZero &&
+                !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)) {
+                throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
+            }
+            if (!shouldUnwrapNativeAsset && singleTokenMaxOut === AddressZero)
+                throw new Error('shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values');
+            // Check if there's any relevant meta stable pool info missing
+            if (pool.tokens.some((token) => !token.decimals))
+                throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+            if (!pool.amp)
+                throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+            if (pool.tokens.some((token) => !token.priceRate))
+                throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
+            // Parse pool info into EVM amounts in order to match amountsIn scalling
+            const { parsedTokens, parsedBalances, parsedAmp, parsedPriceRates, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Replace WETH address with ETH - required for exiting with ETH
+            const unwrappedTokens = parsedTokens.map((token) => token === wrappedNativeAsset ? AddressZero : token);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [sortedTokens, sortedBalances, sortedPriceRates] = assetHelpers.sortTokens(shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens, parsedBalances, parsedPriceRates);
+            // Scale balances based on price rate for each token
+            const scaledBalances = sortedBalances.map((balance, i) => {
+                return BigNumber.from(balance)
+                    .mul(BigNumber.from(sortedPriceRates[i]))
+                    .div(parseFixed$1('1', 18))
+                    .toString();
+            });
+            let minAmountsOut = Array(parsedTokens.length).fill('0');
+            let userData;
+            if (singleTokenMaxOut) {
+                // Exit pool with single token using exact bptIn
+                const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
+                // Calculate amount out given BPT in
+                const scaledAmountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(BigInt(parsedAmp), scaledBalances.map((b) => BigInt(b)), singleTokenMaxOutIndex, BigInt(bptIn), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+                // Reverse scaled amount out based on token price rate
+                const amountOut = BigNumber.from(scaledAmountOut)
+                    .div(BigNumber.from(sortedPriceRates[singleTokenMaxOutIndex]))
+                    .mul(parseFixed$1('1', 18))
+                    .toString();
+                minAmountsOut[singleTokenMaxOutIndex] = subSlippage(BigNumber.from(amountOut), BigNumber.from(slippage)).toString();
+                userData = StablePoolEncoder.exitExactBPTInForOneTokenOut(bptIn, singleTokenMaxOutIndex);
+            }
+            else {
+                // Exit pool with all tokens proportinally
+                // Calculate amount out given BPT in
+                const scaledAmountsOut = SOR.StableMathBigInt._calcTokensOutGivenExactBptIn(scaledBalances.map((b) => BigInt(b)), BigInt(bptIn), BigInt(parsedTotalShares)).map((amount) => amount.toString());
+                // Reverse scaled amounts out based on token price rate
+                const amountsOut = scaledAmountsOut.map((amount, i) => {
+                    return BigNumber.from(amount)
+                        .div(BigNumber.from(sortedPriceRates[i]))
+                        .mul(parseFixed$1('1', 18))
+                        .toString();
+                });
+                // Apply slippage tolerance
+                minAmountsOut = amountsOut.map((amount) => {
+                    const minAmount = subSlippage(BigNumber.from(amount), BigNumber.from(slippage));
+                    return minAmount.toString();
+                });
+                userData = StablePoolEncoder.exitExactBPTInForTokensOut(bptIn);
+            }
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut,
+                maxBPTIn: bptIn,
+            };
         };
         this.buildExitExactTokensOut = ({ exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset, }) => {
-            // TODO implementation
-            console.log(exiter, pool, tokensOut, amountsOut, slippage, wrappedNativeAsset);
-            throw new Error('To be implemented');
+            if (tokensOut.length != amountsOut.length ||
+                tokensOut.length != pool.tokensList.length) {
+                throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+            }
+            // Check if there's any relevant meta stable pool info missing
+            if (pool.tokens.some((token) => !token.decimals))
+                throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+            if (!pool.amp)
+                throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+            if (pool.tokens.some((token) => !token.priceRate))
+                throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
+            // Parse pool info into EVM amounts in order to match amountsOut scalling
+            const { parsedTokens, parsedBalances, parsedPriceRates, parsedAmp, parsedTotalShares, parsedSwapFee, } = parsePoolInfo(pool);
+            // Sort pool info based on tokens addresses
+            const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+            const [, sortedBalances, sortedPriceRates] = assetHelpers.sortTokens(parsedTokens, parsedBalances, parsedPriceRates);
+            const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(tokensOut, amountsOut);
+            // Scale amounts out based on price rate for each token
+            const scaledAmounts = sortedAmounts.map((amount, i) => {
+                return BigNumber.from(amount)
+                    .mul(BigNumber.from(sortedPriceRates[i]))
+                    .div(parseFixed$1('1', 18))
+                    .toString();
+            });
+            // Scale balances based on price rate for each token
+            const scaledBalances = sortedBalances.map((balance, i) => {
+                return BigNumber.from(balance)
+                    .mul(BigNumber.from(sortedPriceRates[i]))
+                    .div(parseFixed$1('1', 18))
+                    .toString();
+            });
+            // Calculate expected BPT in given tokens out
+            const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(BigInt(parsedAmp), scaledBalances.map((b) => BigInt(b)), scaledAmounts.map((a) => BigInt(a)), BigInt(parsedTotalShares), BigInt(parsedSwapFee)).toString();
+            // Apply slippage tolerance
+            const maxBPTIn = addSlippage(BigNumber.from(bptIn), BigNumber.from(slippage)).toString();
+            const userData = StablePoolEncoder.exitBPTInForExactTokensOut(sortedAmounts, // must not use scaledAmounts because it should match amountsOut provided by the user
+            maxBPTIn);
+            // This is a hack to get around rounding issues for scaled amounts on MetaStable pools
+            // TODO: do this more elegantly
+            const minAmountsOut = sortedAmounts.map((a, i) => a === scaledAmounts[i] ? a : BigNumber.from(a).sub(1).toString());
+            const to = balancerVault;
+            const functionName = 'exitPool';
+            const attributes = {
+                poolId: pool.id,
+                sender: exiter,
+                recipient: exiter,
+                exitPoolRequest: {
+                    assets: sortedTokens,
+                    minAmountsOut,
+                    userData,
+                    toInternalBalance: false,
+                },
+            };
+            // encode transaction data into an ABI byte string which can be sent to the network to be executed
+            const vaultInterface = Vault__factory.createInterface();
+            const data = vaultInterface.encodeFunctionData(functionName, [
+                attributes.poolId,
+                attributes.sender,
+                attributes.recipient,
+                attributes.exitPoolRequest,
+            ]);
+            return {
+                to,
+                functionName,
+                attributes,
+                data,
+                minAmountsOut,
+                maxBPTIn,
+            };
         };
     }
 }
@@ -2747,9 +3089,10 @@ class Linear {
  * Returns a class instance of a type specific method handlers.
  */
 class PoolTypeConcerns {
-    constructor(config, weighted = new Weighted(), stable = new Stable(), metaStable = new MetaStable(), stablePhantom = new StablePhantom(), linear = new Linear()) {
+    constructor(config, weighted = new Weighted(), stable = new Stable(), composableStable = new ComposableStable(), metaStable = new MetaStable(), stablePhantom = new StablePhantom(), linear = new Linear()) {
         this.weighted = weighted;
         this.stable = stable;
+        this.composableStable = composableStable;
         this.metaStable = metaStable;
         this.stablePhantom = stablePhantom;
         this.linear = linear;
@@ -2764,6 +3107,9 @@ class PoolTypeConcerns {
             }
             case 'Stable': {
                 return new Stable();
+            }
+            case 'ComposableStable': {
+                return new ComposableStable();
             }
             case 'MetaStable': {
                 return new MetaStable();
@@ -3374,9 +3720,13 @@ const SubgraphPoolFragmentDoc = gql$1 `
   id
   address
   poolType
+  factory
+  strategyType
   symbol
   name
+  swapEnabled
   swapFee
+  owner
   totalWeight
   totalSwapVolume
   totalSwapFee
@@ -3388,14 +3738,12 @@ const SubgraphPoolFragmentDoc = gql$1 `
   swapsCount
   holdersCount
   tokensList
-  totalWeight
   amp
   expiryTime
   unitSeconds
   createTime
   principalToken
   baseToken
-  swapEnabled
   wrappedIndex
   mainIndex
   lowerTarget
@@ -3508,7 +3856,7 @@ const SubgraphUserFragmentDoc = gql$1 `
   }
 }
     `;
-const PoolsDocument = gql$1 `
+const PoolsDocument$1 = gql$1 `
     query Pools($skip: Int, $first: Int, $orderBy: Pool_orderBy, $orderDirection: OrderDirection, $where: Pool_filter, $block: Block_height) {
   pools(
     skip: $skip
@@ -3674,7 +4022,7 @@ const defaultWrapper$1 = (action, _operationName, _operationType) => action();
 function getSdk$1(client, withWrapper = defaultWrapper$1) {
     return {
         Pools(variables, requestHeaders) {
-            return withWrapper((wrappedRequestHeaders) => client.request(PoolsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), 'Pools', 'query');
+            return withWrapper((wrappedRequestHeaders) => client.request(PoolsDocument$1, variables, { ...requestHeaders, ...wrappedRequestHeaders }), 'Pools', 'query');
         },
         Pool(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(PoolDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), 'Pool', 'query');
@@ -3854,6 +4202,15 @@ const SubgraphLiquidityGaugeFragmentDoc = gql$1 `
   }
 }
     `;
+const SubgraphPoolWithPreferentialGaugeFragmentDoc = gql$1 `
+    fragment SubgraphPoolWithPreferentialGauge on Pool {
+  id
+  poolId
+  preferentialGauge {
+    ...SubgraphLiquidityGauge
+  }
+}
+    ${SubgraphLiquidityGaugeFragmentDoc}`;
 const LiquidityGaugesDocument = gql$1 `
     query LiquidityGauges($skip: Int, $first: Int, $orderBy: LiquidityGauge_orderBy, $orderDirection: OrderDirection, $where: LiquidityGauge_filter, $block: Block_height) {
   liquidityGauges(
@@ -3868,11 +4225,28 @@ const LiquidityGaugesDocument = gql$1 `
   }
 }
     ${SubgraphLiquidityGaugeFragmentDoc}`;
+const PoolsDocument = gql$1 `
+    query Pools($skip: Int, $first: Int, $orderBy: Pool_orderBy, $orderDirection: OrderDirection, $where: Pool_filter, $block: Block_height) {
+  pools(
+    skip: $skip
+    first: $first
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    where: $where
+    block: $block
+  ) {
+    ...SubgraphPoolWithPreferentialGauge
+  }
+}
+    ${SubgraphPoolWithPreferentialGaugeFragmentDoc}`;
 const defaultWrapper = (action, _operationName, _operationType) => action();
 function getSdk(client, withWrapper = defaultWrapper) {
     return {
         LiquidityGauges(variables, requestHeaders) {
             return withWrapper((wrappedRequestHeaders) => client.request(LiquidityGaugesDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), 'LiquidityGauges', 'query');
+        },
+        Pools(variables, requestHeaders) {
+            return withWrapper((wrappedRequestHeaders) => client.request(PoolsDocument, variables, { ...requestHeaders, ...wrappedRequestHeaders }), 'Pools', 'query');
         }
     };
 }
@@ -7867,6 +8241,1440 @@ var linearPoolAbi = [
 	}
 ];
 
+var composableStableAbi = [
+	{
+		inputs: [
+			{
+				components: [
+					{
+						internalType: "contract IVault",
+						name: "vault",
+						type: "address"
+					},
+					{
+						internalType: "contract IProtocolFeePercentagesProvider",
+						name: "protocolFeeProvider",
+						type: "address"
+					},
+					{
+						internalType: "string",
+						name: "name",
+						type: "string"
+					},
+					{
+						internalType: "string",
+						name: "symbol",
+						type: "string"
+					},
+					{
+						internalType: "contract IERC20[]",
+						name: "tokens",
+						type: "address[]"
+					},
+					{
+						internalType: "contract IRateProvider[]",
+						name: "rateProviders",
+						type: "address[]"
+					},
+					{
+						internalType: "uint256[]",
+						name: "tokenRateCacheDurations",
+						type: "uint256[]"
+					},
+					{
+						internalType: "bool[]",
+						name: "exemptFromYieldProtocolFeeFlags",
+						type: "bool[]"
+					},
+					{
+						internalType: "uint256",
+						name: "amplificationParameter",
+						type: "uint256"
+					},
+					{
+						internalType: "uint256",
+						name: "swapFeePercentage",
+						type: "uint256"
+					},
+					{
+						internalType: "uint256",
+						name: "pauseWindowDuration",
+						type: "uint256"
+					},
+					{
+						internalType: "uint256",
+						name: "bufferPeriodDuration",
+						type: "uint256"
+					},
+					{
+						internalType: "address",
+						name: "owner",
+						type: "address"
+					}
+				],
+				internalType: "struct ComposableStablePool.NewPoolParams",
+				name: "params",
+				type: "tuple"
+			}
+		],
+		stateMutability: "nonpayable",
+		type: "constructor"
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: false,
+				internalType: "uint256",
+				name: "startValue",
+				type: "uint256"
+			},
+			{
+				indexed: false,
+				internalType: "uint256",
+				name: "endValue",
+				type: "uint256"
+			},
+			{
+				indexed: false,
+				internalType: "uint256",
+				name: "startTime",
+				type: "uint256"
+			},
+			{
+				indexed: false,
+				internalType: "uint256",
+				name: "endTime",
+				type: "uint256"
+			}
+		],
+		name: "AmpUpdateStarted",
+		type: "event"
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: false,
+				internalType: "uint256",
+				name: "currentValue",
+				type: "uint256"
+			}
+		],
+		name: "AmpUpdateStopped",
+		type: "event"
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: true,
+				internalType: "address",
+				name: "owner",
+				type: "address"
+			},
+			{
+				indexed: true,
+				internalType: "address",
+				name: "spender",
+				type: "address"
+			},
+			{
+				indexed: false,
+				internalType: "uint256",
+				name: "value",
+				type: "uint256"
+			}
+		],
+		name: "Approval",
+		type: "event"
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: false,
+				internalType: "bool",
+				name: "paused",
+				type: "bool"
+			}
+		],
+		name: "PausedStateChanged",
+		type: "event"
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: true,
+				internalType: "uint256",
+				name: "feeType",
+				type: "uint256"
+			},
+			{
+				indexed: false,
+				internalType: "uint256",
+				name: "protocolFeePercentage",
+				type: "uint256"
+			}
+		],
+		name: "ProtocolFeePercentageCacheUpdated",
+		type: "event"
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: false,
+				internalType: "bool",
+				name: "enabled",
+				type: "bool"
+			}
+		],
+		name: "RecoveryModeStateChanged",
+		type: "event"
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: false,
+				internalType: "uint256",
+				name: "swapFeePercentage",
+				type: "uint256"
+			}
+		],
+		name: "SwapFeePercentageChanged",
+		type: "event"
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: true,
+				internalType: "uint256",
+				name: "tokenIndex",
+				type: "uint256"
+			},
+			{
+				indexed: false,
+				internalType: "uint256",
+				name: "rate",
+				type: "uint256"
+			}
+		],
+		name: "TokenRateCacheUpdated",
+		type: "event"
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: true,
+				internalType: "uint256",
+				name: "tokenIndex",
+				type: "uint256"
+			},
+			{
+				indexed: true,
+				internalType: "contract IRateProvider",
+				name: "provider",
+				type: "address"
+			},
+			{
+				indexed: false,
+				internalType: "uint256",
+				name: "cacheDuration",
+				type: "uint256"
+			}
+		],
+		name: "TokenRateProviderSet",
+		type: "event"
+	},
+	{
+		anonymous: false,
+		inputs: [
+			{
+				indexed: true,
+				internalType: "address",
+				name: "from",
+				type: "address"
+			},
+			{
+				indexed: true,
+				internalType: "address",
+				name: "to",
+				type: "address"
+			},
+			{
+				indexed: false,
+				internalType: "uint256",
+				name: "value",
+				type: "uint256"
+			}
+		],
+		name: "Transfer",
+		type: "event"
+	},
+	{
+		inputs: [
+		],
+		name: "DELEGATE_PROTOCOL_SWAP_FEES_SENTINEL",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "DOMAIN_SEPARATOR",
+		outputs: [
+			{
+				internalType: "bytes32",
+				name: "",
+				type: "bytes32"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "address",
+				name: "owner",
+				type: "address"
+			},
+			{
+				internalType: "address",
+				name: "spender",
+				type: "address"
+			}
+		],
+		name: "allowance",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "address",
+				name: "spender",
+				type: "address"
+			},
+			{
+				internalType: "uint256",
+				name: "amount",
+				type: "uint256"
+			}
+		],
+		name: "approve",
+		outputs: [
+			{
+				internalType: "bool",
+				name: "",
+				type: "bool"
+			}
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "address",
+				name: "account",
+				type: "address"
+			}
+		],
+		name: "balanceOf",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "decimals",
+		outputs: [
+			{
+				internalType: "uint8",
+				name: "",
+				type: "uint8"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "address",
+				name: "spender",
+				type: "address"
+			},
+			{
+				internalType: "uint256",
+				name: "amount",
+				type: "uint256"
+			}
+		],
+		name: "decreaseAllowance",
+		outputs: [
+			{
+				internalType: "bool",
+				name: "",
+				type: "bool"
+			}
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "disableRecoveryMode",
+		outputs: [
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "enableRecoveryMode",
+		outputs: [
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "bytes4",
+				name: "selector",
+				type: "bytes4"
+			}
+		],
+		name: "getActionId",
+		outputs: [
+			{
+				internalType: "bytes32",
+				name: "",
+				type: "bytes32"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getActualSupply",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getAmplificationParameter",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "value",
+				type: "uint256"
+			},
+			{
+				internalType: "bool",
+				name: "isUpdating",
+				type: "bool"
+			},
+			{
+				internalType: "uint256",
+				name: "precision",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getAuthorizer",
+		outputs: [
+			{
+				internalType: "contract IAuthorizer",
+				name: "",
+				type: "address"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getBptIndex",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getDomainSeparator",
+		outputs: [
+			{
+				internalType: "bytes32",
+				name: "",
+				type: "bytes32"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getLastJoinExitData",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "lastJoinExitAmplification",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256",
+				name: "lastPostJoinExitInvariant",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getMinimumBpt",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "pure",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "address",
+				name: "account",
+				type: "address"
+			}
+		],
+		name: "getNextNonce",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getOwner",
+		outputs: [
+			{
+				internalType: "address",
+				name: "",
+				type: "address"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getPausedState",
+		outputs: [
+			{
+				internalType: "bool",
+				name: "paused",
+				type: "bool"
+			},
+			{
+				internalType: "uint256",
+				name: "pauseWindowEndTime",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256",
+				name: "bufferPeriodEndTime",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getPoolId",
+		outputs: [
+			{
+				internalType: "bytes32",
+				name: "",
+				type: "bytes32"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "uint256",
+				name: "feeType",
+				type: "uint256"
+			}
+		],
+		name: "getProtocolFeePercentageCache",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getProtocolFeesCollector",
+		outputs: [
+			{
+				internalType: "contract IProtocolFeesCollector",
+				name: "",
+				type: "address"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getProtocolSwapFeeDelegation",
+		outputs: [
+			{
+				internalType: "bool",
+				name: "",
+				type: "bool"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getRate",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getRateProviders",
+		outputs: [
+			{
+				internalType: "contract IRateProvider[]",
+				name: "",
+				type: "address[]"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getScalingFactors",
+		outputs: [
+			{
+				internalType: "uint256[]",
+				name: "",
+				type: "uint256[]"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getSwapFeePercentage",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "contract IERC20",
+				name: "token",
+				type: "address"
+			}
+		],
+		name: "getTokenRate",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "contract IERC20",
+				name: "token",
+				type: "address"
+			}
+		],
+		name: "getTokenRateCache",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "rate",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256",
+				name: "oldRate",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256",
+				name: "duration",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256",
+				name: "expires",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "getVault",
+		outputs: [
+			{
+				internalType: "contract IVault",
+				name: "",
+				type: "address"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "inRecoveryMode",
+		outputs: [
+			{
+				internalType: "bool",
+				name: "",
+				type: "bool"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "address",
+				name: "spender",
+				type: "address"
+			},
+			{
+				internalType: "uint256",
+				name: "addedValue",
+				type: "uint256"
+			}
+		],
+		name: "increaseAllowance",
+		outputs: [
+			{
+				internalType: "bool",
+				name: "",
+				type: "bool"
+			}
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "contract IERC20",
+				name: "token",
+				type: "address"
+			}
+		],
+		name: "isTokenExemptFromYieldProtocolFee",
+		outputs: [
+			{
+				internalType: "bool",
+				name: "",
+				type: "bool"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "name",
+		outputs: [
+			{
+				internalType: "string",
+				name: "",
+				type: "string"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "address",
+				name: "owner",
+				type: "address"
+			}
+		],
+		name: "nonces",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "bytes32",
+				name: "poolId",
+				type: "bytes32"
+			},
+			{
+				internalType: "address",
+				name: "sender",
+				type: "address"
+			},
+			{
+				internalType: "address",
+				name: "recipient",
+				type: "address"
+			},
+			{
+				internalType: "uint256[]",
+				name: "balances",
+				type: "uint256[]"
+			},
+			{
+				internalType: "uint256",
+				name: "lastChangeBlock",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256",
+				name: "protocolSwapFeePercentage",
+				type: "uint256"
+			},
+			{
+				internalType: "bytes",
+				name: "userData",
+				type: "bytes"
+			}
+		],
+		name: "onExitPool",
+		outputs: [
+			{
+				internalType: "uint256[]",
+				name: "",
+				type: "uint256[]"
+			},
+			{
+				internalType: "uint256[]",
+				name: "",
+				type: "uint256[]"
+			}
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "bytes32",
+				name: "poolId",
+				type: "bytes32"
+			},
+			{
+				internalType: "address",
+				name: "sender",
+				type: "address"
+			},
+			{
+				internalType: "address",
+				name: "recipient",
+				type: "address"
+			},
+			{
+				internalType: "uint256[]",
+				name: "balances",
+				type: "uint256[]"
+			},
+			{
+				internalType: "uint256",
+				name: "lastChangeBlock",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256",
+				name: "protocolSwapFeePercentage",
+				type: "uint256"
+			},
+			{
+				internalType: "bytes",
+				name: "userData",
+				type: "bytes"
+			}
+		],
+		name: "onJoinPool",
+		outputs: [
+			{
+				internalType: "uint256[]",
+				name: "",
+				type: "uint256[]"
+			},
+			{
+				internalType: "uint256[]",
+				name: "",
+				type: "uint256[]"
+			}
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				components: [
+					{
+						internalType: "enum IVault.SwapKind",
+						name: "kind",
+						type: "uint8"
+					},
+					{
+						internalType: "contract IERC20",
+						name: "tokenIn",
+						type: "address"
+					},
+					{
+						internalType: "contract IERC20",
+						name: "tokenOut",
+						type: "address"
+					},
+					{
+						internalType: "uint256",
+						name: "amount",
+						type: "uint256"
+					},
+					{
+						internalType: "bytes32",
+						name: "poolId",
+						type: "bytes32"
+					},
+					{
+						internalType: "uint256",
+						name: "lastChangeBlock",
+						type: "uint256"
+					},
+					{
+						internalType: "address",
+						name: "from",
+						type: "address"
+					},
+					{
+						internalType: "address",
+						name: "to",
+						type: "address"
+					},
+					{
+						internalType: "bytes",
+						name: "userData",
+						type: "bytes"
+					}
+				],
+				internalType: "struct IPoolSwapStructs.SwapRequest",
+				name: "swapRequest",
+				type: "tuple"
+			},
+			{
+				internalType: "uint256[]",
+				name: "balances",
+				type: "uint256[]"
+			},
+			{
+				internalType: "uint256",
+				name: "indexIn",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256",
+				name: "indexOut",
+				type: "uint256"
+			}
+		],
+		name: "onSwap",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "pause",
+		outputs: [
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "address",
+				name: "owner",
+				type: "address"
+			},
+			{
+				internalType: "address",
+				name: "spender",
+				type: "address"
+			},
+			{
+				internalType: "uint256",
+				name: "value",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256",
+				name: "deadline",
+				type: "uint256"
+			},
+			{
+				internalType: "uint8",
+				name: "v",
+				type: "uint8"
+			},
+			{
+				internalType: "bytes32",
+				name: "r",
+				type: "bytes32"
+			},
+			{
+				internalType: "bytes32",
+				name: "s",
+				type: "bytes32"
+			}
+		],
+		name: "permit",
+		outputs: [
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "bytes32",
+				name: "poolId",
+				type: "bytes32"
+			},
+			{
+				internalType: "address",
+				name: "sender",
+				type: "address"
+			},
+			{
+				internalType: "address",
+				name: "recipient",
+				type: "address"
+			},
+			{
+				internalType: "uint256[]",
+				name: "balances",
+				type: "uint256[]"
+			},
+			{
+				internalType: "uint256",
+				name: "lastChangeBlock",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256",
+				name: "protocolSwapFeePercentage",
+				type: "uint256"
+			},
+			{
+				internalType: "bytes",
+				name: "userData",
+				type: "bytes"
+			}
+		],
+		name: "queryExit",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "bptIn",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256[]",
+				name: "amountsOut",
+				type: "uint256[]"
+			}
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "bytes32",
+				name: "poolId",
+				type: "bytes32"
+			},
+			{
+				internalType: "address",
+				name: "sender",
+				type: "address"
+			},
+			{
+				internalType: "address",
+				name: "recipient",
+				type: "address"
+			},
+			{
+				internalType: "uint256[]",
+				name: "balances",
+				type: "uint256[]"
+			},
+			{
+				internalType: "uint256",
+				name: "lastChangeBlock",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256",
+				name: "protocolSwapFeePercentage",
+				type: "uint256"
+			},
+			{
+				internalType: "bytes",
+				name: "userData",
+				type: "bytes"
+			}
+		],
+		name: "queryJoin",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "bptOut",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256[]",
+				name: "amountsIn",
+				type: "uint256[]"
+			}
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "contract IERC20",
+				name: "token",
+				type: "address"
+			},
+			{
+				internalType: "bytes",
+				name: "poolConfig",
+				type: "bytes"
+			}
+		],
+		name: "setAssetManagerPoolConfig",
+		outputs: [
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "uint256",
+				name: "swapFeePercentage",
+				type: "uint256"
+			}
+		],
+		name: "setSwapFeePercentage",
+		outputs: [
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "contract IERC20",
+				name: "token",
+				type: "address"
+			},
+			{
+				internalType: "uint256",
+				name: "duration",
+				type: "uint256"
+			}
+		],
+		name: "setTokenRateCacheDuration",
+		outputs: [
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "uint256",
+				name: "rawEndValue",
+				type: "uint256"
+			},
+			{
+				internalType: "uint256",
+				name: "endTime",
+				type: "uint256"
+			}
+		],
+		name: "startAmplificationParameterUpdate",
+		outputs: [
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "stopAmplificationParameterUpdate",
+		outputs: [
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "symbol",
+		outputs: [
+			{
+				internalType: "string",
+				name: "",
+				type: "string"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "totalSupply",
+		outputs: [
+			{
+				internalType: "uint256",
+				name: "",
+				type: "uint256"
+			}
+		],
+		stateMutability: "view",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "address",
+				name: "recipient",
+				type: "address"
+			},
+			{
+				internalType: "uint256",
+				name: "amount",
+				type: "uint256"
+			}
+		],
+		name: "transfer",
+		outputs: [
+			{
+				internalType: "bool",
+				name: "",
+				type: "bool"
+			}
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "address",
+				name: "sender",
+				type: "address"
+			},
+			{
+				internalType: "address",
+				name: "recipient",
+				type: "address"
+			},
+			{
+				internalType: "uint256",
+				name: "amount",
+				type: "uint256"
+			}
+		],
+		name: "transferFrom",
+		outputs: [
+			{
+				internalType: "bool",
+				name: "",
+				type: "bool"
+			}
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "unpause",
+		outputs: [
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+		],
+		name: "updateProtocolFeePercentageCache",
+		outputs: [
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	},
+	{
+		inputs: [
+			{
+				internalType: "contract IERC20",
+				name: "token",
+				type: "address"
+			}
+		],
+		name: "updateTokenRateCache",
+		outputs: [
+		],
+		stateMutability: "nonpayable",
+		type: "function"
+	}
+];
+
 async function getOnChainBalances(subgraphPoolsOriginal, multiAddress, vaultAddress, provider) {
     if (subgraphPoolsOriginal.length === 0)
         return subgraphPoolsOriginal;
@@ -7880,6 +9688,7 @@ async function getOnChainBalances(subgraphPoolsOriginal, multiAddress, vaultAddr
         ...stablePoolAbi,
         ...elementPoolAbi,
         ...linearPoolAbi,
+        ...composableStableAbi,
     ].map((row) => [row.name, row])));
     const multiPool = new Multicaller(multiAddress, provider, abis);
     const supportedPoolTypes = Object.values(PoolFilter);
@@ -7895,11 +9704,21 @@ async function getOnChainBalances(subgraphPoolsOriginal, multiAddress, vaultAddr
         ]);
         multiPool.call(`${pool.id}.totalSupply`, pool.address, 'totalSupply');
         // Pools with pre minted BPT
-        if (pool.poolType.includes('Linear') ||
-            pool.poolType === 'StablePhantom' ||
-            pool.poolType === 'ComposableStable') {
+        if (pool.poolType.includes('Linear') || pool.poolType === 'StablePhantom') {
             multiPool.call(`${pool.id}.virtualSupply`, pool.address, 'getVirtualSupply');
         }
+        /**
+         * Returns the effective BPT supply.
+         * In other pools, this would be the same as `totalSupply`, but there are two key differences here:
+         *  - this pool pre-mints BPT and holds it in the Vault as a token, and as such we need to subtract the Vault's
+         *    balance to get the total "circulating supply". This is called the 'virtualSupply'.
+         *  - the Pool owes debt to the Protocol in the form of unminted BPT, which will be minted immediately before the
+         *    next join or exit. We need to take these into account since, even if they don't yet exist, they will
+         *    effectively be included in any Pool operation that involves BPT.
+         * In the vast majority of cases, this function should be used instead of `totalSupply()`.
+         */
+        if (pool.poolType === 'ComposableStable')
+            multiPool.call(`${pool.id}.actualSupply`, pool.address, 'getActualSupply');
         // TO DO - Make this part of class to make more flexible?
         if (pool.poolType === 'Weighted' ||
             pool.poolType === 'LiquidityBootstrapping' ||
@@ -7937,7 +9756,7 @@ async function getOnChainBalances(subgraphPoolsOriginal, multiAddress, vaultAddr
     const onChainPools = [];
     Object.entries(pools).forEach(([poolId, onchainData], index) => {
         try {
-            const { poolTokens, swapFee, weights, totalSupply, virtualSupply } = onchainData;
+            const { poolTokens, swapFee, weights, totalSupply, virtualSupply, actualSupply, } = onchainData;
             if (subgraphPools[index].poolType === 'Stable' ||
                 subgraphPools[index].poolType === 'MetaStable' ||
                 subgraphPools[index].poolType === 'StablePhantom' ||
@@ -7982,13 +9801,19 @@ async function getOnChainBalances(subgraphPoolsOriginal, multiAddress, vaultAddr
             });
             // Pools with pre minted BPT
             if (subgraphPools[index].poolType.includes('Linear') ||
-                subgraphPools[index].poolType === 'StablePhantom' ||
-                subgraphPools[index].poolType === 'ComposableStable') {
+                subgraphPools[index].poolType === 'StablePhantom') {
                 if (virtualSupply === undefined) {
                     console.error(`Pool with pre-minted BPT missing Virtual Supply: ${poolId}`);
                     return;
                 }
                 subgraphPools[index].totalShares = formatFixed$1(virtualSupply, 18);
+            }
+            else if (subgraphPools[index].poolType === 'ComposableStable') {
+                if (actualSupply === undefined) {
+                    console.error(`ComposableStable missing Actual Supply: ${poolId}`);
+                    return;
+                }
+                subgraphPools[index].totalShares = formatFixed$1(actualSupply, 18);
             }
             else {
                 subgraphPools[index].totalShares = formatFixed$1(totalSupply, 18);
@@ -10696,7 +12521,8 @@ class PoolApr {
      * @returns APR [bsp] from protocol rewards.
      */
     async stakingApr(pool, boost = 1) {
-        if (!this.liquidityGauges) {
+        // For L2s BAL is emmited as a reward token
+        if (!this.liquidityGauges || pool.chainId != 1) {
             return 0;
         }
         // Data resolving
@@ -10740,29 +12566,7 @@ class PoolApr {
         const rewards = rewardTokenAddresses.map(async (tAddress) => {
             /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */
             const data = gauge.rewardTokens[tAddress];
-            if (data.period_finish.toNumber() < Date.now() / 1000) {
-                return {
-                    address: tAddress,
-                    value: 0,
-                };
-            }
-            else {
-                const yearlyReward = data.rate.mul(86400).mul(365);
-                const price = await this.tokenPrices.find(tAddress);
-                if (price && price.usd) {
-                    const meta = await this.tokenMeta.find(tAddress);
-                    const decimals = (meta === null || meta === void 0 ? void 0 : meta.decimals) || 18;
-                    const yearlyRewardUsd = parseFloat(formatUnits(yearlyReward, decimals)) *
-                        parseFloat(price.usd);
-                    return {
-                        address: tAddress,
-                        value: yearlyRewardUsd,
-                    };
-                }
-                else {
-                    throw `No USD price for ${tAddress}`;
-                }
-            }
+            return this.rewardTokenApr(tAddress, data);
         });
         // Get the gauge totalSupplyUsd
         const bptPriceUsd = await this.bptPrice(pool);
@@ -10865,6 +12669,31 @@ class PoolApr {
         const fee = await this.feeCollector.find('');
         return fee ? fee : 0;
     }
+    async rewardTokenApr(tokenAddress, rewardData) {
+        if (rewardData.period_finish.toNumber() < Date.now() / 1000) {
+            return {
+                address: tokenAddress,
+                value: 0,
+            };
+        }
+        else {
+            const yearlyReward = rewardData.rate.mul(86400).mul(365);
+            const price = await this.tokenPrices.find(tokenAddress);
+            if (price && price.usd) {
+                const meta = await this.tokenMeta.find(tokenAddress);
+                const decimals = (meta === null || meta === void 0 ? void 0 : meta.decimals) || 18;
+                const yearlyRewardUsd = parseFloat(formatUnits(yearlyReward, decimals)) *
+                    parseFloat(price.usd);
+                return {
+                    address: tokenAddress,
+                    value: yearlyRewardUsd,
+                };
+            }
+            else {
+                throw `No USD price for ${tokenAddress}`;
+            }
+        }
+    }
 }
 
 class PoolVolume {
@@ -10943,6 +12772,7 @@ class Pools {
     }
     static wrap(pool, networkConfig) {
         const methods = PoolTypeConcerns.from(pool.poolType);
+        const wrappedNativeAsset = networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
         return {
             ...pool,
             buildJoin: (joiner, tokensIn, amountsIn, slippage) => {
@@ -10952,26 +12782,33 @@ class Pools {
                     tokensIn,
                     amountsIn,
                     slippage,
-                    wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+                    wrappedNativeAsset,
                 });
             },
             calcPriceImpact: async (amountsIn, minBPTOut) => methods.priceImpactCalculator.calcPriceImpact(pool, amountsIn, minBPTOut),
-            buildExitExactBPTIn: (exiter, bptIn, slippage, shouldUnwrapNativeAsset = false, singleTokenMaxOut) => methods.exit.buildExitExactBPTIn({
-                exiter,
-                pool,
-                bptIn,
-                slippage,
-                shouldUnwrapNativeAsset,
-                wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
-                singleTokenMaxOut,
-            }),
+            buildExitExactBPTIn: (exiter, bptIn, slippage, shouldUnwrapNativeAsset = false, singleTokenMaxOut) => {
+                if (methods.exit.buildExitExactBPTIn) {
+                    return methods.exit.buildExitExactBPTIn({
+                        exiter,
+                        pool,
+                        bptIn,
+                        slippage,
+                        shouldUnwrapNativeAsset,
+                        wrappedNativeAsset,
+                        singleTokenMaxOut,
+                    });
+                }
+                else {
+                    throw 'ExitExactBPTIn not supported';
+                }
+            },
             buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) => methods.exit.buildExitExactTokensOut({
                 exiter,
                 pool,
                 tokensOut,
                 amountsOut,
                 slippage,
-                wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+                wrappedNativeAsset,
             }),
             // TODO: spotPrice fails, because it needs a subgraphType,
             // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
@@ -11051,7 +12888,8 @@ const liquidityGaugeV5Interface = new Interface([
  * TODO: reseach helper contracts or extend subgraph
  */
 class LiquidityGaugesMulticallRepository {
-    constructor(multicallAddress, provider) {
+    constructor(multicallAddress, chainId, provider) {
+        this.chainId = chainId;
         this.multicall = Multicall(multicallAddress, provider);
     }
     async getTotalSupplies(gaugeAddresses) {
@@ -11083,17 +12921,26 @@ class LiquidityGaugesMulticallRepository {
         return workingSupplies;
     }
     async getRewardCounts(gaugeAddresses) {
-        const payload = gaugeAddresses.map((gaugeAddress) => [
-            gaugeAddress,
-            liquidityGaugeV5Interface.encodeFunctionData('reward_count', []),
-        ]);
-        const [, res] = await this.multicall.aggregate(payload);
-        // Handle 0x return values
-        const res0x = res.map((r) => (r == '0x' ? '0x0' : r));
-        const rewardCounts = gaugeAddresses.reduce((p, a, i) => {
-            p[a] || (p[a] = parseInt(res0x[i]));
-            return p;
-        }, {});
+        let rewardCounts;
+        if (this.chainId == 1) {
+            const payload = gaugeAddresses.map((gaugeAddress) => [
+                gaugeAddress,
+                liquidityGaugeV5Interface.encodeFunctionData('reward_count', []),
+            ]);
+            const [, res] = await this.multicall.aggregate(payload);
+            // Handle 0x return values
+            const res0x = res.map((r) => (r == '0x' ? '0x0' : r));
+            rewardCounts = gaugeAddresses.reduce((p, a, i) => {
+                p[a] || (p[a] = parseInt(res0x[i]));
+                return p;
+            }, {});
+        }
+        else {
+            rewardCounts = gaugeAddresses.reduce((p, a) => {
+                p[a] || (p[a] = 1);
+                return p;
+            }, {});
+        }
         return rewardCounts;
     }
     async getRewardTokens(gaugeAddresses, passingRewardCounts) {
@@ -11172,9 +13019,14 @@ class LiquidityGaugesSubgraphRepository {
         this.client = createGaugesClient(url);
     }
     async fetch() {
-        const queryResult = await this.client.LiquidityGauges();
+        const queryResult = await this.client.Pools({
+            where: {
+                preferentialGauge_not: null,
+            },
+        });
+        const qauges = queryResult.pools.map((pool) => pool.preferentialGauge);
         // TODO: optionally convert subgraph type to sdk internal type
-        this.gauges = queryResult.liquidityGauges;
+        this.gauges = qauges;
         return this.gauges;
     }
     async find(id) {
@@ -11203,36 +13055,47 @@ class LiquidityGaugesSubgraphRepository {
 }
 
 class LiquidityGaugeSubgraphRPCProvider {
-    constructor(subgraphUrl, multicallAddress, gaugeControllerAddress, provider) {
-        this.totalSupplies = {};
+    constructor(subgraphUrl, multicallAddress, gaugeControllerAddress, chainId, provider) {
+        this.chainId = chainId;
         this.workingSupplies = {};
         this.relativeWeights = {};
-        this.rewardTokens = {};
-        this.gaugeController = new GaugeControllerMulticallRepository(multicallAddress, gaugeControllerAddress, provider);
-        this.multicall = new LiquidityGaugesMulticallRepository(multicallAddress, provider);
+        this.rewardData = {};
+        if (gaugeControllerAddress) {
+            this.gaugeController = new GaugeControllerMulticallRepository(multicallAddress, gaugeControllerAddress, provider);
+        }
+        this.multicall = new LiquidityGaugesMulticallRepository(multicallAddress, chainId, provider);
         this.subgraph = new LiquidityGaugesSubgraphRepository(subgraphUrl);
     }
     async fetch() {
+        console.time('fetching liquidity gauges');
         const gauges = await this.subgraph.fetch();
         const gaugeAddresses = gauges.map((g) => g.id);
-        this.totalSupplies = await this.multicall.getTotalSupplies(gaugeAddresses);
-        this.workingSupplies = await this.multicall.getWorkingSupplies(gaugeAddresses);
-        this.rewardTokens = await this.multicall.getRewardData(gaugeAddresses);
-        this.relativeWeights = await this.gaugeController.getRelativeWeights(gaugeAddresses);
+        if (this.chainId == 1) {
+            this.workingSupplies = await this.multicall.getWorkingSupplies(gaugeAddresses);
+        }
+        if (this.gaugeController) {
+            this.relativeWeights = await this.gaugeController.getRelativeWeights(gaugeAddresses);
+        }
+        // TODO: Switch to getting rewards tokens from subgraph when indexer on polygon is fixed
+        // const rewardTokens = gauges.reduce((r: { [key: string]: string[] }, g) => {
+        //   r[g.id] ||= g.tokens ? g.tokens.map((t) => t.id.split('-')[0]) : [];
+        //   return r;
+        // }, {});
+        this.rewardData = await this.multicall.getRewardData(gaugeAddresses //,
+        // rewardTokens
+        );
+        console.timeEnd('fetching liquidity gauges');
+        return gauges.map(this.compose.bind(this));
     }
     async find(id) {
-        if (Object.keys(this.relativeWeights).length == 0) {
-            await this.fetch();
+        if (!this.gauges) {
+            this.gauges = this.fetch();
         }
-        const gauge = await this.subgraph.find(id);
-        if (!gauge) {
-            return;
-        }
-        return this.compose(gauge);
+        return (await this.gauges).find((g) => g.id == id);
     }
     async findBy(attribute, value) {
-        if (Object.keys(this.relativeWeights).length == 0) {
-            await this.fetch();
+        if (!this.gauges) {
+            this.gauges = this.fetch();
         }
         let gauge;
         if (attribute == 'id') {
@@ -11242,18 +13105,15 @@ class LiquidityGaugeSubgraphRPCProvider {
             return this.find(value);
         }
         else if (attribute == 'poolId') {
-            gauge = await this.subgraph.findBy('poolId', value);
+            gauge = (await this.gauges).find((g) => g.poolId == value);
         }
         else if (attribute == 'poolAddress') {
-            gauge = await this.subgraph.findBy('poolAddress', value);
+            gauge = (await this.gauges).find((g) => g.poolAddress == value);
         }
         else {
             throw `search by ${attribute} not implemented`;
         }
-        if (!gauge) {
-            return undefined;
-        }
-        return this.compose(gauge);
+        return gauge;
     }
     compose(subgraphGauge) {
         return {
@@ -11262,10 +13122,10 @@ class LiquidityGaugeSubgraphRPCProvider {
             name: subgraphGauge.symbol,
             poolId: subgraphGauge.poolId,
             poolAddress: subgraphGauge.poolAddress,
-            totalSupply: this.totalSupplies[subgraphGauge.id],
+            totalSupply: parseFloat(subgraphGauge.totalSupply),
             workingSupply: this.workingSupplies[subgraphGauge.id],
             relativeWeight: this.relativeWeights[subgraphGauge.id],
-            rewardTokens: this.rewardTokens[subgraphGauge.id],
+            rewardTokens: this.rewardData[subgraphGauge.id],
         };
     }
 }
@@ -11315,8 +13175,12 @@ class PoolsBalancerAPIRepository {
             orderBy: 'totalLiquidity',
             orderDirection: 'desc',
             where: {
-                swapEnabled: Op.Equals(true),
-                totalShares: Op.GreaterThan(0.05),
+                swapEnabled: {
+                    eq: true,
+                },
+                totalShares: {
+                    gt: 0.05,
+                },
             },
         };
         const defaultAttributes = {
@@ -11491,20 +13355,25 @@ class PoolsSubgraphRepository {
      * Repository with optional lazy loaded blockHeight
      *
      * @param url subgraph URL
+     * @param chainId current network, needed for L2s logic
      * @param blockHeight lazy loading blockHeigh resolver
      */
     constructor(options) {
         var _a, _b;
-        this.pools = [];
         this.skip = 0;
         this.client = createSubgraphClient(options.url);
         this.blockHeight = options.blockHeight;
+        this.chainId = options.chainId;
         const defaultArgs = {
             orderBy: Pool_OrderBy$1.TotalLiquidity,
             orderDirection: OrderDirection$1.Desc,
             where: {
-                swapEnabled: Op.Equals(true),
-                totalShares: Op.GreaterThan(0),
+                swapEnabled: {
+                    eq: true,
+                },
+                totalShares: {
+                    gt: 0,
+                },
             },
         };
         const args = ((_a = options.query) === null || _a === void 0 ? void 0 : _a.args) || defaultArgs;
@@ -11526,51 +13395,43 @@ class PoolsSubgraphRepository {
         }
         const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(new SubgraphArgsFormatter());
         const { pools } = await this.client.Pools(formattedQuery);
-        // TODO: how to best convert subgraph type to sdk internal type?
-        this.pools = pools;
-        this.skip = this.pools.length;
-        return this.pools.map(this.mapType);
+        this.skip = pools.length;
+        return pools.map(this.mapType.bind(this));
     }
     async find(id) {
-        if (this.pools.length == 0) {
-            await this.fetch();
-        }
-        return this.findBy('id', id);
+        return await this.findBy('id', id);
     }
     async findBy(param, value) {
-        if (this.pools.length == 0) {
-            await this.fetch();
+        if (!this.pools) {
+            this.pools = this.fetch();
         }
-        const pool = this.pools.find((pool) => pool[param] == value);
-        if (pool) {
-            return this.mapType(pool);
-        }
-        return undefined;
+        return (await this.pools).find((pool) => pool[param] == value);
     }
     async all() {
-        if (this.pools.length == 0) {
-            await this.fetch();
+        if (!this.pools) {
+            this.pools = this.fetch();
         }
-        return this.pools.map(this.mapType);
+        return this.pools;
     }
     async where(filter) {
-        if (this.pools.length == 0) {
-            await this.fetch();
+        if (!this.pools) {
+            this.pools = this.fetch();
         }
-        return (await this.all()).filter(filter);
+        return (await this.pools).filter(filter);
     }
     mapType(subgraphPool) {
-        var _a, _b, _c;
+        var _a, _b, _c, _d, _e;
         return {
             id: subgraphPool.id,
             name: subgraphPool.name || '',
             address: subgraphPool.address,
+            chainId: this.chainId,
             poolType: subgraphPool.poolType,
             swapFee: subgraphPool.swapFee,
             swapEnabled: subgraphPool.swapEnabled,
             amp: (_a = subgraphPool.amp) !== null && _a !== void 0 ? _a : undefined,
-            // owner: subgraphPool.owner,
-            // factory: subgraphPool.factory,
+            owner: (_b = subgraphPool.owner) !== null && _b !== void 0 ? _b : undefined,
+            factory: (_c = subgraphPool.factory) !== null && _c !== void 0 ? _c : undefined,
             tokens: subgraphPool.tokens || [],
             tokensList: subgraphPool.tokensList,
             tokenAddresses: (subgraphPool.tokens || []).map((t) => t.address),
@@ -11580,8 +13441,8 @@ class PoolsSubgraphRepository {
             totalSwapVolume: subgraphPool.totalSwapVolume,
             // onchain: subgraphPool.onchain,
             createTime: subgraphPool.createTime,
-            mainIndex: (_b = subgraphPool.mainIndex) !== null && _b !== void 0 ? _b : undefined,
-            wrappedIndex: (_c = subgraphPool.wrappedIndex) !== null && _c !== void 0 ? _c : undefined,
+            mainIndex: (_d = subgraphPool.mainIndex) !== null && _d !== void 0 ? _d : undefined,
+            wrappedIndex: (_e = subgraphPool.wrappedIndex) !== null && _e !== void 0 ? _e : undefined,
             // mainTokens: subgraphPool.mainTokens,
             // wrappedTokens: subgraphPool.wrappedTokens,
             // unwrappedTokens: subgraphPool.unwrappedTokens,
@@ -12008,32 +13869,35 @@ class TokenYieldsRepository {
 }
 
 const query = (timestamp) => `{
-  blocks(first: 1, orderBy: number, orderDirection: asc, where: { timestamp_gt: ${timestamp} }) {
+  blocks(first: 1, orderBy: timestamp, orderDirection: asc, where: { timestamp_gt: ${timestamp} }) {
     number
   }
 }`;
 const fetchBlockByTime = async (endpoint, timestamp) => {
+    console.time(`fetching blocks ${timestamp}`);
     const payload = {
         query: query(timestamp),
     };
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-    });
-    const { data: { blocks }, } = (await response.json());
+    const response = await axios.post(endpoint, payload);
+    console.timeEnd(`fetching blocks ${timestamp}`);
+    const { data: { blocks }, } = response.data;
     return parseInt(blocks[0].number);
 };
 class BlockNumberRepository {
     constructor(endpoint) {
         this.endpoint = endpoint;
+        this.blocks = {};
     }
     async find(from) {
         if (from == 'dayAgo') {
             const dayAgo = `${Math.floor(Date.now() / 1000) - 86400}`;
-            return fetchBlockByTime(this.endpoint, dayAgo);
+            if (!this.blocks[dayAgo]) {
+                this.blocks = {
+                    ...this.blocks,
+                    [dayAgo]: fetchBlockByTime(this.endpoint, dayAgo),
+                };
+            }
+            return this.blocks[dayAgo];
         }
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -12954,6 +14818,7 @@ class Data {
     constructor(networkConfig, provider) {
         this.pools = new PoolsSubgraphRepository({
             url: networkConfig.urls.subgraph,
+            chainId: networkConfig.chainId,
         });
         // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
         // TODO: find a better data source for that, eg: maybe DUNE once API is available
@@ -12966,6 +14831,7 @@ class Data {
             };
             this.yesterdaysPools = new PoolsSubgraphRepository({
                 url: networkConfig.urls.subgraph,
+                chainId: networkConfig.chainId,
                 blockHeight: blockDayAgo,
             });
         }
@@ -12974,9 +14840,8 @@ class Data {
             .map((t) => t.address);
         this.tokenPrices = new CoingeckoPriceRepository(tokenAddresses, networkConfig.chainId);
         this.tokenMeta = new StaticTokenProvider([]);
-        if (networkConfig.urls.gaugesSubgraph &&
-            networkConfig.addresses.contracts.gaugeController) {
-            this.liquidityGauges = new LiquidityGaugeSubgraphRPCProvider(networkConfig.urls.gaugesSubgraph, networkConfig.addresses.contracts.multicall, networkConfig.addresses.contracts.gaugeController, provider);
+        if (networkConfig.urls.gaugesSubgraph) {
+            this.liquidityGauges = new LiquidityGaugeSubgraphRPCProvider(networkConfig.urls.gaugesSubgraph, networkConfig.addresses.contracts.multicall, networkConfig.addresses.contracts.gaugeController || '', networkConfig.chainId, provider);
         }
         if (networkConfig.addresses.contracts.feeDistributor &&
             networkConfig.addresses.tokens.bal &&
@@ -13013,5 +14878,5 @@ class BalancerSDK {
     }
 }
 
-export { AaveHelpers, AssetHelpers, BalancerAPIArgsFormatter, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerSDK, BlockNumberRepository, CoingeckoPriceRepository, Data, FeeCollectorRepository, FeeDistributorRepository, GaugeControllerMulticallRepository, GraphQLArgsBuilder, GraphQLFilterOperator, Liquidity, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, Network, Op, PoolBalanceOpKind, PoolSpecialization, PoolType, Pools, PoolsBalancerAPIRepository, PoolsFallbackRepository, PoolsStaticRepository, PoolsSubgraphRepository, Relayer, RelayerAction, RelayerAuthorization, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphArgsFormatter, SwapType, Swaps, TokenYieldsRepository, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, splitPoolId, toNormalizedWeights, tokensToTokenPrices };
+export { AaveHelpers, AssetHelpers, BalancerAPIArgsFormatter, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerSDK, BlockNumberRepository, CoingeckoPriceRepository, ComposableStablePoolEncoder, ComposableStablePoolExitKind, ComposableStablePoolJoinKind, Data, FeeCollectorRepository, FeeDistributorRepository, GaugeControllerMulticallRepository, GraphQLArgsBuilder, Liquidity, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, Network, PoolBalanceOpKind, PoolSpecialization, PoolType, Pools, PoolsBalancerAPIRepository, PoolsFallbackRepository, PoolsStaticRepository, PoolsSubgraphRepository, Relayer, RelayerAction, RelayerAuthorization, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphArgsFormatter, SwapType, Swaps, TokenYieldsRepository, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, splitPoolId, toNormalizedWeights, tokensToTokenPrices };
 //# sourceMappingURL=index.esm.js.map
