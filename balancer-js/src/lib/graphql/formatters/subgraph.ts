@@ -1,20 +1,16 @@
-import {
-  GraphQLArgs,
-  GraphQLArgsFormatter,
-  GraphQLFilterOperator,
-} from '../types';
+import { GraphQLArgs, GraphQLArgsFormatter } from '../types';
 
 export class SubgraphArgsFormatter implements GraphQLArgsFormatter {
-  operatorMap: Record<GraphQLFilterOperator, string>;
+  operatorMap: Record<string, string>;
 
   constructor() {
     this.operatorMap = {
-      [GraphQLFilterOperator.GreaterThan]: '_gt',
-      [GraphQLFilterOperator.LessThan]: '_lt',
-      [GraphQLFilterOperator.Equals]: '',
-      [GraphQLFilterOperator.In]: '_in',
-      [GraphQLFilterOperator.NotIn]: '_not_in',
-      [GraphQLFilterOperator.Contains]: '_contains',
+      gt: '_gt',
+      lt: '_lt',
+      eq: '',
+      in: '_in',
+      not_in: '_not_in',
+      contains: '_contains',
     };
   }
 
@@ -22,8 +18,9 @@ export class SubgraphArgsFormatter implements GraphQLArgsFormatter {
     const whereQuery: Record<string, any> = {};
     if (args.where) {
       Object.entries(args.where).forEach(([name, filter]) => {
-        whereQuery[`${name}${this.operatorMap[filter.operator]}`] =
-          filter.value;
+        Object.entries(filter).forEach(([operator, value]) => {
+          whereQuery[`${name}${this.operatorMap[operator]}`] = value;
+        });
       });
     }
 

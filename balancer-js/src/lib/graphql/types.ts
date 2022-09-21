@@ -1,16 +1,14 @@
-export enum GraphQLFilterOperator {
-  GreaterThan,
-  LessThan,
-  Equals,
-  In,
-  NotIn,
-  Contains,
-}
+export type GraphQLFilterOperator =
+  | 'gt'
+  | 'lt'
+  | 'eq'
+  | 'in'
+  | 'not_in'
+  | 'contains';
 
-export interface GraphQLFilter {
-  operator: GraphQLFilterOperator;
-  value: any;
-}
+export type GraphQLFilter = {
+  [operator in GraphQLFilterOperator]?: any;
+};
 
 export interface GraphQLArgs {
   chainId?: number;

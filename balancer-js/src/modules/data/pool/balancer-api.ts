@@ -4,7 +4,6 @@ import { GraphQLQuery, Pool } from '@/types';
 import BalancerAPIClient from '@/modules/api/balancer-api.client';
 import {
   GraphQLArgsBuilder,
-  Op,
   BalancerAPIArgsFormatter,
 } from '@/lib/graphql/args-builder';
 import { GraphQLArgs } from '@/lib/graphql/types';
@@ -37,8 +36,12 @@ export class PoolsBalancerAPIRepository
       orderBy: 'totalLiquidity',
       orderDirection: 'desc',
       where: {
-        swapEnabled: Op.Equals(true),
-        totalShares: Op.GreaterThan(0.05),
+        swapEnabled: {
+          eq: true,
+        },
+        totalShares: {
+          gt: 0.05,
+        },
       },
     };
 

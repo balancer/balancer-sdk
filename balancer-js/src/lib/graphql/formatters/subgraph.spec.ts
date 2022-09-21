@@ -8,7 +8,9 @@ describe('graphql -> formatters -> subgraph', () => {
     it('Should format greater than as _gt', () => {
       const args: GraphQLArgs = {
         where: {
-          totalLiquidity: Op.GreaterThan(5),
+          totalLiquidity: {
+            gt: 5,
+          },
         },
       };
       const formatter = new SubgraphArgsFormatter();
@@ -19,7 +21,9 @@ describe('graphql -> formatters -> subgraph', () => {
     it('Should format eq as nothing additional', () => {
       const args: GraphQLArgs = {
         where: {
-          swapEnabled: Op.Equals(true),
+          swapEnabled: {
+            eq: true,
+          },
         },
       };
       const formatter = new SubgraphArgsFormatter();

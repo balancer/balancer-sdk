@@ -3,7 +3,6 @@ import {
   BalancerAPIArgsFormatter,
   GraphQLArgsBuilder,
   SubgraphArgsFormatter,
-  Op,
 } from './args-builder';
 
 describe('Pool Query', () => {
@@ -14,10 +13,18 @@ describe('Pool Query', () => {
       orderBy: 'totalLiquidity',
       orderDirection: 'desc',
       where: {
-        totalShares: Op.GreaterThan(0.01),
-        id: Op.NotIn(['0xBAD', '0xDEF']),
-        tokensList: Op.Contains(['0xBAL']),
-        poolType: Op.NotIn(['Linear']),
+        totalShares: {
+          gt: 0.01,
+        },
+        id: {
+          not_in: ['0xBAD', '0xDEF'],
+        },
+        tokensList: {
+          contains: ['0xBAL'],
+        },
+        poolType: {
+          not_in: ['Linear'],
+        },
       },
     });
 
@@ -45,10 +52,18 @@ describe('Pool Query', () => {
       orderBy: 'totalLiquidity',
       orderDirection: 'desc',
       where: {
-        totalShares: Op.GreaterThan(0.01),
-        id: Op.NotIn(['0xBAD', '0xDEF']),
-        tokensList: Op.Contains(['0xBAL']),
-        poolType: Op.NotIn(['Linear']),
+        totalShares: {
+          gt: 0.01,
+        },
+        id: {
+          not_in: ['0xBAD', '0xDEF'],
+        },
+        tokensList: {
+          contains: ['0xBAL'],
+        },
+        poolType: {
+          not_in: ['Linear'],
+        },
       },
     });
 
@@ -83,8 +98,12 @@ describe('Pool Query', () => {
         first: 10,
         orderBy: 'totalLiquidity',
         where: {
-          totalShares: Op.GreaterThan(0.01),
-          id: Op.NotIn(['0xBAD', '0xDEF']),
+          totalShares: {
+            gt: 0.01,
+          },
+          id: {
+            not_in: ['0xBAD', '0xDEF'],
+          },
         },
       });
 
@@ -92,8 +111,12 @@ describe('Pool Query', () => {
         skip: 20,
         orderDirection: 'asc',
         where: {
-          tokensList: Op.Contains(['0xBAL']),
-          poolType: Op.NotIn(['Linear']),
+          tokensList: {
+            contains: ['0xBAL'],
+          },
+          poolType: {
+            not_in: ['Linear'],
+          },
         },
       });
 
@@ -103,10 +126,18 @@ describe('Pool Query', () => {
         skip: 20,
         orderDirection: 'asc',
         where: {
-          totalShares: Op.GreaterThan(0.01),
-          id: Op.NotIn(['0xBAD', '0xDEF']),
-          tokensList: Op.Contains(['0xBAL']),
-          poolType: Op.NotIn(['Linear']),
+          totalShares: {
+            gt: 0.01,
+          },
+          id: {
+            not_in: ['0xBAD', '0xDEF'],
+          },
+          tokensList: {
+            contains: ['0xBAL'],
+          },
+          poolType: {
+            not_in: ['Linear'],
+          },
         },
       });
 
@@ -121,8 +152,12 @@ describe('Pool Query', () => {
         orderBy: 'totalLiquidity',
         orderDirection: 'desc',
         where: {
-          totalShares: Op.GreaterThan(0.01),
-          id: Op.NotIn(['0xBAD', '0xDEF']),
+          totalShares: {
+            gt: 0.01,
+          },
+          id: {
+            not_in: ['0xBAD', '0xDEF'],
+          },
         },
       });
 
@@ -131,8 +166,12 @@ describe('Pool Query', () => {
         orderBy: 'totalShares',
         orderDirection: 'asc',
         where: {
-          tokensList: Op.Contains(['0xBAL']),
-          id: Op.NotIn(['0xNEW']),
+          tokensList: {
+            contains: ['0xBAL'],
+          },
+          id: {
+            not_in: ['0xNEW'],
+          },
         },
       });
 
@@ -141,9 +180,15 @@ describe('Pool Query', () => {
         orderBy: 'totalShares',
         orderDirection: 'asc',
         where: {
-          totalShares: Op.GreaterThan(0.01),
-          tokensList: Op.Contains(['0xBAL']),
-          id: Op.NotIn(['0xBAD', '0xDEF', '0xNEW']),
+          totalShares: {
+            gt: 0.01,
+          },
+          tokensList: {
+            contains: ['0xBAL'],
+          },
+          id: {
+            not_in: ['0xBAD', '0xDEF', '0xNEW'],
+          },
         },
       });
 

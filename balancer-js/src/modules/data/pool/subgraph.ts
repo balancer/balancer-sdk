@@ -8,7 +8,6 @@ import {
 } from '@/modules/subgraph/subgraph';
 import {
   GraphQLArgsBuilder,
-  Op,
   SubgraphArgsFormatter,
 } from '@/lib/graphql/args-builder';
 import { GraphQLArgs } from '@/lib/graphql/types';
@@ -54,8 +53,12 @@ export class PoolsSubgraphRepository
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
       where: {
-        swapEnabled: Op.Equals(true),
-        totalShares: Op.GreaterThan(0),
+        swapEnabled: {
+          eq: true,
+        },
+        totalShares: {
+          gt: 0,
+        },
       },
     };
 
