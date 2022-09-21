@@ -238,7 +238,10 @@ describe('Graph', () => {
       const poolProvider = new StaticPoolRepository(
         linearInfo.linearPools as SdkPool[]
       );
-      poolsGraph = new PoolGraph(poolProvider);
+      poolsGraph = new PoolGraph(poolProvider, {
+        network: Network.GOERLI,
+        rpcUrl: '',
+});
     });
     context('using wrapped tokens', () => {
       before(async () => {
@@ -339,7 +342,10 @@ describe('Graph', () => {
       const pools = [...boostedPoolInfo.linearPools, boostedPool];
       // Create staticPools provider with boosted and linear pools
       const poolProvider = new StaticPoolRepository(pools as SdkPool[]);
-      poolsGraph = new PoolGraph(poolProvider);
+      poolsGraph = new PoolGraph(poolProvider, {
+        network: Network.GOERLI,
+        rpcUrl: '',
+      });
     });
 
     it('should throw when pool doesnt exist', async () => {
@@ -491,7 +497,10 @@ describe('Graph', () => {
       ];
       // // Create staticPools provider with above pools
       const poolProvider = new StaticPoolRepository(pools as SdkPool[]);
-      poolsGraph = new PoolGraph(poolProvider);
+      poolsGraph = new PoolGraph(poolProvider, {
+        network: Network.GOERLI,
+        rpcUrl: '',
+      });
     });
 
     context('using wrapped tokens', () => {
@@ -699,7 +708,10 @@ describe('Graph', () => {
       ];
       // // Create staticPools provider with above pools
       const poolProvider = new StaticPoolRepository(pools as SdkPool[]);
-      poolsGraph = new PoolGraph(poolProvider);
+      poolsGraph = new PoolGraph(poolProvider, {
+        network: Network.GOERLI,
+        rpcUrl: '',
+      });
     });
 
     context('using wrapped tokens', () => {

@@ -1,7 +1,7 @@
 import { defaultAbiCoder } from '@ethersproject/abi';
 import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { AddressZero, MaxInt256 } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
@@ -17,6 +17,12 @@ import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
 import { JsonRpcSigner } from '@ethersproject/providers';
+import {
+  SolidityMaths,
+  _computeScalingFactor,
+  _upscale,
+} from '@/lib/utils/solidityMaths';
+import { calcPriceImpact } from '../pricing/priceImpact';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 interface RootOutputInfo {
@@ -35,7 +41,7 @@ export class Join {
   totalProportions: Record<string, BigNumber> = {};
   private relayer: string;
   private wrappedNativeAsset;
-  constructor(private pools: PoolRepository, chainId: number) {
+  constructor(private pools: PoolRepository, private chainId: number) {
     const { tokens, contracts } = networkAddresses(chainId);
     this.relayer = contracts.relayer as string;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
@@ -55,6 +61,7 @@ export class Join {
     callData: string;
     expectedOut: string;
     minOut: string;
+    priceImpact: string;
   }> {
     /*
     - Create calls with 0 min bpt for each root join
@@ -89,6 +96,11 @@ export class Join {
       queryAmounts
     );
 
+    const priceImpact = calcPriceImpact(
+      BigInt(amountsWithSlippage.total),
+      callsWithNoMin.totalBptZeroPi.toBigInt()
+    ).toString();
+
     // Create calls with minAmounts === actualAmountsWithSlippage
     // No peek required here (saves gas)
     const callsWithMin = await this.createCalls(
@@ -107,6 +119,7 @@ export class Join {
       callData: callsWithMin.callData,
       expectedOut: queryAmounts.total,
       minOut: amountsWithSlippage.total,
+      priceImpact,
     };
   }
 
@@ -143,6 +156,7 @@ export class Join {
     to: string;
     callData: string;
     rootOutputInfo: RootOutputInfo[];
+    totalBptZeroPi: BigNumber;
   }> {
     if (tokensIn.length != amountsIn.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
@@ -154,6 +168,18 @@ export class Join {
       amountsIn,
       wrapMainTokens
     );
+
+    let totalBptZeroPi = BigNumber.from('0');
+    const leafTokens = PoolGraph.getLeafAddresses(orderedNodes);
+    leafTokens.forEach((leafToken) => {
+      const leafInputNodes = orderedNodes.filter(
+        (node) => node.address.toLowerCase() === leafToken.toLowerCase()
+      );
+      leafInputNodes.forEach((inputNode) => {
+        const bptOut = this.bptOutZeroPiForInputNode(inputNode);
+        totalBptZeroPi = totalBptZeroPi.add(bptOut);
+      });
+    });
 
     // Create calls for leaf token actions - this considers full tree.
     const leafCalls = this.createActionCalls(
@@ -175,6 +201,8 @@ export class Join {
       minBptAmounts
     );
 
+    totalBptZeroPi = totalBptZeroPi.add(nonLeafInfo.totalBptZeroPi);
+
     const rootOutputInfo = this.updateOutputInfo(
       nonLeafInfo.rootOutputInfo,
       leafCalls,
@@ -194,7 +222,44 @@ export class Join {
       to: this.relayer,
       callData: callData,
       rootOutputInfo,
+      totalBptZeroPi,
     };
+  }
+
+  /*
+  1. recursively find the spot price for each pool in the path of the join
+  2. take the product to get the spot price of the path
+  3. multiply the input amount of that token by the path spot price to get the "zeroPriceImpact" amount of BPT for that token 
+  */
+  bptOutZeroPiForInputNode(inputNode: Node): bigint {
+    if (inputNode.outputReference === '0' || inputNode.action !== 'input')
+      return BigInt(0);
+    let spProduct = 1;
+    let parentNode: Node | undefined = inputNode.parent;
+    let childAddress = inputNode.address;
+    // Traverse up graph until we reach root adding each node
+    while (parentNode !== undefined) {
+      if (
+        parentNode.action === 'batchSwap' ||
+        parentNode.action === 'joinPool'
+      ) {
+        const sp = parentNode.spotPrices[childAddress];
+        spProduct = spProduct * parseFloat(sp);
+        childAddress = parentNode.address;
+      }
+      parentNode = parentNode.parent;
+    }
+    const spPriceScaled = parseFixed(spProduct.toString(), 18);
+    const scalingFactor = _computeScalingFactor(BigInt(inputNode.decimals));
+    const inputAmountScaled = _upscale(
+      BigInt(inputNode.outputReference),
+      scalingFactor
+    );
+    const bptOut = SolidityMaths.mulDownFixed(
+      inputAmountScaled,
+      spPriceScaled.toBigInt()
+    );
+    return bptOut;
   }
 
   /*
@@ -232,7 +297,11 @@ export class Join {
     userAddress: string,
     isPeek: boolean,
     minBptAmounts?: ReferenceAmounts
-  ): { calls: string[]; rootOutputInfo: RootOutputInfo[] } {
+  ): {
+    calls: string[];
+    rootOutputInfo: RootOutputInfo[];
+    totalBptZeroPi: BigNumber;
+  } {
     const allCalls: string[] = [];
     const rootOutputInfo: RootOutputInfo[] = [];
     const leafTokens = PoolGraph.getLeafAddresses(orderedNodes);
@@ -244,6 +313,7 @@ export class Join {
           .includes(tokenIn.toLowerCase())
     );
     let startingIndex = orderedNodes.length;
+    let totalBptZeroPi = BigNumber.from('0');
 
     nonLeafInputs.forEach((tokenInput) => {
       // Find path to root and update amounts
@@ -272,12 +342,21 @@ export class Join {
         outputRef: rootNode.outputReference,
         callIndex: allCalls.length - 1, // Last call will be root for this token in
       });
-      // Update starting ref index to be unique for next path
+
+      const inputNodes = nodesToRoot.filter(
+        (node) => node.address.toLowerCase() === tokenInput.toLowerCase()
+      );
+      inputNodes.forEach((inputNode) => {
+        const bptOut = this.bptOutZeroPiForInputNode(inputNode);
+        totalBptZeroPi = totalBptZeroPi.add(bptOut);
+      });
+
       startingIndex = orderedNodes.length + nodesToRoot.length;
     });
     return {
       calls: allCalls,
       rootOutputInfo,
+      totalBptZeroPi,
     };
   }
 
@@ -350,7 +429,10 @@ export class Join {
   ): Promise<Node[]> {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-    const poolsGraph = new PoolGraph(this.pools);
+    const poolsGraph = new PoolGraph(this.pools, {
+      network: this.chainId,
+      rpcUrl: '',
+    });
 
     const rootNode = await poolsGraph.buildGraphFromRootPool(
       poolId,
