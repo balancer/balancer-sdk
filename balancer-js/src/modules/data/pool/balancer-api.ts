@@ -14,6 +14,9 @@ interface PoolsBalancerAPIOptions {
   query?: GraphQLQuery;
 }
 
+const DEFAULT_SKIP = 0;
+const DEFAULT_FIRST = 10;
+
 /**
  * Access pools using the Balancer GraphQL Api.
  *
@@ -56,16 +59,9 @@ export class PoolsBalancerAPIRepository
     };
   }
 
-  fetchFromCache(
-    options?: PoolsRepositoryFetchOptions,
-    onlyFetchFullResultSet = false
-  ): Pool[] {
-    const first = options?.first || 10;
-    const skip = options?.skip || 0;
-
-    if (onlyFetchFullResultSet && this.pools.length < skip + first) {
-      return [];
-    }
+  fetchFromCache(options?: PoolsRepositoryFetchOptions): Pool[] {
+    const first = options?.first || DEFAULT_FIRST;
+    const skip = options?.skip || DEFAULT_SKIP;
 
     const pools = this.pools.slice(skip, first + skip);
     this.skip = skip + first;
@@ -73,8 +69,12 @@ export class PoolsBalancerAPIRepository
   }
 
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
-    const poolsFromCache = this.fetchFromCache(options, true);
-    if (poolsFromCache.length) return poolsFromCache;
+    if (
+      this.pools.length >
+      (options?.first || DEFAULT_FIRST) + (options?.skip || DEFAULT_SKIP)
+    ) {
+      return this.fetchFromCache(options);
+    }
 
     if (this.nextToken) {
       this.query.args.nextToken = this.nextToken;
