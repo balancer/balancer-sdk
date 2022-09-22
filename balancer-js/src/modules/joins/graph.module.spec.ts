@@ -23,7 +23,8 @@ function checkNode(
   expectedId: string,
   expectedAddress: string,
   expectedType: string,
-  expectedAction: string,
+  expectedJoinAction: string,
+  expectedExitAction: string,
   childLength: number,
   expectedOutputReference: string,
   expectedProportionOfParent: string
@@ -32,7 +33,8 @@ function checkNode(
   expect(node.id).to.eq(expectedId);
   expect(node.address).to.eq(expectedAddress);
   expect(node.type).to.eq(expectedType);
-  expect(node.action).to.eq(expectedAction);
+  expect(node.joinAction).to.eq(expectedJoinAction);
+  expect(node.exitAction).to.eq(expectedExitAction);
   expect(node.children.length).to.eq(childLength);
   expect(node.outputReference).to.eq(expectedOutputReference);
   expect(node.proportionOfParent.toString()).to.eq(
@@ -59,6 +61,7 @@ function checkLinearNode(
     linearPools[poolIndex].address,
     'AaveLinear',
     'batchSwap',
+    'batchSwap',
     1,
     expectedOutPutReference.toString(),
     linearPools[poolIndex].proportionOfParent
@@ -70,6 +73,7 @@ function checkLinearNode(
       wrappedTokens[poolIndex].address,
       'WrappedToken',
       'wrapAaveDynamicToken',
+      'unwrapAaveStaticToken',
       1,
       (expectedOutPutReference + 1).toString(),
       linearPools[poolIndex].proportionOfParent
@@ -80,6 +84,7 @@ function checkLinearNode(
       mainTokens[poolIndex].address,
       'Input',
       'input',
+      'output',
       0,
       '0',
       linearPools[poolIndex].proportionOfParent
@@ -91,6 +96,7 @@ function checkLinearNode(
       mainTokens[poolIndex].address,
       'Input',
       'input',
+      'output',
       0,
       '0',
       linearPools[poolIndex].proportionOfParent
@@ -115,6 +121,7 @@ function checkBoosted(
     boostedPool.address,
     'ComposableStable',
     'joinPool',
+    'exitPool',
     3,
     boostedIndex.toString(),
     expectedProportionOfParent
@@ -150,6 +157,7 @@ function checkBoostedMeta(
     boostedMetaInfo.rootInfo.pool.address,
     'ComposableStable',
     'joinPool',
+    'exitPool',
     2,
     '0',
     '1'
@@ -192,6 +200,7 @@ function checkBoostedMetaBig(
     boostedMetaBigInfo.rootPool.address,
     'ComposableStable',
     'joinPool',
+    'exitPool',
     2,
     '0',
     '1'
@@ -260,7 +269,7 @@ describe('Graph', () => {
       });
 
       it('should sort in breadth first order', async () => {
-        const orderedNodes = PoolGraph.orderByBfs(rootNode);
+        const orderedNodes = PoolGraph.orderByBfs(rootNode).reverse();
         expect(orderedNodes.length).to.eq(3);
         expect(orderedNodes[0].type).to.eq('Input');
         expect(orderedNodes[1].type).to.eq('WrappedToken');
@@ -287,7 +296,7 @@ describe('Graph', () => {
       });
 
       it('should sort in breadth first order', async () => {
-        const orderedNodes = PoolGraph.orderByBfs(rootNode);
+        const orderedNodes = PoolGraph.orderByBfs(rootNode).reverse();
         expect(orderedNodes.length).to.eq(2);
         expect(orderedNodes[0].type).to.eq('Input');
         expect(orderedNodes[1].type).to.eq('AaveLinear');
@@ -372,7 +381,7 @@ describe('Graph', () => {
       });
 
       it('should sort in breadth first order', async () => {
-        const orderedNodes = PoolGraph.orderByBfs(boostedNode);
+        const orderedNodes = PoolGraph.orderByBfs(boostedNode).reverse();
         expect(orderedNodes.length).to.eq(10);
         expect(orderedNodes[0].type).to.eq('Input');
         expect(orderedNodes[1].type).to.eq('Input');
@@ -407,7 +416,7 @@ describe('Graph', () => {
       });
 
       it('should sort in breadth first order', async () => {
-        const orderedNodes = PoolGraph.orderByBfs(boostedNode);
+        const orderedNodes = PoolGraph.orderByBfs(boostedNode).reverse();
         expect(orderedNodes.length).to.eq(7);
         expect(orderedNodes[0].type).to.eq('Input');
         expect(orderedNodes[1].type).to.eq('Input');
@@ -507,7 +516,7 @@ describe('Graph', () => {
       });
 
       it('should sort in breadth first order', async () => {
-        const orderedNodes = PoolGraph.orderByBfs(boostedNode);
+        const orderedNodes = PoolGraph.orderByBfs(boostedNode).reverse();
         expect(orderedNodes.length).to.eq(14);
         expect(orderedNodes[0].type).to.eq('Input');
         expect(orderedNodes[1].type).to.eq('Input');
@@ -539,7 +548,7 @@ describe('Graph', () => {
       });
 
       it('should sort in breadth first order', async () => {
-        const orderedNodes = PoolGraph.orderByBfs(boostedNode);
+        const orderedNodes = PoolGraph.orderByBfs(boostedNode).reverse();
         expect(orderedNodes.length).to.eq(10);
         expect(orderedNodes[0].type).to.eq('Input');
         expect(orderedNodes[1].type).to.eq('Input');
@@ -561,7 +570,7 @@ describe('Graph', () => {
           rootPool.id,
           false
         );
-        orderedNodes = PoolGraph.orderByBfs(boostedNode);
+        orderedNodes = PoolGraph.orderByBfs(boostedNode).reverse();
       });
 
       it('should throw when token not in tree', () => {
@@ -590,20 +599,20 @@ describe('Graph', () => {
         const inputToken = ADDRESSES[Network.MAINNET].DAI.address;
         const nodes = PoolGraph.getNodesToRoot(orderedNodes, inputToken, 0);
         expect(nodes.length).to.eq(4);
-        expect(nodes[0].action).to.eq('input');
+        expect(nodes[0].joinAction).to.eq('input');
         expect(nodes[0].address).to.eq(inputToken);
-        expect(nodes[1].action).to.eq('batchSwap');
-        expect(nodes[2].action).to.eq('joinPool');
-        expect(nodes[3].action).to.eq('joinPool');
+        expect(nodes[1].joinAction).to.eq('batchSwap');
+        expect(nodes[2].joinAction).to.eq('joinPool');
+        expect(nodes[3].joinAction).to.eq('joinPool');
         expect(nodes[3].address).to.eq(rootPool.address);
       });
       it('child boosted bpt input', () => {
         const inputToken = boostedMetaInfo.childBoostedInfo.rootPool.address;
         const nodes = PoolGraph.getNodesToRoot(orderedNodes, inputToken, 0);
         expect(nodes.length).to.eq(2);
-        expect(nodes[0].action).to.eq('input');
+        expect(nodes[0].joinAction).to.eq('input');
         expect(nodes[0].address).to.eq(inputToken);
-        expect(nodes[1].action).to.eq('joinPool');
+        expect(nodes[1].joinAction).to.eq('joinPool');
         expect(nodes[1].address).to.eq(rootPool.address);
       });
     });
@@ -715,7 +724,7 @@ describe('Graph', () => {
       });
 
       it('should sort in breadth first order', async () => {
-        const orderedNodes = PoolGraph.orderByBfs(boostedNode);
+        const orderedNodes = PoolGraph.orderByBfs(boostedNode).reverse();
         expect(orderedNodes.length).to.eq(21);
         expect(orderedNodes[0].type).to.eq('Input');
         expect(orderedNodes[1].type).to.eq('Input');
@@ -754,7 +763,7 @@ describe('Graph', () => {
       });
 
       it('should sort in breadth first order', async () => {
-        const orderedNodes = PoolGraph.orderByBfs(boostedNode);
+        const orderedNodes = PoolGraph.orderByBfs(boostedNode).reverse();
         expect(orderedNodes.length).to.eq(15);
         expect(orderedNodes[0].type).to.eq('Input');
         expect(orderedNodes[1].type).to.eq('Input');
@@ -780,26 +789,26 @@ describe('Graph', () => {
           boostedPool.id,
           false
         );
-        orderedNodes = PoolGraph.orderByBfs(boostedNode);
+        orderedNodes = PoolGraph.orderByBfs(boostedNode).reverse();
       });
       it('leaf input', () => {
         const inputToken = ADDRESSES[Network.MAINNET].DAI.address;
         const nodes = PoolGraph.getNodesToRoot(orderedNodes, inputToken, 0);
         expect(nodes.length).to.eq(4);
-        expect(nodes[0].action).to.eq('input');
+        expect(nodes[0].joinAction).to.eq('input');
         expect(nodes[0].address).to.eq(inputToken);
-        expect(nodes[1].action).to.eq('batchSwap');
-        expect(nodes[2].action).to.eq('joinPool');
-        expect(nodes[3].action).to.eq('joinPool');
+        expect(nodes[1].joinAction).to.eq('batchSwap');
+        expect(nodes[2].joinAction).to.eq('joinPool');
+        expect(nodes[3].joinAction).to.eq('joinPool');
         expect(nodes[3].address).to.eq(boostedPool.address);
       });
       it('child boosted bpt input', () => {
         const inputToken = boostedMetaBigInfo.childPools[0].address;
         const nodes = PoolGraph.getNodesToRoot(orderedNodes, inputToken, 0);
         expect(nodes.length).to.eq(2);
-        expect(nodes[0].action).to.eq('input');
+        expect(nodes[0].joinAction).to.eq('input');
         expect(nodes[0].address).to.eq(inputToken);
-        expect(nodes[1].action).to.eq('joinPool');
+        expect(nodes[1].joinAction).to.eq('joinPool');
         expect(nodes[1].address).to.eq(boostedPool.address);
       });
     });

@@ -8,7 +8,8 @@ import { PoolRepository } from '../data';
 export interface Node {
   address: string;
   id: string;
-  action: Actions;
+  joinAction: JoinAction;
+  exitAction: ExitAction;
   type: string;
   children: Node[];
   marked: boolean;
@@ -18,14 +19,14 @@ export interface Node {
   isLeaf: boolean;
 }
 
-type Actions =
+type JoinAction =
   | 'input'
   | 'batchSwap'
   | 'wrap'
   | 'joinPool'
   | 'wrapAaveDynamicToken'
   | 'wrapERC4626';
-const joinActions = new Map<PoolType, Actions>();
+const joinActions = new Map<PoolType, JoinAction>();
 joinActions.set(PoolType.AaveLinear, 'batchSwap');
 joinActions.set(PoolType.ERC4626Linear, 'batchSwap');
 joinActions.set(PoolType.Element, 'batchSwap');
@@ -36,6 +37,25 @@ joinActions.set(PoolType.Stable, 'joinPool');
 joinActions.set(PoolType.StablePhantom, 'batchSwap');
 joinActions.set(PoolType.Weighted, 'joinPool');
 joinActions.set(PoolType.ComposableStable, 'joinPool');
+
+type ExitAction =
+  | 'output'
+  | 'batchSwap'
+  | 'unwrap'
+  | 'exitPool'
+  | 'unwrapAaveStaticToken'
+  | 'unwrapERC4626';
+const exitActions = new Map<PoolType, ExitAction>();
+exitActions.set(PoolType.AaveLinear, 'batchSwap');
+exitActions.set(PoolType.ERC4626Linear, 'batchSwap');
+exitActions.set(PoolType.Element, 'batchSwap');
+exitActions.set(PoolType.Investment, 'exitPool');
+exitActions.set(PoolType.LiquidityBootstrapping, 'exitPool');
+exitActions.set(PoolType.MetaStable, 'exitPool');
+exitActions.set(PoolType.Stable, 'exitPool');
+exitActions.set(PoolType.StablePhantom, 'batchSwap');
+exitActions.set(PoolType.Weighted, 'exitPool');
+exitActions.set(PoolType.ComposableStable, 'exitPool');
 
 export class PoolGraph {
   constructor(private pools: PoolRepository) {}
@@ -79,8 +99,9 @@ export class PoolGraph {
   ): Promise<[Node, number]> {
     const pool = await this.pools.findBy('address', address);
     if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-    const action = joinActions.get(pool.poolType);
-    if (!action)
+    const joinAction = joinActions.get(pool.poolType);
+    const exitAction = exitActions.get(pool.poolType);
+    if (!joinAction || !exitAction)
       throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
 
     const tokenTotal = this.getTokenTotal(pool);
@@ -89,7 +110,8 @@ export class PoolGraph {
       address: pool.address,
       id: pool.id,
       type: pool.poolType,
-      action,
+      joinAction,
+      exitAction,
       children: [],
       marked: false,
       outputReference: nodeIndex.toString(),
@@ -176,10 +198,15 @@ export class PoolGraph {
       throw new Error('Issue With Linear Pool');
 
     // Relayer can support different wrapped tokens
-    let action: Actions = 'wrapAaveDynamicToken';
+    let joinAction: JoinAction = 'wrapAaveDynamicToken';
     switch (linearPool.poolType) {
       case PoolType.ERC4626Linear:
-        action = 'wrapERC4626';
+        joinAction = 'wrapERC4626';
+    }
+    let exitAction: ExitAction = 'unwrapAaveStaticToken';
+    switch (linearPool.poolType) {
+      case PoolType.ERC4626Linear:
+        exitAction = 'unwrapERC4626';
     }
 
     const wrappedTokenNode: Node = {
@@ -188,7 +215,8 @@ export class PoolGraph {
       id: 'N/A',
       children: [],
       marked: false,
-      action,
+      joinAction,
+      exitAction,
       outputReference: nodeIndex.toString(),
       parent,
       proportionOfParent,
@@ -220,7 +248,8 @@ export class PoolGraph {
         type: 'Input',
         children: [],
         marked: false,
-        action: 'input',
+        joinAction: 'input',
+        exitAction: 'output',
         outputReference: '0', // Use 0 ref for all main tokens. This will be updated with real amounts in join construction.
         parent,
         proportionOfParent,
@@ -269,7 +298,7 @@ export class PoolGraph {
     if (inputNode === undefined)
       throw new BalancerError(BalancerErrorCode.INPUT_TOKEN_INVALID);
     const nodesToRoot: Node[] = [];
-    if (inputNode.action !== 'input') {
+    if (inputNode.joinAction !== 'input') {
       // Create an input node for the input token
       // For a non-leaf join we will use 100% of token amount in path
       const [inputTokenNode] = this.createInputTokenNode(
