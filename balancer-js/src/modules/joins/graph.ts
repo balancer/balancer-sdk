@@ -16,7 +16,7 @@ export interface Node {
   type: string;
   children: Node[];
   marked: boolean;
-  outputReference: string;
+  index: string;
   proportionOfParent: BigNumber;
   parent: Node | undefined;
   isLeaf: boolean;
@@ -136,7 +136,7 @@ export class PoolGraph {
       exitAction,
       children: [],
       marked: false,
-      outputReference: nodeIndex.toString(),
+      index: nodeIndex.toString(),
       parent,
       proportionOfParent,
       isLeaf: false,
@@ -245,7 +245,7 @@ export class PoolGraph {
       marked: false,
       joinAction,
       exitAction,
-      outputReference: nodeIndex.toString(),
+      index: nodeIndex.toString(),
       parent,
       proportionOfParent,
       isLeaf: false,
@@ -285,7 +285,7 @@ export class PoolGraph {
         marked: false,
         joinAction: 'input',
         exitAction: 'output',
-        outputReference: '0', // Use 0 ref for all main tokens. This will be updated with real amounts in join construction.
+        index: '0', // Use 0 ref for all main tokens. This will be updated with real amounts in join construction.
         parent,
         proportionOfParent,
         isLeaf: true,
@@ -351,7 +351,7 @@ export class PoolGraph {
       const inputTokenNode = { ...inputNode };
       // For a non-leaf join we will use 100% of token amount in path
       inputTokenNode.proportionOfParent = WeiPerEther;
-      inputTokenNode.outputReference = '0';
+      inputTokenNode.index = '0';
       nodesToRoot.push(inputNode);
     }
     index++;
@@ -361,7 +361,7 @@ export class PoolGraph {
     while (parentNode !== undefined) {
       const node: Node = { ...parentNode };
       node.proportionOfParent = BigNumber.from('0'); // TODO - Will this cause issues?
-      node.outputReference = index.toString();
+      node.index = index.toString();
       if (index - 1 === startingIndex) {
         // The first non-input node must have its child input node updated and other to 0 amounts
         const childrenWithoutRoot = node.children
@@ -371,7 +371,7 @@ export class PoolGraph {
               nodesToRoot[0].address.toLowerCase()
           )
           .map((n) => {
-            n.outputReference = '0';
+            n.index = '0';
             return n;
           });
         childrenWithoutRoot.push(nodesToRoot[0]);
