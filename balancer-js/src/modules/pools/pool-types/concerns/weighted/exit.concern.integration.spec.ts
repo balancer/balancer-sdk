@@ -53,7 +53,7 @@ let tokensMinBalanceIncrease: BigNumber[];
 let transactionCost: BigNumber;
 let signerAddress: string;
 
-describe('exit execution', async () => {
+describe('exit weighted pools execution', async () => {
   // Setup chain
   before(async function () {
     this.timeout(20000);

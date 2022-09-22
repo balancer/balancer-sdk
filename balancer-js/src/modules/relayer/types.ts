@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 
-import { ExitPoolRequest } from '@/types';
+import { ExitPoolRequest, JoinPoolRequest } from '@/types';
 import {
   SwapType,
   BatchSwapStep,
@@ -31,6 +31,15 @@ export interface EncodeExitPoolInput {
   recipient: string;
   outputReferences: OutputReference[];
   exitPoolRequest: ExitPoolRequest;
+}
+
+export interface EncodeJoinPoolInput {
+  poolId: string;
+  poolKind: number;
+  sender: string;
+  recipient: string;
+  outputReferences: OutputReference[];
+  joinPoolRequest: JoinPoolRequest;
 }
 
 export interface EncodeUnwrapAaveStaticTokenInput {
