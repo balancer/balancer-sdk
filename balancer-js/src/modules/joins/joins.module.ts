@@ -262,14 +262,14 @@ export class Join {
       const inputCalls = this.createActionCalls(
         nodesToRoot,
         poolId,
-        minBptAmounts ? minBptAmounts[rootNode.outputReference] : '0',
+        minBptAmounts ? minBptAmounts[rootNode.index] : '0',
         userAddress,
         isPeek
       );
       // Add chain calls to previous list of calls
       allCalls.push(...inputCalls);
       rootOutputInfo.push({
-        outputRef: rootNode.outputReference,
+        outputRef: rootNode.index,
         callIndex: allCalls.length - 1, // Last call will be root for this token in
       });
       // Update starting ref index to be unique for next path
@@ -364,6 +364,7 @@ export class Join {
     if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
 
     const orderedNodes = PoolGraph.orderByBfs(rootNode).reverse();
+
     // Update each input node with relevant amount (proportionally)
     this.updateInputAmounts(orderedNodes, tokensIn, amountsIn);
     return orderedNodes;
@@ -401,9 +402,9 @@ export class Join {
       // TODO Check logic of this with Bruno
       if (
         node.children.length > 0 &&
-        node.children.filter((c) => c.outputReference !== '0').length === 0
+        node.children.filter((c) => c.index !== '0').length === 0
       ) {
-        node.outputReference = '0';
+        node.index = '0';
         return;
       }
 
@@ -487,7 +488,7 @@ export class Join {
       .map((t) => t.toLowerCase())
       .indexOf(node.address.toLowerCase());
     if (tokenIndex === -1) {
-      node.outputReference = '0';
+      node.index = '0';
       return node;
     }
 
@@ -499,13 +500,13 @@ export class Join {
     const inputAmount = inputProportion
       .mul(amountsIn[tokenIndex])
       .div((1e18).toString());
-    // Update outputReference with actual value
-    node.outputReference = inputAmount.toString();
+    // Update index with actual value
+    node.index = inputAmount.toString();
     // console.log(
     //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
     //   ${node.joinAction} (
     //     Inputs: ${inputAmount.toString()}
-    //     OutputRef: ${node.outputReference}
+    //     OutputRef: ${node.index}
     //   )`
     // );
     return node;
@@ -519,14 +520,14 @@ export class Join {
     const childNode = node.children[0];
 
     const staticToken = node.address;
-    const amount = childNode.outputReference;
+    const amount = childNode.index;
     const call = Relayer.encodeWrapAaveDynamicToken({
       staticToken,
       sender,
       recipient,
       amount,
       fromUnderlying: true,
-      outputReference: Relayer.toChainedReference(node.outputReference),
+      outputReference: Relayer.toChainedReference(node.index),
     });
 
     // console.log(
@@ -534,7 +535,7 @@ export class Join {
     //   ${node.joinAction} (
     //     staticToken: ${staticToken},
     //     input: ${amount},
-    //     outputRef: ${node.outputReference.toString()}
+    //     outputRef: ${node.index.toString()}
     //   )`
     // );
 
@@ -585,18 +586,18 @@ export class Join {
         index: assets
           .map((a) => a.toLowerCase())
           .indexOf(node.address.toLowerCase()),
-        key: Relayer.toChainedReference(node.outputReference),
+        key: Relayer.toChainedReference(node.index),
       },
     ];
 
     // console.log(
     //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
     //   ${node.joinAction}(
-    //     inputAmt: ${node.children[0].outputReference},
+    //     inputAmt: ${node.children[0].index},
     //     inputToken: ${node.children[0].address},
     //     pool: ${node.id},
     //     outputToken: ${node.address},
-    //     outputRef: ${node.outputReference}
+    //     outputRef: ${node.index}
     //   )`
     // );
 
@@ -615,11 +616,10 @@ export class Join {
   }
 
   getOutputRefValue(node: Node): { value: string; isRef: boolean } {
-    if (node.joinAction === 'input')
-      return { value: node.outputReference, isRef: false };
-    else if (node.outputReference !== '0')
+    if (node.joinAction === 'input') return { value: node.index, isRef: false };
+    else if (node.index !== '0')
       return {
-        value: Relayer.toChainedReference(node.outputReference).toString(),
+        value: Relayer.toChainedReference(node.index).toString(),
         isRef: true,
       };
     else
@@ -690,12 +690,12 @@ export class Join {
     //     maxAmtsIn: ${sortedAmounts.toString()},
     //     amountsIn: ${userDataAmounts.toString()},
     //     minOut: ${minAmountOut},
-    //     outputRef: ${node.outputReference}
+    //     outputRef: ${node.index}
     //   )`
     // );
 
     const peekCall = Relayer.encodePeekChainedReferenceValue(
-      Relayer.toChainedReference(node.outputReference, false)
+      Relayer.toChainedReference(node.index, false)
     );
 
     const call = Relayer.constructJoinCall({
@@ -704,7 +704,7 @@ export class Join {
       sender,
       recipient,
       value,
-      outputReference: Relayer.toChainedReference(node.outputReference),
+      outputReference: Relayer.toChainedReference(node.index),
       joinPoolRequest: {} as JoinPoolRequest,
       assets: sortedTokens, // Must include BPT token
       maxAmountsIn: sortedAmounts,
