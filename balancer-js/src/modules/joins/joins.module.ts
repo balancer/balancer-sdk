@@ -363,7 +363,7 @@ export class Join {
 
     if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
 
-    const orderedNodes = PoolGraph.orderByBfs(rootNode);
+    const orderedNodes = PoolGraph.orderByBfs(rootNode).reverse();
     // Update each input node with relevant amount (proportionally)
     this.updateInputAmounts(orderedNodes, tokensIn, amountsIn);
     return orderedNodes;

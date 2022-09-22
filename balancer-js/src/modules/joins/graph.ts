@@ -246,7 +246,7 @@ export class PoolGraph {
         }
       });
     }
-    return orderedNodes.reverse();
+    return orderedNodes;
   }
 
   // From a starting node traverse up graph until root
