@@ -370,7 +370,7 @@ export class Join {
 
     // Updates and input node to have correct input amount
     nodes.forEach((node) => {
-      if (node.action === 'input')
+      if (node.joinAction === 'input')
         node = this.updateNodeAmount(node, tokensIn, amountsIn);
     });
   }
@@ -493,8 +493,8 @@ export class Join {
       // wrapped tokens have to come from user (Relayer has no approval for wrapped tokens)
       const fromUser = node.children.some(
         (children) =>
-          children.action === 'input' ||
-          children.action === 'wrapAaveDynamicToken'
+          children.joinAction === 'input' ||
+          children.joinAction === 'wrapAaveDynamicToken'
       );
       const sender = fromUser ? userAddress : this.relayer;
 
@@ -506,7 +506,7 @@ export class Join {
       // Last action will use minBptOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
       const minOut = isLastChainedCall ? minBPTOut : '0';
 
-      switch (node.action) {
+      switch (node.joinAction) {
         // TODO - Add other Relayer supported Unwraps
         case 'wrapAaveDynamicToken':
           // relayer has no allowance to spend its own wrapped tokens so recipient must be the user
@@ -585,7 +585,7 @@ export class Join {
     node.outputReference = inputAmount.toString();
     // console.log(
     //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.action} (
+    //   ${node.joinAction} (
     //     Inputs: ${inputAmount.toString()}
     //     OutputRef: ${node.outputReference}
     //   )`
@@ -613,7 +613,7 @@ export class Join {
 
     // console.log(
     //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.action} (
+    //   ${node.joinAction} (
     //     staticToken: ${staticToken},
     //     input: ${amount},
     //     outputRef: ${node.outputReference.toString()}
@@ -673,7 +673,7 @@ export class Join {
 
     // console.log(
     //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.action}(
+    //   ${node.joinAction}(
     //     inputAmt: ${node.children[0].outputReference},
     //     inputToken: ${node.children[0].address},
     //     pool: ${node.id},
@@ -697,7 +697,7 @@ export class Join {
   }
 
   getOutputRefValue(node: Node): { value: string; isRef: boolean } {
-    if (node.action === 'input')
+    if (node.joinAction === 'input')
       return { value: node.outputReference, isRef: false };
     else if (node.outputReference !== '0')
       return {
@@ -766,7 +766,7 @@ export class Join {
 
     // console.log(
     //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.action}(
+    //   ${node.joinAction}(
     //     poolId: ${node.id},
     //     assets: ${sortedTokens.toString()},
     //     maxAmtsIn: ${sortedAmounts.toString()},
