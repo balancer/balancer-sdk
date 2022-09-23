@@ -57,7 +57,6 @@ export class LiquidityGaugeSubgraphRPCProvider
   }
 
   async fetch(): Promise<LiquidityGauge[]> {
-    console.time('fetching liquidity gauges');
     const gauges = await this.subgraph.fetch();
     const gaugeAddresses = gauges.map((g) => g.id);
     if (this.chainId == 1) {
@@ -79,7 +78,6 @@ export class LiquidityGaugeSubgraphRPCProvider
       gaugeAddresses //,
       // rewardTokens
     );
-    console.timeEnd('fetching liquidity gauges');
     return gauges.map(this.compose.bind(this));
   }
 

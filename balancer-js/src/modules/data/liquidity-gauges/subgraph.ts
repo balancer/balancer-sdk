@@ -21,6 +21,7 @@ export class LiquidityGaugesSubgraphRepository
   }
 
   async fetch(): Promise<SubgraphLiquidityGauge[]> {
+    console.time('fetching liquidity gauges');
     const queryResult = await this.client.Pools({
       where: {
         preferentialGauge_not: null,
@@ -30,6 +31,7 @@ export class LiquidityGaugesSubgraphRepository
     // TODO: optionally convert subgraph type to sdk internal type
     this.gauges = qauges as SubgraphLiquidityGauge[];
 
+    console.timeEnd('fetching liquidity gauges');
     return this.gauges;
   }
 

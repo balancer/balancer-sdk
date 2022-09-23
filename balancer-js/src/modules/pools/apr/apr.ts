@@ -12,10 +12,15 @@ import type {
 import { BaseFeeDistributor, RewardData } from '@/modules/data';
 import { ProtocolRevenue } from './protocol-revenue';
 import { Liquidity } from '@/modules/liquidity/liquidity.module';
+import { identity, zipObject, pickBy } from 'lodash';
+import { PoolFees } from '../fees/fees';
 
 export interface AprBreakdown {
   swapFees: number;
-  tokenAprs: number;
+  tokenAprs: {
+    total: number;
+    breakdown: { [address: string]: number };
+  };
   stakingApr: {
     min: number;
     max: number;
@@ -77,12 +82,14 @@ export class PoolApr {
   /**
    * Pool revenue from holding yield-bearing wrapped tokens.
    *
-   * @param pool
    * @returns APR [bsp] from tokens contained in the pool
    */
-  async tokenAprs(pool: Pool): Promise<number> {
+  async tokenAprs(pool: Pool): Promise<AprBreakdown['tokenAprs']> {
     if (!pool.tokens) {
-      return 0;
+      return {
+        total: 0,
+        breakdown: {},
+      };
     }
 
     const totalLiquidity = await this.totalLiquidity(pool);
@@ -108,7 +115,7 @@ export class PoolApr {
           // INFO: Liquidity mining APR can't cascade to other pools
           const subSwapFees = await this.swapFees(subPool);
           const subtokenAprs = await this.tokenAprs(subPool);
-          apr = subSwapFees + subtokenAprs;
+          apr = subSwapFees + subtokenAprs.total;
         }
       }
 
@@ -146,8 +153,18 @@ export class PoolApr {
 
     // sum them up to get pool APRs
     const apr = weightedAprs.reduce((sum, apr) => sum + apr, 0);
+    const breakdown = pickBy(
+      zipObject(
+        bptFreeTokens.map((t) => t.address),
+        weightedAprs
+      ),
+      identity
+    );
 
-    return apr;
+    return {
+      total: apr,
+      breakdown,
+    };
   }
 
   /**
@@ -294,7 +311,6 @@ export class PoolApr {
    * @returns pool APR split [bsp]
    */
   async apr(pool: Pool): Promise<AprBreakdown> {
-    console.time(`APR for ${pool.id}`);
     const [
       swapFees,
       tokenAprs,
@@ -310,7 +326,6 @@ export class PoolApr {
       this.rewardAprs(pool),
       this.protocolApr(pool),
     ]);
-    console.timeEnd(`APR for ${pool.id}`);
 
     return {
       swapFees,
@@ -321,29 +336,19 @@ export class PoolApr {
       },
       rewardAprs,
       protocolApr,
-      min: swapFees + tokenAprs + rewardAprs.total + minStakingApr,
+      min: swapFees + tokenAprs.total + rewardAprs.total + minStakingApr,
       max:
-        swapFees + tokenAprs + rewardAprs.total + protocolApr + maxStakingApr,
+        swapFees +
+        tokenAprs.total +
+        rewardAprs.total +
+        protocolApr +
+        maxStakingApr,
     };
   }
 
-  // 🚨 this is adding 1 call to get yesterday's block height and 2nd call to fetch yesterday's pools data from subgraph
-  // TODO: find a better data source for that eg. add blocks to graph, replace with a database, or dune
   private async last24hFees(pool: Pool): Promise<number> {
-    let yesterdaysPool;
-    if (this.yesterdaysPools) {
-      yesterdaysPool = await this.yesterdaysPools.find(pool.id);
-    }
-    if (!pool.totalSwapFee) {
-      return 0;
-    }
-    if (!yesterdaysPool || !yesterdaysPool.totalSwapFee) {
-      return parseFloat(pool.totalSwapFee);
-    }
-
-    return (
-      parseFloat(pool.totalSwapFee) - parseFloat(yesterdaysPool.totalSwapFee)
-    );
+    const poolFees = new PoolFees(this.yesterdaysPools);
+    return poolFees.last24h(pool);
   }
 
   /**
