@@ -19,6 +19,7 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   }
 
   fetch(address: string): { [address: string]: Promise<TokenPrices> } {
+    console.time(`fetching coingecko ${address}`);
     const addresses = this.addresses(address);
     const prices = axios
       .get(this.url(addresses))
@@ -36,6 +37,7 @@ export class CoingeckoPriceRepository implements Findable<Price> {
         console.error(error);
         return this.prices;
       });
+    console.timeEnd(`fetching coingecko ${address}`);
     return Object.fromEntries(addresses.map((a) => [a, prices]));
   }
 
