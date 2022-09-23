@@ -3,6 +3,7 @@ export * from './pool-weighted';
 export * from './pool-composable-stable';
 export * from './pool-utils';
 export * from './lib/utils';
+export * from './lib/graphql';
 export * from './types';
 export * from './modules/swaps/types';
 export * from './modules/swaps/helpers';

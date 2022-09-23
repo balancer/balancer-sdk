@@ -1,5 +1,5 @@
-import { Pool, PoolToken } from '@/types';
-import { PoolRepository } from '../data';
+import { Findable, Pool, PoolToken } from '@/types';
+import { PoolAttribute } from '../data';
 import { TokenPriceProvider } from '../data';
 import { PoolTypeConcerns } from '../pools/pool-type-concerns';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -14,7 +14,7 @@ export interface PoolBPTValue {
 
 export class Liquidity {
   constructor(
-    private pools: PoolRepository,
+    private pools: Findable<Pool, PoolAttribute>,
     private tokenPrices: TokenPriceProvider
   ) {}
 
@@ -39,7 +39,7 @@ export class Liquidity {
 
         return {
           address: pool.address,
-          liquidity: liquidityInParentPool,
+          liquidity: liquidityInParentPool.toString(),
         };
       })
     );

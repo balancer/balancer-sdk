@@ -135,6 +135,18 @@ describe('stables migration execution', async () => {
   let authorisation: string;
   let balance: BigNumber;
 
+  before(async function () {
+    try {
+      const currentNetwork = await provider.getNetwork();
+      if (currentNetwork.chainId != network) {
+        this.skip();
+      }
+    } catch (err) {
+      console.log(err);
+      this.skip();
+    }
+  });
+
   beforeEach(async function () {
     await reset();
 
