@@ -72,6 +72,27 @@ export class PoolsSubgraphRepository
     };
   }
 
+  /**
+   * We need a list of all the pools, for calculating APRs (nested pools), and for SOR (path finding).
+   * All the pools are fetched on page load and cachced for speedy lookups.
+   *
+   * @returns Promise resolving to pools list
+   */
+  private async fetchDefault(): Promise<Pool[]> {
+    console.time('fetching pools');
+    const { pool0, pool1000, pool2000 } = await this.client.AllPools({
+      where: { swapEnabled: true, totalShares_gt: '0' },
+      orderBy: Pool_OrderBy.TotalLiquidity,
+      orderDirection: OrderDirection.Desc,
+      block: this.blockHeight
+        ? { number: await this.blockHeight() }
+        : undefined,
+    });
+    console.timeEnd('fetching pools');
+
+    return [...pool0, ...pool1000, ...pool2000].map(this.mapType.bind(this));
+  }
+
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
     if (options?.skip) {
       this.query.args.skip = options.skip;
@@ -99,7 +120,7 @@ export class PoolsSubgraphRepository
 
   async findBy(param: PoolAttribute, value: string): Promise<Pool | undefined> {
     if (!this.pools) {
-      this.pools = this.fetch();
+      this.pools = this.fetchDefault();
     }
 
     return (await this.pools).find((pool) => pool[param] == value);
@@ -107,14 +128,14 @@ export class PoolsSubgraphRepository
 
   async all(): Promise<Pool[]> {
     if (!this.pools) {
-      this.pools = this.fetch();
+      this.pools = this.fetchDefault();
     }
     return this.pools;
   }
 
   async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
     if (!this.pools) {
-      this.pools = this.fetch();
+      this.pools = this.fetchDefault();
     }
 
     return (await this.pools).filter(filter);

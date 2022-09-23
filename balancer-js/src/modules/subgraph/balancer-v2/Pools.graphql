@@ -18,6 +18,45 @@ query Pools(
     }
 }
 
+query AllPools(
+    $skip: Int
+    $first: Int
+    $orderBy: Pool_orderBy
+    $orderDirection: OrderDirection
+    $where: Pool_filter
+    $block: Block_height
+) {
+    pool0: pools(
+        first: 1000
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphPool
+    }
+    pool1000: pools(
+        first: 1000
+        skip: 1000
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphPool
+    }
+    pool2000: pools(
+        first: 1000
+        skip: 2000
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphPool
+    }
+}
+
 query Pool($id: ID!, $block: Block_height) {
     pool(id: $id, block: $block) {
         ...SubgraphPool
