@@ -1,5 +1,4 @@
-import { PoolShare } from '@/types';
-import { PoolShareAttribute, PoolShareAttributes } from './types';
+import { PoolShare, PoolShareAttribute, PoolShareAttributes } from './types';
 import { Findable } from '../types';
 import { BalancerSubgraphRepository } from '@/modules/subgraph/repository';
 import {
@@ -48,11 +47,6 @@ export class PoolSharesRepository extends BalancerSubgraphRepository<PoolShare>
         const { poolShares } = await this.client.PoolShares(args);
         return poolShares.map(this.mapType);
     }
-
-    async get(args = {}): Promise<PoolShare | undefined> {
-        const { poolShares } = await this.client.PoolShares(args);
-        return (poolShares && poolShares.length > 0) ? this.mapType(poolShares[0]) : undefined; 
-    }
     
     async findByUser(userAddress: string, 
             first: number = 500, 
@@ -66,7 +60,7 @@ export class PoolSharesRepository extends BalancerSubgraphRepository<PoolShare>
         return this.findAllBy(PoolShareAttributes.PoolId, poolId, first, skip);
     }
     
-    mapType(subgraphPoolShare: SubgraphPoolShareFragment): PoolShare {
+    mapType(subgraphPoolShare: SubgraphPoolShareFragment): PoolShare  {
         return {
             id: subgraphPoolShare.id,
             userAddress: subgraphPoolShare.userAddress.id,
@@ -74,4 +68,5 @@ export class PoolSharesRepository extends BalancerSubgraphRepository<PoolShare>
             balance: subgraphPoolShare.balance
         };
     }
+
 }

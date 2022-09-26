@@ -10,9 +10,9 @@ export type PoolShareAttribute = PoolShareAttributes.Id
   | PoolShareAttributes.UserAddress 
   | PoolShareAttributes.Balance;
 
-  export interface PoolShare {
-    id: string;
-    userAddress: string;
-    poolId: string;
-    balance: string;
-  }
+export interface PoolShare {
+  id: string;
+  userAddress: string;
+  poolId: string;
+  balance: string;
+}

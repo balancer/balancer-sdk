@@ -1,5 +1,4 @@
-import { GaugeShare } from '@/types';
-import { GaugeShareAttribute, GaugeShareAttributes } from './types';
+import { GaugeShare, GaugeShareAttribute, GaugeShareAttributes } from './types';
 import { Findable } from '../types';
 import { GaugesSubgraphRepository } from '@/modules/subgraph/repository';
 import {
@@ -61,18 +60,13 @@ export class GaugeSharesRepository extends GaugesSubgraphRepository<GaugeShare>
         return gaugeShares.map(this.mapType);
     }
 
-    async get(args = {}): Promise<GaugeShare | undefined> {
-        const { gaugeShares } = await this.client.GaugeShares(args);
-        return (gaugeShares && gaugeShares.length > 0) ? this.mapType(gaugeShares[0]) : undefined; 
-    }
-
     mapType(subgraphGaugeShare: SubgraphGaugeShareFragment): GaugeShare {
         return {
             id: subgraphGaugeShare.id,
-            userAddress: subgraphGaugeShare.user.id,
-            gaugeId: subgraphGaugeShare.gauge.id,
             balance: subgraphGaugeShare.balance,
-            gaugeIsKilled: subgraphGaugeShare.gauge.isKilled
+            userAddress: subgraphGaugeShare.user?.id,
+            gaugeId: subgraphGaugeShare.gauge?.id,
+            gaugeIsKilled: subgraphGaugeShare.gauge?.isKilled
         };
     }
 }

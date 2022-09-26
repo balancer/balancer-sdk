@@ -12,6 +12,7 @@ import type {
   LiquidityGauge,
   PoolAttribute,
   TokenAttribute,
+  PoolShare
 } from '@/modules/data/types';
 import type { BaseFeeDistributor } from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
