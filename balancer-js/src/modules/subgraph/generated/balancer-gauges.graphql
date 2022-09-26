@@ -432,8 +432,12 @@ type LiquidityGauge {
   """ Whether Balancer DAO killed the gauge """
   isKilled: Boolean!
 
+  """ Whether the LiquidityGauge is the most recent added to GaugeController 
+  """
+  isPreferentialGauge: Boolean!
+
   """ Reference to Pool entity """
-  pool: Pool!
+  pool: Pool
 
   """ Address of the pool (lp_token of the gauge) """
   poolAddress: Bytes!
@@ -518,6 +522,10 @@ input LiquidityGauge_filter {
   isKilled_in: [Boolean!]
   isKilled_not: Boolean
   isKilled_not_in: [Boolean!]
+  isPreferentialGauge: Boolean
+  isPreferentialGauge_in: [Boolean!]
+  isPreferentialGauge_not: Boolean
+  isPreferentialGauge_not_in: [Boolean!]
   pool: String
   poolAddress: Bytes
   poolAddress_contains: Bytes
@@ -602,6 +610,7 @@ enum LiquidityGauge_orderBy {
   gauge
   id
   isKilled
+  isPreferentialGauge
   pool
   poolAddress
   poolId
@@ -1779,8 +1788,8 @@ type _Block_ {
   """The block number"""
   number: Int!
 
-  """Timestamp of the block if available, format depends on the chain"""
-  timestamp: String
+  """Integer representation of the timestamp stored in blocks for the chain"""
+  timestamp: Int
 }
 
 """The type for the top-level _meta field"""

@@ -427,8 +427,10 @@ export type LiquidityGauge = {
   id: Scalars['ID'];
   /**  Whether Balancer DAO killed the gauge  */
   isKilled: Scalars['Boolean'];
+  /**  Whether the LiquidityGauge is the most recent added to GaugeController  */
+  isPreferentialGauge: Scalars['Boolean'];
   /**  Reference to Pool entity  */
-  pool: Pool;
+  pool?: Maybe<Pool>;
   /**  Address of the pool (lp_token of the gauge)  */
   poolAddress: Scalars['Bytes'];
   /**  Pool ID if lp_token is a Balancer pool; null otherwise  */
@@ -522,6 +524,10 @@ export type LiquidityGauge_Filter = {
   isKilled_in?: InputMaybe<Array<Scalars['Boolean']>>;
   isKilled_not?: InputMaybe<Scalars['Boolean']>;
   isKilled_not_in?: InputMaybe<Array<Scalars['Boolean']>>;
+  isPreferentialGauge?: InputMaybe<Scalars['Boolean']>;
+  isPreferentialGauge_in?: InputMaybe<Array<Scalars['Boolean']>>;
+  isPreferentialGauge_not?: InputMaybe<Scalars['Boolean']>;
+  isPreferentialGauge_not_in?: InputMaybe<Array<Scalars['Boolean']>>;
   pool?: InputMaybe<Scalars['String']>;
   poolAddress?: InputMaybe<Scalars['Bytes']>;
   poolAddress_contains?: InputMaybe<Scalars['Bytes']>;
@@ -606,6 +612,7 @@ export enum LiquidityGauge_OrderBy {
   Gauge = 'gauge',
   Id = 'id',
   IsKilled = 'isKilled',
+  IsPreferentialGauge = 'isPreferentialGauge',
   Pool = 'pool',
   PoolAddress = 'poolAddress',
   PoolId = 'poolId',
@@ -1627,8 +1634,8 @@ export type _Block_ = {
   hash?: Maybe<Scalars['Bytes']>;
   /** The block number */
   number: Scalars['Int'];
-  /** Timestamp of the block if available, format depends on the chain */
-  timestamp?: Maybe<Scalars['String']>;
+  /** Integer representation of the timestamp stored in blocks for the chain */
+  timestamp?: Maybe<Scalars['Int']>;
 };
 
 /** The type for the top-level _meta field */

@@ -14,6 +14,7 @@ import type {
   TokenAttribute,
 } from '@/modules/data/types';
 import type { BaseFeeDistributor } from './modules/data';
+import type { GraphQLArgs } from './lib/graphql';
 
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
 export * from '@/modules/data/types';
@@ -238,6 +239,8 @@ export interface Pool {
   apr?: AprBreakdown;
   liquidity?: string;
   totalWeight: string;
+  mainIndex?: number;
+  wrappedIndex?: number;
 }
 
 /**
@@ -267,17 +270,8 @@ export interface PoolWithMethods extends Pool {
   calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
 }
 
-export interface PoolShare {
-  id: string;
-  userAddress: string;
-  poolId: string;
-  balance: string;
-}
-
-export interface GaugeShare {
-  id: string;
-  balance: string;
-  userAddress: string;
-  gaugeId: string;
-  gaugeIsKilled: boolean;
+export interface GraphQLQuery {
+  args: GraphQLArgs;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  attrs: any;
 }

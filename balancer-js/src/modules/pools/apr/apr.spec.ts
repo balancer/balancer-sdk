@@ -100,7 +100,7 @@ describe('pool apr', () => {
           repositories.liquidityGauges,
           repositories.feeDistributor
         ).tokenAprs(poolData);
-        expect(apr).to.eq(100);
+        expect(apr.total).to.eq(100);
       });
     });
 
@@ -138,7 +138,7 @@ describe('pool apr', () => {
           repositories.feeDistributor
         ).tokenAprs(poolWithBpt);
 
-        expect(apr).to.eq(10000 / 2);
+        expect(apr.total).to.eq(10000 / 2);
       });
     });
   });

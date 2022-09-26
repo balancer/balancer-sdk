@@ -42,10 +42,10 @@ export class Data implements BalancerDataRepositories {
   blockNumbers;
 
   constructor(networkConfig: BalancerNetworkConfig, provider: Provider) {
-    this.pools = new PoolsSubgraphRepository(
-      networkConfig.urls.subgraph,
-      networkConfig.chainId
-    );  
+    this.pools = new PoolsSubgraphRepository({
+      url: networkConfig.urls.subgraph,
+      chainId: networkConfig.chainId,
+    });
 
     this.poolShares = new PoolSharesRepository(
       networkConfig.urls.subgraph, 
@@ -72,11 +72,11 @@ export class Data implements BalancerDataRepositories {
         }
       };
 
-      this.yesterdaysPools = new PoolsSubgraphRepository(
-        networkConfig.urls.subgraph,
-        networkConfig.chainId,
-        blockDayAgo
-      );
+      this.yesterdaysPools = new PoolsSubgraphRepository({
+        url: networkConfig.urls.subgraph,
+        chainId: networkConfig.chainId,
+        blockHeight: blockDayAgo,
+      });
     }
 
     const tokenAddresses = initialCoingeckoList

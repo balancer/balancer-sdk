@@ -6,9 +6,22 @@ import {
   Pool_OrderBy,
   OrderDirection,
 } from '@/modules/subgraph/subgraph';
-import { PoolAttribute } from './types';
-import { Pool, PoolType } from '@/types';
+import {
+  GraphQLArgsBuilder,
+  SubgraphArgsFormatter,
+} from '@/lib/graphql/args-builder';
+import { GraphQLArgs } from '@/lib/graphql/types';
+import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
+import { GraphQLQuery, Pool, PoolType } from '@/types';
 import { Network } from '@/lib/constants/network';
+import { PoolsQueryVariables } from '../../subgraph/subgraph';
+
+interface PoolsSubgraphRepositoryOptions {
+  url: string;
+  chainId: Network;
+  blockHeight?: () => Promise<number | undefined>;
+  query?: GraphQLQuery;
+}
 
 /**
  * Access pools using generated subgraph client.
@@ -19,7 +32,11 @@ export class PoolsSubgraphRepository
   implements Findable<Pool, PoolAttribute>, Searchable<Pool>
 {
   private client: SubgraphClient;
+  private chainId: Network;
   private pools?: Promise<Pool[]>;
+  public skip = 0;
+  private blockHeight: undefined | (() => Promise<number | undefined>);
+  private query: GraphQLQuery;
 
   /**
    * Repository with optional lazy loaded blockHeight
@@ -28,17 +45,42 @@ export class PoolsSubgraphRepository
    * @param chainId current network, needed for L2s logic
    * @param blockHeight lazy loading blockHeigh resolver
    */
-  constructor(
-    url: string,
-    private chainId: Network,
-    private blockHeight?: () => Promise<number | undefined>
-  ) {
-    this.client = createSubgraphClient(url);
+  constructor(options: PoolsSubgraphRepositoryOptions) {
+    this.client = createSubgraphClient(options.url);
+    this.blockHeight = options.blockHeight;
+    this.chainId = options.chainId;
+
+    const defaultArgs: GraphQLArgs = {
+      orderBy: Pool_OrderBy.TotalLiquidity,
+      orderDirection: OrderDirection.Desc,
+      where: {
+        swapEnabled: {
+          eq: true,
+        },
+        totalShares: {
+          gt: 0,
+        },
+      },
+    };
+
+    const args = options.query?.args || defaultArgs;
+    const attrs = options.query?.attrs || {};
+
+    this.query = {
+      args,
+      attrs,
+    };
   }
 
-  async fetch(): Promise<Pool[]> {
+  /**
+   * We need a list of all the pools, for calculating APRs (nested pools), and for SOR (path finding).
+   * All the pools are fetched on page load and cachced for speedy lookups.
+   *
+   * @returns Promise resolving to pools list
+   */
+  private async fetchDefault(): Promise<Pool[]> {
     console.time('fetching pools');
-    const { pool0, pool1000 } = await this.client.Pools({
+    const { pool0, pool1000, pool2000 } = await this.client.AllPools({
       where: { swapEnabled: true, totalShares_gt: '0' },
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
@@ -48,8 +90,28 @@ export class PoolsSubgraphRepository
     });
     console.timeEnd('fetching pools');
 
-    // TODO: how to best convert subgraph type to sdk internal type?
-    return [...pool0, ...pool1000].map(this.mapType.bind(this));
+    return [...pool0, ...pool1000, ...pool2000].map(this.mapType.bind(this));
+  }
+
+  async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
+    if (options?.skip) {
+      this.query.args.skip = options.skip;
+    }
+    if (this.blockHeight) {
+      this.query.args.block = { number: await this.blockHeight() };
+    }
+
+    this.query.args.first = options?.first || 1000;
+
+    const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
+      new SubgraphArgsFormatter()
+    ) as PoolsQueryVariables;
+
+    const { pools } = await this.client.Pools(formattedQuery);
+
+    this.skip = (options?.skip || 0) + pools.length;
+
+    return pools.map(this.mapType.bind(this));
   }
 
   async find(id: string): Promise<Pool | undefined> {
@@ -58,7 +120,7 @@ export class PoolsSubgraphRepository
 
   async findBy(param: PoolAttribute, value: string): Promise<Pool | undefined> {
     if (!this.pools) {
-      this.pools = this.fetch();
+      this.pools = this.fetchDefault();
     }
 
     return (await this.pools).find((pool) => pool[param] == value);
@@ -66,14 +128,14 @@ export class PoolsSubgraphRepository
 
   async all(): Promise<Pool[]> {
     if (!this.pools) {
-      this.pools = this.fetch();
+      this.pools = this.fetchDefault();
     }
     return this.pools;
   }
 
   async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
     if (!this.pools) {
-      this.pools = this.fetch();
+      this.pools = this.fetchDefault();
     }
 
     return (await this.pools).filter(filter);
@@ -88,9 +150,9 @@ export class PoolsSubgraphRepository
       poolType: subgraphPool.poolType as PoolType,
       swapFee: subgraphPool.swapFee,
       swapEnabled: subgraphPool.swapEnabled,
-      amp: subgraphPool.amp || undefined,
-      // owner: subgraphPool.owner,
-      // factory: subgraphPool.factory,
+      amp: subgraphPool.amp ?? undefined,
+      owner: subgraphPool.owner ?? undefined,
+      factory: subgraphPool.factory ?? undefined,
       tokens: subgraphPool.tokens || [],
       tokensList: subgraphPool.tokensList,
       tokenAddresses: (subgraphPool.tokens || []).map((t) => t.address),
@@ -100,6 +162,8 @@ export class PoolsSubgraphRepository
       totalSwapVolume: subgraphPool.totalSwapVolume,
       // onchain: subgraphPool.onchain,
       createTime: subgraphPool.createTime,
+      mainIndex: subgraphPool.mainIndex ?? undefined,
+      wrappedIndex: subgraphPool.wrappedIndex ?? undefined,
       // mainTokens: subgraphPool.mainTokens,
       // wrappedTokens: subgraphPool.wrappedTokens,
       // unwrappedTokens: subgraphPool.unwrappedTokens,
