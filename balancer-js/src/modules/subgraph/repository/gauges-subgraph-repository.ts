@@ -2,7 +2,7 @@ import { Network } from '@/lib/constants/network';
 import { AbstractSubgraphRepository  } from './abstract-subgraph-repository';
 import { createGaugesClient, GaugesClient } from '../subgraph';
 
-export abstract class GaugesSubgraphRepository<T> extends AbstractSubgraphRepository<T> {
+export abstract class GaugesSubgraphRepository<T, A> extends AbstractSubgraphRepository<T, A> {
    
     protected client: GaugesClient;
   

@@ -1,5 +1,4 @@
-import { GaugeShare, GaugeShareAttribute, GaugeShareAttributes } from './types';
-import { Findable } from '../types';
+import { GaugeShare, GaugeShareAttribute } from './types';
 import { GaugesSubgraphRepository } from '@/modules/subgraph/repository';
 import {
     SubgraphGaugeShareFragment,
@@ -7,55 +6,13 @@ import {
     OrderDirection
 } from '@/modules/subgraph/generated/balancer-gauges';
 
-export class GaugeSharesRepository extends GaugesSubgraphRepository<GaugeShare> 
-    implements Findable<GaugeShare, GaugeShareAttribute> {
+export class GaugeSharesRepository extends GaugesSubgraphRepository<GaugeShare, GaugeShareAttribute> {
 
-    async find(id: string): Promise<GaugeShare | undefined> {
-        const args = { id: id, block: this.blockHeight 
-            ? { number: await this.blockHeight() }
-            : undefined };
-        return this.get(args);
-    }
-        
-    async findBy(attribute: GaugeShareAttribute, 
-        value: string): Promise<GaugeShare | undefined> {
-        const args = { [attribute]: value };
-        return this.get(args);
-    }
-    
-    async findAllBy(attribute: GaugeShareAttribute, 
-            value: string,
-            first: number, 
-            skip: number):  Promise<GaugeShare[]> {
-        const orderBy = {
-            orderBy: GaugeShare_OrderBy.Balance, 
-            orderDirection: OrderDirection.Desc
-        };
-        const args = { 
-            where: { [attribute]: value }, 
-            first: first,
-            skip: skip,
-            ...orderBy,
-            block: this.blockHeight
-            ? { number: await this.blockHeight() }
-            : undefined
-        };
-        return this.query(args);
-    }
+    async query(args: any): Promise<GaugeShare[]> {
+        if (!args.orderBy) args.orderBy = GaugeShare_OrderBy.Balance;
+        if (!args.orderDirection) args.orderDirection = OrderDirection.Desc;
+        if (!args.block && this.blockHeight) args.block = { number: await this.blockHeight() };
 
-    async findByUser(userAddress: string, 
-            first: number = 500, 
-            skip: number = 0):  Promise<GaugeShare[]> {
-        return this.findAllBy(GaugeShareAttributes.UserAddress, userAddress, first, skip);
-    }
-
-    async findByGauge(gaugeId: string, 
-            first: number = 1000, 
-            skip: number = 0):  Promise<GaugeShare[]> {
-        return this.findAllBy(GaugeShareAttributes.GaugeId, gaugeId, first, skip);
-    }
-
-    async query(args = {}): Promise<GaugeShare[]> {
         const { gaugeShares } = await this.client.GaugeShares(args);
         return gaugeShares.map(this.mapType);
     }

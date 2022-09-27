@@ -11,8 +11,7 @@ import type {
   Searchable,
   LiquidityGauge,
   PoolAttribute,
-  TokenAttribute,
-  PoolShare
+  TokenAttribute
 } from '@/modules/data/types';
 import type { BaseFeeDistributor } from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';

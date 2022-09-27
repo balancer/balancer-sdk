@@ -1,4 +1,4 @@
-import { Network } from '../../src/index';
+import { GaugeShareAttributes, Network } from '../../src/index';
 import { BalancerSDK } from '../../src/modules/sdk.module';
 
 const sdk = new BalancerSDK(
@@ -22,17 +22,17 @@ const { gaugeShares } = sdk.data;
     result = await gaugeShares.find(GAUGESHARE_ID);
     console.log('Gauge share by id', result);
 
-    result = await gaugeShares.findByUser(USER_ADDR);
+    result = await gaugeShares.findAllBy(GaugeShareAttributes.UserAddress, USER_ADDR);
     console.log('Gauge shares by user', result);
   
-    result = await gaugeShares.findByGauge(GAUGE_ID, 5);
+    result = await gaugeShares.findAllBy(GaugeShareAttributes.GaugeId, GAUGE_ID, 5);
     console.log('Gauge shares by gauge (first 5)', result);
     
-    result = await gaugeShares.findByGauge(GAUGE_ID, 2, 1);
+    result = await gaugeShares.findAllBy(GaugeShareAttributes.GaugeId, GAUGE_ID, 2, 1);
     console.log('Gauge shares by gauge (#2 & #3)', result);
 
     result = await gaugeShares.query({ where: { id_in: [ GAUGESHARE_ID, GAUGESHARE_ID2 ] }});
-    console.log('Gauge shares query', result);
+    console.log('Gauge shares subgraph query', result);
 })();
   
   // npm run examples:exec -- ./examples/data/gauge-shares.ts
