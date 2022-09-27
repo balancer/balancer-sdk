@@ -14,6 +14,7 @@ import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
 import { Join } from '../joins/joins.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
+import { Exit } from '../exits/exits.module';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -22,6 +23,7 @@ export class Pools implements Findable<PoolWithMethods> {
   aprService;
   liquidityService;
   joinService;
+  exitService;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -42,6 +44,7 @@ export class Pools implements Findable<PoolWithMethods> {
       repositories.tokenPrices
     );
     this.joinService = new Join(this.repositories.pools, networkConfig.chainId);
+    this.exitService = new Exit(this.repositories.pools, networkConfig.chainId);
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
@@ -105,6 +108,35 @@ export class Pools implements Findable<PoolWithMethods> {
       wrapMainTokens,
       slippage,
       signer,
+      authorisation
+    );
+  }
+
+  /**
+   * Builds generalised join transaction
+   *
+   * @param poolId          Pool id
+   * @param amount         Token amount in EVM scale
+   * @param userAddress     User address
+   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+   * @returns transaction data ready to be sent to the network along with tokens, min and expected BPT amounts out.
+   */
+  async generalisedExit(
+    poolId: string,
+    amount: string,
+    userAddress: string,
+    authorisation?: string
+  ): Promise<{
+    to: string;
+    callData: string;
+    tokensOut: string[];
+    expectedAmountsOut: string[];
+    minAmountsOut: string[];
+  }> {
+    return this.exitService.exitPool(
+      poolId,
+      amount,
+      userAddress,
       authorisation
     );
   }
