@@ -6,6 +6,7 @@ export * from './token';
 export * from './token-prices';
 export * from './fee-distributor/repository';
 export * from './fee-collector/repository';
+export * from './protocol-fees/provider';
 export * from './token-yields/repository';
 export * from './block-number';
 
@@ -18,6 +19,7 @@ import { LiquidityGaugeSubgraphRPCProvider } from './liquidity-gauges/provider';
 import { FeeDistributorRepository } from './fee-distributor/repository';
 import { FeeCollectorRepository } from './fee-collector/repository';
 import { TokenYieldsRepository } from './token-yields/repository';
+import { ProtocolFeesProvider } from './protocol-fees/provider';
 import { Provider } from '@ethersproject/providers';
 
 // initialCoingeckoList are used to get the initial token list for coingecko
@@ -32,6 +34,7 @@ export class Data implements BalancerDataRepositories {
   liquidityGauges;
   feeDistributor;
   feeCollector;
+  protocolFees;
   tokenYields;
   blockNumbers;
 
@@ -102,6 +105,14 @@ export class Data implements BalancerDataRepositories {
       networkConfig.addresses.contracts.vault,
       provider
     );
+
+    if (networkConfig.addresses.contracts.protocolFeePercentagesProvider) {
+      this.protocolFees = new ProtocolFeesProvider(
+        networkConfig.addresses.contracts.multicall,
+        networkConfig.addresses.contracts.protocolFeePercentagesProvider,
+        provider
+      );
+    }
 
     this.tokenYields = new TokenYieldsRepository();
   }
