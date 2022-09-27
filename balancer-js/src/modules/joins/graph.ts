@@ -285,7 +285,7 @@ export class PoolGraph {
         marked: false,
         joinAction: 'input',
         exitAction: 'output',
-        index: '0', // Use 0 ref for all main tokens. This will be updated with real amounts in join construction.
+        index: nodeIndex.toString(), // This will be updated with real amounts in join construction.
         parent,
         proportionOfParent,
         isLeaf: true,

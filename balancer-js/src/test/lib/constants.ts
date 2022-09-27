@@ -477,14 +477,17 @@ export const ADDRESSES = {
       address: '0x48e984DB5F9BA1Bf2Ee21d0A207a96C944D807E3',
       decimals: 18,
       symbol: 'boostedMeta1',
+      slot: 0,
     },
     boostedMetaBig1: {
       id: '0xae5bfce463ab4689e9353d13b537e9896f13c7420000000000000000000001aa',
       address: '0xae5bfce463ab4689e9353d13b537e9896f13c742',
       decimals: 18,
       symbol: 'boostedMetaBig1',
+      slot: 0,
     },
     bbausd2: {
+      id: '0x3d5981bdd8d3e49eb7bbdc1d2b156a3ee019c18e0000000000000000000001a7',
       address: '0x3d5981BDD8D3E49EB7BBDC1d2B156a3eE019c18e',
       decimals: 18,
       symbol: 'bbausd2',
