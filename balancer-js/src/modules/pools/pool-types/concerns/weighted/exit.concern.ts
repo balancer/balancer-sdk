@@ -1,6 +1,5 @@
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import OldBigNumber from 'bignumber.js';
-import * as SDK from '@georgeroman/balancer-v2-pools';
+import * as SOR from '@balancer-labs/sor';
 import {
   ExitConcern,
   ExitExactBPTInParameters,
@@ -17,17 +16,6 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { AddressZero } from '@ethersproject/constants';
 
 export class WeightedPoolExit implements ExitConcern {
-  /**
-   * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
-   * @param {string}  exiter - Account address exiting pool
-   * @param {Pool}    pool - Subgraph pool object of pool being exited
-   * @param {string}  bptIn - BPT provided for exiting pool
-   * @param {string}  slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-   * @param {boolean} shouldUnwrapNativeAsset - Indicates wether wrapped native asset should be unwrapped after exit.
-   * @param {string}  wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting to native asset.
-   * @param {string}  singleTokenMaxOut - Optional: token address that if provided will exit to given token
-   * @returns         transaction request ready to send with signer.sendTransaction
-   */
   buildExitExactBPTIn = ({
     exiter,
     pool,
@@ -84,15 +72,15 @@ export class WeightedPoolExit implements ExitConcern {
       const singleTokenMaxOutIndex = sortedTokens.indexOf(singleTokenMaxOut);
 
       // Calculate amount out given BPT in
-      const amountOut = SDK.WeightedMath._calcTokenOutGivenExactBptIn(
-        new OldBigNumber(sortedBalances[singleTokenMaxOutIndex]),
-        new OldBigNumber(sortedWeights[singleTokenMaxOutIndex]),
-        new OldBigNumber(bptIn),
-        new OldBigNumber(parsedTotalShares),
-        new OldBigNumber(parsedSwapFee)
+      const amountOut = SOR.WeightedMaths._calcTokenOutGivenExactBptIn(
+        BigInt(sortedBalances[singleTokenMaxOutIndex]),
+        BigInt(sortedWeights[singleTokenMaxOutIndex]),
+        BigInt(bptIn),
+        BigInt(parsedTotalShares),
+        BigInt(parsedSwapFee)
       ).toString();
 
-      // Apply slippage
+      // Apply slippage tolerance
       minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
         BigNumber.from(amountOut),
         BigNumber.from(slippage)
@@ -106,13 +94,13 @@ export class WeightedPoolExit implements ExitConcern {
       // Exit pool with all tokens proportinally
 
       // Calculate amounts out given BPT in
-      const amountsOut = SDK.WeightedMath._calcTokensOutGivenExactBptIn(
-        sortedBalances.map((b) => new OldBigNumber(b)),
-        new OldBigNumber(bptIn),
-        new OldBigNumber(parsedTotalShares)
+      const amountsOut = SOR.WeightedMaths._calcTokensOutGivenExactBptIn(
+        sortedBalances.map((b) => BigInt(b)),
+        BigInt(bptIn),
+        BigInt(parsedTotalShares)
       ).map((amount) => amount.toString());
 
-      // Apply slippage
+      // Apply slippage tolerance
       minAmountsOut = amountsOut.map((amount) => {
         const minAmount = subSlippage(
           BigNumber.from(amount),
@@ -157,16 +145,6 @@ export class WeightedPoolExit implements ExitConcern {
     };
   };
 
-  /**
-   * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
-   * @param {string}    exiter - Account address exiting pool
-   * @param {Pool}      pool - Subgraph pool object of pool being exited
-   * @param {string[]}  tokensOut - Tokens provided for exiting pool
-   * @param {string[]}  amountsOut - Amoutns provided for exiting pool
-   * @param {string}    slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-   * @param {string}    wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for exiting with ETH.
-   * @returns           transaction request ready to send with signer.sendTransaction
-   */
   buildExitExactTokensOut = ({
     exiter,
     pool,
@@ -204,15 +182,15 @@ export class WeightedPoolExit implements ExitConcern {
     ) as [string[], string[]];
 
     // Calculate expected BPT in given tokens out
-    const bptIn = SDK.WeightedMath._calcBptInGivenExactTokensOut(
-      sortedBalances.map((b) => new OldBigNumber(b)),
-      sortedWeights.map((w) => new OldBigNumber(w)),
-      sortedAmounts.map((a) => new OldBigNumber(a)),
-      new OldBigNumber(parsedTotalShares),
-      new OldBigNumber(parsedSwapFee)
+    const bptIn = SOR.WeightedMaths._calcBptInGivenExactTokensOut(
+      sortedBalances.map((b) => BigInt(b)),
+      sortedWeights.map((w) => BigInt(w)),
+      sortedAmounts.map((a) => BigInt(a)),
+      BigInt(parsedTotalShares),
+      BigInt(parsedSwapFee)
     ).toString();
 
-    // Apply slippage
+    // Apply slippage tolerance
     const maxBPTIn = addSlippage(
       BigNumber.from(bptIn),
       BigNumber.from(slippage)

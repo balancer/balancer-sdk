@@ -6,6 +6,26 @@ query Pools(
     $where: Pool_filter
     $block: Block_height
 ) {
+    pools(
+        skip: $skip
+        first: $first
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphPool
+    }
+}
+
+query AllPools(
+    $skip: Int
+    $first: Int
+    $orderBy: Pool_orderBy
+    $orderDirection: OrderDirection
+    $where: Pool_filter
+    $block: Block_height
+) {
     pool0: pools(
         first: 1000
         orderBy: $orderBy
@@ -16,8 +36,18 @@ query Pools(
         ...SubgraphPool
     }
     pool1000: pools(
-        skip: 1000
         first: 1000
+        skip: 1000
+        orderBy: $orderBy
+        orderDirection: $orderDirection
+        where: $where
+        block: $block
+    ) {
+        ...SubgraphPool
+    }
+    pool2000: pools(
+        first: 1000
+        skip: 2000
         orderBy: $orderBy
         orderDirection: $orderDirection
         where: $where
@@ -63,9 +93,13 @@ fragment SubgraphPool on Pool {
     id
     address
     poolType
+    factory
+    strategyType
     symbol
     name
+    swapEnabled
     swapFee
+    owner
     totalWeight
     totalSwapVolume
     totalSwapFee
@@ -77,13 +111,12 @@ fragment SubgraphPool on Pool {
     swapsCount
     holdersCount
     tokensList
-    totalWeight
     amp
     expiryTime
     unitSeconds
+    createTime
     principalToken
     baseToken
-    swapEnabled
     wrappedIndex
     mainIndex
     lowerTarget

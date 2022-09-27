@@ -1,0 +1,1821 @@
+"""
+creates a virtual field on the entity that may be queried but cannot be set manually through the mappings API.
+"""
+directive @derivedFrom(field: String!) on FIELD_DEFINITION
+
+"""
+Marks the GraphQL type as indexable entity.  Each type that should be an entity is required to be annotated with this directive.
+"""
+directive @entity on OBJECT
+
+"""Defined a Subgraph ID for an object type"""
+directive @subgraphId(id: String!) on OBJECT
+
+scalar BigDecimal
+
+scalar BigInt
+
+input BlockChangedFilter {
+  number_gte: Int!
+}
+
+input Block_height {
+  hash: Bytes
+  number: Int
+  number_gte: Int
+}
+
+scalar Bytes
+
+enum Chain {
+  Arbitrum
+  Optimism
+  Polygon
+}
+
+type Gauge {
+  """ Timestamp at which Balancer DAO added the gauge to GaugeController [seconds] 
+  """
+  addedTimestamp: Int!
+
+  """ Address of the gauge """
+  address: Bytes!
+
+  """ Equal to: <gaugeAddress>-<typeID> """
+  id: ID!
+
+  """ Reference to LiquidityGauge """
+  liquidityGauge: LiquidityGauge
+
+  """ Reference to RootGauge """
+  rootGauge: RootGauge
+
+  """ Type of the gauge """
+  type: GaugeType!
+}
+
+type GaugeFactory {
+  """ List of gauges created through the factory """
+  gauges(first: Int = 100, orderBy: LiquidityGauge_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: LiquidityGauge_filter): [LiquidityGauge!]
+
+  """ Factory contract address """
+  id: ID!
+
+  """ Number of gauges created through the factory """
+  numGauges: Int!
+}
+
+input GaugeFactory_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  gauges_: LiquidityGauge_filter
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  numGauges: Int
+  numGauges_gt: Int
+  numGauges_gte: Int
+  numGauges_in: [Int!]
+  numGauges_lt: Int
+  numGauges_lte: Int
+  numGauges_not: Int
+  numGauges_not_in: [Int!]
+}
+
+enum GaugeFactory_orderBy {
+  gauges
+  id
+  numGauges
+}
+
+type GaugeShare {
+  """ User's balance of gauge deposit tokens """
+  balance: BigDecimal!
+
+  """ Reference to LiquidityGauge entity """
+  gauge: LiquidityGauge!
+
+  """ Equal to: <userAddress>-<gaugeAddress> """
+  id: ID!
+
+  """ Reference to User entity """
+  user: User!
+}
+
+input GaugeShare_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  balance: BigDecimal
+  balance_gt: BigDecimal
+  balance_gte: BigDecimal
+  balance_in: [BigDecimal!]
+  balance_lt: BigDecimal
+  balance_lte: BigDecimal
+  balance_not: BigDecimal
+  balance_not_in: [BigDecimal!]
+  gauge: String
+  gauge_: LiquidityGauge_filter
+  gauge_contains: String
+  gauge_contains_nocase: String
+  gauge_ends_with: String
+  gauge_ends_with_nocase: String
+  gauge_gt: String
+  gauge_gte: String
+  gauge_in: [String!]
+  gauge_lt: String
+  gauge_lte: String
+  gauge_not: String
+  gauge_not_contains: String
+  gauge_not_contains_nocase: String
+  gauge_not_ends_with: String
+  gauge_not_ends_with_nocase: String
+  gauge_not_in: [String!]
+  gauge_not_starts_with: String
+  gauge_not_starts_with_nocase: String
+  gauge_starts_with: String
+  gauge_starts_with_nocase: String
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  user: String
+  user_: User_filter
+  user_contains: String
+  user_contains_nocase: String
+  user_ends_with: String
+  user_ends_with_nocase: String
+  user_gt: String
+  user_gte: String
+  user_in: [String!]
+  user_lt: String
+  user_lte: String
+  user_not: String
+  user_not_contains: String
+  user_not_contains_nocase: String
+  user_not_ends_with: String
+  user_not_ends_with_nocase: String
+  user_not_in: [String!]
+  user_not_starts_with: String
+  user_not_starts_with_nocase: String
+  user_starts_with: String
+  user_starts_with_nocase: String
+}
+
+enum GaugeShare_orderBy {
+  balance
+  gauge
+  id
+  user
+}
+
+type GaugeType {
+  """ Type ID """
+  id: ID!
+
+  """ Name of the type - empty string if call reverts """
+  name: String!
+}
+
+input GaugeType_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  name: String
+  name_contains: String
+  name_contains_nocase: String
+  name_ends_with: String
+  name_ends_with_nocase: String
+  name_gt: String
+  name_gte: String
+  name_in: [String!]
+  name_lt: String
+  name_lte: String
+  name_not: String
+  name_not_contains: String
+  name_not_contains_nocase: String
+  name_not_ends_with: String
+  name_not_ends_with_nocase: String
+  name_not_in: [String!]
+  name_not_starts_with: String
+  name_not_starts_with_nocase: String
+  name_starts_with: String
+  name_starts_with_nocase: String
+}
+
+enum GaugeType_orderBy {
+  id
+  name
+}
+
+type GaugeVote {
+  """ Reference to Gauge entity """
+  gauge: Gauge!
+
+  """ Equal to: <userAddress>-<gaugeAddress> """
+  id: ID!
+
+  """ Timestamp at which user voted [seconds] """
+  timestamp: BigInt
+
+  """ Reference to User entity """
+  user: User!
+
+  """ Weight of veBAL power user has used to vote """
+  weight: BigDecimal
+}
+
+input GaugeVote_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  gauge: String
+  gauge_: Gauge_filter
+  gauge_contains: String
+  gauge_contains_nocase: String
+  gauge_ends_with: String
+  gauge_ends_with_nocase: String
+  gauge_gt: String
+  gauge_gte: String
+  gauge_in: [String!]
+  gauge_lt: String
+  gauge_lte: String
+  gauge_not: String
+  gauge_not_contains: String
+  gauge_not_contains_nocase: String
+  gauge_not_ends_with: String
+  gauge_not_ends_with_nocase: String
+  gauge_not_in: [String!]
+  gauge_not_starts_with: String
+  gauge_not_starts_with_nocase: String
+  gauge_starts_with: String
+  gauge_starts_with_nocase: String
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  timestamp: BigInt
+  timestamp_gt: BigInt
+  timestamp_gte: BigInt
+  timestamp_in: [BigInt!]
+  timestamp_lt: BigInt
+  timestamp_lte: BigInt
+  timestamp_not: BigInt
+  timestamp_not_in: [BigInt!]
+  user: String
+  user_: User_filter
+  user_contains: String
+  user_contains_nocase: String
+  user_ends_with: String
+  user_ends_with_nocase: String
+  user_gt: String
+  user_gte: String
+  user_in: [String!]
+  user_lt: String
+  user_lte: String
+  user_not: String
+  user_not_contains: String
+  user_not_contains_nocase: String
+  user_not_ends_with: String
+  user_not_ends_with_nocase: String
+  user_not_in: [String!]
+  user_not_starts_with: String
+  user_not_starts_with_nocase: String
+  user_starts_with: String
+  user_starts_with_nocase: String
+  weight: BigDecimal
+  weight_gt: BigDecimal
+  weight_gte: BigDecimal
+  weight_in: [BigDecimal!]
+  weight_lt: BigDecimal
+  weight_lte: BigDecimal
+  weight_not: BigDecimal
+  weight_not_in: [BigDecimal!]
+}
+
+enum GaugeVote_orderBy {
+  gauge
+  id
+  timestamp
+  user
+  weight
+}
+
+input Gauge_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  addedTimestamp: Int
+  addedTimestamp_gt: Int
+  addedTimestamp_gte: Int
+  addedTimestamp_in: [Int!]
+  addedTimestamp_lt: Int
+  addedTimestamp_lte: Int
+  addedTimestamp_not: Int
+  addedTimestamp_not_in: [Int!]
+  address: Bytes
+  address_contains: Bytes
+  address_in: [Bytes!]
+  address_not: Bytes
+  address_not_contains: Bytes
+  address_not_in: [Bytes!]
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  liquidityGauge: String
+  liquidityGauge_: LiquidityGauge_filter
+  liquidityGauge_contains: String
+  liquidityGauge_contains_nocase: String
+  liquidityGauge_ends_with: String
+  liquidityGauge_ends_with_nocase: String
+  liquidityGauge_gt: String
+  liquidityGauge_gte: String
+  liquidityGauge_in: [String!]
+  liquidityGauge_lt: String
+  liquidityGauge_lte: String
+  liquidityGauge_not: String
+  liquidityGauge_not_contains: String
+  liquidityGauge_not_contains_nocase: String
+  liquidityGauge_not_ends_with: String
+  liquidityGauge_not_ends_with_nocase: String
+  liquidityGauge_not_in: [String!]
+  liquidityGauge_not_starts_with: String
+  liquidityGauge_not_starts_with_nocase: String
+  liquidityGauge_starts_with: String
+  liquidityGauge_starts_with_nocase: String
+  rootGauge: String
+  rootGauge_: RootGauge_filter
+  rootGauge_contains: String
+  rootGauge_contains_nocase: String
+  rootGauge_ends_with: String
+  rootGauge_ends_with_nocase: String
+  rootGauge_gt: String
+  rootGauge_gte: String
+  rootGauge_in: [String!]
+  rootGauge_lt: String
+  rootGauge_lte: String
+  rootGauge_not: String
+  rootGauge_not_contains: String
+  rootGauge_not_contains_nocase: String
+  rootGauge_not_ends_with: String
+  rootGauge_not_ends_with_nocase: String
+  rootGauge_not_in: [String!]
+  rootGauge_not_starts_with: String
+  rootGauge_not_starts_with_nocase: String
+  rootGauge_starts_with: String
+  rootGauge_starts_with_nocase: String
+  type: String
+  type_: GaugeType_filter
+  type_contains: String
+  type_contains_nocase: String
+  type_ends_with: String
+  type_ends_with_nocase: String
+  type_gt: String
+  type_gte: String
+  type_in: [String!]
+  type_lt: String
+  type_lte: String
+  type_not: String
+  type_not_contains: String
+  type_not_contains_nocase: String
+  type_not_ends_with: String
+  type_not_ends_with_nocase: String
+  type_not_in: [String!]
+  type_not_starts_with: String
+  type_not_starts_with_nocase: String
+  type_starts_with: String
+  type_starts_with_nocase: String
+}
+
+enum Gauge_orderBy {
+  addedTimestamp
+  address
+  id
+  liquidityGauge
+  rootGauge
+  type
+}
+
+type LiquidityGauge {
+  """ Factory contract address """
+  factory: GaugeFactory!
+
+  """ Reference to Gauge entity - created when LiquidityGauge is added to GaugeController
+  """
+  gauge: Gauge
+
+  """ LiquidityGauge contract address """
+  id: ID!
+
+  """ Whether Balancer DAO killed the gauge """
+  isKilled: Boolean!
+
+  """ Whether the LiquidityGauge is the most recent added to GaugeController 
+  """
+  isPreferentialGauge: Boolean!
+
+  """ Reference to Pool entity """
+  pool: Pool
+
+  """ Address of the pool (lp_token of the gauge) """
+  poolAddress: Bytes!
+
+  """ Pool ID if lp_token is a Balancer pool; null otherwise """
+  poolId: Bytes
+
+  """ Relative weight cap of the gauge (0.01 = 1%) - V2 factories only """
+  relativeWeightCap: BigDecimal
+
+  """ List of user shares """
+  shares(first: Int = 100, orderBy: GaugeShare_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: GaugeShare_filter): [GaugeShare!]
+
+  """ Address of the contract that streams reward tokens to the gauge - ChildChainLiquidityGauge only 
+  """
+  streamer: Bytes
+
+  """ ERC20 token symbol """
+  symbol: String!
+
+  """ List of reward tokens depositted in the gauge """
+  tokens(first: Int = 100, orderBy: RewardToken_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: RewardToken_filter): [RewardToken!]
+
+  """ Total of BPTs users have staked in the LiquidityGauge """
+  totalSupply: BigDecimal!
+}
+
+input LiquidityGauge_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  factory: String
+  factory_: GaugeFactory_filter
+  factory_contains: String
+  factory_contains_nocase: String
+  factory_ends_with: String
+  factory_ends_with_nocase: String
+  factory_gt: String
+  factory_gte: String
+  factory_in: [String!]
+  factory_lt: String
+  factory_lte: String
+  factory_not: String
+  factory_not_contains: String
+  factory_not_contains_nocase: String
+  factory_not_ends_with: String
+  factory_not_ends_with_nocase: String
+  factory_not_in: [String!]
+  factory_not_starts_with: String
+  factory_not_starts_with_nocase: String
+  factory_starts_with: String
+  factory_starts_with_nocase: String
+  gauge: String
+  gauge_: Gauge_filter
+  gauge_contains: String
+  gauge_contains_nocase: String
+  gauge_ends_with: String
+  gauge_ends_with_nocase: String
+  gauge_gt: String
+  gauge_gte: String
+  gauge_in: [String!]
+  gauge_lt: String
+  gauge_lte: String
+  gauge_not: String
+  gauge_not_contains: String
+  gauge_not_contains_nocase: String
+  gauge_not_ends_with: String
+  gauge_not_ends_with_nocase: String
+  gauge_not_in: [String!]
+  gauge_not_starts_with: String
+  gauge_not_starts_with_nocase: String
+  gauge_starts_with: String
+  gauge_starts_with_nocase: String
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  isKilled: Boolean
+  isKilled_in: [Boolean!]
+  isKilled_not: Boolean
+  isKilled_not_in: [Boolean!]
+  isPreferentialGauge: Boolean
+  isPreferentialGauge_in: [Boolean!]
+  isPreferentialGauge_not: Boolean
+  isPreferentialGauge_not_in: [Boolean!]
+  pool: String
+  poolAddress: Bytes
+  poolAddress_contains: Bytes
+  poolAddress_in: [Bytes!]
+  poolAddress_not: Bytes
+  poolAddress_not_contains: Bytes
+  poolAddress_not_in: [Bytes!]
+  poolId: Bytes
+  poolId_contains: Bytes
+  poolId_in: [Bytes!]
+  poolId_not: Bytes
+  poolId_not_contains: Bytes
+  poolId_not_in: [Bytes!]
+  pool_: Pool_filter
+  pool_contains: String
+  pool_contains_nocase: String
+  pool_ends_with: String
+  pool_ends_with_nocase: String
+  pool_gt: String
+  pool_gte: String
+  pool_in: [String!]
+  pool_lt: String
+  pool_lte: String
+  pool_not: String
+  pool_not_contains: String
+  pool_not_contains_nocase: String
+  pool_not_ends_with: String
+  pool_not_ends_with_nocase: String
+  pool_not_in: [String!]
+  pool_not_starts_with: String
+  pool_not_starts_with_nocase: String
+  pool_starts_with: String
+  pool_starts_with_nocase: String
+  relativeWeightCap: BigDecimal
+  relativeWeightCap_gt: BigDecimal
+  relativeWeightCap_gte: BigDecimal
+  relativeWeightCap_in: [BigDecimal!]
+  relativeWeightCap_lt: BigDecimal
+  relativeWeightCap_lte: BigDecimal
+  relativeWeightCap_not: BigDecimal
+  relativeWeightCap_not_in: [BigDecimal!]
+  shares_: GaugeShare_filter
+  streamer: Bytes
+  streamer_contains: Bytes
+  streamer_in: [Bytes!]
+  streamer_not: Bytes
+  streamer_not_contains: Bytes
+  streamer_not_in: [Bytes!]
+  symbol: String
+  symbol_contains: String
+  symbol_contains_nocase: String
+  symbol_ends_with: String
+  symbol_ends_with_nocase: String
+  symbol_gt: String
+  symbol_gte: String
+  symbol_in: [String!]
+  symbol_lt: String
+  symbol_lte: String
+  symbol_not: String
+  symbol_not_contains: String
+  symbol_not_contains_nocase: String
+  symbol_not_ends_with: String
+  symbol_not_ends_with_nocase: String
+  symbol_not_in: [String!]
+  symbol_not_starts_with: String
+  symbol_not_starts_with_nocase: String
+  symbol_starts_with: String
+  symbol_starts_with_nocase: String
+  tokens_: RewardToken_filter
+  totalSupply: BigDecimal
+  totalSupply_gt: BigDecimal
+  totalSupply_gte: BigDecimal
+  totalSupply_in: [BigDecimal!]
+  totalSupply_lt: BigDecimal
+  totalSupply_lte: BigDecimal
+  totalSupply_not: BigDecimal
+  totalSupply_not_in: [BigDecimal!]
+}
+
+enum LiquidityGauge_orderBy {
+  factory
+  gauge
+  id
+  isKilled
+  isPreferentialGauge
+  pool
+  poolAddress
+  poolId
+  relativeWeightCap
+  shares
+  streamer
+  symbol
+  tokens
+  totalSupply
+}
+
+"""Defines the order direction, either ascending or descending"""
+enum OrderDirection {
+  asc
+  desc
+}
+
+type Pool {
+  """ Address of the pool (lp_token of the gauge) """
+  address: Bytes!
+
+  """ List of gauges created for the pool """
+  gauges(first: Int = 100, orderBy: LiquidityGauge_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: LiquidityGauge_filter): [LiquidityGauge!]
+
+  """ List of the pool's gauges addresses """
+  gaugesList: [Bytes!]!
+
+  """ Address of the pool (lp_token of the gauge) """
+  id: ID!
+
+  """ Pool ID if lp_token is a Balancer pool; null otherwise """
+  poolId: Bytes
+
+  """ Most recent, unkilled gauge in the GaugeController """
+  preferentialGauge: LiquidityGauge
+}
+
+input Pool_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  address: Bytes
+  address_contains: Bytes
+  address_in: [Bytes!]
+  address_not: Bytes
+  address_not_contains: Bytes
+  address_not_in: [Bytes!]
+  gaugesList: [Bytes!]
+  gaugesList_contains: [Bytes!]
+  gaugesList_contains_nocase: [Bytes!]
+  gaugesList_not: [Bytes!]
+  gaugesList_not_contains: [Bytes!]
+  gaugesList_not_contains_nocase: [Bytes!]
+  gauges_: LiquidityGauge_filter
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  poolId: Bytes
+  poolId_contains: Bytes
+  poolId_in: [Bytes!]
+  poolId_not: Bytes
+  poolId_not_contains: Bytes
+  poolId_not_in: [Bytes!]
+  preferentialGauge: String
+  preferentialGauge_: LiquidityGauge_filter
+  preferentialGauge_contains: String
+  preferentialGauge_contains_nocase: String
+  preferentialGauge_ends_with: String
+  preferentialGauge_ends_with_nocase: String
+  preferentialGauge_gt: String
+  preferentialGauge_gte: String
+  preferentialGauge_in: [String!]
+  preferentialGauge_lt: String
+  preferentialGauge_lte: String
+  preferentialGauge_not: String
+  preferentialGauge_not_contains: String
+  preferentialGauge_not_contains_nocase: String
+  preferentialGauge_not_ends_with: String
+  preferentialGauge_not_ends_with_nocase: String
+  preferentialGauge_not_in: [String!]
+  preferentialGauge_not_starts_with: String
+  preferentialGauge_not_starts_with_nocase: String
+  preferentialGauge_starts_with: String
+  preferentialGauge_starts_with_nocase: String
+}
+
+enum Pool_orderBy {
+  address
+  gauges
+  gaugesList
+  id
+  poolId
+  preferentialGauge
+}
+
+type Query {
+  """Access to subgraph metadata"""
+  _meta(block: Block_height): _Meta_
+  gauge(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Gauge
+  gaugeFactories(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: GaugeFactory_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: GaugeFactory_filter
+  ): [GaugeFactory!]!
+  gaugeFactory(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): GaugeFactory
+  gaugeShare(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): GaugeShare
+  gaugeShares(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: GaugeShare_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: GaugeShare_filter
+  ): [GaugeShare!]!
+  gaugeType(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): GaugeType
+  gaugeTypes(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: GaugeType_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: GaugeType_filter
+  ): [GaugeType!]!
+  gaugeVote(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): GaugeVote
+  gaugeVotes(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: GaugeVote_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: GaugeVote_filter
+  ): [GaugeVote!]!
+  gauges(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Gauge_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Gauge_filter
+  ): [Gauge!]!
+  liquidityGauge(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): LiquidityGauge
+  liquidityGauges(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: LiquidityGauge_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: LiquidityGauge_filter
+  ): [LiquidityGauge!]!
+  pool(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Pool
+  pools(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Pool_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Pool_filter
+  ): [Pool!]!
+  rewardToken(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): RewardToken
+  rewardTokens(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: RewardToken_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: RewardToken_filter
+  ): [RewardToken!]!
+  rootGauge(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): RootGauge
+  rootGauges(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: RootGauge_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: RootGauge_filter
+  ): [RootGauge!]!
+  user(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): User
+  users(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: User_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: User_filter
+  ): [User!]!
+  votingEscrow(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): VotingEscrow
+  votingEscrowLock(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): VotingEscrowLock
+  votingEscrowLocks(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: VotingEscrowLock_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: VotingEscrowLock_filter
+  ): [VotingEscrowLock!]!
+  votingEscrows(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: VotingEscrow_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: VotingEscrow_filter
+  ): [VotingEscrow!]!
+}
+
+type RewardToken {
+  """ ERC20 token decimals - zero if call to decimals() reverts """
+  decimals: Int!
+
+  """ Reference to LiquidityGauge entity """
+  gauge: LiquidityGauge!
+
+  """ Equal to: <tokenAddress>-<gaugeAddress> """
+  id: ID!
+
+  """ ERC20 token symbol - empty string if call to symbol() reverts """
+  symbol: String!
+
+  """ Amount of reward tokens that has been deposited into the gauge """
+  totalDeposited: BigDecimal!
+}
+
+input RewardToken_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  decimals: Int
+  decimals_gt: Int
+  decimals_gte: Int
+  decimals_in: [Int!]
+  decimals_lt: Int
+  decimals_lte: Int
+  decimals_not: Int
+  decimals_not_in: [Int!]
+  gauge: String
+  gauge_: LiquidityGauge_filter
+  gauge_contains: String
+  gauge_contains_nocase: String
+  gauge_ends_with: String
+  gauge_ends_with_nocase: String
+  gauge_gt: String
+  gauge_gte: String
+  gauge_in: [String!]
+  gauge_lt: String
+  gauge_lte: String
+  gauge_not: String
+  gauge_not_contains: String
+  gauge_not_contains_nocase: String
+  gauge_not_ends_with: String
+  gauge_not_ends_with_nocase: String
+  gauge_not_in: [String!]
+  gauge_not_starts_with: String
+  gauge_not_starts_with_nocase: String
+  gauge_starts_with: String
+  gauge_starts_with_nocase: String
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  symbol: String
+  symbol_contains: String
+  symbol_contains_nocase: String
+  symbol_ends_with: String
+  symbol_ends_with_nocase: String
+  symbol_gt: String
+  symbol_gte: String
+  symbol_in: [String!]
+  symbol_lt: String
+  symbol_lte: String
+  symbol_not: String
+  symbol_not_contains: String
+  symbol_not_contains_nocase: String
+  symbol_not_ends_with: String
+  symbol_not_ends_with_nocase: String
+  symbol_not_in: [String!]
+  symbol_not_starts_with: String
+  symbol_not_starts_with_nocase: String
+  symbol_starts_with: String
+  symbol_starts_with_nocase: String
+  totalDeposited: BigDecimal
+  totalDeposited_gt: BigDecimal
+  totalDeposited_gte: BigDecimal
+  totalDeposited_in: [BigDecimal!]
+  totalDeposited_lt: BigDecimal
+  totalDeposited_lte: BigDecimal
+  totalDeposited_not: BigDecimal
+  totalDeposited_not_in: [BigDecimal!]
+}
+
+enum RewardToken_orderBy {
+  decimals
+  gauge
+  id
+  symbol
+  totalDeposited
+}
+
+type RootGauge {
+  """ Chain where emissions by this gauge will be bridged to """
+  chain: Chain!
+
+  """ Factory contract address """
+  factory: GaugeFactory!
+
+  """ Reference to Gauge entity - created when LiquidityGauge is added to GaugeController
+  """
+  gauge: Gauge
+
+  """ RootGauge contract address"""
+  id: ID!
+
+  """ Whether Balancer DAO killed the gauge """
+  isKilled: Boolean!
+
+  """ Address where emissions by this gauge will be bridged to """
+  recipient: Bytes!
+
+  """ Relative weight cap of the gauge (0.01 = 1%) - V2 factories only """
+  relativeWeightCap: BigDecimal
+}
+
+input RootGauge_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  chain: Chain
+  chain_in: [Chain!]
+  chain_not: Chain
+  chain_not_in: [Chain!]
+  factory: String
+  factory_: GaugeFactory_filter
+  factory_contains: String
+  factory_contains_nocase: String
+  factory_ends_with: String
+  factory_ends_with_nocase: String
+  factory_gt: String
+  factory_gte: String
+  factory_in: [String!]
+  factory_lt: String
+  factory_lte: String
+  factory_not: String
+  factory_not_contains: String
+  factory_not_contains_nocase: String
+  factory_not_ends_with: String
+  factory_not_ends_with_nocase: String
+  factory_not_in: [String!]
+  factory_not_starts_with: String
+  factory_not_starts_with_nocase: String
+  factory_starts_with: String
+  factory_starts_with_nocase: String
+  gauge: String
+  gauge_: Gauge_filter
+  gauge_contains: String
+  gauge_contains_nocase: String
+  gauge_ends_with: String
+  gauge_ends_with_nocase: String
+  gauge_gt: String
+  gauge_gte: String
+  gauge_in: [String!]
+  gauge_lt: String
+  gauge_lte: String
+  gauge_not: String
+  gauge_not_contains: String
+  gauge_not_contains_nocase: String
+  gauge_not_ends_with: String
+  gauge_not_ends_with_nocase: String
+  gauge_not_in: [String!]
+  gauge_not_starts_with: String
+  gauge_not_starts_with_nocase: String
+  gauge_starts_with: String
+  gauge_starts_with_nocase: String
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  isKilled: Boolean
+  isKilled_in: [Boolean!]
+  isKilled_not: Boolean
+  isKilled_not_in: [Boolean!]
+  recipient: Bytes
+  recipient_contains: Bytes
+  recipient_in: [Bytes!]
+  recipient_not: Bytes
+  recipient_not_contains: Bytes
+  recipient_not_in: [Bytes!]
+  relativeWeightCap: BigDecimal
+  relativeWeightCap_gt: BigDecimal
+  relativeWeightCap_gte: BigDecimal
+  relativeWeightCap_in: [BigDecimal!]
+  relativeWeightCap_lt: BigDecimal
+  relativeWeightCap_lte: BigDecimal
+  relativeWeightCap_not: BigDecimal
+  relativeWeightCap_not_in: [BigDecimal!]
+}
+
+enum RootGauge_orderBy {
+  chain
+  factory
+  gauge
+  id
+  isKilled
+  recipient
+  relativeWeightCap
+}
+
+type Subscription {
+  """Access to subgraph metadata"""
+  _meta(block: Block_height): _Meta_
+  gauge(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Gauge
+  gaugeFactories(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: GaugeFactory_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: GaugeFactory_filter
+  ): [GaugeFactory!]!
+  gaugeFactory(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): GaugeFactory
+  gaugeShare(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): GaugeShare
+  gaugeShares(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: GaugeShare_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: GaugeShare_filter
+  ): [GaugeShare!]!
+  gaugeType(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): GaugeType
+  gaugeTypes(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: GaugeType_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: GaugeType_filter
+  ): [GaugeType!]!
+  gaugeVote(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): GaugeVote
+  gaugeVotes(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: GaugeVote_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: GaugeVote_filter
+  ): [GaugeVote!]!
+  gauges(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Gauge_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Gauge_filter
+  ): [Gauge!]!
+  liquidityGauge(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): LiquidityGauge
+  liquidityGauges(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: LiquidityGauge_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: LiquidityGauge_filter
+  ): [LiquidityGauge!]!
+  pool(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): Pool
+  pools(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: Pool_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: Pool_filter
+  ): [Pool!]!
+  rewardToken(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): RewardToken
+  rewardTokens(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: RewardToken_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: RewardToken_filter
+  ): [RewardToken!]!
+  rootGauge(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): RootGauge
+  rootGauges(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: RootGauge_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: RootGauge_filter
+  ): [RootGauge!]!
+  user(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): User
+  users(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: User_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: User_filter
+  ): [User!]!
+  votingEscrow(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): VotingEscrow
+  votingEscrowLock(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): VotingEscrowLock
+  votingEscrowLocks(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: VotingEscrowLock_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: VotingEscrowLock_filter
+  ): [VotingEscrowLock!]!
+  votingEscrows(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: VotingEscrow_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: VotingEscrow_filter
+  ): [VotingEscrow!]!
+}
+
+type User {
+  """ List of gauge the user has shares """
+  gaugeShares(first: Int = 100, orderBy: GaugeShare_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: GaugeShare_filter): [GaugeShare!]
+
+  """ List of votes on gauges """
+  gaugeVotes(first: Int = 100, orderBy: GaugeVote_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: GaugeVote_filter): [GaugeVote!]
+
+  """ User address """
+  id: ID!
+
+  """ List of locks the user created """
+  votingLocks(first: Int = 100, orderBy: VotingEscrowLock_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: VotingEscrowLock_filter): [VotingEscrowLock!]
+}
+
+input User_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  gaugeShares_: GaugeShare_filter
+  gaugeVotes_: GaugeVote_filter
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  votingLocks_: VotingEscrowLock_filter
+}
+
+enum User_orderBy {
+  gaugeShares
+  gaugeVotes
+  id
+  votingLocks
+}
+
+type VotingEscrow {
+  """ VotingEscrow contract address """
+  id: ID!
+
+  """ List of veBAL locks created """
+  locks(first: Int = 100, orderBy: VotingEscrowLock_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: VotingEscrowLock_filter): [VotingEscrowLock!]
+
+  """ Amount of B-80BAL-20WETH BPT locked """
+  stakedSupply: BigDecimal!
+}
+
+type VotingEscrowLock {
+  """ Equal to: <userAdress>-<votingEscrow> """
+  id: ID!
+
+  """ Amount of B-80BAL-20WETH BPT the user has locked """
+  lockedBalance: BigDecimal!
+
+  """ Timestamp at which B-80BAL-20WETH BPT can be unlocked by user [seconds] 
+  """
+  unlockTime: BigInt
+  updatedAt: Int!
+
+  """ Reference to User entity """
+  user: User!
+
+  """ Reference to VotingEscrow entity """
+  votingEscrowID: VotingEscrow!
+}
+
+input VotingEscrowLock_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  lockedBalance: BigDecimal
+  lockedBalance_gt: BigDecimal
+  lockedBalance_gte: BigDecimal
+  lockedBalance_in: [BigDecimal!]
+  lockedBalance_lt: BigDecimal
+  lockedBalance_lte: BigDecimal
+  lockedBalance_not: BigDecimal
+  lockedBalance_not_in: [BigDecimal!]
+  unlockTime: BigInt
+  unlockTime_gt: BigInt
+  unlockTime_gte: BigInt
+  unlockTime_in: [BigInt!]
+  unlockTime_lt: BigInt
+  unlockTime_lte: BigInt
+  unlockTime_not: BigInt
+  unlockTime_not_in: [BigInt!]
+  updatedAt: Int
+  updatedAt_gt: Int
+  updatedAt_gte: Int
+  updatedAt_in: [Int!]
+  updatedAt_lt: Int
+  updatedAt_lte: Int
+  updatedAt_not: Int
+  updatedAt_not_in: [Int!]
+  user: String
+  user_: User_filter
+  user_contains: String
+  user_contains_nocase: String
+  user_ends_with: String
+  user_ends_with_nocase: String
+  user_gt: String
+  user_gte: String
+  user_in: [String!]
+  user_lt: String
+  user_lte: String
+  user_not: String
+  user_not_contains: String
+  user_not_contains_nocase: String
+  user_not_ends_with: String
+  user_not_ends_with_nocase: String
+  user_not_in: [String!]
+  user_not_starts_with: String
+  user_not_starts_with_nocase: String
+  user_starts_with: String
+  user_starts_with_nocase: String
+  votingEscrowID: String
+  votingEscrowID_: VotingEscrow_filter
+  votingEscrowID_contains: String
+  votingEscrowID_contains_nocase: String
+  votingEscrowID_ends_with: String
+  votingEscrowID_ends_with_nocase: String
+  votingEscrowID_gt: String
+  votingEscrowID_gte: String
+  votingEscrowID_in: [String!]
+  votingEscrowID_lt: String
+  votingEscrowID_lte: String
+  votingEscrowID_not: String
+  votingEscrowID_not_contains: String
+  votingEscrowID_not_contains_nocase: String
+  votingEscrowID_not_ends_with: String
+  votingEscrowID_not_ends_with_nocase: String
+  votingEscrowID_not_in: [String!]
+  votingEscrowID_not_starts_with: String
+  votingEscrowID_not_starts_with_nocase: String
+  votingEscrowID_starts_with: String
+  votingEscrowID_starts_with_nocase: String
+}
+
+enum VotingEscrowLock_orderBy {
+  id
+  lockedBalance
+  unlockTime
+  updatedAt
+  user
+  votingEscrowID
+}
+
+input VotingEscrow_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  locks_: VotingEscrowLock_filter
+  stakedSupply: BigDecimal
+  stakedSupply_gt: BigDecimal
+  stakedSupply_gte: BigDecimal
+  stakedSupply_in: [BigDecimal!]
+  stakedSupply_lt: BigDecimal
+  stakedSupply_lte: BigDecimal
+  stakedSupply_not: BigDecimal
+  stakedSupply_not_in: [BigDecimal!]
+}
+
+enum VotingEscrow_orderBy {
+  id
+  locks
+  stakedSupply
+}
+
+type _Block_ {
+  """The hash of the block"""
+  hash: Bytes
+
+  """The block number"""
+  number: Int!
+
+  """Integer representation of the timestamp stored in blocks for the chain"""
+  timestamp: Int
+}
+
+"""The type for the top-level _meta field"""
+type _Meta_ {
+  """
+  Information about a specific subgraph block. The hash of the block
+  will be null if the _meta field has a block constraint that asks for
+  a block number. It will be filled if the _meta field has no block constraint
+  and therefore asks for the latest  block
+  
+  """
+  block: _Block_!
+
+  """The deployment ID"""
+  deployment: String!
+
+  """If `true`, the subgraph encountered indexing errors at some past block"""
+  hasIndexingErrors: Boolean!
+}
+
+enum _SubgraphErrorPolicy_ {
+  """Data will be returned even if the subgraph has indexing errors"""
+  allow
+
+  """
+  If the subgraph has indexing errors, data will be omitted. The default.
+  """
+  deny
+}

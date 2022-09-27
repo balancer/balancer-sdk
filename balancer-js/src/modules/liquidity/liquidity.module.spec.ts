@@ -1,14 +1,17 @@
-import { StaticPoolRepository } from '../data';
+import { PoolsStaticRepository } from '../data';
 import { Pool } from '@/types';
 import { expect } from 'chai';
 import { Liquidity } from './liquidity.module';
 import pools from '@/test/fixtures/liquidityPools.json';
-import tokenPrices from '@/test/fixtures/liquidityTokenPrices.json';
+import tokens from '@/test/fixtures/liquidityTokens.json';
 import { StaticTokenPriceProvider } from '../data';
 import { formatFixed, parseFixed } from '@ethersproject/bignumber';
+import { tokensToTokenPrices } from '@/lib/utils';
+
+const tokenPrices = tokensToTokenPrices(tokens);
 
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
-const poolProvider = new StaticPoolRepository(pools as Pool[]);
+const poolProvider = new PoolsStaticRepository(pools as Pool[]);
 
 let liquidityProvider: Liquidity;
 
@@ -30,28 +33,28 @@ describe('Liquidity Module', () => {
       const liquidity = await liquidityProvider.getLiquidity(
         findPool('0xa6f548df93de924d73be7d25dc02554c6bd66db5')
       );
-      expect(liquidity).to.be.eq('640000.0');
+      expect(liquidity).to.be.eq('640000');
     });
 
     it('Correct calculates liquidity of a 60/40 pool', async () => {
       const liquidity = await liquidityProvider.getLiquidity(
         findPool('0xc6a5032dc4bf638e15b4a66bc718ba7ba474ff73')
       );
-      expect(liquidity).to.be.eq('10000.0');
+      expect(liquidity).to.be.eq('10000');
     });
 
     it('Correctly calculates value of a 25/25/25/25 pool which is slightly imbalanced', async () => {
       const liquidity = await liquidityProvider.getLiquidity(
         findPool('0xd8833594420db3d6589c1098dbdd073f52419dba')
       );
-      expect(liquidity).to.be.eq('127080.0');
+      expect(liquidity).to.be.eq('127080');
     });
 
     it('Should return 0 liquidity with no errors when all prices are undefined', async () => {
       const liquidity = await liquidityProvider.getLiquidity(
         findPool('0x062f38735aac32320db5e2dbbeb07968351d7c72')
       );
-      expect(liquidity).to.be.eq('0.0');
+      expect(liquidity).to.be.eq('0');
     });
 
     it('Should approximate liquidity when some prices are unknown', async () => {
@@ -66,6 +69,18 @@ describe('Liquidity Module', () => {
         .mul(parseFixed(wethPrice, 0))
         .mul('2');
       expect(liquidity).to.be.eq(formatFixed(expectedLiquidity, 18));
+    });
+
+    it('Should work with this Vita pool', async () => {
+      const pool = findPool('0xbaeec99c90e3420ec6c1e7a769d2a856d2898e4d');
+      const liquidity = await liquidityProvider.getLiquidity(pool);
+      expect(liquidity).to.be.eq('666366.860307633662004');
+    });
+
+    it('Should work with this NFT/Gaming index pool', async () => {
+      const pool = findPool('0x344e8f99a55da2ba6b4b5158df2143374e400df2');
+      const liquidity = await liquidityProvider.getLiquidity(pool);
+      expect(liquidity).to.be.eq('116.303077211035488');
     });
   });
 
@@ -90,7 +105,7 @@ describe('Liquidity Module', () => {
       const liquidity = await liquidityProvider.getLiquidity(
         findPool('0x32296969ef14eb0c6d29669c550d4a0449130230')
       );
-      expect(liquidity).to.be.eq('154558160.0');
+      expect(liquidity).to.be.eq('154558160');
     });
   });
 

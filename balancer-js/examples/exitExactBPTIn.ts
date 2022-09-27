@@ -5,7 +5,7 @@ import {
   BalancerErrorCode,
   BalancerSDK,
   Network,
-  PoolModel,
+  PoolWithMethods,
 } from '../src/index';
 import { parseFixed } from '@ethersproject/bignumber';
 import { forkSetup, getBalances } from '../src/test/lib/utils';
@@ -40,7 +40,7 @@ async function exitExactBPTIn() {
   const balancer = new BalancerSDK(sdkConfig);
 
   // Use SDK to find pool info
-  const pool: PoolModel | undefined = await balancer.poolsProvider.find(poolId);
+  const pool: PoolWithMethods | undefined = await balancer.pools.find(poolId);
   if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
   // Sets up local fork granting signer initial balances and token approvals

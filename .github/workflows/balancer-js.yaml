@@ -20,9 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 18
       - name: Cache
         uses: actions/cache@v2
         id: cache
@@ -40,9 +40,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 18
       - name: Cache
         uses: actions/cache@v2
         id: cache
@@ -62,9 +62,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 18
       - name: Cache
         uses: actions/cache@v2
         id: cache
@@ -79,7 +79,7 @@ jobs:
       - name: Compile
         run: yarn build
       - name: Run node in background for integration tests
-        run: npx hardhat node --hostname 127.0.0.1 &
+        run: npx hardhat node --hostname 127.0.0.1 --fork ${{ secrets.ALCHEMY_URL }} &
       - name: Test
         run: yarn test
 

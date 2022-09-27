@@ -51,6 +51,7 @@
     "totalWeight": "1",
     "tokens": [
       {
+        "symbol": "DAI",
         "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
         "priceRate": "1",
         "balance": "4000",
@@ -58,6 +59,7 @@
         "weight": "0.4"
       },
       {
+        "symbol": "WETH",
         "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
         "priceRate": "1",
         "balance": "3",
@@ -522,5 +524,201 @@
     ],
     "id": "0x996616bde0cb4974e571f17d31c844da2bd177f8000100000000000000000018",
     "swapFee": "0.01"
+  },
+  {
+    "holdersCount": "5",
+    "lowerTarget": null,
+    "swapEnabled": true,
+    "name": "Balancer 50 VITA 50 WETH",
+    "id": "0xbaeec99c90e3420ec6c1e7a769d2a856d2898e4d00020000000000000000008a",
+    "totalSwapVolume": "2894704.530037270938008629720776634",
+    "totalShares": "13131.715529062384181831",
+    "tokensList": [
+      "0x81f8f0bb1cb2a06649e51913a151f0e7ef6fa321",
+      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    ],
+    "mainIndex": 0,
+    "symbol": "B-50VITA-50WETH",
+    "wrappedIndex": 0,
+    "snapshots": [
+      {
+        "swapFees": "28947.04530037270938008629720776634",
+        "timestamp": 1660521600
+      },
+      {
+        "swapFees": "28928.07248262964911030900211200051",
+        "timestamp": 1660348800
+      }
+    ],
+    "poolType": "Weighted",
+    "address": "0xbaeec99c90e3420ec6c1e7a769d2a856d2898e4d",
+    "createTime": 1631291082,
+    "lastUpdate": 1660547742027,
+    "totalWeight": "1",
+    "swapsCount": "419",
+    "totalSwapFee": "28947.04530037270938008629720776634",
+    "chainId": 1,
+    "totalLiquidity": "634448.98518992614430606016",
+    "graphData": { "totalLiquidity": "640698.368476791206945358004321879" },
+    "swapFee": "0.01",
+    "upperTarget": null,
+    "tokens": [
+      {
+        "symbol": "VITA",
+        "address": "0x81f8f0bb1cb2a06649e51913a151f0e7ef6fa321",
+        "priceRate": "1",
+        "balance": "278964.206419329154042175",
+        "decimals": 18,
+        "name": "VitaDAO Token",
+        "weight": "0.5",
+        "id": "0xbaeec99c90e3420ec6c1e7a769d2a856d2898e4d00020000000000000000008a-0x81f8f0bb1cb2a06649e51913a151f0e7ef6fa321",
+        "managedBalance": "0"
+      },
+      {
+        "symbol": "WETH",
+        "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "priceRate": "1",
+        "balance": "166.591715076908415501",
+        "decimals": 18,
+        "name": "Wrapped Ether",
+        "weight": "0.5",
+        "id": "0xbaeec99c90e3420ec6c1e7a769d2a856d2898e4d00020000000000000000008a-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "managedBalance": "0"
+      }
+    ]
+  },
+  {
+    "holdersCount": "3",
+    "lowerTarget": null,
+    "swapEnabled": true,
+    "name": "NFT/Gaming Index",
+    "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079",
+    "totalSwapVolume": "535332.2784457539488546921754750037",
+    "totalShares": "8.137638729432030372",
+    "tokensList": [
+      "0x0ec9f76202a7061eb9b3a7d6b59d36215a7e37da",
+      "0x18aaa7115705e8be94bffebde57af9bfc265b998",
+      "0x25f8087ead173b73d6e8b84329989a8eea16cf73",
+      "0x3845badade8e6dff049820680d1f14bd3903a5d0",
+      "0x87d73e916d7057945c9bcd8cdd94e42a6f47f776",
+      "0xb6ca7399b4f9ca56fc27cbff44f4d2e4eef1fc81",
+      "0xbb0e17ef65f82ab018d8edd776e8dd940327b28b",
+      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    ],
+    "mainIndex": 0,
+    "symbol": "NFTG",
+    "wrappedIndex": 0,
+    "snapshots": [
+      {
+        "swapFees": "5353.322784457539488546921754750037",
+        "timestamp": 1659484800
+      },
+      {
+        "swapFees": "5353.253430365446478494999759539674",
+        "timestamp": 1658880000
+      }
+    ],
+    "poolType": "Weighted",
+    "address": "0x344e8f99a55da2ba6b4b5158df2143374e400df2",
+    "createTime": 1627482189,
+    "lastUpdate": 1660547742028,
+    "totalWeight": "1",
+    "swapsCount": "882",
+    "totalSwapFee": "5353.322784457539488546921754750037",
+    "chainId": 1,
+    "totalLiquidity": "60.450842422483721371046222",
+    "graphData": { "totalLiquidity": "107.0540296058752735129733507284743" },
+    "swapFee": "0.01",
+    "upperTarget": null,
+    "tokens": [
+      {
+        "symbol": "BPT",
+        "address": "0x0ec9f76202a7061eb9b3a7d6b59d36215a7e37da",
+        "priceRate": "1",
+        "balance": "9.339431454424532673",
+        "decimals": 18,
+        "name": "BlackPool Token",
+        "weight": "0.125",
+        "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0x0ec9f76202a7061eb9b3a7d6b59d36215a7e37da",
+        "managedBalance": "0"
+      },
+      {
+        "symbol": "AUDIO",
+        "address": "0x18aaa7115705e8be94bffebde57af9bfc265b998",
+        "priceRate": "1",
+        "balance": "11.579054239992159476",
+        "decimals": 18,
+        "name": "Audius",
+        "weight": "0.125",
+        "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0x18aaa7115705e8be94bffebde57af9bfc265b998",
+        "managedBalance": "0"
+      },
+      {
+        "symbol": "YGG",
+        "address": "0x25f8087ead173b73d6e8b84329989a8eea16cf73",
+        "priceRate": "1",
+        "balance": "4.945778411706075443",
+        "decimals": 18,
+        "name": "Yield Guild Games Token",
+        "weight": "0.125",
+        "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0x25f8087ead173b73d6e8b84329989a8eea16cf73",
+        "managedBalance": "0"
+      },
+      {
+        "symbol": "SAND",
+        "address": "0x3845badade8e6dff049820680d1f14bd3903a5d0",
+        "priceRate": "1",
+        "balance": "8.57243620802115272",
+        "decimals": 18,
+        "name": "SAND",
+        "weight": "0.125",
+        "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0x3845badade8e6dff049820680d1f14bd3903a5d0",
+        "managedBalance": "0"
+      },
+      {
+        "symbol": "NFTX",
+        "address": "0x87d73e916d7057945c9bcd8cdd94e42a6f47f776",
+        "priceRate": "1",
+        "balance": "0.123976658398697496",
+        "decimals": 18,
+        "name": "NFTX",
+        "weight": "0.125",
+        "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0x87d73e916d7057945c9bcd8cdd94e42a6f47f776",
+        "managedBalance": "0"
+      },
+      {
+        "symbol": "MUSE",
+        "address": "0xb6ca7399b4f9ca56fc27cbff44f4d2e4eef1fc81",
+        "priceRate": "1",
+        "balance": "0.854224382331130788",
+        "decimals": 18,
+        "name": "Muse",
+        "weight": "0.125",
+        "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0xb6ca7399b4f9ca56fc27cbff44f4d2e4eef1fc81",
+        "managedBalance": "0"
+      },
+      {
+        "symbol": "AXS",
+        "address": "0xbb0e17ef65f82ab018d8edd776e8dd940327b28b",
+        "priceRate": "1",
+        "balance": "0.441388331959998161",
+        "decimals": 18,
+        "name": "Axie Infinity Shard",
+        "weight": "0.125",
+        "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0xbb0e17ef65f82ab018d8edd776e8dd940327b28b",
+        "managedBalance": "0"
+      },
+      {
+        "symbol": "WETH",
+        "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "priceRate": "1",
+        "balance": "0.007268942325689718",
+        "decimals": 18,
+        "name": "Wrapped Ether",
+        "weight": "0.125",
+        "id": "0x344e8f99a55da2ba6b4b5158df2143374e400df2000100000000000000000079-0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "managedBalance": "0"
+      }
+    ]
   }
 ]

@@ -1,13 +1,11 @@
-import { BigNumber, formatFixed } from '@ethersproject/bignumber';
-import { parseFixed } from '@/lib/utils/math';
-import { Pool, PoolToken } from '@/types';
-import { Pools } from '@/modules/pools/pools.module';
-import { PoolRepository } from '../data';
+import { Findable, Pool, PoolToken } from '@/types';
+import { PoolAttribute } from '../data';
 import { TokenPriceProvider } from '../data';
-import { Zero } from '@ethersproject/constants';
+import { PoolTypeConcerns } from '../pools/pool-type-concerns';
+import { BigNumber } from '@ethersproject/bignumber';
+import { formatFixed, parseFixed } from '@/lib/utils/math';
 
-const SCALING_FACTOR = 36;
-const TOKEN_WEIGHT_SCALING_FACTOR = 18;
+const SCALE = 18;
 
 export interface PoolBPTValue {
   address: string;
@@ -16,7 +14,7 @@ export interface PoolBPTValue {
 
 export class Liquidity {
   constructor(
-    private pools: PoolRepository,
+    private pools: Findable<Pool, PoolAttribute>,
     private tokenPrices: TokenPriceProvider
   ) {}
 
@@ -27,35 +25,31 @@ export class Liquidity {
     });
 
     // For all tokens that are pools, recurse into them and fetch their liquidity
-    const subPoolLiquidity: (PoolBPTValue | undefined)[] = await Promise.all(
+    const subPoolLiquidity = await Promise.all(
       parsedTokens.map(async (token) => {
         const pool = await this.pools.findBy('address', token.address);
         if (!pool) return;
 
-        const liquidity = await this.getLiquidity(pool);
-        const scaledLiquidity = parseFixed(liquidity, SCALING_FACTOR * 2);
-        const totalBPT = parseFixed(pool.totalShares, SCALING_FACTOR);
-        const bptValue = scaledLiquidity.div(totalBPT);
-
-        const bptInParentPool = parseFixed(token.balance, SCALING_FACTOR);
-        const liquidityInParentPool = formatFixed(
-          bptValue.mul(bptInParentPool),
-          SCALING_FACTOR
-        ).replace(/\.[0-9]+/, ''); // strip trailing decimals, we don't need them as we're already scaled up by 1e36
+        const liquidity = parseFixed(await this.getLiquidity(pool), SCALE);
+        const totalBPT = parseFixed(pool.totalShares, SCALE);
+        const bptInParentPool = parseFixed(token.balance, SCALE);
+        const liquidityInParentPool = liquidity
+          .mul(bptInParentPool)
+          .div(totalBPT);
 
         return {
           address: pool.address,
-          liquidity: liquidityInParentPool,
+          liquidity: liquidityInParentPool.toString(),
         };
       })
     );
 
     const totalSubPoolLiquidity = subPoolLiquidity.reduce(
       (totalLiquidity, subPool) => {
-        if (!subPool) return Zero;
+        if (!subPool) return BigNumber.from(0);
         return totalLiquidity.add(subPool.liquidity);
       },
-      Zero
+      BigNumber.from(0)
     );
 
     const nonPoolTokens = parsedTokens.filter((token) => {
@@ -71,25 +65,20 @@ export class Liquidity {
           priceRate: token.priceRate,
           price: tokenPrice,
           balance: token.balance,
-          weight: token.weight
-            ? parseFixed(token.weight, TOKEN_WEIGHT_SCALING_FACTOR).toString()
-            : '0',
+          weight: token.weight,
         };
         return poolToken;
       })
     );
 
-    const tokenLiquidity = Pools.from(pool.poolType).liquidity.calcTotal(
-      tokenBalances
-    );
+    const tokenLiquidity = PoolTypeConcerns.from(
+      pool.poolType
+    ).liquidity.calcTotal(tokenBalances);
 
-    const totalLiquidity = formatFixed(
-      BigNumber.from(totalSubPoolLiquidity).add(
-        parseFixed(tokenLiquidity, SCALING_FACTOR)
-      ),
-      SCALING_FACTOR
-    );
+    const tl = parseFixed(tokenLiquidity, SCALE);
 
-    return totalLiquidity;
+    const totalLiquidity = totalSubPoolLiquidity.add(tl);
+
+    return formatFixed(totalLiquidity, SCALE);
   }
 }

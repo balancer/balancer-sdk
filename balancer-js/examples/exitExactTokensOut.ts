@@ -5,7 +5,7 @@ import {
   BalancerErrorCode,
   BalancerSDK,
   Network,
-  PoolModel,
+  PoolWithMethods,
 } from '../src/index';
 import { forkSetup, getBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
@@ -40,7 +40,7 @@ async function exitExactTokensOut() {
   const balancer = new BalancerSDK(sdkConfig);
 
   // Use SDK to find pool info
-  const pool: PoolModel | undefined = await balancer.poolsProvider.find(poolId);
+  const pool: PoolWithMethods | undefined = await balancer.pools.find(poolId);
   if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
   const tokensOut = [
@@ -87,7 +87,11 @@ async function exitExactTokensOut() {
   console.log('Balances before exit:                 ', tokenBalancesBefore);
   console.log('Balances after exit:                  ', tokenBalancesAfter);
   console.log('Max BPT input:                        ', [maxBPTIn.toString()]);
-  console.log('Actual BPT input:                     ', [BigNumber.from(tokenBalancesBefore[0]).sub(BigNumber.from(tokenBalancesAfter[0])).toString()]);
+  console.log('Actual BPT input:                     ', [
+    BigNumber.from(tokenBalancesBefore[0])
+      .sub(BigNumber.from(tokenBalancesAfter[0]))
+      .toString(),
+  ]);
 }
 
 // yarn examples:run ./examples/exitExactTokensOut.ts

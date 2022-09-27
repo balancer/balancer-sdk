@@ -1,12 +1,18 @@
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';
-import { AddressZero } from '@ethersproject/constants';
+import { AddressZero, MaxUint256 } from '@ethersproject/constants';
 import { balancerVault } from '@/lib/constants/config';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { keccak256 } from '@ethersproject/solidity';
+import { parseEther } from '@ethersproject/units';
 import { ERC20 } from '@/modules/contracts/ERC20';
-import { PoolsProvider } from '@/modules/pools/provider';
-import { PoolModel, BalancerError, BalancerErrorCode } from '@/.';
+import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
+
+import { Interface } from '@ethersproject/abi';
+const liquidityGaugeAbi = ['function deposit(uint value) payable'];
+const liquidityGauge = new Interface(liquidityGaugeAbi);
+import { Pools as PoolsProvider } from '@/modules/pools';
+import { PoolWithMethods, BalancerError, BalancerErrorCode } from '@/.';
 
 /**
  * Setup local fork with approved token balance for a given account
@@ -24,7 +30,8 @@ export const forkSetup = async (
   slots: number[],
   balances: string[],
   jsonRpcUrl: string,
-  blockNumber?: number
+  blockNumber?: number,
+  isVyperMapping = false
 ): Promise<void> => {
   await signer.provider.send('hardhat_reset', [
     {
@@ -37,7 +44,14 @@ export const forkSetup = async (
 
   for (let i = 0; i < tokens.length; i++) {
     // Set initial account balance for each token that will be used to join pool
-    await setTokenBalance(signer, tokens[i], slots[i], balances[i]);
+    await setTokenBalance(
+      signer,
+      tokens[i],
+      slots[i],
+      balances[i],
+      isVyperMapping
+    );
+
     // Approve appropriate allowances so that vault contract can move tokens
     await approveToken(tokens[i], balances[i], signer);
   }
@@ -55,7 +69,8 @@ export const setTokenBalance = async (
   signer: JsonRpcSigner,
   token: string,
   slot: number,
-  balance: string
+  balance: string,
+  isVyperMapping = false
 ): Promise<void> => {
   const toBytes32 = (bn: BigNumber) => {
     return hexlify(zeroPad(bn.toHexString(), 32));
@@ -69,10 +84,18 @@ export const setTokenBalance = async (
   const signerAddress = await signer.getAddress();
 
   // Get storage slot index
-  const index = keccak256(
-    ['uint256', 'uint256'],
-    [signerAddress, slot] // key, slot
-  );
+  let index;
+  if (isVyperMapping) {
+    index = keccak256(
+      ['uint256', 'uint256'],
+      [slot, signerAddress] // slot, key
+    );
+  } else {
+    index = keccak256(
+      ['uint256', 'uint256'],
+      [signerAddress, slot] // key, slot
+    );
+  }
 
   // Manipulate local balance (needs to be bytes32 string)
   await setStorageAt(
@@ -101,7 +124,7 @@ export const approveToken = async (
 export const setupPool = async (
   provider: PoolsProvider,
   poolId: string
-): Promise<PoolModel> => {
+): Promise<PoolWithMethods> => {
   const pool = await provider.find(poolId);
   if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
   return pool;
@@ -127,4 +150,50 @@ export const getBalances = async (
     }
   }
   return Promise.all(balances);
+};
+
+export const move = async (
+  token: string,
+  from: string,
+  to: string,
+  provider: JsonRpcProvider
+): Promise<BigNumber> => {
+  const holder = await impersonateAccount(from, provider);
+  const balance = await getErc20Balance(token, provider, from);
+  await ERC20(token, provider).connect(holder).transfer(to, balance);
+
+  return balance;
+};
+
+// https://hardhat.org/hardhat-network/docs/guides/forking-other-networks#impersonating-accounts
+// WARNING: don't use hardhat SignerWithAddress to sendTransactions!!
+// It's not working and we didn't have time to figure out why.
+// Use JsonRpcSigner instead
+export const impersonateAccount = async (
+  account: string,
+  provider: JsonRpcProvider
+): Promise<JsonRpcSigner> => {
+  await provider.send('hardhat_impersonateAccount', [account]);
+  await setBalance(account, parseEther('10000'));
+  return provider.getSigner(account);
+};
+
+export const stake = async (
+  signer: JsonRpcSigner,
+  pool: string,
+  gauge: string,
+  balance: BigNumber
+): Promise<void> => {
+  await (
+    await ERC20(pool, signer.provider)
+      .connect(signer)
+      .approve(gauge, MaxUint256)
+  ).wait();
+
+  await (
+    await signer.sendTransaction({
+      to: gauge,
+      data: liquidityGauge.encodeFunctionData('deposit', [balance]),
+    })
+  ).wait();
 };

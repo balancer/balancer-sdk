@@ -1,7 +1,9 @@
-import { Pool } from '@/types';
-import { PoolAttribute, PoolRepository } from './types';
+import { Findable, Pool, Searchable } from '@/types';
+import { PoolAttribute } from './types';
 
-export class StaticPoolRepository implements PoolRepository {
+export class PoolsStaticRepository
+  implements Findable<Pool, PoolAttribute>, Searchable<Pool>
+{
   constructor(private pools: Pool[]) {}
 
   async find(id: string): Promise<Pool | undefined> {
@@ -17,5 +19,13 @@ export class StaticPoolRepository implements PoolRepository {
     return this.pools.find((pool) => {
       return pool[attribute] === value;
     });
+  }
+
+  async all(): Promise<Pool[]> {
+    return this.pools;
+  }
+
+  async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
+    return (await this.all()).filter(filter);
   }
 }

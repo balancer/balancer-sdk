@@ -1,16 +1,7 @@
-import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { WeightedPoolPriceImpact } from '@/modules/pools/pool-types/concerns/weighted/priceImpact.concern';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import { StaticPoolRepository } from '@/modules/data';
-import { PoolsProvider } from '@/modules/pools/provider';
-import { PoolModel, Pool } from '@/types';
-import { Network } from '@/.';
-import { setupPool } from '@/test/lib/utils';
-
-dotenv.config();
-
-const rpcUrl = 'http://127.0.0.1:8545';
+import { Pool } from '@/types';
 
 const priceImpactCalc = new WeightedPoolPriceImpact();
 const wethDaiId =
@@ -18,26 +9,15 @@ const wethDaiId =
 const threeTokensPoolId =
   '0xb39362c3d5ac235fe588b0b83ed7ac87241039cb000100000000000000000195';
 
+const pool = pools_14717479.find(
+  (pool) => pool.id == wethDaiId
+) as unknown as Pool;
+
+const threeTokensPool = pools_14717479.find(
+  (pool) => pool.id == threeTokensPoolId
+) as unknown as Pool;
+
 describe('weighted pool price impact', () => {
-  let pool: PoolModel | undefined;
-  let threeTokensPool: PoolModel | undefined;
-
-  // Setup chain
-  before(async function () {
-    this.timeout(20000);
-    const sdkConfig = {
-      network: Network.MAINNET,
-      rpcUrl,
-    };
-    // Using a static repository to make test consistent over time
-    const poolsProvider = new PoolsProvider(
-      sdkConfig,
-      new StaticPoolRepository(pools_14717479 as Pool[])
-    );
-    pool = await setupPool(poolsProvider, wethDaiId);
-    threeTokensPool = await setupPool(poolsProvider, threeTokensPoolId);
-  });
-
   context('bpt zero price impact', () => {
     it('two token pool', () => {
       const tokenAmounts = [
@@ -46,7 +26,7 @@ describe('weighted pool price impact', () => {
       ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
-        pool as PoolModel,
+        pool,
         tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('2362847643421361281550');
@@ -56,7 +36,7 @@ describe('weighted pool price impact', () => {
         BigInt('125240456379058423162'),
       ];
       const proportionalBptZeroPI = priceImpactCalc.bptZeroPriceImpact(
-        pool as PoolModel,
+        pool,
         proportionalTokenAmounts
       );
       expect(proportionalBptZeroPI.toString()).to.eq('4931900186642428185328');
@@ -69,7 +49,7 @@ describe('weighted pool price impact', () => {
       ];
 
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
-        threeTokensPool as PoolModel,
+        threeTokensPool,
         tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('876361770363362937782');
@@ -80,7 +60,7 @@ describe('weighted pool price impact', () => {
         BigInt('383499316375739080555'),
       ];
       const proportionalBptZeroPI = priceImpactCalc.bptZeroPriceImpact(
-        threeTokensPool as PoolModel,
+        threeTokensPool,
         proportionalTokenAmounts
       );
       expect(proportionalBptZeroPI.toString()).to.eq('279707470176761335097');
@@ -94,7 +74,7 @@ describe('weighted pool price impact', () => {
         '125240456379058423162',
       ];
       const priceImpact = priceImpactCalc.calcPriceImpact(
-        pool as PoolModel,
+        pool,
         proportionalTokenAmounts,
         '4931900186642428185328'
       );
