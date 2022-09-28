@@ -232,7 +232,7 @@ export class Exit {
     // Create actions for each Node and return in multicall array
 
     exitPaths.forEach((exitPath, i) => {
-      exitPath.forEach((node, j) => {
+      exitPath.forEach((node) => {
         // Calls from root node are sent by the user. Otherwise sent by the relayer
         // const isRootNode = j === 0;
         // const sender = isRootNode ? userAddress : this.relayer;
@@ -249,40 +249,28 @@ export class Exit {
 
         switch (node.exitAction) {
           case 'batchSwap':
-            if (node.type.includes('Linear')) {
-              // linear pools should exit by swapping to the mainToken only
-              calls.push(
-                this.createBatchSwap(
-                  node,
-                  exitPath,
-                  i,
-                  minAmountOut,
-                  sender,
-                  recipient
-                )
-              );
-            } else {
-              // other pools (e.g. StablePhantom) should exit by swapping to each child token proportionaly based on its proportionOfParent
-              // TODO: check if this needs to be implemented
-            }
+            calls.push(
+              this.createBatchSwap(
+                node,
+                exitPath,
+                i,
+                minAmountOut,
+                sender,
+                recipient
+              )
+            );
             break;
           case 'exitPool':
-            if (node.type === PoolType.ComposableStable) {
-              // !!! ComposableStables do not have Proportional Exit method !!!
-              calls.push(
-                this.createExitPool(
-                  node,
-                  exitPath,
-                  i,
-                  minAmountOut,
-                  sender,
-                  recipient
-                )
-              );
-            } else {
-              // exit to all tokens in a single exit call
-              // TODO: check if this needs to be implemented
-            }
+            calls.push(
+              this.createExitPool(
+                node,
+                exitPath,
+                i,
+                minAmountOut,
+                sender,
+                recipient
+              )
+            );
             break;
           case 'output':
             if (isPeek) {
@@ -314,9 +302,6 @@ export class Exit {
     sender: string,
     recipient: string
   ): string {
-    // We only need batchSwaps for main/wrapped > linearBpt so shouldn't be more than token > token
-    if (node.children.length !== 1) throw new Error('Unsupported batchswap');
-
     const exitChild = node.children.find((child) =>
       exitPath.map((n) => n.index).includes(child.index)
     ) as Node;

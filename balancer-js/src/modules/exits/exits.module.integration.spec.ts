@@ -163,12 +163,12 @@ const testFlow = async (
     const minOut = BigNumber.from(minAmountsOut[i]);
     return expect(balanceAfter.gte(minOut)).to.be.true;
   });
-  console.log('bpt after', query.tokensOut.toString());
-  console.log('minOut', minAmountsOut.toString());
-  console.log('expectedOut', expectedAmountsOut.toString());
+  // console.log('bpt after', query.tokensOut.toString());
+  // console.log('minOut', minAmountsOut.toString());
+  // console.log('expectedOut', expectedAmountsOut.toString());
 };
 
-describe('generalised join execution', async () => {
+describe('generalised exit execution', async () => {
   // following contexts currently applies to GOERLI only
   /*
   bbamaiweth: ComposableStable, baMai/baWeth
