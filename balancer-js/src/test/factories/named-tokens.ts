@@ -20,4 +20,12 @@ export const namedTokens: Record<string, any> = {
     address: '0xba100000625a3754423978a60c9317c58a424e3D',
     decimals: 18,
   },
+  auraBAL: {
+    address: '0x616e8bfa43f920657b3497dbf40d6b1a02d4608d',
+    decimals: 18,
+  },
+  B80BAL20WETH: {
+    address: '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56',
+    decimals: 18,
+  },
 };

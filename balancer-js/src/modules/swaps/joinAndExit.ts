@@ -8,14 +8,17 @@ import { getPoolAddress } from '@/pool-utils';
 import { Interface } from '@ethersproject/abi';
 
 import { ExitPoolRequest } from '@/types';
+import { FundManagement, SwapType } from './types';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { WeightedPoolEncoder } from '@/pool-weighted';
+import { BigNumber } from 'ethers';
 
 interface Action {
   type: string;
   opRef: OutputReference[];
   swaps: SwapV2[];
   minOut: string;
+  assets: string[];
 }
 
 // mainnet V4 - TODO - Make this part of config
@@ -99,6 +102,7 @@ export function orderActions(
     swaps: [],
     opRef: [],
     minOut: '0',
+    assets,
   };
 
   for (const a of allActions) {
@@ -116,6 +120,7 @@ export function orderActions(
           swaps: [],
           opRef: [],
           minOut: '0',
+          assets,
         };
       }
       orderedActions.push(a);
@@ -176,6 +181,7 @@ export function getActions(
       swaps: [swap],
       opRef,
       minOut,
+      assets,
     });
   }
   return actions;
@@ -256,6 +262,36 @@ function buildJoin(action: Action, user: string): string {
   return callData;
 }
 
+function buildBatchSwap(action: Action, user: string): string {
+  console.log(`!!!!!!!!!!!!!! buildBatchSwap`);
+  // Swap to/from Relayer
+  const funds: FundManagement = {
+    sender: user,
+    recipient: user,
+    fromInternalBalance: false,
+    toInternalBalance: false,
+  };
+
+  const limits = Array(action.assets.length).fill('100000000000000000000000000');
+
+  console.log(action.swaps);
+  console.log(action.assets);
+  console.log(limits);
+
+  const encodedBatchSwap = Relayer.encodeBatchSwap({
+    swapType: SwapType.SwapExactIn, // TODO
+    swaps: action.swaps,
+    assets: action.assets,
+    funds,
+    limits,
+    deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
+    value: '0',
+    outputReferences: action.opRef,
+  });
+
+  return encodedBatchSwap;
+}
+
 /**
  * Uses relayer to approve itself to act in behalf of the user
  *
@@ -295,6 +331,7 @@ export function buildCalls(
   for (const action of orderedActions) {
     if (action.type === 'exit') calls.push(buildExit(action, user));
     if (action.type === 'join') calls.push(buildJoin(action, user));
+    if (action.type === 'batchswap') calls.push(buildBatchSwap(action, user));
   }
 
   const callData = balancerRelayerInterface.encodeFunctionData('multicall', [

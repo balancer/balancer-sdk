@@ -2,12 +2,21 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { parseFixed } from '@ethersproject/bignumber';
-import { AddressZero, MaxUint256 } from '@ethersproject/constants';
+import { MaxUint256 } from '@ethersproject/constants';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
-import { SOR, SwapTypes, TokenPriceService } from '@balancer-labs/sor';
+import {
+  SOR,
+  SubgraphPoolBase,
+  SwapTypes,
+  TokenPriceService,
+} from '@balancer-labs/sor';
 import { BalancerSDK, Network, RelayerAuthorization } from '@/index';
 import { buildCalls, someJoinExit } from './joinAndExit';
-import { BAL_WETH, getForkedPools } from '@/test/lib/mainnetPools';
+import {
+  BAL_WETH,
+  AURA_BAL_STABLE,
+  getForkedPools,
+} from '@/test/lib/mainnetPools';
 import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Contracts } from '../contracts/contracts.module';
@@ -21,9 +30,10 @@ const MAX_GAS_LIMIT = 8e6;
 
 async function setUp(
   networkId: Network,
-  provider: JsonRpcProvider
+  provider: JsonRpcProvider,
+  pools: SubgraphPoolBase[]
 ): Promise<SOR> {
-  const pools = await getForkedPools(provider, [BAL_WETH]);
+  const forkedPools = await getForkedPools(provider, pools);
   class CoingeckoTokenPriceService implements TokenPriceService {
     constructor(private readonly chainId: number) {}
     async getNativeAssetPriceInToken(tokenAddress: string): Promise<string> {
@@ -35,7 +45,7 @@ async function setUp(
     rpcUrl,
     sor: {
       tokenPriceService: new CoingeckoTokenPriceService(networkId),
-      poolDataService: new MockPoolDataService(pools),
+      poolDataService: new MockPoolDataService(forkedPools),
       fetchOnChainBalances: true,
     },
   };
@@ -98,7 +108,7 @@ describe('join and exit integration tests', () => {
         jsonRpcUrl as string,
         15624161
       );
-      sor = await setUp(networkId, provider);
+      sor = await setUp(networkId, provider, [BAL_WETH]);
       await sor.fetchPools();
     });
 
@@ -182,7 +192,7 @@ describe('join and exit integration tests', () => {
         jsonRpcUrl as string,
         15624161
       );
-      sor = await setUp(networkId, provider);
+      sor = await setUp(networkId, provider, [BAL_WETH]);
       await sor.fetchPools();
     });
 
@@ -199,6 +209,90 @@ describe('join and exit integration tests', () => {
       );
       expect(someJoinExit(swapInfo.swaps, swapInfo.tokenAddresses)).to.be.true;
 
+      const signerAddr = await signer.getAddress();
+      const authorisation = await signRelayerApproval(
+        '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
+        signerAddr,
+        signer
+      );
+      const callData = buildCalls(
+        tokenIn,
+        tokenOut,
+        swapInfo,
+        signerAddr,
+        authorisation
+      );
+
+      const [tokenInBalanceBefore, tokenOutBalanceBefore] = await getBalances(
+        [tokenIn, tokenOut],
+        signer,
+        signerAddr
+      );
+      const gasLimit = MAX_GAS_LIMIT;
+      // const tx = await relayerContract.multicall([]);
+      const response = await signer.sendTransaction({
+        to: callData.to,
+        data: callData.data,
+        gasLimit,
+      });
+
+      const receipt = await response.wait();
+      console.log('Gas used', receipt.gasUsed.toString());
+      const [tokenInBalanceAfter, tokenOutBalanceAfter] = await getBalances(
+        [tokenIn, tokenOut],
+        signer,
+        signerAddr
+      );
+      console.log(tokenInBalanceBefore.toString());
+      console.log(tokenOutBalanceBefore.toString());
+      console.log(tokenInBalanceAfter.toString());
+      console.log(tokenOutBalanceAfter.toString());
+      console.log(swapInfo.returnAmount.toString());
+      expect(tokenOutBalanceBefore.toString()).to.eq('0');
+      expect(swapInfo.returnAmount.gt('0')).to.be.true;
+      expect(tokenInBalanceBefore.sub(tokenInBalanceAfter).toString()).to.eq(
+        swapAmount.toString()
+      );
+      expect(tokenOutBalanceAfter.gte(swapInfo.returnAmount));
+    }).timeout(10000000);
+  });
+
+  context('swap > exit', () => {
+    const tokenIn = ADDRESSES[Network.MAINNET].auraBal.address;
+    const tokenOut = ADDRESSES[Network.MAINNET].WETH.address;
+    // Setup chain
+    before(async function () {
+      this.timeout(20000);
+      const networkId = Network.MAINNET;
+      const tokens = [tokenIn];
+      const balances = [parseFixed('100', 18).toString()];
+      const slots = [ADDRESSES[Network.MAINNET].auraBal.slot];
+
+      await forkSetup(
+        signer,
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        15624161
+      );
+      sor = await setUp(networkId, provider, [BAL_WETH, AURA_BAL_STABLE]);
+      await sor.fetchPools();
+    });
+
+    it('should swap then exit', async () => {
+      const swapAmount = parseFixed('7', 18);
+      const swapType = SwapTypes.SwapExactIn;
+      const swapInfo = await sor.getSwaps(
+        tokenIn,
+        tokenOut,
+        swapType,
+        swapAmount,
+        undefined,
+        true
+      );
+      expect(someJoinExit(swapInfo.swaps, swapInfo.tokenAddresses)).to.be.true;
+      console.log(swapInfo.swaps);
       const signerAddr = await signer.getAddress();
       const authorisation = await signRelayerApproval(
         '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
