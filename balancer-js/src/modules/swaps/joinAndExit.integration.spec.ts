@@ -131,7 +131,9 @@ describe('join and exit integration tests', () => {
         signerAddr,
         signer
       );
+      const pools = sor.getPools();
       const callData = buildCalls(
+        pools,
         tokenIn,
         tokenOut,
         swapInfo,
@@ -215,7 +217,9 @@ describe('join and exit integration tests', () => {
         signerAddr,
         signer
       );
+      const pools = sor.getPools();
       const callData = buildCalls(
+        pools,
         tokenIn,
         tokenOut,
         swapInfo,
@@ -299,7 +303,9 @@ describe('join and exit integration tests', () => {
         signerAddr,
         signer
       );
+      const pools = sor.getPools();
       const callData = buildCalls(
+        pools,
         tokenIn,
         tokenOut,
         swapInfo,

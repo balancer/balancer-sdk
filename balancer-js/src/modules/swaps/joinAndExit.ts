@@ -1,4 +1,4 @@
-import { SwapInfo, SwapV2 } from '@balancer-labs/sor';
+import { SubgraphPoolBase, SwapInfo, SwapV2 } from '@balancer-labs/sor';
 import {
   Relayer,
   OutputReference,
@@ -12,6 +12,7 @@ import { FundManagement, SwapType } from './types';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { BigNumber } from 'ethers';
+import { AssetHelpers } from '@/lib/utils';
 
 interface Action {
   type: string;
@@ -20,6 +21,8 @@ interface Action {
   minOut: string;
   assets: string[];
 }
+
+// TODO - Safety check at end to make sure nothing is wrong?
 
 // mainnet V4 - TODO - Make this part of config
 const relayerAddress = '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA';
@@ -196,24 +199,31 @@ export function getActions(
  * @param amount Amount of staBal3 BPT to exit with.
  * @returns Encoded exitPool call. Output references.
  */
-function buildExit(action: Action, user: string): string {
-  // TODO
-  const exitTokenIndex = 1;
+function buildExit(
+  pool: SubgraphPoolBase,
+  action: Action,
+  user: string
+): string {
+  // TODO -
+  const wrappedNativeAsset = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+  const assets = pool.tokensList;
+  const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+  // sort inputs
+  const [sortedTokens] = assetHelpers.sortTokens(assets) as [string[]];
+  const exitToken = action.assets[action.swaps[0].assetOutIndex];
+  const exitTokenIndex = sortedTokens.findIndex(
+    (t) => t.toLowerCase() === exitToken.toLowerCase()
+  );
   const userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(
     action.swaps[0].amount,
     exitTokenIndex
   );
 
-  // TODO -
-  const assets: string[] = [
-    '0xba100000625a3754423978a60c9317c58a424e3d',
-    '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-  ];
   const minAmountsOut = Array(assets.length).fill('0');
   minAmountsOut[exitTokenIndex] = action.minOut;
 
   const callData = Relayer.constructExitCall({
-    assets,
+    assets: sortedTokens,
     minAmountsOut,
     userData,
     toInternalBalance: false, // TODO - check this
@@ -227,14 +237,21 @@ function buildExit(action: Action, user: string): string {
   return callData;
 }
 
-function buildJoin(action: Action, user: string): string {
+function buildJoin(
+  pool: SubgraphPoolBase,
+  action: Action,
+  user: string
+): string {
   // TODO -
-  const assets: string[] = [
-    '0xba100000625a3754423978a60c9317c58a424e3d',
-    '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-  ];
-  // TODO
-  const joinTokenIndex = 1;
+  const wrappedNativeAsset = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+  const assets = pool.tokensList;
+  const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+  // sort inputs
+  const [sortedTokens] = assetHelpers.sortTokens(assets) as [string[]];
+  const joinToken = action.assets[action.swaps[0].assetInIndex];
+  const joinTokenIndex = sortedTokens.findIndex(
+    (t) => t.toLowerCase() === joinToken.toLowerCase()
+  );
   const amountsIn = Array(assets.length).fill('0');
   amountsIn[joinTokenIndex] = action.swaps[0].amount;
 
@@ -243,28 +260,32 @@ function buildJoin(action: Action, user: string): string {
     action.minOut
   );
 
+
+
   const attributes: EncodeJoinPoolInput = {
     poolId: action.swaps[0].poolId,
     sender: user,
     recipient: user,
     kind: 0,
     joinPoolRequest: {
-      assets,
+      assets: sortedTokens,
       maxAmountsIn: amountsIn,
       userData,
       fromInternalBalance: false,
     },
     value: '0',
-    outputReferences: '0', // TODO
+    outputReferences: action.opRef[0] ? action.opRef[0].key.toString() : '0',
   };
 
   const callData = Relayer.constructJoinCall(attributes);
   return callData;
 }
 
-function buildBatchSwap(action: Action, user: string): string {
-  console.log(`!!!!!!!!!!!!!! buildBatchSwap`);
-  // Swap to/from Relayer
+function buildBatchSwap(
+  action: Action,
+  user: string,
+  swapAmount: string
+): string {
   const funds: FundManagement = {
     sender: user,
     recipient: user,
@@ -272,11 +293,15 @@ function buildBatchSwap(action: Action, user: string): string {
     toInternalBalance: false,
   };
 
-  const limits = Array(action.assets.length).fill('100000000000000000000000000');
-
-  console.log(action.swaps);
-  console.log(action.assets);
-  console.log(limits);
+  const tokenInIndex = action.swaps[0].assetInIndex;
+  const tokenOutIndex = action.swaps[action.swaps.length - 1].assetOutIndex;
+  // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
+  const limits = Array(action.assets.length).fill('0');
+  // TODO This won't be correct if swaps at end or middle. Need tokenIn/out?
+  limits[tokenInIndex] = swapAmount;
+  limits[tokenOutIndex] = BigNumber.from(action.minOut).mul(-1).toString();
+  console.log(action.minOut.toString(), 'minOut');
+  console.log(limits.toString());
 
   const encodedBatchSwap = Relayer.encodeBatchSwap({
     swapType: SwapType.SwapExactIn, // TODO
@@ -303,6 +328,7 @@ function buildSetRelayerApproval(authorisation: string): string {
 }
 
 export function buildCalls(
+  pools: SubgraphPoolBase[],
   tokenIn: string,
   tokenOut: string,
   swapInfo: SwapInfo,
@@ -329,9 +355,18 @@ export function buildCalls(
   const calls: string[] = [buildSetRelayerApproval(authorisation)];
 
   for (const action of orderedActions) {
-    if (action.type === 'exit') calls.push(buildExit(action, user));
-    if (action.type === 'join') calls.push(buildJoin(action, user));
-    if (action.type === 'batchswap') calls.push(buildBatchSwap(action, user));
+    if (action.type === 'exit') {
+      const pool = pools.find(p => p.id === action.swaps[0].poolId);
+      if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
+      calls.push(buildExit(pool, action, user));
+    }
+    if (action.type === 'join') {
+      const pool = pools.find(p => p.id === action.swaps[0].poolId);
+      if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
+      calls.push(buildJoin(pool, action, user));
+    }
+    if (action.type === 'batchswap')
+      calls.push(buildBatchSwap(action, user, swapInfo.swapAmount.toString()));
   }
 
   const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
