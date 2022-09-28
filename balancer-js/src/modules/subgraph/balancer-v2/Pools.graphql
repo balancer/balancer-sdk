@@ -163,6 +163,11 @@ fragment SubgraphPoolToken on PoolToken {
     managedBalance
     weight
     priceRate
+    token {
+        pool {
+            poolType
+        }
+    }
 }
 
 query PoolHistoricalLiquidities(
