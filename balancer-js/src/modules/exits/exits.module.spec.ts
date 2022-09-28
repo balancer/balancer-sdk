@@ -19,8 +19,6 @@ const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 
-const slippage = '100';
-
 describe('Generalised Exits', () => {
   let userAddress: string;
   before(async () => {
@@ -274,7 +272,7 @@ describe('Generalised Exits', () => {
         boostedMetaBigInfo.rootPool,
       ];
       // // Create staticPools provider with above pools
-      const poolProvider = new StaticPoolRepository(pools as Pool[]);
+      const poolProvider = new StaticPoolRepository(pools as unknown as Pool[]);
       exitModule = new Exit(poolProvider, 1);
     });
 

@@ -84,7 +84,7 @@ export class Exit {
         .toString()
     );
 
-    // Create calls with 0 expected for each exit amount
+    // Create calls with minimum expected amount out for each exit path
     const query = await this.createCalls(
       exitPaths,
       userAddress,
@@ -156,6 +156,7 @@ export class Exit {
     return orderedNodes;
   }
 
+  // Create one exit path for each output node
   private getExitPaths = (outputNodes: Node[], amountIn: string): Node[][] => {
     const exitPaths = outputNodes.map((outputNode) => {
       const exitPath = [outputNode];
@@ -173,6 +174,9 @@ export class Exit {
       return exitPath;
     });
 
+    /*
+    Amounts in for exit paths should be adjusted after caculated to fix eventual rounding issues
+    */
     // Sum amountIn for each exit path
     const amountsInSum = exitPaths.reduce((accumulator, currentExitPath) => {
       const amountInForCurrentExitPath = currentExitPath[0].index;
@@ -180,7 +184,7 @@ export class Exit {
     }, Zero);
     // Compare total amountIn with sum of calculated amountIn for each exit path
     const amountsInDiff = BigNumber.from(amountIn).sub(amountsInSum);
-    // Add diff to amountIn from last exit path
+    // Add diff to last exit path amountIn
     exitPaths[exitPaths.length - 1][0].index = amountsInDiff
       .add(exitPaths[exitPaths.length - 1][0].index)
       .toString();
@@ -234,7 +238,7 @@ export class Exit {
     exitPaths.forEach((exitPath, i) => {
       exitPath.forEach((node) => {
         // Calls from root node are sent by the user. Otherwise sent by the relayer
-        // const isRootNode = j === 0;
+        // const isRootNode = !node.parent;
         // const sender = isRootNode ? userAddress : this.relayer;
         const sender = userAddress; // FIXME: temporary workaround until we don't figure out why the intended behavior isn't working as expected
         // Always send to user on output calls otherwise send to relayer
@@ -442,7 +446,6 @@ export class Exit {
       userDataTokens.indexOf(tokenOut)
     );
 
-    // TODO: check if it's not necessary to define all outputReferences even for outputs with zero amounts
     const outputReferences = [
       {
         index: sortedTokens
