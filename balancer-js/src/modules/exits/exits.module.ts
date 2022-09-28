@@ -34,15 +34,18 @@ export class Exit {
     poolId: string,
     amountIn: string,
     userAddress: string,
-    signer: JsonRpcSigner,
-    slippage: string,
+    minAmountsOut?: string[],
     authorisation?: string
   ): Promise<{
     to: string;
     callData: string;
     tokensOut: string[];
-    expectedAmountsOut: string[];
-    minAmountsOut: string[];
+    outputIndexes: number[];
+    decodeOutputInfo: (
+      staticCallResult: string,
+      outputIndexes: number[],
+      slippage: string
+    ) => { expectedAmountsOut: string[]; minAmountsOut: string[] };
   }> {
     /*
     Overall exit flow description:
@@ -64,84 +67,48 @@ export class Exit {
     // TODO: check how to sort these tokens and match with expected and min amounts out order
     const tokensOut = [...new Set(outputNodes.map((n) => n.address))];
 
+    // TODO: split minAmountsOut proportionally in case there is more than one exit path the same token out
+
     // Create calls with 0 expected for each exit amount
-    const queryWithoutMin = await this.createCalls(
+    const query = await this.createCalls(
       exitPaths,
       userAddress,
-      undefined,
+      minAmountsOut,
       authorisation
     );
-
-    // Query expected amounts out using peek calls
-    const amountsOutByExitPath = await this.queryAmountsOut(
-      queryWithoutMin.callData,
-      queryWithoutMin.peekIndexes,
-      signer
-    );
-
-    // Apply slippage
-    const minAmountsOutByExitPath = amountsOutByExitPath.map((a) =>
-      subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
-    );
-
-    // Recreate calls with minAmountsOut
-    const queryWithMin = await this.createCalls(
-      exitPaths,
-      userAddress,
-      minAmountsOutByExitPath,
-      authorisation
-    );
-
-    // TODO: aggregate amountsOutByExitPath into expectedAmountsOut
-    const expectedAmountsOut = amountsOutByExitPath;
-    // TODO: aggregate minAmountsOutByExitPath into minAmountsOut
-    const minAmountsOut = minAmountsOutByExitPath;
 
     return {
       to: this.relayer,
-      callData: queryWithMin.callData,
+      callData: query.callData,
       tokensOut,
-      expectedAmountsOut,
-      minAmountsOut,
+      outputIndexes: query.outputIndexes,
+      decodeOutputInfo: (
+        staticCallResult: string,
+        outputIndexes: number[],
+        slippage: string
+      ) => {
+        const multiCallResult = defaultAbiCoder.decode(
+          ['bytes[]'],
+          staticCallResult
+        )[0] as string[];
+
+        const amountsOut = outputIndexes.map((outputIndex) => {
+          const result = defaultAbiCoder.decode(
+            ['uint256'],
+            multiCallResult[outputIndex]
+          );
+
+          return result.toString();
+        });
+        const expectedAmountsOut = amountsOut; // TODO: aggregate amountsOutByExitPath into expectedAmountsOut
+
+        const minAmountsOut = expectedAmountsOut.map((a) =>
+          subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
+        ); // TODO: aggregate minAmountsOutByExitPath into minAmountsOut
+
+        return { expectedAmountsOut, minAmountsOut };
+      },
     };
-  }
-
-  async staticMulticall(
-    signer: JsonRpcSigner,
-    encodedMulticalls: string
-  ): Promise<string[]> {
-    const MAX_GAS_LIMIT = 8e6;
-
-    const staticResult = await signer.call({
-      to: this.relayer,
-      data: encodedMulticalls,
-      gasLimit: MAX_GAS_LIMIT,
-    });
-    // console.log(staticResult);
-
-    return defaultAbiCoder.decode(['bytes[]'], staticResult)[0] as string[];
-  }
-
-  /*
-  Static calls multicall and decodes each output of interest.
-  */
-  async queryAmountsOut(
-    callData: string,
-    peekIndexes: number[],
-    signer: JsonRpcSigner
-  ): Promise<string[]> {
-    const multicallResult = await this.staticMulticall(signer, callData);
-
-    const amountsOut = peekIndexes.map((peekIndexes) => {
-      const result = defaultAbiCoder.decode(
-        ['uint256'],
-        multicallResult[peekIndexes]
-      );
-
-      return result.toString();
-    });
-
-    return amountsOut;
   }
 
   // Get full graph from root pool and return ordered nodes
@@ -202,9 +169,9 @@ export class Exit {
     authorisation?: string
   ): Promise<{
     callData: string;
-    peekIndexes: number[];
+    outputIndexes: number[];
   }> {
-    const { calls, peekIndexes } = this.createActionCalls(
+    const { calls, outputIndexes } = this.createActionCalls(
       cloneDeep(exitPaths),
       userAddress,
       minAmountsOut
@@ -222,7 +189,9 @@ export class Exit {
 
     return {
       callData,
-      peekIndexes: authorisation ? peekIndexes.map((i) => i + 1) : peekIndexes,
+      outputIndexes: authorisation
+        ? outputIndexes.map((i) => i + 1)
+        : outputIndexes,
     };
   }
 
@@ -230,9 +199,9 @@ export class Exit {
     exitPaths: Node[][],
     userAddress: string,
     minAmountsOut?: string[]
-  ): { calls: string[]; peekIndexes: number[] } {
+  ): { calls: string[]; outputIndexes: number[] } {
     const calls: string[] = [];
-    const peekIndexes: number[] = [];
+    const outputIndexes: number[] = [];
     const isPeek = !minAmountsOut;
     // Create actions for each Node and return in multicall array
 
@@ -299,7 +268,7 @@ export class Exit {
                   )
                 )
               );
-              peekIndexes.push(calls.length - 1);
+              outputIndexes.push(calls.length - 1);
             }
             break;
           default:
@@ -308,7 +277,7 @@ export class Exit {
       });
     });
 
-    return { calls, peekIndexes };
+    return { calls, outputIndexes };
   }
 
   private createBatchSwap(

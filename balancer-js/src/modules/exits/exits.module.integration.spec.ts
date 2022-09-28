@@ -101,12 +101,31 @@ const testFlow = async (
   const gasLimit = MAX_GAS_LIMIT;
   const slippage = '10'; // 10 bps = 0.1%
 
+  const staticQuery = await pools.generalisedExit(
+    pool.id,
+    amount,
+    signerAddress,
+    undefined,
+    authorisation
+  );
+
+  const staticCallResult = await signer.call({
+    to: staticQuery.to,
+    data: staticQuery.callData,
+    gasLimit,
+  });
+
+  const { expectedAmountsOut, minAmountsOut } = staticQuery.decodeOutputInfo(
+    staticCallResult,
+    staticQuery.outputIndexes,
+    slippage
+  );
+
   const query = await pools.generalisedExit(
     pool.id,
     amount,
     signerAddress,
-    signer,
-    slippage,
+    minAmountsOut,
     authorisation
   );
 
@@ -131,25 +150,23 @@ const testFlow = async (
     signerAddress
   );
   expect(receipt.status).to.eql(1);
-  query.minAmountsOut.forEach((minAmountOut) => {
+  minAmountsOut.forEach((minAmountOut) => {
     expect(BigNumber.from(minAmountOut).gte('0')).to.be.true;
   });
-  query.expectedAmountsOut.forEach((expectedAmountOut, i) => {
+  expectedAmountsOut.forEach((expectedAmountOut, i) => {
     expect(
-      BigNumber.from(expectedAmountOut).gte(
-        BigNumber.from(query.minAmountsOut[i])
-      )
+      BigNumber.from(expectedAmountOut).gte(BigNumber.from(minAmountsOut[i]))
     ).to.be.true;
   });
   expect(bptBalanceAfter.eq(bptBalanceBefore.sub(amount))).to.be.true;
   tokensOutBalanceBefore.forEach((b) => expect(b.eq(0)).to.be.true);
   tokensOutBalanceAfter.forEach((balanceAfter, i) => {
-    const minOut = BigNumber.from(query.minAmountsOut[i]);
+    const minOut = BigNumber.from(minAmountsOut[i]);
     return expect(balanceAfter.gte(minOut)).to.be.true;
   });
   console.log('bpt after', query.tokensOut.toString());
-  console.log('minOut', query.minAmountsOut.toString());
-  console.log('expectedOut', query.expectedAmountsOut.toString());
+  console.log('minOut', minAmountsOut.toString());
+  console.log('expectedOut', expectedAmountsOut.toString());
 };
 
 describe('generalised join execution', async () => {
