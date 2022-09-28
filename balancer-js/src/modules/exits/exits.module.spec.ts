@@ -75,13 +75,7 @@ describe('Generalised Exits', () => {
       it('should throw when pool doesnt exist', async () => {
         let errorMessage = '';
         try {
-          await exitModule.exitPool(
-            'thisisntapool',
-            '',
-            userAddress,
-            signer,
-            slippage
-          );
+          await exitModule.exitPool('thisisntapool', '', userAddress);
         } catch (error) {
           errorMessage = (error as Error).message;
         }
@@ -93,13 +87,7 @@ describe('Generalised Exits', () => {
         try {
           rootPool.poolType = 'StablePhantom'; // changing type to test error handling
           const inputAmount = '1000000000000000000';
-          await exitModule.exitPool(
-            rootPool.id,
-            inputAmount,
-            userAddress,
-            signer,
-            slippage
-          );
+          await exitModule.exitPool(rootPool.id, inputAmount, userAddress);
         } catch (error) {
           errorMessage = (error as Error).message;
         }
@@ -113,9 +101,7 @@ describe('Generalised Exits', () => {
         const exitPoolInfo = await exitModule.exitPool(
           rootPool.id,
           inputAmount,
-          userAddress,
-          signer,
-          slippage
+          userAddress
         );
         expect(exitPoolInfo.tokensOut.length).to.eql(3);
         // TODO: add more relevant tests
@@ -198,9 +184,7 @@ describe('Generalised Exits', () => {
       const exitPoolInfo = await exitModule.exitPool(
         rootPool.id,
         inputAmount,
-        userAddress,
-        signer,
-        slippage
+        userAddress
       );
       expect(exitPoolInfo.tokensOut.length).to.eql(4);
       // TODO: add more relevant tests
@@ -299,9 +283,7 @@ describe('Generalised Exits', () => {
       const exitPoolInfo = await exitModule.exitPool(
         rootPool.id,
         inputAmount,
-        userAddress,
-        signer,
-        slippage
+        userAddress
       );
       expect(exitPoolInfo.tokensOut.length).to.eql(3);
       // TODO: add more relevant tests

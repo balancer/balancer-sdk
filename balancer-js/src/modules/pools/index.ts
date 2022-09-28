@@ -125,22 +125,24 @@ export class Pools implements Findable<PoolWithMethods> {
     poolId: string,
     amount: string,
     userAddress: string,
-    signer: JsonRpcSigner,
-    slippage: string,
+    minAmountsOut?: string[],
     authorisation?: string
   ): Promise<{
     to: string;
     callData: string;
     tokensOut: string[];
-    expectedAmountsOut: string[];
-    minAmountsOut: string[];
+    outputIndexes: number[];
+    decodeOutputInfo: (
+      staticCallResult: string,
+      outputIndexes: number[],
+      slippage: string
+    ) => { expectedAmountsOut: string[]; minAmountsOut: string[] };
   }> {
     return this.exitService.exitPool(
       poolId,
       amount,
       userAddress,
-      signer,
-      slippage,
+      minAmountsOut,
       authorisation
     );
   }
