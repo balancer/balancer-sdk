@@ -9,7 +9,11 @@ import type {
   TokenAttribute,
   LiquidityGauge,
 } from '@/types';
-import { BaseFeeDistributor, RewardData } from '@/modules/data';
+import {
+  BaseFeeDistributor,
+  ProtocolFeesProvider,
+  RewardData,
+} from '@/modules/data';
 import { ProtocolRevenue } from './protocol-revenue';
 import { Liquidity } from '@/modules/liquidity/liquidity.module';
 import { identity, zipObject, pickBy } from 'lodash';
@@ -54,7 +58,8 @@ export class PoolApr {
     private feeCollector: Findable<number>,
     private yesterdaysPools?: Findable<Pool, PoolAttribute>,
     private liquidityGauges?: Findable<LiquidityGauge>,
-    private feeDistributor?: BaseFeeDistributor
+    private feeDistributor?: BaseFeeDistributor,
+    private protocolFees?: ProtocolFeesProvider
   ) {}
 
   /**
@@ -106,7 +111,17 @@ export class PoolApr {
       const tokenYield = await this.tokenYields.find(token.address);
 
       if (tokenYield) {
-        apr = tokenYield;
+        if (pool.poolType === 'MetaStable') {
+          apr = tokenYield * (1 - (await this.protocolSwapFeePercentage()));
+        } else if (pool.poolType === 'ComposableStable') {
+          // TODO: add if(token.isTokenExemptFromYieldProtocolFee) once supported by subgraph
+          // apr = tokenYield;
+
+          const fees = await this.protocolFeesPercentage();
+          apr = tokenYield * (1 - fees.yieldFee);
+        } else {
+          apr = tokenYield;
+        }
       } else {
         // Handle subpool APRs with recursive call to get the subPool APR
         const subPool = await this.pools.findBy('address', token.address);
@@ -381,6 +396,17 @@ export class PoolApr {
     const fee = await this.feeCollector.find('');
 
     return fee ? fee : 0;
+  }
+
+  private async protocolFeesPercentage() {
+    if (this.protocolFees) {
+      return await this.protocolFees.getFees();
+    }
+
+    return {
+      swapFee: 0,
+      yieldFee: 0,
+    };
   }
 
   private async rewardTokenApr(tokenAddress: string, rewardData: RewardData) {
