@@ -1,6 +1,15 @@
-import { SwapV2 } from '@balancer-labs/sor';
-import { Relayer, OutputReference } from '@/modules/relayer/relayer.module';
+import { SwapInfo, SwapV2 } from '@balancer-labs/sor';
+import {
+  Relayer,
+  OutputReference,
+  EncodeJoinPoolInput,
+} from '@/modules/relayer/relayer.module';
 import { getPoolAddress } from '@/pool-utils';
+import { Interface } from '@ethersproject/abi';
+
+import { ExitPoolRequest } from '@/types';
+import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
+import { WeightedPoolEncoder } from '@/pool-weighted';
 
 interface Action {
   type: string;
@@ -8,6 +17,12 @@ interface Action {
   swaps: SwapV2[];
   minOut: string;
 }
+
+// mainnet V4 - TODO - Make this part of config
+const relayerAddress = '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA';
+// const relayerAddress = '0x886A3Ec7bcC508B8795990B60Fa21f85F9dB7948';
+
+const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 function getOutputRef(key: number, index: number): OutputReference {
   const keyRef = Relayer.toChainedReference(key);
@@ -164,4 +179,130 @@ export function getActions(
     });
   }
   return actions;
+}
+
+/**
+ * Encodes exitPool callData.
+ * Exit staBal3 pool proportionally to underlying stables. Exits to relayer.
+ * Outputreferences are used to store exit amounts for next transaction.
+ *
+ * @param sender Sender address.
+ * @param amount Amount of staBal3 BPT to exit with.
+ * @returns Encoded exitPool call. Output references.
+ */
+function buildExit(action: Action, user: string): string {
+  // TODO
+  const exitTokenIndex = 1;
+  const userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(
+    action.swaps[0].amount,
+    exitTokenIndex
+  );
+
+  // TODO -
+  const assets: string[] = [
+    '0xba100000625a3754423978a60c9317c58a424e3d',
+    '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+  ];
+  const minAmountsOut = Array(assets.length).fill('0');
+  minAmountsOut[exitTokenIndex] = action.minOut;
+
+  const callData = Relayer.constructExitCall({
+    assets,
+    minAmountsOut,
+    userData,
+    toInternalBalance: false, // TODO - check this
+    poolId: action.swaps[0].poolId,
+    poolKind: 0, // This will always be 0 to match supported Relayer types
+    sender: user,
+    recipient: user,
+    outputReferences: action.opRef,
+    exitPoolRequest: {} as ExitPoolRequest,
+  });
+  return callData;
+}
+
+function buildJoin(action: Action, user: string): string {
+  // TODO -
+  const assets: string[] = [
+    '0xba100000625a3754423978a60c9317c58a424e3d',
+    '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+  ];
+  // TODO
+  const joinTokenIndex = 1;
+  const amountsIn = Array(assets.length).fill('0');
+  amountsIn[joinTokenIndex] = action.swaps[0].amount;
+
+  const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
+    amountsIn,
+    action.minOut
+  );
+
+  const attributes: EncodeJoinPoolInput = {
+    poolId: action.swaps[0].poolId,
+    sender: user,
+    recipient: user,
+    kind: 0,
+    joinPoolRequest: {
+      assets,
+      maxAmountsIn: amountsIn,
+      userData,
+      fromInternalBalance: false,
+    },
+    value: '0',
+    outputReferences: '0', // TODO
+  };
+
+  const callData = Relayer.constructJoinCall(attributes);
+  return callData;
+}
+
+/**
+ * Uses relayer to approve itself to act in behalf of the user
+ *
+ * @param authorisation Encoded authorisation call.
+ * @returns relayer approval call
+ */
+function buildSetRelayerApproval(authorisation: string): string {
+  return Relayer.encodeSetRelayerApproval(relayerAddress, true, authorisation);
+}
+
+export function buildCalls(
+  tokenIn: string,
+  tokenOut: string,
+  swapInfo: SwapInfo,
+  user: string,
+  authorisation: string
+): {
+  to: string;
+  data: string;
+} {
+  const actions = getActions(
+    tokenIn,
+    tokenOut,
+    swapInfo.swaps,
+    swapInfo.tokenAddresses,
+    swapInfo.returnAmount.toString()
+  );
+  const orderedActions = orderActions(
+    actions,
+    tokenIn,
+    tokenOut,
+    swapInfo.tokenAddresses
+  );
+  // TODO - Build call for each action
+  const calls: string[] = [buildSetRelayerApproval(authorisation)];
+
+  for (const action of orderedActions) {
+    if (action.type === 'exit') calls.push(buildExit(action, user));
+    if (action.type === 'join') calls.push(buildJoin(action, user));
+  }
+
+  const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
+    calls,
+  ]);
+
+  return {
+    to: relayerAddress,
+    data: callData,
+  };
 }

@@ -13,6 +13,15 @@ export const B_50WBTC_50WETH = factories.subgraphPoolBase.build({
   ],
 });
 
+export const BAL_WETH = factories.subgraphPoolBase.build({
+  id: '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014',
+  address: '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56',
+  tokens: [
+    factories.subgraphToken.transient({ symbol: 'wETH' }).build(),
+    factories.subgraphToken.transient({ symbol: 'BAL' }).build(),
+  ],
+});
+
 export const getForkedPools = async (
   provider: JsonRpcProvider,
   pools: SubgraphPoolBase[] = [B_50WBTC_50WETH]

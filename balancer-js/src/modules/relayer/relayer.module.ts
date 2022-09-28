@@ -11,6 +11,7 @@ import {
   EncodeExitPoolInput,
   ExitAndBatchSwapInput,
   ExitPoolData,
+  EncodeJoinPoolInput,
 } from './types';
 import { TransactionData, ExitPoolRequest, BalancerSdkConfig } from '@/types';
 import {
@@ -112,6 +113,18 @@ export class Relayer {
     ]);
   }
 
+  static encodeJoinPool(params: EncodeJoinPoolInput): string {
+    return relayerLibrary.encodeFunctionData('joinPool', [
+      params.poolId,
+      params.kind,
+      params.sender,
+      params.recipient,
+      params.joinPoolRequest,
+      params.value,
+      params.outputReferences,
+    ]);
+  }
+
   static encodeUnwrapAaveStaticToken(
     params: EncodeUnwrapAaveStaticTokenInput
   ): string {
@@ -166,6 +179,11 @@ export class Relayer {
 
     const exitEncoded = Relayer.encodeExitPool(exitPoolInput);
     return exitEncoded;
+  }
+
+  static constructJoinCall(params: EncodeJoinPoolInput): string {
+    const joinEncoded = Relayer.encodeJoinPool(params);
+    return joinEncoded;
   }
 
   /**

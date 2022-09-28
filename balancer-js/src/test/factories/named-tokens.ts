@@ -16,4 +16,8 @@ export const namedTokens: Record<string, any> = {
     address: '0x3472a5a71965499acd81997a54bba8d852c6e53d',
     decimals: 18,
   },
+  BAL: {
+    address: '0xba100000625a3754423978a60c9317c58a424e3D',
+    decimals: 18,
+  },
 };
