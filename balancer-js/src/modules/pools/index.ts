@@ -131,10 +131,8 @@ export class Pools implements Findable<PoolWithMethods> {
     to: string;
     callData: string;
     tokensOut: string[];
-    outputIndexes: number[];
     decodeOutputInfo: (
       staticCallResult: string,
-      outputIndexes: number[],
       slippage: string
     ) => { expectedAmountsOut: string[]; minAmountsOut: string[] };
   }> {
