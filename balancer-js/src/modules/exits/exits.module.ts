@@ -1,8 +1,8 @@
 import { defaultAbiCoder } from '@ethersproject/abi';
-import { cloneDeep, stubArray } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
-import { BigNumber, formatFixed } from '@ethersproject/bignumber';
-import { MaxInt256, WeiPerEther, Zero, One } from '@ethersproject/constants';
+import { BigNumber } from '@ethersproject/bignumber';
+import { MaxInt256, WeiPerEther, Zero } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
@@ -16,12 +16,13 @@ import { subSlippage } from '@/lib/utils/slippageHelper';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
-import { JsonRpcSigner } from '@ethersproject/providers';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 export class Exit {
-  totalProportions: Record<string, BigNumber> = {};
-  private wrappedNativeAsset;
+  private outputIndexes: number[] = [];
+  private tokensOut: string[] = [];
+  private tokensOutByExitPath: string[] = [];
+  private wrappedNativeAsset: string;
   private relayer: string;
 
   constructor(private pools: PoolRepository, private chainId: number) {
@@ -40,12 +41,13 @@ export class Exit {
     to: string;
     callData: string;
     tokensOut: string[];
-    outputIndexes: number[];
     decodeOutputInfo: (
       staticCallResult: string,
-      outputIndexes: number[],
       slippage: string
-    ) => { expectedAmountsOut: string[]; minAmountsOut: string[] };
+    ) => {
+      expectedAmountsOut: string[];
+      minAmountsOut: string[];
+    };
   }> {
     /*
     Overall exit flow description:
@@ -64,47 +66,71 @@ export class Exit {
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
     const exitPaths = this.getExitPaths(outputNodes, amountIn);
 
-    // TODO: check how to sort these tokens and match with expected and min amounts out order
-    const tokensOut = [...new Set(outputNodes.map((n) => n.address))];
+    this.tokensOutByExitPath = outputNodes.map((n) => n.address);
+    this.tokensOut = [...new Set(this.tokensOutByExitPath)];
 
-    // TODO: split minAmountsOut proportionally in case there is more than one exit path the same token out
+    // Split minAmountsOut proportionally in case there is more than one exit path for the same token out
+    const tokenOutProportions: Record<string, BigNumber> = {};
+    outputNodes.forEach(
+      (node) =>
+        (tokenOutProportions[node.address] = (
+          tokenOutProportions[node.address] ?? Zero
+        ).add(node.proportionOfParent))
+    );
+    const minAmountsOutByExitPath = minAmountsOut?.map((minAmountOut, i) =>
+      BigNumber.from(minAmountOut)
+        .mul(outputNodes[i].proportionOfParent)
+        .div(tokenOutProportions[outputNodes[i].address])
+        .toString()
+    );
 
     // Create calls with 0 expected for each exit amount
     const query = await this.createCalls(
       exitPaths,
       userAddress,
-      minAmountsOut,
+      minAmountsOutByExitPath,
       authorisation
     );
+
+    this.outputIndexes = query.outputIndexes;
 
     return {
       to: this.relayer,
       callData: query.callData,
-      tokensOut,
-      outputIndexes: query.outputIndexes,
-      decodeOutputInfo: (
-        staticCallResult: string,
-        outputIndexes: number[],
-        slippage: string
-      ) => {
+      tokensOut: this.tokensOut,
+      decodeOutputInfo: (staticCallResult: string, slippage: string) => {
+        // Decode each exit path amount out from static call result
         const multiCallResult = defaultAbiCoder.decode(
           ['bytes[]'],
           staticCallResult
         )[0] as string[];
-
-        const amountsOut = outputIndexes.map((outputIndex) => {
+        const amountsOutByExitPath = this.outputIndexes.map((outputIndex) => {
           const result = defaultAbiCoder.decode(
             ['uint256'],
             multiCallResult[outputIndex]
           );
-
           return result.toString();
         });
-        const expectedAmountsOut = amountsOut; // TODO: aggregate amountsOutByExitPath into expectedAmountsOut
 
-        const minAmountsOut = expectedAmountsOut.map((a) =>
-          subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
-        ); // TODO: aggregate minAmountsOutByExitPath into minAmountsOut
+        // Aggregate amountsOutByExitPath into expectedAmountsOut
+        const expectedAmountsOutMap: Record<string, BigNumber> = {};
+        this.tokensOutByExitPath.forEach(
+          (tokenOut, i) =>
+            (expectedAmountsOutMap[tokenOut] = (
+              expectedAmountsOutMap[tokenOut] ?? Zero
+            ).add(amountsOutByExitPath[i]))
+        );
+        const expectedAmountsOut = this.tokensOut.map((tokenOut) =>
+          expectedAmountsOutMap[tokenOut].toString()
+        );
+
+        // Apply slippage tolerance on each expected amount out
+        const minAmountsOut = expectedAmountsOut.map((expectedAmountOut) =>
+          subSlippage(
+            BigNumber.from(expectedAmountOut),
+            BigNumber.from(slippage)
+          ).toString()
+        );
 
         return { expectedAmountsOut, minAmountsOut };
       },

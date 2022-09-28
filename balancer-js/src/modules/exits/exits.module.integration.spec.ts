@@ -117,7 +117,6 @@ const testFlow = async (
 
   const { expectedAmountsOut, minAmountsOut } = staticQuery.decodeOutputInfo(
     staticCallResult,
-    staticQuery.outputIndexes,
     slippage
   );
 
