@@ -12,24 +12,12 @@ import { ExitPoolRequest, PoolType } from '@/types';
 import { PoolRepository } from '../data';
 import { PoolGraph, Node } from '../joins/graph';
 
-import { addSlippage } from '@/lib/utils/slippageHelper';
+import { subSlippage } from '@/lib/utils/slippageHelper';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
 import { JsonRpcSigner } from '@ethersproject/providers';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
-
-interface OutputRefInfo {
-  outputRef: string;
-  callIndex: number;
-}
-
-type OutputRefAmounts = { [outputRef: string]: string };
-
-interface ExitOutputRefAmounts {
-  outputRefAmounts: OutputRefAmounts;
-  leafOutputRefAmounts: OutputRefAmounts;
-}
 
 export class Exit {
   totalProportions: Record<string, BigNumber> = {};
@@ -46,6 +34,8 @@ export class Exit {
     poolId: string,
     amountIn: string,
     userAddress: string,
+    signer: JsonRpcSigner,
+    slippage: string,
     authorisation?: string
   ): Promise<{
     to: string;
@@ -75,26 +65,83 @@ export class Exit {
     const tokensOut = [...new Set(outputNodes.map((n) => n.address))];
 
     // Create calls with 0 expected for each exit amount
-    const calls = await this.createCalls(
+    const queryWithoutMin = await this.createCalls(
       exitPaths,
       userAddress,
       undefined,
       authorisation
     );
 
-    // TODO: calculate expected amounts out using staticCall and peek
-    const expectedAmountsOut: string[] = tokensOut.map(() => '0');
+    // Query expected amounts out using peek calls
+    const amountsOutByExitPath = await this.queryAmountsOut(
+      queryWithoutMin.callData,
+      queryWithoutMin.peekIndexes,
+      signer
+    );
 
-    // TODO: sub slippage
-    const minAmountsOut: string[] = tokensOut.map(() => '0');
+    // Apply slippage
+    const minAmountsOutByExitPath = amountsOutByExitPath.map((a) =>
+      subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
+    );
+
+    // Recreate calls with minAmountsOut
+    const queryWithMin = await this.createCalls(
+      exitPaths,
+      userAddress,
+      minAmountsOutByExitPath,
+      authorisation
+    );
+
+    // TODO: aggregate amountsOutByExitPath into expectedAmountsOut
+    const expectedAmountsOut = amountsOutByExitPath;
+    // TODO: aggregate minAmountsOutByExitPath into minAmountsOut
+    const minAmountsOut = minAmountsOutByExitPath;
 
     return {
       to: this.relayer,
-      callData: calls.callData,
+      callData: queryWithMin.callData,
       tokensOut,
       expectedAmountsOut,
       minAmountsOut,
     };
+  }
+
+  async staticMulticall(
+    signer: JsonRpcSigner,
+    encodedMulticalls: string
+  ): Promise<string[]> {
+    const MAX_GAS_LIMIT = 8e6;
+
+    const staticResult = await signer.call({
+      to: this.relayer,
+      data: encodedMulticalls,
+      gasLimit: MAX_GAS_LIMIT,
+    });
+    // console.log(staticResult);
+
+    return defaultAbiCoder.decode(['bytes[]'], staticResult)[0] as string[];
+  }
+
+  /*
+  Static calls multicall and decodes each output of interest.
+  */
+  async queryAmountsOut(
+    callData: string,
+    peekIndexes: number[],
+    signer: JsonRpcSigner
+  ): Promise<string[]> {
+    const multicallResult = await this.staticMulticall(signer, callData);
+
+    const amountsOut = peekIndexes.map((peekIndexes) => {
+      const result = defaultAbiCoder.decode(
+        ['uint256'],
+        multicallResult[peekIndexes]
+      );
+
+      return result.toString();
+    });
+
+    return amountsOut;
   }
 
   // Get full graph from root pool and return ordered nodes
@@ -151,21 +198,17 @@ export class Exit {
   private async createCalls(
     exitPaths: Node[][],
     userAddress: string,
-    minAmountsOut?: OutputRefAmounts,
+    minAmountsOut?: string[],
     authorisation?: string
   ): Promise<{
-    to: string;
     callData: string;
-    outputRefsInfo: OutputRefInfo[];
+    peekIndexes: number[];
   }> {
-    const calls: string[] = this.createActionCalls(
+    const { calls, peekIndexes } = this.createActionCalls(
       cloneDeep(exitPaths),
       userAddress,
       minAmountsOut
     );
-
-    // TODO: update output info (both intermediary and final)
-    const outputRefsInfo: OutputRefInfo[] = [];
 
     if (authorisation) {
       calls.unshift(
@@ -178,18 +221,19 @@ export class Exit {
     ]);
 
     return {
-      to: this.relayer,
       callData,
-      outputRefsInfo,
+      peekIndexes: authorisation ? peekIndexes.map((i) => i + 1) : peekIndexes,
     };
   }
 
   private createActionCalls(
     exitPaths: Node[][],
     userAddress: string,
-    minAmountsOut?: OutputRefAmounts
-  ): string[] {
+    minAmountsOut?: string[]
+  ): { calls: string[]; peekIndexes: number[] } {
     const calls: string[] = [];
+    const peekIndexes: number[] = [];
+    const isPeek = !minAmountsOut;
     // Create actions for each Node and return in multicall array
 
     exitPaths.forEach((exitPath, i) => {
@@ -199,17 +243,14 @@ export class Exit {
         // const sender = isRootNode ? userAddress : this.relayer;
         const sender = userAddress; // FIXME: temporary workaround until we don't figure out why the intended behavior isn't working as expected
         // Always send to user on output calls otherwise send to relayer
-        // const isOutputNode = node.children.some(
-        //   (child) => child.exitAction === 'output'
-        // );
+        const isLastActionFromExitPath = node.children.some(
+          (child) => child.exitAction === 'output'
+        );
         // const recipient = isOutputNode ? userAddress : this.relayer;
         const recipient = userAddress; // FIXME: temporary workaround until we don't figure out why the intended behavior isn't working as expected
         // Last calls will use minAmountsOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
-        // const minAmountOut =
-        //   isOutputNode && minAmountsOut && minAmountsOut[node.index]
-        //     ? minAmountsOut[node.index]
-        //     : '0';
-        const minAmountOut = '0';
+        const minAmountOut =
+          isLastActionFromExitPath && minAmountsOut ? minAmountsOut[i] : '0';
 
         switch (node.exitAction) {
           case 'batchSwap':
@@ -248,20 +289,33 @@ export class Exit {
               // TODO: check if this needs to be implemented
             }
             break;
+          case 'output':
+            if (isPeek) {
+              calls.push(
+                Relayer.encodePeekChainedReferenceValue(
+                  Relayer.toChainedReference(
+                    this.getOutputRef(i, node.index),
+                    false
+                  )
+                )
+              );
+              peekIndexes.push(calls.length - 1);
+            }
+            break;
           default:
             return;
         }
       });
     });
 
-    return calls;
+    return { calls, peekIndexes };
   }
 
   private createBatchSwap(
     node: Node,
     exitPath: Node[],
     exitPathIndex: number,
-    expectedOut: string,
+    minAmountOut: string,
     sender: string,
     recipient: string
   ): string {
@@ -275,7 +329,7 @@ export class Exit {
     const amountIn = isRootNode
       ? node.index
       : Relayer.toChainedReference(
-          exitPathIndex * 100 + parseInt(node.index)
+          this.getOutputRef(exitPathIndex, node.index)
         ).toString();
 
     const tokenOut = exitChild.address;
@@ -286,7 +340,7 @@ export class Exit {
     // We don't know input amounts if they are part of a chain so set to max input
     // TODO can we be safer?
     const limits: string[] = [
-      BigNumber.from(expectedOut).mul(-1).toString(),
+      BigNumber.from(minAmountOut).mul(-1).toString(),
       MaxInt256.toString(),
     ];
 
@@ -314,7 +368,7 @@ export class Exit {
           .map((a) => a.toLowerCase())
           .indexOf(tokenOut.toLowerCase()),
         key: Relayer.toChainedReference(
-          exitPathIndex * 100 + parseInt(exitChild.index)
+          this.getOutputRef(exitPathIndex, exitChild.index)
         ),
       },
     ];
@@ -329,7 +383,7 @@ export class Exit {
     //     inputToken: ${node.address},
     //     pool: ${node.id},
     //     outputToken: ${exitChild.address},
-    //     outputRef: ${exitPathIndex * 100 + parseInt(exitChild.index)}
+    //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)}
     //   )`
     // );
 
@@ -363,7 +417,7 @@ export class Exit {
     const amountIn = isRootNode
       ? node.index
       : Relayer.toChainedReference(
-          exitPathIndex * 100 + parseInt(node.index)
+          this.getOutputRef(exitPathIndex, node.index)
         ).toString();
 
     const tokensOut: string[] = [];
@@ -415,12 +469,10 @@ export class Exit {
           .map((t) => t.toLowerCase())
           .indexOf(tokenOut.toLowerCase()),
         key: Relayer.toChainedReference(
-          exitPathIndex * 100 + parseInt(exitChild.index)
+          this.getOutputRef(exitPathIndex, exitChild.index)
         ),
       },
     ];
-
-    const tokenOutIndex = sortedTokens.indexOf(tokenOut);
 
     // console.log(
     //   `${node.type} ${node.address} prop: ${formatFixed(
@@ -430,11 +482,11 @@ export class Exit {
     //   ${node.exitAction}(
     //     poolId: ${node.id},
     //     tokensOut: ${sortedTokens},
-    //     tokenOut: ${sortedTokens[tokenOutIndex].toString()},
-    //     amountOut: ${sortedAmounts[tokenOutIndex].toString()},
+    //     tokenOut: ${sortedTokens[sortedTokens.indexOf(tokenOut)].toString()},
+    //     amountOut: ${sortedAmounts[sortedTokens.indexOf(tokenOut)].toString()},
     //     amountIn: ${amountIn},
     //     minAmountOut: ${minAmountOut},
-    //     outputRef: ${exitPathIndex * 100 + parseInt(exitChild.index)}
+    //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)}
     //   )`
     // );
 
@@ -453,4 +505,8 @@ export class Exit {
 
     return call;
   }
+
+  private getOutputRef = (exitPathIndex: number, nodeIndex: string): number => {
+    return exitPathIndex * 100 + parseInt(nodeIndex);
+  };
 }
