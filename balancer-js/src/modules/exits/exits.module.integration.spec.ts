@@ -105,10 +105,10 @@ const testFlow = async (
     pool.id,
     amount,
     signerAddress,
+    signer,
+    slippage,
     authorisation
   );
-  // console.log(query.to);
-  // console.log(query.callData);
 
   const [bptBalanceBefore, ...tokensOutBalanceBefore] = await getBalances(
     [pool.address, ...query.tokensOut],

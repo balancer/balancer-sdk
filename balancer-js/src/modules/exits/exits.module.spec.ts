@@ -12,26 +12,25 @@ import { Pool } from '@/types';
 import { Exit } from './exits.module';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { Network } from '@/lib/constants/network';
-import { formatAddress } from '@/test/lib/utils';
-import { ADDRESSES } from '@/test/lib/constants';
-import { parseFixed } from '@/lib/utils/math';
 import { JsonRpcProvider } from '@ethersproject/providers';
 
-const network = Network.MAINNET;
+const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 
-const slippage = '0';
+const slippage = '100';
 
 describe('Generalised Exits', () => {
+  let userAddress: string;
+  before(async () => {
+    userAddress = await signer.getAddress();
+  });
   context('Boosted', () => {
     let exitModule: Exit;
     let rootPool: SubgraphPoolBase;
-    let userAddress: string;
     let boostedInfo: BoostedInfo;
     beforeEach(() => {
-      userAddress = formatAddress('testAccount');
       // The boostedPool will contain these Linear pools.
       const linearPools = [
         {
@@ -76,7 +75,13 @@ describe('Generalised Exits', () => {
       it('should throw when pool doesnt exist', async () => {
         let errorMessage = '';
         try {
-          await exitModule.exitPool('thisisntapool', '', userAddress);
+          await exitModule.exitPool(
+            'thisisntapool',
+            '',
+            userAddress,
+            signer,
+            slippage
+          );
         } catch (error) {
           errorMessage = (error as Error).message;
         }
@@ -88,7 +93,13 @@ describe('Generalised Exits', () => {
         try {
           rootPool.poolType = 'StablePhantom'; // changing type to test error handling
           const inputAmount = '1000000000000000000';
-          await exitModule.exitPool(rootPool.id, inputAmount, userAddress);
+          await exitModule.exitPool(
+            rootPool.id,
+            inputAmount,
+            userAddress,
+            signer,
+            slippage
+          );
         } catch (error) {
           errorMessage = (error as Error).message;
         }
@@ -102,7 +113,9 @@ describe('Generalised Exits', () => {
         const exitPoolInfo = await exitModule.exitPool(
           rootPool.id,
           inputAmount,
-          userAddress
+          userAddress,
+          signer,
+          slippage
         );
         expect(exitPoolInfo.tokensOut.length).to.eql(3);
         // TODO: add more relevant tests
@@ -113,10 +126,7 @@ describe('Generalised Exits', () => {
   context('boostedMeta', () => {
     let exitModule: Exit;
     let rootPool: SubgraphPoolBase;
-    let userAddress: string;
     before(() => {
-      userAddress = formatAddress('testAccount');
-
       // The boostedMeta will have:
       // - boosted with linearPools[0], linearPools[1], linearPools[2]
       // - a single linearPool, linearPools[3]
@@ -188,7 +198,9 @@ describe('Generalised Exits', () => {
       const exitPoolInfo = await exitModule.exitPool(
         rootPool.id,
         inputAmount,
-        userAddress
+        userAddress,
+        signer,
+        slippage
       );
       expect(exitPoolInfo.tokensOut.length).to.eql(4);
       // TODO: add more relevant tests
@@ -198,10 +210,8 @@ describe('Generalised Exits', () => {
   context('boostedMetaBig, has same leaf tokens', () => {
     let exitModule: Exit;
     let rootPool: SubgraphPoolBase;
-    let userAddress: string;
     let boostedMetaBigInfo: BoostedMetaBigInfo;
     before(() => {
-      userAddress = formatAddress('testAccount');
       const child1LinearPools: LinearParams = {
         pools: [
           {
@@ -289,7 +299,9 @@ describe('Generalised Exits', () => {
       const exitPoolInfo = await exitModule.exitPool(
         rootPool.id,
         inputAmount,
-        userAddress
+        userAddress,
+        signer,
+        slippage
       );
       expect(exitPoolInfo.tokensOut.length).to.eql(3);
       // TODO: add more relevant tests
