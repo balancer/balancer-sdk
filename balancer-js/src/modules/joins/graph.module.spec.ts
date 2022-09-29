@@ -245,12 +245,12 @@ describe('Graph', () => {
         .transient({ pools: [linearPool] })
         .build();
       const poolProvider = new StaticPoolRepository(
-        linearInfo.linearPools as SdkPool[]
+        linearInfo.linearPools as unknown as SdkPool[]
       );
       poolsGraph = new PoolGraph(poolProvider, {
         network: Network.GOERLI,
         rpcUrl: '',
-});
+      });
     });
     context('using wrapped tokens', () => {
       before(async () => {
@@ -350,7 +350,9 @@ describe('Graph', () => {
       boostedPool = boostedPoolInfo.rootPool;
       const pools = [...boostedPoolInfo.linearPools, boostedPool];
       // Create staticPools provider with boosted and linear pools
-      const poolProvider = new StaticPoolRepository(pools as SdkPool[]);
+      const poolProvider = new StaticPoolRepository(
+        pools as unknown as SdkPool[]
+      );
       poolsGraph = new PoolGraph(poolProvider, {
         network: Network.GOERLI,
         rpcUrl: '',
@@ -505,7 +507,9 @@ describe('Graph', () => {
         rootPool,
       ];
       // // Create staticPools provider with above pools
-      const poolProvider = new StaticPoolRepository(pools as SdkPool[]);
+      const poolProvider = new StaticPoolRepository(
+        pools as unknown as SdkPool[]
+      );
       poolsGraph = new PoolGraph(poolProvider, {
         network: Network.GOERLI,
         rpcUrl: '',
@@ -716,7 +720,9 @@ describe('Graph', () => {
         boostedMetaBigInfo.rootPool,
       ];
       // // Create staticPools provider with above pools
-      const poolProvider = new StaticPoolRepository(pools as SdkPool[]);
+      const poolProvider = new StaticPoolRepository(
+        pools as unknown as SdkPool[]
+      );
       poolsGraph = new PoolGraph(poolProvider, {
         network: Network.GOERLI,
         rpcUrl: '',
