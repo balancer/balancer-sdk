@@ -277,15 +277,13 @@ export class Exit {
     exitPaths.forEach((exitPath, i) => {
       exitPath.forEach((node) => {
         // Calls from root node are sent by the user. Otherwise sent by the relayer
-        // const isRootNode = !node.parent;
-        // const sender = isRootNode ? userAddress : this.relayer;
-        const sender = userAddress; // FIXME: temporary workaround until we don't figure out why the intended behavior isn't working as expected
+        const isRootNode = !node.parent;
+        const sender = isRootNode ? userAddress : this.relayer;
         // Always send to user on output calls otherwise send to relayer
         const isLastActionFromExitPath = node.children.some(
           (child) => child.exitAction === 'output'
         );
-        // const recipient = isOutputNode ? userAddress : this.relayer;
-        const recipient = userAddress; // FIXME: temporary workaround until we don't figure out why the intended behavior isn't working as expected
+        const recipient = isLastActionFromExitPath ? userAddress : this.relayer;
         // Last calls will use minAmountsOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
         const minAmountOut =
           isLastActionFromExitPath && minAmountsOut ? minAmountsOut[i] : '0';
@@ -381,8 +379,8 @@ export class Exit {
     const funds: FundManagement = {
       sender,
       recipient,
-      fromInternalBalance: sender === this.relayer,
-      toInternalBalance: recipient === this.relayer,
+      fromInternalBalance: false,
+      toInternalBalance: false,
     };
 
     const outputReferences = [
@@ -522,7 +520,7 @@ export class Exit {
       assets: sortedTokens,
       minAmountsOut: sortedAmounts,
       userData,
-      toInternalBalance: recipient === this.relayer,
+      toInternalBalance: false,
     });
 
     return call;
