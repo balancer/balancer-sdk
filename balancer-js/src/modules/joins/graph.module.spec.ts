@@ -36,7 +36,7 @@ function checkNode(
   expect(node.joinAction).to.eq(expectedJoinAction);
   expect(node.exitAction).to.eq(expectedExitAction);
   expect(node.children.length).to.eq(childLength);
-  expect(node.outputReference).to.eq(expectedOutputReference);
+  expect(node.index).to.eq(expectedOutputReference);
   expect(node.proportionOfParent.toString()).to.eq(
     proportionOfParentWei.toString()
   );
@@ -86,7 +86,7 @@ function checkLinearNode(
       'input',
       'output',
       0,
-      '0',
+      (expectedOutPutReference + 2).toString(),
       linearPools[poolIndex].proportionOfParent
     );
   } else {
@@ -98,7 +98,7 @@ function checkLinearNode(
       'input',
       'output',
       0,
-      '0',
+      (expectedOutPutReference + 1).toString(),
       linearPools[poolIndex].proportionOfParent
     );
   }
