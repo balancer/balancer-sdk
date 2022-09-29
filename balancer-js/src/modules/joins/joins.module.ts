@@ -232,7 +232,7 @@ export class Join {
   3. multiply the input amount of that token by the path spot price to get the "zeroPriceImpact" amount of BPT for that token 
   */
   bptOutZeroPiForInputNode(inputNode: Node): bigint {
-    if (inputNode.outputReference === '0' || inputNode.action !== 'input')
+    if (inputNode.index === '0' || inputNode.joinAction !== 'input')
       return BigInt(0);
     let spProduct = 1;
     let parentNode: Node | undefined = inputNode.parent;
@@ -240,8 +240,8 @@ export class Join {
     // Traverse up graph until we reach root adding each node
     while (parentNode !== undefined) {
       if (
-        parentNode.action === 'batchSwap' ||
-        parentNode.action === 'joinPool'
+        parentNode.joinAction === 'batchSwap' ||
+        parentNode.joinAction === 'joinPool'
       ) {
         const sp = parentNode.spotPrices[childAddress];
         spProduct = spProduct * parseFloat(sp);
@@ -251,10 +251,7 @@ export class Join {
     }
     const spPriceScaled = parseFixed(spProduct.toString(), 18);
     const scalingFactor = _computeScalingFactor(BigInt(inputNode.decimals));
-    const inputAmountScaled = _upscale(
-      BigInt(inputNode.outputReference),
-      scalingFactor
-    );
+    const inputAmountScaled = _upscale(BigInt(inputNode.index), scalingFactor);
     const bptOut = SolidityMaths.mulDownFixed(
       inputAmountScaled,
       spPriceScaled.toBigInt()

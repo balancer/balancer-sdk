@@ -180,7 +180,10 @@ export class Exit {
   async getGraphNodes(poolId: string): Promise<Node[]> {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-    const poolsGraph = new PoolGraph(this.pools);
+    const poolsGraph = new PoolGraph(this.pools, {
+      network: this.chainId,
+      rpcUrl: '',
+    });
 
     // should always exit to main tokens, so wrapMainTokens is always false
     const rootNode = await poolsGraph.buildGraphFromRootPool(poolId, false);
