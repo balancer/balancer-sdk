@@ -243,7 +243,7 @@ export class Join {
         parentNode.joinAction === 'batchSwap' ||
         parentNode.joinAction === 'joinPool'
       ) {
-        const sp = parentNode.spotPrices[childAddress];
+        const sp = parentNode.spotPrices[childAddress.toLowerCase()];
         spProduct = spProduct * parseFloat(sp);
         childAddress = parentNode.address;
       }
