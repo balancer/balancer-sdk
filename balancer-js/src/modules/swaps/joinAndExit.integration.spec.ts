@@ -7,8 +7,8 @@ import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import {
   SOR,
   SubgraphPoolBase,
-  SwapTypes,
   TokenPriceService,
+  SwapTypes,
 } from '@balancer-labs/sor';
 import { BalancerSDK, Network, RelayerAuthorization } from '@/index';
 import { buildCalls, someJoinExit } from './joinAndExit';
@@ -24,9 +24,134 @@ import { forkSetup, getBalances } from '@/test/lib/utils';
 dotenv.config();
 
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
+const networkId = Network.MAINNET;
 const rpcUrl = 'http://127.0.0.1:8545';
-const provider = new JsonRpcProvider(rpcUrl, 1);
-const MAX_GAS_LIMIT = 8e6;
+const provider = new JsonRpcProvider(rpcUrl, networkId);
+const gasLimit = 8e6;
+let sor: SOR;
+
+const { contracts } = new Contracts(networkId, provider);
+
+const signer = provider.getSigner();
+
+async function testFlow(
+  description: string,
+  pools: SubgraphPoolBase[],
+  tokenIn: {
+    address: string;
+    decimals: number;
+    symbol: string;
+    slot: number;
+  },
+  tokenOut: {
+    address: string;
+    decimals: number;
+    symbol: string;
+    slot: number;
+  }
+): Promise<void> {
+  context(`${description}`, () => {
+    // Setup chain
+    before(async function () {
+      this.timeout(20000);
+      const tokens = [tokenIn.address];
+      const balances = [parseFixed('100', 18).toString()];
+      const slots = [tokenIn.slot];
+      await forkSetup(
+        signer,
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        15624161
+      );
+      sor = await setUp(networkId, provider, pools);
+      await sor.fetchPools();
+    });
+
+    it('should exit swap via Relayer', async () => {
+      const swapAmount = parseFixed('7', 18);
+      const swapType = SwapTypes.SwapExactIn;
+      const swapInfo = await sor.getSwaps(
+        tokenIn.address,
+        tokenOut.address,
+        swapType,
+        swapAmount,
+        undefined,
+        true
+      );
+      expect(someJoinExit(swapInfo.swaps, swapInfo.tokenAddresses)).to.be.true;
+
+      const signerAddr = await signer.getAddress();
+      const authorisation = await signRelayerApproval(
+        ADDRESSES[networkId].BatchRelayerV4.address,
+        signerAddr,
+        signer
+      );
+      const pools = sor.getPools();
+      const callData = buildCalls(
+        pools,
+        tokenIn.address,
+        tokenOut.address,
+        swapInfo,
+        signerAddr,
+        authorisation,
+        swapType
+      );
+
+      const [tokenInBalanceBefore, tokenOutBalanceBefore] = await getBalances(
+        [tokenIn.address, tokenOut.address],
+        signer,
+        signerAddr
+      );
+      const response = await signer.sendTransaction({
+        to: callData.to,
+        data: callData.data,
+        gasLimit,
+      });
+
+      const receipt = await response.wait();
+      console.log('Gas used', receipt.gasUsed.toString());
+      const [tokenInBalanceAfter, tokenOutBalanceAfter] = await getBalances(
+        [tokenIn.address, tokenOut.address],
+        signer,
+        signerAddr
+      );
+      console.log(tokenInBalanceBefore.toString());
+      console.log(tokenOutBalanceBefore.toString());
+      console.log(tokenInBalanceAfter.toString());
+      console.log(tokenOutBalanceAfter.toString());
+      console.log(swapInfo.returnAmount.toString());
+      expect(tokenOutBalanceBefore.toString()).to.eq('0');
+      expect(swapInfo.returnAmount.gt('0')).to.be.true;
+      expect(tokenInBalanceBefore.sub(tokenInBalanceAfter).toString()).to.eq(
+        swapAmount.toString()
+      );
+      expect(tokenOutBalanceAfter.gte(swapInfo.returnAmount));
+    }).timeout(10000000);
+  });
+}
+
+describe('join and exit integration tests', async () => {
+  await testFlow(
+    'exit',
+    [BAL_WETH],
+    ADDRESSES[networkId].BAL8020BPT,
+    ADDRESSES[networkId].WETH
+  );
+  await testFlow(
+    'join',
+    [BAL_WETH],
+    ADDRESSES[networkId].WETH,
+    ADDRESSES[networkId].BAL8020BPT
+  );
+  await testFlow(
+    'swap > exit',
+    [BAL_WETH, AURA_BAL_STABLE],
+    ADDRESSES[networkId].auraBal,
+    ADDRESSES[networkId].WETH
+  );
+});
 
 async function setUp(
   networkId: Network,
@@ -52,15 +177,6 @@ async function setUp(
   const balancer = new BalancerSDK(sdkConfig);
   return balancer.sor;
 }
-
-let sor: SOR;
-const bal = ADDRESSES[Network.MAINNET].BAL.address;
-const weth = ADDRESSES[Network.MAINNET].WETH.address;
-const balBpt = '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56';
-
-const { contracts } = new Contracts(Network.MAINNET, provider);
-
-const signer = provider.getSigner();
 
 const signRelayerApproval = async (
   relayerAddress: string,
@@ -88,262 +204,3 @@ const signRelayerApproval = async (
 
   return calldata;
 };
-
-describe('join and exit integration tests', () => {
-  context('exit', () => {
-    const tokenIn = balBpt;
-    const tokenOut = weth;
-    // Setup chain
-    before(async function () {
-      this.timeout(20000);
-      const networkId = Network.MAINNET;
-      const tokens = [tokenIn];
-      const balances = [parseFixed('100', 18).toString()];
-      const slots = [0];
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        15624161
-      );
-      sor = await setUp(networkId, provider, [BAL_WETH]);
-      await sor.fetchPools();
-    });
-
-    it('Exit', async () => {
-      const swapAmount = parseFixed('7', 18);
-      const swapType = SwapTypes.SwapExactIn;
-      const swapInfo = await sor.getSwaps(
-        tokenIn,
-        tokenOut,
-        swapType,
-        swapAmount,
-        undefined,
-        true
-      );
-      expect(someJoinExit(swapInfo.swaps, swapInfo.tokenAddresses)).to.be.true;
-
-      const signerAddr = await signer.getAddress();
-      const authorisation = await signRelayerApproval(
-        '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
-        signerAddr,
-        signer
-      );
-      const pools = sor.getPools();
-      const callData = buildCalls(
-        pools,
-        tokenIn,
-        tokenOut,
-        swapInfo,
-        signerAddr,
-        authorisation
-      );
-
-      const [tokenInBalanceBefore, tokenOutBalanceBefore] = await getBalances(
-        [tokenIn, tokenOut],
-        signer,
-        signerAddr
-      );
-      const gasLimit = MAX_GAS_LIMIT;
-      // const tx = await relayerContract.multicall([]);
-      const response = await signer.sendTransaction({
-        to: callData.to,
-        data: callData.data,
-        gasLimit,
-      });
-
-      const receipt = await response.wait();
-      console.log('Gas used', receipt.gasUsed.toString());
-      const [tokenInBalanceAfter, tokenOutBalanceAfter] = await getBalances(
-        [tokenIn, tokenOut],
-        signer,
-        signerAddr
-      );
-      console.log(tokenInBalanceBefore.toString());
-      console.log(tokenOutBalanceBefore.toString());
-      console.log(tokenInBalanceAfter.toString());
-      console.log(tokenOutBalanceAfter.toString());
-      console.log(swapInfo.returnAmount.toString());
-      expect(tokenOutBalanceBefore.toString()).to.eq('0');
-      expect(swapInfo.returnAmount.gt('0')).to.be.true;
-      expect(tokenInBalanceBefore.sub(tokenInBalanceAfter).toString()).to.eq(
-        swapAmount.toString()
-      );
-      expect(tokenOutBalanceAfter.gte(swapInfo.returnAmount));
-    }).timeout(10000000);
-  });
-
-  context('join', () => {
-    const tokenIn = weth;
-    const tokenOut = balBpt;
-    // Setup chain
-    before(async function () {
-      this.timeout(20000);
-      const networkId = Network.MAINNET;
-      const tokens = [tokenIn];
-      const balances = [parseFixed('100', 18).toString()];
-      const slots = [3];
-
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        15624161
-      );
-      sor = await setUp(networkId, provider, [BAL_WETH]);
-      await sor.fetchPools();
-    });
-
-    it('should join', async () => {
-      const swapAmount = parseFixed('7', 18);
-      const swapType = SwapTypes.SwapExactIn;
-      const swapInfo = await sor.getSwaps(
-        tokenIn,
-        tokenOut,
-        swapType,
-        swapAmount,
-        undefined,
-        true
-      );
-      expect(someJoinExit(swapInfo.swaps, swapInfo.tokenAddresses)).to.be.true;
-
-      const signerAddr = await signer.getAddress();
-      const authorisation = await signRelayerApproval(
-        '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
-        signerAddr,
-        signer
-      );
-      const pools = sor.getPools();
-      const callData = buildCalls(
-        pools,
-        tokenIn,
-        tokenOut,
-        swapInfo,
-        signerAddr,
-        authorisation
-      );
-
-      const [tokenInBalanceBefore, tokenOutBalanceBefore] = await getBalances(
-        [tokenIn, tokenOut],
-        signer,
-        signerAddr
-      );
-      const gasLimit = MAX_GAS_LIMIT;
-      // const tx = await relayerContract.multicall([]);
-      const response = await signer.sendTransaction({
-        to: callData.to,
-        data: callData.data,
-        gasLimit,
-      });
-
-      const receipt = await response.wait();
-      console.log('Gas used', receipt.gasUsed.toString());
-      const [tokenInBalanceAfter, tokenOutBalanceAfter] = await getBalances(
-        [tokenIn, tokenOut],
-        signer,
-        signerAddr
-      );
-      console.log(tokenInBalanceBefore.toString());
-      console.log(tokenOutBalanceBefore.toString());
-      console.log(tokenInBalanceAfter.toString());
-      console.log(tokenOutBalanceAfter.toString());
-      console.log(swapInfo.returnAmount.toString());
-      expect(tokenOutBalanceBefore.toString()).to.eq('0');
-      expect(swapInfo.returnAmount.gt('0')).to.be.true;
-      expect(tokenInBalanceBefore.sub(tokenInBalanceAfter).toString()).to.eq(
-        swapAmount.toString()
-      );
-      expect(tokenOutBalanceAfter.gte(swapInfo.returnAmount));
-    }).timeout(10000000);
-  });
-
-  context('swap > exit', () => {
-    const tokenIn = ADDRESSES[Network.MAINNET].auraBal.address;
-    const tokenOut = ADDRESSES[Network.MAINNET].WETH.address;
-    // Setup chain
-    before(async function () {
-      this.timeout(20000);
-      const networkId = Network.MAINNET;
-      const tokens = [tokenIn];
-      const balances = [parseFixed('100', 18).toString()];
-      const slots = [ADDRESSES[Network.MAINNET].auraBal.slot];
-
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        15624161
-      );
-      sor = await setUp(networkId, provider, [BAL_WETH, AURA_BAL_STABLE]);
-      await sor.fetchPools();
-    });
-
-    it('should swap then exit', async () => {
-      const swapAmount = parseFixed('7', 18);
-      const swapType = SwapTypes.SwapExactIn;
-      const swapInfo = await sor.getSwaps(
-        tokenIn,
-        tokenOut,
-        swapType,
-        swapAmount,
-        undefined,
-        true
-      );
-      expect(someJoinExit(swapInfo.swaps, swapInfo.tokenAddresses)).to.be.true;
-      console.log(swapInfo.swaps);
-      const signerAddr = await signer.getAddress();
-      const authorisation = await signRelayerApproval(
-        '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
-        signerAddr,
-        signer
-      );
-      const pools = sor.getPools();
-      const callData = buildCalls(
-        pools,
-        tokenIn,
-        tokenOut,
-        swapInfo,
-        signerAddr,
-        authorisation
-      );
-
-      const [tokenInBalanceBefore, tokenOutBalanceBefore] = await getBalances(
-        [tokenIn, tokenOut],
-        signer,
-        signerAddr
-      );
-      const gasLimit = MAX_GAS_LIMIT;
-      // const tx = await relayerContract.multicall([]);
-      const response = await signer.sendTransaction({
-        to: callData.to,
-        data: callData.data,
-        gasLimit,
-      });
-
-      const receipt = await response.wait();
-      console.log('Gas used', receipt.gasUsed.toString());
-      const [tokenInBalanceAfter, tokenOutBalanceAfter] = await getBalances(
-        [tokenIn, tokenOut],
-        signer,
-        signerAddr
-      );
-      console.log(tokenInBalanceBefore.toString());
-      console.log(tokenOutBalanceBefore.toString());
-      console.log(tokenInBalanceAfter.toString());
-      console.log(tokenOutBalanceAfter.toString());
-      console.log(swapInfo.returnAmount.toString());
-      expect(tokenOutBalanceBefore.toString()).to.eq('0');
-      expect(swapInfo.returnAmount.gt('0')).to.be.true;
-      expect(tokenInBalanceBefore.sub(tokenInBalanceAfter).toString()).to.eq(
-        swapAmount.toString()
-      );
-      expect(tokenOutBalanceAfter.gte(swapInfo.returnAmount));
-    }).timeout(10000000);
-  });
-});

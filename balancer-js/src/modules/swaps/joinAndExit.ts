@@ -1,4 +1,9 @@
-import { SubgraphPoolBase, SwapInfo, SwapV2 } from '@balancer-labs/sor';
+import {
+  SubgraphPoolBase,
+  SwapInfo,
+  SwapTypes,
+  SwapV2,
+} from '@balancer-labs/sor';
 import {
   Relayer,
   OutputReference,
@@ -27,6 +32,8 @@ interface Action {
 // mainnet V4 - TODO - Make this part of config
 const relayerAddress = '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA';
 // const relayerAddress = '0x886A3Ec7bcC508B8795990B60Fa21f85F9dB7948';
+// TODO -
+const wrappedNativeAsset = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
 
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
@@ -204,8 +211,6 @@ function buildExit(
   action: Action,
   user: string
 ): string {
-  // TODO -
-  const wrappedNativeAsset = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
   const assets = pool.tokensList;
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
   // sort inputs
@@ -242,8 +247,6 @@ function buildJoin(
   action: Action,
   user: string
 ): string {
-  // TODO -
-  const wrappedNativeAsset = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
   const assets = pool.tokensList;
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
   // sort inputs
@@ -259,8 +262,6 @@ function buildJoin(
     amountsIn,
     action.minOut
   );
-
-
 
   const attributes: EncodeJoinPoolInput = {
     poolId: action.swaps[0].poolId,
@@ -284,7 +285,8 @@ function buildJoin(
 function buildBatchSwap(
   action: Action,
   user: string,
-  swapAmount: string
+  swapAmount: string,
+  swapType: SwapTypes
 ): string {
   const funds: FundManagement = {
     sender: user,
@@ -300,11 +302,12 @@ function buildBatchSwap(
   // TODO This won't be correct if swaps at end or middle. Need tokenIn/out?
   limits[tokenInIndex] = swapAmount;
   limits[tokenOutIndex] = BigNumber.from(action.minOut).mul(-1).toString();
-  console.log(action.minOut.toString(), 'minOut');
-  console.log(limits.toString());
 
   const encodedBatchSwap = Relayer.encodeBatchSwap({
-    swapType: SwapType.SwapExactIn, // TODO
+    swapType:
+      swapType === SwapTypes.SwapExactIn
+        ? SwapType.SwapExactIn
+        : SwapType.SwapExactOut,
     swaps: action.swaps,
     assets: action.assets,
     funds,
@@ -333,7 +336,8 @@ export function buildCalls(
   tokenOut: string,
   swapInfo: SwapInfo,
   user: string,
-  authorisation: string
+  authorisation: string,
+  swapType: SwapTypes
 ): {
   to: string;
   data: string;
@@ -351,22 +355,23 @@ export function buildCalls(
     tokenOut,
     swapInfo.tokenAddresses
   );
-  // TODO - Build call for each action
   const calls: string[] = [buildSetRelayerApproval(authorisation)];
 
   for (const action of orderedActions) {
     if (action.type === 'exit') {
-      const pool = pools.find(p => p.id === action.swaps[0].poolId);
+      const pool = pools.find((p) => p.id === action.swaps[0].poolId);
       if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
       calls.push(buildExit(pool, action, user));
     }
     if (action.type === 'join') {
-      const pool = pools.find(p => p.id === action.swaps[0].poolId);
+      const pool = pools.find((p) => p.id === action.swaps[0].poolId);
       if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
       calls.push(buildJoin(pool, action, user));
     }
     if (action.type === 'batchswap')
-      calls.push(buildBatchSwap(action, user, swapInfo.swapAmount.toString()));
+      calls.push(
+        buildBatchSwap(action, user, swapInfo.swapAmount.toString(), swapType)
+      );
   }
 
   const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
