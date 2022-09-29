@@ -115,32 +115,33 @@ export class Pools implements Findable<PoolWithMethods> {
   /**
    * Builds generalised join transaction
    *
-   * @param poolId          Pool id
-   * @param amount         Token amount in EVM scale
-   * @param userAddress     User address
-   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+   * @param poolId        Pool id
+   * @param amount        Token amount in EVM scale
+   * @param signer        JsonRpcSigner that will perform the exit transaction
+   * @param slippage      Slippage tolerance in bps (e.g. 100 bps = 1%)
+   * @param authorisation Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with tokens, min and expected BPT amounts out.
    */
   async generalisedExit(
     poolId: string,
     amount: string,
+    signer: JsonRpcSigner,
     userAddress: string,
-    minAmountsOut?: string[],
+    slippage: string,
     authorisation?: string
   ): Promise<{
     to: string;
     callData: string;
     tokensOut: string[];
-    decodeOutputInfo: (
-      staticCallResult: string,
-      slippage: string
-    ) => { expectedAmountsOut: string[]; minAmountsOut: string[] };
+    expectedAmountsOut: string[];
+    minAmountsOut: string[];
   }> {
     return this.exitService.exitPool(
       poolId,
       amount,
+      signer,
       userAddress,
-      minAmountsOut,
+      slippage,
       authorisation
     );
   }

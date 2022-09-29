@@ -101,42 +101,25 @@ const testFlow = async (
   const gasLimit = MAX_GAS_LIMIT;
   const slippage = '10'; // 10 bps = 0.1%
 
-  const staticQuery = await pools.generalisedExit(
-    pool.id,
-    amount,
-    signerAddress,
-    undefined,
-    authorisation
-  );
-
-  const staticCallResult = await signer.call({
-    to: staticQuery.to,
-    data: staticQuery.callData,
-    gasLimit,
-  });
-
-  const { expectedAmountsOut, minAmountsOut } = staticQuery.decodeOutputInfo(
-    staticCallResult,
-    slippage
-  );
-
-  const query = await pools.generalisedExit(
-    pool.id,
-    amount,
-    signerAddress,
-    minAmountsOut,
-    authorisation
-  );
+  const { to, callData, tokensOut, expectedAmountsOut, minAmountsOut } =
+    await pools.generalisedExit(
+      pool.id,
+      amount,
+      signer,
+      signerAddress,
+      slippage,
+      authorisation
+    );
 
   const [bptBalanceBefore, ...tokensOutBalanceBefore] = await getBalances(
-    [pool.address, ...query.tokensOut],
+    [pool.address, ...tokensOut],
     signer,
     signerAddress
   );
 
   const response = await signer.sendTransaction({
-    to: query.to,
-    data: query.callData,
+    to,
+    data: callData,
     gasLimit,
   });
 
@@ -144,7 +127,7 @@ const testFlow = async (
   console.log('Gas used', receipt.gasUsed.toString());
 
   const [bptBalanceAfter, ...tokensOutBalanceAfter] = await getBalances(
-    [pool.address, ...query.tokensOut],
+    [pool.address, ...tokensOut],
     signer,
     signerAddress
   );

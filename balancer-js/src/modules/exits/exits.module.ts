@@ -16,12 +16,10 @@ import { subSlippage } from '@/lib/utils/slippageHelper';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
+import { JsonRpcSigner } from '@ethersproject/providers';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 export class Exit {
-  private outputIndexes: number[] = [];
-  private tokensOut: string[] = [];
-  private tokensOutByExitPath: string[] = [];
   private wrappedNativeAsset: string;
   private relayer: string;
 
@@ -34,20 +32,16 @@ export class Exit {
   async exitPool(
     poolId: string,
     amountIn: string,
+    signer: JsonRpcSigner,
     userAddress: string,
-    minAmountsOut?: string[],
+    slippage: string,
     authorisation?: string
   ): Promise<{
     to: string;
     callData: string;
     tokensOut: string[];
-    decodeOutputInfo: (
-      staticCallResult: string,
-      slippage: string
-    ) => {
-      expectedAmountsOut: string[];
-      minAmountsOut: string[];
-    };
+    expectedAmountsOut: string[];
+    minAmountsOut: string[];
   }> {
     /*
     Overall exit flow description:
@@ -66,23 +60,24 @@ export class Exit {
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
     const exitPaths = this.getExitPaths(outputNodes, amountIn);
 
-    this.tokensOutByExitPath = outputNodes.map((n) => n.address);
-    this.tokensOut = [...new Set(this.tokensOutByExitPath)];
+    const tokensOutByExitPath = outputNodes.map((n) => n.address.toLowerCase());
+    const tokensOut = [...new Set(tokensOutByExitPath)].sort();
 
-    // Split minAmountsOut proportionally in case there is more than one exit path for the same token out
-    const tokenOutProportions: Record<string, BigNumber> = {};
-    outputNodes.forEach(
-      (node) =>
-        (tokenOutProportions[node.address] = (
-          tokenOutProportions[node.address] ?? Zero
-        ).add(node.proportionOfParent))
+    // Create calls with minimum expected amount out for each exit path
+    const staticCall = await this.createCalls(
+      exitPaths,
+      userAddress,
+      undefined,
+      authorisation
     );
-    const minAmountsOutByExitPath = minAmountsOut?.map((minAmountOut, i) =>
-      BigNumber.from(minAmountOut)
-        .mul(outputNodes[i].proportionOfParent)
-        .div(tokenOutProportions[outputNodes[i].address])
-        .toString()
-    );
+
+    const { expectedAmountsOutByExitPath, minAmountsOutByExitPath } =
+      await this.amountsOutByExitPath(
+        signer,
+        staticCall.callData,
+        staticCall.outputIndexes,
+        slippage
+      );
 
     // Create calls with minimum expected amount out for each exit path
     const query = await this.createCalls(
@@ -92,50 +87,94 @@ export class Exit {
       authorisation
     );
 
-    this.outputIndexes = query.outputIndexes;
+    const { expectedAmountsOut, minAmountsOut } = this.amountsOutByTokenOut(
+      tokensOut,
+      tokensOutByExitPath,
+      expectedAmountsOutByExitPath,
+      slippage
+    );
 
     return {
       to: this.relayer,
       callData: query.callData,
-      tokensOut: this.tokensOut,
-      decodeOutputInfo: (staticCallResult: string, slippage: string) => {
-        // Decode each exit path amount out from static call result
-        const multiCallResult = defaultAbiCoder.decode(
-          ['bytes[]'],
-          staticCallResult
-        )[0] as string[];
-        const amountsOutByExitPath = this.outputIndexes.map((outputIndex) => {
-          const result = defaultAbiCoder.decode(
-            ['uint256'],
-            multiCallResult[outputIndex]
-          );
-          return result.toString();
-        });
-
-        // Aggregate amountsOutByExitPath into expectedAmountsOut
-        const expectedAmountsOutMap: Record<string, BigNumber> = {};
-        this.tokensOutByExitPath.forEach(
-          (tokenOut, i) =>
-            (expectedAmountsOutMap[tokenOut] = (
-              expectedAmountsOutMap[tokenOut] ?? Zero
-            ).add(amountsOutByExitPath[i]))
-        );
-        const expectedAmountsOut = this.tokensOut.map((tokenOut) =>
-          expectedAmountsOutMap[tokenOut].toString()
-        );
-
-        // Apply slippage tolerance on each expected amount out
-        const minAmountsOut = expectedAmountsOut.map((expectedAmountOut) =>
-          subSlippage(
-            BigNumber.from(expectedAmountOut),
-            BigNumber.from(slippage)
-          ).toString()
-        );
-
-        return { expectedAmountsOut, minAmountsOut };
-      },
+      tokensOut,
+      expectedAmountsOut,
+      minAmountsOut,
     };
   }
+
+  // Query amounts out through static call and return decoded result
+  private amountsOutByExitPath = async (
+    signer: JsonRpcSigner,
+    callData: string,
+    outputIndexes: number[],
+    slippage: string
+  ): Promise<{
+    expectedAmountsOutByExitPath: string[];
+    minAmountsOutByExitPath: string[];
+  }> => {
+    const MAX_GAS_LIMIT = 8e6;
+    const staticCallResult = await signer.call({
+      to: this.relayer,
+      data: callData,
+      gasLimit: MAX_GAS_LIMIT,
+    });
+
+    // Decode each exit path amount out from static call result
+    const multiCallResult = defaultAbiCoder.decode(
+      ['bytes[]'],
+      staticCallResult
+    )[0] as string[];
+
+    const expectedAmountsOutByExitPath = outputIndexes.map((outputIndex) => {
+      const result = defaultAbiCoder.decode(
+        ['uint256'],
+        multiCallResult[outputIndex]
+      );
+      return result.toString();
+    });
+
+    // Apply slippage tolerance on expected amount out for each exit path
+    const minAmountsOutByExitPath = expectedAmountsOutByExitPath.map(
+      (expectedAmountOut) =>
+        subSlippage(
+          BigNumber.from(expectedAmountOut),
+          BigNumber.from(slippage)
+        ).toString()
+    );
+
+    return { expectedAmountsOutByExitPath, minAmountsOutByExitPath };
+  };
+
+  // Aggregate amounts out by exit path into amounts out by token out
+  private amountsOutByTokenOut = (
+    tokensOut: string[],
+    tokensOutByExitPath: string[],
+    expectedAmountsOutByExitPath: string[],
+    slippage: string
+  ) => {
+    // Aggregate amountsOutByExitPath into expectedAmountsOut
+    const expectedAmountsOutMap: Record<string, BigNumber> = {};
+    tokensOutByExitPath.forEach(
+      (tokenOut, i) =>
+        (expectedAmountsOutMap[tokenOut] = (
+          expectedAmountsOutMap[tokenOut] ?? Zero
+        ).add(expectedAmountsOutByExitPath[i]))
+    );
+    const expectedAmountsOut = tokensOut.map((tokenOut) =>
+      expectedAmountsOutMap[tokenOut].toString()
+    );
+
+    // Apply slippage tolerance on each expected amount out
+    const minAmountsOut = expectedAmountsOut.map((expectedAmountOut) =>
+      subSlippage(
+        BigNumber.from(expectedAmountOut),
+        BigNumber.from(slippage)
+      ).toString()
+    );
+
+    return { expectedAmountsOut, minAmountsOut };
+  };
 
   // Get full graph from root pool and return ordered nodes
   async getGraphNodes(poolId: string): Promise<Node[]> {
