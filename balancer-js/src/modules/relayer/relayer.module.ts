@@ -32,7 +32,8 @@ export * from './types';
 export class Relayer {
   private readonly swaps: Swaps;
 
-  static CHAINED_REFERENCE_PREFIX = 'ba10';
+  static CHAINED_REFERENCE_TEMP_PREFIX = 'ba10'; // Temporary reference: it is deleted after a read.
+  static CHAINED_REFERENCE_READONLY_PREFIX = 'ba11'; // Read-only reference: it is not deleted after a read.
 
   constructor(swapsOrConfig: Swaps | BalancerSdkConfig) {
     if (swapsOrConfig instanceof Swaps) {
@@ -140,12 +141,22 @@ export class Relayer {
     ]);
   }
 
-  static toChainedReference(key: BigNumberish): BigNumber {
+  static toChainedReference(key: BigNumberish, isTemporary = true): BigNumber {
+    const prefix = isTemporary
+      ? Relayer.CHAINED_REFERENCE_TEMP_PREFIX
+      : Relayer.CHAINED_REFERENCE_READONLY_PREFIX;
     // The full padded prefix is 66 characters long, with 64 hex characters and the 0x prefix.
-    const paddedPrefix = `0x${Relayer.CHAINED_REFERENCE_PREFIX}${'0'.repeat(
-      64 - Relayer.CHAINED_REFERENCE_PREFIX.length
-    )}`;
+    const paddedPrefix = `0x${prefix}${'0'.repeat(64 - prefix.length)}`;
     return BigNumber.from(paddedPrefix).add(key);
+  }
+
+  static fromChainedReference(ref: string, isTemporary = true): BigNumber {
+    const prefix = isTemporary
+      ? Relayer.CHAINED_REFERENCE_TEMP_PREFIX
+      : Relayer.CHAINED_REFERENCE_READONLY_PREFIX;
+    // The full padded prefix is 66 characters long, with 64 hex characters and the 0x prefix.
+    const paddedPrefix = `0x${prefix}${'0'.repeat(64 - prefix.length)}`;
+    return BigNumber.from(ref).sub(BigNumber.from(paddedPrefix));
   }
 
   static constructExitCall(params: ExitPoolData): string {

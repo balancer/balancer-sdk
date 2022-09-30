@@ -296,7 +296,7 @@ function buildJoin(
     outputReferences: action.opRef[0] ? action.opRef[0].key.toString() : '0',
   };
 
-  console.log(attributes);
+  // console.log(attributes);
 
   const callData = Relayer.constructJoinCall(attributes);
   return callData;
@@ -310,12 +310,12 @@ function buildBatchSwap(
   tokenOut: string,
   swapAmount: string,
   pools: SubgraphPoolBase[]
-): string {
-  console.log(`#############`, action.swaps[0].amount);
+): string[] {
   const tokenInIndex = action.swaps[0].assetInIndex;
   const tokenOutIndex = action.swaps[action.swaps.length - 1].assetOutIndex;
   let toInternalBalance = true;
   let fromInternalBalance = true;
+  const calls: string[] = [];
   // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
   const limits = Array(action.assets.length).fill('0');
   if (
@@ -336,12 +336,19 @@ function buildBatchSwap(
     sender = user;
     limits[tokenInIndex] = swapAmount;
   } else if (
-    tokenIn.toLowerCase() === action.assets[tokenInIndex].toLowerCase() ||
     pools.some(
       (p) =>
         p.address.toLowerCase() === action.assets[tokenInIndex].toLowerCase()
     )
   ) {
+    // new pools have automatic infinite vault allowance, but not old ones
+    const key = Relayer.fromChainedReference(action.swaps[0].amount);
+    const readOnlyRef = Relayer.toChainedReference(key, false);
+    const approval = Relayer.encodeApproveVault(
+      action.assets[tokenInIndex],
+      readOnlyRef.toString()
+    );
+    calls.push(approval);
     // If tokenIn is a BPT this needs to be false as we can't join a pool from internal balances
     fromInternalBalance = false;
     sender = relayerAddress;
@@ -358,7 +365,6 @@ function buildBatchSwap(
     toInternalBalance,
   };
 
-  // TODO - If tokenIn is a BPT set approval
   const batchSwapInput: EncodeBatchSwapInput = {
     swapType:
       swapType === SwapTypes.SwapExactIn
@@ -372,11 +378,11 @@ function buildBatchSwap(
     value: '0',
     outputReferences: action.opRef,
   };
-  console.log(batchSwapInput);
+  // console.log(batchSwapInput);
 
   const encodedBatchSwap = Relayer.encodeBatchSwap(batchSwapInput);
-
-  return encodedBatchSwap;
+  calls.push(encodedBatchSwap);
+  return calls;
 }
 
 /**
@@ -430,7 +436,7 @@ export function buildCalls(
     }
     if (action.type === 'batchswap') {
       calls.push(
-        buildBatchSwap(
+        ...buildBatchSwap(
           action,
           user,
           swapType,
