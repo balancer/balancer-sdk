@@ -80,7 +80,6 @@ export class Data implements BalancerDataRepositories {
         networkConfig.urls.gaugesSubgraph,
         networkConfig.addresses.contracts.multicall,
         networkConfig.addresses.contracts.gaugeController || '',
-        networkConfig.chainId,
         provider
       );
     }

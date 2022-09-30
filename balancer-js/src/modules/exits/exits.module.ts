@@ -8,8 +8,8 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { StablePoolEncoder } from '@/pool-stable';
-import { ExitPoolRequest, PoolType } from '@/types';
-import { PoolRepository } from '../data';
+import { ExitPoolRequest, Pool, PoolAttribute, PoolType } from '@/types';
+import { Findable } from '../data/types';
 import { PoolGraph, Node } from '../joins/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
@@ -23,7 +23,10 @@ export class Exit {
   private wrappedNativeAsset: string;
   private relayer: string;
 
-  constructor(private pools: PoolRepository, private chainId: number) {
+  constructor(
+    private pools: Findable<Pool, PoolAttribute>,
+    private chainId: number
+  ) {
     const { tokens, contracts } = networkAddresses(chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
     this.relayer = contracts.relayer as string;

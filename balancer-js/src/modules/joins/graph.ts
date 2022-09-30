@@ -1,9 +1,9 @@
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { parsePoolInfo } from '@/lib/utils';
-import { BalancerSdkConfig, Pool, PoolType } from '@/types';
+import { BalancerSdkConfig, Pool, PoolAttribute, PoolType } from '@/types';
 import { Zero, WeiPerEther } from '@ethersproject/constants';
 import { BigNumber } from '@ethersproject/bignumber';
-import { PoolRepository } from '../data';
+import { Findable } from '../data/types';
 import { Pools } from '../pools';
 import { getNetworkConfig } from '../sdk.helpers';
 
@@ -64,7 +64,7 @@ exitActions.set(PoolType.ComposableStable, 'exitPool');
 
 export class PoolGraph {
   constructor(
-    private pools: PoolRepository,
+    private pools: Findable<Pool, PoolAttribute>,
     private sdkConfig: BalancerSdkConfig
   ) {}
 
