@@ -2083,6 +2083,13 @@ declare type PoolsQuery = {
             managedBalance: string;
             weight?: string | null;
             priceRate: string;
+            token: {
+                __typename?: 'Token';
+                pool?: {
+                    __typename?: 'Pool';
+                    poolType?: string | null;
+                } | null;
+            };
         }> | null;
     }>;
 };
@@ -2140,6 +2147,13 @@ declare type AllPoolsQuery = {
             managedBalance: string;
             weight?: string | null;
             priceRate: string;
+            token: {
+                __typename?: 'Token';
+                pool?: {
+                    __typename?: 'Pool';
+                    poolType?: string | null;
+                } | null;
+            };
         }> | null;
     }>;
     pool1000: Array<{
@@ -2186,6 +2200,13 @@ declare type AllPoolsQuery = {
             managedBalance: string;
             weight?: string | null;
             priceRate: string;
+            token: {
+                __typename?: 'Token';
+                pool?: {
+                    __typename?: 'Pool';
+                    poolType?: string | null;
+                } | null;
+            };
         }> | null;
     }>;
     pool2000: Array<{
@@ -2232,6 +2253,13 @@ declare type AllPoolsQuery = {
             managedBalance: string;
             weight?: string | null;
             priceRate: string;
+            token: {
+                __typename?: 'Token';
+                pool?: {
+                    __typename?: 'Pool';
+                    poolType?: string | null;
+                } | null;
+            };
         }> | null;
     }>;
 };
@@ -2285,6 +2313,13 @@ declare type PoolQuery = {
             managedBalance: string;
             weight?: string | null;
             priceRate: string;
+            token: {
+                __typename?: 'Token';
+                pool?: {
+                    __typename?: 'Pool';
+                    poolType?: string | null;
+                } | null;
+            };
         }> | null;
     } | null;
 };
@@ -2331,6 +2366,13 @@ declare type PoolsWithoutLinearQuery = {
             managedBalance: string;
             weight?: string | null;
             priceRate: string;
+            token: {
+                __typename?: 'Token';
+                pool?: {
+                    __typename?: 'Pool';
+                    poolType?: string | null;
+                } | null;
+            };
         }> | null;
     }>;
 };
@@ -2373,6 +2415,13 @@ declare type PoolWithoutLinearQuery = {
             managedBalance: string;
             weight?: string | null;
             priceRate: string;
+            token: {
+                __typename?: 'Token';
+                pool?: {
+                    __typename?: 'Pool';
+                    poolType?: string | null;
+                } | null;
+            };
         }> | null;
     } | null;
 };
@@ -3018,6 +3067,7 @@ declare class PoolsSubgraphRepository implements Findable<Pool, PoolAttribute>, 
     all(): Promise<Pool[]>;
     where(filter: (pool: Pool) => boolean): Promise<Pool[]>;
     private mapType;
+    private mapToken;
 }
 
 declare class StaticTokenProvider implements Findable<Token, TokenAttribute> {
