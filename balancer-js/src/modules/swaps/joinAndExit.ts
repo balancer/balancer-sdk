@@ -8,6 +8,8 @@ import {
   Relayer,
   OutputReference,
   EncodeJoinPoolInput,
+  EncodeBatchSwapInput,
+  ExitPoolData,
 } from '@/modules/relayer/relayer.module';
 import { getPoolAddress } from '@/pool-utils';
 import { Interface } from '@ethersproject/abi';
@@ -18,6 +20,7 @@ import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { BigNumber } from 'ethers';
 import { AssetHelpers } from '@/lib/utils';
+import { MaxInt256 } from '@ethersproject/constants';
 
 interface Action {
   type: string;
@@ -209,7 +212,8 @@ export function getActions(
 function buildExit(
   pool: SubgraphPoolBase,
   action: Action,
-  user: string
+  user: string,
+  tokenOut: string
 ): string {
   const assets = pool.tokensList;
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
@@ -223,29 +227,35 @@ function buildExit(
     action.swaps[0].amount,
     exitTokenIndex
   );
+  let toInternalBalance = true;
+  if (exitToken.toLowerCase() === tokenOut.toLowerCase())
+    toInternalBalance = false;
 
   const minAmountsOut = Array(assets.length).fill('0');
   minAmountsOut[exitTokenIndex] = action.minOut;
 
-  const callData = Relayer.constructExitCall({
+  const exitParams: ExitPoolData = {
     assets: sortedTokens,
     minAmountsOut,
     userData,
-    toInternalBalance: false, // TODO - check this
+    toInternalBalance,
     poolId: action.swaps[0].poolId,
     poolKind: 0, // This will always be 0 to match supported Relayer types
     sender: user,
-    recipient: user,
+    recipient: toInternalBalance ? relayerAddress : user,
     outputReferences: action.opRef,
     exitPoolRequest: {} as ExitPoolRequest,
-  });
+  };
+  const callData = Relayer.constructExitCall(exitParams);
   return callData;
 }
 
 function buildJoin(
   pool: SubgraphPoolBase,
   action: Action,
-  user: string
+  user: string,
+  tokenIn: string,
+  tokenOut: string
 ): string {
   const assets = pool.tokensList;
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
@@ -263,20 +273,30 @@ function buildJoin(
     action.minOut
   );
 
+  let fromInternalBalance = true;
+  if (joinToken.toLowerCase() === tokenIn.toLowerCase())
+    fromInternalBalance = false;
+
+  let toInternalBalance = true;
+  if (pool.address.toLowerCase() === tokenOut.toLowerCase())
+    toInternalBalance = false;
+
   const attributes: EncodeJoinPoolInput = {
     poolId: action.swaps[0].poolId,
-    sender: user,
-    recipient: user,
+    sender: fromInternalBalance ? relayerAddress : user,
+    recipient: toInternalBalance ? relayerAddress : user,
     kind: 0,
     joinPoolRequest: {
       assets: sortedTokens,
       maxAmountsIn: amountsIn,
       userData,
-      fromInternalBalance: false,
+      fromInternalBalance,
     },
     value: '0',
     outputReferences: action.opRef[0] ? action.opRef[0].key.toString() : '0',
   };
+
+  console.log(attributes);
 
   const callData = Relayer.constructJoinCall(attributes);
   return callData;
@@ -285,25 +305,61 @@ function buildJoin(
 function buildBatchSwap(
   action: Action,
   user: string,
+  swapType: SwapTypes,
+  tokenIn: string,
+  tokenOut: string,
   swapAmount: string,
-  swapType: SwapTypes
+  pools: SubgraphPoolBase[]
 ): string {
-  const funds: FundManagement = {
-    sender: user,
-    recipient: user,
-    fromInternalBalance: false,
-    toInternalBalance: false,
-  };
-
+  console.log(`#############`, action.swaps[0].amount);
   const tokenInIndex = action.swaps[0].assetInIndex;
   const tokenOutIndex = action.swaps[action.swaps.length - 1].assetOutIndex;
+  let toInternalBalance = true;
+  let fromInternalBalance = true;
   // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
   const limits = Array(action.assets.length).fill('0');
-  // TODO This won't be correct if swaps at end or middle. Need tokenIn/out?
-  limits[tokenInIndex] = swapAmount;
-  limits[tokenOutIndex] = BigNumber.from(action.minOut).mul(-1).toString();
+  if (
+    tokenOut.toLowerCase() === action.assets[tokenOutIndex].toLowerCase() ||
+    pools.some(
+      (p) =>
+        p.address.toLowerCase() === action.assets[tokenOutIndex].toLowerCase()
+    )
+  ) {
+    // If tokenOut is a BPT this needs to be false as we can't exit a pool from internal balances
+    toInternalBalance = false;
+    limits[tokenOutIndex] = BigNumber.from(action.minOut).mul(-1).toString();
+  }
 
-  const encodedBatchSwap = Relayer.encodeBatchSwap({
+  let sender: string;
+  if (tokenIn.toLowerCase() === action.assets[tokenInIndex].toLowerCase()) {
+    fromInternalBalance = false;
+    sender = user;
+    limits[tokenInIndex] = swapAmount;
+  } else if (
+    tokenIn.toLowerCase() === action.assets[tokenInIndex].toLowerCase() ||
+    pools.some(
+      (p) =>
+        p.address.toLowerCase() === action.assets[tokenInIndex].toLowerCase()
+    )
+  ) {
+    // If tokenIn is a BPT this needs to be false as we can't join a pool from internal balances
+    fromInternalBalance = false;
+    sender = relayerAddress;
+    limits[tokenInIndex] = MaxInt256.toString();
+  } else {
+    sender = relayerAddress;
+    limits[tokenInIndex] = MaxInt256.toString();
+  }
+
+  const funds: FundManagement = {
+    sender,
+    recipient: toInternalBalance ? relayerAddress : user,
+    fromInternalBalance,
+    toInternalBalance,
+  };
+
+  // TODO - If tokenIn is a BPT set approval
+  const batchSwapInput: EncodeBatchSwapInput = {
     swapType:
       swapType === SwapTypes.SwapExactIn
         ? SwapType.SwapExactIn
@@ -315,7 +371,10 @@ function buildBatchSwap(
     deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
     value: '0',
     outputReferences: action.opRef,
-  });
+  };
+  console.log(batchSwapInput);
+
+  const encodedBatchSwap = Relayer.encodeBatchSwap(batchSwapInput);
 
   return encodedBatchSwap;
 }
@@ -336,7 +395,7 @@ export function buildCalls(
   tokenOut: string,
   swapInfo: SwapInfo,
   user: string,
-  authorisation: string,
+  authorisation: string | undefined,
   swapType: SwapTypes
 ): {
   to: string;
@@ -355,23 +414,33 @@ export function buildCalls(
     tokenOut,
     swapInfo.tokenAddresses
   );
-  const calls: string[] = [buildSetRelayerApproval(authorisation)];
+  const calls: string[] = [];
+  if (authorisation) calls.push(buildSetRelayerApproval(authorisation));
 
   for (const action of orderedActions) {
     if (action.type === 'exit') {
       const pool = pools.find((p) => p.id === action.swaps[0].poolId);
       if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
-      calls.push(buildExit(pool, action, user));
+      calls.push(buildExit(pool, action, user, tokenOut));
     }
     if (action.type === 'join') {
       const pool = pools.find((p) => p.id === action.swaps[0].poolId);
       if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
-      calls.push(buildJoin(pool, action, user));
+      calls.push(buildJoin(pool, action, user, tokenIn, tokenOut));
     }
-    if (action.type === 'batchswap')
+    if (action.type === 'batchswap') {
       calls.push(
-        buildBatchSwap(action, user, swapInfo.swapAmount.toString(), swapType)
+        buildBatchSwap(
+          action,
+          user,
+          swapType,
+          tokenIn,
+          tokenOut,
+          swapInfo.swapAmount.toString(),
+          pools
+        )
       );
+    }
   }
 
   const callData = balancerRelayerInterface.encodeFunctionData('multicall', [

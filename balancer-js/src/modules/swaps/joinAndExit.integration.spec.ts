@@ -15,6 +15,7 @@ import { buildCalls, someJoinExit } from './joinAndExit';
 import {
   BAL_WETH,
   AURA_BAL_STABLE,
+  B_50WBTC_50WETH,
   getForkedPools,
 } from '@/test/lib/mainnetPools';
 import { MockPoolDataService } from '@/test/lib/mockPool';
@@ -34,9 +35,55 @@ const { contracts } = new Contracts(networkId, provider);
 
 const signer = provider.getSigner();
 
+describe('join and exit integration tests', async () => {
+  await testFlow(
+    'exit',
+    [BAL_WETH],
+    parseFixed('7', 18).toString(),
+    ADDRESSES[networkId].BAL8020BPT,
+    ADDRESSES[networkId].WETH
+  );
+  await testFlow(
+    'join',
+    [BAL_WETH],
+    parseFixed('7', 18).toString(),
+    ADDRESSES[networkId].WETH,
+    ADDRESSES[networkId].BAL8020BPT
+  );
+  await testFlow(
+    'swap > exit - auraBAL[Swap]BPT[exit]WETH',
+    [BAL_WETH, AURA_BAL_STABLE],
+    parseFixed('7', 18).toString(),
+    ADDRESSES[networkId].auraBal,
+    ADDRESSES[networkId].WETH
+  );
+  await testFlow(
+    'swap > join - WBTC[Swap]WETH[join]BPT',
+    [BAL_WETH, B_50WBTC_50WETH],
+    parseFixed('7', 8).toString(),
+    ADDRESSES[networkId].WBTC,
+    ADDRESSES[networkId].BAL8020BPT
+  );
+  await testFlow(
+    'exit > swap - BPT[Exit]WETH[Swap]WBTC',
+    [BAL_WETH, B_50WBTC_50WETH],
+    parseFixed('7', 18).toString(),
+    ADDRESSES[networkId].BAL8020BPT,
+    ADDRESSES[networkId].WBTC
+  );
+  await testFlow(
+    'join > swap - BAL[Join]BPT[Swap]auraBal',
+    [BAL_WETH, AURA_BAL_STABLE],
+    parseFixed('7', 18).toString(),
+    ADDRESSES[networkId].BAL,
+    ADDRESSES[networkId].auraBal
+  );
+});
+
 async function testFlow(
   description: string,
   pools: SubgraphPoolBase[],
+  swapAmount: string,
   tokenIn: {
     address: string;
     decimals: number;
@@ -54,8 +101,11 @@ async function testFlow(
     // Setup chain
     before(async function () {
       this.timeout(20000);
+      // const tokens = [tokenIn.address, ADDRESSES[networkId].BAL8020BPT.address];
+      // const balances = [parseFixed('100', tokenIn.decimals).toString(), parseFixed('100', 18).toString()];
+      // const slots = [tokenIn.slot, ADDRESSES[networkId].BAL8020BPT.slot];
       const tokens = [tokenIn.address];
-      const balances = [parseFixed('100', 18).toString()];
+      const balances = [parseFixed('100', tokenIn.decimals).toString()];
       const slots = [tokenIn.slot];
       await forkSetup(
         signer,
@@ -70,7 +120,6 @@ async function testFlow(
     });
 
     it('should exit swap via Relayer', async () => {
-      const swapAmount = parseFixed('7', 18);
       const swapType = SwapTypes.SwapExactIn;
       const swapInfo = await sor.getSwaps(
         tokenIn.address,
@@ -100,7 +149,11 @@ async function testFlow(
       );
 
       const [tokenInBalanceBefore, tokenOutBalanceBefore] = await getBalances(
-        [tokenIn.address, tokenOut.address],
+        [
+          tokenIn.address,
+          tokenOut.address,
+          ADDRESSES[networkId].BAL8020BPT.address,
+        ],
         signer,
         signerAddr
       );
@@ -113,7 +166,11 @@ async function testFlow(
       const receipt = await response.wait();
       console.log('Gas used', receipt.gasUsed.toString());
       const [tokenInBalanceAfter, tokenOutBalanceAfter] = await getBalances(
-        [tokenIn.address, tokenOut.address],
+        [
+          tokenIn.address,
+          tokenOut.address,
+          ADDRESSES[networkId].BAL8020BPT.address,
+        ],
         signer,
         signerAddr
       );
@@ -127,31 +184,10 @@ async function testFlow(
       expect(tokenInBalanceBefore.sub(tokenInBalanceAfter).toString()).to.eq(
         swapAmount.toString()
       );
-      expect(tokenOutBalanceAfter.gte(swapInfo.returnAmount));
+      expect(tokenOutBalanceAfter.gte(swapInfo.returnAmount)).to.be.true;
     }).timeout(10000000);
   });
 }
-
-describe('join and exit integration tests', async () => {
-  await testFlow(
-    'exit',
-    [BAL_WETH],
-    ADDRESSES[networkId].BAL8020BPT,
-    ADDRESSES[networkId].WETH
-  );
-  await testFlow(
-    'join',
-    [BAL_WETH],
-    ADDRESSES[networkId].WETH,
-    ADDRESSES[networkId].BAL8020BPT
-  );
-  await testFlow(
-    'swap > exit',
-    [BAL_WETH, AURA_BAL_STABLE],
-    ADDRESSES[networkId].auraBal,
-    ADDRESSES[networkId].WETH
-  );
-});
 
 async function setUp(
   networkId: Network,

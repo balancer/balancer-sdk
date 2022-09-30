@@ -7,7 +7,7 @@ export const ADDRESSES = {
       address: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
     },
     BatchRelayerV4: {
-      address: '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA'
+      address: '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
     },
     ETH: {
       address: AddressZero,
@@ -18,6 +18,7 @@ export const ADDRESSES = {
       address: '0xba100000625a3754423978a60c9317c58a424e3d',
       decimals: 18,
       symbol: 'BAL',
+      slot: 1,
     },
     USDC: {
       address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',

@@ -17,7 +17,7 @@ export const namedTokens: Record<string, any> = {
     decimals: 18,
   },
   BAL: {
-    address: '0xba100000625a3754423978a60c9317c58a424e3D',
+    address: '0xba100000625a3754423978a60c9317c58a424e3D'.toLowerCase(),
     decimals: 18,
   },
   auraBAL: {
