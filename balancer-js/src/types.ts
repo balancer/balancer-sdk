@@ -174,7 +174,7 @@ export interface PoolToken extends Token {
   balance: string;
   priceRate?: string;
   weight?: string | null;
-  token?: { pool?: { poolType?: null | PoolType } | null };
+  token?: { pool: { poolType: null | PoolType } | null };
 }
 
 export interface OnchainTokenData {
