@@ -16,7 +16,6 @@ import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
 import { GraphQLQuery, Pool, PoolType, PoolToken } from '@/types';
 import { Network } from '@/lib/constants/network';
 import { PoolsQueryVariables } from '../../subgraph/subgraph';
-import { SubgraphToken } from '@balancer-labs/sor';
 
 interface PoolsSubgraphRepositoryOptions {
   url: string;
