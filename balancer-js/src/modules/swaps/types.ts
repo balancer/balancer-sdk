@@ -103,6 +103,7 @@ export interface FindRouteParameters {
   amount: BigNumber;
   gasPrice: BigNumber;
   maxPools: number;
+  useBpts?: boolean;
 }
 
 export interface BuildTransactionParameters {

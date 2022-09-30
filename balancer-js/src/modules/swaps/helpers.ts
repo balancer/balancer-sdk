@@ -3,7 +3,6 @@ import { Zero, WeiPerEther } from '@ethersproject/constants';
 
 import { SwapType } from './types';
 import { isSameAddress } from '@/lib/utils';
-import { PoolBase } from '@balancer-labs/sor';
 
 /**
  * Helper to create limits using a defined slippage amount.
@@ -54,22 +53,4 @@ export function getLimitsForSlippage(
   });
 
   return limits;
-}
-
-export function getReserves(parsedPool: PoolBase): { [token: string]: string } {
-  const reserves: { [token: string]: string } = {};
-  const tokensList = parsedPool.tokensList;
-  const balances: string[] = [];
-  for (let i = 0; i < tokensList.length - 1; i++) {
-    const poolPairData = parsedPool.parsePoolPairData(
-      tokensList[i],
-      tokensList[i + 1]
-    );
-    balances.push(poolPairData.balanceIn.toString());
-    if (i == tokensList.length - 2) {
-      balances.push(poolPairData.balanceOut.toString());
-    }
-  }
-  tokensList.forEach((token, i) => (reserves[token] = balances[i]));
-  return reserves;
 }

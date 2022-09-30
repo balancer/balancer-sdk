@@ -1,11 +1,4 @@
-import {
-  bnum,
-  parseToPoolsDict,
-  SOR,
-  SubgraphPoolBase,
-  SwapInfo,
-  SwapTypes,
-} from '@balancer-labs/sor';
+import { SOR, SubgraphPoolBase, SwapInfo, SwapTypes } from '@balancer-labs/sor';
 import { Vault__factory, Vault } from '@balancer-labs/typechain';
 import {
   BatchSwap,
@@ -25,7 +18,7 @@ import {
   getSorSwapInfo,
 } from './queryBatchSwap';
 import { balancerVault } from '@/lib/constants/config';
-import { getLimitsForSlippage, getReserves } from './helpers';
+import { getLimitsForSlippage } from './helpers';
 import { BalancerSdkConfig } from '@/types';
 import { SwapInput } from './types';
 import { Sor } from '@/modules/sor/sor.module';
@@ -37,8 +30,6 @@ import {
   SingleSwapBuilder,
   BatchSwapBuilder,
 } from '@/modules/swaps/swap_builder';
-import { formatFixed, parseFixed } from '@/lib/utils/math';
-import { BigNumber } from 'ethers';
 
 export class Swaps {
   readonly sor: SOR;
@@ -100,11 +91,19 @@ export class Swaps {
     amount,
     gasPrice,
     maxPools = 4,
+    useBpts,
   }: FindRouteParameters): Promise<SwapInfo> {
-    return this.sor.getSwaps(tokenIn, tokenOut, SwapTypes.SwapExactIn, amount, {
-      gasPrice,
-      maxPools,
-    });
+    return this.sor.getSwaps(
+      tokenIn,
+      tokenOut,
+      SwapTypes.SwapExactIn,
+      amount,
+      {
+        gasPrice,
+        maxPools,
+      },
+      useBpts
+    );
   }
 
   /**
@@ -116,6 +115,7 @@ export class Swaps {
    * @param FindRouteParameters.amount BigNumber with a trade amount
    * @param FindRouteParameters.gasPrice BigNumber current gas price
    * @param FindRouteParameters.maxPools number of pool included in path
+   * @param FindRouteParameters.useBpts boolean whether to allow bpts in paths
    * @returns Best trade route information
    */
   async findRouteGivenOut({
@@ -124,6 +124,7 @@ export class Swaps {
     amount,
     gasPrice,
     maxPools,
+    useBpts,
   }: FindRouteParameters): Promise<SwapInfo> {
     return this.sor.getSwaps(
       tokenIn,
@@ -133,7 +134,8 @@ export class Swaps {
       {
         gasPrice,
         maxPools,
-      }
+      },
+      useBpts
     );
   }
 
@@ -239,8 +241,8 @@ export class Swaps {
     return this.sor.fetchPools();
   }
 
-  public getPools(): SubgraphPoolBase[] {
-    return this.sor.getPools();
+  public getPools(useBpts?: boolean): SubgraphPoolBase[] {
+    return this.sor.getPools(useBpts);
   }
 
   /**
@@ -331,94 +333,41 @@ export class Swaps {
 
   async formatSwapsForGnosis(
     swapInfo: SwapInfo,
-    costToken: string,
-    costAmount: BigNumber,
-    swapType: SwapTypes
+    referenceToken: string,
+    useBpts?: boolean
   ): Promise<string> {
     let output = '';
-    const pools = this.getPools();
+    const pools = this.getPools(useBpts);
     const swaps = swapInfo.swaps;
+    interface Token {
+      [address: string]: {
+        alias: string;
+        decimals: number;
+      };
+    }
+    const tokens: Set<Token> = new Set();
     for (const swap of swaps) {
       const pool = pools.find(
         (value) => value.id == swap.poolId
       ) as SubgraphPoolBase;
-      const parsedPool = parseToPoolsDict([pool], 0)[pool.id];
-      const tokenIn = swapInfo.tokenAddresses[swap.assetInIndex];
-      const tokenOut = swapInfo.tokenAddresses[swap.assetOutIndex];
-      const amount = swap.amount;
-      const fee = pool.swapFee;
-      const poolPairData = parsedPool.parsePoolPairData(tokenIn, tokenOut);
-      const reserves: { [token: string]: string } = getReserves(parsedPool);
-      const decimalsIn = poolPairData.decimalsIn;
-      const decimalsOut = poolPairData.decimalsOut;
-
-      let amountIn: string;
-      let amountOut: string;
-      const index = swapInfo.swaps.indexOf(swap);
-      let orderNumber: number;
-      // This if/else clause modifies zero amounts with the actual ones
-      if (swapType == SwapTypes.SwapExactIn) {
-        orderNumber = index;
-        amountIn = amount;
-        amountOut = parseFixed(
-          parsedPool
-            ._exactTokenInForTokenOut(
-              poolPairData,
-              bnum(formatFixed(BigNumber.from(amountIn), decimalsIn))
-            )
-            .toString(),
-          decimalsOut
-        ).toString();
-        if (index < swaps.length - 1) {
-          if (swaps[index + 1].amount == '0') {
-            swaps[index + 1].amount = amountOut.toString();
-          }
-        }
-      } else {
-        orderNumber = swaps.length - 1 - index;
-        amountOut = amount;
-        amountIn = parseFixed(
-          parsedPool
-            ._tokenInForExactTokenOut(
-              poolPairData,
-              bnum(formatFixed(BigNumber.from(amountOut), decimalsOut))
-            )
-            .toString(),
-          decimalsOut
-        ).toString();
-        if (index < swaps.length - 1) {
-          if (swaps[index + 1].amount == '0') {
-            swaps[index + 1].amount = amountIn.toString();
-          }
-        }
+      for (const poolToken of pool.tokens) {
+        const token: Token = {
+          [poolToken.address]: {
+            alias: '', // where can we get alias from?
+            decimals: poolToken.decimals,
+          },
+        };
+        tokens.add(token);
       }
-      const execution = [
-        {
-          buy_token: tokenOut,
-          exec_buy_amount: amountOut,
-          exec_plan: {
-            position: 0,
-            sequence: 0,
-          },
-          exec_sell_amount: amountIn,
-          sell_token: tokenIn,
-        },
-      ];
-      const cowSwapOrder = {
-        [orderNumber]: {
-          cost: {
-            amount: costAmount.toString(),
-            token: costToken,
-          },
-          execution: execution,
-          fee: fee,
-          kind: pool.poolType,
-          mandatory: true,
-          reserves: reserves,
-        },
-      };
-      output = JSON.stringify(cowSwapOrder, null, 2) + '\n' + output;
     }
+    const tokensArray: Token[] = Array.from(tokens);
+    const cowSwapOrder = {
+      ref_token: referenceToken,
+      interaction_data: [],
+      foreign_liquidity_orders: [],
+      tokens: tokensArray,
+    };
+    output = JSON.stringify(cowSwapOrder, null, 2) + '\n' + output;
     return output;
   }
 }

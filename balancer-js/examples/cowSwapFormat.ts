@@ -13,10 +13,11 @@ const network = Network.MAINNET;
 // const rpcUrl = `https://polygon-mainnet.infura.io/v3/${process.env.INFURA}`;
 const rpcUrl = `https://mainnet.infura.io/v3/${process.env.INFURA}`;
 const gasPrice = parseFixed('1', 9);
-const tokenIn = ADDRESSES[network].DAI.address;
-const tokenOut = ADDRESSES[network].USDC.address;
-const swapType = SwapTypes.SwapExactOut;
-const amount = parseFixed('1', 6);
+const auraBal = '0x616e8bfa43f920657b3497dbf40d6b1a02d4608d';
+const tokenIn = auraBal; // ADDRESSES[network].USDC.address;
+const tokenOut = ADDRESSES[network].WETH.address; // '0xc45d42f801105e861e86658648e3678ad7aa70f9'; // '0x616e8bfa43f920657b3497dbf40d6b1a02d4608d'; // ADDRESSES[network].DAI.address;
+const swapType = SwapTypes.SwapExactIn;
+const amount = parseFixed('1', 18);
 
 async function swap() {
   const balancer = new BalancerSDK({
@@ -26,23 +27,25 @@ async function swap() {
 
   await balancer.swaps.fetchPools();
 
+  balancer.sor.getPools()
+  
   const params = {
     tokenIn,
     tokenOut,
     amount,
     gasPrice: gasPrice,
     maxPools: 4,
+    useBpts: true
   };
 
-  const swapInfo = await balancer.swaps.findRouteGivenOut(params);
+  const swapInfo = await balancer.swaps.findRouteGivenIn(params);
 
-  const costToken = ADDRESSES[network].WETH;
-  const costAmount = await balancer.sor.getCostOfSwapInToken(costToken.address, costToken.decimals, gasPrice);
+  const referenceToken = ADDRESSES[network].WETH.address;
   if (swapInfo.returnAmount.isZero()) {
     console.log('No Swap');
     return;
   }
-  const output = await balancer.swaps.formatSwapsForGnosis(swapInfo, costToken.address, costAmount, swapType);
+  const output = await balancer.swaps.formatSwapsForGnosis(swapInfo, referenceToken, params.useBpts);
   console.log(output);
 }
 
