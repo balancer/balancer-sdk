@@ -14,6 +14,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         relayer: '0x886A3Ec7bcC508B8795990B60Fa21f85F9dB7948',
         gaugeController: '0xc128468b7ce63ea702c1f104d55a2566b13d3abd',
         feeDistributor: '0xD3cf852898b21fc233251427c2DC93d3d604F3BB',
+        protocolFeePercentagesProvider:
+          '0x97207B095e4D5C9a6e4cfbfcd2C3358E03B90c4A',
       },
       tokens: {
         wrappedNativeAsset: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -50,21 +52,16 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
-        gaugeController: '',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-polygon',
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
     },
@@ -76,21 +73,16 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
-        gaugeController: '',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-arbitrum-v2',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-arbitrum',
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-one-blocks',
     },
@@ -102,14 +94,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x2cc8688C5f75E365aaEEb4ea8D6a480405A48D2A',
-        gaugeController: '',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
@@ -126,14 +113,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x53c43764255c17bd724f74c4ef150724ac50a3ed',
-        gaugeController: '',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
@@ -149,14 +131,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x42ad527de7d4e9d9d011ac45b31d8551f8fe9821',
-        gaugeController: '',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
@@ -175,13 +152,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
         relayer: '0x2Fb8aD26faDC971464A17407e9213D1A22befc8a',
         gaugeController: '0xBB1CE49b16d55A1f2c6e88102f32144C7334B116',
-        feeDistributor: '',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-        bal: '',
-        veBal: '',
-        bbaUsd: '',
       },
     },
     urls: {
@@ -208,6 +181,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-optimism',
+      gaugesSubgraph: '',
     },
     pools: {},
   },

@@ -889,11 +889,13 @@ enum PoolShare_orderBy {
 
 type PoolSnapshot {
   amounts: [BigDecimal!]!
+  holdersCount: BigInt!
   id: ID!
   liquidity: BigDecimal!
   pool: Pool!
   swapFees: BigDecimal!
   swapVolume: BigDecimal!
+  swapsCount: BigInt!
   timestamp: Int!
   totalShares: BigDecimal!
 }
@@ -907,6 +909,14 @@ input PoolSnapshot_filter {
   amounts_not: [BigDecimal!]
   amounts_not_contains: [BigDecimal!]
   amounts_not_contains_nocase: [BigDecimal!]
+  holdersCount: BigInt
+  holdersCount_gt: BigInt
+  holdersCount_gte: BigInt
+  holdersCount_in: [BigInt!]
+  holdersCount_lt: BigInt
+  holdersCount_lte: BigInt
+  holdersCount_not: BigInt
+  holdersCount_not_in: [BigInt!]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -960,6 +970,14 @@ input PoolSnapshot_filter {
   swapVolume_lte: BigDecimal
   swapVolume_not: BigDecimal
   swapVolume_not_in: [BigDecimal!]
+  swapsCount: BigInt
+  swapsCount_gt: BigInt
+  swapsCount_gte: BigInt
+  swapsCount_in: [BigInt!]
+  swapsCount_lt: BigInt
+  swapsCount_lte: BigInt
+  swapsCount_not: BigInt
+  swapsCount_not_in: [BigInt!]
   timestamp: Int
   timestamp_gt: Int
   timestamp_gte: Int
@@ -980,11 +998,13 @@ input PoolSnapshot_filter {
 
 enum PoolSnapshot_orderBy {
   amounts
+  holdersCount
   id
   liquidity
   pool
   swapFees
   swapVolume
+  swapsCount
   timestamp
   totalShares
 }
@@ -3708,6 +3728,9 @@ type _Block_ {
 
   """The block number"""
   number: Int!
+
+  """Integer representation of the timestamp stored in blocks for the chain"""
+  timestamp: Int
 }
 
 """The type for the top-level _meta field"""

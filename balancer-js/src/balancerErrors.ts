@@ -10,6 +10,7 @@ export enum BalancerErrorCode {
   INPUT_OUT_OF_BOUNDS = 'INPUT_OUT_OF_BOUNDS',
   INPUT_LENGTH_MISMATCH = 'INPUT_LENGTH_MISMATCH',
   INPUT_TOKEN_INVALID = 'INPUT_TOKEN_INVALID',
+  INPUT_ZERO_NOT_ALLOWED = 'INPUT_ZERO_NOT_ALLOWED',
   TOKEN_MISMATCH = 'TOKEN_MISMATCH',
   MISSING_TOKENS = 'MISSING_TOKENS',
   MISSING_AMP = 'MISSING_AMP',
@@ -60,6 +61,8 @@ export class BalancerError extends Error {
         return 'missing price rate';
       case BalancerErrorCode.MISSING_WEIGHT:
         return 'missing weight';
+      case BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED:
+        return 'zero input not allowed';
       default:
         return 'Unknown error';
     }

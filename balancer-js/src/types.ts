@@ -1,5 +1,5 @@
+import { Network } from './lib/constants/network';
 import type { BigNumberish } from '@ethersproject/bignumber';
-import type { Network } from './lib/constants/network';
 import type { Contract } from '@ethersproject/contracts';
 import type { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 import type {
@@ -13,11 +13,12 @@ import type {
   PoolAttribute,
   TokenAttribute,
 } from '@/modules/data/types';
-import type { BaseFeeDistributor } from './modules/data';
+import type { BaseFeeDistributor, ProtocolFeesProvider } from './modules/data';
+import type { GraphQLArgs } from './lib/graphql';
 
-export * from '@/modules/data/types';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
-export { AprBreakdown };
+export * from '@/modules/data/types';
+export { Network, AprBreakdown };
 
 export type Address = string;
 
@@ -50,6 +51,7 @@ export interface ContractAddresses {
   relayer?: string;
   gaugeController?: string;
   feeDistributor?: string;
+  protocolFeePercentagesProvider?: string;
 }
 
 export interface BalancerNetworkConfig {
@@ -84,6 +86,7 @@ export interface BalancerDataRepositories {
   liquidityGauges?: Findable<LiquidityGauge>;
   feeDistributor?: BaseFeeDistributor;
   feeCollector: Findable<number>;
+  protocolFees?: ProtocolFeesProvider;
   tokenYields: Findable<number>;
 }
 
@@ -172,6 +175,7 @@ export interface PoolToken extends Token {
   balance: string;
   priceRate?: string;
   weight?: string | null;
+  token?: { pool: { poolType: null | PoolType } | null };
 }
 
 export interface OnchainTokenData {
@@ -197,19 +201,22 @@ export enum PoolType {
   Weighted = 'Weighted',
   Investment = 'Investment',
   Stable = 'Stable',
+  ComposableStable = 'ComposableStable',
   MetaStable = 'MetaStable',
   StablePhantom = 'StablePhantom',
   LiquidityBootstrapping = 'LiquidityBootstrapping',
   AaveLinear = 'AaveLinear',
   ERC4626Linear = 'ERC4626Linear',
   Element = 'Element',
-  ComposableStable = 'ComposableStable',
+  Gyro2 = 'Gyro2',
+  Gyro3 = 'Gyro3',
 }
 
 export interface Pool {
   id: string;
   name: string;
   address: string;
+  chainId: number;
   poolType: PoolType;
   swapFee: string;
   owner?: string;
@@ -267,4 +274,10 @@ export interface PoolWithMethods extends Pool {
     slippage: string
   ) => ExitPoolAttributes;
   calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
+}
+
+export interface GraphQLQuery {
+  args: GraphQLArgs;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  attrs: any;
 }

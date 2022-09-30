@@ -15,6 +15,8 @@ import { Liquidity } from '../liquidity/liquidity.module';
 import { Join } from '../joins/joins.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { Exit } from '../exits/exits.module';
+import { PoolVolume } from './volume/volume';
+import { PoolFees } from './fees/fees';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -24,6 +26,8 @@ export class Pools implements Findable<PoolWithMethods> {
   liquidityService;
   joinService;
   exitService;
+  feesService;
+  volumeService;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -45,6 +49,8 @@ export class Pools implements Findable<PoolWithMethods> {
     );
     this.joinService = new Join(this.repositories.pools, networkConfig.chainId);
     this.exitService = new Exit(this.repositories.pools, networkConfig.chainId);
+    this.feesService = new PoolFees(repositories.yesterdaysPools);
+    this.volumeService = new PoolVolume(repositories.yesterdaysPools);
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
@@ -146,11 +152,33 @@ export class Pools implements Findable<PoolWithMethods> {
     );
   }
 
+  /**
+   * Calculates total fees for the pool in the last 24 hours
+   *
+   * @param pool
+   * @returns
+   */
+  async fees(pool: Pool): Promise<number> {
+    return this.feesService.last24h(pool);
+  }
+
+  /**
+   * Calculates total volume of the pool in the last 24 hours
+   *
+   * @param pool
+   * @returns
+   */
+  async volume(pool: Pool): Promise<number> {
+    return this.volumeService.last24h(pool);
+  }
+
   static wrap(
     pool: Pool,
     networkConfig: BalancerNetworkConfig
   ): PoolWithMethods {
     const methods = PoolTypeConcerns.from(pool.poolType);
+    const wrappedNativeAsset =
+      networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
     return {
       ...pool,
       buildJoin: (
@@ -165,7 +193,7 @@ export class Pools implements Findable<PoolWithMethods> {
           tokensIn,
           amountsIn,
           slippage,
-          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+          wrappedNativeAsset,
         });
       },
       calcPriceImpact: async (amountsIn: string[], minBPTOut: string) =>
@@ -180,16 +208,21 @@ export class Pools implements Findable<PoolWithMethods> {
         slippage,
         shouldUnwrapNativeAsset = false,
         singleTokenMaxOut
-      ) =>
-        methods.exit.buildExitExactBPTIn({
-          exiter,
-          pool,
-          bptIn,
-          slippage,
-          shouldUnwrapNativeAsset,
-          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
-          singleTokenMaxOut,
-        }),
+      ) => {
+        if (methods.exit.buildExitExactBPTIn) {
+          return methods.exit.buildExitExactBPTIn({
+            exiter,
+            pool,
+            bptIn,
+            slippage,
+            shouldUnwrapNativeAsset,
+            wrappedNativeAsset,
+            singleTokenMaxOut,
+          });
+        } else {
+          throw 'ExitExactBPTIn not supported';
+        }
+      },
       buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) =>
         methods.exit.buildExitExactTokensOut({
           exiter,
@@ -197,7 +230,7 @@ export class Pools implements Findable<PoolWithMethods> {
           tokensOut,
           amountsOut,
           slippage,
-          wrappedNativeAsset: networkConfig.addresses.tokens.wrappedNativeAsset,
+          wrappedNativeAsset,
         }),
       // TODO: spotPrice fails, because it needs a subgraphType,
       // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)

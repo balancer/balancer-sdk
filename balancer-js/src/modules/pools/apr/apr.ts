@@ -9,13 +9,22 @@ import type {
   TokenAttribute,
   LiquidityGauge,
 } from '@/types';
-import { BaseFeeDistributor } from '@/modules/data';
+import {
+  BaseFeeDistributor,
+  ProtocolFeesProvider,
+  RewardData,
+} from '@/modules/data';
 import { ProtocolRevenue } from './protocol-revenue';
 import { Liquidity } from '@/modules/liquidity/liquidity.module';
+import { identity, zipObject, pickBy } from 'lodash';
+import { PoolFees } from '../fees/fees';
 
 export interface AprBreakdown {
   swapFees: number;
-  tokenAprs: number;
+  tokenAprs: {
+    total: number;
+    breakdown: { [address: string]: number };
+  };
   stakingApr: {
     min: number;
     max: number;
@@ -49,7 +58,8 @@ export class PoolApr {
     private feeCollector: Findable<number>,
     private yesterdaysPools?: Findable<Pool, PoolAttribute>,
     private liquidityGauges?: Findable<LiquidityGauge>,
-    private feeDistributor?: BaseFeeDistributor
+    private feeDistributor?: BaseFeeDistributor,
+    private protocolFees?: ProtocolFeesProvider
   ) {}
 
   /**
@@ -77,12 +87,14 @@ export class PoolApr {
   /**
    * Pool revenue from holding yield-bearing wrapped tokens.
    *
-   * @param pool
    * @returns APR [bsp] from tokens contained in the pool
    */
-  async tokenAprs(pool: Pool): Promise<number> {
+  async tokenAprs(pool: Pool): Promise<AprBreakdown['tokenAprs']> {
     if (!pool.tokens) {
-      return 0;
+      return {
+        total: 0,
+        breakdown: {},
+      };
     }
 
     const totalLiquidity = await this.totalLiquidity(pool);
@@ -99,7 +111,17 @@ export class PoolApr {
       const tokenYield = await this.tokenYields.find(token.address);
 
       if (tokenYield) {
-        apr = tokenYield;
+        if (pool.poolType === 'MetaStable') {
+          apr = tokenYield * (1 - (await this.protocolSwapFeePercentage()));
+        } else if (pool.poolType === 'ComposableStable') {
+          // TODO: add if(token.isTokenExemptFromYieldProtocolFee) once supported by subgraph
+          // apr = tokenYield;
+
+          const fees = await this.protocolFeesPercentage();
+          apr = tokenYield * (1 - fees.yieldFee);
+        } else {
+          apr = tokenYield;
+        }
       } else {
         // Handle subpool APRs with recursive call to get the subPool APR
         const subPool = await this.pools.findBy('address', token.address);
@@ -108,7 +130,7 @@ export class PoolApr {
           // INFO: Liquidity mining APR can't cascade to other pools
           const subSwapFees = await this.swapFees(subPool);
           const subtokenAprs = await this.tokenAprs(subPool);
-          apr = subSwapFees + subtokenAprs;
+          apr = subSwapFees + subtokenAprs.total;
         }
       }
 
@@ -146,8 +168,18 @@ export class PoolApr {
 
     // sum them up to get pool APRs
     const apr = weightedAprs.reduce((sum, apr) => sum + apr, 0);
+    const breakdown = pickBy(
+      zipObject(
+        bptFreeTokens.map((t) => t.address),
+        weightedAprs
+      ),
+      identity
+    );
 
-    return apr;
+    return {
+      total: apr,
+      breakdown,
+    };
   }
 
   /**
@@ -173,7 +205,8 @@ export class PoolApr {
    * @returns APR [bsp] from protocol rewards.
    */
   async stakingApr(pool: Pool, boost = 1): Promise<number> {
-    if (!this.liquidityGauges) {
+    // For L2s BAL is emmited as a reward token
+    if (!this.liquidityGauges || pool.chainId != 1) {
       return 0;
     }
 
@@ -229,28 +262,7 @@ export class PoolApr {
     const rewards = rewardTokenAddresses.map(async (tAddress) => {
       /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */
       const data = gauge!.rewardTokens![tAddress];
-      if (data.period_finish.toNumber() < Date.now() / 1000) {
-        return {
-          address: tAddress,
-          value: 0,
-        };
-      } else {
-        const yearlyReward = data.rate.mul(86400).mul(365);
-        const price = await this.tokenPrices.find(tAddress);
-        if (price && price.usd) {
-          const meta = await this.tokenMeta.find(tAddress);
-          const decimals = meta?.decimals || 18;
-          const yearlyRewardUsd =
-            parseFloat(formatUnits(yearlyReward, decimals)) *
-            parseFloat(price.usd);
-          return {
-            address: tAddress,
-            value: yearlyRewardUsd,
-          };
-        } else {
-          throw `No USD price for ${tAddress}`;
-        }
-      }
+      return this.rewardTokenApr(tAddress, data);
     });
 
     // Get the gauge totalSupplyUsd
@@ -314,7 +326,6 @@ export class PoolApr {
    * @returns pool APR split [bsp]
    */
   async apr(pool: Pool): Promise<AprBreakdown> {
-    console.time(`APR for ${pool.id}`);
     const [
       swapFees,
       tokenAprs,
@@ -330,7 +341,6 @@ export class PoolApr {
       this.rewardAprs(pool),
       this.protocolApr(pool),
     ]);
-    console.timeEnd(`APR for ${pool.id}`);
 
     return {
       swapFees,
@@ -341,30 +351,19 @@ export class PoolApr {
       },
       rewardAprs,
       protocolApr,
-      min:
-        swapFees + tokenAprs + rewardAprs.total + protocolApr + minStakingApr,
+      min: swapFees + tokenAprs.total + rewardAprs.total + minStakingApr,
       max:
-        swapFees + tokenAprs + rewardAprs.total + protocolApr + maxStakingApr,
+        swapFees +
+        tokenAprs.total +
+        rewardAprs.total +
+        protocolApr +
+        maxStakingApr,
     };
   }
 
-  // 🚨 this is adding 1 call to get yesterday's block height and 2nd call to fetch yesterday's pools data from subgraph
-  // TODO: find a better data source for that eg. add blocks to graph, replace with a database, or dune
   private async last24hFees(pool: Pool): Promise<number> {
-    let yesterdaysPool;
-    if (this.yesterdaysPools) {
-      yesterdaysPool = await this.yesterdaysPools.find(pool.id);
-    }
-    if (!pool.totalSwapFee) {
-      return 0;
-    }
-    if (!yesterdaysPool || !yesterdaysPool.totalSwapFee) {
-      return parseFloat(pool.totalSwapFee);
-    }
-
-    return (
-      parseFloat(pool.totalSwapFee) - parseFloat(yesterdaysPool.totalSwapFee)
-    );
+    const poolFees = new PoolFees(this.yesterdaysPools);
+    return poolFees.last24h(pool);
   }
 
   /**
@@ -397,5 +396,41 @@ export class PoolApr {
     const fee = await this.feeCollector.find('');
 
     return fee ? fee : 0;
+  }
+
+  private async protocolFeesPercentage() {
+    if (this.protocolFees) {
+      return await this.protocolFees.getFees();
+    }
+
+    return {
+      swapFee: 0,
+      yieldFee: 0,
+    };
+  }
+
+  private async rewardTokenApr(tokenAddress: string, rewardData: RewardData) {
+    if (rewardData.period_finish.toNumber() < Date.now() / 1000) {
+      return {
+        address: tokenAddress,
+        value: 0,
+      };
+    } else {
+      const yearlyReward = rewardData.rate.mul(86400).mul(365);
+      const price = await this.tokenPrices.find(tokenAddress);
+      if (price && price.usd) {
+        const meta = await this.tokenMeta.find(tokenAddress);
+        const decimals = meta?.decimals || 18;
+        const yearlyRewardUsd =
+          parseFloat(formatUnits(yearlyReward, decimals)) *
+          parseFloat(price.usd);
+        return {
+          address: tokenAddress,
+          value: yearlyRewardUsd,
+        };
+      } else {
+        throw `No USD price for ${tokenAddress}`;
+      }
+    }
   }
 }

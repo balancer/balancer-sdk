@@ -52,6 +52,13 @@ export class Relayer {
     }
   }
 
+  static encodeApproveVault(tokenAddress: string, maxAmount: string): string {
+    return relayerLibrary.encodeFunctionData('approveVault', [
+      tokenAddress,
+      maxAmount,
+    ]);
+  }
+
   static encodeSetRelayerApproval(
     relayerAdress: string,
     approved: boolean,
@@ -64,9 +71,35 @@ export class Relayer {
     ]);
   }
 
-  static encodeBatchSwap(params: EncodeBatchSwapInput): string {
-    const relayerLibrary = new Interface(relayerLibraryAbi);
+  static encodeGaugeWithdraw(
+    gaugeAddress: string,
+    sender: string,
+    recipient: string,
+    amount: string
+  ): string {
+    return relayerLibrary.encodeFunctionData('gaugeWithdraw', [
+      gaugeAddress,
+      sender,
+      recipient,
+      amount,
+    ]);
+  }
 
+  static encodeGaugeDeposit(
+    gaugeAddress: string,
+    sender: string,
+    recipient: string,
+    amount: string
+  ): string {
+    return relayerLibrary.encodeFunctionData('gaugeDeposit', [
+      gaugeAddress,
+      sender,
+      recipient,
+      amount,
+    ]);
+  }
+
+  static encodeBatchSwap(params: EncodeBatchSwapInput): string {
     return relayerLibrary.encodeFunctionData('batchSwap', [
       params.swapType,
       params.swaps,
@@ -80,8 +113,6 @@ export class Relayer {
   }
 
   static encodeExitPool(params: EncodeExitPoolInput): string {
-    const relayerLibrary = new Interface(relayerLibraryAbi);
-
     return relayerLibrary.encodeFunctionData('exitPool', [
       params.poolId,
       params.poolKind,
