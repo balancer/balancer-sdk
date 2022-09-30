@@ -1,9 +1,9 @@
-import { GaugeShare, GaugeShareAttribute } from './types';
+import { GaugeShare, GaugeShareAttribute, GaugeShareAttributes } from './types';
 import { GaugesSubgraphRepository } from '@/modules/subgraph/repository';
 import {
     SubgraphGaugeShareFragment,
     GaugeShare_OrderBy,
-    OrderDirection,
+    OrderDirection
 } from '@/modules/subgraph/generated/balancer-gauges';
 
 export class GaugeSharesRepository extends GaugesSubgraphRepository<GaugeShare, GaugeShareAttribute> {
@@ -30,4 +30,11 @@ export class GaugeSharesRepository extends GaugesSubgraphRepository<GaugeShare, 
         };
     }
 
+    async findByUser(userAddress: string, first?: number, skip?: number):  Promise<GaugeShare[]> {
+        return this.findAllBy(GaugeShareAttributes.UserAddress, userAddress, first, skip);
+    }
+
+    async findByGauge(gaugeId: string, first?: number, skip?: number):  Promise<GaugeShare[]> {
+        return this.findAllBy(GaugeShareAttributes.GaugeId, gaugeId, first, skip);
+    }
 }

@@ -1,4 +1,4 @@
-import { PoolShare, PoolShareAttribute } from './types';
+import { PoolShare, PoolShareAttribute, PoolShareAttributes } from './types';
 import { BalancerSubgraphRepository } from '@/modules/subgraph/repository';
 import {
     SubgraphPoolShareFragment,
@@ -24,5 +24,13 @@ export class PoolSharesRepository extends BalancerSubgraphRepository<PoolShare, 
             poolId: subgraphPoolShare.poolId.id,
             balance: subgraphPoolShare.balance
         };
+    }
+
+    async findByUser(userAddress: string, first?: number, skip?: number):  Promise<PoolShare[]> {
+        return this.findAllBy(PoolShareAttributes.UserAddress, userAddress, first, skip);
+    }
+
+    async findByPool(poolId: string, first?: number, skip?: number):  Promise<PoolShare[]> {
+        return this.findAllBy(PoolShareAttributes.PoolId, poolId, first, skip);
     }
 }

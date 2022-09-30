@@ -12,7 +12,7 @@ async function main() {
   let result;
 
   result = await pools.all();
-  console.log('Retrieve all pools', result);
+  console.log('Fetch all pools', result);
 
   const POOL_IDs = [ 
         '0xfa1575c57d887e93f37a3c267a548ede008458b3000200000000000000000088',

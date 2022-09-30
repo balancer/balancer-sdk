@@ -18,22 +18,23 @@ const { poolShares } = sdk.data;
 
   result = await poolShares.find(POOLSHARE_ID);
   console.log('Pool share by id', result);
-  
-  result = await poolShares.findAllBy(PoolShareAttributes.UserAddress, USER_ADDR);
+
+  result = await poolShares.findByUser(USER_ADDR);
   console.log('Pool shares by user', result);
 
-  result = await poolShares.findAllBy(PoolShareAttributes.UserAddress, USER_ADDR, 5);
+  result = await poolShares.findByUser(USER_ADDR, 5);
   console.log('Pool shares by user (first 5)', result);
-  
-  result = await poolShares.findAllBy(PoolShareAttributes.PoolId, POOL_ID);
+
+  result = await poolShares.findByPool(POOL_ID);
   console.log('Pool shares by pool', result);
-  
-  result = await poolShares.findAllBy(PoolShareAttributes.PoolId, POOL_ID, 2, 1);
+
+  result = await poolShares.findByPool(POOL_ID, 2, 1);
   console.log('Pool shares by pool (#2 & #3)', result);
     
+  // Balancer subgraph : https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
   result = await poolShares.query({ where: { poolId: POOL_ID,  balance_gt: '0' }, first: 3 });
   console.log('Pool shares subgraph query', result);
-
+  
 })();
 
 // npm run examples:exec -- ./examples/data/pool-shares.ts

@@ -16,7 +16,7 @@ export abstract class AbstractSubgraphRepository<T, A> implements Findable<T, A>
     }
 
     async findBy(attribute: A, value: string): Promise<T | undefined> {
-        return this.get({ [String(attribute)]: value });
+        return this.get({where: { [String(attribute)]: value }});
     }
 
     async findAllBy(attribute: A, 
