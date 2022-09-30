@@ -4,7 +4,7 @@ import { BalancerSDK } from '../../src/modules/sdk.module';
 const sdk = new BalancerSDK(
   { 
     network: Network.MAINNET, 
-    rpcUrl: `${process.env.ALCHEMY_URL}` 
+    rpcUrl: '' 
   });
 const { poolShares } = sdk.data;
 

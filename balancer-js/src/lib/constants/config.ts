@@ -157,7 +157,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-goerli',
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/blocklytics/goerli-blocks',
     },

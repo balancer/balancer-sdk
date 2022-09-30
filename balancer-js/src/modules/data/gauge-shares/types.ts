@@ -15,6 +15,9 @@ export interface GaugeShare {
   id: string;
   balance: string;
   userAddress: string;
-  gaugeId: string;
-  gaugeIsKilled: boolean;
+  gauge: {
+    id: string;
+    poolId?: string;
+    isKilled: boolean;
+  }
 }

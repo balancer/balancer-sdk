@@ -3,7 +3,7 @@ import { GaugesSubgraphRepository } from '@/modules/subgraph/repository';
 import {
     SubgraphGaugeShareFragment,
     GaugeShare_OrderBy,
-    OrderDirection
+    OrderDirection,
 } from '@/modules/subgraph/generated/balancer-gauges';
 
 export class GaugeSharesRepository extends GaugesSubgraphRepository<GaugeShare, GaugeShareAttribute> {
@@ -22,8 +22,12 @@ export class GaugeSharesRepository extends GaugesSubgraphRepository<GaugeShare, 
             id: subgraphGaugeShare.id,
             balance: subgraphGaugeShare.balance,
             userAddress: subgraphGaugeShare.user?.id,
-            gaugeId: subgraphGaugeShare.gauge?.id,
-            gaugeIsKilled: subgraphGaugeShare.gauge?.isKilled
+            gauge: {
+                id: subgraphGaugeShare.gauge.id,
+                poolId:  subgraphGaugeShare.gauge.poolId || undefined,
+                isKilled: subgraphGaugeShare.gauge.isKilled
+            }
         };
     }
+
 }
