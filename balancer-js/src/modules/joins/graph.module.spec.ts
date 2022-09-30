@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { parseFixed } from '@ethersproject/bignumber';
 import { factories } from '@/test/factories';
-import { StaticPoolRepository } from '../data';
+import { PoolsStaticRepository } from '../data';
 import { SubgraphToken } from '@balancer-labs/sor';
 import { PoolGraph, Node } from './graph';
 import {
@@ -244,7 +244,7 @@ describe('Graph', () => {
       linearInfo = factories.linearPools
         .transient({ pools: [linearPool] })
         .build();
-      const poolProvider = new StaticPoolRepository(
+      const poolProvider = new PoolsStaticRepository(
         linearInfo.linearPools as unknown as SdkPool[]
       );
       poolsGraph = new PoolGraph(poolProvider, {
@@ -350,7 +350,7 @@ describe('Graph', () => {
       boostedPool = boostedPoolInfo.rootPool;
       const pools = [...boostedPoolInfo.linearPools, boostedPool];
       // Create staticPools provider with boosted and linear pools
-      const poolProvider = new StaticPoolRepository(
+      const poolProvider = new PoolsStaticRepository(
         pools as unknown as SdkPool[]
       );
       poolsGraph = new PoolGraph(poolProvider, {
@@ -507,7 +507,7 @@ describe('Graph', () => {
         rootPool,
       ];
       // // Create staticPools provider with above pools
-      const poolProvider = new StaticPoolRepository(
+      const poolProvider = new PoolsStaticRepository(
         pools as unknown as SdkPool[]
       );
       poolsGraph = new PoolGraph(poolProvider, {
@@ -720,7 +720,7 @@ describe('Graph', () => {
         boostedMetaBigInfo.rootPool,
       ];
       // // Create staticPools provider with above pools
-      const poolProvider = new StaticPoolRepository(
+      const poolProvider = new PoolsStaticRepository(
         pools as unknown as SdkPool[]
       );
       poolsGraph = new PoolGraph(poolProvider, {

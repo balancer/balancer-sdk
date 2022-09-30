@@ -48,8 +48,7 @@ export class PoolTypeConcerns {
       case 'MetaStable': {
         return new MetaStable();
       }
-      case 'StablePhantom':
-      case 'ComposableStable': {
+      case 'StablePhantom': {
         return new StablePhantom();
       }
       case 'AaveLinear':
