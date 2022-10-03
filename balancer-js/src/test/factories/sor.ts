@@ -50,6 +50,8 @@ const subgraphPoolBase = Factory.define<SubgraphPoolBase>(
       pool.tokensList = pool.tokens.map((t) => t.address);
     });
 
+    const type = params.poolType || 'Weighted';
+
     const tokens = params.tokens || [
       subgraphToken.transient({ symbol: 'wETH' }).build(),
       subgraphToken.transient({ symbol: 'wBTC' }).build(),
@@ -58,7 +60,7 @@ const subgraphPoolBase = Factory.define<SubgraphPoolBase>(
     return {
       id: '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e',
       address: '0xa6f548df93de924d73be7d25dc02554c6bd66db5',
-      poolType: 'Weighted',
+      poolType: type,
       swapFee: '0.001',
       swapEnabled: true,
       tokens,
