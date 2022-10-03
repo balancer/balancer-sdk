@@ -200,39 +200,45 @@ export function getActions(
   return actions;
 }
 
-/**
- * Encodes exitPool callData.
- * Exit staBal3 pool proportionally to underlying stables. Exits to relayer.
- * Outputreferences are used to store exit amounts for next transaction.
- *
- * @param sender Sender address.
- * @param amount Amount of staBal3 BPT to exit with.
- * @returns Encoded exitPool call. Output references.
- */
 function buildExit(
   pool: SubgraphPoolBase,
+  swapType: SwapTypes,
   action: Action,
   user: string,
   tokenOut: string
 ): string {
   const assets = pool.tokensList;
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-  // sort inputs
+  // tokens must have same order as pool getTokens
   const [sortedTokens] = assetHelpers.sortTokens(assets) as [string[]];
   const exitToken = action.assets[action.swaps[0].assetOutIndex];
   const exitTokenIndex = sortedTokens.findIndex(
     (t) => t.toLowerCase() === exitToken.toLowerCase()
   );
-  const userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(
-    action.swaps[0].amount,
-    exitTokenIndex
-  );
+  let userData: string;
+  const minAmountsOut = Array(assets.length).fill('0');
+  if (swapType === SwapTypes.SwapExactIn) {
+    // Variable amount of token out
+    minAmountsOut[exitTokenIndex] = action.minOut;
+    // Uses exact amount in
+    userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(
+      action.swaps[0].amount,
+      exitTokenIndex
+    );
+  } else {
+    // Uses exact amount of token out
+    minAmountsOut[exitTokenIndex] = action.swaps[0].amount;
+    // Variable amount of BPT in
+    userData = WeightedPoolEncoder.exitBPTInForExactTokensOut(
+      minAmountsOut,
+      action.minOut
+    );
+  }
+
+  // Send to relayer unless this is main token out
   let toInternalBalance = true;
   if (exitToken.toLowerCase() === tokenOut.toLowerCase())
     toInternalBalance = false;
-
-  const minAmountsOut = Array(assets.length).fill('0');
-  minAmountsOut[exitTokenIndex] = action.minOut;
 
   const exitParams: ExitPoolData = {
     assets: sortedTokens,
@@ -252,6 +258,7 @@ function buildExit(
 
 function buildJoin(
   pool: SubgraphPoolBase,
+  swapType: SwapTypes,
   action: Action,
   user: string,
   tokenIn: string,
@@ -259,19 +266,33 @@ function buildJoin(
 ): string {
   const assets = pool.tokensList;
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-  // sort inputs
+  // tokens must have same order as pool getTokens
   const [sortedTokens] = assetHelpers.sortTokens(assets) as [string[]];
   const joinToken = action.assets[action.swaps[0].assetInIndex];
   const joinTokenIndex = sortedTokens.findIndex(
     (t) => t.toLowerCase() === joinToken.toLowerCase()
   );
-  const amountsIn = Array(assets.length).fill('0');
-  amountsIn[joinTokenIndex] = action.swaps[0].amount;
 
-  const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
-    amountsIn,
-    action.minOut
-  );
+  const maxAmountsIn = Array(assets.length).fill('0');
+  let userData: string;
+
+  if (swapType === SwapTypes.SwapExactIn) {
+    // Uses exact amounts of tokens in
+    maxAmountsIn[joinTokenIndex] = action.swaps[0].amount;
+    // Variable amount of BPT out
+    userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
+      maxAmountsIn,
+      action.minOut
+    );
+  } else {
+    // Uses variable amounts of tokens in
+    maxAmountsIn[joinTokenIndex] = action.minOut;
+    // Exact amount of BPT out
+    userData = WeightedPoolEncoder.joinTokenInForExactBPTOut(
+      action.swaps[0].amount,
+      joinTokenIndex
+    );
+  }
 
   let fromInternalBalance = true;
   if (joinToken.toLowerCase() === tokenIn.toLowerCase())
@@ -288,7 +309,7 @@ function buildJoin(
     kind: 0,
     joinPoolRequest: {
       assets: sortedTokens,
-      maxAmountsIn: amountsIn,
+      maxAmountsIn,
       userData,
       fromInternalBalance,
     },
@@ -427,12 +448,12 @@ export function buildCalls(
     if (action.type === 'exit') {
       const pool = pools.find((p) => p.id === action.swaps[0].poolId);
       if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
-      calls.push(buildExit(pool, action, user, tokenOut));
+      calls.push(buildExit(pool, swapType, action, user, tokenOut));
     }
     if (action.type === 'join') {
       const pool = pools.find((p) => p.id === action.swaps[0].poolId);
       if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
-      calls.push(buildJoin(pool, action, user, tokenIn, tokenOut));
+      calls.push(buildJoin(pool, swapType, action, user, tokenIn, tokenOut));
     }
     if (action.type === 'batchswap') {
       calls.push(

@@ -41,42 +41,64 @@ describe('join and exit integration tests', async () => {
     [BAL_WETH],
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].BAL8020BPT,
-    ADDRESSES[networkId].WETH
+    ADDRESSES[networkId].WETH,
+    SwapTypes.SwapExactIn
   );
   await testFlow(
     'join',
     [BAL_WETH],
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].WETH,
-    ADDRESSES[networkId].BAL8020BPT
+    ADDRESSES[networkId].BAL8020BPT,
+    SwapTypes.SwapExactIn
   );
   await testFlow(
     'swap > exit - auraBAL[Swap]BPT[exit]WETH',
     [BAL_WETH, AURA_BAL_STABLE],
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].auraBal,
-    ADDRESSES[networkId].WETH
+    ADDRESSES[networkId].WETH,
+    SwapTypes.SwapExactIn
   );
   await testFlow(
     'swap > join - WBTC[Swap]WETH[join]BPT',
     [BAL_WETH, B_50WBTC_50WETH],
     parseFixed('7', 8).toString(),
     ADDRESSES[networkId].WBTC,
-    ADDRESSES[networkId].BAL8020BPT
+    ADDRESSES[networkId].BAL8020BPT,
+    SwapTypes.SwapExactIn
   );
   await testFlow(
     'exit > swap - BPT[Exit]WETH[Swap]WBTC',
     [BAL_WETH, B_50WBTC_50WETH],
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].BAL8020BPT,
-    ADDRESSES[networkId].WBTC
+    ADDRESSES[networkId].WBTC,
+    SwapTypes.SwapExactIn
   );
   await testFlow(
     'join > swap - BAL[Join]BPT[Swap]auraBal',
     [BAL_WETH, AURA_BAL_STABLE],
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].BAL,
-    ADDRESSES[networkId].auraBal
+    ADDRESSES[networkId].auraBal,
+    SwapTypes.SwapExactIn
+  );
+  await testFlow(
+    'exit',
+    [BAL_WETH],
+    parseFixed('0.78', 18).toString(),
+    ADDRESSES[networkId].BAL8020BPT,
+    ADDRESSES[networkId].WETH,
+    SwapTypes.SwapExactOut
+  );
+  await testFlow(
+    'join',
+    [BAL_WETH],
+    parseFixed('7', 18).toString(),
+    ADDRESSES[networkId].WETH,
+    ADDRESSES[networkId].BAL8020BPT,
+    SwapTypes.SwapExactOut
   );
 });
 
@@ -95,7 +117,8 @@ async function testFlow(
     decimals: number;
     symbol: string;
     slot: number;
-  }
+  },
+  swapType: SwapTypes
 ): Promise<void> {
   context(`${description}`, () => {
     // Setup chain
@@ -120,7 +143,6 @@ async function testFlow(
     });
 
     it('should exit swap via Relayer', async () => {
-      const swapType = SwapTypes.SwapExactIn;
       const swapInfo = await sor.getSwaps(
         tokenIn.address,
         tokenOut.address,
@@ -174,17 +196,32 @@ async function testFlow(
         signer,
         signerAddr
       );
-      console.log(tokenInBalanceBefore.toString());
-      console.log(tokenOutBalanceBefore.toString());
-      console.log(tokenInBalanceAfter.toString());
-      console.log(tokenOutBalanceAfter.toString());
-      console.log(swapInfo.returnAmount.toString());
+      const tokenInBalanceChange = tokenInBalanceBefore
+        .sub(tokenInBalanceAfter)
+        .abs()
+        .toString();
+      const tokenOutBalanceChange = tokenOutBalanceBefore
+        .sub(tokenOutBalanceAfter)
+        .abs()
+        .toString();
+
+      console.log(tokenInBalanceBefore.toString(), 'tokenInBalance before');
+      console.log(tokenInBalanceAfter.toString(), 'tokenInBalance after');
+      console.log(tokenInBalanceChange.toString(), 'tokenInBalance change');
+      console.log(tokenOutBalanceBefore.toString(), 'tokenOutBalance before');
+      console.log(tokenOutBalanceAfter.toString(), 'tokenOutBalance after');
+      console.log(tokenOutBalanceChange.toString(), 'tokenOutBalanceChange');
+      console.log(swapInfo.returnAmount.toString(), 'returnAmount');
+      console.log(swapAmount.toString(), 'swapAmount');
       expect(tokenOutBalanceBefore.toString()).to.eq('0');
       expect(swapInfo.returnAmount.gt('0')).to.be.true;
-      expect(tokenInBalanceBefore.sub(tokenInBalanceAfter).toString()).to.eq(
-        swapAmount.toString()
-      );
-      expect(tokenOutBalanceAfter.gte(swapInfo.returnAmount)).to.be.true;
+      if (swapType === SwapTypes.SwapExactIn) {
+        expect(tokenInBalanceChange).to.eq(swapAmount.toString());
+        expect(swapInfo.returnAmount.lte(tokenOutBalanceChange)).to.be.true;
+      } else {
+        expect(tokenOutBalanceChange).to.eq(swapAmount.toString());
+        expect(swapInfo.returnAmount.gte(tokenInBalanceChange)).to.be.true;
+      }
     }).timeout(10000000);
   });
 }
