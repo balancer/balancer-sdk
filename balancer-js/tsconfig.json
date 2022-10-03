@@ -19,5 +19,5 @@
     },
     "include": ["./src", "src/abi/*.json"],
     "exclude": ["node_modules"],
-    "files": ["hardhat.config.js"]
+    "files": ["hardhat.config.ts"]
 }
