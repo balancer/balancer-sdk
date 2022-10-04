@@ -22,14 +22,14 @@ import { BigNumber } from 'ethers';
 import { AssetHelpers } from '@/lib/utils';
 import { MaxInt256 } from '@ethersproject/constants';
 
-enum ActionStep {
+export enum ActionStep {
   Direct,
   TokenIn,
   TokenOut,
   Middle,
 }
 
-enum ActionType {
+export enum ActionType {
   Swap,
   BatchSwap,
   Join,
@@ -41,7 +41,7 @@ interface BaseAction {
   assets: string[];
 }
 
-interface JoinAction extends BaseAction {
+export interface JoinAction extends BaseAction {
   type: ActionType.Join;
   poolId: string;
   tokenIn: string;
@@ -51,7 +51,7 @@ interface JoinAction extends BaseAction {
   actionStep: ActionStep;
 }
 
-interface ExitAction extends BaseAction {
+export interface ExitAction extends BaseAction {
   type: ActionType.Exit;
   poolId: string;
   tokenOut: string;
@@ -61,7 +61,7 @@ interface ExitAction extends BaseAction {
   actionStep: ActionStep;
 }
 
-interface SwapAction extends BaseAction {
+export interface SwapAction extends BaseAction {
   type: ActionType.Swap;
   swap: SwapV2;
   opRef: OutputReference[];
@@ -69,7 +69,7 @@ interface SwapAction extends BaseAction {
   actionStep: ActionStep;
 }
 
-interface BatchSwapAction extends BaseAction {
+export interface BatchSwapAction extends BaseAction {
   type: ActionType.BatchSwap;
   swaps: SwapV2[];
   opRef: OutputReference[];
@@ -209,7 +209,7 @@ export function orderActions(
     // joins/exits with tokenOut (and not tokenIn) can always be done last
     else if (
       a.type === ActionType.Exit &&
-      a.bpt.toLowerCase() === tokenOut.toLowerCase()
+      a.tokenOut.toLowerCase() === tokenOut.toLowerCase()
     )
       exitActions.push(a);
     else if (
@@ -235,7 +235,6 @@ export function orderActions(
     assets,
     amountIn: '0',
   };
-  let isFirst = true;
 
   for (const a of allActions) {
     // batch neighbouring swaps together
@@ -243,10 +242,6 @@ export function orderActions(
       batchSwaps.swaps.push(a.swap);
       batchSwaps.opRef.push(...a.opRef);
       batchSwaps.minOut = a.minOut;
-      if (isFirst) {
-        batchSwaps.swaps[0].amount = a.amountIn;
-        isFirst = false;
-      }
     } else {
       if (batchSwaps.swaps.length > 0) {
         orderedActions.push(batchSwaps);
@@ -259,7 +254,6 @@ export function orderActions(
           assets,
           amountIn: '0',
         };
-        isFirst = true;
       }
       orderedActions.push(a);
     }
@@ -420,6 +414,7 @@ function createSwapAction(
     swap.assetOutIndex,
     opRefKey
   );
+  swap.amount = amountIn;
   const swapAction: SwapAction = {
     type: ActionType.Swap,
     opRef: opRef.key ? [opRef] : [],
