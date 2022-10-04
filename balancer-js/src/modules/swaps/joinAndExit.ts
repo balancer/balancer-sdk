@@ -689,6 +689,9 @@ export function buildCalls(
     swapInfo.tokenAddresses
   );
 
+  if (swapType === SwapTypes.SwapExactOut && orderedActions.length > 1)
+    throw new Error('ExactOut with > 1 step no supported.');
+
   if (checkOrderedActions(orderedActions) > 1)
     throw new Error('Paths finishing on two exits are unsupported');
 
