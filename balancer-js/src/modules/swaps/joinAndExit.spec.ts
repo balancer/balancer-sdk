@@ -14,6 +14,7 @@ import {
 import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
 import {
+  ActionStep,
   ActionType,
   BatchSwapAction,
   ExitAction,
@@ -26,7 +27,6 @@ import {
 import poolsList from '@/test/lib/joinExitPools.json';
 import { Network } from '@/types';
 import { BalancerSDK } from '../sdk.module';
-import { BatchSwap } from './types';
 
 const pool1Bpt = '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56';
 const DAI = ADDRESSES[Network.MAINNET].DAI;
@@ -153,6 +153,7 @@ describe(`Paths with join and exits.`, () => {
       expect(join.opRef.index).to.eq(undefined);
       expect(join.amountIn).to.eq(swapAmount.toString());
       expect(join.minOut).to.eq(returnAmount);
+      expect(join.actionStep).to.eq(ActionStep.Direct);
     });
     it('exact in, exit', async () => {
       const tokenIn = pool1Bpt;
@@ -187,13 +188,14 @@ describe(`Paths with join and exits.`, () => {
       expect(exit.opRef.length).to.eq(0);
       expect(exit.amountIn).to.eq(swapAmount);
       expect(exit.minOut).to.eq(returnAmount);
+      expect(exit.actionStep).to.eq(ActionStep.Direct);
     });
-    it('exact in, join>swap and swap', async () => {
+    it('exact in, swap and join>swap', async () => {
       const tokenIn = DAI.address;
       const tokenOut = USDT.address;
       const swaps = [
         {
-          // swap
+          // swap (tokenIn>tokenOut)
           poolId:
             '0xc45d42f801105e861e86658648e3678ad7aa70f900010000000000000000011e',
           assetInIndex: 0,
@@ -241,12 +243,14 @@ describe(`Paths with join and exits.`, () => {
       expect(join.type).to.eq(ActionType.Join);
       expect(join.opRef.index).to.eq(2);
       expect(join.minOut).to.eq('0');
+      expect(join.actionStep).to.eq(ActionStep.TokenIn);
       expect(batchSwap.type).to.eq(ActionType.BatchSwap);
       expect(batchSwap.opRef.length).to.eq(0);
       expect(batchSwap.minOut).to.eq(returnAmount);
       expect(batchSwap.swaps.length).to.eq(2);
       expect(batchSwap.swaps[0].amount).to.eq('1279699403356512142192771');
       expect(batchSwap.swaps[1].amount).to.eq(join.opRef.key.toString());
+      expect(batchSwap.hasTokenOut).to.be.true;
     });
     it('exact in, swap>exit', async () => {
       const tokenIn = USDT.address;
@@ -294,10 +298,12 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwap.minOut).to.eq('0');
       expect(batchSwap.swaps.length).to.eq(1);
       expect(batchSwap.swaps[0].amount).to.eq('100000000000');
+      expect(batchSwap.hasTokenOut).to.be.false;
       expect(exit.type).to.eq(ActionType.Exit);
       expect(exit.opRef.length).to.eq(0);
       expect(exit.minOut).to.eq(returnAmount);
       expect(exit.amountIn).to.eq(batchSwap.opRef[0].key.toString());
+      expect(exit.actionStep).to.eq(ActionStep.TokenOut);
     });
     it('exact in, swap>join>swap', async () => {
       // e.g.
@@ -356,15 +362,18 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwapFirst.opRef[0].index).to.eq(1);
       expect(batchSwapFirst.swaps.length).to.eq(1);
       expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
+      expect(batchSwapFirst.hasTokenOut).to.be.false;
       expect(join.type).to.eq(ActionType.Join);
       expect(join.minOut).to.eq('0');
       expect(join.opRef.index).to.eq(2);
       expect(join.amountIn).to.eq(batchSwapFirst.opRef[0].key.toString());
+      expect(join.actionStep).to.eq(ActionStep.Middle);
       expect(batchSwapSecond.type).to.eq(ActionType.BatchSwap);
       expect(batchSwapSecond.opRef.length).to.eq(0);
       expect(batchSwapSecond.swaps.length).to.eq(1);
       expect(batchSwapSecond.swaps[0].amount).to.eq(join.opRef.key.toString());
       expect(batchSwapSecond.minOut).to.eq(returnAmount);
+      expect(batchSwapSecond.hasTokenOut).to.be.true;
     });
     it('exact in, swap>exit>swap', async () => {
       // e.g.
@@ -422,11 +431,13 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwapFirst.opRef[0].index).to.eq(1);
       expect(batchSwapFirst.swaps.length).to.eq(1);
       expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
+      expect(batchSwapFirst.hasTokenOut).to.be.false;
       expect(exit.type).to.eq(ActionType.Exit);
       expect(exit.minOut).to.eq('0');
       expect(exit.opRef.length).to.eq(1);
       expect(exit.opRef[0].index).to.eq(2);
       expect(exit.amountIn).to.eq(batchSwapFirst.opRef[0].key.toString());
+      expect(exit.actionStep).to.eq(ActionStep.Middle);
       expect(batchSwapSecond.type).to.eq(ActionType.BatchSwap);
       expect(batchSwapSecond.opRef.length).to.eq(0);
       expect(batchSwapSecond.swaps.length).to.eq(1);
@@ -434,6 +445,7 @@ describe(`Paths with join and exits.`, () => {
         exit.opRef[0].key.toString()
       );
       expect(batchSwapSecond.minOut).to.eq(returnAmount);
+      expect(batchSwapSecond.hasTokenOut).to.be.true;
     });
     it('exact in, ending in two joins', async () => {
       // e.g.
@@ -504,10 +516,13 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwapFirst.swaps.length).to.eq(2);
       expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
       expect(batchSwapFirst.swaps[1].amount).to.eq('200000000000');
+      expect(batchSwapFirst.hasTokenOut).to.be.false;
       expect(joinFirst.type).to.eq(ActionType.Join);
       expect(joinFirst.amountIn).to.eq(batchSwapFirst.opRef[0].key.toString());
+      expect(joinFirst.actionStep).to.eq(ActionStep.TokenOut);
       expect(joinSecond.type).to.eq(ActionType.Join);
       expect(joinSecond.amountIn).to.eq(batchSwapFirst.opRef[1].key.toString());
+      expect(joinSecond.actionStep).to.eq(ActionStep.TokenOut);
       expect(joinFirst.minOut).to.not.eq(joinSecond.minOut); // TODO - Can't be same for both
     });
     it('exact in, ending in two exits', async () => {
@@ -603,13 +618,15 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwapFirst.swaps[1].amount).to.eq('0');
       expect(batchSwapFirst.swaps[2].amount).to.eq('100000000000');
       expect(batchSwapFirst.swaps[3].amount).to.eq('0');
-
+      expect(batchSwapFirst.hasTokenOut).to.eq(false);
       expect(exitFirst.type).to.eq(ActionType.Exit);
       expect(exitFirst.opRef.length).to.eq(0);
       expect(exitFirst.amountIn).to.eq(batchSwapFirst.opRef[1].key.toString());
+      expect(exitFirst.actionStep).to.eq(ActionStep.TokenOut);
       expect(exitSecond.type).to.eq(ActionType.Exit);
       expect(exitSecond.opRef.length).to.eq(0);
       expect(exitSecond.amountIn).to.eq(batchSwapFirst.opRef[3].key.toString());
+      expect(exitSecond.actionStep).to.eq(ActionStep.TokenOut);
       expect(exitFirst.minOut).to.not.eq(exitSecond.minOut); // TODO - Can't be same for both
       expect(exitSecond.minOut).to.eq('94961515248180000000000');
       expect(orderedActions[5].minOut).to.eq('94961515248180000000000');

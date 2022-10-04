@@ -74,6 +74,7 @@ export interface BatchSwapAction extends BaseAction {
   swaps: SwapV2[];
   opRef: OutputReference[];
   amountIn: string;
+  hasTokenOut: boolean;
 }
 
 type Actions = JoinAction | ExitAction | SwapAction | BatchSwapAction;
@@ -234,6 +235,7 @@ export function orderActions(
     minOut: '0',
     assets,
     amountIn: '0',
+    hasTokenOut: false,
   };
 
   for (const a of allActions) {
@@ -242,6 +244,8 @@ export function orderActions(
       batchSwaps.swaps.push(a.swap);
       batchSwaps.opRef.push(...a.opRef);
       batchSwaps.minOut = a.minOut;
+      if (a.actionStep === ActionStep.TokenOut || ActionStep.Direct)
+        batchSwaps.hasTokenOut = true;
     } else {
       if (batchSwaps.swaps.length > 0) {
         orderedActions.push(batchSwaps);
@@ -253,6 +257,7 @@ export function orderActions(
           minOut: '0',
           assets,
           amountIn: '0',
+          hasTokenOut: false,
         };
       }
       orderedActions.push(a);
