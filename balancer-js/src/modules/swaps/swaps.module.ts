@@ -30,6 +30,7 @@ import {
   SingleSwapBuilder,
   BatchSwapBuilder,
 } from '@/modules/swaps/swap_builder';
+import { TokenKind } from 'graphql';
 
 export class Swaps {
   readonly sor: SOR;
@@ -334,8 +335,12 @@ export class Swaps {
   async formatSwapsForGnosis(
     swapInfo: SwapInfo,
     referenceToken: string,
+    relayerAddress: string,
+    callData: string,
     useBpts?: boolean
   ): Promise<string> {
+    const amountIn = swapInfo.swapAmount.toString();
+    const amountOut = swapInfo.returnAmount.toString();
     let output = '';
     const pools = this.getPools(useBpts);
     const swaps = swapInfo.swaps;
@@ -350,6 +355,7 @@ export class Swaps {
       const pool = pools.find(
         (value) => value.id == swap.poolId
       ) as SubgraphPoolBase;
+      // pool.tokens[0].
       for (const poolToken of pool.tokens) {
         const token: Token = {
           [poolToken.address]: {
@@ -363,8 +369,40 @@ export class Swaps {
     const tokensArray: Token[] = Array.from(tokens);
     const cowSwapOrder = {
       ref_token: referenceToken,
-      interaction_data: [],
+      prices: {},
+      orders: {},
+      amms: {},
       foreign_liquidity_orders: [],
+      approvals: [
+        {
+          token: swapInfo.tokenIn,
+          spender: relayerAddress,
+          amount: amountIn,
+        },
+      ],
+      interaction_data: [
+        {
+          target: relayerAddress,
+          value: '0x0',
+          call_data_hex: callData,
+          inputs: [
+            {
+              amount: amountIn,
+              token: swapInfo.tokenIn,
+            },
+          ],
+          outputs: [
+            {
+              amount: amountOut,
+              token: swapInfo.tokenOut,
+            },
+          ],
+          exec_plan: {
+            sequence: 0,
+            position: 1,
+          },
+        },
+      ],
       tokens: tokensArray,
     };
     output = JSON.stringify(cowSwapOrder, null, 2) + '\n' + output;
