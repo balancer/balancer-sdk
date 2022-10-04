@@ -1,10 +1,7 @@
 import dotenv from 'dotenv';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { parseFixed } from '@ethersproject/bignumber';
-import {
-  BalancerSDK,
-  Network,
-} from '../src/index';
+import { BalancerSDK, Network } from '../src/index';
 import { forkSetup, getBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
 import { Relayer } from '../src/modules/relayer/relayer.module';
@@ -29,23 +26,29 @@ async function setUp(provider: JsonRpcProvider): Promise<string> {
     parseFixed('100', addresses.DAI.decimals).toString(),
     parseFixed('100', addresses.USDC.decimals).toString(),
   ];
-  const mainSlots = [addresses.DAI.slot as number, addresses.USDC.slot as number];
+  const mainSlots = [
+    addresses.DAI.slot as number,
+    addresses.USDC.slot as number,
+  ];
 
-  const linearPoolTokens = [addresses.bbadai?.address as string, addresses.bbausdc?.address as string];
+  const linearPoolTokens = [
+    addresses.bbadai?.address as string,
+    addresses.bbausdc?.address as string,
+  ];
   const linearInitialBalances = [
     parseFixed('100', addresses.bbadai?.decimals).toString(),
     parseFixed('100', addresses.bbausdc?.decimals).toString(),
   ];
-  const linearPoolSlots = [addresses.bbadai?.slot as number, addresses.bbausdc?.slot as number];
+  const linearPoolSlots = [
+    addresses.bbadai?.slot as number,
+    addresses.bbausdc?.slot as number,
+  ];
 
   await forkSetup(
     signer,
     [...mainTokens, ...linearPoolTokens],
     [...mainSlots, ...linearPoolSlots],
-    [
-      ...mainInitialBalances,
-      ...linearInitialBalances,
-    ],
+    [...mainInitialBalances, ...linearInitialBalances],
     jsonRpcUrl as string,
     blockNumber
   );
@@ -55,7 +58,12 @@ async function setUp(provider: JsonRpcProvider): Promise<string> {
     provider
   );
 
-  return await Relayer.signRelayerApproval(contractAddresses.relayer as string, signerAddress, signer, contracts.vault);
+  return await Relayer.signRelayerApproval(
+    contractAddresses.relayer as string,
+    signerAddress,
+    signer,
+    contracts.vault
+  );
 }
 
 /*
@@ -79,17 +87,24 @@ async function join() {
   const wrapLeafTokens = false;
   const slippage = '100'; // 100 bps = 1%
   const bbausd2 = {
-    id: '0x3d5981bdd8d3e49eb7bbdc1d2b156a3ee019c18e0000000000000000000001a7',
-    address: '0x3d5981bdd8d3e49eb7bbdc1d2b156a3ee019c18e',
+    id: addresses.bbausd2?.id as string,
+    address: addresses.bbausd2?.address as string,
   };
   // Here we join with USDC and bbadai
-  const tokensIn = [addresses.USDC.address, addresses.bbadai?.address as string];
-  const amountsIn = [parseFixed('10', 6).toString(), parseFixed('10', 18).toString()];
+  const tokensIn = [
+    addresses.USDC.address,
+    addresses.bbadai?.address as string,
+  ];
+  const amountsIn = [
+    parseFixed('10', 6).toString(),
+    parseFixed('10', 18).toString(),
+  ];
 
   const balancer = new BalancerSDK({
     network,
     rpcUrl,
-    customSubgraphUrl: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta'
+    customSubgraphUrl:
+      'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta',
   });
 
   // Checking balances to confirm success
