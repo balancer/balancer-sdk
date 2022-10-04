@@ -253,9 +253,9 @@ Find Spot Price for pair in specific pool.
 const balancer = new BalancerSDK(sdkConfig);
 const pool = await balancer.pools.find(poolId);
 const spotPrice = await pool.calcSpotPrice(
-    ADDRESSES[network].DAI.address,
-    ADDRESSES[network].BAL.address,
-  );
+  ADDRESSES[network].DAI.address,
+  ADDRESSES[network].BAL.address
+);
 ```
 
 ### #getSpotPrice
@@ -318,6 +318,7 @@ buildJoin: (
 ### Joining nested pools
 
 Exposes Join functionality allowing user to join a pool that has pool tokens that are BPTs of other pools, e.g.:
+
 ```
                   CS0
               /        \
@@ -414,6 +415,50 @@ Builds an exit transaction with exact tokens out and maximum BPT in based on sli
 ```
 
 [Example](./examples/exitExactTokensOut.ts)
+
+### Exiting nested pools
+
+Exposes Exit functionality allowing user to exit a pool that has pool tokens that are BPTs of other pools, e.g.:
+
+```
+                  CS0
+              /        \
+            CS1        CS2
+          /    \      /   \
+         DAI   USDC  USDT  FRAX
+
+Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
+```
+
+```js
+/**
+   * Builds generalised exit transaction
+   *
+   * @param poolId        Pool id
+   * @param amount        Token amount in EVM scale
+   * @param signer        Signer (used for simulating tx to get accurate amounts)
+   * @param userAddress   User address
+   * @param slippage      Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param authorisation Optional auhtorisation call to be added to the chained transaction
+   * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
+   */
+  async generalisedExit(
+    poolId: string,
+    amount: string,
+    signer: JsonRpcSigner,
+    userAddress: string,
+    slippage: string,
+    authorisation?: string
+  ): Promise<{
+    to: string;
+    callData: string;
+    tokensOut: string[];
+    expectedAmountsOut: string[];
+    minAmountsOut: string[];
+  }>
+```
+
+[Example](./examples/exitGeneralised.ts)
 
 ## RelayerService
 

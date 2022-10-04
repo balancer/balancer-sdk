@@ -119,14 +119,15 @@ export class Pools implements Findable<PoolWithMethods> {
   }
 
   /**
-   * Builds generalised join transaction
+   * Builds generalised exit transaction
    *
    * @param poolId        Pool id
    * @param amount        Token amount in EVM scale
-   * @param signer        JsonRpcSigner that will perform the exit transaction
-   * @param slippage      Slippage tolerance in bps (e.g. 100 bps = 1%)
+   * @param signer        Signer (used for simulating tx to get accurate amounts)
+   * @param userAddress   User address
+   * @param slippage      Maximum slippage tolerance in bps i.e. 50 = 0.5%.
    * @param authorisation Optional auhtorisation call to be added to the chained transaction
-   * @returns transaction data ready to be sent to the network along with tokens, min and expected BPT amounts out.
+   * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
    */
   async generalisedExit(
     poolId: string,
