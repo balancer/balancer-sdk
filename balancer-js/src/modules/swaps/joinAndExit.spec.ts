@@ -22,7 +22,7 @@ import {
   JoinAction,
   orderActions,
   SwapAction,
-  checkOrderedActions
+  checkOrderedActions,
 } from './joinAndExit';
 
 import poolsList from '@/test/lib/joinExitPools.json';

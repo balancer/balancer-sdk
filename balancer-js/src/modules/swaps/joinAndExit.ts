@@ -80,14 +80,6 @@ export interface BatchSwapAction extends BaseAction {
 type Actions = JoinAction | ExitAction | SwapAction | BatchSwapAction;
 type OrderedActions = JoinAction | ExitAction | BatchSwapAction;
 
-// TODO - Safety check at end to make sure nothing is wrong?
-
-// mainnet V4 - TODO - Make this part of config
-const relayerAddress = '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA';
-// const relayerAddress = '0x886A3Ec7bcC508B8795990B60Fa21f85F9dB7948';
-// TODO -
-const wrappedNativeAsset = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
-
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 function getOutputRef(key: number, index: number): OutputReference {
@@ -437,7 +429,9 @@ function buildExit(
   swapType: SwapTypes,
   action: ExitAction,
   user: string,
-  tokenOut: string
+  tokenOut: string,
+  relayerAddress: string,
+  wrappedNativeAsset: string
 ): string {
   const assets = pool.tokensList;
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
@@ -494,7 +488,9 @@ function buildJoin(
   action: JoinAction,
   user: string,
   tokenIn: string,
-  tokenOut: string
+  tokenOut: string,
+  relayerAddress: string,
+  wrappedNativeAsset: string
 ): string {
   const assets = pool.tokensList;
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
@@ -561,7 +557,8 @@ function buildBatchSwap(
   tokenIn: string,
   tokenOut: string,
   swapAmount: string,
-  pools: SubgraphPoolBase[]
+  pools: SubgraphPoolBase[],
+  relayerAddress: string
 ): string[] {
   const tokenInIndex = action.swaps[0].assetInIndex;
   const tokenOutIndex = action.swaps[action.swaps.length - 1].assetOutIndex;
@@ -643,7 +640,10 @@ function buildBatchSwap(
  * @param authorisation Encoded authorisation call.
  * @returns relayer approval call
  */
-function buildSetRelayerApproval(authorisation: string): string {
+function buildSetRelayerApproval(
+  authorisation: string,
+  relayerAddress: string
+): string {
   return Relayer.encodeSetRelayerApproval(relayerAddress, true, authorisation);
 }
 
@@ -670,7 +670,9 @@ export function buildCalls(
   swapInfo: SwapInfo,
   user: string,
   authorisation: string | undefined,
-  swapType: SwapTypes
+  swapType: SwapTypes,
+  relayerAddress: string,
+  wrappedNativeAsset: string
 ): {
   to: string;
   data: string;
@@ -695,20 +697,42 @@ export function buildCalls(
   if (checkOrderedActions(orderedActions) > 1)
     throw new Error('Paths finishing on two exits are unsupported');
 
-  // TO DO - Add some kind of final amounts in/out safety checks
+  // TODO - Add some kind of final amounts in/out safety checks
   const calls: string[] = [];
-  if (authorisation) calls.push(buildSetRelayerApproval(authorisation));
+  if (authorisation)
+    calls.push(buildSetRelayerApproval(authorisation, relayerAddress));
 
   for (const action of orderedActions) {
     if (action.type === ActionType.Exit) {
       const pool = pools.find((p) => p.id === action.poolId);
       if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
-      calls.push(buildExit(pool, swapType, action, user, tokenOut));
+      calls.push(
+        buildExit(
+          pool,
+          swapType,
+          action,
+          user,
+          tokenOut,
+          relayerAddress,
+          wrappedNativeAsset
+        )
+      );
     }
     if (action.type === ActionType.Join) {
       const pool = pools.find((p) => p.id === action.poolId);
       if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
-      calls.push(buildJoin(pool, swapType, action, user, tokenIn, tokenOut));
+      calls.push(
+        buildJoin(
+          pool,
+          swapType,
+          action,
+          user,
+          tokenIn,
+          tokenOut,
+          relayerAddress,
+          wrappedNativeAsset
+        )
+      );
     }
     if (action.type === ActionType.BatchSwap) {
       calls.push(
@@ -719,7 +743,8 @@ export function buildCalls(
           tokenIn,
           tokenOut,
           swapInfo.swapAmount.toString(),
-          pools
+          pools,
+          relayerAddress
         )
       );
     }
