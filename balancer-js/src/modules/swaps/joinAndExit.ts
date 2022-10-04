@@ -647,6 +647,22 @@ function buildSetRelayerApproval(authorisation: string): string {
   return Relayer.encodeSetRelayerApproval(relayerAddress, true, authorisation);
 }
 
+export function checkOrderedActions(actions: OrderedActions[]): number {
+  let outputCount = 0;
+  for (const a of actions) {
+    if (a.type === ActionType.BatchSwap) {
+      if (a.hasTokenOut) outputCount++;
+    } else if (a.type === ActionType.Exit || a.type === ActionType.Join) {
+      if (
+        a.actionStep === ActionStep.Direct ||
+        a.actionStep === ActionStep.TokenOut
+      )
+        outputCount++;
+    }
+  }
+  return outputCount;
+}
+
 export function buildCalls(
   pools: SubgraphPoolBase[],
   tokenIn: string,
@@ -672,6 +688,11 @@ export function buildCalls(
     tokenOut,
     swapInfo.tokenAddresses
   );
+
+  if (checkOrderedActions(orderedActions) > 1)
+    throw new Error('Paths finishing on two exits are unsupported');
+
+  // TO DO - Add some kind of final amounts in/out safety checks
   const calls: string[] = [];
   if (authorisation) calls.push(buildSetRelayerApproval(authorisation));
 
