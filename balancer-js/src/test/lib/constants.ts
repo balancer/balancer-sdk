@@ -479,6 +479,13 @@ export const ADDRESSES = {
       symbol: 'boostedMeta1',
       slot: 0,
     },
+    boostedMetaAlt1: {
+      id: '0x98f3b300d7d0607ed69be014ec0d99567b00be6d00000000000000000000020a',
+      address: '0x98f3b300d7d0607ed69be014ec0d99567b00be6d',
+      decimals: 18,
+      symbol: 'boostedMetaAlt1',
+      slot: 0,
+    },
     boostedMetaBig1: {
       id: '0xae5bfce463ab4689e9353d13b537e9896f13c7420000000000000000000001aa',
       address: '0xae5bfce463ab4689e9353d13b537e9896f13c742',

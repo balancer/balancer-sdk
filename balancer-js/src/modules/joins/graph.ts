@@ -106,7 +106,33 @@ export class PoolGraph {
     wrapMainTokens: boolean
   ): Promise<[Node, number]> {
     const pool = await this.pools.findBy('address', address);
-    if (!pool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
+
+    if (!pool) {
+      if (!parent) {
+        // If pool not found by address and is root pool (without parent), then throw error
+        throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
+      } else {
+        // If pool not found by address, but it has parent, assume it's a leaf token and add a leafTokenNode
+        // TODO: maybe it's a safety issue? Can we be safer?
+        const parentPool = (await this.pools.findBy(
+          'address',
+          parent.address
+        )) as Pool;
+        const leafTokenDecimals =
+          parentPool.tokens[parentPool.tokensList.indexOf(address)].decimals ??
+          18;
+
+        const nodeInfo = PoolGraph.createInputTokenNode(
+          nodeIndex,
+          address,
+          leafTokenDecimals,
+          parent,
+          proportionOfParent
+        );
+        return nodeInfo;
+      }
+    }
+
     const joinAction = joinActions.get(pool.poolType);
     const exitAction = exitActions.get(pool.poolType);
     if (!joinAction || !exitAction)

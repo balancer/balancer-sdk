@@ -20,7 +20,7 @@ import { JsonRpcSigner } from '@ethersproject/providers';
 const network = Network.GOERLI;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
-const blockNumber = 7596322;
+const blockNumber = 7710300;
 
 /*
  * Testing on MAINNET
@@ -151,8 +151,8 @@ const testFlow = async (
   // console.log('expectedOut', expectedAmountsOut.toString());
 };
 
+// all contexts currently applies to GOERLI only
 describe('generalised exit execution', async () => {
-  // following contexts currently applies to GOERLI only
   /*
   bbamaiweth: ComposableStable, baMai/baWeth
   baMai: Linear, aMai/Mai
@@ -190,7 +190,6 @@ describe('generalised exit execution', async () => {
     ]);
   });
 
-  // following contexts currently applies to GOERLI only
   /*
     boostedMeta1: ComposableStable, baMai/bbausd2
     baMai: Linear, aMai/Mai
@@ -227,7 +226,47 @@ describe('generalised exit execution', async () => {
       },
     ]);
   });
-  // following contexts currently applies to GOERLI only
+
+  /*
+    boostedMetaAlt1: ComposableStable, Mai/bbausd2
+    Mai
+    bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
+    */
+  context('boostedMetaAlt', async () => {
+    let authorisation: string | undefined;
+    beforeEach(async () => {
+      const tokens = [addresses.boostedMetaAlt1.address];
+      const slots = [addresses.boostedMetaAlt1.slot];
+      const balances = [
+        parseFixed('1', addresses.boostedMetaAlt1.decimals).toString(),
+      ];
+      await forkSetup(
+        signer,
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        blockNumber
+      );
+    });
+
+    await runTests([
+      {
+        signer,
+        description: 'exit pool',
+        pool: {
+          id: addresses.boostedMetaAlt1.id,
+          address: addresses.boostedMetaAlt1.address,
+        },
+        amount: parseFixed(
+          '0.05',
+          addresses.boostedMetaAlt1.decimals
+        ).toString(),
+        authorisation: authorisation,
+      },
+    ]);
+  });
+
   /*
   boostedMetaBig1: ComposableStable, bbamaiweth/bbausd2
   bbamaiweth: ComposableStable, baMai/baWeth

@@ -61,6 +61,7 @@ export class Exit {
 
     // Create exit paths for each output node and splits amount in proportionally between them
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
+
     const exitPaths = this.getExitPaths(outputNodes, amountIn);
 
     const tokensOutByExitPath = outputNodes.map((n) => n.address.toLowerCase());
@@ -286,9 +287,10 @@ export class Exit {
         const isRootNode = !node.parent;
         const sender = isRootNode ? userAddress : this.relayer;
         // Always send to user on output calls otherwise send to relayer
-        const isLastActionFromExitPath = node.children.some(
-          (child) => child.exitAction === 'output'
+        const exitChild = node.children.find((child) =>
+          exitPath.map((n) => n.index).includes(child.index)
         );
+        const isLastActionFromExitPath = exitChild?.exitAction === 'output';
         const recipient = isLastActionFromExitPath ? userAddress : this.relayer;
         // Last calls will use minAmountsOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
         const minAmountOut =
@@ -299,7 +301,7 @@ export class Exit {
             calls.push(
               this.createBatchSwap(
                 node,
-                exitPath,
+                exitChild as Node,
                 i,
                 minAmountOut,
                 sender,
@@ -311,7 +313,7 @@ export class Exit {
             calls.push(
               this.createExitPool(
                 node,
-                exitPath,
+                exitChild as Node,
                 i,
                 minAmountOut,
                 sender,
@@ -343,15 +345,12 @@ export class Exit {
 
   private createBatchSwap(
     node: Node,
-    exitPath: Node[],
+    exitChild: Node,
     exitPathIndex: number,
     minAmountOut: string,
     sender: string,
     recipient: string
   ): string {
-    const exitChild = node.children.find((child) =>
-      exitPath.map((n) => n.index).includes(child.index)
-    ) as Node;
     const isRootNode = !node.parent;
     const amountIn = isRootNode
       ? node.index
@@ -410,7 +409,9 @@ export class Exit {
     //     inputToken: ${node.address},
     //     pool: ${node.id},
     //     outputToken: ${exitChild.address},
-    //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)}
+    //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)},
+    //     sender: ${sender},
+    //     recipient: ${recipient}
     //   )`
     // );
 
@@ -430,15 +431,12 @@ export class Exit {
 
   private createExitPool(
     node: Node,
-    exitPath: Node[],
+    exitChild: Node,
     exitPathIndex: number,
     minAmountOut: string,
     sender: string,
     recipient: string
   ): string {
-    const exitChild = node.children.find((child) =>
-      exitPath.map((n) => n.index).includes(child.index)
-    ) as Node;
     const tokenOut = exitChild.address;
     const isRootNode = !node.parent;
     const amountIn = isRootNode
@@ -512,7 +510,9 @@ export class Exit {
     //     amountOut: ${sortedAmounts[sortedTokens.indexOf(tokenOut)].toString()},
     //     amountIn: ${amountIn},
     //     minAmountOut: ${minAmountOut},
-    //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)}
+    //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)},
+    //     sender: ${sender},
+    //     recipient: ${recipient}
     //   )`
     // );
 
