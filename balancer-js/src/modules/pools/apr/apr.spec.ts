@@ -192,6 +192,13 @@ describe('pool apr', () => {
       ).rewardAprs(poolData);
 
       expect(apr.total).to.eq(20000);
+
+      const aprBreakdownSum = Object.values(apr.breakdown).reduce(
+        (total, current) => (total += current),
+        0
+      );
+
+      expect(aprBreakdownSum).to.eq(apr.total);
     });
   });
 });
