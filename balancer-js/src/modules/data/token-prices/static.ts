@@ -1,11 +1,18 @@
-import { Price, TokenPrices } from '@/types';
-import { TokenPriceProvider } from './types';
+import { Findable, Price, TokenPrices } from '@/types';
 
-export class StaticTokenPriceProvider implements TokenPriceProvider {
-  constructor(private tokenPrices: TokenPrices) {}
+export class StaticTokenPriceProvider implements Findable<Price> {
+  tokenPrices: TokenPrices;
+  constructor(tokenPrices: TokenPrices) {
+    this.tokenPrices = Object.fromEntries(
+      Object.entries(tokenPrices).map(([address, price]) => {
+        return [address.toLowerCase(), price];
+      })
+    );
+  }
 
   async find(address: string): Promise<Price | undefined> {
-    const price = this.tokenPrices[address];
+    const lowercaseAddress = address.toLowerCase();
+    const price = this.tokenPrices[lowercaseAddress];
     if (!price) return;
     return price;
   }
