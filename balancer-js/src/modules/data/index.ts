@@ -13,7 +13,11 @@ export * from './block-number';
 import { BalancerNetworkConfig, BalancerDataRepositories } from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
 import { BlockNumberRepository } from './block-number';
-import { CoingeckoPriceRepository } from './token-prices/coingecko';
+import {
+  CoingeckoPriceRepository,
+  AaveRates,
+  TokenPriceProvider,
+} from './token-prices';
 import { StaticTokenProvider } from './token/static';
 import { LiquidityGaugeSubgraphRPCProvider } from './liquidity-gauges/provider';
 import { FeeDistributorRepository } from './fee-distributor/repository';
@@ -68,10 +72,17 @@ export class Data implements BalancerDataRepositories {
       .filter((t) => t.chainId == networkConfig.chainId)
       .map((t) => t.address);
 
-    this.tokenPrices = new CoingeckoPriceRepository(
+    const coingeckoRepository = new CoingeckoPriceRepository(
       tokenAddresses,
       networkConfig.chainId
     );
+
+    const aaveRates = new AaveRates(
+      networkConfig.addresses.contracts.multicall,
+      provider
+    );
+
+    this.tokenPrices = new TokenPriceProvider(coingeckoRepository, aaveRates);
 
     this.tokenMeta = new StaticTokenProvider([]);
 
