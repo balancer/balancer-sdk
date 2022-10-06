@@ -27,7 +27,7 @@ export class AaveRates {
     const [, res] = await this.multicall.aggregate(payload);
 
     const rates = addresses.reduce((p: { [key: string]: number }, a, i) => {
-      p[a] ||= parseFloat(formatUnits(res[i], 27));
+      p[a] ||= res[i] == '0x' ? 0 : parseFloat(formatUnits(res[i], 27));
       return p;
     }, {});
     console.timeEnd('Fetching aave rates');
