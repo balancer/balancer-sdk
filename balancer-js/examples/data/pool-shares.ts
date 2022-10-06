@@ -1,4 +1,4 @@
-import { Network, PoolShareAttributes } from '../../src/index';
+import { Network } from '../../src/index';
 import { BalancerSDK } from '../../src/modules/sdk.module';
 
 const sdk = new BalancerSDK(
@@ -31,10 +31,10 @@ const { poolShares } = sdk.data;
   result = await poolShares.findByPool(POOL_ID, 2, 1);
   console.log('Pool shares by pool (#2 & #3)', result);
     
-  // Balancer subgraph : https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
   result = await poolShares.query({ where: { poolId: POOL_ID,  balance_gt: '0' }, first: 3 });
   console.log('Pool shares subgraph query', result);
-  
+    // Balancer subgraph : https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
+
 })();
 
 // npm run examples:exec -- ./examples/data/pool-shares.ts

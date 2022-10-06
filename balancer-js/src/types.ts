@@ -50,6 +50,7 @@ export interface ContractAddresses {
   lidoRelayer?: string;
   gaugeController?: string;
   feeDistributor?: string;
+  veBal?: string
 }
 
 export interface BalancerNetworkConfig {

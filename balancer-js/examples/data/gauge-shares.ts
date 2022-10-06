@@ -1,10 +1,10 @@
-import { GaugeShareAttributes, Network } from '../../src/index';
+import { Network } from '../../src/index';
 import { BalancerSDK } from '../../src/modules/sdk.module';
 
 const sdk = new BalancerSDK(
   { 
     network: Network.MAINNET, 
-    rpcUrl: `${process.env.ALCHEMY_URL}` 
+    rpcUrl: '' 
   });
 const { gaugeShares } = sdk.data;
 
@@ -31,9 +31,10 @@ const { gaugeShares } = sdk.data;
     result = await gaugeShares.findByGauge(GAUGE_ID, 2, 1);
     console.log('Gauge shares by gauge (#2 & #3)', result);
 
-    // Gauges subgraph : https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-gauges
     result = await gaugeShares.query({ where: { id_in: [ GAUGESHARE_ID, GAUGESHARE_ID2 ] }});
-    console.log('Gauge shares subgraph query', result);
-})();
+    console.log('Gauge shares subgraph query', result);    
+    // Gauges subgraph : https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-gauges
+
+  })();
   
   // npm run examples:exec -- ./examples/data/gauge-shares.ts
