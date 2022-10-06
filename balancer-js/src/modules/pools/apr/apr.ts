@@ -418,9 +418,9 @@ export class PoolApr {
       };
     } else {
       const yearlyReward = rewardData.rate.mul(86400).mul(365);
-      const price = await this.tokenPrices.find(tokenAddress.toLowerCase());
+      const price = await this.tokenPrices.find(tokenAddress);
       if (price && price.usd) {
-        const meta = await this.tokenMeta.find(tokenAddress.toLowerCase());
+        const meta = await this.tokenMeta.find(tokenAddress);
         const decimals = meta?.decimals || 18;
         const yearlyRewardUsd =
           parseFloat(formatUnits(yearlyReward, decimals)) *
