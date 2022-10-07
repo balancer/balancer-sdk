@@ -5,6 +5,7 @@ import {
   SubgraphPool,
   Pool_OrderBy,
   OrderDirection,
+  SubgraphPoolTokenFragment,
 } from '@/modules/subgraph/subgraph';
 import {
   GraphQLArgsBuilder,
@@ -12,7 +13,7 @@ import {
 } from '@/lib/graphql/args-builder';
 import { GraphQLArgs } from '@/lib/graphql/types';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
-import { GraphQLQuery, Pool, PoolType } from '@/types';
+import { GraphQLQuery, Pool, PoolType, PoolToken } from '@/types';
 import { Network } from '@/lib/constants/network';
 import { PoolsQueryVariables } from '../../subgraph/subgraph';
 
@@ -153,7 +154,7 @@ export class PoolsSubgraphRepository
       amp: subgraphPool.amp ?? undefined,
       owner: subgraphPool.owner ?? undefined,
       factory: subgraphPool.factory ?? undefined,
-      tokens: subgraphPool.tokens || [],
+      tokens: (subgraphPool.tokens || []).map(this.mapToken),
       tokensList: subgraphPool.tokensList,
       tokenAddresses: (subgraphPool.tokens || []).map((t) => t.address),
       totalLiquidity: subgraphPool.totalLiquidity,
@@ -172,6 +173,22 @@ export class PoolsSubgraphRepository
       // feesSnapshot: subgraphPool.???, // Approximated last 24h fees
       // boost: subgraphPool.boost,
       totalWeight: subgraphPool.totalWeight || '1',
+    };
+  }
+
+  private mapToken(subgraphToken: SubgraphPoolTokenFragment): PoolToken {
+    let subgraphTokenPool = null;
+    if (subgraphToken.token?.pool) {
+      subgraphTokenPool = {
+        ...subgraphToken.token.pool,
+        poolType: subgraphToken.token.pool.poolType as PoolType,
+      };
+    }
+    return {
+      ...subgraphToken,
+      token: {
+        pool: subgraphTokenPool,
+      },
     };
   }
 }
