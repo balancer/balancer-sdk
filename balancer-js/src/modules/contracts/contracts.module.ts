@@ -9,9 +9,9 @@ import {
   LidoRelayer__factory,
   LidoRelayer,
 } from '@balancer-labs/typechain';
-import { Multicall } from './multicall';
-import { ERC20 } from './ERC20';
-import { VeBal } from './veBAL';
+import { Multicall } from './implementations/multicall';
+import { ERC20 } from './implementations/ERC20';
+import { VeBal } from './implementations/veBAL';
 
 type ERC20Helper = (address: string, provider: Provider) => Contract;
 export interface ContractInstances {
@@ -58,10 +58,7 @@ export class Contracts {
     // TO DO - Possibly create via Typechain but seems unnecessary?
     this.multicall = Multicall(this.contractAddresses.multicall, provider);
 
-    if (this.contractAddresses.veBal) {
-      this.veBal = new VeBal(this.contractAddresses.veBal, provider);
-    }
-
+    this.veBal = new VeBal(this.contractAddresses, provider);
   }
 
   /**

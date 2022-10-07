@@ -3,7 +3,7 @@ import { Provider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
 import { getAddress } from '@ethersproject/address';
 import { formatUnits } from '@ethersproject/units';
-import { Multicall } from '@/modules/contracts/multicall';
+import { Multicall } from '@/modules/contracts/implementations/multicall';
 
 export interface FeeDistributorData {
   balAmount: number;

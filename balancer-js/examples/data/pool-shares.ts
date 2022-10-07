@@ -33,7 +33,7 @@ const { poolShares } = sdk.data;
     
   result = await poolShares.query({ where: { poolId: POOL_ID,  balance_gt: '0' }, first: 3 });
   console.log('Pool shares subgraph query', result);
-    // Balancer subgraph : https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
+  // Balancer subgraph : https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
 
 })();
 
