@@ -30,4 +30,4 @@ export const lidoPolygon: AprFetcher = async () => {
   return {
     [yieldTokens.stMATIC]: returnApr,
   };
-}
+};
