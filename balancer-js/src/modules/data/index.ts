@@ -79,7 +79,8 @@ export class Data implements BalancerDataRepositories {
 
     const aaveRates = new AaveRates(
       networkConfig.addresses.contracts.multicall,
-      provider
+      provider,
+      networkConfig.chainId
     );
 
     this.tokenPrices = new TokenPriceProvider(coingeckoRepository, aaveRates);

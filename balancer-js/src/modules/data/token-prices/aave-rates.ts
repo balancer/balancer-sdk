@@ -4,6 +4,7 @@ import { Provider } from '@ethersproject/providers';
 import { formatUnits } from '@ethersproject/units';
 import { Multicall } from '@/modules/contracts/multicall';
 import { yieldTokens } from '../token-yields/tokens/aave';
+import { Network } from '@/types';
 
 const wrappedATokenInterface = new Interface([
   'function rate() view returns (uint256)',
@@ -13,7 +14,11 @@ export class AaveRates {
   multicall: Contract;
   rates?: Promise<{ [wrappedATokenAddress: string]: number }>;
 
-  constructor(multicallAddress: string, provider: Provider) {
+  constructor(
+    multicallAddress: string,
+    provider: Provider,
+    private network: Network
+  ) {
     this.multicall = Multicall(multicallAddress, provider);
   }
 
@@ -36,6 +41,9 @@ export class AaveRates {
   }
 
   async getRate(wrappedAToken: string): Promise<number> {
+    if (this.network != Network.MAINNET) {
+      return 1;
+    }
     if (!this.rates) {
       this.rates = this.fetch();
     }
