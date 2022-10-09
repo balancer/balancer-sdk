@@ -1,4 +1,8 @@
 import { lido, yieldTokens as lidoTokens } from './tokens/lido';
+import {
+  lidoPolygon,
+  yieldTokens as lidoPolygonTokens,
+} from './tokens/lido-polygon';
 import { aave, yieldTokens as aaveTokens } from './tokens/aave';
 import { overnight, yieldTokens as overnightTokens } from './tokens/overnight';
 import { Findable } from '../types';
@@ -14,6 +18,7 @@ export interface AprFetcher {
 
 const yieldSourceMap: { [address: string]: AprFetcher } = Object.fromEntries([
   ...Object.values(lidoTokens).map((k) => [k, lido]),
+  ...Object.values(lidoPolygonTokens).map((k) => [k, lidoPolygon]),
   ...Object.values(aaveTokens).map((k) => [k, aave]),
   ...Object.values(overnightTokens).map((k) => [k, overnight]),
 ]);
