@@ -87,11 +87,16 @@ function getOutputRef(key: number, index: number): OutputReference {
   return { index: index, key: keyRef };
 }
 
-export function hasJoinExit(swap: SwapV2, assets: string[]): boolean {
+export function hasJoinExit(
+  pools: SubgraphPoolBase[],
+  swap: SwapV2,
+  assets: string[]
+): boolean {
+  const pool = pools.find((p) => p.id === swap.poolId);
+  if (pool?.poolType !== 'Weighted') return false;
   const tokenIn = assets[swap.assetInIndex];
   const tokenOut = assets[swap.assetOutIndex];
-  const poolAddress = getPoolAddress(swap.poolId);
-  return [tokenIn, tokenOut].includes(poolAddress);
+  return [tokenIn, tokenOut].includes(pool.address);
 }
 
 export function isJoin(swap: SwapV2, assets: string[]): boolean {
@@ -108,9 +113,13 @@ export function isExit(swap: SwapV2, assets: string[]): boolean {
   return tokenIn.toLowerCase() === poolAddress.toLowerCase();
 }
 
-export function someJoinExit(swaps: SwapV2[], assets: string[]): boolean {
+export function someJoinExit(
+  pools: SubgraphPoolBase[],
+  swaps: SwapV2[],
+  assets: string[]
+): boolean {
   return swaps.some((swap) => {
-    return hasJoinExit(swap, assets);
+    return hasJoinExit(pools, swap, assets);
   });
 }
 

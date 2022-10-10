@@ -153,8 +153,6 @@ async function testFlow(
         undefined,
         true
       );
-      expect(someJoinExit(swapInfo.swaps, swapInfo.tokenAddresses)).to.be.true;
-
       const signerAddr = await signer.getAddress();
       const authorisation = await signRelayerApproval(
         ADDRESSES[networkId].BatchRelayerV4.address,
@@ -162,6 +160,9 @@ async function testFlow(
         signer
       );
       const pools = sor.getPools();
+      expect(someJoinExit(pools, swapInfo.swaps, swapInfo.tokenAddresses)).to.be
+        .true;
+
       const callData = buildCalls(
         pools,
         tokenIn.address,
