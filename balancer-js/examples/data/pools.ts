@@ -2,15 +2,15 @@ import { Network } from '../../src/index';
 import { BalancerSDK } from '../../src/modules/sdk.module';
 
 const sdk = new BalancerSDK({ 
-    network: Network.GOERLI, 
+    network: Network.MAINNET, 
     rpcUrl: '' 
   });
 const { pools } = sdk.data;
 
 async function main() {
 
-  const POOL_ID1 = '0xfa1575c57d887e93f37a3c267a548ede008458b3000200000000000000000088';
-  const POOL_ID2 = '0x7dd80638c6d8e70b4f7c9a417164b748d8aa3e480002000000000000000000e1';
+  const POOL_ID1 = '0x2d011adf89f0576c9b722c28269fcb5d50c2d17900020000000000000000024d';
+  const POOL_ID2 = '0x4aa462d59361fc0115b3ab7e447627534a8642ae000100000000000000000158';
   const POOL_IDs = [ POOL_ID1, POOL_ID2 ];
 
   let result;

@@ -1,7 +1,17 @@
 import { parseFixed } from '@ethersproject/bignumber';
 import { Pool } from '../../types';
+import { bnum } from './bnum';
 
 const AMP_PRECISION = 3; // number of decimals -> precision 1000
+
+export function getBptPrice(pool?: Pool) {
+  if (!pool) return bnum(0);
+  return bnum(pool.totalLiquidity).div(pool.totalShares);
+}
+
+export function getBptBalanceFiatValue(pool: Pool, balance: string) {
+  return getBptPrice(pool).times(balance).toString();
+}
 
 /**
  * Parse pool info into EVM amounts

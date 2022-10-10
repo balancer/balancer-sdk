@@ -55,9 +55,9 @@ export class VeBal {
 
     return {
       lockedEndDate: lockedEndDateNormalised,
-      lockedAmount: formatUnits(lockedAmount, 18),
-      totalSupply: formatUnits(lockInfo.totalSupply, 18),
-      epoch: lockInfo.epoch.toString(),
+      lockedAmount: formatUnits(lockedAmount),
+      totalSupply: formatUnits(lockInfo.totalSupply),
+      epoch: formatUnits(lockInfo.epoch, 0),
       hasExistingLock,
       isExpired,
     };

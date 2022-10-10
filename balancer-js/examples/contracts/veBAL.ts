@@ -18,7 +18,7 @@ async function main() {
     const USER = "0x91F450602455564A64207414c7Fbd1F1F0EbB425";
 
     const lockInfo = await veBal.getLockInfo(USER);
-    console.log("veBAL info for user", lockInfo);
+    console.log("veBAL lock info for user", lockInfo);
 }
 
 main();
