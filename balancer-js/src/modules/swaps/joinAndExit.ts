@@ -432,7 +432,7 @@ function buildExit(
   tokenOut: string,
   relayerAddress: string,
   wrappedNativeAsset: string
-): string {
+): [string, string, string] {
   const assets = pool.tokensList;
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
   // tokens must have same order as pool getTokens
@@ -442,22 +442,25 @@ function buildExit(
     (t) => t.toLowerCase() === exitToken.toLowerCase()
   );
   let userData: string;
+  let bptAmtIn: string;
   const minAmountsOut = Array(assets.length).fill('0');
   if (swapType === SwapTypes.SwapExactIn) {
     // Variable amount of token out
     minAmountsOut[exitTokenIndex] = action.minOut;
     // Uses exact amount in
+    bptAmtIn = action.amountIn;
     userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(
-      action.amountIn,
+      bptAmtIn,
       exitTokenIndex
     );
   } else {
     // Uses exact amount of token out
     minAmountsOut[exitTokenIndex] = action.amountIn;
     // Variable amount of BPT in
+    bptAmtIn = action.minOut; // maxBptIn
     userData = WeightedPoolEncoder.exitBPTInForExactTokensOut(
       minAmountsOut,
-      action.minOut
+      bptAmtIn
     );
   }
 
@@ -479,7 +482,17 @@ function buildExit(
     exitPoolRequest: {} as ExitPoolRequest,
   };
   const callData = Relayer.constructExitCall(exitParams);
-  return callData;
+  const amountOut =
+    action.actionStep === ActionStep.Direct ||
+    action.actionStep === ActionStep.TokenOut
+      ? minAmountsOut[exitTokenIndex]
+      : '0';
+  const amountIn =
+    action.actionStep === ActionStep.Direct ||
+    action.actionStep === ActionStep.TokenIn
+      ? bptAmtIn
+      : '0';
+  return [callData, amountIn, amountOut];
 }
 
 function buildJoin(
@@ -491,7 +504,7 @@ function buildJoin(
   tokenOut: string,
   relayerAddress: string,
   wrappedNativeAsset: string
-): string {
+): [string, string, string] {
   const assets = pool.tokensList;
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
   // tokens must have same order as pool getTokens
@@ -503,20 +516,23 @@ function buildJoin(
 
   const maxAmountsIn = Array(assets.length).fill('0');
   let userData: string;
+  let bptAmountOut: string;
   if (swapType === SwapTypes.SwapExactIn) {
     // Uses exact amounts of tokens in
     maxAmountsIn[joinTokenIndex] = action.amountIn;
     // Variable amount of BPT out
+    bptAmountOut = action.minOut;
     userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
       maxAmountsIn,
-      action.minOut
+      bptAmountOut
     );
   } else {
     // Uses variable amounts of tokens in
     maxAmountsIn[joinTokenIndex] = action.minOut;
     // Exact amount of BPT out
+    bptAmountOut = action.amountIn;
     userData = WeightedPoolEncoder.joinTokenInForExactBPTOut(
-      action.amountIn,
+      bptAmountOut,
       joinTokenIndex
     );
   }
@@ -547,7 +563,19 @@ function buildJoin(
   // console.log(attributes);
 
   const callData = Relayer.constructJoinCall(attributes);
-  return callData;
+  const amountOut =
+    action.actionStep === ActionStep.Direct ||
+    action.actionStep === ActionStep.TokenOut
+      ? bptAmountOut
+      : '0';
+
+  const amountIn =
+    action.actionStep === ActionStep.Direct ||
+    action.actionStep === ActionStep.TokenIn
+      ? maxAmountsIn[joinTokenIndex]
+      : '0';
+
+  return [callData, amountIn, amountOut];
 }
 
 function buildBatchSwap(
@@ -559,7 +587,7 @@ function buildBatchSwap(
   swapAmount: string,
   pools: SubgraphPoolBase[],
   relayerAddress: string
-): string[] {
+): [string[], string, string] {
   const tokenInIndex = action.swaps[0].assetInIndex;
   const tokenOutIndex = action.swaps[action.swaps.length - 1].assetOutIndex;
   let toInternalBalance = true;
@@ -631,7 +659,14 @@ function buildBatchSwap(
 
   const encodedBatchSwap = Relayer.encodeBatchSwap(batchSwapInput);
   calls.push(encodedBatchSwap);
-  return calls;
+  const amountIn =
+    tokenIn.toLowerCase() === action.assets[tokenInIndex].toLowerCase()
+      ? limits[tokenInIndex]
+      : '0';
+  const amountOut = action.hasTokenOut
+    ? BigNumber.from(limits[tokenOutIndex]).abs().toString()
+    : '0';
+  return [calls, amountIn, amountOut];
 }
 
 /**
@@ -697,8 +732,10 @@ export function buildCalls(
   if (checkOrderedActions(orderedActions) > 1)
     throw new Error('Paths finishing on two exits are unsupported');
 
-  // TODO - Add some kind of final amounts in/out safety checks
   const calls: string[] = [];
+  // These amounts are used to compare to expected amounts
+  const amountsIn: BigNumber[] = [];
+  const amountsOut: BigNumber[] = [];
   if (authorisation)
     calls.push(buildSetRelayerApproval(authorisation, relayerAddress));
 
@@ -706,49 +743,54 @@ export function buildCalls(
     if (action.type === ActionType.Exit) {
       const pool = pools.find((p) => p.id === action.poolId);
       if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
-      calls.push(
-        buildExit(
-          pool,
-          swapType,
-          action,
-          user,
-          tokenOut,
-          relayerAddress,
-          wrappedNativeAsset
-        )
+      const [call, amountIn, amountOut] = buildExit(
+        pool,
+        swapType,
+        action,
+        user,
+        tokenOut,
+        relayerAddress,
+        wrappedNativeAsset
       );
+      calls.push(call);
+      amountsIn.push(BigNumber.from(amountIn));
+      amountsOut.push(BigNumber.from(amountOut));
     }
     if (action.type === ActionType.Join) {
       const pool = pools.find((p) => p.id === action.poolId);
       if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
-      calls.push(
-        buildJoin(
-          pool,
-          swapType,
-          action,
-          user,
-          tokenIn,
-          tokenOut,
-          relayerAddress,
-          wrappedNativeAsset
-        )
+      const [call, amountIn, amountOut] = buildJoin(
+        pool,
+        swapType,
+        action,
+        user,
+        tokenIn,
+        tokenOut,
+        relayerAddress,
+        wrappedNativeAsset
       );
+      calls.push(call);
+      amountsIn.push(BigNumber.from(amountIn));
+      amountsOut.push(BigNumber.from(amountOut));
     }
     if (action.type === ActionType.BatchSwap) {
-      calls.push(
-        ...buildBatchSwap(
-          action,
-          user,
-          swapType,
-          tokenIn,
-          tokenOut,
-          swapInfo.swapAmount.toString(),
-          pools,
-          relayerAddress
-        )
+      const [batchSwapCalls, amountIn, amountOut] = buildBatchSwap(
+        action,
+        user,
+        swapType,
+        tokenIn,
+        tokenOut,
+        swapInfo.swapAmount.toString(),
+        pools,
+        relayerAddress
       );
+      calls.push(...batchSwapCalls);
+      amountsIn.push(BigNumber.from(amountIn));
+      amountsOut.push(BigNumber.from(amountOut));
     }
   }
+
+  checkAmounts(amountsIn, amountsOut, swapType, swapInfo);
 
   const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
     calls,
@@ -758,4 +800,25 @@ export function buildCalls(
     to: relayerAddress,
     data: callData,
   };
+}
+
+function checkAmounts(
+  amountsIn: BigNumber[],
+  amountsOut: BigNumber[],
+  swapType: SwapTypes,
+  swapInfo: SwapInfo
+): void {
+  const totalIn = amountsIn.reduce(
+    (total = BigNumber.from(0), amount) => (total = total.add(amount))
+  );
+  const totalOut = amountsOut.reduce(
+    (total = BigNumber.from(0), amount) => (total = total.add(amount))
+  );
+  if (swapType === SwapTypes.SwapExactIn) {
+    if (!totalIn.eq(swapInfo.swapAmount)) throw new Error('Safety first!!');
+    if (!totalOut.eq(swapInfo.returnAmount)) throw new Error('Safety first!!');
+  } else {
+    if (!totalIn.eq(swapInfo.returnAmount)) throw new Error('Safety first!!');
+    if (!totalOut.eq(swapInfo.swapAmount)) throw new Error('Safety first!!');
+  }
 }
