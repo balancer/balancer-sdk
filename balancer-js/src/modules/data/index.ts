@@ -8,6 +8,7 @@ export * from './token';
 export * from './token-prices';
 export * from './fee-distributor/repository';
 export * from './fee-collector/repository';
+export * from './protocol-fees/provider';
 export * from './token-yields/repository';
 export * from './block-number';
 
@@ -16,12 +17,17 @@ import { PoolsSubgraphRepository } from './pool/subgraph';
 import { PoolSharesRepository } from './pool-shares/repository';
 import { GaugeSharesRepository } from './gauge-shares/repository';
 import { BlockNumberRepository } from './block-number';
-import { CoingeckoPriceRepository } from './token-prices/coingecko';
+import {
+  CoingeckoPriceRepository,
+  AaveRates,
+  TokenPriceProvider,
+} from './token-prices';
 import { StaticTokenProvider } from './token/static';
 import { LiquidityGaugeSubgraphRPCProvider } from './liquidity-gauges/provider';
 import { FeeDistributorRepository } from './fee-distributor/repository';
 import { FeeCollectorRepository } from './fee-collector/repository';
 import { TokenYieldsRepository } from './token-yields/repository';
+import { ProtocolFeesProvider } from './protocol-fees/provider';
 import { Provider } from '@ethersproject/providers';
 
 // initialCoingeckoList are used to get the initial token list for coingecko
@@ -38,6 +44,7 @@ export class Data implements BalancerDataRepositories {
   liquidityGauges;
   feeDistributor;
   feeCollector;
+  protocolFees;
   tokenYields;
   blockNumbers;
 
@@ -83,10 +90,17 @@ export class Data implements BalancerDataRepositories {
       .filter((t) => t.chainId == networkConfig.chainId)
       .map((t) => t.address);
 
-    this.tokenPrices = new CoingeckoPriceRepository(
+    const coingeckoRepository = new CoingeckoPriceRepository(
       tokenAddresses,
       networkConfig.chainId
     );
+
+    const aaveRates = new AaveRates(
+      networkConfig.addresses.contracts.multicall,
+      provider
+    );
+
+    this.tokenPrices = new TokenPriceProvider(coingeckoRepository, aaveRates);
 
     this.tokenMeta = new StaticTokenProvider([]);
 
@@ -120,6 +134,14 @@ export class Data implements BalancerDataRepositories {
       networkConfig.addresses.contracts.vault,
       provider
     );
+
+    if (networkConfig.addresses.contracts.protocolFeePercentagesProvider) {
+      this.protocolFees = new ProtocolFeesProvider(
+        networkConfig.addresses.contracts.multicall,
+        networkConfig.addresses.contracts.protocolFeePercentagesProvider,
+        provider
+      );
+    }
 
     this.tokenYields = new TokenYieldsRepository();
     

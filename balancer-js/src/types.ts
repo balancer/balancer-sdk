@@ -13,7 +13,7 @@ import type {
   PoolAttribute,
   TokenAttribute
 } from '@/modules/data/types';
-import type { BaseFeeDistributor } from './modules/data';
+import type { BaseFeeDistributor, ProtocolFeesProvider } from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
 
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
@@ -50,7 +50,8 @@ export interface ContractAddresses {
   lidoRelayer?: string;
   gaugeController?: string;
   feeDistributor?: string;
-  veBal?: string
+  veBal?: string;
+  protocolFeePercentagesProvider?: string;
 }
 
 export interface BalancerNetworkConfig {
@@ -85,6 +86,7 @@ export interface BalancerDataRepositories {
   liquidityGauges?: Findable<LiquidityGauge>;
   feeDistributor?: BaseFeeDistributor;
   feeCollector: Findable<number>;
+  protocolFees?: ProtocolFeesProvider;
   tokenYields: Findable<number>;
 }
 
@@ -173,6 +175,7 @@ export interface PoolToken extends Token {
   balance: string;
   priceRate?: string;
   weight?: string | null;
+  token?: { pool: { poolType: null | PoolType } | null };
 }
 
 export interface OnchainTokenData {

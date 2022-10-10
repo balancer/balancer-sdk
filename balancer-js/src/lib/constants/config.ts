@@ -13,6 +13,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
         gaugeController: '0xc128468b7ce63ea702c1f104d55a2566b13d3abd',
         feeDistributor: '0xD3cf852898b21fc233251427c2DC93d3d604F3BB',
+        protocolFeePercentagesProvider: '0x97207B095e4D5C9a6e4cfbfcd2C3358E03B90c4A',
         veBal: '0xC128a9954e6c874eA3d62ce62B468bA073093F25'
       },
       tokens: {

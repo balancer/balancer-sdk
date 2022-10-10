@@ -33,6 +33,7 @@ export default [
           '@ethersproject/providers': 'providers',
           'graphql-request': 'graphqlRequest',
           'json-to-graphql-query': 'jsonToGraphqlQuery',
+          'bignumber.js': 'bignumber_js',
           graphql: 'graphql',
           lodash: 'lodash',
           axios: 'axios',

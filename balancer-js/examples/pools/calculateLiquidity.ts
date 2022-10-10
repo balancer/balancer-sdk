@@ -1,13 +1,12 @@
 import {
   Liquidity,
-  StaticPoolRepository,
   StaticTokenPriceProvider,
   Pool,
   TokenPrices,
 } from '../../src';
+import { findable } from '../../src/test/factories/data';
 import { formatFixed } from '@ethersproject/bignumber';
 import { parseFixed } from '../../src/lib/utils/math';
-import { FallbackPoolRepository } from '../../src/modules/data/pool';
 import POOLS from './pools.json';
 import DECORATED_POOLS from './decorated-pools.json';
 import TOKENS from './tokens.json';
@@ -28,12 +27,9 @@ TOKENS.forEach((token) => {
   }
 });
 
-// const sorPoolProvider = new SORPoolProvider(config);
-const staticPoolProvider = new StaticPoolRepository(POOLS as Pool[]);
-const poolProvider = new FallbackPoolRepository([
-  // sorPoolProvider,
-  staticPoolProvider,
-]);
+const pools = new Map<string, Pool>();
+POOLS.forEach((pool) => pools.set(pool.id, pool as Pool));
+const poolProvider = findable<Pool>(pools);
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
 
 const liquidity = new Liquidity(poolProvider, tokenPriceProvider);
