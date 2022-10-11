@@ -22,7 +22,6 @@ type VeBalLockInfoResult = {
 };
 
 export class VeBal {
-
   addresses: ContractAddresses;
   provider: Provider;
 
@@ -31,22 +30,27 @@ export class VeBal {
     this.provider = provider;
   }
 
-  public async getLockInfo(account: string): Promise<VeBalLockInfo | undefined> {
-
+  public async getLockInfo(
+    account: string
+  ): Promise<VeBalLockInfo | undefined> {
     if (!this.addresses.veBal) throw new Error('veBal address must be defined');
 
-    const multicaller = new Multicaller(this.addresses.multicall, this.provider, veBalAbi);
+    const multicaller = new Multicaller(
+      this.addresses.multicall,
+      this.provider,
+      veBalAbi
+    );
 
     multicaller.call('locked', this.addresses.veBal, 'locked', [account]);
     multicaller.call('epoch', this.addresses.veBal, 'epoch');
     multicaller.call('totalSupply', this.addresses.veBal, 'totalSupply()');
 
-    const result = <VeBalLockInfoResult> await multicaller.execute();
+    const result = <VeBalLockInfoResult>await multicaller.execute();
 
     return this.formatLockInfo(result);
   }
 
-  public formatLockInfo(lockInfo: VeBalLockInfoResult) {
+  public formatLockInfo(lockInfo: VeBalLockInfoResult): VeBalLockInfo {
     const [lockedAmount, lockedEndDate] = lockInfo.locked;
 
     const hasExistingLock = lockedAmount.gt(0);

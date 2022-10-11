@@ -5,12 +5,12 @@ export enum GaugeShareAttributes {
   Balance = 'balance',
 }
 
-export type GaugeShareAttribute = GaugeShareAttributes.Id 
-  | GaugeShareAttributes.UserAddress 
-  | GaugeShareAttributes.GaugeId 
+export type GaugeShareAttribute =
+  | GaugeShareAttributes.Id
+  | GaugeShareAttributes.UserAddress
+  | GaugeShareAttributes.GaugeId
   | GaugeShareAttributes.Balance;
 
-    
 export interface GaugeShare {
   id: string;
   balance: string;
@@ -19,5 +19,5 @@ export interface GaugeShare {
     id: string;
     poolId?: string;
     isKilled: boolean;
-  }
+  };
 }

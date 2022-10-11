@@ -39,7 +39,7 @@ export function toUnixTimestamp(jsTimestamp: number): number {
   return Math.round(jsTimestamp / oneSecondInMs);
 }
 
-export function toUtcTime(date: Date) {
+export function toUtcTime(date: Date): number {
   return Date.UTC(
     date.getUTCFullYear(),
     date.getUTCMonth(),
@@ -62,7 +62,15 @@ export function getPreviousThursday(date: Date = new Date()): Date {
   });
 }
 
-export default function useTime() {
+export default function useTime(): {
+  oneSecondInMs: number;
+  oneMinInMs: number;
+  oneHourInMs: number;
+  twentyFourHoursInMs: number;
+  twentyFourHoursInSecs: number;
+  // methods
+  dateTimeLabelFor: (date: Date) => string;
+} {
   return {
     oneSecondInMs,
     oneMinInMs,

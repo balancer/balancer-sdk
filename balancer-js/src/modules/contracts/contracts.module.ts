@@ -19,7 +19,7 @@ export interface ContractInstances {
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
   ERC20: ERC20Helper;
-  veBal?: VeBal
+  veBal?: VeBal;
 }
 
 export class Contracts {
@@ -70,7 +70,7 @@ export class Contracts {
       lidoRelayer: this.lidoRelayer,
       multicall: this.multicall,
       ERC20: this.getErc20,
-      veBal: this.veBal
+      veBal: this.veBal,
     };
   }
 

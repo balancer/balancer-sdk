@@ -55,15 +55,15 @@ export class Data implements BalancerDataRepositories {
     });
 
     this.poolShares = new PoolSharesRepository(
-      networkConfig.urls.subgraph, 
+      networkConfig.urls.subgraph,
       networkConfig.chainId
     );
 
     if (networkConfig.urls.gaugesSubgraph) {
       this.gaugeShares = new GaugeSharesRepository(
-        networkConfig.urls.gaugesSubgraph, 
+        networkConfig.urls.gaugesSubgraph,
         networkConfig.chainId
-      )
+      );
     }
 
     // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
@@ -144,6 +144,5 @@ export class Data implements BalancerDataRepositories {
     }
 
     this.tokenYields = new TokenYieldsRepository();
-    
   }
 }
