@@ -7,7 +7,7 @@ const mockedResponse = {
   data: {
     reserves: [
       {
-        underlyingAsset: wrappedTokensMap[yieldTokens.waUSDT].underlying,
+        underlyingAsset: wrappedTokensMap[1][yieldTokens[1].waUSDT].underlying,
         liquidityRate: '16633720952291480781459657',
       },
     ],
@@ -29,7 +29,7 @@ describe('aave apr', () => {
   });
 
   it('is getting fetched', async () => {
-    const apr = (await aave())[yieldTokens.waUSDT];
+    const apr = (await aave(1))[yieldTokens[1].waUSDT];
     expect(apr).to.eq(166);
   });
 });

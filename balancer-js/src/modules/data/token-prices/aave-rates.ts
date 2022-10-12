@@ -22,9 +22,11 @@ export class AaveRates {
     this.multicall = Multicall(multicallAddress, provider);
   }
 
-  private async fetch(): Promise<{ [wrappedATokenAddress: string]: number }> {
+  private async fetch(
+    network: Network.MAINNET | Network.POLYGON
+  ): Promise<{ [wrappedATokenAddress: string]: number }> {
     console.time('Fetching aave rates');
-    const addresses = Object.values(yieldTokens);
+    const addresses = Object.values(yieldTokens[network]);
     const payload = addresses.map((wrappedATokenAddress) => [
       wrappedATokenAddress,
       wrappedATokenInterface.encodeFunctionData('rate', []),
@@ -41,11 +43,11 @@ export class AaveRates {
   }
 
   async getRate(wrappedAToken: string): Promise<number> {
-    if (this.network != Network.MAINNET) {
+    if (this.network != Network.MAINNET && this.network != Network.POLYGON) {
       return 1;
     }
     if (!this.rates) {
-      this.rates = this.fetch();
+      this.rates = this.fetch(this.network);
     }
 
     return (await this.rates)[wrappedAToken];
