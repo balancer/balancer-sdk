@@ -278,12 +278,13 @@ export class PoolApr {
     let total = 0;
     for await (const reward of Object.values(rewards)) {
       const rewardValue = reward.value / totalSupplyUsd;
-      total += rewardValue;
-      rewardTokensBreakdown[reward.address] = reward.value;
+      const rewardValueScaled = Math.round(10000 * rewardValue);
+      total += rewardValueScaled;
+      rewardTokensBreakdown[reward.address] = rewardValueScaled;
     }
 
     return {
-      total: Math.round(10000 * total),
+      total,
       breakdown: rewardTokensBreakdown,
     };
   }

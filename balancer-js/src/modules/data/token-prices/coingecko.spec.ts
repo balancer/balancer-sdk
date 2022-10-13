@@ -41,8 +41,9 @@ describe('coingecko repository', () => {
   });
 
   it('finds prices', async () => {
-    const [price1, price2, price3, price4, price5] = await Promise.all([
+    const [price1, price2, price3, price4, price5, price6] = await Promise.all([
       repository.find(addresses[0]),
+      repository.find(addresses[0].toUpperCase()),
       repository.find(addresses[1]),
       repository.find(addresses[2]),
       repository.find(addresses[3]),
@@ -51,7 +52,8 @@ describe('coingecko repository', () => {
     expect(price1?.usd).to.be.gt(0);
     expect(price2?.usd).to.be.gt(0);
     expect(price3?.usd).to.be.gt(0);
-    expect(price4?.usd).to.be.undefined;
+    expect(price4?.usd).to.be.gt(0);
     expect(price5?.usd).to.be.undefined;
+    expect(price6?.usd).to.be.undefined;
   });
 });
