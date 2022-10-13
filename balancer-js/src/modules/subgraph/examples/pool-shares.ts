@@ -31,4 +31,4 @@ dotenv.config();
 
 })();
 
-// npm run examples:exec -- ./src/modules/subgraph/examples/pool-shares.ts
+// npm run examples:run -- ./src/modules/subgraph/examples/pool-shares.ts

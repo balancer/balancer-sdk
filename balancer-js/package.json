@@ -27,8 +27,7 @@
     "lint": "eslint ./src --ext .ts --max-warnings 0",
     "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
     "subgraph:generate": "graphql-codegen --config src/modules/subgraph/codegen.yml -r dotenv/config",
-    "examples:run": "TS_NODE_PROJECT='tsconfig.testing.json' ts-node -r tsconfig-paths/register",
-    "examples:exec": "npx ts-node -P tsconfig.testing.json -r tsconfig-paths/register",
+    "examples:run": "npx ts-node -P tsconfig.testing.json -r tsconfig-paths/register",
     "node": "npx hardhat node --fork $(grep ALCHEMY_URL .env | cut -d '=' -f2 | tail -1)"
   },
   "devDependencies": {
@@ -92,8 +91,6 @@
     "@balancer-labs/sor": "^4.0.1-beta.5",
     "@balancer-labs/typechain": "^1.0.0",
     "axios": "^0.24.0",
-    "bignumber.js": "^9.1.0",
-    "date-fns": "^2.29.3",
     "graphql": "^15.6.1",
     "graphql-request": "^3.5.0",
     "json-to-graphql-query": "^2.2.4",

@@ -23,4 +23,4 @@ async function main() {
 
 main();
 
-// npm run examples:exec -- ./examples/contracts/veBAL.ts
+// npm run examples:run -- ./examples/contracts/veBAL.ts

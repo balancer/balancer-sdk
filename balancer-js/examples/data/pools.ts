@@ -27,4 +27,4 @@ async function main() {
 
 main();
 
-// npm run examples:exec -- ./examples/data/pools.ts
+// npm run examples:run -- ./examples/data/pools.ts

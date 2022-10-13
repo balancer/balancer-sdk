@@ -37,4 +37,4 @@ const { poolShares } = sdk.data;
 
 })();
 
-// npm run examples:exec -- ./examples/data/pool-shares.ts
+// npm run examples:run -- ./examples/data/pool-shares.ts

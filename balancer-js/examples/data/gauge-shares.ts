@@ -37,4 +37,4 @@ const { gaugeShares } = sdk.data;
 
   })();
   
-  // npm run examples:exec -- ./examples/data/gauge-shares.ts
+  // npm run examples:run -- ./examples/data/gauge-shares.ts
