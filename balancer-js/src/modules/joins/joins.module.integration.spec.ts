@@ -74,10 +74,9 @@ const runTests = async (tests: Test[]) => {
     const test = tests[i];
     it(test.description, async () => {
       const userAddress = await test.signer.getAddress();
-      const signerAddress = await signer.getAddress();
       const authorisation = await Relayer.signRelayerApproval(
         relayer,
-        signerAddress,
+        userAddress,
         signer,
         contracts.vault
       );
@@ -150,8 +149,8 @@ const testFlow = async (
   console.log(query.expectedOut, 'expectedOut');
 };
 
+// following contexts currently applies to GOERLI only
 describe('generalised join execution', async () => {
-  // following contexts currently applies to GOERLI only
   /*
   bbamaiweth: ComposableStable, baMai/baWeth
   baMai: Linear, aMai/Mai
@@ -240,12 +239,11 @@ describe('generalised join execution', async () => {
     ]);
   });
 
-  // // following contexts currently applies to GOERLI only
-  // /*
-  //   boostedMeta1: ComposableStable, baMai/bbausd2
-  //   baMai: Linear, aMai/Mai
-  //   bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
-  //   */
+  /*
+  boostedMeta1: ComposableStable, baMai/bbausd2
+  baMai: Linear, aMai/Mai
+  bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
+  */
   context('boostedMeta', async () => {
     let authorisation: string | undefined;
     beforeEach(async () => {
@@ -388,9 +386,9 @@ describe('generalised join execution', async () => {
   });
 
   /*
-    boostedMetaAlt1: ComposableStable, Mai/bbausd2
-    bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
-    */
+  boostedMetaAlt1: ComposableStable, Mai/bbausd2
+  bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
+  */
   context('boostedMetaAlt', async () => {
     let authorisation: string | undefined;
     beforeEach(async () => {
@@ -541,14 +539,13 @@ describe('generalised join execution', async () => {
     ]);
   });
 
-  // // following contexts currently applies to GOERLI only
-  // /*
-  // boostedMetaBig1: ComposableStable, bbamaiweth/bbausd2
-  // bbamaiweth: ComposableStable, baMai/baWeth
-  // baMai: Linear, aMai/Mai
-  // baWeth: Linear, aWeth/Weth
-  // bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
-  // */
+  /*
+  boostedMetaBig1: ComposableStable, bbamaiweth/bbausd2
+  bbamaiweth: ComposableStable, baMai/baWeth
+  baMai: Linear, aMai/Mai
+  baWeth: Linear, aWeth/Weth
+  bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
+  */
   context('boostedMetaBig', async () => {
     let authorisation: string | undefined;
     beforeEach(async () => {
