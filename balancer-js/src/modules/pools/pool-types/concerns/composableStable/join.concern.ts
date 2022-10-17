@@ -115,7 +115,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
   };
 
   /**
-   * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
+   * Build Init join pool transaction parameters (Can only be made once per pool)
    * @param {JoinPoolParameters} params - parameters used to build exact tokens in for bpt out transaction
    * @param {string}                          params.joiner - Account address joining pool
    * @param {SubgraphPoolBase}                params.pool - Subgraph pool object of pool being joined

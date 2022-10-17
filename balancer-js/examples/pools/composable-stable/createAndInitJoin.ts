@@ -6,11 +6,10 @@ import {
 } from '@ethersproject/providers';
 import {
   BalancerSDK,
-  BalancerSdkConfig,
   Network,
   PoolType,
   PoolWithMethods,
-} from '../src/index';
+} from '../../../src';
 // @ts-ignore
 import composableStableFactoryAbi from '../src/lib/abi/ComposableStableFactory.json';
 // @ts-ignore
@@ -118,9 +117,11 @@ async function createComposableStablePool() {
     'address',
     poolAddress
   );
-  
+
   console.log('Pool Id: ' + pool?.id);
+
   if(!pool) return console.error("No pool was found by balancer.pools.find functionality");
+
   const {
     to: initJoinTo,
     data: initJoinData,
@@ -129,11 +130,12 @@ async function createComposableStablePool() {
     '100',
     '100',
   ]);
+
   console.log('initJoin target address: ' + initJoinTo);
   console.log('initJoin data: ' + initJoinData);
   console.log('initJoin attributes: ' + attributes);
-  
-  
+
+
 }
 
 createComposableStablePool();
