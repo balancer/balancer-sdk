@@ -23,23 +23,26 @@ const name = 'My-Test-Pool-Name';
 
 const symbol = 'My-Test-Pool-Symbol';
 
+const USDC_address = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
+const WETH_address = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+
 const tokenAddresses = [
-  '0x0595D1Df64279ddB51F1bdC405Fe2D0b4Cc86681',
-  '0x13ACD41C585d7EbB4a9460f7C8f50BE60DC080Cd',
+  USDC_address,
+  WETH_address,
 ];
 
-const amplificationParameter = 1;
+const amplificationParameter = "2";
 
 const rateProviders = [
   '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
   '0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec',
 ];
 
-const tokenRateCacheDurations = [20000, 20000];
+const tokenRateCacheDurations = ["20", "20"];
 
-const exemptFromYieldProtocolFeeFlags = [false, false];
+const exemptFromYieldProtocolFeeFlags = [true, true];
 
-const swapFee = 0.003;
+const swapFee = "0.01";
 const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const contractAddress = '0xB848f50141F3D4255b37aC288C25C109104F2158';
 

@@ -1,5 +1,5 @@
 /* eslint @typescript-eslint/no-explicit-any: ["error", { "ignoreRestArgs": true }] */
-import { ExitPoolRequest, JoinPoolRequest, Pool, PoolSeedToken } from '@/types';
+import { ExitPoolRequest, JoinPoolRequest, Pool } from '@/types';
 import { BigNumber } from '@ethersproject/bignumber';
 import { TransactionResponse, JsonRpcSigner } from '@ethersproject/providers';
 
@@ -91,27 +91,6 @@ export interface ExitConcern {
   }: ExitExactBPTInSingleTokenOutParameters) => ExitPoolAttributes;
 }
 
-export interface CreateConcern {
-  /**
-   * Build create pool transaction
-   * @param signer Signer from the provider
-   * @param name Name of the pool
-   * @param symbol ???
-   * @param swapFee The fee that will be applied to all the swaps in the pool
-   * @param tokens An Array containing the seed tokens of the pool
-   * @param ownerAddress The address of the owner of the pool
-   * @returns transaction request ready to send with signer.sendTransaction
-   */
-  createPool?: ({
-    signer,
-    name,
-    symbol,
-    swapFee,
-    tokens,
-    ownerAddress,
-  }: CreatePoolParameters) => TransactionResponse;
-}
-
 export interface JoinPool {
   poolId: string;
   sender: string;
@@ -196,13 +175,4 @@ export interface ExitExactTokensOutParameters {
   amountsOut: string[];
   slippage: string;
   wrappedNativeAsset: string;
-}
-
-export interface CreatePoolParameters {
-  signer: JsonRpcSigner;
-  name: string;
-  symbol: string;
-  swapFee: string;
-  tokens: PoolSeedToken[];
-  ownerAddress: string;
 }

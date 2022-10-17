@@ -5,9 +5,9 @@ export type CreatePoolParameters = {
   name: string;
   symbol: string;
   tokenAddresses: string[];
-  amplificationParameter: number;
+  amplificationParameter: number | string;
   rateProviders: string[];
-  tokenRateCacheDurations: number[];
+  tokenRateCacheDurations: number[] | string[];
   exemptFromYieldProtocolFeeFlags: boolean[];
   swapFee: string | number;
   owner: Address;
