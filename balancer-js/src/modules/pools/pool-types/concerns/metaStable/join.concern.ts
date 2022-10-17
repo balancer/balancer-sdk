@@ -2,6 +2,7 @@ import * as SOR from '@balancer-labs/sor';
 
 import {
   InitJoinPoolAttributes,
+  InitJoinPoolParameters,
   JoinConcern,
   JoinPool,
   JoinPoolAttributes,
@@ -23,7 +24,7 @@ export class MetaStablePoolJoin implements JoinConcern {
     tokensIn,
     amountsIn,
     wrappedNativeAsset,
-  }: JoinPoolParameters): InitJoinPoolAttributes => {
+  }: InitJoinPoolParameters): InitJoinPoolAttributes => {
     console.log(joiner, pool, tokensIn, amountsIn, wrappedNativeAsset);
     throw new Error('To be implemented');
   };

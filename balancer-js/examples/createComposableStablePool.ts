@@ -111,13 +111,13 @@ async function createComposableStablePool() {
   if (!poolCreationEvent) return console.error("There's no event");
   const poolAddress: string = poolCreationEvent.args.pool;
 
-  const pool: PoolWithMethods = await balancer.pools.findBy(
+  const pool: PoolWithMethods | undefined= await balancer.pools.findBy(
     'address',
     poolAddress
   );
-
+  
   console.log('Pool Id: ' + pool?.id);
-
+  if(!pool) return console.error("No pool was found by balancer.pools.find functionality");
   const {
     to: initJoinTo,
     data: initJoinData,

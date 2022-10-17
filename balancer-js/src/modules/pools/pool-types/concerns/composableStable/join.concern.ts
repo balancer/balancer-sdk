@@ -1,5 +1,6 @@
 import {
-  InitJoinPoolAttributes, InitJoinPoolParameters,
+  InitJoinPoolAttributes,
+  InitJoinPoolParameters,
   JoinConcern,
   JoinPool,
   JoinPoolAttributes,

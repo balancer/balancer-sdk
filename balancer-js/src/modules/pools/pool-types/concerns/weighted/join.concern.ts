@@ -2,6 +2,7 @@ import { WeightedMaths } from '@balancer-labs/sor';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import {
   InitJoinPoolAttributes,
+  InitJoinPoolParameters,
   JoinConcern,
   JoinPool,
   JoinPoolAttributes,
@@ -121,14 +122,8 @@ export class WeightedPoolJoin implements JoinConcern {
     tokensIn,
     amountsIn,
     wrappedNativeAsset,
-  }: JoinPoolParameters): InitJoinPoolAttributes {
-    console.log(
-      joiner,
-      pool,
-      tokensIn,
-      amountsIn,
-      wrappedNativeAsset
-    );
+  }: InitJoinPoolParameters): InitJoinPoolAttributes {
+    console.log(joiner, pool, tokensIn, amountsIn, wrappedNativeAsset);
     throw new Error('To be implemented');
   }
 }

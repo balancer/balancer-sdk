@@ -1,4 +1,10 @@
-import { JoinPoolParameters, JoinConcern, JoinPoolAttributes, InitJoinPoolAttributes } from '../types';
+import {
+  JoinPoolParameters,
+  JoinConcern,
+  JoinPoolAttributes,
+  InitJoinPoolAttributes,
+  InitJoinPoolParameters,
+} from '../types';
 
 export class StablePhantomPoolJoin implements JoinConcern {
   buildJoin = ({
@@ -21,14 +27,14 @@ export class StablePhantomPoolJoin implements JoinConcern {
     throw new Error('To be implemented');
   };
 
-  buildInitJoin({ joiner, pool, tokensIn, amountsIn, wrappedNativeAsset }: JoinPoolParameters): InitJoinPoolAttributes {
-    console.log(
-      joiner,
-      pool,
-      tokensIn,
-      amountsIn,
-      wrappedNativeAsset
-    );
+  buildInitJoin({
+    joiner,
+    pool,
+    tokensIn,
+    amountsIn,
+    wrappedNativeAsset,
+  }: InitJoinPoolParameters): InitJoinPoolAttributes {
+    console.log(joiner, pool, tokensIn, amountsIn, wrappedNativeAsset);
     throw new Error('To be implemented');
   }
 }

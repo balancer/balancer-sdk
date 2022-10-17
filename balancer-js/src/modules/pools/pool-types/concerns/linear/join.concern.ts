@@ -3,6 +3,7 @@ import {
   JoinConcern,
   JoinPoolAttributes,
   InitJoinPoolAttributes,
+  InitJoinPoolParameters,
 } from '../types';
 
 export class LinearPoolJoin implements JoinConcern {
@@ -31,7 +32,7 @@ export class LinearPoolJoin implements JoinConcern {
     tokensIn,
     amountsIn,
     wrappedNativeAsset,
-  }: JoinPoolParameters): InitJoinPoolAttributes => {
+  }: InitJoinPoolParameters): InitJoinPoolAttributes => {
     console.log(joiner, pool, tokensIn, amountsIn, wrappedNativeAsset);
     throw new Error('To be implemented');
   };
