@@ -420,7 +420,7 @@ create({
     owner,
 }) => TransactionRequest 
 ```
-[Example](./examples/exitExactTokensOut.ts)
+[Example](./examples/pools/composable-stable/createAndInitJoin.ts)
 ## RelayerService
 
 Relayers are (user opt-in, audited) contracts that can make calls to the vault (with the transaction “sender” being any arbitrary address) and use the sender’s ERC20 vault allowance, internal balance or BPTs on their behalf.
