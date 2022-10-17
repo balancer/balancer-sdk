@@ -2,7 +2,7 @@ import { defaultAbiCoder } from '@ethersproject/abi';
 import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { AddressZero, MaxInt256 } from '@ethersproject/constants';
+import { AddressZero, MaxInt256, WeiPerEther } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
@@ -15,7 +15,7 @@ import { PoolGraph, Node } from './graph';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { networkAddresses } from '@/lib/constants/config';
-import { AssetHelpers } from '@/lib/utils';
+import { AssetHelpers, isSameAddress } from '@/lib/utils';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import {
   SolidityMaths,
@@ -24,18 +24,6 @@ import {
 } from '@/lib/utils/solidityMaths';
 import { calcPriceImpact } from '../pricing/priceImpact';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
-
-interface RootOutputInfo {
-  outputRef: string;
-  callIndex: number;
-}
-
-type ReferenceAmounts = { [outputReference: string]: string };
-
-interface RootAmounts {
-  refAmounts: ReferenceAmounts;
-  total: string;
-}
 
 export class Join {
   totalProportions: Record<string, BigNumber> = {};
@@ -66,6 +54,19 @@ export class Join {
     minOut: string;
     priceImpact: string;
   }> {
+    if (tokens.length != amounts.length)
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+
+    // Create nodes for each pool/token interaction and order by breadth first
+    const orderedNodes = await this.getGraphNodes(
+      poolId,
+      tokens,
+      amounts,
+      wrapMainTokens
+    );
+
+    const joinPaths = this.getJoinPaths(orderedNodes, tokens, amounts);
+
     /*
     - Create calls with 0 min bpt for each root join
     - static call (or V4 special call) to get actual amounts for each root join
@@ -76,165 +77,161 @@ export class Join {
     */
     // Create calls with 0 expected for each root join
     // Peek is enabled here so we can static call the returned amounts and use these to set limits
-    const callsWithNoMin = await this.createCalls(
-      poolId,
-      tokens,
-      amounts,
+    const {
+      callData: queryData,
+      outputIndexes,
+      totalBptZeroPi,
+    } = await this.createCalls(
+      joinPaths,
       userAddress,
-      wrapMainTokens,
-      true,
       undefined,
       authorisation
     );
 
     // static call (or V4 special call) to get actual amounts for each root join
-    const queryAmounts = await this.queryRootOutputRefs(
-      callsWithNoMin.callData,
-      callsWithNoMin.rootOutputInfo,
+    const { amountsOut, totalAmountOut } = await this.amountsOutByJoinPath(
+      queryData,
+      outputIndexes,
       signer
     );
 
-    const amountsWithSlippage = this.getAmountsWithSlippage(
+    const { minAmountsOut, totalMinAmountOut } = this.minAmountsOutByJoinPath(
       slippage,
-      queryAmounts
+      amountsOut,
+      totalAmountOut
     );
 
     const priceImpact = calcPriceImpact(
-      BigInt(amountsWithSlippage.total),
-      callsWithNoMin.totalBptZeroPi.toBigInt()
+      BigInt(totalMinAmountOut),
+      totalBptZeroPi.toBigInt()
     ).toString();
 
-    // Create calls with minAmounts === actualAmountsWithSlippage
-    // No peek required here (saves gas)
-    const callsWithMin = await this.createCalls(
-      poolId,
-      tokens,
-      amounts,
+    // Create calls with minAmountsOut
+    const { callData } = await this.createCalls(
+      joinPaths,
       userAddress,
-      wrapMainTokens,
-      false,
-      amountsWithSlippage.refAmounts,
+      minAmountsOut,
       authorisation
     );
 
     return {
       to: this.relayer,
-      callData: callsWithMin.callData,
-      expectedOut: queryAmounts.total,
-      minOut: amountsWithSlippage.total,
+      callData,
+      expectedOut: totalAmountOut,
+      minOut: totalMinAmountOut,
       priceImpact,
     };
   }
 
-  getAmountsWithSlippage(slippage: string, amounts: RootAmounts): RootAmounts {
-    // Apply slippage to amounts
-    const refAmountsWithSlippage: ReferenceAmounts = {};
-    for (const outputRef in amounts.refAmounts) {
-      refAmountsWithSlippage[outputRef] = subSlippage(
-        BigNumber.from(amounts.refAmounts[outputRef]),
-        BigNumber.from(slippage)
-      ).toString();
-    }
-    const totalWithSlippage = subSlippage(
-      BigNumber.from(amounts.total),
-      BigNumber.from(slippage)
-    ).toString();
-
-    return {
-      refAmounts: refAmountsWithSlippage,
-      total: totalWithSlippage,
-    };
-  }
-
-  async createCalls(
-    poolId: string,
+  // Create one exit path for each output node
+  private getJoinPaths = (
+    orderedNodes: Node[],
     tokensIn: string[],
-    amountsIn: string[],
-    userAddress: string,
-    wrapMainTokens: boolean,
-    isPeek: boolean,
-    minBptAmounts?: ReferenceAmounts,
-    authorisation?: string
-  ): Promise<{
-    to: string;
-    callData: string;
-    rootOutputInfo: RootOutputInfo[];
-    totalBptZeroPi: BigNumber;
-  }> {
-    if (tokensIn.length != amountsIn.length)
-      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+    amountsIn: string[]
+  ): Node[][] => {
+    const joinPaths: Node[][] = [];
 
-    // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodes = await this.getGraphNodes(
-      poolId,
-      tokensIn,
-      amountsIn,
-      wrapMainTokens
+    const inputNodes = orderedNodes.filter((node) =>
+      tokensIn
+        .map((tokenIn) => tokenIn.toLowerCase())
+        .includes(node.address.toLowerCase())
     );
+    const leafInputNodes = inputNodes.filter((node) => node.isLeaf);
+    const nonLeafInputNodes = inputNodes.filter((node) => !node.isLeaf);
 
-    let totalBptZeroPi = BigNumber.from('0');
-    const leafTokens = PoolGraph.getLeafAddresses(orderedNodes);
-    leafTokens.forEach((leafToken) => {
-      const leafInputNodes = orderedNodes.filter(
-        (node) => node.address.toLowerCase() === leafToken.toLowerCase()
+    if (leafInputNodes.length > 0) {
+      joinPaths.push(orderedNodes);
+    }
+
+    nonLeafInputNodes.forEach((nonLeafInputNode) => {
+      const nonLeafAmountIn = amountsIn.find((amountIn, i) =>
+        isSameAddress(tokensIn[i], nonLeafInputNode.address)
+      ) as string;
+      const [inputTokenNode] = PoolGraph.createInputTokenNode(
+        0, // temp value that will be updated after creation
+        nonLeafInputNode.address,
+        nonLeafInputNode.decimals,
+        nonLeafInputNode.parent,
+        WeiPerEther
       );
-      leafInputNodes.forEach((inputNode) => {
-        const bptOut = this.bptOutZeroPiForInputNode(inputNode);
-        totalBptZeroPi = totalBptZeroPi.add(bptOut);
-      });
+      inputTokenNode.index = nonLeafAmountIn;
+      const nonLeafJoinPath = [inputTokenNode];
+      let parent = nonLeafInputNode.parent;
+      while (parent) {
+        nonLeafJoinPath.push(cloneDeep(parent));
+        parent = parent.parent;
+      }
+      joinPaths.push(nonLeafJoinPath);
     });
 
-    // Create calls for leaf token actions - this considers full tree.
-    const leafCalls = this.createActionCalls(
-      cloneDeep(orderedNodes),
-      poolId,
-      minBptAmounts ? minBptAmounts['0'] : '0',
+    // TODO: proportionally split input amount between nonLeafInputNodes that contain the same token
+
+    return joinPaths;
+  };
+
+  createCalls = async (
+    joinPaths: Node[][],
+    userAddress: string,
+    minAmountsOut?: string[], // one for each joinPath
+    authorisation?: string
+  ): Promise<{
+    callData: string;
+    outputIndexes: number[];
+    totalBptZeroPi: BigNumber;
+  }> => {
+    // Create calls for both leaf and non-leaf inputs
+    const { calls, outputIndexes } = this.createActionCalls(
+      joinPaths,
       userAddress,
-      isPeek
+      minAmountsOut
     );
 
-    // Create calls for non-leaf inputs
-    const nonLeafInfo = this.createNonLeafInputCalls(
-      cloneDeep(orderedNodes),
-      poolId,
-      tokensIn,
-      amountsIn,
-      userAddress,
-      isPeek,
-      minBptAmounts
-    );
-
-    totalBptZeroPi = totalBptZeroPi.add(nonLeafInfo.totalBptZeroPi);
-
-    const rootOutputInfo = this.updateOutputInfo(
-      nonLeafInfo.rootOutputInfo,
-      leafCalls,
-      authorisation
-    );
-
-    const callsCombined = [...leafCalls, ...nonLeafInfo.calls];
     if (authorisation) {
-      callsCombined.unshift(this.createSetRelayerApproval(authorisation));
+      calls.unshift(this.createSetRelayerApproval(authorisation));
     }
 
     const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
-      callsCombined,
+      calls,
     ]);
 
+    const totalBptZeroPi = this.totalBptZeroPriceImpact(joinPaths);
+
     return {
-      to: this.relayer,
-      callData: callData,
-      rootOutputInfo,
+      callData,
+      outputIndexes: authorisation
+        ? outputIndexes.map((i) => i + 1)
+        : outputIndexes,
       totalBptZeroPi,
     };
-  }
+  };
+
+  totalBptZeroPriceImpact = (joinPaths: Node[][]): BigNumber => {
+    // Add bptZeroPriceImpact for all inputs
+    let totalBptZeroPi = BigNumber.from('0');
+    joinPaths.forEach((joinPath) => {
+      const isLeafJoin = joinPath[0].isLeaf;
+      if (isLeafJoin) {
+        // Calculate bptZeroPriceImpact for leaf inputs
+        const leafNodes = joinPath.filter((node) => node.isLeaf);
+        leafNodes.forEach((leafNode) => {
+          const bptOut = this.bptOutZeroPiForInputNode(leafNode);
+          totalBptZeroPi = totalBptZeroPi.add(bptOut);
+        });
+      } else {
+        // Calculate bptZeroPriceImpact for non-leaf inputs
+        const bptOut = this.bptOutZeroPiForInputNode(joinPath[0]);
+        totalBptZeroPi = totalBptZeroPi.add(bptOut);
+      }
+    });
+    return totalBptZeroPi;
+  };
 
   /*
   1. recursively find the spot price for each pool in the path of the join
   2. take the product to get the spot price of the path
   3. multiply the input amount of that token by the path spot price to get the "zeroPriceImpact" amount of BPT for that token 
   */
-  bptOutZeroPiForInputNode(inputNode: Node): bigint {
+  bptOutZeroPiForInputNode = (inputNode: Node): bigint => {
     if (inputNode.index === '0' || inputNode.joinAction !== 'input')
       return BigInt(0);
     let spProduct = 1;
@@ -260,111 +257,13 @@ export class Join {
       spPriceScaled.toBigInt()
     );
     return bptOut;
-  }
+  };
 
-  /*
-  Combines outputs from leaf, non-leaf and auth calls
-  */
-  updateOutputInfo(
-    nonLeafOutputInfo: RootOutputInfo[],
-    leafCalls: string[],
-    authorisation?: string
-  ): RootOutputInfo[] {
-    // Auth call will be added to start if it exists
-    const auth = authorisation ? 1 : 0;
-    const additional = leafCalls.length + auth;
-    const info = nonLeafOutputInfo.map((originalInfo) => {
-      return {
-        outputRef: originalInfo.outputRef,
-        callIndex: originalInfo.callIndex + additional,
-      };
-    });
-    if (leafCalls.length > 0) {
-      // Any leaf calls will end on root pool with default ref of 0
-      info.unshift({
-        outputRef: '0',
-        callIndex: leafCalls.length - 1 + auth,
-      });
-    }
-    return info;
-  }
-
-  createNonLeafInputCalls(
-    orderedNodes: Node[],
-    poolId: string,
-    tokensIn: string[],
-    amountsIn: string[],
-    userAddress: string,
-    isPeek: boolean,
-    minBptAmounts?: ReferenceAmounts
-  ): {
-    calls: string[];
-    rootOutputInfo: RootOutputInfo[];
-    totalBptZeroPi: BigNumber;
-  } {
-    const allCalls: string[] = [];
-    const rootOutputInfo: RootOutputInfo[] = [];
-    const leafTokens = PoolGraph.getLeafAddresses(orderedNodes);
-
-    const nonLeafInputs = tokensIn.filter(
-      (tokenIn) =>
-        !leafTokens
-          .map((leafToken) => leafToken.toLowerCase())
-          .includes(tokenIn.toLowerCase())
-    );
-    let startingIndex = orderedNodes.length;
-    let totalBptZeroPi = BigNumber.from('0');
-
-    nonLeafInputs.forEach((tokenInput) => {
-      // Find path to root and update amounts
-      const nodesToRoot = this.getNodesToRootFromToken(
-        orderedNodes,
-        tokensIn,
-        amountsIn,
-        tokenInput,
-        startingIndex
-      );
-      // The last node will be joining root and we want this reference to find final amount out
-      const rootNode = nodesToRoot[nodesToRoot.length - 1];
-      if (rootNode.id !== poolId)
-        throw new Error('Error creating non-leaf join.');
-      // Create calls for path, use value stored in minBptAmounts if available
-      const inputCalls = this.createActionCalls(
-        nodesToRoot,
-        poolId,
-        minBptAmounts ? minBptAmounts[rootNode.index] : '0',
-        userAddress,
-        isPeek
-      );
-      // Add chain calls to previous list of calls
-      allCalls.push(...inputCalls);
-      rootOutputInfo.push({
-        outputRef: rootNode.index,
-        callIndex: allCalls.length - 1, // Last call will be root for this token in
-      });
-
-      const inputNodes = nodesToRoot.filter(
-        (node) => node.address.toLowerCase() === tokenInput.toLowerCase()
-      );
-      inputNodes.forEach((inputNode) => {
-        const bptOut = this.bptOutZeroPiForInputNode(inputNode);
-        totalBptZeroPi = totalBptZeroPi.add(bptOut);
-      });
-
-      startingIndex = orderedNodes.length + nodesToRoot.length;
-    });
-    return {
-      calls: allCalls,
-      rootOutputInfo,
-      totalBptZeroPi,
-    };
-  }
-
-  updateInputAmounts(
+  updateInputAmounts = (
     nodes: Node[],
     tokensIn: string[],
     amountsIn: string[]
-  ): void {
+  ): void => {
     // Update input proportions so inputs are shared correctly
     this.updateTotalProportions(nodes);
 
@@ -373,7 +272,7 @@ export class Join {
       if (node.joinAction === 'input')
         node = this.updateNodeAmount(node, tokensIn, amountsIn);
     });
-  }
+  };
 
   async staticMulticall(
     signer: JsonRpcSigner,
@@ -387,7 +286,6 @@ export class Join {
       data: encodedMulticalls,
       gasLimit,
     });
-    // console.log(staticResult);
 
     return defaultAbiCoder.decode(['bytes[]'], staticResult)[0] as string[];
   }
@@ -395,38 +293,60 @@ export class Join {
   /*
   Static calls multicall and decodes each output of interest.
   */
-  async queryRootOutputRefs(
+  amountsOutByJoinPath = async (
     callData: string,
-    rootOutputInfo: RootOutputInfo[],
+    outputIndexes: number[],
     signer: JsonRpcSigner
-  ): Promise<RootAmounts> {
-    const outputRefAmounts: ReferenceAmounts = {};
+  ): Promise<{ amountsOut: string[]; totalAmountOut: string }> => {
+    const amountsOut: string[] = [];
     const multicallResult = await this.staticMulticall(signer, callData);
 
-    let total = BigNumber.from('0');
+    let totalAmountOut = BigNumber.from('0');
     // Decode each root output
-    rootOutputInfo.forEach((rootOutput) => {
+    outputIndexes.forEach((outputIndex) => {
       const value = defaultAbiCoder.decode(
         ['uint256'],
-        multicallResult[rootOutput.callIndex]
+        multicallResult[outputIndex]
       );
-      outputRefAmounts[rootOutput.outputRef] = value.toString();
-      total = total.add(value.toString());
+      amountsOut.push(value.toString());
+      totalAmountOut = totalAmountOut.add(value.toString());
     });
 
     return {
-      refAmounts: outputRefAmounts,
-      total: total.toString(),
+      amountsOut,
+      totalAmountOut: totalAmountOut.toString(),
     };
-  }
+  };
+
+  /*
+  Apply slippage to amounts
+  */
+  minAmountsOutByJoinPath = (
+    slippage: string,
+    amounts: string[],
+    totalAmountOut: string
+  ): { minAmountsOut: string[]; totalMinAmountOut: string } => {
+    const minAmountsOut = amounts.map((amount) =>
+      subSlippage(BigNumber.from(amount), BigNumber.from(slippage)).toString()
+    );
+    const totalMinAmountOut = subSlippage(
+      BigNumber.from(totalAmountOut),
+      BigNumber.from(slippage)
+    ).toString();
+
+    return {
+      minAmountsOut,
+      totalMinAmountOut,
+    };
+  };
 
   // Get full graph from root pool and return ordered nodes
-  async getGraphNodes(
+  getGraphNodes = async (
     poolId: string,
     tokensIn: string[],
     amountsIn: string[],
     wrapMainTokens: boolean
-  ): Promise<Node[]> {
+  ): Promise<Node[]> => {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
     const poolsGraph = new PoolGraph(this.pools, {
@@ -450,94 +370,109 @@ export class Join {
     // Update each input node with relevant amount (proportionally)
     this.updateInputAmounts(orderedNodes, tokensIn, amountsIn);
     return orderedNodes;
-  }
+  };
 
-  getNodesToRootFromToken(
-    orderedNodes: Node[],
-    tokensIn: string[],
-    amountsIn: string[],
-    tokenInput: string,
-    startingIndex: number
-  ): Node[] {
-    const nodes = PoolGraph.getNodesToRoot(
-      orderedNodes,
-      tokenInput,
-      startingIndex
-    );
-    // Update each input node with relevant amount (proportionally)
-    this.updateInputAmounts(nodes, tokensIn, amountsIn);
-    if (nodes.length === 0) throw new Error('No join path for token');
-    return nodes;
-  }
-
-  createActionCalls(
-    orderedNodes: Node[],
-    rootId: string,
-    minBPTOut: string,
+  // Create actions for each Node and return in multicall array
+  // Create calls for each path, use value stored in minBptAmounts if available
+  createActionCalls = (
+    joinPaths: Node[][],
     userAddress: string,
-    isPeek: boolean
-  ): string[] {
+    minAmountsOut?: string[]
+  ): { calls: string[]; outputIndexes: number[] } => {
     const calls: string[] = [];
-    // Create actions for each Node and return in multicall array
-    orderedNodes.forEach((node, i) => {
-      // if all child nodes have 0 output amount, then forward it to outputRef and skip adding current call
-      // TODO Check logic of this with Bruno
-      if (
-        node.children.length > 0 &&
-        node.children.filter((c) => c.index !== '0').length === 0
-      ) {
-        node.index = '0';
-        return;
-      }
+    const outputIndexes: number[] = [];
+    const isPeek = !minAmountsOut;
 
-      // If child node was input the tokens come from user not relayer
-      // wrapped tokens have to come from user (Relayer has no approval for wrapped tokens)
-      const fromUser = node.children.some(
-        (children) =>
-          children.joinAction === 'input' ||
-          children.joinAction === 'wrapAaveDynamicToken'
-      );
-      const sender = fromUser ? userAddress : this.relayer;
+    joinPaths.forEach((joinPath, j) => {
+      joinPath.forEach((node, i) => {
+        const nodeChildrenWithinJoinPath = joinPath.filter((joinNode) =>
+          node.children.map((n) => n.address).includes(joinNode.address)
+        );
 
-      const isLastChainedCall = i === orderedNodes.length - 1;
-      if (isLastChainedCall && node.id !== rootId)
-        throw Error('Last call must be to root');
-      // Always send to user on last call otherwise send to relayer
-      const recipient = isLastChainedCall ? userAddress : this.relayer;
-      // Last action will use minBptOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
-      const minOut = isLastChainedCall ? minBPTOut : '0';
+        // if all child nodes have 0 output amount, then forward it to outputRef and skip adding current call
+        // TODO Check logic of this with Bruno
+        if (
+          nodeChildrenWithinJoinPath.length > 0 &&
+          nodeChildrenWithinJoinPath.filter((c) => c.index !== '0').length === 0
+        ) {
+          node.index = '0';
+          return;
+        }
 
-      switch (node.joinAction) {
-        // TODO - Add other Relayer supported Unwraps
-        case 'wrapAaveDynamicToken':
-          // relayer has no allowance to spend its own wrapped tokens so recipient must be the user
-          calls.push(this.createAaveWrap(node, sender, userAddress));
-          break;
-        case 'batchSwap':
-          calls.push(this.createBatchSwap(node, minOut, sender, recipient));
-          break;
-        case 'joinPool':
-          // Only need to peek at joinPool result for final node
-          if (isPeek && node.id === rootId)
+        // If child node was input the tokens come from user not relayer
+        // wrapped tokens have to come from user (Relayer has no approval for wrapped tokens)
+        const fromUser = nodeChildrenWithinJoinPath.some(
+          (child) =>
+            child.joinAction === 'input' ||
+            child.joinAction === 'wrapAaveDynamicToken'
+        );
+        const sender = fromUser ? userAddress : userAddress;
+
+        const isLastChainedCall = i === joinPath.length - 1;
+        // Always send to user on last call otherwise send to relayer
+        const recipient = isLastChainedCall ? userAddress : userAddress;
+        // Last action will use minBptOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
+        const minOut =
+          isLastChainedCall && minAmountsOut ? minAmountsOut[j] : '0';
+
+        switch (node.joinAction) {
+          // TODO - Add other Relayer supported Unwraps
+          case 'wrapAaveDynamicToken':
+            // relayer has no allowance to spend its own wrapped tokens so recipient must be the user
             calls.push(
-              ...this.createJoinPool(node, minOut, sender, recipient, true)
+              this.createAaveWrap(
+                node,
+                nodeChildrenWithinJoinPath,
+                j,
+                sender,
+                userAddress
+              )
             );
-          else
+            break;
+          case 'batchSwap':
             calls.push(
-              ...this.createJoinPool(node, minOut, sender, recipient, false)
+              this.createBatchSwap(
+                node,
+                nodeChildrenWithinJoinPath,
+                j,
+                minOut,
+                sender,
+                recipient
+              )
             );
-
-          break;
+            break;
+          case 'joinPool':
+            calls.push(
+              this.createJoinPool(
+                node,
+                nodeChildrenWithinJoinPath,
+                j,
+                minOut,
+                sender,
+                recipient
+              )
+            );
+            break;
+        }
+      });
+      if (isPeek) {
+        const outputRef = 100 * j;
+        const peekCall = Relayer.encodePeekChainedReferenceValue(
+          Relayer.toChainedReference(outputRef, false)
+        );
+        calls.push(peekCall);
+        outputIndexes.push(calls.indexOf(peekCall));
       }
     });
-    return calls;
-  }
+
+    return { calls, outputIndexes };
+  };
 
   /**
    * Creates a map of node address and total proportion. Used for the case where there may be multiple inputs using same token, e.g. DAI input to 2 pools.
    * @param nodes nodes to consider.
    */
-  updateTotalProportions(nodes: Node[]): void {
+  updateTotalProportions = (nodes: Node[]): void => {
     this.totalProportions = {};
     nodes.forEach((node) => {
       if (!this.totalProportions[node.address])
@@ -548,7 +483,7 @@ export class Join {
         ].add(node.proportionOfParent);
       }
     });
-  }
+  };
 
   /**
    * Uses relayer to approve itself to act in behalf of the user
@@ -556,11 +491,15 @@ export class Join {
    * @param authorisation Encoded authorisation call.
    * @returns relayer approval call
    */
-  createSetRelayerApproval(authorisation: string): string {
+  createSetRelayerApproval = (authorisation: string): string => {
     return Relayer.encodeSetRelayerApproval(this.relayer, true, authorisation);
-  }
+  };
 
-  updateNodeAmount(node: Node, tokensIn: string[], amountsIn: string[]): Node {
+  updateNodeAmount = (
+    node: Node,
+    tokensIn: string[],
+    amountsIn: string[]
+  ): Node => {
     /*
     An input node requires a real amount (not an outputRef) as it is first node in chain.
     This amount will be used when chaining to parent.
@@ -592,14 +531,20 @@ export class Join {
     //   )`
     // );
     return node;
-  }
+  };
 
-  createAaveWrap(node: Node, sender: string, recipient: string): string {
+  createAaveWrap = (
+    node: Node,
+    nodeChildrenWithinJoinPath: Node[],
+    joinPathIndex: number,
+    sender: string,
+    recipient: string
+  ): string => {
     // Throws error based on the assumption that aaveWrap apply only to input tokens from leaf nodes
-    if (node.children.length !== 1)
+    if (nodeChildrenWithinJoinPath.length !== 1)
       throw new Error('aaveWrap nodes should always have a single child node');
 
-    const childNode = node.children[0];
+    const childNode = nodeChildrenWithinJoinPath[0];
 
     const staticToken = node.address;
     const amount = childNode.index;
@@ -609,7 +554,7 @@ export class Join {
       recipient,
       amount,
       fromUnderlying: true,
-      outputReference: Relayer.toChainedReference(node.index),
+      outputReference: this.getOutputRefValue(joinPathIndex, node).value,
     });
 
     // console.log(
@@ -622,18 +567,24 @@ export class Join {
     // );
 
     return call;
-  }
+  };
 
-  createBatchSwap(
+  createBatchSwap = (
     node: Node,
+    nodeChildrenWithinJoinPath: Node[],
+    joinPathIndex: number,
     expectedOut: string,
     sender: string,
     recipient: string
-  ): string {
+  ): string => {
     // We only need batchSwaps for main/wrapped > linearBpt so shouldn't be more than token > token
-    if (node.children.length !== 1) throw new Error('Unsupported batchswap');
-    const inputToken = node.children[0].address;
-    const inputValue = this.getOutputRefValue(node.children[0]);
+    if (nodeChildrenWithinJoinPath.length !== 1)
+      throw new Error('Unsupported batchswap');
+    const inputToken = nodeChildrenWithinJoinPath[0].address;
+    const inputValue = this.getOutputRefValue(
+      joinPathIndex,
+      nodeChildrenWithinJoinPath[0]
+    );
     const assets = [node.address, inputToken];
 
     // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
@@ -668,18 +619,20 @@ export class Join {
         index: assets
           .map((a) => a.toLowerCase())
           .indexOf(node.address.toLowerCase()),
-        key: Relayer.toChainedReference(node.index),
+        key: BigNumber.from(this.getOutputRefValue(joinPathIndex, node).value),
       },
     ];
 
     // console.log(
     //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
     //   ${node.joinAction}(
-    //     inputAmt: ${node.children[0].index},
-    //     inputToken: ${node.children[0].address},
+    //     inputAmt: ${nodeChildrenWithinJoinPath[0].index},
+    //     inputToken: ${nodeChildrenWithinJoinPath[0].address},
     //     pool: ${node.id},
     //     outputToken: ${node.address},
-    //     outputRef: ${node.index}
+    //     outputRef: ${this.getOutputRefValue(joinPathIndex, node).value},
+    //     sender: ${sender},
+    //     recipient: ${recipient}
     //   )`
     // );
 
@@ -695,36 +648,33 @@ export class Join {
     });
 
     return call;
-  }
+  };
 
-  getOutputRefValue(node: Node): { value: string; isRef: boolean } {
-    if (node.joinAction === 'input') return { value: node.index, isRef: false };
-    else if (node.index !== '0')
-      return {
-        value: Relayer.toChainedReference(node.index).toString(),
-        isRef: true,
-      };
-    else
-      return {
-        value: '0',
-        isRef: true,
-      };
-  }
-
-  createJoinPool(
+  createJoinPool = (
     node: Node,
+    nodeChildrenWithinJoinPath: Node[],
+    joinPathIndex: number,
     minAmountOut: string,
     sender: string,
-    recipient: string,
-    isPeek: boolean
-  ): string[] {
+    recipient: string
+  ): string => {
     const inputTokens: string[] = [];
     const inputAmts: string[] = [];
 
     // inputTokens needs to include each asset even if it has 0 amount
     node.children.forEach((child) => {
       inputTokens.push(child.address);
-      inputAmts.push(this.getOutputRefValue(child).value);
+      // non-leaf joins should set input amounts only for children that are in their joinPath
+      const childWithinJoinPath = nodeChildrenWithinJoinPath.find((c) =>
+        isSameAddress(c.address, child.address)
+      );
+      if (childWithinJoinPath) {
+        inputAmts.push(
+          this.getOutputRefValue(joinPathIndex, childWithinJoinPath).value
+        );
+      } else {
+        inputAmts.push('0');
+      }
     });
 
     if (node.type === PoolType.ComposableStable) {
@@ -772,13 +722,11 @@ export class Join {
     //     maxAmtsIn: ${sortedAmounts.toString()},
     //     amountsIn: ${userDataAmounts.toString()},
     //     minOut: ${minAmountOut},
-    //     outputRef: ${node.index}
+    //     outputRef: ${this.getOutputRefValue(joinPathIndex, node).value},
+    //     sender: ${sender},
+    //     recipient: ${recipient}
     //   )`
     // );
-
-    const peekCall = Relayer.encodePeekChainedReferenceValue(
-      Relayer.toChainedReference(node.index, false)
-    );
 
     const call = Relayer.constructJoinCall({
       poolId: node.id,
@@ -786,7 +734,7 @@ export class Join {
       sender,
       recipient,
       value,
-      outputReference: Relayer.toChainedReference(node.index),
+      outputReference: this.getOutputRefValue(joinPathIndex, node).value,
       joinPoolRequest: {} as JoinPoolRequest,
       assets: sortedTokens, // Must include BPT token
       maxAmountsIn: sortedAmounts,
@@ -794,7 +742,29 @@ export class Join {
       fromInternalBalance: sender === this.relayer,
     });
 
-    if (isPeek) return [call, peekCall];
-    else return [call];
-  }
+    return call;
+  };
+
+  getOutputRefValue = (
+    joinPathIndex: number,
+    node: Node
+  ): { value: string; isRef: boolean } => {
+    if (node.joinAction === 'input') {
+      // Input nodes have their indexes set as the actual input amount, instead of a chained reference
+      return { value: node.index, isRef: false };
+    } else if (node.index !== '0' || !node.parent) {
+      // Root node (parent === undefined) has index zero, but should still pass chained reference as outputRef value
+      return {
+        value: Relayer.toChainedReference(
+          BigNumber.from(node.index).add(joinPathIndex * 100)
+        ).toString(),
+        isRef: true,
+      };
+    } else {
+      return {
+        value: '0',
+        isRef: true,
+      };
+    }
+  };
 }
