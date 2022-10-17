@@ -8,12 +8,16 @@ import type {
   AprBreakdown,
   PoolAttribute,
 } from '@/types';
-import { JoinPoolAttributes } from './pool-types/concerns/types';
+import {
+  InitJoinPoolAttributes,
+  JoinPoolAttributes,
+} from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
+import { PoolFactory__factory } from './pool-factory__factory';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -23,6 +27,7 @@ export class Pools implements Findable<PoolWithMethods> {
   liquidityService;
   feesService;
   volumeService;
+  poolFactory;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -44,6 +49,7 @@ export class Pools implements Findable<PoolWithMethods> {
     );
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
+    this.poolFactory = new PoolFactory__factory();
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
@@ -112,6 +118,15 @@ export class Pools implements Findable<PoolWithMethods> {
           tokensIn,
           amountsIn,
           slippage,
+          wrappedNativeAsset,
+        });
+      },
+      buildInitJoin: (joiner, tokensIn, amountsIn): InitJoinPoolAttributes => {
+        return methods.join?.buildInitJoin({
+          joiner,
+          pool,
+          tokensIn,
+          amountsIn,
           wrappedNativeAsset,
         });
       },

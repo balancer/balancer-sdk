@@ -1,4 +1,3 @@
-import { StablePoolJoin } from './concerns/stable/join.concern';
 import { StablePoolLiquidity } from './concerns/stable/liquidity.concern';
 import { StablePoolSpotPrice } from './concerns/stable/spotPrice.concern';
 import { StablePoolPriceImpact } from './concerns/stable/priceImpact.concern';
@@ -11,11 +10,12 @@ import {
   PriceImpactConcern,
   SpotPriceConcern,
 } from './concerns/types';
+import { ComposableStablePoolJoin } from '@/modules/pools/pool-types/concerns/composableStable/join.concern';
 
 export class ComposableStable implements PoolType {
   constructor(
     public exit: ExitConcern = new ComposableStablePoolExit(),
-    public join: JoinConcern = new StablePoolJoin(),
+    public join: JoinConcern = new ComposableStablePoolJoin(),
     public liquidity: LiquidityConcern = new StablePoolLiquidity(),
     public spotPriceCalculator: SpotPriceConcern = new StablePoolSpotPrice(),
     public priceImpactCalculator: PriceImpactConcern = new StablePoolPriceImpact()

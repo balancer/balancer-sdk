@@ -1,32 +1,22 @@
-import * as SOR from '@balancer-labs/sor';
-
 import {
-  InitJoinPoolAttributes,
+  InitJoinPoolAttributes, InitJoinPoolParameters,
   JoinConcern,
   JoinPool,
   JoinPoolAttributes,
   JoinPoolParameters,
 } from '../types';
-import { subSlippage } from '@/lib/utils/slippageHelper';
+import { BigNumber } from '@ethersproject/bignumber';
+import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
-import { balancerVault } from '@/lib/constants/config';
 import { Vault__factory } from '@balancer-labs/typechain';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { AddressZero } from '@ethersproject/constants';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import * as SOR from '@balancer-labs/sor';
+import { subSlippage } from '@/lib/utils/slippageHelper';
 import { StablePoolEncoder } from '@/pool-stable';
+import { balancerVault } from '@/lib/constants/config';
+import { AddressZero } from '@ethersproject/constants';
 
-export class MetaStablePoolJoin implements JoinConcern {
-  buildInitJoin = ({
-    joiner,
-    pool,
-    tokensIn,
-    amountsIn,
-    wrappedNativeAsset,
-  }: JoinPoolParameters): InitJoinPoolAttributes => {
-    console.log(joiner, pool, tokensIn, amountsIn, wrappedNativeAsset);
-    throw new Error('To be implemented');
-  };
+export class ComposableStablePoolJoin implements JoinConcern {
   /**
    * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
    * @param {JoinPoolParameters}  params - parameters used to build exact tokens in for bpt out transaction
@@ -52,57 +42,36 @@ export class MetaStablePoolJoin implements JoinConcern {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
 
-    // Check if there's any relevant meta stable pool info missing
+    // Check if there's any relevant stable pool info missing
     if (pool.tokens.some((token) => !token.decimals))
       throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
     if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
-    if (pool.tokens.some((token) => !token.priceRate))
-      throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
 
     // Parse pool info into EVM amounts in order to match amountsIn scalling
     const {
       parsedTokens,
       parsedBalances,
-      parsedPriceRates,
       parsedAmp,
       parsedTotalShares,
       parsedSwapFee,
     } = parsePoolInfo(pool);
 
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    // sort input
+    // sort inputs
     const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
       tokensIn,
       amountsIn
     ) as [string[], string[]];
     // sort pool info
-    const [, sortedBalances, sortedPriceRates] = assetHelpers.sortTokens(
+    const [, sortedBalances] = assetHelpers.sortTokens(
       parsedTokens,
-      parsedBalances,
-      parsedPriceRates
-    ) as [string[], string[], string[]];
+      parsedBalances
+    ) as [string[], string[]];
 
-    // scale amounts in based on price rate for each token
-    const scaledAmounts = sortedAmounts.map((amount, i) => {
-      return BigNumber.from(amount)
-        .mul(BigNumber.from(sortedPriceRates[i]))
-        .div(parseFixed('1', 18))
-        .toString();
-    });
-
-    // scale balances based on price rate for each token
-    const scaledBalances = sortedBalances.map((balance, i) => {
-      return BigNumber.from(balance)
-        .mul(BigNumber.from(sortedPriceRates[i]))
-        .div(parseFixed('1', 18))
-        .toString();
-    });
-
-    // TODO: check if it's ok to remove amounts/balances scaled logic since it's cancelling itself out
     const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp as string),
-      scaledBalances.map((b) => BigInt(b)),
-      scaledAmounts.map((a) => BigInt(a)),
+      sortedBalances.map((b) => BigInt(b)),
+      sortedAmounts.map((a) => BigInt(a)),
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
     ).toString();
@@ -143,4 +112,60 @@ export class MetaStablePoolJoin implements JoinConcern {
 
     return { to, functionName, attributes, data, value, minBPTOut };
   };
+
+  /**
+   * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
+   * @param {JoinPoolParameters} params - parameters used to build exact tokens in for bpt out transaction
+   * @param {string}                          params.joiner - Account address joining pool
+   * @param {SubgraphPoolBase}                params.pool - Subgraph pool object of pool being joined
+   * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
+   * @param {string[]}                        params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
+   * @param {string}                          wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for joining with ETH.
+   * @returns                                 transaction request ready to send with signer.sendTransaction
+   */
+  buildInitJoin({
+    joiner,
+    pool,
+    tokensIn,
+    amountsIn,
+    wrappedNativeAsset,
+  }: InitJoinPoolParameters): InitJoinPoolAttributes {
+    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+
+    // sort inputs
+    const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
+      tokensIn,
+      amountsIn
+    ) as [string[], string[]];
+
+    const userData = ComposableStablePoolEncoder.joinInit(sortedAmounts);
+    const functionName = 'joinPool';
+
+    const attributes = {
+      poolId: pool.id,
+      sender: joiner,
+      recipient: joiner,
+      joinPoolRequest: {
+        assets: sortedTokens,
+        maxAmountsIn: sortedAmounts,
+        userData,
+        fromInternalBalance: false,
+      },
+    };
+
+    const vaultInterface = Vault__factory.createInterface();
+    const data = vaultInterface.encodeFunctionData(functionName, [
+      attributes.poolId,
+      attributes.sender,
+      attributes.recipient,
+      attributes.joinPoolRequest,
+    ]);
+
+    return {
+      to: pool.address,
+      functionName,
+      attributes,
+      data,
+    };
+  }
 }
