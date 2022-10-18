@@ -21,6 +21,7 @@ import { WeightedPoolEncoder } from '@/pool-weighted';
 import { BigNumber } from 'ethers';
 import { AssetHelpers } from '@/lib/utils';
 import { MaxInt256 } from '@ethersproject/constants';
+import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 
 export enum ActionStep {
   Direct,
@@ -136,10 +137,25 @@ function getActionOutputRef(
   return [opRef, opRefKey];
 }
 
-function getActionMinOut(actionStep: ActionStep, amountOut: string): string {
+// If the action contains tokenOut we need to use slippage to set limits
+function getActionMinOut(
+  swapType: SwapTypes,
+  actionStep: ActionStep,
+  amountOut: string,
+  slippage: string
+): string {
   let minOut = '0';
   if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenOut) {
-    minOut = amountOut;
+    if (swapType === SwapTypes.SwapExactIn)
+      minOut = subSlippage(
+        BigNumber.from(amountOut),
+        BigNumber.from(slippage)
+      ).toString();
+    else
+      minOut = addSlippage(
+        BigNumber.from(amountOut),
+        BigNumber.from(slippage)
+      ).toString();
   }
   return minOut;
 }
@@ -273,11 +289,13 @@ Create an array of Actions for each swap.
 An Action is a join/exit/swap with the chained output refs.
 */
 export function getActions(
+  swapType: SwapTypes,
   tokenIn: string,
   tokenOut: string,
   swaps: SwapV2[],
   assets: string[],
-  amountOut: string
+  amountOut: string,
+  slippage: string
 ): Actions[] {
   const tokenInIndex = assets.findIndex(
     (t) => t.toLowerCase() === tokenIn.toLowerCase()
@@ -290,36 +308,42 @@ export function getActions(
   for (const swap of swaps) {
     if (isJoin(swap, assets)) {
       const [joinAction, newOpRefKey] = createJoinAction(
+        swapType,
         swap,
         tokenInIndex,
         tokenOutIndex,
         amountOut,
         opRefKey,
-        assets
+        assets,
+        slippage
       );
       opRefKey = newOpRefKey;
       actions.push(joinAction);
       continue;
     } else if (isExit(swap, assets)) {
       const [exitAction, newOpRefKey] = createExitAction(
+        swapType,
         swap,
         tokenInIndex,
         tokenOutIndex,
         amountOut,
         opRefKey,
-        assets
+        assets,
+        slippage
       );
       opRefKey = newOpRefKey;
       actions.push(exitAction);
       continue;
     } else {
       const [swapAction, newOpRefKey] = createSwapAction(
+        swapType,
         swap,
         tokenInIndex,
         tokenOutIndex,
         amountOut,
         opRefKey,
-        assets
+        assets,
+        slippage
       );
       opRefKey = newOpRefKey;
       actions.push(swapAction);
@@ -330,12 +354,14 @@ export function getActions(
 }
 
 function createJoinAction(
+  swapType: SwapTypes,
   swap: SwapV2,
   tokenInIndex: number,
   tokenOutIndex: number,
   amountOut: string,
   opRefKey: number,
-  assets: string[]
+  assets: string[],
+  slippage: string
 ): [JoinAction, number] {
   const actionStep = getActionStep(
     tokenInIndex,
@@ -344,7 +370,7 @@ function createJoinAction(
     swap.assetOutIndex
   );
   const amountIn = getActionAmount(swap, ActionType.Join, actionStep, opRefKey);
-  const minOut = getActionMinOut(actionStep, amountOut);
+  const minOut = getActionMinOut(swapType, actionStep, amountOut, slippage);
   const [opRef, newOpRefKey] = getActionOutputRef(
     actionStep,
     swap.assetOutIndex,
@@ -365,12 +391,14 @@ function createJoinAction(
 }
 
 function createExitAction(
+  swapType: SwapTypes,
   swap: SwapV2,
   tokenInIndex: number,
   tokenOutIndex: number,
   amountOut: string,
   opRefKey: number,
-  assets: string[]
+  assets: string[],
+  slippage: string
 ): [ExitAction, number] {
   const actionStep = getActionStep(
     tokenInIndex,
@@ -379,7 +407,7 @@ function createExitAction(
     swap.assetOutIndex
   );
   const amountIn = getActionAmount(swap, ActionType.Exit, actionStep, opRefKey);
-  const minOut = getActionMinOut(actionStep, amountOut);
+  const minOut = getActionMinOut(swapType, actionStep, amountOut, slippage);
   const [opRef, newOpRefKey] = getActionOutputRef(
     actionStep,
     swap.assetOutIndex,
@@ -400,12 +428,14 @@ function createExitAction(
 }
 
 function createSwapAction(
+  swapType: SwapTypes,
   swap: SwapV2,
   tokenInIndex: number,
   tokenOutIndex: number,
   amountOut: string,
   opRefKey: number,
-  assets: string[]
+  assets: string[],
+  slippage: string
 ): [SwapAction, number] {
   const actionStep = getActionStep(
     tokenInIndex,
@@ -414,7 +444,7 @@ function createSwapAction(
     swap.assetOutIndex
   );
   const amountIn = getActionAmount(swap, ActionType.Swap, actionStep, opRefKey);
-  const minOut = getActionMinOut(actionStep, amountOut);
+  const minOut = getActionMinOut(swapType, actionStep, amountOut, slippage);
   const [opRef, newOpRefKey] = getActionOutputRef(
     actionStep,
     swap.assetOutIndex,
@@ -716,17 +746,20 @@ export function buildCalls(
   authorisation: string | undefined,
   swapType: SwapTypes,
   relayerAddress: string,
-  wrappedNativeAsset: string
+  wrappedNativeAsset: string,
+  slippage: string
 ): {
   to: string;
   data: string;
 } {
   const actions = getActions(
+    swapType,
     tokenIn,
     tokenOut,
     swapInfo.swaps,
     swapInfo.tokenAddresses,
-    swapInfo.returnAmount.toString()
+    swapInfo.returnAmount.toString(),
+    slippage
   );
   const orderedActions = orderActions(
     actions,
@@ -734,6 +767,8 @@ export function buildCalls(
     tokenOut,
     swapInfo.tokenAddresses
   );
+
+  // SwapExactIn - slippage should be applied to final amount out
 
   if (swapType === SwapTypes.SwapExactOut && orderedActions.length > 1)
     throw new Error('ExactOut with > 1 step no supported.');
@@ -799,7 +834,7 @@ export function buildCalls(
     }
   }
 
-  checkAmounts(amountsIn, amountsOut, swapType, swapInfo);
+  checkAmounts(amountsIn, amountsOut, swapType, swapInfo, slippage);
 
   const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
     calls,
@@ -815,7 +850,8 @@ function checkAmounts(
   amountsIn: BigNumber[],
   amountsOut: BigNumber[],
   swapType: SwapTypes,
-  swapInfo: SwapInfo
+  swapInfo: SwapInfo,
+  slippage: string
 ): void {
   const totalIn = amountsIn.reduce(
     (total = BigNumber.from(0), amount) => (total = total.add(amount))
@@ -825,9 +861,15 @@ function checkAmounts(
   );
   if (swapType === SwapTypes.SwapExactIn) {
     if (!totalIn.eq(swapInfo.swapAmount)) throw new Error('Safety first!!');
-    if (!totalOut.eq(swapInfo.returnAmount)) throw new Error('Safety first!!');
+    if (
+      !totalOut.eq(subSlippage(swapInfo.returnAmount, BigNumber.from(slippage)))
+    )
+      throw new Error('Safety first!!');
   } else {
-    if (!totalIn.eq(swapInfo.returnAmount)) throw new Error('Safety first!!');
+    if (
+      !totalIn.eq(addSlippage(swapInfo.returnAmount, BigNumber.from(slippage)))
+    )
+      throw new Error('Safety first!!');
     if (!totalOut.eq(swapInfo.swapAmount)) throw new Error('Safety first!!');
   }
 }

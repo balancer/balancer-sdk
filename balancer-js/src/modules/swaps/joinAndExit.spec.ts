@@ -35,6 +35,7 @@ const USDT = ADDRESSES[Network.MAINNET].USDT;
 const BAL = ADDRESSES[Network.MAINNET].BAL;
 const WETH = ADDRESSES[Network.MAINNET].WETH;
 const USDC = ADDRESSES[Network.MAINNET].USDC;
+const slippage = '0';
 
 export class MockTokenPriceService implements TokenPriceService {
   constructor(private nativeAssetPriceInToken: string = '0') {}
@@ -65,11 +66,13 @@ describe(`Paths with join and exits.`, () => {
         true
       );
       const actions = getActions(
+        swapType,
         tokenIn,
         tokenOut,
         swapWithJoinExit.swaps,
         swapWithJoinExit.tokenAddresses,
-        swapWithJoinExit.returnAmount.toString()
+        swapWithJoinExit.returnAmount.toString(),
+        slippage
       );
       const firstSwap = actions[0] as SwapAction;
       const firstJoin = actions[1] as JoinAction;
@@ -101,11 +104,13 @@ describe(`Paths with join and exits.`, () => {
         true
       );
       const actions = getActions(
+        swapType,
         tokenIn,
         tokenOut,
         swapWithJoinExit.swaps,
         swapWithJoinExit.tokenAddresses,
-        swapWithJoinExit.returnAmount.toString()
+        swapWithJoinExit.returnAmount.toString(),
+        slippage
       );
       const swap = actions[0] as SwapAction;
       const exit = actions[1] as ExitAction;
@@ -122,6 +127,7 @@ describe(`Paths with join and exits.`, () => {
   });
   context('orderActions', () => {
     it('exact in, join', async () => {
+      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = DAI.address;
       const tokenOut = pool1Bpt;
       const swapAmount = parseFixed('1280000', 18);
@@ -141,11 +147,13 @@ describe(`Paths with join and exits.`, () => {
       ];
       const returnAmount = '639359779510000000000000';
       const actions = getActions(
+        swapType,
         tokenIn,
         tokenOut,
         swaps,
         assets,
-        returnAmount
+        returnAmount,
+        slippage
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const join = orderedActions[0] as JoinAction;
@@ -159,6 +167,7 @@ describe(`Paths with join and exits.`, () => {
       expect(count).to.eq(1);
     });
     it('exact in, exit', async () => {
+      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = pool1Bpt;
       const tokenOut = DAI.address;
       const swapAmount = '1280000000000000000000000';
@@ -178,11 +187,13 @@ describe(`Paths with join and exits.`, () => {
       ];
       const returnAmount = '2557439736413850000000000';
       const actions = getActions(
+        swapType,
         tokenIn,
         tokenOut,
         swaps,
         assets,
-        returnAmount
+        returnAmount,
+        slippage
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const exit = orderedActions[0] as ExitAction;
@@ -196,6 +207,7 @@ describe(`Paths with join and exits.`, () => {
       expect(count).to.eq(1);
     });
     it('exact in, swap and join>swap', async () => {
+      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = DAI.address;
       const tokenOut = USDT.address;
       const swaps = [
@@ -234,11 +246,13 @@ describe(`Paths with join and exits.`, () => {
       ];
       const returnAmount = '1264585520968';
       const actions = getActions(
+        swapType,
         tokenIn,
         tokenOut,
         swaps,
         assets,
-        returnAmount
+        returnAmount,
+        slippage
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const join = orderedActions[0] as JoinAction;
@@ -260,6 +274,7 @@ describe(`Paths with join and exits.`, () => {
       expect(count).to.eq(1);
     });
     it('exact in, swap>exit', async () => {
+      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = USDT.address;
       const tokenOut = DAI.address;
       const swaps = [
@@ -289,11 +304,13 @@ describe(`Paths with join and exits.`, () => {
       ];
       const returnAmount = '94961515248180000000000';
       const actions = getActions(
+        swapType,
         tokenIn,
         tokenOut,
         swaps,
         assets,
-        returnAmount
+        returnAmount,
+        slippage
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const batchSwap = orderedActions[0] as BatchSwapAction;
@@ -319,6 +336,7 @@ describe(`Paths with join and exits.`, () => {
       //    USDT[swap]DAI
       //    DAI[join]BPT
       //    BPT[swap]USDC
+      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = USDT.address;
       const tokenOut = USDC.address;
       const swaps = [
@@ -353,11 +371,13 @@ describe(`Paths with join and exits.`, () => {
       const assets = [tokenIn, DAI.address, pool1Bpt, USDC.address];
       const returnAmount = '94961515248180000000000';
       const actions = getActions(
+        swapType,
         tokenIn,
         tokenOut,
         swaps,
         assets,
-        returnAmount
+        returnAmount,
+        slippage
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const batchSwapFirst = orderedActions[0] as BatchSwapAction;
@@ -391,6 +411,7 @@ describe(`Paths with join and exits.`, () => {
       //    USDT[swap]BPT
       //    BPT[exit]DAI
       //    DAI[swap]USDC
+      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = USDT.address;
       const tokenOut = USDC.address;
       const swaps = [
@@ -425,11 +446,13 @@ describe(`Paths with join and exits.`, () => {
       const assets = [tokenIn, pool1Bpt, DAI.address, USDC.address];
       const returnAmount = '94961515248180000000000';
       const actions = getActions(
+        swapType,
         tokenIn,
         tokenOut,
         swaps,
         assets,
-        returnAmount
+        returnAmount,
+        slippage
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const batchSwapFirst = orderedActions[0] as BatchSwapAction;
@@ -467,6 +490,7 @@ describe(`Paths with join and exits.`, () => {
       //    USDT[swap]USDC
       //    USDC[join]BPT
       //    Need minOut for both which equals total
+      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = USDT.address;
       const tokenOut = pool1Bpt;
       const swaps = [
@@ -510,11 +534,13 @@ describe(`Paths with join and exits.`, () => {
       const assets = [tokenIn, DAI.address, tokenOut, BAL.address];
       const returnAmount = '94961515248180000000000';
       const actions = getActions(
+        swapType,
         tokenIn,
         tokenOut,
         swaps,
         assets,
-        returnAmount
+        returnAmount,
+        slippage
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const batchSwapFirst = orderedActions[0] as BatchSwapAction;
@@ -549,6 +575,7 @@ describe(`Paths with join and exits.`, () => {
       //    USDC[swap]BPT
       //    BPT[exit]weth
       //    Need minOut for both which equals total
+      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = USDT.address;
       const tokenOut = WETH.address;
       const swaps = [
@@ -610,11 +637,13 @@ describe(`Paths with join and exits.`, () => {
       const assets = [tokenIn, DAI.address, pool1Bpt, tokenOut, USDC.address];
       const returnAmount = '94961515248180000000000';
       const actions = getActions(
+        swapType,
         tokenIn,
         tokenOut,
         swaps,
         assets,
-        returnAmount
+        returnAmount,
+        slippage
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const batchSwapFirst = orderedActions[0] as BatchSwapAction;
