@@ -691,7 +691,7 @@ function buildSetRelayerApproval(
   return Relayer.encodeSetRelayerApproval(relayerAddress, true, authorisation);
 }
 
-export function checkOrderedActions(actions: OrderedActions[]): number {
+export function getNumberOfOutputActions(actions: OrderedActions[]): number {
   let outputCount = 0;
   for (const a of actions) {
     if (a.type === ActionType.BatchSwap) {
@@ -738,7 +738,7 @@ export function buildCalls(
   if (swapType === SwapTypes.SwapExactOut && orderedActions.length > 1)
     throw new Error('ExactOut with > 1 step no supported.');
 
-  if (checkOrderedActions(orderedActions) > 1)
+  if (getNumberOfOutputActions(orderedActions) > 1)
     throw new Error('Paths finishing on two exits are unsupported');
 
   const calls: string[] = [];

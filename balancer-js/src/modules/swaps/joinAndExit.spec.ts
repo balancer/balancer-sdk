@@ -22,7 +22,7 @@ import {
   JoinAction,
   orderActions,
   SwapAction,
-  checkOrderedActions,
+  getNumberOfOutputActions,
 } from './joinAndExit';
 
 import poolsList from '@/test/lib/joinExitPools.json';
@@ -155,7 +155,7 @@ describe(`Paths with join and exits.`, () => {
       expect(join.amountIn).to.eq(swapAmount.toString());
       expect(join.minOut).to.eq(returnAmount);
       expect(join.actionStep).to.eq(ActionStep.Direct);
-      const count = checkOrderedActions(orderedActions);
+      const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(1);
     });
     it('exact in, exit', async () => {
@@ -192,7 +192,7 @@ describe(`Paths with join and exits.`, () => {
       expect(exit.amountIn).to.eq(swapAmount);
       expect(exit.minOut).to.eq(returnAmount);
       expect(exit.actionStep).to.eq(ActionStep.Direct);
-      const count = checkOrderedActions(orderedActions);
+      const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(1);
     });
     it('exact in, swap and join>swap', async () => {
@@ -256,7 +256,7 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwap.swaps[0].amount).to.eq('1279699403356512142192771');
       expect(batchSwap.swaps[1].amount).to.eq(join.opRef.key.toString());
       expect(batchSwap.hasTokenOut).to.be.true;
-      const count = checkOrderedActions(orderedActions);
+      const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(1);
     });
     it('exact in, swap>exit', async () => {
@@ -311,7 +311,7 @@ describe(`Paths with join and exits.`, () => {
       expect(exit.minOut).to.eq(returnAmount);
       expect(exit.amountIn).to.eq(batchSwap.opRef[0].key.toString());
       expect(exit.actionStep).to.eq(ActionStep.TokenOut);
-      const count = checkOrderedActions(orderedActions);
+      const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(1);
     });
     it('exact in, swap>join>swap', async () => {
@@ -383,7 +383,7 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwapSecond.swaps[0].amount).to.eq(join.opRef.key.toString());
       expect(batchSwapSecond.minOut).to.eq(returnAmount);
       expect(batchSwapSecond.hasTokenOut).to.be.true;
-      const count = checkOrderedActions(orderedActions);
+      const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(1);
     });
     it('exact in, swap>exit>swap', async () => {
@@ -457,7 +457,7 @@ describe(`Paths with join and exits.`, () => {
       );
       expect(batchSwapSecond.minOut).to.eq(returnAmount);
       expect(batchSwapSecond.hasTokenOut).to.be.true;
-      const count = checkOrderedActions(orderedActions);
+      const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(1);
     });
     it('exact in, ending in two joins', async () => {
@@ -536,7 +536,7 @@ describe(`Paths with join and exits.`, () => {
       expect(joinSecond.type).to.eq(ActionType.Join);
       expect(joinSecond.amountIn).to.eq(batchSwapFirst.opRef[1].key.toString());
       expect(joinSecond.actionStep).to.eq(ActionStep.TokenOut);
-      const count = checkOrderedActions(orderedActions);
+      const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(2);
       expect(joinFirst.minOut).to.not.eq(joinSecond.minOut); // TODO - Can't be same for both
     });
@@ -642,7 +642,7 @@ describe(`Paths with join and exits.`, () => {
       expect(exitSecond.opRef.length).to.eq(0);
       expect(exitSecond.amountIn).to.eq(batchSwapFirst.opRef[3].key.toString());
       expect(exitSecond.actionStep).to.eq(ActionStep.TokenOut);
-      const count = checkOrderedActions(orderedActions);
+      const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(2);
       expect(exitFirst.minOut).to.not.eq(exitSecond.minOut); // TODO - Can't be same for both
       expect(exitSecond.minOut).to.eq('94961515248180000000000');
