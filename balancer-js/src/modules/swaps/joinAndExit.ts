@@ -22,6 +22,7 @@ import { BigNumber } from 'ethers';
 import { AssetHelpers } from '@/lib/utils';
 import { MaxInt256 } from '@ethersproject/constants';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export enum ActionStep {
   Direct,
@@ -281,6 +282,8 @@ export function orderActions(
     }
   }
   if (batchSwaps.swaps.length > 0) orderedActions.push(batchSwaps);
+  if (getNumberOfOutputActions(orderedActions) > 1)
+    throw new BalancerError(BalancerErrorCode.RELAY_SWAP_LENGTH);
   return orderedActions;
 }
 
@@ -768,13 +771,8 @@ export function buildCalls(
     swapInfo.tokenAddresses
   );
 
-  // SwapExactIn - slippage should be applied to final amount out
-
   if (swapType === SwapTypes.SwapExactOut && orderedActions.length > 1)
     throw new Error('ExactOut with > 1 step no supported.');
-
-  if (getNumberOfOutputActions(orderedActions) > 1)
-    throw new Error('Paths finishing on two exits are unsupported');
 
   const calls: string[] = [];
   // These amounts are used to compare to expected amounts

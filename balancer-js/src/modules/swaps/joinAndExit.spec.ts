@@ -4,6 +4,7 @@ require('dotenv').config();
 import { expect } from 'chai';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { cloneDeep } from 'lodash';
+import { BalancerError, BalancerErrorCode } from '@/.';
 
 import {
   SwapTypes,
@@ -542,29 +543,37 @@ describe(`Paths with join and exits.`, () => {
         returnAmount,
         slippage
       );
-      const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
-      const batchSwapFirst = orderedActions[0] as BatchSwapAction;
-      const joinFirst = orderedActions[1] as JoinAction;
-      const joinSecond = orderedActions[2] as JoinAction;
-      expect(orderedActions.length).to.eq(3);
-      expect(batchSwapFirst.type).to.eq(ActionType.BatchSwap);
-      expect(batchSwapFirst.minOut).to.eq('0');
-      expect(batchSwapFirst.opRef.length).to.eq(2);
-      expect(batchSwapFirst.opRef[0].index).to.eq(1);
-      expect(batchSwapFirst.opRef[1].index).to.eq(3);
-      expect(batchSwapFirst.swaps.length).to.eq(2);
-      expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
-      expect(batchSwapFirst.swaps[1].amount).to.eq('200000000000');
-      expect(batchSwapFirst.hasTokenOut).to.be.false;
-      expect(joinFirst.type).to.eq(ActionType.Join);
-      expect(joinFirst.amountIn).to.eq(batchSwapFirst.opRef[0].key.toString());
-      expect(joinFirst.actionStep).to.eq(ActionStep.TokenOut);
-      expect(joinSecond.type).to.eq(ActionType.Join);
-      expect(joinSecond.amountIn).to.eq(batchSwapFirst.opRef[1].key.toString());
-      expect(joinSecond.actionStep).to.eq(ActionStep.TokenOut);
-      const count = getNumberOfOutputActions(orderedActions);
-      expect(count).to.eq(2);
-      expect(joinFirst.minOut).to.not.eq(joinSecond.minOut); // TODO - Can't be same for both
+      let errorMessage;
+      try {
+        orderActions(actions, tokenIn, tokenOut, assets);
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain(
+        BalancerError.getMessage(BalancerErrorCode.RELAY_SWAP_LENGTH)
+      );
+      // const batchSwapFirst = orderedActions[0] as BatchSwapAction;
+      // const joinFirst = orderedActions[1] as JoinAction;
+      // const joinSecond = orderedActions[2] as JoinAction;
+      // expect(orderedActions.length).to.eq(3);
+      // expect(batchSwapFirst.type).to.eq(ActionType.BatchSwap);
+      // expect(batchSwapFirst.minOut).to.eq('0');
+      // expect(batchSwapFirst.opRef.length).to.eq(2);
+      // expect(batchSwapFirst.opRef[0].index).to.eq(1);
+      // expect(batchSwapFirst.opRef[1].index).to.eq(3);
+      // expect(batchSwapFirst.swaps.length).to.eq(2);
+      // expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
+      // expect(batchSwapFirst.swaps[1].amount).to.eq('200000000000');
+      // expect(batchSwapFirst.hasTokenOut).to.be.false;
+      // expect(joinFirst.type).to.eq(ActionType.Join);
+      // expect(joinFirst.amountIn).to.eq(batchSwapFirst.opRef[0].key.toString());
+      // expect(joinFirst.actionStep).to.eq(ActionStep.TokenOut);
+      // expect(joinSecond.type).to.eq(ActionType.Join);
+      // expect(joinSecond.amountIn).to.eq(batchSwapFirst.opRef[1].key.toString());
+      // expect(joinSecond.actionStep).to.eq(ActionStep.TokenOut);
+      // const count = getNumberOfOutputActions(orderedActions);
+      // expect(count).to.eq(2);
+      // expect(joinFirst.minOut).to.not.eq(joinSecond.minOut); // TODO - Can't be same for both
     });
     it('exact in, ending in two exits', async () => {
       // e.g.
@@ -645,37 +654,45 @@ describe(`Paths with join and exits.`, () => {
         returnAmount,
         slippage
       );
-      const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
-      const batchSwapFirst = orderedActions[0] as BatchSwapAction;
-      const exitFirst = orderedActions[1] as ExitAction;
-      const exitSecond = orderedActions[2] as ExitAction;
-      console.log(orderedActions);
-      expect(orderedActions.length).to.eq(3);
-      expect(batchSwapFirst.type).to.eq(ActionType.BatchSwap);
-      expect(batchSwapFirst.minOut).to.eq('0');
-      expect(batchSwapFirst.opRef.length).to.eq(4);
-      expect(batchSwapFirst.opRef[0].index).to.eq(1);
-      expect(batchSwapFirst.opRef[1].index).to.eq(2);
-      expect(batchSwapFirst.opRef[2].index).to.eq(4);
-      expect(batchSwapFirst.opRef[3].index).to.eq(2);
-      expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
-      expect(batchSwapFirst.swaps[1].amount).to.eq('0');
-      expect(batchSwapFirst.swaps[2].amount).to.eq('100000000000');
-      expect(batchSwapFirst.swaps[3].amount).to.eq('0');
-      expect(batchSwapFirst.hasTokenOut).to.eq(false);
-      expect(exitFirst.type).to.eq(ActionType.Exit);
-      expect(exitFirst.opRef.length).to.eq(0);
-      expect(exitFirst.amountIn).to.eq(batchSwapFirst.opRef[1].key.toString());
-      expect(exitFirst.actionStep).to.eq(ActionStep.TokenOut);
-      expect(exitSecond.type).to.eq(ActionType.Exit);
-      expect(exitSecond.opRef.length).to.eq(0);
-      expect(exitSecond.amountIn).to.eq(batchSwapFirst.opRef[3].key.toString());
-      expect(exitSecond.actionStep).to.eq(ActionStep.TokenOut);
-      const count = getNumberOfOutputActions(orderedActions);
-      expect(count).to.eq(2);
-      expect(exitFirst.minOut).to.not.eq(exitSecond.minOut); // TODO - Can't be same for both
-      expect(exitSecond.minOut).to.eq('94961515248180000000000');
-      expect(orderedActions[5].minOut).to.eq('94961515248180000000000');
+      let errorMessage;
+      try {
+        orderActions(actions, tokenIn, tokenOut, assets);
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain(
+        BalancerError.getMessage(BalancerErrorCode.RELAY_SWAP_LENGTH)
+      );
+      // const batchSwapFirst = orderedActions[0] as BatchSwapAction;
+      // const exitFirst = orderedActions[1] as ExitAction;
+      // const exitSecond = orderedActions[2] as ExitAction;
+      // console.log(orderedActions);
+      // expect(orderedActions.length).to.eq(3);
+      // expect(batchSwapFirst.type).to.eq(ActionType.BatchSwap);
+      // expect(batchSwapFirst.minOut).to.eq('0');
+      // expect(batchSwapFirst.opRef.length).to.eq(4);
+      // expect(batchSwapFirst.opRef[0].index).to.eq(1);
+      // expect(batchSwapFirst.opRef[1].index).to.eq(2);
+      // expect(batchSwapFirst.opRef[2].index).to.eq(4);
+      // expect(batchSwapFirst.opRef[3].index).to.eq(2);
+      // expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
+      // expect(batchSwapFirst.swaps[1].amount).to.eq('0');
+      // expect(batchSwapFirst.swaps[2].amount).to.eq('100000000000');
+      // expect(batchSwapFirst.swaps[3].amount).to.eq('0');
+      // expect(batchSwapFirst.hasTokenOut).to.eq(false);
+      // expect(exitFirst.type).to.eq(ActionType.Exit);
+      // expect(exitFirst.opRef.length).to.eq(0);
+      // expect(exitFirst.amountIn).to.eq(batchSwapFirst.opRef[1].key.toString());
+      // expect(exitFirst.actionStep).to.eq(ActionStep.TokenOut);
+      // expect(exitSecond.type).to.eq(ActionType.Exit);
+      // expect(exitSecond.opRef.length).to.eq(0);
+      // expect(exitSecond.amountIn).to.eq(batchSwapFirst.opRef[3].key.toString());
+      // expect(exitSecond.actionStep).to.eq(ActionStep.TokenOut);
+      // const count = getNumberOfOutputActions(orderedActions);
+      // expect(count).to.eq(2);
+      // expect(exitFirst.minOut).to.not.eq(exitSecond.minOut); // TODO - Can't be same for both
+      // expect(exitSecond.minOut).to.eq('94961515248180000000000');
+      // expect(orderedActions[5].minOut).to.eq('94961515248180000000000');
     });
   });
 });
