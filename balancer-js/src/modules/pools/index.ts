@@ -185,6 +185,10 @@ export class Pools implements Findable<PoolWithMethods> {
     return this.volumeService.last24h(pool);
   }
 
+  controller(pool: Pool): PoolWithMethods {
+    return Pools.wrap(pool, this.networkConfig);
+  }
+
   static wrap(
     pool: Pool,
     networkConfig: BalancerNetworkConfig
