@@ -1,3 +1,6 @@
+import { Interface } from '@ethersproject/abi';
+import { BigNumber } from 'ethers';
+import { MaxInt256 } from '@ethersproject/constants';
 import {
   SubgraphPoolBase,
   SwapInfo,
@@ -12,17 +15,14 @@ import {
   ExitPoolData,
 } from '@/modules/relayer/relayer.module';
 import { getPoolAddress } from '@/pool-utils';
-import { Interface } from '@ethersproject/abi';
-
 import { ExitPoolRequest } from '@/types';
 import { FundManagement, SwapType } from './types';
-import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { WeightedPoolEncoder } from '@/pool-weighted';
-import { BigNumber } from 'ethers';
 import { AssetHelpers } from '@/lib/utils';
-import { MaxInt256 } from '@ethersproject/constants';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+
+import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 
 export enum ActionStep {
   Direct,
@@ -89,6 +89,26 @@ function getOutputRef(key: number, index: number): OutputReference {
   return { index: index, key: keyRef };
 }
 
+/**
+ * Uses relayer to approve itself to act in behalf of the user
+ * @param authorisation Encoded authorisation call.
+ * @returns relayer approval call
+ */
+function buildSetRelayerApproval(
+  authorisation: string,
+  relayerAddress: string
+): string {
+  return Relayer.encodeSetRelayerApproval(relayerAddress, true, authorisation);
+}
+
+/**
+ * Currently SOR only supports join/exit paths through Weighted pools.
+ * Weighted pools should not have preminted BPT so can assume if a swap token is pool address it is a join or exit.
+ * @param pools
+ * @param swap
+ * @param assets
+ * @returns
+ */
 export function hasJoinExit(
   pools: SubgraphPoolBase[],
   swap: SwapV2,
@@ -101,6 +121,12 @@ export function hasJoinExit(
   return [tokenIn, tokenOut].includes(pool.address);
 }
 
+/**
+ * Finds if a swap returned by SOR is a join by checking if tokenOut === poolAddress
+ * @param swap
+ * @param assets
+ * @returns
+ */
 export function isJoin(swap: SwapV2, assets: string[]): boolean {
   // token[join]bpt
   const tokenOut = assets[swap.assetOutIndex];
@@ -108,6 +134,12 @@ export function isJoin(swap: SwapV2, assets: string[]): boolean {
   return tokenOut.toLowerCase() === poolAddress.toLowerCase();
 }
 
+/**
+ * Finds if a swap returned by SOR is an exit by checking if tokenIn === poolAddress
+ * @param swap
+ * @param assets
+ * @returns
+ */
 export function isExit(swap: SwapV2, assets: string[]): boolean {
   // bpt[exit]token
   const tokenIn = assets[swap.assetInIndex];
@@ -115,6 +147,13 @@ export function isExit(swap: SwapV2, assets: string[]): boolean {
   return tokenIn.toLowerCase() === poolAddress.toLowerCase();
 }
 
+/**
+ * Find if any of the swaps are join/exits. If yes these swaps should be routed via Relayer.
+ * @param pools
+ * @param swaps
+ * @param assets
+ * @returns
+ */
 export function someJoinExit(
   pools: SubgraphPoolBase[],
   swaps: SwapV2[],
@@ -125,6 +164,13 @@ export function someJoinExit(
   });
 }
 
+/**
+ * If its not the final action then we need an outputReferece to chain to next action as input
+ * @param actionStep
+ * @param tokenOutIndex
+ * @param opRefKey
+ * @returns
+ */
 function getActionOutputRef(
   actionStep: ActionStep,
   tokenOutIndex: number,
@@ -138,7 +184,14 @@ function getActionOutputRef(
   return [opRef, opRefKey];
 }
 
-// If the action contains tokenOut we need to use slippage to set limits
+/**
+ * If the action contains tokenOut we need to use slippage to set limits
+ * @param swapType
+ * @param actionStep
+ * @param amountOut
+ * @param slippage
+ * @returns
+ */
 function getActionMinOut(
   swapType: SwapTypes,
   actionStep: ActionStep,
@@ -161,6 +214,14 @@ function getActionMinOut(
   return minOut;
 }
 
+/**
+ * If its not the first action then the amount will come from the previous output ref
+ * @param swap
+ * @param actionType
+ * @param actionStep
+ * @param opRefKey
+ * @returns
+ */
 function getActionAmount(
   swap: SwapV2,
   actionType: ActionType,
@@ -178,6 +239,18 @@ function getActionAmount(
   return amountIn;
 }
 
+/**
+ * Find if the Action is:
+ * Direct: tokenIn > tokenOut
+ * TokenIn: tokenIn > chain...
+ * TokenOut: ...chain > tokenOut
+ * Middle: ...chain > action > chain...
+ * @param tokenInIndex
+ * @param tokenOutIndex
+ * @param tokenInIndexAction
+ * @param tokenOutIndexAction
+ * @returns
+ */
 function getActionStep(
   tokenInIndex: number,
   tokenOutIndex: number,
@@ -200,16 +273,39 @@ function getActionStep(
   return actionStep;
 }
 
-/*
-This aims to minimise the number of Actions the Relayer multicall needs to call by
-ordering the Actions in a way that allows swaps to be batched together.
-*/
-export function orderActions(
+/**
+ * Find the number of actions that end with tokenOut
+ * @param actions
+ * @returns
+ */
+export function getNumberOfOutputActions(actions: OrderedActions[]): number {
+  let outputCount = 0;
+  for (const a of actions) {
+    if (a.type === ActionType.BatchSwap) {
+      if (a.hasTokenOut) outputCount++;
+    } else if (a.type === ActionType.Exit || a.type === ActionType.Join) {
+      if (
+        a.actionStep === ActionStep.Direct ||
+        a.actionStep === ActionStep.TokenOut
+      )
+        outputCount++;
+    }
+  }
+  return outputCount;
+}
+
+/**
+ * Categorize each action into a Join, Middle or Exit.
+ * @param actions
+ * @param tokenIn
+ * @param tokenOut
+ * @returns
+ */
+export function categorizeActions(
   actions: Actions[],
   tokenIn: string,
-  tokenOut: string,
-  assets: string[]
-): OrderedActions[] {
+  tokenOut: string
+): Actions[] {
   const enterActions: Actions[] = [];
   const exitActions: Actions[] = [];
   const middleActions: Actions[] = [];
@@ -244,6 +340,19 @@ export function orderActions(
     ...middleActions,
     ...exitActions,
   ];
+  return allActions;
+}
+
+/**
+ * This aims to minimise the number of Actions the Relayer multicall needs to call by batching sequential swaps together.
+ * @param actions
+ * @param assets
+ * @returns
+ */
+export function batchSwapActions(
+  allActions: Actions[],
+  assets: string[]
+): OrderedActions[] {
   const orderedActions: OrderedActions[] = [];
   // batchSwaps are a collection of swaps that can all be called in a single batchSwap
   let batchSwaps: BatchSwapAction = {
@@ -282,15 +391,41 @@ export function orderActions(
     }
   }
   if (batchSwaps.swaps.length > 0) orderedActions.push(batchSwaps);
+  return orderedActions;
+}
+
+/**
+ * Organise Actions into order with least amount of calls.
+ * @param actions
+ * @param tokenIn
+ * @param tokenOut
+ * @param assets
+ * @returns
+ */
+export function orderActions(
+  actions: Actions[],
+  tokenIn: string,
+  tokenOut: string,
+  assets: string[]
+): OrderedActions[] {
+  const categorizedActions = categorizeActions(actions, tokenIn, tokenOut);
+  const orderedActions = batchSwapActions(categorizedActions, assets);
   if (getNumberOfOutputActions(orderedActions) > 1)
     throw new BalancerError(BalancerErrorCode.RELAY_SWAP_LENGTH);
   return orderedActions;
 }
 
-/*
-Create an array of Actions for each swap.
-An Action is a join/exit/swap with the chained output refs.
-*/
+/**
+ * Translate each swap into an Action. An Action is a join/exit/swap with the chained output refs.
+ * @param swapType
+ * @param tokenIn
+ * @param tokenOut
+ * @param swaps
+ * @param assets
+ * @param amountOut
+ * @param slippage
+ * @returns
+ */
 export function getActions(
   swapType: SwapTypes,
   tokenIn: string,
@@ -356,6 +491,18 @@ export function getActions(
   return actions;
 }
 
+/**
+ * Create a JoinAction with relevant info.
+ * @param swapType
+ * @param swap
+ * @param tokenInIndex
+ * @param tokenOutIndex
+ * @param amountOut
+ * @param opRefKey
+ * @param assets
+ * @param slippage
+ * @returns
+ */
 function createJoinAction(
   swapType: SwapTypes,
   swap: SwapV2,
@@ -393,6 +540,18 @@ function createJoinAction(
   return [joinAction, newOpRefKey];
 }
 
+/**
+ * Create a ExitAction with relevant info.
+ * @param swapType
+ * @param swap
+ * @param tokenInIndex
+ * @param tokenOutIndex
+ * @param amountOut
+ * @param opRefKey
+ * @param assets
+ * @param slippage
+ * @returns
+ */
 function createExitAction(
   swapType: SwapTypes,
   swap: SwapV2,
@@ -430,6 +589,18 @@ function createExitAction(
   return [exitAction, newOpRefKey];
 }
 
+/**
+ * * Create a SwapAction with relevant info.
+ * @param swapType
+ * @param swap
+ * @param tokenInIndex
+ * @param tokenOutIndex
+ * @param amountOut
+ * @param opRefKey
+ * @param assets
+ * @param slippage
+ * @returns
+ */
 function createSwapAction(
   swapType: SwapTypes,
   swap: SwapV2,
@@ -466,7 +637,18 @@ function createSwapAction(
   return [swapAction, newOpRefKey];
 }
 
-function buildExit(
+/**
+ * Creates encoded exitPool call.
+ * @param pool
+ * @param swapType
+ * @param action
+ * @param user
+ * @param tokenOut
+ * @param relayerAddress
+ * @param wrappedNativeAsset
+ * @returns
+ */
+function buildExitCall(
   pool: SubgraphPoolBase,
   swapType: SwapTypes,
   action: ExitAction,
@@ -537,7 +719,19 @@ function buildExit(
   return [callData, amountIn, amountOut];
 }
 
-function buildJoin(
+/**
+ * Creates encoded joinPool call.
+ * @param pool
+ * @param swapType
+ * @param action
+ * @param user
+ * @param tokenIn
+ * @param tokenOut
+ * @param relayerAddress
+ * @param wrappedNativeAsset
+ * @returns
+ */
+function buildJoinCall(
   pool: SubgraphPoolBase,
   swapType: SwapTypes,
   action: JoinAction,
@@ -620,7 +814,19 @@ function buildJoin(
   return [callData, amountIn, amountOut];
 }
 
-function buildBatchSwap(
+/**
+ * Creates encoded batchSwap call.
+ * @param action
+ * @param user
+ * @param swapType
+ * @param tokenIn
+ * @param tokenOut
+ * @param swapAmount
+ * @param pools
+ * @param relayerAddress
+ * @returns
+ */
+function buildBatchSwapCall(
   action: BatchSwapAction,
   user: string,
   swapType: SwapTypes,
@@ -712,62 +918,45 @@ function buildBatchSwap(
 }
 
 /**
- * Uses relayer to approve itself to act in behalf of the user
- *
+ * Given swapInfo from the SOR construct the Relayer multicall to execture swaps/joins/exits.
+ * @param swapInfo Returned from SOR
+ * @param swapType Only supports ExactIn
+ * @param pools Pool info from SOR
+ * @param user Address of user
+ * @param relayerAddress Address of Relayer (>=V4)
+ * @param wrappedNativeAsset Address of Native asset
+ * @param slippage [bps], eg: 1 === 0.01%, 100 === 1%
  * @param authorisation Encoded authorisation call.
- * @returns relayer approval call
+ * @returns
  */
-function buildSetRelayerApproval(
-  authorisation: string,
-  relayerAddress: string
-): string {
-  return Relayer.encodeSetRelayerApproval(relayerAddress, true, authorisation);
-}
-
-export function getNumberOfOutputActions(actions: OrderedActions[]): number {
-  let outputCount = 0;
-  for (const a of actions) {
-    if (a.type === ActionType.BatchSwap) {
-      if (a.hasTokenOut) outputCount++;
-    } else if (a.type === ActionType.Exit || a.type === ActionType.Join) {
-      if (
-        a.actionStep === ActionStep.Direct ||
-        a.actionStep === ActionStep.TokenOut
-      )
-        outputCount++;
-    }
-  }
-  return outputCount;
-}
-
-export function buildCalls(
-  pools: SubgraphPoolBase[],
-  tokenIn: string,
-  tokenOut: string,
+export function buildRelayerCalls(
   swapInfo: SwapInfo,
-  user: string,
-  authorisation: string | undefined,
   swapType: SwapTypes.SwapExactIn,
+  pools: SubgraphPoolBase[],
+  user: string,
   relayerAddress: string,
   wrappedNativeAsset: string,
-  slippage: string
+  slippage: string,
+  authorisation: string | undefined
 ): {
   to: string;
   data: string;
 } {
+  // For each 'swap' create a swap/join/exit action
   const actions = getActions(
     swapType,
-    tokenIn,
-    tokenOut,
+    swapInfo.tokenIn,
+    swapInfo.tokenOut,
     swapInfo.swaps,
     swapInfo.tokenAddresses,
     swapInfo.returnAmount.toString(),
     slippage
   );
+  // Arrange action into order that will create minimal amount of calls
   const orderedActions = orderActions(
     actions,
-    tokenIn,
-    tokenOut,
+    swapInfo.tokenIn,
+    swapInfo.tokenOut,
     swapInfo.tokenAddresses
   );
 
@@ -778,17 +967,18 @@ export function buildCalls(
   if (authorisation)
     calls.push(buildSetRelayerApproval(authorisation, relayerAddress));
 
+  // Create encoded call for each action
   for (const action of orderedActions) {
     if (action.type === ActionType.Exit) {
       const pool = pools.find((p) => p.id === action.poolId);
       if (pool === undefined)
         throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
-      const [call, amountIn, amountOut] = buildExit(
+      const [call, amountIn, amountOut] = buildExitCall(
         pool,
         swapType,
         action,
         user,
-        tokenOut,
+        swapInfo.tokenOut,
         relayerAddress,
         wrappedNativeAsset
       );
@@ -800,13 +990,13 @@ export function buildCalls(
       const pool = pools.find((p) => p.id === action.poolId);
       if (pool === undefined)
         throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
-      const [call, amountIn, amountOut] = buildJoin(
+      const [call, amountIn, amountOut] = buildJoinCall(
         pool,
         swapType,
         action,
         user,
-        tokenIn,
-        tokenOut,
+        swapInfo.tokenIn,
+        swapInfo.tokenOut,
         relayerAddress,
         wrappedNativeAsset
       );
@@ -815,12 +1005,12 @@ export function buildCalls(
       amountsOut.push(BigNumber.from(amountOut));
     }
     if (action.type === ActionType.BatchSwap) {
-      const [batchSwapCalls, amountIn, amountOut] = buildBatchSwap(
+      const [batchSwapCalls, amountIn, amountOut] = buildBatchSwapCall(
         action,
         user,
         swapType,
-        tokenIn,
-        tokenOut,
+        swapInfo.tokenIn,
+        swapInfo.tokenOut,
         swapInfo.swapAmount.toString(),
         pools,
         relayerAddress
@@ -831,8 +1021,9 @@ export function buildCalls(
     }
   }
 
+  // Safety check to make sure amounts/limits from calls match expected
   checkAmounts(amountsIn, amountsOut, swapType, swapInfo, slippage);
-
+  // encode relayer multicall
   const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
     calls,
   ]);
@@ -857,12 +1048,16 @@ function checkAmounts(
     (total = BigNumber.from(0), amount) => (total = total.add(amount))
   );
   if (swapType === SwapTypes.SwapExactIn) {
+    // totalIn should equal the original input swap amount
+    // totalOut should equal the return amount from SOR minus any slippage allowance
     if (
       !totalIn.eq(swapInfo.swapAmount) ||
       !totalOut.eq(subSlippage(swapInfo.returnAmount, BigNumber.from(slippage)))
     )
       throw new BalancerError(BalancerErrorCode.RELAY_SWAP_AMOUNTS);
   } else {
+    // totalIn should equal the return amount from SOR (this is the amount in) plus any slippage allowance
+    // totalOut should equal the original input swap amount (the exact amount out)
     if (
       !totalIn.eq(
         addSlippage(swapInfo.returnAmount, BigNumber.from(slippage))

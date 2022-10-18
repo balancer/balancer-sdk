@@ -11,7 +11,7 @@ import {
   SwapTypes,
 } from '@balancer-labs/sor';
 import { BalancerSDK, Network, RelayerAuthorization } from '@/index';
-import { buildCalls, someJoinExit } from './joinAndExit';
+import { buildRelayerCalls, someJoinExit } from './joinAndExit';
 import {
   BAL_WETH,
   AURA_BAL_STABLE,
@@ -174,17 +174,15 @@ async function testFlow(
       expect(someJoinExit(pools, swapInfo.swaps, swapInfo.tokenAddresses)).to.be
         .true;
 
-      const callData = buildCalls(
-        pools,
-        tokenIn.address,
-        tokenOut.address,
+      const callData = buildRelayerCalls(
         swapInfo,
-        signerAddr,
-        authorisation,
         swapType,
+        pools,
+        signerAddr,
         relayerV4Address,
         wrappedNativeAsset,
-        slippage
+        slippage,
+        authorisation
       );
 
       const [tokenInBalanceBefore, tokenOutBalanceBefore] = await getBalances(
