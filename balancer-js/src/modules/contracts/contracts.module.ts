@@ -8,6 +8,8 @@ import {
   Vault,
   LidoRelayer__factory,
   LidoRelayer,
+  BalancerHelpers,
+  BalancerHelpers__factory,
 } from '@balancer-labs/typechain';
 import { Multicall } from './multicall';
 import { ERC20 } from './ERC20';
@@ -15,6 +17,7 @@ import { ERC20 } from './ERC20';
 type ERC20Helper = (address: string, provider: Provider) => Contract;
 export interface ContractInstances {
   vault: Vault;
+  balancerHelpers: BalancerHelpers;
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
   ERC20: ERC20Helper;
@@ -23,6 +26,7 @@ export interface ContractInstances {
 export class Contracts {
   contractAddresses: ContractAddresses;
   vault: Vault;
+  balancerHelpers: BalancerHelpers;
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
 
@@ -44,6 +48,10 @@ export class Contracts {
     }
 
     this.vault = Vault__factory.connect(this.contractAddresses.vault, provider);
+    this.balancerHelpers = BalancerHelpers__factory.connect(
+      this.contractAddresses.balancerHelpers,
+      provider
+    );
 
     if (this.contractAddresses.lidoRelayer)
       this.lidoRelayer = LidoRelayer__factory.connect(
@@ -62,6 +70,7 @@ export class Contracts {
   get contracts(): ContractInstances {
     return {
       vault: this.vault,
+      balancerHelpers: this.balancerHelpers,
       lidoRelayer: this.lidoRelayer,
       multicall: this.multicall,
       ERC20: this.getErc20,
