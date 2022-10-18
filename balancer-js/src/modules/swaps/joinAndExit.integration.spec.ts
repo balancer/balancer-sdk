@@ -44,7 +44,7 @@ describe('join and exit integration tests', async () => {
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].BAL8020BPT,
     ADDRESSES[networkId].WETH,
-    SwapTypes.SwapExactIn,
+    // SwapTypes.SwapExactIn,
     '50' // 50 bsp = 0.5%
   );
   await testFlow(
@@ -53,7 +53,7 @@ describe('join and exit integration tests', async () => {
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].WETH,
     ADDRESSES[networkId].BAL8020BPT,
-    SwapTypes.SwapExactIn,
+    // SwapTypes.SwapExactIn,
     '10' // 10 bsp = 0.1%
   );
   await testFlow(
@@ -62,7 +62,7 @@ describe('join and exit integration tests', async () => {
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].auraBal,
     ADDRESSES[networkId].WETH,
-    SwapTypes.SwapExactIn,
+    // SwapTypes.SwapExactIn,
     '10' // 10 bsp = 0.1%
   );
   await testFlow(
@@ -71,7 +71,7 @@ describe('join and exit integration tests', async () => {
     parseFixed('7', 8).toString(),
     ADDRESSES[networkId].WBTC,
     ADDRESSES[networkId].BAL8020BPT,
-    SwapTypes.SwapExactIn,
+    // SwapTypes.SwapExactIn,
     '50' // 50 bsp = 0.5%
   );
   await testFlow(
@@ -80,7 +80,7 @@ describe('join and exit integration tests', async () => {
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].BAL8020BPT,
     ADDRESSES[networkId].WBTC,
-    SwapTypes.SwapExactIn,
+    // SwapTypes.SwapExactIn,
     '10' // 10 bsp = 0.1%
   );
   await testFlow(
@@ -89,27 +89,28 @@ describe('join and exit integration tests', async () => {
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].BAL,
     ADDRESSES[networkId].auraBal,
-    SwapTypes.SwapExactIn,
+    // SwapTypes.SwapExactIn,
     '50' // 50 bsp = 0.5%
   );
-  await testFlow(
-    'exit',
-    [BAL_WETH],
-    parseFixed('0.78', 18).toString(),
-    ADDRESSES[networkId].BAL8020BPT,
-    ADDRESSES[networkId].WETH,
-    SwapTypes.SwapExactOut,
-    '10' // 10 bsp = 0.1%
-  );
-  await testFlow(
-    'join',
-    [BAL_WETH],
-    parseFixed('7', 18).toString(),
-    ADDRESSES[networkId].WETH,
-    ADDRESSES[networkId].BAL8020BPT,
-    SwapTypes.SwapExactOut,
-    '50' // 50 bsp = 0.5%
-  );
+  // Removed ExactOut cases for now as Relayer formatting is difficult
+  // await testFlow(
+  //   'exit',
+  //   [BAL_WETH],
+  //   parseFixed('0.78', 18).toString(),
+  //   ADDRESSES[networkId].BAL8020BPT,
+  //   ADDRESSES[networkId].WETH,
+  //   SwapTypes.SwapExactOut,
+  //   '10' // 10 bsp = 0.1%
+  // );
+  // await testFlow(
+  //   'join',
+  //   [BAL_WETH],
+  //   parseFixed('7', 18).toString(),
+  //   ADDRESSES[networkId].WETH,
+  //   ADDRESSES[networkId].BAL8020BPT,
+  //   SwapTypes.SwapExactOut,
+  //   '50' // 50 bsp = 0.5%
+  // );
 });
 
 async function testFlow(
@@ -128,10 +129,11 @@ async function testFlow(
     symbol: string;
     slot: number;
   },
-  swapType: SwapTypes,
   slippage: string
 ): Promise<void> {
   context(`${description}`, () => {
+    // For now we only support ExactIn case
+    const swapType = SwapTypes.SwapExactIn;
     // Setup chain
     before(async function () {
       this.timeout(20000);

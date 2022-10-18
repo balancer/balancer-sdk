@@ -747,7 +747,7 @@ export function buildCalls(
   swapInfo: SwapInfo,
   user: string,
   authorisation: string | undefined,
-  swapType: SwapTypes,
+  swapType: SwapTypes.SwapExactIn,
   relayerAddress: string,
   wrappedNativeAsset: string,
   slippage: string
@@ -770,9 +770,6 @@ export function buildCalls(
     tokenOut,
     swapInfo.tokenAddresses
   );
-
-  if (swapType === SwapTypes.SwapExactOut && orderedActions.length > 1)
-    throw new Error('ExactOut with > 1 step no supported.');
 
   const calls: string[] = [];
   // These amounts are used to compare to expected amounts
