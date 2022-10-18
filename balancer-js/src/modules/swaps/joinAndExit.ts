@@ -781,7 +781,8 @@ export function buildCalls(
   for (const action of orderedActions) {
     if (action.type === ActionType.Exit) {
       const pool = pools.find((p) => p.id === action.poolId);
-      if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
+      if (pool === undefined)
+        throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
       const [call, amountIn, amountOut] = buildExit(
         pool,
         swapType,
@@ -797,7 +798,8 @@ export function buildCalls(
     }
     if (action.type === ActionType.Join) {
       const pool = pools.find((p) => p.id === action.poolId);
-      if (pool === undefined) throw new Error(`Pool Doesn't Exist`);
+      if (pool === undefined)
+        throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
       const [call, amountIn, amountOut] = buildJoin(
         pool,
         swapType,
@@ -855,16 +857,18 @@ function checkAmounts(
     (total = BigNumber.from(0), amount) => (total = total.add(amount))
   );
   if (swapType === SwapTypes.SwapExactIn) {
-    if (!totalIn.eq(swapInfo.swapAmount)) throw new Error('Safety first!!');
     if (
+      !totalIn.eq(swapInfo.swapAmount) ||
       !totalOut.eq(subSlippage(swapInfo.returnAmount, BigNumber.from(slippage)))
     )
-      throw new Error('Safety first!!');
+      throw new BalancerError(BalancerErrorCode.RELAY_SWAP_AMOUNTS);
   } else {
     if (
-      !totalIn.eq(addSlippage(swapInfo.returnAmount, BigNumber.from(slippage)))
+      !totalIn.eq(
+        addSlippage(swapInfo.returnAmount, BigNumber.from(slippage))
+      ) ||
+      !totalOut.eq(swapInfo.swapAmount)
     )
-      throw new Error('Safety first!!');
-    if (!totalOut.eq(swapInfo.swapAmount)) throw new Error('Safety first!!');
+      throw new BalancerError(BalancerErrorCode.RELAY_SWAP_AMOUNTS);
   }
 }

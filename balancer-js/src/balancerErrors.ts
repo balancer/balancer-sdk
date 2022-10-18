@@ -17,6 +17,7 @@ export enum BalancerErrorCode {
   MISSING_PRICE_RATE = 'MISSING_PRICE_RATE',
   MISSING_WEIGHT = 'MISSING_WEIGHT',
   RELAY_SWAP_LENGTH = 'RELAY_SWAP_LENGTH',
+  RELAY_SWAP_AMOUNTS = 'RELAY_SWAP_AMOUNTS',
 }
 
 export class BalancerError extends Error {
@@ -63,6 +64,8 @@ export class BalancerError extends Error {
         return 'zero input not allowed';
       case BalancerErrorCode.RELAY_SWAP_LENGTH:
         return 'Paths finishing on two exits are unsupported';
+      case BalancerErrorCode.RELAY_SWAP_AMOUNTS:
+        return 'Error when checking swap amounts';
       default:
         return 'Unknown error';
     }
