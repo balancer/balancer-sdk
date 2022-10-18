@@ -28,3 +28,6 @@ export function parseToBigInt18(value: string): bigint {
 export function formatFromBigInt18(value: bigint): string {
   return _formatFixed(BigNumber.from(value), 18);
 }
+
+export const bn = (value: number): BigNumber => _parseFixed(`${value}`, 18);
+export const fp = (value: number): string => bn(value).toString();
