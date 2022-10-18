@@ -1,6 +1,6 @@
 // yarn test:only ./src/modules/swaps/cowSwapOutput.spec.ts
 import dotenv from 'dotenv';
-import { parseFixed } from '@ethersproject/bignumber';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { MaxUint256 } from '@ethersproject/constants';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import {
@@ -8,7 +8,12 @@ import {
   TokenPriceService,
   SwapTypes,
 } from '@balancer-labs/sor';
-import { BalancerSDK, Network, RelayerAuthorization } from '@/index';
+import {
+  BalancerSDK,
+  getSwapInfoSlippageTolerance,
+  Network,
+  RelayerAuthorization,
+} from '@/index';
 import { buildCalls } from './joinAndExit';
 import {
   BAL_WETH,
@@ -19,6 +24,8 @@ import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Contracts } from '../contracts/contracts.module';
 import { forkSetup } from '@/test/lib/utils';
+import sampleInput from './cowSwapData/sampleInput.json';
+
 dotenv.config();
 
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
@@ -26,7 +33,6 @@ const networkId = Network.MAINNET;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new JsonRpcProvider(rpcUrl, networkId);
 let balancer: BalancerSDK;
-// let sor: SOR;
 
 const { contracts } = new Contracts(networkId, provider);
 
@@ -37,8 +43,8 @@ describe('cowSwap output tests', async () => {
     'cowSwap output',
     [BAL_WETH, AURA_BAL_STABLE],
     parseFixed('7', 18).toString(),
-    ADDRESSES[networkId].BAL, // .auraBal,
     ADDRESSES[networkId].WETH,
+    ADDRESSES[networkId].BAL,
     SwapTypes.SwapExactIn
   );
 });
@@ -68,6 +74,7 @@ async function testFlow(
       // const tokens = [tokenIn.address, ADDRESSES[networkId].BAL8020BPT.address];
       // const balances = [parseFixed('100', tokenIn.decimals).toString(), parseFixed('100', 18).toString()];
       // const slots = [tokenIn.slot, ADDRESSES[networkId].BAL8020BPT.slot];
+
       const tokens = [tokenIn.address];
       const balances = [parseFixed('100', tokenIn.decimals).toString()];
       const slots = [tokenIn.slot];
@@ -85,26 +92,20 @@ async function testFlow(
 
     it('should produce CowSwap output for an SOR query', async () => {
       const useBpts = true;
-      const referenceToken = ADDRESSES[networkId].WETH.address;
+      const input = sampleInput;
+      const inputOrder = input.orders[0];
       await balancer.swaps.fetchPools();
-      // Check whether the following produces the same result
-      /* const gasPrice = parseFixed('1', 9);
-      const amount = BigNumber.from(swapAmount);
-      const params = {
-        tokenIn: tokenIn.address,
-        tokenOut: tokenOut.address,
-        amount,
-        gasPrice: gasPrice,
-        maxPools: 4,
-        useBpts: true,
-      };
-      const swapInfo = await balancer.swaps.findRouteGivenIn(params);*/
+
+      const tokenIn = inputOrder.sell_token;
+      const tokenOut = inputOrder.buy_token;
+      const gasPrice = BigNumber.from(Math.floor(input.metadata.gas_price));
+      const swapGas = BigNumber.from('200000');
       const swapInfo = await balancer.sor.getSwaps(
-        tokenIn.address,
-        tokenOut.address,
+        tokenIn,
+        tokenOut,
         swapType,
         swapAmount,
-        undefined,
+        { gasPrice, swapGas },
         true
       );
       const relayerAddress = ADDRESSES[networkId].BatchRelayerV4.address;
@@ -115,21 +116,22 @@ async function testFlow(
         signer
       );
       const pools = balancer.sor.getPools(useBpts);
+      const swapInfoSlippageTolerance = getSwapInfoSlippageTolerance(swapInfo);
       const callData = buildCalls(
         pools,
-        tokenIn.address,
-        tokenOut.address,
-        swapInfo,
+        tokenIn,
+        tokenOut,
+        swapInfoSlippageTolerance,
         signerAddr,
         authorisation,
         swapType
       );
       const output = await balancer.swaps.formatSwapsForGnosis(
         swapInfo,
-        referenceToken,
+        input,
         relayerAddress,
         callData.data,
-        useBpts
+        swapGas
       );
       console.log(output);
     }).timeout(10000000);

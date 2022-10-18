@@ -22,6 +22,24 @@ export const BAL_WETH = factories.subgraphPoolBase.build({
   ],
 });
 
+export const DAI_WETH = factories.subgraphPoolBase.build({
+  id: '0x0b09dea16768f0799065c475be02919503cb2a3500020000000000000000001a',
+  address: '0x0b09deA16768f0799065C475bE02919503cB2a35',
+  tokens: [
+    factories.subgraphToken.transient({ symbol: 'wETH' }).build(),
+    factories.subgraphToken.transient({ symbol: 'DAI' }).build(),
+  ],
+});
+
+export const USDC_WETH = factories.subgraphPoolBase.build({
+  id: '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019',
+  address: '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8',
+  tokens: [
+    factories.subgraphToken.transient({ symbol: 'wETH' }).build(),
+    factories.subgraphToken.transient({ symbol: 'USDC' }).build(),
+  ],
+});
+
 export const AURA_BAL_STABLE = factories.subgraphPoolBase.build({
   id: '0x3dd0843a028c86e0b760b1a76929d1c5ef93a2dd000200000000000000000249',
   address: '0x3dd0843a028c86e0b760b1a76929d1c5ef93a2dd',

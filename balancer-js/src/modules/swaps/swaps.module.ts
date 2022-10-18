@@ -30,7 +30,10 @@ import {
   SingleSwapBuilder,
   BatchSwapBuilder,
 } from '@/modules/swaps/swap_builder';
-import { TokenKind } from 'graphql';
+import { BigNumber } from 'ethers';
+import { parseFixed } from '@ethersproject/bignumber';
+import { fromPairs } from 'lodash';
+import { deepCopy } from 'ethers/lib/utils';
 
 export class Swaps {
   readonly sor: SOR;
@@ -334,67 +337,73 @@ export class Swaps {
 
   async formatSwapsForGnosis(
     swapInfo: SwapInfo,
-    referenceToken: string,
+    input: cowSwapInput,
     relayerAddress: string,
     callData: string,
-    useBpts?: boolean
+    swapGas: BigNumber
   ): Promise<string> {
-    const amountIn = swapInfo.swapAmount.toString();
-    const amountOut = swapInfo.returnAmount.toString();
-    let output = '';
-    const pools = this.getPools(useBpts);
-    const swaps = swapInfo.swaps;
-    interface Token {
-      [address: string]: {
-        alias: string;
-        decimals: number;
-      };
-    }
-    const tokens: Set<Token> = new Set();
-    for (const swap of swaps) {
-      const pool = pools.find(
-        (value) => value.id == swap.poolId
-      ) as SubgraphPoolBase;
-      // pool.tokens[0].
-      for (const poolToken of pool.tokens) {
-        const token: Token = {
-          [poolToken.address]: {
-            alias: '', // where can we get alias from?
-            decimals: poolToken.decimals,
-          },
-        };
-        tokens.add(token);
-      }
-    }
-    const tokensArray: Token[] = Array.from(tokens);
-    const cowSwapOrder = {
-      ref_token: referenceToken,
-      prices: {},
-      orders: {},
+    const gasPrice = BigNumber.from(Math.floor(input.metadata.gas_price));
+    const inputOrder = input.orders[0];
+    // Only process if is_liquidity_order is false
+    if (inputOrder.is_liquidity_order) return '';
+    // For the moment this code only supports sell orders, i.e. "exactTokenIn".
+    if (!inputOrder.is_sell_order) return '';
+    // Only process if return amount is at least buy_amount
+    if (swapInfo.returnAmount.lt(inputOrder.buy_amount)) return '';
+    const exec_amountIn = swapInfo.swapAmount.toString();
+    const exec_amountOut = swapInfo.returnAmount.toString();
+    const tokenIn = swapInfo.tokenIn;
+    const tokenOut = swapInfo.tokenOut;
+    // Output order is based on input order with two additions and one modification
+    const order: outputOrder = {
+      ...inputOrder,
+      exec_buy_amount: exec_amountOut,
+      exec_sell_amount: exec_amountIn,
+    };
+    const cost = gasPrice.mul(swapGas).mul(swapInfo.swaps.length);
+    order['cost'].amount = cost.toString();
+    // Prices field
+    // Since the unit is arbitrary, we choose the price of the input token as 10 ** 18
+    const unit = parseFixed('1', 18);
+    const priceTokenIn = unit;
+    const priceTokenOut = swapInfo.swapAmount
+      .mul(unit)
+      .div(swapInfo.returnAmount);
+    const prices = {
+      [tokenIn]: priceTokenIn.toString(),
+      [tokenOut]: priceTokenOut.toString(),
+    };
+    // Make full output
+    const cowSwapOutput: cowSwapOutput = {
+      ref_token: input.metadata.native_token,
+      prices: prices,
+      orders: {
+        '0': order,
+      },
       amms: {},
       foreign_liquidity_orders: [],
       approvals: [
         {
-          token: swapInfo.tokenIn,
+          token: tokenIn,
           spender: relayerAddress,
-          amount: amountIn,
+          amount: exec_amountIn,
         },
       ],
       interaction_data: [
         {
           target: relayerAddress,
           value: '0x0',
-          call_data_hex: callData,
+          call_data: callData,
           inputs: [
             {
-              amount: amountIn,
-              token: swapInfo.tokenIn,
+              amount: exec_amountIn,
+              token: tokenIn,
             },
           ],
           outputs: [
             {
-              amount: amountOut,
-              token: swapInfo.tokenOut,
+              amount: exec_amountOut,
+              token: tokenOut,
             },
           ],
           exec_plan: {
@@ -403,9 +412,104 @@ export class Swaps {
           },
         },
       ],
-      tokens: tokensArray,
     };
-    output = JSON.stringify(cowSwapOrder, null, 2) + '\n' + output;
-    return output;
+    return JSON.stringify(cowSwapOutput, null, 2) + '\n';
   }
+}
+
+interface cowSwapInput {
+  tokens: {
+    [address: string]: {
+      alias: string;
+      decimals: number;
+      external_price: number;
+      normalize_priority: number;
+    };
+  };
+  orders: {
+    [number: string]: inputOrder;
+  };
+  amms: unknown;
+  metadata: {
+    environment: string;
+    auction_id: number;
+    gas_price: number;
+    native_token: string;
+  };
+}
+
+interface cowSwapOutput {
+  ref_token: string;
+  prices: {
+    [address: string]: string;
+  };
+  orders: {
+    [number: string]: outputOrder;
+  };
+  amms: any;
+  foreign_liquidity_orders: any;
+  approvals: [
+    {
+      token: string;
+      spender: string;
+      amount: string;
+    }
+  ];
+  interaction_data: [
+    {
+      target: string;
+      value: string;
+      call_data: string;
+      inputs: [
+        {
+          amount: string;
+          token: string;
+        }
+      ];
+      outputs: [
+        {
+          amount: string;
+          token: string;
+        }
+      ];
+      exec_plan: {
+        sequence: number;
+        position: number;
+      };
+    }
+  ];
+}
+
+interface inputOrder {
+  sell_token: string;
+  buy_token: string;
+  sell_amount: string;
+  buy_amount: string;
+  allow_partial_fill: boolean;
+  is_sell_order: boolean;
+  fee: {
+    amount: string;
+    token: string;
+  };
+  cost: {
+    amount: string;
+    token: string;
+  };
+  is_liquidity_order: boolean;
+  mandatory: boolean;
+  has_atomic_execution: boolean;
+}
+
+interface outputOrder extends inputOrder {
+  exec_sell_amount: string;
+  exec_buy_amount: string;
+}
+
+export function getSwapInfoSlippageTolerance(swapInfo: SwapInfo): SwapInfo {
+  const swapInfoSlippageTolerance = { ...swapInfo };
+  const minOut = swapInfo.returnAmount.mul(999).div(1000);
+  swapInfoSlippageTolerance.returnAmount = minOut;
+  // As indicated by CowSwap, the difference of the new value has to be at most 100 dollars.
+  // For this we need to convert the amount to dollars
+  return swapInfoSlippageTolerance;
 }

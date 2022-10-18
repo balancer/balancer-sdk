@@ -1,0 +1,53 @@
+{
+    "tokens": {
+        "0xba100000625a3754423978a60c9317c58a424e3d": {
+            "decimals": 18,
+            "alias": "BAL",
+            "external_price": 0.002508088538849021,
+            "normalize_priority": 0,
+            "internal_buffer": "57387679063304398620"
+        },
+        "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": {
+            "decimals": 6,
+            "alias": "USDC",
+            "external_price": 507752260.7279709,
+            "normalize_priority": 0,
+            "internal_buffer": "7399988499"
+        },
+        "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": {
+            "decimals": 18,
+            "alias": "WETH",
+            "external_price": 1.0,
+            "normalize_priority": 1,
+            "internal_buffer": "669749242083165250"
+        }
+    },
+    "orders": {
+        "0": {
+            "sell_token": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+            "buy_token": "0xba100000625a3754423978a60c9317c58a424e3d",
+            "sell_amount": "8505544324251964669952",
+            "buy_amount": "1698888888888888888888",                               
+            "allow_partial_fill": false,
+            "is_sell_order": true,
+            "fee": {
+                "amount": "7774293693985010688",
+                "token": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+            },
+            "cost": {
+                "amount": "2011453830675990",
+                "token": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+            },
+            "is_liquidity_order": false,
+            "mandatory": false,
+            "has_atomic_execution": false
+        }
+    },
+    "amms": {},
+    "metadata": {
+        "environment": "Ethereum / Mainnet",
+        "auction_id": 9003,
+        "gas_price": 30331807746.28894,
+        "native_token": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    }
+}
