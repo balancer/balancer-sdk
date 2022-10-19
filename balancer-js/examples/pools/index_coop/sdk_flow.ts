@@ -25,10 +25,6 @@ const sdk = new BalancerSDK({
   rpcUrl,
 });
 
-const provider = sdk.provider as JsonRpcProvider;
-const admin = provider.getSigner(1);
-const lp = provider.getSigner(2);
-
 const {
   contracts: { vault },
   pools,
@@ -49,19 +45,10 @@ const tokens = {
   wstETH: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
   wETH: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
 };
+
 const slots = [2, 0, 3];
 
 const TOKEN_COUNT = Object.values(tokens).length;
-
-const newPoolParams = {
-  name: 'dsETH',
-  symbol: 'dsETH',
-  tokens: Object.values(tokens),
-  normalizedWeights: [0.6, 0.2, 0.2].map(fp),
-  rateProviders: Array(TOKEN_COUNT).fill(AddressZero),
-  swapFeePercentage: fp(0.01),
-  owner: AddressZero,
-};
 
 // Create a new pool from a factory
 const deploy = async (
@@ -146,7 +133,7 @@ const seed = async (
   }
 };
 
-const sendTx = async (sender: JsonRpcSigner, to: string, data: string) => {
+const sendTx = async (lp: JsonRpcSigner, to: string, data: string) => {
   const tx = await lp.sendTransaction({ to, data });
   const receipt = await tx.wait();
   const event = receipt.logs.find(
@@ -160,10 +147,15 @@ const sendTx = async (sender: JsonRpcSigner, to: string, data: string) => {
   return parsed;
 };
 
-const getPool = async (id: string, weights: string[], swapFee: string) => {
+const getPool = async (
+  id: string,
+  weights: string[],
+  swapFee: string,
+  provider: JsonRpcProvider
+) => {
   const poolTokens = await vault.getPoolTokens(id);
   const [address] = await vault.getPool(id);
-  const pool = new Contract(address, iPool, lp);
+  const pool = new Contract(address, iPool, provider);
   const balances = poolTokens.balances.map(formatEther);
   const tokensList = poolTokens.tokens;
   const totalShares = await pool.totalSupply().then(formatEther);
@@ -192,42 +184,74 @@ const getPool = async (id: string, weights: string[], swapFee: string) => {
 };
 
 const main = async () => {
-  const lpAddress = await lp.getAddress();
-  const assets = newPoolParams.tokens;
-  const poolId = await deploy(admin, newPoolParams);
-  const [poolAddress] = await vault.getPool(poolId);
-  const pool = new Contract(poolAddress, iPool, lp);
+  const provider = sdk.provider as JsonRpcProvider;
+  const admin = provider.getSigner(1); // account responsible for pool deployment
+  const lp = provider.getSigner(2); // account responsible for providing liquidity
 
+  // New pool definition
+  const newPoolParams = {
+    name: 'dsETH',
+    symbol: 'dsETH',
+    tokens: Object.values(tokens),
+    normalizedWeights: [0.6, 0.2, 0.2].map(fp),
+    rateProviders: Array(TOKEN_COUNT).fill(AddressZero),
+    swapFeePercentage: fp(0.01),
+    owner: AddressZero,
+  };
+
+  const poolId = await deploy(admin, newPoolParams);
+
+  // Liquidity seeding
+  // balances needs to be adjusted to rates between tokens to avoid arbitrage
   const balances = [60, 20, 20].map(bn);
   await seed(vault, lp, poolId, balances);
 
-  const providerPool = (await getPool(
+  // SDK works on internal pool data schema, getPool helper function converts to this schema
+  let pool = (await getPool(
     poolId,
     newPoolParams.normalizedWeights.map(formatEther),
-    formatEther(newPoolParams.swapFeePercentage)
+    formatEther(newPoolParams.swapFeePercentage),
+    provider
   )) as Pool;
 
   // Custom amounts in - may result in price impact
-  const controller = pools.controller(providerPool);
+  let controller = pools.controller(pool);
+  const lpAddress = await lp.getAddress();
+  const assets = newPoolParams.tokens;
   const amountsIn = [10, 10, 10].map(fp);
-  const joinRequest = controller.buildJoin(lpAddress, assets, amountsIn, '1');
+  const slippage = '100'; // 100 bps = 1%
 
+  // Join execution
+  const joinRequest = controller.buildJoin(
+    lpAddress,
+    assets,
+    amountsIn,
+    slippage
+  );
   const joinLog = await sendTx(lp, joinRequest.to, joinRequest.data);
   console.log(joinLog);
 
   // Exit
-  const exitPool = (await getPool(
+  pool = (await getPool(
     poolId,
     newPoolParams.normalizedWeights.map(formatEther),
-    formatEther(newPoolParams.swapFeePercentage)
+    formatEther(newPoolParams.swapFeePercentage),
+    provider
   )) as Pool;
 
-  const exitController = pools.controller(exitPool);
+  const [address] = await vault.getPool(poolId);
+  const poolContract = new Contract(address, iPool, provider);
+  controller = pools.controller(pool);
 
-  const bptIn = await pool
+  const bptIn = await poolContract
     .balanceOf(lpAddress)
     .then((b: BigNumber) => b.toString());
-  const exitRequest = exitController.buildExitExactBPTIn(lpAddress, bptIn, '1');
+
+  const exitRequest = controller.buildExitExactBPTIn(
+    lpAddress,
+    bptIn,
+    slippage
+  );
   const exitLog = await sendTx(lp, exitRequest.to, exitRequest.data);
   console.log(exitLog);
 };
