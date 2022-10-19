@@ -644,13 +644,6 @@ const POOLS_MAP = {
   [Network.ARBITRUM]: POOLS_ARBITRUM,
 };
 
-export function POOLS(
-  networkId:
-    | Network.MAINNET
-    | Network.GOERLI
-    | Network.KOVAN
-    | Network.POLYGON
-    | Network.ARBITRUM
-): Pools {
+export function POOLS(networkId: keyof typeof POOLS_MAP): Pools {
   return POOLS_MAP[networkId] ? POOLS_MAP[networkId] : POOLS_GENERIC;
 }

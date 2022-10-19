@@ -167,7 +167,7 @@ export const TOKENS_GENERIC: TokenConstants = {
   },
 };
 
-const TOKENS_MAP = {
+export const TOKENS_MAP = {
   [Network.KOVAN]: TOKENS_KOVAN,
   [Network.GOERLI]: TOKENS_GOERLI,
   [Network.MAINNET]: TOKENS_MAINNET,
@@ -175,13 +175,6 @@ const TOKENS_MAP = {
   [Network.ARBITRUM]: TOKENS_ARBITRUM,
 };
 
-export function TOKENS(
-  networkId:
-    | Network.MAINNET
-    | Network.GOERLI
-    | Network.KOVAN
-    | Network.POLYGON
-    | Network.ARBITRUM
-): TokenConstants {
+export function TOKENS(networkId: keyof typeof TOKENS_MAP): TokenConstants {
   return TOKENS_MAP[networkId] ? TOKENS_MAP[networkId] : TOKENS_GENERIC;
 }
