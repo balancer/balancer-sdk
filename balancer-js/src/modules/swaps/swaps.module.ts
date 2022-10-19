@@ -1,4 +1,4 @@
-import { SOR, SubgraphPoolBase, SwapInfo, SwapTypes } from '@balancer-labs/sor';
+import { bnum, SOR, SubgraphPoolBase, SwapInfo, SwapTypes } from '@balancer-labs/sor';
 import { Vault__factory, Vault } from '@balancer-labs/typechain';
 import {
   BatchSwap,
@@ -32,7 +32,7 @@ import {
 } from '@/modules/swaps/swap_builder';
 import { BigNumber } from 'ethers';
 import { parseFixed } from '@ethersproject/bignumber';
-import { fromPairs } from 'lodash';
+import { fromPairs, max } from 'lodash';
 import { deepCopy } from 'ethers/lib/utils';
 
 export class Swaps {
@@ -417,7 +417,7 @@ export class Swaps {
   }
 }
 
-interface cowSwapInput {
+export interface cowSwapInput {
   tokens: {
     [address: string]: {
       alias: string;
@@ -505,11 +505,29 @@ interface outputOrder extends inputOrder {
   exec_buy_amount: string;
 }
 
-export function getSwapInfoSlippageTolerance(swapInfo: SwapInfo): SwapInfo {
+export function getSwapInfoWithSlippageTolerance(
+  swapInfo: SwapInfo,
+  tokenOutPriceInUsd: number,
+  decimalsOut: number
+): SwapInfo {
+  // As indicated by CowSwap, the minimum amount out at callData must be
+  // 0.1% lower than the SOR output, so that the tx tolerates some slippage.
+  // However the difference shall not exceed 100 dollars.
   const swapInfoSlippageTolerance = { ...swapInfo };
-  const minOut = swapInfo.returnAmount.mul(999).div(1000);
+  const initialReturnAmount = swapInfo.returnAmount;
+  const minOutByPercentage = initialReturnAmount.mul(999).div(1000);
+
+  // Substract 100 USD using integer arithmetic
+  const tokenOutPriceInUsdAsInteger = BigNumber.from(
+    Math.floor(tokenOutPriceInUsd * 10 ** 8) // arbitrarily takes 8 digits
+  );
+  const oneHundredDollars = parseFixed('1', decimalsOut + 10).div(
+    // 100 = 10 ** 2 and 10 = 8 + 2
+    tokenOutPriceInUsdAsInteger
+  );
+  const minOutByDifference = initialReturnAmount.sub(oneHundredDollars);
+
+  const minOut = max([minOutByDifference, minOutByPercentage]) as BigNumber;
   swapInfoSlippageTolerance.returnAmount = minOut;
-  // As indicated by CowSwap, the difference of the new value has to be at most 100 dollars.
-  // For this we need to convert the amount to dollars
   return swapInfoSlippageTolerance;
 }

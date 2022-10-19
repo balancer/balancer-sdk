@@ -26,7 +26,7 @@
         "0": {
             "sell_token": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
             "buy_token": "0xba100000625a3754423978a60c9317c58a424e3d",
-            "sell_amount": "8505544324251964669952",
+            "sell_amount": "7544324251964669952",
             "buy_amount": "1698888888888888888888",                               
             "allow_partial_fill": false,
             "is_sell_order": true,

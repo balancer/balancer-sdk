@@ -1,6 +1,6 @@
 // yarn test:only ./src/modules/swaps/cowSwapOutput.spec.ts
 import dotenv from 'dotenv';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber } from '@ethersproject/bignumber';
 import { MaxUint256 } from '@ethersproject/constants';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import {
@@ -10,7 +10,8 @@ import {
 } from '@balancer-labs/sor';
 import {
   BalancerSDK,
-  getSwapInfoSlippageTolerance,
+  cowSwapInput,
+  getSwapInfoWithSlippageTolerance,
   Network,
   RelayerAuthorization,
 } from '@/index';
@@ -19,12 +20,14 @@ import {
   BAL_WETH,
   AURA_BAL_STABLE,
   getForkedPools,
+  B_50WBTC_50WETH,
 } from '@/test/lib/mainnetPools';
 import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Contracts } from '../contracts/contracts.module';
-import { forkSetup } from '@/test/lib/utils';
 import sampleInput from './cowSwapData/sampleInput.json';
+import sampleInput2 from './cowSwapData/sampleInput2.json';
+import { CoingeckoTokenPriceService } from '../sor/token-price/coingeckoTokenPriceService';
 
 dotenv.config();
 
@@ -41,70 +44,51 @@ const signer = provider.getSigner();
 describe('cowSwap output tests', async () => {
   await testFlow(
     'cowSwap output',
+    sampleInput,
     [BAL_WETH, AURA_BAL_STABLE],
-    parseFixed('7', 18).toString(),
-    ADDRESSES[networkId].WETH,
-    ADDRESSES[networkId].BAL,
+    SwapTypes.SwapExactIn
+  );
+});
+
+describe('cowSwap output tests 2', async () => {
+  await testFlow(
+    'cowSwap output',
+    sampleInput2,
+    [BAL_WETH, AURA_BAL_STABLE, B_50WBTC_50WETH],
     SwapTypes.SwapExactIn
   );
 });
 
 async function testFlow(
   description: string,
+  cowSwapInput: cowSwapInput,
   pools: SubgraphPoolBase[],
-  swapAmount: string,
-  tokenIn: {
-    address: string;
-    decimals: number;
-    symbol: string;
-    slot: number;
-  },
-  tokenOut: {
-    address: string;
-    decimals: number;
-    symbol: string;
-    slot: number;
-  },
   swapType: SwapTypes
 ): Promise<void> {
   context(`${description}`, () => {
     // Setup chain
     before(async function () {
       this.timeout(20000);
-      // const tokens = [tokenIn.address, ADDRESSES[networkId].BAL8020BPT.address];
-      // const balances = [parseFixed('100', tokenIn.decimals).toString(), parseFixed('100', 18).toString()];
-      // const slots = [tokenIn.slot, ADDRESSES[networkId].BAL8020BPT.slot];
-
-      const tokens = [tokenIn.address];
-      const balances = [parseFixed('100', tokenIn.decimals).toString()];
-      const slots = [tokenIn.slot];
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        15624161
-      );
       balancer = await setUp(networkId, provider, pools);
       await balancer.sor.fetchPools();
     });
 
     it('should produce CowSwap output for an SOR query', async () => {
       const useBpts = true;
-      const input = sampleInput;
+      const input = cowSwapInput;
       const inputOrder = input.orders[0];
       await balancer.swaps.fetchPools();
 
       const tokenIn = inputOrder.sell_token;
       const tokenOut = inputOrder.buy_token;
+      const decimalsOut = input.tokens[tokenOut].decimals as number;
       const gasPrice = BigNumber.from(Math.floor(input.metadata.gas_price));
       const swapGas = BigNumber.from('200000');
       const swapInfo = await balancer.sor.getSwaps(
         tokenIn,
         tokenOut,
         swapType,
-        swapAmount,
+        inputOrder.sell_amount,
         { gasPrice, swapGas },
         true
       );
@@ -116,12 +100,28 @@ async function testFlow(
         signer
       );
       const pools = balancer.sor.getPools(useBpts);
-      const swapInfoSlippageTolerance = getSwapInfoSlippageTolerance(swapInfo);
+      // Deal with slippage tolerance
+      // First compute tokenOutPriceInUsd
+      const tokenPriceService = new CoingeckoTokenPriceService(networkId);
+      const tokenOutPriceInEth =
+        await tokenPriceService.getTokenPriceInNativeAsset(tokenOut);
+      const ethPriceInUsd = await tokenPriceService.getNativeAssetPriceInToken(
+        ADDRESSES[networkId].USDT.address
+      );
+      const tokenOutPriceInUsd =
+        Number(tokenOutPriceInEth) * Number(ethPriceInUsd);
+
+      // Modify return amount at callData to tolerate slippage
+      const swapInfoWithSlippageTolerance = getSwapInfoWithSlippageTolerance(
+        swapInfo,
+        tokenOutPriceInUsd,
+        decimalsOut
+      );
       const callData = buildCalls(
         pools,
         tokenIn,
         tokenOut,
-        swapInfoSlippageTolerance,
+        swapInfoWithSlippageTolerance,
         signerAddr,
         authorisation,
         swapType
