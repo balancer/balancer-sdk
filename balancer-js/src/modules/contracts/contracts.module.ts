@@ -11,6 +11,7 @@ import {
 } from '@balancer-labs/typechain';
 import { Multicall } from './multicall';
 import { ERC20 } from './ERC20';
+import { RelayerV4 } from './relayerV4';
 
 type ERC20Helper = (address: string, provider: Provider) => Contract;
 export interface ContractInstances {
@@ -18,6 +19,7 @@ export interface ContractInstances {
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
   ERC20: ERC20Helper;
+  relayerV4: Contract | undefined;
 }
 
 export class Contracts {
@@ -25,6 +27,7 @@ export class Contracts {
   vault: Vault;
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
+  relayerV4: Contract | undefined;
 
   /**
    * Create instances of Balancer contracts connected to passed provider.
@@ -54,6 +57,8 @@ export class Contracts {
     // These contracts aren't included in Balancer Typechain but are still useful.
     // TO DO - Possibly create via Typechain but seems unnecessary?
     this.multicall = Multicall(this.contractAddresses.multicall, provider);
+    if (this.contractAddresses.relayerV4)
+      this.relayerV4 = RelayerV4(this.contractAddresses.relayerV4, provider);
   }
 
   /**
@@ -65,6 +70,7 @@ export class Contracts {
       lidoRelayer: this.lidoRelayer,
       multicall: this.multicall,
       ERC20: this.getErc20,
+      relayerV4: this.relayerV4,
     };
   }
 
