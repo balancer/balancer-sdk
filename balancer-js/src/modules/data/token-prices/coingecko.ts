@@ -2,6 +2,7 @@
 import { Price, Findable, TokenPrices } from '@/types';
 import { wrappedTokensMap as aaveWrappedMap } from '../token-yields/tokens/aave';
 import axios from 'axios';
+import { TOKENS } from '@/lib/constants/tokens';
 
 // Conscious choice for a deferred promise since we have setTimeout that returns a promise
 // Some reference for history buffs: https://github.com/petkaantonov/bluebird/wiki/Promise-anti-patterns
@@ -24,6 +25,7 @@ const makePromise = (): PromisedTokenPrices => {
  * Simple coingecko price source implementation. Configurable by network and token addresses.
  */
 export class CoingeckoPriceRepository implements Findable<Price> {
+  chainId: number;
   prices: TokenPrices = {};
   urlBase: string;
   baseTokenAddresses: string[];
@@ -38,8 +40,10 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   debounceCancel = (): void => {}; // Allow to cancel mid-flight requests
 
   constructor(tokenAddresses: string[], chainId = 1) {
+    this.chainId = chainId;
     this.baseTokenAddresses = tokenAddresses
       .map((a) => a.toLowerCase())
+      .map((a) => this.addressMapIn(a))
       .map((a) => unwrapToken(a));
     this.urlBase = `https://api.coingecko.com/api/v3/simple/token_price/${this.platform(
       chainId
@@ -97,7 +101,8 @@ export class CoingeckoPriceRepository implements Findable<Price> {
 
   async find(address: string): Promise<Price | undefined> {
     const lowercaseAddress = address.toLowerCase();
-    const unwrapped = unwrapToken(lowercaseAddress);
+    const mapInAddress = this.addressMapIn(lowercaseAddress);
+    const unwrapped = unwrapToken(mapInAddress);
     if (!this.prices[unwrapped]) {
       try {
         let init = false;
@@ -137,6 +142,7 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   private platform(chainId: number): string {
     switch (chainId) {
       case 1:
+      case 5:
       case 42:
       case 31337:
         return 'ethereum';
@@ -147,6 +153,12 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     }
 
     return '2';
+  }
+
+  private addressMapIn(address: string): string {
+    const addressMap = TOKENS(this.chainId).PriceChainMap;
+    if (!addressMap) return address;
+    return addressMap[address.toLowerCase()] || address;
   }
 
   private url(addresses: string[]): string {
