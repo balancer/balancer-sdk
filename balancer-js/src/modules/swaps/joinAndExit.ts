@@ -52,6 +52,9 @@ export interface JoinAction extends BaseAction {
   opRef: OutputReference;
   amountIn: string;
   actionStep: ActionStep;
+  sender: string;
+  receiver: string;
+  fromInternal: boolean;
 }
 
 export interface ExitAction extends BaseAction {
@@ -525,7 +528,9 @@ export function getActions(
         tokenOutIndex,
         opRefKey,
         assets,
-        slippage
+        slippage,
+        user,
+        relayer
       );
       opRefKey = newOpRefKey;
       actions.push(joinAction);
@@ -570,8 +575,8 @@ export function getActions(
  * Create a JoinAction with relevant info
  * @param swapType
  * @param swap
- * @param tokenInIndex
- * @param tokenOutIndex
+ * @param mainTokenInIndex
+ * @param mainTokenOutIndex
  * @param opRefKey
  * @param assets
  * @param slippage
@@ -580,15 +585,17 @@ export function getActions(
 function createJoinAction(
   swapType: SwapTypes,
   swap: SwapV2,
-  tokenInIndex: number,
-  tokenOutIndex: number,
+  mainTokenInIndex: number,
+  mainTokenOutIndex: number,
   opRefKey: number,
   assets: string[],
-  slippage: string
+  slippage: string,
+  user: string,
+  relayerAddress: string
 ): [JoinAction, number] {
   const actionStep = getActionStep(
-    tokenInIndex,
-    tokenOutIndex,
+    mainTokenInIndex,
+    mainTokenOutIndex,
     swap.assetInIndex,
     swap.assetOutIndex
   );
@@ -604,6 +611,18 @@ function createJoinAction(
     swap.assetOutIndex,
     opRefKey
   );
+  let sender = relayerAddress;
+  let fromInternal = true;
+  // If using mainTokenIn we can assume it comes from user
+  if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn) {
+    sender = user;
+    fromInternal = false;
+  }
+  let receiver = relayerAddress;
+  // If using mainTokenOut we can assume it goes to user
+  if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenOut)
+    receiver = user;
+
   const joinAction: JoinAction = {
     type: ActionType.Join,
     poolId: swap.poolId,
@@ -614,6 +633,9 @@ function createJoinAction(
     amountIn,
     assets,
     actionStep,
+    sender,
+    receiver,
+    fromInternal,
   };
   return [joinAction, newOpRefKey];
 }
@@ -861,23 +883,13 @@ function buildExitCall(
 /**
  * Creates encoded joinPool call.
  * @param pool
- * @param swapType
  * @param action
- * @param user
- * @param tokenIn
- * @param tokenOut
- * @param relayerAddress
  * @param wrappedNativeAsset
  * @returns
  */
 function buildJoinCall(
   pool: SubgraphPoolBase,
-  swapType: SwapTypes,
   action: JoinAction,
-  user: string,
-  tokenIn: string,
-  tokenOut: string,
-  relayerAddress: string,
   wrappedNativeAsset: string
 ): [string, string, string] {
   const assets = pool.tokensList;
@@ -888,48 +900,25 @@ function buildJoinCall(
   const joinTokenIndex = sortedTokens.findIndex(
     (t) => t.toLowerCase() === joinToken.toLowerCase()
   );
-
   const maxAmountsIn = Array(assets.length).fill('0');
-  let userData: string;
-  let bptAmountOut: string;
-  if (swapType === SwapTypes.SwapExactIn) {
-    // Uses exact amounts of tokens in
-    maxAmountsIn[joinTokenIndex] = action.amountIn;
-    // Variable amount of BPT out
-    bptAmountOut = action.minOut;
-    userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
-      maxAmountsIn,
-      bptAmountOut
-    );
-  } else {
-    // Uses variable amounts of tokens in
-    maxAmountsIn[joinTokenIndex] = action.minOut;
-    // Exact amount of BPT out
-    bptAmountOut = action.amountIn;
-    userData = WeightedPoolEncoder.joinTokenInForExactBPTOut(
-      bptAmountOut,
-      joinTokenIndex
-    );
-  }
-
-  let fromInternalBalance = true;
-  if (joinToken.toLowerCase() === tokenIn.toLowerCase())
-    fromInternalBalance = false;
-
-  let toInternalBalance = true;
-  if (pool.address.toLowerCase() === tokenOut.toLowerCase())
-    toInternalBalance = false;
-
+  // Uses exact amounts of tokens in
+  maxAmountsIn[joinTokenIndex] = action.amountIn;
+  // Variable amount of BPT out (this has slippage applied)
+  const bptAmountOut = action.minOut;
+  const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
+    maxAmountsIn,
+    bptAmountOut
+  );
   const attributes: EncodeJoinPoolInput = {
     poolId: action.poolId,
-    sender: fromInternalBalance ? relayerAddress : user,
-    recipient: toInternalBalance ? relayerAddress : user,
+    sender: action.sender,
+    recipient: action.receiver,
     kind: 0,
     joinPoolRequest: {
       assets: sortedTokens,
       maxAmountsIn,
       userData,
-      fromInternalBalance,
+      fromInternalBalance: action.fromInternal,
     },
     value: '0',
     outputReferences: action.opRef.key ? action.opRef.key.toString() : '0',
@@ -938,6 +927,7 @@ function buildJoinCall(
   // console.log(attributes);
 
   const callData = Relayer.constructJoinCall(attributes);
+  // These are used for final amount check
   const amountOut =
     action.actionStep === ActionStep.Direct ||
     action.actionStep === ActionStep.TokenOut
@@ -1096,12 +1086,7 @@ export function buildRelayerCalls(
         throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
       const [call, amountIn, amountOut] = buildJoinCall(
         pool,
-        swapType,
         action,
-        user,
-        swapInfo.tokenIn,
-        swapInfo.tokenOut,
-        relayerAddress,
         wrappedNativeAsset
       );
       calls.push(call);

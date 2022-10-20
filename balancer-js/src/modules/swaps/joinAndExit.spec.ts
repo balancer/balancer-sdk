@@ -139,6 +139,9 @@ describe(`Paths with join and exits.`, () => {
         actionStep: ActionStep.TokenIn,
         minOut: '0',
         assets: swapWithJoinExit.tokenAddresses,
+        sender: user,
+        receiver: relayer,
+        fromInternal: false,
       };
       expect(firstJoin).to.deep.eq(expectedJoin);
     });
@@ -245,6 +248,9 @@ describe(`Paths with join and exits.`, () => {
         actionStep: ActionStep.Direct,
         minOut: returnAmount,
         assets,
+        sender: user,
+        receiver: user,
+        fromInternal: false,
       };
       expect(orderedActions.length).to.eq(actions.length);
       expect(count).to.eq(1);
@@ -385,6 +391,9 @@ describe(`Paths with join and exits.`, () => {
         actionStep: ActionStep.TokenIn,
         minOut: '0',
         assets,
+        sender: user,
+        receiver: relayer,
+        fromInternal: false,
       };
       expect(expectedJoin).to.deep.eq(join);
     });
@@ -535,6 +544,9 @@ describe(`Paths with join and exits.`, () => {
         actionStep: ActionStep.Middle,
         minOut: '0',
         assets,
+        sender: relayer,
+        receiver: relayer,
+        fromInternal: true,
       };
       expect(expectedJoin).to.deep.eq(join);
       const count = getNumberOfOutputActions(orderedActions);
@@ -701,6 +713,9 @@ describe(`Paths with join and exits.`, () => {
         actionStep: ActionStep.TokenIn,
         minOut: '0',
         assets,
+        sender: user,
+        receiver: relayer,
+        fromInternal: false,
       };
       expect(expectedJoin).to.deep.eq(join);
       const count = getNumberOfOutputActions(orderedActions);
@@ -798,6 +813,9 @@ describe(`Paths with join and exits.`, () => {
         actionStep: ActionStep.TokenOut,
         minOut: swaps[1].returnAmount,
         assets,
+        sender: relayer,
+        receiver: user,
+        fromInternal: true,
       };
       expect(expectedJoinFirst).to.deep.eq(joinFirst);
       const expectedJoinSecond: JoinAction = {
@@ -810,6 +828,9 @@ describe(`Paths with join and exits.`, () => {
         actionStep: ActionStep.TokenOut,
         minOut: swaps[3].returnAmount,
         assets,
+        sender: relayer,
+        receiver: user,
+        fromInternal: true,
       };
       expect(expectedJoinSecond).to.deep.eq(joinSecond);
       const count = getNumberOfOutputActions(orderedActions);
