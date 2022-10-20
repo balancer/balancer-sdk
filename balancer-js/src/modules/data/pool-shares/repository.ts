@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any */
-import { PoolShare, PoolShareAttribute, PoolShareAttributes } from './types';
+import { PoolShare, PoolShareAttributes } from './types';
 import { BalancerSubgraphRepository } from '@/modules/subgraph/repository';
 import {
   SubgraphPoolShareFragment,
@@ -9,7 +9,7 @@ import {
 
 export class PoolSharesRepository extends BalancerSubgraphRepository<
   PoolShare,
-  PoolShareAttribute
+  PoolShareAttributes
 > {
   async query(args: any): Promise<PoolShare[]> {
     if (!args.orderBy) args.orderBy = PoolShare_OrderBy.Balance;

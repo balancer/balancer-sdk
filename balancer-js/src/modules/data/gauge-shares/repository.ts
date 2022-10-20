@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any */
-import { GaugeShare, GaugeShareAttribute, GaugeShareAttributes } from './types';
+import { GaugeShare, GaugeShareAttributes } from './types';
 import { GaugesSubgraphRepository } from '@/modules/subgraph/repository';
 import {
   SubgraphGaugeShareFragment,
@@ -9,7 +9,7 @@ import {
 
 export class GaugeSharesRepository extends GaugesSubgraphRepository<
   GaugeShare,
-  GaugeShareAttribute
+  GaugeShareAttributes
 > {
   async query(args: any): Promise<GaugeShare[]> {
     if (!args.orderBy) args.orderBy = GaugeShare_OrderBy.Balance;

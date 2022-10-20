@@ -9,12 +9,3 @@ export enum Network {
   POLYGON = 137,
   ARBITRUM = 42161,
 }
-
-export function isEthereumTestnet(chainId: Network): boolean {
-  return (
-    chainId === Network.GOERLI ||
-    chainId === Network.KOVAN ||
-    chainId === Network.ROPSTEN ||
-    chainId === Network.RINKEBY
-  );
-}

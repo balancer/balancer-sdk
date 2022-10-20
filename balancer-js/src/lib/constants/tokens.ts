@@ -175,6 +175,7 @@ export const TOKENS_MAP = {
   [Network.ARBITRUM]: TOKENS_ARBITRUM,
 };
 
-export function TOKENS(networkId: keyof typeof TOKENS_MAP): TokenConstants {
-  return TOKENS_MAP[networkId] ? TOKENS_MAP[networkId] : TOKENS_GENERIC;
+export function TOKENS(networkId: Network): TokenConstants {
+  const id = networkId as keyof typeof TOKENS_MAP;
+  return TOKENS_MAP[id] ? TOKENS_MAP[id] : TOKENS_GENERIC;
 }
