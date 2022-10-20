@@ -268,6 +268,7 @@ async function setUp(
   const forkedPools = await getForkedPools(provider, pools);
   class CoingeckoTokenPriceService implements TokenPriceService {
     constructor(private readonly chainId: number) {}
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async getNativeAssetPriceInToken(tokenAddress: string): Promise<string> {
       return '0';
     }

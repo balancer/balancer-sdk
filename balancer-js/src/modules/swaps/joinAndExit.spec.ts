@@ -43,7 +43,7 @@ const slippage = '0';
 export class MockTokenPriceService implements TokenPriceService {
   constructor(private nativeAssetPriceInToken: string = '0') {}
 
-  public setTokenPrice(nativeAssetPriceInToken: string) {
+  public setTokenPrice(nativeAssetPriceInToken: string): void {
     this.nativeAssetPriceInToken = nativeAssetPriceInToken;
   }
 
@@ -535,7 +535,6 @@ describe(`Paths with join and exits.`, () => {
         },
       ];
       const assets = [tokenIn, DAI.address, pool1Bpt, USDC.address];
-      const returnAmount = '94961515248180000000000';
       const actions = getActions(
         swapType,
         tokenIn,
@@ -628,7 +627,6 @@ describe(`Paths with join and exits.`, () => {
         },
       ];
       const assets = [tokenIn, pool1Bpt, DAI.address, USDC.address];
-      const returnAmount = '94961515248180000000000';
       const actions = getActions(
         swapType,
         tokenIn,
@@ -1011,6 +1009,7 @@ async function getSwapInfo(
   tokenIn: string,
   tokenOut: string,
   swapType: SwapTypes,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pools: any,
   swapAmount: BigNumber,
   useBpts?: boolean
