@@ -14,6 +14,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         gaugeController: '0xc128468b7ce63ea702c1f104d55a2566b13d3abd',
         feeDistributor: '0xD3cf852898b21fc233251427c2DC93d3d604F3BB',
         relayerV4: '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
+        protocolFeePercentagesProvider:
+          '0x97207B095e4D5C9a6e4cfbfcd2C3358E03B90c4A',
       },
       tokens: {
         wrappedNativeAsset: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',

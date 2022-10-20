@@ -1,6 +1,5 @@
-import { Findable, Pool, PoolToken } from '@/types';
+import { Findable, Pool, PoolToken, Price } from '@/types';
 import { PoolAttribute } from '../data';
-import { TokenPriceProvider } from '../data';
 import { PoolTypeConcerns } from '../pools/pool-type-concerns';
 import { BigNumber } from '@ethersproject/bignumber';
 import { formatFixed, parseFixed } from '@/lib/utils/math';
@@ -15,7 +14,7 @@ export interface PoolBPTValue {
 export class Liquidity {
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
-    private tokenPrices: TokenPriceProvider
+    private tokenPrices: Findable<Price>
   ) {}
 
   async getLiquidity(pool: Pool): Promise<string> {
