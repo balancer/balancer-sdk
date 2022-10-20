@@ -601,13 +601,16 @@ function createJoinAction(
     swap.assetInIndex,
     swap.assetOutIndex
   );
+  // Will get actual amount if input or chain amount if part of chain
   const amountIn = getActionAmount(swap, ActionType.Join, actionStep, opRefKey);
+  // This will be 0 if not a mainTokenOut action otherwise amount using slippage
   const minOut = getActionMinOut(
     swapType,
     actionStep,
     swap.returnAmount ?? '0',
     slippage
   );
+  // This will set opRef for next chained action if required
   const [opRef, newOpRefKey] = getActionOutputRef(
     actionStep,
     swap.assetOutIndex,
@@ -672,6 +675,21 @@ function createExitAction(
     swap.assetInIndex,
     swap.assetOutIndex
   );
+  // Will get actual amount if input or chain amount if part of chain
+  const amountIn = getActionAmount(swap, ActionType.Exit, actionStep, opRefKey);
+  // This will be 0 if not a mainTokenOut action otherwise amount using slippage
+  const minOut = getActionMinOut(
+    swapType,
+    actionStep,
+    swap.returnAmount ?? '0',
+    slippage
+  );
+  // This will set opRef for next chained action if required
+  const [opRef, newOpRefKey] = getActionOutputRef(
+    actionStep,
+    swap.assetOutIndex,
+    opRefKey
+  );
   let sender = relayerAddress;
   if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn)
     sender = user;
@@ -682,18 +700,6 @@ function createExitAction(
     receiver = user;
     toInternalBalance = false;
   }
-  const amountIn = getActionAmount(swap, ActionType.Exit, actionStep, opRefKey);
-  const minOut = getActionMinOut(
-    swapType,
-    actionStep,
-    swap.returnAmount ?? '0',
-    slippage
-  );
-  const [opRef, newOpRefKey] = getActionOutputRef(
-    actionStep,
-    swap.assetOutIndex,
-    opRefKey
-  );
 
   const exitAction: ExitAction = {
     type: ActionType.Exit,
@@ -744,15 +750,18 @@ function createSwapAction(
     swap.assetInIndex,
     swap.assetOutIndex
   );
+  // Will get actual amount if input or chain amount if part of chain
   const amountIn = getActionAmount(swap, ActionType.Swap, actionStep, opRefKey);
   // Updates swap data to use chainedRef if required
   swap.amount = amountIn;
+  // This will be 0 if not a mainTokenOut action otherwise amount using slippage
   const minOut = getActionMinOut(
     swapType,
     actionStep,
     swap.returnAmount ?? '0',
     slippage
   );
+  // This will set opRef for next chained action if required
   const [opRef, newOpRefKey] = getActionOutputRef(
     actionStep,
     swap.assetOutIndex,
@@ -812,11 +821,7 @@ function createSwapAction(
 /**
  * Creates encoded exitPool call.
  * @param pool
- * @param swapType
  * @param action
- * @param user
- * @param tokenOut
- * @param relayerAddress
  * @param wrappedNativeAsset
  * @returns
  */
