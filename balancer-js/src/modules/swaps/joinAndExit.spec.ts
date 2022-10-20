@@ -211,6 +211,8 @@ describe(`Paths with join and exits.`, () => {
         minOut: swapWithJoinExit.returnAmount.toString(),
         assets: swapWithJoinExit.tokenAddresses,
         sender: relayer,
+        receiver: user,
+        toInternal: false,
       };
       expect(swap).to.deep.eq(expectedSwap);
       expect(exit).to.deep.eq(expectedExit);
@@ -315,6 +317,8 @@ describe(`Paths with join and exits.`, () => {
         minOut: returnAmount,
         assets: assets,
         sender: user,
+        receiver: user,
+        toInternal: false,
       };
       expect(orderedActions.length).to.eq(actions.length);
       expect(exit).to.deep.eq(expectedExit);
@@ -476,6 +480,8 @@ describe(`Paths with join and exits.`, () => {
         minOut: returnAmount,
         assets: assets,
         sender: relayer,
+        receiver: user,
+        toInternal: false,
       };
       expect(orderedActions.length).to.eq(2);
       expect(exit).to.deep.eq(expectedExit);
@@ -664,6 +670,8 @@ describe(`Paths with join and exits.`, () => {
         minOut: '0',
         assets: assets,
         sender: relayer,
+        receiver: relayer,
+        toInternal: true,
       };
       expect(exit).to.deep.eq(expectedExit);
       expect(batchSwapSecond.type).to.eq(ActionType.BatchSwap);

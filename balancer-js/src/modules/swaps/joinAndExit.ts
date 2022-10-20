@@ -66,6 +66,8 @@ export interface ExitAction extends BaseAction {
   amountIn: string;
   actionStep: ActionStep;
   sender: string;
+  receiver: string;
+  toInternal: boolean;
 }
 
 export interface SwapAction extends BaseAction {
@@ -673,6 +675,13 @@ function createExitAction(
   let sender = relayerAddress;
   if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn)
     sender = user;
+  // Send to relayer unless this is main token out
+  let toInternalBalance = true;
+  let receiver = relayerAddress;
+  if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenOut) {
+    receiver = user;
+    toInternalBalance = false;
+  }
   const amountIn = getActionAmount(swap, ActionType.Exit, actionStep, opRefKey);
   const minOut = getActionMinOut(
     swapType,
@@ -685,6 +694,7 @@ function createExitAction(
     swap.assetOutIndex,
     opRefKey
   );
+
   const exitAction: ExitAction = {
     type: ActionType.Exit,
     poolId: swap.poolId,
@@ -696,6 +706,8 @@ function createExitAction(
     assets,
     actionStep,
     sender,
+    receiver,
+    toInternal: toInternalBalance,
   };
   return [exitAction, newOpRefKey];
 }
@@ -810,11 +822,7 @@ function createSwapAction(
  */
 function buildExitCall(
   pool: SubgraphPoolBase,
-  swapType: SwapTypes,
   action: ExitAction,
-  user: string,
-  tokenOut: string,
-  relayerAddress: string,
   wrappedNativeAsset: string
 ): [string, string, string] {
   const assets = pool.tokensList;
@@ -825,48 +833,30 @@ function buildExitCall(
   const exitTokenIndex = sortedTokens.findIndex(
     (t) => t.toLowerCase() === exitToken.toLowerCase()
   );
-  let userData: string;
-  let bptAmtIn: string;
   const minAmountsOut = Array(assets.length).fill('0');
-  if (swapType === SwapTypes.SwapExactIn) {
-    // Variable amount of token out
-    minAmountsOut[exitTokenIndex] = action.minOut;
-    // Uses exact amount in
-    bptAmtIn = action.amountIn;
-    userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(
-      bptAmtIn,
-      exitTokenIndex
-    );
-  } else {
-    // Uses exact amount of token out
-    minAmountsOut[exitTokenIndex] = action.amountIn;
-    // Variable amount of BPT in
-    bptAmtIn = action.minOut; // maxBptIn
-    userData = WeightedPoolEncoder.exitBPTInForExactTokensOut(
-      minAmountsOut,
-      bptAmtIn
-    );
-  }
-
-  // Send to relayer unless this is main token out
-  let toInternalBalance = true;
-  if (exitToken.toLowerCase() === tokenOut.toLowerCase())
-    toInternalBalance = false;
-
+  // Variable amount of token out (this has slippage applied)
+  minAmountsOut[exitTokenIndex] = action.minOut;
+  // Uses exact amount in
+  const bptAmtIn = action.amountIn;
+  const userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(
+    bptAmtIn,
+    exitTokenIndex
+  );
   const exitParams: ExitPoolData = {
     assets: sortedTokens,
     minAmountsOut,
     userData,
-    toInternalBalance,
+    toInternalBalance: action.toInternal,
     poolId: action.poolId,
     poolKind: 0, // This will always be 0 to match supported Relayer types
     sender: action.sender,
-    recipient: toInternalBalance ? relayerAddress : user,
+    recipient: action.receiver,
     outputReferences: action.opRef,
     exitPoolRequest: {} as ExitPoolRequest,
   };
   // console.log(exitParams);
   const callData = Relayer.constructExitCall(exitParams);
+  // These are used for final amount check
   const amountOut =
     action.actionStep === ActionStep.Direct ||
     action.actionStep === ActionStep.TokenOut
@@ -1069,11 +1059,7 @@ export function buildRelayerCalls(
         throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
       const [call, amountIn, amountOut] = buildExitCall(
         pool,
-        swapType,
         action,
-        user,
-        swapInfo.tokenOut,
-        relayerAddress,
         wrappedNativeAsset
       );
       calls.push(call);
