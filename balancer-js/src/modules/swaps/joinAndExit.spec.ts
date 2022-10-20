@@ -28,6 +28,7 @@ import {
 import poolsList from '@/test/lib/joinExitPools.json';
 import { Network } from '@/types';
 import { BalancerSDK } from '../sdk.module';
+import { OutputReference } from '../relayer/types';
 
 const pool1Bpt = '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56';
 const DAI = ADDRESSES[Network.MAINNET].DAI;
@@ -85,17 +86,63 @@ describe(`Paths with join and exits.`, () => {
       const firstJoin = actions[1] as JoinAction;
       const secondSwap = actions[2] as SwapAction;
       expect(actions.length).to.eq(swapWithJoinExit.swaps.length);
-      expect(firstSwap.type).to.eq(ActionType.Swap);
-      expect(firstSwap.opRef.length).to.eq(0);
-      expect(firstSwap.minOut).to.eq(swapWithJoinExit.swaps[0].returnAmount);
-      expect(firstJoin.type).to.eq(ActionType.Join);
-      expect(firstJoin.minOut).to.eq('0');
-      expect(secondSwap.type).to.eq(ActionType.Swap);
-      expect(secondSwap.opRef.length).to.eq(0);
-      expect(secondSwap.amountIn).to.eq(firstJoin.opRef.key.toString());
-      expect(secondSwap.minOut).to.eq(swapWithJoinExit.swaps[2].returnAmount);
+      const expectedFirstSwap: SwapAction = {
+        type: ActionType.Swap,
+        swap: swapWithJoinExit.swaps[0],
+        opRef: [],
+        amountIn: swapWithJoinExit.swaps[0].amount,
+        hasTokenIn: true,
+        hasTokenOut: true,
+        fromInternal: false,
+        toInternal: false,
+        sender: user,
+        receiver: user,
+        isBptIn: false,
+        assets: swapWithJoinExit.tokenAddresses,
+        minOut: swapWithJoinExit.swaps[0].returnAmount ?? '0',
+      };
+      const expectedSecondSwap: SwapAction = {
+        type: ActionType.Swap,
+        swap: swapWithJoinExit.swaps[2],
+        opRef: [],
+        amountIn: firstJoin.opRef.key.toString(),
+        hasTokenIn: false,
+        hasTokenOut: true,
+        fromInternal: false,
+        toInternal: false,
+        sender: relayer,
+        receiver: user,
+        isBptIn: true,
+        assets: swapWithJoinExit.tokenAddresses,
+        minOut: swapWithJoinExit.swaps[2].returnAmount ?? '0',
+      };
+      expect(firstSwap).to.deep.eq(expectedFirstSwap);
+      expect(secondSwap).to.deep.eq(expectedSecondSwap);
+
+      const expectedJoin: JoinAction = {
+        type: ActionType.Join,
+        poolId: swapWithJoinExit.swaps[1].poolId,
+        tokenIn:
+          swapWithJoinExit.tokenAddresses[
+            swapWithJoinExit.swaps[1].assetInIndex
+          ],
+        bpt: swapWithJoinExit.tokenAddresses[
+          swapWithJoinExit.swaps[1].assetOutIndex
+        ],
+        opRef: {
+          index: 2,
+          key: BigNumber.from(
+            '0xba10000000000000000000000000000000000000000000000000000000000000'
+          ),
+        },
+        amountIn: swapWithJoinExit.swaps[1].amount,
+        actionStep: ActionStep.TokenIn,
+        minOut: '0',
+        assets: swapWithJoinExit.tokenAddresses,
+      };
+      expect(firstJoin).to.deep.eq(expectedJoin);
     });
-    it('BPT->token, exact in', async () => {
+    it('BPT->token (swap>exit), exact in', async () => {
       const tokenIn = USDT.address;
       const tokenOut = DAI.address;
       const swapType = SwapTypes.SwapExactIn;
@@ -123,14 +170,33 @@ describe(`Paths with join and exits.`, () => {
       const swap = actions[0] as SwapAction;
       const exit = actions[1] as ExitAction;
       expect(actions.length).to.eq(swapWithJoinExit.swaps.length);
-      expect(actions.length).to.eq(swapWithJoinExit.swaps.length);
-      expect(swap.type).to.eq(ActionType.Swap);
-      expect(swap.opRef[0].index).to.eq(1);
-      expect(swap.minOut).to.eq('0');
+      const expectedSwap: SwapAction = {
+        type: ActionType.Swap,
+        swap: swapWithJoinExit.swaps[0],
+        opRef: [
+          {
+            index: 1,
+            key: BigNumber.from(
+              '0xba10000000000000000000000000000000000000000000000000000000000000'
+            ),
+          },
+        ],
+        amountIn: swapWithJoinExit.swaps[0].amount,
+        hasTokenIn: true,
+        hasTokenOut: false,
+        fromInternal: false,
+        toInternal: false,
+        sender: user,
+        receiver: relayer,
+        isBptIn: false,
+        assets: swapWithJoinExit.tokenAddresses,
+        minOut: '0',
+      };
+      expect(swap).to.deep.eq(expectedSwap);
       expect(exit.type).to.eq(ActionType.Exit);
       expect(exit.opRef.length).to.eq(0);
       expect(exit.amountIn).to.eq(swap.opRef[0].key.toString());
-      expect(actions[1].minOut).to.eq(swapWithJoinExit.returnAmount.toString());
+      expect(exit.minOut).to.eq(swapWithJoinExit.returnAmount.toString());
     });
   });
   context('orderActions', () => {
@@ -168,14 +234,21 @@ describe(`Paths with join and exits.`, () => {
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const join = orderedActions[0] as JoinAction;
-      expect(orderedActions.length).to.eq(actions.length);
-      expect(join.type).to.eq(ActionType.Join);
-      expect(join.opRef.index).to.eq(undefined);
-      expect(join.amountIn).to.eq(swapAmount.toString());
-      expect(join.minOut).to.eq(returnAmount);
-      expect(join.actionStep).to.eq(ActionStep.Direct);
       const count = getNumberOfOutputActions(orderedActions);
+      const expectedJoin: JoinAction = {
+        type: ActionType.Join,
+        poolId: swaps[0].poolId,
+        tokenIn: assets[swaps[0].assetInIndex],
+        bpt: assets[swaps[0].assetOutIndex],
+        opRef: {} as OutputReference,
+        amountIn: swaps[0].amount,
+        actionStep: ActionStep.Direct,
+        minOut: returnAmount,
+        assets,
+      };
+      expect(orderedActions.length).to.eq(actions.length);
       expect(count).to.eq(1);
+      expect(join).to.deep.eq(expectedJoin);
     });
     it('exact in, exit', async () => {
       const swapType = SwapTypes.SwapExactIn;
@@ -281,10 +354,6 @@ describe(`Paths with join and exits.`, () => {
       const batchSwapDirect = orderedActions[1] as BatchSwapAction;
       const batchSwapFromJoin = orderedActions[2] as BatchSwapAction;
       expect(orderedActions.length).to.eq(3);
-      expect(join.type).to.eq(ActionType.Join);
-      expect(join.opRef.index).to.eq(2);
-      expect(join.minOut).to.eq('0');
-      expect(join.actionStep).to.eq(ActionStep.TokenIn);
       expect(batchSwapDirect.type).to.eq(ActionType.BatchSwap);
       expect(batchSwapDirect.hasTokenOut).to.eq(true);
       expect(batchSwapDirect.opRef.length).to.eq(0);
@@ -301,6 +370,23 @@ describe(`Paths with join and exits.`, () => {
       );
       const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(2);
+      const expectedJoin: JoinAction = {
+        type: ActionType.Join,
+        poolId: swaps[1].poolId,
+        tokenIn: assets[swaps[1].assetInIndex],
+        bpt: assets[swaps[1].assetOutIndex],
+        opRef: {
+          index: 2,
+          key: BigNumber.from(
+            '0xba10000000000000000000000000000000000000000000000000000000000000'
+          ),
+        },
+        amountIn: swaps[1].amount,
+        actionStep: ActionStep.TokenIn,
+        minOut: '0',
+        assets,
+      };
+      expect(expectedJoin).to.deep.eq(join);
     });
     it('exact in, swap>exit', async () => {
       const swapType = SwapTypes.SwapExactIn;
@@ -429,16 +515,28 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwapFirst.swaps.length).to.eq(1);
       expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
       expect(batchSwapFirst.hasTokenOut).to.be.false;
-      expect(join.type).to.eq(ActionType.Join);
-      expect(join.minOut).to.eq('0');
-      expect(join.opRef.index).to.eq(2);
-      expect(join.amountIn).to.eq(batchSwapFirst.opRef[0].key.toString());
-      expect(join.actionStep).to.eq(ActionStep.Middle);
       expect(batchSwapSecond.type).to.eq(ActionType.BatchSwap);
       expect(batchSwapSecond.opRef.length).to.eq(0);
       expect(batchSwapSecond.swaps.length).to.eq(1);
       expect(batchSwapSecond.swaps[0].amount).to.eq(join.opRef.key.toString());
       expect(batchSwapSecond.hasTokenOut).to.be.true;
+      const expectedJoin: JoinAction = {
+        type: ActionType.Join,
+        poolId: swaps[1].poolId,
+        tokenIn: assets[swaps[1].assetInIndex],
+        bpt: assets[swaps[1].assetOutIndex],
+        opRef: {
+          index: 2,
+          key: BigNumber.from(
+            '0xba10000000000000000000000000000000000000000000000000000000000001'
+          ),
+        },
+        amountIn: batchSwapFirst.opRef[0].key.toString(),
+        actionStep: ActionStep.Middle,
+        minOut: '0',
+        assets,
+      };
+      expect(expectedJoin).to.deep.eq(join);
       const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(1);
     });
@@ -580,10 +678,6 @@ describe(`Paths with join and exits.`, () => {
       const batchSwapFirst = orderedActions[1] as BatchSwapAction;
       const batchSwapSecond = orderedActions[2] as BatchSwapAction;
       expect(orderedActions.length).to.eq(3);
-      expect(join.type).to.eq(ActionType.Join);
-      expect(join.amountIn).to.eq('7000000');
-      expect(join.actionStep).to.eq(ActionStep.TokenIn);
-      expect(join.minOut).to.eq('0');
       expect(batchSwapFirst.hasTokenOut).to.eq(true);
       expect(batchSwapFirst.opRef.length).to.eq(0);
       expect(batchSwapFirst.swaps.length).to.eq(1);
@@ -592,6 +686,23 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwapSecond.opRef.length).to.eq(0);
       expect(batchSwapSecond.swaps.length).to.eq(1);
       expect(batchSwapSecond.swaps[0].amount).to.eq('3000000');
+      const expectedJoin: JoinAction = {
+        type: ActionType.Join,
+        poolId: swaps[0].poolId,
+        tokenIn: assets[swaps[0].assetInIndex],
+        bpt: assets[swaps[0].assetOutIndex],
+        opRef: {
+          index: 1,
+          key: BigNumber.from(
+            '0xba10000000000000000000000000000000000000000000000000000000000000'
+          ),
+        },
+        amountIn: swaps[0].amount,
+        actionStep: ActionStep.TokenIn,
+        minOut: '0',
+        assets,
+      };
+      expect(expectedJoin).to.deep.eq(join);
       const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(2);
     });
@@ -677,14 +788,30 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwapFirst.hasTokenIn).to.eq(true);
       expect(batchSwapFirst.hasTokenOut).to.eq(false);
       expect(batchSwapFirst.hasTokenOut).to.eq(false);
-      expect(joinFirst.type).to.eq(ActionType.Join);
-      expect(joinFirst.amountIn).to.eq(batchSwapFirst.opRef[0].key.toString());
-      expect(joinFirst.actionStep).to.eq(ActionStep.TokenOut);
-      expect(joinFirst.minOut).to.eq('6000000');
-      expect(joinSecond.type).to.eq(ActionType.Join);
-      expect(joinSecond.amountIn).to.eq(batchSwapFirst.opRef[1].key.toString());
-      expect(joinSecond.actionStep).to.eq(ActionStep.TokenOut);
-      expect(joinSecond.minOut).to.eq('4000000');
+      const expectedJoinFirst: JoinAction = {
+        type: ActionType.Join,
+        poolId: swaps[1].poolId,
+        tokenIn: assets[swaps[1].assetInIndex],
+        bpt: assets[swaps[1].assetOutIndex],
+        opRef: {} as OutputReference,
+        amountIn: batchSwapFirst.opRef[0].key.toString(),
+        actionStep: ActionStep.TokenOut,
+        minOut: swaps[1].returnAmount,
+        assets,
+      };
+      expect(expectedJoinFirst).to.deep.eq(joinFirst);
+      const expectedJoinSecond: JoinAction = {
+        type: ActionType.Join,
+        poolId: swaps[3].poolId,
+        tokenIn: assets[swaps[3].assetInIndex],
+        bpt: assets[swaps[3].assetOutIndex],
+        opRef: {} as OutputReference,
+        amountIn: batchSwapFirst.opRef[1].key.toString(),
+        actionStep: ActionStep.TokenOut,
+        minOut: swaps[3].returnAmount,
+        assets,
+      };
+      expect(expectedJoinSecond).to.deep.eq(joinSecond);
       const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(2);
     });
