@@ -4,7 +4,6 @@ require('dotenv').config();
 import { expect } from 'chai';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { cloneDeep } from 'lodash';
-import { BalancerError, BalancerErrorCode } from '@/.';
 
 import {
   SwapTypes,
@@ -36,6 +35,8 @@ const USDT = ADDRESSES[Network.MAINNET].USDT;
 const BAL = ADDRESSES[Network.MAINNET].BAL;
 const WETH = ADDRESSES[Network.MAINNET].WETH;
 const USDC = ADDRESSES[Network.MAINNET].USDC;
+const auraBAL = ADDRESSES[Network.MAINNET].auraBal;
+const BAL8020BPT = ADDRESSES[Network.MAINNET].BAL8020BPT;
 const slippage = '0';
 
 export class MockTokenPriceService implements TokenPriceService {
@@ -51,12 +52,15 @@ export class MockTokenPriceService implements TokenPriceService {
 }
 
 describe(`Paths with join and exits.`, () => {
+  const pools = cloneDeep(poolsList.pools);
+  const user = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+  const relayer = '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA';
+
   context('getActions', () => {
-    it('token->BPT, exact in', async () => {
+    it('token->BPT (swap + join>swap), exact in', async () => {
       const tokenIn = DAI.address;
       const tokenOut = USDT.address;
       const swapType = SwapTypes.SwapExactIn;
-      const pools = cloneDeep(poolsList.pools);
       const swapAmount = parseFixed('1280000', 18);
       const swapWithJoinExit = await getSwapInfo(
         tokenIn,
@@ -72,8 +76,10 @@ describe(`Paths with join and exits.`, () => {
         tokenOut,
         swapWithJoinExit.swaps,
         swapWithJoinExit.tokenAddresses,
-        swapWithJoinExit.returnAmount.toString(),
-        slippage
+        slippage,
+        pools,
+        user,
+        relayer
       );
       const firstSwap = actions[0] as SwapAction;
       const firstJoin = actions[1] as JoinAction;
@@ -81,19 +87,18 @@ describe(`Paths with join and exits.`, () => {
       expect(actions.length).to.eq(swapWithJoinExit.swaps.length);
       expect(firstSwap.type).to.eq(ActionType.Swap);
       expect(firstSwap.opRef.length).to.eq(0);
-      expect(firstSwap.minOut).to.eq(swapWithJoinExit.returnAmount.toString());
+      expect(firstSwap.minOut).to.eq(swapWithJoinExit.swaps[0].returnAmount);
       expect(firstJoin.type).to.eq(ActionType.Join);
       expect(firstJoin.minOut).to.eq('0');
       expect(secondSwap.type).to.eq(ActionType.Swap);
       expect(secondSwap.opRef.length).to.eq(0);
       expect(secondSwap.amountIn).to.eq(firstJoin.opRef.key.toString());
-      expect(secondSwap.minOut).to.eq(swapWithJoinExit.returnAmount.toString());
+      expect(secondSwap.minOut).to.eq(swapWithJoinExit.swaps[2].returnAmount);
     });
     it('BPT->token, exact in', async () => {
       const tokenIn = USDT.address;
       const tokenOut = DAI.address;
       const swapType = SwapTypes.SwapExactIn;
-      const pools = cloneDeep(poolsList.pools);
       pools.splice(1, 1); // removes the stable pool
       const swapAmount = parseFixed('100000', 6);
       const swapWithJoinExit = await getSwapInfo(
@@ -110,8 +115,10 @@ describe(`Paths with join and exits.`, () => {
         tokenOut,
         swapWithJoinExit.swaps,
         swapWithJoinExit.tokenAddresses,
-        swapWithJoinExit.returnAmount.toString(),
-        slippage
+        slippage,
+        pools,
+        user,
+        relayer
       );
       const swap = actions[0] as SwapAction;
       const exit = actions[1] as ExitAction;
@@ -140,6 +147,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 1,
           amount: swapAmount.toString(),
           userData: '0x',
+          returnAmount: '639359779510000000000000',
         },
       ];
       const assets = [
@@ -153,8 +161,10 @@ describe(`Paths with join and exits.`, () => {
         tokenOut,
         swaps,
         assets,
-        returnAmount,
-        slippage
+        slippage,
+        pools,
+        user,
+        relayer
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const join = orderedActions[0] as JoinAction;
@@ -180,6 +190,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 1,
           amount: swapAmount,
           userData: '0x',
+          returnAmount: '2557439736413850000000000',
         },
       ];
       const assets = [
@@ -193,8 +204,10 @@ describe(`Paths with join and exits.`, () => {
         tokenOut,
         swaps,
         assets,
-        returnAmount,
-        slippage
+        slippage,
+        pools,
+        user,
+        relayer
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const exit = orderedActions[0] as ExitAction;
@@ -208,6 +221,10 @@ describe(`Paths with join and exits.`, () => {
       expect(count).to.eq(1);
     });
     it('exact in, swap and join>swap', async () => {
+      // e.g.
+      //    DAI[swap]USDT (from External, to External)
+      //    DAI[join]BPT (from External, to Internal)
+      //    BPT[swap]USDT (from Internal, to External)
       const swapType = SwapTypes.SwapExactIn;
       const tokenIn = DAI.address;
       const tokenOut = USDT.address;
@@ -220,6 +237,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 1,
           amount: '1279699403356512142192771',
           userData: '0x',
+          returnAmount: '400000000000',
         },
         {
           // join
@@ -229,6 +247,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 2,
           amount: '300596643487857807229',
           userData: '0x',
+          returnAmount: '7777777',
         },
         {
           // swap
@@ -238,6 +257,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 1,
           amount: '0',
           userData: '0x',
+          returnAmount: '600000000000',
         },
       ];
       const assets = [
@@ -245,34 +265,42 @@ describe(`Paths with join and exits.`, () => {
         '0xdac17f958d2ee523a2206206994597c13d831ec7',
         '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56',
       ];
-      const returnAmount = '1264585520968';
       const actions = getActions(
         swapType,
         tokenIn,
         tokenOut,
         swaps,
         assets,
-        returnAmount,
-        slippage
+        slippage,
+        pools,
+        user,
+        relayer
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const join = orderedActions[0] as JoinAction;
-      const batchSwap = orderedActions[1] as BatchSwapAction;
-
-      expect(orderedActions.length).to.eq(2);
+      const batchSwapDirect = orderedActions[1] as BatchSwapAction;
+      const batchSwapFromJoin = orderedActions[2] as BatchSwapAction;
+      expect(orderedActions.length).to.eq(3);
       expect(join.type).to.eq(ActionType.Join);
       expect(join.opRef.index).to.eq(2);
       expect(join.minOut).to.eq('0');
       expect(join.actionStep).to.eq(ActionStep.TokenIn);
-      expect(batchSwap.type).to.eq(ActionType.BatchSwap);
-      expect(batchSwap.opRef.length).to.eq(0);
-      expect(batchSwap.minOut).to.eq(returnAmount);
-      expect(batchSwap.swaps.length).to.eq(2);
-      expect(batchSwap.swaps[0].amount).to.eq('1279699403356512142192771');
-      expect(batchSwap.swaps[1].amount).to.eq(join.opRef.key.toString());
-      expect(batchSwap.hasTokenOut).to.be.true;
+      expect(batchSwapDirect.type).to.eq(ActionType.BatchSwap);
+      expect(batchSwapDirect.hasTokenOut).to.eq(true);
+      expect(batchSwapDirect.opRef.length).to.eq(0);
+      expect(batchSwapDirect.swaps.length).to.eq(1);
+      expect(batchSwapDirect.swaps[0].amount).to.eq(
+        '1279699403356512142192771'
+      );
+      expect(batchSwapFromJoin.type).to.eq(ActionType.BatchSwap);
+      expect(batchSwapFromJoin.hasTokenOut).to.eq(true);
+      expect(batchSwapFromJoin.opRef.length).to.eq(0);
+      expect(batchSwapFromJoin.swaps.length).to.eq(1);
+      expect(batchSwapFromJoin.swaps[0].amount).to.eq(
+        join.opRef.key.toString()
+      );
       const count = getNumberOfOutputActions(orderedActions);
-      expect(count).to.eq(1);
+      expect(count).to.eq(2);
     });
     it('exact in, swap>exit', async () => {
       const swapType = SwapTypes.SwapExactIn;
@@ -287,6 +315,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 1,
           amount: '100000000000',
           userData: '0x',
+          returnAmount: '7777777',
         },
         {
           // exit
@@ -296,6 +325,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 2,
           amount: '0',
           userData: '0x',
+          returnAmount: '94961515248180000000000',
         },
       ];
       const assets = [
@@ -310,8 +340,10 @@ describe(`Paths with join and exits.`, () => {
         tokenOut,
         swaps,
         assets,
-        returnAmount,
-        slippage
+        slippage,
+        pools,
+        user,
+        relayer
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const batchSwap = orderedActions[0] as BatchSwapAction;
@@ -334,9 +366,9 @@ describe(`Paths with join and exits.`, () => {
     });
     it('exact in, swap>join>swap', async () => {
       // e.g.
-      //    USDT[swap]DAI
-      //    DAI[join]BPT
-      //    BPT[swap]USDC
+      //    USDT[swap]DAI (from External, to Internal)
+      //    DAI[join]BPT (from/to Internal)
+      //    BPT[swap]USDC (from Internal, to External)
       const swapType = SwapTypes.SwapExactIn;
       const tokenIn = USDT.address;
       const tokenOut = USDC.address;
@@ -349,6 +381,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 1,
           amount: '100000000000',
           userData: '0x',
+          returnAmount: '1111111',
         },
         {
           // join
@@ -358,6 +391,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 2,
           amount: '0',
           userData: '0x',
+          returnAmount: '2222222',
         },
         {
           // swap
@@ -367,6 +401,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 3,
           amount: '0',
           userData: '0x',
+          returnAmount: '94961515248180000000000',
         },
       ];
       const assets = [tokenIn, DAI.address, pool1Bpt, USDC.address];
@@ -377,14 +412,15 @@ describe(`Paths with join and exits.`, () => {
         tokenOut,
         swaps,
         assets,
-        returnAmount,
-        slippage
+        slippage,
+        pools,
+        user,
+        relayer
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const batchSwapFirst = orderedActions[0] as BatchSwapAction;
       const join = orderedActions[1] as JoinAction;
       const batchSwapSecond = orderedActions[2] as BatchSwapAction;
-
       expect(orderedActions.length).to.eq(3);
       expect(batchSwapFirst.type).to.eq(ActionType.BatchSwap);
       expect(batchSwapFirst.minOut).to.eq('0');
@@ -402,7 +438,6 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwapSecond.opRef.length).to.eq(0);
       expect(batchSwapSecond.swaps.length).to.eq(1);
       expect(batchSwapSecond.swaps[0].amount).to.eq(join.opRef.key.toString());
-      expect(batchSwapSecond.minOut).to.eq(returnAmount);
       expect(batchSwapSecond.hasTokenOut).to.be.true;
       const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(1);
@@ -424,6 +459,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 1,
           amount: '100000000000',
           userData: '0x',
+          returnAmount: '1111111',
         },
         {
           // exit
@@ -433,6 +469,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 2,
           amount: '0',
           userData: '0x',
+          returnAmount: '2222222',
         },
         {
           // swap
@@ -442,6 +479,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 3,
           amount: '0',
           userData: '0x',
+          returnAmount: '94961515248180000000000',
         },
       ];
       const assets = [tokenIn, pool1Bpt, DAI.address, USDC.address];
@@ -452,8 +490,10 @@ describe(`Paths with join and exits.`, () => {
         tokenOut,
         swaps,
         assets,
-        returnAmount,
-        slippage
+        slippage,
+        pools,
+        user,
+        relayer
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const batchSwapFirst = orderedActions[0] as BatchSwapAction;
@@ -479,18 +519,90 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwapSecond.swaps[0].amount).to.eq(
         exit.opRef[0].key.toString()
       );
-      expect(batchSwapSecond.minOut).to.eq(returnAmount);
       expect(batchSwapSecond.hasTokenOut).to.be.true;
       const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(1);
     });
+    it('exact in, join>swap + swap', async () => {
+      // e.g.
+      //    WETH[join]BPT[Swap]auraBAL
+      //    WETH[Swap]auraBAL
+      const swapType = SwapTypes.SwapExactIn;
+      const tokenIn = WETH.address;
+      const tokenOut = auraBAL.address;
+      const swaps = [
+        {
+          // join
+          poolId:
+            '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014',
+          assetInIndex: 0,
+          assetOutIndex: 1,
+          amount: '7000000',
+          userData: '0x',
+          returnAmount: '1111111',
+        },
+        {
+          // swap
+          poolId:
+            '0x3dd0843a028c86e0b760b1a76929d1c5ef93a2dd000200000000000000000249',
+          assetInIndex: 1,
+          assetOutIndex: 2,
+          amount: '200000000000',
+          userData: '0x',
+          returnAmount: '6000000',
+        },
+        {
+          // swap
+          poolId:
+            '0x0578292cb20a443ba1cde459c985ce14ca2bdee5000100000000000000000269',
+          assetInIndex: 0,
+          assetOutIndex: 2,
+          amount: '3000000',
+          userData: '0x',
+          returnAmount: '40000000',
+        },
+      ];
+      const assets = [tokenIn, BAL8020BPT.address, tokenOut];
+      const actions = getActions(
+        swapType,
+        tokenIn,
+        tokenOut,
+        swaps,
+        assets,
+        slippage,
+        pools,
+        user,
+        relayer
+      );
+
+      const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
+      const join = orderedActions[0] as JoinAction;
+      const batchSwapFirst = orderedActions[1] as BatchSwapAction;
+      const batchSwapSecond = orderedActions[2] as BatchSwapAction;
+      expect(orderedActions.length).to.eq(3);
+      expect(join.type).to.eq(ActionType.Join);
+      expect(join.amountIn).to.eq('7000000');
+      expect(join.actionStep).to.eq(ActionStep.TokenIn);
+      expect(join.minOut).to.eq('0');
+      expect(batchSwapFirst.hasTokenOut).to.eq(true);
+      expect(batchSwapFirst.opRef.length).to.eq(0);
+      expect(batchSwapFirst.swaps.length).to.eq(1);
+      expect(batchSwapFirst.swaps[0].amount).to.eq(join.opRef.key.toString());
+      expect(batchSwapSecond.hasTokenOut).to.eq(true);
+      expect(batchSwapSecond.opRef.length).to.eq(0);
+      expect(batchSwapSecond.swaps.length).to.eq(1);
+      expect(batchSwapSecond.swaps[0].amount).to.eq('3000000');
+      const count = getNumberOfOutputActions(orderedActions);
+      expect(count).to.eq(2);
+    });
     it('exact in, ending in two joins', async () => {
       // e.g.
-      //    USDT[swap]DAI
-      //    DAI[join]BPT
-      //    USDT[swap]USDC
-      //    USDC[join]BPT
+      //    USDT[swap]DAI (external, internal)
+      //    DAI[join]BPT (internal, external)
+      //    USDT[swap]USDC (external, internal)
+      //    USDC[join]BPT (internal, external)
       //    Need minOut for both which equals total
+      //    Swaps can be batched together and executed before joins
       const swapType = SwapTypes.SwapExactIn;
       const tokenIn = USDT.address;
       const tokenOut = pool1Bpt;
@@ -503,6 +615,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 1,
           amount: '100000000000',
           userData: '0x',
+          returnAmount: '1111111',
         },
         {
           // join
@@ -512,6 +625,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 2,
           amount: '0',
           userData: '0x',
+          returnAmount: '6000000',
         },
         {
           // swap
@@ -521,6 +635,7 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 3,
           amount: '200000000000',
           userData: '0x',
+          returnAmount: '1111111',
         },
         {
           // join
@@ -530,170 +645,166 @@ describe(`Paths with join and exits.`, () => {
           assetOutIndex: 2,
           amount: '0',
           userData: '0x',
+          returnAmount: '4000000',
         },
       ];
       const assets = [tokenIn, DAI.address, tokenOut, BAL.address];
-      const returnAmount = '94961515248180000000000';
       const actions = getActions(
         swapType,
         tokenIn,
         tokenOut,
         swaps,
         assets,
-        returnAmount,
-        slippage
+        slippage,
+        pools,
+        user,
+        relayer
       );
-      let errorMessage;
-      try {
-        orderActions(actions, tokenIn, tokenOut, assets);
-      } catch (error) {
-        errorMessage = (error as Error).message;
-      }
-      expect(errorMessage).to.contain(
-        BalancerError.getMessage(BalancerErrorCode.RELAY_SWAP_LENGTH)
-      );
-      // const batchSwapFirst = orderedActions[0] as BatchSwapAction;
-      // const joinFirst = orderedActions[1] as JoinAction;
-      // const joinSecond = orderedActions[2] as JoinAction;
-      // expect(orderedActions.length).to.eq(3);
-      // expect(batchSwapFirst.type).to.eq(ActionType.BatchSwap);
-      // expect(batchSwapFirst.minOut).to.eq('0');
-      // expect(batchSwapFirst.opRef.length).to.eq(2);
-      // expect(batchSwapFirst.opRef[0].index).to.eq(1);
-      // expect(batchSwapFirst.opRef[1].index).to.eq(3);
-      // expect(batchSwapFirst.swaps.length).to.eq(2);
-      // expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
-      // expect(batchSwapFirst.swaps[1].amount).to.eq('200000000000');
-      // expect(batchSwapFirst.hasTokenOut).to.be.false;
-      // expect(joinFirst.type).to.eq(ActionType.Join);
-      // expect(joinFirst.amountIn).to.eq(batchSwapFirst.opRef[0].key.toString());
-      // expect(joinFirst.actionStep).to.eq(ActionStep.TokenOut);
-      // expect(joinSecond.type).to.eq(ActionType.Join);
-      // expect(joinSecond.amountIn).to.eq(batchSwapFirst.opRef[1].key.toString());
-      // expect(joinSecond.actionStep).to.eq(ActionStep.TokenOut);
-      // const count = getNumberOfOutputActions(orderedActions);
-      // expect(count).to.eq(2);
-      // expect(joinFirst.minOut).to.not.eq(joinSecond.minOut); // TODO - Can't be same for both
+
+      const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
+      const batchSwapFirst = orderedActions[0] as BatchSwapAction;
+      const joinFirst = orderedActions[1] as JoinAction;
+      const joinSecond = orderedActions[2] as JoinAction;
+      expect(orderedActions.length).to.eq(3);
+      expect(batchSwapFirst.type).to.eq(ActionType.BatchSwap);
+      expect(batchSwapFirst.minOut).to.eq('0');
+      expect(batchSwapFirst.opRef.length).to.eq(2);
+      expect(batchSwapFirst.opRef[0].index).to.eq(1);
+      expect(batchSwapFirst.opRef[1].index).to.eq(3);
+      expect(batchSwapFirst.swaps.length).to.eq(2);
+      expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
+      expect(batchSwapFirst.swaps[1].amount).to.eq('200000000000');
+      expect(batchSwapFirst.hasTokenIn).to.eq(true);
+      expect(batchSwapFirst.hasTokenOut).to.eq(false);
+      expect(batchSwapFirst.hasTokenOut).to.eq(false);
+      expect(joinFirst.type).to.eq(ActionType.Join);
+      expect(joinFirst.amountIn).to.eq(batchSwapFirst.opRef[0].key.toString());
+      expect(joinFirst.actionStep).to.eq(ActionStep.TokenOut);
+      expect(joinFirst.minOut).to.eq('6000000');
+      expect(joinSecond.type).to.eq(ActionType.Join);
+      expect(joinSecond.amountIn).to.eq(batchSwapFirst.opRef[1].key.toString());
+      expect(joinSecond.actionStep).to.eq(ActionStep.TokenOut);
+      expect(joinSecond.minOut).to.eq('4000000');
+      const count = getNumberOfOutputActions(orderedActions);
+      expect(count).to.eq(2);
     });
-    it('exact in, ending in two exits', async () => {
-      // e.g.
-      //    USDT[swap]DAI
-      //    DAI[swap]BPT
-      //    BPT[exit]weth
-      //    USDT[swap]USDC
-      //    USDC[swap]BPT
-      //    BPT[exit]weth
-      //    Need minOut for both which equals total
-      const swapType = SwapTypes.SwapExactIn;
-      const tokenIn = USDT.address;
-      const tokenOut = WETH.address;
-      const swaps = [
-        {
-          // swap
-          poolId:
-            '0xf88278315a1d5ace3aaa41712f60602e069208e6000200000000000000000375',
-          assetInIndex: 0,
-          assetOutIndex: 1,
-          amount: '100000000000',
-          userData: '0x',
-        },
-        {
-          // swap
-          poolId:
-            '0x4626d81b3a1711beb79f4cecff2413886d461677000200000000000000000011',
-          assetInIndex: 1,
-          assetOutIndex: 2,
-          amount: '0',
-          userData: '0x',
-        },
-        {
-          // exit
-          poolId:
-            '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014',
-          assetInIndex: 2,
-          assetOutIndex: 3,
-          amount: '0',
-          userData: '0x',
-        },
-        {
-          // swap
-          poolId:
-            '0xf88278315a1d5ace3aaa41712f60602e069208e6000200000000000000000375',
-          assetInIndex: 0,
-          assetOutIndex: 4,
-          amount: '100000000000',
-          userData: '0x',
-        },
-        {
-          // swap
-          poolId:
-            '0x4626d81b3a1711beb79f4cecff2413886d461677000200000000000000000011',
-          assetInIndex: 4,
-          assetOutIndex: 2,
-          amount: '0',
-          userData: '0x',
-        },
-        {
-          // exit
-          poolId:
-            '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014',
-          assetInIndex: 2,
-          assetOutIndex: 3,
-          amount: '0',
-          userData: '0x',
-        },
-      ];
-      const assets = [tokenIn, DAI.address, pool1Bpt, tokenOut, USDC.address];
-      const returnAmount = '94961515248180000000000';
-      const actions = getActions(
-        swapType,
-        tokenIn,
-        tokenOut,
-        swaps,
-        assets,
-        returnAmount,
-        slippage
-      );
-      let errorMessage;
-      try {
-        orderActions(actions, tokenIn, tokenOut, assets);
-      } catch (error) {
-        errorMessage = (error as Error).message;
-      }
-      expect(errorMessage).to.contain(
-        BalancerError.getMessage(BalancerErrorCode.RELAY_SWAP_LENGTH)
-      );
-      // const batchSwapFirst = orderedActions[0] as BatchSwapAction;
-      // const exitFirst = orderedActions[1] as ExitAction;
-      // const exitSecond = orderedActions[2] as ExitAction;
-      // console.log(orderedActions);
-      // expect(orderedActions.length).to.eq(3);
-      // expect(batchSwapFirst.type).to.eq(ActionType.BatchSwap);
-      // expect(batchSwapFirst.minOut).to.eq('0');
-      // expect(batchSwapFirst.opRef.length).to.eq(4);
-      // expect(batchSwapFirst.opRef[0].index).to.eq(1);
-      // expect(batchSwapFirst.opRef[1].index).to.eq(2);
-      // expect(batchSwapFirst.opRef[2].index).to.eq(4);
-      // expect(batchSwapFirst.opRef[3].index).to.eq(2);
-      // expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
-      // expect(batchSwapFirst.swaps[1].amount).to.eq('0');
-      // expect(batchSwapFirst.swaps[2].amount).to.eq('100000000000');
-      // expect(batchSwapFirst.swaps[3].amount).to.eq('0');
-      // expect(batchSwapFirst.hasTokenOut).to.eq(false);
-      // expect(exitFirst.type).to.eq(ActionType.Exit);
-      // expect(exitFirst.opRef.length).to.eq(0);
-      // expect(exitFirst.amountIn).to.eq(batchSwapFirst.opRef[1].key.toString());
-      // expect(exitFirst.actionStep).to.eq(ActionStep.TokenOut);
-      // expect(exitSecond.type).to.eq(ActionType.Exit);
-      // expect(exitSecond.opRef.length).to.eq(0);
-      // expect(exitSecond.amountIn).to.eq(batchSwapFirst.opRef[3].key.toString());
-      // expect(exitSecond.actionStep).to.eq(ActionStep.TokenOut);
-      // const count = getNumberOfOutputActions(orderedActions);
-      // expect(count).to.eq(2);
-      // expect(exitFirst.minOut).to.not.eq(exitSecond.minOut); // TODO - Can't be same for both
-      // expect(exitSecond.minOut).to.eq('94961515248180000000000');
-      // expect(orderedActions[5].minOut).to.eq('94961515248180000000000');
-    });
+    // it('exact in, ending in two exits', async () => {
+    //   // e.g.
+    //   //    USDT[swap]DAI (external, internal)
+    //   //    DAI[swap]BPT (internal, internal)
+    //   //    BPT[exit]weth (internal, external)
+    //   //    USDT[swap]USDC (external, internal)
+    //   //    USDC[swap]BPT (internal, internal)
+    //   //    BPT[exit]weth (internal, external)
+    //   //    Need minOut for both which equals total
+    //   const swapType = SwapTypes.SwapExactIn;
+    //   const tokenIn = USDT.address;
+    //   const tokenOut = WETH.address;
+    //   const swaps = [
+    //     {
+    //       // swap
+    //       poolId:
+    //         '0xf88278315a1d5ace3aaa41712f60602e069208e6000200000000000000000375',
+    //       assetInIndex: 0,
+    //       assetOutIndex: 1,
+    //       amount: '100000000000',
+    //       userData: '0x',
+    //       returnAmount: '1111111',
+    //     },
+    //     {
+    //       // swap
+    //       poolId:
+    //         '0x4626d81b3a1711beb79f4cecff2413886d461677000200000000000000000011',
+    //       assetInIndex: 1,
+    //       assetOutIndex: 2,
+    //       amount: '0',
+    //       userData: '0x',
+    //       returnAmount: '2222222',
+    //     },
+    //     {
+    //       // exit
+    //       poolId:
+    //         '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014',
+    //       assetInIndex: 2,
+    //       assetOutIndex: 3,
+    //       amount: '0',
+    //       userData: '0x',
+    //       returnAmount: '6000000',
+    //     },
+    //     {
+    //       // swap
+    //       poolId:
+    //         '0xf88278315a1d5ace3aaa41712f60602e069208e6000200000000000000000375',
+    //       assetInIndex: 0,
+    //       assetOutIndex: 4,
+    //       amount: '100000000000',
+    //       userData: '0x',
+    //       returnAmount: '3333333',
+    //     },
+    //     {
+    //       // swap
+    //       poolId:
+    //         '0x4626d81b3a1711beb79f4cecff2413886d461677000200000000000000000011',
+    //       assetInIndex: 4,
+    //       assetOutIndex: 2,
+    //       amount: '0',
+    //       userData: '0x',
+    //       returnAmount: '4444444',
+    //     },
+    //     {
+    //       // exit
+    //       poolId:
+    //         '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014',
+    //       assetInIndex: 2,
+    //       assetOutIndex: 3,
+    //       amount: '0',
+    //       userData: '0x',
+    //       returnAmount: '4000000',
+    //     },
+    //   ];
+    //   const assets = [tokenIn, DAI.address, pool1Bpt, tokenOut, USDC.address];
+    //   const actions = getActions(
+    //     swapType,
+    //     tokenIn,
+    //     tokenOut,
+    //     swaps,
+    //     assets,
+    //     slippage
+    //   );
+    //   const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
+
+    //   const batchSwapFirst = orderedActions[0] as BatchSwapAction;
+    //   const batchSwapSecond = orderedActions[1] as BatchSwapAction;
+    //   const exitFirst = orderedActions[2] as ExitAction;
+    //   const exitSecond = orderedActions[3] as ExitAction;
+    //   console.log(orderedActions);
+    //   expect(orderedActions.length).to.eq(4);
+    //   expect(batchSwapFirst.type).to.eq(ActionType.BatchSwap);
+    //   expect(batchSwapFirst.minOut).to.eq('0');
+    //   expect(batchSwapFirst.opRef.length).to.eq(4);
+    //   expect(batchSwapFirst.opRef[0].index).to.eq(1);
+    //   expect(batchSwapFirst.opRef[1].index).to.eq(2);
+    //   expect(batchSwapFirst.opRef[2].index).to.eq(4);
+    //   expect(batchSwapFirst.opRef[3].index).to.eq(2);
+    //   expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
+    //   expect(batchSwapFirst.swaps[1].amount).to.eq('0');
+    //   expect(batchSwapFirst.swaps[2].amount).to.eq('100000000000');
+    //   expect(batchSwapFirst.swaps[3].amount).to.eq('0');
+    //   expect(batchSwapFirst.hasTokenOut).to.eq(false);
+    //   expect(exitFirst.type).to.eq(ActionType.Exit);
+    //   expect(exitFirst.opRef.length).to.eq(0);
+    //   expect(exitFirst.amountIn).to.eq(batchSwapFirst.opRef[1].key.toString());
+    //   expect(exitFirst.actionStep).to.eq(ActionStep.TokenOut);
+    //   expect(exitSecond.type).to.eq(ActionType.Exit);
+    //   expect(exitSecond.opRef.length).to.eq(0);
+    //   expect(exitSecond.amountIn).to.eq(batchSwapFirst.opRef[3].key.toString());
+    //   expect(exitSecond.actionStep).to.eq(ActionStep.TokenOut);
+    //   const count = getNumberOfOutputActions(orderedActions);
+    //   expect(count).to.eq(2);
+    //   expect(exitFirst.minOut).to.not.eq(exitSecond.minOut); // TODO - Can't be same for both
+    //   expect(exitSecond.minOut).to.eq('94961515248180000000000');
+    //   expect(orderedActions[5].minOut).to.eq('94961515248180000000000');
+    // });
   });
 });
 

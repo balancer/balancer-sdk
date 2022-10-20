@@ -28,4 +28,8 @@ export const namedTokens: Record<string, any> = {
     address: '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56',
     decimals: 18,
   },
+  graviAura: {
+    address: '0xBA485b556399123261a5F9c95d413B4f93107407',
+    decimals: 18,
+  },
 };

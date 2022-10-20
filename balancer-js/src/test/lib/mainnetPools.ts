@@ -32,6 +32,16 @@ export const AURA_BAL_STABLE = factories.subgraphPoolBase.build({
   poolType: 'Stable',
 });
 
+export const GRAVI_AURA = factories.subgraphPoolBase.build({
+  id: '0x0578292cb20a443ba1cde459c985ce14ca2bdee5000100000000000000000269',
+  address: '0x0578292CB20a443bA1CdE459c985CE14Ca2bDEe5'.toLowerCase(),
+  tokens: [
+    factories.subgraphToken.transient({ symbol: 'auraBAL' }).build(),
+    factories.subgraphToken.transient({ symbol: 'wETH' }).build(),
+    factories.subgraphToken.transient({ symbol: 'graviAura' }).build(),
+  ],
+});
+
 export const getForkedPools = async (
   provider: JsonRpcProvider,
   pools: SubgraphPoolBase[] = [B_50WBTC_50WETH]

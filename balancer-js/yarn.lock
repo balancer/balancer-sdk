@@ -485,7 +485,7 @@
 
 "@balancer-labs/sor@github:balancer-labs/balancer-sor#join-exit-package":
   version "4.0.1-beta.6"
-  resolved "https://codeload.github.com/balancer-labs/balancer-sor/tar.gz/e9e17bdaaf5c9c65dafdb973fa5893b9394c1ded"
+  resolved "https://codeload.github.com/balancer-labs/balancer-sor/tar.gz/014c43651a76e965ff53ec5b1a1437c99511a4f6"
   dependencies:
     isomorphic-fetch "^2.2.1"
 

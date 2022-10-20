@@ -1,6 +1,7 @@
+import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from 'ethers';
-import { MaxInt256 } from '@ethersproject/constants';
+import { MaxInt256, MaxUint256 } from '@ethersproject/constants';
 import {
   SubgraphPoolBase,
   SwapInfo,
@@ -61,6 +62,7 @@ export interface ExitAction extends BaseAction {
   opRef: OutputReference[];
   amountIn: string;
   actionStep: ActionStep;
+  sender: string;
 }
 
 export interface SwapAction extends BaseAction {
@@ -68,16 +70,44 @@ export interface SwapAction extends BaseAction {
   swap: SwapV2;
   opRef: OutputReference[];
   amountIn: string;
-  actionStep: ActionStep;
+  hasTokenIn: boolean;
+  hasTokenOut: boolean;
+  fromInternal: boolean;
+  toInternal: boolean;
+  sender: string;
+  receiver: string;
+  isBptIn: boolean;
 }
 
 export interface BatchSwapAction extends BaseAction {
   type: ActionType.BatchSwap;
   swaps: SwapV2[];
   opRef: OutputReference[];
-  amountIn: string;
+  hasTokenIn: boolean;
   hasTokenOut: boolean;
+  fromInternal: boolean;
+  toInternal: boolean;
+  limits: BigNumber[];
+  approveTokens: string[];
+  sender: string;
+  receiver: string;
 }
+
+const EMPTY_BATCHSWAP_ACTION: BatchSwapAction = {
+  type: ActionType.BatchSwap,
+  swaps: [],
+  opRef: [],
+  minOut: '0',
+  assets: [],
+  hasTokenIn: false,
+  hasTokenOut: false,
+  fromInternal: false,
+  toInternal: false,
+  limits: [],
+  approveTokens: [],
+  sender: '',
+  receiver: '',
+};
 
 type Actions = JoinAction | ExitAction | SwapAction | BatchSwapAction;
 type OrderedActions = JoinAction | ExitAction | BatchSwapAction;
@@ -87,6 +117,10 @@ const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 function getOutputRef(key: number, index: number): OutputReference {
   const keyRef = Relayer.toChainedReference(key);
   return { index: index, key: keyRef };
+}
+
+function isBpt(pools: SubgraphPoolBase[], token: string): boolean {
+  return pools.some((p) => p.address.toLowerCase() === token.toLowerCase());
 }
 
 /**
@@ -353,39 +387,76 @@ export function batchSwapActions(
   allActions: Actions[],
   assets: string[]
 ): OrderedActions[] {
+  /*
+  batchSwaps are a collection of swaps that can all be called in a single batchSwap
+  Can batch all swaps with same source
+  Any swap without tokenIn && not BPT should be coming from internal balances
+  Any swap with tokenIn or BPT should be coming from external balances
+  */
   const orderedActions: OrderedActions[] = [];
-  // batchSwaps are a collection of swaps that can all be called in a single batchSwap
-  let batchSwaps: BatchSwapAction = {
-    type: ActionType.BatchSwap,
-    swaps: [],
-    opRef: [],
-    minOut: '0',
-    assets,
-    amountIn: '0',
-    hasTokenOut: false,
-  };
+  let batchSwaps = cloneDeep(EMPTY_BATCHSWAP_ACTION);
+  batchSwaps.assets = assets;
+  batchSwaps.limits = Array(assets.length).fill(BigNumber.from('0'));
+
+  let isFirstSwap = true;
+  let lastSwap: SwapAction = {} as SwapAction;
 
   for (const a of allActions) {
-    // batch neighbouring swaps together
     if (a.type === ActionType.Swap) {
+      if (isFirstSwap) {
+        lastSwap = a;
+        isFirstSwap = false;
+      }
+      if (a.isBptIn) {
+        // Older pools don't have pre-approval so need to add this as a step
+        batchSwaps.approveTokens.push(a.assets[a.swap.assetInIndex]);
+      }
+      // If swap has different send/receive params than previous then it will need to be done separately
+      if (
+        a.fromInternal !== lastSwap.fromInternal ||
+        a.toInternal !== lastSwap.toInternal ||
+        a.receiver !== lastSwap.receiver ||
+        a.sender !== lastSwap.sender
+      ) {
+        if (batchSwaps.swaps.length > 0) {
+          orderedActions.push(batchSwaps);
+          batchSwaps = cloneDeep(EMPTY_BATCHSWAP_ACTION);
+          batchSwaps.assets = assets;
+          batchSwaps.limits = Array(assets.length).fill(BigNumber.from('0'));
+        }
+      }
       batchSwaps.swaps.push(a.swap);
       batchSwaps.opRef.push(...a.opRef);
-      batchSwaps.minOut = a.minOut;
-      if (a.actionStep === ActionStep.TokenOut || ActionStep.Direct)
+      batchSwaps.fromInternal = a.fromInternal;
+      batchSwaps.toInternal = a.toInternal;
+      batchSwaps.sender = a.sender;
+      batchSwaps.receiver = a.receiver;
+      if (a.hasTokenIn) {
+        batchSwaps.hasTokenIn = true;
+        // We need to add amount for each swap that uses tokenIn to get correct total
+        batchSwaps.limits[a.swap.assetInIndex] = batchSwaps.limits[
+          a.swap.assetInIndex
+        ].add(a.amountIn);
+      } else {
+        // This will be a chained swap/input amount
+        batchSwaps.limits[a.swap.assetInIndex] = MaxInt256;
+      }
+      if (a.hasTokenOut) {
+        // We need to add amount for each swap that uses tokenOut to get correct total
         batchSwaps.hasTokenOut = true;
+        batchSwaps.limits[a.swap.assetOutIndex] = batchSwaps.limits[
+          a.swap.assetOutIndex
+        ].add(a.minOut);
+      }
+      lastSwap = a;
     } else {
+      // Non swap action
       if (batchSwaps.swaps.length > 0) {
         orderedActions.push(batchSwaps);
         // new batchSwap collection as there is a chained join/exit inbetween
-        batchSwaps = {
-          type: ActionType.BatchSwap,
-          swaps: [],
-          opRef: [],
-          minOut: '0',
-          assets,
-          amountIn: '0',
-          hasTokenOut: false,
-        };
+        batchSwaps = cloneDeep(EMPTY_BATCHSWAP_ACTION);
+        batchSwaps.assets = assets;
+        batchSwaps.limits = Array(assets.length).fill(BigNumber.from('0'));
       }
       orderedActions.push(a);
     }
@@ -410,8 +481,6 @@ export function orderActions(
 ): OrderedActions[] {
   const categorizedActions = categorizeActions(actions, tokenIn, tokenOut);
   const orderedActions = batchSwapActions(categorizedActions, assets);
-  if (getNumberOfOutputActions(orderedActions) > 1)
-    throw new BalancerError(BalancerErrorCode.RELAY_SWAP_LENGTH);
   return orderedActions;
 }
 
@@ -422,8 +491,10 @@ export function orderActions(
  * @param tokenOut
  * @param swaps
  * @param assets
- * @param amountOut
  * @param slippage
+ * @param pools
+ * @param user
+ * @param relayer
  * @returns
  */
 export function getActions(
@@ -432,8 +503,10 @@ export function getActions(
   tokenOut: string,
   swaps: SwapV2[],
   assets: string[],
-  amountOut: string,
-  slippage: string
+  slippage: string,
+  pools: SubgraphPoolBase[],
+  user: string,
+  relayer: string
 ): Actions[] {
   const tokenInIndex = assets.findIndex(
     (t) => t.toLowerCase() === tokenIn.toLowerCase()
@@ -450,7 +523,6 @@ export function getActions(
         swap,
         tokenInIndex,
         tokenOutIndex,
-        amountOut,
         opRefKey,
         assets,
         slippage
@@ -464,10 +536,11 @@ export function getActions(
         swap,
         tokenInIndex,
         tokenOutIndex,
-        amountOut,
         opRefKey,
         assets,
-        slippage
+        slippage,
+        user,
+        relayer
       );
       opRefKey = newOpRefKey;
       actions.push(exitAction);
@@ -478,10 +551,12 @@ export function getActions(
         swap,
         tokenInIndex,
         tokenOutIndex,
-        amountOut,
         opRefKey,
         assets,
-        slippage
+        slippage,
+        pools,
+        user,
+        relayer
       );
       opRefKey = newOpRefKey;
       actions.push(swapAction);
@@ -492,12 +567,11 @@ export function getActions(
 }
 
 /**
- * Create a JoinAction with relevant info.
+ * Create a JoinAction with relevant info
  * @param swapType
  * @param swap
  * @param tokenInIndex
  * @param tokenOutIndex
- * @param amountOut
  * @param opRefKey
  * @param assets
  * @param slippage
@@ -508,7 +582,6 @@ function createJoinAction(
   swap: SwapV2,
   tokenInIndex: number,
   tokenOutIndex: number,
-  amountOut: string,
   opRefKey: number,
   assets: string[],
   slippage: string
@@ -520,7 +593,12 @@ function createJoinAction(
     swap.assetOutIndex
   );
   const amountIn = getActionAmount(swap, ActionType.Join, actionStep, opRefKey);
-  const minOut = getActionMinOut(swapType, actionStep, amountOut, slippage);
+  const minOut = getActionMinOut(
+    swapType,
+    actionStep,
+    swap.returnAmount ?? '0',
+    slippage
+  );
   const [opRef, newOpRefKey] = getActionOutputRef(
     actionStep,
     swap.assetOutIndex,
@@ -546,10 +624,11 @@ function createJoinAction(
  * @param swap
  * @param tokenInIndex
  * @param tokenOutIndex
- * @param amountOut
  * @param opRefKey
  * @param assets
  * @param slippage
+ * @param user
+ * @param relayerAddress
  * @returns
  */
 function createExitAction(
@@ -557,10 +636,11 @@ function createExitAction(
   swap: SwapV2,
   tokenInIndex: number,
   tokenOutIndex: number,
-  amountOut: string,
   opRefKey: number,
   assets: string[],
-  slippage: string
+  slippage: string,
+  user: string,
+  relayerAddress: string
 ): [ExitAction, number] {
   const actionStep = getActionStep(
     tokenInIndex,
@@ -568,8 +648,16 @@ function createExitAction(
     swap.assetInIndex,
     swap.assetOutIndex
   );
+  let sender = relayerAddress;
+  if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn)
+    sender = user;
   const amountIn = getActionAmount(swap, ActionType.Exit, actionStep, opRefKey);
-  const minOut = getActionMinOut(swapType, actionStep, amountOut, slippage);
+  const minOut = getActionMinOut(
+    swapType,
+    actionStep,
+    swap.returnAmount ?? '0',
+    slippage
+  );
   const [opRef, newOpRefKey] = getActionOutputRef(
     actionStep,
     swap.assetOutIndex,
@@ -585,54 +673,104 @@ function createExitAction(
     amountIn,
     assets,
     actionStep,
+    sender,
   };
   return [exitAction, newOpRefKey];
 }
 
 /**
- * * Create a SwapAction with relevant info.
+ * Create a SwapAction with relevant info.
  * @param swapType
  * @param swap
- * @param tokenInIndex
- * @param tokenOutIndex
- * @param amountOut
+ * @param mainTokenInIndex
+ * @param mainTokenOutIndex
  * @param opRefKey
  * @param assets
  * @param slippage
+ * @param pools
+ * @param user
+ * @param relayer
  * @returns
  */
 function createSwapAction(
   swapType: SwapTypes,
   swap: SwapV2,
-  tokenInIndex: number,
-  tokenOutIndex: number,
-  amountOut: string,
+  mainTokenInIndex: number,
+  mainTokenOutIndex: number,
   opRefKey: number,
   assets: string[],
-  slippage: string
+  slippage: string,
+  pools: SubgraphPoolBase[],
+  user: string,
+  relayer: string
 ): [SwapAction, number] {
   const actionStep = getActionStep(
-    tokenInIndex,
-    tokenOutIndex,
+    mainTokenInIndex,
+    mainTokenOutIndex,
     swap.assetInIndex,
     swap.assetOutIndex
   );
   const amountIn = getActionAmount(swap, ActionType.Swap, actionStep, opRefKey);
-  const minOut = getActionMinOut(swapType, actionStep, amountOut, slippage);
+  // Updates swap data to use chainedRef if required
+  swap.amount = amountIn;
+  const minOut = getActionMinOut(
+    swapType,
+    actionStep,
+    swap.returnAmount ?? '0',
+    slippage
+  );
   const [opRef, newOpRefKey] = getActionOutputRef(
     actionStep,
     swap.assetOutIndex,
     opRefKey
   );
-  swap.amount = amountIn;
+  const hasTokenIn =
+    actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn
+      ? true
+      : false;
+  const hasTokenOut =
+    actionStep === ActionStep.Direct || actionStep === ActionStep.TokenOut
+      ? true
+      : false;
+  const isBptIn = isBpt(pools, assets[swap.assetInIndex]);
+  // joins - can't join a pool and send BPT to internal balances
+  // Because of ^ we can assume that any BPT is coming from external (either from user or join)
+  let fromInternal = true;
+  if (hasTokenIn || isBptIn) fromInternal = false;
+  // exits - can't exit using BPT from internal balances
+  // Because of ^ we can assume that any tokenOut BPT is going to external (either to user or exit)
+  let toInternal = true;
+  if (hasTokenOut || isBpt(pools, assets[swap.assetOutIndex]))
+    toInternal = false;
+
+  // tokenIn/Out will come from/go to the user. Any other tokens are intermediate and will be from/to Relayer
+  let sender: string;
+  if (hasTokenIn) {
+    sender = user;
+  } else {
+    sender = relayer;
+  }
+  let receiver: string;
+  if (hasTokenOut) {
+    receiver = user;
+  } else {
+    receiver = relayer;
+  }
+
   const swapAction: SwapAction = {
     type: ActionType.Swap,
     opRef: opRef.key ? [opRef] : [],
     minOut,
     amountIn,
     assets,
-    actionStep,
     swap: swap,
+    hasTokenIn,
+    hasTokenOut,
+    fromInternal,
+    toInternal,
+    isBptIn,
+    sender,
+    receiver,
   };
   return [swapAction, newOpRefKey];
 }
@@ -700,11 +838,12 @@ function buildExitCall(
     toInternalBalance,
     poolId: action.poolId,
     poolKind: 0, // This will always be 0 to match supported Relayer types
-    sender: user,
+    sender: action.sender,
     recipient: toInternalBalance ? relayerAddress : user,
     outputReferences: action.opRef,
     exitPoolRequest: {} as ExitPoolRequest,
   };
+  // console.log(exitParams);
   const callData = Relayer.constructExitCall(exitParams);
   const amountOut =
     action.actionStep === ActionStep.Direct ||
@@ -817,79 +956,36 @@ function buildJoinCall(
 /**
  * Creates encoded batchSwap call.
  * @param action
- * @param user
  * @param swapType
  * @param tokenIn
  * @param tokenOut
- * @param swapAmount
- * @param pools
- * @param relayerAddress
  * @returns
  */
 function buildBatchSwapCall(
   action: BatchSwapAction,
-  user: string,
-  swapType: SwapTypes,
+  swapType: SwapTypes.SwapExactIn,
   tokenIn: string,
-  tokenOut: string,
-  swapAmount: string,
-  pools: SubgraphPoolBase[],
-  relayerAddress: string
+  tokenOut: string
 ): [string[], string, string] {
-  const tokenInIndex = action.swaps[0].assetInIndex;
-  const tokenOutIndex = action.swaps[action.swaps.length - 1].assetOutIndex;
-  let toInternalBalance = true;
-  let fromInternalBalance = true;
   const calls: string[] = [];
-  // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
-  const limits = Array(action.assets.length).fill('0');
-  if (
-    tokenOut.toLowerCase() === action.assets[tokenOutIndex].toLowerCase() ||
-    pools.some(
-      (p) =>
-        p.address.toLowerCase() === action.assets[tokenOutIndex].toLowerCase()
-    )
-  ) {
-    // If tokenOut is a BPT this needs to be false as we can't exit a pool from internal balances
-    toInternalBalance = false;
-    limits[tokenOutIndex] = BigNumber.from(action.minOut).mul(-1).toString();
-  }
 
-  let sender: string;
-  if (tokenIn.toLowerCase() === action.assets[tokenInIndex].toLowerCase()) {
-    fromInternalBalance = false;
-    sender = user;
-    limits[tokenInIndex] = swapAmount;
-  } else if (
-    pools.some(
-      (p) =>
-        p.address.toLowerCase() === action.assets[tokenInIndex].toLowerCase()
-    )
-  ) {
+  for (const token of action.approveTokens) {
+    // If swap tokenIn is a BPT then:
     // new pools have automatic infinite vault allowance, but not old ones
-    const key = Relayer.fromChainedReference(action.swaps[0].amount);
-    const readOnlyRef = Relayer.toChainedReference(key, false);
-    const approval = Relayer.encodeApproveVault(
-      action.assets[tokenInIndex],
-      readOnlyRef.toString()
-    );
+    // const key = Relayer.fromChainedReference(action.swaps[0].amount);
+    // const readOnlyRef = Relayer.toChainedReference(key, false);
+    // const approval = Relayer.encodeApproveVault(token, readOnlyRef.toString());
+    // TODO fix approval amount
+    const approval = Relayer.encodeApproveVault(token, MaxUint256.toString());
     calls.push(approval);
-    // If tokenIn is a BPT this needs to be false as we can't join a pool from internal balances
-    fromInternalBalance = false;
-    sender = relayerAddress;
-    limits[tokenInIndex] = MaxInt256.toString();
-  } else {
-    sender = relayerAddress;
-    limits[tokenInIndex] = MaxInt256.toString();
   }
 
   const funds: FundManagement = {
-    sender,
-    recipient: toInternalBalance ? relayerAddress : user,
-    fromInternalBalance,
-    toInternalBalance,
+    sender: action.sender,
+    recipient: action.receiver,
+    fromInternalBalance: action.fromInternal,
+    toInternalBalance: action.toInternal,
   };
-
   const batchSwapInput: EncodeBatchSwapInput = {
     swapType:
       swapType === SwapTypes.SwapExactIn
@@ -898,7 +994,7 @@ function buildBatchSwapCall(
     swaps: action.swaps,
     assets: action.assets,
     funds,
-    limits,
+    limits: action.limits.map((l) => l.toString()),
     deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
     value: '0',
     outputReferences: action.opRef,
@@ -907,12 +1003,17 @@ function buildBatchSwapCall(
 
   const encodedBatchSwap = Relayer.encodeBatchSwap(batchSwapInput);
   calls.push(encodedBatchSwap);
-  const amountIn =
-    tokenIn.toLowerCase() === action.assets[tokenInIndex].toLowerCase()
-      ? limits[tokenInIndex]
-      : '0';
+  const maintokenInIndex = action.assets.findIndex(
+    (t) => t.toLowerCase() === tokenIn.toLowerCase()
+  );
+  const maintokenOutIndex = action.assets.findIndex(
+    (t) => t.toLowerCase() === tokenOut.toLowerCase()
+  );
+  const amountIn = action.hasTokenIn
+    ? action.limits[maintokenInIndex].toString()
+    : '0';
   const amountOut = action.hasTokenOut
-    ? BigNumber.from(limits[tokenOutIndex]).abs().toString()
+    ? action.limits[maintokenOutIndex].abs().toString()
     : '0';
   return [calls, amountIn, amountOut];
 }
@@ -941,6 +1042,7 @@ export function buildRelayerCalls(
 ): {
   to: string;
   data: string;
+  rawCalls: string[];
 } {
   // For each 'swap' create a swap/join/exit action
   const actions = getActions(
@@ -949,8 +1051,10 @@ export function buildRelayerCalls(
     swapInfo.tokenOut,
     swapInfo.swaps,
     swapInfo.tokenAddresses,
-    swapInfo.returnAmount.toString(),
-    slippage
+    slippage,
+    pools,
+    user,
+    relayerAddress
   );
   // Arrange action into order that will create minimal amount of calls
   const orderedActions = orderActions(
@@ -1007,13 +1111,9 @@ export function buildRelayerCalls(
     if (action.type === ActionType.BatchSwap) {
       const [batchSwapCalls, amountIn, amountOut] = buildBatchSwapCall(
         action,
-        user,
         swapType,
         swapInfo.tokenIn,
-        swapInfo.tokenOut,
-        swapInfo.swapAmount.toString(),
-        pools,
-        relayerAddress
+        swapInfo.tokenOut
       );
       calls.push(...batchSwapCalls);
       amountsIn.push(BigNumber.from(amountIn));
@@ -1031,6 +1131,7 @@ export function buildRelayerCalls(
   return {
     to: relayerAddress,
     data: callData,
+    rawCalls: calls,
   };
 }
 
@@ -1050,6 +1151,14 @@ function checkAmounts(
   if (swapType === SwapTypes.SwapExactIn) {
     // totalIn should equal the original input swap amount
     // totalOut should equal the return amount from SOR minus any slippage allowance
+    // console.log(totalIn.toString(), 'totalIn');
+    // console.log(swapInfo.swapAmount.toString(), 'swapInfo.swapAmount');
+    // console.log(totalOut.toString(), 'totalOut');
+    // console.log(
+    //   subSlippage(swapInfo.returnAmount, BigNumber.from(slippage)).toString(),
+    //   'slippage'
+    // );
+    // console.log(swapInfo.returnAmount.toString(), 'swapInfo.returnAmount');
     if (
       !totalIn.eq(swapInfo.swapAmount) ||
       !totalOut.eq(subSlippage(swapInfo.returnAmount, BigNumber.from(slippage)))
