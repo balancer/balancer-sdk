@@ -195,11 +195,25 @@ describe(`Paths with join and exits.`, () => {
         assets: swapWithJoinExit.tokenAddresses,
         minOut: '0',
       };
+      const expectedExit: ExitAction = {
+        type: ActionType.Exit,
+        poolId: swapWithJoinExit.swaps[1].poolId,
+        tokenOut:
+          swapWithJoinExit.tokenAddresses[
+            swapWithJoinExit.swaps[1].assetOutIndex
+          ],
+        bpt: swapWithJoinExit.tokenAddresses[
+          swapWithJoinExit.swaps[1].assetInIndex
+        ],
+        opRef: [],
+        amountIn: swap.opRef[0].key.toString(),
+        actionStep: ActionStep.TokenOut,
+        minOut: swapWithJoinExit.returnAmount.toString(),
+        assets: swapWithJoinExit.tokenAddresses,
+        sender: relayer,
+      };
       expect(swap).to.deep.eq(expectedSwap);
-      expect(exit.type).to.eq(ActionType.Exit);
-      expect(exit.opRef.length).to.eq(0);
-      expect(exit.amountIn).to.eq(swap.opRef[0].key.toString());
-      expect(exit.minOut).to.eq(swapWithJoinExit.returnAmount.toString());
+      expect(exit).to.deep.eq(expectedExit);
     });
   });
   context('orderActions', () => {
@@ -290,12 +304,20 @@ describe(`Paths with join and exits.`, () => {
       );
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const exit = orderedActions[0] as ExitAction;
+      const expectedExit: ExitAction = {
+        type: ActionType.Exit,
+        poolId: swaps[0].poolId,
+        tokenOut: assets[swaps[0].assetOutIndex],
+        bpt: assets[swaps[0].assetInIndex],
+        opRef: [],
+        amountIn: swaps[0].amount,
+        actionStep: ActionStep.Direct,
+        minOut: returnAmount,
+        assets: assets,
+        sender: user,
+      };
       expect(orderedActions.length).to.eq(actions.length);
-      expect(exit.type).to.eq(ActionType.Exit);
-      expect(exit.opRef.length).to.eq(0);
-      expect(exit.amountIn).to.eq(swapAmount);
-      expect(exit.minOut).to.eq(returnAmount);
-      expect(exit.actionStep).to.eq(ActionStep.Direct);
+      expect(exit).to.deep.eq(expectedExit);
       const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(1);
     });
@@ -443,19 +465,26 @@ describe(`Paths with join and exits.`, () => {
       const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
       const batchSwap = orderedActions[0] as BatchSwapAction;
       const exit = orderedActions[1] as ExitAction;
-
+      const expectedExit: ExitAction = {
+        type: ActionType.Exit,
+        poolId: swaps[1].poolId,
+        tokenOut: assets[swaps[1].assetOutIndex],
+        bpt: assets[swaps[1].assetInIndex],
+        opRef: [],
+        amountIn: batchSwap.opRef[0].key.toString(),
+        actionStep: ActionStep.TokenOut,
+        minOut: returnAmount,
+        assets: assets,
+        sender: relayer,
+      };
       expect(orderedActions.length).to.eq(2);
+      expect(exit).to.deep.eq(expectedExit);
       expect(batchSwap.type).to.eq(ActionType.BatchSwap);
       expect(batchSwap.opRef[0].index).to.eq(1);
       expect(batchSwap.minOut).to.eq('0');
       expect(batchSwap.swaps.length).to.eq(1);
       expect(batchSwap.swaps[0].amount).to.eq('100000000000');
       expect(batchSwap.hasTokenOut).to.be.false;
-      expect(exit.type).to.eq(ActionType.Exit);
-      expect(exit.opRef.length).to.eq(0);
-      expect(exit.minOut).to.eq(returnAmount);
-      expect(exit.amountIn).to.eq(batchSwap.opRef[0].key.toString());
-      expect(exit.actionStep).to.eq(ActionStep.TokenOut);
       const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(1);
     });
@@ -617,12 +646,26 @@ describe(`Paths with join and exits.`, () => {
       expect(batchSwapFirst.swaps.length).to.eq(1);
       expect(batchSwapFirst.swaps[0].amount).to.eq('100000000000');
       expect(batchSwapFirst.hasTokenOut).to.be.false;
-      expect(exit.type).to.eq(ActionType.Exit);
-      expect(exit.minOut).to.eq('0');
-      expect(exit.opRef.length).to.eq(1);
-      expect(exit.opRef[0].index).to.eq(2);
-      expect(exit.amountIn).to.eq(batchSwapFirst.opRef[0].key.toString());
-      expect(exit.actionStep).to.eq(ActionStep.Middle);
+      const expectedExit: ExitAction = {
+        type: ActionType.Exit,
+        poolId: swaps[1].poolId,
+        tokenOut: assets[swaps[1].assetOutIndex],
+        bpt: assets[swaps[1].assetInIndex],
+        opRef: [
+          {
+            index: 2,
+            key: BigNumber.from(
+              '0xba10000000000000000000000000000000000000000000000000000000000001'
+            ),
+          },
+        ],
+        amountIn: batchSwapFirst.opRef[0].key.toString(),
+        actionStep: ActionStep.Middle,
+        minOut: '0',
+        assets: assets,
+        sender: relayer,
+      };
+      expect(exit).to.deep.eq(expectedExit);
       expect(batchSwapSecond.type).to.eq(ActionType.BatchSwap);
       expect(batchSwapSecond.opRef.length).to.eq(0);
       expect(batchSwapSecond.swaps.length).to.eq(1);
