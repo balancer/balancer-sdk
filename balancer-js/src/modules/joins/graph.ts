@@ -1,5 +1,5 @@
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { parsePoolInfo } from '@/lib/utils';
+import { isSameAddress, parsePoolInfo } from '@/lib/utils';
 import { BalancerSdkConfig, Pool, PoolAttribute, PoolType } from '@/types';
 import { Zero, WeiPerEther } from '@ethersproject/constants';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -145,7 +145,7 @@ export class PoolGraph {
     let decimals = 18;
     // Spot price of a path is product of the sp of each pool in path. We calculate the sp for each pool token here to use as required later.
     pool.tokens.forEach((token) => {
-      if (token.address === pool.address) {
+      if (isSameAddress(token.address, pool.address)) {
         // Updated node with BPT token decimal
         decimals = token.decimals ? token.decimals : 18;
         return;
@@ -181,7 +181,7 @@ export class PoolGraph {
       const { parsedBalances } = parsePoolInfo(pool);
       for (let i = 0; i < pool.tokens.length; i++) {
         // ignore any phantomBpt tokens
-        if (pool.tokens[i].address === pool.address) continue;
+        if (isSameAddress(pool.tokens[i].address, pool.address)) continue;
         const proportion = BigNumber.from(parsedBalances[i])
           .mul((1e18).toString())
           .div(tokenTotal);
@@ -350,13 +350,12 @@ export class PoolGraph {
     let index = startingIndex;
     // Can't join using the root token itself
     if (
-      inputToken.toLowerCase() ===
-      orderedNodes[orderedNodes.length - 1].address.toLowerCase()
+      isSameAddress(inputToken, orderedNodes[orderedNodes.length - 1].address)
     )
       throw new BalancerError(BalancerErrorCode.INPUT_TOKEN_INVALID);
     // Find the node matching input token
-    const inputNode = orderedNodes.find(
-      (node) => node.address.toLowerCase() === inputToken.toLowerCase()
+    const inputNode = orderedNodes.find((node) =>
+      isSameAddress(node.address, inputToken)
     );
     if (inputNode === undefined)
       throw new BalancerError(BalancerErrorCode.INPUT_TOKEN_INVALID);
@@ -377,7 +376,7 @@ export class PoolGraph {
       const inputTokenNode = { ...inputNode };
       // For a non-leaf join we will use 100% of token amount in path
       inputTokenNode.proportionOfParent = WeiPerEther;
-      inputTokenNode.index = '0';
+      inputTokenNode.index = index.toString();
       nodesToRoot.push(inputNode);
     }
     index++;
@@ -392,9 +391,7 @@ export class PoolGraph {
         // The first non-input node must have its child input node updated and other to 0 amounts
         const childrenWithoutRoot = node.children
           .filter(
-            (node) =>
-              node.address.toLowerCase() !==
-              nodesToRoot[0].address.toLowerCase()
+            (node) => !isSameAddress(node.address, nodesToRoot[0].address)
           )
           .map((n) => {
             n.index = '0';

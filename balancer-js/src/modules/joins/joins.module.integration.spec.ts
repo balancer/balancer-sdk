@@ -20,7 +20,7 @@ import { JsonRpcSigner } from '@ethersproject/providers';
 const network = Network.GOERLI;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
-const blockNumber = 7596322;
+const blockNumber = 7770300;
 
 /*
  * Testing on MAINNET
@@ -74,10 +74,9 @@ const runTests = async (tests: Test[]) => {
     const test = tests[i];
     it(test.description, async () => {
       const userAddress = await test.signer.getAddress();
-      const signerAddress = await signer.getAddress();
       const authorisation = await Relayer.signRelayerApproval(
         relayer,
-        signerAddress,
+        userAddress,
         signer,
         contracts.vault
       );
@@ -150,8 +149,8 @@ const testFlow = async (
   console.log(query.expectedOut, 'expectedOut');
 };
 
+// following contexts currently applies to GOERLI only
 describe('generalised join execution', async () => {
-  // following contexts currently applies to GOERLI only
   /*
   bbamaiweth: ComposableStable, baMai/baWeth
   baMai: Linear, aMai/Mai
@@ -240,12 +239,11 @@ describe('generalised join execution', async () => {
     ]);
   });
 
-  // following contexts currently applies to GOERLI only
   /*
-    boostedMeta1: ComposableStable, baMai/bbausd2
-    baMai: Linear, aMai/Mai
-    bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
-    */
+  boostedMeta1: ComposableStable, baMai/bbausd2
+  baMai: Linear, aMai/Mai
+  bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
+  */
   context('boostedMeta', async () => {
     let authorisation: string | undefined;
     beforeEach(async () => {
@@ -386,7 +384,161 @@ describe('generalised join execution', async () => {
       },
     ]);
   });
-  // following contexts currently applies to GOERLI only
+
+  /*
+  boostedMetaAlt1: ComposableStable, Mai/bbausd2
+  bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
+  */
+  context('boostedMetaAlt', async () => {
+    let authorisation: string | undefined;
+    beforeEach(async () => {
+      const tokens = [
+        addresses.DAI.address,
+        addresses.USDC.address,
+        addresses.USDT.address,
+        addresses.MAI.address,
+        addresses.waDAI.address,
+        addresses.waUSDC.address,
+        addresses.waUSDT.address,
+        addresses.bbausdc.address,
+        addresses.bbadai.address,
+        addresses.bbausd2.address,
+      ];
+      const slots = [
+        addresses.DAI.slot,
+        addresses.USDC.slot,
+        addresses.USDT.slot,
+        addresses.MAI.slot,
+        addresses.waDAI.slot,
+        addresses.waUSDC.slot,
+        addresses.waUSDT.slot,
+        addresses.bbausdc.slot,
+        addresses.bbadai.slot,
+        addresses.bbausd2.slot,
+      ];
+      const balances = [
+        parseFixed('10', addresses.DAI.decimals).toString(),
+        parseFixed('10', addresses.USDC.decimals).toString(),
+        parseFixed('10', addresses.USDT.decimals).toString(),
+        parseFixed('10', addresses.MAI.decimals).toString(),
+        '0',
+        '0',
+        '0',
+        parseFixed('10', addresses.bbausdc.decimals).toString(),
+        parseFixed('10', addresses.bbadai.decimals).toString(),
+        parseFixed('10', addresses.bbausd2.decimals).toString(),
+      ];
+      await forkSetup(
+        signer,
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        blockNumber
+      );
+    });
+
+    await runTests([
+      {
+        signer,
+        description: 'join with all leaf tokens',
+        pool: {
+          id: addresses.boostedMetaAlt1.id,
+          address: addresses.boostedMetaAlt1.address,
+        },
+        tokensIn: [
+          addresses.DAI.address,
+          addresses.USDC.address,
+          addresses.USDT.address,
+          addresses.MAI.address,
+        ],
+        amountsIn: [
+          parseFixed('10', addresses.DAI.decimals).toString(),
+          parseFixed('10', addresses.USDC.decimals).toString(),
+          parseFixed('10', addresses.USDT.decimals).toString(),
+          parseFixed('10', addresses.MAI.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      {
+        signer,
+        description: 'join with single leaf token',
+        pool: {
+          id: addresses.boostedMetaAlt1.id,
+          address: addresses.boostedMetaAlt1.address,
+        },
+        tokensIn: [addresses.MAI.address],
+        amountsIn: [parseFixed('10', addresses.MAI.decimals).toString()],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      {
+        signer,
+        description: 'join with child linear',
+        pool: {
+          id: addresses.boostedMetaAlt1.id,
+          address: addresses.boostedMetaAlt1.address,
+        },
+        tokensIn: [addresses.bbausdc.address],
+        amountsIn: [parseFixed('3', addresses.bbausdc.decimals).toString()],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      {
+        signer,
+        description: 'join with leaf and child linear',
+        pool: {
+          id: addresses.boostedMetaAlt1.id,
+          address: addresses.boostedMetaAlt1.address,
+        },
+        tokensIn: [addresses.DAI.address, addresses.bbadai.address],
+        amountsIn: [
+          parseFixed('4', addresses.DAI.decimals).toString(),
+          parseFixed('4', addresses.bbadai.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      {
+        signer,
+        description: 'join with child boosted',
+        pool: {
+          id: addresses.boostedMetaAlt1.id,
+          address: addresses.boostedMetaAlt1.address,
+        },
+        tokensIn: [addresses.bbausd2.address],
+        amountsIn: [parseFixed('10', addresses.bbausd2.decimals).toString()],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      {
+        signer,
+        description: 'join with child boosted and all leaves',
+        pool: {
+          id: addresses.boostedMetaAlt1.id,
+          address: addresses.boostedMetaAlt1.address,
+        },
+        tokensIn: [
+          addresses.bbausd2.address,
+          addresses.DAI.address,
+          addresses.USDC.address,
+          addresses.USDT.address,
+          addresses.MAI.address,
+        ],
+        amountsIn: [
+          parseFixed('10', addresses.bbausd2.decimals).toString(),
+          parseFixed('10', addresses.DAI.decimals).toString(),
+          parseFixed('10', addresses.USDC.decimals).toString(),
+          parseFixed('10', addresses.USDT.decimals).toString(),
+          parseFixed('10', addresses.MAI.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+    ]);
+  });
+
   /*
   boostedMetaBig1: ComposableStable, bbamaiweth/bbausd2
   bbamaiweth: ComposableStable, baMai/baWeth
