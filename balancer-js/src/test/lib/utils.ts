@@ -5,7 +5,7 @@ import { balancerVault } from '@/lib/constants/config';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { keccak256 } from '@ethersproject/solidity';
 import { parseEther } from '@ethersproject/units';
-import { ERC20 } from '@/modules/contracts/ERC20';
+import { ERC20 } from '@/modules/contracts/implementations/ERC20';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 
 import { Interface } from '@ethersproject/abi';
