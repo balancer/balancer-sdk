@@ -3562,6 +3562,28 @@ export enum _SubgraphErrorPolicy_ {
   Deny = 'deny'
 }
 
+export type PoolShareQueryVariables = Exact<{
+  id: Scalars['ID'];
+  block?: InputMaybe<Block_Height>;
+}>;
+
+
+export type PoolShareQuery = { __typename?: 'Query', poolShare?: { __typename?: 'PoolShare', id: string, balance: string, userAddress: { __typename?: 'User', id: string }, poolId: { __typename?: 'Pool', id: string, address: string } } | null };
+
+export type PoolSharesQueryVariables = Exact<{
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<PoolShare_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  where?: InputMaybe<PoolShare_Filter>;
+  block?: InputMaybe<Block_Height>;
+}>;
+
+
+export type PoolSharesQuery = { __typename?: 'Query', poolShares: Array<{ __typename?: 'PoolShare', id: string, balance: string, userAddress: { __typename?: 'User', id: string }, poolId: { __typename?: 'Pool', id: string, address: string } }> };
+
+export type SubgraphPoolShareFragment = { __typename?: 'PoolShare', id: string, balance: string, userAddress: { __typename?: 'User', id: string }, poolId: { __typename?: 'Pool', id: string, address: string } };
+
 export type PoolsQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -3731,6 +3753,19 @@ export type UsersQuery = { __typename?: 'Query', users: Array<{ __typename?: 'Us
 
 export type SubgraphUserFragment = { __typename?: 'User', id: string, sharesOwned?: Array<{ __typename?: 'PoolShare', balance: string, poolId: { __typename?: 'Pool', id: string } }> | null };
 
+export const SubgraphPoolShareFragmentDoc = gql`
+    fragment SubgraphPoolShare on PoolShare {
+  id
+  balance
+  userAddress {
+    id
+  }
+  poolId {
+    id
+    address
+  }
+}
+    `;
 export const SubgraphPoolTokenFragmentDoc = gql`
     fragment SubgraphPoolToken on PoolToken {
   id
@@ -3890,6 +3925,27 @@ export const SubgraphUserFragmentDoc = gql`
   }
 }
     `;
+export const PoolShareDocument = gql`
+    query PoolShare($id: ID!, $block: Block_height) {
+  poolShare(id: $id, block: $block) {
+    ...SubgraphPoolShare
+  }
+}
+    ${SubgraphPoolShareFragmentDoc}`;
+export const PoolSharesDocument = gql`
+    query PoolShares($first: Int, $orderBy: PoolShare_orderBy, $orderDirection: OrderDirection, $skip: Int, $where: PoolShare_filter, $block: Block_height) {
+  poolShares(
+    first: $first
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    skip: $skip
+    where: $where
+    block: $block
+  ) {
+    ...SubgraphPoolShare
+  }
+}
+    ${SubgraphPoolShareFragmentDoc}`;
 export const PoolsDocument = gql`
     query Pools($skip: Int, $first: Int, $orderBy: Pool_orderBy, $orderDirection: OrderDirection, $where: Pool_filter, $block: Block_height) {
   pools(
@@ -4093,6 +4149,12 @@ const defaultWrapper: SdkFunctionWrapper = (action, _operationName, _operationTy
 
 export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = defaultWrapper) {
   return {
+    PoolShare(variables: PoolShareQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolShareQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PoolShareQuery>(PoolShareDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PoolShare', 'query');
+    },
+    PoolShares(variables?: PoolSharesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolSharesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PoolSharesQuery>(PoolSharesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PoolShares', 'query');
+    },
     Pools(variables?: PoolsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<PoolsQuery>(PoolsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'Pools', 'query');
     },
