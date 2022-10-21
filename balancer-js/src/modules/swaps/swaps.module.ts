@@ -1,4 +1,4 @@
-import { bnum, SOR, SubgraphPoolBase, SwapInfo, SwapTypes } from '@balancer-labs/sor';
+import { SOR, SubgraphPoolBase, SwapInfo, SwapTypes } from '@balancer-labs/sor';
 import { Vault__factory, Vault } from '@balancer-labs/typechain';
 import {
   BatchSwap,
@@ -375,7 +375,6 @@ export class Swaps {
     };
     // Make full output
     const cowSwapOutput: cowSwapOutput = {
-      ref_token: input.metadata.native_token,
       prices: prices,
       orders: {
         '0': order,
@@ -412,6 +411,7 @@ export class Swaps {
           },
         },
       ],
+      metadata: input.metadata,
     };
     return JSON.stringify(cowSwapOutput, null, 2) + '\n';
   }
@@ -430,16 +430,10 @@ export interface cowSwapInput {
     [number: string]: inputOrder;
   };
   amms: unknown;
-  metadata: {
-    environment: string;
-    auction_id: number;
-    gas_price: number;
-    native_token: string;
-  };
+  metadata: metadata;
 }
 
 interface cowSwapOutput {
-  ref_token: string;
   prices: {
     [address: string]: string;
   };
@@ -478,6 +472,14 @@ interface cowSwapOutput {
       };
     }
   ];
+  metadata: metadata;
+}
+
+interface metadata {
+  environment: string;
+  auction_id: number;
+  gas_price: number;
+  native_token: string;
 }
 
 interface inputOrder {
