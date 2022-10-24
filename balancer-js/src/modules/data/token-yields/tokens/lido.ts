@@ -3,6 +3,7 @@ import axios from 'axios';
 
 export const yieldTokens = {
   stETH: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+  arbitrumStEth: '0x5979d7b546e38e414f7e9822514be443a4800529',
 };
 
 interface LidoAPIResponse {
@@ -31,5 +32,6 @@ export const lido: AprFetcher = async () => {
 
   return {
     [yieldTokens.stETH]: apr,
+    [yieldTokens.arbitrumStEth]: apr,
   };
 };

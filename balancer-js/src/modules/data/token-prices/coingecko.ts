@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { Price, Findable, TokenPrices } from '@/types';
+import { Price, Findable, TokenPrices, Network } from '@/types';
 import { wrappedTokensMap as aaveWrappedMap } from '../token-yields/tokens/aave';
 import axios from 'axios';
+import { TOKENS } from '@/lib/constants/tokens';
+import { isEthereumTestnet } from '@/lib/utils/network';
 
 // Conscious choice for a deferred promise since we have setTimeout that returns a promise
 // Some reference for history buffs: https://github.com/petkaantonov/bluebird/wiki/Promise-anti-patterns
@@ -37,10 +39,11 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   timeout?: ReturnType<typeof setTimeout>;
   debounceCancel = (): void => {}; // Allow to cancel mid-flight requests
 
-  constructor(tokenAddresses: string[], chainId = 1) {
+  constructor(tokenAddresses: string[], private chainId: Network = 1) {
     this.baseTokenAddresses = tokenAddresses
       .map((a) => a.toLowerCase())
-      .map((a) => unwrapToken(a));
+      .map((a) => this.addressMapIn(a))
+      .map((a) => this.unwrapToken(a));
     this.urlBase = `https://api.coingecko.com/api/v3/simple/token_price/${this.platform(
       chainId
     )}?vs_currencies=usd,eth`;
@@ -97,7 +100,8 @@ export class CoingeckoPriceRepository implements Findable<Price> {
 
   async find(address: string): Promise<Price | undefined> {
     const lowercaseAddress = address.toLowerCase();
-    const unwrapped = unwrapToken(lowercaseAddress);
+    const mapInAddress = this.addressMapIn(lowercaseAddress);
+    const unwrapped = this.unwrapToken(mapInAddress);
     if (!this.prices[unwrapped]) {
       try {
         let init = false;
@@ -137,6 +141,7 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   private platform(chainId: number): string {
     switch (chainId) {
       case 1:
+      case 5:
       case 42:
       case 31337:
         return 'ethereum';
@@ -149,16 +154,31 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     return '2';
   }
 
+  private addressMapIn(address: string): string {
+    const addressMap = TOKENS(this.chainId).PriceChainMap;
+    return (addressMap && addressMap[address.toLowerCase()]) || address;
+  }
+
+  private unwrapToken(wrappedAddress: string) {
+    const chainId = isEthereumTestnet(this.chainId)
+      ? Network.MAINNET
+      : this.chainId;
+    return unwrapToken(wrappedAddress, chainId);
+  }
+
   private url(addresses: string[]): string {
     return `${this.urlBase}&contract_addresses=${addresses.join(',')}`;
   }
 }
 
-const unwrapToken = (wrappedAddress: string) => {
+const unwrapToken = (wrappedAddress: string, chainId: Network) => {
   const lowercase = wrappedAddress.toLocaleLowerCase();
 
-  if (Object.keys(aaveWrappedMap).includes(lowercase)) {
-    return aaveWrappedMap[lowercase as keyof typeof aaveWrappedMap].aToken;
+  const aaveChain = chainId as keyof typeof aaveWrappedMap;
+  if (Object.keys(aaveWrappedMap[aaveChain])?.includes(lowercase)) {
+    return aaveWrappedMap[aaveChain][
+      lowercase as keyof typeof aaveWrappedMap[typeof aaveChain]
+    ].aToken;
   } else {
     return lowercase;
   }

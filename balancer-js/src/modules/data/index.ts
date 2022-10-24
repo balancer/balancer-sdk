@@ -1,7 +1,9 @@
 export * as balEmissions from './bal/emissions';
 export * from './gauge-controller/multicall';
+export * from './gauge-shares';
 export * from './liquidity-gauges';
 export * from './pool';
+export * from './pool-shares';
 export * from './token';
 export * from './token-prices';
 export * from './fee-distributor/repository';
@@ -12,6 +14,8 @@ export * from './block-number';
 
 import { BalancerNetworkConfig, BalancerDataRepositories } from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
+import { PoolSharesRepository } from './pool-shares/repository';
+import { GaugeSharesRepository } from './gauge-shares/repository';
 import { BlockNumberRepository } from './block-number';
 import {
   CoingeckoPriceRepository,
@@ -33,6 +37,8 @@ import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json'
 export class Data implements BalancerDataRepositories {
   pools;
   yesterdaysPools;
+  poolShares;
+  gaugeShares;
   tokenPrices;
   tokenMeta;
   liquidityGauges;
@@ -47,6 +53,18 @@ export class Data implements BalancerDataRepositories {
       url: networkConfig.urls.subgraph,
       chainId: networkConfig.chainId,
     });
+
+    this.poolShares = new PoolSharesRepository(
+      networkConfig.urls.subgraph,
+      networkConfig.chainId
+    );
+
+    if (networkConfig.urls.gaugesSubgraph) {
+      this.gaugeShares = new GaugeSharesRepository(
+        networkConfig.urls.gaugesSubgraph,
+        networkConfig.chainId
+      );
+    }
 
     // 🚨 yesterdaysPools is used to calculate swapFees accumulated over last 24 hours
     // TODO: find a better data source for that, eg: maybe DUNE once API is available
@@ -79,7 +97,8 @@ export class Data implements BalancerDataRepositories {
 
     const aaveRates = new AaveRates(
       networkConfig.addresses.contracts.multicall,
-      provider
+      provider,
+      networkConfig.chainId
     );
 
     this.tokenPrices = new TokenPriceProvider(coingeckoRepository, aaveRates);
@@ -125,6 +144,6 @@ export class Data implements BalancerDataRepositories {
       );
     }
 
-    this.tokenYields = new TokenYieldsRepository();
+    this.tokenYields = new TokenYieldsRepository(networkConfig.chainId);
   }
 }
