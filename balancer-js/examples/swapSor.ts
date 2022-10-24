@@ -1,13 +1,15 @@
 /**
- *  Example showing how to find a swap for a pair and use queryBatchSwap to check result on Vault.
+ *  Example showing how to find a swap for a pair using SOR directly
+ *  - Path only uses swaps: use queryBatchSwap on Vault to see result
+ *  - Path use join/exit: Use SDK functions to build calls to submit tx via Relayer
  */
 import dotenv from 'dotenv';
-import { BalancerSDK, Network, SwapTypes } from '../src/index';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { Wallet } from '@ethersproject/wallet';
 import { AddressZero } from '@ethersproject/constants';
+import { BalancerSDK, Network, SwapTypes, someJoinExit, buildRelayerCalls } from '../src/index';
+
 import { ADDRESSES } from '../src/test/lib/constants';
-import { someJoinExit, buildRelayerCalls } from '../src/modules/swaps/joinAndExit';
-import { Wallet } from 'ethers';
 
 dotenv.config();
 
@@ -16,9 +18,11 @@ const rpcUrl = `https://mainnet.infura.io/v3/${process.env.INFURA}`;
 const tokenIn = ADDRESSES[network].WETH.address;
 const tokenOut = ADDRESSES[network].auraBal?.address;
 const swapType = SwapTypes.SwapExactIn;
-const amount = parseFixed('0.84', 18);
+const amount = parseFixed('18.7777777', 18);
 
 async function swap() {
+    // The SOR will find paths including Weighted pool join/exits (currently only supported for ExactIn swap type)
+    const useJoinExitPaths = true;
 
     const balancer = new BalancerSDK({
         network,
@@ -33,31 +37,39 @@ async function swap() {
         swapType,
         amount,
         undefined,
-        swapType === SwapTypes.SwapExactIn // join/exit paths currently only supported for ExactIn
+        (useJoinExitPaths && swapType === SwapTypes.SwapExactIn) // join/exit paths currently only supported for ExactIn
     );
 
     if(swapInfo.returnAmount.isZero()) {
         console.log('No Swap');
         return;
     }
-
     // console.log(swapInfo.swaps);
+    // console.log(swapInfo.tokenAddresses);
+    console.log(`Return amount: `, swapInfo.returnAmount.toString());
+
     const pools = balancer.swaps.sor.getPools();
 
     if (swapType === SwapTypes.SwapExactIn && someJoinExit(pools, swapInfo.swaps, swapInfo.tokenAddresses)) {
+        console.log(`Swaps with join/exit paths. Must submit via Relayer.`);
         const key: any = process.env.TRADER_KEY;
         const wallet = new Wallet(key, balancer.sor.provider);
-        console.log(`Swaps with join/exit paths. Must submit via Relayer.`);
-        console.log(`Return amount: `, swapInfo.returnAmount.toString());
-        // console.log(swapInfo.tokenAddresses);
-        const signerAddr = '0xdf330Ccb1d8fE97D176850BC127D0101cBe4e932';
-        const relayerV4Address = '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA';
-        const wethAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
         const slippage = '50'; // 50 bsp = 0.5%
-        const relayerCallData = buildRelayerCalls(swapInfo, swapType, pools, signerAddr, relayerV4Address, wethAddress, slippage, undefined);
-        // console.log(relayerCallData.data); // Can be used to simulate tx on Tenderly
+        const relayerCallData = buildRelayerCalls(
+            swapInfo, 
+            swapType, 
+            pools, 
+            wallet.address, 
+            balancer.contracts.relayerV4!.address, 
+            balancer.networkConfig.addresses.tokens.wrappedNativeAsset, 
+            slippage, 
+            undefined
+        );
+        // Static calling Relayer doesn't return any useful values but will allow confirmation tx is ok
+        // relayerCallData.data can be used to simulate tx on Tenderly to see token balance change, etc
+        // console.log(relayerCallData.data);
         const result = await balancer.contracts.relayerV4?.connect(wallet).callStatic.multicall(relayerCallData.rawCalls);
-        console.log(result); // Doesn't return any useful result but will allow confirmation tx is ok
+        console.log(result);
     } else {
         console.log(`Swaps via Vault.`)
         const userAddress = AddressZero;
@@ -75,9 +87,6 @@ async function swap() {
         const { attributes } = transactionAttributes;
 
         try {
-            console.log(`Return amounts: `, swapInfo.returnAmount.toString());
-            console.log(swapInfo.swaps);
-            console.log(swapInfo.tokenAddresses);
             // Simulates a call to `batchSwap`, returning an array of Vault asset deltas.
             const deltas = await balancer.contracts.vault.callStatic.queryBatchSwap(
                 swapType,

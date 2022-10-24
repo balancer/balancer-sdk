@@ -12,6 +12,7 @@ export * from './modules/liquidity/liquidity.module';
 export * from './modules/sdk.module';
 export * from './modules/relayer/relayer.module';
 export * from './modules/swaps/swaps.module';
+export { someJoinExit, buildRelayerCalls } from './modules/swaps/joinAndExit';
 export * from './modules/subgraph/subgraph.module';
 export * from './modules/sor/sor.module';
 export * from './modules/pools';
