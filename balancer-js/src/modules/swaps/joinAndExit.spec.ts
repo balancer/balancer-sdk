@@ -142,6 +142,8 @@ describe(`Paths with join and exits.`, () => {
         sender: user,
         receiver: relayer,
         fromInternal: false,
+        hasTokenIn: true,
+        hasTokenOut: false,
       };
       expect(firstJoin).to.deep.eq(expectedJoin);
     });
@@ -213,6 +215,8 @@ describe(`Paths with join and exits.`, () => {
         sender: relayer,
         receiver: user,
         toInternal: false,
+        hasTokenIn: false,
+        hasTokenOut: true,
       };
       expect(swap).to.deep.eq(expectedSwap);
       expect(exit).to.deep.eq(expectedExit);
@@ -220,7 +224,6 @@ describe(`Paths with join and exits.`, () => {
   });
   context('orderActions', () => {
     it('exact in, join', async () => {
-      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = DAI.address;
       const tokenOut = pool1Bpt;
       const swapAmount = parseFixed('1280000', 18);
@@ -250,7 +253,7 @@ describe(`Paths with join and exits.`, () => {
         user,
         relayer
       );
-      const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
+      const orderedActions = orderActions(actions, assets);
       const join = orderedActions[0] as JoinAction;
       const count = getNumberOfOutputActions(orderedActions);
       const expectedJoin: JoinAction = {
@@ -266,13 +269,14 @@ describe(`Paths with join and exits.`, () => {
         sender: user,
         receiver: user,
         fromInternal: false,
+        hasTokenIn: true,
+        hasTokenOut: true,
       };
       expect(orderedActions.length).to.eq(actions.length);
       expect(count).to.eq(1);
       expect(join).to.deep.eq(expectedJoin);
     });
     it('exact in, exit', async () => {
-      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = pool1Bpt;
       const tokenOut = DAI.address;
       const swapAmount = '1280000000000000000000000';
@@ -302,7 +306,7 @@ describe(`Paths with join and exits.`, () => {
         user,
         relayer
       );
-      const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
+      const orderedActions = orderActions(actions, assets);
       const exit = orderedActions[0] as ExitAction;
       const expectedExit: ExitAction = {
         type: ActionType.Exit,
@@ -317,6 +321,8 @@ describe(`Paths with join and exits.`, () => {
         sender: user,
         receiver: user,
         toInternal: false,
+        hasTokenIn: true,
+        hasTokenOut: true,
       };
       expect(orderedActions.length).to.eq(actions.length);
       expect(exit).to.deep.eq(expectedExit);
@@ -328,7 +334,6 @@ describe(`Paths with join and exits.`, () => {
       //    DAI[swap]USDT (from External, to External)
       //    DAI[join]BPT (from External, to Internal)
       //    BPT[swap]USDT (from Internal, to External)
-      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = DAI.address;
       const tokenOut = USDT.address;
       const swaps = [
@@ -378,7 +383,7 @@ describe(`Paths with join and exits.`, () => {
         user,
         relayer
       );
-      const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
+      const orderedActions = orderActions(actions, assets);
       const join = orderedActions[0] as JoinAction;
       const batchSwapDirect = orderedActions[1] as BatchSwapAction;
       const batchSwapFromJoin = orderedActions[2] as BatchSwapAction;
@@ -417,11 +422,12 @@ describe(`Paths with join and exits.`, () => {
         sender: user,
         receiver: relayer,
         fromInternal: false,
+        hasTokenIn: true,
+        hasTokenOut: false,
       };
       expect(expectedJoin).to.deep.eq(join);
     });
     it('exact in, swap>exit', async () => {
-      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = USDT.address;
       const tokenOut = DAI.address;
       const swaps = [
@@ -462,7 +468,7 @@ describe(`Paths with join and exits.`, () => {
         user,
         relayer
       );
-      const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
+      const orderedActions = orderActions(actions, assets);
       const batchSwap = orderedActions[0] as BatchSwapAction;
       const exit = orderedActions[1] as ExitAction;
       const expectedExit: ExitAction = {
@@ -478,6 +484,8 @@ describe(`Paths with join and exits.`, () => {
         sender: relayer,
         receiver: user,
         toInternal: false,
+        hasTokenIn: false,
+        hasTokenOut: true,
       };
       expect(orderedActions.length).to.eq(2);
       expect(exit).to.deep.eq(expectedExit);
@@ -495,7 +503,6 @@ describe(`Paths with join and exits.`, () => {
       //    USDT[swap]DAI (from External, to Internal)
       //    DAI[join]BPT (from/to Internal)
       //    BPT[swap]USDC (from Internal, to External)
-      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = USDT.address;
       const tokenOut = USDC.address;
       const swaps = [
@@ -541,7 +548,7 @@ describe(`Paths with join and exits.`, () => {
         user,
         relayer
       );
-      const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
+      const orderedActions = orderActions(actions, assets);
       const batchSwapFirst = orderedActions[0] as BatchSwapAction;
       const join = orderedActions[1] as JoinAction;
       const batchSwapSecond = orderedActions[2] as BatchSwapAction;
@@ -576,6 +583,8 @@ describe(`Paths with join and exits.`, () => {
         sender: relayer,
         receiver: relayer,
         fromInternal: true,
+        hasTokenIn: false,
+        hasTokenOut: false,
       };
       expect(expectedJoin).to.deep.eq(join);
       const count = getNumberOfOutputActions(orderedActions);
@@ -586,7 +595,6 @@ describe(`Paths with join and exits.`, () => {
       //    USDT[swap]BPT
       //    BPT[exit]DAI
       //    DAI[swap]USDC
-      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = USDT.address;
       const tokenOut = USDC.address;
       const swaps = [
@@ -632,7 +640,7 @@ describe(`Paths with join and exits.`, () => {
         user,
         relayer
       );
-      const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
+      const orderedActions = orderActions(actions, assets);
       const batchSwapFirst = orderedActions[0] as BatchSwapAction;
       const exit = orderedActions[1] as ExitAction;
       const batchSwapSecond = orderedActions[2] as BatchSwapAction;
@@ -664,6 +672,8 @@ describe(`Paths with join and exits.`, () => {
         sender: relayer,
         receiver: relayer,
         toInternal: true,
+        hasTokenIn: false,
+        hasTokenOut: false,
       };
       expect(exit).to.deep.eq(expectedExit);
       expect(batchSwapSecond.type).to.eq(ActionType.BatchSwap);
@@ -680,7 +690,6 @@ describe(`Paths with join and exits.`, () => {
       // e.g.
       //    WETH[join]BPT[Swap]auraBAL
       //    WETH[Swap]auraBAL
-      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = WETH.address;
       const tokenOut = auraBAL.address;
       const swaps = [
@@ -727,7 +736,7 @@ describe(`Paths with join and exits.`, () => {
         relayer
       );
 
-      const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
+      const orderedActions = orderActions(actions, assets);
       const join = orderedActions[0] as JoinAction;
       const batchSwapFirst = orderedActions[1] as BatchSwapAction;
       const batchSwapSecond = orderedActions[2] as BatchSwapAction;
@@ -758,6 +767,8 @@ describe(`Paths with join and exits.`, () => {
         sender: user,
         receiver: relayer,
         fromInternal: false,
+        hasTokenIn: true,
+        hasTokenOut: false,
       };
       expect(expectedJoin).to.deep.eq(join);
       const count = getNumberOfOutputActions(orderedActions);
@@ -771,7 +782,6 @@ describe(`Paths with join and exits.`, () => {
       //    USDC[join]BPT (internal, external)
       //    Need minOut for both which equals total
       //    Swaps can be batched together and executed before joins
-      const swapType = SwapTypes.SwapExactIn;
       const tokenIn = USDT.address;
       const tokenOut = pool1Bpt;
       const swaps = [
@@ -828,7 +838,7 @@ describe(`Paths with join and exits.`, () => {
         relayer
       );
 
-      const orderedActions = orderActions(actions, tokenIn, tokenOut, assets);
+      const orderedActions = orderActions(actions, assets);
       const batchSwapFirst = orderedActions[0] as BatchSwapAction;
       const joinFirst = orderedActions[1] as JoinAction;
       const joinSecond = orderedActions[2] as JoinAction;
@@ -857,6 +867,8 @@ describe(`Paths with join and exits.`, () => {
         sender: relayer,
         receiver: user,
         fromInternal: true,
+        hasTokenIn: false,
+        hasTokenOut: true,
       };
       expect(expectedJoinFirst).to.deep.eq(joinFirst);
       const expectedJoinSecond: JoinAction = {
@@ -872,6 +884,8 @@ describe(`Paths with join and exits.`, () => {
         sender: relayer,
         receiver: user,
         fromInternal: true,
+        hasTokenIn: false,
+        hasTokenOut: true,
       };
       expect(expectedJoinSecond).to.deep.eq(joinSecond);
       const count = getNumberOfOutputActions(orderedActions);

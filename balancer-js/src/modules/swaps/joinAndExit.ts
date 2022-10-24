@@ -42,6 +42,8 @@ interface BaseAction {
   type: ActionType;
   minOut: string;
   assets: string[];
+  hasTokenIn: boolean;
+  hasTokenOut: boolean;
 }
 
 export interface JoinAction extends BaseAction {
@@ -75,8 +77,6 @@ export interface SwapAction extends BaseAction {
   swap: SwapV2;
   opRef: OutputReference[];
   amountIn: string;
-  hasTokenIn: boolean;
-  hasTokenOut: boolean;
   fromInternal: boolean;
   toInternal: boolean;
   sender: string;
@@ -88,8 +88,6 @@ export interface BatchSwapAction extends BaseAction {
   type: ActionType.BatchSwap;
   swaps: SwapV2[];
   opRef: OutputReference[];
-  hasTokenIn: boolean;
-  hasTokenOut: boolean;
   fromInternal: boolean;
   toInternal: boolean;
   limits: BigNumber[];
@@ -305,15 +303,7 @@ function getActionStep(
 export function getNumberOfOutputActions(actions: OrderedActions[]): number {
   let outputCount = 0;
   for (const a of actions) {
-    if (a.type === ActionType.BatchSwap) {
-      if (a.hasTokenOut) outputCount++;
-    } else if (a.type === ActionType.Exit || a.type === ActionType.Join) {
-      if (
-        a.actionStep === ActionStep.Direct ||
-        a.actionStep === ActionStep.TokenOut
-      )
-        outputCount++;
-    }
+    if (a.hasTokenOut) outputCount++;
   }
   return outputCount;
 }
@@ -321,41 +311,20 @@ export function getNumberOfOutputActions(actions: OrderedActions[]): number {
 /**
  * Categorize each action into a Join, Middle or Exit.
  * @param actions
- * @param tokenIn
- * @param tokenOut
  * @returns
  */
-export function categorizeActions(
-  actions: Actions[],
-  tokenIn: string,
-  tokenOut: string
-): Actions[] {
+export function categorizeActions(actions: Actions[]): Actions[] {
   const enterActions: Actions[] = [];
   const exitActions: Actions[] = [];
   const middleActions: Actions[] = [];
   for (const a of actions) {
-    // joins/exits with tokenIn can always be done first
-    if (
-      a.type === ActionType.Exit &&
-      a.bpt.toLowerCase() === tokenIn.toLowerCase()
-    )
-      enterActions.push(a);
-    else if (
-      a.type === ActionType.Join &&
-      a.tokenIn.toLowerCase() === tokenIn.toLowerCase()
-    )
-      enterActions.push(a);
-    // joins/exits with tokenOut (and not tokenIn) can always be done last
-    else if (
-      a.type === ActionType.Exit &&
-      a.tokenOut.toLowerCase() === tokenOut.toLowerCase()
-    )
-      exitActions.push(a);
-    else if (
-      a.type === ActionType.Join &&
-      a.bpt.toLowerCase() === tokenOut.toLowerCase()
-    )
-      exitActions.push(a);
+    if (a.type === ActionType.Exit || a.type === ActionType.Join) {
+      // joins/exits with tokenIn can always be done first
+      if (a.hasTokenIn) enterActions.push(a);
+      // joins/exits with tokenOut (and not tokenIn) can always be done last
+      else if (a.hasTokenOut) exitActions.push(a);
+      else middleActions.push(a);
+    }
     // All other actions will be chained inbetween
     else middleActions.push(a);
   }
@@ -458,18 +427,14 @@ export function batchSwapActions(
 /**
  * Organise Actions into order with least amount of calls.
  * @param actions
- * @param tokenIn
- * @param tokenOut
  * @param assets
  * @returns
  */
 export function orderActions(
   actions: Actions[],
-  tokenIn: string,
-  tokenOut: string,
   assets: string[]
 ): OrderedActions[] {
-  const categorizedActions = categorizeActions(actions, tokenIn, tokenOut);
+  const categorizedActions = categorizeActions(actions);
   const orderedActions = batchSwapActions(categorizedActions, assets);
   return orderedActions;
 }
@@ -593,15 +558,20 @@ function createJoinAction(
   );
   let sender = relayerAddress;
   let fromInternal = true;
+  let hasTokenIn = false;
   // If using mainTokenIn we can assume it comes from user
   if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn) {
     sender = user;
     fromInternal = false;
+    hasTokenIn = true;
   }
   let receiver = relayerAddress;
+  let hasTokenOut = false;
   // If using mainTokenOut we can assume it goes to user
-  if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenOut)
+  if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenOut) {
     receiver = user;
+    hasTokenOut = true;
+  }
 
   const joinAction: JoinAction = {
     type: ActionType.Join,
@@ -616,6 +586,8 @@ function createJoinAction(
     sender,
     receiver,
     fromInternal,
+    hasTokenIn,
+    hasTokenOut,
   };
   return [joinAction, newOpRefKey];
 }
@@ -660,14 +632,19 @@ function createExitAction(
     opRefKey
   );
   let sender = relayerAddress;
-  if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn)
+  let hasTokenIn = false;
+  if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn) {
     sender = user;
+    hasTokenIn = true;
+  }
   // Send to relayer unless this is main token out
+  let hasTokenOut = false;
   let toInternalBalance = true;
   let receiver = relayerAddress;
   if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenOut) {
     receiver = user;
     toInternalBalance = false;
+    hasTokenOut = true;
   }
 
   const exitAction: ExitAction = {
@@ -683,6 +660,8 @@ function createExitAction(
     sender,
     receiver,
     toInternal: toInternalBalance,
+    hasTokenIn,
+    hasTokenOut,
   };
   return [exitAction, newOpRefKey];
 }
@@ -825,16 +804,8 @@ function buildExitCall(
   // console.log(exitParams);
   const callData = Relayer.constructExitCall(exitParams);
   // These are used for final amount check
-  const amountOut =
-    action.actionStep === ActionStep.Direct ||
-    action.actionStep === ActionStep.TokenOut
-      ? minAmountsOut[exitTokenIndex]
-      : '0';
-  const amountIn =
-    action.actionStep === ActionStep.Direct ||
-    action.actionStep === ActionStep.TokenIn
-      ? bptAmtIn
-      : '0';
+  const amountOut = action.hasTokenOut ? minAmountsOut[exitTokenIndex] : '0';
+  const amountIn = action.hasTokenIn ? bptAmtIn : '0';
   return [callData, amountIn, amountOut];
 }
 
@@ -886,17 +857,8 @@ function buildJoinCall(
 
   const callData = Relayer.constructJoinCall(attributes);
   // These are used for final amount check
-  const amountOut =
-    action.actionStep === ActionStep.Direct ||
-    action.actionStep === ActionStep.TokenOut
-      ? bptAmountOut
-      : '0';
-
-  const amountIn =
-    action.actionStep === ActionStep.Direct ||
-    action.actionStep === ActionStep.TokenIn
-      ? maxAmountsIn[joinTokenIndex]
-      : '0';
+  const amountOut = action.hasTokenOut ? bptAmountOut : '0';
+  const amountIn = action.hasTokenIn ? maxAmountsIn[joinTokenIndex] : '0';
 
   return [callData, amountIn, amountOut];
 }
@@ -1004,12 +966,7 @@ export function buildRelayerCalls(
     relayerAddress
   );
   // Arrange action into order that will create minimal amount of calls
-  const orderedActions = orderActions(
-    actions,
-    swapInfo.tokenIn,
-    swapInfo.tokenOut,
-    swapInfo.tokenAddresses
-  );
+  const orderedActions = orderActions(actions, swapInfo.tokenAddresses);
 
   const calls: string[] = [];
   // These amounts are used to compare to expected amounts
