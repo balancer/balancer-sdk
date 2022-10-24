@@ -96,6 +96,13 @@ export const ADDRESSES = {
       symbol: 'waUSDT',
       slot: 52,
     },
+    WBTCWETH: {
+      id: '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e',
+      address: '0xa6f548df93de924d73be7d25dc02554c6bd66db5',
+      decimals: 18,
+      symbol: 'B-50WBTC-50WETH',
+      slot: 0,
+    },
   },
   [Network.KOVAN]: {
     // Visit https://balancer-faucet.on.fleek.co/#/faucet for test tokens
@@ -498,6 +505,13 @@ export const ADDRESSES = {
       address: '0x3d5981BDD8D3E49EB7BBDC1d2B156a3eE019c18e',
       decimals: 18,
       symbol: 'bbausd2',
+      slot: 0,
+    },
+    WBTCWETH: {
+      id: '0x16faf9f73748013155b7bc116a3008b57332d1e600020000000000000000005b',
+      address: '0x16faf9f73748013155b7bc116a3008b57332d1e6',
+      decimals: 18,
+      symbol: 'B-50WBTC-50WETH',
       slot: 0,
     },
   },
