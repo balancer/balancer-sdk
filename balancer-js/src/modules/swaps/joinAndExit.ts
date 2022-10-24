@@ -224,33 +224,18 @@ function getActionOutputRef(
 }
 
 /**
- * If the action contains tokenOut we need to use slippage to set limits
- * @param swapType
- * @param actionStep
+ * Use slippage to set min amount out
  * @param amountOut
  * @param slippage
  * @returns
  */
-function getActionMinOut(
-  swapType: SwapTypes,
-  actionStep: ActionStep,
-  amountOut: string,
-  slippage: string
-): string {
-  let minOut = '0';
-  if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenOut) {
-    if (swapType === SwapTypes.SwapExactIn)
-      minOut = subSlippage(
-        BigNumber.from(amountOut),
-        BigNumber.from(slippage)
-      ).toString();
-    else
-      minOut = addSlippage(
-        BigNumber.from(amountOut),
-        BigNumber.from(slippage)
-      ).toString();
-  }
-  return minOut;
+function getActionMinOut(amountOut: string, slippage: string): string {
+  // Currently only handle ExactIn swap. ExactOut would add slippage
+  // We should apply slippage to each swaps amountOut
+  return subSlippage(
+    BigNumber.from(amountOut),
+    BigNumber.from(slippage)
+  ).toString();
 }
 
 /**
@@ -503,7 +488,6 @@ export function orderActions(
  * @returns
  */
 export function getActions(
-  swapType: SwapTypes,
   tokenIn: string,
   tokenOut: string,
   swaps: SwapV2[],
@@ -524,7 +508,6 @@ export function getActions(
   for (const swap of swaps) {
     if (isJoin(swap, assets)) {
       const [joinAction, newOpRefKey] = createJoinAction(
-        swapType,
         swap,
         tokenInIndex,
         tokenOutIndex,
@@ -539,7 +522,6 @@ export function getActions(
       continue;
     } else if (isExit(swap, assets)) {
       const [exitAction, newOpRefKey] = createExitAction(
-        swapType,
         swap,
         tokenInIndex,
         tokenOutIndex,
@@ -554,7 +536,6 @@ export function getActions(
       continue;
     } else {
       const [swapAction, newOpRefKey] = createSwapAction(
-        swapType,
         swap,
         tokenInIndex,
         tokenOutIndex,
@@ -585,7 +566,6 @@ export function getActions(
  * @returns
  */
 function createJoinAction(
-  swapType: SwapTypes,
   swap: SwapV2,
   mainTokenInIndex: number,
   mainTokenOutIndex: number,
@@ -604,12 +584,7 @@ function createJoinAction(
   // Will get actual amount if input or chain amount if part of chain
   const amountIn = getActionAmount(swap, ActionType.Join, actionStep, opRefKey);
   // This will be 0 if not a mainTokenOut action otherwise amount using slippage
-  const minOut = getActionMinOut(
-    swapType,
-    actionStep,
-    swap.returnAmount ?? '0',
-    slippage
-  );
+  const minOut = getActionMinOut(swap.returnAmount ?? '0', slippage);
   // This will set opRef for next chained action if required
   const [opRef, newOpRefKey] = getActionOutputRef(
     actionStep,
@@ -659,7 +634,6 @@ function createJoinAction(
  * @returns
  */
 function createExitAction(
-  swapType: SwapTypes,
   swap: SwapV2,
   tokenInIndex: number,
   tokenOutIndex: number,
@@ -678,12 +652,7 @@ function createExitAction(
   // Will get actual amount if input or chain amount if part of chain
   const amountIn = getActionAmount(swap, ActionType.Exit, actionStep, opRefKey);
   // This will be 0 if not a mainTokenOut action otherwise amount using slippage
-  const minOut = getActionMinOut(
-    swapType,
-    actionStep,
-    swap.returnAmount ?? '0',
-    slippage
-  );
+  const minOut = getActionMinOut(swap.returnAmount ?? '0', slippage);
   // This will set opRef for next chained action if required
   const [opRef, newOpRefKey] = getActionOutputRef(
     actionStep,
@@ -733,7 +702,6 @@ function createExitAction(
  * @returns
  */
 function createSwapAction(
-  swapType: SwapTypes,
   swap: SwapV2,
   mainTokenInIndex: number,
   mainTokenOutIndex: number,
@@ -755,12 +723,7 @@ function createSwapAction(
   // Updates swap data to use chainedRef if required
   swap.amount = amountIn;
   // This will be 0 if not a mainTokenOut action otherwise amount using slippage
-  const minOut = getActionMinOut(
-    swapType,
-    actionStep,
-    swap.returnAmount ?? '0',
-    slippage
-  );
+  const minOut = getActionMinOut(swap.returnAmount ?? '0', slippage);
   // This will set opRef for next chained action if required
   const [opRef, newOpRefKey] = getActionOutputRef(
     actionStep,
@@ -916,7 +879,7 @@ function buildJoinCall(
       fromInternalBalance: action.fromInternal,
     },
     value: '0',
-    outputReferences: action.opRef.key ? action.opRef.key.toString() : '0',
+    outputReference: action.opRef.key ? action.opRef.key.toString() : '0',
   };
 
   // console.log(attributes);
@@ -1031,7 +994,6 @@ export function buildRelayerCalls(
 } {
   // For each 'swap' create a swap/join/exit action
   const actions = getActions(
-    swapType,
     swapInfo.tokenIn,
     swapInfo.tokenOut,
     swapInfo.swaps,

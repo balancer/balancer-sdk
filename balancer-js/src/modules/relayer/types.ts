@@ -40,7 +40,7 @@ export interface EncodeJoinPoolInput {
   recipient: string;
   joinPoolRequest: JoinPoolRequest;
   value: string;
-  outputReferences: string;
+  outputReference: string;
 }
 
 export interface EncodeUnwrapAaveStaticTokenInput {

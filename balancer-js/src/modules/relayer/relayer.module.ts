@@ -122,7 +122,7 @@ export class Relayer {
       params.recipient,
       params.joinPoolRequest,
       params.value,
-      params.outputReferences,
+      params.outputReference,
     ]);
   }
 

@@ -72,7 +72,6 @@ describe(`Paths with join and exits.`, () => {
         true
       );
       const actions = getActions(
-        swapType,
         tokenIn,
         tokenOut,
         swapWithJoinExit.swaps,
@@ -137,7 +136,8 @@ describe(`Paths with join and exits.`, () => {
         },
         amountIn: swapWithJoinExit.swaps[1].amount,
         actionStep: ActionStep.TokenIn,
-        minOut: '0',
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        minOut: swapWithJoinExit.swaps[1].returnAmount!.toString(),
         assets: swapWithJoinExit.tokenAddresses,
         sender: user,
         receiver: relayer,
@@ -160,7 +160,6 @@ describe(`Paths with join and exits.`, () => {
         true
       );
       const actions = getActions(
-        swapType,
         tokenIn,
         tokenOut,
         swapWithJoinExit.swaps,
@@ -193,7 +192,8 @@ describe(`Paths with join and exits.`, () => {
         receiver: relayer,
         isBptIn: false,
         assets: swapWithJoinExit.tokenAddresses,
-        minOut: '0',
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        minOut: swapWithJoinExit.swaps[0].returnAmount!.toString(),
       };
       const expectedExit: ExitAction = {
         type: ActionType.Exit,
@@ -241,7 +241,6 @@ describe(`Paths with join and exits.`, () => {
       ];
       const returnAmount = '639359779510000000000000';
       const actions = getActions(
-        swapType,
         tokenIn,
         tokenOut,
         swaps,
@@ -294,7 +293,6 @@ describe(`Paths with join and exits.`, () => {
       ];
       const returnAmount = '2557439736413850000000000';
       const actions = getActions(
-        swapType,
         tokenIn,
         tokenOut,
         swaps,
@@ -371,7 +369,6 @@ describe(`Paths with join and exits.`, () => {
         '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56',
       ];
       const actions = getActions(
-        swapType,
         tokenIn,
         tokenOut,
         swaps,
@@ -415,7 +412,7 @@ describe(`Paths with join and exits.`, () => {
         },
         amountIn: swaps[1].amount,
         actionStep: ActionStep.TokenIn,
-        minOut: '0',
+        minOut: swaps[1].returnAmount.toString(),
         assets,
         sender: user,
         receiver: relayer,
@@ -456,7 +453,6 @@ describe(`Paths with join and exits.`, () => {
       ];
       const returnAmount = '94961515248180000000000';
       const actions = getActions(
-        swapType,
         tokenIn,
         tokenOut,
         swaps,
@@ -536,7 +532,6 @@ describe(`Paths with join and exits.`, () => {
       ];
       const assets = [tokenIn, DAI.address, pool1Bpt, USDC.address];
       const actions = getActions(
-        swapType,
         tokenIn,
         tokenOut,
         swaps,
@@ -576,7 +571,7 @@ describe(`Paths with join and exits.`, () => {
         },
         amountIn: batchSwapFirst.opRef[0].key.toString(),
         actionStep: ActionStep.Middle,
-        minOut: '0',
+        minOut: swaps[1].returnAmount,
         assets,
         sender: relayer,
         receiver: relayer,
@@ -628,7 +623,6 @@ describe(`Paths with join and exits.`, () => {
       ];
       const assets = [tokenIn, pool1Bpt, DAI.address, USDC.address];
       const actions = getActions(
-        swapType,
         tokenIn,
         tokenOut,
         swaps,
@@ -665,7 +659,7 @@ describe(`Paths with join and exits.`, () => {
         ],
         amountIn: batchSwapFirst.opRef[0].key.toString(),
         actionStep: ActionStep.Middle,
-        minOut: '0',
+        minOut: swaps[1].returnAmount,
         assets: assets,
         sender: relayer,
         receiver: relayer,
@@ -723,7 +717,6 @@ describe(`Paths with join and exits.`, () => {
       ];
       const assets = [tokenIn, BAL8020BPT.address, tokenOut];
       const actions = getActions(
-        swapType,
         tokenIn,
         tokenOut,
         swaps,
@@ -760,7 +753,7 @@ describe(`Paths with join and exits.`, () => {
         },
         amountIn: swaps[0].amount,
         actionStep: ActionStep.TokenIn,
-        minOut: '0',
+        minOut: swaps[0].returnAmount,
         assets,
         sender: user,
         receiver: relayer,
@@ -825,7 +818,6 @@ describe(`Paths with join and exits.`, () => {
       ];
       const assets = [tokenIn, DAI.address, tokenOut, BAL.address];
       const actions = getActions(
-        swapType,
         tokenIn,
         tokenOut,
         swaps,
