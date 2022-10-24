@@ -17,13 +17,13 @@ type StateOverrides = {
 };
 
 export const simulateTransaction = async (
+  to: string,
+  data: string,
   userAddress: string,
-  encodedCallData: string,
   tokensIn: string[],
   chainId: number
 ): Promise<string> => {
   const { contracts } = networkAddresses(chainId);
-  const relayerAddress = contracts.relayer as string;
   const vaultAddress = contracts.vault as string;
 
   // Encode token balances and allowances overrides to max value before performing simulation
@@ -46,8 +46,8 @@ export const simulateTransaction = async (
     // -- Standard TX fields --
     network_id: chainId.toString(),
     from: userAddress,
-    to: relayerAddress,
-    input: encodedCallData,
+    to,
+    input: data,
     // gas: 8000000,
     // gas_price: '0',
     // value: '0',
@@ -83,6 +83,9 @@ const encodeBalanceAndAllowanceOverrides = async (
           value: {
             [`_balances[${userAddress}]`]: MaxUint256.toString(),
             [`_allowances[${userAddress}][${vaultAddress}]`]:
+              MaxUint256.toString(),
+            [`balanceOf[${userAddress}]`]: MaxUint256.toString(),
+            [`allowance[${userAddress}][${vaultAddress}]`]:
               MaxUint256.toString(),
           },
         },

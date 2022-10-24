@@ -286,8 +286,9 @@ export class Join {
     const amountsOut: string[] = [];
 
     const staticResult = await simulateTransaction(
-      userAddress,
+      this.relayer,
       callData,
+      userAddress,
       tokensIn,
       this.chainId
     );
