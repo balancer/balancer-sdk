@@ -116,7 +116,6 @@ const testFlow = async (
     userAddress,
     wrapMainTokens,
     slippage,
-    signer,
     authorisation
   );
 

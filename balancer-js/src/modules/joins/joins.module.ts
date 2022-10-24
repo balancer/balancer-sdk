@@ -13,10 +13,10 @@ import { Findable } from '../data/types';
 import { PoolGraph, Node } from './graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
+import { simulateTransaction } from '@/lib/utils/tenderlyHelper';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers, isSameAddress } from '@/lib/utils';
-import { JsonRpcSigner } from '@ethersproject/providers';
 import {
   SolidityMaths,
   _computeScalingFactor,
@@ -45,7 +45,6 @@ export class Join {
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
-    signer: JsonRpcSigner,
     authorisation?: string
   ): Promise<{
     to: string;
@@ -90,9 +89,10 @@ export class Join {
 
     // static call (or V4 special call) to get actual amounts for each root join
     const { amountsOut, totalAmountOut } = await this.amountsOutByJoinPath(
+      userAddress,
       queryData,
-      outputIndexes,
-      signer
+      tokens,
+      outputIndexes
     );
 
     const { minAmountsOut, totalMinAmountOut } = this.minAmountsOutByJoinPath(
@@ -274,32 +274,28 @@ export class Join {
     });
   };
 
-  async staticMulticall(
-    signer: JsonRpcSigner,
-    encodedMulticalls: string
-  ): Promise<string[]> {
-    const MAX_GAS_LIMIT = 8e6;
-    const gasLimit = MAX_GAS_LIMIT;
-
-    const staticResult = await signer.call({
-      to: this.relayer,
-      data: encodedMulticalls,
-      gasLimit,
-    });
-
-    return defaultAbiCoder.decode(['bytes[]'], staticResult)[0] as string[];
-  }
-
   /*
-  Static calls multicall and decodes each output of interest.
+  Simulate transaction and decodes each output of interest.
   */
   amountsOutByJoinPath = async (
+    userAddress: string,
     callData: string,
-    outputIndexes: number[],
-    signer: JsonRpcSigner
+    tokensIn: string[],
+    outputIndexes: number[]
   ): Promise<{ amountsOut: string[]; totalAmountOut: string }> => {
     const amountsOut: string[] = [];
-    const multicallResult = await this.staticMulticall(signer, callData);
+
+    const staticResult = await simulateTransaction(
+      userAddress,
+      callData,
+      tokensIn,
+      this.chainId
+    );
+
+    const multicallResult = defaultAbiCoder.decode(
+      ['bytes[]'],
+      staticResult
+    )[0] as string[];
 
     let totalAmountOut = BigNumber.from('0');
     // Decode each root output

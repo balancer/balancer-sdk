@@ -98,7 +98,6 @@ export class Pools implements Findable<PoolWithMethods> {
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
-    signer: JsonRpcSigner,
     authorisation?: string
   ): Promise<{
     to: string;
@@ -113,7 +112,6 @@ export class Pools implements Findable<PoolWithMethods> {
       userAddress,
       wrapMainTokens,
       slippage,
-      signer,
       authorisation
     );
   }
