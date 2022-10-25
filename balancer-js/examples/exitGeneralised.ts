@@ -87,7 +87,6 @@ async function exit() {
   const query = await balancer.pools.generalisedExit(
     bbausd2.id,
     amount,
-    signer,
     signerAddress,
     slippage,
     relayerAuth

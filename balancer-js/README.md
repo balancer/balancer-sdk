@@ -339,7 +339,6 @@ Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
    * @param userAddress     User address
    * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param signer          Signer (used for simulating tx to get accurate amounts)
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
    */
@@ -350,7 +349,6 @@ Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
-    signer: JsonRpcSigner,
     authorisation?: string
   ): Promise<{
     to: string;
@@ -436,7 +434,6 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
    *
    * @param poolId        Pool id
    * @param amount        Token amount in EVM scale
-   * @param signer        Signer (used for simulating tx to get accurate amounts)
    * @param userAddress   User address
    * @param slippage      Maximum slippage tolerance in bps i.e. 50 = 0.5%.
    * @param authorisation Optional auhtorisation call to be added to the chained transaction
@@ -445,7 +442,6 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
   async generalisedExit(
     poolId: string,
     amount: string,
-    signer: JsonRpcSigner,
     userAddress: string,
     slippage: string,
     authorisation?: string

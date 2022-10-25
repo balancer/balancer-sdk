@@ -130,7 +130,6 @@ export class Pools implements Findable<PoolWithMethods> {
   async generalisedExit(
     poolId: string,
     amount: string,
-    signer: JsonRpcSigner,
     userAddress: string,
     slippage: string,
     authorisation?: string
@@ -144,7 +143,6 @@ export class Pools implements Findable<PoolWithMethods> {
     return this.exitService.exitPool(
       poolId,
       amount,
-      signer,
       userAddress,
       slippage,
       authorisation

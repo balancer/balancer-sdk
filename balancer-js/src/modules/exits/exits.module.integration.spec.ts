@@ -20,7 +20,7 @@ import { JsonRpcSigner } from '@ethersproject/providers';
 const network = Network.GOERLI;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
-const blockNumber = 7710300;
+const blockNumber = 7827606;
 
 /*
  * Testing on MAINNET
@@ -105,7 +105,6 @@ const testFlow = async (
     await pools.generalisedExit(
       pool.id,
       amount,
-      signer,
       signerAddress,
       slippage,
       authorisation

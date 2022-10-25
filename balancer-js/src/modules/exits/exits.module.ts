@@ -13,10 +13,10 @@ import { Findable } from '../data/types';
 import { PoolGraph, Node } from '../joins/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
+import { simulateTransaction } from '@/lib/utils/tenderlyHelper';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
-import { JsonRpcSigner } from '@ethersproject/providers';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 export class Exit {
@@ -35,7 +35,6 @@ export class Exit {
   async exitPool(
     poolId: string,
     amountIn: string,
-    signer: JsonRpcSigner,
     userAddress: string,
     slippage: string,
     authorisation?: string
@@ -77,8 +76,9 @@ export class Exit {
 
     const { expectedAmountsOutByExitPath, minAmountsOutByExitPath } =
       await this.amountsOutByExitPath(
-        signer,
+        userAddress,
         staticCall.callData,
+        orderedNodes[0].address,
         staticCall.outputIndexes,
         slippage
       );
@@ -109,25 +109,27 @@ export class Exit {
 
   // Query amounts out through static call and return decoded result
   private amountsOutByExitPath = async (
-    signer: JsonRpcSigner,
+    userAddress: string,
     callData: string,
+    tokenIn: string,
     outputIndexes: number[],
     slippage: string
   ): Promise<{
     expectedAmountsOutByExitPath: string[];
     minAmountsOutByExitPath: string[];
   }> => {
-    const MAX_GAS_LIMIT = 8e6;
-    const staticCallResult = await signer.call({
-      to: this.relayer,
-      data: callData,
-      gasLimit: MAX_GAS_LIMIT,
-    });
+    const simulationResult = await simulateTransaction(
+      this.relayer,
+      callData,
+      userAddress,
+      [tokenIn],
+      this.chainId
+    );
 
     // Decode each exit path amount out from static call result
     const multiCallResult = defaultAbiCoder.decode(
       ['bytes[]'],
-      staticCallResult
+      simulationResult
     )[0] as string[];
 
     const expectedAmountsOutByExitPath = outputIndexes.map((outputIndex) => {

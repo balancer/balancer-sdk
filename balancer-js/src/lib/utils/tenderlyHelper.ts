@@ -35,12 +35,15 @@ export const simulateTransaction = async (
   );
 
   // Map encoded-state response into simulate request body by replacing property names
-  const state_objects = Object.fromEntries(
-    Object.keys(encodedStateOverrides).map((address) => {
-      // Object.fromEntries require format [key, value] instead of {key: value}
-      return [address, { storage: encodedStateOverrides[address].value }];
-    })
-  );
+  let state_objects;
+  if (encodedStateOverrides) {
+    state_objects = Object.fromEntries(
+      Object.keys(encodedStateOverrides).map((address) => {
+        // Object.fromEntries require format [key, value] instead of {key: value}
+        return [address, { storage: encodedStateOverrides[address].value }];
+      })
+    );
+  }
 
   const body = {
     // -- Standard TX fields --
@@ -72,7 +75,7 @@ const encodeBalanceAndAllowanceOverrides = async (
   tokens: string[],
   chainId: number,
   vaultAddress: string
-): Promise<StateOverrides> => {
+): Promise<StateOverrides | undefined> => {
   // Create balances and allowances overrides for each token address provided
   let stateOverrides: StateOverrides = {};
   tokens.forEach(
@@ -87,6 +90,8 @@ const encodeBalanceAndAllowanceOverrides = async (
             [`balanceOf[${userAddress}]`]: MaxUint256.toString(),
             [`allowance[${userAddress}][${vaultAddress}]`]:
               MaxUint256.toString(),
+            [`balances[${userAddress}]`]: MaxUint256.toString(),
+            [`allowed[${userAddress}][${vaultAddress}]`]: MaxUint256.toString(),
           },
         },
       })
@@ -99,7 +104,9 @@ const encodeBalanceAndAllowanceOverrides = async (
   };
 
   const encodedStatesResponse = await axios.post(ENCODE_STATES_URL, body, opts);
-  const encodedStateOverrides = encodedStatesResponse.data
-    .stateOverrides as StateOverrides;
+  const encodedStateOverrides = encodedStatesResponse.data.stateOverrides as
+    | StateOverrides
+    | undefined;
+
   return encodedStateOverrides;
 };
