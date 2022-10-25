@@ -195,7 +195,6 @@ async function testFlow(
 
       const callData = buildRelayerCalls(
         swapInfo,
-        swapType,
         pools,
         signerAddr,
         relayerV4Address,

@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from 'ethers';
-import { MaxInt256, MaxUint256 } from '@ethersproject/constants';
+import { AddressZero, MaxInt256, MaxUint256 } from '@ethersproject/constants';
 import {
   SubgraphPoolBase,
   SwapInfo,
@@ -124,6 +124,20 @@ function getOutputRef(key: number, index: number): OutputReference {
 
 function isBpt(pools: SubgraphPoolBase[], token: string): boolean {
   return pools.some((p) => p.address.toLowerCase() === token.toLowerCase());
+}
+
+export function canUseJoinExit(
+  swapType: SwapTypes,
+  tokenIn: string,
+  tokenOut: string
+): boolean {
+  if (
+    swapType === SwapTypes.SwapExactOut ||
+    tokenIn.toLowerCase() === AddressZero.toLowerCase() ||
+    tokenOut.toLowerCase() === AddressZero.toLowerCase()
+  )
+    return false;
+  else return true;
 }
 
 /**
@@ -873,7 +887,6 @@ function buildJoinCall(
  */
 function buildBatchSwapCall(
   action: BatchSwapAction,
-  swapType: SwapTypes.SwapExactIn,
   tokenIn: string,
   tokenOut: string
 ): [string[], string, string] {
@@ -897,10 +910,7 @@ function buildBatchSwapCall(
     toInternalBalance: action.toInternal,
   };
   const batchSwapInput: EncodeBatchSwapInput = {
-    swapType:
-      swapType === SwapTypes.SwapExactIn
-        ? SwapType.SwapExactIn
-        : SwapType.SwapExactOut,
+    swapType: SwapType.SwapExactIn,
     swaps: action.swaps,
     assets: action.assets,
     funds,
@@ -942,7 +952,6 @@ function buildBatchSwapCall(
  */
 export function buildRelayerCalls(
   swapInfo: SwapInfo,
-  swapType: SwapTypes.SwapExactIn,
   pools: SubgraphPoolBase[],
   user: string,
   relayerAddress: string,
@@ -1006,7 +1015,6 @@ export function buildRelayerCalls(
     if (action.type === ActionType.BatchSwap) {
       const [batchSwapCalls, amountIn, amountOut] = buildBatchSwapCall(
         action,
-        swapType,
         swapInfo.tokenIn,
         swapInfo.tokenOut
       );
@@ -1017,7 +1025,7 @@ export function buildRelayerCalls(
   }
 
   // Safety check to make sure amounts/limits from calls match expected
-  checkAmounts(amountsIn, amountsOut, swapType, swapInfo, slippage);
+  checkAmounts(amountsIn, amountsOut, swapInfo, slippage);
   // encode relayer multicall
   const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
     calls,
@@ -1033,7 +1041,6 @@ export function buildRelayerCalls(
 function checkAmounts(
   amountsIn: BigNumber[],
   amountsOut: BigNumber[],
-  swapType: SwapTypes,
   swapInfo: SwapInfo,
   slippage: string
 ): void {
@@ -1043,23 +1050,22 @@ function checkAmounts(
   const totalOut = amountsOut.reduce(
     (total = BigNumber.from(0), amount) => (total = total.add(amount))
   );
-  if (swapType === SwapTypes.SwapExactIn) {
-    // totalIn should equal the original input swap amount
-    // totalOut should equal the return amount from SOR minus any slippage allowance
-    // console.log(totalIn.toString(), 'totalIn');
-    // console.log(swapInfo.swapAmount.toString(), 'swapInfo.swapAmount');
-    // console.log(totalOut.toString(), 'totalOut');
-    // console.log(
-    //   subSlippage(swapInfo.returnAmount, BigNumber.from(slippage)).toString(),
-    //   'slippage'
-    // );
-    // console.log(swapInfo.returnAmount.toString(), 'swapInfo.returnAmount');
-    if (
-      !totalIn.eq(swapInfo.swapAmount) ||
-      !totalOut.eq(subSlippage(swapInfo.returnAmount, BigNumber.from(slippage)))
-    )
-      throw new BalancerError(BalancerErrorCode.RELAY_SWAP_AMOUNTS);
-  } else {
+  // totalIn should equal the original input swap amount
+  // totalOut should equal the return amount from SOR minus any slippage allowance
+  // console.log(totalIn.toString(), 'totalIn');
+  // console.log(swapInfo.swapAmount.toString(), 'swapInfo.swapAmount');
+  // console.log(totalOut.toString(), 'totalOut');
+  // console.log(
+  //   subSlippage(swapInfo.returnAmount, BigNumber.from(slippage)).toString(),
+  //   'slippage'
+  // );
+  // console.log(swapInfo.returnAmount.toString(), 'swapInfo.returnAmount');
+  if (
+    !totalIn.eq(swapInfo.swapAmount) ||
+    !totalOut.eq(subSlippage(swapInfo.returnAmount, BigNumber.from(slippage)))
+  )
+    throw new BalancerError(BalancerErrorCode.RELAY_SWAP_AMOUNTS);
+  /* ExactOut case
     // totalIn should equal the return amount from SOR (this is the amount in) plus any slippage allowance
     // totalOut should equal the original input swap amount (the exact amount out)
     if (
@@ -1069,5 +1075,5 @@ function checkAmounts(
       !totalOut.eq(swapInfo.swapAmount)
     )
       throw new BalancerError(BalancerErrorCode.RELAY_SWAP_AMOUNTS);
-  }
+    */
 }
