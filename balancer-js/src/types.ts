@@ -13,9 +13,13 @@ import type {
   PoolAttribute,
   TokenAttribute,
 } from '@/modules/data/types';
-import type { BaseFeeDistributor, ProtocolFeesProvider } from './modules/data';
+import type {
+  BaseFeeDistributor,
+  GaugeSharesRepository,
+  PoolSharesRepository,
+  ProtocolFeesProvider,
+} from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
-
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
 export * from '@/modules/data/types';
 export { Network, AprBreakdown };
@@ -51,6 +55,7 @@ export interface ContractAddresses {
   gaugeController?: string;
   feeDistributor?: string;
   relayerV4?: string;
+  veBal?: string;
   protocolFeePercentagesProvider?: string;
 }
 
@@ -88,6 +93,8 @@ export interface BalancerDataRepositories {
   feeCollector: Findable<number>;
   protocolFees?: ProtocolFeesProvider;
   tokenYields: Findable<number>;
+  poolShares: PoolSharesRepository;
+  gaugeShares?: GaugeSharesRepository;
 }
 
 export type PoolReference = {

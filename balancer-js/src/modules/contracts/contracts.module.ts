@@ -9,9 +9,10 @@ import {
   LidoRelayer__factory,
   LidoRelayer,
 } from '@balancer-labs/typechain';
-import { Multicall } from './multicall';
-import { ERC20 } from './ERC20';
-import { RelayerV4 } from './relayerV4';
+import { Multicall } from './implementations/multicall';
+import { ERC20 } from './implementations/ERC20';
+import { VeBal } from './implementations/veBAL';
+import { RelayerV4 } from './implementations/relayerV4';
 
 type ERC20Helper = (address: string, provider: Provider) => Contract;
 export interface ContractInstances {
@@ -20,6 +21,7 @@ export interface ContractInstances {
   multicall: Contract;
   ERC20: ERC20Helper;
   relayerV4: Contract | undefined;
+  veBal?: VeBal;
 }
 
 export class Contracts {
@@ -28,6 +30,7 @@ export class Contracts {
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
   relayerV4: Contract | undefined;
+  veBal?: VeBal;
 
   /**
    * Create instances of Balancer contracts connected to passed provider.
@@ -59,6 +62,8 @@ export class Contracts {
     this.multicall = Multicall(this.contractAddresses.multicall, provider);
     if (this.contractAddresses.relayerV4)
       this.relayerV4 = RelayerV4(this.contractAddresses.relayerV4, provider);
+
+    this.veBal = new VeBal(this.contractAddresses, provider);
   }
 
   /**
@@ -71,6 +76,7 @@ export class Contracts {
       multicall: this.multicall,
       ERC20: this.getErc20,
       relayerV4: this.relayerV4,
+      veBal: this.veBal,
     };
   }
 

@@ -2,7 +2,7 @@ import { Interface } from '@ethersproject/abi';
 import { Contract } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/providers';
 import { formatUnits } from '@ethersproject/units';
-import { Multicall } from '@/modules/contracts/multicall';
+import { Multicall } from '@/modules/contracts/implementations/multicall';
 import { yieldTokens } from '../token-yields/tokens/aave';
 import { Network } from '@/types';
 

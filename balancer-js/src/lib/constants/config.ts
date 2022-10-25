@@ -16,6 +16,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         relayerV4: '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
         protocolFeePercentagesProvider:
           '0x97207B095e4D5C9a6e4cfbfcd2C3358E03B90c4A',
+        veBal: '0xC128a9954e6c874eA3d62ce62B468bA073093F25',
       },
       tokens: {
         wrappedNativeAsset: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -96,6 +97,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x2cc8688C5f75E365aaEEb4ea8D6a480405A48D2A',
+        veBal: '0x16ba924752EF283C7946db8A122a6742AA35C1DC',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
@@ -154,6 +156,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
         gaugeController: '0xBB1CE49b16d55A1f2c6e88102f32144C7334B116',
         relayerV4: '0x00e695aA8000df01B8DC8401B4C34Fba5D56BBb2',
+        veBal: '0x33A99Dcc4C85C014cf12626959111D5898bbCAbF',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
@@ -163,7 +166,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-goerli',
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/blocklytics/goerli-blocks',
     },

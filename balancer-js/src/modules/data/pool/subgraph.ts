@@ -154,6 +154,7 @@ export class PoolsSubgraphRepository
       amp: subgraphPool.amp ?? undefined,
       owner: subgraphPool.owner ?? undefined,
       factory: subgraphPool.factory ?? undefined,
+      symbol: subgraphPool.symbol ?? undefined,
       tokens: (subgraphPool.tokens || []).map(this.mapToken),
       tokensList: subgraphPool.tokensList,
       tokenAddresses: (subgraphPool.tokens || []).map((t) => t.address),
