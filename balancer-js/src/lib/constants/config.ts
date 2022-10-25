@@ -13,6 +13,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
         gaugeController: '0xc128468b7ce63ea702c1f104d55a2566b13d3abd',
         feeDistributor: '0xD3cf852898b21fc233251427c2DC93d3d604F3BB',
+        relayerV4: '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
         protocolFeePercentagesProvider:
           '0x97207B095e4D5C9a6e4cfbfcd2C3358E03B90c4A',
         veBal: '0xC128a9954e6c874eA3d62ce62B468bA073093F25',
@@ -52,6 +53,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
+        relayerV4: '0x28A224d9d398a1eBB7BA69BCA515898966Bb1B6b',
       },
       tokens: {
         wrappedNativeAsset: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
@@ -73,6 +75,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
+        relayerV4: '0x5bf3B7c14b10f16939d63Bd679264A1Aa951B4D5',
       },
       tokens: {
         wrappedNativeAsset: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
@@ -152,6 +155,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
         gaugeController: '0xBB1CE49b16d55A1f2c6e88102f32144C7334B116',
+        relayerV4: '0x00e695aA8000df01B8DC8401B4C34Fba5D56BBb2',
         veBal: '0x33A99Dcc4C85C014cf12626959111D5898bbCAbF',
       },
       tokens: {
@@ -174,6 +178,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x2dc0e2aa608532da689e89e237df582b783e552c',
+        relayerV4: '0x1a58897Ab366082028ced3740900ecBD765Af738',
       },
       tokens: {
         wrappedNativeAsset: '0x4200000000000000000000000000000000000006',
