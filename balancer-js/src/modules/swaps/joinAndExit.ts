@@ -1,6 +1,6 @@
 import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero, MaxInt256, MaxUint256 } from '@ethersproject/constants';
 import {
   SubgraphPoolBase,
@@ -20,7 +20,7 @@ import { ExitPoolRequest } from '@/types';
 import { FundManagement, SwapType } from './types';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { AssetHelpers } from '@/lib/utils';
-import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
+import { subSlippage } from '@/lib/utils/slippageHelper';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
