@@ -727,7 +727,7 @@ export class Join {
 
     const call = Relayer.constructJoinCall({
       poolId: node.id,
-      poolKind: 0,
+      kind: 0,
       sender,
       recipient,
       value,

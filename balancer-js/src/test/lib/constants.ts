@@ -6,6 +6,9 @@ export const ADDRESSES = {
     BatchRelayer: {
       address: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
     },
+    BatchRelayerV4: {
+      address: '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
+    },
     ETH: {
       address: AddressZero,
       decimals: 18,
@@ -15,6 +18,7 @@ export const ADDRESSES = {
       address: '0xba100000625a3754423978a60c9317c58a424e3d',
       decimals: 18,
       symbol: 'BAL',
+      slot: 1,
     },
     USDC: {
       address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
@@ -101,6 +105,18 @@ export const ADDRESSES = {
       address: '0xa6f548df93de924d73be7d25dc02554c6bd66db5',
       decimals: 18,
       symbol: 'B-50WBTC-50WETH',
+      slot: 0,
+    },
+    auraBal: {
+      address: '0x616e8bfa43f920657b3497dbf40d6b1a02d4608d',
+      decimals: 18,
+      symbol: 'auraBal',
+      slot: 0,
+    },
+    BAL8020BPT: {
+      address: '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56',
+      decimals: 18,
+      symbol: 'BAL8020BPT',
       slot: 0,
     },
   },

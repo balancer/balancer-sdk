@@ -124,11 +124,9 @@ export class Relayer {
   }
 
   static encodeJoinPool(params: EncodeJoinPoolInput): string {
-    const relayerLibrary = new Interface(relayerLibraryAbi);
-
     return relayerLibrary.encodeFunctionData('joinPool', [
       params.poolId,
-      params.poolKind,
+      params.kind,
       params.sender,
       params.recipient,
       params.joinPoolRequest,
@@ -178,6 +176,15 @@ export class Relayer {
     return BigNumber.from(paddedPrefix).add(key);
   }
 
+  static fromChainedReference(ref: string, isTemporary = true): BigNumber {
+    const prefix = isTemporary
+      ? Relayer.CHAINED_REFERENCE_TEMP_PREFIX
+      : Relayer.CHAINED_REFERENCE_READONLY_PREFIX;
+    // The full padded prefix is 66 characters long, with 64 hex characters and the 0x prefix.
+    const paddedPrefix = `0x${prefix}${'0'.repeat(64 - prefix.length)}`;
+    return BigNumber.from(ref).sub(BigNumber.from(paddedPrefix));
+  }
+
   static constructExitCall(params: ExitPoolData): string {
     const {
       assets,
@@ -218,7 +225,7 @@ export class Relayer {
       userData,
       fromInternalBalance,
       poolId,
-      poolKind,
+      kind,
       sender,
       recipient,
       value,
@@ -234,7 +241,7 @@ export class Relayer {
 
     const joinPoolInput: EncodeJoinPoolInput = {
       poolId,
-      poolKind,
+      kind,
       sender,
       recipient,
       value,

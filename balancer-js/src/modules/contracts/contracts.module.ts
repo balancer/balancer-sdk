@@ -12,6 +12,7 @@ import {
 import { Multicall } from './implementations/multicall';
 import { ERC20 } from './implementations/ERC20';
 import { VeBal } from './implementations/veBAL';
+import { RelayerV4 } from './implementations/relayerV4';
 
 type ERC20Helper = (address: string, provider: Provider) => Contract;
 export interface ContractInstances {
@@ -19,6 +20,7 @@ export interface ContractInstances {
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
   ERC20: ERC20Helper;
+  relayerV4: Contract | undefined;
   veBal?: VeBal;
 }
 
@@ -27,6 +29,7 @@ export class Contracts {
   vault: Vault;
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
+  relayerV4: Contract | undefined;
   veBal?: VeBal;
 
   /**
@@ -57,6 +60,8 @@ export class Contracts {
     // These contracts aren't included in Balancer Typechain but are still useful.
     // TO DO - Possibly create via Typechain but seems unnecessary?
     this.multicall = Multicall(this.contractAddresses.multicall, provider);
+    if (this.contractAddresses.relayerV4)
+      this.relayerV4 = RelayerV4(this.contractAddresses.relayerV4, provider);
 
     this.veBal = new VeBal(this.contractAddresses, provider);
   }
@@ -70,6 +75,7 @@ export class Contracts {
       lidoRelayer: this.lidoRelayer,
       multicall: this.multicall,
       ERC20: this.getErc20,
+      relayerV4: this.relayerV4,
       veBal: this.veBal,
     };
   }
