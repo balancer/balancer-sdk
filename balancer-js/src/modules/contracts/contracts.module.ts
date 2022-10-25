@@ -12,6 +12,7 @@ import {
 import { Multicall } from './implementations/multicall';
 import { ERC20 } from './implementations/ERC20';
 import { VeBal } from './implementations/veBAL';
+import { VeBalProxy } from './implementations/veBAL-proxy';
 
 type ERC20Helper = (address: string, provider: Provider) => Contract;
 export interface ContractInstances {
@@ -20,6 +21,7 @@ export interface ContractInstances {
   multicall: Contract;
   ERC20: ERC20Helper;
   veBal?: VeBal;
+  veBalProxy?: VeBalProxy;
 }
 
 export class Contracts {
@@ -28,6 +30,7 @@ export class Contracts {
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
   veBal?: VeBal;
+  veBalProxy?: VeBalProxy;
 
   /**
    * Create instances of Balancer contracts connected to passed provider.
@@ -58,7 +61,13 @@ export class Contracts {
     // TO DO - Possibly create via Typechain but seems unnecessary?
     this.multicall = Multicall(this.contractAddresses.multicall, provider);
 
-    this.veBal = new VeBal(this.contractAddresses, provider);
+    if (this.contractAddresses.veBal) {
+      this.veBal = new VeBal(this.contractAddresses, provider);
+    }
+
+    if (this.contractAddresses.veBalProxy) {
+      this.veBalProxy = new VeBalProxy(this.contractAddresses, provider);
+    }
   }
 
   /**
@@ -71,6 +80,7 @@ export class Contracts {
       multicall: this.multicall,
       ERC20: this.getErc20,
       veBal: this.veBal,
+      veBalProxy: this.veBalProxy,
     };
   }
 

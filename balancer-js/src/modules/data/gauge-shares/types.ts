@@ -13,5 +13,6 @@ export interface GaugeShare {
     id: string;
     poolId?: string;
     isKilled: boolean;
+    totalSupply: string;
   };
 }

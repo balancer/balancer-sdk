@@ -30,6 +30,7 @@ export class GaugeSharesRepository extends GaugesSubgraphRepository<
         id: subgraphGaugeShare.gauge.id,
         poolId: subgraphGaugeShare.gauge.poolId || undefined,
         isKilled: subgraphGaugeShare.gauge.isKilled,
+        totalSupply: subgraphGaugeShare.gauge.totalSupply,
       },
     };
   }

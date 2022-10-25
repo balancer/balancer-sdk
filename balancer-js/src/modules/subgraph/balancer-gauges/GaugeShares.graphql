@@ -34,5 +34,6 @@ fragment SubgraphGaugeShare on GaugeShare {
       isKilled
       poolId
       poolAddress
+      totalSupply
     }
 }

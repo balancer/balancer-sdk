@@ -55,6 +55,7 @@ export interface ContractAddresses {
   gaugeController?: string;
   feeDistributor?: string;
   veBal?: string;
+  veBalProxy?: string;
   protocolFeePercentagesProvider?: string;
 }
 
