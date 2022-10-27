@@ -21,6 +21,7 @@ import type {
 } from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
+import { OnChainPoolsRepository } from '@/modules/sor/pool-data/subgraphPoolDataService';
 export * from '@/modules/data/types';
 export { Network, AprBreakdown };
 
@@ -85,6 +86,7 @@ export interface BalancerNetworkConfig {
 
 export interface BalancerDataRepositories {
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  poolsForSor: OnChainPoolsRepository;
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
   tokenMeta: Findable<Token, TokenAttribute>;

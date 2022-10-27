@@ -14,6 +14,7 @@ export * from './block-number';
 
 import { BalancerNetworkConfig, BalancerDataRepositories } from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
+import { OnChainPoolsRepository } from '../sor/pool-data/subgraphPoolDataService';
 import { PoolSharesRepository } from './pool-shares/repository';
 import { GaugeSharesRepository } from './gauge-shares/repository';
 import { BlockNumberRepository } from './block-number';
@@ -36,6 +37,7 @@ import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json'
 
 export class Data implements BalancerDataRepositories {
   pools;
+  poolsForSor;
   yesterdaysPools;
   poolShares;
   gaugeShares;
@@ -53,6 +55,13 @@ export class Data implements BalancerDataRepositories {
       url: networkConfig.urls.subgraph,
       chainId: networkConfig.chainId,
     });
+
+    this.poolsForSor = new OnChainPoolsRepository(
+      networkConfig.urls.subgraph,
+      networkConfig.addresses.contracts.multicall,
+      networkConfig.addresses.contracts.vault,
+      provider
+    );
 
     this.poolShares = new PoolSharesRepository(
       networkConfig.urls.subgraph,

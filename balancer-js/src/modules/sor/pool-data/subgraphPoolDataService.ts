@@ -1,5 +1,6 @@
 import { PoolDataService, SubgraphPoolBase } from '@balancer-labs/sor';
 import {
+  createSubgraphClient,
   OrderDirection,
   Pool_OrderBy,
   SubgraphClient,
@@ -88,6 +89,42 @@ export class SubgraphPoolDataService implements PoolDataService {
       orderDirection: OrderDirection.Desc,
       first: 1000,
     });
+
+    return pools;
+  }
+}
+
+export class OnChainPoolsRepository implements PoolDataService {
+  private client: SubgraphClient;
+
+  constructor(
+    url: string,
+    private readonly multicall: string,
+    private readonly vault: string,
+    private readonly provider: Provider
+  ) {
+    this.client = createSubgraphClient(url);
+  }
+
+  public async getPools(): Promise<SubgraphPoolBase[]> {
+    const pools = await this.getLinearPools();
+    const mapped = mapPools(pools);
+    return getOnChainBalances(
+      mapped,
+      this.multicall,
+      this.vault,
+      this.provider
+    );
+  }
+
+  private async getLinearPools() {
+    const { pool0, pool1000, pool2000 } = await this.client.AllPools({
+      where: { swapEnabled: true, totalShares_gt: '0' },
+      orderBy: Pool_OrderBy.TotalLiquidity,
+      orderDirection: OrderDirection.Desc,
+    });
+
+    const pools = [...pool0, ...pool1000, ...pool2000];
 
     return pools;
   }
