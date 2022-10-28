@@ -385,6 +385,12 @@ export const ADDRESSES = {
     },
   },
   [Network.GOERLI]: {
+    USDC_old: {
+      address: '0xe0c9275e44ea80ef17579d33c55136b7da269aeb',
+      decimals: 6,
+      symbol: 'USDC_old',
+      slot: 0,
+    },
     USDC: {
       address: '0xdabd33683bafdd448968ab6d6f47c3535c64bf0c',
       decimals: 6,
@@ -402,6 +408,12 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'DAI',
       slot: 0,
+    },
+    BAL: {
+      address: '0xfa8449189744799ad2ace7e0ebac8bb7575eff47',
+      decimals: 18,
+      symbol: 'BAL',
+      slot: 1,
     },
     bbausd: {
       address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
@@ -474,6 +486,12 @@ export const ADDRESSES = {
       symbol: 'bbausdc',
       slot: 0,
     },
+    bbausdt: {
+      address: '0xd03d4d8b4669d135569215dd6c4e790307c8e14b',
+      decimals: 18,
+      symbol: 'bbausdt',
+      slot: 0,
+    },
     bbamai: {
       id: '0x24c52fee349194f68a998ac4e2ce170d780d010c0000000000000000000001a1',
       address: '0x24C52feE349194f68A998aC4E2ce170D780D010c',
@@ -528,6 +546,41 @@ export const ADDRESSES = {
       address: '0x16faf9f73748013155b7bc116a3008b57332d1e6',
       decimals: 18,
       symbol: 'B-50WBTC-50WETH',
+      slot: 0,
+    },
+    boostedWeightedSimple1: {
+      id: '0xd625c90154084cf1417227bbdea4ef151f746995000200000000000000000272',
+      address: '0xd625c90154084cf1417227bbdea4ef151f746995',
+      decimals: 18,
+      symbol: 'BWS1',
+      slot: 0,
+    },
+    boostedWeightedGeneral1: {
+      id: '0x42827c5452a8f4f13f4d5a1048dbfc58c77e98f5000100000000000000000273',
+      address: '0x42827c5452a8f4f13f4d5a1048dbfc58c77e98f5',
+      decimals: 18,
+      symbol: 'BWG1',
+      slot: 0,
+    },
+    boostedWeightedMeta1: {
+      id: '0x3b01654804b0cea899d5edf8fd7000fe1c0911bd000200000000000000000274',
+      address: '0x3b01654804b0cea899d5edf8fd7000fe1c0911bd',
+      decimals: 18,
+      symbol: 'BWM1',
+      slot: 0,
+    },
+    boostedWeightedMetaAlt1: {
+      id: '0x5f037eadf5cd0bc5fc198e6020f33f21a9361fc8000200000000000000000275',
+      address: '0x5f037eadf5cd0bc5fc198e6020f33f21a9361fc8',
+      decimals: 18,
+      symbol: 'BWMA1',
+      slot: 0,
+    },
+    boostedWeightedMetaGeneral1: {
+      id: '0xe0baf79433d233c26b41cac99ddcd73830f257e5000100000000000000000276',
+      address: '0xe0baf79433d233c26b41cac99ddcd73830f257e5',
+      decimals: 18,
+      symbol: 'BWMG1',
       slot: 0,
     },
   },

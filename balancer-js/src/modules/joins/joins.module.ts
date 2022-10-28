@@ -23,6 +23,7 @@ import {
   _upscale,
 } from '@/lib/utils/solidityMaths';
 import { calcPriceImpact } from '../pricing/priceImpact';
+import { WeightedPoolEncoder } from '@/pool-weighted';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 export class Join {
@@ -421,10 +422,6 @@ export class Join {
       wrapMainTokens
     );
 
-    if (rootNode.type !== PoolType.ComposableStable) {
-      throw new Error('root pool type should be ComposableStable');
-    }
-
     if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
 
     const orderedNodes = PoolGraph.orderByBfs(rootNode).reverse();
@@ -772,10 +769,18 @@ export class Join {
       ];
     }
 
-    const userData = StablePoolEncoder.joinExactTokensInForBPTOut(
-      userDataAmounts,
-      minAmountOut
-    );
+    let userData: string;
+    if (node.type === PoolType.Weighted) {
+      userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
+        userDataAmounts,
+        minAmountOut
+      );
+    } else {
+      userData = StablePoolEncoder.joinExactTokensInForBPTOut(
+        userDataAmounts,
+        minAmountOut
+      );
+    }
 
     // TODO: add test to join weth/wsteth pool using ETH
     const ethIndex = sortedTokens.indexOf(AddressZero);
