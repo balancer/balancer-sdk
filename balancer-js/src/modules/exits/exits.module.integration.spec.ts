@@ -10,15 +10,15 @@ import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
 
-const TEST_BOOSTED = false;
-const TEST_BOOSTED_META = false;
-const TEST_BOOSTED_META_ALT = false;
-const TEST_BOOSTED_META_BIG = false;
-const TEST_BOOSTED_WEIGHTED_SIMPLE = false;
-const TEST_BOOSTED_WEIGHTED_GENERAL = false;
-const TEST_BOOSTED_WEIGHTED_META = false;
+const TEST_BOOSTED = true;
+const TEST_BOOSTED_META = true;
+const TEST_BOOSTED_META_ALT = true;
+const TEST_BOOSTED_META_BIG = true;
+const TEST_BOOSTED_WEIGHTED_SIMPLE = true;
+const TEST_BOOSTED_WEIGHTED_GENERAL = true;
+const TEST_BOOSTED_WEIGHTED_META = true;
 const TEST_BOOSTED_WEIGHTED_META_ALT = true;
-const TEST_BOOSTED_WEIGHTED_META_GENERAL = false;
+const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 
 /*
  * Testing on GOERLI
