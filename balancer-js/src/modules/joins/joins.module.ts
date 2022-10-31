@@ -124,7 +124,7 @@ export class Join {
     };
   }
 
-  // Create one exit path for each output node
+  // Create join paths from tokensIn all the way to the root node.
   private getJoinPaths = (
     orderedNodes: Node[],
     tokensIn: string[],
@@ -132,18 +132,21 @@ export class Join {
   ): Node[][] => {
     const joinPaths: Node[][] = [];
 
+    // Filter all nodes that contain a token in the tokensIn array
     const inputNodes = orderedNodes.filter((node) =>
       tokensIn
         .map((tokenIn) => tokenIn.toLowerCase())
         .includes(node.address.toLowerCase())
     );
-    const leafInputNodes = inputNodes.filter((node) => node.isLeaf);
-    const nonLeafInputNodes = inputNodes.filter((node) => !node.isLeaf);
 
-    if (leafInputNodes.length > 0) {
+    // If inputNodes contain at least one leaf token, then add path to join proportionally with all leaf tokens contained in tokensIn
+    const containsLeafNode = inputNodes.some((node) => node.isLeaf);
+    if (containsLeafNode) {
       joinPaths.push(orderedNodes);
     }
 
+    // Add a join path for each non-leaf input node
+    const nonLeafInputNodes = inputNodes.filter((node) => !node.isLeaf);
     nonLeafInputNodes.forEach((nonLeafInputNode) => {
       // Get amount in for current node
       const nonLeafAmountIn = amountsIn.find((amountIn, i) =>
@@ -183,13 +186,16 @@ export class Join {
       joinPaths.push(nonLeafJoinPath);
     });
 
+    // After creating all join paths, update the index of each input node to be the amount in for that node
+    // All other node indexes will be used as a reference to store the amounts out for that node
     this.updateInputAmounts(joinPaths, tokensIn, amountsIn);
 
     return joinPaths;
   };
 
   /*
-  AmountsIn should be adjusted after being split between tokensIn to fix eventual rounding issues
+  AmountsIn should be adjusted after being split between tokensIn to fix eventual rounding issues.
+  This prevents the transaction to leave out dust amounts.
   */
   updateInputAmounts = (
     joinPaths: Node[][],
