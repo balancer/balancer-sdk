@@ -13,7 +13,6 @@ import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
 import { Join } from '../joins/joins.module';
-import { JsonRpcSigner } from '@ethersproject/providers';
 import { Exit } from '../exits/exits.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
