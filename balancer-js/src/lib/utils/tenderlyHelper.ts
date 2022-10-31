@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import axios from 'axios';
-import { MaxUint256 } from '@ethersproject/constants';
+import { MaxInt256 } from '@ethersproject/constants';
 import { networkAddresses } from '@/lib/constants/config';
 
 dotenv.config();
@@ -35,15 +35,12 @@ export const simulateTransaction = async (
   );
 
   // Map encoded-state response into simulate request body by replacing property names
-  let state_objects;
-  if (encodedStateOverrides) {
-    state_objects = Object.fromEntries(
-      Object.keys(encodedStateOverrides).map((address) => {
-        // Object.fromEntries require format [key, value] instead of {key: value}
-        return [address, { storage: encodedStateOverrides[address].value }];
-      })
-    );
-  }
+  const state_objects = Object.fromEntries(
+    Object.keys(encodedStateOverrides).map((address) => {
+      // Object.fromEntries require format [key, value] instead of {key: value}
+      return [address, { storage: encodedStateOverrides[address].value }];
+    })
+  );
 
   const body = {
     // -- Standard TX fields --
@@ -75,7 +72,9 @@ const encodeBalanceAndAllowanceOverrides = async (
   tokens: string[],
   chainId: number,
   vaultAddress: string
-): Promise<StateOverrides | undefined> => {
+): Promise<StateOverrides> => {
+  if (tokens.length === 0) return {};
+
   // Create balances and allowances overrides for each token address provided
   let stateOverrides: StateOverrides = {};
   tokens.forEach(
@@ -84,14 +83,14 @@ const encodeBalanceAndAllowanceOverrides = async (
         ...stateOverrides,
         [`${token}`]: {
           value: {
-            [`_balances[${userAddress}]`]: MaxUint256.toString(),
+            [`_balances[${userAddress}]`]: MaxInt256.toString(),
             [`_allowances[${userAddress}][${vaultAddress}]`]:
-              MaxUint256.toString(),
-            [`balanceOf[${userAddress}]`]: MaxUint256.toString(),
+              MaxInt256.toString(),
+            [`balanceOf[${userAddress}]`]: MaxInt256.toString(),
             [`allowance[${userAddress}][${vaultAddress}]`]:
-              MaxUint256.toString(),
-            [`balances[${userAddress}]`]: MaxUint256.toString(),
-            [`allowed[${userAddress}][${vaultAddress}]`]: MaxUint256.toString(),
+              MaxInt256.toString(),
+            [`balances[${userAddress}]`]: MaxInt256.toString(),
+            [`allowed[${userAddress}][${vaultAddress}]`]: MaxInt256.toString(),
           },
         },
       })
@@ -104,9 +103,19 @@ const encodeBalanceAndAllowanceOverrides = async (
   };
 
   const encodedStatesResponse = await axios.post(ENCODE_STATES_URL, body, opts);
-  const encodedStateOverrides = encodedStatesResponse.data.stateOverrides as
-    | StateOverrides
-    | undefined;
+  const encodedStateOverrides = encodedStatesResponse.data
+    .stateOverrides as StateOverrides;
+
+  if (
+    !encodedStateOverrides ||
+    Object.keys(encodedStateOverrides).length !== tokens.length ||
+    Object.keys(encodedStateOverrides).some((k) => {
+      return Object.keys(encodedStateOverrides[k].value).length !== 2;
+    })
+  )
+    throw new Error(
+      "Couldn't encode state overrides - contracts should be verified and whitelisted on Tenderly - states should match the ones in the contracts"
+    );
 
   return encodedStateOverrides;
 };

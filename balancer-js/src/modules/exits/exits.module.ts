@@ -7,6 +7,7 @@ import { MaxInt256, WeiPerEther, Zero } from '@ethersproject/constants';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
+import { WeightedPoolEncoder } from '@/pool-weighted';
 import { StablePoolEncoder } from '@/pool-stable';
 import { ExitPoolRequest, Pool, PoolAttribute, PoolType } from '@/types';
 import { Findable } from '../data/types';
@@ -193,10 +194,6 @@ export class Exit {
 
     // should always exit to main tokens, so wrapMainTokens is always false
     const rootNode = await poolsGraph.buildGraphFromRootPool(poolId, false);
-
-    if (rootNode.type !== PoolType.ComposableStable) {
-      throw new Error('root pool type should be ComposableStable');
-    }
 
     if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
 
@@ -484,10 +481,18 @@ export class Exit {
       ];
     }
 
-    const userData = StablePoolEncoder.exitExactBPTInForOneTokenOut(
-      amountIn,
-      userDataTokens.indexOf(tokenOut)
-    );
+    let userData: string;
+    if (node.type === PoolType.Weighted) {
+      userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(
+        amountIn,
+        userDataTokens.indexOf(tokenOut)
+      );
+    } else {
+      userData = StablePoolEncoder.exitExactBPTInForOneTokenOut(
+        amountIn,
+        userDataTokens.indexOf(tokenOut)
+      );
+    }
 
     const outputReferences = [
       {

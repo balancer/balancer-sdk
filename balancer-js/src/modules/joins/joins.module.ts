@@ -23,6 +23,7 @@ import {
   _upscale,
 } from '@/lib/utils/solidityMaths';
 import { calcPriceImpact } from '../pricing/priceImpact';
+import { WeightedPoolEncoder } from '@/pool-weighted';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 export class Join {
@@ -123,7 +124,7 @@ export class Join {
     };
   }
 
-  // Create one exit path for each output node
+  // Create join paths from tokensIn all the way to the root node.
   private getJoinPaths = (
     orderedNodes: Node[],
     tokensIn: string[],
@@ -131,22 +132,38 @@ export class Join {
   ): Node[][] => {
     const joinPaths: Node[][] = [];
 
+    // Filter all nodes that contain a token in the tokensIn array
     const inputNodes = orderedNodes.filter((node) =>
       tokensIn
         .map((tokenIn) => tokenIn.toLowerCase())
         .includes(node.address.toLowerCase())
     );
-    const leafInputNodes = inputNodes.filter((node) => node.isLeaf);
-    const nonLeafInputNodes = inputNodes.filter((node) => !node.isLeaf);
 
-    if (leafInputNodes.length > 0) {
+    // If inputNodes contain at least one leaf token, then add path to join proportionally with all leaf tokens contained in tokensIn
+    const containsLeafNode = inputNodes.some((node) => node.isLeaf);
+    if (containsLeafNode) {
       joinPaths.push(orderedNodes);
     }
 
+    // Add a join path for each non-leaf input node
+    const nonLeafInputNodes = inputNodes.filter((node) => !node.isLeaf);
     nonLeafInputNodes.forEach((nonLeafInputNode) => {
+      // Get amount in for current node
       const nonLeafAmountIn = amountsIn.find((amountIn, i) =>
         isSameAddress(tokensIn[i], nonLeafInputNode.address)
       ) as string;
+      // Split amount in between nodes with same non-leaf input token based on proportionOfParent
+      const totalProportions = nonLeafInputNodes
+        .filter((node) => isSameAddress(node.address, nonLeafInputNode.address))
+        .reduce(
+          (total, node) => total.add(node.proportionOfParent),
+          BigNumber.from(0)
+        );
+      const proportionalNonLeafAmountIn = BigNumber.from(nonLeafAmountIn)
+        .mul(nonLeafInputNode.proportionOfParent)
+        .div(totalProportions)
+        .toString();
+      // Create input node for current non-leaf input token
       const [inputTokenNode] = PoolGraph.createInputTokenNode(
         0, // temp value that will be updated after creation
         nonLeafInputNode.address,
@@ -154,19 +171,89 @@ export class Join {
         nonLeafInputNode.parent,
         WeiPerEther
       );
-      inputTokenNode.index = nonLeafAmountIn;
+      // Update index to be actual amount in
+      inputTokenNode.index = proportionalNonLeafAmountIn;
+      inputTokenNode.isLeaf = false;
+      // Start join path with input node
       const nonLeafJoinPath = [inputTokenNode];
+      // Add each parent to the join path until we reach the root node
       let parent = nonLeafInputNode.parent;
       while (parent) {
         nonLeafJoinPath.push(cloneDeep(parent));
         parent = parent.parent;
       }
+      // Add join path to list of join paths
       joinPaths.push(nonLeafJoinPath);
     });
 
-    // TODO: proportionally split input amount between nonLeafInputNodes that contain the same token
+    // After creating all join paths, update the index of each input node to be the amount in for that node
+    // All other node indexes will be used as a reference to store the amounts out for that node
+    this.updateInputAmounts(joinPaths, tokensIn, amountsIn);
 
     return joinPaths;
+  };
+
+  /*
+  AmountsIn should be adjusted after being split between tokensIn to fix eventual rounding issues.
+  This prevents the transaction to leave out dust amounts.
+  */
+  updateInputAmounts = (
+    joinPaths: Node[][],
+    tokensIn: string[],
+    amountsIn: string[]
+  ): void => {
+    // Helper function to calculate and adjust amount difference for each token in
+    const ajdustAmountInDiff = (
+      tokenInInputNodes: Node[],
+      amountIn: string
+    ): void => {
+      if (tokenInInputNodes.length > 1) {
+        // Sum of amountsIn from each input node with same tokenIn
+        const amountsInSumforTokenIn = tokenInInputNodes.reduce(
+          (sum, currentNode) => sum.add(currentNode.index),
+          BigNumber.from(0)
+        );
+        // Compare total amountIn with sum of amountIn split between each input node with same tokenIn
+        const diff = BigNumber.from(amountIn).sub(amountsInSumforTokenIn);
+        // Apply difference to first input node with same tokenIn
+        tokenInInputNodes[0].index = diff
+          .add(tokenInInputNodes[0].index)
+          .toString();
+      }
+    };
+
+    // Update amountsIn within leaf join path
+    const leafJoinPath = joinPaths.find((joinPath) => joinPath[0].isLeaf);
+    if (leafJoinPath) {
+      // Update input proportions so inputs are shared correctly between leaf nodes with same tokenIn
+      this.updateTotalProportions(leafJoinPath);
+      // Update input nodes to have correct input amount
+      leafJoinPath.forEach((node) => {
+        if (node.joinAction === 'input')
+          node = this.updateNodeAmount(node, tokensIn, amountsIn);
+      });
+      // Adjust amountIn for each tokenIn to fix eventual rounding issues
+      tokensIn.forEach((tokenIn, i) => {
+        const tokenInInputNodes = leafJoinPath.filter(
+          (inputNode) =>
+            inputNode.isLeaf && isSameAddress(inputNode.address, tokenIn)
+        );
+        ajdustAmountInDiff(tokenInInputNodes, amountsIn[i]);
+      });
+    }
+
+    // Adjust amountsIn shared between non-leaf join paths with same tokenIn
+    const nonLeafJoinPaths = joinPaths.filter(
+      (joinPath) => !joinPath[0].isLeaf
+    );
+    if (nonLeafJoinPaths.length > 1) {
+      tokensIn.forEach((tokenIn, i) => {
+        const tokenInInputNodes = nonLeafJoinPaths
+          .map((path) => path[0])
+          .filter((node) => isSameAddress(node.address, tokenIn));
+        ajdustAmountInDiff(tokenInInputNodes, amountsIn[i]);
+      });
+    }
   };
 
   createCalls = async (
@@ -259,21 +346,6 @@ export class Join {
     return bptOut;
   };
 
-  updateInputAmounts = (
-    nodes: Node[],
-    tokensIn: string[],
-    amountsIn: string[]
-  ): void => {
-    // Update input proportions so inputs are shared correctly
-    this.updateTotalProportions(nodes);
-
-    // Updates and input node to have correct input amount
-    nodes.forEach((node) => {
-      if (node.joinAction === 'input')
-        node = this.updateNodeAmount(node, tokensIn, amountsIn);
-    });
-  };
-
   /*
   Simulate transaction and decodes each output of interest.
   */
@@ -356,16 +428,10 @@ export class Join {
       wrapMainTokens
     );
 
-    if (rootNode.type !== PoolType.ComposableStable) {
-      throw new Error('root pool type should be ComposableStable');
-    }
-
     if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
 
     const orderedNodes = PoolGraph.orderByBfs(rootNode).reverse();
 
-    // Update each input node with relevant amount (proportionally)
-    this.updateInputAmounts(orderedNodes, tokensIn, amountsIn);
     return orderedNodes;
   };
 
@@ -381,13 +447,20 @@ export class Join {
     const isPeek = !minAmountsOut;
 
     joinPaths.forEach((joinPath, j) => {
+      const isLeafJoin = joinPath[0].isLeaf;
       joinPath.forEach((node, i) => {
-        const nodeChildrenWithinJoinPath = joinPath.filter((joinNode) =>
-          node.children.map((n) => n.address).includes(joinNode.address)
-        );
+        let nodeChildrenWithinJoinPath;
+        if (isLeafJoin) {
+          nodeChildrenWithinJoinPath = joinPath.filter(
+            (joinNode) =>
+              node.children.map((n) => n.address).includes(joinNode.address) &&
+              node.index === joinNode.parent?.index // Ensure child nodes with same address are not included
+          );
+        } else {
+          nodeChildrenWithinJoinPath = i > 0 ? [joinPath[i - 1]] : [];
+        }
 
-        // if all child nodes have 0 output amount, then forward it to outputRef and skip adding current call
-        // TODO Check logic of this with Bruno
+        // Prevent adding action calls with input amounts equal 0
         if (
           nodeChildrenWithinJoinPath.length > 0 &&
           nodeChildrenWithinJoinPath.filter((c) => c.index !== '0').length === 0
@@ -702,10 +775,18 @@ export class Join {
       ];
     }
 
-    const userData = StablePoolEncoder.joinExactTokensInForBPTOut(
-      userDataAmounts,
-      minAmountOut
-    );
+    let userData: string;
+    if (node.type === PoolType.Weighted) {
+      userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
+        userDataAmounts,
+        minAmountOut
+      );
+    } else {
+      userData = StablePoolEncoder.joinExactTokensInForBPTOut(
+        userDataAmounts,
+        minAmountOut
+      );
+    }
 
     // TODO: add test to join weth/wsteth pool using ETH
     const ethIndex = sortedTokens.indexOf(AddressZero);

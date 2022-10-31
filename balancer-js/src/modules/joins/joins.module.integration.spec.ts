@@ -10,6 +10,16 @@ import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
 
+const TEST_BOOSTED = true;
+const TEST_BOOSTED_META = true;
+const TEST_BOOSTED_META_ALT = true;
+const TEST_BOOSTED_META_BIG = true;
+const TEST_BOOSTED_WEIGHTED_SIMPLE = true;
+const TEST_BOOSTED_WEIGHTED_GENERAL = true;
+const TEST_BOOSTED_WEIGHTED_META = true;
+const TEST_BOOSTED_WEIGHTED_META_ALT = true;
+const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
+
 /*
  * Testing on GOERLI
  * - Update hardhat.config.js with chainId = 5
@@ -20,7 +30,7 @@ import { JsonRpcSigner } from '@ethersproject/providers';
 const network = Network.GOERLI;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
-const blockNumber = 7770300;
+const blockNumber = 7844900;
 
 /*
  * Testing on MAINNET
@@ -156,6 +166,7 @@ describe('generalised join execution', async () => {
   baWeth: Linear, aWeth/Weth
   */
   context('boosted', async () => {
+    if (!TEST_BOOSTED) return true;
     let authorisation: string | undefined;
     beforeEach(async () => {
       const tokens = [
@@ -208,18 +219,18 @@ describe('generalised join execution', async () => {
         authorisation: authorisation,
         wrapMainTokens: false,
       },
-      {
-        signer,
-        description: 'join with 1 linear',
-        pool: {
-          id: addresses.bbamaiweth.id,
-          address: addresses.bbamaiweth.address,
-        },
-        tokensIn: [addresses.bbamai.address],
-        amountsIn: [parseFixed('10', 18).toString()],
-        authorisation: authorisation,
-        wrapMainTokens: false,
-      },
+      // {
+      //   signer,
+      //   description: 'join with 1 linear',
+      //   pool: {
+      //     id: addresses.bbamaiweth.id,
+      //     address: addresses.bbamaiweth.address,
+      //   },
+      //   tokensIn: [addresses.bbamai.address],
+      //   amountsIn: [parseFixed('10', 18).toString()],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
       {
         signer,
         description: 'join with 1 leaf and 1 linear',
@@ -244,6 +255,7 @@ describe('generalised join execution', async () => {
   bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
   */
   context('boostedMeta', async () => {
+    if (!TEST_BOOSTED_META) return true;
     let authorisation: string | undefined;
     beforeEach(async () => {
       const tokens = [
@@ -255,8 +267,10 @@ describe('generalised join execution', async () => {
         addresses.waUSDC.address,
         addresses.waUSDT.address,
         addresses.waMAI.address,
-        addresses.bbamai.address,
         addresses.bbadai.address,
+        addresses.bbausdc.address,
+        addresses.bbausdt.address,
+        addresses.bbamai.address,
         addresses.bbausd2.address,
       ];
       const slots = [
@@ -268,8 +282,10 @@ describe('generalised join execution', async () => {
         addresses.waUSDC.slot,
         addresses.waUSDT.slot,
         addresses.waMAI.slot,
-        addresses.bbamai.slot,
         addresses.bbadai.slot,
+        addresses.bbausdc.slot,
+        addresses.bbausdt.slot,
+        addresses.bbamai.slot,
         addresses.bbausd2.slot,
       ];
       const balances = [
@@ -281,8 +297,10 @@ describe('generalised join execution', async () => {
         '0',
         '0',
         '0',
-        parseFixed('10', addresses.bbamai.decimals).toString(),
         parseFixed('10', addresses.bbadai.decimals).toString(),
+        parseFixed('10', addresses.bbausdc.decimals).toString(),
+        parseFixed('10', addresses.bbausdt.decimals).toString(),
+        parseFixed('10', addresses.bbamai.decimals).toString(),
         parseFixed('10', addresses.bbausd2.decimals).toString(),
       ];
       await forkSetup(
@@ -318,65 +336,38 @@ describe('generalised join execution', async () => {
         authorisation: authorisation,
         wrapMainTokens: false,
       },
+      // {
+      //   signer,
+      //   description: 'join with child linear',
+      //   pool: {
+      //     id: addresses.boostedMeta1.id,
+      //     address: addresses.boostedMeta1.address,
+      //   },
+      //   tokensIn: [addresses.bbamai.address],
+      //   amountsIn: [parseFixed('10', addresses.bbamai.decimals).toString()],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
       {
         signer,
-        description: 'join with child linear',
-        pool: {
-          id: addresses.boostedMeta1.id,
-          address: addresses.boostedMeta1.address,
-        },
-        tokensIn: [addresses.bbamai.address],
-        amountsIn: [parseFixed('10', addresses.bbamai.decimals).toString()],
-        authorisation: authorisation,
-        wrapMainTokens: false,
-      },
-      {
-        signer,
-        description: 'join with leaf and child linear',
-        pool: {
-          id: addresses.boostedMeta1.id,
-          address: addresses.boostedMeta1.address,
-        },
-        tokensIn: [addresses.DAI.address, addresses.bbamai.address],
-        amountsIn: [
-          parseFixed('10', addresses.DAI.decimals).toString(),
-          parseFixed('10', addresses.bbamai.decimals).toString(),
-        ],
-        authorisation: authorisation,
-        wrapMainTokens: false,
-      },
-      {
-        signer,
-        description: 'join with child boosted',
-        pool: {
-          id: addresses.boostedMeta1.id,
-          address: addresses.boostedMeta1.address,
-        },
-        tokensIn: [addresses.bbausd2.address],
-        amountsIn: [parseFixed('10', addresses.bbausd2.decimals).toString()],
-        authorisation: authorisation,
-        wrapMainTokens: false,
-      },
-      {
-        signer,
-        description: 'join with child boosted and leaves',
+        description: 'join with some leafs, linears and boosted',
         pool: {
           id: addresses.boostedMeta1.id,
           address: addresses.boostedMeta1.address,
         },
         tokensIn: [
-          addresses.bbausd2.address,
           addresses.DAI.address,
           addresses.USDC.address,
-          addresses.USDT.address,
-          addresses.MAI.address,
+          addresses.bbamai.address,
+          addresses.bbausdt.address,
+          addresses.bbausd2.address,
         ],
         amountsIn: [
-          parseFixed('10', addresses.bbausd2.decimals).toString(),
           parseFixed('10', addresses.DAI.decimals).toString(),
           parseFixed('10', addresses.USDC.decimals).toString(),
-          parseFixed('10', addresses.USDT.decimals).toString(),
-          parseFixed('10', addresses.MAI.decimals).toString(),
+          parseFixed('10', addresses.bbamai.decimals).toString(),
+          parseFixed('10', addresses.bbausdt.decimals).toString(),
+          parseFixed('10', addresses.bbausd2.decimals).toString(),
         ],
         authorisation: authorisation,
         wrapMainTokens: false,
@@ -389,6 +380,7 @@ describe('generalised join execution', async () => {
   bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
   */
   context('boostedMetaAlt', async () => {
+    if (!TEST_BOOSTED_META_ALT) return true;
     let authorisation: string | undefined;
     beforeEach(async () => {
       const tokens = [
@@ -400,7 +392,9 @@ describe('generalised join execution', async () => {
         addresses.waUSDC.address,
         addresses.waUSDT.address,
         addresses.bbausdc.address,
+        addresses.bbausdt.address,
         addresses.bbadai.address,
+        addresses.bbamai.address,
         addresses.bbausd2.address,
       ];
       const slots = [
@@ -412,7 +406,9 @@ describe('generalised join execution', async () => {
         addresses.waUSDC.slot,
         addresses.waUSDT.slot,
         addresses.bbausdc.slot,
+        addresses.bbausdt.slot,
         addresses.bbadai.slot,
+        addresses.bbamai.slot,
         addresses.bbausd2.slot,
       ];
       const balances = [
@@ -424,7 +420,9 @@ describe('generalised join execution', async () => {
         '0',
         '0',
         parseFixed('10', addresses.bbausdc.decimals).toString(),
+        parseFixed('10', addresses.bbausdt.decimals).toString(),
         parseFixed('10', addresses.bbadai.decimals).toString(),
+        parseFixed('10', addresses.bbamai.decimals).toString(),
         parseFixed('10', addresses.bbausd2.decimals).toString(),
       ];
       await forkSetup(
@@ -460,77 +458,62 @@ describe('generalised join execution', async () => {
         authorisation: authorisation,
         wrapMainTokens: false,
       },
+      // {
+      //   signer,
+      //   description: 'join with single leaf token',
+      //   pool: {
+      //     id: addresses.boostedMetaAlt1.id,
+      //     address: addresses.boostedMetaAlt1.address,
+      //   },
+      //   tokensIn: [addresses.MAI.address],
+      //   amountsIn: [parseFixed('10', addresses.MAI.decimals).toString()],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
+      // {
+      //   signer,
+      //   description: 'join with child linear',
+      //   pool: {
+      //     id: addresses.boostedMetaAlt1.id,
+      //     address: addresses.boostedMetaAlt1.address,
+      //   },
+      //   tokensIn: [addresses.bbausdc.address],
+      //   amountsIn: [parseFixed('3', addresses.bbausdc.decimals).toString()],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
+      // {
+      //   signer,
+      //   description: 'join with child boosted',
+      //   pool: {
+      //     id: addresses.boostedMetaAlt1.id,
+      //     address: addresses.boostedMetaAlt1.address,
+      //   },
+      //   tokensIn: [addresses.bbausd2.address],
+      //   amountsIn: [parseFixed('10', addresses.bbausd2.decimals).toString()],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
       {
         signer,
-        description: 'join with single leaf token',
-        pool: {
-          id: addresses.boostedMetaAlt1.id,
-          address: addresses.boostedMetaAlt1.address,
-        },
-        tokensIn: [addresses.MAI.address],
-        amountsIn: [parseFixed('10', addresses.MAI.decimals).toString()],
-        authorisation: authorisation,
-        wrapMainTokens: false,
-      },
-      {
-        signer,
-        description: 'join with child linear',
-        pool: {
-          id: addresses.boostedMetaAlt1.id,
-          address: addresses.boostedMetaAlt1.address,
-        },
-        tokensIn: [addresses.bbausdc.address],
-        amountsIn: [parseFixed('3', addresses.bbausdc.decimals).toString()],
-        authorisation: authorisation,
-        wrapMainTokens: false,
-      },
-      {
-        signer,
-        description: 'join with leaf and child linear',
-        pool: {
-          id: addresses.boostedMetaAlt1.id,
-          address: addresses.boostedMetaAlt1.address,
-        },
-        tokensIn: [addresses.DAI.address, addresses.bbadai.address],
-        amountsIn: [
-          parseFixed('4', addresses.DAI.decimals).toString(),
-          parseFixed('4', addresses.bbadai.decimals).toString(),
-        ],
-        authorisation: authorisation,
-        wrapMainTokens: false,
-      },
-      {
-        signer,
-        description: 'join with child boosted',
-        pool: {
-          id: addresses.boostedMetaAlt1.id,
-          address: addresses.boostedMetaAlt1.address,
-        },
-        tokensIn: [addresses.bbausd2.address],
-        amountsIn: [parseFixed('10', addresses.bbausd2.decimals).toString()],
-        authorisation: authorisation,
-        wrapMainTokens: false,
-      },
-      {
-        signer,
-        description: 'join with child boosted and all leaves',
+        description: 'join with some leafs, linears and boosted',
         pool: {
           id: addresses.boostedMetaAlt1.id,
           address: addresses.boostedMetaAlt1.address,
         },
         tokensIn: [
-          addresses.bbausd2.address,
           addresses.DAI.address,
-          addresses.USDC.address,
           addresses.USDT.address,
-          addresses.MAI.address,
+          addresses.bbadai.address,
+          addresses.bbausdc.address,
+          addresses.bbausd2.address,
         ],
         amountsIn: [
-          parseFixed('10', addresses.bbausd2.decimals).toString(),
-          parseFixed('10', addresses.DAI.decimals).toString(),
-          parseFixed('10', addresses.USDC.decimals).toString(),
-          parseFixed('10', addresses.USDT.decimals).toString(),
-          parseFixed('10', addresses.MAI.decimals).toString(),
+          parseFixed('4', addresses.DAI.decimals).toString(),
+          parseFixed('4', addresses.USDT.decimals).toString(),
+          parseFixed('4', addresses.bbadai.decimals).toString(),
+          parseFixed('4', addresses.bbausdc.decimals).toString(),
+          parseFixed('4', addresses.bbausd2.decimals).toString(),
         ],
         authorisation: authorisation,
         wrapMainTokens: false,
@@ -546,6 +529,7 @@ describe('generalised join execution', async () => {
   bbausd2 (boosted): ComposableStable, baUsdt/baDai/baUsdc
   */
   context('boostedMetaBig', async () => {
+    if (!TEST_BOOSTED_META_BIG) return true;
     let authorisation: string | undefined;
     beforeEach(async () => {
       const tokens = [
@@ -559,9 +543,12 @@ describe('generalised join execution', async () => {
         addresses.waUSDT.address,
         addresses.waMAI.address,
         addresses.waWETH.address,
+        addresses.bbadai.address,
+        addresses.bbausdc.address,
+        addresses.bbausdt.address,
         addresses.bbamai.address,
         addresses.bbamaiweth.address,
-        addresses.bbadai.address,
+        addresses.bbausd2.address,
       ];
       const slots = [
         addresses.DAI.slot,
@@ -574,9 +561,12 @@ describe('generalised join execution', async () => {
         addresses.waUSDT.slot,
         addresses.waMAI.slot,
         addresses.waWETH.slot,
+        addresses.bbadai.slot,
+        addresses.bbausdc.slot,
+        addresses.bbausdt.slot,
         addresses.bbamai.slot,
         addresses.bbamaiweth.slot,
-        addresses.bbadai.slot,
+        addresses.bbausd2.slot,
       ];
       const balances = [
         parseFixed('10', addresses.DAI.decimals).toString(),
@@ -589,9 +579,12 @@ describe('generalised join execution', async () => {
         '0',
         '0',
         '0',
+        parseFixed('10', addresses.bbadai.decimals).toString(),
+        parseFixed('10', addresses.bbausdc.decimals).toString(),
+        parseFixed('10', addresses.bbausdt.decimals).toString(),
         parseFixed('10', addresses.bbamai.decimals).toString(),
         parseFixed('10', addresses.bbamaiweth.decimals).toString(),
-        parseFixed('10', addresses.bbadai.decimals).toString(),
+        parseFixed('10', addresses.bbausd2.decimals).toString(),
       ];
       await forkSetup(
         signer,
@@ -619,27 +612,27 @@ describe('generalised join execution', async () => {
           addresses.WETH.address,
         ],
         amountsIn: [
-          parseFixed('10', addresses.DAI.decimals).toString(),
-          parseFixed('10', addresses.USDC.decimals).toString(),
-          parseFixed('10', addresses.USDT.decimals).toString(),
-          parseFixed('10', addresses.MAI.decimals).toString(),
-          parseFixed('10', addresses.WETH.decimals).toString(),
+          parseFixed('1', addresses.DAI.decimals).toString(),
+          parseFixed('1', addresses.USDC.decimals).toString(),
+          parseFixed('1', addresses.USDT.decimals).toString(),
+          parseFixed('1', addresses.MAI.decimals).toString(),
+          parseFixed('1', addresses.WETH.decimals).toString(),
         ],
         authorisation: authorisation,
         wrapMainTokens: false,
       },
-      {
-        signer,
-        description: 'join with child boosted',
-        pool: {
-          id: addresses.boostedMetaBig1.id,
-          address: addresses.boostedMetaBig1.address,
-        },
-        tokensIn: [addresses.bbamaiweth.address],
-        amountsIn: [parseFixed('10', addresses.bbamaiweth.decimals).toString()],
-        authorisation: authorisation,
-        wrapMainTokens: false,
-      },
+      // {
+      //   signer,
+      //   description: 'join with child boosted',
+      //   pool: {
+      //     id: addresses.boostedMetaBig1.id,
+      //     address: addresses.boostedMetaBig1.address,
+      //   },
+      //   tokensIn: [addresses.bbamaiweth.address],
+      //   amountsIn: [parseFixed('10', addresses.bbamaiweth.decimals).toString()],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
       {
         signer,
         description: 'join with leaf and child boosted',
@@ -649,8 +642,564 @@ describe('generalised join execution', async () => {
         },
         tokensIn: [addresses.DAI.address, addresses.bbamaiweth.address],
         amountsIn: [
+          parseFixed('1', addresses.DAI.decimals).toString(),
+          parseFixed('1', addresses.bbamaiweth.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      {
+        signer,
+        description: 'join with some leafs, linears and boosted',
+        pool: {
+          id: addresses.boostedMetaBig1.id,
+          address: addresses.boostedMetaBig1.address,
+        },
+        tokensIn: [
+          addresses.DAI.address,
+          addresses.USDT.address,
+          addresses.WETH.address,
+          addresses.bbausdt.address,
+          addresses.bbamai.address,
+          addresses.bbamaiweth.address,
+          addresses.bbausd2.address,
+        ],
+        amountsIn: [
+          parseFixed('1', addresses.DAI.decimals).toString(),
+          parseFixed('1', addresses.USDT.decimals).toString(),
+          parseFixed('1', addresses.WETH.decimals).toString(),
+          parseFixed('1', addresses.bbausdt.decimals).toString(),
+          parseFixed('1', addresses.bbamai.decimals).toString(),
+          parseFixed('1', addresses.bbamaiweth.decimals).toString(),
+          parseFixed('1', addresses.bbausd2.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+    ]);
+  });
+
+  /*
+  boostedWeightedSimple1: 1 Linear + 1 normal token
+  b-a-weth: Linear, aWeth/Weth
+  BAL
+  */
+  context('boostedWeightedSimple', async () => {
+    if (!TEST_BOOSTED_WEIGHTED_SIMPLE) return true;
+    let authorisation: string | undefined;
+    beforeEach(async () => {
+      const tokens = [
+        addresses.BAL.address,
+        addresses.WETH.address,
+        addresses.waWETH.address,
+        addresses.bbaweth.address,
+      ];
+      const slots = [
+        addresses.BAL.slot,
+        addresses.WETH.slot,
+        addresses.waWETH.slot,
+        addresses.bbaweth.slot,
+      ];
+      const balances = [
+        parseFixed('10', addresses.BAL.decimals).toString(),
+        parseFixed('10', addresses.WETH.decimals).toString(),
+        '0',
+        parseFixed('10', addresses.bbaweth.decimals).toString(),
+      ];
+      await forkSetup(
+        signer,
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        blockNumber
+      );
+    });
+
+    await runTests([
+      {
+        signer,
+        description: 'join with all leaf tokens',
+        pool: {
+          id: addresses.boostedWeightedSimple1.id,
+          address: addresses.boostedWeightedSimple1.address,
+        },
+        tokensIn: [addresses.BAL.address, addresses.WETH.address],
+        amountsIn: [
+          parseFixed('10', addresses.BAL.decimals).toString(),
+          parseFixed('10', addresses.WETH.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      // {
+      //   signer,
+      //   description: 'join with child linear',
+      //   pool: {
+      //     id: addresses.boostedWeightedSimple1.id,
+      //     address: addresses.boostedWeightedSimple1.address,
+      //   },
+      //   tokensIn: [addresses.bbaweth.address],
+      //   amountsIn: [parseFixed('10', addresses.bbaweth.decimals).toString()],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
+      {
+        signer,
+        description: 'join with leaf and child linear',
+        pool: {
+          id: addresses.boostedWeightedSimple1.id,
+          address: addresses.boostedWeightedSimple1.address,
+        },
+        tokensIn: [addresses.BAL.address, addresses.bbaweth.address],
+        amountsIn: [
+          parseFixed('1', addresses.BAL.decimals).toString(),
+          parseFixed('1', addresses.bbaweth.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+    ]);
+  });
+
+  /*
+  boostedWeightedGeneral1: N Linear + M normal tokens
+  b-a-dai: Linear, aDai/Dai
+  b-a-mai: Linear, aMai/Mai
+  BAL
+  USDC
+  */
+  context('boostedWeightedGeneral', async () => {
+    if (!TEST_BOOSTED_WEIGHTED_GENERAL) return true;
+    let authorisation: string | undefined;
+    beforeEach(async () => {
+      const tokens = [
+        addresses.DAI.address,
+        addresses.MAI.address,
+        addresses.BAL.address,
+        addresses.USDC_old.address,
+        addresses.bbadai.address,
+        addresses.bbamai.address,
+      ];
+      const slots = [
+        addresses.DAI.slot,
+        addresses.MAI.slot,
+        addresses.BAL.slot,
+        addresses.USDC_old.slot,
+        addresses.bbadai.slot,
+        addresses.bbamai.slot,
+      ];
+      const balances = [
+        parseFixed('10', addresses.DAI.decimals).toString(),
+        parseFixed('10', addresses.MAI.decimals).toString(),
+        parseFixed('10', addresses.BAL.decimals).toString(),
+        parseFixed('10', addresses.USDC_old.decimals).toString(),
+        parseFixed('10', addresses.bbadai.decimals).toString(),
+        parseFixed('10', addresses.bbamai.decimals).toString(),
+      ];
+      await forkSetup(
+        signer,
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        blockNumber
+      );
+    });
+
+    await runTests([
+      {
+        signer,
+        description: 'join with all leaf tokens',
+        pool: {
+          id: addresses.boostedWeightedGeneral1.id,
+          address: addresses.boostedWeightedGeneral1.address,
+        },
+        tokensIn: [
+          addresses.DAI.address,
+          addresses.MAI.address,
+          addresses.BAL.address,
+          addresses.USDC_old.address,
+        ],
+        amountsIn: [
+          parseFixed('1', addresses.DAI.decimals).toString(),
+          parseFixed('1', addresses.MAI.decimals).toString(),
+          parseFixed('1', addresses.BAL.decimals).toString(),
+          parseFixed('1', addresses.USDC_old.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      // {
+      //   signer,
+      //   description: 'join with child linear',
+      //   pool: {
+      //     id: addresses.boostedWeightedGeneral1.id,
+      //     address: addresses.boostedWeightedGeneral1.address,
+      //   },
+      //   tokensIn: [addresses.bbadai.address],
+      //   amountsIn: [parseFixed('10', addresses.bbadai.decimals).toString()],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
+      {
+        signer,
+        description: 'join with some leafs and linear',
+        pool: {
+          id: addresses.boostedWeightedGeneral1.id,
+          address: addresses.boostedWeightedGeneral1.address,
+        },
+        tokensIn: [
+          addresses.MAI.address,
+          addresses.BAL.address,
+          addresses.bbamai.address,
+        ],
+        amountsIn: [
+          parseFixed('10', addresses.MAI.decimals).toString(),
+          parseFixed('10', addresses.BAL.decimals).toString(),
+          parseFixed('10', addresses.bbamai.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+    ]);
+  });
+
+  /*
+  boostedWeightedMeta1: 1 Linear + 1 ComposableStable
+  b-a-weth: Linear, aWeth/Weth
+  bb-a-usd2: ComposableStable, b-a-usdc/b-a-usdt/b-a-dai
+  BAL
+  */
+  context('boostedWeightedMeta', async () => {
+    if (!TEST_BOOSTED_WEIGHTED_META) return true;
+    let authorisation: string | undefined;
+    beforeEach(async () => {
+      const tokens = [
+        addresses.DAI.address,
+        addresses.USDC.address,
+        addresses.USDT.address,
+        addresses.WETH.address,
+        addresses.bbadai.address,
+        addresses.bbausdc.address,
+        addresses.bbausdt.address,
+        addresses.bbaweth.address,
+        addresses.bbausd2.address,
+      ];
+      const slots = [
+        addresses.DAI.slot,
+        addresses.USDC.slot,
+        addresses.USDT.slot,
+        addresses.WETH.slot,
+        addresses.bbadai.slot,
+        addresses.bbausdc.slot,
+        addresses.bbausdt.slot,
+        addresses.bbaweth.slot,
+        addresses.bbausd2.slot,
+      ];
+      const balances = [
+        parseFixed('10', addresses.DAI.decimals).toString(),
+        parseFixed('10', addresses.USDC.decimals).toString(),
+        parseFixed('10', addresses.USDT.decimals).toString(),
+        parseFixed('10', addresses.WETH.decimals).toString(),
+        parseFixed('10', addresses.bbadai.decimals).toString(),
+        parseFixed('10', addresses.bbausdc.decimals).toString(),
+        parseFixed('10', addresses.bbausdt.decimals).toString(),
+        parseFixed('10', addresses.bbaweth.decimals).toString(),
+        parseFixed('10', addresses.bbausd2.decimals).toString(),
+      ];
+      await forkSetup(
+        signer,
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        blockNumber
+      );
+    });
+
+    await runTests([
+      {
+        signer,
+        description: 'join with all leaf tokens',
+        pool: {
+          id: addresses.boostedWeightedMeta1.id,
+          address: addresses.boostedWeightedMeta1.address,
+        },
+        tokensIn: [
+          addresses.DAI.address,
+          addresses.USDC.address,
+          addresses.USDT.address,
+          addresses.WETH.address,
+        ],
+        amountsIn: [
           parseFixed('10', addresses.DAI.decimals).toString(),
-          parseFixed('10', addresses.bbamaiweth.decimals).toString(),
+          parseFixed('10', addresses.USDC.decimals).toString(),
+          parseFixed('10', addresses.USDT.decimals).toString(),
+          parseFixed('10', addresses.WETH.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      // {
+      //   signer,
+      //   description: 'join with child linear',
+      //   pool: {
+      //     id: addresses.boostedWeightedMeta1.id,
+      //     address: addresses.boostedWeightedMeta1.address,
+      //   },
+      //   tokensIn: [addresses.bbaweth.address],
+      //   amountsIn: [parseFixed('10', addresses.bbaweth.decimals).toString()],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
+      {
+        signer,
+        description: 'join with some leafs, linears and boosted',
+        pool: {
+          id: addresses.boostedWeightedMeta1.id,
+          address: addresses.boostedWeightedMeta1.address,
+        },
+        tokensIn: [
+          addresses.DAI.address,
+          addresses.WETH.address,
+          addresses.bbausdt.address,
+          addresses.bbaweth.address,
+          addresses.bbausd2.address,
+        ],
+        amountsIn: [
+          parseFixed('10', addresses.DAI.decimals).toString(),
+          parseFixed('10', addresses.WETH.decimals).toString(),
+          parseFixed('10', addresses.bbausdt.decimals).toString(),
+          parseFixed('10', addresses.bbaweth.decimals).toString(),
+          parseFixed('10', addresses.bbausd2.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+    ]);
+  });
+
+  /*
+  boostedWeightedMetaAlt1: 1 normal token + 1 ComposableStable
+  WETH
+  b-a-usd2: ComposableStable, b-a-usdt/b-a-usdc/b-a-dai
+  */
+  context('boostedWeightedMetaAlt', async () => {
+    if (!TEST_BOOSTED_WEIGHTED_META_ALT) return true;
+    let authorisation: string | undefined;
+    beforeEach(async () => {
+      const tokens = [
+        addresses.DAI.address,
+        addresses.USDC.address,
+        addresses.USDT.address,
+        addresses.WETH.address,
+        addresses.bbadai.address,
+        addresses.bbausdc.address,
+        addresses.bbausdt.address,
+        addresses.bbausd2.address,
+      ];
+      const slots = [
+        addresses.DAI.slot,
+        addresses.USDC.slot,
+        addresses.USDT.slot,
+        addresses.WETH.slot,
+        addresses.bbadai.slot,
+        addresses.bbausdc.slot,
+        addresses.bbausdt.slot,
+        addresses.bbausd2.slot,
+      ];
+      const balances = [
+        parseFixed('10', addresses.DAI.decimals).toString(),
+        parseFixed('10', addresses.USDC.decimals).toString(),
+        parseFixed('10', addresses.USDT.decimals).toString(),
+        parseFixed('10', addresses.WETH.decimals).toString(),
+        parseFixed('10', addresses.bbadai.decimals).toString(),
+        parseFixed('10', addresses.bbausdc.decimals).toString(),
+        parseFixed('10', addresses.bbausdt.decimals).toString(),
+        parseFixed('10', addresses.bbausd2.decimals).toString(),
+      ];
+      await forkSetup(
+        signer,
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        blockNumber
+      );
+    });
+
+    await runTests([
+      {
+        signer,
+        description: 'join with all leaf tokens',
+        pool: {
+          id: addresses.boostedWeightedMetaAlt1.id,
+          address: addresses.boostedWeightedMetaAlt1.address,
+        },
+        tokensIn: [
+          addresses.DAI.address,
+          addresses.USDC.address,
+          addresses.USDT.address,
+          addresses.WETH.address,
+        ],
+        amountsIn: [
+          parseFixed('1', addresses.DAI.decimals).toString(),
+          parseFixed('1', addresses.USDC.decimals).toString(),
+          parseFixed('1', addresses.USDT.decimals).toString(),
+          parseFixed('1', addresses.WETH.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      // {
+      //   signer,
+      //   description: 'join with child linear',
+      //   pool: {
+      //     id: addresses.boostedWeightedMetaAlt1.id,
+      //     address: addresses.boostedWeightedMetaAlt1.address,
+      //   },
+      //   tokensIn: [addresses.bbausdt.address],
+      //   amountsIn: [parseFixed('1', addresses.bbausdt.decimals).toString()],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
+      {
+        signer,
+        description: 'join with leaf and child linear',
+        pool: {
+          id: addresses.boostedWeightedMetaAlt1.id,
+          address: addresses.boostedWeightedMetaAlt1.address,
+        },
+        tokensIn: [
+          addresses.USDC.address,
+          addresses.WETH.address,
+          addresses.bbadai.address,
+          addresses.bbausdc.address,
+          addresses.bbausd2.address,
+        ],
+        amountsIn: [
+          parseFixed('1', addresses.USDC.decimals).toString(),
+          parseFixed('1', addresses.WETH.decimals).toString(),
+          parseFixed('1', addresses.bbadai.decimals).toString(),
+          parseFixed('1', addresses.bbausdc.decimals).toString(),
+          parseFixed('1', addresses.bbausd2.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+    ]);
+  });
+
+  /*
+  boostedWeightedMetaGeneral1: N Linear + 1 ComposableStable
+  b-a-usdt: Linear, aUSDT/USDT
+  b-a-usdc: Linear, aUSDC/USDC
+  b-a-weth: Linear, aWeth/Weth
+  b-a-usd2: ComposableStable, b-a-usdt/b-a-usdc/b-a-dai
+  */
+  context('boostedWeightedMetaGeneral', async () => {
+    if (!TEST_BOOSTED_WEIGHTED_META_GENERAL) return true;
+    let authorisation: string | undefined;
+    beforeEach(async () => {
+      const tokens = [
+        addresses.DAI.address,
+        addresses.USDC.address,
+        addresses.USDT.address,
+        addresses.WETH.address,
+        addresses.bbadai.address,
+        addresses.bbausdc.address,
+        addresses.bbausdt.address,
+        addresses.bbaweth.address,
+        addresses.bbausd2.address,
+      ];
+      const slots = [
+        addresses.DAI.slot,
+        addresses.USDC.slot,
+        addresses.USDT.slot,
+        addresses.WETH.slot,
+        addresses.bbadai.slot,
+        addresses.bbausdc.slot,
+        addresses.bbausdt.slot,
+        addresses.bbaweth.slot,
+        addresses.bbausd2.slot,
+      ];
+      const balances = [
+        parseFixed('10', addresses.DAI.decimals).toString(),
+        parseFixed('10', addresses.USDC.decimals).toString(),
+        parseFixed('10', addresses.USDT.decimals).toString(),
+        parseFixed('10', addresses.WETH.decimals).toString(),
+        parseFixed('10', addresses.bbadai.decimals).toString(),
+        parseFixed('10', addresses.bbausdc.decimals).toString(),
+        parseFixed('10', addresses.bbausdt.decimals).toString(),
+        parseFixed('10', addresses.bbaweth.decimals).toString(),
+        parseFixed('10', addresses.bbausd2.decimals).toString(),
+      ];
+      await forkSetup(
+        signer,
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        blockNumber
+      );
+    });
+
+    await runTests([
+      {
+        signer,
+        description: 'join with all leaf tokens',
+        pool: {
+          id: addresses.boostedWeightedMetaGeneral1.id,
+          address: addresses.boostedWeightedMetaGeneral1.address,
+        },
+        tokensIn: [
+          addresses.DAI.address,
+          addresses.USDC.address,
+          addresses.USDT.address,
+          addresses.WETH.address,
+        ],
+        amountsIn: [
+          parseFixed('1', addresses.DAI.decimals).toString(),
+          parseFixed('1', addresses.USDC.decimals).toString(),
+          parseFixed('1', addresses.USDT.decimals).toString(),
+          parseFixed('1', addresses.WETH.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+      },
+      // {
+      //   signer,
+      //   description: 'join with child linear',
+      //   pool: {
+      //     id: addresses.boostedWeightedMetaGeneral1.id,
+      //     address: addresses.boostedWeightedMetaGeneral1.address,
+      //   },
+      //   tokensIn: [addresses.bbausdc.address],
+      //   amountsIn: [parseFixed('10', addresses.bbausdc.decimals).toString()],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
+      {
+        signer,
+        description: 'join with some leafs, linears and boosted',
+        pool: {
+          id: addresses.boostedWeightedMetaGeneral1.id,
+          address: addresses.boostedWeightedMetaGeneral1.address,
+        },
+        tokensIn: [
+          addresses.DAI.address,
+          addresses.USDC.address,
+          addresses.bbadai.address,
+          addresses.bbaweth.address,
+          addresses.bbausd2.address,
+        ],
+        amountsIn: [
+          parseFixed('1', addresses.DAI.decimals).toString(),
+          parseFixed('1', addresses.USDC.decimals).toString(),
+          parseFixed('1', addresses.bbadai.decimals).toString(),
+          parseFixed('1', addresses.bbaweth.decimals).toString(),
+          parseFixed('1', addresses.bbausd2.decimals).toString(),
         ],
         authorisation: authorisation,
         wrapMainTokens: false,
