@@ -1061,6 +1061,12 @@ type RewardToken {
   """ Equal to: <tokenAddress>-<gaugeAddress> """
   id: ID!
 
+  """ Timestamp at which finishes the period of rewards """
+  periodFinish: BigInt
+
+  """ Rate of reward tokens streamed per second """
+  rate: BigDecimal
+
   """ ERC20 token symbol - empty string if call to symbol() reverts """
   symbol: String!
 
@@ -1108,6 +1114,22 @@ input RewardToken_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  periodFinish: BigInt
+  periodFinish_gt: BigInt
+  periodFinish_gte: BigInt
+  periodFinish_in: [BigInt!]
+  periodFinish_lt: BigInt
+  periodFinish_lte: BigInt
+  periodFinish_not: BigInt
+  periodFinish_not_in: [BigInt!]
+  rate: BigDecimal
+  rate_gt: BigDecimal
+  rate_gte: BigDecimal
+  rate_in: [BigDecimal!]
+  rate_lt: BigDecimal
+  rate_lte: BigDecimal
+  rate_not: BigDecimal
+  rate_not_in: [BigDecimal!]
   symbol: String
   symbol_contains: String
   symbol_contains_nocase: String
@@ -1142,6 +1164,8 @@ enum RewardToken_orderBy {
   decimals
   gauge
   id
+  periodFinish
+  rate
   symbol
   totalDeposited
 }

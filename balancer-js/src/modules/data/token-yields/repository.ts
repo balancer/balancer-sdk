@@ -1,5 +1,9 @@
 import { lido, yieldTokens as lidoTokens } from './tokens/lido';
 import {
+  rocketpool,
+  yieldTokens as rocketpoolTokens,
+} from './tokens/rocketpool';
+import {
   lidoPolygon,
   yieldTokens as lidoPolygonTokens,
 } from './tokens/lido-polygon';
@@ -21,6 +25,7 @@ const yieldSourceMap: { [address: string]: AprFetcher } = Object.fromEntries([
   ...Object.values(lidoPolygonTokens).map((k) => [k, lidoPolygon]),
   ...Object.values(aaveTokens).map((k) => [k, aave]),
   ...Object.values(overnightTokens).map((k) => [k, overnight]),
+  ...Object.values(rocketpoolTokens).map((k) => [k, rocketpool]),
 ]);
 
 export class TokenYieldsRepository implements Findable<number> {
