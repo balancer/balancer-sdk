@@ -403,6 +403,7 @@ type JoinExit {
   tx: Bytes!
   type: InvestType!
   user: User!
+  valueUSD: BigDecimal
 }
 
 input JoinExit_filter {
@@ -488,6 +489,14 @@ input JoinExit_filter {
   user_not_starts_with_nocase: String
   user_starts_with: String
   user_starts_with_nocase: String
+  valueUSD: BigDecimal
+  valueUSD_gt: BigDecimal
+  valueUSD_gte: BigDecimal
+  valueUSD_in: [BigDecimal!]
+  valueUSD_lt: BigDecimal
+  valueUSD_lte: BigDecimal
+  valueUSD_not: BigDecimal
+  valueUSD_not_in: [BigDecimal!]
 }
 
 enum JoinExit_orderBy {
@@ -499,6 +508,7 @@ enum JoinExit_orderBy {
   tx
   type
   user
+  valueUSD
 }
 
 type LatestPrice {
@@ -675,14 +685,19 @@ enum OrderDirection {
 
 type Pool {
   address: Bytes!
+  alpha: BigDecimal
   amp: BigInt
   baseToken: Bytes
+  beta: BigDecimal
+  c: BigDecimal
   createTime: Int!
+  dSq: BigDecimal
   expiryTime: BigInt
   factory: Bytes
   historicalValues(first: Int = 100, orderBy: PoolHistoricalLiquidity_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolHistoricalLiquidity_filter): [PoolHistoricalLiquidity!]
   holdersCount: BigInt!
   id: ID!
+  lambda: BigDecimal
   lowerTarget: BigDecimal
   mainIndex: Int
   managementFee: BigDecimal
@@ -690,9 +705,14 @@ type Pool {
   oracleEnabled: Boolean!
   owner: Bytes
   poolType: String
+  poolTypeVersion: Int
   priceRateProviders(first: Int = 100, orderBy: PriceRateProvider_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PriceRateProvider_filter): [PriceRateProvider!]
   principalToken: Bytes
+  protocolAumFeeCache: BigDecimal
+  protocolSwapFeeCache: BigDecimal
+  protocolYieldFeeCache: BigDecimal
   root3Alpha: BigDecimal
+  s: BigDecimal
   shares(first: Int = 100, orderBy: PoolShare_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolShare_filter): [PoolShare!]
   snapshots(first: Int = 100, orderBy: PoolSnapshot_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolSnapshot_filter): [PoolSnapshot!]
   sqrtAlpha: BigDecimal
@@ -703,6 +723,10 @@ type Pool {
   swaps(first: Int = 100, orderBy: Swap_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: Swap_filter): [Swap!]
   swapsCount: BigInt!
   symbol: String
+  tauAlphaX: BigDecimal
+  tauAlphaY: BigDecimal
+  tauBetaX: BigDecimal
+  tauBetaY: BigDecimal
   tokens(first: Int = 100, orderBy: PoolToken_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolToken_filter): [PoolToken!]
   tokensList: [Bytes!]!
   totalLiquidity: BigDecimal!
@@ -711,11 +735,15 @@ type Pool {
   totalSwapVolume: BigDecimal!
   totalWeight: BigDecimal
   tx: Bytes
+  u: BigDecimal
   unitSeconds: BigInt
   upperTarget: BigDecimal
+  v: BigDecimal
   vaultID: Balancer!
+  w: BigDecimal
   weightUpdates(first: Int = 100, orderBy: GradualWeightUpdate_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: GradualWeightUpdate_filter): [GradualWeightUpdate!]
   wrappedIndex: Int
+  z: BigDecimal
 }
 
 type PoolHistoricalLiquidity {
@@ -1016,6 +1044,7 @@ type PoolToken {
   cashBalance: BigDecimal!
   decimals: Int!
   id: ID!
+  isExemptFromYieldProtocolFee: Boolean
   managedBalance: BigDecimal!
   managements(first: Int = 100, orderBy: ManagementOperation_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: ManagementOperation_filter): [ManagementOperation!]
   name: String!
@@ -1087,6 +1116,10 @@ input PoolToken_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  isExemptFromYieldProtocolFee: Boolean
+  isExemptFromYieldProtocolFee_in: [Boolean!]
+  isExemptFromYieldProtocolFee_not: Boolean
+  isExemptFromYieldProtocolFee_not_in: [Boolean!]
   managedBalance: BigDecimal
   managedBalance_gt: BigDecimal
   managedBalance_gte: BigDecimal
@@ -1203,6 +1236,7 @@ enum PoolToken_orderBy {
   cashBalance
   decimals
   id
+  isExemptFromYieldProtocolFee
   managedBalance
   managements
   name
@@ -1222,6 +1256,14 @@ input Pool_filter {
   address_not: Bytes
   address_not_contains: Bytes
   address_not_in: [Bytes!]
+  alpha: BigDecimal
+  alpha_gt: BigDecimal
+  alpha_gte: BigDecimal
+  alpha_in: [BigDecimal!]
+  alpha_lt: BigDecimal
+  alpha_lte: BigDecimal
+  alpha_not: BigDecimal
+  alpha_not_in: [BigDecimal!]
   amp: BigInt
   amp_gt: BigInt
   amp_gte: BigInt
@@ -1236,6 +1278,22 @@ input Pool_filter {
   baseToken_not: Bytes
   baseToken_not_contains: Bytes
   baseToken_not_in: [Bytes!]
+  beta: BigDecimal
+  beta_gt: BigDecimal
+  beta_gte: BigDecimal
+  beta_in: [BigDecimal!]
+  beta_lt: BigDecimal
+  beta_lte: BigDecimal
+  beta_not: BigDecimal
+  beta_not_in: [BigDecimal!]
+  c: BigDecimal
+  c_gt: BigDecimal
+  c_gte: BigDecimal
+  c_in: [BigDecimal!]
+  c_lt: BigDecimal
+  c_lte: BigDecimal
+  c_not: BigDecimal
+  c_not_in: [BigDecimal!]
   createTime: Int
   createTime_gt: Int
   createTime_gte: Int
@@ -1244,6 +1302,14 @@ input Pool_filter {
   createTime_lte: Int
   createTime_not: Int
   createTime_not_in: [Int!]
+  dSq: BigDecimal
+  dSq_gt: BigDecimal
+  dSq_gte: BigDecimal
+  dSq_in: [BigDecimal!]
+  dSq_lt: BigDecimal
+  dSq_lte: BigDecimal
+  dSq_not: BigDecimal
+  dSq_not_in: [BigDecimal!]
   expiryTime: BigInt
   expiryTime_gt: BigInt
   expiryTime_gte: BigInt
@@ -1275,6 +1341,14 @@ input Pool_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  lambda: BigDecimal
+  lambda_gt: BigDecimal
+  lambda_gte: BigDecimal
+  lambda_in: [BigDecimal!]
+  lambda_lt: BigDecimal
+  lambda_lte: BigDecimal
+  lambda_not: BigDecimal
+  lambda_not_in: [BigDecimal!]
   lowerTarget: BigDecimal
   lowerTarget_gt: BigDecimal
   lowerTarget_gte: BigDecimal
@@ -1330,6 +1404,14 @@ input Pool_filter {
   owner_not_contains: Bytes
   owner_not_in: [Bytes!]
   poolType: String
+  poolTypeVersion: Int
+  poolTypeVersion_gt: Int
+  poolTypeVersion_gte: Int
+  poolTypeVersion_in: [Int!]
+  poolTypeVersion_lt: Int
+  poolTypeVersion_lte: Int
+  poolTypeVersion_not: Int
+  poolTypeVersion_not_in: [Int!]
   poolType_contains: String
   poolType_contains_nocase: String
   poolType_ends_with: String
@@ -1356,6 +1438,30 @@ input Pool_filter {
   principalToken_not: Bytes
   principalToken_not_contains: Bytes
   principalToken_not_in: [Bytes!]
+  protocolAumFeeCache: BigDecimal
+  protocolAumFeeCache_gt: BigDecimal
+  protocolAumFeeCache_gte: BigDecimal
+  protocolAumFeeCache_in: [BigDecimal!]
+  protocolAumFeeCache_lt: BigDecimal
+  protocolAumFeeCache_lte: BigDecimal
+  protocolAumFeeCache_not: BigDecimal
+  protocolAumFeeCache_not_in: [BigDecimal!]
+  protocolSwapFeeCache: BigDecimal
+  protocolSwapFeeCache_gt: BigDecimal
+  protocolSwapFeeCache_gte: BigDecimal
+  protocolSwapFeeCache_in: [BigDecimal!]
+  protocolSwapFeeCache_lt: BigDecimal
+  protocolSwapFeeCache_lte: BigDecimal
+  protocolSwapFeeCache_not: BigDecimal
+  protocolSwapFeeCache_not_in: [BigDecimal!]
+  protocolYieldFeeCache: BigDecimal
+  protocolYieldFeeCache_gt: BigDecimal
+  protocolYieldFeeCache_gte: BigDecimal
+  protocolYieldFeeCache_in: [BigDecimal!]
+  protocolYieldFeeCache_lt: BigDecimal
+  protocolYieldFeeCache_lte: BigDecimal
+  protocolYieldFeeCache_not: BigDecimal
+  protocolYieldFeeCache_not_in: [BigDecimal!]
   root3Alpha: BigDecimal
   root3Alpha_gt: BigDecimal
   root3Alpha_gte: BigDecimal
@@ -1364,6 +1470,14 @@ input Pool_filter {
   root3Alpha_lte: BigDecimal
   root3Alpha_not: BigDecimal
   root3Alpha_not_in: [BigDecimal!]
+  s: BigDecimal
+  s_gt: BigDecimal
+  s_gte: BigDecimal
+  s_in: [BigDecimal!]
+  s_lt: BigDecimal
+  s_lte: BigDecimal
+  s_not: BigDecimal
+  s_not_in: [BigDecimal!]
   shares_: PoolShare_filter
   snapshots_: PoolSnapshot_filter
   sqrtAlpha: BigDecimal
@@ -1431,6 +1545,38 @@ input Pool_filter {
   symbol_not_starts_with_nocase: String
   symbol_starts_with: String
   symbol_starts_with_nocase: String
+  tauAlphaX: BigDecimal
+  tauAlphaX_gt: BigDecimal
+  tauAlphaX_gte: BigDecimal
+  tauAlphaX_in: [BigDecimal!]
+  tauAlphaX_lt: BigDecimal
+  tauAlphaX_lte: BigDecimal
+  tauAlphaX_not: BigDecimal
+  tauAlphaX_not_in: [BigDecimal!]
+  tauAlphaY: BigDecimal
+  tauAlphaY_gt: BigDecimal
+  tauAlphaY_gte: BigDecimal
+  tauAlphaY_in: [BigDecimal!]
+  tauAlphaY_lt: BigDecimal
+  tauAlphaY_lte: BigDecimal
+  tauAlphaY_not: BigDecimal
+  tauAlphaY_not_in: [BigDecimal!]
+  tauBetaX: BigDecimal
+  tauBetaX_gt: BigDecimal
+  tauBetaX_gte: BigDecimal
+  tauBetaX_in: [BigDecimal!]
+  tauBetaX_lt: BigDecimal
+  tauBetaX_lte: BigDecimal
+  tauBetaX_not: BigDecimal
+  tauBetaX_not_in: [BigDecimal!]
+  tauBetaY: BigDecimal
+  tauBetaY_gt: BigDecimal
+  tauBetaY_gte: BigDecimal
+  tauBetaY_in: [BigDecimal!]
+  tauBetaY_lt: BigDecimal
+  tauBetaY_lte: BigDecimal
+  tauBetaY_not: BigDecimal
+  tauBetaY_not_in: [BigDecimal!]
   tokensList: [Bytes!]
   tokensList_contains: [Bytes!]
   tokensList_contains_nocase: [Bytes!]
@@ -1484,6 +1630,14 @@ input Pool_filter {
   tx_not: Bytes
   tx_not_contains: Bytes
   tx_not_in: [Bytes!]
+  u: BigDecimal
+  u_gt: BigDecimal
+  u_gte: BigDecimal
+  u_in: [BigDecimal!]
+  u_lt: BigDecimal
+  u_lte: BigDecimal
+  u_not: BigDecimal
+  u_not_in: [BigDecimal!]
   unitSeconds: BigInt
   unitSeconds_gt: BigInt
   unitSeconds_gte: BigInt
@@ -1500,6 +1654,14 @@ input Pool_filter {
   upperTarget_lte: BigDecimal
   upperTarget_not: BigDecimal
   upperTarget_not_in: [BigDecimal!]
+  v: BigDecimal
+  v_gt: BigDecimal
+  v_gte: BigDecimal
+  v_in: [BigDecimal!]
+  v_lt: BigDecimal
+  v_lte: BigDecimal
+  v_not: BigDecimal
+  v_not_in: [BigDecimal!]
   vaultID: String
   vaultID_: Balancer_filter
   vaultID_contains: String
@@ -1521,6 +1683,14 @@ input Pool_filter {
   vaultID_not_starts_with_nocase: String
   vaultID_starts_with: String
   vaultID_starts_with_nocase: String
+  w: BigDecimal
+  w_gt: BigDecimal
+  w_gte: BigDecimal
+  w_in: [BigDecimal!]
+  w_lt: BigDecimal
+  w_lte: BigDecimal
+  w_not: BigDecimal
+  w_not_in: [BigDecimal!]
   weightUpdates_: GradualWeightUpdate_filter
   wrappedIndex: Int
   wrappedIndex_gt: Int
@@ -1530,18 +1700,31 @@ input Pool_filter {
   wrappedIndex_lte: Int
   wrappedIndex_not: Int
   wrappedIndex_not_in: [Int!]
+  z: BigDecimal
+  z_gt: BigDecimal
+  z_gte: BigDecimal
+  z_in: [BigDecimal!]
+  z_lt: BigDecimal
+  z_lte: BigDecimal
+  z_not: BigDecimal
+  z_not_in: [BigDecimal!]
 }
 
 enum Pool_orderBy {
   address
+  alpha
   amp
   baseToken
+  beta
+  c
   createTime
+  dSq
   expiryTime
   factory
   historicalValues
   holdersCount
   id
+  lambda
   lowerTarget
   mainIndex
   managementFee
@@ -1549,9 +1732,14 @@ enum Pool_orderBy {
   oracleEnabled
   owner
   poolType
+  poolTypeVersion
   priceRateProviders
   principalToken
+  protocolAumFeeCache
+  protocolSwapFeeCache
+  protocolYieldFeeCache
   root3Alpha
+  s
   shares
   snapshots
   sqrtAlpha
@@ -1562,6 +1750,10 @@ enum Pool_orderBy {
   swaps
   swapsCount
   symbol
+  tauAlphaX
+  tauAlphaY
+  tauBetaX
+  tauBetaY
   tokens
   tokensList
   totalLiquidity
@@ -1570,21 +1762,25 @@ enum Pool_orderBy {
   totalSwapVolume
   totalWeight
   tx
+  u
   unitSeconds
   upperTarget
+  v
   vaultID
+  w
   weightUpdates
   wrappedIndex
+  z
 }
 
 type PriceRateProvider {
   address: Bytes!
-  cacheDuration: Int!
-  cacheExpiry: Int!
+  cacheDuration: Int
+  cacheExpiry: Int
   id: ID!
-  lastCached: Int!
+  lastCached: Int
   poolId: Pool!
-  rate: BigDecimal!
+  rate: BigDecimal
   token: PoolToken!
 }
 

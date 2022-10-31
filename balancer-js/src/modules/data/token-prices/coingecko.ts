@@ -175,7 +175,10 @@ const unwrapToken = (wrappedAddress: string, chainId: Network) => {
   const lowercase = wrappedAddress.toLocaleLowerCase();
 
   const aaveChain = chainId as keyof typeof aaveWrappedMap;
-  if (Object.keys(aaveWrappedMap[aaveChain])?.includes(lowercase)) {
+  if (
+    aaveWrappedMap[aaveChain] &&
+    Object.keys(aaveWrappedMap[aaveChain])?.includes(lowercase)
+  ) {
     return aaveWrappedMap[aaveChain][
       lowercase as keyof typeof aaveWrappedMap[typeof aaveChain]
     ].aToken;

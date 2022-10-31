@@ -56,6 +56,7 @@ export interface ContractAddresses {
   feeDistributor?: string;
   relayerV4?: string;
   veBal?: string;
+  veBalProxy?: string;
   protocolFeePercentagesProvider?: string;
 }
 
