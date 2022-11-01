@@ -12,25 +12,29 @@ import { parseFixed, BigNumber, formatFixed } from '@ethersproject/bignumber';
 import { ComposableStablePoolExitKind } from '@/pool-composable-stable';
 import { defaultAbiCoder } from '@ethersproject/abi';
 import { WeightedPoolDecoder } from '@/pool-weighted/decoder';
+import { SwapType } from '../swaps/types';
+import { Zero } from '@ethersproject/constants';
 
 enum PoolExitKind {
   EXACT_BPT_IN_FOR_ONE_TOKEN_OUT = 0,
   EXACT_BPT_IN_FOR_TOKENS_OUT,
   BPT_IN_FOR_EXACT_TOKENS_OUT,
 }
-interface Info {
-  actionType: ActionType;
-  poolId: string;
-  tokenIn: string;
-  tokenOut: string;
-  amount: string;
-}
+
 export enum ActionType {
   BatchSwap,
   Join,
   Exit,
 }
-type BatchSwap = EncodeBatchSwapInput & Info;
+
+export interface BatchSwap
+  extends Pick<
+    EncodeBatchSwapInput,
+    'swaps' | 'assets' | 'funds' | 'swapType'
+  > {
+  actionType: ActionType.BatchSwap;
+}
+
 export interface ExitPool {
   actionType: ActionType.Exit;
   poolId: string;
@@ -255,5 +259,64 @@ export class VaultModel {
     } else if (exitKind === PoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT) {
       return this.exactBptInForOneTokenOut(exitPoolRequest.userData, pool);
     } else throw new Error('Exit type not implemented');
+  }
+
+  async handleBatchSwap(batchSwapRequest: BatchSwap): Promise<string[]> {
+    const assets = batchSwapRequest.assets;
+    const pools = await this.poolsDictionary();
+    const deltas = new Array(assets.length).fill(Zero);
+
+    batchSwapRequest.swaps.forEach((swap) => {
+      const tokenIn = assets[swap.assetInIndex];
+      const tokenOut = assets[swap.assetOutIndex];
+      const pool = pools[swap.poolId];
+      const pairData = pool.parsePoolPairData(tokenIn, tokenOut);
+      const isExactIn = batchSwapRequest.swapType === SwapType.SwapExactIn;
+      let amountInEvm: string | BigNumber = isExactIn
+        ? BigNumber.from(swap.amount)
+        : Zero;
+      let amountOutEvm: string | BigNumber = isExactIn
+        ? Zero
+        : BigNumber.from(swap.amount);
+      const amountInHuman: string | BigNumber = formatFixed(
+        amountInEvm,
+        pairData.decimalsIn
+      );
+      const amountOutHuman: string | BigNumber = formatFixed(
+        amountOutEvm,
+        pairData.decimalsOut
+      );
+
+      if (batchSwapRequest.swapType === SwapType.SwapExactIn) {
+        // Needs human scale
+        const amountOutHuman = pool._exactTokenInForTokenOut(
+          pairData,
+          bnum(amountInHuman.toString())
+        );
+        amountOutEvm = parseFixed(
+          amountOutHuman.toString(),
+          pairData.decimalsOut
+        );
+      } else {
+        // Needs human scale
+        const amountInHuman = pool._tokenInForExactTokenOut(
+          pairData,
+          bnum(amountOutHuman.toString())
+        );
+        amountInEvm = parseFixed(amountInHuman.toString(), pairData.decimalsIn);
+      }
+      deltas[swap.assetInIndex] = deltas[swap.assetInIndex].add(amountInEvm);
+      deltas[swap.assetOutIndex] = deltas[swap.assetOutIndex].sub(amountOutEvm);
+      // Update balances of tokenIn and tokenOut - use EVM scale
+      pool.updateTokenBalanceForPool(
+        pairData.tokenIn,
+        pairData.balanceIn.add(amountInEvm)
+      );
+      pool.updateTokenBalanceForPool(
+        pairData.tokenOut,
+        pairData.balanceOut.sub(amountOutEvm)
+      );
+    });
+    return deltas.map((d) => d.toString());
   }
 }

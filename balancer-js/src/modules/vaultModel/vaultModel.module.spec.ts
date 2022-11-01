@@ -2,11 +2,12 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { Network, SubgraphPoolBase } from '@/.';
+import { Network, SubgraphPoolBase, SwapType } from '@/.';
 import {
   VaultModel,
   JoinPool,
   ExitPool,
+  BatchSwap,
   ActionType,
 } from './vaultModel.module';
 
@@ -234,6 +235,116 @@ describe('vault model', () => {
         BigNumber.from(balancesBefore[3]).sub(balancesAfter[3]).toString()
       ).to.eq(amountsOut[3]);
       expect(amountsOut).to.deep.eq(['9992541880923205377', '0', '0', '0']); // Taken from Tenderly simulation
+    });
+  });
+  context('batchSwapAction', async () => {
+    context('ExactIn', () => {
+      it('single swap', async () => {
+        const poolsRepository = new MockPoolDataService(
+          cloneDeep(pools_14717479 as unknown as SubgraphPoolBase[])
+        );
+        const vaultModel = new VaultModel(poolsRepository);
+        const swapType = SwapType.SwapExactIn;
+        const swap = [
+          {
+            poolId:
+              '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014',
+            assetInIndex: 0,
+            assetOutIndex: 1,
+            amount: '100000000000000000000',
+            userData: '0x',
+          },
+        ];
+        const assets = [
+          '0xba100000625a3754423978a60c9317c58a424e3d',
+          '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+        ];
+
+        const funds = {
+          sender: '',
+          recipient: '',
+          fromInternalBalance: false,
+          toInternalBalance: false,
+        };
+        const batchSwapRequest: BatchSwap = {
+          actionType: ActionType.BatchSwap,
+          swapType,
+          swaps: swap,
+          assets,
+          funds,
+        };
+        const poolsDictionary = await vaultModel.poolsDictionary();
+        const swapPool = poolsDictionary[swap[0].poolId];
+        const balancesBefore = getPoolBalances(swapPool, assets);
+
+        const deltas = await vaultModel.handleBatchSwap(batchSwapRequest);
+
+        const balancesAfter = getPoolBalances(swapPool, assets);
+        expect(deltas).to.deep.eq([
+          '100000000000000000000',
+          '-488191063271093915',
+        ]); // Taken from Tenderly simulation
+        expect(
+          BigNumber.from(balancesAfter[0]).sub(balancesBefore[0]).toString()
+        ).to.eq(deltas[0]);
+        expect(
+          BigNumber.from(balancesAfter[1]).sub(balancesBefore[1]).toString()
+        ).to.eq(deltas[1]);
+      });
+    });
+    context('ExactOut', () => {
+      it('single swap', async () => {
+        const poolsRepository = new MockPoolDataService(
+          cloneDeep(pools_14717479 as unknown as SubgraphPoolBase[])
+        );
+        const vaultModel = new VaultModel(poolsRepository);
+        const swapType = SwapType.SwapExactOut;
+        const swap = [
+          {
+            poolId:
+              '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014',
+            assetInIndex: 0,
+            assetOutIndex: 1,
+            amount: '100000000000000000000',
+            userData: '0x',
+          },
+        ];
+        const assets = [
+          '0xba100000625a3754423978a60c9317c58a424e3d',
+          '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+        ];
+
+        const funds = {
+          sender: '',
+          recipient: '',
+          fromInternalBalance: false,
+          toInternalBalance: false,
+        };
+        const batchSwapRequest: BatchSwap = {
+          actionType: ActionType.BatchSwap,
+          swapType,
+          swaps: swap,
+          assets,
+          funds,
+        };
+        const poolsDictionary = await vaultModel.poolsDictionary();
+        const swapPool = poolsDictionary[swap[0].poolId];
+        const balancesBefore = getPoolBalances(swapPool, assets);
+
+        const deltas = await vaultModel.handleBatchSwap(batchSwapRequest);
+
+        const balancesAfter = getPoolBalances(swapPool, assets);
+        expect(deltas).to.deep.eq([
+          '20635111802024409758812',
+          '-100000000000000000000',
+        ]); // Taken from Tenderly simulation
+        expect(
+          BigNumber.from(balancesAfter[0]).sub(balancesBefore[0]).toString()
+        ).to.eq(deltas[0]);
+        expect(
+          BigNumber.from(balancesAfter[1]).sub(balancesBefore[1]).toString()
+        ).to.eq(deltas[1]);
+      });
     });
   });
 });
