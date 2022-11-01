@@ -157,7 +157,6 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
         relayer: '0x00e695aA8000df01B8DC8401B4C34Fba5D56BBb2',
-        // relayer: '0x2Fb8aD26faDC971464A17407e9213D1A22befc8a', // TODO: remove this after permissions are granted to new relayerV4
         gaugeController: '0xBB1CE49b16d55A1f2c6e88102f32144C7334B116',
         veBal: '0x33A99Dcc4C85C014cf12626959111D5898bbCAbF',
         veBalProxy: '0xA1F107D1cD709514AE8A914eCB757E95f9cedB31',

@@ -30,7 +30,7 @@ const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 const network = Network.GOERLI;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
-const blockNumber = 7844900;
+const blockNumber = 7873505;
 
 /*
  * Testing on MAINNET
