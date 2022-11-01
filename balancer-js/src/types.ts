@@ -34,6 +34,7 @@ export interface BalancerSdkConfig {
   customSubgraphUrl?: string;
   //optionally overwrite parts of the standard SOR config
   sor?: Partial<BalancerSdkSorConfig>;
+  tenderlyAccessKey?: string;
 }
 
 export interface BalancerSdkSorConfig {
@@ -73,6 +74,9 @@ export interface BalancerNetworkConfig {
       veBal?: string;
       bbaUsd?: string;
     };
+  };
+  keys?: {
+    tenderlyAccessKey?: string;
   };
   urls: {
     subgraph: string;

@@ -46,7 +46,8 @@ const blockNumber = 7844900;
 
 dotenv.config();
 
-const { ALCHEMY_URL: jsonRpcUrl } = process.env;
+const { ALCHEMY_URL: jsonRpcUrl, TENDERLY_ACCESS_KEY: tenderlyAccessKey } =
+  process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
@@ -55,6 +56,7 @@ const sdk = new BalancerSDK({
   network,
   rpcUrl,
   customSubgraphUrl,
+  tenderlyAccessKey,
 });
 const { pools } = sdk;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);

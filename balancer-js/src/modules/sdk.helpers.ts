@@ -12,6 +12,10 @@ export function getNetworkConfig(
         ...networkConfig.urls,
         subgraph: config.customSubgraphUrl ?? networkConfig.urls.subgraph,
       },
+      keys: {
+        ...networkConfig.keys,
+        tenderlyAccessKey: config.tenderlyAccessKey,
+      },
     };
   }
 
@@ -20,6 +24,10 @@ export function getNetworkConfig(
     urls: {
       ...config.network.urls,
       subgraph: config.customSubgraphUrl ?? config.network.urls.subgraph,
+    },
+    keys: {
+      ...config.network.keys,
+      tenderlyAccessKey: config.tenderlyAccessKey,
     },
   };
 }

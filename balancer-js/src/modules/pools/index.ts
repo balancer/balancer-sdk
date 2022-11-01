@@ -46,8 +46,8 @@ export class Pools implements Findable<PoolWithMethods> {
       repositories.pools,
       repositories.tokenPrices
     );
-    this.joinService = new Join(this.repositories.pools, networkConfig.chainId);
-    this.exitService = new Exit(this.repositories.pools, networkConfig.chainId);
+    this.joinService = new Join(this.repositories.pools, networkConfig);
+    this.exitService = new Exit(this.repositories.pools, networkConfig);
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
   }
