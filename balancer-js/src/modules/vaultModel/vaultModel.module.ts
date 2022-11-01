@@ -1,23 +1,23 @@
-import type { BalancerDataRepositories } from '@/types';
 import {
   SubgraphPoolBase,
   parseToPoolsDict,
   PoolDictionary,
   SubgraphToken,
   bnum,
-  SwapTypes,
-  PoolBase,
-  PoolPairBase,
   PoolDataService,
+  PoolBase,
 } from '@balancer-labs/sor';
-import { OnChainPoolsRepository } from '../sor/pool-data/subgraphPoolDataService';
-import {
-  EncodeBatchSwapInput,
-  // EncodeWrapAaveDynamicTokenInput,
-  // EncodeUnwrapAaveStaticTokenInput,
-  EncodeExitPoolInput,
-} from '@/modules/relayer/types';
+import { EncodeBatchSwapInput } from '@/modules/relayer/types';
 import { parseFixed, BigNumber, formatFixed } from '@ethersproject/bignumber';
+import { ComposableStablePoolExitKind } from '@/pool-composable-stable';
+import { defaultAbiCoder } from '@ethersproject/abi';
+import { WeightedPoolDecoder } from '@/pool-weighted/decoder';
+
+enum PoolExitKind {
+  EXACT_BPT_IN_FOR_ONE_TOKEN_OUT = 0,
+  EXACT_BPT_IN_FOR_TOKENS_OUT,
+  BPT_IN_FOR_EXACT_TOKENS_OUT,
+}
 interface Info {
   actionType: ActionType;
   poolId: string;
@@ -31,8 +31,12 @@ export enum ActionType {
   Exit,
 }
 type BatchSwap = EncodeBatchSwapInput & Info;
-type ExitPool = EncodeExitPoolInput & Info;
-// export type JoinPool = { Info };
+export interface ExitPool {
+  actionType: ActionType.Exit;
+  poolId: string;
+  poolType: string;
+  userData: string;
+}
 export interface JoinPool {
   actionType: ActionType.Join;
   poolId: string;
@@ -40,6 +44,23 @@ export interface JoinPool {
   amountsIn: string[];
 }
 type Inputs = BatchSwap | JoinPool | ExitPool;
+
+function getPoolBalances(pool: PoolBase, tokens: string[]): string[] {
+  const balances: string[] = [];
+  tokens.forEach((t) => {
+    const tokenIndex = pool.tokens.findIndex(
+      (pt) => pt.address.toLowerCase() === t.toLowerCase()
+    );
+    if (tokenIndex < 0) throw 'Pool does not contain tokenIn';
+    balances.push(
+      parseFixed(
+        pool.tokens[tokenIndex].balance,
+        pool.tokens[tokenIndex].decimals
+      ).toString()
+    );
+  });
+  return balances;
+}
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -86,8 +107,8 @@ export class VaultModel {
     for (const call of rawCalls) {
       if (call.actionType === ActionType.Join) {
         console.log('JoinPool');
-      } else if ('exitPoolRequest' in call) {
-        console.log(call.exitPoolRequest);
+      } else if (call.actionType === ActionType.Exit) {
+        console.log('ExitPool');
       } else {
         console.log('BatchSwap');
       }
@@ -131,5 +152,108 @@ export class VaultModel {
       totalOut = totalOut.add(amountOutEvm);
     });
     return totalOut.toString();
+  }
+
+  exitKind(poolType: string, data: string): PoolExitKind {
+    const decoded = defaultAbiCoder.decode(['uint256'], data);
+    const type = decoded[0] as BigNumber;
+    if (!type) throw new Error('No exit kind.');
+    if (poolType === 'ComposableStable') {
+      if (
+        type.toNumber() ===
+        ComposableStablePoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT
+      )
+        return PoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT;
+      else {
+        return PoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT;
+      }
+    } else {
+      return type.toNumber() as PoolExitKind;
+    }
+  }
+
+  decodeExitData(data: string, exitKind: PoolExitKind): string[] {
+    if (exitKind === PoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT) {
+      const [, amountsOut, maxBPTAmountIn] =
+        WeightedPoolDecoder.exitBPTInForExactTokensOut(data);
+      return [amountsOut.toString(), maxBPTAmountIn.toString()];
+    } else if (exitKind === PoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT) {
+      const [, bptIn, tokenIndex] =
+        WeightedPoolDecoder.exitExactBPTInForOneTokenOut(data);
+      return [bptIn.toString(), tokenIndex.toString()];
+    } else if (exitKind === PoolExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT) {
+      const [, bptIn] = WeightedPoolDecoder.exitExactBPTInForTokensOut(data);
+      return [bptIn.toString()];
+    } else throw new Error('Non supported exit data');
+  }
+
+  exactBptInForTokensOut(encodedData: string, pool: PoolBase): string[] {
+    const [bptIn] = this.decodeExitData(
+      encodedData,
+      PoolExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT
+    );
+    const tokensOut = pool
+      ._calcTokensOutGivenExactBptIn(BigNumber.from(bptIn))
+      .map((a) => a.toString());
+
+    // Updates BPT/totalShares value for pool
+    pool.updateTokenBalanceForPool(pool.address, pool.totalShares.sub(bptIn));
+    // Update each tokens balance
+    tokensOut.forEach((t, i) => {
+      const balanceEvm = parseFixed(
+        pool.tokens[i].balance.toString(),
+        pool.tokens[i].decimals
+      );
+      pool.updateTokenBalanceForPool(pool.tokensList[i], balanceEvm.sub(t));
+    });
+    return tokensOut;
+  }
+
+  exactBptInForOneTokenOut(encodedData: string, pool: PoolBase): string[] {
+    const [bptIn, tokenIndex] = this.decodeExitData(
+      encodedData,
+      PoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT
+    );
+    const pairData = pool.parsePoolPairData(
+      pool.address,
+      pool.tokensList[Number(tokenIndex)]
+    );
+    const amountInHuman: string = formatFixed(bptIn, pairData.decimalsIn);
+    const amountOutHuman = pool
+      ._exactTokenInForTokenOut(pairData, bnum(amountInHuman))
+      .dp(pairData.decimalsOut);
+    const amountOutEvm = parseFixed(
+      amountOutHuman.toString(),
+      pairData.decimalsOut
+    );
+
+    const balances = getPoolBalances(pool, [pool.address, pairData.tokenOut]);
+    // Update balances of tokenIn and tokenOut - use EVM scale
+    pool.updateTokenBalanceForPool(
+      pool.address,
+      BigNumber.from(balances[0]).add(bptIn)
+    );
+
+    const x = BigNumber.from(balances[1]).sub(amountOutEvm);
+    // For a join we have to add the extra BPT to the balance as this is equivalent to bptTotalSupply
+    pool.updateTokenBalanceForPool(pairData.tokenOut, x);
+    const result = new Array(pool.tokensList.length).fill('0');
+    result[Number(tokenIndex)] = amountOutEvm.toString();
+    return result;
+  }
+
+  async handleExitPool(exitPoolRequest: ExitPool): Promise<string[]> {
+    const pools = await this.poolsDictionary();
+    const pool = pools[exitPoolRequest.poolId];
+    const exitKind = this.exitKind(
+      exitPoolRequest.poolType,
+      exitPoolRequest.userData
+    );
+
+    if (exitKind === PoolExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT) {
+      return this.exactBptInForTokensOut(exitPoolRequest.userData, pool);
+    } else if (exitKind === PoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT) {
+      return this.exactBptInForOneTokenOut(exitPoolRequest.userData, pool);
+    } else throw new Error('Exit type not implemented');
   }
 }
