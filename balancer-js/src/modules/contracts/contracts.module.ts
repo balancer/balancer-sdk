@@ -21,7 +21,7 @@ export interface ContractInstances {
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
   ERC20: ERC20Helper;
-  relayerV4: Contract | undefined;
+  relayer: Contract | undefined;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
 }
@@ -31,7 +31,7 @@ export class Contracts {
   vault: Vault;
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
-  relayerV4: Contract | undefined;
+  relayer: Contract | undefined;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
 
@@ -63,8 +63,8 @@ export class Contracts {
     // These contracts aren't included in Balancer Typechain but are still useful.
     // TO DO - Possibly create via Typechain but seems unnecessary?
     this.multicall = Multicall(this.contractAddresses.multicall, provider);
-    if (this.contractAddresses.relayerV4)
-      this.relayerV4 = RelayerV4(this.contractAddresses.relayerV4, provider);
+    if (this.contractAddresses.relayer)
+      this.relayer = RelayerV4(this.contractAddresses.relayer, provider);
 
     if (this.contractAddresses.veBal) {
       this.veBal = new VeBal(this.contractAddresses, provider);
@@ -84,7 +84,7 @@ export class Contracts {
       lidoRelayer: this.lidoRelayer,
       multicall: this.multicall,
       ERC20: this.getErc20,
-      relayerV4: this.relayerV4,
+      relayer: this.relayer,
       veBal: this.veBal,
       veBalProxy: this.veBalProxy,
     };

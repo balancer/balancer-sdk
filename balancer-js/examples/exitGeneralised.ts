@@ -9,7 +9,6 @@ import { Contracts } from '../src/modules/contracts/contracts.module';
 
 dotenv.config();
 
-// !!!!!!! Note this currently run on Goerli only (needs RelayerV4 which isn't deployed on mainnet)
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
