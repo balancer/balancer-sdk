@@ -139,17 +139,21 @@ export class VaultModel {
     return this.poolsDict;
   }
 
-  async multicall(rawCalls: Inputs[]): Promise<string[]> {
+  async multicall(rawCalls: Inputs[]): Promise<(string | string[])[]> {
+    const results: (string | string[])[] = [];
     for (const call of rawCalls) {
       if (call.actionType === ActionType.Join) {
-        console.log('JoinPool');
+        const result = await this.doJoinPool(call);
+        results.push(result);
       } else if (call.actionType === ActionType.Exit) {
-        console.log('ExitPool');
+        const result = await this.doExitPool(call);
+        results.push(result);
       } else {
-        console.log('BatchSwap');
+        const result = await this.doBatchSwap(call);
+        results.push(result);
       }
     }
-    return [];
+    return results;
   }
 
   /**
@@ -468,7 +472,7 @@ export class VaultModel {
    * @param batchSwapRequest
    * @returns Returns an array with the net Vault asset balance deltas. Positive amounts represent tokens (or ETH) sent to the Vault, and negative amounts represent tokens (or ETH) sent by the Vault. Each delta corresponds to the asset at the same index in the `assets` array.
    */
-  async handleBatchSwap(batchSwapRequest: BatchSwapRequest): Promise<string[]> {
+  async doBatchSwap(batchSwapRequest: BatchSwapRequest): Promise<string[]> {
     const assets = batchSwapRequest.assets;
     const pools = await this.poolsDictionary();
     const deltas = new Array(assets.length).fill(Zero);
