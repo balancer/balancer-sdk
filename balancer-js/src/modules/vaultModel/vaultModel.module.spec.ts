@@ -5,10 +5,11 @@ import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Network, SubgraphPoolBase, SwapType } from '@/.';
 import {
   VaultModel,
-  JoinPool,
-  ExitPool,
-  BatchSwap,
+  JoinPoolInput,
+  ExitPoolRequest,
+  BatchSwapRequest,
   ActionType,
+  PoolTypes,
 } from './vaultModel.module';
 
 import { MockPoolDataService } from '@/test/lib/mockPool';
@@ -92,7 +93,7 @@ describe('vault model', () => {
         parseFixed('1.23', 8).toString(),
         parseFixed('10.7', 18).toString(),
       ];
-      const joinPoolRequest: JoinPool = {
+      const joinPoolRequest: JoinPoolInput = {
         actionType: ActionType.Join,
         poolId,
         amountsIn,
@@ -135,10 +136,10 @@ describe('vault model', () => {
       // Should be EVM scale
       const bptIn = parseFixed('10', 18).toString();
       const userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(bptIn);
-      const exitPoolRequest: ExitPool = {
+      const exitPoolRequest: ExitPoolRequest = {
         actionType: ActionType.Exit,
-        poolType: 'Weighted',
-        userData,
+        poolType: PoolTypes.Weighted,
+        encodedUserData: userData,
         poolId,
       };
       const poolsDictionary = await vaultModel.poolsDictionary();
@@ -181,10 +182,10 @@ describe('vault model', () => {
         bptIn,
         0
       );
-      const exitPoolRequest: ExitPool = {
+      const exitPoolRequest: ExitPoolRequest = {
         actionType: ActionType.Exit,
-        poolType: 'ComposableStable',
-        userData,
+        poolType: PoolTypes.ComposableStable,
+        encodedUserData: userData,
         poolId,
       };
       const poolsDictionary = await vaultModel.poolsDictionary();
@@ -219,7 +220,7 @@ describe('vault model', () => {
         BigNumber.from(balancesBefore[1]).sub(balancesAfter[1]).toString()
       ).to.eq(amountsOut[1]);
       expect(
-        BigNumber.from(balancesAfter[2]).sub(balancesBefore[2]).toString()
+        BigNumber.from(balancesBefore[2]).sub(balancesAfter[2]).toString()
       ).to.eq(bptIn);
       expect(
         BigNumber.from(balancesBefore[3]).sub(balancesAfter[3]).toString()
@@ -256,7 +257,7 @@ describe('vault model', () => {
           fromInternalBalance: false,
           toInternalBalance: false,
         };
-        const batchSwapRequest: BatchSwap = {
+        const batchSwapRequest: BatchSwapRequest = {
           actionType: ActionType.BatchSwap,
           swapType,
           swaps: swap,
@@ -321,7 +322,7 @@ describe('vault model', () => {
           fromInternalBalance: false,
           toInternalBalance: false,
         };
-        const batchSwapRequest: BatchSwap = {
+        const batchSwapRequest: BatchSwapRequest = {
           actionType: ActionType.BatchSwap,
           swapType,
           swaps,
@@ -392,7 +393,7 @@ describe('vault model', () => {
           fromInternalBalance: false,
           toInternalBalance: false,
         };
-        const batchSwapRequest: BatchSwap = {
+        const batchSwapRequest: BatchSwapRequest = {
           actionType: ActionType.BatchSwap,
           swapType,
           swaps: swap,
@@ -456,7 +457,7 @@ describe('vault model', () => {
           fromInternalBalance: false,
           toInternalBalance: false,
         };
-        const batchSwapRequest: BatchSwap = {
+        const batchSwapRequest: BatchSwapRequest = {
           actionType: ActionType.BatchSwap,
           swapType,
           swaps,
