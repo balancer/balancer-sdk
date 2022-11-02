@@ -72,10 +72,10 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'bbausd',
     },
-    bbausdc: {
+    bbausdcOld: {
       address: '0x9210F1204b5a24742Eba12f710636D76240dF3d0',
       decimals: 18,
-      symbol: 'bbausdc',
+      symbol: 'bbausdcOld',
     },
     waDAI: {
       address: '0x02d60b84491589974263d922d9cc7a3152618ef6',
@@ -98,6 +98,21 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'BAL8020BPT',
       slot: 0,
+    },
+    bbausdc: {
+      address: '0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83',
+      decimals: 18,
+      symbol: 'bbausdc',
+    },
+    bbausdt: {
+      address: '0x2F4eb100552ef93840d5aDC30560E5513DFfFACb',
+      decimals: 18,
+      symbol: 'bbausdt',
+    },
+    bbadai: {
+      address: '0xae37D54Ae477268B9997d4161B96b8200755935c',
+      decimals: 18,
+      symbol: 'bbadai',
     },
   },
   [Network.KOVAN]: {

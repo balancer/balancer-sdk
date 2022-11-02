@@ -5,7 +5,7 @@ import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Network, SubgraphPoolBase, SwapType } from '@/.';
 import {
   VaultModel,
-  JoinPoolInput,
+  JoinPoolRequest,
   ExitPoolRequest,
   BatchSwapRequest,
   ActionType,
@@ -78,7 +78,7 @@ describe('vault model', () => {
     // });
   });
   context('joinAction', async () => {
-    it('should handle join', async () => {
+    it('weighted pool - joinExactTokensInForBPTOut', async () => {
       const poolsRepository = new MockPoolDataService([
         cloneDeep(poolWeighted),
       ]);
@@ -93,11 +93,15 @@ describe('vault model', () => {
         parseFixed('1.23', 8).toString(),
         parseFixed('10.7', 18).toString(),
       ];
-      const joinPoolRequest: JoinPoolInput = {
+      const encodedUserData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
+        amountsIn,
+        '0'
+      );
+
+      const joinPoolRequest: JoinPoolRequest = {
         actionType: ActionType.Join,
         poolId,
-        amountsIn,
-        tokensIn,
+        encodedUserData,
       };
       const poolsDictionary = await vaultModel.poolsDictionary();
       const joinPool = poolsDictionary[poolId];
@@ -108,7 +112,7 @@ describe('vault model', () => {
         },
       ]);
 
-      const bptOut = await vaultModel.handleJoinPool(joinPoolRequest);
+      const bptOut = await vaultModel.doJoinPool(joinPoolRequest);
 
       const balancesAfter = getPoolBalances([
         { pool: joinPool, tokens: [...tokensIn, poolWeighted.address] },
@@ -123,7 +127,58 @@ describe('vault model', () => {
       expect(
         BigNumber.from(balancesAfter[2]).sub(balancesBefore[2]).toString()
       ).to.eq(bptOut);
-      expect(bptOut).to.eq('7314757264527952668'); // Taken from join module
+      expect(bptOut).to.eq('7314757264527952668');
+    });
+    it('ComposableStable - joinExactTokensInForBPTOut', async () => {
+      const poolsRepository = new MockPoolDataService([
+        cloneDeep(poolComposableStable),
+      ]);
+      const vaultModel = new VaultModel(poolsRepository);
+      const poolId = poolComposableStable.id;
+      const tokensIn = [
+        ADDRESSES[Network.MAINNET].bbausdt.address,
+        ADDRESSES[Network.MAINNET].bbausdc.address,
+        ADDRESSES[Network.MAINNET].bbadai.address,
+      ];
+      // Should be EVM scaled
+      const amountsIn = [
+        parseFixed('1.23', 18).toString(),
+        parseFixed('10.7', 18).toString(),
+        parseFixed('1099.5432', 18).toString(),
+      ];
+      const encodedUserData =
+        ComposableStablePoolEncoder.joinExactTokensInForBPTOut(amountsIn, '0');
+
+      const joinPoolRequest: JoinPoolRequest = {
+        actionType: ActionType.Join,
+        poolId,
+        encodedUserData,
+      };
+      const poolsDictionary = await vaultModel.poolsDictionary();
+      const joinPool = poolsDictionary[poolId];
+      const balancesBefore = getPoolBalances([
+        {
+          pool: joinPool,
+          tokens: tokensIn,
+        },
+      ]);
+
+      const bptOut = await vaultModel.doJoinPool(joinPoolRequest);
+
+      const balancesAfter = getPoolBalances([
+        { pool: joinPool, tokens: tokensIn },
+      ]);
+      expect(BigNumber.from(bptOut).gt(0)).to.be.true;
+      expect(
+        BigNumber.from(balancesAfter[0]).sub(balancesBefore[0]).toString()
+      ).to.eq(amountsIn[0]);
+      expect(
+        BigNumber.from(balancesAfter[1]).sub(balancesBefore[1]).toString()
+      ).to.eq(amountsIn[1]);
+      expect(
+        BigNumber.from(balancesAfter[2]).sub(balancesBefore[2]).toString()
+      ).to.eq(amountsIn[2]);
+      expect(bptOut).to.eq('1111327432434158659003'); // From Tenderly
     });
   });
   context('exitAction', async () => {
@@ -151,7 +206,7 @@ describe('vault model', () => {
         },
       ]);
 
-      const amountsOut = await vaultModel.handleExitPool(exitPoolRequest);
+      const amountsOut = await vaultModel.doExitPool(exitPoolRequest);
 
       const balancesAfter = getPoolBalances([
         {
@@ -194,25 +249,11 @@ describe('vault model', () => {
         { pool: joinPool, tokens: poolComposableStable.tokensList },
       ]);
 
-      const amountsOut = await vaultModel.handleExitPool(exitPoolRequest);
-      const balanceTest = joinPool.parsePoolPairData(
-        poolComposableStable.tokensList[0],
-        poolComposableStable.tokensList[1]
-      );
+      const amountsOut = await vaultModel.doExitPool(exitPoolRequest);
 
       const balancesAfter = getPoolBalances([
         { pool: joinPool, tokens: poolComposableStable.tokensList },
       ]);
-      console.log(poolComposableStable.tokensList);
-      console.log(amountsOut.toString(), 'amountsOut');
-      console.log(balancesBefore.toString(), 'before');
-      console.log(balancesAfter.toString(), 'after');
-      console.log(balanceTest.balanceIn.toString(), 'test');
-      console.log(poolComposableStable.tokensList[0], 'TOKEN OUT TEST');
-      console.log(
-        BigNumber.from(balancesBefore[0]).sub(balancesAfter[0]).toString()
-      );
-
       expect(
         BigNumber.from(balancesBefore[0]).sub(balancesAfter[0]).toString()
       ).to.eq(amountsOut[0]);

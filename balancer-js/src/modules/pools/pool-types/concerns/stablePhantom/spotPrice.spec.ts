@@ -19,7 +19,7 @@ describe('phantomStable pool spot price', () => {
     it('should calculate spot price for pair', () => {
       const spotPrice = spotPriceCalc.calcPoolSpotPrice(
         ADDRESSES[network].bbausd.address,
-        ADDRESSES[network].bbausdc.address,
+        ADDRESSES[network].bbausdcOld.address,
         pool
       );
       expect(spotPrice).to.eq('0.997873677414938406552928560423740375');

@@ -14,6 +14,7 @@ import { defaultAbiCoder } from '@ethersproject/abi';
 import { WeightedPoolDecoder } from '@/pool-weighted/decoder';
 import { SwapType } from '../swaps/types';
 import { Zero } from '@ethersproject/constants';
+import { isSameAddress } from '@/lib/utils';
 
 export enum PoolTypes {
   Weighted = 'Weighted',
@@ -25,6 +26,13 @@ export enum PoolTypes {
   StablePhantom = 'StablePhantom',
   ERC4626Linear = 'ERC4626Linear',
   ComposableStable = 'ComposableStable',
+}
+
+export enum PoolJoinKind {
+  INIT = 0,
+  EXACT_TOKENS_IN_FOR_BPT_OUT,
+  TOKEN_IN_FOR_EXACT_BPT_OUT,
+  ALL_TOKENS_IN_FOR_EXACT_BPT_OUT,
 }
 
 enum PoolExitKind {
@@ -53,19 +61,18 @@ export interface ExitPoolRequest {
   poolType: PoolTypes;
   encodedUserData: string;
 }
-export interface JoinPoolInput {
+export interface JoinPoolRequest {
   actionType: ActionType.Join;
   poolId: string;
-  tokensIn: string[];
-  amountsIn: string[];
+  encodedUserData: string;
 }
-type Inputs = BatchSwapRequest | JoinPoolInput | ExitPoolRequest;
+type Inputs = BatchSwapRequest | JoinPoolRequest | ExitPoolRequest;
 
-function getPoolBalances(pool: PoolBase, tokens: string[]): string[] {
+function getBalancesForTokens(pool: PoolBase, tokens: string[]): string[] {
   const balances: string[] = [];
   tokens.forEach((t) => {
-    const tokenIndex = pool.tokens.findIndex(
-      (pt) => pt.address.toLowerCase() === t.toLowerCase()
+    const tokenIndex = pool.tokens.findIndex((pt) =>
+      isSameAddress(pt.address, t)
     );
     if (tokenIndex < 0) throw 'Pool does not contain tokenIn';
     balances.push(
@@ -145,44 +152,162 @@ export class VaultModel {
     return [];
   }
 
-  // TODO - Refactor this to be like exitPool
-  async handleJoinPool(joinPoolInput: JoinPoolInput): Promise<string> {
-    const pools = await this.poolsDictionary();
-    const pool = pools[joinPoolInput.poolId];
-    let totalOut = BigNumber.from('0');
-    // For each input token do a swap > BPT
-    // TODO This is a workaround until there is time to implement correct joinPool maths
-    joinPoolInput.tokensIn.forEach((token, i) => {
-      const pairData = pool.parsePoolPairData(token, pool.address);
-      // Assume its always a EXACT_TOKENS_IN_FOR_BPT_OUT
-      const amountInEvm = BigNumber.from(joinPoolInput.amountsIn[i]);
-      const amountInHuman: string = formatFixed(
-        amountInEvm,
-        pairData.decimalsIn
-      );
-      const amountOutHuman = pool._exactTokenInForTokenOut(
-        pairData,
-        bnum(amountInHuman)
-      );
-      const amountOutEvm = parseFixed(
-        amountOutHuman.toString(),
-        pairData.decimalsOut
-      );
-
-      // Update balances of tokenIn and tokenOut - use EVM scale
-      pool.updateTokenBalanceForPool(
-        pairData.tokenIn,
-        pairData.balanceIn.add(amountInEvm)
-      );
-      // For a join we have to add the extra BPT to the balance as this is equivalent to bptTotalSupply
-      pool.updateTokenBalanceForPool(
-        pairData.tokenOut,
-        pairData.balanceOut.add(amountOutEvm)
-      );
-      totalOut = totalOut.add(amountOutEvm);
-    });
-    return totalOut.toString();
+  /**
+   * Finds join kind given encoded user data.
+   * @param encodedUserData
+   * @returns
+   */
+  joinKind(encodedUserData: string): PoolJoinKind {
+    const decodedUserData = defaultAbiCoder.decode(
+      ['uint256'],
+      encodedUserData
+    );
+    const joinKind = decodedUserData[0] as BigNumber;
+    if (!joinKind) throw new Error('No exit kind.');
+    return joinKind.toNumber() as PoolJoinKind;
   }
+  /**
+   * Decodes user join data and returns token input amounts
+   * @param encodedUserData
+   * @param joinKind
+   * @returns
+   */
+  decodeJoinData(
+    encodedUserData: string,
+    joinKind: PoolJoinKind
+  ): string | string[] {
+    // At the moment all pools have same structure so just use WeightedPoolDecoded for all
+    if (joinKind === PoolJoinKind.ALL_TOKENS_IN_FOR_EXACT_BPT_OUT) {
+      const bptAmountOut =
+        WeightedPoolDecoder.joinAllTokensInForExactBPTOut(encodedUserData);
+      return bptAmountOut.toString();
+    } else if (joinKind === PoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT) {
+      const [, amountsIn] =
+        WeightedPoolDecoder.joinExactTokensInForBPTOut(encodedUserData);
+      return amountsIn;
+    } else if (joinKind === PoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT) {
+      const [, bptAmountOut, tokenIndex] =
+        WeightedPoolDecoder.joinTokenInForExactBPTOut(encodedUserData);
+      return [bptAmountOut.toString(), tokenIndex];
+    } else throw new Error('Non supported join data');
+  }
+
+  allTokensInForExactBPTOut(encodedUserData: string, pool: PoolBase): string {
+    throw new Error('joinAllTokensInForExactBPTOut not supported');
+    /*
+      We need maths for _calcAllTokensInGivenExactBptOut
+      From SC:
+      uint256 bptAmountOut = userData.allTokensInForExactBptOut();
+      // Note that there is no maximum amountsIn parameter: this is handled by `IVault.joinPool`.
+
+      uint256[] memory amountsIn = WeightedMath._calcAllTokensInGivenExactBptOut(balances, bptAmountOut, totalSupply);
+
+      return (bptAmountOut, amountsIn);
+
+      const bptAmountOut = this.decodeJoinData(
+      encodedUserData,
+      PoolJoinKind.ALL_TOKENS_IN_FOR_EXACT_BPT_OUT
+    );
+    */
+  }
+
+  joinExactTokensInForBPTOut(encodedUserData: string, pool: PoolBase): string {
+    // This does not include a value for pre-minted BPT
+    const amountsIn = this.decodeJoinData(
+      encodedUserData,
+      PoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT
+    ) as string[];
+    // Calculate amount of BPT out given exact amounts in
+    const bptAmountOut = pool._calcBptOutGivenExactTokensIn(
+      amountsIn.map((a) => BigNumber.from(a))
+    );
+    // Updates BPT/totalShares value for pool
+    pool.updateTokenBalanceForPool(
+      pool.address,
+      pool.totalShares.add(bptAmountOut)
+    );
+    const tokensWithoutBpt = pool.tokens.filter(
+      (t) => !isSameAddress(t.address, pool.address)
+    );
+    // Update each tokens balance
+    amountsIn.forEach((amount, i) => {
+      const balanceEvm = parseFixed(
+        tokensWithoutBpt[i].balance.toString(),
+        tokensWithoutBpt[i].decimals
+      );
+      pool.updateTokenBalanceForPool(
+        tokensWithoutBpt[i].address,
+        balanceEvm.add(amount)
+      );
+    });
+    return bptAmountOut.toString();
+  }
+
+  joinTokenInForExactBPTOut(encodedUserData: string, pool: PoolBase): string {
+    const [bptAmountOut, tokenInIndex] = this.decodeJoinData(
+      encodedUserData,
+      PoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT
+    ) as string;
+    // Uses an existing SOR functionality so need to deal with pairData and scaling
+    const pairData = pool.parsePoolPairData(
+      pool.tokensList[Number(tokenInIndex)],
+      pool.address
+    );
+
+    const bptAmountOutHuman = formatFixed(bptAmountOut, 18);
+    // Needs human scale
+    const amountInHuman = pool
+      ._tokenInForExactTokenOut(pairData, bnum(bptAmountOutHuman.toString()))
+      .dp(pairData.decimalsIn);
+    const amountInEvm = parseFixed(
+      amountInHuman.toString(),
+      pairData.decimalsIn
+    );
+
+    // Update balances of tokenIn and tokenOut - use EVM scale
+    pool.updateTokenBalanceForPool(
+      pairData.tokenIn,
+      pairData.balanceIn.add(amountInEvm)
+    );
+    // For a join we have to add the extra BPT to the balance as this is equivalent to bptTotalSupply
+    pool.updateTokenBalanceForPool(
+      pairData.tokenOut,
+      pairData.balanceOut.add(bptAmountOut)
+    );
+
+    return amountInEvm.toString();
+  }
+
+  /**
+   * Perform the specified exit type.
+   * @param joinPoolRequest
+   * @returns tokens out
+   */
+  async doJoinPool(joinPoolRequest: JoinPoolRequest): Promise<string> {
+    const pools = await this.poolsDictionary();
+    const pool = pools[joinPoolRequest.poolId];
+    const joinKind = this.joinKind(joinPoolRequest.encodedUserData);
+    if (joinKind === PoolJoinKind.ALL_TOKENS_IN_FOR_EXACT_BPT_OUT) {
+      // Returns amount of tokens in
+      return this.allTokensInForExactBPTOut(
+        joinPoolRequest.encodedUserData,
+        pool
+      );
+    } else if (joinKind === PoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT) {
+      // Returns amount of BPT out
+      return this.joinExactTokensInForBPTOut(
+        joinPoolRequest.encodedUserData,
+        pool
+      );
+    } else if (joinKind === PoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT) {
+      // Returns amount of tokenIn
+      return this.joinTokenInForExactBPTOut(
+        joinPoolRequest.encodedUserData,
+        pool
+      );
+    } else throw new Error('Exit type not implemented');
+  }
+
   /**
    * Finds exit kind given encoded user data and pool type.
    * @param poolType
@@ -251,13 +376,19 @@ export class VaultModel {
 
     // Updates BPT/totalShares value for pool
     pool.updateTokenBalanceForPool(pool.address, pool.totalShares.sub(bptIn));
+    const tokensWithoutBpt = pool.tokens.filter(
+      (t) => !isSameAddress(t.address, pool.address)
+    );
     // Update each tokens balance
     tokensOut.forEach((t, i) => {
       const balanceEvm = parseFixed(
-        pool.tokens[i].balance.toString(),
-        pool.tokens[i].decimals
+        tokensWithoutBpt[i].balance.toString(),
+        tokensWithoutBpt[i].decimals
       );
-      pool.updateTokenBalanceForPool(pool.tokensList[i], balanceEvm.sub(t));
+      pool.updateTokenBalanceForPool(
+        tokensWithoutBpt[i].address,
+        balanceEvm.sub(t)
+      );
     });
     return tokensOut;
   }
@@ -290,7 +421,7 @@ export class VaultModel {
       pairData.decimalsOut
     );
 
-    const poolBalances = getPoolBalances(pool, [
+    const poolBalances = getBalancesForTokens(pool, [
       pool.address,
       pairData.tokenOut,
     ]);
@@ -311,11 +442,11 @@ export class VaultModel {
   }
 
   /**
-   * Calculates amount tokens out given bpt in.
+   * Perform the specified exit type.
    * @param exitPoolRequest
    * @returns tokens out
    */
-  async handleExitPool(exitPoolRequest: ExitPoolRequest): Promise<string[]> {
+  async doExitPool(exitPoolRequest: ExitPoolRequest): Promise<string[]> {
     const pools = await this.poolsDictionary();
     const pool = pools[exitPoolRequest.poolId];
     const exitKind = this.exitKind(
