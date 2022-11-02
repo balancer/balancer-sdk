@@ -266,18 +266,22 @@ export class VaultModel {
     const pools = await this.poolsDictionary();
     const deltas = new Array(assets.length).fill(Zero);
 
+    let previousAmount: string;
+
     batchSwapRequest.swaps.forEach((swap) => {
       const tokenIn = assets[swap.assetInIndex];
       const tokenOut = assets[swap.assetOutIndex];
       const pool = pools[swap.poolId];
       const pairData = pool.parsePoolPairData(tokenIn, tokenOut);
       const isExactIn = batchSwapRequest.swapType === SwapType.SwapExactIn;
+      let amount = swap.amount;
+      if (amount === '0') amount = previousAmount;
       let amountInEvm: string | BigNumber = isExactIn
-        ? BigNumber.from(swap.amount)
+        ? BigNumber.from(amount)
         : Zero;
       let amountOutEvm: string | BigNumber = isExactIn
         ? Zero
-        : BigNumber.from(swap.amount);
+        : BigNumber.from(amount);
       const amountInHuman: string | BigNumber = formatFixed(
         amountInEvm,
         pairData.decimalsIn
@@ -289,21 +293,21 @@ export class VaultModel {
 
       if (batchSwapRequest.swapType === SwapType.SwapExactIn) {
         // Needs human scale
-        const amountOutHuman = pool._exactTokenInForTokenOut(
-          pairData,
-          bnum(amountInHuman.toString())
-        );
+        const amountOutHuman = pool
+          ._exactTokenInForTokenOut(pairData, bnum(amountInHuman.toString()))
+          .dp(pairData.decimalsOut);
         amountOutEvm = parseFixed(
           amountOutHuman.toString(),
           pairData.decimalsOut
         );
+        previousAmount = amountOutEvm.toString();
       } else {
         // Needs human scale
-        const amountInHuman = pool._tokenInForExactTokenOut(
-          pairData,
-          bnum(amountOutHuman.toString())
-        );
+        const amountInHuman = pool
+          ._tokenInForExactTokenOut(pairData, bnum(amountOutHuman.toString()))
+          .dp(pairData.decimalsIn);
         amountInEvm = parseFixed(amountInHuman.toString(), pairData.decimalsIn);
+        previousAmount = amountInEvm.toString();
       }
       deltas[swap.assetInIndex] = deltas[swap.assetInIndex].add(amountInEvm);
       deltas[swap.assetOutIndex] = deltas[swap.assetOutIndex].sub(amountOutEvm);

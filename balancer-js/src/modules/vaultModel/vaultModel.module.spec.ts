@@ -23,37 +23,24 @@ import { ComposableStablePoolEncoder } from '@/pool-composable-stable/encoder';
 
 dotenv.config();
 
-function getPoolBalances(pool: PoolBase, tokens: string[]): string[] {
-  const balances: string[] = [];
-  tokens.forEach((t) => {
-    const tokenIndex = pool.tokens.findIndex(
-      (pt) => pt.address.toLowerCase() === t.toLowerCase()
-    );
-    if (tokenIndex < 0) throw 'Pool does not contain tokenIn';
-    balances.push(
-      parseFixed(
-        pool.tokens[tokenIndex].balance,
-        pool.tokens[tokenIndex].decimals
-      ).toString()
-    );
-  });
-  return balances;
-}
+type PoolBalanceInput = { pool: PoolBase; tokens: string[] };
 
-function getPoolBalancesOld(pool: PoolBase, tokens: string[]): string[] {
+function getPoolBalances(poolBalancesInput: PoolBalanceInput[]): string[] {
   const balances: string[] = [];
-  let i = 0;
-  while (i < tokens.length) {
-    if (i + 2 > tokens.length) {
-      const poolPair = pool.parsePoolPairData(tokens[i], tokens[i - 1]);
-      balances.push(poolPair.balanceIn.toString());
-    } else {
-      const poolPair = pool.parsePoolPairData(tokens[i], tokens[i + 1]);
-      balances.push(poolPair.balanceIn.toString());
-      balances.push(poolPair.balanceOut.toString());
-    }
-    i = i + 2;
-  }
+  poolBalancesInput.forEach((ip) => {
+    ip.tokens.forEach((t) => {
+      const tokenIndex = ip.pool.tokens.findIndex(
+        (pt) => pt.address.toLowerCase() === t.toLowerCase()
+      );
+      if (tokenIndex < 0) throw 'Pool does not contain tokenIn';
+      balances.push(
+        parseFixed(
+          ip.pool.tokens[tokenIndex].balance,
+          ip.pool.tokens[tokenIndex].decimals
+        ).toString()
+      );
+    });
+  });
   return balances;
 }
 
@@ -113,16 +100,17 @@ describe('vault model', () => {
       };
       const poolsDictionary = await vaultModel.poolsDictionary();
       const joinPool = poolsDictionary[poolId];
-      const balancesBefore = getPoolBalances(joinPool, [
-        ...tokensIn,
-        poolWeighted.address,
+      const balancesBefore = getPoolBalances([
+        {
+          pool: joinPool,
+          tokens: [...tokensIn, poolWeighted.address],
+        },
       ]);
 
       const bptOut = await vaultModel.handleJoinPool(joinPoolRequest);
 
-      const balancesAfter = getPoolBalances(joinPool, [
-        ...tokensIn,
-        poolWeighted.address,
+      const balancesAfter = getPoolBalances([
+        { pool: joinPool, tokens: [...tokensIn, poolWeighted.address] },
       ]);
       expect(BigNumber.from(bptOut).gt(0)).to.be.true;
       expect(
@@ -155,16 +143,20 @@ describe('vault model', () => {
       };
       const poolsDictionary = await vaultModel.poolsDictionary();
       const joinPool = poolsDictionary[poolId];
-      const balancesBefore = getPoolBalances(joinPool, [
-        ...poolWeighted.tokensList,
-        poolWeighted.address,
+      const balancesBefore = getPoolBalances([
+        {
+          pool: joinPool,
+          tokens: [...poolWeighted.tokensList, poolWeighted.address],
+        },
       ]);
 
       const amountsOut = await vaultModel.handleExitPool(exitPoolRequest);
 
-      const balancesAfter = getPoolBalances(joinPool, [
-        ...poolWeighted.tokensList,
-        poolWeighted.address,
+      const balancesAfter = getPoolBalances([
+        {
+          pool: joinPool,
+          tokens: [...poolWeighted.tokensList, poolWeighted.address],
+        },
       ]);
       expect(amountsOut).to.deep.eq(['138218951', '18666074549381720234']); // Taken from exit module
       expect(
@@ -197,10 +189,9 @@ describe('vault model', () => {
       };
       const poolsDictionary = await vaultModel.poolsDictionary();
       const joinPool = poolsDictionary[poolId];
-      const balancesBefore = getPoolBalances(
-        joinPool,
-        poolComposableStable.tokensList
-      );
+      const balancesBefore = getPoolBalances([
+        { pool: joinPool, tokens: poolComposableStable.tokensList },
+      ]);
 
       const amountsOut = await vaultModel.handleExitPool(exitPoolRequest);
       const balanceTest = joinPool.parsePoolPairData(
@@ -208,10 +199,9 @@ describe('vault model', () => {
         poolComposableStable.tokensList[1]
       );
 
-      const balancesAfter = getPoolBalances(
-        joinPool,
-        poolComposableStable.tokensList
-      );
+      const balancesAfter = getPoolBalances([
+        { pool: joinPool, tokens: poolComposableStable.tokensList },
+      ]);
       console.log(poolComposableStable.tokensList);
       console.log(amountsOut.toString(), 'amountsOut');
       console.log(balancesBefore.toString(), 'before');
@@ -239,7 +229,7 @@ describe('vault model', () => {
   });
   context('batchSwapAction', async () => {
     context('ExactIn', () => {
-      it('single swap', async () => {
+      it('single hop', async () => {
         const poolsRepository = new MockPoolDataService(
           cloneDeep(pools_14717479 as unknown as SubgraphPoolBase[])
         );
@@ -275,11 +265,15 @@ describe('vault model', () => {
         };
         const poolsDictionary = await vaultModel.poolsDictionary();
         const swapPool = poolsDictionary[swap[0].poolId];
-        const balancesBefore = getPoolBalances(swapPool, assets);
+        const balancesBefore = getPoolBalances([
+          { pool: swapPool, tokens: assets },
+        ]);
 
         const deltas = await vaultModel.handleBatchSwap(batchSwapRequest);
 
-        const balancesAfter = getPoolBalances(swapPool, assets);
+        const balancesAfter = getPoolBalances([
+          { pool: swapPool, tokens: assets },
+        ]);
         expect(deltas).to.deep.eq([
           '100000000000000000000',
           '-488191063271093915',
@@ -291,9 +285,87 @@ describe('vault model', () => {
           BigNumber.from(balancesAfter[1]).sub(balancesBefore[1]).toString()
         ).to.eq(deltas[1]);
       });
+      it('multihop', async () => {
+        const poolsRepository = new MockPoolDataService(
+          cloneDeep(pools_14717479 as unknown as SubgraphPoolBase[])
+        );
+        const vaultModel = new VaultModel(poolsRepository);
+        const swapType = SwapType.SwapExactIn;
+        const swaps = [
+          {
+            poolId:
+              '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014',
+            assetInIndex: 0,
+            assetOutIndex: 1,
+            amount: '100000000000000000000',
+            userData: '0x',
+          },
+          {
+            poolId:
+              '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019',
+            assetInIndex: 1,
+            assetOutIndex: 2,
+            amount: '0',
+            userData: '0x',
+          },
+        ];
+        const assets = [
+          '0xba100000625a3754423978a60c9317c58a424e3d',
+          '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+        ];
+
+        const funds = {
+          sender: '',
+          recipient: '',
+          fromInternalBalance: false,
+          toInternalBalance: false,
+        };
+        const batchSwapRequest: BatchSwap = {
+          actionType: ActionType.BatchSwap,
+          swapType,
+          swaps,
+          assets,
+          funds,
+        };
+        const poolsDictionary = await vaultModel.poolsDictionary();
+        const swapPool1 = poolsDictionary[swaps[0].poolId];
+        const swapPool2 = poolsDictionary[swaps[1].poolId];
+        const balancesBefore = getPoolBalances([
+          { pool: swapPool1, tokens: [assets[0], assets[1]] },
+          { pool: swapPool2, tokens: [assets[1], assets[2]] },
+        ]);
+
+        const deltas = await vaultModel.handleBatchSwap(batchSwapRequest);
+
+        const balancesAfter = getPoolBalances([
+          { pool: swapPool1, tokens: [assets[0], assets[1]] },
+          { pool: swapPool2, tokens: [assets[1], assets[2]] },
+        ]);
+        expect(deltas).to.deep.eq([
+          '100000000000000000000',
+          '0',
+          '-1426027854',
+        ]); // Taken from Tenderly simulation
+        expect(
+          BigNumber.from(balancesAfter[0]).sub(balancesBefore[0]).toString()
+        ).to.eq(deltas[0]);
+        const hopTokenDeltaPool1 = BigNumber.from(balancesAfter[1]).sub(
+          balancesBefore[1]
+        );
+        const hopTokenDeltaPool2 = BigNumber.from(balancesAfter[2]).sub(
+          balancesBefore[2]
+        );
+        expect(hopTokenDeltaPool1.add(hopTokenDeltaPool2).toString()).to.eq(
+          '0'
+        );
+        expect(
+          BigNumber.from(balancesAfter[3]).sub(balancesBefore[3]).toString()
+        ).to.eq(deltas[2]);
+      });
     });
     context('ExactOut', () => {
-      it('single swap', async () => {
+      it('single hop', async () => {
         const poolsRepository = new MockPoolDataService(
           cloneDeep(pools_14717479 as unknown as SubgraphPoolBase[])
         );
@@ -329,11 +401,14 @@ describe('vault model', () => {
         };
         const poolsDictionary = await vaultModel.poolsDictionary();
         const swapPool = poolsDictionary[swap[0].poolId];
-        const balancesBefore = getPoolBalances(swapPool, assets);
+        const balancesBefore = getPoolBalances([
+          { pool: swapPool, tokens: assets },
+        ]);
 
         const deltas = await vaultModel.handleBatchSwap(batchSwapRequest);
-
-        const balancesAfter = getPoolBalances(swapPool, assets);
+        const balancesAfter = getPoolBalances([
+          { pool: swapPool, tokens: assets },
+        ]);
         expect(deltas).to.deep.eq([
           '20635111802024409758812',
           '-100000000000000000000',
@@ -344,6 +419,80 @@ describe('vault model', () => {
         expect(
           BigNumber.from(balancesAfter[1]).sub(balancesBefore[1]).toString()
         ).to.eq(deltas[1]);
+      });
+      it('multihop', async () => {
+        const poolsRepository = new MockPoolDataService(
+          cloneDeep(pools_14717479 as unknown as SubgraphPoolBase[])
+        );
+        const vaultModel = new VaultModel(poolsRepository);
+        const swapType = SwapType.SwapExactOut;
+        const swaps = [
+          {
+            poolId:
+              '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019',
+            assetInIndex: 1,
+            assetOutIndex: 2,
+            amount: '1000000000',
+            userData: '0x',
+          },
+          {
+            poolId:
+              '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014',
+            assetInIndex: 0,
+            assetOutIndex: 1,
+            amount: '0',
+            userData: '0x',
+          },
+        ];
+        const assets = [
+          '0xba100000625a3754423978a60c9317c58a424e3d',
+          '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+        ];
+
+        const funds = {
+          sender: '',
+          recipient: '',
+          fromInternalBalance: false,
+          toInternalBalance: false,
+        };
+        const batchSwapRequest: BatchSwap = {
+          actionType: ActionType.BatchSwap,
+          swapType,
+          swaps,
+          assets,
+          funds,
+        };
+        const poolsDictionary = await vaultModel.poolsDictionary();
+        const swapPool1 = poolsDictionary[swaps[0].poolId];
+        const swapPool2 = poolsDictionary[swaps[1].poolId];
+        const balancesBefore = getPoolBalances([
+          { pool: swapPool2, tokens: [assets[0], assets[1]] },
+          { pool: swapPool1, tokens: [assets[1], assets[2]] },
+        ]);
+
+        const deltas = await vaultModel.handleBatchSwap(batchSwapRequest);
+
+        const balancesAfter = getPoolBalances([
+          { pool: swapPool2, tokens: [assets[0], assets[1]] },
+          { pool: swapPool1, tokens: [assets[1], assets[2]] },
+        ]);
+        expect(deltas).to.deep.eq(['70123692802964272311', '0', '-1000000000']); // Taken from Tenderly simulation
+        expect(
+          BigNumber.from(balancesAfter[0]).sub(balancesBefore[0]).toString()
+        ).to.eq(deltas[0]);
+        const hopTokenDeltaPool1 = BigNumber.from(balancesAfter[1]).sub(
+          balancesBefore[1]
+        );
+        const hopTokenDeltaPool2 = BigNumber.from(balancesAfter[2]).sub(
+          balancesBefore[2]
+        );
+        expect(hopTokenDeltaPool1.add(hopTokenDeltaPool2).toString()).to.eq(
+          '0'
+        );
+        expect(
+          BigNumber.from(balancesAfter[3]).sub(balancesBefore[3]).toString()
+        ).to.eq(deltas[2]);
       });
     });
   });
