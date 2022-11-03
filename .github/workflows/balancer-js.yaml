@@ -6,9 +6,9 @@ on:
       - master
   pull_request:
     branches:
-      - '*'
+      - "*"
     paths:
-      - 'balancer-js/**'
+      - "balancer-js/**"
 
 defaults:
   run:
@@ -79,7 +79,9 @@ jobs:
       - name: Compile
         run: yarn build
       - name: Run node in background for integration tests
-        run: npx hardhat node --hostname 127.0.0.1 --fork ${{ secrets.ALCHEMY_URL }} &
+        run: npx hardhat node TS_NODE_PROJECT='tsconfig.testing.json' --hostname 127.0.0.1 --fork ${{ secrets.ALCHEMY_URL }}
+      - name: Run goerli node in background for integration tests
+        run: npx hardhat node TS_NODE_PROJECT='tsconfig.testing.json' --hostname 127.0.0.1 --fork ${{ secrets.ALCHEMY_URL_GOERLI }} --port 8000 --config hardhat.config.goerli.ts
       - name: Test
         run: yarn test
 
