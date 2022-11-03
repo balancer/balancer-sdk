@@ -1,0 +1,25 @@
+query PoolGauges(
+  $where: Pool_filter,
+  $first: Int, 
+  $orderBy: Pool_orderBy, 
+  $orderDirection: OrderDirection, 
+  $skip: Int, 
+  $block: Block_height
+) {
+  pools(
+    where: $where
+    first: $first
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    skip: $skip
+    block: $block
+  ) {
+    gauges {
+      id
+      relativeWeightCap
+    }
+    preferentialGauge {
+      id
+    }
+  }
+}
