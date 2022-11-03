@@ -15,9 +15,11 @@ import { buildRelayerCalls, someJoinExit } from './joinAndExit';
 import {
   BAL_WETH,
   AURA_BAL_STABLE,
-  B_50WBTC_50WETH,
   getForkedPools,
   GRAVI_AURA,
+  B_50auraBAL_50wstETH,
+  B_stETH_STABLE,
+  B_50WBTC_50WETH,
 } from '@/test/lib/mainnetPools';
 import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
@@ -111,6 +113,21 @@ describe('join and exit integration tests', async () => {
     // SwapTypes.SwapExactIn,
     '10' // 10 bsp = 0.1%
   );
+  await testFlow(
+    'swap, join > swap, mulithopswap - WETH[Swap]auraBal, WETH[join]BPT[Swap]auraBAL, WETH[Swap]wstETH[Swap]auraBal',
+    [
+      BAL_WETH,
+      AURA_BAL_STABLE,
+      GRAVI_AURA,
+      B_50auraBAL_50wstETH,
+      B_stETH_STABLE,
+    ],
+    parseFixed('12.3', 18).toString(),
+    ADDRESSES[networkId].WETH,
+    ADDRESSES[networkId].auraBal,
+    '10', // 10 bsp = 0.1%
+    15773550
+  );
   // Removed ExactOut cases for now as Relayer formatting is difficult
   // await testFlow(
   //   'exit',
@@ -148,7 +165,8 @@ async function testFlow(
     symbol: string;
     slot: number;
   },
-  slippage: string
+  slippage: string,
+  blockNumber = 15624161
 ): Promise<void> {
   context(`${description}`, () => {
     // For now we only support ExactIn case
@@ -168,7 +186,7 @@ async function testFlow(
         slots,
         balances,
         jsonRpcUrl as string,
-        15624161
+        blockNumber
       );
       sor = await setUp(networkId, provider, pools);
       await sor.fetchPools();
