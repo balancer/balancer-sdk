@@ -46,13 +46,13 @@ Installation instructions for:
 
   To start a MAINNET forked node:
 
-  > Set env var: `ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT for MAINNET]`
-  > Run command: `npm run node`
+  - Set env var: `ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT for MAINNET]`
+  - Run: `npm run node`
 
   To start a GOERLI forked node:
 
-  > Set env var: `ALCHEMY_URL_GOERLI=[ALCHEMY HTTPS ENDPOINT for GOERLI]`
-  > Run command: `npm run node:goerli`
+  - Set env var: `ALCHEMY_URL_GOERLI=[ALCHEMY HTTPS ENDPOINT for GOERLI]`
+  - Run: `npm run node:goerli`
 
 - [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation) - use with caution, still experimental.
 
