@@ -483,10 +483,10 @@
     "@babel/helper-validator-identifier" "^7.18.6"
     to-fast-properties "^2.0.0"
 
-"@balancer-labs/sor@^4.0.1-beta.8":
-  version "4.0.1-beta.8"
-  resolved "https://registry.npmjs.org/@balancer-labs/sor/-/sor-4.0.1-beta.8.tgz"
-  integrity sha512-beg6cwD0z+HDKNmCj1W1Z7ve5SBdWXJoad3TolFMz2gUX02BbtEg9hkwVHJ+LSLi99h8/18W4aM8JzqQH9WwwQ==
+"@balancer-labs/sor@^4.0.1-beta.9":
+  version "4.0.1-beta.9"
+  resolved "https://registry.yarnpkg.com/@balancer-labs/sor/-/sor-4.0.1-beta.9.tgz#5c144de41255fbf924324ee664c96d915096e289"
+  integrity sha512-/ErkccWwijPOuq+wApxP5dsaP3pALye0Sv1C7yn9X7T3f/jIw9YGSw+EfmOCheTqHbWSnmCiJD97iLbW/KggIA==
   dependencies:
     isomorphic-fetch "^2.2.1"
 
@@ -2899,7 +2899,7 @@ encoding-down@^6.3.0:
 
 encoding@^0.1.11:
   version "0.1.13"
-  resolved "https://registry.npmjs.org/encoding/-/encoding-0.1.13.tgz"
+  resolved "https://registry.yarnpkg.com/encoding/-/encoding-0.1.13.tgz#56574afdd791f54a8e9b2785c0582a2d26210fa9"
   integrity sha512-ETBauow1T35Y/WZMkio9jiM0Z5xjHHmJ4XmjZOq1l/dXz3lr2sRn87nJy20RupqSh1F2m3HHPSp8ShIPQJrJ3A==
   dependencies:
     iconv-lite "^0.6.2"
@@ -3753,7 +3753,7 @@ iconv-lite@0.4.24, iconv-lite@^0.4.24:
 
 iconv-lite@^0.6.2:
   version "0.6.3"
-  resolved "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.6.3.tgz"
+  resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.6.3.tgz#a52f80bf38da1952eb5c681790719871a1a72501"
   integrity sha512-4fCk79wshMdzMp2rH06qWrJE4iolqLhCUH+OiuIgU++RB0+94NlDL81atO7GX55uUKueo0txHNtvEyI6D7WdMw==
   dependencies:
     safer-buffer ">= 2.1.2 < 3.0.0"
@@ -3973,7 +3973,7 @@ is-relative@^1.0.0:
 
 is-stream@^1.0.1:
   version "1.1.0"
-  resolved "https://registry.npmjs.org/is-stream/-/is-stream-1.1.0.tgz"
+  resolved "https://registry.yarnpkg.com/is-stream/-/is-stream-1.1.0.tgz#12d4a3dd4e68e0b79ceb8dbc84173ae80d91ca44"
   integrity sha512-uQPm8kcs47jx38atAcWTVxyltQYoPT68y9aWYdV6yWXSyW8mzSat0TL6CiWdZeCdF3KrAvpVtnHbTv4RN+rqdQ==
 
 is-unc-path@^1.0.0:
@@ -4007,7 +4007,7 @@ isexe@^2.0.0:
 
 isomorphic-fetch@^2.2.1:
   version "2.2.1"
-  resolved "https://registry.npmjs.org/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz"
+  resolved "https://registry.yarnpkg.com/isomorphic-fetch/-/isomorphic-fetch-2.2.1.tgz#611ae1acf14f5e81f729507472819fe9733558a9"
   integrity sha512-9c4TNAKYXM5PRyVcwUZrF3W09nQ+sO7+jydgs4ZGW9dhsLG2VOlISJABombdQqQRXCwuYG3sYV/puGf5rp0qmA==
   dependencies:
     node-fetch "^1.0.1"
@@ -4740,7 +4740,7 @@ node-fetch@2.6.7, node-fetch@^2.6.1, node-fetch@^2.6.7:
 
 node-fetch@^1.0.1:
   version "1.7.3"
-  resolved "https://registry.npmjs.org/node-fetch/-/node-fetch-1.7.3.tgz"
+  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-1.7.3.tgz#980f6f72d85211a5347c6b2bc18c5b84c3eb47ef"
   integrity sha512-NhZ4CsKx7cYm2vSrBAr2PvFOe6sWDf0UYLRqA6svUYg7+/TSfVAu49jYC4BvQ4Sms9SZgdqGBgroqfDhJdTyKQ==
   dependencies:
     encoding "^0.1.11"

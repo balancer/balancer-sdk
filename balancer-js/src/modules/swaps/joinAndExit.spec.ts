@@ -29,6 +29,7 @@ import poolsList from '@/test/lib/joinExitPools.json';
 import { Network } from '@/types';
 import { BalancerSDK } from '../sdk.module';
 import { OutputReference } from '../relayer/types';
+import { MaxInt256 } from '@ethersproject/constants';
 
 const pool1Bpt = '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56';
 const DAI = ADDRESSES[Network.MAINNET].DAI;
@@ -386,24 +387,27 @@ describe(`Paths with join and exits.`, () => {
       const orderedActions = orderActions(actions, assets);
       const join = orderedActions[0] as JoinAction;
       const batchSwapDirect = orderedActions[1] as BatchSwapAction;
-      const batchSwapFromJoin = orderedActions[2] as BatchSwapAction;
       expect(orderedActions.length).to.eq(3);
       expect(batchSwapDirect.type).to.eq(ActionType.BatchSwap);
-      expect(batchSwapDirect.hasTokenOut).to.eq(true);
-      expect(batchSwapDirect.opRef.length).to.eq(0);
       expect(batchSwapDirect.swaps.length).to.eq(1);
       expect(batchSwapDirect.swaps[0].amount).to.eq(
         '1279699403356512142192771'
       );
-      expect(batchSwapFromJoin.type).to.eq(ActionType.BatchSwap);
-      expect(batchSwapFromJoin.hasTokenOut).to.eq(true);
-      expect(batchSwapFromJoin.opRef.length).to.eq(0);
-      expect(batchSwapFromJoin.swaps.length).to.eq(1);
-      expect(batchSwapFromJoin.swaps[0].amount).to.eq(
-        join.opRef.key.toString()
-      );
-      const count = getNumberOfOutputActions(orderedActions);
-      expect(count).to.eq(2);
+      expect(batchSwapDirect.hasTokenIn).to.eq(true);
+      expect(batchSwapDirect.hasTokenOut).to.eq(true);
+      expect(batchSwapDirect.opRef.length).to.eq(0);
+      expect(batchSwapDirect.fromInternal).to.eq(false);
+      expect(batchSwapDirect.toInternal).to.eq(false);
+      expect(batchSwapDirect.sender).to.eq(user);
+      expect(batchSwapDirect.receiver).to.eq(user);
+      expect(
+        batchSwapDirect.limits[batchSwapDirect.swaps[0].assetInIndex].toString()
+      ).to.eq('1279699403356512142192771');
+      expect(
+        batchSwapDirect.limits[
+          batchSwapDirect.swaps[0].assetOutIndex
+        ].toString()
+      ).to.eq('-400000000000');
       const expectedJoin: JoinAction = {
         type: ActionType.Join,
         poolId: swaps[1].poolId,
@@ -425,7 +429,28 @@ describe(`Paths with join and exits.`, () => {
         hasTokenIn: true,
         hasTokenOut: false,
       };
+      const batchSwapFromJoin = orderedActions[2] as BatchSwapAction;
       expect(expectedJoin).to.deep.eq(join);
+      expect(batchSwapFromJoin.type).to.eq(ActionType.BatchSwap);
+      expect(batchSwapFromJoin.swaps.length).to.eq(1);
+      expect(batchSwapFromJoin.swaps[0].amount).to.eq(
+        join.opRef.key.toString()
+      );
+      expect(batchSwapFromJoin.opRef.length).to.eq(0);
+      expect(batchSwapFromJoin.fromInternal).to.eq(false);
+      expect(batchSwapFromJoin.toInternal).to.eq(false);
+      expect(batchSwapFromJoin.hasTokenIn).to.eq(false);
+      expect(batchSwapFromJoin.hasTokenOut).to.eq(true);
+      expect(batchSwapFromJoin.sender).to.eq(relayer);
+      expect(batchSwapFromJoin.receiver).to.eq(user);
+      expect(batchSwapFromJoin.limits[swaps[2].assetInIndex].toString()).to.eq(
+        MaxInt256.toString()
+      );
+      expect(batchSwapFromJoin.limits[swaps[2].assetOutIndex].toString()).to.eq(
+        '-600000000000'
+      );
+      const count = getNumberOfOutputActions(orderedActions);
+      expect(count).to.eq(2);
     });
     it('exact in, swap>exit', async () => {
       const tokenIn = USDT.address;
@@ -890,6 +915,149 @@ describe(`Paths with join and exits.`, () => {
       expect(expectedJoinSecond).to.deep.eq(joinSecond);
       const count = getNumberOfOutputActions(orderedActions);
       expect(count).to.eq(2);
+    });
+    it('exact in, swap, join>swap, mulithop', async () => {
+      // e.g.
+      //    WETH[swap]AURABAL (external, external)
+      //    WETH[join]BPT (external, relayer)
+      //    BPT[swap]AURABAL (relayer, external)
+      //    WETH[swap]wstETH[swap]AURABAL (external, external)
+      const tokenIn = WETH.address;
+      const tokenOut = auraBAL.address;
+      const swaps = [
+        {
+          poolId:
+            '0x0578292cb20a443ba1cde459c985ce14ca2bdee5000100000000000000000269', // swap
+          assetInIndex: 0,
+          assetOutIndex: 1,
+          amount: '6021654047345106708',
+          userData: '0x',
+          returnAmount: '579946758625050147190',
+        },
+        {
+          poolId:
+            '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014', // join
+          assetInIndex: 0,
+          assetOutIndex: 2,
+          amount: '3978345952654889628',
+          userData: '0x',
+          returnAmount: '362083706912447325569',
+        },
+        {
+          poolId:
+            '0x3dd0843a028c86e0b760b1a76929d1c5ef93a2dd000200000000000000000249', // swap
+          assetInIndex: 2,
+          assetOutIndex: 1,
+          amount: '0',
+          userData: '0x',
+          returnAmount: '374315221022843007278',
+        },
+        {
+          poolId:
+            '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080',
+          assetInIndex: 0,
+          assetOutIndex: 3,
+          amount: '3664',
+          userData: '0x',
+          returnAmount: '2431',
+        },
+        {
+          poolId:
+            '0x0731399bd09ced6765ff1e0cb884bd223298a5a6000200000000000000000398',
+          assetInIndex: 3,
+          assetOutIndex: 1,
+          amount: '0',
+          userData: '0x',
+          returnAmount: '257788',
+        },
+      ];
+      const assets = [
+        '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+        '0x616e8bfa43f920657b3497dbf40d6b1a02d4608d', // auraBal
+        '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56', // 80/20
+        '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0', // wstEth
+      ];
+      const actions = getActions(
+        tokenIn,
+        tokenOut,
+        swaps,
+        assets,
+        slippage,
+        pools,
+        user,
+        relayer
+      );
+
+      const orderedActions = orderActions(actions, assets);
+
+      const join = orderedActions[0] as JoinAction;
+      const batchSwapDirect = orderedActions[1] as BatchSwapAction;
+      const batchSwapFromJoin = orderedActions[2] as BatchSwapAction;
+      const batchSwapMultihop = orderedActions[3] as BatchSwapAction;
+      expect(orderedActions.length).to.eq(4);
+      const expectedJoinFirst: JoinAction = {
+        type: ActionType.Join,
+        poolId: swaps[1].poolId,
+        tokenIn: assets[swaps[1].assetInIndex],
+        bpt: assets[swaps[1].assetOutIndex],
+        opRef: {
+          index: swaps[1].assetOutIndex,
+          key: BigNumber.from(
+            '0xba10000000000000000000000000000000000000000000000000000000000000'
+          ),
+        },
+        amountIn: swaps[1].amount,
+        actionStep: ActionStep.TokenIn,
+        minOut: swaps[1].returnAmount,
+        assets,
+        sender: user,
+        receiver: relayer,
+        fromInternal: false,
+        hasTokenIn: true,
+        hasTokenOut: false,
+      };
+      expect(expectedJoinFirst).to.deep.eq(join);
+      expect(batchSwapDirect.type).to.eq(ActionType.BatchSwap);
+      expect(batchSwapDirect.opRef.length).to.eq(0);
+      expect(batchSwapDirect.swaps.length).to.eq(1);
+      expect(batchSwapDirect.swaps[0].amount).to.eq(swaps[0].amount);
+      expect(batchSwapDirect.limits[swaps[0].assetInIndex].toString()).to.eq(
+        '6021654047345106708'
+      );
+      expect(batchSwapDirect.limits[swaps[0].assetOutIndex].toString()).to.eq(
+        '-579946758625050147190'
+      );
+      expect(batchSwapDirect.hasTokenIn).to.eq(true);
+      expect(batchSwapDirect.hasTokenOut).to.eq(true);
+      expect(batchSwapFromJoin.type).to.eq(ActionType.BatchSwap);
+      expect(batchSwapFromJoin.opRef.length).to.eq(0);
+      expect(batchSwapFromJoin.swaps.length).to.eq(1);
+      expect(batchSwapFromJoin.swaps[0].amount).to.eq(
+        join.opRef.key.toString()
+      );
+      expect(batchSwapFromJoin.limits[swaps[2].assetInIndex].toString()).to.eq(
+        MaxInt256.toString()
+      );
+      expect(batchSwapFromJoin.limits[swaps[2].assetOutIndex].toString()).to.eq(
+        '-374315221022843007278'
+      );
+      expect(batchSwapFromJoin.hasTokenIn).to.eq(false);
+      expect(batchSwapFromJoin.hasTokenOut).to.eq(true);
+      expect(batchSwapMultihop.type).to.eq(ActionType.BatchSwap);
+      expect(batchSwapMultihop.opRef.length).to.eq(0);
+      expect(batchSwapMultihop.swaps.length).to.eq(2);
+      expect(batchSwapMultihop.swaps[0].amount).to.eq(swaps[3].amount);
+      expect(batchSwapMultihop.swaps[1].amount).to.eq('0');
+      expect(batchSwapMultihop.hasTokenIn).to.eq(true);
+      expect(batchSwapMultihop.hasTokenOut).to.eq(true);
+      expect(batchSwapMultihop.limits[swaps[3].assetInIndex].toString()).to.eq(
+        '3664'
+      );
+      expect(batchSwapMultihop.limits[swaps[4].assetOutIndex].toString()).to.eq(
+        '-257788'
+      );
+      const count = getNumberOfOutputActions(orderedActions);
+      expect(count).to.eq(3);
     });
     // it('exact in, ending in two exits', async () => {
     //   // e.g.
