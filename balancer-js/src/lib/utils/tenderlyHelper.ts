@@ -1,32 +1,27 @@
 import axios from 'axios';
 import { MaxInt256 } from '@ethersproject/constants';
 import { networkAddresses } from '@/lib/constants/config';
-
-const TENDERLY_USER = 'balancer';
-const TENDERLY_PROJECT = 'v2';
+import { BalancerTenderlyConfig } from '@/types';
 
 type StateOverrides = {
   [address: string]: { value: { [key: string]: string } };
 };
 
 export default class TenderlyHelper {
-  private vaultAddress: string;
-  constructor(private chainId: number, private accessKey: string) {
+  private vaultAddress;
+  private tenderlyUrl;
+  private opts;
+
+  constructor(private chainId: number, tenderlyConfig: BalancerTenderlyConfig) {
     const { contracts } = networkAddresses(this.chainId);
     this.vaultAddress = contracts.vault as string;
+    this.tenderlyUrl = `https://api.tenderly.co/api/v1/account/${tenderlyConfig.user}/project/${tenderlyConfig.project}/`;
+    this.opts = {
+      headers: {
+        'X-Access-Key': tenderlyConfig.accessKey,
+      },
+    };
   }
-
-  private opts = {
-    headers: {
-      'X-Access-Key': this.accessKey,
-    },
-  };
-
-  // private opts = {
-  //   headers: {
-  //     'X-Access-Key': this.accessKey ?? (TENDERLY_ACCESS_KEY || ''),
-  //   },
-  // };
 
   simulateTransaction = async (
     to: string,
@@ -63,7 +58,7 @@ export default class TenderlyHelper {
       state_objects,
     };
 
-    const SIMULATE_URL = `https://api.tenderly.co/api/v1/account/${TENDERLY_USER}/project/${TENDERLY_PROJECT}/simulate`;
+    const SIMULATE_URL = this.tenderlyUrl + 'simulate';
 
     const resp = await axios.post(SIMULATE_URL, body, this.opts);
 
@@ -101,7 +96,7 @@ export default class TenderlyHelper {
         })
     );
 
-    const ENCODE_STATES_URL = `https://api.tenderly.co/api/v1/account/${TENDERLY_USER}/project/${TENDERLY_PROJECT}/contracts/encode-states`;
+    const ENCODE_STATES_URL = this.tenderlyUrl + 'contracts/encode-states';
     const body = {
       networkID: this.chainId.toString(),
       stateOverrides,

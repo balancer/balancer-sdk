@@ -45,11 +45,10 @@ export class Join {
     this.relayer = contracts.relayer as string;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
 
-    if (!networkConfig.keys?.tenderlyAccessKey)
-      throw new Error('Tenderly access key not found');
+    if (!networkConfig.tenderly) throw new Error('Tenderly config not found');
     this.tenderlyHelper = new TenderlyHelper(
       networkConfig.chainId,
-      networkConfig.keys.tenderlyAccessKey
+      networkConfig.tenderly
     );
   }
 

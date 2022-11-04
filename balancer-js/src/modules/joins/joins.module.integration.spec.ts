@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 
-import { BalancerSDK, Network } from '@/.';
+import { BalancerSDK, BalancerTenderlyConfig, Network } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { forkSetup, getBalances } from '@/test/lib/utils';
@@ -30,7 +30,7 @@ const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 const network = Network.GOERLI;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
-const blockNumber = 7844900;
+const blockNumber = 7890980;
 
 /*
  * Testing on MAINNET
@@ -46,17 +46,27 @@ const blockNumber = 7844900;
 
 dotenv.config();
 
-const { ALCHEMY_URL: jsonRpcUrl, TENDERLY_ACCESS_KEY: tenderlyAccessKey } =
-  process.env;
+const {
+  ALCHEMY_URL: jsonRpcUrl,
+  TENDERLY_ACCESS_KEY,
+  TENDERLY_USER,
+  TENDERLY_PROJECT,
+} = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
+
+const tenderlyConfig: BalancerTenderlyConfig = {
+  accessKey: TENDERLY_ACCESS_KEY as string,
+  user: TENDERLY_USER as string,
+  project: TENDERLY_PROJECT as string,
+};
 
 const rpcUrl = 'http://127.0.0.1:8545';
 const sdk = new BalancerSDK({
   network,
   rpcUrl,
   customSubgraphUrl,
-  tenderlyAccessKey,
+  tenderly: tenderlyConfig,
 });
 const { pools } = sdk;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
