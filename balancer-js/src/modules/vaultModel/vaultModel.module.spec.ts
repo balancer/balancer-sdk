@@ -63,7 +63,10 @@ describe('vault model', () => {
       const poolsRepository = new MockPoolDataService([
         cloneDeep(poolWeighted),
       ]);
-      const vaultModel = new VaultModel(poolsRepository);
+      const vaultModel = new VaultModel(
+        poolsRepository,
+        ADDRESSES[Network.MAINNET].WETH.address
+      );
       const pools = await vaultModel.all();
       expect(pools.length).to.eq(1);
     });
@@ -83,7 +86,10 @@ describe('vault model', () => {
         const poolsRepository = new MockPoolDataService([
           cloneDeep(poolWeighted),
         ]);
-        const vaultModel = new VaultModel(poolsRepository);
+        const vaultModel = new VaultModel(
+          poolsRepository,
+          ADDRESSES[Network.MAINNET].WETH.address
+        );
         const poolId = poolWeighted.id;
         const tokensIn = [
           ADDRESSES[Network.MAINNET].WBTC.address,
@@ -134,7 +140,10 @@ describe('vault model', () => {
         const poolsRepository = new MockPoolDataService([
           cloneDeep(poolComposableStable),
         ]);
-        const vaultModel = new VaultModel(poolsRepository);
+        const vaultModel = new VaultModel(
+          poolsRepository,
+          ADDRESSES[Network.MAINNET].WETH.address
+        );
         const poolId = poolComposableStable.id;
         const tokensIn = [
           ADDRESSES[Network.MAINNET].bbausdt.address,
@@ -190,7 +199,10 @@ describe('vault model', () => {
         const poolsRepository = new MockPoolDataService([
           cloneDeep(poolWeighted),
         ]);
-        const vaultModel = new VaultModel(poolsRepository);
+        const vaultModel = new VaultModel(
+          poolsRepository,
+          ADDRESSES[Network.MAINNET].WETH.address
+        );
         const poolId = poolWeighted.id;
         // Should be EVM scale
         const bptIn = parseFixed('10', 18).toString();
@@ -233,7 +245,10 @@ describe('vault model', () => {
         const poolsRepository = new MockPoolDataService([
           cloneDeep(poolComposableStable),
         ]);
-        const vaultModel = new VaultModel(poolsRepository);
+        const vaultModel = new VaultModel(
+          poolsRepository,
+          ADDRESSES[Network.MAINNET].WETH.address
+        );
         const poolId = poolComposableStable.id;
         // Should be EVM scale
         const bptIn = parseFixed('10', 18).toString();
@@ -277,7 +292,10 @@ describe('vault model', () => {
           const poolsRepository = new MockPoolDataService(
             cloneDeep(pools_14717479 as unknown as SubgraphPoolBase[])
           );
-          const vaultModel = new VaultModel(poolsRepository);
+          const vaultModel = new VaultModel(
+            poolsRepository,
+            ADDRESSES[Network.MAINNET].WETH.address
+          );
           const swapType = SwapType.SwapExactIn;
           const swap = [
             {
@@ -333,7 +351,10 @@ describe('vault model', () => {
           const poolsRepository = new MockPoolDataService(
             cloneDeep(pools_14717479 as unknown as SubgraphPoolBase[])
           );
-          const vaultModel = new VaultModel(poolsRepository);
+          const vaultModel = new VaultModel(
+            poolsRepository,
+            ADDRESSES[Network.MAINNET].WETH.address
+          );
           const swapType = SwapType.SwapExactIn;
           const swaps = [
             {
@@ -413,7 +434,10 @@ describe('vault model', () => {
           const poolsRepository = new MockPoolDataService(
             cloneDeep(pools_14717479 as unknown as SubgraphPoolBase[])
           );
-          const vaultModel = new VaultModel(poolsRepository);
+          const vaultModel = new VaultModel(
+            poolsRepository,
+            ADDRESSES[Network.MAINNET].WETH.address
+          );
           const swapType = SwapType.SwapExactOut;
           const swap = [
             {
@@ -468,7 +492,10 @@ describe('vault model', () => {
           const poolsRepository = new MockPoolDataService(
             cloneDeep(pools_14717479 as unknown as SubgraphPoolBase[])
           );
-          const vaultModel = new VaultModel(poolsRepository);
+          const vaultModel = new VaultModel(
+            poolsRepository,
+            ADDRESSES[Network.MAINNET].WETH.address
+          );
           const swapType = SwapType.SwapExactOut;
           const swaps = [
             {
@@ -551,7 +578,10 @@ describe('vault model', () => {
         const poolsRepository = new MockPoolDataService(
           cloneDeep(pools_14717479 as unknown as SubgraphPoolBase[])
         );
-        const vaultModel = new VaultModel(poolsRepository);
+        const vaultModel = new VaultModel(
+          poolsRepository,
+          ADDRESSES[Network.MAINNET].WETH.address
+        );
         const swapType = SwapType.SwapExactIn;
         const swap = [
           {

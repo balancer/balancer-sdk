@@ -14,7 +14,8 @@ import { defaultAbiCoder } from '@ethersproject/abi';
 import { WeightedPoolDecoder } from '@/pool-weighted/decoder';
 import { SwapType } from '../swaps/types';
 import { Zero } from '@ethersproject/constants';
-import { isSameAddress } from '@/lib/utils';
+import { AssetHelpers, isSameAddress } from '@/lib/utils';
+import { cloneDeep } from 'lodash';
 
 export enum PoolTypes {
   Weighted = 'Weighted',
@@ -66,7 +67,7 @@ export interface JoinPoolRequest {
   poolId: string;
   encodedUserData: string;
 }
-type Inputs = BatchSwapRequest | JoinPoolRequest | ExitPoolRequest;
+export type Inputs = BatchSwapRequest | JoinPoolRequest | ExitPoolRequest;
 
 function getBalancesForTokens(pool: PoolBase, tokens: string[]): string[] {
   const balances: string[] = [];
@@ -91,7 +92,10 @@ function getBalancesForTokens(pool: PoolBase, tokens: string[]): string[] {
 export class VaultModel {
   poolsArray: SubgraphPoolBase[] = [];
   poolsDict: PoolDictionary = {};
-  constructor(private poolDataService: PoolDataService) {}
+  constructor(
+    private poolDataService: PoolDataService,
+    private wrappedNativeAsset: string
+  ) {}
 
   dataSource(): PoolDataService {
     return this.poolDataService;
@@ -99,8 +103,17 @@ export class VaultModel {
 
   async all(refresh = false): Promise<SubgraphPoolBase[]> {
     if (refresh || this.poolsArray.length === 0) {
-      const list = await this.dataSource().getPools();
+      const list = cloneDeep(await this.dataSource().getPools());
+      const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
       for (const pool of list) {
+        // Sort tokens here
+        // tokens must have same order as pool getTokens
+        const [sortedTokensList, sortedTokens] = assetHelpers.sortTokens(
+          pool.tokensList,
+          pool.tokens
+        );
+        pool.tokensList = sortedTokensList;
+        pool.tokens = sortedTokens as SubgraphToken[];
         // For non pre-minted BPT pools we add the BPT to the token list. This makes the SOR functions work for joins/exits
         if (
           [
