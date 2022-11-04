@@ -89,3 +89,4 @@ env:
   CI: true
   INFURA: ${{ secrets.INFURA }}
   ALCHEMY_URL: ${{ secrets.ALCHEMY_URL }}
+  ALCHEMY_URL_GOERLI: ${{ secrets.ALCHEMY_URL_GOERLI }}
