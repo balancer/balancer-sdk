@@ -10,6 +10,6 @@ export interface PoolGauges {
   };
   gauges?: {
     id: string;
-    relativeWeightCap: string | null;
+    relativeWeightCap?: string | null;
   }[];
 }

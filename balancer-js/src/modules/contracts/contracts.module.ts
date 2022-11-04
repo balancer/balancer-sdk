@@ -73,6 +73,7 @@ export class Contracts {
     if (this.contractAddresses.veBalProxy) {
       this.veBalProxy = new VeBalProxy(this.contractAddresses, provider);
     }
+
   }
 
   /**
