@@ -5,10 +5,10 @@ export enum PoolGaugesAttributes {
 }
 
 export interface PoolGauges {
-  preferentialGauge?: {
-    id: string | null;
+  preferentialGauge: {
+    id: string;
   };
-  gauges?: {
+  gauges: {
     id: string;
     relativeWeightCap: string | null;
   }[];

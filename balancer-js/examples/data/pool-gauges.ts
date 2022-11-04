@@ -16,8 +16,10 @@ const { poolGauges } = sdk.data;
     
     const result = await poolGauges.find(POOL_ADDRESS);
     
-    console.log('Pool gauges', result?.gauges);
-    console.log('Pool preferential gauge', result?.preferentialGauge);
+    if (result) {
+      console.log('All gauges of this pool', result.gauges);
+      console.log('Preferential gauge', result.preferentialGauge);
+    }
 
   })();
   
