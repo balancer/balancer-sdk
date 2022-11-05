@@ -118,6 +118,9 @@ export class PoolsSubgraphRepository
   }
 
   async findBy(param: PoolAttribute, value: string): Promise<Pool | undefined> {
+    if (this.pools) {
+      return (await this.pools).find((p) => p[param] === value);
+    }
     const { pools } = await this.client.Pools({
       where: { [param]: value, swapEnabled: true, totalShares_gt: '0' },
       block: await this.block(),
