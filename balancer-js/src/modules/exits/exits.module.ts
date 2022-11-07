@@ -9,12 +9,18 @@ import { Relayer } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { StablePoolEncoder } from '@/pool-stable';
-import { ExitPoolRequest, Pool, PoolAttribute, PoolType } from '@/types';
+import {
+  BalancerNetworkConfig,
+  ExitPoolRequest,
+  Pool,
+  PoolAttribute,
+  PoolType,
+} from '@/types';
 import { Findable } from '../data/types';
 import { PoolGraph, Node } from '../joins/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
-import { simulateTransaction } from '@/lib/utils/tenderlyHelper';
+import TenderlyHelper from '@/lib/utils/tenderlyHelper';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
@@ -23,14 +29,21 @@ const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 export class Exit {
   private wrappedNativeAsset: string;
   private relayer: string;
+  private tenderlyHelper: TenderlyHelper;
 
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
-    private chainId: number
+    private networkConfig: BalancerNetworkConfig
   ) {
-    const { tokens, contracts } = networkAddresses(chainId);
+    const { tokens, contracts } = networkAddresses(networkConfig.chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
     this.relayer = contracts.relayer as string;
+
+    if (!networkConfig.tenderly) throw new Error('Tenderly config not found');
+    this.tenderlyHelper = new TenderlyHelper(
+      networkConfig.chainId,
+      networkConfig.tenderly
+    );
   }
 
   async exitPool(
@@ -119,12 +132,11 @@ export class Exit {
     expectedAmountsOutByExitPath: string[];
     minAmountsOutByExitPath: string[];
   }> => {
-    const simulationResult = await simulateTransaction(
+    const simulationResult = await this.tenderlyHelper.simulateTransaction(
       this.relayer,
       callData,
       userAddress,
-      [tokenIn],
-      this.chainId
+      [tokenIn]
     );
 
     // Decode each exit path amount out from static call result
@@ -188,7 +200,7 @@ export class Exit {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
     const poolsGraph = new PoolGraph(this.pools, {
-      network: this.chainId,
+      network: this.networkConfig.chainId,
       rpcUrl: '',
     });
 

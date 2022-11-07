@@ -34,6 +34,13 @@ export interface BalancerSdkConfig {
   customSubgraphUrl?: string;
   //optionally overwrite parts of the standard SOR config
   sor?: Partial<BalancerSdkSorConfig>;
+  tenderly?: BalancerTenderlyConfig;
+}
+
+export interface BalancerTenderlyConfig {
+  accessKey: string;
+  user: 'balancer' | string;
+  project: 'v2' | string;
 }
 
 export interface BalancerSdkSorConfig {
@@ -74,6 +81,7 @@ export interface BalancerNetworkConfig {
       bbaUsd?: string;
     };
   };
+  tenderly?: BalancerTenderlyConfig;
   urls: {
     subgraph: string;
     gaugesSubgraph?: string;

@@ -8,12 +8,18 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { StablePoolEncoder } from '@/pool-stable';
-import { JoinPoolRequest, Pool, PoolAttribute, PoolType } from '@/types';
+import {
+  BalancerNetworkConfig,
+  JoinPoolRequest,
+  Pool,
+  PoolAttribute,
+  PoolType,
+} from '@/types';
 import { Findable } from '../data/types';
 import { PoolGraph, Node } from './graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
-import { simulateTransaction } from '@/lib/utils/tenderlyHelper';
+import TenderlyHelper from '@/lib/utils/tenderlyHelper';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers, isSameAddress } from '@/lib/utils';
@@ -30,13 +36,20 @@ export class Join {
   totalProportions: Record<string, BigNumber> = {};
   private relayer: string;
   private wrappedNativeAsset;
+  private tenderlyHelper: TenderlyHelper;
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
-    private chainId: number
+    private networkConfig: BalancerNetworkConfig
   ) {
-    const { tokens, contracts } = networkAddresses(chainId);
+    const { tokens, contracts } = networkAddresses(networkConfig.chainId);
     this.relayer = contracts.relayer as string;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
+
+    if (!networkConfig.tenderly) throw new Error('Tenderly config not found');
+    this.tenderlyHelper = new TenderlyHelper(
+      networkConfig.chainId,
+      networkConfig.tenderly
+    );
   }
 
   async joinPool(
@@ -357,12 +370,11 @@ export class Join {
   ): Promise<{ amountsOut: string[]; totalAmountOut: string }> => {
     const amountsOut: string[] = [];
 
-    const staticResult = await simulateTransaction(
+    const staticResult = await this.tenderlyHelper.simulateTransaction(
       this.relayer,
       callData,
       userAddress,
-      tokensIn,
-      this.chainId
+      tokensIn
     );
 
     const multicallResult = defaultAbiCoder.decode(
@@ -419,7 +431,7 @@ export class Join {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
     const poolsGraph = new PoolGraph(this.pools, {
-      network: this.chainId,
+      network: this.networkConfig.chainId,
       rpcUrl: '',
     });
 

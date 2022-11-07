@@ -9,7 +9,12 @@ import { Contracts } from '../src/modules/contracts/contracts.module';
 
 dotenv.config();
 
-const { ALCHEMY_URL: jsonRpcUrl } = process.env;
+const {
+  ALCHEMY_URL: jsonRpcUrl,
+  TENDERLY_ACCESS_KEY,
+  TENDERLY_PROJECT,
+  TENDERLY_USER,
+} = process.env;
 const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8545';
 const addresses = ADDRESSES[network];
@@ -99,11 +104,18 @@ async function join() {
     parseFixed('10', 18).toString(),
   ];
 
+  const tenderlyConfig = {
+    accessKey: TENDERLY_ACCESS_KEY as string,
+    user: TENDERLY_USER as string,
+    project: TENDERLY_PROJECT as string,
+  };
+
   const balancer = new BalancerSDK({
     network,
     rpcUrl,
     customSubgraphUrl:
       'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta',
+    tenderly: tenderlyConfig,
   });
 
   // Checking balances to confirm success
@@ -119,7 +131,6 @@ async function join() {
     signerAddress,
     wrapLeafTokens,
     slippage,
-    signer,
     relayerAuth
   );
 
