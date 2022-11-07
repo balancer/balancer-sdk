@@ -1,17 +1,9 @@
-import { Provider } from "@ethersproject/providers";
-import { BigNumber } from "@ethersproject/bignumber";
-import { Contract } from "@ethersproject/contracts";
-import LiquidityGaugeAbi from '@/lib/abi/LiquidityGaugeV5.json';
+import { Provider } from '@ethersproject/providers';
+import { Signer } from '@ethersproject/abstract-signer';
+import { Contract } from '@ethersproject/contracts';
+import abi from '@/lib/abi/LiquidityGaugeV5.json';
 
-export class LiquidityGauge {
-
-    instance: Contract;
-
-    constructor(address: string, provider: Provider) {
-        this.instance = new Contract(address, LiquidityGaugeAbi, provider);
-    }
-
-    stake(amount: BigNumber) {
-    }
-
-}
+export const LiquidityGauge = (
+  address: string,
+  signerOrProvider: Signer | Provider
+): Contract => new Contract(address, abi, signerOrProvider);
