@@ -12,10 +12,14 @@ A JavaScript SDK which provides commonly used utilties for interacting with Bala
 4. Create a .env file in the balancer-js folder
 5. In the .env file you will need to define and initialize the following variables
 
+   We have defined both Alchemy and Infura, because some of the examples use Infura, others use Alchemy. However, feel free to modify accordingly and use your favourite one.
    ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT]  
    INFURA=[Infura API KEY]  
    TRADER_KEY=[MetaMask PRIVATE KEY]  
-   We have defined both Alchemy and Infura, because some of the examples use Infura, others use Alchemy. However, feel free to modify accordingly and use your favourite one.
+   Some examples also require the following Tenderly config parameters to be defined:
+   TENDERLY_ACCESS_KEY=[TENDERLY API ACCESS KEY]
+   TENDERLY_PROJECT=[TENDERLY PROJECT NAME]
+   TENDERLY_USER=[TENDERLY USERNAME]
 
 6. Run 'npm run node', this runs a local Hardhat Network
 7. Open a new terminal
