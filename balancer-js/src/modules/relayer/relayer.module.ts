@@ -159,6 +159,22 @@ export class Relayer {
     return BigNumber.from(ref).sub(BigNumber.from(paddedPrefix));
   }
 
+  /**
+   * Returns true if `amount` is not actually an amount, but rather a chained reference.
+   */
+  static isChainedReference(amount: string): boolean {
+    const amountBn = BigNumber.from(amount);
+    const mask = BigNumber.from(
+      '0xfff0000000000000000000000000000000000000000000000000000000000000'
+    );
+    const readonly = BigNumber.from(
+      '0xba10000000000000000000000000000000000000000000000000000000000000'
+    );
+    const check = amountBn.toBigInt() & mask.toBigInt();
+
+    return readonly.toString() === check.toString();
+  }
+
   static constructExitCall(params: ExitPoolData): string {
     const {
       assets,
