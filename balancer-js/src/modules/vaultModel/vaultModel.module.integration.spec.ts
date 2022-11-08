@@ -190,6 +190,7 @@ async function testFlow(
 
       const multicalls: Requests[] = [];
       // EncodeBatchSwapInput | ExitPoolData | EncodeJoinPoolInput
+      // TODO - Remove the need to manipulate this data - see what the GeneralisedJoin/Exits look like first.
       callData.inputs.forEach((input) => {
         if ('swapType' in input) {
           const call = input as EncodeBatchSwapInput;

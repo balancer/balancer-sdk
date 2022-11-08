@@ -200,6 +200,9 @@ export class ExitModel {
     pools: PoolDictionary
   ): Promise<[string[], string[]]> {
     const pool = pools[exitPoolRequest.poolId];
+    // TODO - Currently rely on ExitPoolRequest to pass pool type but this feels like it could be improved.
+    // This is because we need to know a ComposableStable due to encoding.
+    // Current pools dictionary lumps all stable pools together so maybe we can create a new one that doesn't.
     const exitKind = this.exitKind(
       exitPoolRequest.poolType,
       exitPoolRequest.encodedUserData
