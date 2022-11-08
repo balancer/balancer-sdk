@@ -23,14 +23,10 @@ import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Contracts } from '../contracts/contracts.module';
 import { forkSetup, getBalances } from '@/test/lib/utils';
-import {
-  VaultModel,
-  Requests,
-  BatchSwapRequest,
-  ActionType,
-  ExitPoolRequest,
-  JoinPoolRequest,
-} from './vaultModel.module';
+import { VaultModel, Requests, ActionType } from './vaultModel.module';
+import { ExitPoolRequest } from './poolModel/exit';
+import { JoinPoolRequest } from './poolModel/join';
+import { BatchSwapRequest } from './poolModel/swap';
 import {
   EncodeJoinPoolInput,
   EncodeBatchSwapInput,
