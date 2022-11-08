@@ -25,3 +25,5 @@ const { pools } = sdk;
     }
   });
 })();
+
+// yarn examples:run ./examples/pools/liquidity.ts
