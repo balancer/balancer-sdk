@@ -86,7 +86,6 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param userAddress     User address
    * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param signer          Signer (used for simulating tx to get accurate amounts)
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
    */
@@ -120,7 +119,6 @@ export class Pools implements Findable<PoolWithMethods> {
    *
    * @param poolId        Pool id
    * @param amount        Token amount in EVM scale
-   * @param signer        Signer (used for simulating tx to get accurate amounts)
    * @param userAddress   User address
    * @param slippage      Maximum slippage tolerance in bps i.e. 50 = 0.5%.
    * @param authorisation Optional auhtorisation call to be added to the chained transaction
