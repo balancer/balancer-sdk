@@ -1,6 +1,6 @@
 {
   "name": "@balancer-labs/sdk",
-  "version": "0.1.31-beta.3",
+  "version": "0.1.32",
   "description": "JavaScript SDK for interacting with the Balancer Protocol V2",
   "license": "GPL-3.0-only",
   "homepage": "https://github.com/balancer-labs/balancer-sdk/balancer-js#readme",
@@ -88,7 +88,7 @@
     "typescript": "^4.0.2"
   },
   "dependencies": {
-    "@balancer-labs/sor": "^4.0.1-beta.8",
+    "@balancer-labs/sor": "^4.0.1-beta.9",
     "@balancer-labs/typechain": "^1.0.0",
     "axios": "^0.24.0",
     "graphql": "^15.6.1",

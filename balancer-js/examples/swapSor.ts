@@ -68,15 +68,17 @@ async function getAndProcessSwaps(
       );
       // Static calling Relayer doesn't return any useful values but will allow confirmation tx is ok
       // relayerCallData.data can be used to simulate tx on Tenderly to see token balance change, etc
+      // console.log(wallet.address);
+      // console.log(await balancer.sor.provider.getBlockNumber());
       // console.log(relayerCallData.data);
       const result = await balancer.contracts.relayer
         ?.connect(wallet)
         .callStatic.multicall(relayerCallData.rawCalls);
       console.log(result);
-    } catch (err) {
+    } catch (err: any) {
       // If error we can reprocess without join/exit paths
-      console.log(`Error Using Join/Exit Paths: `, err);
-      getAndProcessSwaps(
+      console.log(`Error Using Join/Exit Paths`, err.reason);
+      await getAndProcessSwaps(
         balancer,
         tokenIn!,
         tokenOut!,
@@ -122,7 +124,7 @@ async function swapExample() {
   const tokenIn = ADDRESSES[network].WETH.address;
   const tokenOut = ADDRESSES[network].auraBal?.address;
   const swapType = SwapTypes.SwapExactIn;
-  const amount = parseFixed('0.8', 18);
+  const amount = parseFixed('18', 18);
   // Currently Relayer only suitable for ExactIn and non-eth swaps
   const canUseJoinExitPaths = canUseJoinExit(swapType, tokenIn!, tokenOut!);
 
