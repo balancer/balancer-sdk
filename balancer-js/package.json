@@ -28,8 +28,8 @@
     "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
     "subgraph:generate": "graphql-codegen --config src/modules/subgraph/codegen.yml -r dotenv/config",
     "examples:run": "npx ts-node -P tsconfig.testing.json -r tsconfig-paths/register",
-    "node": "npx hardhat node --tsconfig tsconfig.testing.json --fork $(grep ALCHEMY_URL .env | cut -d '=' -f2 | tail -1)",
-    "node:goerli": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --fork $(grep ALCHEMY_URL_GOERLI .env | cut -d '=' -f2 | tail -1) --port 8000"
+    "node": "npx hardhat node --fork $(grep ALCHEMY_URL .env | cut -d '=' -f2 | tail -1)",
+    "node:goerli": "npx hardhat --config hardhat.config.goerli.js node --fork $(grep ALCHEMY_URL_GOERLI .env | cut -d '=' -f2 | tail -1) --port 8000"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.0",

@@ -1,12 +1,12 @@
-import '@nomiclabs/hardhat-ethers';
+require('@nomiclabs/hardhat-ethers');
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-export default {
+module.exports = {
   networks: {
     hardhat: {
-      chainId: 5,
+      chainId: 1,
     },
   },
 };
