@@ -575,60 +575,6 @@ describe('Graph', () => {
         expect(orderedNodes[9].type).to.eq('ComposableStable');
       });
     });
-
-    context('nodes to root', () => {
-      let orderedNodes: Node[];
-      before(async () => {
-        const boostedNode = await poolsGraph.buildGraphFromRootPool(
-          rootPool.id,
-          false
-        );
-        orderedNodes = PoolGraph.orderByBfs(boostedNode).reverse();
-      });
-
-      it('should throw when token not in tree', () => {
-        const inputToken = ADDRESSES[Network.MAINNET].BAL.address;
-        let reason = '';
-        try {
-          PoolGraph.getNodesToRoot(orderedNodes, inputToken, 0);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (err: any) {
-          reason = err.message;
-        }
-        expect(reason).to.eq('input token invalid');
-      });
-      it('should throw when trying to join with root token', () => {
-        const inputToken = rootPool.address;
-        let reason = '';
-        try {
-          PoolGraph.getNodesToRoot(orderedNodes, inputToken, 0);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (err: any) {
-          reason = err.message;
-        }
-        expect(reason).to.eq('input token invalid');
-      });
-      it('leaf input', () => {
-        const inputToken = ADDRESSES[Network.MAINNET].DAI.address;
-        const nodes = PoolGraph.getNodesToRoot(orderedNodes, inputToken, 0);
-        expect(nodes.length).to.eq(4);
-        expect(nodes[0].joinAction).to.eq('input');
-        expect(nodes[0].address).to.eq(inputToken);
-        expect(nodes[1].joinAction).to.eq('batchSwap');
-        expect(nodes[2].joinAction).to.eq('joinPool');
-        expect(nodes[3].joinAction).to.eq('joinPool');
-        expect(nodes[3].address).to.eq(rootPool.address);
-      });
-      it('child boosted bpt input', () => {
-        const inputToken = boostedMetaInfo.childBoostedInfo.rootPool.address;
-        const nodes = PoolGraph.getNodesToRoot(orderedNodes, inputToken, 0);
-        expect(nodes.length).to.eq(2);
-        expect(nodes[0].joinAction).to.eq('input');
-        expect(nodes[0].address).to.eq(inputToken);
-        expect(nodes[1].joinAction).to.eq('joinPool');
-        expect(nodes[1].address).to.eq(rootPool.address);
-      });
-    });
   });
 
   context('boostedMetaBigPool', () => {
@@ -798,36 +744,6 @@ describe('Graph', () => {
         expect(orderedNodes[12].type).to.eq('ComposableStable');
         expect(orderedNodes[13].type).to.eq('ComposableStable');
         expect(orderedNodes[14].type).to.eq('ComposableStable');
-      });
-    });
-    context('nodes to root', () => {
-      let orderedNodes: Node[];
-      before(async () => {
-        const boostedNode = await poolsGraph.buildGraphFromRootPool(
-          boostedPool.id,
-          false
-        );
-        orderedNodes = PoolGraph.orderByBfs(boostedNode).reverse();
-      });
-      it('leaf input', () => {
-        const inputToken = ADDRESSES[Network.MAINNET].DAI.address;
-        const nodes = PoolGraph.getNodesToRoot(orderedNodes, inputToken, 0);
-        expect(nodes.length).to.eq(4);
-        expect(nodes[0].joinAction).to.eq('input');
-        expect(nodes[0].address).to.eq(inputToken);
-        expect(nodes[1].joinAction).to.eq('batchSwap');
-        expect(nodes[2].joinAction).to.eq('joinPool');
-        expect(nodes[3].joinAction).to.eq('joinPool');
-        expect(nodes[3].address).to.eq(boostedPool.address);
-      });
-      it('child boosted bpt input', () => {
-        const inputToken = boostedMetaBigInfo.childPools[0].address;
-        const nodes = PoolGraph.getNodesToRoot(orderedNodes, inputToken, 0);
-        expect(nodes.length).to.eq(2);
-        expect(nodes[0].joinAction).to.eq('input');
-        expect(nodes[0].address).to.eq(inputToken);
-        expect(nodes[1].joinAction).to.eq('joinPool');
-        expect(nodes[1].address).to.eq(boostedPool.address);
       });
     });
   });
