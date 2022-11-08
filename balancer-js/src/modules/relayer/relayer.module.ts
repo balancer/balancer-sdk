@@ -167,12 +167,10 @@ export class Relayer {
     const mask = BigNumber.from(
       '0xfff0000000000000000000000000000000000000000000000000000000000000'
     );
-    const readonly = BigNumber.from(
-      '0xba10000000000000000000000000000000000000000000000000000000000000'
-    );
+    const readonly =
+      '0xba10000000000000000000000000000000000000000000000000000000000000';
     const check = amountBn.toBigInt() & mask.toBigInt();
-
-    return readonly.toString() === check.toString();
+    return readonly === BigNumber.from(check)._hex.toString();
   }
 
   static constructExitCall(params: ExitPoolData): string {

@@ -1,3 +1,7 @@
+import { parseFixed, BigNumber, formatFixed } from '@ethersproject/bignumber';
+import { defaultAbiCoder } from '@ethersproject/abi';
+import { Zero } from '@ethersproject/constants';
+import { cloneDeep } from 'lodash';
 import {
   SubgraphPoolBase,
   parseToPoolsDict,
@@ -7,40 +11,18 @@ import {
   PoolDataService,
   PoolBase,
 } from '@balancer-labs/sor';
-import { EncodeBatchSwapInput } from '@/modules/relayer/types';
-import { parseFixed, BigNumber, formatFixed } from '@ethersproject/bignumber';
+
 import { ComposableStablePoolExitKind } from '@/pool-composable-stable';
-import { defaultAbiCoder } from '@ethersproject/abi';
 import { WeightedPoolDecoder } from '@/pool-weighted/decoder';
-import { SwapType } from '../swaps/types';
-import { Zero } from '@ethersproject/constants';
+import { EncodeBatchSwapInput, OutputReference } from '@/modules/relayer/types';
+import {
+  WeightedPoolExitKind,
+  WeightedPoolJoinKind,
+} from '@/pool-weighted/decoder';
+import { SwapType } from '@/modules/swaps/types';
 import { AssetHelpers, isSameAddress } from '@/lib/utils';
-import { cloneDeep } from 'lodash';
-
-export enum PoolTypes {
-  Weighted = 'Weighted',
-  Stable = 'Stable',
-  MetaStable = 'MetaStable',
-  LBP = 'LiquidityBootstrapping',
-  Investment = 'Investment',
-  AaveLinear = 'AaveLinear',
-  StablePhantom = 'StablePhantom',
-  ERC4626Linear = 'ERC4626Linear',
-  ComposableStable = 'ComposableStable',
-}
-
-export enum PoolJoinKind {
-  INIT = 0,
-  EXACT_TOKENS_IN_FOR_BPT_OUT,
-  TOKEN_IN_FOR_EXACT_BPT_OUT,
-  ALL_TOKENS_IN_FOR_EXACT_BPT_OUT,
-}
-
-enum PoolExitKind {
-  EXACT_BPT_IN_FOR_ONE_TOKEN_OUT = 0,
-  EXACT_BPT_IN_FOR_TOKENS_OUT,
-  BPT_IN_FOR_EXACT_TOKENS_OUT,
-}
+import { Relayer } from '@/modules/relayer/relayer.module';
+import { PoolType } from '@/types';
 
 export enum ActionType {
   BatchSwap,
@@ -51,7 +33,7 @@ export enum ActionType {
 export interface BatchSwapRequest
   extends Pick<
     EncodeBatchSwapInput,
-    'swaps' | 'assets' | 'funds' | 'swapType'
+    'swaps' | 'assets' | 'funds' | 'swapType' | 'outputReferences'
   > {
   actionType: ActionType.BatchSwap;
 }
@@ -59,15 +41,18 @@ export interface BatchSwapRequest
 export interface ExitPoolRequest {
   actionType: ActionType.Exit;
   poolId: string;
-  poolType: PoolTypes;
+  poolType: PoolType;
   encodedUserData: string;
+  outputReferences: OutputReference[];
 }
+
 export interface JoinPoolRequest {
   actionType: ActionType.Join;
   poolId: string;
   encodedUserData: string;
+  outputReference: string;
 }
-export type Inputs = BatchSwapRequest | JoinPoolRequest | ExitPoolRequest;
+export type Requests = BatchSwapRequest | JoinPoolRequest | ExitPoolRequest;
 
 function getBalancesForTokens(pool: PoolBase, tokens: string[]): string[] {
   const balances: string[] = [];
@@ -92,6 +77,7 @@ function getBalancesForTokens(pool: PoolBase, tokens: string[]): string[] {
 export class VaultModel {
   poolsArray: SubgraphPoolBase[] = [];
   poolsDict: PoolDictionary = {};
+  chainedRefs: Record<string, string> = {};
   constructor(
     private poolDataService: PoolDataService,
     private wrappedNativeAsset: string
@@ -152,21 +138,63 @@ export class VaultModel {
     return this.poolsDict;
   }
 
-  async multicall(rawCalls: Inputs[]): Promise<(string | string[])[]> {
-    const results: (string | string[])[] = [];
+  updateDeltas(
+    deltas: Record<string, BigNumber>,
+    assets: string[],
+    amounts: string[]
+  ): Record<string, BigNumber> {
+    assets.forEach((t, i) => {
+      if (!deltas[t]) deltas[t] = Zero;
+      deltas[t] = deltas[t].add(amounts[i]);
+    });
+    return deltas;
+  }
+
+  async multicall(rawCalls: Requests[]): Promise<Record<string, BigNumber>> {
+    const deltas: Record<string, BigNumber> = {};
     for (const call of rawCalls) {
       if (call.actionType === ActionType.Join) {
-        const result = await this.doJoinPool(call);
-        results.push(result);
+        const [tokens, amounts] = await this.doJoinPool(call);
+        this.updateDeltas(deltas, tokens, amounts);
       } else if (call.actionType === ActionType.Exit) {
-        const result = await this.doExitPool(call);
-        results.push(result);
+        const [tokens, amounts] = await this.doExitPool(call);
+        this.updateDeltas(deltas, tokens, amounts);
       } else {
-        const result = await this.doBatchSwap(call);
-        results.push(result);
+        const swapDeltas = await this.doBatchSwap(call);
+        this.updateDeltas(deltas, call.assets, swapDeltas);
       }
     }
-    return results;
+    return deltas;
+  }
+
+  /**
+   * Stores `value` as the amount referenced by chained reference `ref`.
+   * @param ref
+   * @param value
+   */
+  setChainedReferenceValue(ref: string, value: string): void {
+    this.chainedRefs[ref] = value;
+  }
+
+  /**
+   * Returns the amount referenced by chained reference `ref`.
+   * @param ref
+   * @returns
+   */
+  getChainedReferenceValue(ref: string): string {
+    return this.chainedRefs[ref];
+  }
+
+  doChainedRefReplacement(amount: string): string {
+    if (Relayer.isChainedReference(amount.toString())) {
+      return this.getChainedReferenceValue(amount.toString());
+    } else return amount;
+  }
+
+  doChainedRefReplacements(amounts: string[]): string[] {
+    return amounts.map((amount) =>
+      this.doChainedRefReplacement(amount).toString()
+    );
   }
 
   /**
@@ -174,14 +202,14 @@ export class VaultModel {
    * @param encodedUserData
    * @returns
    */
-  joinKind(encodedUserData: string): PoolJoinKind {
+  joinKind(encodedUserData: string): WeightedPoolJoinKind {
     const decodedUserData = defaultAbiCoder.decode(
       ['uint256'],
       encodedUserData
     );
     const joinKind = decodedUserData[0] as BigNumber;
     if (!joinKind) throw new Error('No exit kind.');
-    return joinKind.toNumber() as PoolJoinKind;
+    return joinKind.toNumber() as WeightedPoolJoinKind;
   }
   /**
    * Decodes user join data and returns token input amounts
@@ -191,18 +219,18 @@ export class VaultModel {
    */
   decodeJoinData(
     encodedUserData: string,
-    joinKind: PoolJoinKind
+    joinKind: WeightedPoolJoinKind
   ): string | string[] {
     // At the moment all pools have same structure so just use WeightedPoolDecoded for all
-    if (joinKind === PoolJoinKind.ALL_TOKENS_IN_FOR_EXACT_BPT_OUT) {
+    if (joinKind === WeightedPoolJoinKind.ALL_TOKENS_IN_FOR_EXACT_BPT_OUT) {
       const bptAmountOut =
         WeightedPoolDecoder.joinAllTokensInForExactBPTOut(encodedUserData);
       return bptAmountOut.toString();
-    } else if (joinKind === PoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT) {
+    } else if (joinKind === WeightedPoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT) {
       const [, amountsIn] =
         WeightedPoolDecoder.joinExactTokensInForBPTOut(encodedUserData);
       return amountsIn;
-    } else if (joinKind === PoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT) {
+    } else if (joinKind === WeightedPoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT) {
       const [, bptAmountOut, tokenIndex] =
         WeightedPoolDecoder.joinTokenInForExactBPTOut(encodedUserData);
       return [bptAmountOut.toString(), tokenIndex];
@@ -228,12 +256,17 @@ export class VaultModel {
     */
   }
 
-  joinExactTokensInForBPTOut(encodedUserData: string, pool: PoolBase): string {
+  joinExactTokensInForBPTOut(
+    encodedUserData: string,
+    pool: PoolBase
+  ): [string, string[], string[]] {
     // This does not include a value for pre-minted BPT
-    const amountsIn = this.decodeJoinData(
+    const amountsInWithRef = this.decodeJoinData(
       encodedUserData,
-      PoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT
+      WeightedPoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT
     ) as string[];
+
+    const amountsIn = this.doChainedRefReplacements(amountsInWithRef);
     // Calculate amount of BPT out given exact amounts in
     const bptAmountOut = pool._calcBptOutGivenExactTokensIn(
       amountsIn.map((a) => BigNumber.from(a))
@@ -257,14 +290,23 @@ export class VaultModel {
         balanceEvm.add(amount)
       );
     });
-    return bptAmountOut.toString();
+    return [
+      bptAmountOut.toString(),
+      tokensWithoutBpt.map((t) => t.address),
+      amountsIn,
+    ];
   }
 
-  joinTokenInForExactBPTOut(encodedUserData: string, pool: PoolBase): string {
-    const [bptAmountOut, tokenInIndex] = this.decodeJoinData(
+  joinTokenInForExactBPTOut(
+    encodedUserData: string,
+    pool: PoolBase
+  ): [string, string, string] {
+    const [bptAmountOutWithRef, tokenInIndex] = this.decodeJoinData(
       encodedUserData,
-      PoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT
+      WeightedPoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT
     ) as string;
+
+    const bptAmountOut = this.doChainedRefReplacement(bptAmountOutWithRef);
     // Uses an existing SOR functionality so need to deal with pairData and scaling
     const pairData = pool.parsePoolPairData(
       pool.tokensList[Number(tokenInIndex)],
@@ -292,7 +334,7 @@ export class VaultModel {
       pairData.balanceOut.add(bptAmountOut)
     );
 
-    return amountInEvm.toString();
+    return [amountInEvm.toString(), pairData.tokenIn, amountInEvm.toString()];
   }
 
   /**
@@ -300,29 +342,49 @@ export class VaultModel {
    * @param joinPoolRequest
    * @returns tokens out
    */
-  async doJoinPool(joinPoolRequest: JoinPoolRequest): Promise<string> {
+  async doJoinPool(
+    joinPoolRequest: JoinPoolRequest
+  ): Promise<[string[], string[]]> {
     const pools = await this.poolsDictionary();
     const pool = pools[joinPoolRequest.poolId];
     const joinKind = this.joinKind(joinPoolRequest.encodedUserData);
-    if (joinKind === PoolJoinKind.ALL_TOKENS_IN_FOR_EXACT_BPT_OUT) {
-      // Returns amount of tokens in
-      return this.allTokensInForExactBPTOut(
+    let bptOut = '0';
+    let tokens: string[] = [];
+    let amounts: string[] = [];
+    if (joinKind === WeightedPoolJoinKind.ALL_TOKENS_IN_FOR_EXACT_BPT_OUT) {
+      // Returns amount of tokens in - This isn't currently implemented
+      bptOut = this.allTokensInForExactBPTOut(
         joinPoolRequest.encodedUserData,
         pool
       );
-    } else if (joinKind === PoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT) {
+    } else if (joinKind === WeightedPoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT) {
       // Returns amount of BPT out
-      return this.joinExactTokensInForBPTOut(
+      [bptOut, tokens, amounts] = this.joinExactTokensInForBPTOut(
         joinPoolRequest.encodedUserData,
         pool
       );
-    } else if (joinKind === PoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT) {
+    } else if (joinKind === WeightedPoolJoinKind.TOKEN_IN_FOR_EXACT_BPT_OUT) {
       // Returns amount of tokenIn
-      return this.joinTokenInForExactBPTOut(
+      let tokenIn: string, amountIn: string;
+      [bptOut, tokenIn, amountIn] = this.joinTokenInForExactBPTOut(
         joinPoolRequest.encodedUserData,
         pool
       );
+      tokens.push(tokenIn);
+      amounts.push(amountIn);
     } else throw new Error('Exit type not implemented');
+
+    tokens.push(pool.address);
+    // -ve because coming from Vault
+    amounts.push(Zero.sub(bptOut).toString());
+
+    if (
+      joinPoolRequest.outputReference &&
+      Relayer.isChainedReference(joinPoolRequest.outputReference)
+    ) {
+      this.setChainedReferenceValue(joinPoolRequest.outputReference, bptOut);
+    }
+    return [tokens, amounts];
   }
 
   /**
@@ -331,24 +393,24 @@ export class VaultModel {
    * @param encodedUserData
    * @returns
    */
-  exitKind(poolType: PoolTypes, encodedUserData: string): PoolExitKind {
+  exitKind(poolType: PoolType, encodedUserData: string): WeightedPoolExitKind {
     const decodedUserData = defaultAbiCoder.decode(
       ['uint256'],
       encodedUserData
     );
     const exitKind = decodedUserData[0] as BigNumber;
     if (!exitKind) throw new Error('No exit kind.');
-    if (poolType === PoolTypes.ComposableStable) {
+    if (poolType === PoolType.ComposableStable) {
       if (
         exitKind.toNumber() ===
         ComposableStablePoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT
       )
-        return PoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT;
+        return WeightedPoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT;
       else {
-        return PoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT;
+        return WeightedPoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT;
       }
     } else {
-      return exitKind.toNumber() as PoolExitKind;
+      return exitKind.toNumber() as WeightedPoolExitKind;
     }
   }
   /**
@@ -357,17 +419,22 @@ export class VaultModel {
    * @param exitKind
    * @returns
    */
-  decodeExitData(encodedUserData: string, exitKind: PoolExitKind): string[] {
+  decodeExitData(
+    encodedUserData: string,
+    exitKind: WeightedPoolExitKind
+  ): string[] {
     // At the moment all pools have same structure so just use WeightedPoolDecoded for all
-    if (exitKind === PoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT) {
+    if (exitKind === WeightedPoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT) {
       const [, amountsOut, maxBPTAmountIn] =
         WeightedPoolDecoder.exitBPTInForExactTokensOut(encodedUserData);
       return [amountsOut.toString(), maxBPTAmountIn.toString()];
-    } else if (exitKind === PoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT) {
+    } else if (
+      exitKind === WeightedPoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT
+    ) {
       const [, bptIn, tokenIndex] =
         WeightedPoolDecoder.exitExactBPTInForOneTokenOut(encodedUserData);
       return [bptIn.toString(), tokenIndex.toString()];
-    } else if (exitKind === PoolExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT) {
+    } else if (exitKind === WeightedPoolExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT) {
       const [, bptIn] =
         WeightedPoolDecoder.exitExactBPTInForTokensOut(encodedUserData);
       return [bptIn.toString()];
@@ -381,13 +448,18 @@ export class VaultModel {
    * @param pool
    * @returns tokensOut
    */
-  exactBptInForTokensOut(encodedUserData: string, pool: PoolBase): string[] {
-    const [bptIn] = this.decodeExitData(
+  exactBptInForTokensOut(
+    encodedUserData: string,
+    pool: PoolBase
+  ): [string, string[], string[]] {
+    const [bptInWithRef] = this.decodeExitData(
       encodedUserData,
-      PoolExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT
+      WeightedPoolExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT
     );
+
+    const bptIn = this.doChainedRefReplacement(bptInWithRef);
     // Calculate amount of tokens out given an exact amount of BPT in
-    const tokensOut = pool
+    const amountsOut = pool
       ._calcTokensOutGivenExactBptIn(BigNumber.from(bptIn))
       .map((a) => a.toString());
 
@@ -397,7 +469,7 @@ export class VaultModel {
       (t) => !isSameAddress(t.address, pool.address)
     );
     // Update each tokens balance
-    tokensOut.forEach((t, i) => {
+    amountsOut.forEach((t, i) => {
       const balanceEvm = parseFixed(
         tokensWithoutBpt[i].balance.toString(),
         tokensWithoutBpt[i].decimals
@@ -407,7 +479,7 @@ export class VaultModel {
         balanceEvm.sub(t)
       );
     });
-    return tokensOut;
+    return [bptIn, tokensWithoutBpt.map((t) => t.address), amountsOut];
   }
 
   /**
@@ -417,11 +489,15 @@ export class VaultModel {
    * @param pool
    * @returns tokens out
    */
-  exactBptInForOneTokenOut(encodedUserData: string, pool: PoolBase): string[] {
-    const [bptIn, tokenIndex] = this.decodeExitData(
+  exactBptInForOneTokenOut(
+    encodedUserData: string,
+    pool: PoolBase
+  ): [string, string[], string[]] {
+    const [bptInWithRef, tokenIndex] = this.decodeExitData(
       encodedUserData,
-      PoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT
+      WeightedPoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT
     );
+    const bptIn = this.doChainedRefReplacement(bptInWithRef);
     // Uses an existing SOR functionality so need to deal with pairData and scaling
     const pairData = pool.parsePoolPairData(
       pool.address,
@@ -453,9 +529,12 @@ export class VaultModel {
       pairData.tokenOut,
       BigNumber.from(poolBalances[1]).sub(amountOutEvm)
     );
-    const result = new Array(pool.tokensList.length).fill('0');
-    result[Number(tokenIndex)] = amountOutEvm.toString();
-    return result;
+    const tokensWithoutBpt = pool.tokensList.filter(
+      (t) => !isSameAddress(t, pool.address)
+    );
+    const amountsOut = new Array(tokensWithoutBpt.length).fill('0');
+    amountsOut[Number(tokenIndex)] = amountOutEvm.toString();
+    return [bptIn, tokensWithoutBpt, amountsOut];
   }
 
   /**
@@ -463,21 +542,44 @@ export class VaultModel {
    * @param exitPoolRequest
    * @returns tokens out
    */
-  async doExitPool(exitPoolRequest: ExitPoolRequest): Promise<string[]> {
+  async doExitPool(
+    exitPoolRequest: ExitPoolRequest
+  ): Promise<[string[], string[]]> {
     const pools = await this.poolsDictionary();
     const pool = pools[exitPoolRequest.poolId];
     const exitKind = this.exitKind(
       exitPoolRequest.poolType,
       exitPoolRequest.encodedUserData
     );
-    if (exitKind === PoolExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT) {
-      return this.exactBptInForTokensOut(exitPoolRequest.encodedUserData, pool);
-    } else if (exitKind === PoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT) {
-      return this.exactBptInForOneTokenOut(
+    let amountsOut: string[] = [];
+    let bptIn: string;
+    let tokensOut: string[] = [];
+    const tokens: string[] = [];
+    const deltas: string[] = [];
+    if (exitKind === WeightedPoolExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT) {
+      [bptIn, tokensOut, amountsOut] = this.exactBptInForTokensOut(
+        exitPoolRequest.encodedUserData,
+        pool
+      );
+    } else if (
+      exitKind === WeightedPoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT
+    ) {
+      [bptIn, tokensOut, amountsOut] = this.exactBptInForOneTokenOut(
         exitPoolRequest.encodedUserData,
         pool
       );
     } else throw new Error('Exit type not implemented');
+
+    // Save any chained references
+    for (let i = 0; i < exitPoolRequest.outputReferences.length; i++) {
+      this.setChainedReferenceValue(
+        exitPoolRequest.outputReferences[i].key.toString(),
+        amountsOut[exitPoolRequest.outputReferences[i].index]
+      );
+    }
+    tokens.push(pool.address, ...tokensOut);
+    deltas.push(bptIn, ...amountsOut.map((a) => Zero.sub(a).toString()));
+    return [tokens, deltas];
   }
 
   /**
@@ -492,6 +594,14 @@ export class VaultModel {
     // Used for multihop swaps where previous swap return is used as input to next swap
     let previousAmount: string;
 
+    for (let i = 0; i < batchSwapRequest.swaps.length; ++i) {
+      const amount = batchSwapRequest.swaps[i].amount;
+      if (Relayer.isChainedReference(amount)) {
+        batchSwapRequest.swaps[i].amount =
+          this.getChainedReferenceValue(amount);
+      }
+    }
+
     // Handle each swap in order
     batchSwapRequest.swaps.forEach((swap) => {
       const tokenIn = assets[swap.assetInIndex];
@@ -499,7 +609,7 @@ export class VaultModel {
       const pool = pools[swap.poolId];
       let amount = swap.amount;
       if (amount === '0') amount = previousAmount;
-      const [amountInEvm, amountOutEvm] = this.handleSwap(
+      const [amountInEvm, amountOutEvm] = this.doSwap(
         tokenIn,
         tokenOut,
         pool,
@@ -515,6 +625,16 @@ export class VaultModel {
       deltas[swap.assetInIndex] = deltas[swap.assetInIndex].add(amountInEvm);
       deltas[swap.assetOutIndex] = deltas[swap.assetOutIndex].sub(amountOutEvm);
     });
+
+    for (let i = 0; i < batchSwapRequest.outputReferences.length; i++) {
+      // Batch swap return values are signed, as they are Vault deltas (positive values correspond to assets sent
+      // to the Vault, and negative values are assets received from the Vault). To simplify the chained reference
+      // value model, we simply store the absolute value.
+      this.setChainedReferenceValue(
+        batchSwapRequest.outputReferences[i].key.toString(),
+        deltas[batchSwapRequest.outputReferences[i].index].abs().toString()
+      );
+    }
     return deltas.map((d) => d.toString());
   }
 
@@ -527,7 +647,7 @@ export class VaultModel {
    * @param amount (EVM Scale)
    * @returns
    */
-  handleSwap(
+  doSwap(
     tokenIn: string,
     tokenOut: string,
     pool: PoolBase,

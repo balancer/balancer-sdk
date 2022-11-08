@@ -100,17 +100,17 @@ export const ADDRESSES = {
       slot: 0,
     },
     bbausdc: {
-      address: '0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83',
+      address: '0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83'.toLowerCase(),
       decimals: 18,
       symbol: 'bbausdc',
     },
     bbausdt: {
-      address: '0x2F4eb100552ef93840d5aDC30560E5513DFfFACb',
+      address: '0x2F4eb100552ef93840d5aDC30560E5513DFfFACb'.toLowerCase(),
       decimals: 18,
       symbol: 'bbausdt',
     },
     bbadai: {
-      address: '0xae37D54Ae477268B9997d4161B96b8200755935c',
+      address: '0xae37D54Ae477268B9997d4161B96b8200755935c'.toLowerCase(),
       decimals: 18,
       symbol: 'bbadai',
     },

@@ -9,8 +9,9 @@ import {
   ExitPoolRequest,
   BatchSwapRequest,
   ActionType,
-  PoolTypes,
 } from './vaultModel.module';
+import { PoolType } from '@/types';
+import { isSameAddress } from '@/lib/utils';
 
 import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
@@ -109,6 +110,7 @@ describe('vault model', () => {
           actionType: ActionType.Join,
           poolId,
           encodedUserData,
+          outputReference: '',
         };
         const poolsDictionary = await vaultModel.poolsDictionary();
         const joinPool = poolsDictionary[poolId];
@@ -119,12 +121,17 @@ describe('vault model', () => {
           },
         ]);
 
-        const bptOut = await vaultModel.doJoinPool(joinPoolRequest);
+        const [tokens, amounts] = await vaultModel.doJoinPool(joinPoolRequest);
 
         const balancesAfter = getPoolBalances([
           { pool: joinPool, tokens: [...tokensIn, poolWeighted.address] },
         ]);
-        expect(BigNumber.from(bptOut).gt(0)).to.be.true;
+        expect(tokens).to.deep.eq([...tokensIn, joinPool.address]);
+        expect(amounts).to.deep.eq([
+          '123000000',
+          '10700000000000000000',
+          '-7314757264527952668',
+        ]);
         expect(
           BigNumber.from(balancesAfter[0]).sub(balancesBefore[0]).toString()
         ).to.eq(amountsIn[0]);
@@ -133,8 +140,7 @@ describe('vault model', () => {
         ).to.eq(amountsIn[1]);
         expect(
           BigNumber.from(balancesAfter[2]).sub(balancesBefore[2]).toString()
-        ).to.eq(bptOut);
-        expect(bptOut).to.eq('7314757264527952668');
+        ).to.eq('7314757264527952668');
       });
       it('ComposableStable - joinExactTokensInForBPTOut', async () => {
         const poolsRepository = new MockPoolDataService([
@@ -166,6 +172,7 @@ describe('vault model', () => {
           actionType: ActionType.Join,
           poolId,
           encodedUserData,
+          outputReference: '',
         };
         const poolsDictionary = await vaultModel.poolsDictionary();
         const joinPool = poolsDictionary[poolId];
@@ -176,12 +183,12 @@ describe('vault model', () => {
           },
         ]);
 
-        const bptOut = await vaultModel.doJoinPool(joinPoolRequest);
+        const [tokens, amounts] = await vaultModel.doJoinPool(joinPoolRequest);
 
         const balancesAfter = getPoolBalances([
           { pool: joinPool, tokens: tokensIn },
         ]);
-        expect(BigNumber.from(bptOut).gt(0)).to.be.true;
+        expect(tokens).to.deep.eq([...tokensIn, joinPool.address]);
         expect(
           BigNumber.from(balancesAfter[0]).sub(balancesBefore[0]).toString()
         ).to.eq(amountsIn[0]);
@@ -191,7 +198,12 @@ describe('vault model', () => {
         expect(
           BigNumber.from(balancesAfter[2]).sub(balancesBefore[2]).toString()
         ).to.eq(amountsIn[2]);
-        expect(bptOut).to.eq('1111327432434158659003'); // From Tenderly
+        expect(amounts).to.deep.eq([
+          '1230000000000000000',
+          '10700000000000000000',
+          '1099543200000000000000',
+          '-1111327432434158659003', // TODO - This result is innacurate when compared to Tenderly
+        ]); // From Tenderly
       });
     });
     context('exitAction', async () => {
@@ -209,34 +221,43 @@ describe('vault model', () => {
         const userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(bptIn);
         const exitPoolRequest: ExitPoolRequest = {
           actionType: ActionType.Exit,
-          poolType: PoolTypes.Weighted,
+          poolType: PoolType.Weighted,
           encodedUserData: userData,
           poolId,
+          outputReferences: [],
         };
         const poolsDictionary = await vaultModel.poolsDictionary();
-        const joinPool = poolsDictionary[poolId];
+        const exitPool = poolsDictionary[poolId];
         const balancesBefore = getPoolBalances([
           {
-            pool: joinPool,
+            pool: exitPool,
             tokens: [...poolWeighted.tokensList, poolWeighted.address],
           },
         ]);
 
-        const amountsOut = await vaultModel.doExitPool(exitPoolRequest);
+        const [tokens, amounts] = await vaultModel.doExitPool(exitPoolRequest);
 
         const balancesAfter = getPoolBalances([
           {
-            pool: joinPool,
+            pool: exitPool,
             tokens: [...poolWeighted.tokensList, poolWeighted.address],
           },
         ]);
-        expect(amountsOut).to.deep.eq(['138218951', '18666074549381720234']); // Taken from exit module
+        expect(tokens).to.deep.eq([
+          exitPool.address,
+          ...poolWeighted.tokensList,
+        ]);
+        expect(amounts).to.deep.eq([
+          '10000000000000000000',
+          '-138218951',
+          '-18666074549381720234',
+        ]); // Taken from exit module
         expect(
           BigNumber.from(balancesBefore[0]).sub(balancesAfter[0]).toString()
-        ).to.eq(amountsOut[0]);
+        ).to.eq('138218951');
         expect(
           BigNumber.from(balancesBefore[1]).sub(balancesAfter[1]).toString()
-        ).to.eq(amountsOut[1]);
+        ).to.eq('18666074549381720234');
         expect(
           BigNumber.from(balancesBefore[2]).sub(balancesAfter[2]).toString()
         ).to.eq(bptIn);
@@ -252,38 +273,51 @@ describe('vault model', () => {
         const poolId = poolComposableStable.id;
         // Should be EVM scale
         const bptIn = parseFixed('10', 18).toString();
+        // bbausdt
         const userData =
           ComposableStablePoolEncoder.exitExactBPTInForOneTokenOut(bptIn, 0);
         const exitPoolRequest: ExitPoolRequest = {
           actionType: ActionType.Exit,
-          poolType: PoolTypes.ComposableStable,
+          poolType: PoolType.ComposableStable,
           encodedUserData: userData,
           poolId,
+          outputReferences: [],
         };
         const poolsDictionary = await vaultModel.poolsDictionary();
-        const joinPool = poolsDictionary[poolId];
+        const exitPool = poolsDictionary[poolId];
         const balancesBefore = getPoolBalances([
-          { pool: joinPool, tokens: poolComposableStable.tokensList },
+          { pool: exitPool, tokens: exitPool.tokensList },
         ]);
 
-        const amountsOut = await vaultModel.doExitPool(exitPoolRequest);
-
+        const [tokens, amounts] = await vaultModel.doExitPool(exitPoolRequest);
+        expect(tokens).to.deep.eq([
+          exitPool.address,
+          ...exitPool.tokensList.filter(
+            (t) => !isSameAddress(t, exitPool.address)
+          ),
+        ]);
         const balancesAfter = getPoolBalances([
-          { pool: joinPool, tokens: poolComposableStable.tokensList },
+          { pool: exitPool, tokens: exitPool.tokensList },
         ]);
-        expect(
-          BigNumber.from(balancesBefore[0]).sub(balancesAfter[0]).toString()
-        ).to.eq(amountsOut[0]);
         expect(
           BigNumber.from(balancesBefore[1]).sub(balancesAfter[1]).toString()
-        ).to.eq(amountsOut[1]);
+        ).to.eq('0');
         expect(
           BigNumber.from(balancesBefore[2]).sub(balancesAfter[2]).toString()
         ).to.eq(bptIn);
         expect(
           BigNumber.from(balancesBefore[3]).sub(balancesAfter[3]).toString()
-        ).to.eq(amountsOut[3]);
-        expect(amountsOut).to.deep.eq(['9992541880923205377', '0', '0', '0']); // Taken from Tenderly simulation
+        ).to.eq('0');
+        expect(amounts).to.deep.eq([
+          '10000000000000000000',
+          '-9992541880923205377',
+          '0',
+          '0',
+          '0',
+        ]); // Taken from Tenderly simulation
+        expect(
+          BigNumber.from(balancesBefore[0]).sub(balancesAfter[0]).toString()
+        ).to.eq('9992541880923205377'); // TODO - This result is innacurate when compared to Tenderly
       });
     });
     context('batchSwapAction', async () => {
@@ -324,6 +358,7 @@ describe('vault model', () => {
             swaps: swap,
             assets,
             funds,
+            outputReferences: [],
           };
           const poolsDictionary = await vaultModel.poolsDictionary();
           const swapPool = poolsDictionary[swap[0].poolId];
@@ -392,6 +427,7 @@ describe('vault model', () => {
             swaps,
             assets,
             funds,
+            outputReferences: [],
           };
           const poolsDictionary = await vaultModel.poolsDictionary();
           const swapPool1 = poolsDictionary[swaps[0].poolId];
@@ -466,6 +502,7 @@ describe('vault model', () => {
             swaps: swap,
             assets,
             funds,
+            outputReferences: [],
           };
           const poolsDictionary = await vaultModel.poolsDictionary();
           const swapPool = poolsDictionary[swap[0].poolId];
@@ -533,6 +570,7 @@ describe('vault model', () => {
             swaps,
             assets,
             funds,
+            outputReferences: [],
           };
           const poolsDictionary = await vaultModel.poolsDictionary();
           const swapPool1 = poolsDictionary[swaps[0].poolId];
@@ -610,6 +648,7 @@ describe('vault model', () => {
           swaps: swap,
           assets,
           funds,
+          outputReferences: [],
         };
 
         const poolId = poolWeighted.id;
@@ -617,22 +656,28 @@ describe('vault model', () => {
         const userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(bptIn);
         const exitPoolRequest: ExitPoolRequest = {
           actionType: ActionType.Exit,
-          poolType: PoolTypes.Weighted,
+          poolType: PoolType.Weighted,
           encodedUserData: userData,
           poolId,
+          outputReferences: [],
         };
 
         const deltas = await vaultModel.multicall([
           batchSwapRequest,
           exitPoolRequest,
         ]);
-
-        expect(deltas.length).to.eq(2);
-        expect(deltas[0]).to.deep.eq([
-          '100000000000000000000',
-          '-488191063271093915',
-        ]);
-        expect(deltas[1]).to.deep.eq(['138218951', '18666074549381720234']);
+        expect(
+          deltas['0xba100000625a3754423978a60c9317c58a424e3d'].toString()
+        ).to.eq('100000000000000000000');
+        expect(
+          deltas['0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2'].toString()
+        ).to.eq('-19154265612652814149'); // This is total of weth out from both actions
+        expect(
+          deltas['0xa6f548df93de924d73be7d25dc02554c6bd66db5'].toString()
+        ).to.eq('10000000000000000000');
+        expect(
+          deltas['0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'].toString()
+        ).to.eq('-138218951');
       });
     });
   });

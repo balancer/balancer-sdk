@@ -25,18 +25,19 @@ import { Contracts } from '../contracts/contracts.module';
 import { forkSetup, getBalances } from '@/test/lib/utils';
 import {
   VaultModel,
-  Inputs,
+  Requests,
   BatchSwapRequest,
   ActionType,
   ExitPoolRequest,
   JoinPoolRequest,
-  PoolTypes,
 } from './vaultModel.module';
 import {
   EncodeJoinPoolInput,
   EncodeBatchSwapInput,
   ExitPoolData,
 } from '@/modules/relayer/relayer.module';
+import { PoolType } from '@/types';
+
 dotenv.config();
 
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
@@ -59,7 +60,6 @@ describe('join and exit integration tests', async () => {
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].BAL8020BPT,
     ADDRESSES[networkId].WETH,
-    // SwapTypes.SwapExactIn,
     '50' // 50 bsp = 0.5%
   );
   await testFlow(
@@ -68,8 +68,15 @@ describe('join and exit integration tests', async () => {
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].WETH,
     ADDRESSES[networkId].BAL8020BPT,
-    // SwapTypes.SwapExactIn,
     '10' // 10 bsp = 0.1%
+  );
+  await testFlow(
+    'swap > join - WBTC[Swap]WETH[join]BPT',
+    [BAL_WETH, B_50WBTC_50WETH],
+    parseFixed('7', 8).toString(),
+    ADDRESSES[networkId].WBTC,
+    ADDRESSES[networkId].BAL8020BPT,
+    '50' // 50 bsp = 0.5%
   );
   await testFlow(
     'swap > exit - auraBAL[Swap]BPT[exit]WETH',
@@ -77,75 +84,40 @@ describe('join and exit integration tests', async () => {
     parseFixed('7', 18).toString(),
     ADDRESSES[networkId].auraBal,
     ADDRESSES[networkId].WETH,
-    // SwapTypes.SwapExactIn,
     '10' // 10 bsp = 0.1%
   );
-  // await testFlow(
-  //   'join > swap - WETH[join]BPT[Swap]auraBAL',
-  //   [BAL_WETH, AURA_BAL_STABLE],
-  //   parseFixed('18', 18).toString(),
-  //   ADDRESSES[networkId].WETH,
-  //   ADDRESSES[networkId].auraBal,
-  //   // SwapTypes.SwapExactIn,
-  //   '10' // 10 bsp = 0.1%
-  // );
-  // await testFlow(
-  //   'swap > join - WBTC[Swap]WETH[join]BPT',
-  //   [BAL_WETH, B_50WBTC_50WETH],
-  //   parseFixed('7', 8).toString(),
-  //   ADDRESSES[networkId].WBTC,
-  //   ADDRESSES[networkId].BAL8020BPT,
-  //   // SwapTypes.SwapExactIn,
-  //   '50' // 50 bsp = 0.5%
-  // );
-  // await testFlow(
-  //   'exit > swap - BPT[Exit]WETH[Swap]WBTC',
-  //   [BAL_WETH, B_50WBTC_50WETH],
-  //   parseFixed('7', 18).toString(),
-  //   ADDRESSES[networkId].BAL8020BPT,
-  //   ADDRESSES[networkId].WBTC,
-  //   // SwapTypes.SwapExactIn,
-  //   '10' // 10 bsp = 0.1%
-  // );
-
-
-//   await testFlow(
-//     'join > swap - BAL[Join]BPT[Swap]auraBal',
-//     [BAL_WETH, AURA_BAL_STABLE],
-//     parseFixed('7', 18).toString(),
-//     ADDRESSES[networkId].BAL,
-//     ADDRESSES[networkId].auraBal,
-//     // SwapTypes.SwapExactIn,
-//     '50' // 50 bsp = 0.5%
-//   );
-  // await testFlow(
-  //   'join > swap + swap - WETH[join]BPT[Swap]auraBAL, WETH[Swap]auraBAL',
-  //   [BAL_WETH, AURA_BAL_STABLE, GRAVI_AURA],
-  //   parseFixed('18', 18).toString(),
-  //   ADDRESSES[networkId].WETH,
-  //   ADDRESSES[networkId].auraBal,
-  //   // SwapTypes.SwapExactIn,
-  //   '10' // 10 bsp = 0.1%
-  // );
-  // Removed ExactOut cases for now as Relayer formatting is difficult
-  // await testFlow(
-  //   'exit',
-  //   [BAL_WETH],
-  //   parseFixed('0.78', 18).toString(),
-  //   ADDRESSES[networkId].BAL8020BPT,
-  //   ADDRESSES[networkId].WETH,
-  //   SwapTypes.SwapExactOut,
-  //   '10' // 10 bsp = 0.1%
-  // );
-  // await testFlow(
-  //   'join',
-  //   [BAL_WETH],
-  //   parseFixed('7', 18).toString(),
-  //   ADDRESSES[networkId].WETH,
-  //   ADDRESSES[networkId].BAL8020BPT,
-  //   SwapTypes.SwapExactOut,
-  //   '50' // 50 bsp = 0.5%
-  // );
+  await testFlow(
+    'join > swap - WETH[join]BPT[Swap]auraBAL',
+    [BAL_WETH, AURA_BAL_STABLE],
+    parseFixed('18', 18).toString(),
+    ADDRESSES[networkId].WETH,
+    ADDRESSES[networkId].auraBal,
+    '10' // 10 bsp = 0.1%
+  );
+  await testFlow(
+    'exit > swap - BPT[Exit]WETH[Swap]WBTC',
+    [BAL_WETH, B_50WBTC_50WETH],
+    parseFixed('7', 18).toString(),
+    ADDRESSES[networkId].BAL8020BPT,
+    ADDRESSES[networkId].WBTC,
+    '10' // 10 bsp = 0.1%
+  );
+  await testFlow(
+    'join > swap - BAL[Join]BPT[Swap]auraBal',
+    [BAL_WETH, AURA_BAL_STABLE],
+    parseFixed('7', 18).toString(),
+    ADDRESSES[networkId].BAL,
+    ADDRESSES[networkId].auraBal,
+    '50' // 50 bsp = 0.5%
+  );
+  await testFlow(
+    'join > swap + swap - WETH[join]BPT[Swap]auraBAL, WETH[Swap]auraBAL',
+    [BAL_WETH, AURA_BAL_STABLE, GRAVI_AURA],
+    parseFixed('18', 18).toString(),
+    ADDRESSES[networkId].WETH,
+    ADDRESSES[networkId].auraBal,
+    '10' // 10 bsp = 0.1%
+  );
 });
 
 async function testFlow(
@@ -191,7 +163,7 @@ async function testFlow(
       await sor.fetchPools();
     });
 
-    it('should exit swap via Relayer', async () => {
+    it('model should match onchain', async () => {
       const swapInfo = await sor.getSwaps(
         tokenIn.address,
         tokenOut.address,
@@ -220,7 +192,7 @@ async function testFlow(
         authorisation
       );
 
-      const multicalls: Inputs[] = [];
+      const multicalls: Requests[] = [];
       // EncodeBatchSwapInput | ExitPoolData | EncodeJoinPoolInput
       callData.inputs.forEach((input) => {
         if ('swapType' in input) {
@@ -232,6 +204,7 @@ async function testFlow(
             assets: call.assets,
             funds: call.funds,
             swapType: call.swapType,
+            outputReferences: call.outputReferences,
           };
           multicalls.push(batchSwap);
         } else if ('exitPoolRequest' in input) {
@@ -241,8 +214,9 @@ async function testFlow(
           const exit: ExitPoolRequest = {
             actionType: ActionType.Exit,
             poolId: call.poolId,
-            poolType: PoolTypes.Weighted, // This is ok as only weighted for join/exits
+            poolType: PoolType.Weighted, // This is ok as only weighted for join/exits
             encodedUserData: call.userData,
+            outputReferences: call.outputReferences,
           };
           multicalls.push(exit);
         } else if ('joinPoolRequest' in input) {
@@ -253,14 +227,13 @@ async function testFlow(
             actionType: ActionType.Join,
             poolId: call.poolId,
             encodedUserData: call.joinPoolRequest.userData,
+            outputReference: call.outputReference,
           };
           multicalls.push(join);
         }
       });
 
       const modelResults = await vaultModel.multicall(multicalls);
-      console.log(`!!!!!!! multicalls.length:`, multicalls.length);
-      console.log(modelResults);
       const [tokenInBalanceBefore, tokenOutBalanceBefore] = await getBalances(
         [
           tokenIn.address,
@@ -270,14 +243,12 @@ async function testFlow(
         signer,
         signerAddr
       );
-      const response = await signer.sendTransaction({
+      await signer.sendTransaction({
         to: callData.to,
         data: callData.data,
         gasLimit,
       });
 
-      const receipt = await response.wait();
-      console.log('Gas used', receipt.gasUsed.toString());
       const [tokenInBalanceAfter, tokenOutBalanceAfter] = await getBalances(
         [
           tokenIn.address,
@@ -295,24 +266,13 @@ async function testFlow(
         .sub(tokenOutBalanceAfter)
         .abs()
         .toString();
-
-      console.log(tokenInBalanceBefore.toString(), 'tokenInBalance before');
-      console.log(tokenInBalanceAfter.toString(), 'tokenInBalance after');
-      console.log(tokenInBalanceChange.toString(), 'tokenInBalance change');
-      console.log(tokenOutBalanceBefore.toString(), 'tokenOutBalance before');
-      console.log(tokenOutBalanceAfter.toString(), 'tokenOutBalance after');
-      console.log(tokenOutBalanceChange.toString(), 'tokenOutBalanceChange');
-      console.log(swapInfo.returnAmount.toString(), 'swapInfo.returnAmount');
-      console.log(swapAmount.toString(), 'swapAmount');
-      expect(tokenOutBalanceBefore.toString()).to.eq('0');
-      expect(swapInfo.returnAmount.gt('0')).to.be.true;
-      if (swapType === SwapTypes.SwapExactIn) {
-        expect(tokenInBalanceChange).to.eq(swapAmount.toString());
-        expect(swapInfo.returnAmount.lte(tokenOutBalanceChange)).to.be.true;
-      } else {
-        expect(tokenOutBalanceChange).to.eq(swapAmount.toString());
-        expect(swapInfo.returnAmount.gte(tokenInBalanceChange)).to.be.true;
-      }
+      expect(modelResults[tokenIn.address].toString()).to.eq(
+        tokenInBalanceChange.toString()
+      );
+      expect(modelResults[tokenOut.address].isNegative()).to.be.true;
+      expect(modelResults[tokenOut.address].abs().toString()).to.eq(
+        tokenOutBalanceChange.toString()
+      );
     }).timeout(10000000);
   });
 }
