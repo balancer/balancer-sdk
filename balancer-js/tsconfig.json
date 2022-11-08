@@ -15,7 +15,12 @@
       "@/*": ["src/*"]
     }
   },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
   "include": ["./src", "src/abi/*.json"],
   "exclude": ["node_modules"],
-  "files": ["hardhat.config.js", "hardhat.config.goerli.js"]
+  "files": ["hardhat.config.ts", "hardhat.config.goerli.ts"]
 }

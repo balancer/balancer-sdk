@@ -79,9 +79,9 @@ jobs:
       - name: Compile
         run: yarn build
       - name: Run node in background for integration tests
-        run: npx hardhat node --hostname 127.0.0.1 --fork ${{ secrets.ALCHEMY_URL }} &
+        run: npx hardhat --tsconfig tsconfig.testing.json node --hostname 127.0.0.1 --fork ${{ secrets.ALCHEMY_URL }}
       - name: Run goerli node in background for integration tests
-        run: npx hardhat --config hardhat.config.goerli.ts node --hostname 127.0.0.1 --fork ${{ secrets.ALCHEMY_URL_GOERLI }} --port 8000 &
+        run: npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --hostname 127.0.0.1 --fork ${{ secrets.ALCHEMY_URL_GOERLI }} --port 8000
       - name: Test
         run: yarn test
 
