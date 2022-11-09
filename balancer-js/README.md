@@ -472,6 +472,10 @@ async relayer.exitPoolAndBatchSwap(
 
 [Example](./examples/relayerExitPoolAndBatchSwap.ts)
 
+### Pools Impermanent Loss
+
+> DRAFT 
+
 ## Licensing
 
 [GNU General Public License Version 3 (GPL v3)](../../LICENSE).
