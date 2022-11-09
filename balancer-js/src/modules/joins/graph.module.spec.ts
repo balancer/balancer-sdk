@@ -15,7 +15,6 @@ import {
   LinearInfo,
 } from '@/test/factories/pools';
 import { Pool as SdkPool } from '@/types';
-import { ADDRESSES } from '@/test/lib/constants';
 import { Network } from '@/lib/constants/network';
 
 function checkNode(
