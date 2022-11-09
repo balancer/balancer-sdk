@@ -36,7 +36,7 @@ export class Join {
   totalProportions: Record<string, BigNumber> = {};
   private relayer: string;
   private wrappedNativeAsset;
-  private tenderlyHelper: TenderlyHelper;
+  private tenderlyHelper: TenderlyHelper | undefined;
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
     private networkConfig: BalancerNetworkConfig
@@ -45,11 +45,13 @@ export class Join {
     this.relayer = contracts.relayer as string;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
 
-    if (!networkConfig.tenderly) throw new Error('Tenderly config not found');
-    this.tenderlyHelper = new TenderlyHelper(
-      networkConfig.chainId,
-      networkConfig.tenderly
-    );
+    if (!networkConfig.tenderly) {
+      this.tenderlyHelper = undefined;
+    } else
+      this.tenderlyHelper = new TenderlyHelper(
+        networkConfig.chainId,
+        networkConfig.tenderly
+      );
   }
 
   async joinPool(
@@ -369,6 +371,9 @@ export class Join {
     outputIndexes: number[]
   ): Promise<{ amountsOut: string[]; totalAmountOut: string }> => {
     const amountsOut: string[] = [];
+
+    if (this.tenderlyHelper === undefined)
+      throw new Error('Missing Tenderly Config.');
 
     const staticResult = await this.tenderlyHelper.simulateTransaction(
       this.relayer,

@@ -29,7 +29,7 @@ const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 export class Exit {
   private wrappedNativeAsset: string;
   private relayer: string;
-  private tenderlyHelper: TenderlyHelper;
+  private tenderlyHelper: TenderlyHelper | undefined;
 
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
@@ -39,7 +39,9 @@ export class Exit {
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
     this.relayer = contracts.relayer as string;
 
-    if (!networkConfig.tenderly) throw new Error('Tenderly config not found');
+    if (!networkConfig.tenderly) {
+      this.tenderlyHelper = undefined;
+    } else
     this.tenderlyHelper = new TenderlyHelper(
       networkConfig.chainId,
       networkConfig.tenderly
@@ -132,6 +134,8 @@ export class Exit {
     expectedAmountsOutByExitPath: string[];
     minAmountsOutByExitPath: string[];
   }> => {
+    if (this.tenderlyHelper === undefined)
+      throw new Error('Missing Tenderly Config.');
     const simulationResult = await this.tenderlyHelper.simulateTransaction(
       this.relayer,
       callData,
