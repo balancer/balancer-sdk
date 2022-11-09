@@ -1,8 +1,9 @@
 import { parseFixed, BigNumber, formatFixed } from '@ethersproject/bignumber';
 import { defaultAbiCoder } from '@ethersproject/abi';
 import { Zero } from '@ethersproject/constants';
-import { bnum, PoolBase, PoolDictionary } from '@balancer-labs/sor';
+import { bnum } from '@balancer-labs/sor';
 
+import { PoolDictionary, Pool } from '../poolSource';
 import { WeightedPoolDecoder } from '@/pool-weighted/decoder';
 import { WeightedPoolJoinKind } from '@/pool-weighted/decoder';
 import { isSameAddress } from '@/lib/utils';
@@ -59,7 +60,7 @@ export class JoinModel {
     } else throw new Error('Non supported join data');
   }
 
-  allTokensInForExactBPTOut(encodedUserData: string, pool: PoolBase): string {
+  allTokensInForExactBPTOut(encodedUserData: string, pool: Pool): string {
     throw new Error('joinAllTokensInForExactBPTOut not supported');
     /*
           We need maths for _calcAllTokensInGivenExactBptOut
@@ -80,7 +81,7 @@ export class JoinModel {
 
   joinExactTokensInForBPTOut(
     encodedUserData: string,
-    pool: PoolBase
+    pool: Pool
   ): [string, string[], string[]] {
     // This does not include a value for pre-minted BPT
     const amountsInWithRef = this.decodeJoinData(
@@ -122,7 +123,7 @@ export class JoinModel {
 
   joinTokenInForExactBPTOut(
     encodedUserData: string,
-    pool: PoolBase
+    pool: Pool
   ): [string, string, string] {
     const [bptAmountOutWithRef, tokenInIndex] = this.decodeJoinData(
       encodedUserData,
@@ -140,7 +141,10 @@ export class JoinModel {
     const bptAmountOutHuman = formatFixed(bptAmountOut, 18);
     // Needs human scale
     const amountInHuman = pool
-      ._tokenInForExactTokenOut(pairData, bnum(bptAmountOutHuman.toString()))
+      ._tokenInForExactTokenOut(
+        pairData as never,
+        bnum(bptAmountOutHuman.toString())
+      )
       .dp(pairData.decimalsIn);
     const amountInEvm = parseFixed(
       amountInHuman.toString(),

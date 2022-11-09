@@ -1,7 +1,8 @@
 import { parseFixed, BigNumber, formatFixed } from '@ethersproject/bignumber';
 import { Zero } from '@ethersproject/constants';
-import { PoolDictionary, bnum, PoolBase } from '@balancer-labs/sor';
+import { bnum } from '@balancer-labs/sor';
 
+import { PoolDictionary, Pool } from '../poolSource';
 import { EncodeBatchSwapInput } from '@/modules/relayer/types';
 import { SwapType } from '@/modules/swaps/types';
 import { Relayer } from '@/modules/relayer/relayer.module';
@@ -88,7 +89,7 @@ export class SwapModel {
   doSwap(
     tokenIn: string,
     tokenOut: string,
-    pool: PoolBase,
+    pool: Pool,
     swapType: SwapType,
     amount: string
   ): BigNumber[] {
@@ -112,7 +113,10 @@ export class SwapModel {
     if (isExactIn) {
       // Needs human scale
       const amountOutHuman = pool
-        ._exactTokenInForTokenOut(pairData, bnum(amountInHuman.toString()))
+        ._exactTokenInForTokenOut(
+          pairData as never,
+          bnum(amountInHuman.toString())
+        )
         .dp(pairData.decimalsOut);
       amountOutEvm = parseFixed(
         amountOutHuman.toString(),
@@ -121,7 +125,10 @@ export class SwapModel {
     } else {
       // Needs human scale
       const amountInHuman = pool
-        ._tokenInForExactTokenOut(pairData, bnum(amountOutHuman.toString()))
+        ._tokenInForExactTokenOut(
+          pairData as never,
+          bnum(amountOutHuman.toString())
+        )
         .dp(pairData.decimalsIn);
       amountInEvm = parseFixed(amountInHuman.toString(), pairData.decimalsIn);
     }

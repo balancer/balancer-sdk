@@ -3,10 +3,9 @@ import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { cloneDeep } from 'lodash';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { PoolDictionary } from '@balancer-labs/sor';
 
+import { PoolDictionary } from '../poolSource';
 import { Network, SubgraphPoolBase } from '@/.';
-import { PoolType } from '@/types';
 import { isSameAddress } from '@/lib/utils';
 import { WeightedPoolEncoder } from '@/pool-weighted/encoder';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable/encoder';
@@ -60,7 +59,6 @@ describe('exitModel', () => {
       const userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(bptIn);
       const exitPoolRequest: ExitPoolRequest = {
         actionType: ActionType.Exit,
-        poolType: PoolType.Weighted,
         encodedUserData: userData,
         poolId,
         outputReferences: [],
@@ -109,7 +107,6 @@ describe('exitModel', () => {
       );
       const exitPoolRequest: ExitPoolRequest = {
         actionType: ActionType.Exit,
-        poolType: PoolType.ComposableStable,
         encodedUserData: userData,
         poolId,
         outputReferences: [],

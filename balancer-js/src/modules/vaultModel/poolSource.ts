@@ -1,13 +1,29 @@
 import { cloneDeep } from 'lodash';
 import {
   SubgraphPoolBase,
-  parseToPoolsDict,
-  PoolDictionary,
   SubgraphToken,
   PoolDataService,
+  WeightedPool,
+  StablePool,
+  MetaStablePool,
+  LinearPool,
+  PhantomStablePool,
 } from '@balancer-labs/sor';
 
 import { AssetHelpers } from '@/lib/utils';
+
+export interface PoolDictionary {
+  [poolId: string]: Pool;
+}
+
+export type Pool =
+  | (
+      | WeightedPool
+      | StablePool
+      | LinearPool
+      | MetaStablePool
+      | PhantomStablePool
+    ) & { SubgraphType: string };
 
 export class PoolsSource {
   poolsArray: SubgraphPoolBase[] = [];
@@ -58,6 +74,61 @@ export class PoolsSource {
     return this.poolsArray;
   }
 
+  parseToPoolsDict(pools: SubgraphPoolBase[]): PoolDictionary {
+    return Object.fromEntries(
+      cloneDeep(pools)
+        .filter(
+          (pool) => pool.tokensList.length > 0 && pool.tokens[0].balance !== '0'
+        )
+        .map((pool) => [pool.id, this.parseNewPool(pool)])
+        .filter(([, pool]) => pool !== undefined)
+    );
+  }
+
+  parseNewPool(subgraphPool: SubgraphPoolBase): Pool | undefined {
+    // We're not interested in any pools which don't allow swapping
+    if (!subgraphPool.swapEnabled) return undefined;
+
+    let pool: Pool = {} as Pool;
+
+    try {
+      if (
+        ['Weighted', 'Investment', 'LiquidityBootstrapping'].includes(
+          subgraphPool.poolType
+        )
+      ) {
+        const sorPool = WeightedPool.fromPool(subgraphPool, false);
+        pool = sorPool as Pool;
+      } else if (subgraphPool.poolType === 'Stable') {
+        const sorPool = StablePool.fromPool(subgraphPool);
+        pool = sorPool as Pool;
+      } else if (subgraphPool.poolType === 'MetaStable') {
+        const sorPool = MetaStablePool.fromPool(subgraphPool);
+        pool = sorPool as Pool;
+      } else if (subgraphPool.poolType.toString().includes('Linear')) {
+        const sorPool = LinearPool.fromPool(subgraphPool);
+        pool = sorPool as Pool;
+      } else if (
+        subgraphPool.poolType === 'StablePhantom' ||
+        subgraphPool.poolType === 'ComposableStable'
+      ) {
+        const sorPool = PhantomStablePool.fromPool(subgraphPool);
+        pool = sorPool as Pool;
+      } else {
+        console.error(
+          `Unknown pool type or type field missing: ${subgraphPool.poolType} ${subgraphPool.id}`
+        );
+        return undefined;
+      }
+      if (!pool) throw new Error('Issue with Pool');
+      pool.SubgraphType = subgraphPool.poolType;
+    } catch (err) {
+      console.error(`Error parseNewPool`);
+      return undefined;
+    }
+    return pool;
+  }
+
   /**
    * Converts Subgraph array into PoolDictionary
    * @param refresh
@@ -66,7 +137,7 @@ export class PoolsSource {
   async poolsDictionary(refresh = false): Promise<PoolDictionary> {
     if (refresh || Object.keys(this.poolsDict).length === 0) {
       const poolsArray = await this.all(refresh);
-      this.poolsDict = parseToPoolsDict(poolsArray, 0);
+      this.poolsDict = this.parseToPoolsDict(poolsArray);
     }
     return this.poolsDict;
   }

@@ -1,13 +1,13 @@
 import { parseFixed, BigNumber, formatFixed } from '@ethersproject/bignumber';
 import { defaultAbiCoder } from '@ethersproject/abi';
 import { Zero } from '@ethersproject/constants';
-import { bnum, PoolBase, PoolDictionary } from '@balancer-labs/sor';
+import { bnum } from '@balancer-labs/sor';
 
+import { PoolDictionary, Pool } from '../poolSource';
 import { ComposableStablePoolExitKind } from '@/pool-composable-stable';
 import { WeightedPoolDecoder } from '@/pool-weighted/decoder';
 import { WeightedPoolExitKind } from '@/pool-weighted/decoder';
 import { isSameAddress } from '@/lib/utils';
-import { PoolType } from '@/types';
 import { RelayerModel } from '../relayer';
 import { ActionType } from '../vaultModel.module';
 import { OutputReference } from '@/modules/relayer/types';
@@ -15,12 +15,11 @@ import { OutputReference } from '@/modules/relayer/types';
 export interface ExitPoolRequest {
   actionType: ActionType.Exit;
   poolId: string;
-  poolType: PoolType;
   encodedUserData: string;
   outputReferences: OutputReference[];
 }
 
-function getBalancesForTokens(pool: PoolBase, tokens: string[]): string[] {
+function getBalancesForTokens(pool: Pool, tokens: string[]): string[] {
   const balances: string[] = [];
   tokens.forEach((t) => {
     const tokenIndex = pool.tokens.findIndex((pt) =>
@@ -46,14 +45,14 @@ export class ExitModel {
    * @param encodedUserData
    * @returns
    */
-  exitKind(poolType: PoolType, encodedUserData: string): WeightedPoolExitKind {
+  exitKind(poolType: string, encodedUserData: string): WeightedPoolExitKind {
     const decodedUserData = defaultAbiCoder.decode(
       ['uint256'],
       encodedUserData
     );
     const exitKind = decodedUserData[0] as BigNumber;
     if (!exitKind) throw new Error('No exit kind.');
-    if (poolType === PoolType.ComposableStable) {
+    if (poolType === 'ComposableStable') {
       if (
         exitKind.toNumber() ===
         ComposableStablePoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT
@@ -103,7 +102,7 @@ export class ExitModel {
    */
   exactBptInForTokensOut(
     encodedUserData: string,
-    pool: PoolBase
+    pool: Pool
   ): [string, string[], string[]] {
     const [bptInWithRef] = this.decodeExitData(
       encodedUserData,
@@ -144,7 +143,7 @@ export class ExitModel {
    */
   exactBptInForOneTokenOut(
     encodedUserData: string,
-    pool: PoolBase
+    pool: Pool
   ): [string, string[], string[]] {
     const [bptInWithRef, tokenIndex] = this.decodeExitData(
       encodedUserData,
@@ -160,7 +159,7 @@ export class ExitModel {
     const amountInHuman: string = formatFixed(bptIn, pairData.decimalsIn);
     // Calculate amount of token out given an exact amount of BPT in
     const amountOutHuman = pool
-      ._exactTokenInForTokenOut(pairData, bnum(amountInHuman))
+      ._exactTokenInForTokenOut(pairData as never, bnum(amountInHuman))
       .dp(pairData.decimalsOut);
     const amountOutEvm = parseFixed(
       amountOutHuman.toString(),
@@ -200,11 +199,8 @@ export class ExitModel {
     pools: PoolDictionary
   ): Promise<[string[], string[]]> {
     const pool = pools[exitPoolRequest.poolId];
-    // TODO - Currently rely on ExitPoolRequest to pass pool type but this feels like it could be improved.
-    // This is because we need to know a ComposableStable due to encoding.
-    // Current pools dictionary lumps all stable pools together so maybe we can create a new one that doesn't.
     const exitKind = this.exitKind(
-      exitPoolRequest.poolType,
+      pool.SubgraphType,
       exitPoolRequest.encodedUserData
     );
     let amountsOut: string[] = [];

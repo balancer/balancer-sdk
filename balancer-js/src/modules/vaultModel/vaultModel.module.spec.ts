@@ -93,7 +93,6 @@ describe('vault model', () => {
         const userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(bptIn);
         const exitPoolRequest: ExitPoolRequest = {
           actionType: ActionType.Exit,
-          poolType: PoolType.Weighted,
           encodedUserData: userData,
           poolId,
           outputReferences: [],

@@ -211,7 +211,6 @@ async function testFlow(
           const exit: ExitPoolRequest = {
             actionType: ActionType.Exit,
             poolId: call.poolId,
-            poolType: PoolType.Weighted, // This is ok as only weighted for join/exits
             encodedUserData: call.userData,
             outputReferences: call.outputReferences,
           };

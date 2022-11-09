@@ -53,7 +53,10 @@ export class BalancerSDK implements BalancerSDKRoot {
       sor.provider
     );
     this.zaps = new Zaps(this.networkConfig.chainId);
-    this.vaultModel = new VaultModel(this.data.poolsForSor);
+    this.vaultModel = new VaultModel(
+      this.data.poolsForSor,
+      this.networkConfig.addresses.tokens.wrappedNativeAsset
+    );
   }
 
   get rpcProvider(): Provider {

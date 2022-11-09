@@ -1,4 +1,4 @@
-import { PoolDictionary } from '@balancer-labs/sor';
+import { PoolDictionary } from '../poolSource';
 import { RelayerModel } from '../relayer';
 import { JoinModel, JoinPoolRequest } from './join';
 import { ExitModel, ExitPoolRequest } from './exit';

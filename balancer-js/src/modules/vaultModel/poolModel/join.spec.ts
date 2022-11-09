@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { cloneDeep } from 'lodash';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { PoolDictionary } from '@balancer-labs/sor';
 
+import { PoolDictionary } from '../poolSource';
 import { Network, SubgraphPoolBase } from '@/.';
 import { WeightedPoolEncoder } from '@/pool-weighted/encoder';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable/encoder';

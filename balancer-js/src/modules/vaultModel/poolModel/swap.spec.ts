@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { cloneDeep } from 'lodash';
 import { BigNumber } from '@ethersproject/bignumber';
-import { PoolDictionary } from '@balancer-labs/sor';
 
+import { PoolDictionary } from '../poolSource';
 import { Network, SubgraphPoolBase, SwapType } from '@/.';
 import { ActionType } from '../vaultModel.module';
 import { BatchSwapRequest, SwapModel } from './swap';
