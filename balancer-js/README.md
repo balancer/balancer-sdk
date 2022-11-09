@@ -472,6 +472,52 @@ async relayer.exitPoolAndBatchSwap(
 
 [Example](./examples/relayerExitPoolAndBatchSwap.ts)
 
+### Pools Impermanent Loss
+
+> DRAFT
+> 
+> impermanent loss (IL) describes the percentage by which a pool is worth less than what one would have if they had instead just held the tokens outside the pool
+
+
+#### Usage
+
+Impermanent Loss will be given with all the statistics about a pools as long as a user have invested in the pool.
+
+![class-diagram](IL-class.png)
+
+The method `calcImpLoss(joiner: string): number` accepts as parameter the address of the user performing the request and returns the impermanent loss as an absolute value.
+
+#### Algorithm
+
+Using the variation delta formula:
+
+![img.png](img.png)
+
+where **𝚫P<sup>i</sup>** represents the difference between the price for a single token at the date of joining the pool and the current price. 
+
+```javascript
+
+// retrieves pool's tokens
+tokens = balancer.pools.find(poolId).tokens;
+// retrieves join timestamp for user
+joinTimestamp = getJoinTimestamp(poolId, joinerAddress);  
+// retrieves historical price for tokens
+prices = getPricesAt(tokens, joinTimestamp); 
+// retrieves list of pool's assets with prices delta and weights 
+assets = getAssets(tokens, prices);
+
+poolValueDelta = assets.reduce((result, asset) => result * Math.pow(asset.priceDelta, asset.weight), 0);
+holdValueDelta = assets.reduce((result, asset) => result + Math.pow(asset.priceDelta, asset.weight), 0);
+
+// IL = (PoolValueDelta/HoldValueDelta) - 1
+
+const IL = poolValueDelta/holdValueDelta - 1;
+
+```
+
+
+
+
 ## Licensing
 
 [GNU General Public License Version 3 (GPL v3)](../../LICENSE).
