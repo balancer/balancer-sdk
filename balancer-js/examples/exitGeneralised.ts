@@ -27,7 +27,6 @@ const bbausd2 = {
 
 // Setup local fork with correct balances/approval to exit bb-a-usd2 pool
 async function setUp(provider: JsonRpcProvider): Promise<string> {
-  const blockNumber = 7596322;
   const signer = provider.getSigner();
   const signerAddress = await signer.getAddress();
 
@@ -40,8 +39,7 @@ async function setUp(provider: JsonRpcProvider): Promise<string> {
     mainTokens,
     mainSlots,
     mainInitialBalances,
-    jsonRpcUrl as string,
-    blockNumber
+    jsonRpcUrl as string
   );
 
   const { contracts, contractAddresses } = new Contracts(

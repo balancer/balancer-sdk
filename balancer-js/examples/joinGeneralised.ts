@@ -21,7 +21,6 @@ const addresses = ADDRESSES[network];
 
 // Setup local fork with correct balances/approval to join pool with DAI/USDC/bbaDAI/bbaUSDC
 async function setUp(provider: JsonRpcProvider): Promise<string> {
-  const blockNumber = 7596322;
   const signer = provider.getSigner();
   const signerAddress = await signer.getAddress();
 
@@ -53,8 +52,7 @@ async function setUp(provider: JsonRpcProvider): Promise<string> {
     [...mainTokens, ...linearPoolTokens],
     [...mainSlots, ...linearPoolSlots],
     [...mainInitialBalances, ...linearInitialBalances],
-    jsonRpcUrl as string,
-    blockNumber
+    jsonRpcUrl as string
   );
 
   const { contracts, contractAddresses } = new Contracts(
@@ -133,8 +131,6 @@ async function join() {
     slippage,
     relayerAuth
   );
-
-  // TODO - Calculate price impact
 
   // Submit join tx
   const transactionResponse = await signer.sendTransaction({

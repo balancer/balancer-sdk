@@ -30,7 +30,6 @@ const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 const network = Network.GOERLI;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
-const blockNumber = 7890980;
 
 /*
  * Testing on MAINNET
@@ -40,7 +39,6 @@ const blockNumber = 7890980;
  * - Uncomment section below:
  */
 // const network = Network.MAINNET;
-// const blockNumber = 15519886;
 // const customSubgraphUrl =
 //   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta';
 
@@ -110,7 +108,7 @@ const runTests = async (tests: Test[]) => {
         test.wrapMainTokens,
         authorisation
       );
-    });
+    }).timeout(120000);
   }
 };
 
@@ -170,8 +168,13 @@ const testFlow = async (
   console.log(query.expectedOut, 'expectedOut');
 };
 
+let blockNumber: number;
+
 // following contexts currently applies to GOERLI only
 describe('generalised join execution', async () => {
+  before(async () => {
+    blockNumber = await provider.getBlockNumber();
+  });
   /*
   bbamaiweth: ComposableStable, baMai/baWeth
   baMai: Linear, aMai/Mai
