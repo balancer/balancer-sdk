@@ -1716,9 +1716,9 @@ export type LiquidityGaugesQueryVariables = Exact<{
 }>;
 
 
-export type LiquidityGaugesQuery = { __typename?: 'Query', liquidityGauges: Array<{ __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string }> | null }> };
+export type LiquidityGaugesQuery = { __typename?: 'Query', liquidityGauges: Array<{ __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string, rate?: string | null, periodFinish?: string | null }> | null }> };
 
-export type SubgraphLiquidityGaugeFragment = { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string }> | null };
+export type SubgraphLiquidityGaugeFragment = { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string, rate?: string | null, periodFinish?: string | null }> | null };
 
 export type PoolsQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']>;
@@ -1730,9 +1730,9 @@ export type PoolsQueryVariables = Exact<{
 }>;
 
 
-export type PoolsQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, poolId?: string | null, preferentialGauge?: { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string }> | null } | null }> };
+export type PoolsQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, poolId?: string | null, preferentialGauge?: { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string, rate?: string | null, periodFinish?: string | null }> | null } | null }> };
 
-export type SubgraphPoolWithPreferentialGaugeFragment = { __typename?: 'Pool', id: string, poolId?: string | null, preferentialGauge?: { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string }> | null } | null };
+export type SubgraphPoolWithPreferentialGaugeFragment = { __typename?: 'Pool', id: string, poolId?: string | null, preferentialGauge?: { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string, rate?: string | null, periodFinish?: string | null }> | null } | null };
 
 export const SubgraphGaugeShareFragmentDoc = gql`
     fragment SubgraphGaugeShare on GaugeShare {
@@ -1767,6 +1767,8 @@ export const SubgraphLiquidityGaugeFragmentDoc = gql`
     symbol
     decimals
     totalDeposited
+    rate
+    periodFinish
   }
 }
     `;
