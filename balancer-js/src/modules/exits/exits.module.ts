@@ -42,10 +42,10 @@ export class Exit {
     if (!networkConfig.tenderly) {
       this.tenderlyHelper = undefined;
     } else
-    this.tenderlyHelper = new TenderlyHelper(
-      networkConfig.chainId,
-      networkConfig.tenderly
-    );
+      this.tenderlyHelper = new TenderlyHelper(
+        networkConfig.chainId,
+        networkConfig.tenderly
+      );
   }
 
   async exitPool(
