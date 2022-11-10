@@ -44,11 +44,15 @@ Installation instructions for:
 
 - [Hardhat](https://hardhat.org/getting-started/#installation)
 
-  To start a forked node:
+  To start a MAINNET forked node:
 
-  ```
-  npm run node
-  ```
+  - Set env var: `ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT for MAINNET]`
+  - Run: `npm run node`
+
+  To start a GOERLI forked node:
+
+  - Set env var: `ALCHEMY_URL_GOERLI=[ALCHEMY HTTPS ENDPOINT for GOERLI]`
+  - Run: `npm run node:goerli`
 
 - [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation) - use with caution, still experimental.
 
@@ -253,9 +257,9 @@ Find Spot Price for pair in specific pool.
 const balancer = new BalancerSDK(sdkConfig);
 const pool = await balancer.pools.find(poolId);
 const spotPrice = await pool.calcSpotPrice(
-    ADDRESSES[network].DAI.address,
-    ADDRESSES[network].BAL.address,
-  );
+  ADDRESSES[network].DAI.address,
+  ADDRESSES[network].BAL.address
+);
 ```
 
 ### #getSpotPrice

@@ -10,35 +10,33 @@ import { MaxUint256 } from '@ethersproject/constants';
 import { Migrations } from '../migrations';
 import { getErc20Balance, move, stake } from '@/test/lib/utils';
 
+dotenv.config();
+
 /*
  * Testing on GOERLI
- * - Update hardhat.config.js with chainId = 5
- * - Update ALCHEMY_URL on .env with a goerli api key
- * - Run node on terminal: yarn run node
+ * - Run node on terminal: yarn run node:goerli
  * - Uncomment section below
  */
 const network = Network.GOERLI;
 const blockNumber = 7376670;
 const holderAddress = '0x8fe3a2a5ae6baa201c26fc7830eb713f33d6b313';
+const { ALCHEMY_URL_GOERLI: jsonRpcUrl } = process.env;
+const rpcUrl = 'http://127.0.0.1:8000';
 
 /*
  * Testing on POLYGON
- * - Update hardhat.config.js with chainId = 137
- * - Update ALCHEMY_URL on .env with a goerli api key
- * - Run node on terminal: yarn run node
+ * - Run node on terminal: yarn run node:polygon
  * - Uncomment section below
  */
 // const network = Network.POLYGON;
 // const blockNumber = 32856000;
 // const holderAddress = '0xfb0272990728a967ecaf702a1291fcd64c38ed25';
+// const { ALCHEMY_URL_POLYGON: jsonRpcUrl } = process.env;
+// const rpcUrl = 'http://127.0.0.1:8545';
 
-dotenv.config();
-
-const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
-const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const addresses = ADDRESSES[network];
 const fromPool = {
