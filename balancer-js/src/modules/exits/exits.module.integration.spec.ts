@@ -10,6 +10,8 @@ import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
 
+dotenv.config();
+
 const TEST_BOOSTED = true;
 const TEST_BOOSTED_META = true;
 const TEST_BOOSTED_META_ALT = true;
@@ -30,6 +32,8 @@ const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 const network = Network.GOERLI;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
+const { ALCHEMY_URL_GOERLI: jsonRpcUrl } = process.env;
+const rpcUrl = 'http://127.0.0.1:8000';
 
 /*
  * Testing on MAINNET
@@ -41,15 +45,10 @@ const customSubgraphUrl =
 // const network = Network.MAINNET;
 // const customSubgraphUrl =
 //   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta';
+// const { ALCHEMY_URL: jsonRpcUrl } = process.env;
+// const rpcUrl = 'http://127.0.0.1:8545';
 
-dotenv.config();
-
-const {
-  ALCHEMY_URL: jsonRpcUrl,
-  TENDERLY_ACCESS_KEY,
-  TENDERLY_USER,
-  TENDERLY_PROJECT,
-} = process.env;
+const { TENDERLY_ACCESS_KEY, TENDERLY_USER, TENDERLY_PROJECT } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
@@ -59,7 +58,6 @@ const tenderlyConfig = {
   project: TENDERLY_PROJECT as string,
 };
 
-const rpcUrl = 'http://127.0.0.1:8545';
 const sdk = new BalancerSDK({
   network,
   rpcUrl,
