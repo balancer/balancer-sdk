@@ -19,6 +19,7 @@ export enum BalancerErrorCode {
   MISSING_WEIGHT = 'MISSING_WEIGHT',
   RELAY_SWAP_AMOUNTS = 'RELAY_SWAP_AMOUNTS',
   JOIN_DELTA_AMOUNTS = 'JOIN_DELTA_AMOUNTS',
+  EXIT_DELTA_AMOUNTS = 'EXIT_DELTA_AMOUNTS',
 }
 
 export class BalancerError extends Error {
@@ -69,6 +70,8 @@ export class BalancerError extends Error {
         return 'Error when checking swap amounts';
       case BalancerErrorCode.JOIN_DELTA_AMOUNTS:
         return 'Error when checking join call deltas';
+      case BalancerErrorCode.EXIT_DELTA_AMOUNTS:
+        return 'Error when checking exit call deltas';
       default:
         return 'Unknown error';
     }

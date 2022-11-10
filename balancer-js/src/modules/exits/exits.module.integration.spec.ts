@@ -1,3 +1,4 @@
+// yarn test:only ./src/modules/exits/exits.module.integration.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import hardhat from 'hardhat';

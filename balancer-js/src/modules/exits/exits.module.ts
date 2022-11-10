@@ -24,6 +24,8 @@ import TenderlyHelper from '@/lib/utils/tenderlyHelper';
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
+import { getPoolAddress } from '@/pool-utils';
+
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 export class Exit {
@@ -100,7 +102,7 @@ export class Exit {
       );
 
     // Create calls with minimum expected amount out for each exit path
-    const query = await this.createCalls(
+    const { callData, deltas } = await this.createCalls(
       exitPaths,
       userAddress,
       minAmountsOutByExitPath,
@@ -114,13 +116,64 @@ export class Exit {
       slippage
     );
 
+    this.assertDeltas(poolId, deltas, amountIn, tokensOut, minAmountsOut);
+
     return {
       to: this.relayer,
-      callData: query.callData,
+      callData,
       tokensOut,
       expectedAmountsOut,
       minAmountsOut,
     };
+  }
+
+  private assertDeltas(
+    poolId: string,
+    deltas: Record<string, BigNumber>,
+    bptIn: string,
+    tokensOut: string[],
+    amountsOut: string[]
+  ): void {
+    const poolAddress = getPoolAddress(poolId);
+    const outDiff = deltas[poolAddress.toLowerCase()].sub(bptIn);
+
+    if (outDiff.abs().gt(3)) {
+      console.error(
+        `exit assertDeltas, bptIn: `,
+        poolAddress,
+        bptIn,
+        deltas[poolAddress.toLowerCase()]?.toString()
+      );
+      throw new BalancerError(BalancerErrorCode.EXIT_DELTA_AMOUNTS);
+    }
+    delete deltas[poolAddress.toLowerCase()];
+
+    tokensOut.forEach((token, i) => {
+      if (
+        deltas[token.toLowerCase()]?.toString() !==
+        Zero.sub(amountsOut[i]).toString()
+      ) {
+        console.error(
+          `exit assertDeltas, tokenOut: `,
+          token,
+          amountsOut[i],
+          deltas[token.toLowerCase()]?.toString()
+        );
+        throw new BalancerError(BalancerErrorCode.EXIT_DELTA_AMOUNTS);
+      }
+      delete deltas[token.toLowerCase()];
+    });
+
+    for (const token in deltas) {
+      if (deltas[token].toString() !== '0') {
+        console.error(
+          `exit assertDeltas, non-input token should be 0: `,
+          token,
+          deltas[token].toString()
+        );
+        throw new BalancerError(BalancerErrorCode.EXIT_DELTA_AMOUNTS);
+      }
+    }
   }
 
   // Query amounts out through static call and return decoded result
@@ -261,8 +314,9 @@ export class Exit {
   ): Promise<{
     callData: string;
     outputIndexes: number[];
+    deltas: Record<string, BigNumber>;
   }> {
-    const { calls, outputIndexes } = this.createActionCalls(
+    const { calls, outputIndexes, deltas } = this.createActionCalls(
       cloneDeep(exitPaths),
       userAddress,
       minAmountsOut
@@ -283,17 +337,37 @@ export class Exit {
       outputIndexes: authorisation
         ? outputIndexes.map((i) => i + 1)
         : outputIndexes,
+      deltas,
     };
+  }
+
+  updateDeltas(
+    deltas: Record<string, BigNumber>,
+    assets: string[],
+    amounts: string[]
+  ): Record<string, BigNumber> {
+    assets.forEach((t, i) => {
+      const asset = t.toLowerCase();
+      if (!deltas[asset]) deltas[asset] = Zero;
+      deltas[asset] = deltas[asset].add(amounts[i]);
+    });
+    return deltas;
   }
 
   private createActionCalls(
     exitPaths: Node[][],
     userAddress: string,
     minAmountsOut?: string[]
-  ): { calls: string[]; outputIndexes: number[] } {
+  ): {
+    calls: string[];
+    outputIndexes: number[];
+    deltas: Record<string, BigNumber>;
+  } {
     const calls: string[] = [];
     const outputIndexes: number[] = [];
     const isPeek = !minAmountsOut;
+    const deltas: Record<string, BigNumber> = {};
+
     // Create actions for each Node and return in multicall array
 
     exitPaths.forEach((exitPath, i) => {
@@ -312,30 +386,36 @@ export class Exit {
           isLastActionFromExitPath && minAmountsOut ? minAmountsOut[i] : '0';
 
         switch (node.exitAction) {
-          case 'batchSwap':
-            calls.push(
-              this.createBatchSwap(
-                node,
-                exitChild as Node,
-                i,
-                minAmountOut,
-                sender,
-                recipient
-              )
+          case 'batchSwap': {
+            const [call, assets, limits] = this.createBatchSwap(
+              node,
+              exitChild as Node,
+              i,
+              minAmountOut,
+              sender,
+              recipient
+            );
+            calls.push(call);
+            this.updateDeltas(deltas, assets, limits);
+            break;
+          }
+          case 'exitPool': {
+            const [call, bptIn, tokensOut, amountsOut] = this.createExitPool(
+              node,
+              exitChild as Node,
+              i,
+              minAmountOut,
+              sender,
+              recipient
+            );
+            calls.push(call);
+            this.updateDeltas(
+              deltas,
+              [node.address, ...tokensOut],
+              [bptIn, ...amountsOut]
             );
             break;
-          case 'exitPool':
-            calls.push(
-              this.createExitPool(
-                node,
-                exitChild as Node,
-                i,
-                minAmountOut,
-                sender,
-                recipient
-              )
-            );
-            break;
+          }
           case 'output':
             if (isPeek) {
               calls.push(
@@ -355,7 +435,7 @@ export class Exit {
       });
     });
 
-    return { calls, outputIndexes };
+    return { calls, outputIndexes, deltas };
   }
 
   private createBatchSwap(
@@ -365,7 +445,7 @@ export class Exit {
     minAmountOut: string,
     sender: string,
     recipient: string
-  ): string {
+  ): [string, string[], string[]] {
     const isRootNode = !node.parent;
     const amountIn = isRootNode
       ? node.index
@@ -441,7 +521,14 @@ export class Exit {
       outputReferences,
     });
 
-    return call;
+    let tokenOutAmount = Relayer.isChainedReference(limits[0])
+      ? '0'
+      : limits[0];
+    const bptAmount = Relayer.isChainedReference(limits[1]) ? '0' : limits[1];
+    const bptIn = sender === this.relayer ? '0' : bptAmount;
+    tokenOutAmount = recipient === this.relayer ? '0' : tokenOutAmount;
+
+    return [call, assets, [tokenOutAmount, bptIn]];
   }
 
   private createExitPool(
@@ -451,7 +538,7 @@ export class Exit {
     minAmountOut: string,
     sender: string,
     recipient: string
-  ): string {
+  ): [string, string, string[], string[]] {
     const tokenOut = exitChild.address;
     const isRootNode = !node.parent;
     const amountIn = isRootNode
@@ -552,7 +639,17 @@ export class Exit {
       toInternalBalance: false,
     });
 
-    return call;
+    const amountTokensOut = sortedAmounts.map((a) =>
+      Relayer.isChainedReference(a) ? '0' : Zero.sub(a).toString()
+    );
+    const bptIn = Relayer.isChainedReference(amountIn) ? '0' : amountIn;
+
+    return [
+      call,
+      sender === this.relayer ? Zero.toString() : bptIn,
+      recipient === this.relayer ? [] : sortedTokens,
+      recipient === this.relayer ? [] : amountTokensOut,
+    ];
   }
 
   private getOutputRef = (exitPathIndex: number, nodeIndex: string): number => {
