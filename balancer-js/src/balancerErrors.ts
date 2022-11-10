@@ -18,6 +18,7 @@ export enum BalancerErrorCode {
   MISSING_PRICE_RATE = 'MISSING_PRICE_RATE',
   MISSING_WEIGHT = 'MISSING_WEIGHT',
   RELAY_SWAP_AMOUNTS = 'RELAY_SWAP_AMOUNTS',
+  JOIN_DELTA_AMOUNTS = 'JOIN_DELTA_AMOUNTS',
 }
 
 export class BalancerError extends Error {
@@ -66,6 +67,8 @@ export class BalancerError extends Error {
         return 'zero input not allowed';
       case BalancerErrorCode.RELAY_SWAP_AMOUNTS:
         return 'Error when checking swap amounts';
+      case BalancerErrorCode.JOIN_DELTA_AMOUNTS:
+        return 'Error when checking join call deltas';
       default:
         return 'Unknown error';
     }
