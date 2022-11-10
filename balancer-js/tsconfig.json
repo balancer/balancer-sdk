@@ -1,23 +1,21 @@
 {
-    "compilerOptions": {
-        "target": "es2019",
-        "module": "esnext",
-        "moduleResolution": "node",
-        "declaration": true,
-        "outDir": "dist",
-        "strict": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true /* Skip type checking of declaration files. */,
-        "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */,
-        "resolveJsonModule": true,
-        "baseUrl": ".",
-        "paths": {
-          "@/*": [
-            "src/*"
-          ]
-        }
-    },
-    "include": ["./src", "src/abi/*.json"],
-    "exclude": ["node_modules"],
-    "files": ["hardhat.config.js"]
+  "compilerOptions": {
+    "target": "es2019",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "declaration": true,
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true /* Skip type checking of declaration files. */,
+    "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["./src", "src/abi/*.json"],
+  "exclude": ["node_modules"],
+  "files": ["hardhat.config.ts", "hardhat.config.goerli.ts"]
 }

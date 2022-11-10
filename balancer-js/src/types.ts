@@ -16,6 +16,7 @@ import type {
 import type {
   BaseFeeDistributor,
   GaugeSharesRepository,
+  PoolGaugesRepository,
   PoolSharesRepository,
   ProtocolFeesProvider,
 } from './modules/data';
@@ -103,6 +104,7 @@ export interface BalancerDataRepositories {
   protocolFees?: ProtocolFeesProvider;
   tokenYields: Findable<number>;
   poolShares: PoolSharesRepository;
+  poolGauges?: PoolGaugesRepository;
   gaugeShares?: GaugeSharesRepository;
 }
 
