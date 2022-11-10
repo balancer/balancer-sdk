@@ -136,7 +136,7 @@ export class Exit {
   }> => {
     if (this.tenderlyHelper === undefined)
       throw new Error('Missing Tenderly Config.');
-    const simulationResult = await this.tenderlyHelper.simulateTransaction(
+    const simulationResult = await this.tenderlyHelper.simulateMulticall(
       this.relayer,
       callData,
       userAddress,

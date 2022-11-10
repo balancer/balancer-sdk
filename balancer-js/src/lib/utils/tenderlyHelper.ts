@@ -25,18 +25,38 @@ export default class TenderlyHelper {
     this.blockNumber = tenderlyConfig.blockNumber;
   }
 
+  simulateMulticall = async (
+    to: string,
+    data: string,
+    userAddress: string,
+    tokens: string[]
+  ): Promise<string> => {
+    const tokensOverrides = await this.encodeBalanceAndAllowanceOverrides(
+      userAddress,
+      tokens
+    );
+    const relayerApprovalOverride = await this.encodeRelayerApprovalOverride(
+      userAddress,
+      to
+    );
+    const encodedStateOverrides = {
+      ...tokensOverrides,
+      ...relayerApprovalOverride,
+    };
+    return this.simulateTransaction(
+      to,
+      data,
+      userAddress,
+      encodedStateOverrides
+    );
+  };
+
   simulateTransaction = async (
     to: string,
     data: string,
     userAddress: string,
-    tokensIn: string[]
+    encodedStateOverrides: StateOverrides
   ): Promise<string> => {
-    // Encode token balances and allowances overrides to max value before performing simulation
-    const encodedStateOverrides = await this.encodeBalanceAndAllowanceOverrides(
-      userAddress,
-      tokensIn
-    );
-
     // Map encoded-state response into simulate request body by replacing property names
     const state_objects = Object.fromEntries(
       Object.keys(encodedStateOverrides).map((address) => {
@@ -71,7 +91,29 @@ export default class TenderlyHelper {
     return simulatedTransactionOutput;
   };
 
-  private encodeBalanceAndAllowanceOverrides = async (
+  // Encode relayer approval state override
+  encodeRelayerApprovalOverride = async (
+    userAddress: string,
+    relayerAddress: string
+  ): Promise<StateOverrides> => {
+    const stateOverrides: StateOverrides = {
+      [`${this.vaultAddress}`]: {
+        value: {
+          [`_approvedRelayers[${userAddress}][${relayerAddress}]`]:
+            true.toString(),
+        },
+      },
+    };
+
+    const encodedStateOverrides = await this.requestStateOverrides(
+      stateOverrides
+    );
+
+    return encodedStateOverrides;
+  };
+
+  // Encode token balances and allowances overrides to max value
+  encodeBalanceAndAllowanceOverrides = async (
     userAddress: string,
     tokens: string[]
   ): Promise<StateOverrides> => {
@@ -99,6 +141,16 @@ export default class TenderlyHelper {
         })
     );
 
+    const encodedStateOverrides = await this.requestStateOverrides(
+      stateOverrides
+    );
+
+    return encodedStateOverrides;
+  };
+
+  private requestStateOverrides = async (
+    stateOverrides: StateOverrides
+  ): Promise<StateOverrides> => {
     const ENCODE_STATES_URL = this.tenderlyUrl + 'contracts/encode-states';
     const body = {
       networkID: this.chainId.toString(),
@@ -115,10 +167,8 @@ export default class TenderlyHelper {
 
     if (
       !encodedStateOverrides ||
-      Object.keys(encodedStateOverrides).length !== tokens.length ||
-      Object.keys(encodedStateOverrides).some((k) => {
-        return Object.keys(encodedStateOverrides[k].value).length !== 2;
-      })
+      Object.keys(encodedStateOverrides).length !==
+        Object.keys(stateOverrides).length
     )
       throw new Error(
         "Couldn't encode state overrides - contracts should be verified and whitelisted on Tenderly - states should match the ones in the contracts"

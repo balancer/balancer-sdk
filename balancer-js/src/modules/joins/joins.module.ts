@@ -375,7 +375,7 @@ export class Join {
     if (this.tenderlyHelper === undefined)
       throw new Error('Missing Tenderly Config.');
 
-    const staticResult = await this.tenderlyHelper.simulateTransaction(
+    const staticResult = await this.tenderlyHelper.simulateMulticall(
       this.relayer,
       callData,
       userAddress,
