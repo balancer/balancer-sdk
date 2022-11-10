@@ -42,6 +42,7 @@ export interface BalancerTenderlyConfig {
   accessKey: string;
   user: 'balancer' | string;
   project: 'v2' | string;
+  blockNumber?: number;
 }
 
 export interface BalancerSdkSorConfig {

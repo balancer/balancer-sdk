@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import { parseFixed } from '@ethersproject/bignumber';
 import { BalancerSDK, Network } from '../src/index';
 import { forkSetup, getBalances } from '../src/test/lib/utils';
@@ -10,13 +10,14 @@ import { Contracts } from '../src/modules/contracts/contracts.module';
 dotenv.config();
 
 const {
-  ALCHEMY_URL: jsonRpcUrl,
+  ALCHEMY_URL_GOERLI: jsonRpcUrl,
   TENDERLY_ACCESS_KEY,
   TENDERLY_PROJECT,
   TENDERLY_USER,
 } = process.env;
 const network = Network.GOERLI;
-const rpcUrl = 'http://127.0.0.1:8545';
+const blockNumber = 7890980;
+const rpcUrl = 'http://127.0.0.1:8000';
 const addresses = ADDRESSES[network];
 
 // Setup local fork with correct balances/approval to join pool with DAI/USDC/bbaDAI/bbaUSDC
@@ -52,7 +53,8 @@ async function setUp(provider: JsonRpcProvider): Promise<string> {
     [...mainTokens, ...linearPoolTokens],
     [...mainSlots, ...linearPoolSlots],
     [...mainInitialBalances, ...linearInitialBalances],
-    jsonRpcUrl as string
+    jsonRpcUrl as string,
+    blockNumber
   );
 
   const { contracts, contractAddresses } = new Contracts(
@@ -106,6 +108,7 @@ async function join() {
     accessKey: TENDERLY_ACCESS_KEY as string,
     user: TENDERLY_USER as string,
     project: TENDERLY_PROJECT as string,
+    blockNumber,
   };
 
   const balancer = new BalancerSDK({

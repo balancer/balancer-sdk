@@ -11,6 +11,7 @@ export default class TenderlyHelper {
   private vaultAddress;
   private tenderlyUrl;
   private opts;
+  private blockNumber;
 
   constructor(private chainId: number, tenderlyConfig: BalancerTenderlyConfig) {
     const { contracts } = networkAddresses(this.chainId);
@@ -21,6 +22,7 @@ export default class TenderlyHelper {
         'X-Access-Key': tenderlyConfig.accessKey,
       },
     };
+    this.blockNumber = tenderlyConfig.blockNumber;
   }
 
   simulateTransaction = async (
@@ -46,6 +48,7 @@ export default class TenderlyHelper {
     const body = {
       // -- Standard TX fields --
       network_id: this.chainId.toString(),
+      block_number: this.blockNumber,
       from: userAddress,
       to,
       input: data,

@@ -24,12 +24,11 @@ const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 
 /*
  * Testing on GOERLI
- * - Update hardhat.config.js with chainId = 5
- * - Update ALCHEMY_URL on .env with a goerli api key
- * - Run node on terminal: yarn run node
+ * - Run node on terminal: yarn run node:goerli
  * - Uncomment section below:
  */
 const network = Network.GOERLI;
+const blockNumber = 7890980;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
 const { ALCHEMY_URL_GOERLI: jsonRpcUrl } = process.env;
@@ -37,12 +36,11 @@ const rpcUrl = 'http://127.0.0.1:8000';
 
 /*
  * Testing on MAINNET
- * - Update hardhat.config.js with chainId = 1
- * - Update ALCHEMY_URL on .env with a mainnet api key
  * - Run node on terminal: yarn run node
  * - Uncomment section below:
  */
 // const network = Network.MAINNET;
+// const blockNumber = 15519886;
 // const customSubgraphUrl =
 //   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta';
 // const { ALCHEMY_URL: jsonRpcUrl } = process.env;
@@ -56,6 +54,7 @@ const tenderlyConfig = {
   accessKey: TENDERLY_ACCESS_KEY as string,
   user: TENDERLY_USER as string,
   project: TENDERLY_PROJECT as string,
+  blockNumber,
 };
 
 const sdk = new BalancerSDK({
@@ -168,13 +167,8 @@ const testFlow = async (
   // console.log('expectedOut', expectedAmountsOut.toString());
 };
 
-let blockNumber: number;
-
 // all contexts currently applies to GOERLI only
 describe('generalised exit execution', async () => {
-  before(async () => {
-    blockNumber = await provider.getBlockNumber();
-  });
   /*
   bbamaiweth: ComposableStable, baMai/baWeth
   baMai: Linear, aMai/Mai
