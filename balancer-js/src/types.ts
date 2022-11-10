@@ -19,6 +19,7 @@ import type {
   PoolGaugesRepository,
   PoolSharesRepository,
   ProtocolFeesProvider,
+  PoolJoinExitRepository
 } from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
@@ -97,6 +98,7 @@ export interface BalancerDataRepositories {
   tokenYields: Findable<number>;
   poolShares: PoolSharesRepository;
   poolGauges?: PoolGaugesRepository;
+  poolJoinExits: PoolJoinExitRepository;
   gaugeShares?: GaugeSharesRepository;
 }
 
