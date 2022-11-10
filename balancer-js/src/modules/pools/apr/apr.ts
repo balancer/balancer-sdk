@@ -231,7 +231,12 @@ export class PoolApr {
       this.tokenPrices.find(bal), // BAL
       this.bptPrice(pool),
     ]);
-    const balPriceUsd = parseFloat(balPrice?.usd || '0');
+
+    if (!balPrice?.usd) {
+      throw 'Missing BAL price';
+    }
+
+    const balPriceUsd = parseFloat(balPrice.usd);
 
     // Subgraph is returning BAL staking rewards as reward tokens for L2 gauges.
     if (pool.chainId > 1) {
