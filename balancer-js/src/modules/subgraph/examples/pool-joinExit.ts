@@ -6,7 +6,7 @@ dotenv.config();
 (async function() {
 
     const POOL_ID = '0x0297e37f1873d2dab4487aa67cd56b58e2f27875000100000000000000000002'
-    const subgraph_url = process.env.BALANCER_SUBGRAPH_URL;
+    const subgraph_url = process.env.BALANCER_SUBGRAPH_URL;// https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2
     const client = createSubgraphClient(`${subgraph_url}`);
 
     const poolQuery = await client.Pool({ id: POOL_ID});
