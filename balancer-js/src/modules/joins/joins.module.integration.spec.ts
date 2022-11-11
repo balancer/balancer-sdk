@@ -74,7 +74,7 @@ const { contracts, contractAddresses } = new Contracts(
   network as number,
   provider
 );
-const relayer = contractAddresses.relayer as string;
+const relayer = contractAddresses.relayerV4 as string;
 const addresses = ADDRESSES[network];
 
 interface Test {

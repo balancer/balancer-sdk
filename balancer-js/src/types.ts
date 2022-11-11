@@ -61,7 +61,8 @@ export interface ContractAddresses {
   vault: string;
   multicall: string;
   lidoRelayer?: string;
-  relayer?: string;
+  relayerV3?: string;
+  relayerV4?: string;
   gaugeController?: string;
   feeDistributor?: string;
   veBal?: string;

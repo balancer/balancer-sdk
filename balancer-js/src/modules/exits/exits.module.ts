@@ -21,7 +21,7 @@ import { PoolGraph, Node } from '../joins/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import TenderlyHelper from '@/lib/utils/tenderlyHelper';
-import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
+import balancerRelayerAbi from '@/lib/abi/RelayerV4.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
@@ -37,7 +37,7 @@ export class Exit {
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
-    this.relayer = contracts.relayer as string;
+    this.relayer = contracts.relayerV4 as string;
 
     if (!networkConfig.tenderly) {
       this.tenderlyHelper = undefined;

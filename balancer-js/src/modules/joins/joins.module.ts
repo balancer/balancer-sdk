@@ -20,7 +20,7 @@ import { PoolGraph, Node } from './graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import TenderlyHelper from '@/lib/utils/tenderlyHelper';
-import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
+import balancerRelayerAbi from '@/lib/abi/RelayerV4.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers, isSameAddress } from '@/lib/utils';
 import {
@@ -42,7 +42,7 @@ export class Join {
     private networkConfig: BalancerNetworkConfig
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
-    this.relayer = contracts.relayer as string;
+    this.relayer = contracts.relayerV4 as string;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
 
     if (!networkConfig.tenderly) {
