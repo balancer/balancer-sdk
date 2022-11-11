@@ -1716,9 +1716,9 @@ export type LiquidityGaugesQueryVariables = Exact<{
 }>;
 
 
-export type LiquidityGaugesQuery = { __typename?: 'Query', liquidityGauges: Array<{ __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string }> | null }> };
+export type LiquidityGaugesQuery = { __typename?: 'Query', liquidityGauges: Array<{ __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string, rate?: string | null, periodFinish?: string | null }> | null }> };
 
-export type SubgraphLiquidityGaugeFragment = { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string }> | null };
+export type SubgraphLiquidityGaugeFragment = { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string, rate?: string | null, periodFinish?: string | null }> | null };
 
 export type PoolsQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']>;
@@ -1730,9 +1730,21 @@ export type PoolsQueryVariables = Exact<{
 }>;
 
 
-export type PoolsQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, poolId?: string | null, preferentialGauge?: { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string }> | null } | null }> };
+export type PoolsQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, poolId?: string | null, preferentialGauge?: { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string, rate?: string | null, periodFinish?: string | null }> | null } | null }> };
 
-export type SubgraphPoolWithPreferentialGaugeFragment = { __typename?: 'Pool', id: string, poolId?: string | null, preferentialGauge?: { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string }> | null } | null };
+export type SubgraphPoolWithPreferentialGaugeFragment = { __typename?: 'Pool', id: string, poolId?: string | null, preferentialGauge?: { __typename?: 'LiquidityGauge', id: string, symbol: string, poolAddress: string, poolId?: string | null, streamer?: string | null, totalSupply: string, factory: { __typename?: 'GaugeFactory', id: string, numGauges: number }, tokens?: Array<{ __typename?: 'RewardToken', id: string, symbol: string, decimals: number, totalDeposited: string, rate?: string | null, periodFinish?: string | null }> | null } | null };
+
+export type PoolGaugesQueryVariables = Exact<{
+  where?: InputMaybe<Pool_Filter>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<Pool_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  block?: InputMaybe<Block_Height>;
+}>;
+
+
+export type PoolGaugesQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', gauges?: Array<{ __typename?: 'LiquidityGauge', id: string, relativeWeightCap?: string | null }> | null, preferentialGauge?: { __typename?: 'LiquidityGauge', id: string } | null }> };
 
 export const SubgraphGaugeShareFragmentDoc = gql`
     fragment SubgraphGaugeShare on GaugeShare {
@@ -1767,6 +1779,8 @@ export const SubgraphLiquidityGaugeFragmentDoc = gql`
     symbol
     decimals
     totalDeposited
+    rate
+    periodFinish
   }
 }
     `;
@@ -1828,6 +1842,26 @@ export const PoolsDocument = gql`
   }
 }
     ${SubgraphPoolWithPreferentialGaugeFragmentDoc}`;
+export const PoolGaugesDocument = gql`
+    query PoolGauges($where: Pool_filter, $first: Int, $orderBy: Pool_orderBy, $orderDirection: OrderDirection, $skip: Int, $block: Block_height) {
+  pools(
+    where: $where
+    first: $first
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    skip: $skip
+    block: $block
+  ) {
+    gauges {
+      id
+      relativeWeightCap
+    }
+    preferentialGauge {
+      id
+    }
+  }
+}
+    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string) => Promise<T>;
 
@@ -1847,6 +1881,9 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     Pools(variables?: PoolsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<PoolsQuery>(PoolsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'Pools', 'query');
+    },
+    PoolGauges(variables?: PoolGaugesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolGaugesQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<PoolGaugesQuery>(PoolGaugesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PoolGauges', 'query');
     }
   };
 }

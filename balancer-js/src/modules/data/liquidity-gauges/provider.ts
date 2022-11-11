@@ -1,6 +1,8 @@
 import { GaugeControllerMulticallRepository } from '../gauge-controller/multicall';
 import { LiquidityGaugesMulticallRepository, RewardData } from './multicall';
 import { LiquidityGaugesSubgraphRepository } from './subgraph';
+import { parseUnits } from '@ethersproject/units';
+import { BigNumber } from '@ethersproject/bignumber';
 import type {
   Maybe,
   SubgraphLiquidityGauge,
@@ -57,7 +59,7 @@ export class LiquidityGaugeSubgraphRPCProvider
   }
 
   async fetch(): Promise<LiquidityGauge[]> {
-    const gauges = await this.subgraph.fetch();
+    const gauges: SubgraphLiquidityGauge[] = await this.subgraph.fetch();
     const gaugeAddresses = gauges.map((g) => g.id);
     if (this.chainId == 1) {
       this.workingSupplies = await this.multicall.getWorkingSupplies(
@@ -69,15 +71,40 @@ export class LiquidityGaugeSubgraphRPCProvider
         gaugeAddresses
       );
     }
-    // TODO: Switch to getting rewards tokens from subgraph when indexer on polygon is fixed
-    // const rewardTokens = gauges.reduce((r: { [key: string]: string[] }, g) => {
-    //   r[g.id] ||= g.tokens ? g.tokens.map((t) => t.id.split('-')[0]) : [];
-    //   return r;
-    // }, {});
-    this.rewardData = await this.multicall.getRewardData(
-      gaugeAddresses //,
-      // rewardTokens
+
+    // Kept as a potential fallback for getting rewardData from RPC
+    // this.rewardData = await this.multicall.getRewardData(
+    //   gaugeAddresses //,
+    //   // rewardTokens
+    // );
+
+    // Reward data was made available from subgraph, keeping it separate for potential RPC fallback
+    this.rewardData = gauges.reduce(
+      (r: { [key: string]: { [key: string]: RewardData } }, g) => {
+        r[g.id] ||= g.tokens
+          ? Object.fromEntries(
+              g.tokens.map((t) => [
+                t.id.split('-')[0],
+                {
+                  distributor: '',
+                  last_update: BigNumber.from(0),
+                  integral: BigNumber.from(0),
+                  token: t.id.split('-')[0],
+                  decimals: t.decimals,
+                  rate: parseUnits(t.rate || '0', t.decimals),
+                  period_finish: BigNumber.from(
+                    (t.periodFinish as unknown as string) || '0'
+                  ),
+                },
+              ])
+            )
+          : {};
+
+        return r;
+      },
+      {}
     );
+
     return gauges.map(this.compose.bind(this));
   }
 

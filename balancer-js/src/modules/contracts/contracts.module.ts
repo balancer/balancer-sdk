@@ -1,5 +1,6 @@
 import { Contract } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/providers';
+import { Signer } from '@ethersproject/abstract-signer';
 import { ContractAddresses } from '@/types';
 import { Network } from '@/lib/constants/network';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
@@ -14,16 +15,22 @@ import { ERC20 } from './implementations/ERC20';
 import { VeBal } from './implementations/veBAL';
 import { VeBalProxy } from './implementations/veBAL-proxy';
 import { RelayerV4 } from './implementations/relayerV4';
+import { LiquidityGauge } from './implementations/liquidity-gauge';
 
-type ERC20Helper = (address: string, provider: Provider) => Contract;
+type ContractFactory = (
+  address: string,
+  signerOrProvider: Signer | Provider
+) => Contract;
+
 export interface ContractInstances {
   vault: Vault;
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
-  ERC20: ERC20Helper;
   relayerV4: Contract | undefined;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
+  ERC20: ContractFactory;
+  liquidityGauge: ContractFactory;
 }
 
 export class Contracts {
@@ -83,20 +90,34 @@ export class Contracts {
       vault: this.vault,
       lidoRelayer: this.lidoRelayer,
       multicall: this.multicall,
-      ERC20: this.getErc20,
       relayerV4: this.relayerV4,
       veBal: this.veBal,
       veBalProxy: this.veBalProxy,
+      ERC20: this.getErc20,
+      liquidityGauge: this.getLiquidityGauge,
     };
   }
 
   /**
    * Helper to create ERC20 contract.
    * @param { string } address ERC20 address.
-   * @param { Provider} provider Provider.
+   * @param { Signer | Provider } Signer or Provider.
    * @returns Contract.
    */
-  getErc20(address: string, provider: Provider): Contract {
-    return ERC20(address, provider);
+  getErc20(address: string, signerOrProvider: Signer | Provider): Contract {
+    return ERC20(address, signerOrProvider);
+  }
+
+  /**
+   * Helper to create LiquidityGauge contract.
+   * @param { string } Gauge address.
+   * @param { Signer | Provider} Signer or Provider.
+   * @returns Contract.
+   */
+  getLiquidityGauge(
+    address: string,
+    signerOrProvider: Signer | Provider
+  ): Contract {
+    return LiquidityGauge(address, signerOrProvider);
   }
 }

@@ -2,6 +2,7 @@ export { LiquidityGauge } from './liquidity-gauges/provider';
 export { PoolAttribute } from './pool/types';
 export { TokenAttribute } from './token/types';
 export { ProtocolFees } from './protocol-fees/provider';
+export * from './pool-gauges/types';
 export * from './pool-shares/types';
 export * from './gauge-shares/types';
 
