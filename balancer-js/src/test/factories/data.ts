@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { PoolSharesRepository } from '@/modules/data';
+import { PoolJoinExitRepository, PoolSharesRepository } from '@/modules/data';
 import {
   BalancerDataRepositories,
   Findable,
@@ -65,6 +65,10 @@ export const repositores = ({
     BALANCER_NETWORK_CONFIG[Network.MAINNET].urls.subgraph,
     Network.MAINNET
   ),
+  poolJoinExits = new PoolJoinExitRepository(
+    BALANCER_NETWORK_CONFIG[Network.MAINNET].urls.subgraph,
+    Network.MAINNET
+  ),
 }): BalancerDataRepositories => ({
   pools,
   yesterdaysPools,
@@ -75,4 +79,5 @@ export const repositores = ({
   feeCollector,
   tokenYields,
   poolShares,
+  poolJoinExits,
 });
