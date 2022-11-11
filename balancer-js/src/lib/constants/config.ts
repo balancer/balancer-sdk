@@ -59,6 +59,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         relayerV4: '0x28A224d9d398a1eBB7BA69BCA515898966Bb1B6b',
       },
       tokens: {
+        bal: '0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3',
         wrappedNativeAsset: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
       },
     },
@@ -82,6 +83,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         relayerV4: '0x5bf3B7c14b10f16939d63Bd679264A1Aa951B4D5',
       },
       tokens: {
+        bal: '0x040d1edc9569d4bab2d15287dc5a4f10f56a56b8',
         wrappedNativeAsset: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
       },
     },
