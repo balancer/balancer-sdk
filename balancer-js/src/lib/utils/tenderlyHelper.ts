@@ -145,6 +145,15 @@ export default class TenderlyHelper {
       stateOverrides
     );
 
+    if (
+      Object.keys(encodedStateOverrides).some((k) => {
+        return Object.keys(encodedStateOverrides[k].value).length !== 2;
+      })
+    )
+      throw new Error(
+        "Couldn't encode state overrides - states should match the ones in the contracts"
+      );
+
     return encodedStateOverrides;
   };
 
@@ -171,7 +180,7 @@ export default class TenderlyHelper {
         Object.keys(stateOverrides).length
     )
       throw new Error(
-        "Couldn't encode state overrides - contracts should be verified and whitelisted on Tenderly - states should match the ones in the contracts"
+        "Couldn't encode state overrides - contracts should be verified and whitelisted on Tenderly"
       );
 
     return encodedStateOverrides;
