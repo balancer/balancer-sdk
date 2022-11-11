@@ -8,6 +8,7 @@ import type {
   Token,
   TokenAttribute,
   LiquidityGauge,
+  Network,
 } from '@/types';
 import {
   BaseFeeDistributor,
@@ -18,6 +19,7 @@ import { ProtocolRevenue } from './protocol-revenue';
 import { Liquidity } from '@/modules/liquidity/liquidity.module';
 import { identity, zipObject, pickBy } from 'lodash';
 import { PoolFees } from '../fees/fees';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 
 export interface AprBreakdown {
   swapFees: number;
@@ -205,22 +207,53 @@ export class PoolApr {
    * @returns APR [bsp] from protocol rewards.
    */
   async stakingApr(pool: Pool, boost = 1): Promise<number> {
-    // For L2s BAL is emmited as a reward token
-    if (!this.liquidityGauges || pool.chainId != 1) {
+    if (!this.liquidityGauges) {
       return 0;
     }
 
     // Data resolving
     const gauge = await this.liquidityGauges.findBy('poolId', pool.id);
-    if (!gauge) {
+    if (
+      !gauge ||
+      (pool.chainId == 1 && gauge.workingSupply == 0) ||
+      (pool.chainId > 1 && gauge.totalSupply == 0)
+    ) {
+      return 0;
+    }
+
+    const bal =
+      BALANCER_NETWORK_CONFIG[pool.chainId as Network].addresses.tokens.bal;
+    if (!bal) {
       return 0;
     }
 
     const [balPrice, bptPriceUsd] = await Promise.all([
-      this.tokenPrices.find('0xba100000625a3754423978a60c9317c58a424e3d'), // BAL
+      this.tokenPrices.find(bal), // BAL
       this.bptPrice(pool),
     ]);
-    const balPriceUsd = parseFloat(balPrice?.usd || '0');
+
+    if (!balPrice?.usd) {
+      throw 'Missing BAL price';
+    }
+
+    const balPriceUsd = parseFloat(balPrice.usd);
+
+    // Subgraph is returning BAL staking rewards as reward tokens for L2 gauges.
+    if (pool.chainId > 1) {
+      if (!gauge.rewardTokens) {
+        return 0;
+      }
+
+      const balReward = bal && gauge.rewardTokens[bal];
+      if (balReward) {
+        const reward = await this.rewardTokenApr(bal, balReward);
+        const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
+        const rewardValue = reward.value / totalSupplyUsd;
+        return Math.round(10000 * rewardValue);
+      } else {
+        return 0;
+      }
+    }
 
     const now = Math.round(new Date().getTime() / 1000);
     const totalBalEmissions = emissions.between(now, now + 365 * 86400);
@@ -256,7 +289,12 @@ export class PoolApr {
       return { total: 0, breakdown: {} };
     }
 
-    const rewardTokenAddresses = Object.keys(gauge.rewardTokens);
+    // BAL rewards already returned as stakingApr, so we can filter them out
+    const bal =
+      BALANCER_NETWORK_CONFIG[pool.chainId as Network].addresses.tokens.bal;
+    const rewardTokenAddresses = Object.keys(gauge.rewardTokens).filter(
+      (a) => a != bal
+    );
 
     // Gets each tokens rate, extrapolate to a year and convert to USD
     const rewards = rewardTokenAddresses.map(async (tAddress) => {
@@ -420,8 +458,13 @@ export class PoolApr {
       const yearlyReward = rewardData.rate.mul(86400).mul(365);
       const price = await this.tokenPrices.find(tokenAddress);
       if (price && price.usd) {
-        const meta = await this.tokenMeta.find(tokenAddress);
-        const decimals = meta?.decimals || 18;
+        let decimals = 18;
+        if (rewardData.decimals) {
+          decimals = rewardData.decimals;
+        } else {
+          const meta = await this.tokenMeta.find(tokenAddress);
+          decimals = meta?.decimals || 18;
+        }
         const yearlyRewardUsd =
           parseFloat(formatUnits(yearlyReward, decimals)) *
           parseFloat(price.usd);

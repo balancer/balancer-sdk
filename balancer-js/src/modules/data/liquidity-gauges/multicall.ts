@@ -21,6 +21,7 @@ export interface RewardData {
   rate: BigNumber; // per second
   last_update: BigNumber;
   integral: BigNumber; // sum accrued to date
+  decimals?: number; // Provided by subgraph
 }
 
 /**
