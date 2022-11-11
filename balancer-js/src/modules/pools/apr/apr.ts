@@ -126,6 +126,8 @@ export class PoolApr {
           if (token.isExemptFromYieldProtocolFee) {
             apr = tokenYield;
           } else {
+            if (!pool.protocolYieldFeeCache)
+              throw new Error('Missing protocolYieldFeeCache');
             apr = tokenYield * (1 - parseFloat(pool.protocolYieldFeeCache));
           }
         } else {
