@@ -85,9 +85,7 @@ export class PoolsSubgraphRepository
       where: { swapEnabled: true, totalShares_gt: '0' },
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
-      block: this.blockHeight
-        ? { number: await this.blockHeight() }
-        : undefined,
+      block: await this.block(),
     });
     console.timeEnd('fetching pools');
 
@@ -120,11 +118,15 @@ export class PoolsSubgraphRepository
   }
 
   async findBy(param: PoolAttribute, value: string): Promise<Pool | undefined> {
-    if (!this.pools) {
-      this.pools = this.fetchDefault();
+    if (this.pools) {
+      return (await this.pools).find((p) => p[param] === value);
     }
-
-    return (await this.pools).find((pool) => pool[param] == value);
+    const { pools } = await this.client.Pools({
+      where: { [param]: value, swapEnabled: true, totalShares_gt: '0' },
+      block: await this.block(),
+    });
+    const poolsTab: Pool[] = pools.map(this.mapType.bind(this));
+    return poolsTab.length > 0 ? poolsTab[0] : undefined;
   }
 
   async all(): Promise<Pool[]> {
@@ -132,6 +134,10 @@ export class PoolsSubgraphRepository
       this.pools = this.fetchDefault();
     }
     return this.pools;
+  }
+
+  async block(): Promise<{ number: number | undefined } | undefined> {
+    return this.blockHeight ? { number: await this.blockHeight() } : undefined;
   }
 
   async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
@@ -149,8 +155,10 @@ export class PoolsSubgraphRepository
       address: subgraphPool.address,
       chainId: this.chainId,
       poolType: subgraphPool.poolType as PoolType,
+      poolTypeVersion: subgraphPool.poolTypeVersion || 1,
       swapFee: subgraphPool.swapFee,
       swapEnabled: subgraphPool.swapEnabled,
+      protocolYieldFeeCache: subgraphPool.protocolYieldFeeCache || '0',
       amp: subgraphPool.amp ?? undefined,
       owner: subgraphPool.owner ?? undefined,
       factory: subgraphPool.factory ?? undefined,
@@ -187,6 +195,8 @@ export class PoolsSubgraphRepository
     }
     return {
       ...subgraphToken,
+      isExemptFromYieldProtocolFee:
+        subgraphToken.isExemptFromYieldProtocolFee || false,
       token: {
         pool: subgraphTokenPool,
       },

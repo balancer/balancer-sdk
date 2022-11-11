@@ -16,6 +16,7 @@ import type {
 import type {
   BaseFeeDistributor,
   GaugeSharesRepository,
+  PoolGaugesRepository,
   PoolSharesRepository,
   ProtocolFeesProvider,
 } from './modules/data';
@@ -57,6 +58,7 @@ export interface ContractAddresses {
   feeDistributor?: string;
   relayerV4?: string;
   veBal?: string;
+  veBalProxy?: string;
   protocolFeePercentagesProvider?: string;
 }
 
@@ -96,6 +98,7 @@ export interface BalancerDataRepositories {
   protocolFees?: ProtocolFeesProvider;
   tokenYields: Findable<number>;
   poolShares: PoolSharesRepository;
+  poolGauges?: PoolGaugesRepository;
   gaugeShares?: GaugeSharesRepository;
 }
 
@@ -184,6 +187,7 @@ export interface PoolToken extends Token {
   balance: string;
   priceRate?: string;
   weight?: string | null;
+  isExemptFromYieldProtocolFee?: boolean;
   token?: { pool: { poolType: null | PoolType } | null };
 }
 
@@ -210,6 +214,7 @@ export enum PoolType {
   Weighted = 'Weighted',
   Investment = 'Investment',
   Stable = 'Stable',
+  HighAmpComposableStable = 'HighAmpComposableStable',
   ComposableStable = 'ComposableStable',
   MetaStable = 'MetaStable',
   StablePhantom = 'StablePhantom',
@@ -227,7 +232,9 @@ export interface Pool {
   address: string;
   chainId: number;
   poolType: PoolType;
+  poolTypeVersion: number;
   swapFee: string;
+  protocolYieldFeeCache: string;
   owner?: string;
   factory?: string;
   tokens: PoolToken[];

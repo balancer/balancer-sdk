@@ -3,6 +3,7 @@ export * from './gauge-controller/multicall';
 export * from './gauge-shares';
 export * from './liquidity-gauges';
 export * from './pool';
+export * from './pool-gauges';
 export * from './pool-shares';
 export * from './token';
 export * from './token-prices';
@@ -16,6 +17,7 @@ import { BalancerNetworkConfig, BalancerDataRepositories } from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
 import { OnChainPoolsRepository } from '../sor/pool-data/subgraphPoolDataService';
 import { PoolSharesRepository } from './pool-shares/repository';
+import { PoolGaugesRepository } from './pool-gauges/repository';
 import { GaugeSharesRepository } from './gauge-shares/repository';
 import { BlockNumberRepository } from './block-number';
 import {
@@ -40,6 +42,7 @@ export class Data implements BalancerDataRepositories {
   poolsForSor;
   yesterdaysPools;
   poolShares;
+  poolGauges;
   gaugeShares;
   tokenPrices;
   tokenMeta;
@@ -69,6 +72,11 @@ export class Data implements BalancerDataRepositories {
     );
 
     if (networkConfig.urls.gaugesSubgraph) {
+      this.poolGauges = new PoolGaugesRepository(
+        networkConfig.urls.gaugesSubgraph,
+        networkConfig.chainId
+      );
+
       this.gaugeShares = new GaugeSharesRepository(
         networkConfig.urls.gaugesSubgraph,
         networkConfig.chainId

@@ -415,11 +415,11 @@ export function batchSwapActions(
         batchSwaps.limits[a.swap.assetInIndex] = MaxInt256;
       }
       if (a.hasTokenOut) {
-        // We need to add amount for each swap that uses tokenOut to get correct total
+        // We need to add amount for each swap that uses tokenOut to get correct total (should be negative)
         batchSwaps.hasTokenOut = true;
         batchSwaps.limits[a.swap.assetOutIndex] = batchSwaps.limits[
           a.swap.assetOutIndex
-        ].add(a.minOut);
+        ].sub(a.minOut);
       }
       lastSwap = a;
     } else {
@@ -484,6 +484,7 @@ export function getActions(
   );
   const actions: Actions[] = [];
   let opRefKey = 0;
+  let previousAction: Actions = {} as Actions;
   for (const swap of swaps) {
     if (isJoin(swap, assets)) {
       const [joinAction, newOpRefKey] = createJoinAction(
@@ -498,6 +499,7 @@ export function getActions(
       );
       opRefKey = newOpRefKey;
       actions.push(joinAction);
+      previousAction = joinAction;
       continue;
     } else if (isExit(swap, assets)) {
       const [exitAction, newOpRefKey] = createExitAction(
@@ -512,8 +514,10 @@ export function getActions(
       );
       opRefKey = newOpRefKey;
       actions.push(exitAction);
+      previousAction = exitAction;
       continue;
     } else {
+      const amount = swap.amount;
       const [swapAction, newOpRefKey] = createSwapAction(
         swap,
         tokenInIndex,
@@ -525,8 +529,22 @@ export function getActions(
         user,
         relayer
       );
+      if (previousAction.type === ActionType.Swap && amount === '0') {
+        /*
+        If its part of a multihop swap the amount will be 0 (and should remain 0)
+        The source will be same as previous swap so set previous receiver to match sender. Receiver set as is.
+        */
+        previousAction.receiver = previousAction.sender;
+        previousAction.toInternal = previousAction.fromInternal;
+        previousAction.opRef = [];
+        swapAction.sender = previousAction.receiver;
+        swapAction.fromInternal = previousAction.fromInternal;
+        swapAction.amountIn = '0';
+        swapAction.swap.amount = '0';
+      }
       opRefKey = newOpRefKey;
       actions.push(swapAction);
+      previousAction = swapAction;
       continue;
     }
   }
@@ -1064,10 +1082,10 @@ function checkAmounts(
   //   'slippage'
   // );
   // console.log(swapInfo.returnAmount.toString(), 'swapInfo.returnAmount');
-  if (
-    !totalIn.eq(swapInfo.swapAmount) ||
-    !totalOut.eq(subSlippage(swapInfo.returnAmount, BigNumber.from(slippage)))
-  )
+  const diffOut = totalOut.sub(
+    subSlippage(swapInfo.returnAmount, BigNumber.from(slippage))
+  );
+  if (!totalIn.eq(swapInfo.swapAmount) || !diffOut.lt(`3`))
     throw new BalancerError(BalancerErrorCode.RELAY_SWAP_AMOUNTS);
   /* ExactOut case
     // totalIn should equal the return amount from SOR (this is the amount in) plus any slippage allowance

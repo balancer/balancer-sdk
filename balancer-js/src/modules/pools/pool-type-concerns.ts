@@ -42,6 +42,7 @@ export class PoolTypeConcerns {
       case 'Stable': {
         return new Stable();
       }
+      case 'HighAmpComposableStable':
       case 'ComposableStable': {
         return new ComposableStable();
       }
