@@ -155,8 +155,10 @@ export class PoolsSubgraphRepository
       address: subgraphPool.address,
       chainId: this.chainId,
       poolType: subgraphPool.poolType as PoolType,
+      poolTypeVersion: subgraphPool.poolTypeVersion || 1,
       swapFee: subgraphPool.swapFee,
       swapEnabled: subgraphPool.swapEnabled,
+      protocolYieldFeeCache: subgraphPool.protocolYieldFeeCache || '0',
       amp: subgraphPool.amp ?? undefined,
       owner: subgraphPool.owner ?? undefined,
       factory: subgraphPool.factory ?? undefined,
@@ -193,6 +195,7 @@ export class PoolsSubgraphRepository
     }
     return {
       ...subgraphToken,
+      isExemptFromYieldProtocolFee: subgraphToken.isExemptFromYieldProtocolFee || false,
       token: {
         pool: subgraphTokenPool,
       },

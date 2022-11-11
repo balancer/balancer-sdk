@@ -116,11 +116,18 @@ export class PoolApr {
         if (pool.poolType === 'MetaStable') {
           apr = tokenYield * (1 - (await this.protocolSwapFeePercentage()));
         } else if (pool.poolType === 'ComposableStable') {
-          // TODO: add if(token.isTokenExemptFromYieldProtocolFee) once supported by subgraph
-          // apr = tokenYield;
-
-          const fees = await this.protocolFeesPercentage();
-          apr = tokenYield * (1 - fees.yieldFee);
+          if (token.isExemptFromYieldProtocolFee) {
+            apr = tokenYield
+          } else {
+            const fees = await this.protocolFeesPercentage()
+            apr = tokenYield * (1 - fees.yieldFee);
+          }
+        } else if (pool.poolType === 'Weighted' && pool.poolTypeVersion === 2) {
+          if (token.isExemptFromYieldProtocolFee) {
+            apr = tokenYield
+          } else {
+            apr = tokenYield * (1 - parseFloat(pool.protocolYieldFeeCache));
+          }
         } else {
           apr = tokenYield;
         }
