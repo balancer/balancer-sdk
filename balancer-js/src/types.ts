@@ -240,9 +240,9 @@ export interface Pool {
   address: string;
   chainId: number;
   poolType: PoolType;
-  poolTypeVersion?: number;
+  poolTypeVersion: number;
   swapFee: string;
-  protocolYieldFeeCache?: string;
+  protocolYieldFeeCache: string;
   owner?: string;
   factory?: string;
   tokens: PoolToken[];
