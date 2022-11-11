@@ -185,6 +185,7 @@ export interface PoolToken extends Token {
   balance: string;
   priceRate?: string;
   weight?: string | null;
+  isExemptFromYieldProtocolFee?: boolean;
   token?: { pool: { poolType: null | PoolType } | null };
 }
 
@@ -229,7 +230,9 @@ export interface Pool {
   address: string;
   chainId: number;
   poolType: PoolType;
+  poolTypeVersion: number;
   swapFee: string;
+  protocolYieldFeeCache: string;
   owner?: string;
   factory?: string;
   tokens: PoolToken[];
