@@ -195,7 +195,8 @@ export class PoolsSubgraphRepository
     }
     return {
       ...subgraphToken,
-      isExemptFromYieldProtocolFee: subgraphToken.isExemptFromYieldProtocolFee || false,
+      isExemptFromYieldProtocolFee:
+        subgraphToken.isExemptFromYieldProtocolFee || false,
       token: {
         pool: subgraphTokenPool,
       },
