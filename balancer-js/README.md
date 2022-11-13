@@ -510,10 +510,8 @@ prices = getPricesAt(tokens, joinTimestamp);
 // retrieves list of pool's assets with prices delta and weights 
 assets = getAssets(tokens, prices);
 
-poolValueDelta = assets.reduce((result, asset) => result * Math.pow(asset.priceDelta, asset.weight), 0);
-holdValueDelta = assets.reduce((result, asset) => result + Math.pow(asset.priceDelta, asset.weight), 0);
-
-// IL = (PoolValueDelta/HoldValueDelta) - 1
+poolValueDelta = assets.reduce((result, asset) => result * Math.pow(Math.abs(asset.priceDelta + 1), asset.weight), 1);
+holdValueDelta = assets.reduce((result, asset) => result + (Math.abs(asset.priceDelta + 1) * asset.weight), 0);
 
 const IL = poolValueDelta/holdValueDelta - 1;
 
