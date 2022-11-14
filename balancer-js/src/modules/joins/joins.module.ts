@@ -814,14 +814,12 @@ export class Join {
       outputReferences,
     });
 
-    const bptAmount = Relayer.isChainedReference(limits[0]) ? '0' : limits[0];
-    const tokenInAmount = Relayer.isChainedReference(limits[1])
-      ? '0'
-      : limits[1];
-    const bptOut = sender === this.relayer ? '0' : bptAmount;
-    const tokenIn = sender === this.relayer ? '0' : tokenInAmount;
+    // If the sender is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
+    const userTokenIn = sender === this.relayer ? '0' : limits[1];
+    // If the receiver is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
+    const userBptOut = recipient === this.relayer ? '0' : limits[0];
 
-    return [call, assets, [bptOut, tokenIn]];
+    return [call, assets, [userBptOut, userTokenIn]];
   };
 
   createJoinPool = (
@@ -924,20 +922,22 @@ export class Join {
       fromInternalBalance: sender === this.relayer,
     });
 
-    const amountsTokenIn = sortedAmounts.map((a) =>
+    const userAmountsTokenIn = sortedAmounts.map((a) =>
       Relayer.isChainedReference(a) ? '0' : a
     );
-    const amountOut = Relayer.isChainedReference(minAmountOut)
+    const userAmountOut = Relayer.isChainedReference(minAmountOut)
       ? '0'
       : minAmountOut;
 
     return [
       call,
+      // If the sender is the Relayer the join is part of a chain and shouldn't be considered for user deltas
       sender === this.relayer ? [] : sortedTokens,
-      sender === this.relayer ? [] : amountsTokenIn,
+      sender === this.relayer ? [] : userAmountsTokenIn,
+      // If the receiver is the Relayer the join is part of a chain and shouldn't be considered for user deltas
       recipient === this.relayer
         ? Zero.toString()
-        : Zero.sub(amountOut).toString(), // -ve because coming from Vault
+        : Zero.sub(userAmountOut).toString(), // -ve because coming from Vault
     ];
   };
 

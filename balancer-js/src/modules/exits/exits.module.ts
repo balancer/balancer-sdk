@@ -149,10 +149,8 @@ export class Exit {
     delete deltas[poolAddress.toLowerCase()];
 
     tokensOut.forEach((token, i) => {
-      if (
-        deltas[token.toLowerCase()]?.toString() !==
-        Zero.sub(amountsOut[i]).toString()
-      ) {
+      const diff = deltas[token.toLowerCase()].add(amountsOut[i]);
+      if (diff.abs().gt(1)) {
         console.error(
           `exit assertDeltas, tokenOut: `,
           token,
@@ -521,14 +519,13 @@ export class Exit {
       outputReferences,
     });
 
-    let tokenOutAmount = Relayer.isChainedReference(limits[0])
-      ? '0'
-      : limits[0];
-    const bptAmount = Relayer.isChainedReference(limits[1]) ? '0' : limits[1];
-    const bptIn = sender === this.relayer ? '0' : bptAmount;
-    tokenOutAmount = recipient === this.relayer ? '0' : tokenOutAmount;
-
-    return [call, assets, [tokenOutAmount, bptIn]];
+    let userTokenOutAmount = limits[0];
+    const userBptAmount = limits[1];
+    // If the sender is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
+    const bptIn = sender === this.relayer ? '0' : userBptAmount;
+    // If the receiver is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
+    userTokenOutAmount = recipient === this.relayer ? '0' : userTokenOutAmount;
+    return [call, assets, [userTokenOutAmount, bptIn]];
   }
 
   private createExitPool(
@@ -639,16 +636,18 @@ export class Exit {
       toInternalBalance: false,
     });
 
-    const amountTokensOut = sortedAmounts.map((a) =>
+    const userAmountTokensOut = sortedAmounts.map((a) =>
       Relayer.isChainedReference(a) ? '0' : Zero.sub(a).toString()
     );
-    const bptIn = Relayer.isChainedReference(amountIn) ? '0' : amountIn;
+    const userBptIn = Relayer.isChainedReference(amountIn) ? '0' : amountIn;
 
     return [
       call,
-      sender === this.relayer ? Zero.toString() : bptIn,
+      // If the sender is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
+      sender === this.relayer ? Zero.toString() : userBptIn,
+      // If the receiver is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
       recipient === this.relayer ? [] : sortedTokens,
-      recipient === this.relayer ? [] : amountTokensOut,
+      recipient === this.relayer ? [] : userAmountTokensOut,
     ];
   }
 
