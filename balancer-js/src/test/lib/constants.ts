@@ -328,6 +328,12 @@ export const ADDRESSES = {
       symbol: 'waUSDT',
       slot: 52,
     },
+    bbamUSD: {
+      address: '0x48e6B98ef6329f8f0A30eBB8c7C960330d648085',
+      decimals: 18,
+      symbol: 'bb-am-usd',
+      slot: 0,
+    },
   },
   [Network.ARBITRUM]: {
     WETH: {
