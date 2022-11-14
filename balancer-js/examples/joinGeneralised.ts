@@ -63,7 +63,7 @@ async function setUp(provider: JsonRpcProvider): Promise<string> {
   );
 
   return await Relayer.signRelayerApproval(
-    contractAddresses.relayer as string,
+    contractAddresses.relayerV4 as string,
     signerAddress,
     signer,
     contracts.vault
