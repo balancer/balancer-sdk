@@ -13,20 +13,20 @@ import {
   Token,
 } from '@/types';
 
-export const findable = <T, P = string>(
-  map: Map<string, T>
+export const findable = <T, P = string, V = any>(
+  map: Map<string | V, T>
 ): Findable<T, P> & Searchable<T> => ({
   find: (id: string) => Promise.resolve(map.get(id)),
-  findBy: (param: P, value: string) => Promise.resolve(map.get(value)),
+  findBy: (param: P, value: V) => Promise.resolve(map.get(value)),
   all: () => Promise.resolve(Object.values(map)),
   where: (filters: (arg: T) => boolean) => Promise.resolve(Object.values(map)),
 });
 
-export const stubbed = <T, P = string>(
+export const stubbed = <T, P = string, V = any>(
   value: unknown
-): Findable<T, P> & Searchable<T> => ({
+): Findable<T, P, V> & Searchable<T> => ({
   find: (id: string) => Promise.resolve(value as T),
-  findBy: (param: P, _: string) => Promise.resolve(value as T),
+  findBy: (param: P, _: V) => Promise.resolve(value as T),
   all: () => Promise.resolve([value as T]),
   where: (filters: (arg: T) => boolean) => Promise.resolve([value as T]),
 });

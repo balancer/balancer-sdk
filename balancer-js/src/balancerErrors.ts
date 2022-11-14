@@ -17,6 +17,8 @@ export enum BalancerErrorCode {
   MISSING_PRICE_RATE = 'MISSING_PRICE_RATE',
   MISSING_WEIGHT = 'MISSING_WEIGHT',
   RELAY_SWAP_AMOUNTS = 'RELAY_SWAP_AMOUNTS',
+  NO_POOL_DATA_FOR_USER = 'NO_POOL_DATA_FOR_USER',
+  NO_VALUE_PARAMETER = 'NO_VALUE_PARAMETER',
 }
 
 export class BalancerError extends Error {
@@ -63,6 +65,9 @@ export class BalancerError extends Error {
         return 'zero input not allowed';
       case BalancerErrorCode.RELAY_SWAP_AMOUNTS:
         return 'Error when checking swap amounts';
+      case BalancerErrorCode.NO_VALUE_PARAMETER:
+      case BalancerErrorCode.NO_POOL_DATA_FOR_USER:
+        return 'No pool data found for user';
       default:
         return 'Unknown error';
     }

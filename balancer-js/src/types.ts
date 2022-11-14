@@ -19,7 +19,7 @@ import type {
   PoolGaugesRepository,
   PoolSharesRepository,
   ProtocolFeesProvider,
-  PoolJoinExitRepository
+  PoolJoinExitRepository,
 } from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
@@ -175,6 +175,11 @@ export type Currency = 'eth' | 'usd';
 
 export type Price = { [currency in Currency]?: string };
 export type TokenPrices = { [address: string]: Price };
+export type HistoricalPrices = {
+  prices: [[number, number]];
+  market_caps: [[number, number]];
+  total_volumes: [[number, number]];
+};
 
 export interface Token {
   address: string;

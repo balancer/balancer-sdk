@@ -6,9 +6,9 @@ export * from './pool-gauges/types';
 export * from './pool-shares/types';
 export * from './gauge-shares/types';
 
-export interface Findable<T, P = string> {
+export interface Findable<T, P = string, V = any> {
   find: (id: string) => Promise<T | undefined>;
-  findBy: (attribute: P, value: string) => Promise<T | undefined>;
+  findBy: (attribute: P, value: V) => Promise<T | undefined>;
 }
 
 export interface Searchable<T> {

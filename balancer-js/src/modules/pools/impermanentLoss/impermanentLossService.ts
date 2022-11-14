@@ -19,6 +19,10 @@ type Asset = {
   weight: number;
 };
 
+type TokenPrices = {
+  [key:string]: number;
+}
+
 export class ImpermanentLossService {
   constructor(
     private tokenPrices: Findable<Price>,
@@ -78,25 +82,28 @@ export class ImpermanentLossService {
    *  3. the user has no liquidity invested in the pool
    */
   async prepareData(userAddress: string, pool: Pool): Promise<Asset[]> {
-    const tokens = pool.tokens.filter(
+    const entryTimestamp = await this.getEntryTimestamp(userAddress, pool.id);
+
+    const poolTokens = pool.tokens.filter(
       (token) => token.address !== pool.address
     );
 
-    const tokenAddresses = tokens.map((t) => t.address);
-    const poolTokens: PoolToken[] = await this.getExitPrices(tokens);
-
-    const entryTimestamp = await this.getEntryTimestamp(userAddress, pool.id);
-
-    const entryPrices = await this.getEntryPrices(
-      entryTimestamp,
-      tokenAddresses
-    );
     const weights = this.getWeights(poolTokens);
 
+    const tokenAddresses = poolTokens.map((t) => t.address);
+    const entryPrices = await this.getEntryPrices(entryTimestamp, tokenAddresses);
+
+    const exitPrices: TokenPrices = await this.getExitPrices(poolTokens);
+
+
     return poolTokens.map((token, i) => ({
-      priceDelta: Number(token.price?.usd ?? 0) - entryPrices[token.address],
+      priceDelta: this.getDelta(entryPrices[token.address], exitPrices[token.address]),
       weight: weights[i],
     }));
+  }
+
+  getDelta(entryPrice: number, exitPrice: number) {
+    return Math.floor(((exitPrice - entryPrice) / entryPrice) * 100) / 100;
   }
 
   /**
@@ -126,7 +133,7 @@ export class ImpermanentLossService {
    * @param tokens the pools' tokens
    * @returns a list of tokens with prices
    */
-  async getExitPrices(tokens: PoolToken[]): Promise<PoolToken[]> {
+  async getExitPrices(tokens: PoolToken[]): Promise<TokenPrices> {
     const prices = await Promise.all(
       tokens.map((token) => this.tokenPrices.find(token.address))
     );
@@ -138,7 +145,11 @@ export class ImpermanentLossService {
     if (tokensWithPrice.some((token) => token.price?.usd === undefined)) {
       throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
     }
-    return tokensWithPrice;
+    const tokenPrices: TokenPrices = {};
+    for (const token of tokensWithPrice) {
+      if (token.price?.usd) tokenPrices[token.address] = +token.price.usd; // price.usd is never undefined but JS complains
+    }
+    return tokenPrices;
   }
 
   /**
@@ -155,7 +166,7 @@ export class ImpermanentLossService {
       where: { pool: poolId, sender: userAddress, type: InvestType.Join },
     });
     if (joins.length === 0) {
-      throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
+      throw new BalancerError(BalancerErrorCode.NO_POOL_DATA_FOR_USER);
     }
     return joins[0].timestamp;
   }
@@ -170,7 +181,13 @@ export class ImpermanentLossService {
   async getEntryPrices(
     timestamp: number,
     tokenAddresses: string[]
-  ): Promise<{ [key: string]: number }> {
-    return {};
+  ): Promise<TokenPrices> {
+    const prices: TokenPrices = {};
+    for (const address of tokenAddresses) {
+      const price = await this.tokenPrices.findBy('timestamp', { address: address, timestamp: timestamp});
+      if (!price?.usd) throw new BalancerError(BalancerErrorCode.NO_VALUE_PARAMETER);
+      prices[address] = +price.usd;
+    }
+    return prices;
   }
 }
