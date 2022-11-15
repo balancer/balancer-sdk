@@ -2,7 +2,12 @@ import { defaultAbiCoder } from '@ethersproject/abi';
 import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { AddressZero, MaxInt256, WeiPerEther } from '@ethersproject/constants';
+import {
+  AddressZero,
+  MaxInt256,
+  WeiPerEther,
+  Zero,
+} from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Relayer } from '@/modules/relayer/relayer.module';
@@ -30,6 +35,7 @@ import {
 } from '@/lib/utils/solidityMaths';
 import { calcPriceImpact } from '../pricing/priceImpact';
 import { WeightedPoolEncoder } from '@/pool-weighted';
+import { getPoolAddress } from '@/pool-utils';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 export class Join {
@@ -56,8 +62,8 @@ export class Join {
 
   async joinPool(
     poolId: string,
-    tokens: string[],
-    amounts: string[],
+    tokensIn: string[],
+    amountsIn: string[],
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
@@ -69,18 +75,18 @@ export class Join {
     minOut: string;
     priceImpact: string;
   }> {
-    if (tokens.length != amounts.length)
+    if (tokensIn.length != amountsIn.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // Create nodes for each pool/token interaction and order by breadth first
     const orderedNodes = await this.getGraphNodes(
       poolId,
-      tokens,
-      amounts,
+      tokensIn,
+      amountsIn,
       wrapMainTokens
     );
 
-    const joinPaths = this.getJoinPaths(orderedNodes, tokens, amounts);
+    const joinPaths = this.getJoinPaths(orderedNodes, tokensIn, amountsIn);
 
     /*
     - Create calls with 0 min bpt for each root join
@@ -107,7 +113,7 @@ export class Join {
     const { amountsOut, totalAmountOut } = await this.amountsOutByJoinPath(
       userAddress,
       queryData,
-      tokens,
+      tokensIn,
       outputIndexes
     );
 
@@ -123,12 +129,14 @@ export class Join {
     ).toString();
 
     // Create calls with minAmountsOut
-    const { callData } = await this.createCalls(
+    const { callData, deltas } = await this.createCalls(
       joinPaths,
       userAddress,
       minAmountsOut,
       authorisation
     );
+
+    this.assertDeltas(poolId, deltas, tokensIn, amountsIn, totalMinAmountOut);
 
     return {
       to: this.relayer,
@@ -137,6 +145,52 @@ export class Join {
       minOut: totalMinAmountOut,
       priceImpact,
     };
+  }
+
+  private assertDeltas(
+    poolId: string,
+    deltas: Record<string, BigNumber>,
+    tokensIn: string[],
+    amountsIn: string[],
+    minBptOut: string
+  ): void {
+    const poolAddress = getPoolAddress(poolId);
+    const outDiff = deltas[poolAddress.toLowerCase()].add(minBptOut);
+
+    if (outDiff.abs().gt(3)) {
+      console.error(
+        `join assertDeltas, bptOut: `,
+        poolAddress,
+        minBptOut,
+        deltas[poolAddress.toLowerCase()]?.toString()
+      );
+      throw new BalancerError(BalancerErrorCode.JOIN_DELTA_AMOUNTS);
+    }
+    delete deltas[poolAddress.toLowerCase()];
+
+    tokensIn.forEach((token, i) => {
+      if (deltas[token.toLowerCase()]?.toString() !== amountsIn[i]) {
+        console.error(
+          `join assertDeltas, tokenIn: `,
+          token,
+          amountsIn[i],
+          deltas[token.toLowerCase()]?.toString()
+        );
+        throw new BalancerError(BalancerErrorCode.JOIN_DELTA_AMOUNTS);
+      }
+      delete deltas[token.toLowerCase()];
+    });
+
+    for (const token in deltas) {
+      if (deltas[token].toString() !== '0') {
+        console.error(
+          `join assertDeltas, non-input token should be 0: `,
+          token,
+          deltas[token].toString()
+        );
+        throw new BalancerError(BalancerErrorCode.JOIN_DELTA_AMOUNTS);
+      }
+    }
   }
 
   // Create join paths from tokensIn all the way to the root node.
@@ -280,9 +334,10 @@ export class Join {
     callData: string;
     outputIndexes: number[];
     totalBptZeroPi: BigNumber;
+    deltas: Record<string, BigNumber>;
   }> => {
     // Create calls for both leaf and non-leaf inputs
-    const { calls, outputIndexes } = this.createActionCalls(
+    const { calls, outputIndexes, deltas } = this.createActionCalls(
       joinPaths,
       userAddress,
       minAmountsOut
@@ -304,6 +359,7 @@ export class Join {
         ? outputIndexes.map((i) => i + 1)
         : outputIndexes,
       totalBptZeroPi,
+      deltas,
     };
   };
 
@@ -452,16 +508,34 @@ export class Join {
     return orderedNodes;
   };
 
+  updateDeltas(
+    deltas: Record<string, BigNumber>,
+    assets: string[],
+    amounts: string[]
+  ): Record<string, BigNumber> {
+    assets.forEach((t, i) => {
+      const asset = t.toLowerCase();
+      if (!deltas[asset]) deltas[asset] = Zero;
+      deltas[asset] = deltas[asset].add(amounts[i]);
+    });
+    return deltas;
+  }
+
   // Create actions for each Node and return in multicall array
   // Create calls for each path, use value stored in minBptAmounts if available
   createActionCalls = (
     joinPaths: Node[][],
     userAddress: string,
     minAmountsOut?: string[]
-  ): { calls: string[]; outputIndexes: number[] } => {
+  ): {
+    calls: string[];
+    outputIndexes: number[];
+    deltas: Record<string, BigNumber>;
+  } => {
     const calls: string[] = [];
     const outputIndexes: number[] = [];
     const isPeek = !minAmountsOut;
+    const deltas: Record<string, BigNumber> = {};
 
     joinPaths.forEach((joinPath, j) => {
       const isLeafJoin = joinPath[0].isLeaf;
@@ -516,30 +590,36 @@ export class Join {
               )
             );
             break;
-          case 'batchSwap':
-            calls.push(
-              this.createBatchSwap(
-                node,
-                nodeChildrenWithinJoinPath,
-                j,
-                minOut,
-                sender,
-                recipient
-              )
+          case 'batchSwap': {
+            const [call, assets, limits] = this.createBatchSwap(
+              node,
+              nodeChildrenWithinJoinPath,
+              j,
+              minOut,
+              sender,
+              recipient
+            );
+            calls.push(call);
+            this.updateDeltas(deltas, assets, limits);
+            break;
+          }
+          case 'joinPool': {
+            const [call, tokensIn, amountsIn, minBptOut] = this.createJoinPool(
+              node,
+              nodeChildrenWithinJoinPath,
+              j,
+              minOut,
+              sender,
+              recipient
+            );
+            calls.push(call);
+            this.updateDeltas(
+              deltas,
+              [node.address, ...tokensIn],
+              [minBptOut, ...amountsIn]
             );
             break;
-          case 'joinPool':
-            calls.push(
-              this.createJoinPool(
-                node,
-                nodeChildrenWithinJoinPath,
-                j,
-                minOut,
-                sender,
-                recipient
-              )
-            );
-            break;
+          }
         }
       });
       if (isPeek) {
@@ -552,7 +632,7 @@ export class Join {
       }
     });
 
-    return { calls, outputIndexes };
+    return { calls, outputIndexes, deltas };
   };
 
   /**
@@ -663,7 +743,7 @@ export class Join {
     expectedOut: string,
     sender: string,
     recipient: string
-  ): string => {
+  ): [string, string[], string[]] => {
     // We only need batchSwaps for main/wrapped > linearBpt so shouldn't be more than token > token
     if (nodeChildrenWithinJoinPath.length !== 1)
       throw new Error('Unsupported batchswap');
@@ -675,7 +755,7 @@ export class Join {
     const assets = [node.address, inputToken];
 
     // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
-    // First asset will always be the output token so use expectedOut to set limit
+    // First asset will always be the output token (which will be linearBpt) so use expectedOut to set limit
     // We don't know input amounts if they are part of a chain so set to max input
     // TODO can we be safer?
     const limits: string[] = [
@@ -734,7 +814,12 @@ export class Join {
       outputReferences,
     });
 
-    return call;
+    // If the sender is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
+    const userTokenIn = sender === this.relayer ? '0' : limits[1];
+    // If the receiver is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
+    const userBptOut = recipient === this.relayer ? '0' : limits[0];
+
+    return [call, assets, [userBptOut, userTokenIn]];
   };
 
   createJoinPool = (
@@ -744,7 +829,7 @@ export class Join {
     minAmountOut: string,
     sender: string,
     recipient: string
-  ): string => {
+  ): [string, string[], string[], string] => {
     const inputTokens: string[] = [];
     const inputAmts: string[] = [];
 
@@ -837,7 +922,23 @@ export class Join {
       fromInternalBalance: sender === this.relayer,
     });
 
-    return call;
+    const userAmountsTokenIn = sortedAmounts.map((a) =>
+      Relayer.isChainedReference(a) ? '0' : a
+    );
+    const userAmountOut = Relayer.isChainedReference(minAmountOut)
+      ? '0'
+      : minAmountOut;
+
+    return [
+      call,
+      // If the sender is the Relayer the join is part of a chain and shouldn't be considered for user deltas
+      sender === this.relayer ? [] : sortedTokens,
+      sender === this.relayer ? [] : userAmountsTokenIn,
+      // If the receiver is the Relayer the join is part of a chain and shouldn't be considered for user deltas
+      recipient === this.relayer
+        ? Zero.toString()
+        : Zero.sub(userAmountOut).toString(), // -ve because coming from Vault
+    ];
   };
 
   getOutputRefValue = (
