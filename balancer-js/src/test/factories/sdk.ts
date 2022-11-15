@@ -33,7 +33,7 @@ const poolFactory = Factory.define<Pool>(({ params, afterBuild }) => {
     poolTypeVersion: 1,
     swapFee: '0.001',
     swapEnabled: true,
-    protocolYieldFeeCache: "0",
+    protocolYieldFeeCache: '0',
     tokens,
     tokensList: [],
     totalWeight: '1',
