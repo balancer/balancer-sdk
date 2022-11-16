@@ -51,7 +51,7 @@ export class SubgraphPoolDataService implements PoolDataService {
       ? await this.getLinearPools()
       : await this.getNonLinearPools();
 
-      const mapped = mapPools(pools);
+    const mapped = mapPools(pools);
 
     if (this.sorConfig.fetchOnChainBalances === false) {
       return mapped;
