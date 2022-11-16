@@ -25,6 +25,8 @@ import balancerRelayerAbi from '@/lib/abi/RelayerV4.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
 import { getPoolAddress } from '@/pool-utils';
+import { Join } from '../joins/joins.module';
+import { calcPriceImpact } from '../pricing/priceImpact';
 
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
@@ -52,7 +54,7 @@ export class Exit {
 
   async exitPool(
     poolId: string,
-    amountIn: string,
+    amountBptIn: string,
     userAddress: string,
     slippage: string,
     authorisation?: string
@@ -86,7 +88,7 @@ export class Exit {
     // Create exit paths for each output node and splits amount in proportionally between them
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
 
-    const exitPaths = this.getExitPaths(outputNodes, amountIn);
+    const exitPaths = this.getExitPaths(outputNodes, amountBptIn);
 
     const tokensOutByExitPath = outputNodes.map((n) => n.address.toLowerCase());
     const tokensOut = [...new Set(tokensOutByExitPath)].sort();
@@ -123,13 +125,14 @@ export class Exit {
       slippage
     );
 
-    this.assertDeltas(poolId, deltas, amountIn, tokensOut, minAmountsOut);
+    this.assertDeltas(poolId, deltas, amountBptIn, tokensOut, minAmountsOut);
 
-    // const priceImpact = calcPriceImpact(
-    //   BigInt(totalMinAmountOut),
-    //   totalBptZeroPi.toBigInt()
-    // ).toString();
-    const priceImpact = '';
+    const priceImpact = await this.calculatePriceImpact(
+      poolId,
+      tokensOut,
+      minAmountsOut,
+      amountBptIn
+    );
 
     return {
       to: this.relayer,
@@ -139,6 +142,40 @@ export class Exit {
       minAmountsOut,
       priceImpact,
     };
+  }
+
+  /*
+  (From Fernando)
+  1. Given a bpt amount in find the expect token amounts out (proportionally)
+  2. Uses bptZeroPi = _bptForTokensZeroPriceImpact (the same is used for joins too)
+  3. PI = bptAmountIn / bptZeroPi - 1
+  */
+  private async calculatePriceImpact(
+    poolId: string,
+    tokensOut: string[],
+    amountsOut: string[],
+    amountBptIn: string
+  ): Promise<string> {
+    // Create nodes for each pool/token interaction and order by breadth first
+    const orderedNodesForJoin = await PoolGraph.getGraphNodes(
+      true,
+      this.networkConfig.chainId,
+      poolId,
+      this.pools,
+      false
+    );
+    const joinPaths = Join.getJoinPaths(
+      orderedNodesForJoin,
+      tokensOut,
+      amountsOut
+    );
+    const totalBptZeroPi = Join.totalBptZeroPriceImpact(joinPaths);
+    const priceImpact = calcPriceImpact(
+      BigInt(amountBptIn),
+      totalBptZeroPi.toBigInt(),
+      false
+    ).toString();
+    return priceImpact;
   }
 
   private assertDeltas(

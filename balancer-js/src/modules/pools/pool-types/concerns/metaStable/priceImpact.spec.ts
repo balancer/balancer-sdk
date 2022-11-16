@@ -47,7 +47,8 @@ describe('metastable pool price impact', () => {
       const priceImpact = priceImpactCalc.calcPriceImpact(
         pool,
         tokenAmounts.map((amount) => amount.toString()),
-        '660816325116386208862285'
+        '660816325116386208862285',
+        true
       );
       expect(priceImpact.toString()).to.eq('3017427187914862');
     });

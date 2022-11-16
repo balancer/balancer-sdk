@@ -39,7 +39,6 @@ import { getPoolAddress } from '@/pool-utils';
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 export class Join {
-  totalProportions: Record<string, BigNumber> = {};
   private relayer: string;
   private wrappedNativeAsset;
   private tenderlyHelper: TenderlyHelper | undefined;
@@ -87,9 +86,9 @@ export class Join {
       wrapMainTokens
     );
 
-    const joinPaths = this.getJoinPaths(orderedNodes, tokensIn, amountsIn);
-    const totalBptZeroPi = this.totalBptZeroPriceImpact(joinPaths);
+    const joinPaths = Join.getJoinPaths(orderedNodes, tokensIn, amountsIn);
 
+    const totalBptZeroPi = Join.totalBptZeroPriceImpact(joinPaths);
     /*
     - Create calls with 0 min bpt for each root join
     - static call (or V4 special call) to get actual amounts for each root join
@@ -122,7 +121,8 @@ export class Join {
     );
     const priceImpact = calcPriceImpact(
       BigInt(totalMinAmountOut),
-      totalBptZeroPi.toBigInt()
+      totalBptZeroPi.toBigInt(),
+      true
     ).toString();
 
     // Create calls with minAmountsOut
@@ -191,7 +191,7 @@ export class Join {
   }
 
   // Create join paths from tokensIn all the way to the root node.
-  private getJoinPaths = (
+  static getJoinPaths = (
     orderedNodes: Node[],
     tokensIn: string[],
     amountsIn: string[]
@@ -263,7 +263,7 @@ export class Join {
   AmountsIn should be adjusted after being split between tokensIn to fix eventual rounding issues.
   This prevents the transaction to leave out dust amounts.
   */
-  updateInputAmounts = (
+  private static updateInputAmounts = (
     joinPaths: Node[][],
     tokensIn: string[],
     amountsIn: string[]
@@ -292,11 +292,16 @@ export class Join {
     const leafJoinPath = joinPaths.find((joinPath) => joinPath[0].isLeaf);
     if (leafJoinPath) {
       // Update input proportions so inputs are shared correctly between leaf nodes with same tokenIn
-      this.updateTotalProportions(leafJoinPath);
+      const totalProportions = this.updateTotalProportions(leafJoinPath);
       // Update input nodes to have correct input amount
       leafJoinPath.forEach((node) => {
         if (node.joinAction === 'input')
-          node = this.updateNodeAmount(node, tokensIn, amountsIn);
+          node = this.updateNodeAmount(
+            node,
+            tokensIn,
+            amountsIn,
+            totalProportions
+          );
       });
       // Adjust amountIn for each tokenIn to fix eventual rounding issues
       tokensIn.forEach((tokenIn, i) => {
@@ -356,7 +361,14 @@ export class Join {
     };
   };
 
-  totalBptZeroPriceImpact = (joinPaths: Node[][]): BigNumber => {
+  /*
+  1. For each input token:
+    1. recursively find the spot price for each pool in the path of the join
+    2. take the product to get the spot price of the path
+    3. multiply the input amount of that token by the path spot price to get the "zeroPriceImpact" amount of BPT for that token
+  2. Sum each tokens zeroPriceImpact BPT amount to get total zeroPriceImpact BPT
+  */
+  static totalBptZeroPriceImpact = (joinPaths: Node[][]): BigNumber => {
     // Add bptZeroPriceImpact for all inputs
     let totalBptZeroPi = BigNumber.from('0');
     joinPaths.forEach((joinPath) => {
@@ -382,7 +394,7 @@ export class Join {
   2. take the product to get the spot price of the path
   3. multiply the input amount of that token by the path spot price to get the "zeroPriceImpact" amount of BPT for that token 
   */
-  bptOutZeroPiForInputNode = (inputNode: Node): bigint => {
+  static bptOutZeroPiForInputNode = (inputNode: Node): bigint => {
     if (inputNode.index === '0' || inputNode.joinAction !== 'input')
       return BigInt(0);
     let spProduct = 1;
@@ -606,17 +618,20 @@ export class Join {
    * Creates a map of node address and total proportion. Used for the case where there may be multiple inputs using same token, e.g. DAI input to 2 pools.
    * @param nodes nodes to consider.
    */
-  updateTotalProportions = (nodes: Node[]): void => {
-    this.totalProportions = {};
+  static updateTotalProportions = (
+    nodes: Node[]
+  ): Record<string, BigNumber> => {
+    const totalProportions: Record<string, BigNumber> = {};
     nodes.forEach((node) => {
-      if (!this.totalProportions[node.address])
-        this.totalProportions[node.address] = node.proportionOfParent;
+      if (!totalProportions[node.address])
+        totalProportions[node.address] = node.proportionOfParent;
       else {
-        this.totalProportions[node.address] = this.totalProportions[
-          node.address
-        ].add(node.proportionOfParent);
+        totalProportions[node.address] = totalProportions[node.address].add(
+          node.proportionOfParent
+        );
       }
     });
+    return totalProportions;
   };
 
   /**
@@ -629,10 +644,11 @@ export class Join {
     return Relayer.encodeSetRelayerApproval(this.relayer, true, authorisation);
   };
 
-  updateNodeAmount = (
+  static updateNodeAmount = (
     node: Node,
     tokensIn: string[],
-    amountsIn: string[]
+    amountsIn: string[],
+    totalProportions: Record<string, BigNumber>
   ): Node => {
     /*
     An input node requires a real amount (not an outputRef) as it is first node in chain.
@@ -648,7 +664,7 @@ export class Join {
     }
 
     // Calculate proportional split
-    const totalProportion = this.totalProportions[node.address];
+    const totalProportion = totalProportions[node.address];
     const inputProportion = node.proportionOfParent
       .mul((1e18).toString())
       .div(totalProportion);

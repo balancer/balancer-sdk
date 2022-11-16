@@ -6,12 +6,12 @@ dotenv.config();
 
 describe('priceImpact', () => {
   it('zero price impact', async () => {
-    const priceImpact = calcPriceImpact(BigInt(1e18), BigInt(1e18));
+    const priceImpact = calcPriceImpact(BigInt(1e18), BigInt(1e18), true);
     expect(priceImpact.toString()).to.eq('0');
   });
 
   it('50% price impact', async () => {
-    const priceImpact = calcPriceImpact(BigInt(1e18), BigInt(2e18));
+    const priceImpact = calcPriceImpact(BigInt(1e18), BigInt(2e18), true);
     expect(priceImpact.toString()).to.eq('500000000000000000');
   });
 

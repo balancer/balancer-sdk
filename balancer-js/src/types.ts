@@ -283,7 +283,11 @@ export interface PoolWithMethods extends Pool {
     amountsIn: string[],
     slippage: string
   ) => JoinPoolAttributes;
-  calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
+  calcPriceImpact: (
+    amountsIn: string[],
+    minBPTOut: string,
+    isJoin: boolean
+  ) => Promise<string>;
   buildExitExactBPTIn: (
     exiter: string,
     bptIn: string,

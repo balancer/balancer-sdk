@@ -190,11 +190,16 @@ export class Pools implements Findable<PoolWithMethods> {
           wrappedNativeAsset,
         });
       },
-      calcPriceImpact: async (amountsIn: string[], minBPTOut: string) =>
+      calcPriceImpact: async (
+        amountsIn: string[],
+        minBPTOut: string,
+        isJoin: boolean
+      ) =>
         methods.priceImpactCalculator.calcPriceImpact(
           pool,
           amountsIn,
-          minBPTOut
+          minBPTOut,
+          isJoin
         ),
       buildExitExactBPTIn: (
         exiter,
