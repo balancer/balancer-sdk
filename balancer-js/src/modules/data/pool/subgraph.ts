@@ -82,7 +82,7 @@ export class PoolsSubgraphRepository
   private async fetchDefault(): Promise<Pool[]> {
     console.time('fetching pools');
     const { pool0, pool1000, pool2000 } = await this.client.AllPools({
-      where: { swapEnabled: true, totalShares_gt: '0' },
+      where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
       block: await this.block(),
@@ -122,7 +122,11 @@ export class PoolsSubgraphRepository
       return (await this.pools).find((p) => p[param] === value);
     }
     const { pools } = await this.client.Pools({
-      where: { [param]: value, swapEnabled: true, totalShares_gt: '0' },
+      where: {
+        [param]: value,
+        swapEnabled: true,
+        totalShares_gt: '0.000000000001',
+      },
       block: await this.block(),
     });
     const poolsTab: Pool[] = pools.map(this.mapType.bind(this));
