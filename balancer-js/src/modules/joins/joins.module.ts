@@ -21,7 +21,7 @@ import {
   PoolType,
 } from '@/types';
 import { Findable } from '../data/types';
-import { PoolGraph, Node } from './graph';
+import { PoolGraph, Node } from '../graph/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import TenderlyHelper from '@/lib/utils/tenderlyHelper';
@@ -87,6 +87,7 @@ export class Join {
     );
 
     const joinPaths = this.getJoinPaths(orderedNodes, tokensIn, amountsIn);
+    const totalBptZeroPi = this.totalBptZeroPriceImpact(joinPaths);
 
     /*
     - Create calls with 0 min bpt for each root join
@@ -98,11 +99,7 @@ export class Join {
     */
     // Create calls with 0 expected for each root join
     // Peek is enabled here so we can static call the returned amounts and use these to set limits
-    const {
-      callData: queryData,
-      outputIndexes,
-      totalBptZeroPi,
-    } = await this.createCalls(
+    const { callData: queryData, outputIndexes } = await this.createCalls(
       joinPaths,
       userAddress,
       undefined,
@@ -122,7 +119,6 @@ export class Join {
       amountsOut,
       totalAmountOut
     );
-
     const priceImpact = calcPriceImpact(
       BigInt(totalMinAmountOut),
       totalBptZeroPi.toBigInt()
@@ -333,7 +329,6 @@ export class Join {
   ): Promise<{
     callData: string;
     outputIndexes: number[];
-    totalBptZeroPi: BigNumber;
     deltas: Record<string, BigNumber>;
   }> => {
     // Create calls for both leaf and non-leaf inputs
@@ -351,14 +346,11 @@ export class Join {
       calls,
     ]);
 
-    const totalBptZeroPi = this.totalBptZeroPriceImpact(joinPaths);
-
     return {
       callData,
       outputIndexes: authorisation
         ? outputIndexes.map((i) => i + 1)
         : outputIndexes,
-      totalBptZeroPi,
       deltas,
     };
   };

@@ -17,7 +17,7 @@ import {
   PoolType,
 } from '@/types';
 import { Findable } from '../data/types';
-import { PoolGraph, Node } from '../joins/graph';
+import { PoolGraph, Node } from '../graph/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import TenderlyHelper from '@/lib/utils/tenderlyHelper';
@@ -62,6 +62,7 @@ export class Exit {
     tokensOut: string[];
     expectedAmountsOut: string[];
     minAmountsOut: string[];
+    priceImpact: string;
   }> {
     /*
     Overall exit flow description:
@@ -118,12 +119,19 @@ export class Exit {
 
     this.assertDeltas(poolId, deltas, amountIn, tokensOut, minAmountsOut);
 
+    // const priceImpact = calcPriceImpact(
+    //   BigInt(totalMinAmountOut),
+    //   totalBptZeroPi.toBigInt()
+    // ).toString();
+    const priceImpact = '';
+
     return {
       to: this.relayer,
       callData,
       tokensOut,
       expectedAmountsOut,
       minAmountsOut,
+      priceImpact,
     };
   }
 
