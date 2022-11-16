@@ -3,16 +3,13 @@
  *
  * 1. Prepare the data:
  *  a. get exit price for pools' tokens
- *  b. get time and date when user joined first time
- *  c. get entry price for pools tokens when user joined first time
- * 2. calculate delta values for tokens in pools and if held
+ *  b. get entry price for pools' tokens
+ * 2. calculate delta values for tokens in pools
  * 3. calculate and return the impermanent loss as percentage rounded to 2 decimal places.
  *
  */
-import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { PoolJoinExitRepository } from '@/modules/data';
-import { InvestType } from '@/modules/subgraph/generated/balancer-subgraph-types';
-import { Findable, Pool, PoolToken, Price } from '@/types';
+import {BalancerError, BalancerErrorCode} from '@/balancerErrors';
+import {Findable, Pool, PoolToken, Price} from '@/types';
 
 type Asset = {
   priceDelta: number;
@@ -26,17 +23,25 @@ type TokenPrices = {
 export class ImpermanentLossService {
   constructor(
     private tokenPrices: Findable<Price>,
-    private poolJoinExits: PoolJoinExitRepository
   ) {}
 
   /**
-   * entry point to calculate impermanent loss
-   * @param userAddress the address of the user for which IL is requested
+   * entry point to calculate impermanent loss.
+   *
+   * The function will
+   *  - retrieve the tokens' historical value at the desired time in the future
+   *  - calculate the relative variation between current and historical value
+   *  - return the IL in percentage rounded to 2 decimal places
+   *
+   * @param timestamp UNIX timestamp from which the IL is desired
    * @param pool the pool
    * @returns the impermanent loss as percentage rounded to 2 decimal places
    */
-  async calcImpLoss(userAddress: string, pool: Pool): Promise<number> {
-    const assets = await this.prepareData(userAddress, pool);
+  async calcImpLoss(timestamp: number, pool: Pool): Promise<number> {
+    if (timestamp * 1000 >= Date.now()) {
+      throw new BalancerError(BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE);
+    }
+    const assets = await this.prepareData(timestamp, pool);
 
     const poolValueDelta = this.getPoolValueDelta(assets);
     const holdValueDelta = this.getHoldValueDelta(assets);
@@ -52,7 +57,7 @@ export class ImpermanentLossService {
     poolValueDelta: number,
     holdValueDelta: number
   ): number {
-    return Math.abs(poolValueDelta / holdValueDelta - 1) * 100;
+    return Math.floor(Math.abs(poolValueDelta / holdValueDelta - 1) * 100 * 100)/100;
   }
 
   getPoolValueDelta(assets: Asset[]): number {
@@ -73,7 +78,7 @@ export class ImpermanentLossService {
   /**
    * prepare the data for calculating the impermanent loss
    *
-   * @param userAddress the address of the user for which IL is requested
+   * @param entryTimestamp UNIX timestamp from which the IL is desired
    * @param pool the pool
    * @returns a list of pair weight/price delta for each token in the pool
    * @throws BalancerError if
@@ -81,8 +86,7 @@ export class ImpermanentLossService {
    *  2. a token's weight is unknown
    *  3. the user has no liquidity invested in the pool
    */
-  async prepareData(userAddress: string, pool: Pool): Promise<Asset[]> {
-    const entryTimestamp = await this.getEntryTimestamp(userAddress, pool.id);
+  async prepareData(entryTimestamp: number, pool: Pool): Promise<Asset[]> {
 
     const poolTokens = pool.tokens.filter(
       (token) => token.address !== pool.address
@@ -91,11 +95,15 @@ export class ImpermanentLossService {
     const weights = this.getWeights(poolTokens);
 
     const tokenAddresses = poolTokens.map((t) => t.address);
-    const entryPrices = await this.getEntryPrices(entryTimestamp, tokenAddresses);
 
+    const entryPrices = await this.getEntryPrices(entryTimestamp, tokenAddresses);
     const exitPrices: TokenPrices = await this.getExitPrices(poolTokens);
 
 
+    return this.getAssets(poolTokens, exitPrices, entryPrices, weights);
+  }
+
+  getAssets(poolTokens: PoolToken[], exitPrices: TokenPrices, entryPrices: TokenPrices, weights: number[]): Asset[] {
     return poolTokens.map((token, i) => ({
       priceDelta: this.getDelta(entryPrices[token.address], exitPrices[token.address]),
       weight: weights[i],
@@ -103,7 +111,10 @@ export class ImpermanentLossService {
   }
 
   getDelta(entryPrice: number, exitPrice: number) {
-    return Math.floor(((exitPrice - entryPrice) / entryPrice) * 100) / 100;
+    if (entryPrice === 0) {
+      throw new BalancerError(BalancerErrorCode.ILLEGAL_PARAMETER)
+    }
+    return (exitPrice - entryPrice) / entryPrice;
   }
 
   /**
@@ -136,39 +147,22 @@ export class ImpermanentLossService {
   async getExitPrices(tokens: PoolToken[]): Promise<TokenPrices> {
     const prices = await Promise.all(
       tokens.map((token) => this.tokenPrices.find(token.address))
-    );
+    ).catch(() => []);
+
+    if (!prices.length || prices.some((price) => price?.usd === undefined)) {
+      throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
+    }
 
     const tokensWithPrice = tokens.map((token, i) => ({
       ...token,
       price: prices[i],
     }));
-    if (tokensWithPrice.some((token) => token.price?.usd === undefined)) {
-      throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
-    }
+
     const tokenPrices: TokenPrices = {};
     for (const token of tokensWithPrice) {
       if (token.price?.usd) tokenPrices[token.address] = +token.price.usd; // price.usd is never undefined but JS complains
     }
     return tokenPrices;
-  }
-
-  /**
-   * get the timestamp of the first Join of the user, querying the JoinExits subgraph
-   * @param userAddress the user's address
-   * @param poolId the pool's id
-   * @returns a Unix Timestamp
-   */
-  async getEntryTimestamp(
-    userAddress: string,
-    poolId: string
-  ): Promise<number> {
-    const joins = await this.poolJoinExits.query({
-      where: { pool: poolId, sender: userAddress, type: InvestType.Join },
-    });
-    if (joins.length === 0) {
-      throw new BalancerError(BalancerErrorCode.NO_POOL_DATA_FOR_USER);
-    }
-    return joins[0].timestamp;
   }
 
   /**
@@ -184,8 +178,9 @@ export class ImpermanentLossService {
   ): Promise<TokenPrices> {
     const prices: TokenPrices = {};
     for (const address of tokenAddresses) {
-      const price = await this.tokenPrices.findBy('timestamp', { address: address, timestamp: timestamp});
-      if (!price?.usd) throw new BalancerError(BalancerErrorCode.NO_VALUE_PARAMETER);
+      const price = await this.tokenPrices.findBy('timestamp', { address: address, timestamp: timestamp})
+        .catch(() => undefined);
+      if (!price?.usd) throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
       prices[address] = +price.usd;
     }
     return prices;

@@ -133,7 +133,7 @@ export class CoingeckoPriceRepository implements Findable<Price> {
           this.debounceCancel = () => {};
         })
         .catch((reason) => {
-          console.error(reason);
+          reject(reason);
         });
     }, this.debounceWait);
 

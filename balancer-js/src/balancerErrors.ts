@@ -17,8 +17,9 @@ export enum BalancerErrorCode {
   MISSING_PRICE_RATE = 'MISSING_PRICE_RATE',
   MISSING_WEIGHT = 'MISSING_WEIGHT',
   RELAY_SWAP_AMOUNTS = 'RELAY_SWAP_AMOUNTS',
-  NO_POOL_DATA_FOR_USER = 'NO_POOL_DATA_FOR_USER',
   NO_VALUE_PARAMETER = 'NO_VALUE_PARAMETER',
+  ILLEGAL_PARAMETER = 'ILLEGAL_PARAMETER',
+  TIMESTAMP_IN_THE_FUTURE = 'TIMESTAMP_IN_THE_FUTURE',
 }
 
 export class BalancerError extends Error {
@@ -66,8 +67,11 @@ export class BalancerError extends Error {
       case BalancerErrorCode.RELAY_SWAP_AMOUNTS:
         return 'Error when checking swap amounts';
       case BalancerErrorCode.NO_VALUE_PARAMETER:
-      case BalancerErrorCode.NO_POOL_DATA_FOR_USER:
-        return 'No pool data found for user';
+        return 'Illegal value passed as parameter';
+      case BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE:
+        return 'Timestamp cannot be in the future';
+      case BalancerErrorCode.ILLEGAL_PARAMETER:
+        return 'An illegal parameter has been passed';
       default:
         return 'Unknown error';
     }
