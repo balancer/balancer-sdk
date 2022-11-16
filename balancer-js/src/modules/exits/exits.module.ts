@@ -75,7 +75,13 @@ export class Exit {
     */
 
     // Create nodes and order by breadth first
-    const orderedNodes = await this.getGraphNodes(poolId);
+    const orderedNodes = await PoolGraph.getGraphNodes(
+      false,
+      this.networkConfig.chainId,
+      poolId,
+      this.pools,
+      false
+    );
 
     // Create exit paths for each output node and splits amount in proportionally between them
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
@@ -257,24 +263,6 @@ export class Exit {
 
     return { expectedAmountsOut, minAmountsOut };
   };
-
-  // Get full graph from root pool and return ordered nodes
-  async getGraphNodes(poolId: string): Promise<Node[]> {
-    const rootPool = await this.pools.find(poolId);
-    if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-    const poolsGraph = new PoolGraph(this.pools, {
-      network: this.networkConfig.chainId,
-      rpcUrl: '',
-    });
-
-    // should always exit to main tokens, so wrapMainTokens is always false
-    const rootNode = await poolsGraph.buildGraphFromRootPool(poolId, false);
-
-    if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
-
-    const orderedNodes = PoolGraph.orderByBfs(rootNode);
-    return orderedNodes;
-  }
 
   // Create one exit path for each output node
   private getExitPaths = (outputNodes: Node[], amountIn: string): Node[][] => {

@@ -79,10 +79,11 @@ export class Join {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodes = await this.getGraphNodes(
+    const orderedNodes = await PoolGraph.getGraphNodes(
+      true,
+      this.networkConfig.chainId,
       poolId,
-      tokensIn,
-      amountsIn,
+      this.pools,
       wrapMainTokens
     );
 
@@ -472,32 +473,6 @@ export class Join {
       minAmountsOut,
       totalMinAmountOut,
     };
-  };
-
-  // Get full graph from root pool and return ordered nodes
-  getGraphNodes = async (
-    poolId: string,
-    tokensIn: string[],
-    amountsIn: string[],
-    wrapMainTokens: boolean
-  ): Promise<Node[]> => {
-    const rootPool = await this.pools.find(poolId);
-    if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-    const poolsGraph = new PoolGraph(this.pools, {
-      network: this.networkConfig.chainId,
-      rpcUrl: '',
-    });
-
-    const rootNode = await poolsGraph.buildGraphFromRootPool(
-      poolId,
-      wrapMainTokens
-    );
-
-    if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
-
-    const orderedNodes = PoolGraph.orderByBfs(rootNode).reverse();
-
-    return orderedNodes;
   };
 
   updateDeltas(

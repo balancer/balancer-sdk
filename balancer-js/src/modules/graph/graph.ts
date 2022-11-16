@@ -345,4 +345,30 @@ export class PoolGraph {
   static getLeafAddresses(nodes: Node[]): string[] {
     return nodes.filter((n) => n.isLeaf).map((n) => n.address);
   }
+
+  // Get full graph from root pool and return ordered nodes
+  static getGraphNodes = async (
+    isJoin: boolean,
+    chainId: number,
+    poolId: string,
+    pools: Findable<Pool, PoolAttribute>,
+    wrapMainTokens: boolean
+  ): Promise<Node[]> => {
+    const rootPool = await pools.find(poolId);
+    if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
+    const poolsGraph = new PoolGraph(pools, {
+      network: chainId,
+      rpcUrl: '',
+    });
+
+    const rootNode = await poolsGraph.buildGraphFromRootPool(
+      poolId,
+      wrapMainTokens
+    );
+
+    if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
+
+    if (isJoin) return PoolGraph.orderByBfs(rootNode).reverse();
+    else return PoolGraph.orderByBfs(rootNode);
+  };
 }
