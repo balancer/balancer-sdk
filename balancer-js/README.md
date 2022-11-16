@@ -528,7 +528,9 @@ async impermanentLoss(
 
 ```javascript
 const pool = await sdk.pools.find(poolId);
-const IL = await pools.impermanentLoss(timestamp, pool);  
+const joins = (await sdk.data.findByUser(userAddress)).filter((it) => it.type === "Join" && it.poolId === poolId);
+const join = joins[0];
+const IL = await pools.impermanentLoss(join.timestamp, pool);  
 ```
 
 [Example](./examples/pools/impermanentLoss.ts)
