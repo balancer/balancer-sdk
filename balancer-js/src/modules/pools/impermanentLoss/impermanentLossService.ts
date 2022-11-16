@@ -128,8 +128,7 @@ export class ImpermanentLossService {
    *
    */
   getWeights(poolTokens: PoolToken[]): number[] {
-    const noWeights =
-      poolTokens.filter((token) => !token.weight).length === poolTokens.length;
+    const noWeights = poolTokens.every((token) => !token.weight);
     const uniformWeight = Math.round((1 / poolTokens.length) * 100) / 100;
     const weights: number[] = noWeights
       ? poolTokens.map(() => uniformWeight) // if no weight is returned we assume the tokens are balanced uniformly in the pool
