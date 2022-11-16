@@ -39,6 +39,7 @@ export class ImpermanentLossService {
    */
   async calcImpLoss(timestamp: number, pool: Pool): Promise<number> {
     if (timestamp * 1000 >= Date.now()) {
+      console.error(`[ImpermanentLossService][calcImpLoss]Error: ${BalancerError.getMessage(BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE)}`)
       throw new BalancerError(BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE);
     }
     const assets = await this.prepareData(timestamp, pool);
@@ -50,7 +51,7 @@ export class ImpermanentLossService {
       poolValueDelta,
       holdValueDelta
     );
-    return Math.floor(impLoss * 100) / 100;
+    return impLoss;
   }
 
   calculateImpermanentLoss(
@@ -112,6 +113,7 @@ export class ImpermanentLossService {
 
   getDelta(entryPrice: number, exitPrice: number) {
     if (entryPrice === 0) {
+      console.error(`[ImpermanentLossService][getDelta]Error: ${BalancerError.getMessage(BalancerErrorCode.ILLEGAL_PARAMETER)}: entry price is 0`)
       throw new BalancerError(BalancerErrorCode.ILLEGAL_PARAMETER)
     }
     return (exitPrice - entryPrice) / entryPrice;
@@ -134,6 +136,7 @@ export class ImpermanentLossService {
       : poolTokens.map((token) => Number(token.weight ?? 0));
 
     if (weights.some((w) => w === 0)) {
+      console.error(`[ImpermanentLossService][getWeights]Error: ${BalancerError.getMessage(BalancerErrorCode.MISSING_WEIGHT)}`)
       throw new BalancerError(BalancerErrorCode.MISSING_WEIGHT);
     }
     return weights;
@@ -150,6 +153,7 @@ export class ImpermanentLossService {
     ).catch(() => []);
 
     if (!prices.length || prices.some((price) => price?.usd === undefined)) {
+      console.error(`[ImpermanentLossService][getExitPrices]Error: ${BalancerError.getMessage(BalancerErrorCode.MISSING_PRICE_RATE)}`)
       throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
     }
 
@@ -179,8 +183,14 @@ export class ImpermanentLossService {
     const prices: TokenPrices = {};
     for (const address of tokenAddresses) {
       const price = await this.tokenPrices.findBy('timestamp', { address: address, timestamp: timestamp})
-        .catch(() => undefined);
-      if (!price?.usd) throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
+        .catch((reason) => {
+          console.error(`[ImpermanentLossService][getEntryPrices]Error: ${reason.message}`)
+          return undefined;
+        });
+      if (!price?.usd) {
+        console.error(`[ImpermanentLossService][getEntryPrices]Error: ${BalancerError.getMessage(BalancerErrorCode.MISSING_PRICE_RATE)}`)
+        throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
+      }
       prices[address] = +price.usd;
     }
     return prices;

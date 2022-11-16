@@ -107,15 +107,11 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     { signal }: { signal?: AbortSignal } = {}
   ): Promise<HistoricalPrices> {
     const at = new Date(timestamp * 1000).toISOString();
-    console.time(`fetching coingecko for ${address} @ ${at} token`);
     const url = this.urlRange(address, timestamp);
     return axios
       .get<HistoricalPrices>(url, { signal })
       .then(({ data }) => {
         return data;
-      })
-      .finally(() => {
-        console.timeEnd(`fetching coingecko for ${address} @ ${at} token`);
       });
   }
 

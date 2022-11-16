@@ -483,13 +483,9 @@ async relayer.exitPoolAndBatchSwap(
 > impermanent loss (IL) describes the percentage by which a pool is worth less than what one would have if they had instead just held the tokens outside the pool
 
 
-#### Usage
-
-Impermanent Loss will be given with all the statistics about a pools as long as a user have invested in the pool.
+#### Service
 
 ![class-diagram](IL-class.png)
-
-The method `calcImpLoss(joiner: string): number` accepts as parameter the address of the user performing the request and returns the impermanent loss as an absolute value.
 
 #### Algorithm
 
@@ -502,22 +498,40 @@ where **𝚫P<sup>i</sup>** represents the difference between the price for a si
 ```javascript
 
 // retrieves pool's tokens
-tokens = balancer.pools.find(poolId).tokens;
-// retrieves join timestamp for user
-joinTimestamp = getJoinTimestamp(poolId, joinerAddress);  
+tokens = pool.tokens;
+// get weights for tokens
+weights = tokens.map((token) => token.weight);
+// retrieves current price for tokens
+exitPrices = tokens.map((token) => tokenPrices.find(token.address));
 // retrieves historical price for tokens
-prices = getPricesAt(tokens, joinTimestamp); 
+entryPrices = tokens.map((token) => tokenPrices.findBy('timestamp', { address: token.address, timestamp: timestamp})); 
 // retrieves list of pool's assets with prices delta and weights 
-assets = getAssets(tokens, prices);
+assets = tokens.map((token) => ({
+  priceDelta: this.getDelta(entryPrices[token.address], exitPrices[token.address]),
+  weight: weights[i],
+}));
 
 poolValueDelta = assets.reduce((result, asset) => result * Math.pow(Math.abs(asset.priceDelta + 1), asset.weight), 1);
 holdValueDelta = assets.reduce((result, asset) => result + (Math.abs(asset.priceDelta + 1) * asset.weight), 0);
 
 const IL = poolValueDelta/holdValueDelta - 1;
-
 ```
 
+#### Usage
 
+```javascript
+async impermanentLoss(
+  timestamp: number, // the UNIX timestamp from which the IL is desired
+  pool: Pool // the pool on which the IL must be calculated
+): Promise<number> 
+```
+
+```javascript
+const pool = await sdk.pools.find(poolId);
+const IL = await pools.impermanentLoss(timestamp, pool);  
+```
+
+[Example](./examples/pools/impermanentLoss.ts)
 
 
 ## Licensing
