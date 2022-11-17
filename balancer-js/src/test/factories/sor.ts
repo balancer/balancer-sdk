@@ -6,6 +6,7 @@ import {
   SwapV2,
 } from '@balancer-labs/sor';
 import { BigNumber } from '@ethersproject/bignumber';
+import { formatAddress } from '../lib/utils';
 import { namedTokens } from './named-tokens';
 
 const swapV2 = Factory.define<SwapV2>(() => ({
@@ -33,14 +34,19 @@ const swapInfo = Factory.define<SwapInfo>(() => ({
 }));
 
 const subgraphToken = Factory.define<SubgraphToken>(({ transientParams }) => {
-  const { symbol } = transientParams;
-  const namedToken = namedTokens[symbol];
-
+  const { symbol, balance = '1', weight = '1', address } = transientParams;
+  let namedToken = namedTokens[symbol];
+  if (!namedToken) {
+    namedToken = {};
+    namedToken.address = formatAddress(address ?? `address_${symbol}`);
+    namedToken.decimals = 18;
+  }
   return {
     ...namedToken,
-    balance: '1',
+    balance,
     priceRate: '1',
-    weight: '0.5',
+    weight,
+    symbol,
   };
 });
 

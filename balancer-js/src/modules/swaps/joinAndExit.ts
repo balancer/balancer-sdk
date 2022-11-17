@@ -887,7 +887,7 @@ function buildJoinCall(
 
   // console.log(attributes);
 
-  const callData = Relayer.constructJoinCall(attributes);
+  const callData = Relayer.encodeJoinPool(attributes);
   // These are used for final amount check
   const amountOut = action.hasTokenOut ? bptAmountOut : '0';
   const amountIn = action.hasTokenIn ? maxAmountsIn[joinTokenIndex] : '0';

@@ -35,6 +35,14 @@ export interface BalancerSdkConfig {
   customSubgraphUrl?: string;
   //optionally overwrite parts of the standard SOR config
   sor?: Partial<BalancerSdkSorConfig>;
+  tenderly?: BalancerTenderlyConfig;
+}
+
+export interface BalancerTenderlyConfig {
+  accessKey: string;
+  user: 'balancer' | string;
+  project: 'v2' | string;
+  blockNumber?: number;
 }
 
 export interface BalancerSdkSorConfig {
@@ -53,9 +61,10 @@ export interface ContractAddresses {
   vault: string;
   multicall: string;
   lidoRelayer?: string;
+  relayerV3?: string;
+  relayerV4?: string;
   gaugeController?: string;
   feeDistributor?: string;
-  relayerV4?: string;
   veBal?: string;
   veBalProxy?: string;
   protocolFeePercentagesProvider?: string;
@@ -75,6 +84,7 @@ export interface BalancerNetworkConfig {
       bbaUsd?: string;
     };
   };
+  tenderly?: BalancerTenderlyConfig;
   urls: {
     subgraph: string;
     gaugesSubgraph?: string;
@@ -254,11 +264,13 @@ export interface Pool {
   symbol?: string;
   swapEnabled: boolean;
   amp?: string;
+  wrappedIndex?: number;
+  mainIndex?: number;
   apr?: AprBreakdown;
   liquidity?: string;
   totalWeight: string;
-  mainIndex?: number;
-  wrappedIndex?: number;
+  lowerTarget: string;
+  upperTarget: string;
 }
 
 /**
@@ -271,7 +283,11 @@ export interface PoolWithMethods extends Pool {
     amountsIn: string[],
     slippage: string
   ) => JoinPoolAttributes;
-  calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
+  calcPriceImpact: (
+    amountsIn: string[],
+    minBPTOut: string,
+    isJoin: boolean
+  ) => Promise<string>;
   buildExitExactBPTIn: (
     exiter: string,
     bptIn: string,

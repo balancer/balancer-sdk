@@ -1,9 +1,12 @@
-import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';
-import { AddressZero, MaxUint256 } from '@ethersproject/constants';
-import { balancerVault } from '@/lib/constants/config';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
+import { AddressZero, MaxUint256 } from '@ethersproject/constants';
+import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
+import { formatBytes32String } from '@ethersproject/strings';
+
+import { PoolWithMethods, BalancerError, BalancerErrorCode } from '@/.';
+import { balancerVault } from '@/lib/constants/config';
 import { parseEther } from '@ethersproject/units';
 import { ERC20 } from '@/modules/contracts/implementations/ERC20';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
@@ -12,7 +15,6 @@ import { Interface } from '@ethersproject/abi';
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const liquidityGauge = new Interface(liquidityGaugeAbi);
 import { Pools as PoolsProvider } from '@/modules/pools';
-import { PoolWithMethods, BalancerError, BalancerErrorCode } from '@/.';
 
 /**
  * Setup local fork with approved token balance for a given account
@@ -53,7 +55,7 @@ export const forkSetup = async (
     );
 
     // Approve appropriate allowances so that vault contract can move tokens
-    await approveToken(tokens[i], balances[i], signer);
+    await approveToken(tokens[i], MaxUint256.toString(), signer);
   }
 };
 
@@ -150,6 +152,16 @@ export const getBalances = async (
     }
   }
   return Promise.all(balances);
+};
+
+export const formatAddress = (text: string): string => {
+  if (text.match(/^(0x)?[0-9a-fA-F]{40}$/)) return text; // Return text if it's already a valid address
+  return formatBytes32String(text).slice(0, 42);
+};
+
+export const formatId = (text: string): string => {
+  if (text.match(/^(0x)?[0-9a-fA-F]{64}$/)) return text; // Return text if it's already a valid id
+  return formatBytes32String(text);
 };
 
 export const move = async (
