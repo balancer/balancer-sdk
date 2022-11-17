@@ -8,8 +8,7 @@ export const yieldTokens = {
 
 interface LidoAPIResponse {
   data: {
-    eth: string;
-    steth: string;
+    smaApr: string;
   };
 }
 
@@ -22,10 +21,12 @@ export const lido: AprFetcher = async () => {
   let apr = 0;
 
   try {
-    const response = await axios.get('https://stake.lido.fi/api/apr');
+    const response = await axios.get(
+      'https://eth-api.lido.fi/v1/protocol/steth/apr/sma'
+    );
     const { data: aprs } = response.data as LidoAPIResponse;
 
-    apr = Math.round(parseFloat(aprs.steth) * 100);
+    apr = Math.round(parseFloat(aprs.smaApr) * 100);
   } catch (error) {
     console.error('Failed to fetch stETH APR:', error);
   }
