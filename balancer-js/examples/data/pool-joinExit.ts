@@ -14,7 +14,6 @@ const { poolJoinExits } = sdk.data;
 
 const format = (result: PoolJoinExit[]): string => {
   return result
-    .sort((a, b) => a.timestamp - b.timestamp)
     .map(
       (it) =>
         `${it.poolId}\t${it.type}\t${new Date(
@@ -50,16 +49,12 @@ const format = (result: PoolJoinExit[]): string => {
   });
   console.log(`Pool JoinExit Query by PoolId and User:\n${format(result)}`);
 
-  result = await poolJoinExits.query({
-    where: { pool: poolId, sender: USER_ADDR, type: InvestType.Join },
-  });
+  result = await poolJoinExits.findJoins(USER_ADDR, poolId);
   console.log(
     `Pool JoinExit Query by PoolId and User and Type Join:\n${format(result)}`
   );
 
-  result = await poolJoinExits.query({
-    where: { pool: poolId, sender: USER_ADDR, type: InvestType.Exit },
-  });
+  result = await poolJoinExits.findExits(USER_ADDR, poolId);
   console.log(
     `Pool JoinExit Query by PoolId and User and Type Exit:\n${format(result)}`
   );

@@ -29,23 +29,22 @@ const main = async (): Promise<void> => {
 }
 
 const impermanentLoss = async (userAddress: string, poolId: string): Promise<void> => {
-  const joinExists = await poolJoinExits.findByUser(userAddress);
-  const joins = joinExists.filter((it) => it.type === "Join" && it.poolId === poolId);
-  if (!joins.length) {
-    console.log(`${userAddress}: No Pool found`);
-    return;
-  }
-  const timestamp = joins[0].timestamp;
-
-  const pool = await sdk.pools.find(poolId);
-  if (!pool) {
-    throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-  }
   try {
+    const joins = await poolJoinExits.findJoins(userAddress, poolId);
+    if (!joins.length) {
+      console.log(`${userAddress}: No Pool found`);
+      return;
+    }
+    const timestamp = joins[0].timestamp;
+
+    const pool = await sdk.pools.find(poolId);
+    if (!pool) {
+      throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
+    }
     const IL = await pools.impermanentLoss(timestamp, pool);
-    console.log(`${userAddress} ${poolId} ${new Date(timestamp * 1000).toLocaleString()} => ${IL}%`);
+    console.log(`${userAddress} ${poolId} => ${IL}%`);
   } catch (e: any) {
-    console.error(`${userAddress} ${poolId} ${new Date(timestamp * 1000).toLocaleString()} => Error: ${e.message}`);
+    console.error(`${userAddress} ${poolId} => Error: ${e.message}`);
   }
 }
 
