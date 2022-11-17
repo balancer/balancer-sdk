@@ -48,7 +48,8 @@ describe('phantomStable pool price impact', () => {
       const priceImpact = priceImpactCalc.calcPriceImpact(
         pool,
         tokenAmounts.map((amount) => amount.toString()),
-        '6300741387055771004078'
+        '6300741387055771004078',
+        true
       );
       expect(priceImpact.toString()).to.eq('1584599872926409');
     });

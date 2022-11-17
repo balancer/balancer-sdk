@@ -17,7 +17,7 @@ import {
   PoolType,
 } from '@/types';
 import { Findable } from '../data/types';
-import { PoolGraph, Node } from '../joins/graph';
+import { PoolGraph, Node } from '../graph/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import TenderlyHelper from '@/lib/utils/tenderlyHelper';
@@ -25,6 +25,8 @@ import balancerRelayerAbi from '@/lib/abi/RelayerV4.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
 import { getPoolAddress } from '@/pool-utils';
+import { Join } from '../joins/joins.module';
+import { calcPriceImpact } from '../pricing/priceImpact';
 
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
@@ -52,7 +54,7 @@ export class Exit {
 
   async exitPool(
     poolId: string,
-    amountIn: string,
+    amountBptIn: string,
     userAddress: string,
     slippage: string,
     authorisation?: string
@@ -62,6 +64,7 @@ export class Exit {
     tokensOut: string[];
     expectedAmountsOut: string[];
     minAmountsOut: string[];
+    priceImpact: string;
   }> {
     /*
     Overall exit flow description:
@@ -74,12 +77,18 @@ export class Exit {
     */
 
     // Create nodes and order by breadth first
-    const orderedNodes = await this.getGraphNodes(poolId);
+    const orderedNodes = await PoolGraph.getGraphNodes(
+      false,
+      this.networkConfig.chainId,
+      poolId,
+      this.pools,
+      false
+    );
 
     // Create exit paths for each output node and splits amount in proportionally between them
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
 
-    const exitPaths = this.getExitPaths(outputNodes, amountIn);
+    const exitPaths = this.getExitPaths(outputNodes, amountBptIn);
 
     const tokensOutByExitPath = outputNodes.map((n) => n.address.toLowerCase());
     const tokensOut = [...new Set(tokensOutByExitPath)].sort();
@@ -116,7 +125,14 @@ export class Exit {
       slippage
     );
 
-    this.assertDeltas(poolId, deltas, amountIn, tokensOut, minAmountsOut);
+    this.assertDeltas(poolId, deltas, amountBptIn, tokensOut, minAmountsOut);
+
+    const priceImpact = await this.calculatePriceImpact(
+      poolId,
+      tokensOut,
+      minAmountsOut,
+      amountBptIn
+    );
 
     return {
       to: this.relayer,
@@ -124,7 +140,42 @@ export class Exit {
       tokensOut,
       expectedAmountsOut,
       minAmountsOut,
+      priceImpact,
     };
+  }
+
+  /*
+  (From Fernando)
+  1. Given a bpt amount in find the expect token amounts out (proportionally)
+  2. Uses bptZeroPi = _bptForTokensZeroPriceImpact (the same is used for joins too)
+  3. PI = bptAmountIn / bptZeroPi - 1
+  */
+  private async calculatePriceImpact(
+    poolId: string,
+    tokensOut: string[],
+    amountsOut: string[],
+    amountBptIn: string
+  ): Promise<string> {
+    // Create nodes for each pool/token interaction and order by breadth first
+    const orderedNodesForJoin = await PoolGraph.getGraphNodes(
+      true,
+      this.networkConfig.chainId,
+      poolId,
+      this.pools,
+      false
+    );
+    const joinPaths = Join.getJoinPaths(
+      orderedNodesForJoin,
+      tokensOut,
+      amountsOut
+    );
+    const totalBptZeroPi = Join.totalBptZeroPriceImpact(joinPaths);
+    const priceImpact = calcPriceImpact(
+      BigInt(amountBptIn),
+      totalBptZeroPi.toBigInt(),
+      false
+    ).toString();
+    return priceImpact;
   }
 
   private assertDeltas(
@@ -249,24 +300,6 @@ export class Exit {
 
     return { expectedAmountsOut, minAmountsOut };
   };
-
-  // Get full graph from root pool and return ordered nodes
-  async getGraphNodes(poolId: string): Promise<Node[]> {
-    const rootPool = await this.pools.find(poolId);
-    if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-    const poolsGraph = new PoolGraph(this.pools, {
-      network: this.networkConfig.chainId,
-      rpcUrl: '',
-    });
-
-    // should always exit to main tokens, so wrapMainTokens is always false
-    const rootNode = await poolsGraph.buildGraphFromRootPool(poolId, false);
-
-    if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
-
-    const orderedNodes = PoolGraph.orderByBfs(rootNode);
-    return orderedNodes;
-  }
 
   // Create one exit path for each output node
   private getExitPaths = (outputNodes: Node[], amountIn: string): Node[][] => {
