@@ -186,6 +186,8 @@ export class PoolsSubgraphRepository
       // feesSnapshot: subgraphPool.???, // Approximated last 24h fees
       // boost: subgraphPool.boost,
       totalWeight: subgraphPool.totalWeight || '1',
+      lowerTarget: subgraphPool.lowerTarget ?? '0',
+      upperTarget: subgraphPool.upperTarget ?? '0',
     };
   }
 
