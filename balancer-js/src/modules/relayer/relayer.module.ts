@@ -52,20 +52,6 @@ export class Relayer {
     }
   }
 
-  /**
-   * Returns true if `amount` is not actually an amount, but rather a chained reference.
-   */
-  static isChainedReference(amount: string): boolean {
-    const amountBn = BigNumber.from(amount);
-    const mask = BigNumber.from(
-      '0xfff0000000000000000000000000000000000000000000000000000000000000'
-    );
-    const readonly =
-      '0xba10000000000000000000000000000000000000000000000000000000000000';
-    const check = amountBn.toBigInt() & mask.toBigInt();
-    return readonly === BigNumber.from(check)._hex.toString();
-  }
-
   static encodeApproveVault(tokenAddress: string, maxAmount: string): string {
     return relayerLibrary.encodeFunctionData('approveVault', [
       tokenAddress,
