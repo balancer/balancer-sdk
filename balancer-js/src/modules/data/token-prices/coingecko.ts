@@ -176,12 +176,17 @@ const unwrapToken = (wrappedAddress: string, chainId: Network) => {
 
   const aaveChain = chainId as keyof typeof aaveWrappedMap;
   if (
-    aaveWrappedMap[aaveChain] &&
-    Object.keys(aaveWrappedMap[aaveChain])?.includes(lowercase)
+    aaveWrappedMap[aaveChain] != undefined &&
+    aaveWrappedMap[aaveChain] != null
   ) {
-    return aaveWrappedMap[aaveChain][
-      lowercase as keyof typeof aaveWrappedMap[typeof aaveChain]
-    ].aToken;
+    // Double if to avoid skipping just to at after compile: Object.keys()?.includes
+    if (Object.keys(aaveWrappedMap[aaveChain]).includes(lowercase)) {
+      return aaveWrappedMap[aaveChain][
+        lowercase as keyof typeof aaveWrappedMap[typeof aaveChain]
+      ].aToken;
+    } else {
+      return lowercase;
+    }
   } else {
     return lowercase;
   }
