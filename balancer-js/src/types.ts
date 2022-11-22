@@ -230,10 +230,12 @@ export enum PoolType {
   StablePhantom = 'StablePhantom',
   LiquidityBootstrapping = 'LiquidityBootstrapping',
   AaveLinear = 'AaveLinear',
+  Linear = 'Linear',
   ERC4626Linear = 'ERC4626Linear',
   Element = 'Element',
   Gyro2 = 'Gyro2',
   Gyro3 = 'Gyro3',
+  Managed = 'Managed',
 }
 
 export interface Pool {

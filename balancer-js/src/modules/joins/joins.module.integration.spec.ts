@@ -342,7 +342,7 @@ describe('generalised join execution', async () => {
         amountsIn: [
           parseFixed('10', addresses.DAI.decimals).toString(),
           parseFixed('10', addresses.USDC.decimals).toString(),
-          parseFixed('10', addresses.USDT.decimals).toString(),
+          parseFixed('0', addresses.USDT.decimals).toString(),
           parseFixed('10', addresses.MAI.decimals).toString(),
         ],
         authorisation: authorisation,
@@ -377,7 +377,7 @@ describe('generalised join execution', async () => {
         amountsIn: [
           parseFixed('10', addresses.DAI.decimals).toString(),
           parseFixed('10', addresses.USDC.decimals).toString(),
-          parseFixed('10', addresses.bbamai.decimals).toString(),
+          parseFixed('0', addresses.bbamai.decimals).toString(),
           parseFixed('10', addresses.bbausdt.decimals).toString(),
           parseFixed('10', addresses.bbausd2.decimals).toString(),
         ],
@@ -522,7 +522,7 @@ describe('generalised join execution', async () => {
         ],
         amountsIn: [
           parseFixed('4', addresses.DAI.decimals).toString(),
-          parseFixed('4', addresses.USDT.decimals).toString(),
+          parseFixed('0', addresses.USDT.decimals).toString(),
           parseFixed('4', addresses.bbadai.decimals).toString(),
           parseFixed('4', addresses.bbausdc.decimals).toString(),
           parseFixed('4', addresses.bbausd2.decimals).toString(),
@@ -669,6 +669,7 @@ describe('generalised join execution', async () => {
         },
         tokensIn: [
           addresses.DAI.address,
+          addresses.USDC.address,
           addresses.USDT.address,
           addresses.WETH.address,
           addresses.bbausdt.address,
@@ -678,6 +679,7 @@ describe('generalised join execution', async () => {
         ],
         amountsIn: [
           parseFixed('1', addresses.DAI.decimals).toString(),
+          parseFixed('0', addresses.USDC.decimals).toString(),
           parseFixed('1', addresses.USDT.decimals).toString(),
           parseFixed('1', addresses.WETH.decimals).toString(),
           parseFixed('1', addresses.bbausdt.decimals).toString(),
@@ -974,6 +976,7 @@ describe('generalised join execution', async () => {
         },
         tokensIn: [
           addresses.DAI.address,
+          addresses.USDC.address,
           addresses.WETH.address,
           addresses.bbausdt.address,
           addresses.bbaweth.address,
@@ -981,6 +984,7 @@ describe('generalised join execution', async () => {
         ],
         amountsIn: [
           parseFixed('10', addresses.DAI.decimals).toString(),
+          parseFixed('0', addresses.USDC.decimals).toString(),
           parseFixed('10', addresses.WETH.decimals).toString(),
           parseFixed('10', addresses.bbausdt.decimals).toString(),
           parseFixed('10', addresses.bbaweth.decimals).toString(),
@@ -1088,6 +1092,7 @@ describe('generalised join execution', async () => {
           addresses.WETH.address,
           addresses.bbadai.address,
           addresses.bbausdc.address,
+          addresses.bbausdt.address,
           addresses.bbausd2.address,
         ],
         amountsIn: [
@@ -1095,6 +1100,7 @@ describe('generalised join execution', async () => {
           parseFixed('1', addresses.WETH.decimals).toString(),
           parseFixed('1', addresses.bbadai.decimals).toString(),
           parseFixed('1', addresses.bbausdc.decimals).toString(),
+          parseFixed('0', addresses.bbausdt.decimals).toString(),
           parseFixed('1', addresses.bbausd2.decimals).toString(),
         ],
         authorisation: authorisation,
@@ -1202,6 +1208,7 @@ describe('generalised join execution', async () => {
         tokensIn: [
           addresses.DAI.address,
           addresses.USDC.address,
+          addresses.WETH.address,
           addresses.bbadai.address,
           addresses.bbaweth.address,
           addresses.bbausd2.address,
@@ -1209,6 +1216,7 @@ describe('generalised join execution', async () => {
         amountsIn: [
           parseFixed('1', addresses.DAI.decimals).toString(),
           parseFixed('1', addresses.USDC.decimals).toString(),
+          parseFixed('0', addresses.WETH.decimals).toString(),
           parseFixed('1', addresses.bbadai.decimals).toString(),
           parseFixed('1', addresses.bbaweth.decimals).toString(),
           parseFixed('1', addresses.bbausd2.decimals).toString(),

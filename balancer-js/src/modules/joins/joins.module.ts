@@ -166,7 +166,10 @@ export class Join {
     delete deltas[poolAddress.toLowerCase()];
 
     tokensIn.forEach((token, i) => {
-      if (deltas[token.toLowerCase()]?.toString() !== amountsIn[i]) {
+      if (
+        !BigNumber.from(amountsIn[i]).eq(0) &&
+        deltas[token.toLowerCase()]?.toString() !== amountsIn[i]
+      ) {
         console.error(
           `join assertDeltas, tokenIn: `,
           token,
@@ -201,6 +204,7 @@ export class Join {
     // Filter all nodes that contain a token in the tokensIn array
     const inputNodes = orderedNodes.filter((node) =>
       tokensIn
+        .filter((t, i) => BigNumber.from(amountsIn[i]).gt(0)) // Remove input tokens with 0 amounts
         .map((tokenIn) => tokenIn.toLowerCase())
         .includes(node.address.toLowerCase())
     );
