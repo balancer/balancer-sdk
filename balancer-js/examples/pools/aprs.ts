@@ -23,6 +23,7 @@ const main = async () => {
         pool.poolType != 'LiquidityBootstrapping'
     )
   )
+    // .filter((p) => p.id === '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d')
     .sort((a, b) => parseFloat(b.totalLiquidity) - parseFloat(a.totalLiquidity))
     .slice(0, 30);
 

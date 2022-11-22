@@ -10,11 +10,7 @@ import type {
   LiquidityGauge,
   Network,
 } from '@/types';
-import {
-  BaseFeeDistributor,
-  ProtocolFeesProvider,
-  RewardData,
-} from '@/modules/data';
+import { BaseFeeDistributor, RewardData } from '@/modules/data';
 import { ProtocolRevenue } from './protocol-revenue';
 import { Liquidity } from '@/modules/liquidity/liquidity.module';
 import { identity, zipObject, pickBy } from 'lodash';
@@ -60,8 +56,7 @@ export class PoolApr {
     private feeCollector: Findable<number>,
     private yesterdaysPools?: Findable<Pool, PoolAttribute>,
     private liquidityGauges?: Findable<LiquidityGauge>,
-    private feeDistributor?: BaseFeeDistributor,
-    private protocolFees?: ProtocolFeesProvider
+    private feeDistributor?: BaseFeeDistributor
   ) {}
 
   /**
@@ -115,14 +110,10 @@ export class PoolApr {
       if (tokenYield) {
         if (pool.poolType === 'MetaStable') {
           apr = tokenYield * (1 - (await this.protocolSwapFeePercentage()));
-        } else if (pool.poolType === 'ComposableStable') {
-          if (token.isExemptFromYieldProtocolFee) {
-            apr = tokenYield;
-          } else {
-            const fees = await this.protocolFeesPercentage();
-            apr = tokenYield * (1 - fees.yieldFee);
-          }
-        } else if (pool.poolType === 'Weighted' && pool.poolTypeVersion === 2) {
+        } else if (
+          pool.poolType === 'ComposableStable' ||
+          (pool.poolType === 'Weighted' && pool.poolTypeVersion === 2)
+        ) {
           if (token.isExemptFromYieldProtocolFee) {
             apr = tokenYield;
           } else {
@@ -139,7 +130,16 @@ export class PoolApr {
           // INFO: Liquidity mining APR can't cascade to other pools
           const subSwapFees = await this.swapFees(subPool);
           const subtokenAprs = await this.tokenAprs(subPool);
-          apr = subSwapFees + subtokenAprs.total;
+          let subApr = subtokenAprs.total;
+          if (
+            pool.poolType === 'ComposableStable' ||
+            (pool.poolType === 'Weighted' && pool.poolTypeVersion === 2)
+          ) {
+            if (!token.isExemptFromYieldProtocolFee) {
+              subApr = subApr * (1 - parseFloat(pool.protocolYieldFeeCache));
+            }
+          }
+          apr = subSwapFees + subApr;
         }
       }
 
@@ -446,17 +446,6 @@ export class PoolApr {
     const fee = await this.feeCollector.find('');
 
     return fee ? fee : 0;
-  }
-
-  private async protocolFeesPercentage() {
-    if (this.protocolFees) {
-      return await this.protocolFees.getFees();
-    }
-
-    return {
-      swapFee: 0,
-      yieldFee: 0,
-    };
   }
 
   private async rewardTokenApr(tokenAddress: string, rewardData: RewardData) {
