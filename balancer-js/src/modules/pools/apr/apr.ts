@@ -419,10 +419,14 @@ export class PoolApr {
    * @returns Pool liquidity in USD
    */
   private async totalLiquidity(pool: Pool): Promise<string> {
-    const liquidityService = new Liquidity(this.pools, this.tokenPrices);
-    const liquidity = await liquidityService.getLiquidity(pool);
-
-    return liquidity;
+    try {
+      const liquidityService = new Liquidity(this.pools, this.tokenPrices);
+      const liquidity = await liquidityService.getLiquidity(pool);
+      return liquidity;
+    } catch (err) {
+      console.error('Liquidity calculcation failed, falling back to subgraph');
+      return pool.totalLiquidity;
+    }
   }
 
   /**
