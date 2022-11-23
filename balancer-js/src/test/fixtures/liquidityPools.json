@@ -720,5 +720,354 @@
         "managedBalance": "0"
       }
     ]
+  },
+  {
+    "id": "0xb54b2125b711cd183edd3dd09433439d5396165200000000000000000000075e",
+    "address": "0xb54b2125b711cd183edd3dd09433439d53961652",
+    "poolType": "ComposableStable",
+    "swapFee": "0.0004",
+    "tokensList": [
+      "0x48e6b98ef6329f8f0a30ebb8c7c960330d648085",
+      "0xa3fa99a148fa48d14ed51d610c367c61876997f1"
+    ],
+    "totalLiquidity": "18155.03979860564175032143240229646",
+    "totalSwapVolume": "102671.3531868674812919326397895474",
+    "totalSwapFee": "41.06854127474699251677305591581902",
+    "totalShares": "18229.452335273313471779",
+    "owner": "0xba1ba1ba1ba1ba1ba1ba1ba1ba1ba1ba1ba1ba1b",
+    "factory": "0x136fd06fa01ecf624c7f2b3cb15742c1339dc2c4",
+    "amp": "60",
+    "createTime": 1662580832,
+    "swapEnabled": true,
+    "symbol": "Mai BSP",
+    "name": "Balancer MAI bb-am-usd Stable",
+    "protocolYieldFeeCache": "0.5",
+    "priceRateProviders": [
+      {
+        "address": "0x48e6b98ef6329f8f0a30ebb8c7c960330d648085",
+        "token": {
+          "address": "0x48e6b98ef6329f8f0a30ebb8c7c960330d648085"
+        }
+      }
+    ],
+    "tokens": [
+      {
+        "address": "0x48e6b98ef6329f8f0a30ebb8c7c960330d648085",
+        "balance": "6709.966214955565090006",
+        "weight": null,
+        "priceRate": "1.001100630645200917",
+        "symbol": "bb-am-usd",
+        "decimals": 18
+      },
+      {
+        "address": "0xa3fa99a148fa48d14ed51d610c367c61876997f1",
+        "balance": "11562.004232310021164248",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "miMATIC",
+        "decimals": 18
+      },
+      {
+        "address": "0xb54b2125b711cd183edd3dd09433439d53961652",
+        "balance": "2596148429115008.984547065289098477",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "Mai BSP",
+        "decimals": 18
+      }
+    ],
+    "isNew": false,
+    "chainId": 137,
+    "unwrappedTokens": [],
+    "feesSnapshot": "0.05569436766835841178113130600685",
+    "volumeSnapshot": "139.2359191708960294528282650171"
+  },
+  {
+    "id": "0x48e6b98ef6329f8f0a30ebb8c7c960330d64808500000000000000000000075b",
+    "totalShares": "6210115.878004697935980954",
+    "address": "0x48e6b98ef6329f8f0a30ebb8c7c960330d648085",
+    "poolType": "ComposableStable",
+    "mainIndex": 0,
+    "tokens": [
+      {
+        "address": "0x178e029173417b1f9c8bc16dcec6f697bc323746",
+        "balance": "1204360.955231972026803034",
+        "weight": null,
+        "priceRate": "1.00039076943095233",
+        "symbol": "bb-am-DAI",
+        "decimals": 18
+      },
+      {
+        "address": "0x48e6b98ef6329f8f0a30ebb8c7c960330d648085",
+        "balance": "2596148423060491.811647377029393683",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "bb-am-usd",
+        "decimals": 18
+      },
+      {
+        "address": "0xf93579002dbe8046c43fefe86ec78b1112247bb8",
+        "balance": "1281578.268016962309728138",
+        "weight": null,
+        "priceRate": "1.000387793129824715",
+        "symbol": "bb-am-USDC",
+        "decimals": 18
+      },
+      {
+        "address": "0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea6",
+        "balance": "3727441.528992488683407726",
+        "weight": null,
+        "priceRate": "1.000903832871667996",
+        "symbol": "bb-am-USDT",
+        "decimals": 18
+      }
+    ]
+  },
+  {
+    "id": "0xb54b2125b711cd183edd3dd09433439d5396165200000000000000000000075e",
+    "totalShares": "18229.452335273313471779",
+    "address": "0xb54b2125b711cd183edd3dd09433439d53961652",
+    "poolType": "ComposableStable",
+    "mainIndex": 0,
+    "tokens": [
+      {
+        "address": "0x48e6b98ef6329f8f0a30ebb8c7c960330d648085",
+        "balance": "6709.966214955565090006",
+        "weight": null,
+        "priceRate": "1.001100630645200917",
+        "symbol": "bb-am-usd",
+        "decimals": 18
+      },
+      {
+        "address": "0xa3fa99a148fa48d14ed51d610c367c61876997f1",
+        "balance": "11562.004232310021164248",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "miMATIC",
+        "decimals": 18
+      },
+      {
+        "address": "0xb54b2125b711cd183edd3dd09433439d53961652",
+        "balance": "2596148429115008.984547065289098477",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "Mai BSP",
+        "decimals": 18
+      }
+    ]
+  },
+  {
+    "id": "0x178e029173417b1f9c8bc16dcec6f697bc323746000000000000000000000758",
+    "totalShares": "1204361.979169081484934798",
+    "address": "0x178e029173417b1f9c8bc16dcec6f697bc323746",
+    "poolType": "AaveLinear",
+    "mainIndex": 1,
+    "tokens": [
+      {
+        "address": "0x178e029173417b1f9c8bc16dcec6f697bc323746",
+        "balance": "5192296857330465.649361414844285297",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "bb-am-DAI",
+        "decimals": 18
+      },
+      {
+        "address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "balance": "375304.734603121326369737",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "DAI",
+        "decimals": 18
+      },
+      {
+        "address": "0xee029120c72b0607344f35b17cdd90025e647b00",
+        "balance": "794969.292450441860119758",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "amDAI",
+        "decimals": 18
+      }
+    ]
+  },
+  {
+    "id": "0x48e6b98ef6329f8f0a30ebb8c7c960330d64808500000000000000000000075b",
+    "totalShares": "6210115.878004697935980954",
+    "address": "0x48e6b98ef6329f8f0a30ebb8c7c960330d648085",
+    "poolType": "ComposableStable",
+    "mainIndex": 0,
+    "tokens": [
+      {
+        "address": "0x178e029173417b1f9c8bc16dcec6f697bc323746",
+        "balance": "1204360.955231972026803034",
+        "weight": null,
+        "priceRate": "1.00039076943095233",
+        "symbol": "bb-am-DAI",
+        "decimals": 18
+      },
+      {
+        "address": "0x48e6b98ef6329f8f0a30ebb8c7c960330d648085",
+        "balance": "2596148423060491.811647377029393683",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "bb-am-usd",
+        "decimals": 18
+      },
+      {
+        "address": "0xf93579002dbe8046c43fefe86ec78b1112247bb8",
+        "balance": "1281578.268016962309728138",
+        "weight": null,
+        "priceRate": "1.000387793129824715",
+        "symbol": "bb-am-USDC",
+        "decimals": 18
+      },
+      {
+        "address": "0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea6",
+        "balance": "3727441.528992488683407726",
+        "weight": null,
+        "priceRate": "1.000903832871667996",
+        "symbol": "bb-am-USDT",
+        "decimals": 18
+      }
+    ]
+  },
+  {
+    "id": "0xf93579002dbe8046c43fefe86ec78b1112247bb8000000000000000000000759",
+    "totalShares": "1281580.284714950985286573",
+    "address": "0xf93579002dbe8046c43fefe86ec78b1112247bb8",
+    "poolType": "AaveLinear",
+    "mainIndex": 1,
+    "tokens": [
+      {
+        "address": "0x221836a597948dce8f3568e044ff123108acc42a",
+        "balance": "1002299.319398",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "amUSDC",
+        "decimals": 6
+      },
+      {
+        "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "balance": "240640.547859",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "USDC",
+        "decimals": 6
+      },
+      {
+        "address": "0xf93579002dbe8046c43fefe86ec78b1112247bb8",
+        "balance": "5192296857253247.343815545343933522",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "bb-am-USDC",
+        "decimals": 18
+      }
+    ]
+  },
+  {
+    "id": "0x48e6b98ef6329f8f0a30ebb8c7c960330d64808500000000000000000000075b",
+    "totalShares": "6210115.878004697935980954",
+    "address": "0x48e6b98ef6329f8f0a30ebb8c7c960330d648085",
+    "poolType": "ComposableStable",
+    "mainIndex": 0,
+    "tokens": [
+      {
+        "address": "0x178e029173417b1f9c8bc16dcec6f697bc323746",
+        "balance": "1204360.955231972026803034",
+        "weight": null,
+        "priceRate": "1.00039076943095233",
+        "symbol": "bb-am-DAI",
+        "decimals": 18
+      },
+      {
+        "address": "0x48e6b98ef6329f8f0a30ebb8c7c960330d648085",
+        "balance": "2596148423060491.811647377029393683",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "bb-am-usd",
+        "decimals": 18
+      },
+      {
+        "address": "0xf93579002dbe8046c43fefe86ec78b1112247bb8",
+        "balance": "1281578.268016962309728138",
+        "weight": null,
+        "priceRate": "1.000387793129824715",
+        "symbol": "bb-am-USDC",
+        "decimals": 18
+      },
+      {
+        "address": "0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea6",
+        "balance": "3727441.528992488683407726",
+        "weight": null,
+        "priceRate": "1.000903832871667996",
+        "symbol": "bb-am-USDT",
+        "decimals": 18
+      }
+    ]
+  },
+  {
+    "id": "0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea600000000000000000000075a",
+    "totalShares": "3727441.547287488412857699",
+    "address": "0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea6",
+    "poolType": "AaveLinear",
+    "mainIndex": 1,
+    "tokens": [
+      {
+        "address": "0x19c60a251e525fa88cd6f3768416a8024e98fc19",
+        "balance": "3329110.6963",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "amUSDT",
+        "decimals": 6
+      },
+      {
+        "address": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+        "balance": "147162.90748",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "USDT",
+        "decimals": 6
+      },
+      {
+        "address": "0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea6",
+        "balance": "5192296854807386.081243007916362396",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "bb-am-USDT",
+        "decimals": 18
+      }
+    ]
+  },
+  {
+    "id": "0xb54b2125b711cd183edd3dd09433439d5396165200000000000000000000075e",
+    "totalShares": "18229.452335273313471779",
+    "address": "0xb54b2125b711cd183edd3dd09433439d53961652",
+    "poolType": "ComposableStable",
+    "mainIndex": 0,
+    "tokens": [
+      {
+        "address": "0x48e6b98ef6329f8f0a30ebb8c7c960330d648085",
+        "balance": "6709.966214955565090006",
+        "weight": null,
+        "priceRate": "1.001100630645200917",
+        "symbol": "bb-am-usd",
+        "decimals": 18
+      },
+      {
+        "address": "0xa3fa99a148fa48d14ed51d610c367c61876997f1",
+        "balance": "11562.004232310021164248",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "miMATIC",
+        "decimals": 18
+      },
+      {
+        "address": "0xb54b2125b711cd183edd3dd09433439d53961652",
+        "balance": "2596148429115008.984547065289098477",
+        "weight": null,
+        "priceRate": "1",
+        "symbol": "Mai BSP",
+        "decimals": 18
+      }
+    ]
   }
 ]

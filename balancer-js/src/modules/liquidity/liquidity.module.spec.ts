@@ -119,4 +119,15 @@ describe('Liquidity Module', () => {
       );
     });
   });
+
+  context('Composable Stable pool calculations', () => {
+    it('Correctly calculates liquidity of a composable stable pool with a boosted subpool', async () => {
+      const liquidity = await liquidityProvider.getLiquidity(
+        findPool('0xb54b2125b711cd183edd3dd09433439d53961652')
+      );
+      expect(Number(liquidity).toFixed(8).toString()).to.be.eq(
+        '17901.40061800'
+      );
+    });
+  });
 });
