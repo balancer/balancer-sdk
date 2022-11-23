@@ -46,6 +46,9 @@ export class AaveRates {
     if (this.network != Network.MAINNET && this.network != Network.POLYGON) {
       return 1;
     }
+    if (!Object.values(yieldTokens[this.network]).includes(wrappedAToken)) {
+      return 1;
+    }
     if (!this.rates) {
       this.rates = this.fetch(this.network);
     }

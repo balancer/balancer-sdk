@@ -3,7 +3,6 @@ import { Price, Findable, TokenPrices, Network } from '@/types';
 import { wrappedTokensMap as aaveWrappedMap } from '../token-yields/tokens/aave';
 import axios from 'axios';
 import { TOKENS } from '@/lib/constants/tokens';
-import { isEthereumTestnet } from '@/lib/utils/network';
 
 // Conscious choice for a deferred promise since we have setTimeout that returns a promise
 // Some reference for history buffs: https://github.com/petkaantonov/bluebird/wiki/Promise-anti-patterns
@@ -160,10 +159,7 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   }
 
   private unwrapToken(wrappedAddress: string) {
-    const chainId = isEthereumTestnet(this.chainId)
-      ? Network.MAINNET
-      : this.chainId;
-    return unwrapToken(wrappedAddress, chainId);
+    return unwrapToken(wrappedAddress, this.chainId);
   }
 
   private url(addresses: string[]): string {
