@@ -118,19 +118,30 @@ export class PoolsSubgraphRepository
   }
 
   async findBy(param: PoolAttribute, value: string): Promise<Pool | undefined> {
-    if (this.pools) {
-      return (await this.pools).find((p) => p[param] === value);
+    if (!this.pools) {
+      this.pools = this.fetchDefault();
     }
-    const { pools } = await this.client.Pools({
-      where: {
-        [param]: value,
-        swapEnabled: true,
-        totalShares_gt: '0.000000000001',
-      },
-      block: await this.block(),
-    });
-    const poolsTab: Pool[] = pools.map(this.mapType.bind(this));
-    return poolsTab.length > 0 ? poolsTab[0] : undefined;
+
+    return (await this.pools).find((pool) => pool[param] == value);
+
+    // TODO: @Nma - Fetching pools outside of default query is causing a lot of requests
+    // on a frontend, because results aren't cached anywhere.
+    // For fetching pools directly from subgraph with custom queries please use the client not this repository.
+    // Code below kept for reference, to be removed later.
+    //
+    // if (this.pools) {
+    //   return (await this.pools).find((p) => p[param] === value);
+    // }
+    // const { pools } = await this.client.Pools({
+    //   where: {
+    //     [param]: value,
+    //     swapEnabled: true,
+    //     totalShares_gt: '0.000000000001',
+    //   },
+    //   block: await this.block(),
+    // });
+    // const poolsTab: Pool[] = pools.map(this.mapType.bind(this));
+    // return poolsTab.length > 0 ? poolsTab[0] : undefined;
   }
 
   async all(): Promise<Pool[]> {
