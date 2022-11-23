@@ -117,7 +117,9 @@ export class PoolApr {
           if (token.isExemptFromYieldProtocolFee) {
             apr = tokenYield;
           } else {
-            apr = tokenYield * (1 - parseFloat(pool.protocolYieldFeeCache));
+            apr =
+              tokenYield *
+              (1 - parseFloat(pool.protocolYieldFeeCache || '0.5'));
           }
         } else {
           apr = tokenYield;
@@ -136,7 +138,8 @@ export class PoolApr {
             (pool.poolType === 'Weighted' && pool.poolTypeVersion === 2)
           ) {
             if (!token.isExemptFromYieldProtocolFee) {
-              subApr = subApr * (1 - parseFloat(pool.protocolYieldFeeCache));
+              subApr =
+                subApr * (1 - parseFloat(pool.protocolYieldFeeCache || '0.5'));
             }
           }
           apr = subSwapFees + subApr;
