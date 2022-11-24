@@ -93,12 +93,14 @@ fragment SubgraphPool on Pool {
     id
     address
     poolType
+    poolTypeVersion
     factory
     strategyType
     symbol
     name
     swapEnabled
     swapFee
+    protocolYieldFeeCache
     owner
     totalWeight
     totalSwapVolume
@@ -163,6 +165,7 @@ fragment SubgraphPoolToken on PoolToken {
     managedBalance
     weight
     priceRate
+    isExemptFromYieldProtocolFee
     token {
         pool {
             poolType

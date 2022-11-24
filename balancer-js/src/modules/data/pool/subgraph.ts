@@ -82,7 +82,7 @@ export class PoolsSubgraphRepository
   private async fetchDefault(): Promise<Pool[]> {
     console.time('fetching pools');
     const { pool0, pool1000, pool2000 } = await this.client.AllPools({
-      where: { swapEnabled: true, totalShares_gt: '0' },
+      where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
       block: await this.block(),
@@ -118,15 +118,30 @@ export class PoolsSubgraphRepository
   }
 
   async findBy(param: PoolAttribute, value: string): Promise<Pool | undefined> {
-    if (this.pools) {
-      return (await this.pools).find((p) => p[param] === value);
+    if (!this.pools) {
+      this.pools = this.fetchDefault();
     }
-    const { pools } = await this.client.Pools({
-      where: { [param]: value, swapEnabled: true, totalShares_gt: '0' },
-      block: await this.block(),
-    });
-    const poolsTab: Pool[] = pools.map(this.mapType.bind(this));
-    return poolsTab.length > 0 ? poolsTab[0] : undefined;
+
+    return (await this.pools).find((pool) => pool[param] == value);
+
+    // TODO: @Nma - Fetching pools outside of default query is causing a lot of requests
+    // on a frontend, because results aren't cached anywhere.
+    // For fetching pools directly from subgraph with custom queries please use the client not this repository.
+    // Code below kept for reference, to be removed later.
+    //
+    // if (this.pools) {
+    //   return (await this.pools).find((p) => p[param] === value);
+    // }
+    // const { pools } = await this.client.Pools({
+    //   where: {
+    //     [param]: value,
+    //     swapEnabled: true,
+    //     totalShares_gt: '0.000000000001',
+    //   },
+    //   block: await this.block(),
+    // });
+    // const poolsTab: Pool[] = pools.map(this.mapType.bind(this));
+    // return poolsTab.length > 0 ? poolsTab[0] : undefined;
   }
 
   async all(): Promise<Pool[]> {
@@ -155,8 +170,10 @@ export class PoolsSubgraphRepository
       address: subgraphPool.address,
       chainId: this.chainId,
       poolType: subgraphPool.poolType as PoolType,
+      poolTypeVersion: subgraphPool.poolTypeVersion || 1,
       swapFee: subgraphPool.swapFee,
       swapEnabled: subgraphPool.swapEnabled,
+      protocolYieldFeeCache: subgraphPool.protocolYieldFeeCache || '0',
       amp: subgraphPool.amp ?? undefined,
       owner: subgraphPool.owner ?? undefined,
       factory: subgraphPool.factory ?? undefined,
@@ -180,6 +197,8 @@ export class PoolsSubgraphRepository
       // feesSnapshot: subgraphPool.???, // Approximated last 24h fees
       // boost: subgraphPool.boost,
       totalWeight: subgraphPool.totalWeight || '1',
+      lowerTarget: subgraphPool.lowerTarget ?? '0',
+      upperTarget: subgraphPool.upperTarget ?? '0',
     };
   }
 
@@ -193,6 +212,8 @@ export class PoolsSubgraphRepository
     }
     return {
       ...subgraphToken,
+      isExemptFromYieldProtocolFee:
+        subgraphToken.isExemptFromYieldProtocolFee || false,
       token: {
         pool: subgraphTokenPool,
       },

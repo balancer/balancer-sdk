@@ -41,6 +41,10 @@ export const MOCK_POOLS: { [key: string]: Pool } = {
     totalShares: '10000000000000',
     totalLiquidity: '10000000000000',
     poolType: PoolType.Weighted,
+    poolTypeVersion: 1,
+    protocolYieldFeeCache: '0',
+    lowerTarget: '0',
+    upperTarget: '0'
   },
   WeightedPool_2: {
     chainId: 1,
@@ -75,6 +79,10 @@ export const MOCK_POOLS: { [key: string]: Pool } = {
     totalShares: '10000000000000',
     totalLiquidity: '10000000000000',
     poolType: PoolType.Weighted,
+    poolTypeVersion: 1,
+    protocolYieldFeeCache: '0',
+    lowerTarget: '0',
+    upperTarget: '0'
   },
   StablePool: {
     chainId: 1,
@@ -119,6 +127,10 @@ export const MOCK_POOLS: { [key: string]: Pool } = {
     totalShares: '100000',
     totalLiquidity: '10000000000000',
     poolType: PoolType.Stable,
+    poolTypeVersion: 1,
+    protocolYieldFeeCache: '0',
+    lowerTarget: '0',
+    upperTarget: '0'
   },
 };
 

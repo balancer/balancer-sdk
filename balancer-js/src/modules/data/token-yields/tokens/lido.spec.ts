@@ -4,7 +4,7 @@ import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
 const mockedResponse = {
-  data: { eth: '1', steth: '1' },
+  data: { smaApr: '1' },
 };
 
 describe('lido apr', () => {
@@ -13,7 +13,7 @@ describe('lido apr', () => {
   before(() => {
     mock = new MockAdapter(axios);
     mock
-      .onGet('https://stake.lido.fi/api/apr')
+      .onGet('https://eth-api.lido.fi/v1/protocol/steth/apr/sma')
       .reply(() => [200, mockedResponse]);
   });
 

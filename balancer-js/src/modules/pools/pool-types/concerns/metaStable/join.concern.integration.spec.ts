@@ -117,7 +117,8 @@ describe('join execution', async () => {
       const minBPTOut = bptMinBalanceIncrease.toString();
       const priceImpact = await controller.calcPriceImpact(
         amountsIn,
-        minBPTOut
+        minBPTOut,
+        true
       );
       expect(priceImpact).to.eql('100000000010000');
     });

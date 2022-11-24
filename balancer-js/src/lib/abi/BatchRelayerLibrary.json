@@ -489,6 +489,25 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "ref",
+        "type": "uint256"
+      }
+    ],
+    "name": "peekChainedReferenceValue",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "relayer",
         "type": "address"

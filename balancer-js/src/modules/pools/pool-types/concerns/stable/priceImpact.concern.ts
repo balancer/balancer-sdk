@@ -61,12 +61,17 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
   calcPriceImpact(
     pool: Pool,
     tokenAmounts: string[],
-    bptAmount: string
+    bptAmount: string,
+    isJoin: boolean
   ): string {
     const bptZeroPriceImpact = this.bptZeroPriceImpact(
       pool,
       tokenAmounts.map((a) => BigInt(a))
     );
-    return calcPriceImpact(BigInt(bptAmount), bptZeroPriceImpact).toString();
+    return calcPriceImpact(
+      BigInt(bptAmount),
+      bptZeroPriceImpact,
+      isJoin
+    ).toString();
   }
 }

@@ -9,6 +9,7 @@ export enum BalancerErrorCode {
   NO_POOL_DATA = 'NO_POOL_DATA',
   INPUT_OUT_OF_BOUNDS = 'INPUT_OUT_OF_BOUNDS',
   INPUT_LENGTH_MISMATCH = 'INPUT_LENGTH_MISMATCH',
+  INPUT_TOKEN_INVALID = 'INPUT_TOKEN_INVALID',
   INPUT_ZERO_NOT_ALLOWED = 'INPUT_ZERO_NOT_ALLOWED',
   TOKEN_MISMATCH = 'TOKEN_MISMATCH',
   MISSING_TOKENS = 'MISSING_TOKENS',
@@ -20,6 +21,8 @@ export enum BalancerErrorCode {
   NO_VALUE_PARAMETER = 'NO_VALUE_PARAMETER',
   ILLEGAL_PARAMETER = 'ILLEGAL_PARAMETER',
   TIMESTAMP_IN_THE_FUTURE = 'TIMESTAMP_IN_THE_FUTURE',
+  JOIN_DELTA_AMOUNTS = 'JOIN_DELTA_AMOUNTS',
+  EXIT_DELTA_AMOUNTS = 'EXIT_DELTA_AMOUNTS',
 }
 
 export class BalancerError extends Error {
@@ -50,6 +53,8 @@ export class BalancerError extends Error {
         return 'input out of bounds';
       case BalancerErrorCode.INPUT_LENGTH_MISMATCH:
         return 'input length mismatch';
+      case BalancerErrorCode.INPUT_TOKEN_INVALID:
+        return 'input token invalid';
       case BalancerErrorCode.TOKEN_MISMATCH:
         return 'token mismatch';
       case BalancerErrorCode.MISSING_DECIMALS:
@@ -72,6 +77,10 @@ export class BalancerError extends Error {
         return 'Timestamp cannot be in the future';
       case BalancerErrorCode.ILLEGAL_PARAMETER:
         return 'An illegal parameter has been passed';
+      case BalancerErrorCode.JOIN_DELTA_AMOUNTS:
+        return 'Error when checking join call deltas';
+      case BalancerErrorCode.EXIT_DELTA_AMOUNTS:
+        return 'Error when checking exit call deltas';
       default:
         return 'Unknown error';
     }

@@ -30,13 +30,17 @@ const poolFactory = Factory.define<Pool>(({ params, afterBuild }) => {
     address: '0xa6f548df93de924d73be7d25dc02554c6bd66db5',
     chainId: 1,
     poolType: PoolType.Weighted,
+    poolTypeVersion: 1,
     swapFee: '0.001',
     swapEnabled: true,
+    protocolYieldFeeCache: '0',
     tokens,
     tokensList: [],
     totalWeight: '1',
     totalShares: '1',
     totalLiquidity: '0',
+    lowerTarget: '0',
+    upperTarget: '0',
   };
 });
 

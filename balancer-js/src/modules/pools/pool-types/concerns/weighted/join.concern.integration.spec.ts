@@ -119,62 +119,10 @@ describe('join execution', async () => {
       const minBPTOut = bptMinBalanceIncrease.toString();
       const priceImpact = await controller.calcPriceImpact(
         amountsIn,
-        minBPTOut
+        minBPTOut,
+        true
       );
       expect(priceImpact).to.eq('102055375201527');
-    });
-
-    it('should increase BPT balance', async () => {
-      expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
-        .to.be.true;
-    });
-
-    it('should decrease tokens balance', async () => {
-      for (let i = 0; i < tokensIn.length; i++) {
-        expect(
-          tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
-        ).to.equal(amountsIn[i]);
-      }
-    });
-  });
-
-  context('join transaction - join with params', () => {
-    before(async function () {
-      this.timeout(20000);
-
-      amountsIn = tokensIn.map((t) =>
-        parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
-      );
-
-      [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
-        [pool.address, ...pool.tokensList],
-        signer,
-        signerAddress
-      );
-
-      const slippage = '100';
-      const { functionName, attributes, value, minBPTOut } =
-        controller.buildJoin(
-          signerAddress,
-          tokensIn.map((t) => t.address),
-          amountsIn,
-          slippage
-        );
-      const transactionResponse = await sdk.contracts.vault
-        .connect(signer)
-        [functionName](...Object.values(attributes), { value });
-      transactionReceipt = await transactionResponse.wait();
-
-      bptMinBalanceIncrease = BigNumber.from(minBPTOut);
-      [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
-        [pool.address, ...pool.tokensList],
-        signer,
-        signerAddress
-      );
-    });
-
-    it('should work', async () => {
-      expect(transactionReceipt.status).to.eql(1);
     });
 
     it('should increase BPT balance', async () => {

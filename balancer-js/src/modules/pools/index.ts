@@ -13,6 +13,8 @@ import { JoinPoolAttributes } from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
+import { Join } from '../joins/joins.module';
+import { Exit } from '../exits/exits.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
 
@@ -22,6 +24,8 @@ import { PoolFees } from './fees/fees';
 export class Pools implements Findable<PoolWithMethods> {
   aprService;
   liquidityService;
+  joinService;
+  exitService;
   feesService;
   volumeService;
   impermanentLossService;
@@ -44,6 +48,8 @@ export class Pools implements Findable<PoolWithMethods> {
       repositories.pools,
       repositories.tokenPrices
     );
+    this.joinService = new Join(this.repositories.pools, networkConfig);
+    this.exitService = new Exit(this.repositories.pools, networkConfig);
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
     this.impermanentLossService = new ImpermanentLossService(
@@ -86,6 +92,75 @@ export class Pools implements Findable<PoolWithMethods> {
    */
   async liquidity(pool: Pool): Promise<string> {
     return this.liquidityService.getLiquidity(pool);
+  }
+
+  /**
+   * Builds generalised join transaction
+   *
+   * @param poolId          Pool id
+   * @param tokens          Token addresses
+   * @param amounts         Token amounts in EVM scale
+   * @param userAddress     User address
+   * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+   * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
+   */
+  async generalisedJoin(
+    poolId: string,
+    tokens: string[],
+    amounts: string[],
+    userAddress: string,
+    wrapMainTokens: boolean,
+    slippage: string,
+    authorisation?: string
+  ): Promise<{
+    to: string;
+    callData: string;
+    minOut: string;
+    expectedOut: string;
+  }> {
+    return this.joinService.joinPool(
+      poolId,
+      tokens,
+      amounts,
+      userAddress,
+      wrapMainTokens,
+      slippage,
+      authorisation
+    );
+  }
+
+  /**
+   * Builds generalised exit transaction
+   *
+   * @param poolId        Pool id
+   * @param amount        Token amount in EVM scale
+   * @param userAddress   User address
+   * @param slippage      Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param authorisation Optional auhtorisation call to be added to the chained transaction
+   * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
+   */
+  async generalisedExit(
+    poolId: string,
+    amount: string,
+    userAddress: string,
+    slippage: string,
+    authorisation?: string
+  ): Promise<{
+    to: string;
+    callData: string;
+    tokensOut: string[];
+    expectedAmountsOut: string[];
+    minAmountsOut: string[];
+  }> {
+    return this.exitService.exitPool(
+      poolId,
+      amount,
+      userAddress,
+      slippage,
+      authorisation
+    );
   }
 
   /**
@@ -132,11 +207,16 @@ export class Pools implements Findable<PoolWithMethods> {
           wrappedNativeAsset,
         });
       },
-      calcPriceImpact: async (amountsIn: string[], minBPTOut: string) =>
+      calcPriceImpact: async (
+        amountsIn: string[],
+        minBPTOut: string,
+        isJoin: boolean
+      ) =>
         methods.priceImpactCalculator.calcPriceImpact(
           pool,
           amountsIn,
-          minBPTOut
+          minBPTOut,
+          isJoin
         ),
       buildExitExactBPTIn: (
         exiter,

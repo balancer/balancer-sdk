@@ -9,7 +9,6 @@ import {
 import { wrappedTokensMap as aaveWrappedMap } from '../token-yields/tokens/aave';
 import axios from 'axios';
 import { TOKENS } from '@/lib/constants/tokens';
-import { isEthereumTestnet } from '@/lib/utils/network';
 
 // Conscious choice for a deferred promise since we have setTimeout that returns a promise
 // Some reference for history buffs: https://github.com/petkaantonov/bluebird/wiki/Promise-anti-patterns
@@ -219,13 +218,8 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     return (addressMap && addressMap[address.toLowerCase()]) || address;
   }
 
-  private unwrapToken(address: string) {
-    const lowercaseAddress = address.toLowerCase();
-    const wrappedAddress = this.addressMapIn(lowercaseAddress);
-    const chainId = isEthereumTestnet(this.chainId)
-      ? Network.MAINNET
-      : this.chainId;
-    return unwrapToken(wrappedAddress, chainId);
+  private unwrapToken(wrappedAddress: string) {
+    return unwrapToken(wrappedAddress, this.chainId);
   }
 
   private url(addresses: string[]): string {
@@ -248,12 +242,17 @@ const unwrapToken = (wrappedAddress: string, chainId: Network) => {
 
   const aaveChain = chainId as keyof typeof aaveWrappedMap;
   if (
-    aaveWrappedMap[aaveChain] &&
-    Object.keys(aaveWrappedMap[aaveChain])?.includes(lowercase)
+    aaveWrappedMap[aaveChain] != undefined &&
+    aaveWrappedMap[aaveChain] != null
   ) {
-    return aaveWrappedMap[aaveChain][
-      lowercase as keyof typeof aaveWrappedMap[typeof aaveChain]
-    ].aToken;
+    // Double if to avoid skipping just to at after compile: Object.keys()?.includes
+    if (Object.keys(aaveWrappedMap[aaveChain]).includes(lowercase)) {
+      return aaveWrappedMap[aaveChain][
+        lowercase as keyof typeof aaveWrappedMap[typeof aaveChain]
+      ].aToken;
+    } else {
+      return lowercase;
+    }
   } else {
     return lowercase;
   }

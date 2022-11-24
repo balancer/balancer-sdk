@@ -71,7 +71,7 @@ export class SubgraphPoolDataService implements PoolDataService {
 
   private async getLinearPools() {
     const { pool0, pool1000, pool2000 } = await this.client.AllPools({
-      where: { swapEnabled: true, totalShares_gt: '0' },
+      where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
     });
@@ -83,7 +83,7 @@ export class SubgraphPoolDataService implements PoolDataService {
 
   private async getNonLinearPools() {
     const { pools } = await this.client.PoolsWithoutLinear({
-      where: { swapEnabled: true, totalShares_gt: '0' },
+      where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
       first: 1000,

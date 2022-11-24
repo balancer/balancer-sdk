@@ -34,6 +34,8 @@ fragment SubgraphLiquidityGauge on LiquidityGauge {
     symbol
     decimals
     totalDeposited
+    rate
+    periodFinish
   }
 }
 

@@ -8,16 +8,14 @@ import type {
   Token,
   TokenAttribute,
   LiquidityGauge,
+  Network,
 } from '@/types';
-import {
-  BaseFeeDistributor,
-  ProtocolFeesProvider,
-  RewardData,
-} from '@/modules/data';
+import { BaseFeeDistributor, RewardData } from '@/modules/data';
 import { ProtocolRevenue } from './protocol-revenue';
 import { Liquidity } from '@/modules/liquidity/liquidity.module';
 import { identity, zipObject, pickBy } from 'lodash';
 import { PoolFees } from '../fees/fees';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 
 export interface AprBreakdown {
   swapFees: number;
@@ -58,8 +56,7 @@ export class PoolApr {
     private feeCollector: Findable<number>,
     private yesterdaysPools?: Findable<Pool, PoolAttribute>,
     private liquidityGauges?: Findable<LiquidityGauge>,
-    private feeDistributor?: BaseFeeDistributor,
-    private protocolFees?: ProtocolFeesProvider
+    private feeDistributor?: BaseFeeDistributor
   ) {}
 
   /**
@@ -113,12 +110,17 @@ export class PoolApr {
       if (tokenYield) {
         if (pool.poolType === 'MetaStable') {
           apr = tokenYield * (1 - (await this.protocolSwapFeePercentage()));
-        } else if (pool.poolType === 'ComposableStable') {
-          // TODO: add if(token.isTokenExemptFromYieldProtocolFee) once supported by subgraph
-          // apr = tokenYield;
-
-          const fees = await this.protocolFeesPercentage();
-          apr = tokenYield * (1 - fees.yieldFee);
+        } else if (
+          pool.poolType === 'ComposableStable' ||
+          (pool.poolType === 'Weighted' && pool.poolTypeVersion === 2)
+        ) {
+          if (token.isExemptFromYieldProtocolFee) {
+            apr = tokenYield;
+          } else {
+            apr =
+              tokenYield *
+              (1 - parseFloat(pool.protocolYieldFeeCache || '0.5'));
+          }
         } else {
           apr = tokenYield;
         }
@@ -130,7 +132,17 @@ export class PoolApr {
           // INFO: Liquidity mining APR can't cascade to other pools
           const subSwapFees = await this.swapFees(subPool);
           const subtokenAprs = await this.tokenAprs(subPool);
-          apr = subSwapFees + subtokenAprs.total;
+          let subApr = subtokenAprs.total;
+          if (
+            pool.poolType === 'ComposableStable' ||
+            (pool.poolType === 'Weighted' && pool.poolTypeVersion === 2)
+          ) {
+            if (!token.isExemptFromYieldProtocolFee) {
+              subApr =
+                subApr * (1 - parseFloat(pool.protocolYieldFeeCache || '0.5'));
+            }
+          }
+          apr = subSwapFees + subApr;
         }
       }
 
@@ -205,22 +217,53 @@ export class PoolApr {
    * @returns APR [bsp] from protocol rewards.
    */
   async stakingApr(pool: Pool, boost = 1): Promise<number> {
-    // For L2s BAL is emmited as a reward token
-    if (!this.liquidityGauges || pool.chainId != 1) {
+    if (!this.liquidityGauges) {
       return 0;
     }
 
     // Data resolving
     const gauge = await this.liquidityGauges.findBy('poolId', pool.id);
-    if (!gauge) {
+    if (
+      !gauge ||
+      (pool.chainId == 1 && gauge.workingSupply == 0) ||
+      (pool.chainId > 1 && gauge.totalSupply == 0)
+    ) {
+      return 0;
+    }
+
+    const bal =
+      BALANCER_NETWORK_CONFIG[pool.chainId as Network].addresses.tokens.bal;
+    if (!bal) {
       return 0;
     }
 
     const [balPrice, bptPriceUsd] = await Promise.all([
-      this.tokenPrices.find('0xba100000625a3754423978a60c9317c58a424e3d'), // BAL
+      this.tokenPrices.find(bal), // BAL
       this.bptPrice(pool),
     ]);
-    const balPriceUsd = parseFloat(balPrice?.usd || '0');
+
+    if (!balPrice?.usd) {
+      throw 'Missing BAL price';
+    }
+
+    const balPriceUsd = parseFloat(balPrice.usd);
+
+    // Subgraph is returning BAL staking rewards as reward tokens for L2 gauges.
+    if (pool.chainId > 1) {
+      if (!gauge.rewardTokens) {
+        return 0;
+      }
+
+      const balReward = bal && gauge.rewardTokens[bal];
+      if (balReward) {
+        const reward = await this.rewardTokenApr(bal, balReward);
+        const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
+        const rewardValue = reward.value / totalSupplyUsd;
+        return Math.round(10000 * rewardValue);
+      } else {
+        return 0;
+      }
+    }
 
     const now = Math.round(new Date().getTime() / 1000);
     const totalBalEmissions = emissions.between(now, now + 365 * 86400);
@@ -256,7 +299,12 @@ export class PoolApr {
       return { total: 0, breakdown: {} };
     }
 
-    const rewardTokenAddresses = Object.keys(gauge.rewardTokens);
+    // BAL rewards already returned as stakingApr, so we can filter them out
+    const bal =
+      BALANCER_NETWORK_CONFIG[pool.chainId as Network].addresses.tokens.bal;
+    const rewardTokenAddresses = Object.keys(gauge.rewardTokens).filter(
+      (a) => a != bal
+    );
 
     // Gets each tokens rate, extrapolate to a year and convert to USD
     const rewards = rewardTokenAddresses.map(async (tAddress) => {
@@ -374,10 +422,14 @@ export class PoolApr {
    * @returns Pool liquidity in USD
    */
   private async totalLiquidity(pool: Pool): Promise<string> {
-    const liquidityService = new Liquidity(this.pools, this.tokenPrices);
-    const liquidity = await liquidityService.getLiquidity(pool);
-
-    return liquidity;
+    try {
+      const liquidityService = new Liquidity(this.pools, this.tokenPrices);
+      const liquidity = await liquidityService.getLiquidity(pool);
+      return liquidity;
+    } catch (err) {
+      console.error('Liquidity calculcation failed, falling back to subgraph');
+      return pool.totalLiquidity;
+    }
   }
 
   /**
@@ -399,17 +451,6 @@ export class PoolApr {
     return fee ? fee : 0;
   }
 
-  private async protocolFeesPercentage() {
-    if (this.protocolFees) {
-      return await this.protocolFees.getFees();
-    }
-
-    return {
-      swapFee: 0,
-      yieldFee: 0,
-    };
-  }
-
   private async rewardTokenApr(tokenAddress: string, rewardData: RewardData) {
     if (rewardData.period_finish.toNumber() < Date.now() / 1000) {
       return {
@@ -420,8 +461,13 @@ export class PoolApr {
       const yearlyReward = rewardData.rate.mul(86400).mul(365);
       const price = await this.tokenPrices.find(tokenAddress);
       if (price && price.usd) {
-        const meta = await this.tokenMeta.find(tokenAddress);
-        const decimals = meta?.decimals || 18;
+        let decimals = 18;
+        if (rewardData.decimals) {
+          decimals = rewardData.decimals;
+        } else {
+          const meta = await this.tokenMeta.find(tokenAddress);
+          decimals = meta?.decimals || 18;
+        }
         const yearlyRewardUsd =
           parseFloat(formatUnits(yearlyReward, decimals)) *
           parseFloat(price.usd);
