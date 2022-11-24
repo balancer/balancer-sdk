@@ -10,18 +10,19 @@ import { forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
+import { SimulationType } from '../simulation/simulation.module';
 
 dotenv.config();
 
 const TEST_BOOSTED = true;
-const TEST_BOOSTED_META = true;
-const TEST_BOOSTED_META_ALT = true;
-const TEST_BOOSTED_META_BIG = true;
-const TEST_BOOSTED_WEIGHTED_SIMPLE = true;
-const TEST_BOOSTED_WEIGHTED_GENERAL = true;
-const TEST_BOOSTED_WEIGHTED_META = true;
-const TEST_BOOSTED_WEIGHTED_META_ALT = true;
-const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
+const TEST_BOOSTED_META = false;
+const TEST_BOOSTED_META_ALT = false;
+const TEST_BOOSTED_META_BIG = false;
+const TEST_BOOSTED_WEIGHTED_SIMPLE = false;
+const TEST_BOOSTED_WEIGHTED_GENERAL = false;
+const TEST_BOOSTED_WEIGHTED_META = false;
+const TEST_BOOSTED_WEIGHTED_META_ALT = false;
+const TEST_BOOSTED_WEIGHTED_META_GENERAL = false;
 
 /*
  * Testing on GOERLI
@@ -95,6 +96,8 @@ const runTests = async (tests: Test[]) => {
   for (let i = 0; i < tests.length; i++) {
     const test = tests[i];
     it(test.description, async () => {
+      // const userAddress = '0xb7d222a710169f42ddff2a9a5122bd7c724dc203';
+      // const authorisation = undefined;
       const userAddress = await test.signer.getAddress();
       const authorisation = await Relayer.signRelayerApproval(
         relayer,
@@ -138,12 +141,13 @@ const testFlow = async (
     userAddress,
     wrapMainTokens,
     slippage,
+    SimulationType.VaultModel,
     authorisation
   );
 
   const response = await signer.sendTransaction({
     to: query.to,
-    data: query.callData,
+    data: query.encodedCall,
     gasLimit,
   });
 

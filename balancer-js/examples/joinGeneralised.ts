@@ -6,6 +6,7 @@ import { forkSetup, getBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
 import { Relayer } from '../src/modules/relayer/relayer.module';
 import { Contracts } from '../src/modules/contracts/contracts.module';
+import { SimulationType } from '../src/modules/simulation/simulation.module';
 
 dotenv.config();
 
@@ -16,7 +17,7 @@ const {
   TENDERLY_USER,
 } = process.env;
 const network = Network.GOERLI;
-const blockNumber = 7890980;
+const blockNumber = 8006790;
 const rpcUrl = 'http://127.0.0.1:8000';
 const addresses = ADDRESSES[network];
 
@@ -132,13 +133,14 @@ async function join() {
     signerAddress,
     wrapLeafTokens,
     slippage,
+    SimulationType.VaultModel,
     relayerAuth
   );
 
   // Submit join tx
   const transactionResponse = await signer.sendTransaction({
     to: query.to,
-    data: query.callData,
+    data: query.encodedCall,
   });
 
   await transactionResponse.wait();

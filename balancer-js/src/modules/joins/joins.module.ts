@@ -1,4 +1,3 @@
-import { defaultAbiCoder } from '@ethersproject/abi';
 import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
@@ -10,7 +9,12 @@ import {
 } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { Relayer } from '@/modules/relayer/relayer.module';
+import {
+  EncodeBatchSwapInput,
+  EncodeJoinPoolInput,
+  EncodeWrapAaveDynamicTokenInput,
+  Relayer,
+} from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { StablePoolEncoder } from '@/pool-stable';
 import {
@@ -24,7 +28,6 @@ import { Findable } from '../data/types';
 import { PoolGraph, Node } from '../graph/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
-import TenderlyHelper from '@/lib/utils/tenderlyHelper';
 import balancerRelayerAbi from '@/lib/abi/RelayerV4.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers, isSameAddress } from '@/lib/utils';
@@ -36,27 +39,24 @@ import {
 import { calcPriceImpact } from '../pricing/priceImpact';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { getPoolAddress } from '@/pool-utils';
+import { Simulation, SimulationType } from '../simulation/simulation.module';
+import { Requests, VaultModel } from '../vaultModel/vaultModel.module';
+import { BatchSwapRequest } from '../vaultModel/poolModel/swap';
+import { JoinPoolRequest as JoinPoolModelRequest } from '../vaultModel/poolModel/join';
+
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 export class Join {
   private relayer: string;
   private wrappedNativeAsset;
-  private tenderlyHelper: TenderlyHelper | undefined;
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
-    private networkConfig: BalancerNetworkConfig
+    private networkConfig: BalancerNetworkConfig,
+    private simulationService: Simulation
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
     this.relayer = contracts.relayerV4 as string;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
-
-    if (!networkConfig.tenderly) {
-      this.tenderlyHelper = undefined;
-    } else
-      this.tenderlyHelper = new TenderlyHelper(
-        networkConfig.chainId,
-        networkConfig.tenderly
-      );
   }
 
   async joinPool(
@@ -66,10 +66,11 @@ export class Join {
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
+    simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
     to: string;
-    callData: string;
+    encodedCall: string;
     expectedOut: string;
     minOut: string;
     priceImpact: string;
@@ -99,7 +100,11 @@ export class Join {
     */
     // Create calls with 0 expected for each root join
     // Peek is enabled here so we can static call the returned amounts and use these to set limits
-    const { callData: queryData, outputIndexes } = await this.createCalls(
+    const {
+      multiRequests,
+      encodedCall: queryData,
+      outputIndexes,
+    } = await this.createCalls(
       joinPaths,
       userAddress,
       undefined,
@@ -109,9 +114,11 @@ export class Join {
     // static call (or V4 special call) to get actual amounts for each root join
     const { amountsOut, totalAmountOut } = await this.amountsOutByJoinPath(
       userAddress,
+      multiRequests,
       queryData,
       tokensIn,
-      outputIndexes
+      outputIndexes,
+      simulationType
     );
 
     const { minAmountsOut, totalMinAmountOut } = this.minAmountsOutByJoinPath(
@@ -126,7 +133,7 @@ export class Join {
     ).toString();
 
     // Create calls with minAmountsOut
-    const { callData, deltas } = await this.createCalls(
+    const { encodedCall, deltas } = await this.createCalls(
       joinPaths,
       userAddress,
       minAmountsOut,
@@ -137,7 +144,7 @@ export class Join {
 
     return {
       to: this.relayer,
-      callData,
+      encodedCall,
       expectedOut: totalAmountOut,
       minOut: totalMinAmountOut,
       priceImpact,
@@ -337,27 +344,27 @@ export class Join {
     minAmountsOut?: string[], // one for each joinPath
     authorisation?: string
   ): Promise<{
-    callData: string;
+    multiRequests: Requests[][];
+    encodedCall: string;
     outputIndexes: number[];
     deltas: Record<string, BigNumber>;
   }> => {
     // Create calls for both leaf and non-leaf inputs
-    const { calls, outputIndexes, deltas } = this.createActionCalls(
-      joinPaths,
-      userAddress,
-      minAmountsOut
-    );
+    const { multiRequests, encodedCalls, outputIndexes, deltas } =
+      this.createActionCalls(joinPaths, userAddress, minAmountsOut);
 
     if (authorisation) {
-      calls.unshift(this.createSetRelayerApproval(authorisation));
+      encodedCalls.unshift(this.createSetRelayerApproval(authorisation));
     }
 
-    const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
-      calls,
-    ]);
+    const encodedCall = balancerRelayerInterface.encodeFunctionData(
+      'multicall',
+      [encodedCalls]
+    );
 
     return {
-      callData,
+      multiRequests,
+      encodedCall,
       outputIndexes: authorisation
         ? outputIndexes.map((i) => i + 1)
         : outputIndexes,
@@ -431,41 +438,26 @@ export class Join {
   */
   amountsOutByJoinPath = async (
     userAddress: string,
+    multiRequests: Requests[][],
     callData: string,
     tokensIn: string[],
-    outputIndexes: number[]
+    outputIndexes: number[],
+    simulationType: SimulationType
   ): Promise<{ amountsOut: string[]; totalAmountOut: string }> => {
-    const amountsOut: string[] = [];
-
-    if (this.tenderlyHelper === undefined)
-      throw new Error('Missing Tenderly Config.');
-
-    const staticResult = await this.tenderlyHelper.simulateMulticall(
-      this.relayer,
-      callData,
-      userAddress,
-      tokensIn
-    );
-
-    const multicallResult = defaultAbiCoder.decode(
-      ['bytes[]'],
-      staticResult
-    )[0] as string[];
-
-    let totalAmountOut = BigNumber.from('0');
-    // Decode each root output
-    outputIndexes.forEach((outputIndex) => {
-      const value = defaultAbiCoder.decode(
-        ['uint256'],
-        multicallResult[outputIndex]
+    const { amountsOut, totalAmountOut } =
+      await this.simulationService.simulateGeneralisedJoin(
+        this.relayer,
+        multiRequests,
+        callData,
+        outputIndexes,
+        userAddress,
+        tokensIn,
+        simulationType
       );
-      amountsOut.push(value.toString());
-      totalAmountOut = totalAmountOut.add(value.toString());
-    });
 
     return {
       amountsOut,
-      totalAmountOut: totalAmountOut.toString(),
+      totalAmountOut,
     };
   };
 
@@ -511,17 +503,20 @@ export class Join {
     userAddress: string,
     minAmountsOut?: string[]
   ): {
-    calls: string[];
+    multiRequests: Requests[][];
+    encodedCalls: string[];
     outputIndexes: number[];
     deltas: Record<string, BigNumber>;
   } => {
-    const calls: string[] = [];
+    const multiRequests: Requests[][] = [];
+    const encodedCalls: string[] = [];
     const outputIndexes: number[] = [];
     const isPeek = !minAmountsOut;
     const deltas: Record<string, BigNumber> = {};
 
     joinPaths.forEach((joinPath, j) => {
       const isLeafJoin = joinPath[0].isLeaf;
+      const modelRequests: Requests[] = [];
       joinPath.forEach((node, i) => {
         let nodeChildrenWithinJoinPath;
         if (isLeafJoin) {
@@ -562,60 +557,71 @@ export class Join {
         switch (node.joinAction) {
           // TODO - Add other Relayer supported Unwraps
           case 'wrapAaveDynamicToken':
-            // relayer has no allowance to spend its own wrapped tokens so recipient must be the user
-            calls.push(
-              this.createAaveWrap(
+            {
+              // relayer has no allowance to spend its own wrapped tokens so recipient must be the user
+              const { encodedCall } = this.createAaveWrap(
                 node,
                 nodeChildrenWithinJoinPath,
                 j,
                 sender,
                 userAddress
-              )
-            );
+              );
+              // modelRequests.push(modelRequest); // TODO: add model request when available
+              encodedCalls.push(encodedCall);
+            }
             break;
-          case 'batchSwap': {
-            const [call, assets, limits] = this.createBatchSwap(
-              node,
-              nodeChildrenWithinJoinPath,
-              j,
-              minOut,
-              sender,
-              recipient
-            );
-            calls.push(call);
-            this.updateDeltas(deltas, assets, limits);
+          case 'batchSwap':
+            {
+              const { modelRequest, encodedCall, assets, amounts } =
+                this.createBatchSwap(
+                  node,
+                  nodeChildrenWithinJoinPath,
+                  j,
+                  minOut,
+                  sender,
+                  recipient
+                );
+              modelRequests.push(modelRequest);
+              encodedCalls.push(encodedCall);
+              this.updateDeltas(deltas, assets, amounts);
+            }
             break;
-          }
-          case 'joinPool': {
-            const [call, tokensIn, amountsIn, minBptOut] = this.createJoinPool(
-              node,
-              nodeChildrenWithinJoinPath,
-              j,
-              minOut,
-              sender,
-              recipient
-            );
-            calls.push(call);
-            this.updateDeltas(
-              deltas,
-              [node.address, ...tokensIn],
-              [minBptOut, ...amountsIn]
-            );
+          case 'joinPool':
+            {
+              const { modelRequest, encodedCall, assets, amounts, minBptOut } =
+                this.createJoinPool(
+                  node,
+                  nodeChildrenWithinJoinPath,
+                  j,
+                  minOut,
+                  sender,
+                  recipient
+                );
+              modelRequests.push(modelRequest);
+              encodedCalls.push(encodedCall);
+              this.updateDeltas(
+                deltas,
+                [node.address, ...assets],
+                [minBptOut, ...amounts]
+              );
+            }
             break;
-          }
+          default:
+            return;
         }
       });
       if (isPeek) {
         const outputRef = 100 * j;
-        const peekCall = Relayer.encodePeekChainedReferenceValue(
+        const encodedPeekCall = Relayer.encodePeekChainedReferenceValue(
           Relayer.toChainedReference(outputRef, false)
         );
-        calls.push(peekCall);
-        outputIndexes.push(calls.indexOf(peekCall));
+        encodedCalls.push(encodedPeekCall);
+        outputIndexes.push(encodedCalls.indexOf(encodedPeekCall));
       }
+      multiRequests.push(modelRequests);
     });
 
-    return { calls, outputIndexes, deltas };
+    return { multiRequests, encodedCalls, outputIndexes, deltas };
   };
 
   /**
@@ -693,7 +699,7 @@ export class Join {
     joinPathIndex: number,
     sender: string,
     recipient: string
-  ): string => {
+  ): { encodedCall: string } => {
     // Throws error based on the assumption that aaveWrap apply only to input tokens from leaf nodes
     if (nodeChildrenWithinJoinPath.length !== 1)
       throw new Error('aaveWrap nodes should always have a single child node');
@@ -702,14 +708,15 @@ export class Join {
 
     const staticToken = node.address;
     const amount = childNode.index;
-    const call = Relayer.encodeWrapAaveDynamicToken({
+    const call: EncodeWrapAaveDynamicTokenInput = {
       staticToken,
       sender,
       recipient,
       amount,
       fromUnderlying: true,
       outputReference: this.getOutputRefValue(joinPathIndex, node).value,
-    });
+    };
+    const encodedCall = Relayer.encodeWrapAaveDynamicToken(call);
 
     // console.log(
     //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
@@ -720,7 +727,7 @@ export class Join {
     //   )`
     // );
 
-    return call;
+    return { encodedCall };
   };
 
   createBatchSwap = (
@@ -730,7 +737,12 @@ export class Join {
     expectedOut: string,
     sender: string,
     recipient: string
-  ): [string, string[], string[]] => {
+  ): {
+    modelRequest: BatchSwapRequest;
+    encodedCall: string;
+    assets: string[];
+    amounts: string[];
+  } => {
     // We only need batchSwaps for main/wrapped > linearBpt so shouldn't be more than token > token
     if (nodeChildrenWithinJoinPath.length !== 1)
       throw new Error('Unsupported batchswap');
@@ -790,23 +802,27 @@ export class Join {
     //   )`
     // );
 
-    const call = Relayer.encodeBatchSwap({
+    const call: EncodeBatchSwapInput = {
       swapType: SwapType.SwapExactIn,
       swaps,
       assets,
       funds,
       limits,
       deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
-      value: '0',
+      value: '0', // TODO: handle join with ETH
       outputReferences,
-    });
+    };
+    const encodedCall = Relayer.encodeBatchSwap(call);
+
+    const modelRequest = VaultModel.mapBatchSwapRequest(call);
 
     // If the sender is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
     const userTokenIn = sender === this.relayer ? '0' : limits[1];
     // If the receiver is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
     const userBptOut = recipient === this.relayer ? '0' : limits[0];
+    const amounts = [userBptOut, userTokenIn];
 
-    return [call, assets, [userBptOut, userTokenIn]];
+    return { modelRequest, encodedCall, assets, amounts };
   };
 
   createJoinPool = (
@@ -816,7 +832,13 @@ export class Join {
     minAmountOut: string,
     sender: string,
     recipient: string
-  ): [string, string[], string[], string] => {
+  ): {
+    modelRequest: JoinPoolModelRequest;
+    encodedCall: string;
+    assets: string[];
+    amounts: string[];
+    minBptOut: string;
+  } => {
     const inputTokens: string[] = [];
     const inputAmts: string[] = [];
 
@@ -895,7 +917,7 @@ export class Join {
     //   )`
     // );
 
-    const call = Relayer.constructJoinCall({
+    const call: EncodeJoinPoolInput = Relayer.formatJoinPoolInput({
       poolId: node.id,
       kind: 0,
       sender,
@@ -908,6 +930,8 @@ export class Join {
       userData,
       fromInternalBalance: sender === this.relayer,
     });
+    const encodedCall = Relayer.encodeJoinPool(call);
+    const modelRequest = VaultModel.mapJoinPoolRequest(call);
 
     const userAmountsTokenIn = sortedAmounts.map((a) =>
       Relayer.isChainedReference(a) ? '0' : a
@@ -916,16 +940,16 @@ export class Join {
       ? '0'
       : minAmountOut;
 
-    return [
-      call,
-      // If the sender is the Relayer the join is part of a chain and shouldn't be considered for user deltas
-      sender === this.relayer ? [] : sortedTokens,
-      sender === this.relayer ? [] : userAmountsTokenIn,
-      // If the receiver is the Relayer the join is part of a chain and shouldn't be considered for user deltas
+    // If the sender is the Relayer the join is part of a chain and shouldn't be considered for user deltas
+    const assets = sender === this.relayer ? [] : sortedTokens;
+    const amounts = sender === this.relayer ? [] : userAmountsTokenIn;
+    // If the receiver is the Relayer the join is part of a chain and shouldn't be considered for user deltas
+    const minBptOut =
       recipient === this.relayer
         ? Zero.toString()
-        : Zero.sub(userAmountOut).toString(), // -ve because coming from Vault
-    ];
+        : Zero.sub(userAmountOut).toString(); // -ve because coming from Vault
+
+    return { modelRequest, encodedCall, assets, amounts, minBptOut };
   };
 
   getOutputRefValue = (

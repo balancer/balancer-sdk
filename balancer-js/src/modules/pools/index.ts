@@ -16,6 +16,7 @@ import { Join } from '../joins/joins.module';
 import { Exit } from '../exits/exits.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
+import { Simulation, SimulationType } from '../simulation/simulation.module';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -27,6 +28,7 @@ export class Pools implements Findable<PoolWithMethods> {
   exitService;
   feesService;
   volumeService;
+  simulationService;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -46,7 +48,15 @@ export class Pools implements Findable<PoolWithMethods> {
       repositories.pools,
       repositories.tokenPrices
     );
-    this.joinService = new Join(this.repositories.pools, networkConfig);
+    this.simulationService = new Simulation(
+      networkConfig,
+      this.repositories.poolsForSor
+    );
+    this.joinService = new Join(
+      this.repositories.pools,
+      networkConfig,
+      this.simulationService
+    );
     this.exitService = new Exit(this.repositories.pools, networkConfig);
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
@@ -96,10 +106,11 @@ export class Pools implements Findable<PoolWithMethods> {
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
+    simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
     to: string;
-    callData: string;
+    encodedCall: string;
     minOut: string;
     expectedOut: string;
   }> {
@@ -110,6 +121,7 @@ export class Pools implements Findable<PoolWithMethods> {
       userAddress,
       wrapMainTokens,
       slippage,
+      simulationType,
       authorisation
     );
   }

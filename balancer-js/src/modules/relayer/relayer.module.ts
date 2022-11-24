@@ -232,7 +232,7 @@ export class Relayer {
     return exitEncoded;
   }
 
-  static constructJoinCall(params: JoinPoolData): string {
+  static formatJoinPoolInput(params: JoinPoolData): EncodeJoinPoolInput {
     const {
       assets,
       maxAmountsIn,
@@ -263,8 +263,7 @@ export class Relayer {
       joinPoolRequest,
     };
 
-    const joinEncoded = Relayer.encodeJoinPool(joinPoolInput);
-    return joinEncoded;
+    return joinPoolInput;
   }
 
   /**

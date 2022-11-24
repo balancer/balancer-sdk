@@ -8,6 +8,11 @@ import { ExitPoolRequest } from './poolModel/exit';
 import { BatchSwapRequest } from './poolModel/swap';
 import { RelayerModel } from './relayer';
 import { PoolsSource } from './poolSource';
+import {
+  EncodeBatchSwapInput,
+  EncodeJoinPoolInput,
+  EncodeExitPoolInput,
+} from '../relayer/types';
 
 export enum ActionType {
   BatchSwap,
@@ -58,5 +63,37 @@ export class VaultModel {
       }
     }
     return deltas;
+  }
+
+  static mapBatchSwapRequest(call: EncodeBatchSwapInput): BatchSwapRequest {
+    const batchSwapRequest: BatchSwapRequest = {
+      actionType: ActionType.BatchSwap,
+      swaps: call.swaps,
+      assets: call.assets,
+      funds: call.funds,
+      swapType: call.swapType,
+      outputReferences: call.outputReferences,
+    };
+    return batchSwapRequest;
+  }
+
+  static mapJoinPoolRequest(call: EncodeJoinPoolInput): JoinPoolRequest {
+    const joinPoolRequest: JoinPoolRequest = {
+      actionType: ActionType.Join,
+      poolId: call.poolId,
+      encodedUserData: call.joinPoolRequest.userData,
+      outputReference: call.outputReference,
+    };
+    return joinPoolRequest;
+  }
+
+  static mapExitPoolRequest(call: EncodeExitPoolInput): ExitPoolRequest {
+    const exitPoolRequest: ExitPoolRequest = {
+      actionType: ActionType.Exit,
+      poolId: call.poolId,
+      encodedUserData: call.exitPoolRequest.userData,
+      outputReferences: call.outputReferences,
+    };
+    return exitPoolRequest;
   }
 }
