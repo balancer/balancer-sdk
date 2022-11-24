@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { Price, Findable, TokenPrices, Network, HistoricalPrices } from '@/types';
+import {
+  Price,
+  Findable,
+  TokenPrices,
+  Network,
+  HistoricalPrices,
+} from '@/types';
 import { wrappedTokensMap as aaveWrappedMap } from '../token-yields/tokens/aave';
 import axios from 'axios';
 import { TOKENS } from '@/lib/constants/tokens';
@@ -106,16 +112,16 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     timestamp: number,
     { signal }: { signal?: AbortSignal } = {}
   ): Promise<HistoricalPrices> {
-    const at = new Date(timestamp * 1000).toISOString();
     const url = this.urlRange(address, timestamp);
-    return axios
-      .get<HistoricalPrices>(url, { signal })
-      .then(({ data }) => {
-        return data;
-      });
+    return axios.get<HistoricalPrices>(url, { signal }).then(({ data }) => {
+      return data;
+    });
   }
 
-  private debouncedFetchHistorical(address: string, timestamp: number): Promise<HistoricalPrices> {
+  private debouncedFetchHistorical(
+    address: string,
+    timestamp: number
+  ): Promise<HistoricalPrices> {
     const { promise, resolve, reject } = makePromise<HistoricalPrices>();
     if (this.timeout) {
       clearTimeout(this.timeout);
@@ -226,13 +232,14 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     return `${this.urlBase}&contract_addresses=${addresses.join(',')}`;
   }
 
-
   private urlRange(address: string, timestamp: number): string {
-    const range: {from: number, to: number} = {
+    const range: { from: number; to: number } = {
       from: timestamp - HOUR,
-      to: timestamp + HOUR
-    }
-    return `${this.urlHistorical.replace('%TOKEN_ADDRESS%', address)}&from=${range.from}&to=${range.to}`;
+      to: timestamp + HOUR,
+    };
+    return `${this.urlHistorical.replace('%TOKEN_ADDRESS%', address)}&from=${
+      range.from
+    }&to=${range.to}`;
   }
 }
 

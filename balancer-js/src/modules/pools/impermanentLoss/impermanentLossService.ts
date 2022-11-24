@@ -8,8 +8,8 @@
  * 3. calculate and return the impermanent loss as percentage rounded to 2 decimal places.
  *
  */
-import {BalancerError, BalancerErrorCode} from '@/balancerErrors';
-import {Findable, Pool, PoolToken, Price} from '@/types';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { Findable, Pool, PoolToken, Price } from '@/types';
 
 type Asset = {
   priceDelta: number;
@@ -17,12 +17,13 @@ type Asset = {
 };
 
 type TokenPrices = {
-  [key:string]: number;
-}
+  [key: string]: number;
+};
 
 export class ImpermanentLossService {
   constructor(
     private tokenPrices: Findable<Price>,
+    private tokenHistoricalPrices: Findable<Price>
   ) {}
 
   /**
@@ -39,7 +40,11 @@ export class ImpermanentLossService {
    */
   async calcImpLoss(timestamp: number, pool: Pool): Promise<number> {
     if (timestamp * 1000 >= Date.now()) {
-      console.error(`[ImpermanentLossService][calcImpLoss]Error: ${BalancerError.getMessage(BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE)}`)
+      console.error(
+        `[ImpermanentLossService][calcImpLoss]Error: ${BalancerError.getMessage(
+          BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE
+        )}`
+      );
       throw new BalancerError(BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE);
     }
     const assets = await this.prepareData(timestamp, pool);
@@ -58,7 +63,10 @@ export class ImpermanentLossService {
     poolValueDelta: number,
     holdValueDelta: number
   ): number {
-    return Math.floor(Math.abs(poolValueDelta / holdValueDelta - 1) * 100 * 100)/100;
+    return (
+      Math.floor(Math.abs(poolValueDelta / holdValueDelta - 1) * 100 * 100) /
+      100
+    );
   }
 
   getPoolValueDelta(assets: Asset[]): number {
@@ -88,7 +96,6 @@ export class ImpermanentLossService {
    *  3. the user has no liquidity invested in the pool
    */
   async prepareData(entryTimestamp: number, pool: Pool): Promise<Asset[]> {
-
     const poolTokens = pool.tokens.filter(
       (token) => token.address !== pool.address
     );
@@ -97,24 +104,38 @@ export class ImpermanentLossService {
 
     const tokenAddresses = poolTokens.map((t) => t.address);
 
-    const entryPrices = await this.getEntryPrices(entryTimestamp, tokenAddresses);
+    const entryPrices = await this.getEntryPrices(
+      entryTimestamp,
+      tokenAddresses
+    );
     const exitPrices: TokenPrices = await this.getExitPrices(poolTokens);
-
 
     return this.getAssets(poolTokens, exitPrices, entryPrices, weights);
   }
 
-  getAssets(poolTokens: PoolToken[], exitPrices: TokenPrices, entryPrices: TokenPrices, weights: number[]): Asset[] {
+  getAssets(
+    poolTokens: PoolToken[],
+    exitPrices: TokenPrices,
+    entryPrices: TokenPrices,
+    weights: number[]
+  ): Asset[] {
     return poolTokens.map((token, i) => ({
-      priceDelta: this.getDelta(entryPrices[token.address], exitPrices[token.address]),
+      priceDelta: this.getDelta(
+        entryPrices[token.address],
+        exitPrices[token.address]
+      ),
       weight: weights[i],
     }));
   }
 
-  getDelta(entryPrice: number, exitPrice: number) {
+  getDelta(entryPrice: number, exitPrice: number): number {
     if (entryPrice === 0) {
-      console.error(`[ImpermanentLossService][getDelta]Error: ${BalancerError.getMessage(BalancerErrorCode.ILLEGAL_PARAMETER)}: entry price is 0`)
-      throw new BalancerError(BalancerErrorCode.ILLEGAL_PARAMETER)
+      console.error(
+        `[ImpermanentLossService][getDelta]Error: ${BalancerError.getMessage(
+          BalancerErrorCode.ILLEGAL_PARAMETER
+        )}: entry price is 0`
+      );
+      throw new BalancerError(BalancerErrorCode.ILLEGAL_PARAMETER);
     }
     return (exitPrice - entryPrice) / entryPrice;
   }
@@ -135,7 +156,11 @@ export class ImpermanentLossService {
       : poolTokens.map((token) => Number(token.weight ?? 0));
 
     if (weights.some((w) => w === 0)) {
-      console.error(`[ImpermanentLossService][getWeights]Error: ${BalancerError.getMessage(BalancerErrorCode.MISSING_WEIGHT)}`)
+      console.error(
+        `[ImpermanentLossService][getWeights]Error: ${BalancerError.getMessage(
+          BalancerErrorCode.MISSING_WEIGHT
+        )}`
+      );
       throw new BalancerError(BalancerErrorCode.MISSING_WEIGHT);
     }
     return weights;
@@ -152,7 +177,11 @@ export class ImpermanentLossService {
     ).catch(() => []);
 
     if (!prices.length || prices.some((price) => price?.usd === undefined)) {
-      console.error(`[ImpermanentLossService][getExitPrices]Error: ${BalancerError.getMessage(BalancerErrorCode.MISSING_PRICE_RATE)}`)
+      console.error(
+        `[ImpermanentLossService][getExitPrices]Error: ${BalancerError.getMessage(
+          BalancerErrorCode.MISSING_PRICE_RATE
+        )}`
+      );
       throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
     }
 
@@ -181,13 +210,20 @@ export class ImpermanentLossService {
   ): Promise<TokenPrices> {
     const prices: TokenPrices = {};
     for (const address of tokenAddresses) {
-      const price = await this.tokenPrices.findBy('timestamp', { address: address, timestamp: timestamp})
+      const price = await this.tokenHistoricalPrices
+        .findBy('timestamp', { address: address, timestamp: timestamp })
         .catch((reason) => {
-          console.error(`[ImpermanentLossService][getEntryPrices]Error: ${reason.message}`)
+          console.error(
+            `[ImpermanentLossService][getEntryPrices]Error: ${reason.message}`
+          );
           return undefined;
         });
       if (!price?.usd) {
-        console.error(`[ImpermanentLossService][getEntryPrices]Error: ${BalancerError.getMessage(BalancerErrorCode.MISSING_PRICE_RATE)}`)
+        console.error(
+          `[ImpermanentLossService][getEntryPrices]Error: ${BalancerError.getMessage(
+            BalancerErrorCode.MISSING_PRICE_RATE
+          )}`
+        );
         throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
       }
       prices[address] = +price.usd;

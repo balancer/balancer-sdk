@@ -1,4 +1,4 @@
-import {ImpermanentLossService} from "@/modules/pools/impermanentLoss/impermanentLossService";
+import { ImpermanentLossService } from '@/modules/pools/impermanentLoss/impermanentLossService';
 import type {
   BalancerNetworkConfig,
   BalancerDataRepositories,
@@ -46,7 +46,10 @@ export class Pools implements Findable<PoolWithMethods> {
     );
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
-    this.impermanentLossService = new ImpermanentLossService(repositories.tokenPrices);
+    this.impermanentLossService = new ImpermanentLossService(
+      repositories.tokenPrices,
+      repositories.tokenHistoricalPrices
+    );
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {

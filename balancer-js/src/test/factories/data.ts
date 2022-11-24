@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { PoolJoinExitRepository, PoolSharesRepository } from '@/modules/data';
 import {
@@ -47,6 +49,7 @@ export const repositores = ({
   pools = stubbed<Pool>(undefined),
   yesterdaysPools = stubbed<Pool>(undefined),
   tokenPrices = stubbed<Price>({ usd: '1' }),
+  tokenHistoricalPrices = stubbed<Price>({ usd: '1' }),
   tokenMeta = stubbed<Token>({ decimals: 18 }),
   liquidityGauges = stubbed<LiquidityGauge>(undefined),
   feeDistributor = {
@@ -73,6 +76,7 @@ export const repositores = ({
   pools,
   yesterdaysPools,
   tokenPrices,
+  tokenHistoricalPrices,
   tokenMeta,
   liquidityGauges,
   feeDistributor,

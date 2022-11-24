@@ -41,18 +41,12 @@ export class PoolJoinExitRepository extends BalancerSubgraphRepository<
     return this.findAllBy(PoolJoinExitAttributes.Sender, sender, first, skip);
   }
 
-  async findJoins(
-    sender: string,
-    pool: string,
-  ): Promise<PoolJoinExit[]> {
-    return this.query({ where: {sender, pool, type: "Join"}});
+  async findJoins(sender: string, pool: string): Promise<PoolJoinExit[]> {
+    return this.query({ where: { sender, pool, type: 'Join' } });
   }
 
-  async findExits(
-    sender: string,
-    pool: string,
-  ): Promise<PoolJoinExit[]> {
-    return this.query({ where: { sender, pool, type: "Exit"}});
+  async findExits(sender: string, pool: string): Promise<PoolJoinExit[]> {
+    return this.query({ where: { sender, pool, type: 'Exit' } });
   }
 
   async findByPool(

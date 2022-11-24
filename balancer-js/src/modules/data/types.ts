@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export { LiquidityGauge } from './liquidity-gauges/provider';
 export { PoolAttribute } from './pool/types';
 export { TokenAttribute } from './token/types';

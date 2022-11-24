@@ -1,8 +1,10 @@
-import {BalancerError, BalancerErrorCode} from "@/balancerErrors";
-import {ImpermanentLossService} from '@/modules/pools/impermanentLoss/impermanentLossService';
-import {BalancerSDK} from '@/modules/sdk.module';
-import {Network, Pool} from '@/types';
-import {expect} from 'chai';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { ImpermanentLossService } from '@/modules/pools/impermanentLoss/impermanentLossService';
+import { BalancerSDK } from '@/modules/sdk.module';
+import { Network, Pool } from '@/types';
+import { expect } from 'chai';
 
 const TEST_DATA: { [key: string]: { poolId: string } } = {
   ComposableStablePool: {
@@ -28,16 +30,16 @@ const network = Network.POLYGON;
 const sdk = new BalancerSDK({ network, rpcUrl });
 const service = new ImpermanentLossService(
   sdk.data.tokenPrices,
+  sdk.data.tokenHistoricalPrices
 );
-
 
 const getPool = async (poolId: string): Promise<Pool> => {
   const pool = await sdk.pools.find(poolId);
   if (!pool) {
     throw new Error('poll not found');
   }
-  return pool
-}
+  return pool;
+};
 /*
  * REALLY MORE A LIST OF USE CASE SCENARIOS THAN AN INTEGRATION TEST.
  *
@@ -48,7 +50,7 @@ describe('ImpermanentLossService', () => {
     it('should return an IL gte 0', async () => {
       const testData = TEST_DATA.ComposableStablePool;
       const pool = await getPool(testData.poolId);
-      const timestamp = 1666276501;
+      const timestamp = 1666601608;
       const loss = await service.calcImpLoss(timestamp, pool);
       expect(loss).gte(0);
     });
@@ -57,7 +59,7 @@ describe('ImpermanentLossService', () => {
     it('should return an IL gte 0', async () => {
       const testData = TEST_DATA.WeightedPool;
       const pool = await getPool(testData.poolId);
-      const timestamp = 1666276501;
+      const timestamp = 1666601608;
       const loss = await service.calcImpLoss(timestamp, pool);
       expect(loss).gte(0);
     });
@@ -70,21 +72,24 @@ describe('ImpermanentLossService', () => {
       try {
         await service.calcImpLoss(timestamp, pool);
       } catch (e: any) {
-        expect(e.message).eq(BalancerError.getMessage(BalancerErrorCode.MISSING_PRICE_RATE));
+        expect(e.message).eq(
+          BalancerError.getMessage(BalancerErrorCode.MISSING_PRICE_RATE)
+        );
       }
     });
   });
-  context('when queried for pool Weighted Pool with missing user data',() => {
-      it('should throw an exception', async () => {
-        const testData = TEST_DATA.WeightedPoolWithMissingUserData;
-        const pool = await getPool(testData.poolId);
-        const timestamp = Date.now() + 3600000;//1 hour from now
-        try {
-          await service.calcImpLoss(timestamp, pool)
-        } catch (e: any) {
-          expect(e.message).eq(BalancerError.getMessage(BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE))
-        }
-      });
-    }
-  );
+  context('when queried for pool Weighted Pool with missing user data', () => {
+    it('should throw an exception', async () => {
+      const testData = TEST_DATA.WeightedPoolWithMissingUserData;
+      const pool = await getPool(testData.poolId);
+      const timestamp = Date.now() + 3600000; //1 hour from now
+      try {
+        await service.calcImpLoss(timestamp, pool);
+      } catch (e: any) {
+        expect(e.message).eq(
+          BalancerError.getMessage(BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE)
+        );
+      }
+    });
+  });
 });
