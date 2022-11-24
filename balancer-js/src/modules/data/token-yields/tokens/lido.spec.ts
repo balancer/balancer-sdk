@@ -13,7 +13,7 @@ describe('lido apr', () => {
   before(() => {
     mock = new MockAdapter(axios);
     mock
-      .onGet('https://eth-api.lido.fi/v1/protocol/steth/apr/sma')
+      .onGet('https://lido-aprs-proxy.balancer.workers.dev/?network=1')
       .reply(() => [200, mockedResponse]);
   });
 
