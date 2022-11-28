@@ -416,7 +416,7 @@ export class Join {
       }
       parentNode = parentNode.parent;
     }
-    const spPriceScaled = parseFixed(spProduct.toString(), 18);
+    const spPriceScaled = parseFixed(spProduct.toFixed(18), 18);
     const scalingFactor = _computeScalingFactor(BigInt(inputNode.decimals));
     const inputAmountScaled = _upscale(BigInt(inputNode.index), scalingFactor);
     const bptOut = SolidityMaths.divDownFixed(
