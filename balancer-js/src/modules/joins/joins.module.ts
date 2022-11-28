@@ -419,7 +419,7 @@ export class Join {
     const spPriceScaled = parseFixed(spProduct.toString(), 18);
     const scalingFactor = _computeScalingFactor(BigInt(inputNode.decimals));
     const inputAmountScaled = _upscale(BigInt(inputNode.index), scalingFactor);
-    const bptOut = SolidityMaths.mulDownFixed(
+    const bptOut = SolidityMaths.divDownFixed(
       inputAmountScaled,
       spPriceScaled.toBigInt()
     );
