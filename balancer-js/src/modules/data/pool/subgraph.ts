@@ -216,6 +216,7 @@ export class PoolsSubgraphRepository
         subgraphToken.isExemptFromYieldProtocolFee || false,
       token: {
         pool: subgraphTokenPool,
+        latestUSDPrice: subgraphToken.token.latestUSDPrice || undefined,
       },
     };
   }
