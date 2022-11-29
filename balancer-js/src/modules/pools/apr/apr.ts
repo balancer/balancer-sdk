@@ -155,22 +155,26 @@ export class PoolApr {
 
     // Get token weights normalised by usd price
     const getWeight = async (token: PoolToken): Promise<number> => {
+      let tokenPrice: string | undefined;
       if (token.weight) {
         return parseFloat(token.weight);
-      } else {
-        let tokenPrice =
-          token.price?.usd || (await this.tokenPrices.find(token.address))?.usd;
-        if (!tokenPrice) {
-          const poolToken = await this.pools.findBy('address', token.address);
-          if (poolToken) {
-            tokenPrice = (await this.bptPrice(poolToken)).toString();
-          } else {
-            throw `No price for ${token.address}`;
-          }
+      } else if (token.token?.pool?.poolType) {
+        const poolToken = await this.pools.findBy('address', token.address);
+        if (poolToken) {
+          tokenPrice = (await this.bptPrice(poolToken)).toString();
         }
+      } else {
+        tokenPrice =
+          token.price?.usd ||
+          (await this.tokenPrices.find(token.address))?.usd ||
+          token.token?.latestUSDPrice;
+      }
+      if (tokenPrice) {
         // using floats assuming frontend purposes with low precision needs
         const tokenValue = parseFloat(token.balance) * parseFloat(tokenPrice);
         return tokenValue / parseFloat(totalLiquidity);
+      } else {
+        throw `No price for ${token.address}`;
       }
     };
 

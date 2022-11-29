@@ -65,13 +65,21 @@ export class Liquidity {
           address: token.address,
           decimals: token.decimals,
           priceRate: token.priceRate,
-          price: tokenPrice,
+          price: (tokenPrice?.usd && tokenPrice) || {
+            usd: token.token?.latestUSDPrice,
+          },
           balance: token.balance,
           weight: token.weight,
         };
         return poolToken;
       })
     );
+
+    // TODO: Just in case we need it soon. Otherwise remove without mercy.
+    // Any of the tokens is missing the price, use subgraph totalLiquidity
+    // if(nonPoolTokensWithUpdatedPrice.map((t) => t.price?.usd).indexOf(undefined) > -1) {
+    //   return pool.totalLiquidity
+    // }
 
     const tokenLiquidity = PoolTypeConcerns.from(
       pool.poolType
