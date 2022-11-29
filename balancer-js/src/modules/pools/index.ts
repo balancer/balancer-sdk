@@ -113,6 +113,7 @@ export class Pools implements Findable<PoolWithMethods> {
     encodedCall: string;
     minOut: string;
     expectedOut: string;
+    priceImpact: string;
   }> {
     return this.joinService.joinPool(
       poolId,
@@ -148,6 +149,7 @@ export class Pools implements Findable<PoolWithMethods> {
     tokensOut: string[];
     expectedAmountsOut: string[];
     minAmountsOut: string[];
+    priceImpact: string;
   }> {
     return this.exitService.exitPool(
       poolId,

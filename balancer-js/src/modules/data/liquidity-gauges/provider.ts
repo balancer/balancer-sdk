@@ -62,14 +62,18 @@ export class LiquidityGaugeSubgraphRPCProvider
     const gauges: SubgraphLiquidityGauge[] = await this.subgraph.fetch();
     const gaugeAddresses = gauges.map((g) => g.id);
     if (this.chainId == 1) {
+      console.time('Fetching multicall.getWorkingSupplies');
       this.workingSupplies = await this.multicall.getWorkingSupplies(
         gaugeAddresses
       );
+      console.timeEnd('Fetching multicall.getWorkingSupplies');
     }
     if (this.gaugeController) {
+      console.time('Fetching gaugeController.getRelativeWeights');
       this.relativeWeights = await this.gaugeController.getRelativeWeights(
         gaugeAddresses
       );
+      console.timeEnd('Fetching gaugeController.getRelativeWeights');
     }
 
     // Kept as a potential fallback for getting rewardData from RPC

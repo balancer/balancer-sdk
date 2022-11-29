@@ -170,6 +170,7 @@ fragment SubgraphPoolToken on PoolToken {
         pool {
             poolType
         }
+        latestUSDPrice
     }
 }
 
