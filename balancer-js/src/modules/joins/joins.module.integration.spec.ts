@@ -32,9 +32,9 @@ const TEST_BOOSTED_WEIGHTED_META_GENERAL = false;
  * - Uncomment section below:
  */
 const network = Network.GOERLI;
-const blockNumber = 8038074;
+const blockNumber = 8048370;
 const customSubgraphUrl =
-  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
+  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2';
 const { ALCHEMY_URL_GOERLI: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8000';
 
@@ -113,7 +113,7 @@ const runTests = async (tests: Test[]) => {
         test.wrapMainTokens,
         authorisation
       );
-    }).timeout(120000);
+    }).timeout(360000);
   }
 };
 
@@ -247,21 +247,21 @@ describe('generalised join execution', async () => {
       //   authorisation: authorisation,
       //   wrapMainTokens: false,
       // },
-      {
-        signer,
-        description: 'join with 1 leaf and 1 linear',
-        pool: {
-          id: addresses.bbamaiweth.id,
-          address: addresses.bbamaiweth.address,
-        },
-        tokensIn: [addresses.WETH.address, addresses.bbamai.address],
-        amountsIn: [
-          parseFixed('10', 18).toString(),
-          parseFixed('10', 18).toString(),
-        ],
-        authorisation: authorisation,
-        wrapMainTokens: false,
-      },
+      // {
+      //   signer,
+      //   description: 'join with 1 leaf and 1 linear',
+      //   pool: {
+      //     id: addresses.bbamaiweth.id,
+      //     address: addresses.bbamaiweth.address,
+      //   },
+      //   tokensIn: [addresses.WETH.address, addresses.bbamai.address],
+      //   amountsIn: [
+      //     parseFixed('10', 18).toString(),
+      //     parseFixed('10', 18).toString(),
+      //   ],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
     ]);
   });
 
