@@ -168,7 +168,6 @@ fragment SubgraphPoolToken on PoolToken {
     isExemptFromYieldProtocolFee
     token {
         ...TokenTree
-        latestUSDPrice
     }
 }
 
@@ -199,16 +198,19 @@ fragment PoolAttrs on Pool {
 
 fragment TokenTree on Token {
   ...TokenAttrs
+  latestUSDPrice
   pool {
     ...PoolAttrs
     tokens {
       ...PoolTokenAttrs
       token {
+        latestUSDPrice
         pool {
           ...PoolAttrs
           tokens {
             ...PoolTokenAttrs
             token {
+              latestUSDPrice
               pool {
                 ...PoolAttrs
               }
