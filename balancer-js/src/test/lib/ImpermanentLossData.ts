@@ -44,7 +44,7 @@ export const MOCK_POOLS: { [key: string]: Pool } = {
     poolTypeVersion: 1,
     protocolYieldFeeCache: '0',
     lowerTarget: '0',
-    upperTarget: '0'
+    upperTarget: '0',
   },
   WeightedPool_2: {
     chainId: 1,
@@ -82,7 +82,7 @@ export const MOCK_POOLS: { [key: string]: Pool } = {
     poolTypeVersion: 1,
     protocolYieldFeeCache: '0',
     lowerTarget: '0',
-    upperTarget: '0'
+    upperTarget: '0',
   },
   StablePool: {
     chainId: 1,
@@ -130,7 +130,7 @@ export const MOCK_POOLS: { [key: string]: Pool } = {
     poolTypeVersion: 1,
     protocolYieldFeeCache: '0',
     lowerTarget: '0',
-    upperTarget: '0'
+    upperTarget: '0',
   },
 };
 
