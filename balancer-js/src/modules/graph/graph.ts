@@ -150,7 +150,7 @@ export class PoolGraph {
         decimals = token.decimals ? token.decimals : 18;
         return;
       }
-      const sp = controller.calcSpotPrice(token.address, pool.address);
+      const sp = controller.calcSpotPrice(token.address, pool.address, true);
       spotPrices[token.address] = sp;
     });
 
