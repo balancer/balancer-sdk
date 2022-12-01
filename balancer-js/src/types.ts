@@ -39,9 +39,9 @@ export interface BalancerSdkConfig {
 }
 
 export interface BalancerTenderlyConfig {
-  accessKey: string;
-  user: 'balancer' | string;
-  project: 'v2' | string;
+  accessKey?: string;
+  user?: string;
+  project?: string;
   blockNumber?: number;
 }
 
@@ -306,7 +306,11 @@ export interface PoolWithMethods extends Pool {
     amountsOut: string[],
     slippage: string
   ) => ExitPoolAttributes;
-  calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
+  calcSpotPrice: (
+    tokenIn: string,
+    tokenOut: string,
+    isDefault?: boolean
+  ) => string;
 }
 
 export interface GraphQLQuery {

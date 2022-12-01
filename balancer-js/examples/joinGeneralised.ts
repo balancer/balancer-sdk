@@ -104,6 +104,7 @@ async function join() {
     parseFixed('10', 18).toString(),
   ];
 
+  // Custom Tenderly configuration parameters - remove in order to use default values
   const tenderlyConfig = {
     accessKey: TENDERLY_ACCESS_KEY as string,
     user: TENDERLY_USER as string,

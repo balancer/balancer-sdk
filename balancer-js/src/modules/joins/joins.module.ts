@@ -41,7 +41,7 @@ const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 export class Join {
   private relayer: string;
   private wrappedNativeAsset;
-  private tenderlyHelper: TenderlyHelper | undefined;
+  private tenderlyHelper: TenderlyHelper;
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
     private networkConfig: BalancerNetworkConfig
@@ -50,13 +50,10 @@ export class Join {
     this.relayer = contracts.relayerV4 as string;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
 
-    if (!networkConfig.tenderly) {
-      this.tenderlyHelper = undefined;
-    } else
-      this.tenderlyHelper = new TenderlyHelper(
-        networkConfig.chainId,
-        networkConfig.tenderly
-      );
+    this.tenderlyHelper = new TenderlyHelper(
+      networkConfig.chainId,
+      networkConfig.tenderly
+    );
   }
 
   async joinPool(
@@ -436,9 +433,6 @@ export class Join {
     outputIndexes: number[]
   ): Promise<{ amountsOut: string[]; totalAmountOut: string }> => {
     const amountsOut: string[] = [];
-
-    if (this.tenderlyHelper === undefined)
-      throw new Error('Missing Tenderly Config.');
 
     const staticResult = await this.tenderlyHelper.simulateMulticall(
       this.relayer,

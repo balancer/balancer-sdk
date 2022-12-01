@@ -80,6 +80,7 @@ async function exit() {
   // Here we exit with bb-a-usd BPT
   const amount = parseFixed('10', bbausd2.decimals).toString();
 
+  // Custom Tenderly configuration parameters - remove in order to use default values
   const tenderlyConfig = {
     accessKey: TENDERLY_ACCESS_KEY as string,
     user: TENDERLY_USER as string,
