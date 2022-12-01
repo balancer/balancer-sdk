@@ -44,10 +44,13 @@ export class VaultModel {
     return deltas;
   }
 
-  async multicall(rawCalls: Requests[]): Promise<Record<string, BigNumber>> {
+  async multicall(
+    rawCalls: Requests[],
+    refresh = false
+  ): Promise<Record<string, BigNumber>> {
     const relayerModel = new RelayerModel();
     const poolModel = new PoolModel(relayerModel);
-    const pools = await this.poolsSource.poolsDictionary();
+    const pools = await this.poolsSource.poolsDictionary(refresh);
     const deltas: Record<string, BigNumber> = {};
     for (const call of rawCalls) {
       if (call.actionType === ActionType.Join) {

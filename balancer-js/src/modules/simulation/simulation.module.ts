@@ -80,7 +80,7 @@ export class Simulation {
           throw new Error('Missing Vault Model Config.');
         // make one mutlicall for each joinPath
         // take only BPT delta into account
-        for (const requests of multiRequests) {
+        for (const [i, requests] of multiRequests.entries()) {
           const lastRequest = requests[requests.length - 1];
           let poolId = '';
           switch (lastRequest.actionType) {
@@ -92,7 +92,7 @@ export class Simulation {
               poolId = lastRequest.swaps[0].poolId;
           }
           const rootPoolAddress = getPoolAddress(poolId); // BPT address of the pool being joined/exited
-          const deltas = await this.vaultModel.multicall(requests);
+          const deltas = await this.vaultModel.multicall(requests, i === 0);
           const bptOutDelta = deltas[rootPoolAddress].mul(-1); // delta is negative for BPT out on joins
           if (!bptOutDelta) throw new Error('No delta found for BPT out.');
           amountsOut.push(bptOutDelta.toString());
