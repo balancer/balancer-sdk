@@ -117,7 +117,7 @@ export class Join {
       totalAmountOut
     );
     const priceImpact = calcPriceImpact(
-      BigInt(totalMinAmountOut),
+      BigInt(totalAmountOut),
       totalBptZeroPi.toBigInt(),
       true
     ).toString();
