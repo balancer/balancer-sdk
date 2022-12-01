@@ -204,7 +204,10 @@ export interface PoolToken extends Token {
   priceRate?: string;
   weight?: string | null;
   isExemptFromYieldProtocolFee?: boolean;
-  token?: { pool: { poolType: null | PoolType } | null };
+  token?: {
+    pool: { poolType: null | PoolType } | null;
+    latestUSDPrice?: string;
+  };
 }
 
 export interface OnchainTokenData {
@@ -311,7 +314,11 @@ export interface PoolWithMethods extends Pool {
     amountsOut: string[],
     slippage: string
   ) => ExitPoolAttributes;
-  calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
+  calcSpotPrice: (
+    tokenIn: string,
+    tokenOut: string,
+    isDefault?: boolean
+  ) => string;
 }
 
 export interface GraphQLQuery {

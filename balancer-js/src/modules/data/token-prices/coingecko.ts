@@ -34,6 +34,7 @@ const HOUR = 60 * 60;
  */
 export class CoingeckoPriceRepository implements Findable<Price> {
   prices: TokenPrices = {};
+  nativePrice?: Promise<Price>;
   urlBase: string;
   urlHistorical: string;
   baseTokenAddresses: string[];
@@ -69,6 +70,24 @@ export class CoingeckoPriceRepository implements Findable<Price> {
       })
       .finally(() => {
         console.timeEnd(`fetching coingecko for ${addresses.length} tokens`);
+      });
+  }
+
+  private fetchNative({
+    signal,
+  }: { signal?: AbortSignal } = {}): Promise<Price> {
+    console.time(`fetching coingecko for native token`);
+    const assetId = this.chainId === 137 ? 'matic-network' : 'ethereum';
+    return axios
+      .get<Price>(
+        `https://api.coingecko.com/api/v3/simple/price/?vs_currencies=eth,usd&ids=${assetId}`,
+        { signal }
+      )
+      .then(({ data }) => {
+        return data;
+      })
+      .finally(() => {
+        console.timeEnd(`fetching coingecko for native token`);
       });
   }
 
@@ -162,27 +181,37 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   async find(address: string): Promise<Price | undefined> {
     const unwrapped = this.unwrapToken(address);
     if (!this.prices[unwrapped]) {
-      try {
-        let init = false;
-        if (Object.keys(this.prices).length === 0) {
-          // Make initial call with all the tokens we want to preload
-          this.baseTokenAddresses.forEach(
-            this.requestedAddresses.add.bind(this.requestedAddresses)
-          );
-          init = true;
+      // Handle native asset special case
+      if (
+        unwrapped === TOKENS(this.chainId).Addresses.nativeAsset.toLowerCase()
+      ) {
+        if (!this.nativePrice) {
+          this.nativePrice = this.fetchNative();
         }
-        this.requestedAddresses.add(unwrapped);
-        const promised = await this.debouncedFetch();
-        this.prices[unwrapped] = promised[unwrapped];
-        this.requestedAddresses.delete(unwrapped);
-        if (init) {
-          this.baseTokenAddresses.forEach((a) => {
-            this.prices[a] = promised[a];
-            this.requestedAddresses.delete(a);
-          });
+        this.prices[unwrapped] = await this.nativePrice;
+      } else {
+        try {
+          let init = false;
+          if (Object.keys(this.prices).length === 0) {
+            // Make initial call with all the tokens we want to preload
+            this.baseTokenAddresses.forEach(
+              this.requestedAddresses.add.bind(this.requestedAddresses)
+            );
+            init = true;
+          }
+          this.requestedAddresses.add(unwrapped);
+          const promised = await this.debouncedFetch();
+          this.prices[unwrapped] = promised[unwrapped];
+          this.requestedAddresses.delete(unwrapped);
+          if (init) {
+            this.baseTokenAddresses.forEach((a) => {
+              this.prices[a] = promised[a];
+              this.requestedAddresses.delete(a);
+            });
+          }
+        } catch (error) {
+          console.error(error);
         }
-      } catch (error) {
-        console.error(error);
       }
     }
 

@@ -119,6 +119,7 @@ export class Pools implements Findable<PoolWithMethods> {
     callData: string;
     minOut: string;
     expectedOut: string;
+    priceImpact: string;
   }> {
     return this.joinService.joinPool(
       poolId,
@@ -153,6 +154,7 @@ export class Pools implements Findable<PoolWithMethods> {
     tokensOut: string[];
     expectedAmountsOut: string[];
     minAmountsOut: string[];
+    priceImpact: string;
   }> {
     return this.exitService.exitPool(
       poolId,
@@ -252,8 +254,13 @@ export class Pools implements Findable<PoolWithMethods> {
       // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
       // spotPrice: async (tokenIn: string, tokenOut: string) =>
       //   methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, data),
-      calcSpotPrice: (tokenIn: string, tokenOut: string) =>
-        methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, pool),
+      calcSpotPrice: (tokenIn: string, tokenOut: string, isDefault?: boolean) =>
+        methods.spotPriceCalculator.calcPoolSpotPrice(
+          tokenIn,
+          tokenOut,
+          pool,
+          isDefault
+        ),
     };
   }
 

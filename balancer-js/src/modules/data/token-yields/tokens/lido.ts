@@ -2,7 +2,8 @@ import { AprFetcher } from '../repository';
 import axios from 'axios';
 
 export const yieldTokens = {
-  stETH: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+  stETH: '0xae7ab96520de3a18e5e111b5eaab095312d7fe84',
+  wstETH: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
   arbitrumStEth: '0x5979d7b546e38e414f7e9822514be443a4800529',
 };
 
@@ -22,7 +23,7 @@ export const lido: AprFetcher = async () => {
 
   try {
     const response = await axios.get(
-      'https://eth-api.lido.fi/v1/protocol/steth/apr/sma'
+      'https://lido-aprs-proxy.balancer.workers.dev/?network=1'
     );
     const { data: aprs } = response.data as LidoAPIResponse;
 
@@ -33,6 +34,7 @@ export const lido: AprFetcher = async () => {
 
   return {
     [yieldTokens.stETH]: apr,
+    [yieldTokens.wstETH]: apr,
     [yieldTokens.arbitrumStEth]: apr,
   };
 };
