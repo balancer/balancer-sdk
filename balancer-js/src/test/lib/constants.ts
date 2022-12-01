@@ -73,7 +73,8 @@ export const ADDRESSES = {
       symbol: 'bbausd',
     },
     bbausd2: {
-      address: '0x9b532ab955417afd0d012eb9f7389457cd0ea712',
+      id: '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d',
+      address: '0xA13a9247ea42D743238089903570127DdA72fE44'.toLowerCase(),
       decimals: 18,
       symbol: 'bbausd2',
     },
@@ -133,6 +134,13 @@ export const ADDRESSES = {
       address: '0xae37D54Ae477268B9997d4161B96b8200755935c'.toLowerCase(),
       decimals: 18,
       symbol: 'bbadai',
+    },
+    wstETH_bbaUSD: {
+      id: '0x25accb7943fd73dda5e23ba6329085a3c24bfb6a000200000000000000000387',
+      address: '0x25accb7943fd73dda5e23ba6329085a3c24bfb6a',
+      decimals: 18,
+      symbol: 'wstETH_bbaUSD',
+      slot: 0,
     },
   },
   [Network.KOVAN]: {

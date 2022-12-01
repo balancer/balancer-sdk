@@ -68,14 +68,18 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     signal,
   }: { signal?: AbortSignal } = {}): Promise<Price> {
     console.time(`fetching coingecko for native token`);
+    enum Assets {
+      ETH = 'matic-network',
+      MATIC = 'ethereum',
+    }
     const assetId = this.chainId === 137 ? 'matic-network' : 'ethereum';
     return axios
-      .get<Price>(
+      .get<{ [key in Assets]: Price }>(
         `https://api.coingecko.com/api/v3/simple/price/?vs_currencies=eth,usd&ids=${assetId}`,
         { signal }
       )
       .then(({ data }) => {
-        return data;
+        return data[assetId];
       })
       .finally(() => {
         console.timeEnd(`fetching coingecko for native token`);
