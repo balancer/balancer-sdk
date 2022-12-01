@@ -209,12 +209,32 @@ export class PoolsSubgraphRepository
   }
 
   private mapToken(subgraphToken: SubgraphPoolTokenFragment): PoolToken {
-    let subgraphTokenPool: TokenTreePool = null;
+    let subgraphTokenPool: TokenTreePool | null = null;
     if (subgraphToken.token?.pool) {
       subgraphTokenPool = {
-        ...subgraphToken.token.pool,
+        id: subgraphToken.token.pool.id,
+        address: subgraphToken.token.pool.address,
+        totalShares: subgraphToken.token.pool.totalShares,
         poolType: subgraphToken.token.pool.poolType as PoolType,
+        mainIndex: subgraphToken.token.pool.mainIndex || 0,
       };
+
+      if (subgraphToken.token?.pool.tokens) {
+        subgraphTokenPool.tokens = subgraphToken.token.pool.tokens.map(
+          (token) => {
+            return {
+              address: token.address,
+              decimals: token.decimals,
+              symbol: token.symbol,
+              balance: token.balance,
+              priceRate: token.priceRate,
+              weight: token.weight,
+              isExemptFromYieldProtocolFee:
+                token.isExemptFromYieldProtocolFee || undefined,
+            };
+          }
+        );
+      }
     }
     return {
       ...subgraphToken,

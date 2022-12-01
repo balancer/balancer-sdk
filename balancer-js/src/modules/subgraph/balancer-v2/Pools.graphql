@@ -168,15 +168,23 @@ fragment SubgraphPoolToken on PoolToken {
     isExemptFromYieldProtocolFee
     token {
         ...TokenTree
+        latestUSDPrice
     }
 }
 
 
-fragment TokenAttrs on PoolToken {
+fragment PoolTokenAttrs on PoolToken {
   address
   balance
   weight
   priceRate
+  symbol
+  decimals
+  isExemptFromYieldProtocolFee
+}
+
+fragment TokenAttrs on Token {
+  address
   symbol
   decimals
 }
@@ -189,22 +197,20 @@ fragment PoolAttrs on Pool {
   mainIndex
 }
 
-fragment TokenTree on PoolToken {
+fragment TokenTree on Token {
   ...TokenAttrs
-  token {
-    pool {
-      ...PoolAttrs
-      tokens {
-        ...TokenAttrs
-        token {
-          pool {
-            ...PoolAttrs
-            tokens {
-              ...TokenAttrs
-              token {
-                pool {
-                  ...PoolAttrs
-                }
+  pool {
+    ...PoolAttrs
+    tokens {
+      ...PoolTokenAttrs
+      token {
+        pool {
+          ...PoolAttrs
+          tokens {
+            ...PoolTokenAttrs
+            token {
+              pool {
+                ...PoolAttrs
               }
             }
           }
