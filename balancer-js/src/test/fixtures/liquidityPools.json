@@ -1069,5 +1069,72 @@
         "decimals": 18
       }
     ]
+  },
+  {
+    "apr": {
+      "protocolApr": 0,
+      "min": 0,
+      "max": 0,
+      "rewardAprs": { "total": 0, "breakdown": {} },
+      "stakingApr": { "max": 0, "min": 0 },
+      "swapFees": 0,
+      "tokenAprs": { "total": 0, "breakdown": {} }
+    },
+    "isNew": false,
+    "swapEnabled": true,
+    "volumeSnapshot": "0",
+    "protocolYieldFeeCache": "0",
+    "name": "33WMATIC-33USDC-33XUSD",
+    "poolTypeVersion": 1,
+    "owner": "0x36cca19c2e8906a2106a0e19b1b8d550ee772439",
+    "id": "0xc8e4f10085308df1df25ef3e8ad5dd08b09655370001000000000000000008dc",
+    "totalSwapVolume": "10.22078653831400437181835257771427",
+    "totalShares": "0.000000000001",
+    "tokensList": [
+      "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+      "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "0x81ee105457c4eafc061b8c8fedc7bb45d22286d2"
+    ],
+    "mainIndex": 0,
+    "factory": "0x8e9aa87e45e92bad84d5f8dd1bff34fb92637de9",
+    "symbol": "33WMATIC-33USDC-33XUSD",
+    "wrappedIndex": 0,
+    "poolType": "Weighted",
+    "address": "0xc8e4f10085308df1df25ef3e8ad5dd08b0965537",
+    "createTime": 1668602382,
+    "tokenAddresses": [
+      "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+      "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "0x81ee105457c4eafc061b8c8fedc7bb45d22286d2"
+    ],
+    "lastUpdate": 1669251894597,
+    "totalWeight": "1",
+    "totalSwapFee": "0.03066235961494201311545505773314281",
+    "chainId": 137,
+    "totalLiquidity": "0.000001502925299805",
+    "graphData": {
+      "totalLiquidity": "0.000001000000312189674882758668439975644"
+    },
+    "swapFee": "0.003",
+    "tokens": [
+      {
+        "id": "0xc8e4f10085308df1df25ef3e8ad5dd08b09655370001000000000000000008dc-0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+        "priceRate": "1",
+        "balance": "0.000000000000346894",
+        "managedBalance": "0"
+      },
+      {
+        "id": "0xc8e4f10085308df1df25ef3e8ad5dd08b09655370001000000000000000008dc-0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "priceRate": "1",
+        "balance": "0.000001",
+        "managedBalance": "0"
+      },
+      {
+        "id": "0xc8e4f10085308df1df25ef3e8ad5dd08b09655370001000000000000000008dc-0x81ee105457c4eafc061b8c8fedc7bb45d22286d2",
+        "priceRate": "1",
+        "balance": "0.000000000000324009",
+        "managedBalance": "0"
+      }
+    ]
   }
 ]

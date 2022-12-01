@@ -167,12 +167,24 @@ fragment SubgraphPoolToken on PoolToken {
     priceRate
     isExemptFromYieldProtocolFee
     token {
-        pool {
-            poolType
-        }
-        latestUSDPrice
+        ...SubgraphToken
     }
 }
+
+fragment SubgraphToken on Token {
+    pool {
+        id
+        address
+        poolType
+        totalShares
+        mainIndex
+        tokens {
+            ...SubgraphPoolToken
+        }
+    }
+    latestUSDPrice
+}
+
 
 query PoolHistoricalLiquidities(
     $skip: Int

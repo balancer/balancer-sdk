@@ -13,7 +13,13 @@ import {
 } from '@/lib/graphql/args-builder';
 import { GraphQLArgs } from '@/lib/graphql/types';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
-import { GraphQLQuery, Pool, PoolType, PoolToken } from '@/types';
+import {
+  GraphQLQuery,
+  Pool,
+  PoolType,
+  PoolToken,
+  TokenTreePool,
+} from '@/types';
 import { Network } from '@/lib/constants/network';
 import { PoolsQueryVariables } from '../../subgraph/subgraph';
 
@@ -203,7 +209,7 @@ export class PoolsSubgraphRepository
   }
 
   private mapToken(subgraphToken: SubgraphPoolTokenFragment): PoolToken {
-    let subgraphTokenPool = null;
+    let subgraphTokenPool: TokenTreePool = null;
     if (subgraphToken.token?.pool) {
       subgraphTokenPool = {
         ...subgraphToken.token.pool,
