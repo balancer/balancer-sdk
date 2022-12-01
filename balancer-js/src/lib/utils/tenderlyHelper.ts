@@ -28,7 +28,7 @@ export default class TenderlyHelper {
     if (tenderlyConfig?.accessKey) {
       this.opts = {
         headers: {
-          'X-Api-Key': tenderlyConfig.accessKey,
+          'X-Access-Key': tenderlyConfig.accessKey,
         },
       };
     }
