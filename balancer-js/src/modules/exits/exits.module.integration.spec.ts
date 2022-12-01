@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 
-import { BalancerSDK, Network } from '@/.';
+import { BalancerSDK, BalancerTenderlyConfig, Network } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { forkSetup, getBalances } from '@/test/lib/utils';
@@ -51,7 +51,7 @@ const { TENDERLY_ACCESS_KEY, TENDERLY_USER, TENDERLY_PROJECT } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
-const tenderlyConfig = {
+const tenderlyConfig: BalancerTenderlyConfig = {
   accessKey: TENDERLY_ACCESS_KEY as string,
   user: TENDERLY_USER as string,
   project: TENDERLY_PROJECT as string,

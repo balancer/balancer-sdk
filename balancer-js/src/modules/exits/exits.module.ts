@@ -33,7 +33,7 @@ const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 export class Exit {
   private wrappedNativeAsset: string;
   private relayer: string;
-  private tenderlyHelper: TenderlyHelper | undefined;
+  private tenderlyHelper: TenderlyHelper;
 
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
@@ -43,13 +43,10 @@ export class Exit {
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
     this.relayer = contracts.relayerV4 as string;
 
-    if (!networkConfig.tenderly) {
-      this.tenderlyHelper = undefined;
-    } else
-      this.tenderlyHelper = new TenderlyHelper(
-        networkConfig.chainId,
-        networkConfig.tenderly
-      );
+    this.tenderlyHelper = new TenderlyHelper(
+      networkConfig.chainId,
+      networkConfig.tenderly
+    );
   }
 
   async exitPool(
@@ -236,8 +233,6 @@ export class Exit {
     expectedAmountsOutByExitPath: string[];
     minAmountsOutByExitPath: string[];
   }> => {
-    if (this.tenderlyHelper === undefined)
-      throw new Error('Missing Tenderly Config.');
     const simulationResult = await this.tenderlyHelper.simulateMulticall(
       this.relayer,
       callData,

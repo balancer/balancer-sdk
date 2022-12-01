@@ -10,19 +10,30 @@ type StateOverrides = {
 export default class TenderlyHelper {
   private vaultAddress;
   private tenderlyUrl;
-  private opts;
-  private blockNumber;
+  private opts?;
+  private blockNumber: number | undefined;
 
-  constructor(private chainId: number, tenderlyConfig: BalancerTenderlyConfig) {
+  constructor(
+    private chainId: number,
+    tenderlyConfig?: BalancerTenderlyConfig
+  ) {
     const { contracts } = networkAddresses(this.chainId);
     this.vaultAddress = contracts.vault as string;
-    this.tenderlyUrl = `https://api.tenderly.co/api/v1/account/${tenderlyConfig.user}/project/${tenderlyConfig.project}/`;
-    this.opts = {
-      headers: {
-        'X-Access-Key': tenderlyConfig.accessKey,
-      },
-    };
-    this.blockNumber = tenderlyConfig.blockNumber;
+    if (tenderlyConfig?.user && tenderlyConfig?.project) {
+      this.tenderlyUrl = `https://api.tenderly.co/api/v1/account/${tenderlyConfig.user}/project/${tenderlyConfig.project}/`;
+    } else {
+      this.tenderlyUrl = 'https://api.balancer.fi/tenderly/';
+    }
+
+    if (tenderlyConfig?.accessKey) {
+      this.opts = {
+        headers: {
+          'X-Api-Key': tenderlyConfig.accessKey,
+        },
+      };
+    }
+
+    this.blockNumber = tenderlyConfig?.blockNumber;
   }
 
   simulateMulticall = async (
