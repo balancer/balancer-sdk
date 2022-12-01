@@ -167,22 +167,51 @@ fragment SubgraphPoolToken on PoolToken {
     priceRate
     isExemptFromYieldProtocolFee
     token {
-        ...SubgraphToken
+        ...TokenTree
     }
 }
 
-fragment SubgraphToken on Token {
+
+fragment TokenAttrs on PoolToken {
+  address
+  balance
+  weight
+  priceRate
+  symbol
+  decimals
+}
+
+fragment PoolAttrs on Pool {
+  id
+  totalShares
+  address
+  poolType
+  mainIndex
+}
+
+fragment TokenTree on PoolToken {
+  ...TokenAttrs
+  token {
     pool {
-        id
-        address
-        poolType
-        totalShares
-        mainIndex
-        tokens {
-            ...SubgraphPoolToken
+      ...PoolAttrs
+      tokens {
+        ...TokenAttrs
+        token {
+          pool {
+            ...PoolAttrs
+            tokens {
+              ...TokenAttrs
+              token {
+                pool {
+                  ...PoolAttrs
+                }
+              }
+            }
+          }
         }
+      }
     }
-    latestUSDPrice
+  }
 }
 
 
