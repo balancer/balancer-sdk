@@ -17,20 +17,16 @@ export enum SimulationType {
 }
 
 export class Simulation {
-  private tenderlyHelper: TenderlyHelper | undefined;
+  private tenderlyHelper: TenderlyHelper;
   private vaultModel: VaultModel | undefined;
   constructor(
     networkConfig: BalancerNetworkConfig,
     poolDataService?: PoolDataService
   ) {
-    if (!networkConfig.tenderly) {
-      this.tenderlyHelper = undefined;
-    } else {
-      this.tenderlyHelper = new TenderlyHelper(
-        networkConfig.chainId,
-        networkConfig.tenderly
-      );
-    }
+    this.tenderlyHelper = new TenderlyHelper(
+      networkConfig.chainId,
+      networkConfig.tenderly
+    );
     if (!poolDataService) {
       this.vaultModel = undefined;
     } else {
@@ -55,8 +51,6 @@ export class Simulation {
 
     switch (simulationType) {
       case SimulationType.Tenderly: {
-        if (this.tenderlyHelper === undefined)
-          throw new Error('Missing Tenderly Config.');
         const simulationResult = await this.tenderlyHelper.simulateMulticall(
           to,
           encodedCall,
@@ -99,7 +93,7 @@ export class Simulation {
           }
           const rootPoolAddress = getPoolAddress(poolId); // BPT address of the pool being joined/exited
           const deltas = await this.vaultModel.multicall(requests);
-          const bptOutDelta = deltas[rootPoolAddress];
+          const bptOutDelta = deltas[rootPoolAddress].mul(-1); // delta is negative for BPT out on joins
           if (!bptOutDelta) throw new Error('No delta found for BPT out.');
           amountsOut.push(bptOutDelta.toString());
           totalAmountOut = totalAmountOut.add(bptOutDelta);

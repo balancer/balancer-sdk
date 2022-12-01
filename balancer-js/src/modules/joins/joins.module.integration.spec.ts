@@ -14,11 +14,11 @@ import { SimulationType } from '../simulation/simulation.module';
 
 dotenv.config();
 
-const TEST_BOOSTED = true;
+const TEST_BOOSTED = false;
 const TEST_BOOSTED_META = false;
 const TEST_BOOSTED_META_ALT = false;
 const TEST_BOOSTED_META_BIG = false;
-const TEST_BOOSTED_WEIGHTED_SIMPLE = false;
+const TEST_BOOSTED_WEIGHTED_SIMPLE = true;
 const TEST_BOOSTED_WEIGHTED_GENERAL = false;
 const TEST_BOOSTED_WEIGHTED_META = false;
 const TEST_BOOSTED_WEIGHTED_META_ALT = false;
@@ -32,7 +32,7 @@ const TEST_BOOSTED_WEIGHTED_META_GENERAL = false;
  * - Uncomment section below:
  */
 const network = Network.GOERLI;
-const blockNumber = 8048370;
+const blockNumber = 8055840;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2';
 const { ALCHEMY_URL_GOERLI: jsonRpcUrl } = process.env;

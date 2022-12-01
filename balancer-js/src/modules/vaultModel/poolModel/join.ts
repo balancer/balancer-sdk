@@ -5,7 +5,7 @@ import { bnum } from '@balancer-labs/sor';
 
 import { PoolDictionary, Pool } from '../poolSource';
 import { WeightedPoolDecoder } from '@/pool-weighted/decoder';
-import { WeightedPoolJoinKind } from '@/pool-weighted/decoder';
+import { WeightedPoolJoinKind } from '@/pool-weighted/encoder';
 import { isSameAddress } from '@/lib/utils';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { RelayerModel } from '../relayer';

@@ -6,7 +6,7 @@ import { bnum } from '@balancer-labs/sor';
 import { PoolDictionary, Pool } from '../poolSource';
 import { ComposableStablePoolExitKind } from '@/pool-composable-stable';
 import { WeightedPoolDecoder } from '@/pool-weighted/decoder';
-import { WeightedPoolExitKind } from '@/pool-weighted/decoder';
+import { WeightedPoolExitKind } from '@/pool-weighted/encoder';
 import { isSameAddress } from '@/lib/utils';
 import { RelayerModel } from '../relayer';
 import { ActionType } from '../vaultModel.module';

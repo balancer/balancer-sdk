@@ -74,9 +74,10 @@ export const ADDRESSES = {
     },
     bbausd2: {
       id: '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d',
-      address: '0xA13a9247ea42D743238089903570127DdA72fE44'.toLowerCase(),
+      address: '0xa13a9247ea42d743238089903570127dda72fe44',
       decimals: 18,
       symbol: 'bbausd2',
+      slot: 0,
     },
     bbausdcOld: {
       address: '0x9210F1204b5a24742Eba12f710636D76240dF3d0',
