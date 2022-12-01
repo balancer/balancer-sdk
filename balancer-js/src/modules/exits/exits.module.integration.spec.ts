@@ -51,6 +51,7 @@ const { TENDERLY_ACCESS_KEY, TENDERLY_USER, TENDERLY_PROJECT } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
+// Custom Tenderly configuration parameters - remove in order to use default values
 const tenderlyConfig: BalancerTenderlyConfig = {
   accessKey: TENDERLY_ACCESS_KEY as string,
   user: TENDERLY_USER as string,
