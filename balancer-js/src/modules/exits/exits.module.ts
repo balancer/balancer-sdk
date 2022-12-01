@@ -127,7 +127,7 @@ export class Exit {
     const priceImpact = await this.calculatePriceImpact(
       poolId,
       tokensOut,
-      minAmountsOut,
+      expectedAmountsOut,
       amountBptIn
     );
 
