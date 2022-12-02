@@ -82,12 +82,6 @@ describe('Liquidity Module', () => {
       const liquidity = await liquidityProvider.getLiquidity(pool);
       expect(liquidity).to.be.eq('116.303077211035488');
     });
-
-    it('Should work with this Polygon pool', async () => {
-      const pool = findPool('0xc8e4f10085308df1df25ef3e8ad5dd08b0965537');
-      const liquidity = await liquidityProvider.getLiquidity(pool);
-      expect(liquidity).to.be.eq('1234');
-    });
   });
 
   context('Stable Pool calculations', () => {
