@@ -89,6 +89,7 @@ export default class TenderlyHelper {
       // -- Simulation config (tenderly specific) --
       save_if_fails: true,
       // save: true,
+      simulation_type: 'quick', // remove this while developing/debugging
       state_objects,
     };
 
