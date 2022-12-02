@@ -197,9 +197,18 @@ export interface PoolToken extends Token {
   weight?: string | null;
   isExemptFromYieldProtocolFee?: boolean;
   token?: {
-    pool: { poolType: null | PoolType } | null;
+    pool: TokenTreePool | null;
     latestUSDPrice?: string;
   };
+}
+
+export interface TokenTreePool {
+  id: string;
+  address: string;
+  poolType: PoolType;
+  totalShares: string;
+  mainIndex: number;
+  tokens?: PoolToken[];
 }
 
 export interface OnchainTokenData {
