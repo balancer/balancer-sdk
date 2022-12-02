@@ -13,7 +13,13 @@ import {
 } from '@/lib/graphql/args-builder';
 import { GraphQLArgs } from '@/lib/graphql/types';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
-import { GraphQLQuery, Pool, PoolType, PoolToken } from '@/types';
+import {
+  GraphQLQuery,
+  Pool,
+  PoolType,
+  PoolToken,
+  TokenTreePool,
+} from '@/types';
 import { Network } from '@/lib/constants/network';
 import { PoolsQueryVariables } from '../../subgraph/subgraph';
 
@@ -203,12 +209,32 @@ export class PoolsSubgraphRepository
   }
 
   private mapToken(subgraphToken: SubgraphPoolTokenFragment): PoolToken {
-    let subgraphTokenPool = null;
+    let subgraphTokenPool: TokenTreePool | null = null;
     if (subgraphToken.token?.pool) {
       subgraphTokenPool = {
-        ...subgraphToken.token.pool,
+        id: subgraphToken.token.pool.id,
+        address: subgraphToken.token.pool.address,
+        totalShares: subgraphToken.token.pool.totalShares,
         poolType: subgraphToken.token.pool.poolType as PoolType,
+        mainIndex: subgraphToken.token.pool.mainIndex || 0,
       };
+
+      if (subgraphToken.token?.pool.tokens) {
+        subgraphTokenPool.tokens = subgraphToken.token.pool.tokens.map(
+          (token) => {
+            return {
+              address: token.address,
+              decimals: token.decimals,
+              symbol: token.symbol,
+              balance: token.balance,
+              priceRate: token.priceRate,
+              weight: token.weight,
+              isExemptFromYieldProtocolFee:
+                token.isExemptFromYieldProtocolFee || undefined,
+            };
+          }
+        );
+      }
     }
     return {
       ...subgraphToken,
