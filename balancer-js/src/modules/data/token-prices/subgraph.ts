@@ -41,7 +41,7 @@ export class SubgraphPriceRepository implements Findable<Price> {
           query: `query($addresses: [String!]) {
             tokens(
               where: {
-                address_in: $addresses
+                id_in: $addresses
               }
             ) {
               address
