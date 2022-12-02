@@ -2,6 +2,7 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import type { Findable, Price } from '@/types';
 import { AaveRates } from './aave-rates';
 import { CoingeckoPriceRepository } from './coingecko';
+import { SubgraphPriceRepository } from './subgraph';
 
 export type HistoricalPriceRequest = {
   address: string;
@@ -11,11 +12,20 @@ export type HistoricalPriceRequest = {
 export class TokenPriceProvider implements Findable<Price> {
   constructor(
     private coingeckoRepository: CoingeckoPriceRepository,
+    private subgraphRepository: SubgraphPriceRepository,
     private aaveRates: AaveRates
   ) {}
 
   async find(address: string): Promise<Price | undefined> {
-    const price = await this.coingeckoRepository.find(address);
+    let price;
+    try {
+      price = await this.coingeckoRepository.find(address);
+      if (!price?.usd) {
+        price = await this.subgraphRepository.find(address);
+      }
+    } catch (err) {
+      console.error(err);
+    }
     const rate = (await this.aaveRates.getRate(address)) || 1;
     if (price && price.usd) {
       return {
