@@ -97,6 +97,7 @@ export interface BalancerNetworkConfig {
 
 export interface BalancerDataRepositories {
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  poolsOnChain: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
   tokenMeta: Findable<Token, TokenAttribute>;

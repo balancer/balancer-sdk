@@ -7,8 +7,15 @@ export * from './pool-shares/types';
 export * from './gauge-shares/types';
 
 export interface Findable<T, P = string> {
-  find: (id: string) => Promise<T | undefined>;
-  findBy: (attribute: P, value: string) => Promise<T | undefined>;
+  find: (
+    id: string,
+    filter?: Record<string, unknown>
+  ) => Promise<T | undefined>;
+  findBy: (
+    attribute: P,
+    value: string,
+    filter?: Record<string, unknown>
+  ) => Promise<T | undefined>;
 }
 
 export interface Searchable<T> {

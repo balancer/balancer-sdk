@@ -354,7 +354,28 @@ export class PoolGraph {
     pools: Findable<Pool, PoolAttribute>,
     wrapMainTokens: boolean
   ): Promise<Node[]> => {
-    const rootPool = await pools.find(poolId);
+    // This is just a dirty example showing how a custom filter could be supplied
+    // For tests, etc this filter would have to be passed down somehow
+    const exampleFilter = {
+      where: {
+        swapEnabled: true,
+        totalShares_gt: '0.000000000001',
+        id_in: [
+          '0x45631a4b3cab78e6dfdd21a7025a61fac76839190000000000000000000001a8',
+          '0x48e984db5f9ba1bf2ee21d0a207a96c944d807e30000000000000000000001a9',
+          '0x24c52fee349194f68a998ac4e2ce170d780d010c0000000000000000000001a1',
+          '0x3d5981bdd8d3e49eb7bbdc1d2b156a3ee019c18e0000000000000000000001a7',
+          '0x4d983081b9b9f3393409a4cdf5504d0aea9cd94c0000000000000000000001a5',
+          '0x594920068382f64e4bc06879679bd474118b97b10000000000000000000001a4',
+          '0xd03d4d8b4669d135569215dd6c4e790307c8e14b0000000000000000000001a6',
+          '0xd8143b8e7a6e452e5e1bc42a3cef43590a2300310000000000000000000001a2',
+        ],
+      },
+      orderBy: 'totalLiquidity',
+      orderDirection: 'desc',
+      block: { number: 8038074 },
+    };
+    const rootPool = await pools.find(poolId, exampleFilter);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
     const poolsGraph = new PoolGraph(pools, {
       network: chainId,
