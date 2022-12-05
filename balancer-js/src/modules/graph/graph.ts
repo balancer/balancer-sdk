@@ -2,7 +2,7 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { isSameAddress, parsePoolInfo } from '@/lib/utils';
 import { BalancerSdkConfig, Pool, PoolAttribute, PoolType } from '@/types';
 import { Zero, WeiPerEther } from '@ethersproject/constants';
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Findable } from '../data/types';
 import { Pools } from '../pools';
 import { getNetworkConfig } from '../sdk.helpers';
@@ -182,9 +182,24 @@ export class PoolGraph {
       for (let i = 0; i < pool.tokens.length; i++) {
         // ignore any phantomBpt tokens
         if (isSameAddress(pool.tokens[i].address, pool.address)) continue;
-        const proportion = BigNumber.from(parsedBalances[i])
-          .mul((1e18).toString())
-          .div(tokenTotal);
+        let proportion: BigNumber;
+        // If the pool is a weighted pool we can use the actual tokenWeight as proportion
+        if (pool.poolType === 'Weighted') {
+          const tokenWeight = pool.tokens[i].weight as string;
+          proportion = parseFixed(tokenWeight, 18);
+        } else {
+          proportion = BigNumber.from(parsedBalances[i])
+            .mul((1e18).toString())
+            .div(tokenTotal);
+        }
+        console.log(`--------------------`);
+        console.log(
+          `Calculating proportion`,
+          pool.poolType,
+          pool.address,
+          pool.tokens[i].address
+        );
+        console.log(proportion.toString(), 'proportion');
         const finalProportion = proportion
           .mul(proportionOfParent)
           .div((1e18).toString());
