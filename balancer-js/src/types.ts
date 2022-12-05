@@ -285,6 +285,14 @@ export interface Pool {
   totalWeight: string;
   lowerTarget: string;
   upperTarget: string;
+  priceRateProviders?: PriceRateProvider[];
+}
+
+export interface PriceRateProvider {
+  address: string;
+  token: {
+    address: string;
+  };
 }
 
 /**

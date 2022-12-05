@@ -114,6 +114,9 @@ fragment SubgraphPool on Pool {
     holdersCount
     tokensList
     amp
+    priceRateProviders(first: 100) {
+        ...SubgraphPriceRateProvider
+    }
     expiryTime
     unitSeconds
     createTime
@@ -220,6 +223,13 @@ fragment TokenTree on Token {
       }
     }
   }
+}
+
+fragment SubgraphPriceRateProvider on PriceRateProvider {
+    address,
+    token {
+        address
+    }
 }
 
 
