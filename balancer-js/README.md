@@ -569,6 +569,66 @@ async relayer.exitPoolAndBatchSwap(
 
 [Example](./examples/relayerExitPoolAndBatchSwap.ts)
 
+### Pools Impermanent Loss
+
+> DRAFT
+> 
+> impermanent loss (IL) describes the percentage by which a pool is worth less than what one would have if they had instead just held the tokens outside the pool
+
+
+#### Service
+
+![class-diagram](IL-class.png)
+
+#### Algorithm
+
+Using the variation delta formula:
+
+![img.png](img.png)
+
+where **𝚫P<sup>i</sup>** represents the difference between the price for a single token at the date of joining the pool and the current price. 
+
+```javascript
+
+// retrieves pool's tokens
+tokens = pool.tokens;
+// get weights for tokens
+weights = tokens.map((token) => token.weight);
+// retrieves current price for tokens
+exitPrices = tokens.map((token) => tokenPrices.find(token.address));
+// retrieves historical price for tokens
+entryPrices = tokens.map((token) => tokenPrices.findBy('timestamp', { address: token.address, timestamp: timestamp})); 
+// retrieves list of pool's assets with prices delta and weights 
+assets = tokens.map((token) => ({
+  priceDelta: this.getDelta(entryPrices[token.address], exitPrices[token.address]),
+  weight: weights[i],
+}));
+
+poolValueDelta = assets.reduce((result, asset) => result * Math.pow(Math.abs(asset.priceDelta + 1), asset.weight), 1);
+holdValueDelta = assets.reduce((result, asset) => result + (Math.abs(asset.priceDelta + 1) * asset.weight), 0);
+
+const IL = poolValueDelta/holdValueDelta - 1;
+```
+
+#### Usage
+
+```javascript
+async impermanentLoss(
+  timestamp: number, // the UNIX timestamp from which the IL is desired
+  pool: Pool // the pool on which the IL must be calculated
+): Promise<number> 
+```
+
+```javascript
+const pool = await sdk.pools.find(poolId);
+const joins = (await sdk.data.findByUser(userAddress)).filter((it) => it.type === "Join" && it.poolId === poolId);
+const join = joins[0];
+const IL = await pools.impermanentLoss(join.timestamp, pool);  
+```
+
+[Example](./examples/pools/impermanentLoss.ts)
+
+
 ## Licensing
 
 [GNU General Public License Version 3 (GPL v3)](../../LICENSE).

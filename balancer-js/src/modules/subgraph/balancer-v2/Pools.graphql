@@ -114,6 +114,9 @@ fragment SubgraphPool on Pool {
     holdersCount
     tokensList
     amp
+    priceRateProviders(first: 100) {
+        ...SubgraphPriceRateProvider
+    }
     expiryTime
     unitSeconds
     createTime
@@ -172,7 +175,7 @@ fragment SubgraphPoolToken on PoolToken {
 }
 
 
-fragment PoolTokenAttrs on PoolToken {
+fragment SubgraphSubPoolToken on PoolToken {
   address
   balance
   weight
@@ -188,7 +191,7 @@ fragment TokenAttrs on Token {
   decimals
 }
 
-fragment PoolAttrs on Pool {
+fragment SubgraphSubPool on Pool {
   id
   totalShares
   address
@@ -197,22 +200,21 @@ fragment PoolAttrs on Pool {
 }
 
 fragment TokenTree on Token {
-  ...TokenAttrs
   latestUSDPrice
   pool {
-    ...PoolAttrs
+    ...SubgraphSubPool
     tokens {
-      ...PoolTokenAttrs
+      ...SubgraphSubPoolToken
       token {
         latestUSDPrice
         pool {
-          ...PoolAttrs
+          ...SubgraphSubPool
           tokens {
-            ...PoolTokenAttrs
+            ...SubgraphSubPoolToken
             token {
               latestUSDPrice
               pool {
-                ...PoolAttrs
+                ...SubgraphSubPool
               }
             }
           }
@@ -220,6 +222,13 @@ fragment TokenTree on Token {
       }
     }
   }
+}
+
+fragment SubgraphPriceRateProvider on PriceRateProvider {
+    address,
+    token {
+        address
+    }
 }
 
 
