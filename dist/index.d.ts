@@ -2412,6 +2412,14 @@ declare type PoolsQuery$1 = {
                 } | null;
             };
         }> | null;
+        priceRateProviders?: Array<{
+            __typename?: 'PriceRateProvider';
+            address: string;
+            token: {
+                __typename?: 'PoolToken';
+                address: string;
+            };
+        }> | null;
     }>;
 };
 declare type AllPoolsQueryVariables = Exact$1<{
@@ -2531,6 +2539,14 @@ declare type AllPoolsQuery = {
                 } | null;
             };
         }> | null;
+        priceRateProviders?: Array<{
+            __typename?: 'PriceRateProvider';
+            address: string;
+            token: {
+                __typename?: 'PoolToken';
+                address: string;
+            };
+        }> | null;
     }>;
     pool1000: Array<{
         __typename?: 'Pool';
@@ -2639,6 +2655,14 @@ declare type AllPoolsQuery = {
                 } | null;
             };
         }> | null;
+        priceRateProviders?: Array<{
+            __typename?: 'PriceRateProvider';
+            address: string;
+            token: {
+                __typename?: 'PoolToken';
+                address: string;
+            };
+        }> | null;
     }>;
     pool2000: Array<{
         __typename?: 'Pool';
@@ -2745,6 +2769,14 @@ declare type AllPoolsQuery = {
                         };
                     }> | null;
                 } | null;
+            };
+        }> | null;
+        priceRateProviders?: Array<{
+            __typename?: 'PriceRateProvider';
+            address: string;
+            token: {
+                __typename?: 'PoolToken';
+                address: string;
             };
         }> | null;
     }>;
@@ -2860,6 +2892,14 @@ declare type PoolQuery = {
                         };
                     }> | null;
                 } | null;
+            };
+        }> | null;
+        priceRateProviders?: Array<{
+            __typename?: 'PriceRateProvider';
+            address: string;
+            token: {
+                __typename?: 'PoolToken';
+                address: string;
             };
         }> | null;
     } | null;
@@ -5306,6 +5346,13 @@ interface Pool {
     totalWeight: string;
     lowerTarget: string;
     upperTarget: string;
+    priceRateProviders?: PriceRateProvider[];
+}
+interface PriceRateProvider {
+    address: string;
+    token: {
+        address: string;
+    };
 }
 /**
  * Pool use-cases / controller layer
@@ -6484,4 +6531,4 @@ declare class BalancerError extends Error {
     static getMessage(code: BalancerErrorCode): string;
 }
 
-export { APR_THRESHOLD, AaveHelpers, AaveRates, Account, Address, AprBreakdown, AprFetcher, AssetHelpers, BalancerAPIArgsFormatter, BalancerDataRepositories, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BalancerTenderlyConfig, BaseFeeDistributor, BatchSwap, BatchSwapStep, BlockNumberRepository, BuildTransactionParameters, CoingeckoPriceRepository, ComposableStablePoolEncoder, ComposableStablePoolExitKind, ComposableStablePoolJoinKind, ContractAddresses, Currency, Data, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeJoinPoolInput, EncodeUnwrapAaveStaticTokenInput, EncodeWrapAaveDynamicTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FeeCollectorRepository, FeeDistributorData, FeeDistributorRepository, FetchPoolsInput, FindRouteParameters, Findable, FundManagement, GaugeControllerMulticallRepository, GaugeShare, GaugeShareAttributes, GaugeSharesRepository, GraphQLArgs, GraphQLArgsBuilder, GraphQLArgsFormatter, GraphQLFilter, GraphQLFilterOperator, GraphQLQuery, JoinPoolData, JoinPoolRequest, Liquidity, LiquidityGauge, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, NamedPools, Network, OnchainPoolData, OnchainTokenData, OutputReference, POOLS, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolGauges, PoolGaugesAttributes, PoolGaugesRepository, PoolReference, PoolRepository, PoolShare, PoolShareAttributes, PoolSharesRepository, PoolSpecialization, PoolToken, PoolType, PoolWithMethods, Pools, PoolsBalancerAPIRepository, PoolsFallbackRepository, PoolsFallbackRepositoryOptions, PoolsRepositoryFetchOptions, PoolsStaticRepository, PoolsSubgraphRepository, Price, ProtocolFees, ProtocolFeesProvider, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, RewardData, SHALLOW_COMPOSABLE_STABLE_BUFFER, Searchable, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphArgsFormatter, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TokenTreePool, TokenYieldsRepository, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, buildRelayerCalls, canUseJoinExit, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, someJoinExit, splitPoolId, toNormalizedWeights, tokensToTokenPrices };
+export { APR_THRESHOLD, AaveHelpers, AaveRates, Account, Address, AprBreakdown, AprFetcher, AssetHelpers, BalancerAPIArgsFormatter, BalancerDataRepositories, BalancerError, BalancerErrorCode, BalancerErrors, BalancerMinterAuthorization, BalancerNetworkConfig, BalancerSDK, BalancerSDKRoot, BalancerSdkConfig, BalancerSdkSorConfig, BalancerTenderlyConfig, BaseFeeDistributor, BatchSwap, BatchSwapStep, BlockNumberRepository, BuildTransactionParameters, CoingeckoPriceRepository, ComposableStablePoolEncoder, ComposableStablePoolExitKind, ComposableStablePoolJoinKind, ContractAddresses, Currency, Data, EncodeBatchSwapInput, EncodeExitPoolInput, EncodeJoinPoolInput, EncodeUnwrapAaveStaticTokenInput, EncodeWrapAaveDynamicTokenInput, ExitAndBatchSwapInput, ExitPoolData, ExitPoolRequest, FeeCollectorRepository, FeeDistributorData, FeeDistributorRepository, FetchPoolsInput, FindRouteParameters, Findable, FundManagement, GaugeControllerMulticallRepository, GaugeShare, GaugeShareAttributes, GaugeSharesRepository, GraphQLArgs, GraphQLArgsBuilder, GraphQLArgsFormatter, GraphQLFilter, GraphQLFilterOperator, GraphQLQuery, JoinPoolData, JoinPoolRequest, Liquidity, LiquidityGauge, LiquidityGaugeSubgraphRPCProvider, LiquidityGaugesMulticallRepository, LiquidityGaugesSubgraphRepository, ManagedPoolEncoder, NamedPools, Network, OnchainPoolData, OnchainTokenData, OutputReference, POOLS, Pool, PoolAttribute, PoolBPTValue, PoolBalanceOp, PoolBalanceOpKind, PoolGauges, PoolGaugesAttributes, PoolGaugesRepository, PoolReference, PoolRepository, PoolShare, PoolShareAttributes, PoolSharesRepository, PoolSpecialization, PoolToken, PoolType, PoolWithMethods, Pools, PoolsBalancerAPIRepository, PoolsFallbackRepository, PoolsFallbackRepositoryOptions, PoolsRepositoryFetchOptions, PoolsStaticRepository, PoolsSubgraphRepository, Price, PriceRateProvider, ProtocolFees, ProtocolFeesProvider, QuerySimpleFlashSwapParameters, QuerySimpleFlashSwapResponse, QueryWithSorInput, QueryWithSorOutput, Relayer, RelayerAction, RelayerAuthorization, RewardData, SHALLOW_COMPOSABLE_STABLE_BUFFER, Searchable, SimpleFlashSwapParameters, SingleSwap, Sor, StablePhantomPoolJoinKind, StablePoolEncoder, StablePoolExitKind, StablePoolJoinKind, StaticTokenPriceProvider, StaticTokenProvider, Subgraph, SubgraphArgsFormatter, Swap, SwapAttributes, SwapInput, SwapTransactionRequest, SwapType, Swaps, Token, TokenAttribute, TokenPriceProvider, TokenPrices, TokenProvider, TokenTreePool, TokenYieldsRepository, TransactionData, UserBalanceOp, UserBalanceOpKind, WeightedPoolEncoder, WeightedPoolExitKind, WeightedPoolJoinKind, accountToAddress, emissions as balEmissions, buildRelayerCalls, canUseJoinExit, getLimitsForSlippage, getPoolAddress, getPoolNonce, getPoolSpecialization, isNormalizedWeights, isSameAddress, parsePoolInfo, signPermit, someJoinExit, splitPoolId, toNormalizedWeights, tokensToTokenPrices };
