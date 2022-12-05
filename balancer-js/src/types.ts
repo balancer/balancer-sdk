@@ -204,13 +204,15 @@ export interface PoolToken extends Token {
   priceRate?: string;
   weight?: string | null;
   isExemptFromYieldProtocolFee?: boolean;
-  token?: {
-    pool: TokenTreePool | null;
-    latestUSDPrice?: string;
-  };
+  token?: SubPoolMeta;
 }
 
-export interface TokenTreePool {
+export interface SubPoolMeta {
+  pool: SubPool | null;
+  latestUSDPrice?: string;
+}
+
+export interface SubPool {
   id: string;
   address: string;
   poolType: PoolType;
