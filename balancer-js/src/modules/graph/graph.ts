@@ -192,14 +192,6 @@ export class PoolGraph {
             .mul((1e18).toString())
             .div(tokenTotal);
         }
-        console.log(`--------------------`);
-        console.log(
-          `Calculating proportion`,
-          pool.poolType,
-          pool.address,
-          pool.tokens[i].address
-        );
-        console.log(proportion.toString(), 'proportion');
         const finalProportion = proportion
           .mul(proportionOfParent)
           .div((1e18).toString());
