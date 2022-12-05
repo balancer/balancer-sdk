@@ -18,6 +18,9 @@ export enum BalancerErrorCode {
   MISSING_PRICE_RATE = 'MISSING_PRICE_RATE',
   MISSING_WEIGHT = 'MISSING_WEIGHT',
   RELAY_SWAP_AMOUNTS = 'RELAY_SWAP_AMOUNTS',
+  NO_VALUE_PARAMETER = 'NO_VALUE_PARAMETER',
+  ILLEGAL_PARAMETER = 'ILLEGAL_PARAMETER',
+  TIMESTAMP_IN_THE_FUTURE = 'TIMESTAMP_IN_THE_FUTURE',
   JOIN_DELTA_AMOUNTS = 'JOIN_DELTA_AMOUNTS',
   EXIT_DELTA_AMOUNTS = 'EXIT_DELTA_AMOUNTS',
 }
@@ -68,6 +71,12 @@ export class BalancerError extends Error {
         return 'zero input not allowed';
       case BalancerErrorCode.RELAY_SWAP_AMOUNTS:
         return 'Error when checking swap amounts';
+      case BalancerErrorCode.NO_VALUE_PARAMETER:
+        return 'Illegal value passed as parameter';
+      case BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE:
+        return 'Timestamp cannot be in the future';
+      case BalancerErrorCode.ILLEGAL_PARAMETER:
+        return 'An illegal parameter has been passed';
       case BalancerErrorCode.JOIN_DELTA_AMOUNTS:
         return 'Error when checking join call deltas';
       case BalancerErrorCode.EXIT_DELTA_AMOUNTS:

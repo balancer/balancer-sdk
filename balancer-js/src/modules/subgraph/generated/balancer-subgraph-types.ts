@@ -829,6 +829,51 @@ export type PoolWeightUpdatesArgs = {
   where?: InputMaybe<GradualWeightUpdate_Filter>;
 };
 
+export type PoolContract = {
+  __typename?: 'PoolContract';
+  id: Scalars['ID'];
+  pool: Pool;
+};
+
+export type PoolContract_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  id?: InputMaybe<Scalars['ID']>;
+  id_gt?: InputMaybe<Scalars['ID']>;
+  id_gte?: InputMaybe<Scalars['ID']>;
+  id_in?: InputMaybe<Array<Scalars['ID']>>;
+  id_lt?: InputMaybe<Scalars['ID']>;
+  id_lte?: InputMaybe<Scalars['ID']>;
+  id_not?: InputMaybe<Scalars['ID']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  pool?: InputMaybe<Scalars['String']>;
+  pool_?: InputMaybe<Pool_Filter>;
+  pool_contains?: InputMaybe<Scalars['String']>;
+  pool_contains_nocase?: InputMaybe<Scalars['String']>;
+  pool_ends_with?: InputMaybe<Scalars['String']>;
+  pool_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  pool_gt?: InputMaybe<Scalars['String']>;
+  pool_gte?: InputMaybe<Scalars['String']>;
+  pool_in?: InputMaybe<Array<Scalars['String']>>;
+  pool_lt?: InputMaybe<Scalars['String']>;
+  pool_lte?: InputMaybe<Scalars['String']>;
+  pool_not?: InputMaybe<Scalars['String']>;
+  pool_not_contains?: InputMaybe<Scalars['String']>;
+  pool_not_contains_nocase?: InputMaybe<Scalars['String']>;
+  pool_not_ends_with?: InputMaybe<Scalars['String']>;
+  pool_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  pool_not_in?: InputMaybe<Array<Scalars['String']>>;
+  pool_not_starts_with?: InputMaybe<Scalars['String']>;
+  pool_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  pool_starts_with?: InputMaybe<Scalars['String']>;
+  pool_starts_with_nocase?: InputMaybe<Scalars['String']>;
+};
+
+export enum PoolContract_OrderBy {
+  Id = 'id',
+  Pool = 'pool'
+}
+
 export type PoolHistoricalLiquidity = {
   __typename?: 'PoolHistoricalLiquidity';
   block: Scalars['BigInt'];
@@ -2030,6 +2075,8 @@ export type Query = {
   managementOperation?: Maybe<ManagementOperation>;
   managementOperations: Array<ManagementOperation>;
   pool?: Maybe<Pool>;
+  poolContract?: Maybe<PoolContract>;
+  poolContracts: Array<PoolContract>;
   poolHistoricalLiquidities: Array<PoolHistoricalLiquidity>;
   poolHistoricalLiquidity?: Maybe<PoolHistoricalLiquidity>;
   poolShare?: Maybe<PoolShare>;
@@ -2197,6 +2244,24 @@ export type QueryPoolArgs = {
   block?: InputMaybe<Block_Height>;
   id: Scalars['ID'];
   subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryPoolContractArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryPoolContractsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<PoolContract_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<PoolContract_Filter>;
 };
 
 
@@ -2481,6 +2546,8 @@ export type Subscription = {
   managementOperation?: Maybe<ManagementOperation>;
   managementOperations: Array<ManagementOperation>;
   pool?: Maybe<Pool>;
+  poolContract?: Maybe<PoolContract>;
+  poolContracts: Array<PoolContract>;
   poolHistoricalLiquidities: Array<PoolHistoricalLiquidity>;
   poolHistoricalLiquidity?: Maybe<PoolHistoricalLiquidity>;
   poolShare?: Maybe<PoolShare>;
@@ -2648,6 +2715,24 @@ export type SubscriptionPoolArgs = {
   block?: InputMaybe<Block_Height>;
   id: Scalars['ID'];
   subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionPoolContractArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionPoolContractsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<PoolContract_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<PoolContract_Filter>;
 };
 
 
@@ -3953,7 +4038,7 @@ export type PoolsQueryVariables = Exact<{
 }>;
 
 
-export type PoolsQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', poolType?: string | null } | null } }> | null }> };
+export type PoolsQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null } | null } }> | null } | null } }> | null } | null } }> | null, priceRateProviders?: Array<{ __typename?: 'PriceRateProvider', address: string, token: { __typename?: 'PoolToken', address: string } }> | null }> };
 
 export type AllPoolsQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']>;
@@ -3965,7 +4050,7 @@ export type AllPoolsQueryVariables = Exact<{
 }>;
 
 
-export type AllPoolsQuery = { __typename?: 'Query', pool0: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', poolType?: string | null } | null } }> | null }>, pool1000: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', poolType?: string | null } | null } }> | null }>, pool2000: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', poolType?: string | null } | null } }> | null }> };
+export type AllPoolsQuery = { __typename?: 'Query', pool0: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null } | null } }> | null } | null } }> | null } | null } }> | null, priceRateProviders?: Array<{ __typename?: 'PriceRateProvider', address: string, token: { __typename?: 'PoolToken', address: string } }> | null }>, pool1000: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null } | null } }> | null } | null } }> | null } | null } }> | null, priceRateProviders?: Array<{ __typename?: 'PriceRateProvider', address: string, token: { __typename?: 'PoolToken', address: string } }> | null }>, pool2000: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null } | null } }> | null } | null } }> | null } | null } }> | null, priceRateProviders?: Array<{ __typename?: 'PriceRateProvider', address: string, token: { __typename?: 'PoolToken', address: string } }> | null }> };
 
 export type PoolQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3973,7 +4058,7 @@ export type PoolQueryVariables = Exact<{
 }>;
 
 
-export type PoolQuery = { __typename?: 'Query', pool?: { __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', poolType?: string | null } | null } }> | null } | null };
+export type PoolQuery = { __typename?: 'Query', pool?: { __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null } | null } }> | null } | null } }> | null } | null } }> | null, priceRateProviders?: Array<{ __typename?: 'PriceRateProvider', address: string, token: { __typename?: 'PoolToken', address: string } }> | null } | null };
 
 export type PoolsWithoutLinearQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']>;
@@ -3985,7 +4070,7 @@ export type PoolsWithoutLinearQueryVariables = Exact<{
 }>;
 
 
-export type PoolsWithoutLinearQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, symbol?: string | null, name?: string | null, swapFee: string, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, principalToken?: string | null, baseToken?: string | null, swapEnabled: boolean, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', poolType?: string | null } | null } }> | null }> };
+export type PoolsWithoutLinearQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, symbol?: string | null, name?: string | null, swapFee: string, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, principalToken?: string | null, baseToken?: string | null, swapEnabled: boolean, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null } | null } }> | null } | null } }> | null } | null } }> | null }> };
 
 export type PoolWithoutLinearQueryVariables = Exact<{
   id: Scalars['ID'];
@@ -3993,13 +4078,23 @@ export type PoolWithoutLinearQueryVariables = Exact<{
 }>;
 
 
-export type PoolWithoutLinearQuery = { __typename?: 'Query', pool?: { __typename?: 'Pool', id: string, address: string, poolType?: string | null, symbol?: string | null, name?: string | null, swapFee: string, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, principalToken?: string | null, baseToken?: string | null, swapEnabled: boolean, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', poolType?: string | null } | null } }> | null } | null };
+export type PoolWithoutLinearQuery = { __typename?: 'Query', pool?: { __typename?: 'Pool', id: string, address: string, poolType?: string | null, symbol?: string | null, name?: string | null, swapFee: string, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, principalToken?: string | null, baseToken?: string | null, swapEnabled: boolean, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null } | null } }> | null } | null } }> | null } | null } }> | null } | null };
 
-export type SubgraphPoolFragment = { __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', poolType?: string | null } | null } }> | null };
+export type SubgraphPoolFragment = { __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null } | null } }> | null } | null } }> | null } | null } }> | null, priceRateProviders?: Array<{ __typename?: 'PriceRateProvider', address: string, token: { __typename?: 'PoolToken', address: string } }> | null };
 
-export type SubgraphPoolWithoutLinearFragment = { __typename?: 'Pool', id: string, address: string, poolType?: string | null, symbol?: string | null, name?: string | null, swapFee: string, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, principalToken?: string | null, baseToken?: string | null, swapEnabled: boolean, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', poolType?: string | null } | null } }> | null };
+export type SubgraphPoolWithoutLinearFragment = { __typename?: 'Pool', id: string, address: string, poolType?: string | null, symbol?: string | null, name?: string | null, swapFee: string, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, principalToken?: string | null, baseToken?: string | null, swapEnabled: boolean, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null } | null } }> | null } | null } }> | null } | null } }> | null };
 
-export type SubgraphPoolTokenFragment = { __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', poolType?: string | null } | null } };
+export type SubgraphPoolTokenFragment = { __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null } | null } }> | null } | null } }> | null } | null } };
+
+export type SubgraphSubPoolTokenFragment = { __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null };
+
+export type TokenAttrsFragment = { __typename?: 'Token', address: string, symbol?: string | null, decimals: number };
+
+export type SubgraphSubPoolFragment = { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null };
+
+export type TokenTreeFragment = { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null } | null } }> | null } | null } }> | null } | null };
+
+export type SubgraphPriceRateProviderFragment = { __typename?: 'PriceRateProvider', address: string, token: { __typename?: 'PoolToken', address: string } };
 
 export type PoolHistoricalLiquiditiesQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']>;
@@ -4125,6 +4220,53 @@ export const SubgraphPoolShareFragmentDoc = gql`
   }
 }
     `;
+export const SubgraphSubPoolFragmentDoc = gql`
+    fragment SubgraphSubPool on Pool {
+  id
+  totalShares
+  address
+  poolType
+  mainIndex
+}
+    `;
+export const SubgraphSubPoolTokenFragmentDoc = gql`
+    fragment SubgraphSubPoolToken on PoolToken {
+  address
+  balance
+  weight
+  priceRate
+  symbol
+  decimals
+  isExemptFromYieldProtocolFee
+}
+    `;
+export const TokenTreeFragmentDoc = gql`
+    fragment TokenTree on Token {
+  latestUSDPrice
+  pool {
+    ...SubgraphSubPool
+    tokens {
+      ...SubgraphSubPoolToken
+      token {
+        latestUSDPrice
+        pool {
+          ...SubgraphSubPool
+          tokens {
+            ...SubgraphSubPoolToken
+            token {
+              latestUSDPrice
+              pool {
+                ...SubgraphSubPool
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+    ${SubgraphSubPoolFragmentDoc}
+${SubgraphSubPoolTokenFragmentDoc}`;
 export const SubgraphPoolTokenFragmentDoc = gql`
     fragment SubgraphPoolToken on PoolToken {
   id
@@ -4138,10 +4280,15 @@ export const SubgraphPoolTokenFragmentDoc = gql`
   priceRate
   isExemptFromYieldProtocolFee
   token {
-    pool {
-      poolType
-    }
-    latestUSDPrice
+    ...TokenTree
+  }
+}
+    ${TokenTreeFragmentDoc}`;
+export const SubgraphPriceRateProviderFragmentDoc = gql`
+    fragment SubgraphPriceRateProvider on PriceRateProvider {
+  address
+  token {
+    address
   }
 }
     `;
@@ -4171,6 +4318,9 @@ export const SubgraphPoolFragmentDoc = gql`
   holdersCount
   tokensList
   amp
+  priceRateProviders(first: 100) {
+    ...SubgraphPriceRateProvider
+  }
   expiryTime
   unitSeconds
   createTime
@@ -4184,7 +4334,8 @@ export const SubgraphPoolFragmentDoc = gql`
   sqrtBeta
   root3Alpha
 }
-    ${SubgraphPoolTokenFragmentDoc}`;
+    ${SubgraphPoolTokenFragmentDoc}
+${SubgraphPriceRateProviderFragmentDoc}`;
 export const SubgraphPoolWithoutLinearFragmentDoc = gql`
     fragment SubgraphPoolWithoutLinear on Pool {
   id
@@ -4213,6 +4364,13 @@ export const SubgraphPoolWithoutLinearFragmentDoc = gql`
   swapEnabled
 }
     ${SubgraphPoolTokenFragmentDoc}`;
+export const TokenAttrsFragmentDoc = gql`
+    fragment TokenAttrs on Token {
+  address
+  symbol
+  decimals
+}
+    `;
 export const SubgraphPoolSnapshotFragmentDoc = gql`
     fragment SubgraphPoolSnapshot on PoolSnapshot {
   id

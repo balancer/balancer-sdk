@@ -1,3 +1,4 @@
+import { ImpermanentLossService } from '@/modules/pools/impermanentLoss/impermanentLossService';
 import type {
   BalancerNetworkConfig,
   BalancerDataRepositories,
@@ -29,6 +30,7 @@ export class Pools implements Findable<PoolWithMethods> {
   feesService;
   volumeService;
   simulationService;
+  impermanentLossService;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -60,6 +62,10 @@ export class Pools implements Findable<PoolWithMethods> {
     this.exitService = new Exit(this.repositories.pools, networkConfig);
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
+    this.impermanentLossService = new ImpermanentLossService(
+      repositories.tokenPrices,
+      repositories.tokenHistoricalPrices
+    );
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
@@ -75,6 +81,17 @@ export class Pools implements Findable<PoolWithMethods> {
    */
   async apr(pool: Pool): Promise<AprBreakdown> {
     return this.aprService.apr(pool);
+  }
+
+  /**
+   * Calculates Impermanent Loss on any pool data
+   *
+   * @param timestamp
+   * @param pool
+   * @returns
+   */
+  async impermanentLoss(timestamp: number, pool: Pool): Promise<number> {
+    return this.impermanentLossService.calcImpLoss(timestamp, pool);
   }
 
   /**

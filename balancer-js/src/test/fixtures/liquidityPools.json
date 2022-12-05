@@ -1069,5 +1069,48 @@
         "decimals": 18
       }
     ]
+  },
+  {
+    "id": "0xc065798f227b49c150bcdc6cdc43149a12c4d75700020000000000000000010b",
+    "address": "0xc065798f227b49c150bcdc6cdc43149a12c4d757",
+    "poolType": "LiquidityBootstrapping",
+    "swapFee": "0.005",
+    "tokensList": [
+      "0x3301ee63fb29f863f2333bd4466acb46cd8323e6",
+      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    ],
+    "totalLiquidity": "5133797.634654893764109217143567092",
+    "totalSwapVolume": "22318765.89221163343284493798122458",
+    "totalSwapFee": "111593.8294610581671642246899061264",
+    "totalShares": "36815633080869.823028415262249208",
+    "owner": "0x116f4d31e8dbfe9eb8c8656bc65dff1198cde30e",
+    "factory": "0x0f3e0c4218b7b0108a3643cfe9d3ec0d4f57c54e",
+    "amp": null,
+    "createTime": 1639690020,
+    "swapEnabled": true,
+    "symbol": "AKITA_TLA",
+    "name": "AKITA Copper Launch",
+    "tokens": [
+      {
+        "address": "0x3301ee63fb29f863f2333bd4466acb46cd8323e6",
+        "balance": "2721529192541.281946501751871327",
+        "weight": "0.048481409814721326",
+        "priceRate": "1",
+        "symbol": "AKITA",
+        "decimals": 18,
+        "token": { "pool": null }
+      },
+      {
+        "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "balance": "3763.691355377977499777",
+        "weight": "0.951533849216315698",
+        "priceRate": "1",
+        "symbol": "WETH",
+        "decimals": 18,
+        "token": { "pool": null }
+      }
+    ],
+    "protocolYieldFeeCache": null,
+    "priceRateProviders": []
   }
 ]

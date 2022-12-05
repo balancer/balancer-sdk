@@ -4,6 +4,7 @@ export * from './gauge-shares';
 export * from './liquidity-gauges';
 export * from './pool';
 export * from './pool-gauges';
+export * from './pool-joinExit';
 export * from './pool-shares';
 export * from './token';
 export * from './token-prices';
@@ -17,6 +18,7 @@ import { BalancerNetworkConfig, BalancerDataRepositories } from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
 import { OnChainPoolsRepository } from '../sor/pool-data/subgraphPoolDataService';
 import { PoolSharesRepository } from './pool-shares/repository';
+import { PoolJoinExitRepository } from './pool-joinExit/repository';
 import { PoolGaugesRepository } from './pool-gauges/repository';
 import { GaugeSharesRepository } from './gauge-shares/repository';
 import { BlockNumberRepository } from './block-number';
@@ -24,6 +26,7 @@ import {
   CoingeckoPriceRepository,
   AaveRates,
   TokenPriceProvider,
+  TokenHistoricalPriceProvider,
 } from './token-prices';
 import { StaticTokenProvider } from './token/static';
 import { LiquidityGaugeSubgraphRPCProvider } from './liquidity-gauges/provider';
@@ -45,6 +48,7 @@ export class Data implements BalancerDataRepositories {
   poolGauges;
   gaugeShares;
   tokenPrices;
+  tokenHistoricalPrices;
   tokenMeta;
   liquidityGauges;
   feeDistributor;
@@ -52,6 +56,7 @@ export class Data implements BalancerDataRepositories {
   protocolFees;
   tokenYields;
   blockNumbers;
+  poolJoinExits;
 
   constructor(networkConfig: BalancerNetworkConfig, provider: Provider) {
     this.pools = new PoolsSubgraphRepository({
@@ -67,6 +72,11 @@ export class Data implements BalancerDataRepositories {
     );
 
     this.poolShares = new PoolSharesRepository(
+      networkConfig.urls.subgraph,
+      networkConfig.chainId
+    );
+
+    this.poolJoinExits = new PoolJoinExitRepository(
       networkConfig.urls.subgraph,
       networkConfig.chainId
     );
@@ -119,6 +129,11 @@ export class Data implements BalancerDataRepositories {
     );
 
     this.tokenPrices = new TokenPriceProvider(coingeckoRepository, aaveRates);
+
+    this.tokenHistoricalPrices = new TokenHistoricalPriceProvider(
+      coingeckoRepository,
+      aaveRates
+    );
 
     this.tokenMeta = new StaticTokenProvider([]);
 

@@ -16,7 +16,14 @@ export class WeightedPoolLiquidity implements LiquidityConcern {
         continue;
       }
 
-      const price = parseFixed(token.price.usd.toString(), SCALING_FACTOR);
+      let price: BigNumber;
+      if (parseFloat(token.price.usd) < 1) {
+        price = parseFixed(parseFloat(token.price.usd).toFixed(10), 10).mul(
+          1e8
+        );
+      } else {
+        price = parseFixed(token.price.usd, SCALING_FACTOR);
+      }
       const balance = parseFixed(token.balance, SCALING_FACTOR);
       const weight = parseFixed(token.weight || '0', SCALING_FACTOR);
 

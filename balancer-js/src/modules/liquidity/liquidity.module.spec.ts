@@ -82,6 +82,12 @@ describe('Liquidity Module', () => {
       const liquidity = await liquidityProvider.getLiquidity(pool);
       expect(liquidity).to.be.eq('116.303077211035488');
     });
+
+    it('Should not show a huge amount of liquidity for this AKITA pool', async () => {
+      const pool = findPool('0xc065798f227b49c150bcdc6cdc43149a12c4d757');
+      const liquidity = await liquidityProvider.getLiquidity(pool);
+      expect(liquidity).to.be.eq('7781301.384420056605162613');
+    });
   });
 
   context('Stable Pool calculations', () => {
