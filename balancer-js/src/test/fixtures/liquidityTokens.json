@@ -137,5 +137,16 @@
       "eth": "0.0005"
     },
     "lastUpdate": 1648702503883
+  },
+  {
+    "chainId": 1,
+    "symbol": "AKITA",
+    "decimals": 18,
+    "address": "0x3301ee63fb29f863f2333bd4466acb46cd8323e6",
+    "price": {
+      "usd": "9.3312e-08",
+      "eth": "7.2066e-11"
+    },
+    "lastUpdate": 1648702503883
   }
 ]
