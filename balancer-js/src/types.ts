@@ -19,6 +19,7 @@ import type {
   PoolGaugesRepository,
   PoolSharesRepository,
   ProtocolFeesProvider,
+  PoolJoinExitRepository,
 } from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
@@ -99,6 +100,7 @@ export interface BalancerDataRepositories {
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
+  tokenHistoricalPrices: Findable<Price>;
   tokenMeta: Findable<Token, TokenAttribute>;
   liquidityGauges?: Findable<LiquidityGauge>;
   feeDistributor?: BaseFeeDistributor;
@@ -107,6 +109,7 @@ export interface BalancerDataRepositories {
   tokenYields: Findable<number>;
   poolShares: PoolSharesRepository;
   poolGauges?: PoolGaugesRepository;
+  poolJoinExits: PoolJoinExitRepository;
   gaugeShares?: GaugeSharesRepository;
 }
 
@@ -183,6 +186,11 @@ export type Currency = 'eth' | 'usd';
 
 export type Price = { [currency in Currency]?: string };
 export type TokenPrices = { [address: string]: Price };
+export type HistoricalPrices = {
+  prices: [[number, number]];
+  market_caps: [[number, number]];
+  total_volumes: [[number, number]];
+};
 
 export interface Token {
   address: string;
