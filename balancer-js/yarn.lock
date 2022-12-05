@@ -691,7 +691,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@balancer-labs/sdk@workspace:."
   dependencies:
-    "@balancer-labs/sor": ^4.0.1-beta.13
+    "@balancer-labs/sor": ^4.0.1-beta.14
     "@balancer-labs/typechain": ^1.0.0
     "@ethersproject/abi": ^5.4.0
     "@ethersproject/abstract-signer": ^5.4.0
@@ -765,9 +765,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@balancer-labs/sor@npm:^4.0.1-beta.13":
-  version: 4.0.1-beta.13
-  resolution: "@balancer-labs/sor@npm:4.0.1-beta.13"
+"@balancer-labs/sor@npm:^4.0.1-beta.14":
+  version: 4.0.1-beta.8-beta.0
+  resolution: "@balancer-labs/sor@npm:4.0.1-beta.8-beta.0"
   dependencies:
     isomorphic-fetch: ^2.2.1
   peerDependencies:
@@ -777,7 +777,7 @@ __metadata:
     "@ethersproject/constants": ^5.4.0
     "@ethersproject/contracts": ^5.4.1
     "@ethersproject/providers": ^5.4.4
-  checksum: 9875890a07a31d30d5fedfe7166c260354b7aba2aff07118a171185661de7ab44947fe30a53161bc3412cb735caab87948d937d3b568d09d6e4e66d1d686444a
+  checksum: 82977b8de0f305e5ecf1e08cff65d1013901e49e3363c5f3919813c3a2ad931d5efa30c02127870554ed5525ba9ba3ca570c0cbed00f08226d8d925e2b6b7704
   languageName: node
   linkType: hard
 

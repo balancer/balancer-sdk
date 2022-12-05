@@ -191,6 +191,7 @@ export class PoolsSubgraphRepository
       totalShares: subgraphPool.totalShares,
       totalSwapFee: subgraphPool.totalSwapFee,
       totalSwapVolume: subgraphPool.totalSwapVolume,
+      priceRateProviders: subgraphPool.priceRateProviders ?? undefined,
       // onchain: subgraphPool.onchain,
       createTime: subgraphPool.createTime,
       mainIndex: subgraphPool.mainIndex ?? undefined,
