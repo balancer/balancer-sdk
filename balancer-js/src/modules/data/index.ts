@@ -14,7 +14,11 @@ export * from './protocol-fees/provider';
 export * from './token-yields/repository';
 export * from './block-number';
 
-import { BalancerNetworkConfig, BalancerDataRepositories } from '@/types';
+import {
+  BalancerNetworkConfig,
+  BalancerDataRepositories,
+  GraphQLQuery,
+} from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
 import { OnChainPoolsRepository } from '../sor/pool-data/subgraphPoolDataService';
 import { PoolSharesRepository } from './pool-shares/repository';
@@ -58,7 +62,11 @@ export class Data implements BalancerDataRepositories {
   blockNumbers;
   poolJoinExits;
 
-  constructor(networkConfig: BalancerNetworkConfig, provider: Provider) {
+  constructor(
+    networkConfig: BalancerNetworkConfig,
+    provider: Provider,
+    subgraphQuery?: GraphQLQuery
+  ) {
     this.pools = new PoolsSubgraphRepository({
       url: networkConfig.urls.subgraph,
       chainId: networkConfig.chainId,
