@@ -67,6 +67,7 @@ export class Join {
     wrapMainTokens: boolean,
     slippage: string,
     simulationType: SimulationType,
+    poolGraph: PoolGraph,
     authorisation?: string
   ): Promise<{
     to: string;
@@ -79,11 +80,9 @@ export class Join {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodes = await PoolGraph.getGraphNodes(
+    const orderedNodes = await poolGraph.getGraphNodes(
       true,
-      this.networkConfig.chainId,
       poolId,
-      this.pools,
       wrapMainTokens
     );
 

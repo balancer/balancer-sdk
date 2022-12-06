@@ -1,11 +1,10 @@
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { isSameAddress, parsePoolInfo } from '@/lib/utils';
-import { BalancerSdkConfig, Pool, PoolAttribute, PoolType } from '@/types';
+import { BalancerNetworkConfig, Pool, PoolAttribute, PoolType } from '@/types';
 import { Zero, WeiPerEther } from '@ethersproject/constants';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Findable } from '../data/types';
 import { Pools } from '../pools';
-import { getNetworkConfig } from '../sdk.helpers';
 
 type SpotPrices = { [tokenIn: string]: string };
 export interface Node {
@@ -65,7 +64,7 @@ exitActions.set(PoolType.ComposableStable, 'exitPool');
 export class PoolGraph {
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
-    private sdkConfig: BalancerSdkConfig
+    private networkConfig: BalancerNetworkConfig
   ) {}
 
   async buildGraphFromRootPool(
@@ -139,8 +138,7 @@ export class PoolGraph {
       throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
 
     const tokenTotal = this.getTokenTotal(pool);
-    const network = getNetworkConfig(this.sdkConfig);
-    const controller = Pools.wrap(pool, network);
+    const controller = Pools.wrap(pool, this.networkConfig);
     const spotPrices: SpotPrices = {};
     let decimals = 18;
     // Spot price of a path is product of the sp of each pool in path. We calculate the sp for each pool token here to use as required later.
@@ -354,24 +352,15 @@ export class PoolGraph {
   }
 
   // Get full graph from root pool and return ordered nodes
-  static getGraphNodes = async (
+  getGraphNodes = async (
     isJoin: boolean,
-    chainId: number,
     poolId: string,
-    pools: Findable<Pool, PoolAttribute>,
     wrapMainTokens: boolean
   ): Promise<Node[]> => {
-    const rootPool = await pools.find(poolId);
+    const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-    const poolsGraph = new PoolGraph(pools, {
-      network: chainId,
-      rpcUrl: '',
-    });
 
-    const rootNode = await poolsGraph.buildGraphFromRootPool(
-      poolId,
-      wrapMainTokens
-    );
+    const rootNode = await this.buildGraphFromRootPool(poolId, wrapMainTokens);
 
     if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
 

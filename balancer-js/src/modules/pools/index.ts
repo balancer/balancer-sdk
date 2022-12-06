@@ -18,6 +18,7 @@ import { Exit } from '../exits/exits.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
 import { Simulation, SimulationType } from '../simulation/simulation.module';
+import { PoolGraph } from '../graph/graph';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -31,6 +32,7 @@ export class Pools implements Findable<PoolWithMethods> {
   volumeService;
   simulationService;
   impermanentLossService;
+  graphService;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -66,6 +68,7 @@ export class Pools implements Findable<PoolWithMethods> {
       repositories.tokenPrices,
       repositories.tokenHistoricalPrices
     );
+    this.graphService = new PoolGraph(this.repositories.pools, networkConfig);
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
@@ -140,6 +143,7 @@ export class Pools implements Findable<PoolWithMethods> {
       wrapMainTokens,
       slippage,
       simulationType,
+      this.graphService,
       authorisation
     );
   }
