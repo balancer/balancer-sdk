@@ -86,8 +86,8 @@ export class PoolsSubgraphRepository
       },
     };
 
-    const args = options.query?.args || defaultArgs;
-    const attrs = options.query?.attrs || {};
+    const args = Object.assign({}, options.query?.args || defaultArgs);
+    const attrs = Object.assign({}, options.query?.attrs || {});
 
     this.query = {
       args,
