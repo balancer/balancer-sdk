@@ -21,6 +21,7 @@ import {
 } from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
 import { OnChainPoolsRepository } from '../sor/pool-data/subgraphPoolDataService';
+import { PoolsSubgraphOnChainRepository } from './pool/subgraphOnChain';
 import { PoolSharesRepository } from './pool-shares/repository';
 import { PoolJoinExitRepository } from './pool-joinExit/repository';
 import { PoolGaugesRepository } from './pool-gauges/repository';
@@ -47,6 +48,7 @@ import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json'
 export class Data implements BalancerDataRepositories {
   pools;
   poolsForSor;
+  poolsOnChain;
   yesterdaysPools;
   poolShares;
   poolGauges;
@@ -78,6 +80,15 @@ export class Data implements BalancerDataRepositories {
       networkConfig.addresses.contracts.vault,
       provider
     );
+
+    this.poolsOnChain = new PoolsSubgraphOnChainRepository({
+      url: networkConfig.urls.subgraph,
+      chainId: networkConfig.chainId,
+      provider: provider,
+      multicall: networkConfig.addresses.contracts.multicall,
+      vault: networkConfig.addresses.contracts.vault,
+      query: subgraphQuery,
+    });
 
     this.poolShares = new PoolSharesRepository(
       networkConfig.urls.subgraph,
