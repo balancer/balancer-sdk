@@ -25,7 +25,8 @@ import {
   CoingeckoPriceRepository,
   AaveRates,
   TokenPriceProvider,
-  TokenHistoricalPriceProvider,
+  HistoricalPriceProvider,
+  CoingeckoHistoricalPriceRepository,
 } from './token-prices';
 import { StaticTokenProvider } from './token/static';
 import { LiquidityGaugeSubgraphRPCProvider } from './liquidity-gauges/provider';
@@ -130,8 +131,11 @@ export class Data implements BalancerDataRepositories {
       aaveRates
     );
 
-    this.tokenHistoricalPrices = new TokenHistoricalPriceProvider(
-      coingeckoRepository,
+    const coingeckoHistoricalRepository =
+      new CoingeckoHistoricalPriceRepository(networkConfig.chainId);
+
+    this.tokenHistoricalPrices = new HistoricalPriceProvider(
+      coingeckoHistoricalRepository,
       aaveRates
     );
 

@@ -10,7 +10,11 @@ const wrappedATokenInterface = new Interface([
   'function rate() view returns (uint256)',
 ]);
 
-export class AaveRates {
+export interface IAaveRates {
+  getRate: (address: string) => Promise<number>;
+}
+
+export class AaveRates implements IAaveRates {
   multicall: Contract;
   rates?: Promise<{ [wrappedATokenAddress: string]: number }>;
 
