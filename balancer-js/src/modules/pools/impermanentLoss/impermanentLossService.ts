@@ -211,7 +211,7 @@ export class ImpermanentLossService {
     const prices: TokenPrices = {};
     for (const address of tokenAddresses) {
       const price = await this.tokenHistoricalPrices
-        .findBy('timestamp', { address: address, timestamp: timestamp })
+        .findBy(address, timestamp)
         .catch((reason) => {
           console.error(
             `[ImpermanentLossService][getEntryPrices]Error: ${reason.message}`
