@@ -180,6 +180,7 @@ export class Pools implements Findable<PoolWithMethods> {
       amount,
       userAddress,
       slippage,
+      this.graphService,
       authorisation
     );
   }

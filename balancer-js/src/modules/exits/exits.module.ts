@@ -54,6 +54,7 @@ export class Exit {
     amountBptIn: string,
     userAddress: string,
     slippage: string,
+    poolGraph: PoolGraph,
     authorisation?: string
   ): Promise<{
     to: string;
@@ -74,13 +75,7 @@ export class Exit {
     */
 
     // Create nodes and order by breadth first
-    const orderedNodes = await PoolGraph.getGraphNodes(
-      false,
-      this.networkConfig.chainId,
-      poolId,
-      this.pools,
-      false
-    );
+    const orderedNodes = await poolGraph.getGraphNodes(false, poolId, false);
 
     // Create exit paths for each output node and splits amount in proportionally between them
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
@@ -126,6 +121,7 @@ export class Exit {
 
     const priceImpact = await this.calculatePriceImpact(
       poolId,
+      poolGraph,
       tokensOut,
       expectedAmountsOut,
       amountBptIn
@@ -149,16 +145,15 @@ export class Exit {
   */
   private async calculatePriceImpact(
     poolId: string,
+    poolGraph: PoolGraph,
     tokensOut: string[],
     amountsOut: string[],
     amountBptIn: string
   ): Promise<string> {
     // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodesForJoin = await PoolGraph.getGraphNodes(
+    const orderedNodesForJoin = await poolGraph.getGraphNodes(
       true,
-      this.networkConfig.chainId,
       poolId,
-      this.pools,
       false
     );
     const joinPaths = Join.getJoinPaths(

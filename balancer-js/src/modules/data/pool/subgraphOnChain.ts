@@ -6,6 +6,8 @@ import {
   Pool_OrderBy,
   OrderDirection,
   SubgraphPoolTokenFragment,
+  SubgraphSubPoolFragment,
+  SubgraphSubPoolTokenFragment,
 } from '@/modules/subgraph/subgraph';
 import {
   GraphQLArgsBuilder,
@@ -14,10 +16,22 @@ import {
 import { GraphQLArgs } from '@/lib/graphql/types';
 import { Provider } from '@ethersproject/providers';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
-import { GraphQLQuery, Pool, PoolType, PoolToken } from '@/types';
+import {
+  GraphQLQuery,
+  Pool,
+  PoolType,
+  PoolToken,
+  SubPool,
+  SubPoolMeta,
+} from '@/types';
 import { Network } from '@/lib/constants/network';
 import { PoolsQueryVariables } from '../../subgraph/subgraph';
 import { getOnChainBalances } from './onChainData';
+import {
+  SubgraphSubPool,
+  SubgraphSubPoolMeta,
+  SubgraphSubPoolToken,
+} from './subgraph';
 
 interface PoolsSubgraphOnChainRepositoryOptions {
   url: string;
@@ -234,21 +248,53 @@ export class PoolsSubgraphOnChainRepository
   }
 
   private mapToken(subgraphToken: SubgraphPoolTokenFragment): PoolToken {
-    let subgraphTokenPool = null;
-    if (subgraphToken.token?.pool) {
-      subgraphTokenPool = {
-        ...subgraphToken.token.pool,
-        poolType: subgraphToken.token.pool.poolType as PoolType,
-      };
-    }
+    const subPoolInfo = this.mapSubPools(
+      // need to typecast as the fragment is 3 layers deep while the type is infinite levels deep
+      subgraphToken.token as SubgraphSubPoolMeta
+    );
     return {
       ...subgraphToken,
       isExemptFromYieldProtocolFee:
         subgraphToken.isExemptFromYieldProtocolFee || false,
-      token: {
-        pool: subgraphTokenPool,
-        latestUSDPrice: subgraphToken.token.latestUSDPrice || undefined,
-      },
+      token: subPoolInfo,
+    };
+  }
+
+  private mapSubPools(metadata: SubgraphSubPoolMeta): SubPoolMeta {
+    let subPool: SubPool | null = null;
+    if (metadata.pool) {
+      subPool = {
+        id: metadata.pool.id,
+        address: metadata.pool.address,
+        totalShares: metadata.pool.totalShares,
+        poolType: metadata.pool.poolType as PoolType,
+        mainIndex: metadata.pool.mainIndex || 0,
+      };
+
+      if (metadata?.pool.tokens) {
+        subPool.tokens = metadata.pool.tokens.map(
+          this.mapSubPoolToken.bind(this)
+        );
+      }
+    }
+
+    return {
+      pool: subPool,
+      latestUSDPrice: metadata.latestUSDPrice || undefined,
+    };
+  }
+
+  private mapSubPoolToken(token: SubgraphSubPoolToken) {
+    return {
+      address: token.address,
+      decimals: token.decimals,
+      symbol: token.symbol,
+      balance: token.balance,
+      priceRate: token.priceRate,
+      weight: token.weight,
+      isExemptFromYieldProtocolFee:
+        token.isExemptFromYieldProtocolFee || undefined,
+      token: token.token ? this.mapSubPools(token.token) : undefined,
     };
   }
 }
