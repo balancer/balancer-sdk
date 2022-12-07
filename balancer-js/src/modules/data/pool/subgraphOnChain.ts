@@ -191,7 +191,7 @@ export class PoolsSubgraphOnChainRepository
   }
 
   async getDefaultFilter(args: GraphQLArgs): Promise<PoolsQueryVariables> {
-    const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
+    const formattedQuery = new GraphQLArgsBuilder(args).format(
       new SubgraphArgsFormatter()
     ) as PoolsQueryVariables;
     if (!formattedQuery.block) {

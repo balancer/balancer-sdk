@@ -3,13 +3,23 @@ import {
   createSubgraphClient,
   OrderDirection,
   Pool_OrderBy,
+  PoolsQueryVariables,
   SubgraphClient,
 } from '@/modules/subgraph/subgraph';
 import { parseInt } from 'lodash';
 import { getOnChainBalances } from './onChainData';
 import { Provider } from '@ethersproject/providers';
 import { Network } from '@/lib/constants/network';
-import { BalancerNetworkConfig, BalancerSdkSorConfig } from '@/types';
+import {
+  BalancerNetworkConfig,
+  BalancerSdkSorConfig,
+  GraphQLQuery,
+} from '@/types';
+import { GraphQLArgs } from '@/lib/graphql/types';
+import {
+  GraphQLArgsBuilder,
+  SubgraphArgsFormatter,
+} from '@/lib/graphql/args-builder';
 
 const NETWORKS_WITH_LINEAR_POOLS = [
   Network.MAINNET,
@@ -96,14 +106,37 @@ export class SubgraphPoolDataService implements PoolDataService {
 
 export class OnChainPoolsRepository implements PoolDataService {
   private client: SubgraphClient;
+  private query: GraphQLQuery;
 
   constructor(
     url: string,
     private readonly multicall: string,
     private readonly vault: string,
-    private readonly provider: Provider
+    private readonly provider: Provider,
+    query?: GraphQLQuery
   ) {
     this.client = createSubgraphClient(url);
+
+    const defaultArgs: GraphQLArgs = {
+      orderBy: Pool_OrderBy.TotalLiquidity,
+      orderDirection: OrderDirection.Desc,
+      where: {
+        swapEnabled: {
+          eq: true,
+        },
+        totalShares: {
+          gt: 0.000000000001,
+        },
+      },
+    };
+
+    const args = query?.args || defaultArgs;
+    const attrs = query?.attrs || {};
+
+    this.query = {
+      args,
+      attrs,
+    };
   }
 
   public async getPools(): Promise<SubgraphPoolBase[]> {
@@ -118,14 +151,13 @@ export class OnChainPoolsRepository implements PoolDataService {
   }
 
   private async getLinearPools() {
-    const { pool0, pool1000, pool2000 } = await this.client.AllPools({
-      where: { swapEnabled: true, totalShares_gt: '0' },
-      orderBy: Pool_OrderBy.TotalLiquidity,
-      orderDirection: OrderDirection.Desc,
-    });
-
+    const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
+      new SubgraphArgsFormatter()
+    ) as PoolsQueryVariables;
+    const { pool0, pool1000, pool2000 } = await this.client.AllPools(
+      formattedQuery
+    );
     const pools = [...pool0, ...pool1000, ...pool2000];
-
     return pools;
   }
 }
