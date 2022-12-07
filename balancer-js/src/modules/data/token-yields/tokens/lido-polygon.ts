@@ -19,7 +19,9 @@ export const lidoPolygon: AprFetcher = async () => {
   let returnApr = 0;
 
   try {
-    const response = await axios.get('https://polygon.lido.fi/api/stats');
+    const response = await axios.get(
+      'https://lido-aprs-proxy.balancer.workers.dev/?network=137'
+    );
     const { apr } = response.data as LidoAPIResponse;
 
     returnApr = Math.round(parseFloat(apr) * 100);

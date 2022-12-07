@@ -114,6 +114,9 @@ fragment SubgraphPool on Pool {
     holdersCount
     tokensList
     amp
+    priceRateProviders(first: 100) {
+        ...SubgraphPriceRateProvider
+    }
     expiryTime
     unitSeconds
     createTime
@@ -167,11 +170,67 @@ fragment SubgraphPoolToken on PoolToken {
     priceRate
     isExemptFromYieldProtocolFee
     token {
-        pool {
-            poolType
-        }
+        ...TokenTree
     }
 }
+
+
+fragment SubgraphSubPoolToken on PoolToken {
+  address
+  balance
+  weight
+  priceRate
+  symbol
+  decimals
+  isExemptFromYieldProtocolFee
+}
+
+fragment TokenAttrs on Token {
+  address
+  symbol
+  decimals
+}
+
+fragment SubgraphSubPool on Pool {
+  id
+  totalShares
+  address
+  poolType
+  mainIndex
+}
+
+fragment TokenTree on Token {
+  latestUSDPrice
+  pool {
+    ...SubgraphSubPool
+    tokens {
+      ...SubgraphSubPoolToken
+      token {
+        latestUSDPrice
+        pool {
+          ...SubgraphSubPool
+          tokens {
+            ...SubgraphSubPoolToken
+            token {
+              latestUSDPrice
+              pool {
+                ...SubgraphSubPool
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+fragment SubgraphPriceRateProvider on PriceRateProvider {
+    address,
+    token {
+        address
+    }
+}
+
 
 query PoolHistoricalLiquidities(
     $skip: Int

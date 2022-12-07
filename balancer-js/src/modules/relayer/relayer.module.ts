@@ -1,19 +1,28 @@
+import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Interface } from '@ethersproject/abi';
 import { MaxUint256, WeiPerEther, Zero } from '@ethersproject/constants';
+import { Vault } from '@balancer-labs/typechain';
 
 import { Swaps } from '@/modules/swaps/swaps.module';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
   EncodeBatchSwapInput,
+  EncodeWrapAaveDynamicTokenInput,
   EncodeUnwrapAaveStaticTokenInput,
   OutputReference,
   EncodeExitPoolInput,
+  EncodeJoinPoolInput,
   ExitAndBatchSwapInput,
   ExitPoolData,
-  EncodeJoinPoolInput,
+  JoinPoolData,
 } from './types';
-import { TransactionData, ExitPoolRequest, BalancerSdkConfig } from '@/types';
+import {
+  TransactionData,
+  ExitPoolRequest,
+  JoinPoolRequest,
+  BalancerSdkConfig,
+} from '@/types';
 import {
   SwapType,
   FundManagement,
@@ -21,13 +30,13 @@ import {
   FetchPoolsInput,
 } from '../swaps/types';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
+import { RelayerAuthorization } from '@/lib/utils';
 
 import relayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
-import aaveWrappingAbi from '@/lib/abi/AaveWrapping.json';
-
-const relayerLibrary = new Interface(relayerLibraryAbi);
 
 export * from './types';
+
+const relayerLibrary = new Interface(relayerLibraryAbi);
 
 export class Relayer {
   private readonly swaps: Swaps;
@@ -41,6 +50,20 @@ export class Relayer {
     } else {
       this.swaps = new Swaps(swapsOrConfig);
     }
+  }
+
+  /**
+   * Returns true if `amount` is not actually an amount, but rather a chained reference.
+   */
+  static isChainedReference(amount: string): boolean {
+    const amountBn = BigNumber.from(amount);
+    const mask = BigNumber.from(
+      '0xfff0000000000000000000000000000000000000000000000000000000000000'
+    );
+    const readonly =
+      '0xba10000000000000000000000000000000000000000000000000000000000000';
+    const check = amountBn.toBigInt() & mask.toBigInt();
+    return readonly === BigNumber.from(check)._hex.toString();
   }
 
   static encodeApproveVault(tokenAddress: string, maxAmount: string): string {
@@ -126,18 +149,35 @@ export class Relayer {
     ]);
   }
 
+  static encodeWrapAaveDynamicToken(
+    params: EncodeWrapAaveDynamicTokenInput
+  ): string {
+    return relayerLibrary.encodeFunctionData('wrapAaveDynamicToken', [
+      params.staticToken,
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.fromUnderlying,
+      params.outputReference,
+    ]);
+  }
+
   static encodeUnwrapAaveStaticToken(
     params: EncodeUnwrapAaveStaticTokenInput
   ): string {
-    const aaveWrappingLibrary = new Interface(aaveWrappingAbi);
-
-    return aaveWrappingLibrary.encodeFunctionData('unwrapAaveStaticToken', [
+    return relayerLibrary.encodeFunctionData('unwrapAaveStaticToken', [
       params.staticToken,
       params.sender,
       params.recipient,
       params.amount,
       params.toUnderlying,
       params.outputReferences,
+    ]);
+  }
+
+  static encodePeekChainedReferenceValue(reference: BigNumberish): string {
+    return relayerLibrary.encodeFunctionData('peekChainedReferenceValue', [
+      reference,
     ]);
   }
 
@@ -192,8 +232,38 @@ export class Relayer {
     return exitEncoded;
   }
 
-  static constructJoinCall(params: EncodeJoinPoolInput): string {
-    const joinEncoded = Relayer.encodeJoinPool(params);
+  static constructJoinCall(params: JoinPoolData): string {
+    const {
+      assets,
+      maxAmountsIn,
+      userData,
+      fromInternalBalance,
+      poolId,
+      kind,
+      sender,
+      recipient,
+      value,
+      outputReference,
+    } = params;
+
+    const joinPoolRequest: JoinPoolRequest = {
+      assets,
+      maxAmountsIn,
+      userData,
+      fromInternalBalance,
+    };
+
+    const joinPoolInput: EncodeJoinPoolInput = {
+      poolId,
+      kind,
+      sender,
+      recipient,
+      value,
+      outputReference,
+      joinPoolRequest,
+    };
+
+    const joinEncoded = Relayer.encodeJoinPool(joinPoolInput);
     return joinEncoded;
   }
 
@@ -558,7 +628,35 @@ export class Relayer {
       value: '0',
       outputReferences: outputReferences,
     });
-
     return [encodedBatchSwap, ...unwrapCalls];
   }
+
+  static signRelayerApproval = async (
+    relayerAddress: string,
+    signerAddress: string,
+    signer: JsonRpcSigner,
+    vault: Vault
+  ): Promise<string> => {
+    const approval = vault.interface.encodeFunctionData('setRelayerApproval', [
+      signerAddress,
+      relayerAddress,
+      true,
+    ]);
+
+    const signature =
+      await RelayerAuthorization.signSetRelayerApprovalAuthorization(
+        vault,
+        signer,
+        relayerAddress,
+        approval
+      );
+
+    const calldata = RelayerAuthorization.encodeCalldataAuthorization(
+      '0x',
+      MaxUint256,
+      signature
+    );
+
+    return calldata;
+  };
 }

@@ -39,6 +39,8 @@ const poolFactory = Factory.define<Pool>(({ params, afterBuild }) => {
     totalWeight: '1',
     totalShares: '1',
     totalLiquidity: '0',
+    lowerTarget: '0',
+    upperTarget: '0',
   };
 });
 

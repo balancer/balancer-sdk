@@ -93,5 +93,60 @@
       "eth": "1"
     },
     "lastUpdate": 1648702384835
+  },
+  {
+    "chainId": 137,
+    "symbol": "USDC",
+    "decimals": 6,
+    "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+    "price": {
+      "usd": "1.01",
+      "eth": "0.000505"
+    },
+    "lastUpdate": 1648702623513
+  },
+  {
+    "chainId": 137,
+    "symbol": "DAI",
+    "decimals": 18,
+    "address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+    "price": {
+      "usd": "1",
+      "eth": "0.0005"
+    },
+    "lastUpdate": 1648702385646
+  },
+  {
+    "chainId": 137,
+    "symbol": "USDT",
+    "decimals": 6,
+    "address": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+    "price": {
+      "usd": "0.99",
+      "eth": "0.000495"
+    },
+    "lastUpdate": 1648702503883
+  },
+  {
+    "chainId": 137,
+    "symbol": "MAI",
+    "decimals": 18,
+    "address": "0xa3fa99a148fa48d14ed51d610c367c61876997f1",
+    "price": {
+      "usd": "1",
+      "eth": "0.0005"
+    },
+    "lastUpdate": 1648702503883
+  },
+  {
+    "chainId": 1,
+    "symbol": "AKITA",
+    "decimals": 18,
+    "address": "0x3301ee63fb29f863f2333bd4466acb46cd8323e6",
+    "price": {
+      "usd": "9.3312e-08",
+      "eth": "7.2066e-11"
+    },
+    "lastUpdate": 1648702503883
   }
 ]

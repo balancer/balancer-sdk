@@ -1,6 +1,6 @@
 /**
  * Display APRs for pool ids hardcoded under `const ids`
- * Run command: yarn examples:run ./examples/pools/aprs.ts
+ * Run command: yarn examples:run ./examples/pools/aprs.polygon.ts
  */
 import dotenv from 'dotenv';
 import { BalancerSDK } from '../../src/modules/sdk.module';
@@ -19,7 +19,7 @@ const { pools } = sdk;
 
 const main = async () => {
   const pool = await pools.find(
-    '0x0297e37f1873d2dab4487aa67cd56b58e2f27875000100000000000000000002'
+    '0x8159462d255c1d24915cb51ec361f700174cd99400000000000000000000075d'
   );
 
   if (pool) {

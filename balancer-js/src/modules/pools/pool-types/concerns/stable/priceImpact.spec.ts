@@ -49,7 +49,8 @@ describe('stable pool price impact', () => {
       const priceImpact = priceImpactCalc.calcPriceImpact(
         pool,
         tokenAmounts,
-        '109598303041827170846'
+        '109598303041827170846',
+        true
         // this not the actual bptAmount that would result
         // but it is still useful for testing purposes
       );

@@ -14,7 +14,7 @@ import { Multicall } from './implementations/multicall';
 import { ERC20 } from './implementations/ERC20';
 import { VeBal } from './implementations/veBAL';
 import { VeBalProxy } from './implementations/veBAL-proxy';
-import { RelayerV4 } from './implementations/relayerV4';
+import { Relayer } from './implementations/relayer';
 import { LiquidityGauge } from './implementations/liquidity-gauge';
 
 type ContractFactory = (
@@ -26,7 +26,8 @@ export interface ContractInstances {
   vault: Vault;
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
-  relayerV4: Contract | undefined;
+  relayerV3?: Contract;
+  relayerV4?: Contract;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
   ERC20: ContractFactory;
@@ -38,7 +39,8 @@ export class Contracts {
   vault: Vault;
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
-  relayerV4: Contract | undefined;
+  relayerV3?: Contract;
+  relayerV4?: Contract;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
 
@@ -70,8 +72,10 @@ export class Contracts {
     // These contracts aren't included in Balancer Typechain but are still useful.
     // TO DO - Possibly create via Typechain but seems unnecessary?
     this.multicall = Multicall(this.contractAddresses.multicall, provider);
+    if (this.contractAddresses.relayerV3)
+      this.relayerV3 = Relayer(this.contractAddresses.relayerV3, provider, 3);
     if (this.contractAddresses.relayerV4)
-      this.relayerV4 = RelayerV4(this.contractAddresses.relayerV4, provider);
+      this.relayerV4 = Relayer(this.contractAddresses.relayerV4, provider, 4);
 
     if (this.contractAddresses.veBal) {
       this.veBal = new VeBal(this.contractAddresses, provider);
@@ -90,6 +94,7 @@ export class Contracts {
       vault: this.vault,
       lidoRelayer: this.lidoRelayer,
       multicall: this.multicall,
+      relayerV3: this.relayerV3,
       relayerV4: this.relayerV4,
       veBal: this.veBal,
       veBalProxy: this.veBalProxy,
@@ -101,7 +106,7 @@ export class Contracts {
   /**
    * Helper to create ERC20 contract.
    * @param { string } address ERC20 address.
-   * @param { Signer | Provider } Signer or Provider.
+   * @param { Signer | Provider } signerOrProvider Signer or Provider.
    * @returns Contract.
    */
   getErc20(address: string, signerOrProvider: Signer | Provider): Contract {
@@ -110,8 +115,8 @@ export class Contracts {
 
   /**
    * Helper to create LiquidityGauge contract.
-   * @param { string } Gauge address.
-   * @param { Signer | Provider} Signer or Provider.
+   * @param { string } address Gauge address.
+   * @param { Signer | Provider} signerOrProvider Signer or Provider.
    * @returns Contract.
    */
   getLiquidityGauge(

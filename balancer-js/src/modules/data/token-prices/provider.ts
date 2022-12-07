@@ -1,15 +1,23 @@
 import type { Findable, Price } from '@/types';
-import { AaveRates } from './aave-rates';
-import { CoingeckoPriceRepository } from './coingecko';
+import { IAaveRates } from './aave-rates';
 
 export class TokenPriceProvider implements Findable<Price> {
   constructor(
-    private coingeckoRepository: CoingeckoPriceRepository,
-    private aaveRates: AaveRates
+    private coingeckoRepository: Findable<Price>,
+    private subgraphRepository: Findable<Price>,
+    private aaveRates: IAaveRates
   ) {}
 
   async find(address: string): Promise<Price | undefined> {
-    const price = await this.coingeckoRepository.find(address);
+    let price;
+    try {
+      price = await this.coingeckoRepository.find(address);
+      if (!price?.usd) {
+        price = await this.subgraphRepository.find(address);
+      }
+    } catch (err) {
+      console.error(err);
+    }
     const rate = (await this.aaveRates.getRate(address)) || 1;
     if (price && price.usd) {
       return {
@@ -24,8 +32,7 @@ export class TokenPriceProvider implements Findable<Price> {
   async findBy(attribute: string, value: string): Promise<Price | undefined> {
     if (attribute === 'address') {
       return this.find(value);
-    } else {
-      throw `Token price search by ${attribute} not implemented`;
     }
+    throw `Token price search by ${attribute} not implemented`;
   }
 }

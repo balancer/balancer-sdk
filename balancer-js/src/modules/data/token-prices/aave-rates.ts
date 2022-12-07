@@ -10,7 +10,11 @@ const wrappedATokenInterface = new Interface([
   'function rate() view returns (uint256)',
 ]);
 
-export class AaveRates {
+export interface IAaveRates {
+  getRate: (address: string) => Promise<number>;
+}
+
+export class AaveRates implements IAaveRates {
   multicall: Contract;
   rates?: Promise<{ [wrappedATokenAddress: string]: number }>;
 
@@ -44,6 +48,9 @@ export class AaveRates {
 
   async getRate(wrappedAToken: string): Promise<number> {
     if (this.network != Network.MAINNET && this.network != Network.POLYGON) {
+      return 1;
+    }
+    if (!Object.values(yieldTokens[this.network]).includes(wrappedAToken)) {
       return 1;
     }
     if (!this.rates) {
