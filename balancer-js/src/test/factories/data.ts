@@ -33,6 +33,10 @@ export const stubbed = <T, P = string, V = any>(
   where: (filters: (arg: T) => boolean) => Promise.resolve([value as T]),
 });
 
+export const aaveRates = {
+  getRate: (address: string) => Promise.resolve(1),
+};
+
 interface IdentifiableArray {
   id: number;
 }

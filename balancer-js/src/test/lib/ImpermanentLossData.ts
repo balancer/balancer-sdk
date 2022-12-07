@@ -1,10 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import {
-  HistoricalPriceRequest,
-  TokenHistoricalPriceProvider,
-  TokenPriceProvider,
-} from '@/modules/data';
+import { HistoricalPriceProvider, TokenPriceProvider } from '@/modules/data';
 import { Pool, PoolType, Price } from '@/types';
 
 export const MOCK_POOLS: { [key: string]: Pool } = {
@@ -160,15 +156,12 @@ export class MockPriceProvider extends TokenPriceProvider {
     return MOCK_PRICES.get(address);
   }
 
-  async findBy<V = string>(
-    attribute: string,
-    value: V
-  ): Promise<Price | undefined> {
-    return MOCK_PRICES.get(value as unknown as string);
+  async findBy(address: string): Promise<Price | undefined> {
+    return MOCK_PRICES.get(address as unknown as string);
   }
 }
 
-export class MockHistoricalPriceProvider extends TokenHistoricalPriceProvider {
+export class MockHistoricalPriceProvider extends HistoricalPriceProvider {
   async find(address: string): Promise<Price | undefined> {
     const historicalPrice = MOCK_HISTORICAL_PRICES.has(address)
       ? MOCK_HISTORICAL_PRICES.get(address)
@@ -176,14 +169,10 @@ export class MockHistoricalPriceProvider extends TokenHistoricalPriceProvider {
     return historicalPrice ? historicalPrice[1666276501] : undefined;
   }
 
-  async findBy<V = string | HistoricalPriceRequest>(
-    attribute: string,
-    value: V
-  ): Promise<Price | undefined> {
-    const req = value as unknown as HistoricalPriceRequest;
-    const historicalPrice = MOCK_HISTORICAL_PRICES.has(req.address)
-      ? MOCK_HISTORICAL_PRICES.get(req.address)
+  async findBy(address: string, timestamp: number): Promise<Price | undefined> {
+    const historicalPrice = MOCK_HISTORICAL_PRICES.has(address)
+      ? MOCK_HISTORICAL_PRICES.get(address)
       : undefined;
-    return historicalPrice ? historicalPrice[req.timestamp] : undefined;
+    return historicalPrice ? historicalPrice[timestamp] : undefined;
   }
 }

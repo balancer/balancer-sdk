@@ -25,7 +25,8 @@ import {
   CoingeckoPriceRepository,
   AaveRates,
   TokenPriceProvider,
-  TokenHistoricalPriceProvider,
+  HistoricalPriceProvider,
+  CoingeckoHistoricalPriceRepository,
 } from './token-prices';
 import { StaticTokenProvider } from './token/static';
 import { LiquidityGaugeSubgraphRPCProvider } from './liquidity-gauges/provider';
@@ -38,6 +39,7 @@ import { Provider } from '@ethersproject/providers';
 // initialCoingeckoList are used to get the initial token list for coingecko
 // TODO: we might want to replace that with what frontend is using
 import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json';
+import { SubgraphPriceRepository } from './token-prices/subgraph';
 
 export class Data implements BalancerDataRepositories {
   pools;
@@ -113,16 +115,27 @@ export class Data implements BalancerDataRepositories {
       networkConfig.chainId
     );
 
+    const subgraphPriceRepository = new SubgraphPriceRepository(
+      networkConfig.chainId
+    );
+
     const aaveRates = new AaveRates(
       networkConfig.addresses.contracts.multicall,
       provider,
       networkConfig.chainId
     );
 
-    this.tokenPrices = new TokenPriceProvider(coingeckoRepository, aaveRates);
-
-    this.tokenHistoricalPrices = new TokenHistoricalPriceProvider(
+    this.tokenPrices = new TokenPriceProvider(
       coingeckoRepository,
+      subgraphPriceRepository,
+      aaveRates
+    );
+
+    const coingeckoHistoricalRepository =
+      new CoingeckoHistoricalPriceRepository(networkConfig.chainId);
+
+    this.tokenHistoricalPrices = new HistoricalPriceProvider(
+      coingeckoHistoricalRepository,
       aaveRates
     );
 

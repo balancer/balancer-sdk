@@ -1,30 +1,28 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { AaveRates, CoingeckoPriceRepository } from '@/modules/data';
 import { ImpermanentLossService } from '@/modules/pools/impermanentLoss/impermanentLossService';
-import { BalancerSDK } from '@/modules/sdk.module';
 import {
   MockHistoricalPriceProvider,
   MockPriceProvider,
 } from '@/test/lib/ImpermanentLossData';
-import { Network, Pool } from '@/types';
+import { Pool } from '@/types';
 import { expect } from 'chai';
 import dotenv from 'dotenv';
+import { repositores, aaveRates } from '@/test/factories/data';
+
+const stubbedRepositores = repositores({});
 
 dotenv.config();
 
-const rpcUrl = 'http://127.0.0.1:8545';
-const network = Network.MAINNET;
-const sdk = new BalancerSDK({ network, rpcUrl });
-
 const mockTokenPriceProvider = new MockPriceProvider(
-  new CoingeckoPriceRepository([], 1),
-  new AaveRates('', sdk.rpcProvider, Network.MAINNET)
+  stubbedRepositores.tokenPrices,
+  stubbedRepositores.tokenPrices,
+  aaveRates
 );
 const mockHistoricalTokenPriceProvider = new MockHistoricalPriceProvider(
-  new CoingeckoPriceRepository([], 1),
-  new AaveRates('', sdk.rpcProvider, Network.MAINNET)
+  stubbedRepositores.tokenPrices,
+  aaveRates
 );
 
 const service = new ImpermanentLossService(
