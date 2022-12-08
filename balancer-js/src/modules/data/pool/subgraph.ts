@@ -107,7 +107,8 @@ export class PoolsSubgraphRepository
       where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
-      block: await this.block(),
+      // block: await this.block(),
+      block: { number: 16067738 },
     });
     console.timeEnd('fetching pools');
 
