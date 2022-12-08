@@ -68,9 +68,11 @@ export const ADDRESSES = {
       slot: 0,
     },
     bbausd: {
+      id: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe',
       address: '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2',
       decimals: 18,
       symbol: 'bbausd',
+      slot: 0,
     },
     bbausd2: {
       id: '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d',
@@ -446,9 +448,11 @@ export const ADDRESSES = {
       slot: 1,
     },
     bbausd: {
+      id: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd00000000000000000000005f',
       address: '0x13acd41c585d7ebb4a9460f7c8f50be60dc080cd',
       decimals: 18,
       symbol: 'bbausd',
+      slot: 0,
     },
     waDAI: {
       address: '0x0b61329839d2ebea96e21f45d4b065dbf38a7af6',

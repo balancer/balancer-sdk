@@ -2,7 +2,7 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { parseFixed } from '@ethersproject/bignumber';
-import { MaxUint256 } from '@ethersproject/constants';
+import { MaxUint256, WeiPerEther } from '@ethersproject/constants';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import {
   SOR,
@@ -266,9 +266,14 @@ async function testFlow(
         tokenInBalanceChange.toString()
       );
       expect(modelResults[tokenOut.address].isNegative()).to.be.true;
-      expect(modelResults[tokenOut.address].abs().toString()).to.eq(
-        tokenOutBalanceChange.toString()
-      );
+
+      const modelInaccuracy = modelResults[tokenOut.address]
+        .abs()
+        .sub(tokenOutBalanceChange)
+        .mul(WeiPerEther)
+        .div(tokenOutBalanceChange);
+      const inaccuracyLimit = WeiPerEther.div(100); // inaccuracy should not be over to 1%
+      expect(modelInaccuracy.lte(inaccuracyLimit)).to.be.true;
     }).timeout(10000000);
   });
 }
