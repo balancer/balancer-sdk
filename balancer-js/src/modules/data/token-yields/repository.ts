@@ -9,6 +9,7 @@ import {
 } from './tokens/lido-polygon';
 import { aave, allYieldTokens as aaveTokens } from './tokens/aave';
 import { overnight, yieldTokens as overnightTokens } from './tokens/overnight';
+import { sfrxETH, yieldTokens as fraxTokens } from './tokens/sfrxeth';
 import { Network, Findable } from '@/types';
 
 /**
@@ -26,6 +27,7 @@ const yieldSourceMap: { [address: string]: AprFetcher } = Object.fromEntries([
   ...Object.values(aaveTokens).map((k) => [k, aave]),
   ...Object.values(overnightTokens).map((k) => [k, overnight]),
   ...Object.values(rocketpoolTokens).map((k) => [k, rocketpool]),
+  ...Object.values(fraxTokens).map((k) => [k, sfrxETH]),
 ]);
 
 export class TokenYieldsRepository implements Findable<number> {
