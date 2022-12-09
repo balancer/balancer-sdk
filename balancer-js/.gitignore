@@ -7,4 +7,4 @@ yarn-error.log
 dist/
 src/subgraph/generated/
 cache/
-.idea
+balancer-js.iml

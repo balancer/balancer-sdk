@@ -12,10 +12,14 @@ A JavaScript SDK which provides commonly used utilties for interacting with Bala
 4. Create a .env file in the balancer-js folder
 5. In the .env file you will need to define and initialize the following variables
 
+   We have defined both Alchemy and Infura, because some of the examples use Infura, others use Alchemy. However, feel free to modify accordingly and use your favourite one.
    ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT]  
    INFURA=[Infura API KEY]  
    TRADER_KEY=[MetaMask PRIVATE KEY]  
-   We have defined both Alchemy and Infura, because some of the examples use Infura, others use Alchemy. However, feel free to modify accordingly and use your favourite one.
+   Some examples also require the following Tenderly config parameters to be defined:
+   TENDERLY_ACCESS_KEY=[TENDERLY API ACCESS KEY]
+   TENDERLY_PROJECT=[TENDERLY PROJECT NAME]
+   TENDERLY_USER=[TENDERLY USERNAME]
 
 6. Run 'npm run node', this runs a local Hardhat Network
 7. Open a new terminal
@@ -44,11 +48,15 @@ Installation instructions for:
 
 - [Hardhat](https://hardhat.org/getting-started/#installation)
 
-  To start a forked node:
+  To start a MAINNET forked node:
 
-  ```
-  npm run node
-  ```
+  - Set env var: `ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT for MAINNET]`
+  - Run: `npm run node`
+
+  To start a GOERLI forked node:
+
+  - Set env var: `ALCHEMY_URL_GOERLI=[ALCHEMY HTTPS ENDPOINT for GOERLI]`
+  - Run: `npm run node:goerli`
 
 - [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation) - use with caution, still experimental.
 
@@ -253,9 +261,9 @@ Find Spot Price for pair in specific pool.
 const balancer = new BalancerSDK(sdkConfig);
 const pool = await balancer.pools.find(poolId);
 const spotPrice = await pool.calcSpotPrice(
-    ADDRESSES[network].DAI.address,
-    ADDRESSES[network].BAL.address,
-  );
+  ADDRESSES[network].DAI.address,
+  ADDRESSES[network].BAL.address
+);
 ```
 
 ### #getSpotPrice
@@ -281,9 +289,11 @@ async getSpotPrice(
 
 [Example](./examples/spotPrice.ts)
 
-## Join Pool
+## Joining Pools
 
-Exposes Join functionality allowing user to join pools.
+### Joining with pool tokens
+
+Exposes Join functionality allowing user to join pools with its pool tokens.
 
 ```js
 const balancer = new BalancerSDK(sdkConfig);
@@ -291,7 +301,7 @@ const pool = await balancer.pools.find(poolId);
 const { to, functionName, attributes, data } = pool.buildJoin(params);
 ```
 
-### #buildJoin
+#### #buildJoin
 
 Builds a join transaction.
 
@@ -333,6 +343,51 @@ buildJoin: (
 ```
 
 [Example](./examples/pools/composable-stable/createAndInitJoin.ts)
+### Joining nested pools
+
+Exposes Join functionality allowing user to join a pool that has pool tokens that are BPTs of other pools, e.g.:
+
+```
+                  CS0
+              /        \
+            CS1        CS2
+          /    \      /   \
+         DAI   USDC  USDT  FRAX
+
+Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
+```
+
+```js
+  /**
+   * Builds generalised join transaction
+   *
+   * @param poolId          Pool id
+   * @param tokens          Token addresses
+   * @param amounts         Token amounts in EVM scale
+   * @param userAddress     User address
+   * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+   * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
+   */
+  async generalisedJoin(
+    poolId: string,
+    tokens: string[],
+    amounts: string[],
+    userAddress: string,
+    wrapMainTokens: boolean,
+    slippage: string,
+    authorisation?: string
+  ): Promise<{
+    to: string;
+    callData: string;
+    minOut: string;
+    expectedOut: string;
+  }>
+```
+
+[Example](./examples/joinGeneralised.ts)
+
 ## Exit Pool
 
 Exposes Exit functionality allowing user to exit pools.
@@ -386,6 +441,48 @@ Builds an exit transaction with exact tokens out and maximum BPT in based on sli
 ```
 
 [Example](./examples/exitExactTokensOut.ts)
+
+### Exiting nested pools
+
+Exposes Exit functionality allowing user to exit a pool that has pool tokens that are BPTs of other pools, e.g.:
+
+```
+                  CS0
+              /        \
+            CS1        CS2
+          /    \      /   \
+         DAI   USDC  USDT  FRAX
+
+Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
+```
+
+```js
+/**
+   * Builds generalised exit transaction
+   *
+   * @param poolId        Pool id
+   * @param amount        Token amount in EVM scale
+   * @param userAddress   User address
+   * @param slippage      Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param authorisation Optional auhtorisation call to be added to the chained transaction
+   * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
+   */
+  async generalisedExit(
+    poolId: string,
+    amount: string,
+    userAddress: string,
+    slippage: string,
+    authorisation?: string
+  ): Promise<{
+    to: string;
+    callData: string;
+    tokensOut: string[];
+    expectedAmountsOut: string[];
+    minAmountsOut: string[];
+  }>
+```
+
+[Example](./examples/exitGeneralised.ts)
 
 ## Create Pool
 
@@ -525,6 +622,66 @@ async relayer.exitPoolAndBatchSwap(
 ```
 
 [Example](./examples/relayerExitPoolAndBatchSwap.ts)
+
+### Pools Impermanent Loss
+
+> DRAFT
+> 
+> impermanent loss (IL) describes the percentage by which a pool is worth less than what one would have if they had instead just held the tokens outside the pool
+
+
+#### Service
+
+![class-diagram](IL-class.png)
+
+#### Algorithm
+
+Using the variation delta formula:
+
+![img.png](img.png)
+
+where **𝚫P<sup>i</sup>** represents the difference between the price for a single token at the date of joining the pool and the current price. 
+
+```javascript
+
+// retrieves pool's tokens
+tokens = pool.tokens;
+// get weights for tokens
+weights = tokens.map((token) => token.weight);
+// retrieves current price for tokens
+exitPrices = tokens.map((token) => tokenPrices.find(token.address));
+// retrieves historical price for tokens
+entryPrices = tokens.map((token) => tokenPrices.findBy('timestamp', { address: token.address, timestamp: timestamp})); 
+// retrieves list of pool's assets with prices delta and weights 
+assets = tokens.map((token) => ({
+  priceDelta: this.getDelta(entryPrices[token.address], exitPrices[token.address]),
+  weight: weights[i],
+}));
+
+poolValueDelta = assets.reduce((result, asset) => result * Math.pow(Math.abs(asset.priceDelta + 1), asset.weight), 1);
+holdValueDelta = assets.reduce((result, asset) => result + (Math.abs(asset.priceDelta + 1) * asset.weight), 0);
+
+const IL = poolValueDelta/holdValueDelta - 1;
+```
+
+#### Usage
+
+```javascript
+async impermanentLoss(
+  timestamp: number, // the UNIX timestamp from which the IL is desired
+  pool: Pool // the pool on which the IL must be calculated
+): Promise<number> 
+```
+
+```javascript
+const pool = await sdk.pools.find(poolId);
+const joins = (await sdk.data.findByUser(userAddress)).filter((it) => it.type === "Join" && it.poolId === poolId);
+const join = joins[0];
+const IL = await pools.impermanentLoss(join.timestamp, pool);  
+```
+
+[Example](./examples/pools/impermanentLoss.ts)
+
 
 ## Licensing
 

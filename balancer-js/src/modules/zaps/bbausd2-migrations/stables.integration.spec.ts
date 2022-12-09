@@ -14,15 +14,15 @@ dotenv.config();
 
 /*
  * Testing on GOERLI
- * - Update hardhat.config.js with chainId = 5
- * - Update ALCHEMY_URL on .env with a goerli api key
- * - Run node on terminal: yarn run node
+ * - Run node on terminal: yarn run node:goerli
  * - Uncomment section below
  */
 const network = Network.GOERLI;
 const addresses = ADDRESSES[network];
 const blockNumber = 7300090;
 const holderAddress = '0xd86a11b0c859c18bfc1b4acd072c5afe57e79438';
+const { ALCHEMY_URL_GOERLI: jsonRpcUrl } = process.env;
+const rpcUrl = 'http://127.0.0.1:8000';
 // stabal3
 const fromPool = {
   id: addresses.staBal3.id,
@@ -39,8 +39,6 @@ const tokens = [addresses.USDT, addresses.DAI, addresses.USDC]; // this order on
 
 /*
  * Testing on POLYGON
- * - Update hardhat.config.js with chainId = 137
- * - Update ALCHEMY_URL on .env with a goerli api key
  * - Run node on terminal: yarn run node
  * - Uncomment section below
  */
@@ -81,12 +79,12 @@ const tokens = [addresses.USDT, addresses.DAI, addresses.USDC]; // this order on
 //   '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270', // wMATIC
 //   '0x3a58a54c066fdc0f2d55fc9c89f0415c92ebf3c4', // stMATIC
 // ];
+// const { ALCHEMY_URL: jsonRpcUrl } = process.env;
+// const rpcUrl = 'http://127.0.0.1:8545';
 
-const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
 
-const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const relayer = addresses.relayer;
 const { contracts } = new Contracts(network as number, provider);

@@ -6,6 +6,8 @@ import {
   Pool_OrderBy,
   OrderDirection,
   SubgraphPoolTokenFragment,
+  SubgraphSubPoolFragment,
+  SubgraphSubPoolTokenFragment,
 } from '@/modules/subgraph/subgraph';
 import {
   GraphQLArgsBuilder,
@@ -13,7 +15,14 @@ import {
 } from '@/lib/graphql/args-builder';
 import { GraphQLArgs } from '@/lib/graphql/types';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
-import { GraphQLQuery, Pool, PoolType, PoolToken } from '@/types';
+import {
+  GraphQLQuery,
+  Pool,
+  PoolType,
+  PoolToken,
+  SubPool,
+  SubPoolMeta,
+} from '@/types';
 import { Network } from '@/lib/constants/network';
 import { PoolsQueryVariables } from '../../subgraph/subgraph';
 
@@ -22,6 +31,19 @@ interface PoolsSubgraphRepositoryOptions {
   chainId: Network;
   blockHeight?: () => Promise<number | undefined>;
   query?: GraphQLQuery;
+}
+
+interface SubgraphSubPoolToken extends SubgraphSubPoolTokenFragment {
+  token?: SubgraphSubPoolMeta | null;
+}
+
+interface SubgraphSubPoolMeta {
+  latestUSDPrice?: string | null;
+  pool?: SubgraphSubPool | null;
+}
+
+interface SubgraphSubPool extends SubgraphSubPoolFragment {
+  tokens: SubgraphSubPoolToken[];
 }
 
 /**
@@ -64,8 +86,8 @@ export class PoolsSubgraphRepository
       },
     };
 
-    const args = options.query?.args || defaultArgs;
-    const attrs = options.query?.attrs || {};
+    const args = Object.assign({}, options.query?.args || defaultArgs);
+    const attrs = Object.assign({}, options.query?.attrs || {});
 
     this.query = {
       args,
@@ -82,12 +104,10 @@ export class PoolsSubgraphRepository
   private async fetchDefault(): Promise<Pool[]> {
     console.time('fetching pools');
     const { pool0, pool1000, pool2000 } = await this.client.AllPools({
-      where: { swapEnabled: true, totalShares_gt: '0' },
+      where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
-      block: this.blockHeight
-        ? { number: await this.blockHeight() }
-        : undefined,
+      block: await this.block(),
     });
     console.timeEnd('fetching pools');
 
@@ -125,6 +145,25 @@ export class PoolsSubgraphRepository
     }
 
     return (await this.pools).find((pool) => pool[param] == value);
+
+    // TODO: @Nma - Fetching pools outside of default query is causing a lot of requests
+    // on a frontend, because results aren't cached anywhere.
+    // For fetching pools directly from subgraph with custom queries please use the client not this repository.
+    // Code below kept for reference, to be removed later.
+    //
+    // if (this.pools) {
+    //   return (await this.pools).find((p) => p[param] === value);
+    // }
+    // const { pools } = await this.client.Pools({
+    //   where: {
+    //     [param]: value,
+    //     swapEnabled: true,
+    //     totalShares_gt: '0.000000000001',
+    //   },
+    //   block: await this.block(),
+    // });
+    // const poolsTab: Pool[] = pools.map(this.mapType.bind(this));
+    // return poolsTab.length > 0 ? poolsTab[0] : undefined;
   }
 
   async all(): Promise<Pool[]> {
@@ -132,6 +171,10 @@ export class PoolsSubgraphRepository
       this.pools = this.fetchDefault();
     }
     return this.pools;
+  }
+
+  async block(): Promise<{ number: number | undefined } | undefined> {
+    return this.blockHeight ? { number: await this.blockHeight() } : undefined;
   }
 
   async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
@@ -149,18 +192,22 @@ export class PoolsSubgraphRepository
       address: subgraphPool.address,
       chainId: this.chainId,
       poolType: subgraphPool.poolType as PoolType,
+      poolTypeVersion: subgraphPool.poolTypeVersion || 1,
       swapFee: subgraphPool.swapFee,
       swapEnabled: subgraphPool.swapEnabled,
+      protocolYieldFeeCache: subgraphPool.protocolYieldFeeCache || '0',
       amp: subgraphPool.amp ?? undefined,
       owner: subgraphPool.owner ?? undefined,
       factory: subgraphPool.factory ?? undefined,
-      tokens: (subgraphPool.tokens || []).map(this.mapToken),
+      symbol: subgraphPool.symbol ?? undefined,
+      tokens: (subgraphPool.tokens || []).map(this.mapToken.bind(this)),
       tokensList: subgraphPool.tokensList,
       tokenAddresses: (subgraphPool.tokens || []).map((t) => t.address),
       totalLiquidity: subgraphPool.totalLiquidity,
       totalShares: subgraphPool.totalShares,
       totalSwapFee: subgraphPool.totalSwapFee,
       totalSwapVolume: subgraphPool.totalSwapVolume,
+      priceRateProviders: subgraphPool.priceRateProviders ?? undefined,
       // onchain: subgraphPool.onchain,
       createTime: subgraphPool.createTime,
       mainIndex: subgraphPool.mainIndex ?? undefined,
@@ -173,22 +220,59 @@ export class PoolsSubgraphRepository
       // feesSnapshot: subgraphPool.???, // Approximated last 24h fees
       // boost: subgraphPool.boost,
       totalWeight: subgraphPool.totalWeight || '1',
+      lowerTarget: subgraphPool.lowerTarget ?? '0',
+      upperTarget: subgraphPool.upperTarget ?? '0',
     };
   }
 
   private mapToken(subgraphToken: SubgraphPoolTokenFragment): PoolToken {
-    let subgraphTokenPool = null;
-    if (subgraphToken.token?.pool) {
-      subgraphTokenPool = {
-        ...subgraphToken.token.pool,
-        poolType: subgraphToken.token.pool.poolType as PoolType,
-      };
-    }
+    const subPoolInfo = this.mapSubPools(
+      // need to typecast as the fragment is 3 layers deep while the type is infinite levels deep
+      subgraphToken.token as SubgraphSubPoolMeta
+    );
     return {
       ...subgraphToken,
-      token: {
-        pool: subgraphTokenPool,
-      },
+      isExemptFromYieldProtocolFee:
+        subgraphToken.isExemptFromYieldProtocolFee || false,
+      token: subPoolInfo,
+    };
+  }
+
+  private mapSubPools(metadata: SubgraphSubPoolMeta): SubPoolMeta {
+    let subPool: SubPool | null = null;
+    if (metadata.pool) {
+      subPool = {
+        id: metadata.pool.id,
+        address: metadata.pool.address,
+        totalShares: metadata.pool.totalShares,
+        poolType: metadata.pool.poolType as PoolType,
+        mainIndex: metadata.pool.mainIndex || 0,
+      };
+
+      if (metadata?.pool.tokens) {
+        subPool.tokens = metadata.pool.tokens.map(
+          this.mapSubPoolToken.bind(this)
+        );
+      }
+    }
+
+    return {
+      pool: subPool,
+      latestUSDPrice: metadata.latestUSDPrice || undefined,
+    };
+  }
+
+  private mapSubPoolToken(token: SubgraphSubPoolToken) {
+    return {
+      address: token.address,
+      decimals: token.decimals,
+      symbol: token.symbol,
+      balance: token.balance,
+      priceRate: token.priceRate,
+      weight: token.weight,
+      isExemptFromYieldProtocolFee:
+        token.isExemptFromYieldProtocolFee || undefined,
+      token: token.token ? this.mapSubPools(token.token) : undefined,
     };
   }
 }

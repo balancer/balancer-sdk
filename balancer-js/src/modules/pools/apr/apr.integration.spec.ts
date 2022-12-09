@@ -20,7 +20,7 @@ const veBalId =
   '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014';
 
 const usdStable =
-  '0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb20000000000000000000000fe';
+  '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d';
 
 const btcEth =
   '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e';
@@ -31,9 +31,14 @@ const ethStEthCopy =
 const auraBALveBAL =
   '0x3dd0843a028c86e0b760b1a76929d1c5ef93a2dd000200000000000000000249';
 
+const getMondayOfWeek = (today = new Date()) => {
+  const first = today.getUTCDate() - today.getUTCDay() + 1;
+  return new Date(today.setUTCDate(first));
+};
+
 describe('happy case', () => {
-  // Time when veBal used to recieve procotol revenues
-  const now = new Date('2022-08-19 11:11:11').getTime();
+  // Time when veBal used to receive procotol revenues
+  const now = getMondayOfWeek().getTime();
 
   before(async function () {
     MockDate.set(now);
@@ -44,7 +49,7 @@ describe('happy case', () => {
       {
         forking: {
           jsonRpcUrl: process.env.RPC_URL || process.env.ALCHEMY_URL,
-          blockNumber: 15370937, // 2022-08-19 11:11:11
+          // blockNumber: 15902899, // 2022-11-05 09:24:11
         },
       },
     ]);

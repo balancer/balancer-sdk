@@ -3,7 +3,8 @@ import { Fragment, JsonFragment, Interface, Result } from '@ethersproject/abi';
 import { CallOverrides } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/providers';
 import { BytesLike } from '@ethersproject/bytes';
-import { Multicall } from '../../modules/contracts/multicall';
+import { Multicall } from '@/modules/contracts/implementations/multicall';
+
 export class Multicaller {
   private multiAddress: string;
   private provider: Provider;

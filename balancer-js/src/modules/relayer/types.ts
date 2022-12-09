@@ -35,11 +35,21 @@ export interface EncodeExitPoolInput {
 
 export interface EncodeJoinPoolInput {
   poolId: string;
-  poolKind: number;
+  kind: number;
   sender: string;
   recipient: string;
-  outputReferences: OutputReference[];
   joinPoolRequest: JoinPoolRequest;
+  value: string;
+  outputReference: string;
+}
+
+export interface EncodeWrapAaveDynamicTokenInput {
+  staticToken: string;
+  sender: string;
+  recipient: string;
+  amount: BigNumberish;
+  fromUnderlying: boolean;
+  outputReference: BigNumberish;
 }
 
 export interface EncodeUnwrapAaveStaticTokenInput {
@@ -64,3 +74,4 @@ export interface ExitAndBatchSwapInput {
 }
 
 export type ExitPoolData = ExitPoolRequest & EncodeExitPoolInput;
+export type JoinPoolData = JoinPoolRequest & EncodeJoinPoolInput;

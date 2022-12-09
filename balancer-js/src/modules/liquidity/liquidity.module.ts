@@ -1,6 +1,5 @@
-import { Findable, Pool, PoolToken } from '@/types';
+import { Findable, Pool, PoolToken, Price } from '@/types';
 import { PoolAttribute } from '../data';
-import { TokenPriceProvider } from '../data';
 import { PoolTypeConcerns } from '../pools/pool-type-concerns';
 import { BigNumber } from '@ethersproject/bignumber';
 import { formatFixed, parseFixed } from '@/lib/utils/math';
@@ -15,7 +14,7 @@ export interface PoolBPTValue {
 export class Liquidity {
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
-    private tokenPrices: TokenPriceProvider
+    private tokenPrices: Findable<Price>
   ) {}
 
   async getLiquidity(pool: Pool): Promise<string> {
@@ -24,7 +23,7 @@ export class Liquidity {
       return token.address !== pool.address;
     });
 
-    // For all tokens that are pools, recurse into them and fetch their liquidity
+    // For all tokens that are pools (BPT), recurse into them and fetch their liquidity
     const subPoolLiquidity = await Promise.all(
       parsedTokens.map(async (token) => {
         const pool = await this.pools.findBy('address', token.address);
@@ -46,24 +45,29 @@ export class Liquidity {
 
     const totalSubPoolLiquidity = subPoolLiquidity.reduce(
       (totalLiquidity, subPool) => {
-        if (!subPool) return BigNumber.from(0);
-        return totalLiquidity.add(subPool.liquidity);
+        return totalLiquidity.add(
+          subPool ? subPool.liquidity : BigNumber.from(0)
+        );
       },
       BigNumber.from(0)
     );
 
+    // Filter tokens within pool that are not BPT themselves
     const nonPoolTokens = parsedTokens.filter((token) => {
       return !subPoolLiquidity.find((pool) => pool?.address === token.address);
     });
 
-    const tokenBalances: PoolToken[] = await Promise.all(
+    // Update price using tokenPrices repository
+    const nonPoolTokensWithUpdatedPrice: PoolToken[] = await Promise.all(
       nonPoolTokens.map(async (token) => {
         const tokenPrice = await this.tokenPrices.find(token.address);
         const poolToken: PoolToken = {
           address: token.address,
           decimals: token.decimals,
           priceRate: token.priceRate,
-          price: tokenPrice,
+          price: (tokenPrice?.usd && tokenPrice) || {
+            usd: token.token?.latestUSDPrice,
+          },
           balance: token.balance,
           weight: token.weight,
         };
@@ -71,13 +75,19 @@ export class Liquidity {
       })
     );
 
+    // TODO: Just in case we need it soon. Otherwise remove without mercy.
+    // Any of the tokens is missing the price, use subgraph totalLiquidity
+    // if(nonPoolTokensWithUpdatedPrice.map((t) => t.price?.usd).indexOf(undefined) > -1) {
+    //   return pool.totalLiquidity
+    // }
+
     const tokenLiquidity = PoolTypeConcerns.from(
       pool.poolType
-    ).liquidity.calcTotal(tokenBalances);
+    ).liquidity.calcTotal(nonPoolTokensWithUpdatedPrice);
 
-    const tl = parseFixed(tokenLiquidity, SCALE);
+    const parsedTokenLiquidity = parseFixed(tokenLiquidity, SCALE);
 
-    const totalLiquidity = totalSubPoolLiquidity.add(tl);
+    const totalLiquidity = totalSubPoolLiquidity.add(parsedTokenLiquidity);
 
     return formatFixed(totalLiquidity, SCALE);
   }

@@ -13,9 +13,15 @@ import type {
   PoolAttribute,
   TokenAttribute,
 } from '@/modules/data/types';
-import type { BaseFeeDistributor, ProtocolFeesProvider } from './modules/data';
+import type {
+  BaseFeeDistributor,
+  GaugeSharesRepository,
+  PoolGaugesRepository,
+  PoolSharesRepository,
+  ProtocolFeesProvider,
+  PoolJoinExitRepository,
+} from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
-
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
 import { InitJoinPoolAttributes } from './modules/pools/pool-types/concerns/types';
 
@@ -32,6 +38,14 @@ export interface BalancerSdkConfig {
   customSubgraphUrl?: string;
   //optionally overwrite parts of the standard SOR config
   sor?: Partial<BalancerSdkSorConfig>;
+  tenderly?: BalancerTenderlyConfig;
+}
+
+export interface BalancerTenderlyConfig {
+  accessKey?: string;
+  user?: string;
+  project?: string;
+  blockNumber?: number;
 }
 
 export interface BalancerSdkSorConfig {
@@ -50,8 +64,12 @@ export interface ContractAddresses {
   vault: string;
   multicall: string;
   lidoRelayer?: string;
+  relayerV3?: string;
+  relayerV4?: string;
   gaugeController?: string;
   feeDistributor?: string;
+  veBal?: string;
+  veBalProxy?: string;
   protocolFeePercentagesProvider?: string;
 }
 
@@ -69,6 +87,7 @@ export interface BalancerNetworkConfig {
       bbaUsd?: string;
     };
   };
+  tenderly?: BalancerTenderlyConfig;
   urls: {
     subgraph: string;
     gaugesSubgraph?: string;
@@ -83,12 +102,17 @@ export interface BalancerDataRepositories {
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
+  tokenHistoricalPrices: Findable<Price>;
   tokenMeta: Findable<Token, TokenAttribute>;
   liquidityGauges?: Findable<LiquidityGauge>;
   feeDistributor?: BaseFeeDistributor;
   feeCollector: Findable<number>;
   protocolFees?: ProtocolFeesProvider;
   tokenYields: Findable<number>;
+  poolShares: PoolSharesRepository;
+  poolGauges?: PoolGaugesRepository;
+  poolJoinExits: PoolJoinExitRepository;
+  gaugeShares?: GaugeSharesRepository;
 }
 
 export type PoolReference = {
@@ -164,6 +188,11 @@ export type Currency = 'eth' | 'usd';
 
 export type Price = { [currency in Currency]?: string };
 export type TokenPrices = { [address: string]: Price };
+export type HistoricalPrices = {
+  prices: [[number, number]];
+  market_caps: [[number, number]];
+  total_volumes: [[number, number]];
+};
 
 export interface Token {
   address: string;
@@ -176,7 +205,22 @@ export interface PoolToken extends Token {
   balance: string;
   priceRate?: string;
   weight?: string | null;
-  token?: { pool: { poolType: null | PoolType } | null };
+  isExemptFromYieldProtocolFee?: boolean;
+  token?: SubPoolMeta;
+}
+
+export interface SubPoolMeta {
+  pool: SubPool | null;
+  latestUSDPrice?: string;
+}
+
+export interface SubPool {
+  id: string;
+  address: string;
+  poolType: PoolType;
+  totalShares: string;
+  mainIndex: number;
+  tokens?: PoolToken[];
 }
 
 export interface OnchainTokenData {
@@ -202,15 +246,18 @@ export enum PoolType {
   Weighted = 'Weighted',
   Investment = 'Investment',
   Stable = 'Stable',
+  HighAmpComposableStable = 'HighAmpComposableStable',
   ComposableStable = 'ComposableStable',
   MetaStable = 'MetaStable',
   StablePhantom = 'StablePhantom',
   LiquidityBootstrapping = 'LiquidityBootstrapping',
   AaveLinear = 'AaveLinear',
+  Linear = 'Linear',
   ERC4626Linear = 'ERC4626Linear',
   Element = 'Element',
   Gyro2 = 'Gyro2',
   Gyro3 = 'Gyro3',
+  Managed = 'Managed',
 }
 
 export interface Pool {
@@ -219,7 +266,9 @@ export interface Pool {
   address: string;
   chainId: number;
   poolType: PoolType;
+  poolTypeVersion: number;
   swapFee: string;
+  protocolYieldFeeCache: string;
   owner?: string;
   factory?: string;
   tokens: PoolToken[];
@@ -241,11 +290,21 @@ export interface Pool {
   symbol?: string;
   swapEnabled: boolean;
   amp?: string;
+  wrappedIndex?: number;
+  mainIndex?: number;
   apr?: AprBreakdown;
   liquidity?: string;
   totalWeight: string;
-  mainIndex?: number;
-  wrappedIndex?: number;
+  lowerTarget: string;
+  upperTarget: string;
+  priceRateProviders?: PriceRateProvider[];
+}
+
+export interface PriceRateProvider {
+  address: string;
+  token: {
+    address: string;
+  };
 }
 
 /**
@@ -264,6 +323,11 @@ export interface PoolWithMethods extends Pool {
     amountsIn: string[]
   ) => InitJoinPoolAttributes;
   calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
+  calcPriceImpact: (
+    amountsIn: string[],
+    minBPTOut: string,
+    isJoin: boolean
+  ) => Promise<string>;
   buildExitExactBPTIn: (
     exiter: string,
     bptIn: string,
@@ -277,7 +341,11 @@ export interface PoolWithMethods extends Pool {
     amountsOut: string[],
     slippage: string
   ) => ExitPoolAttributes;
-  calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
+  calcSpotPrice: (
+    tokenIn: string,
+    tokenOut: string,
+    isDefault?: boolean
+  ) => string;
 }
 
 export interface GraphQLQuery {

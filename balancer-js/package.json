@@ -1,6 +1,6 @@
 {
   "name": "@balancer-labs/sdk",
-  "version": "0.1.26",
+  "version": "0.1.40-beta.0",
   "description": "JavaScript SDK for interacting with the Balancer Protocol V2",
   "license": "GPL-3.0-only",
   "homepage": "https://github.com/balancer-labs/balancer-sdk/balancer-js#readme",
@@ -27,8 +27,9 @@
     "lint": "eslint ./src --ext .ts --max-warnings 0",
     "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
     "subgraph:generate": "graphql-codegen --config src/modules/subgraph/codegen.yml -r dotenv/config",
-    "examples:run": "TS_NODE_PROJECT='tsconfig.testing.json' ts-node -r tsconfig-paths/register",
-    "node": "npx hardhat node --fork $(grep ALCHEMY_URL .env | cut -d '=' -f2 | tail -1)"
+    "examples:run": "npx ts-node -P tsconfig.testing.json -r tsconfig-paths/register",
+    "node": "npx hardhat node --tsconfig tsconfig.testing.json --fork $(grep ALCHEMY_URL .env | cut -d '=' -f2 | tail -1)",
+    "node:goerli": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --fork $(grep ALCHEMY_URL_GOERLI .env | cut -d '=' -f2 | tail -1) --port 8000"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.4.0",
@@ -82,13 +83,13 @@
     "rollup-plugin-terser": "^7.0.2",
     "tiny-invariant": "^1.1.0",
     "ts-mocha": "^9.0.2",
-    "ts-node": "^10.4.0",
-    "tsconfig-paths": "^3.12.0",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^3.14.1",
     "typechain": "^5.1.1",
     "typescript": "^4.0.2"
   },
   "dependencies": {
-    "@balancer-labs/sor": "^4.0.1-beta.5",
+    "@balancer-labs/sor": "^4.0.1-beta.15",
     "@balancer-labs/typechain": "^1.0.0",
     "axios": "^0.24.0",
     "bignumber.js": "^9.1.0",

@@ -54,9 +54,12 @@ export class PoolsBalancerAPIRepository
     };
 
     this.query = {
-      args: options.query?.args || defaultArgs,
-      attrs: options.query?.attrs || defaultAttributes,
+      args: Object.assign({}, options.query?.args || defaultArgs),
+      attrs: Object.assign({}, options.query?.attrs || defaultAttributes),
     };
+
+    // skip is not a valid argument for the Balancer API, it uses nextToken
+    delete this.query.args.skip;
   }
 
   fetchFromCache(options?: PoolsRepositoryFetchOptions): Pool[] {

@@ -12,6 +12,7 @@ export function getNetworkConfig(
         ...networkConfig.urls,
         subgraph: config.customSubgraphUrl ?? networkConfig.urls.subgraph,
       },
+      tenderly: config.tenderly,
     };
   }
 
@@ -21,5 +22,6 @@ export function getNetworkConfig(
       ...config.network.urls,
       subgraph: config.customSubgraphUrl ?? config.network.urls.subgraph,
     },
+    tenderly: config.network.tenderly,
   };
 }

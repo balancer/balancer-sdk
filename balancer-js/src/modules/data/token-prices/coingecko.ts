@@ -1,49 +1,28 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { Price, Findable, TokenPrices } from '@/types';
-import { wrappedTokensMap as aaveWrappedMap } from '../token-yields/tokens/aave';
+import { Price, Findable, TokenPrices, Network } from '@/types';
 import axios from 'axios';
-
-// Conscious choice for a deferred promise since we have setTimeout that returns a promise
-// Some reference for history buffs: https://github.com/petkaantonov/bluebird/wiki/Promise-anti-patterns
-interface PromisedTokenPrices {
-  promise: Promise<TokenPrices>;
-  resolve: (value: TokenPrices) => void;
-  reject: (reason: unknown) => void;
-}
-
-const makePromise = (): PromisedTokenPrices => {
-  let resolve: (value: TokenPrices) => void = () => {};
-  let reject: (reason: unknown) => void = () => {};
-  const promise = new Promise<TokenPrices>((res, rej) => {
-    [resolve, reject] = [res, rej];
-  });
-  return { promise, reject, resolve };
-};
+import { TOKENS } from '@/lib/constants/tokens';
+import { Debouncer, tokenAddressForPricing } from '@/lib/utils';
 
 /**
  * Simple coingecko price source implementation. Configurable by network and token addresses.
  */
 export class CoingeckoPriceRepository implements Findable<Price> {
-  prices: TokenPrices = {};
+  prices: { [key: string]: Promise<Price> } = {};
+  nativePrice?: Promise<Price>;
   urlBase: string;
   baseTokenAddresses: string[];
+  debouncer: Debouncer<TokenPrices, string>;
 
-  // Properties used for deferring API calls
-  // TODO: move this logic to hooks
-  requestedAddresses = new Set<string>(); // Accumulates requested addresses
-  debounceWait = 200; // Debouncing waiting time [ms]
-  promisedCalls: PromisedTokenPrices[] = []; // When requesting a price we return a deferred promise
-  promisedCount = 0; // New request coming when setTimeout is executing will make a new promise
-  timeout?: ReturnType<typeof setTimeout>;
-  debounceCancel = (): void => {}; // Allow to cancel mid-flight requests
-
-  constructor(tokenAddresses: string[], chainId = 1) {
-    this.baseTokenAddresses = tokenAddresses
-      .map((a) => a.toLowerCase())
-      .map((a) => unwrapToken(a));
+  constructor(tokenAddresses: string[], private chainId: Network = 1) {
+    this.baseTokenAddresses = tokenAddresses.map(tokenAddressForPricing);
     this.urlBase = `https://api.coingecko.com/api/v3/simple/token_price/${this.platform(
       chainId
     )}?vs_currencies=usd,eth`;
+    this.debouncer = new Debouncer<TokenPrices, string>(
+      this.fetch.bind(this),
+      200
+    );
   }
 
   private fetch(
@@ -61,69 +40,57 @@ export class CoingeckoPriceRepository implements Findable<Price> {
       });
   }
 
-  private debouncedFetch(): Promise<TokenPrices> {
-    if (!this.promisedCalls[this.promisedCount]) {
-      this.promisedCalls[this.promisedCount] = makePromise();
+  private fetchNative({
+    signal,
+  }: { signal?: AbortSignal } = {}): Promise<Price> {
+    console.time(`fetching coingecko for native token`);
+    enum Assets {
+      ETH = 'matic-network',
+      MATIC = 'ethereum',
     }
-
-    const { promise, resolve, reject } = this.promisedCalls[this.promisedCount];
-
-    if (this.timeout) {
-      clearTimeout(this.timeout);
-    }
-
-    this.timeout = setTimeout(() => {
-      this.promisedCount++; // any new call will get a new promise
-      this.fetch([...this.requestedAddresses])
-        .then((results) => {
-          resolve(results);
-          this.debounceCancel = () => {};
-        })
-        .catch((reason) => {
-          console.error(reason);
-        });
-    }, this.debounceWait);
-
-    this.debounceCancel = () => {
-      if (this.timeout) {
-        clearTimeout(this.timeout);
-      }
-      reject('Cancelled');
-      delete this.promisedCalls[this.promisedCount];
-    };
-
-    return promise;
+    const assetId = this.chainId === 137 ? 'matic-network' : 'ethereum';
+    return axios
+      .get<{ [key in Assets]: Price }>(
+        `https://api.coingecko.com/api/v3/simple/price/?vs_currencies=eth,usd&ids=${assetId}`,
+        { signal }
+      )
+      .then(({ data }) => {
+        return data[assetId];
+      })
+      .finally(() => {
+        console.timeEnd(`fetching coingecko for native token`);
+      });
   }
 
-  async find(address: string): Promise<Price | undefined> {
-    const lowercaseAddress = address.toLowerCase();
-    const unwrapped = unwrapToken(lowercaseAddress);
-    if (!this.prices[unwrapped]) {
-      try {
-        let init = false;
-        if (Object.keys(this.prices).length === 0) {
-          // Make initial call with all the tokens we want to preload
-          this.baseTokenAddresses.forEach(
-            this.requestedAddresses.add.bind(this.requestedAddresses)
-          );
-          init = true;
+  find(inputAddress: string): Promise<Price | undefined> {
+    const address = tokenAddressForPricing(inputAddress, this.chainId);
+    if (!this.prices[address]) {
+      // Make initial call with all the tokens we want to preload
+      if (Object.keys(this.prices).length === 0) {
+        for (const baseAddress of this.baseTokenAddresses) {
+          this.prices[baseAddress] = this.debouncer
+            .fetch(baseAddress)
+            .then((prices) => prices[baseAddress]);
         }
-        this.requestedAddresses.add(unwrapped);
-        const promised = await this.debouncedFetch();
-        this.prices[unwrapped] = promised[unwrapped];
-        this.requestedAddresses.delete(unwrapped);
-        if (init) {
-          this.baseTokenAddresses.forEach((a) => {
-            this.prices[a] = promised[a];
-            this.requestedAddresses.delete(a);
-          });
-        }
-      } catch (error) {
-        console.error(error);
       }
+
+      // Handle native asset special case
+      if (
+        address === TOKENS(this.chainId).Addresses.nativeAsset.toLowerCase()
+      ) {
+        if (!this.nativePrice) {
+          this.prices[address] = this.fetchNative();
+        }
+
+        return this.prices[address];
+      }
+
+      this.prices[address] = this.debouncer
+        .fetch(address)
+        .then((prices) => prices[address]);
     }
 
-    return this.prices[unwrapped];
+    return this.prices[address];
   }
 
   async findBy(attribute: string, value: string): Promise<Price | undefined> {
@@ -137,6 +104,7 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   private platform(chainId: number): string {
     switch (chainId) {
       case 1:
+      case 5:
       case 42:
       case 31337:
         return 'ethereum';
@@ -153,13 +121,3 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     return `${this.urlBase}&contract_addresses=${addresses.join(',')}`;
   }
 }
-
-const unwrapToken = (wrappedAddress: string) => {
-  const lowercase = wrappedAddress.toLocaleLowerCase();
-
-  if (Object.keys(aaveWrappedMap).includes(lowercase)) {
-    return aaveWrappedMap[lowercase as keyof typeof aaveWrappedMap].aToken;
-  } else {
-    return lowercase;
-  }
-};

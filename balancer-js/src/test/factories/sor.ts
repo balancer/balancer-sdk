@@ -6,6 +6,7 @@ import {
   SwapV2,
 } from '@balancer-labs/sor';
 import { BigNumber } from '@ethersproject/bignumber';
+import { formatAddress } from '../lib/utils';
 import { namedTokens } from './named-tokens';
 
 const swapV2 = Factory.define<SwapV2>(() => ({
@@ -33,14 +34,19 @@ const swapInfo = Factory.define<SwapInfo>(() => ({
 }));
 
 const subgraphToken = Factory.define<SubgraphToken>(({ transientParams }) => {
-  const { symbol } = transientParams;
-  const namedToken = namedTokens[symbol];
-
+  const { symbol, balance = '1', weight = '1', address } = transientParams;
+  let namedToken = namedTokens[symbol];
+  if (!namedToken) {
+    namedToken = {};
+    namedToken.address = formatAddress(address ?? `address_${symbol}`);
+    namedToken.decimals = 18;
+  }
   return {
     ...namedToken,
-    balance: '1',
+    balance,
     priceRate: '1',
-    weight: '0.5',
+    weight,
+    symbol,
   };
 });
 
@@ -50,6 +56,8 @@ const subgraphPoolBase = Factory.define<SubgraphPoolBase>(
       pool.tokensList = pool.tokens.map((t) => t.address);
     });
 
+    const type = params.poolType || 'Weighted';
+
     const tokens = params.tokens || [
       subgraphToken.transient({ symbol: 'wETH' }).build(),
       subgraphToken.transient({ symbol: 'wBTC' }).build(),
@@ -58,7 +66,7 @@ const subgraphPoolBase = Factory.define<SubgraphPoolBase>(
     return {
       id: '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e',
       address: '0xa6f548df93de924d73be7d25dc02554c6bd66db5',
-      poolType: 'Weighted',
+      poolType: type,
       swapFee: '0.001',
       swapEnabled: true,
       tokens,

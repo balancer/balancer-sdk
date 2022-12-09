@@ -1,4 +1,4 @@
-import { Multicall } from '@/modules/contracts/multicall';
+import { Multicall } from '@/modules/contracts/implementations/multicall';
 import { Provider } from '@ethersproject/providers';
 import { Interface } from '@ethersproject/abi';
 import { Contract } from '@ethersproject/contracts';
@@ -21,6 +21,7 @@ export interface RewardData {
   rate: BigNumber; // per second
   last_update: BigNumber;
   integral: BigNumber; // sum accrued to date
+  decimals?: number; // Provided by subgraph
 }
 
 /**

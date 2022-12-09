@@ -8,7 +8,12 @@ export interface LiquidityConcern {
 }
 
 export interface SpotPriceConcern {
-  calcPoolSpotPrice: (tokenIn: string, tokenOut: string, pool: Pool) => string;
+  calcPoolSpotPrice: (
+    tokenIn: string,
+    tokenOut: string,
+    pool: Pool,
+    isDefault?: boolean
+  ) => string;
 }
 
 export interface PriceImpactConcern {
@@ -16,7 +21,8 @@ export interface PriceImpactConcern {
   calcPriceImpact: (
     pool: Pool,
     tokenAmounts: string[],
-    bptAmount: string
+    bptAmount: string,
+    isJoin: boolean
   ) => string;
 }
 

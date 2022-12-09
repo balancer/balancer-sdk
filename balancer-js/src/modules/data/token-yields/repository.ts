@@ -1,7 +1,16 @@
 import { lido, yieldTokens as lidoTokens } from './tokens/lido';
-import { aave, yieldTokens as aaveTokens } from './tokens/aave';
+import {
+  rocketpool,
+  yieldTokens as rocketpoolTokens,
+} from './tokens/rocketpool';
+import {
+  lidoPolygon,
+  yieldTokens as lidoPolygonTokens,
+} from './tokens/lido-polygon';
+import { aave, allYieldTokens as aaveTokens } from './tokens/aave';
 import { overnight, yieldTokens as overnightTokens } from './tokens/overnight';
-import { Findable } from '../types';
+import { sfrxETH, yieldTokens as fraxTokens } from './tokens/sfrxeth';
+import { Network, Findable } from '@/types';
 
 /**
  * Common interface for fetching APR from external sources
@@ -9,22 +18,25 @@ import { Findable } from '../types';
  * @param address is optional, used when same source, eg: aave has multiple tokens and all of them can be fetched in one call.
  */
 export interface AprFetcher {
-  (): Promise<{ [address: string]: number }>;
+  (network?: Network): Promise<{ [address: string]: number }>;
 }
 
 const yieldSourceMap: { [address: string]: AprFetcher } = Object.fromEntries([
   ...Object.values(lidoTokens).map((k) => [k, lido]),
+  ...Object.values(lidoPolygonTokens).map((k) => [k, lidoPolygon]),
   ...Object.values(aaveTokens).map((k) => [k, aave]),
   ...Object.values(overnightTokens).map((k) => [k, overnight]),
+  ...Object.values(rocketpoolTokens).map((k) => [k, rocketpool]),
+  ...Object.values(fraxTokens).map((k) => [k, sfrxETH]),
 ]);
 
 export class TokenYieldsRepository implements Findable<number> {
   private yields: { [address: string]: number } = {};
 
-  constructor(private sources = yieldSourceMap) {}
+  constructor(private network: Network, private sources = yieldSourceMap) {}
 
   async fetch(address: string): Promise<void> {
-    const tokenYields = await this.sources[address]();
+    const tokenYields = await this.sources[address](this.network);
     this.yields = {
       ...this.yields,
       ...tokenYields,

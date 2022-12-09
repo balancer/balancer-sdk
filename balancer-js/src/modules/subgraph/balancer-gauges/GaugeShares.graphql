@@ -1,0 +1,39 @@
+query GaugeShare($id: ID!, $block: Block_height) {
+  gaugeShare(id: $id, block: $block) {
+    ...SubgraphGaugeShare
+  }
+}
+
+query GaugeShares(
+        $first: Int
+        $orderBy: GaugeShare_orderBy, 
+        $orderDirection: OrderDirection, 
+        $skip: Int, 
+        $where: GaugeShare_filter,
+        $block: Block_height) {
+  gaugeShares(
+    first: $first
+    orderBy: $orderBy
+    orderDirection: $orderDirection
+    skip: $skip
+    where: $where
+    block: $block
+  ) {
+    ...SubgraphGaugeShare
+  }
+}
+
+fragment SubgraphGaugeShare on GaugeShare {
+    id
+    balance
+    user {
+      id
+    }
+    gauge {
+      id
+      isKilled
+      poolId
+      poolAddress
+      totalSupply
+    }
+}
