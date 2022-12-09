@@ -484,11 +484,9 @@ export class Exit {
 
     // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
     // First asset will always be the output token so use expectedOut to set limit
-    // We don't know input amounts if they are part of a chain so set to max input
-    // TODO can we be safer?
     const limits: string[] = [
       BigNumber.from(minAmountOut).mul(-1).toString(),
-      MaxInt256.toString(),
+      Relayer.isChainedReference(amountIn) ? MaxInt256.toString() : amountIn, // We don't know input amounts if they are part of a chain so set to max input
     ];
 
     // TODO Change to single swap to save gas
