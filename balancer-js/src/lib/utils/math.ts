@@ -29,5 +29,7 @@ export function formatFromBigInt18(value: bigint): string {
   return _formatFixed(BigNumber.from(value), 18);
 }
 
+/**
+ * Like parseEther but for numbers. Converts floating point to BigNumber using 18 decimals
+ */
 export const bn = (value: number): BigNumber => _parseFixed(`${value}`, 18);
-export const fp = (value: number): string => bn(value).toString();
