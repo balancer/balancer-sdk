@@ -17,6 +17,7 @@ import { Join } from '../joins/joins.module';
 import { Exit } from '../exits/exits.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
+import * as Queries from './queries';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -185,15 +186,27 @@ export class Pools implements Findable<PoolWithMethods> {
     return this.volumeService.last24h(pool);
   }
 
+  controller(pool: Pool): PoolWithMethods {
+    return Pools.wrap(pool, this.networkConfig);
+  }
+
   static wrap(
     pool: Pool,
     networkConfig: BalancerNetworkConfig
   ): PoolWithMethods {
     const methods = PoolTypeConcerns.from(pool.poolType);
+    const queries = new Queries.ParamsBuilder(pool);
     const wrappedNativeAsset =
       networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
     return {
       ...pool,
+      buildQueryJoinExactIn: queries.buildQueryJoinExactIn.bind(queries),
+      buildQueryJoinExactOut: queries.buildQueryJoinExactOut.bind(queries),
+      buildQueryExitExactOut: queries.buildQueryExitExactOut.bind(queries),
+      buildQueryExitToSingleToken:
+        queries.buildQueryExitToSingleToken.bind(queries),
+      buildQueryExitProportionally:
+        queries.buildQueryExitProportionally.bind(queries),
       buildJoin: (
         joiner: string,
         tokensIn: string[],
