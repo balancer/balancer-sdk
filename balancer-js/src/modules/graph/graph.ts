@@ -1,10 +1,10 @@
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { isSameAddress, parsePoolInfo } from '@/lib/utils';
-import { BalancerNetworkConfig, Pool, PoolAttribute, PoolType } from '@/types';
+import { Pool, PoolAttribute, PoolType } from '@/types';
 import { Zero, WeiPerEther } from '@ethersproject/constants';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Findable } from '../data/types';
-import { Pools } from '../pools';
+import { PoolTypeConcerns } from '../pools/pool-type-concerns';
 
 type SpotPrices = { [tokenIn: string]: string };
 export interface Node {
@@ -62,10 +62,7 @@ exitActions.set(PoolType.Weighted, 'exitPool');
 exitActions.set(PoolType.ComposableStable, 'exitPool');
 
 export class PoolGraph {
-  constructor(
-    private pools: Findable<Pool, PoolAttribute>,
-    private networkConfig: BalancerNetworkConfig
-  ) {}
+  constructor(private pools: Findable<Pool, PoolAttribute>) {}
 
   async buildGraphFromRootPool(
     poolId: string,
@@ -138,7 +135,8 @@ export class PoolGraph {
       throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
 
     const tokenTotal = this.getTokenTotal(pool);
-    const controller = Pools.wrap(pool, this.networkConfig);
+    // Spot price service
+    const { spotPriceCalculator } = PoolTypeConcerns.from(pool.poolType);
     const spotPrices: SpotPrices = {};
     let decimals = 18;
     // Spot price of a path is product of the sp of each pool in path. We calculate the sp for each pool token here to use as required later.
@@ -148,7 +146,12 @@ export class PoolGraph {
         decimals = token.decimals ? token.decimals : 18;
         return;
       }
-      const sp = controller.calcSpotPrice(token.address, pool.address, true);
+      const sp = spotPriceCalculator.calcPoolSpotPrice(
+        token.address,
+        pool.address,
+        pool,
+        true
+      );
       spotPrices[token.address] = sp;
     });
 

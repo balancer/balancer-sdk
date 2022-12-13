@@ -83,4 +83,14 @@ describe('Debouncer', () => {
     expect(await p1).to.eql(['first']);
     expect(await p2).to.eql(['second']);
   });
+
+  it('rejects the promise when debounced function fails', async () => {
+    const asyncFunc = async (asyncAttrs: string[]) =>
+      Promise.reject(asyncAttrs[0]);
+    const subject = new Debouncer<unknown, string>(asyncFunc, 0);
+
+    return subject.fetch('anything').catch((error) => {
+      expect(error).to.eql('anything');
+    });
+  });
 });

@@ -34,6 +34,7 @@ export class BalancerSDK implements BalancerSDKRoot {
   zaps: Zaps;
   vaultModel: VaultModel;
   readonly networkConfig: BalancerNetworkConfig;
+  readonly provider: Provider;
 
   constructor(
     public config: BalancerSdkConfig,
@@ -41,6 +42,7 @@ export class BalancerSDK implements BalancerSDKRoot {
     public subgraph = new Subgraph(config)
   ) {
     this.networkConfig = getNetworkConfig(config);
+    this.provider = sor.provider;
 
     this.data = new Data(
       this.networkConfig,

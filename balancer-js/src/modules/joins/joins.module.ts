@@ -51,7 +51,7 @@ export class Join {
   private wrappedNativeAsset;
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
-    private networkConfig: BalancerNetworkConfig,
+    networkConfig: BalancerNetworkConfig,
     private simulationService: Simulation
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
