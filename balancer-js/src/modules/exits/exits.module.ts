@@ -9,14 +9,7 @@ import { Relayer } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { StablePoolEncoder } from '@/pool-stable';
-import {
-  BalancerNetworkConfig,
-  ExitPoolRequest,
-  Pool,
-  PoolAttribute,
-  PoolType,
-} from '@/types';
-import { Findable } from '../data/types';
+import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
 import { PoolGraph, Node } from '../graph/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';

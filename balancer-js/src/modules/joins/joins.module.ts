@@ -17,14 +17,7 @@ import {
 } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { StablePoolEncoder } from '@/pool-stable';
-import {
-  BalancerNetworkConfig,
-  JoinPoolRequest,
-  Pool,
-  PoolAttribute,
-  PoolType,
-} from '@/types';
-import { Findable } from '../data/types';
+import { BalancerNetworkConfig, JoinPoolRequest, PoolType } from '@/types';
 import { PoolGraph, Node } from '../graph/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
@@ -43,6 +36,7 @@ import { Simulation, SimulationType } from '../simulation/simulation.module';
 import { Requests, VaultModel } from '../vaultModel/vaultModel.module';
 import { BatchSwapRequest } from '../vaultModel/poolModel/swap';
 import { JoinPoolRequest as JoinPoolModelRequest } from '../vaultModel/poolModel/join';
+import { JsonRpcSigner } from '@ethersproject/providers';
 
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
@@ -66,6 +60,7 @@ export class Join {
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
+    signer: JsonRpcSigner,
     simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
@@ -116,6 +111,7 @@ export class Join {
       queryData,
       tokensIn,
       outputIndexes,
+      signer,
       simulationType
     );
 
@@ -440,6 +436,7 @@ export class Join {
     callData: string,
     tokensIn: string[],
     outputIndexes: number[],
+    signer: JsonRpcSigner,
     simulationType: SimulationType
   ): Promise<{ amountsOut: string[]; totalAmountOut: string }> => {
     const { amountsOut, totalAmountOut } =
@@ -450,6 +447,7 @@ export class Join {
         outputIndexes,
         userAddress,
         tokensIn,
+        signer,
         simulationType
       );
 

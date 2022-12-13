@@ -20,6 +20,7 @@ import { PoolFees } from './fees/fees';
 import { Simulation, SimulationType } from '../simulation/simulation.module';
 import { PoolGraph } from '../graph/graph';
 import * as Queries from './queries';
+import { JsonRpcSigner } from '@ethersproject/providers';
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -127,6 +128,7 @@ export class Pools implements Findable<PoolWithMethods> {
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
+    signer: JsonRpcSigner,
     simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
@@ -143,6 +145,7 @@ export class Pools implements Findable<PoolWithMethods> {
       userAddress,
       wrapMainTokens,
       slippage,
+      signer,
       simulationType,
       authorisation
     );

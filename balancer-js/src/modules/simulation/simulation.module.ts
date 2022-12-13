@@ -9,6 +9,7 @@ import {
 } from '../vaultModel/vaultModel.module';
 import { getPoolAddress } from '@/pool-utils';
 import { Zero } from '@ethersproject/constants';
+import { JsonRpcSigner } from '@ethersproject/providers';
 
 export enum SimulationType {
   Tenderly,
@@ -44,11 +45,9 @@ export class Simulation {
     outputIndexes: number[],
     userAddress: string,
     tokensIn: string[],
+    signer: JsonRpcSigner,
     simulationType: SimulationType
   ): Promise<{ amountsOut: string[]; totalAmountOut: string }> => {
-    const amountsOut: string[] = [];
-    let totalAmountOut = Zero;
-
     switch (simulationType) {
       case SimulationType.Tenderly: {
         const simulationResult = await this.tenderlyHelper.simulateMulticall(
@@ -57,22 +56,7 @@ export class Simulation {
           userAddress,
           tokensIn
         );
-
-        const multicallResult = defaultAbiCoder.decode(
-          ['bytes[]'],
-          simulationResult
-        )[0] as string[];
-
-        // Decode each root output
-        outputIndexes.forEach((outputIndex) => {
-          const value = defaultAbiCoder.decode(
-            ['uint256'],
-            multicallResult[outputIndex]
-          );
-          amountsOut.push(value.toString());
-          totalAmountOut = totalAmountOut.add(value.toString());
-        });
-        return { amountsOut, totalAmountOut: totalAmountOut.toString() };
+        return this.decodeResult(simulationResult, outputIndexes);
       }
 
       case SimulationType.VaultModel: {
@@ -80,6 +64,8 @@ export class Simulation {
           throw new Error('Missing Vault Model Config.');
         // make one mutlicall for each joinPath
         // take only BPT delta into account
+        const amountsOut: string[] = [];
+        let totalAmountOut = Zero;
         for (const [i, requests] of multiRequests.entries()) {
           const lastRequest = requests[requests.length - 1];
           let poolId = '';
@@ -100,8 +86,39 @@ export class Simulation {
         }
         return { amountsOut, totalAmountOut: totalAmountOut.toString() };
       }
+      case SimulationType.Static: {
+        const gasLimit = 8e6;
+        const staticResult = await signer.call({
+          to,
+          data: encodedCall,
+          gasLimit,
+        });
+        return this.decodeResult(staticResult, outputIndexes);
+      }
       default:
         throw new Error('Simulation type not supported');
     }
+  };
+
+  private decodeResult = (result: string, outputIndexes: number[]) => {
+    const amountsOut: string[] = [];
+    let totalAmountOut = Zero;
+
+    const multicallResult = defaultAbiCoder.decode(
+      ['bytes[]'],
+      result
+    )[0] as string[];
+
+    // Decode each root output
+    outputIndexes.forEach((outputIndex) => {
+      const value = defaultAbiCoder.decode(
+        ['uint256'],
+        multicallResult[outputIndex]
+      );
+      amountsOut.push(value.toString());
+      totalAmountOut = totalAmountOut.add(value.toString());
+    });
+
+    return { amountsOut, totalAmountOut: totalAmountOut.toString() };
   };
 }

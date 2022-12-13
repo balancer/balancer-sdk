@@ -75,8 +75,6 @@ const poolAddresses = Object.values(addresses).map(
   (address) => address.address
 );
 
-// This is just a dirty example showing how a custom filter could be supplied
-// For tests, etc this filter would have to be passed down somehow
 const subgraphArgs: GraphQLArgs = {
   where: {
     swapEnabled: {
@@ -173,7 +171,8 @@ const testFlow = async (
     userAddress,
     wrapMainTokens,
     slippage,
-    SimulationType.Tenderly,
+    signer,
+    SimulationType.Static,
     authorisation
   );
 
