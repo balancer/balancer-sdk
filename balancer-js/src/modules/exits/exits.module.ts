@@ -36,7 +36,7 @@ export class Exit {
   private tenderlyHelper: TenderlyHelper;
 
   constructor(
-    private pools: Findable<Pool, PoolAttribute>,
+    private poolGraph: PoolGraph,
     networkConfig: BalancerNetworkConfig
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
@@ -54,7 +54,6 @@ export class Exit {
     amountBptIn: string,
     userAddress: string,
     slippage: string,
-    poolGraph: PoolGraph,
     authorisation?: string
   ): Promise<{
     to: string;
@@ -75,7 +74,11 @@ export class Exit {
     */
 
     // Create nodes and order by breadth first
-    const orderedNodes = await poolGraph.getGraphNodes(false, poolId, false);
+    const orderedNodes = await this.poolGraph.getGraphNodes(
+      false,
+      poolId,
+      false
+    );
 
     // Create exit paths for each output node and splits amount in proportionally between them
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
@@ -121,7 +124,7 @@ export class Exit {
 
     const priceImpact = await this.calculatePriceImpact(
       poolId,
-      poolGraph,
+      this.poolGraph,
       tokensOut,
       expectedAmountsOut,
       amountBptIn

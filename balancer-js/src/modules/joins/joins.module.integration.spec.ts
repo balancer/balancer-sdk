@@ -20,15 +20,15 @@ import { SimulationType } from '../simulation/simulation.module';
 
 dotenv.config();
 
-const TEST_BOOSTED = false;
-const TEST_BOOSTED_META = false;
-const TEST_BOOSTED_META_ALT = false;
-const TEST_BOOSTED_META_BIG = false;
+const TEST_BOOSTED = true;
+const TEST_BOOSTED_META = true;
+const TEST_BOOSTED_META_ALT = true;
+const TEST_BOOSTED_META_BIG = true;
 const TEST_BOOSTED_WEIGHTED_SIMPLE = true;
-const TEST_BOOSTED_WEIGHTED_GENERAL = false;
-const TEST_BOOSTED_WEIGHTED_META = false;
-const TEST_BOOSTED_WEIGHTED_META_ALT = false;
-const TEST_BOOSTED_WEIGHTED_META_GENERAL = false;
+const TEST_BOOSTED_WEIGHTED_GENERAL = true;
+const TEST_BOOSTED_WEIGHTED_META = true;
+const TEST_BOOSTED_WEIGHTED_META_ALT = true;
+const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 
 /*
  * Testing on GOERLI
@@ -173,7 +173,7 @@ const testFlow = async (
     userAddress,
     wrapMainTokens,
     slippage,
-    SimulationType.VaultModel,
+    SimulationType.Tenderly,
     authorisation
   );
 

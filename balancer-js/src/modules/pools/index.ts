@@ -57,19 +57,19 @@ export class Pools implements Findable<PoolWithMethods> {
       networkConfig,
       this.repositories.poolsForSor
     );
+    this.graphService = new PoolGraph(this.repositories.poolsOnChain);
     this.joinService = new Join(
-      this.repositories.poolsOnChain,
+      this.graphService,
       networkConfig,
       this.simulationService
     );
-    this.exitService = new Exit(this.repositories.pools, networkConfig);
+    this.exitService = new Exit(this.graphService, networkConfig);
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
     this.impermanentLossService = new ImpermanentLossService(
       repositories.tokenPrices,
       repositories.tokenHistoricalPrices
     );
-    this.graphService = new PoolGraph(this.repositories.poolsOnChain);
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
@@ -144,7 +144,6 @@ export class Pools implements Findable<PoolWithMethods> {
       wrapMainTokens,
       slippage,
       simulationType,
-      this.graphService,
       authorisation
     );
   }
@@ -178,7 +177,6 @@ export class Pools implements Findable<PoolWithMethods> {
       amount,
       userAddress,
       slippage,
-      this.graphService,
       authorisation
     );
   }
