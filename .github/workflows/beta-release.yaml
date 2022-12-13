@@ -38,15 +38,15 @@ jobs:
           git config --global user.email "johngrantuk+bot@users.noreply.github.com"
           git config user.signingkey AFFC8986D78B522F2999BAE053C748C476381000
           git config gpg.program /usr/bin/gpg
-          git checkout develop
           yarn version --prerelease --preid beta --no-git-tag-version
           export NEW_VERSION=$(jq -r '.version' package.json)
           git commit -S -am "chore: version bump v$NEW_VERSION"
           git tag "v$NEW_VERSION"
+          git push
           yarn build
           yarn publish --non-interactive --tag beta
-          git push
 
 env:
   CI: true
   NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
