@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: develop
-          token: ${{ secrets.RELEASE_PAT }}
+          persist-credentials: false
       - uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -32,6 +32,8 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
       - env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
           echo -n "$SIGNING_KEY" | base64 --decode | gpg --import
           git config --global user.name "johngrantuk"
@@ -48,5 +50,3 @@ jobs:
 
 env:
   CI: true
-  NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-  GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
