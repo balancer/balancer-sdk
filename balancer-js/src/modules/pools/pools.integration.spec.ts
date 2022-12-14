@@ -1,7 +1,9 @@
 import { expect } from 'chai';
-import { BalancerSDK, Network, PoolWithMethods } from '@/.';
+import { BalancerSDK, Network, Pool, PoolWithMethods, Pools } from '@/.';
 import { AddressZero, Zero } from '@ethersproject/constants';
 import { bn } from '@/lib/utils';
+import { poolFactory } from '@/test/factories/sdk';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 
 const rpcUrl = 'http://127.0.0.1:8545';
 const network = Network.MAINNET;
@@ -23,12 +25,36 @@ describe('pools module', () => {
       if (!pool) {
         return false;
       }
+
       const params = pool.buildQueryJoinExactIn({
         sender: AddressZero,
         maxAmountsIn: [bn(1), Zero],
       });
+
       const join = await balancerHelpers.queryJoin(...params);
       expect(Number(join.bptOut)).to.be.gt(0);
+    });
+  });
+
+  describe('wrapping', () => {
+    it('should handle not implemented pool types', () => {
+      const pool = {
+        ...poolFactory.build(),
+        poolType: 'unknown',
+      };
+
+      const poolWithServices = Pools.wrap(
+        pool as Pool,
+        BALANCER_NETWORK_CONFIG[1]
+      );
+      expect(poolWithServices.id).to.eq(pool.id);
+      let error;
+      try {
+        poolWithServices.calcPriceImpact([], '', false);
+      } catch (err) {
+        error = err;
+      }
+      expect(error).to.include('not implemented');
     });
   });
 });
