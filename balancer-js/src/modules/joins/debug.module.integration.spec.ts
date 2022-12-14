@@ -24,7 +24,7 @@ const TEST_BOOSTED = true;
  * - Uncomment section below:
  */
 const network = Network.MAINNET;
-const blockNumber = 16067738;
+const blockNumber = 16176441;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2';
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;

@@ -14,10 +14,12 @@ export * from './protocol-fees/provider';
 export * from './token-yields/repository';
 export * from './block-number';
 
+import { GraphQLArgs } from '@/.';
 import { BalancerNetworkConfig, BalancerDataRepositories } from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
 import { PoolSharesRepository } from './pool-shares/repository';
 import { PoolJoinExitRepository } from './pool-joinExit/repository';
+import { PoolsSubgraphOnChainRepository } from './pool/subgraphOnChain';
 import { PoolGaugesRepository } from './pool-gauges/repository';
 import { GaugeSharesRepository } from './gauge-shares/repository';
 import { BlockNumberRepository } from './block-number';
@@ -43,6 +45,7 @@ import { SubgraphPriceRepository } from './token-prices/subgraph';
 
 export class Data implements BalancerDataRepositories {
   pools;
+  poolsOnChain;
   yesterdaysPools;
   poolShares;
   poolGauges;
@@ -62,6 +65,38 @@ export class Data implements BalancerDataRepositories {
     this.pools = new PoolsSubgraphRepository({
       url: networkConfig.urls.subgraph,
       chainId: networkConfig.chainId,
+    });
+
+    const subgraphArgs: GraphQLArgs = {
+      where: {
+        swapEnabled: {
+          eq: true,
+        },
+        totalShares: {
+          gt: 0.000000000001,
+        },
+        id: {
+          in: [
+            '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d',
+            '0x2F4EB100552EF93840D5ADC30560E5513DFFFACB000000000000000000000334'.toLowerCase(),
+            '0xAE37D54AE477268B9997D4161B96B8200755935C000000000000000000000337'.toLowerCase(),
+            '0x82698AECC9E28E9BB27608BD52CF57F704BD1B83000000000000000000000336'.toLowerCase(),
+          ],
+        },
+      },
+      orderBy: 'totalLiquidity',
+      orderDirection: 'desc',
+      block: { number: 16176441 },
+    };
+    const subgraphQuery = { args: subgraphArgs, attrs: {} };
+
+    this.poolsOnChain = new PoolsSubgraphOnChainRepository({
+      url: networkConfig.urls.subgraph,
+      chainId: networkConfig.chainId,
+      provider: provider,
+      multicall: networkConfig.addresses.contracts.multicall,
+      vault: networkConfig.addresses.contracts.vault,
+      query: subgraphQuery,
     });
 
     this.poolShares = new PoolSharesRepository(

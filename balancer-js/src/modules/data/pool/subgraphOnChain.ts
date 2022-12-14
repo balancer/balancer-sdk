@@ -6,14 +6,13 @@ import {
   Pool_OrderBy,
   OrderDirection,
   SubgraphPoolTokenFragment,
-  SubgraphSubPoolFragment,
-  SubgraphSubPoolTokenFragment,
 } from '@/modules/subgraph/subgraph';
 import {
   GraphQLArgsBuilder,
   SubgraphArgsFormatter,
 } from '@/lib/graphql/args-builder';
 import { GraphQLArgs } from '@/lib/graphql/types';
+import { Provider } from '@ethersproject/providers';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
 import {
   GraphQLQuery,
@@ -25,25 +24,17 @@ import {
 } from '@/types';
 import { Network } from '@/lib/constants/network';
 import { PoolsQueryVariables } from '../../subgraph/subgraph';
+import { getOnChainBalances } from './onChainData';
+import { SubgraphSubPoolMeta, SubgraphSubPoolToken } from './subgraph';
 
-interface PoolsSubgraphRepositoryOptions {
+interface PoolsSubgraphOnChainRepositoryOptions {
   url: string;
   chainId: Network;
+  provider: Provider;
+  multicall: string;
+  vault: string;
   blockHeight?: () => Promise<number | undefined>;
   query?: GraphQLQuery;
-}
-
-export interface SubgraphSubPoolToken extends SubgraphSubPoolTokenFragment {
-  token?: SubgraphSubPoolMeta | null;
-}
-
-export interface SubgraphSubPoolMeta {
-  latestUSDPrice?: string | null;
-  pool?: SubgraphSubPool | null;
-}
-
-interface SubgraphSubPool extends SubgraphSubPoolFragment {
-  tokens: SubgraphSubPoolToken[];
 }
 
 /**
@@ -51,12 +42,15 @@ interface SubgraphSubPool extends SubgraphSubPoolFragment {
  *
  * Balancer's subgraph URL: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
  */
-export class PoolsSubgraphRepository
+export class PoolsSubgraphOnChainRepository
   implements Findable<Pool, PoolAttribute>, Searchable<Pool>
 {
   private client: SubgraphClient;
   private chainId: Network;
+  private provider: Provider;
   private pools?: Promise<Pool[]>;
+  private multicall: string;
+  private vault: string;
   public skip = 0;
   private blockHeight: undefined | (() => Promise<number | undefined>);
   private query: GraphQLQuery;
@@ -67,11 +61,16 @@ export class PoolsSubgraphRepository
    * @param url subgraph URL
    * @param chainId current network, needed for L2s logic
    * @param blockHeight lazy loading blockHeigh resolver
+   * @param multicall multicall address
+   * @param valt vault address
    */
-  constructor(options: PoolsSubgraphRepositoryOptions) {
+  constructor(options: PoolsSubgraphOnChainRepositoryOptions) {
     this.client = createSubgraphClient(options.url);
     this.blockHeight = options.blockHeight;
     this.chainId = options.chainId;
+    this.provider = options.provider;
+    this.multicall = options.multicall;
+    this.vault = options.vault;
 
     const defaultArgs: GraphQLArgs = {
       orderBy: Pool_OrderBy.TotalLiquidity,
@@ -81,13 +80,13 @@ export class PoolsSubgraphRepository
           eq: true,
         },
         totalShares: {
-          gt: 0,
+          gt: 0.000000000001,
         },
       },
     };
 
-    const args = Object.assign({}, options.query?.args || defaultArgs);
-    const attrs = Object.assign({}, options.query?.attrs || {});
+    const args = options.query?.args || defaultArgs;
+    const attrs = options.query?.attrs || {};
 
     this.query = {
       args,
@@ -103,23 +102,31 @@ export class PoolsSubgraphRepository
    */
   private async fetchDefault(): Promise<Pool[]> {
     console.time('fetching pools');
-    const { pool0, pool1000, pool2000 } = await this.client.AllPools({
-      where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
-      orderBy: Pool_OrderBy.TotalLiquidity,
-      orderDirection: OrderDirection.Desc,
-      block: await this.block(),
-    });
+    const { pool0, pool1000, pool2000 } = await this.client.AllPools(
+      await this.getDefaultFilter(this.query.args)
+    );
+    const pools = [...pool0, ...pool1000, ...pool2000].map(
+      this.mapType.bind(this)
+    );
     console.timeEnd('fetching pools');
+    console.log(pools.length, 'Example filter should limit the pools length');
+    console.log('Fetching onchain!');
+    const onchainPools = await getOnChainBalances(
+      pools,
+      this.multicall,
+      this.vault,
+      this.provider
+    );
 
-    return [...pool0, ...pool1000, ...pool2000].map(this.mapType.bind(this));
+    return onchainPools;
   }
 
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
     if (options?.skip) {
       this.query.args.skip = options.skip;
     }
-    if (this.blockHeight) {
-      this.query.args.block = { number: await this.blockHeight() };
+    if (!this.query.args.block) {
+      this.query.args.block = await this.block();
     }
 
     this.query.args.first = options?.first || 1000;
@@ -175,6 +182,16 @@ export class PoolsSubgraphRepository
 
   async block(): Promise<{ number: number | undefined } | undefined> {
     return this.blockHeight ? { number: await this.blockHeight() } : undefined;
+  }
+
+  async getDefaultFilter(args: GraphQLArgs): Promise<PoolsQueryVariables> {
+    const formattedQuery = new GraphQLArgsBuilder(args).format(
+      new SubgraphArgsFormatter()
+    ) as PoolsQueryVariables;
+    if (!formattedQuery.block) {
+      formattedQuery.block = await this.block();
+    }
+    return formattedQuery;
   }
 
   async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
