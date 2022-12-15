@@ -11,7 +11,6 @@ import {
   PriceImpactConcern,
   SpotPriceConcern,
 } from './concerns/types';
-import { ComposableStablePoolJoin } from '@/modules/pools/pool-types/concerns/composableStable/join.concern';
 
 export class ComposableStable implements PoolType {
   constructor(

@@ -1,20 +1,33 @@
 import * as dotenv from 'dotenv';
 import {
   JsonRpcProvider,
+  JsonRpcSigner,
   Log,
   TransactionReceipt,
 } from '@ethersproject/providers';
-import {
-  BalancerSDK,
-  Network,
-  PoolType,
-  PoolWithMethods,
-} from '../../../src';
+import { BalancerSDK, Network, PoolType, scale } from '../../../src';
 // @ts-ignore
-import composableStableFactoryAbi from '../src/lib/abi/ComposableStableFactory.json';
+import composableStableFactoryAbi from '../../../src/lib/abi/ComposableStableFactory.json';
+// @ts-ignore
+import composableStablePoolAbi from '../../../src/lib/abi/ComposableStable.json';
 // @ts-ignore
 import { ethers } from 'hardhat';
 import { Interface, LogDescription } from '@ethersproject/abi';
+import { getNetworkConfig } from '../../../src/modules/sdk.helpers';
+import { Contract } from '@ethersproject/contracts';
+import { networkAddresses } from '../../../src/lib/constants/config';
+import {
+  approveToken,
+  forkSetup,
+  getBalances,
+  setTokenBalance,
+} from '../../../src/test/lib/utils';
+import BigNumber from 'bignumber.js';
+import { AddressZero, MaxUint256 } from '@ethersproject/constants';
+import { parseEther } from '@ethersproject/units';
+// @ts-ignore
+import { ADDRESSES } from '@/test/lib/constants';
+import { parseFixed } from '@ethersproject/bignumber';
 
 dotenv.config();
 
@@ -22,41 +35,61 @@ const name = 'My-Test-Pool-Name';
 
 const symbol = 'My-Test-Pool-Symbol';
 
-const USDC_address = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
-const WETH_address = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+const network = Network.GOERLI;
 
-const tokenAddresses = [
-  USDC_address,
-  WETH_address,
-];
+const addresses = ADDRESSES[network];
 
-const amplificationParameter = "2";
+const WETH_address = addresses.WETH.address;
+const MAI_address = addresses.MAI.address;
+const tokenAddresses = [MAI_address, WETH_address];
+
+const amplificationParameter = '1';
 
 const rateProviders = [
-  '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-  '0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec',
+  '0x0000000000000000000000000000000000000000',
+  '0x0000000000000000000000000000000000000000',
 ];
 
-const tokenRateCacheDurations = ["20", "20"];
+const tokenRateCacheDurations = ['0', '0'];
 
-const exemptFromYieldProtocolFeeFlags = [true, true];
+const exemptFromYieldProtocolFeeFlags = [false, false];
 
-const swapFee = "0.01";
-const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
-const contractAddress = '0xB848f50141F3D4255b37aC288C25C109104F2158';
+const swapFee = '0.01';
+const owner = '0x817b6923f3cB53536859b1f01262d0E7f513dB78';
+const contractAddress = '0x85a80afee867adf27b50bdb7b76da70f1e853062';
 
-// Slots used to set the account balance for each token through hardhat_setStorageAt
-// Info fetched using npm package slot20
+const forkSetupLocalNode = async (
+  signer: JsonRpcSigner,
+  jsonRpcUrl: string
+) => {
+  const tokens = tokenAddresses;
+
+  const slots = [addresses.MAI.slot, addresses.WETH.slot];
+  const balances = [
+    parseFixed('100', 18).toString(),
+    parseFixed('100', 18).toString(),
+  ];
+
+  // await forkSetup(signer, tokens, slots, balances, jsonRpcUrl); // TODO: FIX "Headers Timeout Error" for hardhat_reset transaction
+
+  for (let i = 0; i < tokens.length; i++) {
+    // Set initial account balance for each token that will be used to join pool
+    await setTokenBalance(signer, tokens[i], slots[i], balances[i], false);
+
+    // Approve appropriate allowances so that vault contract can move tokens
+    await approveToken(tokens[i], MaxUint256.toString(), signer);
+  }
+};
 
 async function createComposableStablePool() {
-  const network = Network.GOERLI;
-
-  // const rpcUrl = `https://mainnet.infura.io/v3/${process.env.INFURA}`;
-  const rpcUrl = 'http://localhost:8545';
+  // const rpcUrl = `https://mainnet.infura.io/v3/444153f7f8f2499db7be57a11b1f696e`;
+  // const rpcUrl = 'https://goerli.gateway.tenderly.co/4Rzjgxiyt0WELoXRl1312Q'
+  const rpcUrl = 'http://localhost:8000';
   const provider: JsonRpcProvider = new ethers.providers.JsonRpcProvider(
     rpcUrl,
-    1
+    'goerli'
   );
+
   const signer = provider.getSigner();
 
   const sdkConfig = {
@@ -64,78 +97,119 @@ async function createComposableStablePool() {
     rpcUrl,
   };
 
-  const balancer = new BalancerSDK(sdkConfig);
+  await forkSetupLocalNode(signer, rpcUrl);
 
-  const { to, data } = balancer.pools.poolFactory.of(PoolType.ComposableStable)
-    .create({
-      contractAddress,
-      name,
-      symbol,
-      tokenAddresses,
-      amplificationParameter,
-      rateProviders,
-      tokenRateCacheDurations,
-      exemptFromYieldProtocolFeeFlags,
-      swapFee,
-      owner,
-    });
+  const balancer = new BalancerSDK(sdkConfig);
+  const composableStablePoolFactory = balancer.pools.poolFactory.of(
+    PoolType.ComposableStable
+  );
+  const { to, data } = composableStablePoolFactory.create({
+    contractAddress,
+    name,
+    symbol,
+    tokenAddresses,
+    amplificationParameter,
+    rateProviders,
+    tokenRateCacheDurations,
+    exemptFromYieldProtocolFeeFlags,
+    swapFee,
+    owner,
+  });
+
+  const signerAddress = await signer.getAddress();
 
   const tx = await signer.sendTransaction({
-    from: signer.getAddress(),
+    from: signerAddress,
     to,
     data,
     gasLimit: 6721975,
   });
 
-  console.log('txHash: ' + tx.hash);
-  console.log('from: ' + tx.from);
-  console.log('contractAddress: ' + tx.to);
-
   const receipt: TransactionReceipt = await provider.getTransactionReceipt(
     tx.hash
   );
-  console.log('receipt: ' + receipt);
 
   const composableStableFactoryInterface = new Interface(
     composableStableFactoryAbi
   );
 
+  const composableStablePoolInterface = new Interface(composableStablePoolAbi);
+
   const poolCreationEvent: LogDescription | null | undefined = receipt.logs
-    .filter((log: Log) => log.address === contractAddress)
+    .filter((log: Log) => {
+      return log.address.toUpperCase() === contractAddress.toUpperCase();
+    })
     .map((log) => {
       try {
-        return composableStableFactoryInterface.parseLog(log);
-      } catch {
+        const parsedLog = composableStableFactoryInterface.parseLog(log);
+        return parsedLog;
+      } catch (error) {
+        console.error(error);
         return null;
       }
     })
     .find((parsedLog) => parsedLog?.name === 'PoolCreated');
+
   if (!poolCreationEvent) return console.error("There's no event");
+
   const poolAddress: string = poolCreationEvent.args.pool;
-
-  const pool: PoolWithMethods | undefined= await balancer.pools.findBy(
-    'address',
-    poolAddress
+  const pool = new Contract(
+    poolAddress,
+    composableStablePoolInterface,
+    provider
   );
+  const poolId = await pool.getPoolId();
 
-  console.log('Pool Id: ' + pool?.id);
-
-  if(!pool) return console.error("No pool was found by balancer.pools.find functionality");
+  const networkConfig = getNetworkConfig(sdkConfig);
 
   const {
-    to: initJoinTo,
-    data: initJoinData,
-    attributes,
-  } = pool.buildInitJoin(await signer.getAddress(), tokenAddresses, [
-    '100',
-    '100',
-  ]);
+    tokens: { wrappedNativeAsset },
+  } = networkAddresses(networkConfig.chainId);
 
-  console.log('initJoin target address: ' + initJoinTo);
-  console.log('initJoin data: ' + initJoinData);
-  console.log('initJoin attributes: ' + attributes);
+  const iERC20 = [
+    'function approve(address,uint256) nonpayable',
+    'function balanceOf(address) view returns(uint)',
+  ];
+  const tokenBalances = (
+    await getBalances([...tokenAddresses, poolAddress], signer, signerAddress)
+  ).map((b) => b.toString());
 
+  console.log('tokenBalances');
+  console.log(tokenBalances);
 
+  const initJoinParams = composableStablePoolFactory.buildInitJoin({
+    joiner: signerAddress,
+    poolId,
+    poolAddress,
+    tokensIn: [...tokenAddresses, poolAddress],
+    amountsIn: [
+      scale(new BigNumber('1'), 18).toString(),
+      scale(new BigNumber('1'), 18).toString(),
+      '0',
+    ],
+    wrappedNativeAsset,
+  });
+
+  const erc20 = new Contract(AddressZero, iERC20);
+
+  // Approve vault for seeder
+  await Promise.all(
+    Object.values(tokenAddresses).map((address) => {
+      return erc20
+        .attach(address)
+        .connect(signer)
+        .approve(to, parseEther('100').toString());
+    })
+  );
+
+  const initJoinTx = await signer.sendTransaction({
+    // TODO: FIX something that's causing BAL#506 error
+    to: initJoinParams.to,
+    data: initJoinParams.data,
+    gasLimit: 6721975,
+  });
+
+  await initJoinTx.wait();
 }
 
 createComposableStablePool();

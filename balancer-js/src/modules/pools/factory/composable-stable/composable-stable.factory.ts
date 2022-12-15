@@ -1,11 +1,18 @@
-import { CreatePoolParameters } from '@/modules/pools/factory/types';
-import { scale } from '@/lib/utils';
+import {
+  CreatePoolParameters,
+  InitJoinPoolAttributes,
+  InitJoinPoolParameters,
+} from '@/modules/pools/factory/types';
+import { AssetHelpers, scale } from '@/lib/utils';
 import BigNumber from 'bignumber.js';
 import { TransactionRequest } from '@ethersproject/providers';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import composableStableAbi from '../../../../lib/abi/ComposableStableFactory.json';
 import { FunctionFragment, Interface } from '@ethersproject/abi';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
+import { Vault__factory } from '@balancer-labs/typechain';
+import { balancerVault } from '@/lib/constants/config';
 
 export class ComposableStableFactory implements PoolFactory {
   /***
@@ -48,7 +55,6 @@ export class ComposableStableFactory implements PoolFactory {
       swapFeeScaled.toString(),
       owner,
     ];
-
     const composablePoolInterface = new Interface(composableStableAbi);
     const createFunctionAbi = composableStableAbi.find(
       ({ name }) => name === 'create'
@@ -63,6 +69,61 @@ export class ComposableStableFactory implements PoolFactory {
     return {
       to: contractAddress,
       data: encodedFunctionData,
+    };
+  }
+
+  /**
+   * Build Init join pool transaction parameters (Can only be made once per pool)
+   * @param {JoinPoolParameters} params - parameters used to build exact tokens in for bpt out transaction
+   * @param {string}                          params.joiner - Account address joining pool
+   * @param {SubgraphPoolBase}                params.pool - Subgraph pool object of pool being joined
+   * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
+   * @param {string[]}                        params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
+   * @param {string}                          wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for joining with ETH.
+   * @returns                                 transaction request ready to send with signer.sendTransaction
+   */
+  buildInitJoin({
+    joiner,
+    poolId,
+    poolAddress,
+    tokensIn,
+    amountsIn,
+    wrappedNativeAsset,
+  }: InitJoinPoolParameters): InitJoinPoolAttributes {
+    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+    // sort inputs
+    const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
+      tokensIn,
+      amountsIn
+    ) as [string[], string[]];
+    const userData = ComposableStablePoolEncoder.joinInit(sortedAmounts);
+    const functionName = 'joinPool';
+
+    const attributes = {
+      poolId: poolId,
+      sender: joiner,
+      recipient: joiner,
+      joinPoolRequest: {
+        assets: sortedTokens,
+        maxAmountsIn: sortedAmounts,
+        userData,
+        fromInternalBalance: false,
+      },
+    };
+
+    const vaultInterface = Vault__factory.createInterface();
+    const data = vaultInterface.encodeFunctionData(functionName, [
+      attributes.poolId,
+      attributes.sender,
+      attributes.recipient,
+      attributes.joinPoolRequest,
+    ]);
+
+    return {
+      to: balancerVault,
+      functionName,
+      attributes,
+      data,
     };
   }
 }

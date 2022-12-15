@@ -23,7 +23,6 @@ import type {
 } from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
-import { InitJoinPoolAttributes } from './modules/pools/pool-types/concerns/types';
 
 export * from '@/modules/data/types';
 export { Network, AprBreakdown };
@@ -317,12 +316,6 @@ export interface PoolWithMethods extends Pool {
     amountsIn: string[],
     slippage: string
   ) => JoinPoolAttributes;
-  buildInitJoin: (
-    joiner: string,
-    tokensIn: string[],
-    amountsIn: string[]
-  ) => InitJoinPoolAttributes;
-  calcPriceImpact: (amountsIn: string[], minBPTOut: string) => Promise<string>;
   calcPriceImpact: (
     amountsIn: string[],
     minBPTOut: string,

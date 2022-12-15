@@ -9,10 +9,7 @@ import type {
   AprBreakdown,
   PoolAttribute,
 } from '@/types';
-import {
-  InitJoinPoolAttributes,
-  JoinPoolAttributes,
-} from './pool-types/concerns/types';
+import { JoinPoolAttributes } from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
@@ -198,7 +195,7 @@ export class Pools implements Findable<PoolWithMethods> {
     const methods = PoolTypeConcerns.from(pool.poolType);
     const wrappedNativeAsset =
       networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
-    return {
+    return <PoolWithMethods>{
       ...pool,
       buildJoin: (
         joiner: string,
@@ -212,15 +209,6 @@ export class Pools implements Findable<PoolWithMethods> {
           tokensIn,
           amountsIn,
           slippage,
-          wrappedNativeAsset,
-        });
-      },
-      buildInitJoin: (joiner, tokensIn, amountsIn): InitJoinPoolAttributes => {
-        return methods.join?.buildInitJoin({
-          joiner,
-          pool,
-          tokensIn,
-          amountsIn,
           wrappedNativeAsset,
         });
       },

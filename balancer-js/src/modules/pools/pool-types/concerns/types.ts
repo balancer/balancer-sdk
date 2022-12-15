@@ -35,14 +35,6 @@ export interface JoinConcern {
     slippage,
     wrappedNativeAsset,
   }: JoinPoolParameters) => JoinPoolAttributes;
-
-  buildInitJoin: ({
-    joiner,
-    pool,
-    tokensIn,
-    amountsIn,
-    wrappedNativeAsset,
-  }: InitJoinPoolParameters) => InitJoinPoolAttributes;
 }
 
 export interface ExitConcern {
@@ -111,22 +103,6 @@ export interface JoinPoolAttributes {
   data: string;
   value?: BigNumber;
   minBPTOut: string;
-}
-
-export interface InitJoinPoolAttributes {
-  to: string;
-  functionName: string;
-  attributes: JoinPool;
-  data: string;
-  value?: BigNumber;
-}
-
-export interface InitJoinPoolParameters {
-  joiner: string;
-  pool: Pool;
-  tokensIn: string[];
-  amountsIn: string[];
-  wrappedNativeAsset: string;
 }
 
 export interface JoinPoolParameters {

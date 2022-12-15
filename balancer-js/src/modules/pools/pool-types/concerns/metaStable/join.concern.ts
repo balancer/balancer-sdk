@@ -1,8 +1,6 @@
 import * as SOR from '@balancer-labs/sor';
 
 import {
-  InitJoinPoolAttributes,
-  InitJoinPoolParameters,
   JoinConcern,
   JoinPool,
   JoinPoolAttributes,
@@ -18,16 +16,6 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { StablePoolEncoder } from '@/pool-stable';
 
 export class MetaStablePoolJoin implements JoinConcern {
-  buildInitJoin = ({
-    joiner,
-    pool,
-    tokensIn,
-    amountsIn,
-    wrappedNativeAsset,
-  }: InitJoinPoolParameters): InitJoinPoolAttributes => {
-    console.log(joiner, pool, tokensIn, amountsIn, wrappedNativeAsset);
-    throw new Error('To be implemented');
-  };
   /**
    * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
    * @param {JoinPoolParameters}  params - parameters used to build exact tokens in for bpt out transaction
