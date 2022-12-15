@@ -1,9 +1,9 @@
 {
   "name": "@balancer-labs/sdk",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "description": "JavaScript SDK for interacting with the Balancer Protocol V2",
   "license": "GPL-3.0-only",
-  "homepage": "https://github.com/balancer-labs/balancer-sdk/balancer-js#readme",
+  "homepage": "https://github.com/balancer-labs/balancer-sdk#readme",
   "repository": {
     "type": "git",
     "url": "https://github.com/balancer-labs/balancer-sdk",
