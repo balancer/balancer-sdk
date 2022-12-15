@@ -116,7 +116,30 @@ export class ExitModel {
       .map((a) => a.toString());
 
     // Updates BPT/totalShares value for pool
-    pool.updateTokenBalanceForPool(pool.address, pool.totalShares.sub(bptIn));
+    if (
+      pool.SubgraphType == 'StablePhantom' ||
+      pool.SubgraphType == 'ComposableStable'
+    ) {
+      // Update BPT balance
+      // totalShares will be updated as a side effect within SOR
+      const bptAsPoolToken = pool.tokens.find((t) =>
+        isSameAddress(t.address, pool.address)
+      );
+      if (!bptAsPoolToken)
+        throw new Error('Pool does not contain BPT as a token');
+      const bptBalanceEVM = parseFixed(
+        bptAsPoolToken.balance.toString(),
+        bptAsPoolToken.decimals
+      );
+      pool.updateTokenBalanceForPool(
+        pool.address,
+        bptBalanceEVM.add(bptIn) // subtract value because joining pool reduces pre-minted BPT being held by the pool
+      );
+    } else {
+      // For pools that do not contain BPT as a token, update totalShares directly
+      pool.updateTokenBalanceForPool(pool.address, pool.totalShares.sub(bptIn));
+    }
+
     const tokensWithoutBpt = pool.tokens.filter(
       (t) => !isSameAddress(t.address, pool.address)
     );
