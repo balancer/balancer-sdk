@@ -171,21 +171,19 @@ async function createComposableStablePool() {
     'function balanceOf(address) view returns(uint)',
   ];
   const tokenBalances = (
-    await getBalances([...tokenAddresses, poolAddress], signer, signerAddress)
+    await getBalances(tokenAddresses, signer, signerAddress)
   ).map((b) => b.toString());
 
-  console.log('tokenBalances');
-  console.log(tokenBalances);
+  console.log('tokenBalances: ' + tokenBalances);
 
   const initJoinParams = composableStablePoolFactory.buildInitJoin({
     joiner: signerAddress,
     poolId,
     poolAddress,
-    tokensIn: [...tokenAddresses, poolAddress],
+    tokensIn: tokenAddresses,
     amountsIn: [
       scale(new BigNumber('1'), 18).toString(),
       scale(new BigNumber('1'), 18).toString(),
-      '0',
     ],
     wrappedNativeAsset,
   });

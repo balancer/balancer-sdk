@@ -92,11 +92,35 @@ export class ComposableStableFactory implements PoolFactory {
   }: InitJoinPoolParameters): InitJoinPoolAttributes {
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     // sort inputs
+    tokensIn.push(poolAddress);
+    amountsIn.push('0');
+
+    console.log('tokensIn: ' + tokensIn);
+    console.log('amountsIn: ' + amountsIn);
+
     const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
       tokensIn,
       amountsIn
     ) as [string[], string[]];
-    const userData = ComposableStablePoolEncoder.joinInit(sortedAmounts);
+
+    let userDataAmounts = [];
+    const bptIndex = sortedTokens
+      .map((t) => t.toLowerCase())
+      .indexOf(poolAddress.toLowerCase());
+    if (bptIndex === -1) {
+      userDataAmounts = sortedAmounts;
+    } else {
+      userDataAmounts = [
+        ...sortedAmounts.slice(0, bptIndex),
+        ...sortedAmounts.slice(bptIndex + 1),
+      ];
+    }
+
+    console.log('userDataAmounts: ' + userDataAmounts);
+    console.log('sortedAmounts: ' + sortedAmounts);
+    console.log('sortedTokens: ' + sortedTokens);
+
+    const userData = ComposableStablePoolEncoder.joinInit(userDataAmounts);
     const functionName = 'joinPool';
 
     const attributes = {
