@@ -620,12 +620,9 @@ async relayer.exitPoolAndBatchSwap(
 
 [Example](./examples/relayerExitPoolAndBatchSwap.ts)
 
-### Pools Impermanent Loss
+## Pools Impermanent Loss
 
-> DRAFT
-> 
 > impermanent loss (IL) describes the percentage by which a pool is worth less than what one would have if they had instead just held the tokens outside the pool
-
 
 #### Service
 
@@ -678,6 +675,60 @@ const IL = await pools.impermanentLoss(join.timestamp, pool);
 ```
 
 [Example](./examples/pools/impermanentLoss.ts)
+
+## Claim BAL Incentives
+
+> Draft
+ 
+> Incentives for LPs who stake in eligible pools (based on the previous week's voting). This doesn't include swap fees or intrinsic yield from certain yield bearing tokens which accumulate into LP positions automatically.
+
+### Service
+
+![classes](./claim-incentives-class.png)
+
+### Approach
+
+
+* API calls
+```javascript
+
+// get list of claimable tokens
+claimableTokensBalance = claimService.getClaimableTokens(userAddress) => {
+  tokens = getPoolsTokens();//retrieve tokens from pools enables for staking
+  return feeDistributorContract.staticCall(claimTokens, [userAddress, tokens])
+}
+
+//claim single token
+if (claimableTokensBalance[token] > 0) {
+  txData = service.claimToken(userAddress, token) => {
+    return feeDistributorContract.buildTx('claimToken', [userAddress, token]);  
+  }
+}
+
+//claim multiple token
+if (claimableTokensBalance.every(balance > 0)) {
+  txData = service.claimToken(userAddress, token) => {
+    return feeDistributorContract.buildTx('claimTokens', [userAddress, tokens]);
+  }
+}
+
+feeDistributorContract.buildTx(methodName, args) => {
+  data = encodeFunctionData(methodName, args);
+  return {
+    feeDistributorAddress,
+    methodName,
+    args,
+    data
+  }
+}
+```
+
+* Client calls
+```
+tokens = api.BalanceIncentivesService.getClaimableTokens(userAddress)
+txData = api.BalIncentives.claimTokens(userAddress, tokens);
+ethereum.request(txData).then(() => { ... });
+```
 
 
 ## Licensing
