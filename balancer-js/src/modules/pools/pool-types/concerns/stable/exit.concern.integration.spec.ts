@@ -172,48 +172,45 @@ describe('exit stable pools execution', async () => {
   });
 
   context('exitExactTokensOut', async () => {
-    // FIXME: test scenario not working due to stable math issues with non-proportional inputs
-    // Frontend currently does not support exiting with more than one exact token out
+    context('all tokens out', async () => {
+      before(async function () {
+        amountsOut = pool.tokens.map((t, i) =>
+          parseFixed(t.balance, t.decimals)
+            .div(amountsOutDiv)
+            .mul(i + 1)
+            .toString()
+        );
 
-    // context('all tokens out', async () => {
-    //   before(async function () {
-    //     amountsOut = pool.tokens.map((t, i) =>
-    //       parseFixed(t.balance, t.decimals)
-    //         .div(amountsOutDiv)
-    //         .mul(i + 1)
-    //         .toString()
-    //     );
+        await testFlow(
+          controller.buildExitExactTokensOut(
+            signerAddress,
+            tokensOut.map((t) => t.address),
+            amountsOut,
+            slippage
+          ),
+          pool.tokensList
+        );
+      });
 
-    //     await testFlow(
-    //       controller.buildExitExactTokensOut(
-    //         signerAddress,
-    //         tokensOut.map((t) => t.address),
-    //         amountsOut,
-    //         slippage
-    //       ),
-    //       pool.tokensList
-    //     );
-    //   });
+      it('should work', async () => {
+        expect(transactionReceipt.status).to.eql(1);
+      });
 
-    //   it('should work', async () => {
-    //     expect(transactionReceipt.status).to.eql(1);
-    //   });
+      it('tokens balance should increase by exact amountsOut', async () => {
+        for (let i = 0; i < tokensBalanceAfter.length; i++) {
+          expect(
+            tokensBalanceAfter[i]
+              .sub(tokensBalanceBefore[i])
+              .eq(tokensMinBalanceIncrease[i])
+          ).to.be.true;
+        }
+      });
 
-    //   it('tokens balance should increase by exact amountsOut', async () => {
-    //     for (let i = 0; i < tokensBalanceAfter.length; i++) {
-    //       expect(
-    //         tokensBalanceAfter[i]
-    //           .sub(tokensBalanceBefore[i])
-    //           .eq(tokensMinBalanceIncrease[i])
-    //       ).to.be.true;
-    //     }
-    //   });
-
-    //   it('bpt balance should decrease by max bptMaxBalanceDecrease', async () => {
-    //     expect(bptBalanceBefore.sub(bptBalanceAfter).lte(bptMaxBalanceDecrease))
-    //       .to.be.true;
-    //   });
-    // });
+      it('bpt balance should decrease by max bptMaxBalanceDecrease', async () => {
+        expect(bptBalanceBefore.sub(bptBalanceAfter).lte(bptMaxBalanceDecrease))
+          .to.be.true;
+      });
+    });
 
     context('single token out', async () => {
       before(async function () {
