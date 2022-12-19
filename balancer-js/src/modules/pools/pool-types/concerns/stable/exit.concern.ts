@@ -14,7 +14,7 @@ import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { balancerVault } from '@/lib/constants/config';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { StablePoolEncoder } from '@/pool-stable';
-import { _downscaleDown, _upscale } from '@/lib/utils/solidityMaths';
+import { _downscaleDownArray, _upscaleArray } from '@/lib/utils/solidityMaths';
 
 export class StablePoolExit implements ExitConcern {
   buildExitExactBPTIn = ({
@@ -110,9 +110,10 @@ export class StablePoolExit implements ExitConcern {
       ).map((amount) => amount.toString());
 
       // Maths return numbers scaled to 18 decimals. Must scale down to token decimals.
-      const amountsOutScaledDown = amountsOut.map((a, i) => {
-        return _downscaleDown(BigInt(a), BigInt(sortedScalingFactors[i]));
-      });
+      const amountsOutScaledDown = _downscaleDownArray(
+        amountsOut.map((a) => BigInt(a)),
+        sortedScalingFactors.map((a) => BigInt(a))
+      );
       // Apply slippage tolerance
       minAmountsOut = amountsOutScaledDown.map((amount) => {
         const minAmount = subSlippage(
@@ -190,20 +191,21 @@ export class StablePoolExit implements ExitConcern {
 
     // Sort pool info based on tokens addresses
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    const [, sortedUpScaledBalances] = assetHelpers.sortTokens(
-      parsedTokens,
-      upScaledBalances
+    const [, sortedUpScaledBalances, sortedScalingFactors] =
+      assetHelpers.sortTokens(
+        parsedTokens,
+        upScaledBalances,
+        scalingFactors
+      ) as [string[], string[], string[]];
+    const [sortedTokens, sortedAmountsOut] = assetHelpers.sortTokens(
+      tokensOut,
+      amountsOut
     ) as [string[], string[]];
-    const [sortedTokens, sortedAmountsOut, sortedScalingFactors] =
-      assetHelpers.sortTokens(tokensOut, amountsOut, scalingFactors) as [
-        string[],
-        string[],
-        string[]
-      ];
 
     // Maths should use upscaled amounts, e.g. 1USDC => 1e18 not 1e6
-    const upScaledAmountsOut = sortedAmountsOut.map((a, i) =>
-      _upscale(BigInt(a), BigInt(sortedScalingFactors[i]))
+    const upScaledAmountsOut = _upscaleArray(
+      sortedAmountsOut.map((a) => BigInt(a)),
+      sortedScalingFactors.map((a) => BigInt(a))
     );
 
     // Calculate expected BPT in given tokens out
