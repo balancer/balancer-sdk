@@ -640,7 +640,7 @@ export class Exit {
     //   )`
     // );
 
-    const call = Relayer.constructExitCall({
+    const call = Relayer.formatExitPoolInput({
       poolId: node.id,
       poolKind: 0,
       sender,
