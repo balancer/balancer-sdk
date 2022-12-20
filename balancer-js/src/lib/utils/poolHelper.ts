@@ -1,5 +1,6 @@
 import { parseFixed } from '@ethersproject/bignumber';
 import { Pool } from '../../types';
+import { _computeScalingFactor } from '@/lib/utils/solidityMaths';
 
 const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
@@ -14,8 +15,16 @@ export const parsePoolInfo = (pool: Pool) => {
   const parsedDecimals = pool.tokens.map((token) => {
     return token.decimals ? token.decimals.toString() : undefined;
   });
+  const scalingFactors = parsedDecimals.map((decimals) =>
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    _computeScalingFactor(BigInt(decimals!))
+  );
   const parsedBalances = pool.tokens.map((token) =>
     parseFixed(token.balance, token.decimals).toString()
+  );
+  // This assumes token.balance is in human scale (e.g. from SG)
+  const upScaledBalances = pool.tokens.map((token) =>
+    parseFixed(token.balance, 18).toString()
   );
   const parsedWeights = pool.tokens.map((token) => {
     return token.weight ? parseFixed(token.weight, 18).toString() : undefined;
@@ -39,5 +48,7 @@ export const parsePoolInfo = (pool: Pool) => {
     parsedAmp,
     parsedTotalShares,
     parsedSwapFee,
+    upScaledBalances,
+    scalingFactors,
   };
 };

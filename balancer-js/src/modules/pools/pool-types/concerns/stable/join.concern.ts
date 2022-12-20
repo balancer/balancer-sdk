@@ -14,6 +14,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { StablePoolEncoder } from '@/pool-stable';
+import { _upscaleArray } from '@/lib/utils/solidityMaths';
 
 export class StablePoolJoin implements JoinConcern {
   /**
@@ -49,28 +50,37 @@ export class StablePoolJoin implements JoinConcern {
     // Parse pool info into EVM amounts in order to match amountsIn scalling
     const {
       parsedTokens,
-      parsedBalances,
       parsedAmp,
       parsedTotalShares,
       parsedSwapFee,
+      scalingFactors,
+      upScaledBalances,
     } = parsePoolInfo(pool);
 
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     // sort inputs
-    const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
+    const [sortedTokens, sortedAmountsIn] = assetHelpers.sortTokens(
       tokensIn,
       amountsIn
     ) as [string[], string[]];
     // sort pool info
-    const [, sortedBalances] = assetHelpers.sortTokens(
-      parsedTokens,
-      parsedBalances
-    ) as [string[], string[]];
+    const [, sortedUpscaledBalances, sortedScalingFactors] =
+      assetHelpers.sortTokens(
+        parsedTokens,
+        upScaledBalances,
+        scalingFactors
+      ) as [string[], string[], string[]];
+
+    // Maths should use upscaled amounts, e.g. 1USDC => 1e18 not 1e6
+    const scaledAmountsIn = _upscaleArray(
+      sortedAmountsIn.map((a) => BigInt(a)),
+      sortedScalingFactors.map((a) => BigInt(a))
+    );
 
     const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp as string),
-      sortedBalances.map((b) => BigInt(b)),
-      sortedAmounts.map((a) => BigInt(a)),
+      sortedUpscaledBalances.map((b) => BigInt(b)),
+      scaledAmountsIn,
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
     ).toString();
@@ -81,7 +91,7 @@ export class StablePoolJoin implements JoinConcern {
     ).toString();
 
     const userData = StablePoolEncoder.joinExactTokensInForBPTOut(
-      sortedAmounts,
+      sortedAmountsIn,
       minBPTOut
     );
 
@@ -93,7 +103,7 @@ export class StablePoolJoin implements JoinConcern {
       recipient: joiner,
       joinPoolRequest: {
         assets: sortedTokens,
-        maxAmountsIn: sortedAmounts,
+        maxAmountsIn: sortedAmountsIn,
         userData,
         fromInternalBalance: false,
       },

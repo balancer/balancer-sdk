@@ -44,6 +44,7 @@ jobs:
           export NEW_VERSION=$(jq -r '.version' package.json)
           git commit -S -am "chore: version bump v$NEW_VERSION"
           git tag "v$NEW_VERSION"
+          git remote set-url origin "https://johngrantuk:$GITHUB_TOKEN@github.com/balancer-labs/balancer-sdk"
           git push
           yarn build
           yarn publish --non-interactive --tag beta
