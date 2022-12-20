@@ -16,12 +16,10 @@ interface SubgraphPricesResponse {
 }
 
 export class SubgraphPriceRepository implements Findable<Price> {
-  private subgraphUrl: string;
   prices: { [key: string]: Promise<Price> } = {};
   debouncer: Debouncer<TokenPrices, string>;
 
-  constructor(private chainId: Network = 1) {
-    this.subgraphUrl = BALANCER_NETWORK_CONFIG[chainId].urls.subgraph;
+  constructor(private subgraphUrl: string, private chainId: Network = 1) {
     this.debouncer = new Debouncer<TokenPrices, string>(
       this.fetch.bind(this),
       200
