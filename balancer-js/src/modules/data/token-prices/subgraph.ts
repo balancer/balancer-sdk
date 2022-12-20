@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { Price, Findable, TokenPrices, Network } from '@/types';
 import axios from 'axios';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { Debouncer, tokenAddressForPricing } from '@/lib/utils';
 
 interface SubgraphPricesResponse {
