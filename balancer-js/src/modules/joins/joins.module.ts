@@ -439,17 +439,20 @@ export class Join {
     signer: JsonRpcSigner,
     simulationType: SimulationType
   ): Promise<{ amountsOut: string[]; totalAmountOut: string }> => {
-    const { amountsOut, totalAmountOut } =
-      await this.simulationService.simulateGeneralisedJoin(
-        this.relayer,
-        multiRequests,
-        callData,
-        outputIndexes,
-        userAddress,
-        tokensIn,
-        signer,
-        simulationType
-      );
+    const amountsOut = await this.simulationService.simulateGeneralisedJoin(
+      this.relayer,
+      multiRequests,
+      callData,
+      outputIndexes,
+      userAddress,
+      tokensIn,
+      signer,
+      simulationType
+    );
+
+    const totalAmountOut = amountsOut
+      .reduce((sum, amount) => sum.add(BigNumber.from(amount)), Zero)
+      .toString();
 
     return {
       amountsOut,

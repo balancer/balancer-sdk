@@ -69,7 +69,11 @@ export class Pools implements Findable<PoolWithMethods> {
       networkConfig,
       this.simulationService
     );
-    this.exitService = new Exit(this.graphService, networkConfig);
+    this.exitService = new Exit(
+      this.graphService,
+      networkConfig,
+      this.simulationService
+    );
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
     this.impermanentLossService = new ImpermanentLossService(
@@ -171,10 +175,12 @@ export class Pools implements Findable<PoolWithMethods> {
     amount: string,
     userAddress: string,
     slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
     to: string;
-    callData: string;
+    encodedCall: string;
     tokensOut: string[];
     expectedAmountsOut: string[];
     minAmountsOut: string[];
@@ -185,6 +191,8 @@ export class Pools implements Findable<PoolWithMethods> {
       amount,
       userAddress,
       slippage,
+      signer,
+      simulationType,
       authorisation
     );
   }

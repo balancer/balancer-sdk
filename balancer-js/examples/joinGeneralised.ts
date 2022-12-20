@@ -206,10 +206,12 @@ async function join() {
     await getBalances([bbausd2.address, ...tokensIn], signer, signerAddress)
   ).map((b) => b.toString());
 
-  console.log('Balances before exit:        ', tokenBalancesBefore);
-  console.log('Balances after exit:         ', tokenBalancesAfter);
-  console.log('Expected BPT after exit:     ', [query.expectedOut]);
-  console.log('Min BPT after exit:          ', [query.minOut]);
+  console.table({
+    balancesBefore: tokenBalancesBefore,
+    balancesAfter: tokenBalancesAfter,
+    expectedBPTOut: [query.expectedOut],
+    minBPTOut: [query.minOut],
+  });
 }
 
 join();

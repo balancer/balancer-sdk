@@ -112,9 +112,10 @@ export class JoinModel {
         bptAsPoolToken.balance.toString(),
         bptAsPoolToken.decimals
       );
+      // subtract value because joining pool reduces pre-minted BPT being held by the pool
       pool.updateTokenBalanceForPool(
         pool.address,
-        bptBalanceEVM.sub(bptAmountOut) // subtract value because joining pool reduces pre-minted BPT being held by the pool
+        bptBalanceEVM.sub(bptAmountOut)
       );
     } else {
       // For pools that do not contain BPT as a token, update totalShares directly

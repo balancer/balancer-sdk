@@ -1,11 +1,13 @@
-import { defaultAbiCoder } from '@ethersproject/abi';
 import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { MaxInt256, WeiPerEther, Zero } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { Relayer } from '@/modules/relayer/relayer.module';
+import {
+  EncodeBatchSwapInput,
+  Relayer,
+} from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { StablePoolEncoder } from '@/pool-stable';
@@ -13,33 +15,32 @@ import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
 import { PoolGraph, Node } from '../graph/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
-import TenderlyHelper from '@/lib/utils/tenderlyHelper';
 import balancerRelayerAbi from '@/lib/abi/RelayerV4.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
 import { getPoolAddress } from '@/pool-utils';
 import { Join } from '../joins/joins.module';
 import { calcPriceImpact } from '../pricing/priceImpact';
+import { Simulation, SimulationType } from '../simulation/simulation.module';
+import { Requests, VaultModel } from '../vaultModel/vaultModel.module';
+import { BatchSwapRequest } from '../vaultModel/poolModel/swap';
+import { ExitPoolRequest as ExitPoolModelRequest } from '../vaultModel/poolModel/exit';
+import { JsonRpcSigner } from '@ethersproject/providers';
 
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
 export class Exit {
   private wrappedNativeAsset: string;
   private relayer: string;
-  private tenderlyHelper: TenderlyHelper;
 
   constructor(
     private poolGraph: PoolGraph,
-    networkConfig: BalancerNetworkConfig
+    networkConfig: BalancerNetworkConfig,
+    private simulationService: Simulation
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
     this.relayer = contracts.relayerV4 as string;
-
-    this.tenderlyHelper = new TenderlyHelper(
-      networkConfig.chainId,
-      networkConfig.tenderly
-    );
   }
 
   async exitPool(
@@ -47,10 +48,12 @@ export class Exit {
     amountBptIn: string,
     userAddress: string,
     slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
     to: string;
-    callData: string;
+    encodedCall: string;
     tokensOut: string[];
     expectedAmountsOut: string[];
     minAmountsOut: string[];
@@ -82,53 +85,70 @@ export class Exit {
     const tokensOut = [...new Set(tokensOutByExitPath)].sort();
 
     // Create calls with minimum expected amount out for each exit path
-    const staticCall = await this.createCalls(
+    const {
+      multiRequests,
+      encodedCall: queryData,
+      outputIndexes,
+    } = await this.createCalls(
       exitPaths,
       userAddress,
       undefined,
       authorisation
     );
 
-    const { expectedAmountsOutByExitPath, minAmountsOutByExitPath } =
-      await this.amountsOutByExitPath(
-        userAddress,
-        staticCall.callData,
-        orderedNodes[0].address,
-        staticCall.outputIndexes,
+    const expectedAmountsOutByExitPath = await this.amountsOutByExitPath(
+      userAddress,
+      multiRequests,
+      queryData,
+      orderedNodes[0].address,
+      outputIndexes,
+      signer,
+      simulationType
+    );
+
+    const expectedAmountsOutByTokenOut = this.amountsOutByTokenOut(
+      tokensOut,
+      tokensOutByExitPath,
+      expectedAmountsOutByExitPath
+    );
+
+    const { minAmountsOutByExitPath, minAmountsOutByTokenOut } =
+      this.minAmountsOut(
+        expectedAmountsOutByExitPath,
+        expectedAmountsOutByTokenOut,
         slippage
       );
 
     // Create calls with minimum expected amount out for each exit path
-    const { callData, deltas } = await this.createCalls(
+    const { encodedCall, deltas } = await this.createCalls(
       exitPaths,
       userAddress,
       minAmountsOutByExitPath,
       authorisation
     );
 
-    const { expectedAmountsOut, minAmountsOut } = this.amountsOutByTokenOut(
+    this.assertDeltas(
+      poolId,
+      deltas,
+      amountBptIn,
       tokensOut,
-      tokensOutByExitPath,
-      expectedAmountsOutByExitPath,
-      slippage
+      minAmountsOutByTokenOut
     );
-
-    this.assertDeltas(poolId, deltas, amountBptIn, tokensOut, minAmountsOut);
 
     const priceImpact = await this.calculatePriceImpact(
       poolId,
       this.poolGraph,
       tokensOut,
-      expectedAmountsOut,
+      expectedAmountsOutByTokenOut,
       amountBptIn
     );
 
     return {
       to: this.relayer,
-      callData,
+      encodedCall,
       tokensOut,
-      expectedAmountsOut,
-      minAmountsOut,
+      expectedAmountsOut: expectedAmountsOutByTokenOut,
+      minAmountsOut: minAmountsOutByTokenOut,
       priceImpact,
     };
   }
@@ -216,53 +236,33 @@ export class Exit {
   // Query amounts out through static call and return decoded result
   private amountsOutByExitPath = async (
     userAddress: string,
+    multiRequests: Requests[][],
     callData: string,
     tokenIn: string,
     outputIndexes: number[],
-    slippage: string
-  ): Promise<{
-    expectedAmountsOutByExitPath: string[];
-    minAmountsOutByExitPath: string[];
-  }> => {
-    const simulationResult = await this.tenderlyHelper.simulateMulticall(
-      this.relayer,
-      callData,
-      userAddress,
-      [tokenIn]
-    );
-
-    // Decode each exit path amount out from static call result
-    const multiCallResult = defaultAbiCoder.decode(
-      ['bytes[]'],
-      simulationResult
-    )[0] as string[];
-
-    const expectedAmountsOutByExitPath = outputIndexes.map((outputIndex) => {
-      const result = defaultAbiCoder.decode(
-        ['uint256'],
-        multiCallResult[outputIndex]
+    signer: JsonRpcSigner,
+    simulationType: SimulationType
+  ): Promise<string[]> => {
+    const amountsOutByExitPath =
+      await this.simulationService.simulateGeneralisedExit(
+        this.relayer,
+        multiRequests,
+        callData,
+        outputIndexes,
+        userAddress,
+        tokenIn,
+        signer,
+        simulationType
       );
-      return result.toString();
-    });
 
-    // Apply slippage tolerance on expected amount out for each exit path
-    const minAmountsOutByExitPath = expectedAmountsOutByExitPath.map(
-      (expectedAmountOut) =>
-        subSlippage(
-          BigNumber.from(expectedAmountOut),
-          BigNumber.from(slippage)
-        ).toString()
-    );
-
-    return { expectedAmountsOutByExitPath, minAmountsOutByExitPath };
+    return amountsOutByExitPath;
   };
 
   // Aggregate amounts out by exit path into amounts out by token out
   private amountsOutByTokenOut = (
     tokensOut: string[],
     tokensOutByExitPath: string[],
-    expectedAmountsOutByExitPath: string[],
-    slippage: string
+    expectedAmountsOutByExitPath: string[]
   ) => {
     // Aggregate amountsOutByExitPath into expectedAmountsOut
     const expectedAmountsOutMap: Record<string, BigNumber> = {};
@@ -276,15 +276,34 @@ export class Exit {
       expectedAmountsOutMap[tokenOut].toString()
     );
 
-    // Apply slippage tolerance on each expected amount out
-    const minAmountsOut = expectedAmountsOut.map((expectedAmountOut) =>
-      subSlippage(
-        BigNumber.from(expectedAmountOut),
-        BigNumber.from(slippage)
-      ).toString()
+    return expectedAmountsOut;
+  };
+
+  // Apply slippage tolerance to expected amounts out
+  private minAmountsOut = (
+    expectedAmountsOutByExitPath: string[],
+    expectedAmountsOutByTokenOut: string[],
+    slippage: string
+  ) => {
+    // Apply slippage tolerance on expected amount out for each exit path
+    const minAmountsOutByExitPath = expectedAmountsOutByExitPath.map(
+      (expectedAmountOut) =>
+        subSlippage(
+          BigNumber.from(expectedAmountOut),
+          BigNumber.from(slippage)
+        ).toString()
     );
 
-    return { expectedAmountsOut, minAmountsOut };
+    // Apply slippage tolerance on expected amount out for each token out
+    const minAmountsOutByTokenOut = expectedAmountsOutByTokenOut.map(
+      (expectedAmountOut) =>
+        subSlippage(
+          BigNumber.from(expectedAmountOut),
+          BigNumber.from(slippage)
+        ).toString()
+    );
+
+    return { minAmountsOutByExitPath, minAmountsOutByTokenOut };
   };
 
   // Create one exit path for each output node
@@ -329,15 +348,13 @@ export class Exit {
     minAmountsOut?: string[],
     authorisation?: string
   ): Promise<{
-    callData: string;
+    multiRequests: Requests[][];
+    encodedCall: string;
     outputIndexes: number[];
     deltas: Record<string, BigNumber>;
   }> {
-    const { calls, outputIndexes, deltas } = this.createActionCalls(
-      cloneDeep(exitPaths),
-      userAddress,
-      minAmountsOut
-    );
+    const { multiRequests, calls, outputIndexes, deltas } =
+      this.createActionCalls(cloneDeep(exitPaths), userAddress, minAmountsOut);
 
     if (authorisation) {
       calls.unshift(
@@ -345,12 +362,14 @@ export class Exit {
       );
     }
 
-    const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
-      calls,
-    ]);
+    const encodedCall = balancerRelayerInterface.encodeFunctionData(
+      'multicall',
+      [calls]
+    );
 
     return {
-      callData,
+      multiRequests,
+      encodedCall,
       outputIndexes: authorisation
         ? outputIndexes.map((i) => i + 1)
         : outputIndexes,
@@ -376,10 +395,12 @@ export class Exit {
     userAddress: string,
     minAmountsOut?: string[]
   ): {
+    multiRequests: Requests[][];
     calls: string[];
     outputIndexes: number[];
     deltas: Record<string, BigNumber>;
   } {
+    const multiRequests: Requests[][] = [];
     const calls: string[] = [];
     const outputIndexes: number[] = [];
     const isPeek = !minAmountsOut;
@@ -388,6 +409,7 @@ export class Exit {
     // Create actions for each Node and return in multicall array
 
     exitPaths.forEach((exitPath, i) => {
+      const modelRequests: Requests[] = [];
       exitPath.forEach((node) => {
         // Calls from root node are sent by the user. Otherwise sent by the relayer
         const isRootNode = !node.parent;
@@ -404,28 +426,32 @@ export class Exit {
 
         switch (node.exitAction) {
           case 'batchSwap': {
-            const [call, assets, limits] = this.createBatchSwap(
-              node,
-              exitChild as Node,
-              i,
-              minAmountOut,
-              sender,
-              recipient
-            );
-            calls.push(call);
-            this.updateDeltas(deltas, assets, limits);
+            const { modelRequest, encodedCall, assets, amounts } =
+              this.createBatchSwap(
+                node,
+                exitChild as Node,
+                i,
+                minAmountOut,
+                sender,
+                recipient
+              );
+            modelRequests.push(modelRequest);
+            calls.push(encodedCall);
+            this.updateDeltas(deltas, assets, amounts);
             break;
           }
           case 'exitPool': {
-            const [call, bptIn, tokensOut, amountsOut] = this.createExitPool(
-              node,
-              exitChild as Node,
-              i,
-              minAmountOut,
-              sender,
-              recipient
-            );
-            calls.push(call);
+            const { modelRequest, encodedCall, bptIn, tokensOut, amountsOut } =
+              this.createExitPool(
+                node,
+                exitChild as Node,
+                i,
+                minAmountOut,
+                sender,
+                recipient
+              );
+            modelRequests.push(modelRequest);
+            calls.push(encodedCall);
             this.updateDeltas(
               deltas,
               [node.address, ...tokensOut],
@@ -450,9 +476,10 @@ export class Exit {
             return;
         }
       });
+      multiRequests.push(modelRequests);
     });
 
-    return { calls, outputIndexes, deltas };
+    return { multiRequests, calls, outputIndexes, deltas };
   }
 
   private createBatchSwap(
@@ -462,7 +489,12 @@ export class Exit {
     minAmountOut: string,
     sender: string,
     recipient: string
-  ): [string, string[], string[]] {
+  ): {
+    modelRequest: BatchSwapRequest;
+    encodedCall: string;
+    assets: string[];
+    amounts: string[];
+  } {
     const isRootNode = !node.parent;
     const amountIn = isRootNode
       ? node.index
@@ -525,7 +557,7 @@ export class Exit {
     //   )`
     // );
 
-    const call = Relayer.encodeBatchSwap({
+    const call: EncodeBatchSwapInput = {
       swapType: SwapType.SwapExactIn,
       swaps,
       assets,
@@ -534,15 +566,19 @@ export class Exit {
       deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
       value: '0',
       outputReferences,
-    });
+    };
 
-    let userTokenOutAmount = limits[0];
-    const userBptAmount = limits[1];
+    const encodedCall = Relayer.encodeBatchSwap(call);
+
+    const modelRequest = VaultModel.mapBatchSwapRequest(call);
+
     // If the sender is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
-    const bptIn = sender === this.relayer ? '0' : userBptAmount;
+    const bptIn = sender === this.relayer ? '0' : limits[1];
     // If the receiver is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
-    userTokenOutAmount = recipient === this.relayer ? '0' : userTokenOutAmount;
-    return [call, assets, [userTokenOutAmount, bptIn]];
+    const userTokenOutAmount = recipient === this.relayer ? '0' : limits[0];
+    const amounts = [userTokenOutAmount, bptIn];
+
+    return { modelRequest, encodedCall, assets, amounts };
   }
 
   private createExitPool(
@@ -552,7 +588,13 @@ export class Exit {
     minAmountOut: string,
     sender: string,
     recipient: string
-  ): [string, string, string[], string[]] {
+  ): {
+    modelRequest: ExitPoolModelRequest;
+    encodedCall: string;
+    bptIn: string;
+    tokensOut: string[];
+    amountsOut: string[];
+  } {
     const tokenOut = exitChild.address;
     const isRootNode = !node.parent;
     const amountIn = isRootNode
@@ -652,20 +694,27 @@ export class Exit {
       userData,
       toInternalBalance: false,
     });
+    const encodedCall = Relayer.encodeExitPool(call);
+    const modelRequest = VaultModel.mapExitPoolRequest(call);
 
     const userAmountTokensOut = sortedAmounts.map((a) =>
       Relayer.isChainedReference(a) ? '0' : Zero.sub(a).toString()
     );
     const userBptIn = Relayer.isChainedReference(amountIn) ? '0' : amountIn;
+    // If the sender is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
+    const deltaBptIn = sender === this.relayer ? Zero.toString() : userBptIn;
+    // If the receiver is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
+    const deltaTokensOut = recipient === this.relayer ? [] : sortedTokens;
+    const deltaAmountsOut =
+      recipient === this.relayer ? [] : userAmountTokensOut;
 
-    return [
-      call,
-      // If the sender is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
-      sender === this.relayer ? Zero.toString() : userBptIn,
-      // If the receiver is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
-      recipient === this.relayer ? [] : sortedTokens,
-      recipient === this.relayer ? [] : userAmountTokensOut,
-    ];
+    return {
+      modelRequest,
+      encodedCall,
+      bptIn: deltaBptIn,
+      tokensOut: deltaTokensOut,
+      amountsOut: deltaAmountsOut,
+    };
   }
 
   private getOutputRef = (exitPathIndex: number, nodeIndex: string): number => {

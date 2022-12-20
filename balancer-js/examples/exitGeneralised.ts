@@ -1,11 +1,13 @@
+// yarn examples:run ./examples/exitGeneralised.ts
 import dotenv from 'dotenv';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { parseFixed } from '@ethersproject/bignumber';
-import { BalancerSDK, Network } from '../src/index';
+import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '../src/index';
 import { forkSetup, getBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
 import { Relayer } from '../src/modules/relayer/relayer.module';
 import { Contracts } from '../src/modules/contracts/contracts.module';
+import { SimulationType } from '../src/modules/simulation/simulation.module';
 
 dotenv.config();
 
@@ -88,12 +90,35 @@ async function exit() {
     blockNumber,
   };
 
+  // Example of subgraph query that allows filtering pools
+  const poolAddresses = Object.values(addresses).map(
+    (address) => address.address
+  );
+  const subgraphArgs: GraphQLArgs = {
+    where: {
+      swapEnabled: {
+        eq: true,
+      },
+      totalShares: {
+        gt: 0.000000000001,
+      },
+      address: {
+        in: poolAddresses,
+      },
+    },
+    orderBy: 'totalLiquidity',
+    orderDirection: 'desc',
+    block: { number: blockNumber },
+  };
+  const subgraphQuery: GraphQLQuery = { args: subgraphArgs, attrs: {} };
+
   const balancer = new BalancerSDK({
     network,
     rpcUrl,
     customSubgraphUrl:
       'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta',
     tenderly: tenderlyConfig,
+    subgraphQuery,
   });
 
   // Use SDK to create exit transaction
@@ -102,6 +127,8 @@ async function exit() {
     amount,
     signerAddress,
     slippage,
+    signer,
+    SimulationType.VaultModel,
     relayerAuth
   );
 
@@ -117,7 +144,7 @@ async function exit() {
   // Submit exit tx
   const transactionResponse = await signer.sendTransaction({
     to: query.to,
-    data: query.callData,
+    data: query.encodedCall,
   });
 
   await transactionResponse.wait();
@@ -129,11 +156,12 @@ async function exit() {
     )
   ).map((b) => b.toString());
 
-  console.log('Balances before exit:    ', tokenBalancesBefore);
-  console.log('Balances after exit:     ', tokenBalancesAfter);
-  console.log('Expected amounts out:    ', [...query.expectedAmountsOut]);
-  console.log('Min amounts out:         ', [...query.minAmountsOut]);
+  console.table({
+    balancesBefore: tokenBalancesBefore,
+    balancesAfter: tokenBalancesAfter,
+    expectedAmountsOut: ['0', ...query.expectedAmountsOut],
+    minAmountsOut: ['0', ...query.minAmountsOut],
+  });
 }
 
-// yarn examples:run ./examples/exitGeneralised.ts
 exit();
