@@ -304,17 +304,21 @@ There are two ways to join a pool:
 In this documentation, we will focus on the first method (`joinExactIn`) for joining a pool with known token amounts.
 
 ```js
-const pool = await sdk.pools.find(poolId)
-const maxAmountsIn = pool.tokenList.map((t) => forEachTokenSpecifyAmountYouWantToJoinWith)
-const queryParams = pool.buildQueryJoinExactIn({ maxAmountsIn })
-const response = await balancerContracts.balancerHelpers.queryJoin(...queryParams)
-const { bptOut, amountsIn } = response
+const pool = await sdk.pools.find(poolId);
+const maxAmountsIn = pool.tokenList.map(
+  (t) => forEachTokenSpecifyAmountYouWantToJoinWith
+);
+const queryParams = pool.buildQueryJoinExactIn({ maxAmountsIn });
+const response = await balancerContracts.balancerHelpers.queryJoin(
+  ...queryParams
+);
+const { bptOut, amountsIn } = response;
 ```
 
 `response` will return:
 
-* `bptOut`: The expected pool token amount returned by the pool.
-* `amountsIn`: The same as maxAmountsIn
+- `bptOut`: The expected pool token amount returned by the pool.
+- `amountsIn`: The same as maxAmountsIn
 
 ### Simulating exits
 
@@ -327,16 +331,18 @@ There are three ways to join a pool:
 In this example, we will focus on the first method (`exitProportionally`).
 
 ```js
-const pool = await sdk.pools.find(poolId)
-const queryParams = pool.buildQueryJoinExactIn({ bptIn })
-const response = await balancerContracts.balancerHelpers.queryJoin(...queryParams)
-const { bptIn, amountsOut } = response
+const pool = await sdk.pools.find(poolId);
+const queryParams = pool.buildQueryJoinExactIn({ bptIn });
+const response = await balancerContracts.balancerHelpers.queryJoin(
+  ...queryParams
+);
+const { bptIn, amountsOut } = response;
 ```
 
 `response` will return:
 
-* `amountsOut`: Token amounts returned by the pool.
-* `bptIn`: The same as intput bptIn
+- `amountsOut`: Token amounts returned by the pool.
+- `bptIn`: The same as intput bptIn
 
 More examples: https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/pools/queries.ts
 
@@ -398,6 +404,8 @@ Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
    * @param userAddress     User address
    * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction
+   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
    */
@@ -408,12 +416,15 @@ Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
     to: string;
-    callData: string;
+    encodedCall: string;
     minOut: string;
     expectedOut: string;
+    priceImpact: string;
   }>
 ```
 
@@ -491,11 +502,13 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
 /**
    * Builds generalised exit transaction
    *
-   * @param poolId        Pool id
-   * @param amount        Token amount in EVM scale
-   * @param userAddress   User address
-   * @param slippage      Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param authorisation Optional auhtorisation call to be added to the chained transaction
+   * @param poolId          Pool id
+   * @param amount          Token amount in EVM scale
+   * @param userAddress     User address
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction
+   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
    */
   async generalisedExit(
@@ -503,13 +516,16 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
     amount: string,
     userAddress: string,
     slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
     to: string;
-    callData: string;
+    encodedCall: string;
     tokensOut: string[];
     expectedAmountsOut: string[];
     minAmountsOut: string[];
+    priceImpact: string;
   }>
 ```
 
@@ -623,9 +639,8 @@ async relayer.exitPoolAndBatchSwap(
 ### Pools Impermanent Loss
 
 > DRAFT
-> 
+>
 > impermanent loss (IL) describes the percentage by which a pool is worth less than what one would have if they had instead just held the tokens outside the pool
-
 
 #### Service
 
@@ -637,10 +652,9 @@ Using the variation delta formula:
 
 ![img.png](img.png)
 
-where **𝚫P<sup>i</sup>** represents the difference between the price for a single token at the date of joining the pool and the current price. 
+where **𝚫P<sup>i</sup>** represents the difference between the price for a single token at the date of joining the pool and the current price.
 
 ```javascript
-
 // retrieves pool's tokens
 tokens = pool.tokens;
 // get weights for tokens
@@ -648,17 +662,32 @@ weights = tokens.map((token) => token.weight);
 // retrieves current price for tokens
 exitPrices = tokens.map((token) => tokenPrices.find(token.address));
 // retrieves historical price for tokens
-entryPrices = tokens.map((token) => tokenPrices.findBy('timestamp', { address: token.address, timestamp: timestamp})); 
-// retrieves list of pool's assets with prices delta and weights 
+entryPrices = tokens.map((token) =>
+  tokenPrices.findBy('timestamp', {
+    address: token.address,
+    timestamp: timestamp,
+  })
+);
+// retrieves list of pool's assets with prices delta and weights
 assets = tokens.map((token) => ({
-  priceDelta: this.getDelta(entryPrices[token.address], exitPrices[token.address]),
+  priceDelta: this.getDelta(
+    entryPrices[token.address],
+    exitPrices[token.address]
+  ),
   weight: weights[i],
 }));
 
-poolValueDelta = assets.reduce((result, asset) => result * Math.pow(Math.abs(asset.priceDelta + 1), asset.weight), 1);
-holdValueDelta = assets.reduce((result, asset) => result + (Math.abs(asset.priceDelta + 1) * asset.weight), 0);
+poolValueDelta = assets.reduce(
+  (result, asset) =>
+    result * Math.pow(Math.abs(asset.priceDelta + 1), asset.weight),
+  1
+);
+holdValueDelta = assets.reduce(
+  (result, asset) => result + Math.abs(asset.priceDelta + 1) * asset.weight,
+  0
+);
 
-const IL = poolValueDelta/holdValueDelta - 1;
+const IL = poolValueDelta / holdValueDelta - 1;
 ```
 
 #### Usage
@@ -667,18 +696,19 @@ const IL = poolValueDelta/holdValueDelta - 1;
 async impermanentLoss(
   timestamp: number, // the UNIX timestamp from which the IL is desired
   pool: Pool // the pool on which the IL must be calculated
-): Promise<number> 
+): Promise<number>
 ```
 
 ```javascript
 const pool = await sdk.pools.find(poolId);
-const joins = (await sdk.data.findByUser(userAddress)).filter((it) => it.type === "Join" && it.poolId === poolId);
+const joins = (await sdk.data.findByUser(userAddress)).filter(
+  (it) => it.type === 'Join' && it.poolId === poolId
+);
 const join = joins[0];
-const IL = await pools.impermanentLoss(join.timestamp, pool);  
+const IL = await pools.impermanentLoss(join.timestamp, pool);
 ```
 
 [Example](./examples/pools/impermanentLoss.ts)
-
 
 ## Licensing
 
