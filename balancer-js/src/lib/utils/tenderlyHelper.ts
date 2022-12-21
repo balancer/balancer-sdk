@@ -1,15 +1,31 @@
 import axios from 'axios';
 import { MaxInt256 } from '@ethersproject/constants';
 import { networkAddresses } from '@/lib/constants/config';
-import { BalancerTenderlyConfig } from '@/types';
+import {
+  Address,
+  BalancerTenderlyConfig,
+  TenderlyRpcResponse,
+  TenderlyRpcSimulationBlockNumber,
+  TenderlyRpcStateOverridesParameters,
+  TenderlyRpcTransactionParameters,
+} from '@/types';
 
 type StateOverrides = {
   [address: string]: { value: { [key: string]: string } };
 };
 
+type RpcStateDiff = {
+  [address: string]: {
+    stateDiff: {
+      [storageKey: string]: string;
+    };
+  };
+};
+
 export default class TenderlyHelper {
   private vaultAddress;
   private tenderlyUrl;
+  private tenderlyRpcUrl = '';
   private opts?;
   private blockNumber: number | undefined;
 
@@ -26,9 +42,11 @@ export default class TenderlyHelper {
     }
 
     if (tenderlyConfig?.accessKey) {
+      this.tenderlyRpcUrl = `https://goerli.gateway.tenderly.co/${ tenderlyConfig.accessKey }`;
       this.opts = {
         headers: {
           'X-Access-Key': tenderlyConfig.accessKey,
+          'Content-Type': 'application/json',
         },
       };
     }
@@ -54,7 +72,7 @@ export default class TenderlyHelper {
       ...tokensOverrides,
       ...relayerApprovalOverride,
     };
-    return this.simulateTransaction(
+    return this.simulateTransactionRpc(
       to,
       data,
       userAddress,
@@ -101,6 +119,53 @@ export default class TenderlyHelper {
       resp.data.transaction.transaction_info.call_trace.output;
 
     return simulatedTransactionOutput;
+  };
+
+  simulateTransactionRpc = async (
+    to: Address,
+    data: string,
+    userAddress: Address,
+    encodedStateOverrides: StateOverrides
+  ) => {
+    const transactionParams: TenderlyRpcTransactionParameters = {
+      to,
+      data,
+      from: userAddress,
+    };
+    const simulationBlockNumber: TenderlyRpcSimulationBlockNumber = `0x${this.blockNumber?.toString(
+      16
+    )}`;
+
+    const overrides: TenderlyRpcStateOverridesParameters = Object.fromEntries(
+      Object.keys(encodedStateOverrides).map((address) => {
+        // Object.fromEntries require format [key, value] instead of {key: value}
+        return [address, { stateDiff: encodedStateOverrides[address].value }];
+      })
+    );
+    const tenderlyParams = [
+      transactionParams,
+      simulationBlockNumber,
+      overrides,
+    ];
+    const response = await axios.post(
+      this.tenderlyRpcUrl,
+      {
+        id: 0,
+        jsonrpc: '2.0',
+        method: 'tenderly_simulateTransaction',
+        params: tenderlyParams,
+      },
+      this.opts
+    );
+    const responseBody: TenderlyRpcResponse = response.data;
+    const callTraces = responseBody.result.trace.filter(
+      ({ type, method }) => type === 'CALL' && method === 'multicall'
+    );
+    const lastCallTrace =
+      callTraces.length > 0
+        ? callTraces[callTraces.length - 1]
+        : { output: '0x' };
+    return lastCallTrace.output;
   };
 
   // Encode relayer approval state override
