@@ -14,14 +14,6 @@ type StateOverrides = {
   [address: string]: { value: { [key: string]: string } };
 };
 
-type RpcStateDiff = {
-  [address: string]: {
-    stateDiff: {
-      [storageKey: string]: string;
-    };
-  };
-};
-
 export default class TenderlyHelper {
   private vaultAddress;
   private tenderlyUrl;
@@ -126,7 +118,7 @@ export default class TenderlyHelper {
     data: string,
     userAddress: Address,
     encodedStateOverrides: StateOverrides
-  ) => {
+  ): Promise<string> => {
     const transactionParams: TenderlyRpcTransactionParameters = {
       to,
       data,
