@@ -24,7 +24,6 @@ import type {
 import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
 import * as Queries from '@/modules/pools/queries/types';
-import { RpcAccessList } from 'hardhat/internal/core/jsonrpc/types/access-list';
 
 export * from '@/modules/data/types';
 export { Network, AprBreakdown };

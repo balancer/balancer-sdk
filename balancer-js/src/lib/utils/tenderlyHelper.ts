@@ -42,7 +42,7 @@ export default class TenderlyHelper {
     }
 
     if (tenderlyConfig?.accessKey) {
-      this.tenderlyRpcUrl = `https://goerli.gateway.tenderly.co/${ tenderlyConfig.accessKey }`;
+      this.tenderlyRpcUrl = `https://goerli.gateway.tenderly.co/${tenderlyConfig.accessKey}`;
       this.opts = {
         headers: {
           'X-Access-Key': tenderlyConfig.accessKey,
