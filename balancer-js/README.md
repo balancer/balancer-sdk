@@ -689,45 +689,32 @@ const IL = await pools.impermanentLoss(join.timestamp, pool);
 ### Approach
 
 
-* API calls
+* **API calls**
+
+
 ```javascript
+//get Claimable Tokens
+gauges = LiquidityGaugesRepository.fetch().map((it) => it.address);
+claimableTokensPerGauge = LiquidityGaugesMulticallRepository.getClaimableTokens(gauges, accountAddress){
+  return this.multicall.aggregate('claimable_tokens', [[gaugeAddress, accountAddress], ...]);
+};
 
-// get list of claimable tokens
-claimableTokensBalance = claimService.getClaimableTokens(userAddress) => {
-  tokens = getPoolsTokens();//retrieve tokens from pools enables for staking
-  return feeDistributorContract.staticCall(claimTokens, [userAddress, tokens])
+//claim single reward
+LiquidityGaugesMulticallRepository.buildClaimToken(gaugeAddress, accountAddress, receiverAddress) {
+  new Contract(gaugeAccress).encode('claim_rewards', accountAddress, receiverAddress);
 }
 
-//claim single token
-if (claimableTokensBalance[token] > 0) {
-  txData = service.claimToken(userAddress, token) => {
-    return feeDistributorContract.buildTx('claimToken', [userAddress, token]);  
-  }
+LiquidityGaugesMulticallRepository.buildClaimTokens(gaugeAddresses, accountAddress, receiverAddress) {
+  return this.multicall.aggregate('claim_rewards', [[gaugeAddress, accountAddress, receiverAddress], ...]);
 }
 
-//claim multiple token
-if (claimableTokensBalance.every(balance > 0)) {
-  txData = service.claimToken(userAddress, token) => {
-    return feeDistributorContract.buildTx('claimTokens', [userAddress, tokens]);
-  }
-}
-
-feeDistributorContract.buildTx(methodName, args) => {
-  data = encodeFunctionData(methodName, args);
-  return {
-    feeDistributorAddress,
-    methodName,
-    args,
-    data
-  }
-}
 ```
 
 * Client calls
 ```
-tokens = api.BalanceIncentivesService.getClaimableTokens(userAddress)
-txData = api.BalIncentives.claimTokens(userAddress, tokens);
-ethereum.request(txData).then(() => { ... });
+tokens = api.ClaimService.getClaimableBalTokens(userAddress)
+txData = api.ClaimService.claimTokens(userAddress, tokens);
+signer.request(txData).then(() => { ... });
 ```
 
 
