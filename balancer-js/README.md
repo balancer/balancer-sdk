@@ -680,7 +680,7 @@ const IL = await pools.impermanentLoss(join.timestamp, pool);
 
 > Draft
  
-> Incentives for LPs who stake in eligible pools (based on the previous week's voting). This doesn't include swap fees or intrinsic yield from certain yield bearing tokens which accumulate into LP positions automatically.
+> Incentives for LPs who stake in eligible pools.
 
 ### Service
 
