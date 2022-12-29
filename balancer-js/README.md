@@ -676,7 +676,7 @@ const IL = await pools.impermanentLoss(join.timestamp, pool);
 
 [Example](./examples/pools/impermanentLoss.ts)
 
-## Claim BAL Incentives
+## Claim Pools Incentives
 
 > Draft
  
@@ -688,35 +688,70 @@ const IL = await pools.impermanentLoss(join.timestamp, pool);
 
 ### Approach
 
+#### Open Questions
 
-* **API calls**
+1. **Which function to retrieve claimable rewards on network other that Mainnet?**
+
+As for our analysis, this should be `claimable_reward` for Mainnet, when token is other than BAL, and `claimable_reward_write` for other networks.
+
+We did a bit of reverse engineering on the Balancer web-app, and this confirms our hypothesis.
+
+Documentation says otherwise [here](https://dev.balancer.fi/resources/vebal-and-gauges/gauges).
+
+Please, can you confirm our assumptions are right?
+
+2. **Is the liquidity-gauge provider `src/modules/data/liquidity-gauges/provider.ts` returning the correct list of gauges for the pools?**
+
+The query is `where: { preferentialGauge_not: null }`.
 
 
+#### Pseudo-code
+
+* **Get Claimable Rewards**
 ```javascript
-//get Claimable Tokens
-gauges = LiquidityGaugesRepository.fetch().map((it) => it.address);
-claimableTokensPerGauge = LiquidityGaugesMulticallRepository.getClaimableTokens(gauges, accountAddress){
-  return this.multicall.aggregate('claimable_tokens', [[gaugeAddress, accountAddress], ...]);
+gauges = LiquidityGaugesRepository.fetch();
+claimableTokensPerGauge = LiquidityGaugesMulticallRepository.getClaimableTokens(gauges, accountAddress) {
+  tokens = gauge.rewardData
+  if (MAINNET) {
+    claimableTokens = this.multicall.aggregate('claimable_tokens', gauges, accountAddress);
+    claimableReward = this.multicall.aggregate('claimable_reward', gauges, accountAddress, rewardData); 
+    return aggregate(claimableReward, claimableTokens);
+  } else {
+    return this.multicall.aggregate('claimable_reward_write', gauges, accountAddress, rewardData);
+  }
 };
 
-//claim single reward
+```
+* **Claim Single Reward**
+
+it returns encoded callable data to be fed to a signer and then to send to the gauge contract. 
+
+```javascript
+
 LiquidityGaugesMulticallRepository.buildClaimToken(gaugeAddress, accountAddress, receiverAddress) {
   new Contract(gaugeAccress).encode('claim_rewards', accountAddress, receiverAddress);
 }
+```
+* **Claim Multiple Rewards**
 
+it returns encoded callable data to be fed to a signer and then to send to the multicall contract for the selected network.
+
+```javascript
 LiquidityGaugesMulticallRepository.buildClaimTokens(gaugeAddresses, accountAddress, receiverAddress) {
-  return this.multicall.aggregate('claim_rewards', [[gaugeAddress, accountAddress, receiverAddress], ...]);
+  return this.multicall.encode('claim_rewards', [[gaugeAddress, accountAddress, receiverAddress], ...]);
 }
-
 ```
 
-* Client calls
+#### Client calls
 ```
 tokens = api.ClaimService.getClaimableBalTokens(userAddress)
 txData = api.ClaimService.claimTokens(userAddress, tokens);
 signer.request(txData).then(() => { ... });
 ```
 
+## Claim veBal Incentives
+
+TBD
 
 ## Licensing
 
