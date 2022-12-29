@@ -730,7 +730,7 @@ it returns encoded callable data to be fed to a signer and then to send to the g
 ```javascript
 
 LiquidityGaugesMulticallRepository.buildClaimToken(gaugeAddress, accountAddress, receiverAddress) {
-  new Contract(gaugeAccress).encode('claim_rewards', accountAddress, receiverAddress);
+  new Contract(gaugeAccress).encodeFunctionData('claim_rewards', [accountAddress, receiverAddress]);
 }
 ```
 * **Claim Multiple Rewards**
@@ -739,7 +739,7 @@ it returns encoded callable data to be fed to a signer and then to send to the m
 
 ```javascript
 LiquidityGaugesMulticallRepository.buildClaimTokens(gaugeAddresses, accountAddress, receiverAddress) {
-  return this.multicall.encode('claim_rewards', [[gaugeAddress, accountAddress, receiverAddress], ...]);
+  return this.multicall.encodeFunctionData('claim_rewards', [[gaugeAddress, [accountAddress, receiverAddress]], ...]);
 }
 ```
 
