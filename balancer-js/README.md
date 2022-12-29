@@ -704,6 +704,7 @@ Please, can you confirm our assumptions are right?
 
 The query is `where: { preferentialGauge_not: null }`.
 
+3. **Where can we find some accounts with rewards to use as test?**
 
 #### Pseudo-code
 
