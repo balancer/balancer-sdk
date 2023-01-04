@@ -357,13 +357,17 @@ const { to, functionName, attributes, data } = pool.buildJoin(params);
 Builds a join transaction.
 
 ```js
-/**
- * @param { string }   joiner - Address used to exit pool.
- * @param { string[] } tokensIn - Token addresses provided for joining pool (same length and order as amountsIn).
- * @param { string[] } amountsIn - Token amounts provided for joining pool in EVM amounts.
- * @param { string }   slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%.
- * @returns { Promise<JoinPoolAttributes> } Returns join transaction ready to send with signer.sendTransaction.
-*/
+  /***
+ * @param params
+ *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
+ *  * @param joiner - The address of the joiner of the pool
+ *  * @param poolId - The id of the pool
+ *  * @param poolAddress - The address of the pool
+ *  * @param tokensIn - array with the address of the tokens
+ *  * @param amountsIn - array with the amount of each token
+ *  * @param wrappedNativeAsset
+ *  * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
+ */
 buildJoin: (
   joiner: string,
   tokensIn: string[],
@@ -374,22 +378,24 @@ buildJoin: (
 [Example](./examples/join.ts)
 ### #buildInitJoin
 ```js
-/**
-   * Build Init join pool transaction parameters (Can only be made once per pool)
-   * @param {JoinPoolParameters} params - parameters used to build exact tokens in for bpt out transaction
-   * @param {string}                          params.joiner - Account address joining pool
-   * @param {SubgraphPoolBase}                params.pool - Subgraph pool object of pool being joined
-   * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
-   * @param {string[]}                        params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
-   * @param {string}                          wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for joining with ETH.
-   * @returns                                 transaction request ready to send with signer.sendTransaction
-   */
+  /***
+ * @param params
+ *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
+ *  * @param joiner - The address of the joiner of the pool
+ *  * @param poolId - The id of the pool
+ *  * @param poolAddress - The address of the pool
+ *  * @param tokensIn - array with the address of the tokens
+ *  * @param amountsIn - array with the amount of each token
+ *  * @param wrappedNativeAsset
+ *  * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
+ */
   buildInitJoin({
-    joiner,
-    pool,
-    tokensIn,
-    amountsIn,
-    wrappedNativeAsset,
+      joiner,
+      poolId,
+      poolAddress,
+      tokensIn,
+      amountsIn,
+      wrappedNativeAsset,
   }) => InitJoinPoolAttributes 
 ```
 
