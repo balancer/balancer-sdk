@@ -16,14 +16,14 @@ import { balancerVault } from '@/lib/constants/config';
 
 export class ComposableStableFactory implements PoolFactory {
   /***
-   * @param
+   * @param params
    *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
-   *  * @param contractAddress - The address of the factory for weighted pool (contract address)
+   *  * @param contractAddress - The address of the factory for composable stable pool (contract address)
    *  * @param name - The name of the pool
    *  * @param symbol - The symbol of the pool
    *  * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
-   *  * @param tokenAddresses - The tokens of the pool (each token must be an object that contains "tokenAddress" and "weight" params)
-   *  * @param rateProviders The addresses of the rate providers for each token
+   *  * @param tokenAddresses - The token's addresses
+   *  * @param rateProviders The addresses of the rate providers for each token, ordered
    *  * @param tokenRateCacheDurations the Token Rate Cache Duration of each token
    *  * @param owner - The address of the owner of the pool
    *  * @param amplificationParameter The amplification parameter(must be greater than 1)
@@ -72,15 +72,16 @@ export class ComposableStableFactory implements PoolFactory {
     };
   }
 
-  /**
-   * Build Init join pool transaction parameters (Can only be made once per pool)
-   * @param {JoinPoolParameters} params - parameters used to build exact tokens in for bpt out transaction
-   * @param {string}                          params.joiner - Account address joining pool
-   * @param {SubgraphPoolBase}                params.pool - Subgraph pool object of pool being joined
-   * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
-   * @param {string[]}                        params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
-   * @param {string}                          wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for joining with ETH.
-   * @returns                                 transaction request ready to send with signer.sendTransaction
+  /***
+   * @param params
+   *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
+   *  * @param joiner - The address of the joiner of the pool
+   *  * @param poolId - The id of the pool
+   *  * @param poolAddress - The address of the pool
+   *  * @param tokensIn - array with the address of the tokens
+   *  * @param amountsIn - array with the amount of each token
+   *  * @param wrappedNativeAsset
+   *  * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
    */
   buildInitJoin({
     joiner,
@@ -95,15 +96,12 @@ export class ComposableStableFactory implements PoolFactory {
     tokensIn.push(poolAddress);
     amountsIn.push('0');
 
-    console.log('tokensIn: ' + tokensIn);
-    console.log('amountsIn: ' + amountsIn);
-
     const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
       tokensIn,
       amountsIn
     ) as [string[], string[]];
 
-    let userDataAmounts = [];
+    let userDataAmounts;
     const bptIndex = sortedTokens
       .map((t) => t.toLowerCase())
       .indexOf(poolAddress.toLowerCase());
@@ -115,10 +113,6 @@ export class ComposableStableFactory implements PoolFactory {
         ...sortedAmounts.slice(bptIndex + 1),
       ];
     }
-
-    console.log('userDataAmounts: ' + userDataAmounts);
-    console.log('sortedAmounts: ' + sortedAmounts);
-    console.log('sortedTokens: ' + sortedTokens);
 
     const userData = ComposableStablePoolEncoder.joinInit(userDataAmounts);
     const functionName = 'joinPool';

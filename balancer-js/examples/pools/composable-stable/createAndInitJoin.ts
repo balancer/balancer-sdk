@@ -13,15 +13,10 @@ import composableStablePoolAbi from '../../../src/lib/abi/ComposableStable.json'
 // @ts-ignore
 import { ethers } from 'hardhat';
 import { Interface, LogDescription } from '@ethersproject/abi';
-import { getNetworkConfig } from '../../../src/modules/sdk.helpers';
+import { getNetworkConfig } from '@/modules/sdk.helpers';
 import { Contract } from '@ethersproject/contracts';
-import { networkAddresses } from '../../../src/lib/constants/config';
-import {
-  approveToken,
-  forkSetup,
-  getBalances,
-  setTokenBalance,
-} from '../../../src/test/lib/utils';
+import { networkAddresses } from '@/lib/constants/config';
+import { approveToken, getBalances, setTokenBalance } from '@/test/lib/utils';
 import BigNumber from 'bignumber.js';
 import { AddressZero, MaxUint256 } from '@ethersproject/constants';
 import { parseEther } from '@ethersproject/units';
@@ -58,10 +53,7 @@ const swapFee = '0.01';
 const owner = '0x817b6923f3cB53536859b1f01262d0E7f513dB78';
 const contractAddress = '0x85a80afee867adf27b50bdb7b76da70f1e853062';
 
-const forkSetupLocalNode = async (
-  signer: JsonRpcSigner,
-  jsonRpcUrl: string
-) => {
+const forkSetupLocalNode = async (signer: JsonRpcSigner) => {
   const tokens = tokenAddresses;
 
   const slots = [addresses.MAI.slot, addresses.WETH.slot];
@@ -97,7 +89,7 @@ async function createComposableStablePool() {
     rpcUrl,
   };
 
-  await forkSetupLocalNode(signer, rpcUrl);
+  await forkSetupLocalNode(signer);
 
   const balancer = new BalancerSDK(sdkConfig);
   const composableStablePoolFactory = balancer.pools.poolFactory.of(
@@ -141,8 +133,7 @@ async function createComposableStablePool() {
     })
     .map((log) => {
       try {
-        const parsedLog = composableStableFactoryInterface.parseLog(log);
-        return parsedLog;
+        return composableStableFactoryInterface.parseLog(log);
       } catch (error) {
         console.error(error);
         return null;
@@ -210,4 +201,4 @@ async function createComposableStablePool() {
   await initJoinTx.wait();
 }
 
-createComposableStablePool();
+createComposableStablePool().then((r) => r);
