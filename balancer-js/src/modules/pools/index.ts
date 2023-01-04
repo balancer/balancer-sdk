@@ -17,6 +17,7 @@ import { Join } from '../joins/joins.module';
 import { Exit } from '../exits/exits.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
+import { PoolFactory__factory } from './pool-factory__factory';
 import * as Queries from './queries';
 import { BalancerError } from '@/balancerErrors';
 import { PoolFactory__factory } from './pool-factory__factory';
