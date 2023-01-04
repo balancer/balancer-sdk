@@ -35,6 +35,7 @@ export interface BalancerSdkConfig {
   rpcUrl: string;
   //overwrite the subgraph url if you don't want to use the balancer labs maintained version
   customSubgraphUrl?: string;
+  subgraphQuery?: GraphQLQuery;
   //optionally overwrite parts of the standard SOR config
   sor?: Partial<BalancerSdkSorConfig>;
   tenderly?: BalancerTenderlyConfig;

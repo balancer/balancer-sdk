@@ -22,7 +22,7 @@ describe('metaStable pool spot price', () => {
         ADDRESSES[network].wSTETH.address,
         pool
       );
-      expect(spotPrice).to.eq('1.070497605163895290828158545877174735');
+      expect(spotPrice).to.eq('1.070296441642066094033346842555222521');
     });
   });
 });

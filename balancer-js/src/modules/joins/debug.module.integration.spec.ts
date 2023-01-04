@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 
-import { BalancerSDK, BalancerTenderlyConfig, Network } from '@/.';
+import { BalancerSDK, BalancerTenderlyConfig, Network, GraphQLArgs } from '@/.';
 import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { forkSetup, getBalances } from '@/test/lib/utils';
@@ -41,11 +41,35 @@ const tenderlyConfig: BalancerTenderlyConfig = {
   blockNumber,
 };
 
+const subgraphArgs: GraphQLArgs = {
+  where: {
+    swapEnabled: {
+      eq: true,
+    },
+    totalShares: {
+      gt: 0.000000000001,
+    },
+    id: {
+      in: [
+        '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d',
+        '0x2F4EB100552EF93840D5ADC30560E5513DFFFACB000000000000000000000334'.toLowerCase(),
+        '0xAE37D54AE477268B9997D4161B96B8200755935C000000000000000000000337'.toLowerCase(),
+        '0x82698AECC9E28E9BB27608BD52CF57F704BD1B83000000000000000000000336'.toLowerCase(),
+      ],
+    },
+  },
+  orderBy: 'totalLiquidity',
+  orderDirection: 'desc',
+  block: { number: 16176441 },
+};
+const subgraphQuery = { args: subgraphArgs, attrs: {} };
+
 const sdk = new BalancerSDK({
   network,
   rpcUrl,
   customSubgraphUrl,
   tenderly: tenderlyConfig,
+  subgraphQuery,
 });
 const { pools } = sdk;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
