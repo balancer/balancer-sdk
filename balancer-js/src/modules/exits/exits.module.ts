@@ -37,7 +37,7 @@ export class Exit {
 
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
-    private networkConfig: BalancerNetworkConfig
+    networkConfig: BalancerNetworkConfig
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
@@ -76,7 +76,6 @@ export class Exit {
     // Create nodes and order by breadth first
     const orderedNodes = await PoolGraph.getGraphNodes(
       false,
-      this.networkConfig.chainId,
       poolId,
       this.pools,
       false
@@ -156,7 +155,6 @@ export class Exit {
     // Create nodes for each pool/token interaction and order by breadth first
     const orderedNodesForJoin = await PoolGraph.getGraphNodes(
       true,
-      this.networkConfig.chainId,
       poolId,
       this.pools,
       false

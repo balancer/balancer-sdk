@@ -3,7 +3,6 @@
     "target": "es2019",
     "module": "esnext",
     "moduleResolution": "node",
-    "declaration": true,
     "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
@@ -15,7 +14,7 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["./src", "src/abi/*.json"],
+  "include": ["./src", "./examples", "src/abi/*.json"],
   "exclude": ["node_modules"],
   "files": ["hardhat.config.ts", "hardhat.config.goerli.ts"]
 }

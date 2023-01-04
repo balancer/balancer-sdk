@@ -23,6 +23,7 @@ import type {
 } from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
+import * as Queries from '@/modules/pools/queries/types';
 export * from '@/modules/data/types';
 export { Network, AprBreakdown };
 
@@ -61,6 +62,7 @@ export interface BalancerSdkSorConfig {
 export interface ContractAddresses {
   vault: string;
   multicall: string;
+  balancerHelpers: string;
   lidoRelayer?: string;
   relayerV3?: string;
   relayerV4?: string;
@@ -309,7 +311,7 @@ export interface PriceRateProvider {
 /**
  * Pool use-cases / controller layer
  */
-export interface PoolWithMethods extends Pool {
+export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
   buildJoin: (
     joiner: string,
     tokensIn: string[],

@@ -44,7 +44,7 @@ export class Join {
   private tenderlyHelper: TenderlyHelper;
   constructor(
     private pools: Findable<Pool, PoolAttribute>,
-    private networkConfig: BalancerNetworkConfig
+    networkConfig: BalancerNetworkConfig
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
     this.relayer = contracts.relayerV4 as string;
@@ -77,7 +77,6 @@ export class Join {
     // Create nodes for each pool/token interaction and order by breadth first
     const orderedNodes = await PoolGraph.getGraphNodes(
       true,
-      this.networkConfig.chainId,
       poolId,
       this.pools,
       wrapMainTokens

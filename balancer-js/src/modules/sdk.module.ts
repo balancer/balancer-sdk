@@ -32,6 +32,7 @@ export class BalancerSDK implements BalancerSDKRoot {
   balancerContracts: Contracts;
   zaps: Zaps;
   readonly networkConfig: BalancerNetworkConfig;
+  readonly provider: Provider;
 
   constructor(
     public config: BalancerSdkConfig,
@@ -39,6 +40,7 @@ export class BalancerSDK implements BalancerSDKRoot {
     public subgraph = new Subgraph(config)
   ) {
     this.networkConfig = getNetworkConfig(config);
+    this.provider = sor.provider;
 
     this.data = new Data(this.networkConfig, sor.provider);
     this.swaps = new Swaps(this.config);
