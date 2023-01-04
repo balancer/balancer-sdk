@@ -17,10 +17,6 @@ const pool = pools_14717479.find(
   (pool) => pool.id == dai_usdc_usdt_pool_id
 ) as unknown as Pool;
 
-const initJoinPool = pools_14717479.find(
-  (pool) => pool.id == dai_usdc_usdt_pool_id
-) as unknown as Pool;
-
 const concern = new ComposableStablePoolJoin();
 
 describe('joining stable pool', () => {
