@@ -676,19 +676,9 @@ const IL = await pools.impermanentLoss(join.timestamp, pool);
 
 [Example](./examples/pools/impermanentLoss.ts)
 
-## Claim Pools Incentives
+## Claim Tokens
 
-> Draft
- 
-> Incentives for LPs who stake in eligible pools.
-
-### Service
-
-![classes](./claim-incentives-class.png)
-
-### Approach
-
-#### Open Questions
+### Open Questions
 
 1. **Which function to retrieve claimable rewards on network other that Mainnet?**
 
@@ -706,7 +696,52 @@ The query is `where: { preferentialGauge_not: null }`.
 
 3. **Where can we find some accounts with rewards to use as test?**
 
-#### Pseudo-code
+4. **Are veBal Tokens available only for Mainnet?**
+
+5. **Claimable tokens needs to be hard-coded; is this acceptable?**
+
+Alternatively we can put the claimable tokens as parameters, leaving to the user the task to retrieve the tokens 
+available at a given time; in the pseudocode below a possible use case.
+
+### Service
+
+![classes](./claim-incentives-class.png)
+
+### Claim Tokens for a veBAL Holders
+
+> Draft
+
+#### Pseudocode
+
+* **Get Claimable Rewards**
+
+```javascript
+const defaultClaimableTokens = [
+  '0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2', // bb-a-USD v1
+  '0xA13a9247ea42D743238089903570127DdA72fE44', // bb-a-USD v2
+  '0xba100000625a3754423978a60c9317c58a424e3D', // BAL
+  '0x0d02755a5700414b26ff040e1de35d337df56218' // BEND ???
+]
+
+const claimableTokens: string[] = userDefinedClaimableTokens ?? defaultClaimableTokens;
+
+const balances = await contract.callStatic.claimTokens(userAddress, claimableTokens)
+
+const txData = await contract.encodeFunctionData("claimTokens", [userAddress, claimableTokens])
+
+//on client
+signer.request(txData).then(() => { ... });
+
+```
+
+### Claim Pools Incentives
+
+> Draft
+ 
+> Incentives for LPs who stake in eligible pools.
+
+
+#### Pseudocode
 
 * **Get Claimable Rewards**
 ```javascript
@@ -749,10 +784,6 @@ tokens = api.ClaimService.getClaimableBalTokens(userAddress)
 txData = api.ClaimService.claimTokens(userAddress, tokens);
 signer.request(txData).then(() => { ... });
 ```
-
-## Claim veBal Incentives
-
-TBD
 
 ## Licensing
 
