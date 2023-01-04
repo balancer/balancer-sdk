@@ -18,6 +18,12 @@ import { Exit } from '../exits/exits.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
 import { PoolFactory__factory } from './pool-factory__factory';
+import * as Queries from './queries';
+import { BalancerError } from '@/balancerErrors';
+
+const notImplemented = (poolType: string, name: string) => () => {
+  throw `${name} for poolType ${poolType} not implemented`;
+};
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -192,78 +198,151 @@ export class Pools implements Findable<PoolWithMethods> {
     pool: Pool,
     networkConfig: BalancerNetworkConfig
   ): PoolWithMethods {
-    const methods = PoolTypeConcerns.from(pool.poolType);
-    const wrappedNativeAsset =
-      networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
-    return <PoolWithMethods>{
-      ...pool,
-      buildJoin: (
-        joiner: string,
-        tokensIn: string[],
-        amountsIn: string[],
-        slippage: string
-      ): JoinPoolAttributes => {
-        return methods.join.buildJoin({
-          joiner,
-          pool,
-          tokensIn,
-          amountsIn,
-          slippage,
-          wrappedNativeAsset,
-        });
-      },
-      calcPriceImpact: async (
-        amountsIn: string[],
-        minBPTOut: string,
-        isJoin: boolean
-      ) =>
-        methods.priceImpactCalculator.calcPriceImpact(
-          pool,
-          amountsIn,
-          minBPTOut,
-          isJoin
-        ),
-      buildExitExactBPTIn: (
-        exiter,
-        bptIn,
-        slippage,
-        shouldUnwrapNativeAsset = false,
-        singleTokenMaxOut
-      ) => {
-        if (methods.exit.buildExitExactBPTIn) {
-          return methods.exit.buildExitExactBPTIn({
+    let concerns: ReturnType<typeof PoolTypeConcerns.from>;
+    let queries: Queries.ParamsBuilder;
+    let methods;
+    try {
+      concerns = PoolTypeConcerns.from(pool.poolType);
+      methods = {
+        buildJoin: (
+          joiner: string,
+          tokensIn: string[],
+          amountsIn: string[],
+          slippage: string
+        ): JoinPoolAttributes => {
+          return concerns.join.buildJoin({
+            joiner,
+            pool,
+            tokensIn,
+            amountsIn,
+            slippage,
+            wrappedNativeAsset,
+          });
+        },
+        calcPriceImpact: async (
+          amountsIn: string[],
+          minBPTOut: string,
+          isJoin: boolean
+        ) =>
+          concerns.priceImpactCalculator.calcPriceImpact(
+            pool,
+            amountsIn,
+            minBPTOut,
+            isJoin
+          ),
+        buildExitExactBPTIn: (
+          exiter: string,
+          bptIn: string,
+          slippage: string,
+          shouldUnwrapNativeAsset = false,
+          singleTokenMaxOut?: string
+        ) => {
+          if (concerns.exit.buildExitExactBPTIn) {
+            return concerns.exit.buildExitExactBPTIn({
+              exiter,
+              pool,
+              bptIn,
+              slippage,
+              shouldUnwrapNativeAsset,
+              wrappedNativeAsset,
+              singleTokenMaxOut,
+            });
+          } else {
+            throw 'ExitExactBPTIn not supported';
+          }
+        },
+        buildExitExactTokensOut: (
+          exiter: string,
+          tokensOut: string[],
+          amountsOut: string[],
+          slippage: string
+        ) =>
+          concerns.exit.buildExitExactTokensOut({
             exiter,
             pool,
-            bptIn,
+            tokensOut,
+            amountsOut,
             slippage,
-            shouldUnwrapNativeAsset,
             wrappedNativeAsset,
-            singleTokenMaxOut,
-          });
-        } else {
-          throw 'ExitExactBPTIn not supported';
-        }
-      },
-      buildExitExactTokensOut: (exiter, tokensOut, amountsOut, slippage) =>
-        methods.exit.buildExitExactTokensOut({
-          exiter,
-          pool,
-          tokensOut,
-          amountsOut,
-          slippage,
-          wrappedNativeAsset,
-        }),
-      // TODO: spotPrice fails, because it needs a subgraphType,
-      // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
-      // spotPrice: async (tokenIn: string, tokenOut: string) =>
-      //   methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, data),
-      calcSpotPrice: (tokenIn: string, tokenOut: string, isDefault?: boolean) =>
-        methods.spotPriceCalculator.calcPoolSpotPrice(
-          tokenIn,
-          tokenOut,
-          pool,
-          isDefault
+          }),
+        // TODO: spotPrice fails, because it needs a subgraphType,
+        // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
+        // spotPrice: async (tokenIn: string, tokenOut: string) =>
+        //   methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, data),
+        calcSpotPrice: (
+          tokenIn: string,
+          tokenOut: string,
+          isDefault?: boolean
+        ) =>
+          concerns.spotPriceCalculator.calcPoolSpotPrice(
+            tokenIn,
+            tokenOut,
+            pool,
+            isDefault
+          ),
+      };
+    } catch (error) {
+      if ((error as BalancerError).code != 'UNSUPPORTED_POOL_TYPE') {
+        console.error(error);
+      }
+
+      methods = {
+        buildJoin: notImplemented(pool.poolType, 'buildJoin'),
+        calcPriceImpact: notImplemented(pool.poolType, 'calcPriceImpact'),
+        buildExitExactBPTIn: notImplemented(
+          pool.poolType,
+          'buildExitExactBPTIn'
         ),
+        buildExitExactTokensOut: notImplemented(
+          pool.poolType,
+          'buildExitExactTokensOut'
+        ),
+        calcSpotPrice: notImplemented(pool.poolType, 'calcSpotPrice'),
+      };
+    }
+
+    try {
+      queries = new Queries.ParamsBuilder(pool);
+      methods = {
+        ...methods,
+        buildQueryJoinExactIn: queries.buildQueryJoinExactIn.bind(queries),
+        buildQueryJoinExactOut: queries.buildQueryJoinExactOut.bind(queries),
+        buildQueryExitExactOut: queries.buildQueryExitExactOut.bind(queries),
+        buildQueryExitToSingleToken:
+          queries.buildQueryExitToSingleToken.bind(queries),
+        buildQueryExitProportionally:
+          queries.buildQueryExitProportionally.bind(queries),
+      };
+    } catch (error) {
+      methods = {
+        ...methods,
+        buildQueryJoinExactIn: notImplemented(
+          pool.poolType,
+          'buildQueryJoinExactIn'
+        ),
+        buildQueryJoinExactOut: notImplemented(
+          pool.poolType,
+          'buildQueryJoinExactOut'
+        ),
+        buildQueryExitExactOut: notImplemented(
+          pool.poolType,
+          'buildQueryExitExactOut'
+        ),
+        buildQueryExitToSingleToken: notImplemented(
+          pool.poolType,
+          'buildQueryExitToSingleToken'
+        ),
+        buildQueryExitProportionally: notImplemented(
+          pool.poolType,
+          'buildQueryExitProportionally'
+        ),
+      };
+    }
+    const wrappedNativeAsset =
+      networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
+    return {
+      ...pool,
+      ...methods,
     };
   }
 
@@ -294,13 +373,19 @@ export class Pools implements Findable<PoolWithMethods> {
     const list = await this.dataSource().all();
     if (!list) return [];
 
-    return list.map((data: Pool) => Pools.wrap(data, this.networkConfig));
+    return list
+      .map((data: Pool) => Pools.wrap(data, this.networkConfig))
+      .filter((p) => p) as PoolWithMethods[];
   }
 
   async where(filter: (pool: Pool) => boolean): Promise<PoolWithMethods[]> {
     const list = await this.dataSource().where(filter);
     if (!list) return [];
 
-    return list.map((data: Pool) => Pools.wrap(data, this.networkConfig));
+    const wrapped = list.map((data: Pool) =>
+      Pools.wrap(data, this.networkConfig)
+    );
+
+    return wrapped.filter((p) => p) as PoolWithMethods[];
   }
 }

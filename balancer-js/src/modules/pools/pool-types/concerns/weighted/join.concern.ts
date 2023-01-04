@@ -23,7 +23,7 @@ export class WeightedPoolJoin implements JoinConcern {
    * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
    * @param {string[]}                        params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
    * @param {string}                          params.slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
-   * @param {string}                          wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for joining with ETH.
+   * @param {string}                          params.wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for joining with ETH.
    * @returns                                 transaction request ready to send with signer.sendTransaction
    */
   buildJoin = ({

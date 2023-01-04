@@ -33,7 +33,8 @@ async function getPriceImpact() {
 
   const priceImpactWBTCWETH = await pool.calcPriceImpact(
     ['100000000000000000000', '100000000'],
-    '99430576622436571714692'
+    '99430576622436571714692',
+    true
   );
   console.log(priceImpactWBTCWETH);
 
@@ -43,7 +44,8 @@ async function getPriceImpact() {
 
   const priceImpactStaBal3 = await pool2.calcPriceImpact(
     ['100000000000000000000', '100000000', '190000000'],
-    '376972471880969684010'
+    '376972471880969684010',
+    true
   );
   console.log(priceImpactStaBal3);
 }
