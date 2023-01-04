@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export { LiquidityGauge } from './liquidity-gauges/provider';
+export { RewardData } from './liquidity-gauges/multicall';
 export { PoolAttribute } from './pool/types';
 export { TokenAttribute } from './token/types';
 export { ProtocolFees } from './protocol-fees/provider';
