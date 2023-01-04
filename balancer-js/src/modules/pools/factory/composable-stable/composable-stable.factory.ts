@@ -3,8 +3,7 @@ import {
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
 } from '@/modules/pools/factory/types';
-import { AssetHelpers, scale } from '@/lib/utils';
-import BigNumber from 'bignumber.js';
+import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
 import { TransactionRequest } from '@ethersproject/providers';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import composableStableAbi from '../../../../lib/abi/ComposableStableFactory.json';
@@ -42,8 +41,10 @@ export class ComposableStableFactory implements PoolFactory {
     swapFee,
     owner,
   }: CreatePoolParameters): TransactionRequest {
-    const swapFeeScaled = scale(new BigNumber(swapFee), 18);
-
+    console.log(swapFee);
+    const swapFeeScaled = parseToBigInt18(`${swapFee}`);
+    console.log(swapFeeScaled);
+    console.log(swapFeeScaled.toString());
     const params = [
       name,
       symbol,

@@ -5,7 +5,7 @@ import {
   Log,
   TransactionReceipt,
 } from '@ethersproject/providers';
-import { BalancerSDK, Network, PoolType, scale } from '../../../src';
+import { BalancerSDK, Network, PoolType } from '../../../src';
 // @ts-ignore
 import composableStableFactoryAbi from '../../../src/lib/abi/ComposableStableFactory.json';
 // @ts-ignore
@@ -17,12 +17,12 @@ import { getNetworkConfig } from '@/modules/sdk.helpers';
 import { Contract } from '@ethersproject/contracts';
 import { networkAddresses } from '@/lib/constants/config';
 import { approveToken, getBalances, setTokenBalance } from '@/test/lib/utils';
-import BigNumber from 'bignumber.js';
 import { AddressZero, MaxUint256 } from '@ethersproject/constants';
 import { parseEther } from '@ethersproject/units';
 // @ts-ignore
 import { ADDRESSES } from '@/test/lib/constants';
 import { parseFixed } from '@ethersproject/bignumber';
+import { utils } from 'ethers';
 
 dotenv.config();
 
@@ -173,8 +173,8 @@ async function createComposableStablePool() {
     poolAddress,
     tokensIn: tokenAddresses,
     amountsIn: [
-      scale(new BigNumber('1'), 18).toString(),
-      scale(new BigNumber('1'), 18).toString(),
+      utils.parseEther('1.0').toString(),
+      utils.parseEther('1.0').toString(),
     ],
     wrappedNativeAsset,
   });

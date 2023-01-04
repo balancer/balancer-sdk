@@ -6,7 +6,6 @@ export * from './errors';
 export * from './permit';
 export * from './poolHelper';
 export * from './signatures';
-export * from './scale';
 export * from './tokens';
 export * from './debouncer';
 export * from './math';
