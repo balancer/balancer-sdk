@@ -41,10 +41,7 @@ export class ComposableStableFactory implements PoolFactory {
     swapFee,
     owner,
   }: CreatePoolParameters): TransactionRequest {
-    console.log(swapFee);
     const swapFeeScaled = parseToBigInt18(`${swapFee}`);
-    console.log(swapFeeScaled);
-    console.log(swapFeeScaled.toString());
     const params = [
       name,
       symbol,
