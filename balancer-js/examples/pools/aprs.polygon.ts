@@ -1,5 +1,5 @@
 /**
- * Display APRs for pool ids hardcoded under `const ids`
+ * Display APRs
  * Run command: yarn examples:run ./examples/pools/aprs.polygon.ts
  */
 import dotenv from 'dotenv';
@@ -19,7 +19,7 @@ const { pools } = sdk;
 
 const main = async () => {
   const pool = await pools.find(
-    '0x8159462d255c1d24915cb51ec361f700174cd99400000000000000000000075d'
+    '0x726e324c29a1e49309672b244bdc4ff62a270407000200000000000000000702'
   );
 
   if (pool) {

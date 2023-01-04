@@ -289,6 +289,57 @@ async getSpotPrice(
 
 [Example](./examples/spotPrice.ts)
 
+## Simulating pool joins and exists
+
+The Balancer Vault provides a [method to simulate join or exit calls to a pool](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/standalone-utils/contracts/BalancerQueries.sol#L91).
+These function allows you to perform a dry run before sending an actual transaction, without checking the sender / recipient or token balances / approvals. Note that this function is not 'view' (due to implementation details): the client code must explicitly execute `eth_call` instead of `eth_sendTransaction`.
+
+### Simulating joins
+
+There are two ways to join a pool:
+
+1. `joinExactIn`: Joining the pool with known token amounts. This is the most commonly used method.
+2. `joinExactOut`: Asking the pool for the expected liquidity when we know how much BPT we want back.
+
+In this documentation, we will focus on the first method (`joinExactIn`) for joining a pool with known token amounts.
+
+```js
+const pool = await sdk.pools.find(poolId)
+const maxAmountsIn = pool.tokenList.map((t) => forEachTokenSpecifyAmountYouWantToJoinWith)
+const queryParams = pool.buildQueryJoinExactIn({ maxAmountsIn })
+const response = await balancerContracts.balancerHelpers.queryJoin(...queryParams)
+const { bptOut, amountsIn } = response
+```
+
+`response` will return:
+
+* `bptOut`: The expected pool token amount returned by the pool.
+* `amountsIn`: The same as maxAmountsIn
+
+### Simulating exits
+
+There are three ways to join a pool:
+
+1. `exitToSingleToken`: Exiting liquidity to a single underlying token is the simplest method. However, if the amount of liquidity being exited is a significant portion of the pool's total liquidity, it may result in price slippage.
+2. `exitProportionally`: Exiting liquidity proportionally to all pool tokens. This is the most commonly used method. However `ComposableStable` pool type doesn't support it.
+3. `exitExactOut`: Asking the pool for the expected pool token amount when we know how much token amounts we want back.
+
+In this example, we will focus on the first method (`exitProportionally`).
+
+```js
+const pool = await sdk.pools.find(poolId)
+const queryParams = pool.buildQueryJoinExactIn({ bptIn })
+const response = await balancerContracts.balancerHelpers.queryJoin(...queryParams)
+const { bptIn, amountsOut } = response
+```
+
+`response` will return:
+
+* `amountsOut`: Token amounts returned by the pool.
+* `bptIn`: The same as intput bptIn
+
+More examples: https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/pools/queries.ts
+
 ## Joining Pools
 
 ### Joining with pool tokens
