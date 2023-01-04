@@ -20,7 +20,6 @@ import { PoolFees } from './fees/fees';
 import { PoolFactory__factory } from './pool-factory__factory';
 import * as Queries from './queries';
 import { BalancerError } from '@/balancerErrors';
-import { PoolFactory__factory } from './pool-factory__factory';
 
 const notImplemented = (poolType: string, name: string) => () => {
   throw `${name} for poolType ${poolType} not implemented`;
