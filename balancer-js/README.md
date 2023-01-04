@@ -357,17 +357,14 @@ const { to, functionName, attributes, data } = pool.buildJoin(params);
 Builds a join transaction.
 
 ```js
-  /***
- * @param params
- *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
- *  * @param joiner - The address of the joiner of the pool
- *  * @param poolId - The id of the pool
- *  * @param poolAddress - The address of the pool
- *  * @param tokensIn - array with the address of the tokens
- *  * @param amountsIn - array with the amount of each token
- *  * @param wrappedNativeAsset
- *  * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
+/**
+ * @param { string }   joiner - Address used to exit pool.
+ * @param { string[] } tokensIn - Token addresses provided for joining pool (same length and order as amountsIn).
+ * @param { string[] } amountsIn - Token amounts provided for joining pool in EVM amounts.
+ * @param { string }   slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+ * @returns { Promise<JoinPoolAttributes> } Returns join transaction ready to send with signer.sendTransaction.
  */
+
 buildJoin: (
   joiner: string,
   tokensIn: string[],
@@ -377,6 +374,8 @@ buildJoin: (
 ```
 [Example](./examples/join.ts)
 ### #buildInitJoin
+Builds a Init Join Transaction.
+
 ```js
   /***
  * @param params
