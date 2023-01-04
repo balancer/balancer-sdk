@@ -1,7 +1,6 @@
 /* eslint @typescript-eslint/no-explicit-any: ["error", { "ignoreRestArgs": true }] */
 import { ExitPoolRequest, JoinPoolRequest, Pool } from '@/types';
 import { BigNumber } from '@ethersproject/bignumber';
-import { TransactionResponse, JsonRpcSigner } from '@ethersproject/providers';
 
 export interface LiquidityConcern {
   calcTotal: (...args: any[]) => string;

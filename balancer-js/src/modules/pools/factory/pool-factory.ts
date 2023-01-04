@@ -1,4 +1,4 @@
-import { InitJoinPoolAttributes, InitJoinPoolParameters } from '@/modules/pools/pool-types/concerns/types';
+import { InitJoinPoolAttributes, InitJoinPoolParameters } from './types';
 import { TransactionRequest } from '@ethersproject/providers';
 import { CreatePoolParameters } from '@/modules/pools/factory/types';
 

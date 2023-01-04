@@ -8,9 +8,6 @@ import { Pool } from '@/types';
 const dai_usdc_usdt_pool_id =
   '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063'; // Balancer USD Stable Pool - staBAL3
 
-const dai_usdc_usdt_init_join_pool_id =
-  '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000065';
-
 const DAI_address = '0x6b175474e89094c44da98b954eedeac495271d0f'; // 18
 const USDC_address = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'; // 6
 const USDT_address = '0xdac17f958d2ee523a2206206994597c13d831ec7'; // 6
