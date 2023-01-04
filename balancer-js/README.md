@@ -544,16 +544,17 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
 
 Exposes create functionality allowing user to create pools.
 ### #createComposableStablePool
+Builds a transaction to create a composable stable pool.
 ```js
-   /***
- * @param
+  /***
+ * @param params
  *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
- *  * @param contractAddress - The address of the factory for weighted pool (contract address)
+ *  * @param contractAddress - The address of the factory for composable stable pool (contract address)
  *  * @param name - The name of the pool
  *  * @param symbol - The symbol of the pool
  *  * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
- *  * @param tokenAddresses - The tokens of the pool (each token must be an object that contains "tokenAddress" and "weight" params)
- *  * @param rateProviders The addresses of the rate providers for each token
+ *  * @param tokenAddresses - The token's addresses
+ *  * @param rateProviders The addresses of the rate providers for each token, ordered
  *  * @param tokenRateCacheDurations the Token Rate Cache Duration of each token
  *  * @param owner - The address of the owner of the pool
  *  * @param amplificationParameter The amplification parameter(must be greater than 1)
