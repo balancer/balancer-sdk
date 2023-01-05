@@ -24,7 +24,7 @@ import {
 } from '@/types';
 import { Network } from '@/lib/constants/network';
 import { PoolsQueryVariables } from '../../subgraph/subgraph';
-import { getOnChainBalances } from './onChainData';
+import { getOnChainBalances } from '../../../modules/sor/pool-data/onChainData';
 import { SubgraphSubPoolMeta, SubgraphSubPoolToken } from './subgraph';
 
 interface PoolsSubgraphOnChainRepositoryOptions {
