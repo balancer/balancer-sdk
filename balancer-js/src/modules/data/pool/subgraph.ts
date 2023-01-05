@@ -33,11 +33,11 @@ interface PoolsSubgraphRepositoryOptions {
   query?: GraphQLQuery;
 }
 
-export interface SubgraphSubPoolToken extends SubgraphSubPoolTokenFragment {
+interface SubgraphSubPoolToken extends SubgraphSubPoolTokenFragment {
   token?: SubgraphSubPoolMeta | null;
 }
 
-export interface SubgraphSubPoolMeta {
+interface SubgraphSubPoolMeta {
   latestUSDPrice?: string | null;
   pool?: SubgraphSubPool | null;
 }
