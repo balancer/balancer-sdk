@@ -503,9 +503,10 @@
     "@babel/helper-validator-identifier" "^7.19.1"
     to-fast-properties "^2.0.0"
 
-"@balancer-labs/sor@/Users/jg/Documents/balancer-sor/balancer-labs-sor-v4.0.1-beta.16010.tgz":
-  version "4.0.1-beta.16010"
-  resolved "/Users/jg/Documents/balancer-sor/balancer-labs-sor-v4.0.1-beta.16010.tgz#bbcef0e873f7662f76e9e0aaf3d17ef1202c4795"
+"@balancer-labs/sor@^4.0.1-beta.17":
+  version "4.0.1-beta.17"
+  resolved "https://registry.yarnpkg.com/@balancer-labs/sor/-/sor-4.0.1-beta.17.tgz#b78d67ba4107d4ec366015532d34b5c7af3b0169"
+  integrity sha512-KSkPs8Rxn/MPLNeO51uQWffvCJCjLjZCSFpBrWrSpC0lY536sfmmtmt89GF2Ocin8cnZg01UEg/0JYGOnMj1Og==
   dependencies:
     isomorphic-fetch "^2.2.1"
 
