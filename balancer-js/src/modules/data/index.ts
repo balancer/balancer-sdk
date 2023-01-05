@@ -116,6 +116,7 @@ export class Data implements BalancerDataRepositories {
     );
 
     const subgraphPriceRepository = new SubgraphPriceRepository(
+      networkConfig.urls.subgraph,
       networkConfig.chainId
     );
 
