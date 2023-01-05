@@ -60,7 +60,6 @@ export class PoolsSubgraphOnChainRepository
     console.time('fetching pools SG');
     const pools = await this.poolsSubgraph.fetch();
     console.timeEnd('fetching pools SG');
-    console.log(pools.length, 'Example filter should limit the pools length');
     console.time('fetching pools onchain');
     const onchainPools = await getOnChainBalances(
       pools,

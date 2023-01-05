@@ -121,8 +121,6 @@ export class Join {
       true
     ).toString();
 
-    console.log(totalAmountOut, `totalAmountOut`);
-    console.log(totalBptZeroPi.toString(), `totalBptZeroPi`);
     // Create calls with minAmountsOut
     const { callData, deltas } = await this.createCalls(
       joinPaths,
