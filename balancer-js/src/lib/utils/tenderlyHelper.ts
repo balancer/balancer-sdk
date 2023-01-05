@@ -27,11 +27,11 @@ export default class TenderlyHelper {
   ) {
     const { contracts } = networkAddresses(this.chainId);
     this.vaultAddress = contracts.vault as string;
-    // if (tenderlyConfig?.user && tenderlyConfig?.project) {
-    //   this.tenderlyUrl = `https://api.tenderly.co/api/v1/account/${tenderlyConfig.user}/project/${tenderlyConfig.project}/`;
-    // } else {
-    // }
-    this.tenderlyUrl = 'https://api.balancer.fi/tenderly/';
+    if (tenderlyConfig?.user && tenderlyConfig?.project) {
+      this.tenderlyUrl = `https://api.tenderly.co/api/v1/account/${tenderlyConfig.user}/project/${tenderlyConfig.project}/`;
+    } else {
+      this.tenderlyUrl = 'https://api.balancer.fi/tenderly/';
+    }
     if (tenderlyConfig?.accessKey) {
       this.tenderlyRpcUrl = `https://goerli.gateway.tenderly.co/${tenderlyConfig.accessKey}`;
       this.opts = {
