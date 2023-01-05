@@ -118,45 +118,52 @@ export default class TenderlyHelper {
     userAddress: Address,
     encodedStateOverrides: StateOverrides
   ): Promise<string> => {
-    const transactionParams: TenderlyRpcTransactionParameters = {
-      to,
-      data,
-      from: userAddress,
-    };
-    const simulationBlockNumber: TenderlyRpcSimulationBlockNumber = `0x${this.blockNumber?.toString(
-      16
-    )}`;
+    try {
+      const transactionParams: TenderlyRpcTransactionParameters = {
+        to,
+        data,
+        from: userAddress,
+      };
+      const simulationBlockNumber: TenderlyRpcSimulationBlockNumber = `0x${this.blockNumber?.toString(
+        16
+      )}`;
 
-    const overrides: TenderlyRpcStateOverridesParameters = Object.fromEntries(
-      Object.keys(encodedStateOverrides).map((address) => {
-        // Object.fromEntries require format [key, value] instead of {key: value}
-        return [address, { stateDiff: encodedStateOverrides[address].value }];
-      })
-    );
-    const tenderlyParams = [
-      transactionParams,
-      simulationBlockNumber,
-      overrides,
-    ];
-    const response = await axios.post(
-      this.tenderlyRpcUrl,
-      {
-        id: 0,
-        jsonrpc: '2.0',
-        method: 'tenderly_simulateTransaction',
-        params: tenderlyParams,
-      },
-      this.opts
-    );
-    const responseBody: TenderlyRpcResponse = response.data;
-    const callTraces = responseBody.result.trace.filter(
-      ({ type, method }) => type === 'CALL' && method === 'multicall'
-    );
-    const lastCallTrace =
-      callTraces.length > 0
-        ? callTraces[callTraces.length - 1]
-        : { output: '0x' };
-    return lastCallTrace.output;
+      const overrides: TenderlyRpcStateOverridesParameters = Object.fromEntries(
+        Object.keys(encodedStateOverrides).map((address) => {
+          // Object.fromEntries require format [key, value] instead of {key: value}
+          return [address, { stateDiff: encodedStateOverrides[address].value }];
+        })
+      );
+      const tenderlyParams = [
+        transactionParams,
+        simulationBlockNumber,
+        overrides,
+      ];
+
+      const response = await axios.post(
+        this.tenderlyRpcUrl,
+        {
+          id: 0,
+          jsonrpc: '2.0',
+          method: 'tenderly_simulateTransaction',
+          params: tenderlyParams,
+        },
+        this.opts
+      );
+      const responseBody: TenderlyRpcResponse = response.data;
+      const callTraces = responseBody.result.trace.filter(
+        ({ type, method }) => type === 'CALL' && method === 'multicall'
+      );
+      const lastCallTrace =
+        callTraces.length > 0
+          ? callTraces[callTraces.length - 1]
+          : { output: '0x' };
+      return lastCallTrace.output;
+    } catch (error) {
+      console.log('simulate transaction rpc');
+      console.error(error);
+      throw error;
+    }
   };
 
   // Encode relayer approval state override
@@ -173,11 +180,7 @@ export default class TenderlyHelper {
       },
     };
 
-    const encodedStateOverrides = await this.requestStateOverrides(
-      stateOverrides
-    );
-
-    return encodedStateOverrides;
+    return await this.requestStateOverrides(stateOverrides);
   };
 
   // Encode token balances and allowances overrides to max value
@@ -228,29 +231,35 @@ export default class TenderlyHelper {
   private requestStateOverrides = async (
     stateOverrides: StateOverrides
   ): Promise<StateOverrides> => {
-    const ENCODE_STATES_URL = this.tenderlyUrl + 'contracts/encode-states';
-    const body = {
-      networkID: this.chainId.toString(),
-      stateOverrides,
-    };
+    try {
+      const ENCODE_STATES_URL = this.tenderlyUrl + 'contracts/encode-states';
+      const body = {
+        networkID: this.chainId.toString(),
+        stateOverrides,
+      };
 
-    const encodedStatesResponse = await axios.post(
-      ENCODE_STATES_URL,
-      body,
-      this.opts
-    );
-    const encodedStateOverrides = encodedStatesResponse.data
-      .stateOverrides as StateOverrides;
-
-    if (
-      !encodedStateOverrides ||
-      Object.keys(encodedStateOverrides).length !==
-        Object.keys(stateOverrides).length
-    )
-      throw new Error(
-        "Couldn't encode state overrides - contracts should be verified and whitelisted on Tenderly"
+      const encodedStatesResponse = await axios.post(
+        ENCODE_STATES_URL,
+        body,
+        this.opts
       );
+      const encodedStateOverrides = encodedStatesResponse.data
+        .stateOverrides as StateOverrides;
 
-    return encodedStateOverrides;
+      if (
+        !encodedStateOverrides ||
+        Object.keys(encodedStateOverrides).length !==
+          Object.keys(stateOverrides).length
+      )
+        throw new Error(
+          "Couldn't encode state overrides - contracts should be verified and whitelisted on Tenderly"
+        );
+
+      return encodedStateOverrides;
+    } catch (error) {
+      console.log('request state overdrives');
+      console.error(error);
+      throw error;
+    }
   };
 }
