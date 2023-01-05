@@ -143,7 +143,6 @@ export default class TenderlyHelper {
       const response = await axios.post(
         this.tenderlyRpcUrl,
         {
-          id: 0,
           jsonrpc: '2.0',
           method: 'tenderly_simulateTransaction',
           params: tenderlyParams,
@@ -161,7 +160,9 @@ export default class TenderlyHelper {
       return lastCallTrace.output;
     } catch (error) {
       console.log('simulate transaction rpc');
-      console.error(error);
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      console.error(error.response.data.error);
       throw error;
     }
   };
@@ -231,35 +232,29 @@ export default class TenderlyHelper {
   private requestStateOverrides = async (
     stateOverrides: StateOverrides
   ): Promise<StateOverrides> => {
-    try {
-      const ENCODE_STATES_URL = this.tenderlyUrl + 'contracts/encode-states';
-      const body = {
-        networkID: this.chainId.toString(),
-        stateOverrides,
-      };
+    const ENCODE_STATES_URL = this.tenderlyUrl + 'contracts/encode-states';
+    const body = {
+      networkID: this.chainId.toString(),
+      stateOverrides,
+    };
 
-      const encodedStatesResponse = await axios.post(
-        ENCODE_STATES_URL,
-        body,
-        this.opts
+    const encodedStatesResponse = await axios.post(
+      ENCODE_STATES_URL,
+      body,
+      this.opts
+    );
+    const encodedStateOverrides = encodedStatesResponse.data
+      .stateOverrides as StateOverrides;
+
+    if (
+      !encodedStateOverrides ||
+      Object.keys(encodedStateOverrides).length !==
+        Object.keys(stateOverrides).length
+    )
+      throw new Error(
+        "Couldn't encode state overrides - contracts should be verified and whitelisted on Tenderly"
       );
-      const encodedStateOverrides = encodedStatesResponse.data
-        .stateOverrides as StateOverrides;
 
-      if (
-        !encodedStateOverrides ||
-        Object.keys(encodedStateOverrides).length !==
-          Object.keys(stateOverrides).length
-      )
-        throw new Error(
-          "Couldn't encode state overrides - contracts should be verified and whitelisted on Tenderly"
-        );
-
-      return encodedStateOverrides;
-    } catch (error) {
-      console.log('request state overdrives');
-      console.error(error);
-      throw error;
-    }
+    return encodedStateOverrides;
   };
 }
