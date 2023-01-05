@@ -409,10 +409,6 @@ export class Join {
         parentNode.joinAction === 'joinPool'
       ) {
         const sp = parentNode.spotPrices[childAddress.toLowerCase()];
-        console.log(
-          `Spot price ${childAddress.toLowerCase()}: `,
-          sp.toString()
-        );
         spProduct = spProduct * parseFloat(sp);
         childAddress = parentNode.address;
       }
@@ -425,8 +421,6 @@ export class Join {
       inputAmountScaled,
       spPriceScaled.toBigInt()
     );
-    console.log('sp product: ', spProduct.toString());
-    console.log('zeroPriceImpact amount for path: ', bptOut.toString(), '\n');
     return bptOut;
   };
 

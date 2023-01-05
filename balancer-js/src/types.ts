@@ -337,11 +337,7 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     amountsOut: string[],
     slippage: string
   ) => ExitPoolAttributes;
-  calcSpotPrice: (
-    tokenIn: string,
-    tokenOut: string,
-    isDefault?: boolean
-  ) => string;
+  calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
 }
 
 export interface GraphQLQuery {

@@ -7,12 +7,7 @@ export interface LiquidityConcern {
 }
 
 export interface SpotPriceConcern {
-  calcPoolSpotPrice: (
-    tokenIn: string,
-    tokenOut: string,
-    pool: Pool,
-    isDefault?: boolean
-  ) => string;
+  calcPoolSpotPrice: (tokenIn: string, tokenOut: string, pool: Pool) => string;
 }
 
 export interface PriceImpactConcern {

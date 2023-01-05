@@ -57,17 +57,18 @@ export class PoolsSubgraphOnChainRepository
    * @returns Promise resolving to pools list
    */
   private async fetchDefault(): Promise<Pool[]> {
-    console.time('fetching pools');
+    console.time('fetching pools SG');
     const pools = await this.poolsSubgraph.fetch();
-    console.timeEnd('fetching pools');
+    console.timeEnd('fetching pools SG');
     console.log(pools.length, 'Example filter should limit the pools length');
-    console.log('Fetching onchain!');
+    console.time('fetching pools onchain');
     const onchainPools = await getOnChainBalances(
       pools,
       this.multicall,
       this.vault,
       this.provider
     );
+    console.timeEnd('fetching pools onchain');
 
     return onchainPools;
   }

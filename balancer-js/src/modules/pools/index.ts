@@ -266,16 +266,11 @@ export class Pools implements Findable<PoolWithMethods> {
         // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
         // spotPrice: async (tokenIn: string, tokenOut: string) =>
         //   methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, data),
-        calcSpotPrice: (
-          tokenIn: string,
-          tokenOut: string,
-          isDefault?: boolean
-        ) =>
+        calcSpotPrice: (tokenIn: string, tokenOut: string) =>
           concerns.spotPriceCalculator.calcPoolSpotPrice(
             tokenIn,
             tokenOut,
-            pool,
-            isDefault
+            pool
           ),
       };
     } catch (error) {
