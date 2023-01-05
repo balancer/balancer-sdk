@@ -19,6 +19,7 @@ import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
 import * as Queries from './queries';
 import { BalancerError } from '@/balancerErrors';
+import { EmissionsService } from './emissions';
 
 const notImplemented = (poolType: string, name: string) => () => {
   throw `${name} for poolType ${poolType} not implemented`;
@@ -35,6 +36,7 @@ export class Pools implements Findable<PoolWithMethods> {
   feesService;
   volumeService;
   impermanentLossService;
+  emissionsService;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -62,6 +64,11 @@ export class Pools implements Findable<PoolWithMethods> {
       repositories.tokenPrices,
       repositories.tokenHistoricalPrices
     );
+    if (repositories.liquidityGauges) {
+      this.emissionsService = new EmissionsService(
+        repositories.liquidityGauges
+      );
+    }
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
