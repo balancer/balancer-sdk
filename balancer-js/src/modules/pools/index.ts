@@ -22,6 +22,7 @@ import { PoolGraph } from '../graph/graph';
 import * as Queries from './queries';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { BalancerError } from '@/balancerErrors';
+import { EmissionsService } from './emissions';
 
 const notImplemented = (poolType: string, name: string) => () => {
   throw `${name} for poolType ${poolType} not implemented`;
@@ -40,6 +41,7 @@ export class Pools implements Findable<PoolWithMethods> {
   simulationService;
   impermanentLossService;
   graphService;
+  emissionsService;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -76,6 +78,11 @@ export class Pools implements Findable<PoolWithMethods> {
       repositories.tokenPrices,
       repositories.tokenHistoricalPrices
     );
+    if (repositories.liquidityGauges) {
+      this.emissionsService = new EmissionsService(
+        repositories.liquidityGauges
+      );
+    }
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
