@@ -138,52 +138,6 @@
         "upperTarget": null
     },
     {
-        "id": "0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000065",
-        "newPool": true,
-        "address": "0x06df3b2bbb68adc8b0e302443692037ed9f91b42",
-        "poolType": "ComposableStable",
-        "swapFee": "0.00005",
-        "tokens": [
-            {
-                "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-                "balance": "0",
-                "decimals": 18,
-                "weight": null,
-                "priceRate": "1"
-            },
-            {
-                "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-                "balance": "0",
-                "decimals": 6,
-                "weight": null,
-                "priceRate": "1"
-            },
-            {
-                "address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
-                "balance": "0",
-                "decimals": 6,
-                "weight": null,
-                "priceRate": "1"
-            }
-        ],
-        "tokensList": [
-            "0x6b175474e89094c44da98b954eedeac495271d0f",
-            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-            "0xdac17f958d2ee523a2206206994597c13d831ec7"
-        ],
-        "totalWeight": "0",
-        "amp": "1390.0",
-        "expiryTime": null,
-        "unitSeconds": null,
-        "principalToken": null,
-        "baseToken": null,
-        "swapEnabled": true,
-        "wrappedIndex": 0,
-        "mainIndex": 0,
-        "lowerTarget": null,
-        "upperTarget": null
-    },
-    {
         "id": "0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e",
         "address": "0xa6f548df93de924d73be7d25dc02554c6bd66db5",
         "poolType": "Weighted",
