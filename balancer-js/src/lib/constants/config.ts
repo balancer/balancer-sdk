@@ -209,6 +209,26 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     pools: {},
   },
+  [Network.GNOSIS]: {
+    chainId: Network.GNOSIS, //100
+    addresses: {
+      contracts: {
+        vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+        multicall: '0xb5b692a88bdfc81ca69dcb1d924f59f0413a602a',
+        relayerV4: '0xeF606F58A4FD0fCcb066c6203d0994694d3eB2D3',
+        balancerHelpers: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+      },
+      tokens: {
+        wrappedNativeAsset: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
+      gaugesSubgraph: '',
+    },
+    pools: {},
+  },
 };
 
 export const networkAddresses = (
