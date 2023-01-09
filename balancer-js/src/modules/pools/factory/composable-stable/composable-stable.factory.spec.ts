@@ -1,45 +1,104 @@
+// yarn test:only ./src/modules/pools/factory/composable-stable/composable-stable.factory.spec.ts
 import { expect } from 'chai';
-import { ComposableStableFactory } from './composable-stable.factory';
+import {
+  JsonRpcProvider,
+  Log,
+  TransactionReceipt,
+} from '@ethersproject/providers';
+import { ethers } from 'hardhat';
+import { Network, PoolType } from '@/types';
+import { ADDRESSES } from '@/test/lib/constants';
+import { AddressZero } from '@ethersproject/constants';
+import { BalancerSDK } from '@/modules/sdk.module';
+import { Interface, LogDescription } from '@ethersproject/abi';
+import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
 
-const name = '50DAI_25USDC_25USDT';
-const DAI_address = '0x6b175474e89094c44da98b954eedeac495271d0f'; // 18
-const USDC_address = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'; // 6
-const USDT_address = '0xdac17f958d2ee523a2206206994597c13d831ec7'; // 6
+// const network = Network.GOERLI;
+// const rpcUrl = 'http://localhost:8000';
 
-const rateProviders = [
-  '0x70997970C51812dc3A010C7d01b50e0d17dc79C8',
-  '0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec',
-];
+const network = Network.MAINNET;
+const rpcUrl = 'http://localhost:8545/';
 
-const exemptFromYieldProtocolFeeFlags = [true, true];
-const tokenRateCacheDurations = ['3600', '3600'];
-const COMPOSABLE_STABLE_POOL_FACTORY_address =
-  '0xB848f50141F3D4255b37aC288C25C109104F2158';
-const contractAddress = COMPOSABLE_STABLE_POOL_FACTORY_address;
-const owner = '0x35f5a330fd2f8e521ebd259fa272ba8069590741';
-const tokenAddresses = [DAI_address, USDC_address, USDT_address];
+const name = 'My-Test-Pool-Name';
+const symbol = 'My-Test-Pool-Symbol';
+
+const addresses = ADDRESSES[network];
+
+const USDC_address = addresses.USDC.address;
+const USDT_address = addresses.USDT.address;
+
+const rateProviders = [AddressZero, AddressZero];
+
+const exemptFromYieldProtocolFeeFlags = [false, false];
+const tokenRateCacheDurations = ['0', '0'];
+const contractAddress = '0x85a80afee867aDf27B50BdB7b76DA70f1E853062';
+const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+const tokenAddresses = [USDC_address, USDT_address];
 const amplificationParameter = '2';
-const swapFee = '0.03';
+const swapFee = '0.01';
 
-const factory = new ComposableStableFactory();
-describe('creating composable stable pool', () => {
-  describe('.create', async () => {
-    it('should return encoded params', async () => {
-      const { data } = factory.create({
-        contractAddress,
-        name,
-        symbol: name,
-        tokenAddresses,
-        amplificationParameter,
-        rateProviders,
-        tokenRateCacheDurations,
-        owner,
-        exemptFromYieldProtocolFeeFlags,
-        swapFee,
-      });
-      expect(data).to.equal(
-        '0x66b59f6c0000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000028000000000000000000000000000000000000000000000000000000000000002e0000000000000000000000000000000000000000000000000006a94d74f43000000000000000000000000000035f5a330fd2f8e521ebd259fa272ba8069590741000000000000000000000000000000000000000000000000000000000000001335304441495f3235555344435f32355553445400000000000000000000000000000000000000000000000000000000000000000000000000000000000000001335304441495f3235555344435f3235555344540000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000000000000000000000006b175474e89094c44da98b954eedeac495271d0f000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48000000000000000000000000dac17f958d2ee523a2206206994597c13d831ec7000000000000000000000000000000000000000000000000000000000000000200000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c80000000000000000000000001cbd3b2770909d4e10f157cabc84c7264073c9ec00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000e100000000000000000000000000000000000000000000000000000000000000e10000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001'
-      );
+describe('creating composable stable pool', async () => {
+  context('create', async () => {
+    it('should create a pool', async () => {
+      try {
+        const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
+        const signer = provider.getSigner();
+        const sdkConfig = {
+          network,
+          rpcUrl,
+        };
+        const balancer = new BalancerSDK(sdkConfig);
+        const composableStablePoolFactory = balancer.pools.poolFactory.of(
+          PoolType.ComposableStable
+        );
+        const { to, data } = composableStablePoolFactory.create({
+          contractAddress,
+          name,
+          symbol,
+          tokenAddresses,
+          amplificationParameter,
+          rateProviders,
+          tokenRateCacheDurations,
+          exemptFromYieldProtocolFeeFlags,
+          swapFee,
+          owner,
+        });
+        const signerAddress = await signer.getAddress();
+        const tx = await signer.sendTransaction({
+          from: signerAddress,
+          to,
+          data,
+          gasLimit: 6721975,
+        });
+        const receipt: TransactionReceipt =
+          await provider.getTransactionReceipt(tx.hash);
+
+        const composableStableFactoryInterface = new Interface(
+          composableStableFactoryAbi
+        );
+
+        const poolCreationEvent: LogDescription | null | undefined =
+          receipt.logs
+            .filter((log: Log) => {
+              return (
+                log.address.toUpperCase() === contractAddress.toUpperCase()
+              );
+            })
+            .map((log) => {
+              try {
+                return composableStableFactoryInterface.parseLog(log);
+              } catch (error) {
+                console.error(error);
+                return null;
+              }
+            })
+            .find((parsedLog) => parsedLog?.name === 'PoolCreated');
+        console.log(!!poolCreationEvent);
+        expect(!!poolCreationEvent).to.be.true;
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
     });
   });
 });

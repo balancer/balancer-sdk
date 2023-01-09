@@ -11,9 +11,17 @@ import { FunctionFragment, Interface } from '@ethersproject/abi';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { Vault__factory } from '@balancer-labs/typechain';
-import { balancerVault } from '@/lib/constants/config';
+import { balancerVault, networkAddresses } from '@/lib/constants/config';
+import { BalancerNetworkConfig } from '@/types';
 
 export class ComposableStableFactory implements PoolFactory {
+  private wrappedNativeAsset: string;
+
+  constructor(networkConfig: BalancerNetworkConfig) {
+    const { tokens } = networkAddresses(networkConfig.chainId);
+    this.wrappedNativeAsset = tokens.wrappedNativeAsset;
+  }
+
   /***
    * @param params
    *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
@@ -42,14 +50,26 @@ export class ComposableStableFactory implements PoolFactory {
     owner,
   }: CreatePoolParameters): TransactionRequest {
     const swapFeeScaled = parseToBigInt18(`${swapFee}`);
+    const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
+    const [
+      sortedTokens,
+      sortedRateProviders,
+      sortedTokenRateCacheDurations,
+      sortedExemptFromYieldProtocols,
+    ] = assetHelpers.sortTokens(
+      tokenAddresses,
+      rateProviders,
+      tokenRateCacheDurations,
+      exemptFromYieldProtocolFeeFlags
+    ) as [string[], string[], string[], boolean[]];
     const params = [
       name,
       symbol,
-      tokenAddresses,
+      sortedTokens,
       amplificationParameter,
-      rateProviders,
-      tokenRateCacheDurations,
-      exemptFromYieldProtocolFeeFlags,
+      sortedRateProviders,
+      sortedTokenRateCacheDurations,
+      sortedExemptFromYieldProtocols,
       swapFeeScaled.toString(),
       owner,
     ];
@@ -70,76 +90,77 @@ export class ComposableStableFactory implements PoolFactory {
     };
   }
 
-  /***
-   * @param params
-   *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
-   *  * @param joiner - The address of the joiner of the pool
-   *  * @param poolId - The id of the pool
-   *  * @param poolAddress - The address of the pool
-   *  * @param tokensIn - array with the address of the tokens
-   *  * @param amountsIn - array with the amount of each token
-   *  * @param wrappedNativeAsset
-   *  * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
-   */
-  buildInitJoin({
-    joiner,
-    poolId,
-    poolAddress,
-    tokensIn,
-    amountsIn,
-    wrappedNativeAsset,
-  }: InitJoinPoolParameters): InitJoinPoolAttributes {
-    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    // sort inputs
-    tokensIn.push(poolAddress);
-    amountsIn.push('0');
-
-    const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
-      tokensIn,
-      amountsIn
-    ) as [string[], string[]];
-
-    let userDataAmounts;
-    const bptIndex = sortedTokens
-      .map((t) => t.toLowerCase())
-      .indexOf(poolAddress.toLowerCase());
-    if (bptIndex === -1) {
-      userDataAmounts = sortedAmounts;
-    } else {
-      userDataAmounts = [
-        ...sortedAmounts.slice(0, bptIndex),
-        ...sortedAmounts.slice(bptIndex + 1),
-      ];
-    }
-
-    const userData = ComposableStablePoolEncoder.joinInit(userDataAmounts);
-    const functionName = 'joinPool';
-
-    const attributes = {
-      poolId: poolId,
-      sender: joiner,
-      recipient: joiner,
-      joinPoolRequest: {
-        assets: sortedTokens,
-        maxAmountsIn: sortedAmounts,
-        userData,
-        fromInternalBalance: false,
-      },
-    };
-
-    const vaultInterface = Vault__factory.createInterface();
-    const data = vaultInterface.encodeFunctionData(functionName, [
-      attributes.poolId,
-      attributes.sender,
-      attributes.recipient,
-      attributes.joinPoolRequest,
-    ]);
-
-    return {
-      to: balancerVault,
-      functionName,
-      attributes,
-      data,
-    };
-  }
+  //
+  // /***
+  //  * @param params
+  //  *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
+  //  *  * @param joiner - The address of the joiner of the pool
+  //  *  * @param poolId - The id of the pool
+  //  *  * @param poolAddress - The address of the pool
+  //  *  * @param tokensIn - array with the address of the tokens
+  //  *  * @param amountsIn - array with the amount of each token
+  //  *  * @param wrappedNativeAsset
+  //  *  * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
+  //  */
+  // buildInitJoin({
+  //   joiner,
+  //   poolId,
+  //   poolAddress,
+  //   tokensIn,
+  //   amountsIn,
+  //   wrappedNativeAsset,
+  // }: InitJoinPoolParameters): InitJoinPoolAttributes {
+  //   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+  //   // sort inputs
+  //   tokensIn.push(poolAddress);
+  //   amountsIn.push('0');
+  //
+  //   const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
+  //     tokensIn,
+  //     amountsIn
+  //   ) as [string[], string[]];
+  //
+  //   let userDataAmounts;
+  //   const bptIndex = sortedTokens
+  //     .map((t) => t.toLowerCase())
+  //     .indexOf(poolAddress.toLowerCase());
+  //   if (bptIndex === -1) {
+  //     userDataAmounts = sortedAmounts;
+  //   } else {
+  //     userDataAmounts = [
+  //       ...sortedAmounts.slice(0, bptIndex),
+  //       ...sortedAmounts.slice(bptIndex + 1),
+  //     ];
+  //   }
+  //
+  //   const userData = ComposableStablePoolEncoder.joinInit(userDataAmounts);
+  //   const functionName = 'joinPool';
+  //
+  //   const attributes = {
+  //     poolId: poolId,
+  //     sender: joiner,
+  //     recipient: joiner,
+  //     joinPoolRequest: {
+  //       assets: sortedTokens,
+  //       maxAmountsIn: sortedAmounts,
+  //       userData,
+  //       fromInternalBalance: false,
+  //     },
+  //   };
+  //
+  //   const vaultInterface = Vault__factory.createInterface();
+  //   const data = vaultInterface.encodeFunctionData(functionName, [
+  //     attributes.poolId,
+  //     attributes.sender,
+  //     attributes.recipient,
+  //     attributes.joinPoolRequest,
+  //   ]);
+  //
+  //   return {
+  //     to: balancerVault,
+  //     functionName,
+  //     attributes,
+  //     data,
+  //   };
+  // }
 }

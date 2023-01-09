@@ -1,4 +1,4 @@
-import { PoolType } from '@/types';
+import { BalancerNetworkConfig, PoolType } from '@/types';
 import { ComposableStableFactory } from '@/modules/pools/factory/composable-stable/composable-stable.factory';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
@@ -9,6 +9,12 @@ import { PoolFactory } from '@/modules/pools/factory/pool-factory';
  * Returns a class instance of a type specific factory.
  */
 export class PoolFactory__factory {
+  networkConfig: BalancerNetworkConfig;
+
+  constructor(networkConfig: BalancerNetworkConfig) {
+    this.networkConfig = networkConfig;
+  }
+
   of(poolType: PoolType): PoolFactory {
     switch (poolType) {
       case 'Weighted':
@@ -20,7 +26,7 @@ export class PoolFactory__factory {
         throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
       }
       case 'ComposableStable': {
-        return new ComposableStableFactory();
+        return new ComposableStableFactory(this.networkConfig);
       }
       case 'MetaStable': {
         throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);

@@ -7,7 +7,6 @@ export default {
   networks: {
     hardhat: {
       chainId: 5,
-      timeout: 5000,
     },
   },
 };

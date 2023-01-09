@@ -4,5 +4,5 @@ import { CreatePoolParameters } from '@/modules/pools/factory/types';
 
 export interface PoolFactory {
   create: (parameters: CreatePoolParameters) => TransactionRequest;
-  buildInitJoin: (parameters: InitJoinPoolParameters) => InitJoinPoolAttributes;
+  // buildInitJoin: (parameters: InitJoinPoolParameters) => InitJoinPoolAttributes;
 }

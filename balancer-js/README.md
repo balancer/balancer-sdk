@@ -373,32 +373,6 @@ buildJoin: (
 ) => Promise<JoinPoolAttributes>;
 ```
 [Example](./examples/join.ts)
-### #buildInitJoin
-Builds a Init Join Transaction.
-
-```js
-  /***
- * @param params
- *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
- *  * @param joiner - The address of the joiner of the pool
- *  * @param poolId - The id of the pool
- *  * @param poolAddress - The address of the pool
- *  * @param tokensIn - array with the address of the tokens
- *  * @param amountsIn - array with the amount of each token
- *  * @param wrappedNativeAsset
- *  * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
- */
-  buildInitJoin({
-      joiner,
-      poolId,
-      poolAddress,
-      tokensIn,
-      amountsIn,
-      wrappedNativeAsset,
-  }) => InitJoinPoolAttributes 
-```
-
-[Example](./examples/pools/composable-stable/createAndInitJoin.ts)
 ### Joining nested pools
 
 Exposes Join functionality allowing user to join a pool that has pool tokens that are BPTs of other pools, e.g.:
