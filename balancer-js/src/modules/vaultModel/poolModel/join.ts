@@ -118,10 +118,7 @@ export class JoinModel {
       );
     } else {
       // For pools that do not contain BPT as a token, update totalShares directly
-      pool.updateTokenBalanceForPool(
-        pool.address,
-        pool.totalShares.add(bptAmountOut)
-      );
+      pool.updateTotalShares(pool.totalShares.add(bptAmountOut));
     }
 
     const tokensWithoutBpt = pool.tokens.filter(
