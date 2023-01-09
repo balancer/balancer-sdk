@@ -32,14 +32,6 @@
     "node:goerli": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --fork $(grep ALCHEMY_URL_GOERLI .env | cut -d '=' -f2 | tail -1) --port 8000"
   },
   "devDependencies": {
-    "@ethersproject/abi": "^5.4.0",
-    "@ethersproject/abstract-signer": "^5.4.0",
-    "@ethersproject/address": "^5.4.0",
-    "@ethersproject/bignumber": "^5.4.0",
-    "@ethersproject/bytes": "^5.4.0",
-    "@ethersproject/constants": "^5.4.0",
-    "@ethersproject/contracts": "^5.4.0",
-    "@ethersproject/providers": "^5.4.5",
     "@ethersproject/solidity": "^5.6.1",
     "@ethersproject/units": "^5.7.0",
     "@ethersproject/wallet": "^5.5.0",
@@ -89,15 +81,6 @@
     "typescript": "^4.0.2"
   },
   "dependencies": {
-    "@balancer-labs/sor": "^4.0.1-beta.16",
-    "@balancer-labs/typechain": "^1.0.0",
-    "axios": "^0.24.0",
-    "graphql": "^15.6.1",
-    "graphql-request": "^3.5.0",
-    "json-to-graphql-query": "^2.2.4",
-    "lodash": "^4.17.21"
-  },
-  "peerDependencies": {
     "@ethersproject/abi": "^5.4.0",
     "@ethersproject/abstract-signer": "^5.4.0",
     "@ethersproject/address": "^5.4.0",
@@ -105,6 +88,13 @@
     "@ethersproject/bytes": "^5.4.0",
     "@ethersproject/constants": "^5.4.0",
     "@ethersproject/contracts": "^5.4.0",
-    "@ethersproject/providers": "^5.4.5"
+    "@ethersproject/providers": "^5.4.5",
+    "@balancer-labs/sor": "^4.0.1-beta.16",
+    "@balancer-labs/typechain": "^1.0.0",
+    "axios": "^0.24.0",
+    "graphql": "^15.6.1",
+    "graphql-request": "^3.5.0",
+    "json-to-graphql-query": "^2.2.4",
+    "lodash": "^4.17.21"
   }
 }
