@@ -14,12 +14,14 @@ import elementPoolAbi from '@/lib/abi/ConvergentCurvePool.json';
 import linearPoolAbi from '@/lib/abi/LinearPool.json';
 import composableStableAbi from '@/lib/abi/ComposableStable.json';
 
-export async function getOnChainBalances<Type extends SubgraphPoolBase | Pool>(
-  subgraphPoolsOriginal: Type[],
+export async function getOnChainBalances<
+  GenericPool extends SubgraphPoolBase | Pool
+>(
+  subgraphPoolsOriginal: GenericPool[],
   multiAddress: string,
   vaultAddress: string,
   provider: Provider
-): Promise<Type[]> {
+): Promise<GenericPool[]> {
   if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,7 +43,7 @@ export async function getOnChainBalances<Type extends SubgraphPoolBase | Pool>(
   const multiPool = new Multicaller(multiAddress, provider, abis);
 
   const supportedPoolTypes: string[] = Object.values(PoolFilter);
-  const subgraphPools: Type[] = [];
+  const subgraphPools: GenericPool[] = [];
   subgraphPoolsOriginal.forEach((pool) => {
     if (!supportedPoolTypes.includes(pool.poolType)) {
       console.error(`Unknown pool type: ${pool.poolType} ${pool.id}`);
@@ -173,7 +175,7 @@ export async function getOnChainBalances<Type extends SubgraphPoolBase | Pool>(
     throw `Issue with multicall execution.`;
   }
 
-  const onChainPools: Type[] = [];
+  const onChainPools: GenericPool[] = [];
 
   Object.entries(pools).forEach(([poolId, onchainData], index) => {
     try {
