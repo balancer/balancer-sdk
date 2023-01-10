@@ -7,8 +7,7 @@ import dts from 'rollup-plugin-dts';
 import pkg from './package.json';
 
 const external = [
-  ...Object.keys(pkg.dependencies),
-  ...Object.keys(pkg.peerDependencies),
+  ...Object.keys(pkg.dependencies)
 ];
 
 export default [

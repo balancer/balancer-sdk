@@ -31,7 +31,7 @@ const mockedResponse = {
 
 const addresses = mockedResponse.data.tokens.map((t) => t.address);
 
-const repository = new SubgraphPriceRepository(1);
+const repository = new SubgraphPriceRepository(url, 1);
 
 describe('subgraph price repository', () => {
   let mock: MockAdapter;
