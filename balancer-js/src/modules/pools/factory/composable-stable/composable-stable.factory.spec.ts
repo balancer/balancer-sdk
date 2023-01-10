@@ -14,12 +14,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // const network = Network.GOERLI;
-// const rpcUrl = 'http://localhost:8000';
+// const rpcUrl = 'http://127.0.0.1:8000';
 // const alchemyRpcUrl = `${process.env.ALCHEMY_URL_GOERLI}`;
 // const blockNumber = 8200000;
 
 const network = Network.MAINNET;
-const rpcUrl = 'http://localhost:8545';
+const rpcUrl = 'http://127.0.0.1:8545';
 const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
 const blockNumber = 14390000;
 
