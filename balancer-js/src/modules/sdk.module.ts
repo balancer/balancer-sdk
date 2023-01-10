@@ -42,7 +42,11 @@ export class BalancerSDK implements BalancerSDKRoot {
     this.networkConfig = getNetworkConfig(config);
     this.provider = sor.provider;
 
-    this.data = new Data(this.networkConfig, sor.provider);
+    this.data = new Data(
+      this.networkConfig,
+      sor.provider,
+      config.subgraphQuery
+    );
     this.swaps = new Swaps(this.config);
     this.relayer = new Relayer(this.swaps);
     this.pricing = new Pricing(config, this.swaps);
