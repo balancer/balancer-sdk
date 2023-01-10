@@ -32,7 +32,6 @@ import {
   EncodeBatchSwapInput,
   ExitPoolData,
 } from '@/modules/relayer/relayer.module';
-import { PoolType } from '@/types';
 
 dotenv.config();
 
