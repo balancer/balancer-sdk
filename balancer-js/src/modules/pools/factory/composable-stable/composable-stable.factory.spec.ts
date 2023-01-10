@@ -80,8 +80,6 @@ describe('creating composable stable pool', async () => {
       const receipt: TransactionReceipt = await provider.getTransactionReceipt(
         tx.hash
       );
-
-      console.log(receipt);
       const composableStableFactoryInterface = new Interface(
         composableStableFactoryAbi
       );
