@@ -78,6 +78,7 @@ export const repositores = ({
   ),
 }): BalancerDataRepositories => ({
   pools,
+  poolsOnChain: pools,
   yesterdaysPools,
   tokenPrices,
   tokenHistoricalPrices,
