@@ -1,20 +1,11 @@
-import {
-  CreatePoolParameters,
-  // InitJoinPoolAttributes,
-  // InitJoinPoolParameters,
-} from '@/modules/pools/factory/types';
+import { CreatePoolParameters } from '@/modules/pools/factory/types';
 import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
 import { TransactionRequest } from '@ethersproject/providers';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import composableStableAbi from '../../../../lib/abi/ComposableStableFactory.json';
 import { FunctionFragment, Interface } from '@ethersproject/abi';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-// import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
-// import { Vault__factory } from '@balancer-labs/typechain';
-import {
-  // balancerVault,
-  networkAddresses
-} from '@/lib/constants/config';
+import { networkAddresses } from '@/lib/constants/config';
 import { BalancerNetworkConfig } from '@/types';
 
 export class ComposableStableFactory implements PoolFactory {
@@ -52,7 +43,7 @@ export class ComposableStableFactory implements PoolFactory {
     swapFee,
     owner,
   }: CreatePoolParameters): TransactionRequest {
-    const swapFeeScaled = parseToBigInt18(`${ swapFee }`);
+    const swapFeeScaled = parseToBigInt18(`${swapFee}`);
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     const [
       sortedTokens,
