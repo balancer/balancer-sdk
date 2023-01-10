@@ -89,7 +89,7 @@
     "typescript": "^4.0.2"
   },
   "dependencies": {
-    "@balancer-labs/sor": "^4.0.1-beta.16",
+    "@balancer-labs/sor": "^4.0.1-beta.17",
     "@balancer-labs/typechain": "^1.0.0",
     "axios": "^0.24.0",
     "graphql": "^15.6.1",
