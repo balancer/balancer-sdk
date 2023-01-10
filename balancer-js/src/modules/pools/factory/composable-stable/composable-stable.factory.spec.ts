@@ -21,7 +21,7 @@ dotenv.config();
 const network = Network.MAINNET;
 const rpcUrl = 'http://localhost:8545';
 const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
-const blockNumber = 16320000;
+const blockNumber = 14390000;
 
 const name = 'My-Test-Pool-Name';
 const symbol = 'My-Test-Pool-Symbol';
