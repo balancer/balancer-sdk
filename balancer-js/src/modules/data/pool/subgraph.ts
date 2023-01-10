@@ -81,7 +81,7 @@ export class PoolsSubgraphRepository
           eq: true,
         },
         totalShares: {
-          gt: 0,
+          gt: 0.000000000001,
         },
       },
     };

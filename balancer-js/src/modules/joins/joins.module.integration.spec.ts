@@ -72,6 +72,7 @@ const tenderlyConfig: BalancerTenderlyConfig = {
   blockNumber,
 };
 
+// This filters to pool addresses of interest to avoid too many onchain calls during tests
 const poolAddresses = Object.values(addresses).map(
   (address) => address.address
 );

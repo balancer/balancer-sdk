@@ -3,7 +3,13 @@ import dotenv from 'dotenv';
 import { expect } from 'chai';
 import hardhat from 'hardhat';
 
-import { BalancerSDK, BalancerTenderlyConfig, Network } from '@/.';
+import {
+  BalancerSDK,
+  BalancerTenderlyConfig,
+  Network,
+  GraphQLQuery,
+  GraphQLArgs,
+} from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { forkSetup, getBalances } from '@/test/lib/utils';
@@ -50,6 +56,7 @@ const rpcUrl = 'http://127.0.0.1:8000';
 const { TENDERLY_ACCESS_KEY, TENDERLY_USER, TENDERLY_PROJECT } = process.env;
 const { ethers } = hardhat;
 const MAX_GAS_LIMIT = 8e6;
+const addresses = ADDRESSES[network];
 
 // Custom Tenderly configuration parameters - remove in order to use default values
 const tenderlyConfig: BalancerTenderlyConfig = {
@@ -59,11 +66,35 @@ const tenderlyConfig: BalancerTenderlyConfig = {
   blockNumber,
 };
 
+// This filters to pool addresses of interest to avoid too many onchain calls during tests
+const poolAddresses = Object.values(addresses).map(
+  (address) => address.address
+);
+
+const subgraphArgs: GraphQLArgs = {
+  where: {
+    swapEnabled: {
+      eq: true,
+    },
+    totalShares: {
+      gt: 0.000000000001,
+    },
+    address: {
+      in: poolAddresses,
+    },
+  },
+  orderBy: 'totalLiquidity',
+  orderDirection: 'desc',
+  block: { number: blockNumber },
+};
+const subgraphQuery: GraphQLQuery = { args: subgraphArgs, attrs: {} };
+
 const sdk = new BalancerSDK({
   network,
   rpcUrl,
   customSubgraphUrl,
   tenderly: tenderlyConfig,
+  subgraphQuery,
 });
 const { pools } = sdk;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
@@ -73,7 +104,6 @@ const { contracts, contractAddresses } = new Contracts(
   provider
 );
 const relayer = contractAddresses.relayerV4 as string;
-const addresses = ADDRESSES[network];
 
 interface Test {
   signer: JsonRpcSigner;
