@@ -8,7 +8,7 @@ import {
   ExitPool,
   ExitPoolAttributes,
 } from '../types';
-import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
+import { AssetHelpers, isSameAddress, parsePoolInfo } from '@/lib/utils';
 import { Vault__factory } from '@balancer-labs/typechain';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { balancerVault } from '@/lib/constants/config';
@@ -32,7 +32,9 @@ export class StablePoolExit implements ExitConcern {
     if (
       singleTokenMaxOut &&
       singleTokenMaxOut !== AddressZero &&
-      !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)
+      !pool.tokens
+        .map((t) => t.address)
+        .some((a) => isSameAddress(a, singleTokenMaxOut))
     ) {
       throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
     }
