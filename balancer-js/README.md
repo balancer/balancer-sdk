@@ -363,7 +363,8 @@ Builds a join transaction.
  * @param { string[] } amountsIn - Token amounts provided for joining pool in EVM amounts.
  * @param { string }   slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%.
  * @returns { Promise<JoinPoolAttributes> } Returns join transaction ready to send with signer.sendTransaction.
-*/
+ */
+
 buildJoin: (
   joiner: string,
   tokensIn: string[],
@@ -371,9 +372,7 @@ buildJoin: (
   slippage: string
 ) => Promise<JoinPoolAttributes>;
 ```
-
 [Example](./examples/join.ts)
-
 ### Joining nested pools
 
 Exposes Join functionality allowing user to join a pool that has pool tokens that are BPTs of other pools, e.g.:
@@ -515,6 +514,41 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
 
 [Example](./examples/exitGeneralised.ts)
 
+## Create Pool
+
+Exposes create functionality allowing user to create pools.
+### #createComposableStablePool
+Builds a transaction to create a composable stable pool.
+```js
+  /***
+ * @param params
+ *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
+ *  * @param contractAddress - The address of the factory for composable stable pool (contract address)
+ *  * @param name - The name of the pool
+ *  * @param symbol - The symbol of the pool
+ *  * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
+ *  * @param tokenAddresses - The token's addresses
+ *  * @param rateProviders The addresses of the rate providers for each token, ordered
+ *  * @param tokenRateCacheDurations the Token Rate Cache Duration of each token
+ *  * @param owner - The address of the owner of the pool
+ *  * @param amplificationParameter The amplification parameter(must be greater than 1)
+ *  * @param exemptFromYieldProtocolFeeFlags array containing boolean for each token exemption from yield protocol fee flags
+ *  * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
+ */
+create({
+    contractAddress,
+    name,
+    symbol,
+    tokenAddresses,
+    amplificationParameter,
+    rateProviders,
+    tokenRateCacheDurations,
+    exemptFromYieldProtocolFeeFlags,
+    swapFee,
+    owner,
+}) => TransactionRequest 
+```
+[Example](./examples/pools/composable-stable/create.ts)
 ## RelayerService
 
 Relayers are (user opt-in, audited) contracts that can make calls to the vault (with the transaction “sender” being any arbitrary address) and use the sender’s ERC20 vault allowance, internal balance or BPTs on their behalf.
