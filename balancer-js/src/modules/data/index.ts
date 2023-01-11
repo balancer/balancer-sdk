@@ -14,10 +14,15 @@ export * from './protocol-fees/provider';
 export * from './token-yields/repository';
 export * from './block-number';
 
-import { BalancerNetworkConfig, BalancerDataRepositories } from '@/types';
+import {
+  BalancerNetworkConfig,
+  BalancerDataRepositories,
+  GraphQLQuery,
+} from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
 import { PoolSharesRepository } from './pool-shares/repository';
 import { PoolJoinExitRepository } from './pool-joinExit/repository';
+import { PoolsSubgraphOnChainRepository } from './pool/subgraphOnChain';
 import { PoolGaugesRepository } from './pool-gauges/repository';
 import { GaugeSharesRepository } from './gauge-shares/repository';
 import { BlockNumberRepository } from './block-number';
@@ -43,6 +48,7 @@ import { SubgraphPriceRepository } from './token-prices/subgraph';
 
 export class Data implements BalancerDataRepositories {
   pools;
+  poolsOnChain;
   yesterdaysPools;
   poolShares;
   poolGauges;
@@ -58,10 +64,23 @@ export class Data implements BalancerDataRepositories {
   blockNumbers;
   poolJoinExits;
 
-  constructor(networkConfig: BalancerNetworkConfig, provider: Provider) {
+  constructor(
+    networkConfig: BalancerNetworkConfig,
+    provider: Provider,
+    subgraphQuery?: GraphQLQuery
+  ) {
     this.pools = new PoolsSubgraphRepository({
       url: networkConfig.urls.subgraph,
       chainId: networkConfig.chainId,
+    });
+
+    this.poolsOnChain = new PoolsSubgraphOnChainRepository({
+      url: networkConfig.urls.subgraph,
+      chainId: networkConfig.chainId,
+      provider: provider,
+      multicall: networkConfig.addresses.contracts.multicall,
+      vault: networkConfig.addresses.contracts.vault,
+      query: subgraphQuery,
     });
 
     this.poolShares = new PoolSharesRepository(
@@ -116,6 +135,7 @@ export class Data implements BalancerDataRepositories {
     );
 
     const subgraphPriceRepository = new SubgraphPriceRepository(
+      networkConfig.urls.subgraph,
       networkConfig.chainId
     );
 

@@ -14,12 +14,14 @@ function calcPriceImpactJoin(
   bptZeroPriceImpact: bigint
 ): bigint {
   // 1 - (bptAmount/bptZeroPI)
-  return ONE - SolidityMaths.divDownFixed(bptAmount, bptZeroPriceImpact);
+  const pi = ONE - SolidityMaths.divDownFixed(bptAmount, bptZeroPriceImpact);
+  return pi < 0 ? BigInt(0) : pi;
 }
 function calcPriceImpactExit(
   bptAmount: bigint,
   bptZeroPriceImpact: bigint
 ): bigint {
   // (bptAmount/bptZeroPI) - 1
-  return SolidityMaths.divDownFixed(bptAmount, bptZeroPriceImpact) - ONE;
+  const pi = SolidityMaths.divDownFixed(bptAmount, bptZeroPriceImpact) - ONE;
+  return pi < 0 ? BigInt(0) : pi;
 }

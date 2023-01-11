@@ -19,6 +19,7 @@ import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
 import * as Queries from './queries';
 import { BalancerError } from '@/balancerErrors';
+import { EmissionsService } from './emissions';
 
 const notImplemented = (poolType: string, name: string) => () => {
   throw `${name} for poolType ${poolType} not implemented`;
@@ -35,6 +36,7 @@ export class Pools implements Findable<PoolWithMethods> {
   feesService;
   volumeService;
   impermanentLossService;
+  emissionsService;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -54,14 +56,19 @@ export class Pools implements Findable<PoolWithMethods> {
       repositories.pools,
       repositories.tokenPrices
     );
-    this.joinService = new Join(this.repositories.pools, networkConfig);
-    this.exitService = new Exit(this.repositories.pools, networkConfig);
+    this.joinService = new Join(this.repositories.poolsOnChain, networkConfig);
+    this.exitService = new Exit(this.repositories.poolsOnChain, networkConfig);
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
     this.impermanentLossService = new ImpermanentLossService(
       repositories.tokenPrices,
       repositories.tokenHistoricalPrices
     );
+    if (repositories.liquidityGauges) {
+      this.emissionsService = new EmissionsService(
+        repositories.liquidityGauges
+      );
+    }
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
@@ -266,16 +273,11 @@ export class Pools implements Findable<PoolWithMethods> {
         // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
         // spotPrice: async (tokenIn: string, tokenOut: string) =>
         //   methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, data),
-        calcSpotPrice: (
-          tokenIn: string,
-          tokenOut: string,
-          isDefault?: boolean
-        ) =>
+        calcSpotPrice: (tokenIn: string, tokenOut: string) =>
           concerns.spotPriceCalculator.calcPoolSpotPrice(
             tokenIn,
             tokenOut,
-            pool,
-            isDefault
+            pool
           ),
       };
     } catch (error) {

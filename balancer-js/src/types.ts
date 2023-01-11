@@ -35,6 +35,7 @@ export interface BalancerSdkConfig {
   rpcUrl: string;
   //overwrite the subgraph url if you don't want to use the balancer labs maintained version
   customSubgraphUrl?: string;
+  subgraphQuery?: GraphQLQuery;
   //optionally overwrite parts of the standard SOR config
   sor?: Partial<BalancerSdkSorConfig>;
   tenderly?: BalancerTenderlyConfig;
@@ -100,6 +101,7 @@ export interface BalancerNetworkConfig {
 
 export interface BalancerDataRepositories {
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  poolsOnChain: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
   tokenHistoricalPrices: Findable<Price>;
@@ -335,11 +337,7 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     amountsOut: string[],
     slippage: string
   ) => ExitPoolAttributes;
-  calcSpotPrice: (
-    tokenIn: string,
-    tokenOut: string,
-    isDefault?: boolean
-  ) => string;
+  calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
 }
 
 export interface GraphQLQuery {
