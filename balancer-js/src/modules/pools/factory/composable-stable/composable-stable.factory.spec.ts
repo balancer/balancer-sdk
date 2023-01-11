@@ -10,6 +10,7 @@ import { Interface, LogDescription } from '@ethersproject/abi';
 import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
 import { forkSetup } from '@/test/lib/utils';
 import dotenv from 'dotenv';
+import { isSameAddress } from '@/lib/utils';
 
 dotenv.config();
 
@@ -81,7 +82,7 @@ describe('creating composable stable pool', async () => {
 
       const poolCreationEvent: LogDescription | null | undefined = receipt.logs
         .filter((log: Log) => {
-          return log.address.toUpperCase() === factoryAddress.toUpperCase();
+          return isSameAddress(log.address, factoryAddress);
         })
         .map((log) => {
           try {
