@@ -30,7 +30,7 @@ const rateProviders = [AddressZero, AddressZero];
 
 const exemptFromYieldProtocolFeeFlags = [false, false];
 const tokenRateCacheDurations = ['0', '0'];
-const contractAddress = '0x85a80afee867aDf27B50BdB7b76DA70f1E853062';
+const factoryAddress = '0x85a80afee867aDf27B50BdB7b76DA70f1E853062';
 const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const tokenAddresses = [USDC_address, USDT_address];
 const amplificationParameter = '2';
@@ -53,7 +53,7 @@ describe('creating composable stable pool', async () => {
     });
     it('should create a pool', async () => {
       const { to, data } = composableStablePoolFactory.create({
-        contractAddress,
+        factoryAddress,
         name,
         symbol,
         tokenAddresses,
@@ -81,7 +81,7 @@ describe('creating composable stable pool', async () => {
 
       const poolCreationEvent: LogDescription | null | undefined = receipt.logs
         .filter((log: Log) => {
-          return log.address.toUpperCase() === contractAddress.toUpperCase();
+          return log.address.toUpperCase() === factoryAddress.toUpperCase();
         })
         .map((log) => {
           try {
