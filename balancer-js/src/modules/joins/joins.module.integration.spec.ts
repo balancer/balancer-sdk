@@ -128,8 +128,6 @@ const runTests = async (tests: Test[]) => {
   for (let i = 0; i < tests.length; i++) {
     const test = tests[i];
     it(test.description, async () => {
-      // const userAddress = '0xb7d222a710169f42ddff2a9a5122bd7c724dc203';
-      // const authorisation = undefined;
       const userAddress = await test.signer.getAddress();
       const authorisation = await Relayer.signRelayerApproval(
         relayer,
