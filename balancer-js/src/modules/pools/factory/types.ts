@@ -1,4 +1,4 @@
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { JoinPool } from '@/modules/pools/pool-types/concerns/types';
 
 export type Address = string;
@@ -8,14 +8,21 @@ export type CreatePoolParameters = {
   name: string;
   symbol: string;
   tokenAddresses: string[];
-  amplificationParameter: number | string;
-  rateProviders: string[];
-  tokenRateCacheDurations: number[] | string[];
-  exemptFromYieldProtocolFeeFlags: boolean[];
+  // weights?: string[];
   swapFee: string | number;
   owner: Address;
 };
 
+export interface ComposableStableCreatePoolParameters
+  extends CreatePoolParameters {
+  amplificationParameter: number | string;
+  rateProviders: string[];
+  tokenRateCacheDurations: number[] | string[];
+  exemptFromYieldProtocolFeeFlags: boolean[];
+}
+export interface WeightedCreatePoolParameters extends CreatePoolParameters {
+  weights: BigNumberish[];
+}
 export interface InitJoinPoolParameters {
   joiner: string;
   poolId: string;
