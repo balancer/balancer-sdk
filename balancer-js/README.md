@@ -678,31 +678,6 @@ const IL = await pools.impermanentLoss(join.timestamp, pool);
 
 ## Claim Tokens
 
-### Open Questions
-
-1. **Which function to retrieve claimable rewards on network other that Mainnet?**
-
-As for our analysis, this should be `claimable_reward` for Mainnet, when token is other than BAL, and `claimable_reward_write` for other networks.
-
-We did a bit of reverse engineering on the Balancer web-app, and this confirms our hypothesis.
-
-Documentation says otherwise [here](https://dev.balancer.fi/resources/vebal-and-gauges/gauges).
-
-Please, can you confirm our assumptions are right?
-
-2. **Is the liquidity-gauge provider `src/modules/data/liquidity-gauges/provider.ts` returning the correct list of gauges for the pools?**
-
-The query is `where: { preferentialGauge_not: null }`.
-
-3. **Where can we find some accounts with rewards to use as test?**
-
-4. **Are veBal Tokens available only for Mainnet?**
-
-5. **Claimable tokens needs to be hard-coded; is this acceptable?**
-
-Alternatively we can put the claimable tokens as parameters, leaving to the user the task to retrieve the tokens 
-available at a given time; in the pseudocode below a possible use case.
-
 ### Service
 
 ![classes](./claim-incentives-class.png)
