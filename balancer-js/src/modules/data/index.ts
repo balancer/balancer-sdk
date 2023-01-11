@@ -20,7 +20,7 @@ import {
   GraphQLQuery,
 } from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
-import { OnChainPoolsRepository } from '../sor/pool-data/subgraphPoolDataService';
+import { SubgraphPoolDataService } from '../sor/pool-data/subgraphPoolDataService';
 import { PoolsSubgraphOnChainRepository } from './pool/subgraphOnChain';
 import { PoolSharesRepository } from './pool-shares/repository';
 import { PoolJoinExitRepository } from './pool-joinExit/repository';
@@ -46,6 +46,7 @@ import { Provider } from '@ethersproject/providers';
 // TODO: we might want to replace that with what frontend is using
 import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json';
 import { SubgraphPriceRepository } from './token-prices/subgraph';
+import { createSubgraphClient } from '../subgraph/subgraph';
 
 export class Data implements BalancerDataRepositories {
   pools;
@@ -76,11 +77,11 @@ export class Data implements BalancerDataRepositories {
       chainId: networkConfig.chainId,
     });
 
-    this.poolsForSor = new OnChainPoolsRepository(
-      networkConfig.urls.subgraph,
-      networkConfig.addresses.contracts.multicall,
-      networkConfig.addresses.contracts.vault,
+    this.poolsForSor = new SubgraphPoolDataService(
+      createSubgraphClient(networkConfig.urls.subgraph),
       provider,
+      networkConfig,
+      undefined,
       subgraphQuery
     );
 
