@@ -522,7 +522,7 @@ Builds a transaction to create a composable stable pool.
 ```js
   /***
  * @param params
- *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
+ *  * Builds a transaction for a composable pool create operation.
  *  * @param contractAddress - The address of the factory for composable stable pool (contract address)
  *  * @param name - The name of the pool
  *  * @param symbol - The symbol of the pool

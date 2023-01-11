@@ -18,7 +18,7 @@ export class ComposableStableFactory implements PoolFactory {
 
   /***
    * @param params
-   *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
+   *  * Builds a transaction for a composable pool create operation.
    *  * @param contractAddress - The address of the factory for composable stable pool (contract address)
    *  * @param name - The name of the pool
    *  * @param symbol - The symbol of the pool
@@ -32,7 +32,7 @@ export class ComposableStableFactory implements PoolFactory {
    *  * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
    */
   create({
-    contractAddress,
+    factoryAddress,
     name,
     symbol,
     tokenAddresses,
@@ -79,7 +79,7 @@ export class ComposableStableFactory implements PoolFactory {
       params
     );
     return {
-      to: contractAddress,
+      to: factoryAddress,
       data: encodedFunctionData,
     };
   }
