@@ -22,7 +22,7 @@ describe('stable pool spot price', () => {
         ADDRESSES[network].USDC.address,
         pool
       );
-      expect(spotPrice).to.eq('1.000051911328148725');
+      expect(spotPrice).to.eq('1.000067171032243145');
     });
   });
 });

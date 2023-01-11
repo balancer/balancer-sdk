@@ -124,7 +124,7 @@ describe('join execution', async () => {
         minBPTOut,
         true
       );
-      expect(priceImpact).to.eql('100000444261607');
+      expect(priceImpact).to.eql('100000000006037');
     });
 
     it('should increase BPT balance', async () => {

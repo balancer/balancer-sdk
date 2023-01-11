@@ -8,12 +8,13 @@ import {
   ExitPool,
   ExitPoolAttributes,
 } from '../types';
-import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
+import { AssetHelpers, isSameAddress, parsePoolInfo } from '@/lib/utils';
 import { Vault__factory } from '@balancer-labs/typechain';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { balancerVault } from '@/lib/constants/config';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { StablePoolEncoder } from '@/pool-stable';
+import { _downscaleDownArray, _upscaleArray } from '@/lib/utils/solidityMaths';
 
 export class StablePoolExit implements ExitConcern {
   buildExitExactBPTIn = ({
@@ -31,7 +32,9 @@ export class StablePoolExit implements ExitConcern {
     if (
       singleTokenMaxOut &&
       singleTokenMaxOut !== AddressZero &&
-      !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)
+      !pool.tokens
+        .map((t) => t.address)
+        .some((a) => isSameAddress(a, singleTokenMaxOut))
     ) {
       throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
     }
@@ -49,10 +52,11 @@ export class StablePoolExit implements ExitConcern {
     // Parse pool info into EVM amounts in order to match amountsIn scalling
     const {
       parsedTokens,
-      parsedBalances,
       parsedAmp,
       parsedTotalShares,
       parsedSwapFee,
+      upScaledBalances,
+      scalingFactors,
     } = parsePoolInfo(pool);
 
     // Replace WETH address with ETH - required for exiting with ETH
@@ -62,10 +66,12 @@ export class StablePoolExit implements ExitConcern {
 
     // Sort pool info based on tokens addresses
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    const [sortedTokens, sortedBalances] = assetHelpers.sortTokens(
-      shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens,
-      parsedBalances
-    ) as [string[], string[]];
+    const [sortedTokens, sortedUpscaledBalances, sortedScalingFactors] =
+      assetHelpers.sortTokens(
+        shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens,
+        upScaledBalances,
+        scalingFactors
+      ) as [string[], string[], string[]];
 
     let minAmountsOut = Array(parsedTokens.length).fill('0');
     let userData: string;
@@ -78,7 +84,7 @@ export class StablePoolExit implements ExitConcern {
       // Calculate amount out given BPT in
       const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
         BigInt(parsedAmp as string),
-        sortedBalances.map((b) => BigInt(b)),
+        sortedUpscaledBalances.map((b) => BigInt(b)),
         singleTokenMaxOutIndex,
         BigInt(bptIn),
         BigInt(parsedTotalShares),
@@ -100,13 +106,18 @@ export class StablePoolExit implements ExitConcern {
 
       // Calculate amount out given BPT in
       const amountsOut = SOR.StableMathBigInt._calcTokensOutGivenExactBptIn(
-        sortedBalances.map((b) => BigInt(b)),
+        sortedUpscaledBalances.map((b) => BigInt(b)),
         BigInt(bptIn),
         BigInt(parsedTotalShares)
       ).map((amount) => amount.toString());
 
+      // Maths return numbers scaled to 18 decimals. Must scale down to token decimals.
+      const amountsOutScaledDown = _downscaleDownArray(
+        amountsOut.map((a) => BigInt(a)),
+        sortedScalingFactors.map((a) => BigInt(a))
+      );
       // Apply slippage tolerance
-      minAmountsOut = amountsOut.map((amount) => {
+      minAmountsOut = amountsOutScaledDown.map((amount) => {
         const minAmount = subSlippage(
           BigNumber.from(amount),
           BigNumber.from(slippage)
@@ -173,28 +184,37 @@ export class StablePoolExit implements ExitConcern {
     // Parse pool info into EVM amounts in order to match amountsOut scalling
     const {
       parsedTokens,
-      parsedBalances,
       parsedAmp,
       parsedTotalShares,
       parsedSwapFee,
+      upScaledBalances,
+      scalingFactors,
     } = parsePoolInfo(pool);
 
     // Sort pool info based on tokens addresses
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    const [, sortedBalances] = assetHelpers.sortTokens(
-      parsedTokens,
-      parsedBalances
-    ) as [string[], string[]];
-    const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
+    const [, sortedUpScaledBalances, sortedScalingFactors] =
+      assetHelpers.sortTokens(
+        parsedTokens,
+        upScaledBalances,
+        scalingFactors
+      ) as [string[], string[], string[]];
+    const [sortedTokens, sortedAmountsOut] = assetHelpers.sortTokens(
       tokensOut,
       amountsOut
     ) as [string[], string[]];
 
+    // Maths should use upscaled amounts, e.g. 1USDC => 1e18 not 1e6
+    const upScaledAmountsOut = _upscaleArray(
+      sortedAmountsOut.map((a) => BigInt(a)),
+      sortedScalingFactors.map((a) => BigInt(a))
+    );
+
     // Calculate expected BPT in given tokens out
     const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(
       BigInt(parsedAmp as string),
-      sortedBalances.map((b) => BigInt(b)),
-      sortedAmounts.map((a) => BigInt(a)),
+      sortedUpScaledBalances.map((b) => BigInt(b)),
+      upScaledAmountsOut,
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
     ).toString();
@@ -206,7 +226,7 @@ export class StablePoolExit implements ExitConcern {
     ).toString();
 
     const userData = StablePoolEncoder.exitBPTInForExactTokensOut(
-      sortedAmounts,
+      sortedAmountsOut,
       maxBPTIn
     );
 
@@ -218,7 +238,7 @@ export class StablePoolExit implements ExitConcern {
       recipient: exiter,
       exitPoolRequest: {
         assets: sortedTokens,
-        minAmountsOut: sortedAmounts,
+        minAmountsOut: sortedAmountsOut,
         userData,
         toInternalBalance: false,
       },
@@ -238,7 +258,7 @@ export class StablePoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
-      minAmountsOut: sortedAmounts,
+      minAmountsOut: sortedAmountsOut,
       maxBPTIn,
     };
   };
