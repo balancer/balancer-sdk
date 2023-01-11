@@ -56,6 +56,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
+        gaugeClaimHelper: '0xaeb406b0e430bf5ea2dc0b9fe62e4e53f74b3a33',
         relayerV3: '0xcf6a66E32dCa0e26AcC3426b851FD8aCbF12Dac7',
         relayerV4: '0x28A224d9d398a1eBB7BA69BCA515898966Bb1B6b',
         balancerHelpers: '0x239e55F427D44C3cc793f49bFB507ebe76638a2b',
@@ -81,6 +82,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
+        gaugeClaimHelper: '0xa0dabebaad1b243bbb243f933013d560819eb66f',
         relayerV3: '0x42E49B48573c725ee32d2579060Ed06894f97002',
         relayerV4: '0x5bf3B7c14b10f16939d63Bd679264A1Aa951B4D5',
         balancerHelpers: '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab',
@@ -173,8 +175,10 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         veBal: '0x33A99Dcc4C85C014cf12626959111D5898bbCAbF',
         veBalProxy: '0xA1F107D1cD709514AE8A914eCB757E95f9cedB31',
         balancerHelpers: '0x5aDDCCa35b7A0D07C74063c48700C8590E87864E',
+        feeDistributor: '0x7F91dcdE02F72b478Dc73cB21730cAcA907c8c44',
       },
       tokens: {
+        bal: '0xfA8449189744799aD2AcE7e0EBAC8BB7575eff47',
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
       },
     },

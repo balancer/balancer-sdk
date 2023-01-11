@@ -18,6 +18,7 @@ import { VeBal } from './implementations/veBAL';
 import { VeBalProxy } from './implementations/veBAL-proxy';
 import { Relayer } from './implementations/relayer';
 import { LiquidityGauge } from './implementations/liquidity-gauge';
+import { GaugeClaimHelper } from "./implementations/GaugeClaimHelper";
 
 type ContractFactory = (
   address: string,
@@ -35,6 +36,7 @@ export interface ContractInstances {
   veBalProxy?: VeBalProxy;
   ERC20: ContractFactory;
   liquidityGauge: ContractFactory;
+  gaugeClaimHelper?: Contract;
 }
 
 export class Contracts {
@@ -47,6 +49,7 @@ export class Contracts {
   relayerV4?: Contract;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
+  gaugeClaimHelper?: Contract;
 
   /**
    * Create instances of Balancer contracts connected to passed provider.
@@ -92,6 +95,9 @@ export class Contracts {
     if (this.contractAddresses.veBalProxy) {
       this.veBalProxy = new VeBalProxy(this.contractAddresses, provider);
     }
+
+    if (this.contractAddresses.gaugeClaimHelper)
+      this.gaugeClaimHelper = GaugeClaimHelper(this.contractAddresses.gaugeClaimHelper, provider);
   }
 
   /**
@@ -109,6 +115,7 @@ export class Contracts {
       veBalProxy: this.veBalProxy,
       ERC20: this.getErc20,
       liquidityGauge: this.getLiquidityGauge,
+      gaugeClaimHelper: this.gaugeClaimHelper
     };
   }
 
