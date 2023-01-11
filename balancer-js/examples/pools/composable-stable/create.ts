@@ -4,7 +4,7 @@ import {
   Log,
   TransactionReceipt,
 } from '@ethersproject/providers';
-import { BalancerSDK, Network, PoolType } from 'src';
+import { BalancerSDK, isSameAddress, Network, PoolType } from 'src';
 import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
 import { ethers } from 'hardhat';
 import { Interface, LogDescription } from '@ethersproject/abi';
@@ -97,7 +97,7 @@ async function createComposableStablePool() {
   
   const poolCreationEvent: LogDescription | null | undefined = receipt.logs
     .filter((log: Log) => {
-      return log.address.toUpperCase() === factoryAddress.toUpperCase();
+      return isSameAddress(log.address, factoryAddress);
     })
     .map((log) => {
       try {
