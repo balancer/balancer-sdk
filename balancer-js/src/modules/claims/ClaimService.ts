@@ -70,6 +70,11 @@ export class ClaimService implements IClaimService{
   }
 
   async claimRewardTokens(gaugeAddresses: string[], userAddress: string, receiverAddress?: string): Promise<TransactionData> {
+    if (this.chainId === 1 || this.chainId === 5) {
+      if (!this.balancerMinterAddress) throw new BalancerError(BalancerErrorCode.GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED);
+    } else {
+      if (!this.gaugeClaimHelperAddress) throw new BalancerError(BalancerErrorCode.GAUGES_HELPER_ADDRESS_NOT_PROVIDED);
+    }
     const allGauges = await this.getClaimableTokens(userAddress);
     const gauges = allGauges
       .filter((it) => gaugeAddresses.map(it => it.toLowerCase()).includes(it.address.toLowerCase()))
@@ -85,6 +90,7 @@ export class ClaimService implements IClaimService{
     })
     if (!expectedValues.length || expectedValues.every((it) => it === 0)) throw new BalancerError(BalancerErrorCode.GAUGES_REWARD_TOKEN_ZERO);
     if (this.chainId === 1 || this.chainId === 5) {
+      if (!this.gaugeClaimHelperAddress) throw new BalancerError(BalancerErrorCode.GAUGES_HELPER_ADDRESS_NOT_PROVIDED);
       const callData = gaugeClaimHelperInterface.encodeFunctionData('mintMany', [gaugeAddresses]);
       return {
         to: this.balancerMinterAddress!,

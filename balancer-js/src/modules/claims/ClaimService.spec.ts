@@ -18,6 +18,14 @@ describe("ClaimService On Ethereum", () => {
     service = new ClaimService(sdk.data.liquidityGauges, sdk.networkConfig.chainId, sdk.networkConfig.addresses.contracts.multicall, sdk.provider, sdk.networkConfig.addresses.contracts.gaugeClaimHelper);
   })
 
+  context("initialization", () => {
+    it("should get service from SDK", (done) => {
+      const service = sdk.claimService;
+      expect(service).to.be
+      done();
+    });
+  })
+
   context("getClaimableTokens", () => {
     it("should return gauges with claimable tokens", (done) => {
       service.getClaimableTokens('0x549c660ce2B988F588769d6AD87BE801695b2be3')
@@ -72,7 +80,7 @@ describe("ClaimService On Ethereum", () => {
 
 });
 
-describe.skip("ClaimService On Polygon", () => {
+describe("ClaimService On Polygon", () => {
   before(() => {
     const sdkConfig = {
       network: Network.POLYGON,
@@ -81,7 +89,15 @@ describe.skip("ClaimService On Polygon", () => {
     sdk = new BalancerSDK(sdkConfig);
     if (!sdk.data.liquidityGauges) throw new Error("liquidityGauges not initialized");
     service = new ClaimService(sdk.data.liquidityGauges, sdk.networkConfig.chainId, sdk.networkConfig.addresses.contracts.multicall, sdk.provider, sdk.networkConfig.addresses.contracts.gaugeClaimHelper);
-  })
+  });
+
+  context("initialization", () => {
+    it("should get service from SDK", (done) => {
+      const service = sdk.claimService;
+      expect(service).to.be
+      done();
+    });
+  });
 
   context("getClaimableTokens", () => {
     it("should return gauges with claimable tokens", (done) => {

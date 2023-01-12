@@ -25,6 +25,7 @@ export enum BalancerErrorCode {
   EXIT_DELTA_AMOUNTS = 'EXIT_DELTA_AMOUNTS',
   GAUGES_NOT_FOUND = 'GAUGES_NOT_FOUND',
   GAUGES_HELPER_ADDRESS_NOT_PROVIDED = 'GAUGES_HELPER_ADDRESS_NOT_PROVIDED',
+  GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED = 'GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED',
   GAUGES_REWARD_TOKEN_EMPTY = 'GAUGES_REWARD_TOKEN_EMPTY',
   GAUGES_REWARD_TOKEN_ZERO = 'GAUGES_REWARD_TOKEN_ZERO',
 }
@@ -89,6 +90,8 @@ export class BalancerError extends Error {
         return 'Liquidity Gauges not found with given addresses';
       case BalancerErrorCode.GAUGES_HELPER_ADDRESS_NOT_PROVIDED:
         return 'Liquidity Gauges Helper Contract address has not been provided';
+      case BalancerErrorCode.GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED:
+        return 'Liquidity Gauges Reward Minter Contract address has not been provided';
       case BalancerErrorCode.GAUGES_REWARD_TOKEN_EMPTY:
         return 'No Reward Tokens for Liquidity Gauges provided';
       case BalancerErrorCode.GAUGES_REWARD_TOKEN_ZERO:
