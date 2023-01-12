@@ -11,6 +11,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xeefba1e63905ef1d7acba5a8513c70307c1ce441',
         balancerHelpers: '0x5aDDCCa35b7A0D07C74063c48700C8590E87864E',
+        balancerMinterAddress: "0x239e55F427D44C3cc793f49bFB507ebe76638a2b",
         lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
         relayerV3: '0x886A3Ec7bcC508B8795990B60Fa21f85F9dB7948',
         relayerV4: '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',

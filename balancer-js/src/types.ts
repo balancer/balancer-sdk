@@ -65,6 +65,7 @@ export interface ContractAddresses {
   multicall: string;
   gaugeClaimHelper?: string;
   balancerHelpers: string;
+  balancerMinterAddress?: string;
   lidoRelayer?: string;
   relayerV3?: string;
   relayerV4?: string;

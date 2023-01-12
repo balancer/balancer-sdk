@@ -6,24 +6,18 @@ import {LiquidityGauge, LiquidityGaugeSubgraphRPCProvider} from "@/modules/data"
 import {Interface} from '@ethersproject/abi';
 import {Contract} from "@ethersproject/contracts";
 import {Provider} from "@ethersproject/providers";
-import {
-  GaugeTokens,
-  populateGauges,
-  reduceClaimableRewards,
-  reduceClaimableTokens,
-  reduceRewardTokens,
-  Tokens
-} from "./helper";
+import {GaugeTokens, populateGauges, reduceClaimableRewards, reduceClaimableTokens, reduceRewardTokens} from "./helper";
 
 const liquidityGaugeV5Interface = new Interface([
-  'function claim_rewards(address sender, address receiver) view returns (uint256)',
+  'function claim_rewards(address sender, address receiver) returns (uint256)',
   'function claimable_tokens(address addr) view returns (uint256)',
   'function claimable_reward(address addr, address token) view returns (uint256)',
 ]);
 
 const gaugeClaimHelperInterface = new Interface([
   'function getPendingRewards(address gauge, address user, address token) view returns (uint256)',
-  'function claimRewardsFromGauges(address[] gauges, address user)'
+  'function claimRewardsFromGauges(address[] gauges, address user)',
+  'function mintMany(address[] gauges) returns (uint256)'
 ]);
 
 export interface TransactionData {
@@ -45,6 +39,7 @@ export class ClaimService implements IClaimService{
   private readonly liquidityGauges: LiquidityGaugeSubgraphRPCProvider;
   private readonly multicall: Contract;
   private readonly gaugeClaimHelperAddress?: string;
+  private readonly balancerMinterAddress?: string;
   private readonly chainId: Network;
 
   constructor(
@@ -52,11 +47,13 @@ export class ClaimService implements IClaimService{
     chainId: Network,
     multicallAddress: string,
     provider: Provider,
-    gaugeClaimHelperAddress?: string
+    gaugeClaimHelperAddress?: string,
+    balancerMinterAddress?: string
   ) {
     this.liquidityGauges = liquidityGauges;
     this.chainId = chainId;
     this.gaugeClaimHelperAddress = gaugeClaimHelperAddress;
+    this.balancerMinterAddress = balancerMinterAddress;
     this.multicall = Multicall(multicallAddress, provider);
   }
 
@@ -78,39 +75,34 @@ export class ClaimService implements IClaimService{
       .filter((it) => gaugeAddresses.map(it => it.toLowerCase()).includes(it.address.toLowerCase()))
       .filter((it) => it.claimableTokens && Object.keys(it.claimableTokens).length);
     const claimableTokens = Array.from(new Set(gauges.map((gauge) => gauge.claimableTokens).map((tokens) => Object.keys(tokens || {})).flatMap(it => it)));
+    if (!claimableTokens.length) throw new BalancerError(BalancerErrorCode.GAUGES_REWARD_TOKEN_EMPTY);
     const expectedValues = claimableTokens.map((tokenAddress) => {
       return gauges.reduce((value, gauge) => {
-        if (gauge.claimableTokens && gauge.claimableTokens[tokenAddress])
+        if (gauge.claimableTokens && gauge.claimableTokens[tokenAddress] && gauge.claimableTokens[tokenAddress] > 0)
           value += gauge.claimableTokens[tokenAddress];
         return value;
       }, 0);
     })
+    if (!expectedValues.length || expectedValues.every((it) => it === 0)) throw new BalancerError(BalancerErrorCode.GAUGES_REWARD_TOKEN_ZERO);
     if (this.chainId === 1 || this.chainId === 5) {
-      // prepare data for mainnnet
-      const receiver = receiverAddress ?? userAddress;
-      const sender = userAddress;
-      const payload = [];
-      for (const gaugeAddress of gaugeAddresses) {
-          payload.push(
-            gaugeAddress,
-            liquidityGaugeV5Interface.encodeFunctionData('claim_rewards', [sender, receiver]),
-          );
+      const callData = gaugeClaimHelperInterface.encodeFunctionData('mintMany', [gaugeAddresses]);
+      return {
+        to: this.balancerMinterAddress!,
+        from: userAddress,
+        callData: callData,
+        tokensOut: claimableTokens,
+        expectedTokensValue: expectedValues,
+        functionName: 'mintMany'
       }
-      throw new Error('not yet implemented')
     } else {
-      try {
-        const callData = gaugeClaimHelperInterface.encodeFunctionData('claimRewardsFromGauges', [gaugeAddresses, userAddress]);
-        return {
-          to: this.gaugeClaimHelperAddress!,
-          from: userAddress,
-          callData: callData,
-          tokensOut: claimableTokens,
-          expectedTokensValue: expectedValues,
-          functionName: 'claimRewardsFromGauges'
-        }
-      } catch (e) {
-        console.log(e);
-        throw e;
+      const callData = gaugeClaimHelperInterface.encodeFunctionData('claimRewardsFromGauges', [gaugeAddresses, userAddress]);
+      return {
+        to: this.gaugeClaimHelperAddress!,
+        from: userAddress,
+        callData: callData,
+        tokensOut: claimableTokens,
+        expectedTokensValue: expectedValues,
+        functionName: 'claimRewardsFromGauges'
       }
     }
   }
