@@ -53,7 +53,7 @@ describe('ImpermanentLossService', () => {
       const timestamp = 1666601608;
       const loss = await service.calcImpLoss(timestamp, pool);
       expect(loss).gte(0);
-    });
+    }).timeout(100000);
   });
   context('when queried for Weighted Pool', () => {
     it('should return an IL gte 0', async () => {
