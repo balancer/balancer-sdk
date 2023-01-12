@@ -3,7 +3,7 @@ import { Provider } from '@ethersproject/providers';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
 import { GraphQLQuery, Pool } from '@/types';
 import { Network } from '@/lib/constants/network';
-import { getOnChainBalances } from '../../../modules/sor/pool-data/onChainData';
+import { getOnChainBalances } from './onChainData';
 import { PoolsSubgraphRepository } from './subgraph';
 
 interface PoolsSubgraphOnChainRepositoryOptions {

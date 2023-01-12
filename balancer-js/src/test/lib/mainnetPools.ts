@@ -1,6 +1,6 @@
 import { SubgraphPoolBase, Network } from '@/.';
 import { getNetworkConfig } from '@/modules/sdk.helpers';
-import { getOnChainBalances } from '@/modules/sor/pool-data/onChainData';
+import { getOnChainBalances } from '@/modules/data/pool/onChainData';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { factories } from '../factories';
 
