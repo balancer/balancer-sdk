@@ -19,7 +19,7 @@ const symbol = 'My-Test-Pool-Symbol';
 
 const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8000';
-const alchemyRpcUrl = `${process.env.ALCHEMY_URL_GOERLI}`;
+const alchemyRpcUrl = `${ process.env.ALCHEMY_URL_GOERLI }`;
 const blockNumber = 8200000;
 
 const addresses = ADDRESSES[network];
@@ -94,18 +94,13 @@ async function createComposableStablePool() {
   const composableStableFactoryInterface = new Interface(
     composableStableFactoryAbi
   );
-  
+
   const poolCreationEvent: LogDescription | null | undefined = receipt.logs
     .filter((log: Log) => {
       return isSameAddress(log.address, factoryAddress);
     })
     .map((log) => {
-      try {
-        return composableStableFactoryInterface.parseLog(log);
-      } catch (error) {
-        console.error(error);
-        return null;
-      }
+      return composableStableFactoryInterface.parseLog(log);
     })
     .find((parsedLog) => parsedLog?.name === 'PoolCreated');
 
