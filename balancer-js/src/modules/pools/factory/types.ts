@@ -8,7 +8,6 @@ export type CreatePoolParameters = {
   name: string;
   symbol: string;
   tokenAddresses: string[];
-  // weights?: string[];
   swapFee: string | number;
   owner: Address;
 };

@@ -1,11 +1,9 @@
 import * as dotenv from 'dotenv';
 import {
-  JsonRpcProvider,
   Log,
   TransactionReceipt,
 } from '@ethersproject/providers';
 import { BalancerSDK, isSameAddress, Network, PoolType } from 'src';
-import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
 import { ethers } from 'hardhat';
 import { Interface, LogDescription } from '@ethersproject/abi';
 import { ADDRESSES } from '@/test/lib/constants';
@@ -14,11 +12,6 @@ import { BALANCER_NETWORK_CONFIG } from "@/lib/constants/config";
 import { WeightedPoolFactory__factory } from "@balancer-labs/typechain";
 
 dotenv.config();
-
-// const network = Network.MAINNET;
-// const rpcUrl = 'http://127.0.0.1:8545';
-// const alchemyRpcUrl = `${ process.env.ALCHEMY_URL }`;
-// const blockNumber = 16320000;
 
 const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8000';

@@ -1,4 +1,4 @@
-// yarn test:only ./src/modules/pools/factory/composable-stable/weighted.factory.spec.ts
+// yarn test:only ./src/modules/pools/factory/composable-stable/composable-stable.factory.spec.ts
 import { expect } from 'chai';
 import { Log, TransactionReceipt } from '@ethersproject/providers';
 import { ethers } from 'hardhat';

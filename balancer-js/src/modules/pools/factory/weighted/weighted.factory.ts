@@ -27,7 +27,7 @@ export class WeightedFactory implements PoolFactory {
    *  * @param weights The weights for each token, ordered
    *  * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
    *  * @param owner - The address of the owner of the pool
-   *  * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
+   *  * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
    */
   create({
     factoryAddress,
