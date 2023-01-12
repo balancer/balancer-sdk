@@ -711,6 +711,7 @@ type Pool {
   priceRateProviders(first: Int = 100, orderBy: PriceRateProvider_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PriceRateProvider_filter): [PriceRateProvider!]
   principalToken: Bytes
   protocolAumFeeCache: BigDecimal
+  protocolId: Int
   protocolSwapFeeCache: BigDecimal
   protocolYieldFeeCache: BigDecimal
   root3Alpha: BigDecimal
@@ -1086,7 +1087,6 @@ enum PoolSnapshot_orderBy {
 type PoolToken {
   address: String!
   assetManager: Bytes!
-  assimilator: Bytes
   balance: BigDecimal!
   cashBalance: BigDecimal!
   decimals: Int!
@@ -1131,12 +1131,6 @@ input PoolToken_filter {
   assetManager_not: Bytes
   assetManager_not_contains: Bytes
   assetManager_not_in: [Bytes!]
-  assimilator: Bytes
-  assimilator_contains: Bytes
-  assimilator_in: [Bytes!]
-  assimilator_not: Bytes
-  assimilator_not_contains: Bytes
-  assimilator_not_in: [Bytes!]
   balance: BigDecimal
   balance_gt: BigDecimal
   balance_gte: BigDecimal
@@ -1285,7 +1279,6 @@ input PoolToken_filter {
 enum PoolToken_orderBy {
   address
   assetManager
-  assimilator
   balance
   cashBalance
   decimals
@@ -1516,6 +1509,14 @@ input Pool_filter {
   protocolAumFeeCache_lte: BigDecimal
   protocolAumFeeCache_not: BigDecimal
   protocolAumFeeCache_not_in: [BigDecimal!]
+  protocolId: Int
+  protocolId_gt: Int
+  protocolId_gte: Int
+  protocolId_in: [Int!]
+  protocolId_lt: Int
+  protocolId_lte: Int
+  protocolId_not: Int
+  protocolId_not_in: [Int!]
   protocolSwapFeeCache: BigDecimal
   protocolSwapFeeCache_gt: BigDecimal
   protocolSwapFeeCache_gte: BigDecimal
@@ -1808,6 +1809,7 @@ enum Pool_orderBy {
   priceRateProviders
   principalToken
   protocolAumFeeCache
+  protocolId
   protocolSwapFeeCache
   protocolYieldFeeCache
   root3Alpha
@@ -3539,6 +3541,7 @@ type Token {
   address: String!
   decimals: Int!
   id: ID!
+  latestFXPrice: BigDecimal
   latestPrice: LatestPrice
   latestUSDPrice: BigDecimal
   name: String
@@ -3794,6 +3797,14 @@ input Token_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  latestFXPrice: BigDecimal
+  latestFXPrice_gt: BigDecimal
+  latestFXPrice_gte: BigDecimal
+  latestFXPrice_in: [BigDecimal!]
+  latestFXPrice_lt: BigDecimal
+  latestFXPrice_lte: BigDecimal
+  latestFXPrice_not: BigDecimal
+  latestFXPrice_not_in: [BigDecimal!]
   latestPrice: String
   latestPrice_: LatestPrice_filter
   latestPrice_contains: String
@@ -3930,6 +3941,7 @@ enum Token_orderBy {
   address
   decimals
   id
+  latestFXPrice
   latestPrice
   latestUSDPrice
   name
