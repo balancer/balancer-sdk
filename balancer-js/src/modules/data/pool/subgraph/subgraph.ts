@@ -1,7 +1,5 @@
 import { Findable, Searchable } from '../../types';
 import {
-  createSubgraphClient,
-  SubgraphClient,
   SubgraphPool,
   Pool_OrderBy,
   OrderDirection,
@@ -25,6 +23,7 @@ import {
 } from '@/types';
 import { Network } from '@/lib/constants/network';
 import { PoolQueryVariables } from '../../../subgraph/subgraph';
+import { SubgraphHelper } from './utils/subgraphHelper';
 
 interface PoolsSubgraphRepositoryOptions {
   url: string;
@@ -47,19 +46,18 @@ interface SubgraphSubPool extends SubgraphSubPoolFragment {
 }
 
 /**
- * Access pools using generated subgraph client.
+ * Access pools using generated subgraph.
  *
- * Balancer's subgraph URL: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
  */
 export class PoolsSubgraphRepository
   implements Findable<Pool, PoolAttribute>, Searchable<Pool>
 {
-  private client: SubgraphClient;
   private chainId: Network;
   private pools?: Promise<Pool[]>;
   public skip = 0;
   private blockHeight: undefined | (() => Promise<number | undefined>);
   private query: GraphQLQuery;
+  private subgraphHelper: SubgraphHelper;
 
   /**
    * Repository with optional lazy loaded blockHeight
@@ -69,9 +67,9 @@ export class PoolsSubgraphRepository
    * @param blockHeight lazy loading blockHeigh resolver
    */
   constructor(options: PoolsSubgraphRepositoryOptions) {
-    this.client = createSubgraphClient(options.url);
     this.blockHeight = options.blockHeight;
     this.chainId = options.chainId;
+    this.subgraphHelper = new SubgraphHelper(options.url);
 
     const defaultArgs: GraphQLArgs = {
       orderBy: Pool_OrderBy.TotalLiquidity,
@@ -102,16 +100,10 @@ export class PoolsSubgraphRepository
    * @returns Promise resolving to pools list
    */
   private async fetchDefault(): Promise<Pool[]> {
-    console.time('fetching pools');
-    const { pool0, pool1000, pool2000 } = await this.client.AllPools({
-      where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
-      orderBy: Pool_OrderBy.TotalLiquidity,
-      orderDirection: OrderDirection.Desc,
+    const pools = await this.subgraphHelper.allPools({
       block: await this.block(),
     });
-    console.timeEnd('fetching pools');
-
-    return [...pool0, ...pool1000, ...pool2000].map(this.mapType.bind(this));
+    return pools.map(this.mapType.bind(this));
   }
 
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
@@ -128,10 +120,7 @@ export class PoolsSubgraphRepository
       new SubgraphArgsFormatter()
     ) as PoolQueryVariables;
 
-    const { pool0, pool1000, pool2000 } = await this.client.AllPools(
-      formattedQuery
-    );
-    const pools = [...pool0, ...pool1000, ...pool2000];
+    const pools = await this.subgraphHelper.allPools(formattedQuery);
 
     this.skip = (options?.skip || 0) + pools.length;
 
