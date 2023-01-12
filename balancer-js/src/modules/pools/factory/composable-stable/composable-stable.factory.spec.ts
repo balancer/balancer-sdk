@@ -11,6 +11,7 @@ import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
 import { forkSetup } from '@/test/lib/utils';
 import dotenv from 'dotenv';
 import { isSameAddress } from '@/lib/utils';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 
 dotenv.config();
 
@@ -31,7 +32,7 @@ const rateProviders = [AddressZero, AddressZero];
 
 const exemptFromYieldProtocolFeeFlags = [false, false];
 const tokenRateCacheDurations = ['0', '0'];
-const factoryAddress = '0x85a80afee867aDf27B50BdB7b76DA70f1E853062';
+const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`;
 const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const tokenAddresses = [USDC_address, USDT_address];
 const amplificationParameter = '2';
