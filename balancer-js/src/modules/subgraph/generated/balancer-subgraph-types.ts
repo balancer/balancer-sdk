@@ -4040,18 +4040,6 @@ export type PoolSharesQuery = { __typename?: 'Query', poolShares: Array<{ __type
 
 export type SubgraphPoolShareFragment = { __typename?: 'PoolShare', id: string, balance: string, userAddress: { __typename?: 'User', id: string }, poolId: { __typename?: 'Pool', id: string, address: string } };
 
-export type PoolsQueryVariables = Exact<{
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
-  orderBy?: InputMaybe<Pool_OrderBy>;
-  orderDirection?: InputMaybe<OrderDirection>;
-  where?: InputMaybe<Pool_Filter>;
-  block?: InputMaybe<Block_Height>;
-}>;
-
-
-export type PoolsQuery = { __typename?: 'Query', pools: Array<{ __typename?: 'Pool', id: string, address: string, poolType?: string | null, poolTypeVersion?: number | null, factory?: string | null, strategyType: number, symbol?: string | null, name?: string | null, swapEnabled: boolean, swapFee: string, protocolYieldFeeCache?: string | null, owner?: string | null, totalWeight?: string | null, totalSwapVolume: string, totalSwapFee: string, totalLiquidity: string, totalShares: string, swapsCount: string, holdersCount: string, tokensList: Array<string>, amp?: string | null, expiryTime?: string | null, unitSeconds?: string | null, createTime: number, principalToken?: string | null, baseToken?: string | null, wrappedIndex?: number | null, mainIndex?: number | null, lowerTarget?: string | null, upperTarget?: string | null, sqrtAlpha?: string | null, sqrtBeta?: string | null, root3Alpha?: string | null, tokens?: Array<{ __typename?: 'PoolToken', id: string, symbol: string, name: string, decimals: number, address: string, balance: string, managedBalance: string, weight?: string | null, priceRate: string, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null, tokens?: Array<{ __typename?: 'PoolToken', address: string, balance: string, weight?: string | null, priceRate: string, symbol: string, decimals: number, isExemptFromYieldProtocolFee?: boolean | null, token: { __typename?: 'Token', latestUSDPrice?: string | null, pool?: { __typename?: 'Pool', id: string, totalShares: string, address: string, poolType?: string | null, mainIndex?: number | null } | null } }> | null } | null } }> | null } | null } }> | null, priceRateProviders?: Array<{ __typename?: 'PriceRateProvider', address: string, token: { __typename?: 'PoolToken', address: string } }> | null }> };
-
 export type AllPoolsQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -4429,20 +4417,6 @@ export const PoolSharesDocument = gql`
   }
 }
     ${SubgraphPoolShareFragmentDoc}`;
-export const PoolsDocument = gql`
-    query Pools($skip: Int, $first: Int, $orderBy: Pool_orderBy, $orderDirection: OrderDirection, $where: Pool_filter, $block: Block_height) {
-  pools(
-    skip: $skip
-    first: $first
-    orderBy: $orderBy
-    orderDirection: $orderDirection
-    where: $where
-    block: $block
-  ) {
-    ...SubgraphPool
-  }
-}
-    ${SubgraphPoolFragmentDoc}`;
 export const AllPoolsDocument = gql`
     query AllPools($skip: Int, $first: Int, $orderBy: Pool_orderBy, $orderDirection: OrderDirection, $where: Pool_filter, $block: Block_height) {
   pool0: pools(
@@ -4616,9 +4590,6 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     },
     PoolShares(variables?: PoolSharesQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolSharesQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<PoolSharesQuery>(PoolSharesDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'PoolShares', 'query');
-    },
-    Pools(variables?: PoolsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<PoolsQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<PoolsQuery>(PoolsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'Pools', 'query');
     },
     AllPools(variables?: AllPoolsQueryVariables, requestHeaders?: Dom.RequestInit["headers"]): Promise<AllPoolsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<AllPoolsQuery>(AllPoolsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'AllPools', 'query');

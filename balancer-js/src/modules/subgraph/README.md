@@ -12,7 +12,7 @@ The module leverages `graphql-codegen` and `graphql-request`.
 
 const client = createSubgraphClient(BALANCER_SUBGRAPH_URL);
 
-const { pools } = await client.Pools({
+const { pool0 } = await client.Pools({
     first: 5,
     where: { totalLiquidity_gt: '1' },
 });

@@ -24,7 +24,7 @@ import {
   SubPoolMeta,
 } from '@/types';
 import { Network } from '@/lib/constants/network';
-import { PoolsQueryVariables } from '../../subgraph/subgraph';
+import { PoolQueryVariables } from '../../subgraph/subgraph';
 
 interface PoolsSubgraphRepositoryOptions {
   url: string;
@@ -126,9 +126,12 @@ export class PoolsSubgraphRepository
 
     const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
       new SubgraphArgsFormatter()
-    ) as PoolsQueryVariables;
+    ) as PoolQueryVariables;
 
-    const { pools } = await this.client.Pools(formattedQuery);
+    const { pool0, pool1000, pool2000 } = await this.client.AllPools(
+      formattedQuery
+    );
+    const pools = [...pool0, ...pool1000, ...pool2000];
 
     this.skip = (options?.skip || 0) + pools.length;
 
