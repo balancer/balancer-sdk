@@ -101,6 +101,7 @@ fragment SubgraphPool on Pool {
     swapEnabled
     swapFee
     protocolYieldFeeCache
+    protocolSwapFeeCache
     owner
     totalWeight
     totalSwapVolume
