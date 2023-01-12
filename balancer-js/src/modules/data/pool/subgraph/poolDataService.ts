@@ -1,13 +1,9 @@
 import { PoolDataService, SubgraphPoolBase } from '@balancer-labs/sor';
-import {
-  OrderDirection,
-  Pool_OrderBy,
-  SubgraphClient,
-} from '@/modules/subgraph/subgraph';
 import { parseInt } from 'lodash';
 import { getOnChainBalances } from './utils/onChainData';
 import { Provider } from '@ethersproject/providers';
 import { BalancerNetworkConfig, BalancerSdkSorConfig } from '@/types';
+import { SubgraphHelper } from './utils/subgraphHelper';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapPools(pools: any[]): SubgraphPoolBase[] {
@@ -29,21 +25,18 @@ export function mapPools(pools: any[]): SubgraphPoolBase[] {
 }
 
 export class SubgraphPoolDataService implements PoolDataService {
+  private subgraphHelper: SubgraphHelper;
+
   constructor(
-    private readonly client: SubgraphClient,
     private readonly provider: Provider,
     private readonly network: BalancerNetworkConfig,
     private readonly sorConfig: BalancerSdkSorConfig
-  ) {}
+  ) {
+    this.subgraphHelper = new SubgraphHelper(this.network.urls.subgraph);
+  }
 
   public async getPools(): Promise<SubgraphPoolBase[]> {
-    const { pool0, pool1000, pool2000 } = await this.client.AllPools({
-      where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
-      orderBy: Pool_OrderBy.TotalLiquidity,
-      orderDirection: OrderDirection.Desc,
-    });
-
-    const pools = [...pool0, ...pool1000, ...pool2000];
+    const pools = await this.subgraphHelper.allPools();
 
     const mapped = mapPools(pools);
 

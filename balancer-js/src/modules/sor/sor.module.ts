@@ -28,8 +28,7 @@ export class Sor extends SOR {
     const poolDataService = Sor.getPoolDataService(
       network,
       sorConfig,
-      provider,
-      subgraphClient
+      provider
     );
 
     const tokenPriceService = Sor.getTokenPriceService(
@@ -65,17 +64,11 @@ export class Sor extends SOR {
   private static getPoolDataService(
     network: BalancerNetworkConfig,
     sorConfig: BalancerSdkSorConfig,
-    provider: Provider,
-    subgraphClient: SubgraphClient
+    provider: Provider
   ) {
     return typeof sorConfig.poolDataService === 'object'
       ? sorConfig.poolDataService
-      : new SubgraphPoolDataService(
-          subgraphClient,
-          provider,
-          network,
-          sorConfig
-        );
+      : new SubgraphPoolDataService(provider, network, sorConfig);
   }
 
   private static getTokenPriceService(
