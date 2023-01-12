@@ -1,7 +1,4 @@
-import {
-  ComposableStableCreatePoolParameters,
-  CreatePoolParameters,
-} from '@/modules/pools/factory/types';
+import { ComposableStableCreatePoolParameters } from '@/modules/pools/factory/types';
 import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
 import { TransactionRequest } from '@ethersproject/providers';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
