@@ -101,7 +101,9 @@ export class PoolsSubgraphRepository
    */
   private async fetchDefault(): Promise<Pool[]> {
     const pools = await this.subgraphHelper.allPools({
-      block: await this.block(),
+      queryOptions: {
+        block: await this.block(),
+      },
     });
     return pools.map(this.mapType.bind(this));
   }
@@ -120,7 +122,9 @@ export class PoolsSubgraphRepository
       new SubgraphArgsFormatter()
     ) as PoolQueryVariables;
 
-    const pools = await this.subgraphHelper.allPools(formattedQuery);
+    const pools = await this.subgraphHelper.allPools({
+      queryOptions: formattedQuery,
+    });
 
     this.skip = (options?.skip || 0) + pools.length;
 

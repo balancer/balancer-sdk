@@ -36,7 +36,9 @@ export class SubgraphPoolDataService implements PoolDataService {
   }
 
   public async getPools(): Promise<SubgraphPoolBase[]> {
-    const pools = await this.subgraphHelper.allPools();
+    const pools = await this.subgraphHelper.allPools({
+      poolsToIgnore: this.network.poolsToIgnore,
+    });
 
     const mapped = mapPools(pools);
 

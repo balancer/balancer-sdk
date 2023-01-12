@@ -74,6 +74,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
     },
     pools: {},
+    poolsToIgnore: ['0x600bd01b6526611079e12e1ff93aba7a3e34226f'],
   },
   [Network.ARBITRUM]: {
     chainId: Network.ARBITRUM, //42161
