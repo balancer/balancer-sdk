@@ -1,6 +1,6 @@
 import { SOR, SorConfig, TokenPriceService } from '@balancer-labs/sor';
 import { Provider, JsonRpcProvider } from '@ethersproject/providers';
-import { SubgraphPoolDataService } from '../data/pool/subgraphPoolDataService';
+import { SubgraphPoolDataService } from '../data/pool/subgraph/poolDataService';
 import { CoingeckoTokenPriceService } from './token-price/coingeckoTokenPriceService';
 import {
   SubgraphClient,

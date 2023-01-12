@@ -19,10 +19,10 @@ import {
   BalancerDataRepositories,
   GraphQLQuery,
 } from '@/types';
-import { PoolsSubgraphRepository } from './pool/subgraph';
+import { PoolsSubgraphRepository } from './pool/subgraph/subgraph';
 import { PoolSharesRepository } from './pool-shares/repository';
 import { PoolJoinExitRepository } from './pool-joinExit/repository';
-import { PoolsSubgraphOnChainRepository } from './pool/subgraphOnChain';
+import { PoolsSubgraphOnChainRepository } from './pool/subgraph/subgraphWithOnChain';
 import { PoolGaugesRepository } from './pool-gauges/repository';
 import { GaugeSharesRepository } from './gauge-shares/repository';
 import { BlockNumberRepository } from './block-number';

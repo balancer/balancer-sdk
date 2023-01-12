@@ -1,4 +1,4 @@
-import { Findable, Searchable } from '../types';
+import { Findable, Searchable } from '../../types';
 import {
   createSubgraphClient,
   SubgraphClient,
@@ -14,7 +14,7 @@ import {
   SubgraphArgsFormatter,
 } from '@/lib/graphql/args-builder';
 import { GraphQLArgs } from '@/lib/graphql/types';
-import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
+import { PoolAttribute, PoolsRepositoryFetchOptions } from '../types';
 import {
   GraphQLQuery,
   Pool,
@@ -24,7 +24,7 @@ import {
   SubPoolMeta,
 } from '@/types';
 import { Network } from '@/lib/constants/network';
-import { PoolQueryVariables } from '../../subgraph/subgraph';
+import { PoolQueryVariables } from '../../../subgraph/subgraph';
 
 interface PoolsSubgraphRepositoryOptions {
   url: string;

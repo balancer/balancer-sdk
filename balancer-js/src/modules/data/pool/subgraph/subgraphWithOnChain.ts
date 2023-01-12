@@ -1,9 +1,9 @@
-import { Findable, Searchable } from '../types';
+import { Findable, Searchable } from '../../types';
 import { Provider } from '@ethersproject/providers';
-import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
+import { PoolAttribute, PoolsRepositoryFetchOptions } from '../types';
 import { GraphQLQuery, Pool } from '@/types';
 import { Network } from '@/lib/constants/network';
-import { getOnChainBalances } from './onChainData';
+import { getOnChainBalances } from './utils/onChainData';
 import { PoolsSubgraphRepository } from './subgraph';
 
 interface PoolsSubgraphOnChainRepositoryOptions {
