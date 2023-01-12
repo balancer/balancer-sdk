@@ -304,17 +304,21 @@ There are two ways to join a pool:
 In this documentation, we will focus on the first method (`joinExactIn`) for joining a pool with known token amounts.
 
 ```js
-const pool = await sdk.pools.find(poolId)
-const maxAmountsIn = pool.tokenList.map((t) => forEachTokenSpecifyAmountYouWantToJoinWith)
-const queryParams = pool.buildQueryJoinExactIn({ maxAmountsIn })
-const response = await balancerContracts.balancerHelpers.queryJoin(...queryParams)
-const { bptOut, amountsIn } = response
+const pool = await sdk.pools.find(poolId);
+const maxAmountsIn = pool.tokenList.map(
+  (t) => forEachTokenSpecifyAmountYouWantToJoinWith
+);
+const queryParams = pool.buildQueryJoinExactIn({ maxAmountsIn });
+const response = await balancerContracts.balancerHelpers.queryJoin(
+  ...queryParams
+);
+const { bptOut, amountsIn } = response;
 ```
 
 `response` will return:
 
-* `bptOut`: The expected pool token amount returned by the pool.
-* `amountsIn`: The same as maxAmountsIn
+- `bptOut`: The expected pool token amount returned by the pool.
+- `amountsIn`: The same as maxAmountsIn
 
 ### Simulating exits
 
@@ -327,16 +331,18 @@ There are three ways to join a pool:
 In this example, we will focus on the first method (`exitProportionally`).
 
 ```js
-const pool = await sdk.pools.find(poolId)
-const queryParams = pool.buildQueryJoinExactIn({ bptIn })
-const response = await balancerContracts.balancerHelpers.queryJoin(...queryParams)
-const { bptIn, amountsOut } = response
+const pool = await sdk.pools.find(poolId);
+const queryParams = pool.buildQueryJoinExactIn({ bptIn });
+const response = await balancerContracts.balancerHelpers.queryJoin(
+  ...queryParams
+);
+const { bptIn, amountsOut } = response;
 ```
 
 `response` will return:
 
-* `amountsOut`: Token amounts returned by the pool.
-* `bptIn`: The same as intput bptIn
+- `amountsOut`: Token amounts returned by the pool.
+- `bptIn`: The same as intput bptIn
 
 More examples: https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/pools/queries.ts
 
@@ -372,7 +378,9 @@ buildJoin: (
   slippage: string
 ) => Promise<JoinPoolAttributes>;
 ```
+
 [Example](./examples/join.ts)
+
 ### Joining nested pools
 
 Exposes Join functionality allowing user to join a pool that has pool tokens that are BPTs of other pools, e.g.:
@@ -434,18 +442,42 @@ Builds an exit transaction with exact BPT in and minimum token amounts out based
 
 ```js
   /**
-   * @param {string}  exiter - Account address exiting pool
-   * @param {string}  bptIn - BPT provided for exiting pool
-   * @param {string}  slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-   * @param {string}  singleTokenMaxOut - Optional: token address that if provided will exit to given token
-   * @returns         transaction request ready to send with signer.sendTransaction
+   * @param exiter - Account address exiting pool
+   * @param bptIn - BPT provided for exiting pool
+   * @param slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @param shouldUnwrapNativeAsset Indicates whether wrapped native asset should be unwrapped after exit.
+   * @param singleTokenMaxOut - Optional: token address that if provided will exit to given token
+   * @returns transaction request ready to send with signer.sendTransaction
    */
   buildExitExactBPTIn: (
     exiter: string,
     bptIn: string,
     slippage: string,
+    shouldUnwrapNativeAsset?: boolean,
     singleTokenMaxOut?: string
-  ) => Promise<ExitPoolAttributes>;
+  ) => Promise<ExitExactBPTInAttributes>;
+```
+
+where:
+
+```js
+/**
+ * Exit exact BPT in transaction parameters
+ * @param to Address that will execute the transaction (vault address)
+ * @param functionName Function name to be called (exitPool)
+ * @param attributes Transaction attributes ready to be encoded
+ * @param data Encoded transaction data
+ * @param expectedAmountsOut Expected amounts out of exit transaction
+ * @param minAmountsOut Minimum amounts out of exit transaction considering slippage tolerance
+ */
+export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
+  to: string;
+  functionName: string;
+  attributes: ExitPool;
+  data: string;
+  expectedAmountsOut: string[];
+  minAmountsOut: string[];
+}
 ```
 
 [Example](./examples/exitExactBPTIn.ts)
@@ -467,7 +499,29 @@ Builds an exit transaction with exact tokens out and maximum BPT in based on sli
     tokensOut: string[],
     amountsOut: string[],
     slippage: string
-  ) => Promise<ExitPoolAttributes>;
+  ) => Promise<ExitExactTokensOutAttributes>;
+```
+
+where:
+
+```js
+/**
+ * Exit exact tokens out transaction parameters
+ * @param to Address that will execute the transaction (vault address)
+ * @param functionName Function name to be called (exitPool)
+ * @param attributes Transaction attributes ready to be encoded
+ * @param data Encoded transaction data
+ * @param expectedBPTIn Expected BPT into exit transaction
+ * @param maxBPTIn Max BPT into exit transaction considering slippage tolerance
+ */
+export interface ExitExactTokensOutAttributes extends ExitPoolAttributes {
+  to: string;
+  functionName: string;
+  attributes: ExitPool;
+  data: string;
+  expectedBPTIn: string;
+  maxBPTIn: string;
+}
 ```
 
 [Example](./examples/exitExactTokensOut.ts)
@@ -517,8 +571,11 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
 ## Create Pool
 
 Exposes create functionality allowing user to create pools.
+
 ### #createComposableStablePool
+
 Builds a transaction to create a composable stable pool.
+
 ```js
   /***
  * @param params
@@ -546,9 +603,11 @@ create({
     exemptFromYieldProtocolFeeFlags,
     swapFee,
     owner,
-}) => TransactionRequest 
+}) => TransactionRequest
 ```
+
 [Example](./examples/pools/composable-stable/create.ts)
+
 ## RelayerService
 
 Relayers are (user opt-in, audited) contracts that can make calls to the vault (with the transaction “sender” being any arbitrary address) and use the sender’s ERC20 vault allowance, internal balance or BPTs on their behalf.
@@ -657,9 +716,8 @@ async relayer.exitPoolAndBatchSwap(
 ### Pools Impermanent Loss
 
 > DRAFT
-> 
+>
 > impermanent loss (IL) describes the percentage by which a pool is worth less than what one would have if they had instead just held the tokens outside the pool
-
 
 #### Service
 
@@ -671,10 +729,9 @@ Using the variation delta formula:
 
 ![img.png](img.png)
 
-where **𝚫P<sup>i</sup>** represents the difference between the price for a single token at the date of joining the pool and the current price. 
+where **𝚫P<sup>i</sup>** represents the difference between the price for a single token at the date of joining the pool and the current price.
 
 ```javascript
-
 // retrieves pool's tokens
 tokens = pool.tokens;
 // get weights for tokens
@@ -682,17 +739,32 @@ weights = tokens.map((token) => token.weight);
 // retrieves current price for tokens
 exitPrices = tokens.map((token) => tokenPrices.find(token.address));
 // retrieves historical price for tokens
-entryPrices = tokens.map((token) => tokenPrices.findBy('timestamp', { address: token.address, timestamp: timestamp})); 
-// retrieves list of pool's assets with prices delta and weights 
+entryPrices = tokens.map((token) =>
+  tokenPrices.findBy('timestamp', {
+    address: token.address,
+    timestamp: timestamp,
+  })
+);
+// retrieves list of pool's assets with prices delta and weights
 assets = tokens.map((token) => ({
-  priceDelta: this.getDelta(entryPrices[token.address], exitPrices[token.address]),
+  priceDelta: this.getDelta(
+    entryPrices[token.address],
+    exitPrices[token.address]
+  ),
   weight: weights[i],
 }));
 
-poolValueDelta = assets.reduce((result, asset) => result * Math.pow(Math.abs(asset.priceDelta + 1), asset.weight), 1);
-holdValueDelta = assets.reduce((result, asset) => result + (Math.abs(asset.priceDelta + 1) * asset.weight), 0);
+poolValueDelta = assets.reduce(
+  (result, asset) =>
+    result * Math.pow(Math.abs(asset.priceDelta + 1), asset.weight),
+  1
+);
+holdValueDelta = assets.reduce(
+  (result, asset) => result + Math.abs(asset.priceDelta + 1) * asset.weight,
+  0
+);
 
-const IL = poolValueDelta/holdValueDelta - 1;
+const IL = poolValueDelta / holdValueDelta - 1;
 ```
 
 #### Usage
@@ -701,18 +773,19 @@ const IL = poolValueDelta/holdValueDelta - 1;
 async impermanentLoss(
   timestamp: number, // the UNIX timestamp from which the IL is desired
   pool: Pool // the pool on which the IL must be calculated
-): Promise<number> 
+): Promise<number>
 ```
 
 ```javascript
 const pool = await sdk.pools.find(poolId);
-const joins = (await sdk.data.findByUser(userAddress)).filter((it) => it.type === "Join" && it.poolId === poolId);
+const joins = (await sdk.data.findByUser(userAddress)).filter(
+  (it) => it.type === 'Join' && it.poolId === poolId
+);
 const join = joins[0];
-const IL = await pools.impermanentLoss(join.timestamp, pool);  
+const IL = await pools.impermanentLoss(join.timestamp, pool);
 ```
 
 [Example](./examples/pools/impermanentLoss.ts)
-
 
 ## Licensing
 

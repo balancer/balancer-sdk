@@ -1,3 +1,4 @@
+// yarn test:only ./src/modules/pools/pool-types/concerns/metaStable/exit.concern.integration.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { BalancerSDK, Network, Pool } from '@/.';
@@ -9,7 +10,6 @@ import { forkSetup, getBalances } from '@/test/lib/utils';
 import { Pools } from '@/modules/pools';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import { ExitPoolAttributes } from '../types';
 import { AddressZero } from '@ethersproject/constants';
 
 dotenv.config();
@@ -67,7 +67,7 @@ describe('exit meta stable pools execution', async () => {
   });
 
   const testFlow = async (
-    { to, data, maxBPTIn, minAmountsOut }: ExitPoolAttributes,
+    [to, data, maxBPTIn, minAmountsOut]: [string, string, string, string[]],
     exitTokens: string[],
     exitWithETH = false
   ) => {
@@ -110,10 +110,12 @@ describe('exit meta stable pools execution', async () => {
     context('proportional amounts out', async () => {
       before(async function () {
         const bptIn = parseFixed('10', 18).toString();
-        await testFlow(
-          controller.buildExitExactBPTIn(signerAddress, bptIn, slippage),
-          pool.tokensList
+        const { to, data, minAmountsOut } = controller.buildExitExactBPTIn(
+          signerAddress,
+          bptIn,
+          slippage
         );
+        await testFlow([to, data, bptIn, minAmountsOut], pool.tokensList);
       });
 
       it('should work', async () => {
@@ -138,16 +140,14 @@ describe('exit meta stable pools execution', async () => {
     context('single token max out', async () => {
       before(async function () {
         const bptIn = parseFixed('10', 18).toString();
-        await testFlow(
-          controller.buildExitExactBPTIn(
-            signerAddress,
-            bptIn,
-            slippage,
-            false,
-            pool.tokensList[0]
-          ),
-          pool.tokensList
+        const { to, data, minAmountsOut } = controller.buildExitExactBPTIn(
+          signerAddress,
+          bptIn,
+          slippage,
+          false,
+          pool.tokensList[0]
         );
+        await testFlow([to, data, bptIn, minAmountsOut], pool.tokensList);
       });
 
       it('should work', async () => {
@@ -226,13 +226,15 @@ describe('exit meta stable pools execution', async () => {
           return '0';
         });
 
+        const { to, data, maxBPTIn } = controller.buildExitExactTokensOut(
+          signerAddress,
+          tokensOut.map((t) => t.address),
+          amountsOut,
+          slippage
+        );
+
         await testFlow(
-          controller.buildExitExactTokensOut(
-            signerAddress,
-            tokensOut.map((t) => t.address),
-            amountsOut,
-            slippage
-          ),
+          [to, data, maxBPTIn, amountsOut],
           tokensOut.map((t) => t.address)
         );
       });
@@ -243,10 +245,13 @@ describe('exit meta stable pools execution', async () => {
 
       it('tokens balance should increase by exact amountsOut', async () => {
         for (let i = 0; i < tokensBalanceAfter.length; i++) {
+          // MetaStable exitExactTokensOut may exit with a rounding error of 1 wei
           expect(
             tokensBalanceAfter[i]
               .sub(tokensBalanceBefore[i])
-              .eq(tokensMinBalanceIncrease[i])
+              .sub(tokensMinBalanceIncrease[i])
+              .abs()
+              .lte(1)
           ).to.be.true;
         }
       });
@@ -272,16 +277,14 @@ describe('exit meta stable pools execution', async () => {
           return '0';
         });
 
-        await testFlow(
-          controller.buildExitExactTokensOut(
-            signerAddress,
-            exitTokens,
-            amountsOut,
-            slippage
-          ),
+        const { to, data, maxBPTIn } = controller.buildExitExactTokensOut(
+          signerAddress,
           exitTokens,
-          true
+          amountsOut,
+          slippage
         );
+
+        await testFlow([to, data, maxBPTIn, amountsOut], exitTokens, true);
       });
 
       it('should work', async () => {

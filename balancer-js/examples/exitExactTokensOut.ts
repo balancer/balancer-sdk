@@ -49,7 +49,7 @@ async function exitExactTokensOut() {
   ]; // Tokens that will be provided to pool by joiner
   const amountsOut = ['10000000', '1000000000000000000'];
 
-  const { to, data, maxBPTIn } = pool.buildExitExactTokensOut(
+  const { to, data, expectedBPTIn, maxBPTIn } = pool.buildExitExactTokensOut(
     signerAddress,
     tokensOut as string[],
     amountsOut,
@@ -86,12 +86,8 @@ async function exitExactTokensOut() {
 
   console.log('Balances before exit:                 ', tokenBalancesBefore);
   console.log('Balances after exit:                  ', tokenBalancesAfter);
-  console.log('Max BPT input:                        ', [maxBPTIn.toString()]);
-  console.log('Actual BPT input:                     ', [
-    BigNumber.from(tokenBalancesBefore[0])
-      .sub(BigNumber.from(tokenBalancesAfter[0]))
-      .toString(),
-  ]);
+  console.log('Expected BPT input:                   ', expectedBPTIn);
+  console.log('Max BPT input (slippage):             ', maxBPTIn);
 }
 
 // yarn examples:run ./examples/exitExactTokensOut.ts
