@@ -16,12 +16,14 @@ import {
 } from "./helper";
 
 const liquidityGaugeV5Interface = new Interface([
+  'function claim_rewards(address sender, address receiver) view returns (uint256)',
   'function claimable_tokens(address addr) view returns (uint256)',
   'function claimable_reward(address addr, address token) view returns (uint256)',
 ]);
 
 const gaugeClaimHelperInterface = new Interface([
   'function getPendingRewards(address gauge, address user, address token) view returns (uint256)',
+  'function claimRewardsFromGauges(address[] gauges, address user)'
 ]);
 
 export interface TransactionData {
@@ -29,13 +31,13 @@ export interface TransactionData {
   from: string;
   callData: string;
   tokensOut: string[];
-  expectedAmountsOut: string[];
+  expectedTokensValue: number[];
   functionName: string;
 }
 
 export interface IClaimService {
   getClaimableTokens(userAddress: string): Promise<LiquidityGauge[]>;
-  claimRewardTokens(userAddress: string, gaugeAddresses: string[]): TransactionData;
+  claimRewardTokens(gaugeAddresses: string[], userAddress: string, receiverAddress?: string): Promise<TransactionData>;
 }
 
 
@@ -70,9 +72,47 @@ export class ClaimService implements IClaimService{
     return populateGauges(gauges, claimableRewards, claimableTokens);
   }
 
-  claimRewardTokens(userAddress: string, gaugeAddresses: string[]): TransactionData {
-
-    throw new Error('To be implemented');
+  async claimRewardTokens(gaugeAddresses: string[], userAddress: string, receiverAddress?: string): Promise<TransactionData> {
+    const allGauges = await this.getClaimableTokens(userAddress);
+    const gauges = allGauges
+      .filter((it) => gaugeAddresses.map(it => it.toLowerCase()).includes(it.address.toLowerCase()))
+      .filter((it) => it.claimableTokens && Object.keys(it.claimableTokens).length);
+    const claimableTokens = Array.from(new Set(gauges.map((gauge) => gauge.claimableTokens).map((tokens) => Object.keys(tokens || {})).flatMap(it => it)));
+    const expectedValues = claimableTokens.map((tokenAddress) => {
+      return gauges.reduce((value, gauge) => {
+        if (gauge.claimableTokens && gauge.claimableTokens[tokenAddress])
+          value += gauge.claimableTokens[tokenAddress];
+        return value;
+      }, 0);
+    })
+    if (this.chainId === 1 || this.chainId === 5) {
+      // prepare data for mainnnet
+      const receiver = receiverAddress ?? userAddress;
+      const sender = userAddress;
+      const payload = [];
+      for (const gaugeAddress of gaugeAddresses) {
+          payload.push(
+            gaugeAddress,
+            liquidityGaugeV5Interface.encodeFunctionData('claim_rewards', [sender, receiver]),
+          );
+      }
+      throw new Error('not yet implemented')
+    } else {
+      try {
+        const callData = gaugeClaimHelperInterface.encodeFunctionData('claimRewardsFromGauges', [gaugeAddresses, userAddress]);
+        return {
+          to: this.gaugeClaimHelperAddress!,
+          from: userAddress,
+          callData: callData,
+          tokensOut: claimableTokens,
+          expectedTokensValue: expectedValues,
+          functionName: 'claimRewardsFromGauges'
+        }
+      } catch (e) {
+        console.log(e);
+        throw e;
+      }
+    }
   }
 
   private async getGauges(): Promise<LiquidityGauge[]> {
@@ -112,7 +152,6 @@ export class ClaimService implements IClaimService{
         gaugeAddress,
         liquidityGaugeV5Interface.encodeFunctionData('claimable_reward', [userAddress, tokenAddress]),
       ];
-
     }
     if (!this.gaugeClaimHelperAddress) throw new BalancerError(BalancerErrorCode.GAUGES_HELPER_ADDRESS_NOT_PROVIDED);
     return [
