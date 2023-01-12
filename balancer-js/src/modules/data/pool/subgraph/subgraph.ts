@@ -188,6 +188,7 @@ export class PoolsSubgraphRepository
       swapFee: subgraphPool.swapFee,
       swapEnabled: subgraphPool.swapEnabled,
       protocolYieldFeeCache: subgraphPool.protocolYieldFeeCache || '0',
+      protocolSwapFeeCache: subgraphPool.protocolSwapFeeCache || '0',
       amp: subgraphPool.amp ?? undefined,
       owner: subgraphPool.owner ?? undefined,
       factory: subgraphPool.factory ?? undefined,
