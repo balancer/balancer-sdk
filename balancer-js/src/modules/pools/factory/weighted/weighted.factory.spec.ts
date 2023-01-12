@@ -6,18 +6,31 @@ import { Network, PoolType } from '@/types';
 import { ADDRESSES } from '@/test/lib/constants';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { Interface, LogDescription } from '@ethersproject/abi';
-import { forkSetup } from '@/test/lib/utils';
+import { forkSetup, getBalances } from '@/test/lib/utils';
 import dotenv from 'dotenv';
 import { isSameAddress } from '@/lib/utils';
-import { WeightedPoolFactory__factory } from '@balancer-labs/typechain';
+import {
+  Vault__factory,
+  WeightedPool__factory,
+  WeightedPoolFactory__factory,
+} from '@balancer-labs/typechain';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { parseFixed } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
+import { AddressZero } from '@ethersproject/constants';
+import { parseEther } from '@ethersproject/units';
 
 dotenv.config();
 
-const network = Network.MAINNET;
-const rpcUrl = 'http://127.0.0.1:8545';
-const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
-const blockNumber = 16320000;
+// const network = Network.MAINNET;
+// const rpcUrl = 'http://127.0.0.1:8545';
+// const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
+// const blockNumber = 16340000;
+
+const network = Network.GOERLI;
+const rpcUrl = 'http://127.0.0.1:8000';
+const alchemyRpcUrl = `${process.env.ALCHEMY_URL_GOERLI}`;
+const blockNumber = 8200000;
 
 const name = 'My-Test-Pool-Name';
 const symbol = 'My-Test-Pool-Symbol';
@@ -32,7 +45,12 @@ const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const tokenAddresses = [USDC_address, USDT_address];
 const swapFee = '0.01';
 const weights = [`${0.2e18}`, `${0.8e18}`];
-describe('creating weighted pool', async () => {
+const slots = [addresses.USDC.slot, addresses.USDT.slot];
+const balances = [
+  parseFixed('100000', 6).toString(),
+  parseFixed('100000', 6).toString(),
+];
+describe('creating weighted pool', () => {
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
   const signer = provider.getSigner();
   const sdkConfig = {
@@ -41,11 +59,22 @@ describe('creating weighted pool', async () => {
   };
   const balancer = new BalancerSDK(sdkConfig);
   const weightedPoolFactory = balancer.pools.poolFactory.of(PoolType.Weighted);
-  context('create', async () => {
-    beforeEach(async () => {
-      await forkSetup(signer, [], [], [], alchemyRpcUrl, blockNumber, false);
+  let poolAddress = '';
+
+  context('create and init join', async () => {
+    before(async () => {
+      await forkSetup(
+        signer,
+        tokenAddresses,
+        slots,
+        balances,
+        alchemyRpcUrl,
+        blockNumber,
+        false
+      );
     });
     it('should create a pool', async () => {
+      const signerAddress = await signer.getAddress();
       const { to, data } = weightedPoolFactory.create({
         factoryAddress,
         name,
@@ -55,7 +84,6 @@ describe('creating weighted pool', async () => {
         swapFee,
         owner,
       });
-      const signerAddress = await signer.getAddress();
       const tx = await signer.sendTransaction({
         from: signerAddress,
         to,
@@ -76,15 +104,69 @@ describe('creating weighted pool', async () => {
           return isSameAddress(log.address, factoryAddress);
         })
         .map((log) => {
-          try {
-            return weightedPoolFactoryInterface.parseLog(log);
-          } catch (error) {
-            console.error(error);
-            return null;
-          }
+          return weightedPoolFactoryInterface.parseLog(log);
         })
         .find((parsedLog) => parsedLog?.name === 'PoolCreated');
+      if (poolCreationEvent) {
+        poolAddress = poolCreationEvent.args.pool;
+      }
       expect(!!poolCreationEvent).to.be.true;
+      return;
+    });
+    it('should init join a pool', async () => {
+      const signerAddress = await signer.getAddress();
+      const weightedPoolInterface = new Interface(WeightedPool__factory.abi);
+      const pool = new Contract(poolAddress, weightedPoolInterface, provider);
+      const poolId = await pool.getPoolId();
+
+      const iERC20 = [
+        'function approve(address,uint256) nonpayable',
+        'function balanceOf(address) view returns(uint)',
+      ];
+
+      const initJoinParams = weightedPoolFactory.buildInitJoin({
+        joiner: signerAddress,
+        poolId,
+        poolAddress,
+        tokensIn: tokenAddresses,
+        amountsIn: [
+          parseFixed('2000', 6).toString(),
+          parseFixed('8000', 6).toString(),
+        ],
+      });
+
+      const erc20 = new Contract(AddressZero, iERC20);
+      // Approve vault for seeder
+      await Promise.all(
+        Object.values(tokenAddresses).map((address) => {
+          return erc20
+            .attach(address)
+            .connect(signer)
+            .approve(initJoinParams.to, parseEther('10').toString(), {
+              gasLimit: 3000000,
+            });
+        })
+      );
+      const tx = await signer.sendTransaction({
+        // TODO: FIX something that's causing BAL#506 error
+        to: initJoinParams.to,
+        data: initJoinParams.data,
+        gasLimit: 30000000,
+      });
+      await tx.wait();
+      const receipt: TransactionReceipt = await provider.getTransactionReceipt(
+        tx.hash
+      );
+      const vaultInterface = new Interface(Vault__factory.abi);
+      const poolInitJoinEvent: LogDescription | null | undefined = receipt.logs
+        .filter((log: Log) => {
+          return isSameAddress(log.address, initJoinParams.to);
+        })
+        .map((log) => {
+          return vaultInterface.parseLog(log);
+        })
+        .find((parsedLog) => parsedLog?.name === 'PoolBalanceChanged');
+      expect(!!poolInitJoinEvent).to.be.true;
     });
   });
 });
