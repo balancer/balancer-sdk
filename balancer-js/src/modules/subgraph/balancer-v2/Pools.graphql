@@ -63,32 +63,6 @@ query Pool($id: ID!, $block: Block_height) {
     }
 }
 
-query PoolsWithoutLinear(
-    $skip: Int
-    $first: Int
-    $orderBy: Pool_orderBy
-    $orderDirection: OrderDirection
-    $where: Pool_filter
-    $block: Block_height
-) {
-    pools(
-        skip: $skip
-        first: $first
-        orderBy: $orderBy
-        orderDirection: $orderDirection
-        where: $where
-        block: $block
-    ) {
-        ...SubgraphPoolWithoutLinear
-    }
-}
-
-query PoolWithoutLinear($id: ID!, $block: Block_height) {
-    pool(id: $id, block: $block) {
-        ...SubgraphPoolWithoutLinear
-    }
-}
-
 fragment SubgraphPool on Pool {
     id
     address
@@ -129,33 +103,6 @@ fragment SubgraphPool on Pool {
     sqrtAlpha
     sqrtBeta
     root3Alpha
-}
-
-fragment SubgraphPoolWithoutLinear on Pool {
-    id
-    address
-    poolType
-    symbol
-    name
-    swapFee
-    totalWeight
-    totalSwapVolume
-    totalSwapFee
-    totalLiquidity
-    totalShares
-    tokens(first: 1000) {
-        ...SubgraphPoolToken
-    }
-    swapsCount
-    holdersCount
-    tokensList
-    totalWeight
-    amp
-    expiryTime
-    unitSeconds
-    principalToken
-    baseToken
-    swapEnabled
 }
 
 fragment SubgraphPoolToken on PoolToken {
