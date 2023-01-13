@@ -273,6 +273,7 @@ export interface Pool {
   poolTypeVersion: number;
   swapFee: string;
   protocolYieldFeeCache: string;
+  protocolSwapFeeCache: string;
   owner?: string;
   factory?: string;
   tokens: PoolToken[];
