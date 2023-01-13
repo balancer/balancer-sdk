@@ -517,6 +517,34 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
 ## Create Pool
 
 Exposes create functionality allowing user to create pools.
+
+### #createWeightedPool
+Builds a transaction to create a weighted pool.
+```js
+/***
+ * @param params
+ *  * Builds a transaction for a weighted pool create operation.
+ *  * @param factoryAddress - The address of the factory for weighted pool (contract address)
+ *  * @param name - The name of the pool
+ *  * @param symbol - The symbol of the pool
+ *  * @param tokenAddresses - The token's addresses
+ *  * @param weights The weights for each token, ordered
+ *  * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
+ *  * @param owner - The address of the owner of the pool
+ *  * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
+ */
+create({
+    factoryAddress,
+    name,
+    symbol,
+    tokenAddresses,
+    weights,
+    swapFee,
+    owner,
+}) => TransactionRequest
+```
+[Example](./examples/pools/weighted/create.ts)
+
 ### #createComposableStablePool
 Builds a transaction to create a composable stable pool.
 ```js
@@ -536,7 +564,7 @@ Builds a transaction to create a composable stable pool.
  *  * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
  */
 create({
-    contractAddress,
+    factoryAddress,
     name,
     symbol,
     tokenAddresses,
