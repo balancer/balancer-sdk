@@ -10,29 +10,23 @@ import { ADDRESSES } from '@/test/lib/constants';
 import { forkSetup } from "@/test/lib/utils";
 import { BALANCER_NETWORK_CONFIG } from "@/lib/constants/config";
 import { WeightedPoolFactory__factory } from "@balancer-labs/typechain";
+import "./example-config";
+import {
+  alchemyRpcUrl,
+  blockNumber,
+  network,
+  rpcUrl,
+  factoryAddress,
+  name,
+  symbol,
+  tokenAddresses,
+  weights,
+  swapFee,
+  owner
+} from "./example-config";
 
-dotenv.config();
 
-const network = Network.GOERLI;
-const rpcUrl = 'http://127.0.0.1:8000';
-const alchemyRpcUrl = `${ process.env.ALCHEMY_URL_GOERLI }`;
-const blockNumber = 8200000;
-
-const name = 'My-Test-Pool-Name';
-const symbol = 'My-Test-Pool-Symbol';
-
-const addresses = ADDRESSES[network];
-
-const USDC_address = addresses.USDC.address;
-const USDT_address = addresses.USDT.address;
-
-const factoryAddress = `${ BALANCER_NETWORK_CONFIG[network].addresses.contracts.weightedPoolFactory }`;
-const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
-const tokenAddresses = [USDC_address, USDT_address];
-const swapFee = '0.01';
-const weights = [`${ 0.2e18 }`, `${ 0.8e18 }`];
-
-async function createWeightedPool() {
+export async function createWeightedPool() {
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
   const signer = provider.getSigner();
   const sdkConfig = {
@@ -77,6 +71,8 @@ async function createWeightedPool() {
     .find((parsedLog) => parsedLog?.name === 'PoolCreated');
   if (!poolCreationEvent) return console.error("There's no event");
   console.log("poolAddress: " + poolCreationEvent.args.pool);
+
+  return poolCreationEvent.args.pool;
 }
 
 createWeightedPool().then((r) => r);

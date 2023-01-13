@@ -21,11 +21,16 @@ import { AddressZero } from '@ethersproject/constants';
 import { parseEther } from '@ethersproject/units';
 
 dotenv.config();
-
+//
 // const network = Network.MAINNET;
 // const rpcUrl = 'http://127.0.0.1:8545';
 // const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
-// const blockNumber = 16340000;
+// const blockNumber = 16320000;
+
+const network = Network.GOERLI;
+const rpcUrl = 'http://127.0.0.1:8000';
+const alchemyRpcUrl = `${process.env.ALCHEMY_URL_GOERLI}`;
+const blockNumber = 8200000;
 
 const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8000';
