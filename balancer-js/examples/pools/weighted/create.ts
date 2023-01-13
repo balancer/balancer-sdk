@@ -1,41 +1,26 @@
-import * as dotenv from 'dotenv';
 import {
   Log,
   TransactionReceipt,
 } from '@ethersproject/providers';
-import { BalancerSDK, isSameAddress, Network, PoolType } from 'src';
-import { ethers } from 'hardhat';
+import { isSameAddress, PoolType } from 'src';
 import { Interface, LogDescription } from '@ethersproject/abi';
-import { ADDRESSES } from '@/test/lib/constants';
 import { forkSetup } from "@/test/lib/utils";
-import { BALANCER_NETWORK_CONFIG } from "@/lib/constants/config";
 import { WeightedPoolFactory__factory } from "@balancer-labs/typechain";
-import "./example-config";
 import {
   alchemyRpcUrl,
   blockNumber,
-  network,
-  rpcUrl,
   factoryAddress,
   name,
   symbol,
   tokenAddresses,
   weights,
   swapFee,
-  owner
+  owner, slots, balances, balancer, signer, provider
 } from "./example-config";
 
-
-export async function createWeightedPool() {
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
-  const signer = provider.getSigner();
-  const sdkConfig = {
-    network,
-    rpcUrl,
-  };
-  const balancer = new BalancerSDK(sdkConfig);
+async function createWeightedPool() {
   const weightedPoolFactory = balancer.pools.poolFactory.of(PoolType.Weighted);
-  await forkSetup(signer, [], [], [], alchemyRpcUrl, blockNumber, false);
+  await forkSetup(signer, tokenAddresses, slots, balances, alchemyRpcUrl, blockNumber, false);
   const { to, data } = weightedPoolFactory.create({
     factoryAddress,
     name,
@@ -71,8 +56,7 @@ export async function createWeightedPool() {
     .find((parsedLog) => parsedLog?.name === 'PoolCreated');
   if (!poolCreationEvent) return console.error("There's no event");
   console.log("poolAddress: " + poolCreationEvent.args.pool);
-
   return poolCreationEvent.args.pool;
 }
 
-createWeightedPool().then((r) => r);
+export default createWeightedPool();

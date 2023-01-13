@@ -2,6 +2,9 @@ import * as dotenv from "dotenv";
 import { Network } from "@/lib/constants";
 import { ADDRESSES } from "@/test/lib/constants";
 import { BALANCER_NETWORK_CONFIG } from "@/lib/constants/config";
+import { parseFixed } from "@ethersproject/bignumber";
+import { ethers } from "hardhat";
+import { BalancerSDK } from "@/modules/sdk.module";
 
 dotenv.config();
 
@@ -23,3 +26,17 @@ export const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 export const tokenAddresses = [USDC_address, USDT_address];
 export const swapFee = '0.01';
 export const weights = [`${ 0.2e18 }`, `${ 0.8e18 }`];
+
+export const slots = [addresses.USDC.slot, addresses.USDT.slot];
+export const balances = [
+  parseFixed('100000', 6).toString(),
+  parseFixed('100000', 6).toString(),
+];
+
+export const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
+export const signer = provider.getSigner();
+export const sdkConfig = {
+  network,
+  rpcUrl,
+};
+export const balancer = new BalancerSDK(sdkConfig);
