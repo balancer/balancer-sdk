@@ -13,11 +13,16 @@ import { WeightedPoolFactory__factory } from '@balancer-labs/typechain';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 
 dotenv.config();
+//
+// const network = Network.MAINNET;
+// const rpcUrl = 'http://127.0.0.1:8545';
+// const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
+// const blockNumber = 16320000;
 
-const network = Network.MAINNET;
-const rpcUrl = 'http://127.0.0.1:8545';
-const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
-const blockNumber = 16320000;
+const network = Network.GOERLI;
+const rpcUrl = 'http://127.0.0.1:8000';
+const alchemyRpcUrl = `${process.env.ALCHEMY_URL_GOERLI}`;
+const blockNumber = 8200000;
 
 const name = 'My-Test-Pool-Name';
 const symbol = 'My-Test-Pool-Symbol';
