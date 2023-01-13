@@ -6,7 +6,7 @@ import { Network, PoolType } from '@/types';
 import { ADDRESSES } from '@/test/lib/constants';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { Interface, LogDescription } from '@ethersproject/abi';
-import { forkSetup, getBalances } from '@/test/lib/utils';
+import { forkSetup } from '@/test/lib/utils';
 import dotenv from 'dotenv';
 import { isSameAddress } from '@/lib/utils';
 import {

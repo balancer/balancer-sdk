@@ -92,7 +92,6 @@ export class WeightedFactory implements PoolFactory {
   buildInitJoin({
     joiner,
     poolId,
-    poolAddress,
     tokensIn,
     amountsIn,
   }: InitJoinPoolParameters): InitJoinPoolAttributes {

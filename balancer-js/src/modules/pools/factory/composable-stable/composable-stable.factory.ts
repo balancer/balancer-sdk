@@ -9,10 +9,8 @@ import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import composableStableAbi from '../../../../lib/abi/ComposableStableFactory.json';
 import { FunctionFragment, Interface } from '@ethersproject/abi';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { balancerVault, networkAddresses } from '@/lib/constants/config';
+import { networkAddresses } from '@/lib/constants/config';
 import { BalancerNetworkConfig } from '@/types';
-import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
-import { Vault__factory } from '@balancer-labs/typechain';
 
 export class ComposableStableFactory implements PoolFactory {
   private wrappedNativeAsset: string;
