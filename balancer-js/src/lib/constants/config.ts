@@ -49,6 +49,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         address: '0x32296969ef14eb0c6d29669c550d4a0449130230',
       },
     },
+    poolsToIgnore: [
+      '0xbd482ffb3e6e50dc1c437557c3bea2b68f3683ee', // a pool made by an external dev who was playing with a novel rate provider mechanism in production.
+    ],
   },
   [Network.POLYGON]: {
     chainId: Network.POLYGON, //137
@@ -74,7 +77,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
     },
     pools: {},
-    poolsToIgnore: ['0x600bd01b6526611079e12e1ff93aba7a3e34226f'],
+    poolsToIgnore: [
+      '0x600bd01b6526611079e12e1ff93aba7a3e34226f', // This pool has rateProviders with incorrect scaling
+    ],
   },
   [Network.ARBITRUM]: {
     chainId: Network.ARBITRUM, //42161
