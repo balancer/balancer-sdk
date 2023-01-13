@@ -72,6 +72,8 @@ export interface ContractAddresses {
   veBal?: string;
   veBalProxy?: string;
   protocolFeePercentagesProvider?: string;
+  weightedPoolFactory?: string;
+  composableStablePoolFactory?: string;
 }
 
 export interface BalancerNetworkConfig {

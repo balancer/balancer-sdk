@@ -1,4 +1,4 @@
-import { CreatePoolParameters } from '@/modules/pools/factory/types';
+import { ComposableStableCreatePoolParameters } from '@/modules/pools/factory/types';
 import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
 import { TransactionRequest } from '@ethersproject/providers';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
@@ -42,7 +42,7 @@ export class ComposableStableFactory implements PoolFactory {
     exemptFromYieldProtocolFeeFlags,
     swapFee,
     owner,
-  }: CreatePoolParameters): TransactionRequest {
+  }: ComposableStableCreatePoolParameters): TransactionRequest {
     const swapFeeScaled = parseToBigInt18(`${swapFee}`);
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     const [
