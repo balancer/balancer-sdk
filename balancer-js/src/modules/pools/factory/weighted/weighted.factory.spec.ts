@@ -1,16 +1,15 @@
-// yarn test:only ./src/modules/pools/factory/composable-stable/composable-stable.factory.spec.ts
+// yarn test:only ./src/modules/pools/factory/weighted/weighted.factory.spec.ts
 import { expect } from 'chai';
 import { Log, TransactionReceipt } from '@ethersproject/providers';
 import { ethers } from 'hardhat';
 import { Network, PoolType } from '@/types';
 import { ADDRESSES } from '@/test/lib/constants';
-import { AddressZero } from '@ethersproject/constants';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { Interface, LogDescription } from '@ethersproject/abi';
-import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
 import { forkSetup } from '@/test/lib/utils';
 import dotenv from 'dotenv';
 import { isSameAddress } from '@/lib/utils';
+import { WeightedPoolFactory__factory } from '@balancer-labs/typechain';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 
 dotenv.config();
@@ -28,17 +27,12 @@ const addresses = ADDRESSES[network];
 const USDC_address = addresses.USDC.address;
 const USDT_address = addresses.USDT.address;
 
-const rateProviders = [AddressZero, AddressZero];
-
-const exemptFromYieldProtocolFeeFlags = [false, false];
-const tokenRateCacheDurations = ['0', '0'];
-const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`;
+const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.weightedPoolFactory}`;
 const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const tokenAddresses = [USDC_address, USDT_address];
-const amplificationParameter = '2';
 const swapFee = '0.01';
-
-describe('creating composable stable pool', async () => {
+const weights = [`${0.2e18}`, `${0.8e18}`];
+describe('creating weighted pool', async () => {
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
   const signer = provider.getSigner();
   const sdkConfig = {
@@ -46,23 +40,18 @@ describe('creating composable stable pool', async () => {
     rpcUrl,
   };
   const balancer = new BalancerSDK(sdkConfig);
-  const composableStablePoolFactory = balancer.pools.poolFactory.of(
-    PoolType.ComposableStable
-  );
+  const weightedPoolFactory = balancer.pools.poolFactory.of(PoolType.Weighted);
   context('create', async () => {
     beforeEach(async () => {
       await forkSetup(signer, [], [], [], alchemyRpcUrl, blockNumber, false);
     });
     it('should create a pool', async () => {
-      const { to, data } = composableStablePoolFactory.create({
+      const { to, data } = weightedPoolFactory.create({
         factoryAddress,
         name,
         symbol,
         tokenAddresses,
-        amplificationParameter,
-        rateProviders,
-        tokenRateCacheDurations,
-        exemptFromYieldProtocolFeeFlags,
+        weights,
         swapFee,
         owner,
       });
@@ -77,8 +66,9 @@ describe('creating composable stable pool', async () => {
       const receipt: TransactionReceipt = await provider.getTransactionReceipt(
         tx.hash
       );
-      const composableStableFactoryInterface = new Interface(
-        composableStableFactoryAbi
+
+      const weightedPoolFactoryInterface = new Interface(
+        WeightedPoolFactory__factory.abi
       );
 
       const poolCreationEvent: LogDescription | null | undefined = receipt.logs
@@ -87,7 +77,7 @@ describe('creating composable stable pool', async () => {
         })
         .map((log) => {
           try {
-            return composableStableFactoryInterface.parseLog(log);
+            return weightedPoolFactoryInterface.parseLog(log);
           } catch (error) {
             console.error(error);
             return null;

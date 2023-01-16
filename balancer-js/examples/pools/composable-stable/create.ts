@@ -10,6 +10,7 @@ import { ethers } from 'hardhat';
 import { Interface, LogDescription } from '@ethersproject/abi';
 import { ADDRESSES } from '@/test/lib/constants';
 import { forkSetup } from "@/test/lib/utils";
+import { BALANCER_NETWORK_CONFIG } from "@/lib/constants/config";
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ const symbol = 'My-Test-Pool-Symbol';
 
 const network = Network.GOERLI;
 const rpcUrl = 'http://127.0.0.1:8000';
-const alchemyRpcUrl = `${process.env.ALCHEMY_URL_GOERLI}`;
+const alchemyRpcUrl = `${ process.env.ALCHEMY_URL_GOERLI }`;
 const blockNumber = 8200000;
 
 const addresses = ADDRESSES[network];
@@ -41,7 +42,7 @@ const exemptFromYieldProtocolFeeFlags = [false, false];
 
 const swapFee = '0.01';
 const owner = '0x817b6923f3cB53536859b1f01262d0E7f513dB78';
-const factoryAddress = '0x85a80afee867adf27b50bdb7b76da70f1e853062';
+const factoryAddress = `${ BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory }`;
 
 async function createComposableStablePool() {
   // const rpcUrl = `https://mainnet.infura.io/v3/444153f7f8f2499db7be57a11b1f696e`;
@@ -94,18 +95,13 @@ async function createComposableStablePool() {
   const composableStableFactoryInterface = new Interface(
     composableStableFactoryAbi
   );
-  
+
   const poolCreationEvent: LogDescription | null | undefined = receipt.logs
     .filter((log: Log) => {
       return isSameAddress(log.address, factoryAddress);
     })
     .map((log) => {
-      try {
-        return composableStableFactoryInterface.parseLog(log);
-      } catch (error) {
-        console.error(error);
-        return null;
-      }
+      return composableStableFactoryInterface.parseLog(log);
     })
     .find((parsedLog) => parsedLog?.name === 'PoolCreated');
 

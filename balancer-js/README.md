@@ -322,7 +322,7 @@ const { bptOut, amountsIn } = response;
 
 ### Simulating exits
 
-There are three ways to join a pool:
+There are three ways to exit a pool:
 
 1. `exitToSingleToken`: Exiting liquidity to a single underlying token is the simplest method. However, if the amount of liquidity being exited is a significant portion of the pool's total liquidity, it may result in price slippage.
 2. `exitProportionally`: Exiting liquidity proportionally to all pool tokens. This is the most commonly used method. However `ComposableStable` pool type doesn't support it.
@@ -572,6 +572,36 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
 
 Exposes create functionality allowing user to create pools.
 
+### #createWeightedPool
+
+Builds a transaction to create a weighted pool.
+
+```js
+/***
+ * @param params
+ *  * Builds a transaction for a weighted pool create operation.
+ *  * @param factoryAddress - The address of the factory for weighted pool (contract address)
+ *  * @param name - The name of the pool
+ *  * @param symbol - The symbol of the pool
+ *  * @param tokenAddresses - The token's addresses
+ *  * @param weights The weights for each token, ordered
+ *  * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
+ *  * @param owner - The address of the owner of the pool
+ *  * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
+ */
+create({
+    factoryAddress,
+    name,
+    symbol,
+    tokenAddresses,
+    weights,
+    swapFee,
+    owner,
+}) => TransactionRequest
+```
+
+[Example](./examples/pools/weighted/create.ts)
+
 ### #createComposableStablePool
 
 Builds a transaction to create a composable stable pool.
@@ -593,7 +623,7 @@ Builds a transaction to create a composable stable pool.
  *  * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
  */
 create({
-    contractAddress,
+    factoryAddress,
     name,
     symbol,
     tokenAddresses,
