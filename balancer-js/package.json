@@ -93,7 +93,7 @@
     "@ethersproject/providers": "^5.4.5",
     "axios": "^0.24.0",
     "graphql": "^15.6.1",
-    "graphql-request": "^3.5.0",
+    "graphql-request": "^5.1.0",
     "json-to-graphql-query": "^2.2.4",
     "lodash": "^4.17.21"
   }
