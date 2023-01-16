@@ -29,13 +29,17 @@ export class SubgraphHelper {
       options?.queryOptions
     );
     console.timeEnd('fetching pools');
+    return this.filter([...pool0, ...pool1000, ...pool2000] as Pool[]);
+  }
+
+  filter(pools: Pool[]): Pool[] {
     /*
     Replicates SG query:
         where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
         orderBy: Pool_OrderBy.TotalLiquidity,
         orderDirection: OrderDirection.Desc,
     */
-    const filteredPools = [...pool0, ...pool1000, ...pool2000].filter((p) => {
+    const filteredPools = pools.filter((p) => {
       const totalShare = parseFixed(p.totalShares, 18);
       const filterPool = options?.poolsToIgnore?.includes(p.address);
       return p.swapEnabled === true && totalShare.gt('1000000') && !filterPool;
