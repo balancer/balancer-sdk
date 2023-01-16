@@ -318,7 +318,7 @@ const { bptOut, amountsIn } = response
 
 ### Simulating exits
 
-There are three ways to join a pool:
+There are three ways to exit a pool:
 
 1. `exitToSingleToken`: Exiting liquidity to a single underlying token is the simplest method. However, if the amount of liquidity being exited is a significant portion of the pool's total liquidity, it may result in price slippage.
 2. `exitProportionally`: Exiting liquidity proportionally to all pool tokens. This is the most commonly used method. However `ComposableStable` pool type doesn't support it.
