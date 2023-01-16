@@ -29,10 +29,10 @@ export class SubgraphHelper {
       options?.queryOptions
     );
     console.timeEnd('fetching pools');
-    return this.filter([...pool0, ...pool1000, ...pool2000] as Pool[]);
+    return this.filter([...pool0, ...pool1000, ...pool2000] as Pool[], options);
   }
 
-  filter(pools: Pool[]): Pool[] {
+  filter(pools: Pool[], options?: SubgraphOptions): Pool[] {
     /*
     Replicates SG query:
         where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
