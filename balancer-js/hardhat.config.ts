@@ -14,7 +14,6 @@ export default {
       forking: {
         enabled: true,
         url: ALCHEMY_URL,
-        blockNumber: 16361609
       },
       chainId: 1
     },
