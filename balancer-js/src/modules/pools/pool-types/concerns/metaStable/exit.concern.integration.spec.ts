@@ -250,9 +250,8 @@ describe('exit meta stable pools execution', async () => {
             tokensBalanceAfter[i]
               .sub(tokensBalanceBefore[i])
               .sub(tokensMinBalanceIncrease[i])
-              .abs()
-              .lte(1)
-          ).to.be.true;
+              .toNumber()
+          ).to.be.closeTo(0, 1);
         }
       });
 
