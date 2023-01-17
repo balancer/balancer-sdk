@@ -120,7 +120,8 @@ export class PoolsSubgraphRepository
       new SubgraphArgsFormatter()
     ) as PoolQueryVariables;
 
-    const pools = await this.subgraphHelper.allPools(formattedQuery);
+    // Does not use default filter which would remove pools without swapEnabled
+    const pools = await this.subgraphHelper.allPools(formattedQuery, false);
 
     this.skip = (options?.skip || 0) + pools.length;
 

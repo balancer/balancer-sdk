@@ -40,7 +40,21 @@ describe('subgraph tests', () => {
     const poolsOldFetch = await oldFetch(url);
     expect(poolsSingleCall.length).to.eq(poolsOldFetch.length);
   });
+  it('use default filter', async () => {
+    const pools = await subgraphHelper.allPools({
+      where: { swapEnabled: false },
+    });
+    expect(pools.length).to.eq(0);
+  });
+  it('dont use default filter', async () => {
+    const pools = await subgraphHelper.allPools(
+      {
+        where: { swapEnabled: false },
+      },
+      false
+    );
+    expect(pools.length).to.be.greaterThan(0);
+    pools.forEach((p) => expect(p.swapEnabled).to.be.false);
+  });
 }).timeout(300000);
 // yarn test:only ./src/modules/data/pool/subgraph/utils/subgraphHelper.test.ts
-
-// 21s -> 3.917s
