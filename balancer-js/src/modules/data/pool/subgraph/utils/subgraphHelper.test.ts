@@ -42,14 +42,18 @@ describe('subgraph tests', () => {
   });
   it('use default filter', async () => {
     const pools = await subgraphHelper.allPools({
-      where: { swapEnabled: false },
+      queryOptions: {
+        where: { swapEnabled: false },
+      },
     });
     expect(pools.length).to.eq(0);
   });
   it('dont use default filter', async () => {
     const pools = await subgraphHelper.allPools(
       {
-        where: { swapEnabled: false },
+        queryOptions: {
+          where: { swapEnabled: false },
+        },
       },
       false
     );
