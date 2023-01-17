@@ -20,6 +20,7 @@ import { getPoolBalances } from './utils';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import pools_15840286 from '@/test/lib/pools_15840286.json';
+import { checkInaccuracy } from '@/test/lib/utils';
 
 dotenv.config();
 
@@ -137,16 +138,14 @@ describe('exitModel', () => {
       expect(
         BigNumber.from(balancesBefore[3]).sub(balancesAfter[3]).toString()
       ).to.eq('0');
-      expect(amounts).to.deep.eq([
-        '10000000000000000000',
-        '-9992541880923205377',
-        '0',
-        '0',
-        '0',
-      ]); // Taken from Tenderly simulation
-      expect(
-        BigNumber.from(balancesBefore[0]).sub(balancesAfter[0]).toString()
-      ).to.eq('9992541880923205377'); // TODO - This result is innacurate when compared to Tenderly
+      const amountOut = BigNumber.from(amounts[1]);
+      const expectedAmountOut = BigNumber.from('-9992943504916612596'); // From Tenderly simulation
+      checkInaccuracy(amountOut, expectedAmountOut, 1e-4); // inaccuracy limit of 1 bps
+      checkInaccuracy(
+        BigNumber.from(balancesBefore[0]).sub(balancesAfter[0]),
+        BigNumber.from('9992943504916612596'),
+        1e-4 // inaccuracy limit of 1 bps
+      );
     });
   });
 });

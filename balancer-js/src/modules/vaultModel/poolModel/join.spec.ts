@@ -19,6 +19,7 @@ import { getPoolBalances } from './utils';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import pools_15840286 from '@/test/lib/pools_15840286.json';
+import { checkInaccuracy } from '@/test/lib/utils';
 
 dotenv.config();
 
@@ -153,12 +154,15 @@ describe('joinModel', () => {
       expect(
         BigNumber.from(balancesAfter[2]).sub(balancesBefore[2]).toString()
       ).to.eq(amountsIn[2]);
-      expect(amounts).to.deep.eq([
+
+      expect(amounts.slice(0, -1)).to.deep.eq([
         '1230000000000000000',
         '10700000000000000000',
         '1099543200000000000000',
-        '-1111327432434158659003', // TODO - This result is innacurate when compared to Tenderly
       ]); // From Tenderly
+      const bptOut = BigNumber.from(amounts[3]);
+      const expectedBptOut = BigNumber.from('-1111327432434158659003'); // From Tenderly
+      checkInaccuracy(bptOut, expectedBptOut, 1e-4); // inaccuracy limit of 1 bps
     });
   });
 });
