@@ -1,6 +1,4 @@
 query AllPools(
-    $skip: Int
-    $first: Int
     $orderBy: Pool_orderBy
     $orderDirection: OrderDirection
     $where: Pool_filter

@@ -461,7 +461,11 @@ export type JoinExit_Filter = {
   pool_starts_with_nocase?: InputMaybe<Scalars['String']>;
   sender?: InputMaybe<Scalars['Bytes']>;
   sender_contains?: InputMaybe<Scalars['Bytes']>;
+  sender_gt?: InputMaybe<Scalars['Bytes']>;
+  sender_gte?: InputMaybe<Scalars['Bytes']>;
   sender_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  sender_lt?: InputMaybe<Scalars['Bytes']>;
+  sender_lte?: InputMaybe<Scalars['Bytes']>;
   sender_not?: InputMaybe<Scalars['Bytes']>;
   sender_not_contains?: InputMaybe<Scalars['Bytes']>;
   sender_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -475,7 +479,11 @@ export type JoinExit_Filter = {
   timestamp_not_in?: InputMaybe<Array<Scalars['Int']>>;
   tx?: InputMaybe<Scalars['Bytes']>;
   tx_contains?: InputMaybe<Scalars['Bytes']>;
+  tx_gt?: InputMaybe<Scalars['Bytes']>;
+  tx_gte?: InputMaybe<Scalars['Bytes']>;
   tx_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  tx_lt?: InputMaybe<Scalars['Bytes']>;
+  tx_lte?: InputMaybe<Scalars['Bytes']>;
   tx_not?: InputMaybe<Scalars['Bytes']>;
   tx_not_contains?: InputMaybe<Scalars['Bytes']>;
   tx_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -541,7 +549,11 @@ export type LatestPrice_Filter = {
   _change_block?: InputMaybe<BlockChangedFilter>;
   asset?: InputMaybe<Scalars['Bytes']>;
   asset_contains?: InputMaybe<Scalars['Bytes']>;
+  asset_gt?: InputMaybe<Scalars['Bytes']>;
+  asset_gte?: InputMaybe<Scalars['Bytes']>;
   asset_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  asset_lt?: InputMaybe<Scalars['Bytes']>;
+  asset_lte?: InputMaybe<Scalars['Bytes']>;
   asset_not?: InputMaybe<Scalars['Bytes']>;
   asset_not_contains?: InputMaybe<Scalars['Bytes']>;
   asset_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -592,7 +604,11 @@ export type LatestPrice_Filter = {
   price_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
   pricingAsset?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_contains?: InputMaybe<Scalars['Bytes']>;
+  pricingAsset_gt?: InputMaybe<Scalars['Bytes']>;
+  pricingAsset_gte?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  pricingAsset_lt?: InputMaybe<Scalars['Bytes']>;
+  pricingAsset_lte?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_not?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_not_contains?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -952,7 +968,11 @@ export type PoolHistoricalLiquidity_Filter = {
   poolTotalShares_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
   pricingAsset?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_contains?: InputMaybe<Scalars['Bytes']>;
+  pricingAsset_gt?: InputMaybe<Scalars['Bytes']>;
+  pricingAsset_gte?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  pricingAsset_lt?: InputMaybe<Scalars['Bytes']>;
+  pricingAsset_lte?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_not?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_not_contains?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -1222,7 +1242,11 @@ export type PoolToken_Filter = {
   address_starts_with_nocase?: InputMaybe<Scalars['String']>;
   assetManager?: InputMaybe<Scalars['Bytes']>;
   assetManager_contains?: InputMaybe<Scalars['Bytes']>;
+  assetManager_gt?: InputMaybe<Scalars['Bytes']>;
+  assetManager_gte?: InputMaybe<Scalars['Bytes']>;
   assetManager_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  assetManager_lt?: InputMaybe<Scalars['Bytes']>;
+  assetManager_lte?: InputMaybe<Scalars['Bytes']>;
   assetManager_not?: InputMaybe<Scalars['Bytes']>;
   assetManager_not_contains?: InputMaybe<Scalars['Bytes']>;
   assetManager_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -1394,7 +1418,11 @@ export type Pool_Filter = {
   _change_block?: InputMaybe<BlockChangedFilter>;
   address?: InputMaybe<Scalars['Bytes']>;
   address_contains?: InputMaybe<Scalars['Bytes']>;
+  address_gt?: InputMaybe<Scalars['Bytes']>;
+  address_gte?: InputMaybe<Scalars['Bytes']>;
   address_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  address_lt?: InputMaybe<Scalars['Bytes']>;
+  address_lte?: InputMaybe<Scalars['Bytes']>;
   address_not?: InputMaybe<Scalars['Bytes']>;
   address_not_contains?: InputMaybe<Scalars['Bytes']>;
   address_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -1416,7 +1444,11 @@ export type Pool_Filter = {
   amp_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
   baseToken?: InputMaybe<Scalars['Bytes']>;
   baseToken_contains?: InputMaybe<Scalars['Bytes']>;
+  baseToken_gt?: InputMaybe<Scalars['Bytes']>;
+  baseToken_gte?: InputMaybe<Scalars['Bytes']>;
   baseToken_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  baseToken_lt?: InputMaybe<Scalars['Bytes']>;
+  baseToken_lte?: InputMaybe<Scalars['Bytes']>;
   baseToken_not?: InputMaybe<Scalars['Bytes']>;
   baseToken_not_contains?: InputMaybe<Scalars['Bytes']>;
   baseToken_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -1478,7 +1510,11 @@ export type Pool_Filter = {
   expiryTime_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
   factory?: InputMaybe<Scalars['Bytes']>;
   factory_contains?: InputMaybe<Scalars['Bytes']>;
+  factory_gt?: InputMaybe<Scalars['Bytes']>;
+  factory_gte?: InputMaybe<Scalars['Bytes']>;
   factory_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  factory_lt?: InputMaybe<Scalars['Bytes']>;
+  factory_lte?: InputMaybe<Scalars['Bytes']>;
   factory_not?: InputMaybe<Scalars['Bytes']>;
   factory_not_contains?: InputMaybe<Scalars['Bytes']>;
   factory_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -1557,7 +1593,11 @@ export type Pool_Filter = {
   oracleEnabled_not_in?: InputMaybe<Array<Scalars['Boolean']>>;
   owner?: InputMaybe<Scalars['Bytes']>;
   owner_contains?: InputMaybe<Scalars['Bytes']>;
+  owner_gt?: InputMaybe<Scalars['Bytes']>;
+  owner_gte?: InputMaybe<Scalars['Bytes']>;
   owner_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  owner_lt?: InputMaybe<Scalars['Bytes']>;
+  owner_lte?: InputMaybe<Scalars['Bytes']>;
   owner_not?: InputMaybe<Scalars['Bytes']>;
   owner_not_contains?: InputMaybe<Scalars['Bytes']>;
   owner_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -1592,7 +1632,11 @@ export type Pool_Filter = {
   priceRateProviders_?: InputMaybe<PriceRateProvider_Filter>;
   principalToken?: InputMaybe<Scalars['Bytes']>;
   principalToken_contains?: InputMaybe<Scalars['Bytes']>;
+  principalToken_gt?: InputMaybe<Scalars['Bytes']>;
+  principalToken_gte?: InputMaybe<Scalars['Bytes']>;
   principalToken_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  principalToken_lt?: InputMaybe<Scalars['Bytes']>;
+  principalToken_lte?: InputMaybe<Scalars['Bytes']>;
   principalToken_not?: InputMaybe<Scalars['Bytes']>;
   principalToken_not_contains?: InputMaybe<Scalars['Bytes']>;
   principalToken_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -1792,7 +1836,11 @@ export type Pool_Filter = {
   totalWeight_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
   tx?: InputMaybe<Scalars['Bytes']>;
   tx_contains?: InputMaybe<Scalars['Bytes']>;
+  tx_gt?: InputMaybe<Scalars['Bytes']>;
+  tx_gte?: InputMaybe<Scalars['Bytes']>;
   tx_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  tx_lt?: InputMaybe<Scalars['Bytes']>;
+  tx_lte?: InputMaybe<Scalars['Bytes']>;
   tx_not?: InputMaybe<Scalars['Bytes']>;
   tx_not_contains?: InputMaybe<Scalars['Bytes']>;
   tx_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -1959,7 +2007,11 @@ export type PriceRateProvider_Filter = {
   _change_block?: InputMaybe<BlockChangedFilter>;
   address?: InputMaybe<Scalars['Bytes']>;
   address_contains?: InputMaybe<Scalars['Bytes']>;
+  address_gt?: InputMaybe<Scalars['Bytes']>;
+  address_gte?: InputMaybe<Scalars['Bytes']>;
   address_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  address_lt?: InputMaybe<Scalars['Bytes']>;
+  address_lte?: InputMaybe<Scalars['Bytes']>;
   address_not?: InputMaybe<Scalars['Bytes']>;
   address_not_contains?: InputMaybe<Scalars['Bytes']>;
   address_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -3117,7 +3169,11 @@ export type Swap_Filter = {
   _change_block?: InputMaybe<BlockChangedFilter>;
   caller?: InputMaybe<Scalars['Bytes']>;
   caller_contains?: InputMaybe<Scalars['Bytes']>;
+  caller_gt?: InputMaybe<Scalars['Bytes']>;
+  caller_gte?: InputMaybe<Scalars['Bytes']>;
   caller_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  caller_lt?: InputMaybe<Scalars['Bytes']>;
+  caller_lte?: InputMaybe<Scalars['Bytes']>;
   caller_not?: InputMaybe<Scalars['Bytes']>;
   caller_not_contains?: InputMaybe<Scalars['Bytes']>;
   caller_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -3196,7 +3252,11 @@ export type Swap_Filter = {
   tokenInSym_starts_with?: InputMaybe<Scalars['String']>;
   tokenInSym_starts_with_nocase?: InputMaybe<Scalars['String']>;
   tokenIn_contains?: InputMaybe<Scalars['Bytes']>;
+  tokenIn_gt?: InputMaybe<Scalars['Bytes']>;
+  tokenIn_gte?: InputMaybe<Scalars['Bytes']>;
   tokenIn_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  tokenIn_lt?: InputMaybe<Scalars['Bytes']>;
+  tokenIn_lte?: InputMaybe<Scalars['Bytes']>;
   tokenIn_not?: InputMaybe<Scalars['Bytes']>;
   tokenIn_not_contains?: InputMaybe<Scalars['Bytes']>;
   tokenIn_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -3222,13 +3282,21 @@ export type Swap_Filter = {
   tokenOutSym_starts_with?: InputMaybe<Scalars['String']>;
   tokenOutSym_starts_with_nocase?: InputMaybe<Scalars['String']>;
   tokenOut_contains?: InputMaybe<Scalars['Bytes']>;
+  tokenOut_gt?: InputMaybe<Scalars['Bytes']>;
+  tokenOut_gte?: InputMaybe<Scalars['Bytes']>;
   tokenOut_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  tokenOut_lt?: InputMaybe<Scalars['Bytes']>;
+  tokenOut_lte?: InputMaybe<Scalars['Bytes']>;
   tokenOut_not?: InputMaybe<Scalars['Bytes']>;
   tokenOut_not_contains?: InputMaybe<Scalars['Bytes']>;
   tokenOut_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
   tx?: InputMaybe<Scalars['Bytes']>;
   tx_contains?: InputMaybe<Scalars['Bytes']>;
+  tx_gt?: InputMaybe<Scalars['Bytes']>;
+  tx_gte?: InputMaybe<Scalars['Bytes']>;
   tx_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  tx_lt?: InputMaybe<Scalars['Bytes']>;
+  tx_lte?: InputMaybe<Scalars['Bytes']>;
   tx_not?: InputMaybe<Scalars['Bytes']>;
   tx_not_contains?: InputMaybe<Scalars['Bytes']>;
   tx_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -3322,7 +3390,11 @@ export type TokenPrice_Filter = {
   amount_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
   asset?: InputMaybe<Scalars['Bytes']>;
   asset_contains?: InputMaybe<Scalars['Bytes']>;
+  asset_gt?: InputMaybe<Scalars['Bytes']>;
+  asset_gte?: InputMaybe<Scalars['Bytes']>;
   asset_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  asset_lt?: InputMaybe<Scalars['Bytes']>;
+  asset_lte?: InputMaybe<Scalars['Bytes']>;
   asset_not?: InputMaybe<Scalars['Bytes']>;
   asset_not_contains?: InputMaybe<Scalars['Bytes']>;
   asset_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -3373,7 +3445,11 @@ export type TokenPrice_Filter = {
   price_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
   pricingAsset?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_contains?: InputMaybe<Scalars['Bytes']>;
+  pricingAsset_gt?: InputMaybe<Scalars['Bytes']>;
+  pricingAsset_gte?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  pricingAsset_lt?: InputMaybe<Scalars['Bytes']>;
+  pricingAsset_lte?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_not?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_not_contains?: InputMaybe<Scalars['Bytes']>;
   pricingAsset_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -3927,7 +4003,11 @@ export type UserInternalBalance_Filter = {
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
   token?: InputMaybe<Scalars['Bytes']>;
   token_contains?: InputMaybe<Scalars['Bytes']>;
+  token_gt?: InputMaybe<Scalars['Bytes']>;
+  token_gte?: InputMaybe<Scalars['Bytes']>;
   token_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  token_lt?: InputMaybe<Scalars['Bytes']>;
+  token_lte?: InputMaybe<Scalars['Bytes']>;
   token_not?: InputMaybe<Scalars['Bytes']>;
   token_not_contains?: InputMaybe<Scalars['Bytes']>;
   token_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -4041,8 +4121,6 @@ export type PoolSharesQuery = { __typename?: 'Query', poolShares: Array<{ __type
 export type SubgraphPoolShareFragment = { __typename?: 'PoolShare', id: string, balance: string, userAddress: { __typename?: 'User', id: string }, poolId: { __typename?: 'Pool', id: string, address: string } };
 
 export type AllPoolsQueryVariables = Exact<{
-  skip?: InputMaybe<Scalars['Int']>;
-  first?: InputMaybe<Scalars['Int']>;
   orderBy?: InputMaybe<Pool_OrderBy>;
   orderDirection?: InputMaybe<OrderDirection>;
   where?: InputMaybe<Pool_Filter>;
@@ -4419,7 +4497,7 @@ export const PoolSharesDocument = gql`
 }
     ${SubgraphPoolShareFragmentDoc}`;
 export const AllPoolsDocument = gql`
-    query AllPools($skip: Int, $first: Int, $orderBy: Pool_orderBy, $orderDirection: OrderDirection, $where: Pool_filter, $block: Block_height) {
+    query AllPools($orderBy: Pool_orderBy, $orderDirection: OrderDirection, $where: Pool_filter, $block: Block_height) {
   pool0: pools(
     first: 1000
     orderBy: $orderBy

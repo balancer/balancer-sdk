@@ -23,27 +23,56 @@ export class SubgraphHelper {
     this.client = createSubgraphClient(url);
   }
 
-  async allPools(options?: SubgraphOptions): Promise<Pool[]> {
+  /**
+   * Fetches pools from subgraph
+   * @param queryOptions Custom query
+   * @param useDefaultFilter If true the result will filter for 'useful' pools. swapEnabled, totalShares > '0.000000000001' and order in descending TotalLiquidity.
+   * @returns Pools
+   */
+  async allPools(
+    options?: SubgraphOptions,
+    useDefaultFilter = true
+  ): Promise<Pool[]> {
     console.time('fetching pools');
     const { pool0, pool1000, pool2000 } = await this.client.AllPools(
       options?.queryOptions
     );
     console.timeEnd('fetching pools');
-    return this.filter([...pool0, ...pool1000, ...pool2000] as Pool[], options);
+    return this.filter(
+      [...pool0, ...pool1000, ...pool2000] as Pool[],
+      useDefaultFilter,
+      options
+    );
   }
 
-  filter(pools: Pool[], options?: SubgraphOptions): Pool[] {
-    /*
-    Replicates SG query:
+  /**
+   * Filters pools. Replicates SG query:
         where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
         orderBy: Pool_OrderBy.TotalLiquidity,
         orderDirection: OrderDirection.Desc,
-    */
-    const filteredPools = pools.filter((p) => {
-      const totalShare = parseFixed(p.totalShares, 18);
-      const filterPool = options?.poolsToIgnore?.includes(p.address);
-      return p.swapEnabled === true && totalShare.gt('1000000') && !filterPool;
-    }) as Pool[];
+   * @param pools Pools to filter
+   * @returns Filtered pools
+   */
+  filter(
+    pools: Pool[],
+    useDefaultFilter: boolean,
+    options?: SubgraphOptions
+  ): Pool[] {
+    let filteredPools: Pool[];
+    if (useDefaultFilter)
+      filteredPools = pools.filter((p) => {
+        const totalShare = parseFixed(p.totalShares, 18);
+        const filterPool = options?.poolsToIgnore?.includes(p.address);
+        return (
+          p.swapEnabled === true && totalShare.gt('1000000') && !filterPool
+        );
+      }) as Pool[];
+    else
+      filteredPools = pools.filter((p) => {
+        const filterPool = options?.poolsToIgnore?.includes(p.address);
+        return !filterPool;
+      }) as Pool[];
+
     const sortedPools = filteredPools.sort(
       (a, b) => parseFloat(b.totalLiquidity) - parseFloat(a.totalLiquidity)
     );
