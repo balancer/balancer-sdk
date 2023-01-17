@@ -12,12 +12,11 @@ import {
 } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { forkSetup, getBalances } from '@/test/lib/utils';
+import { checkInaccuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { SimulationType } from '../simulation/simulation.module';
-import { WeiPerEther } from '@ethersproject/constants';
 
 dotenv.config();
 
@@ -204,13 +203,7 @@ const testFlow = async (
   console.log(query.minOut, 'minOut');
   console.log(query.expectedOut, 'expectedOut');
 
-  const modelInaccuracy = bptBalanceAfter
-    .sub(query.expectedOut)
-    .mul(WeiPerEther)
-    .div(query.expectedOut)
-    .abs();
-  const inaccuracyLimit = WeiPerEther.div(100); // inaccuracy should not be over to 1%
-  expect(modelInaccuracy.lte(inaccuracyLimit)).to.be.true;
+  checkInaccuracy(bptBalanceAfter, query.expectedOut, 1e-2); // inaccuracy should not be over to 1%
 };
 
 // following contexts currently applies to GOERLI only

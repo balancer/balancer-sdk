@@ -1,6 +1,6 @@
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
-import { AddressZero, MaxUint256 } from '@ethersproject/constants';
+import { AddressZero, MaxUint256, WeiPerEther } from '@ethersproject/constants';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
 import { formatBytes32String } from '@ethersproject/strings';
@@ -15,6 +15,7 @@ import { Interface } from '@ethersproject/abi';
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const liquidityGauge = new Interface(liquidityGaugeAbi);
 import { Pools as PoolsProvider } from '@/modules/pools';
+import { expect } from 'chai';
 
 /**
  * Setup local fork with approved token balance for a given account
@@ -208,4 +209,18 @@ export const stake = async (
       data: liquidityGauge.encodeFunctionData('deposit', [balance]),
     })
   ).wait();
+};
+
+export const checkInaccuracy = (
+  amount: BigNumber,
+  expectedAmount: BigNumberish,
+  accuracyLimit: number
+): void => {
+  const inaccuracy = amount
+    .sub(expectedAmount)
+    .mul(WeiPerEther)
+    .div(amount)
+    .abs();
+  const inaccuracyLimit = WeiPerEther.div(1 / accuracyLimit);
+  expect(inaccuracy.lte(inaccuracyLimit)).to.be.true;
 };
