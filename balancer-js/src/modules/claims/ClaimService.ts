@@ -90,7 +90,6 @@ export class ClaimService implements IClaimService{
     })
     if (!expectedValues.length || expectedValues.every((it) => it === 0)) throw new BalancerError(BalancerErrorCode.GAUGES_REWARD_TOKEN_ZERO);
     if (this.chainId === 1 || this.chainId === 5) {
-      if (!this.gaugeClaimHelperAddress) throw new BalancerError(BalancerErrorCode.GAUGES_HELPER_ADDRESS_NOT_PROVIDED);
       const callData = gaugeClaimHelperInterface.encodeFunctionData('mintMany', [gaugeAddresses]);
       return {
         to: this.balancerMinterAddress!,

@@ -1,7 +1,6 @@
 import {Network} from "@/lib/constants";
 import {FeeDistributor} from "@/modules/contracts/implementations/feeDistributor";
 import {BalancerSDK} from "@/modules/sdk.module";
-import {BigNumber} from "@ethersproject/bignumber";
 
 const config = {
   network: Network.MAINNET,

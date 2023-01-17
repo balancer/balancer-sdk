@@ -15,7 +15,13 @@ describe("ClaimService On Ethereum", () => {
     };
     sdk = new BalancerSDK(sdkConfig);
     if (!sdk.data.liquidityGauges) throw new Error("liquidityGauges not initialized");
-    service = new ClaimService(sdk.data.liquidityGauges, sdk.networkConfig.chainId, sdk.networkConfig.addresses.contracts.multicall, sdk.provider, sdk.networkConfig.addresses.contracts.gaugeClaimHelper);
+    service = new ClaimService(
+      sdk.data.liquidityGauges,
+      sdk.networkConfig.chainId,
+      sdk.networkConfig.addresses.contracts.multicall,
+      sdk.provider,
+      sdk.networkConfig.addresses.contracts.gaugeClaimHelper,
+      sdk.networkConfig.addresses.contracts.balancerMinterAddress);
   })
 
   context("initialization", () => {
@@ -88,7 +94,13 @@ describe("ClaimService On Polygon", () => {
     };
     sdk = new BalancerSDK(sdkConfig);
     if (!sdk.data.liquidityGauges) throw new Error("liquidityGauges not initialized");
-    service = new ClaimService(sdk.data.liquidityGauges, sdk.networkConfig.chainId, sdk.networkConfig.addresses.contracts.multicall, sdk.provider, sdk.networkConfig.addresses.contracts.gaugeClaimHelper);
+    service = new ClaimService(
+      sdk.data.liquidityGauges,
+      sdk.networkConfig.chainId,
+      sdk.networkConfig.addresses.contracts.multicall,
+      sdk.provider,
+      sdk.networkConfig.addresses.contracts.gaugeClaimHelper,
+      sdk.networkConfig.addresses.contracts.balancerMinterAddress);
   });
 
   context("initialization", () => {
