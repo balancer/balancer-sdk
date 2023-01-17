@@ -1,3 +1,4 @@
+// yarn test:only ./src/modules/pools/pool-types/concerns/weighted/exit.concern.integration.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { BalancerSDK, Network, Pool, PoolToken } from '@/.';
@@ -9,7 +10,6 @@ import { forkSetup, getBalances } from '@/test/lib/utils';
 import { Pools } from '@/modules/pools';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import { ExitPoolAttributes } from '../types';
 import { AddressZero } from '@ethersproject/constants';
 
 dotenv.config();
@@ -71,7 +71,7 @@ describe('exit weighted pools execution', async () => {
   });
 
   const testFlow = async (
-    { to, data, maxBPTIn, minAmountsOut }: ExitPoolAttributes,
+    [to, data, maxBPTIn, minAmountsOut]: [string, string, string, string[]],
     exitTokens: string[],
     exitWithETH = false
   ) => {
@@ -118,10 +118,12 @@ describe('exit weighted pools execution', async () => {
     before(async function () {
       this.timeout(20000);
       const bptIn = parseFixed('10', 18).toString();
-      await testFlow(
-        controller.buildExitExactBPTIn(signerAddress, bptIn, slippage),
-        pool.tokensList
+      const { to, data, minAmountsOut } = controller.buildExitExactBPTIn(
+        signerAddress,
+        bptIn,
+        slippage
       );
+      await testFlow([to, data, bptIn, minAmountsOut], pool.tokensList);
     });
 
     it('should work', async () => {
@@ -153,16 +155,13 @@ describe('exit weighted pools execution', async () => {
           .mul(i + 1) // non-proportional input amounts help improve weighted math calc validation
           .toString()
       );
-
-      await testFlow(
-        controller.buildExitExactTokensOut(
-          signerAddress,
-          tokensOut.map((t) => t.address),
-          amountsOut,
-          slippage
-        ),
-        pool.tokensList
+      const { to, data, maxBPTIn } = controller.buildExitExactTokensOut(
+        signerAddress,
+        tokensOut.map((t) => t.address),
+        amountsOut,
+        slippage
       );
+      await testFlow([to, data, maxBPTIn, amountsOut], pool.tokensList);
     });
 
     it('should work', async () => {
@@ -200,16 +199,14 @@ describe('exit weighted pools execution', async () => {
           : token
       );
 
-      await testFlow(
-        controller.buildExitExactTokensOut(
-          signerAddress,
-          exitTokens,
-          amountsOut,
-          slippage
-        ),
+      const { to, data, maxBPTIn } = controller.buildExitExactTokensOut(
+        signerAddress,
         exitTokens,
-        true
+        amountsOut,
+        slippage
       );
+
+      await testFlow([to, data, maxBPTIn, amountsOut], exitTokens, true);
     });
 
     it('should work', async () => {
@@ -237,16 +234,14 @@ describe('exit weighted pools execution', async () => {
       let errorMessage = '';
       try {
         const bptIn = parseFixed('10', 18).toString();
-        await testFlow(
-          controller.buildExitExactBPTIn(
-            signerAddress,
-            bptIn,
-            slippage,
-            false,
-            AddressZero
-          ),
-          pool.tokensList
+        const { to, data, minAmountsOut } = controller.buildExitExactBPTIn(
+          signerAddress,
+          bptIn,
+          slippage,
+          false,
+          AddressZero
         );
+        await testFlow([to, data, bptIn, minAmountsOut], pool.tokensList);
       } catch (error) {
         errorMessage = (error as Error).message;
       }
