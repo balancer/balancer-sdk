@@ -9,6 +9,7 @@ import { getOnChainBalances } from './onChainData';
 import { Provider } from '@ethersproject/providers';
 import { Network } from '@/lib/constants/network';
 import { BalancerNetworkConfig, BalancerSdkSorConfig } from '@/types';
+import { isSameAddress } from '@/lib/utils';
 
 const NETWORKS_WITH_LINEAR_POOLS = [
   Network.MAINNET,
@@ -51,7 +52,14 @@ export class SubgraphPoolDataService implements PoolDataService {
       ? await this.getLinearPools()
       : await this.getNonLinearPools();
 
-    const mapped = mapPools(pools);
+    const filteredPools = pools.filter((p) => {
+      const index = this.network.poolsToIgnore?.findIndex((addr) =>
+        isSameAddress(addr, p.address)
+      );
+      return index === -1;
+    });
+
+    const mapped = mapPools(filteredPools);
 
     if (this.sorConfig.fetchOnChainBalances === false) {
       return mapped;
