@@ -1,9 +1,11 @@
 /* eslint-disable no-unexpected-multiline */
 import {BalancerSDK, Network, Pool,} from '@/.';
+import {TransactionData} from "@/modules/claims/ClaimService";
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 
 import {forkSetup, getBalances} from '@/test/lib/utils';
 import {Interface} from "@ethersproject/abi";
+import {TransactionRequest} from "@ethersproject/abstract-provider/src.ts";
 import {BigNumber, parseFixed} from '@ethersproject/bignumber';
 import {AddressZero} from '@ethersproject/constants';
 
@@ -14,8 +16,46 @@ import hardhat from 'hardhat';
 import {Pools} from '../../../';
 
 const liquidityGaugeInterface = new Interface([
-  'function deposit(uint256 value)'
+  {
+    "stateMutability": "nonpayable",
+    "type": "function",
+    "name": "deposit",
+    "inputs": [
+      {
+        "name": "_value",
+        "type": "uint256"
+      }
+    ],
+    "outputs": []
+  }
 ]);
+
+const ERC20Interface = new Interface([
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "spender",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "approve",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+])
 
 dotenv.config();
 
@@ -52,10 +92,11 @@ const tokensIn = pool.tokens;
 
 const controller = Pools.wrap(pool, networkConfig);
 
-describe('join execution', async () => {
+describe('join and stake', async () => {
   let transactionReceipt: TransactionReceipt;
   let lpTokenBalance: BigNumber;
-
+  let transactionData: TransactionData;
+  const blockNumber = 16361609;
   // Setup chain
   before(async function () {
     this.timeout(20000);
@@ -68,12 +109,12 @@ describe('join execution', async () => {
       slots,
       balances,
       jsonRpcUrl as string,
-      14717479 // holds the same state as the static repository
+      blockNumber
     );
     signerAddress = await signer.getAddress();
   });
 
-  context('join transaction - join with ETH', () => {
+  context('join and stake with ETH', () => {
     let transactionCost: BigNumber;
     before(async function () {
       this.timeout(40000);
@@ -121,18 +162,31 @@ describe('join execution', async () => {
     });
 
     it('should allow staking', async () => {
-      const data = liquidityGaugeInterface.encodeFunctionData('deposit', [lpTokenBalance]);
-      const tx = { gaugeId, data };
-      const receipt = await (await signer.sendTransaction(tx)).wait();
-      expect(receipt.status).to.eql(1);
+      // approve transfer
+      const approvalData = ERC20Interface.encodeFunctionData('approve', [gaugeId, lpTokenBalance]);
+      const approvalTx:TransactionRequest = { to: lpToken, data: approvalData, gasLimit: 2100000, gasPrice: 8000000000 };
+      const approvalReceipt = await (await signer.sendTransaction(approvalTx)).wait();
+      expect(approvalReceipt.status).to.eql(1);
+
+      // deposit funds
+      const depositData = liquidityGaugeInterface.encodeFunctionData('deposit', [lpTokenBalance]);
+      const depositTx:TransactionRequest = { to: gaugeId, data: depositData, gasLimit: 2100000, gasPrice: 8000000000 };
+      const depositReceipt = await (await signer.sendTransaction(depositTx)).wait();
+      expect(depositReceipt.status).to.eql(1);
     })
 
-    it('should have staked tokens', async () => {
+    it('should have staked tokens to claim', async () => {
       if (!claimService) throw new Error('claimable service not available');
-      const claimableToken = await claimService.getClaimableTokens(signerAddress);
-      expect(claimableToken.length).to.gt(0);
+      transactionData = await claimService.claimRewardTokens([gaugeId], signerAddress);
+      expect(transactionData.tokensOut.length).to.gt(0);
     });
 
+    it('should claim staked tokens successfully', async () => {
+      const { to, callData } = transactionData;
+      const tx = { to: to, data: callData };
+      const receipt = await (await signer.sendTransaction(tx)).wait();
+      expect(receipt.status).to.eql(1);
+    });
   });
 
 }).timeout(40000);
