@@ -1,90 +1,115 @@
 import {Network} from "@/lib/constants";
 import {ClaimService} from "@/modules/claims/ClaimService";
 import {BalancerSDK} from "@/modules/sdk.module";
+import {forkSetup} from "@/test/lib/utils";
 import {expect} from "chai";
+import {ethers} from "ethers";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 let sdk: BalancerSDK;
 let service: ClaimService;
 
+
 describe("ClaimService On Ethereum", () => {
+  const {ALCHEMY_URL: jsonRpcUrl} = process.env;
+  const rpcUrl = 'http://127.0.0.1:8545';
 
-  before(() => {
-    const sdkConfig = {
-      network: Network.MAINNET,
-      rpcUrl: 'https://rpc.ankr.com/eth',
-    };
-    sdk = new BalancerSDK(sdkConfig);
-    if (!sdk.data.liquidityGauges) throw new Error("liquidityGauges not initialized");
-    service = new ClaimService(
-      sdk.data.liquidityGauges,
-      sdk.networkConfig.chainId,
-      sdk.networkConfig.addresses.contracts.multicall,
-      sdk.provider,
-      sdk.networkConfig.addresses.contracts.gaugeClaimHelper,
-      sdk.networkConfig.addresses.contracts.balancerMinterAddress);
-  })
+  const blockNumber = 16361617;
+  const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
+  const signer = provider.getSigner();
 
-  context("initialization", () => {
-    it("should get service from SDK", (done) => {
-      const service = sdk.claimService;
-      expect(service).to.be
-      done();
+  context("", () => {
+
+    before(async function () {
+      this.timeout(40000);
+      const sdkConfig = {
+        network: Network.MAINNET,
+        rpcUrl: rpcUrl,
+      };
+      sdk = new BalancerSDK(sdkConfig);
+      if (!sdk.data.liquidityGauges) throw new Error("liquidityGauges not initialized");
+      await forkSetup(
+        signer,
+        [],
+        [],
+        [],
+        jsonRpcUrl as string,
+        blockNumber
+      );
+
+      service = new ClaimService(
+        sdk.data.liquidityGauges,
+        sdk.networkConfig.chainId,
+        sdk.networkConfig.addresses.contracts.multicall,
+        sdk.provider,
+        sdk.networkConfig.addresses.contracts.gaugeClaimHelper,
+        sdk.networkConfig.addresses.contracts.balancerMinterAddress);
     });
-  })
 
-  context("getClaimableTokens", () => {
-    it("should return gauges with claimable tokens", (done) => {
-      service.getClaimableTokens('0x549c660ce2B988F588769d6AD87BE801695b2be3')
-        .then((gauges) => {
-          expect(gauges).not.to.be.undefined
-          expect(gauges?.length).to.eq(2);
+    context("initialization", () => {
+      it("should get service from SDK", (done) => {
+        const service = sdk.claimService;
+        expect(service).to.be;
+        done();
+      });
+    });
 
-          let gauge = gauges.find((it) => it.address === '0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae');
-          expect(Object.keys(gauge?.claimableTokens ?? {}).length).to.eq(1);
-          expect(gauge?.claimableTokens!['0xba100000625a3754423978a60c9317c58a424e3d']).to.be.gt(0);
+    context("getClaimableTokens", () => {
+      it("should return gauges with claimable tokens", (done) => {
+        service.getClaimableTokens('0x549c660ce2B988F588769d6AD87BE801695b2be3')
+          .then((gauges) => {
+            expect(gauges).not.to.be.undefined;
+            expect(gauges?.length).to.eq(2);
 
-          gauge = gauges.find((it) => it.address === '0x275df57d2b23d53e20322b4bb71bf1dcb21d0a00');
-          expect(Object.keys(gauge?.claimableTokens ?? {}).length).to.eq(1);
-          expect(gauge?.claimableTokens!['0xba100000625a3754423978a60c9317c58a424e3d']).to.be.gt(0);
+            let gauge = gauges.find((it) => it.address === '0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae');
+            expect(Object.keys(gauge?.claimableTokens ?? {}).length).to.eq(1);
+            expect(gauge?.claimableTokens!['0xba100000625a3754423978a60c9317c58a424e3d']).to.be.gt(0);
 
-          done();
-        })
-        .catch((error) => {
-          done(error);
-        })
+            gauge = gauges.find((it) => it.address === '0x275df57d2b23d53e20322b4bb71bf1dcb21d0a00');
+            expect(Object.keys(gauge?.claimableTokens ?? {}).length).to.eq(1);
+            expect(gauge?.claimableTokens!['0xba100000625a3754423978a60c9317c58a424e3d']).to.be.gt(0);
+
+            done();
+          })
+          .catch((error) => {
+            done(error);
+          });
+      });
+    });
+
+    context("claimRewardTokens", () => {
+      it("should returns call data for one gauge", (done) => {
+        service.claimRewardTokens(
+          ["0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae"],
+          '0x549c660ce2B988F588769d6AD87BE801695b2be3')
+          .then((data) => {
+            expect(data.callData).to.eq('0x397ada2100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000cd4722b7c24c29e0413bdcd9e51404b4539d14ae');
+            expect(data.tokensOut.length).to.eq(1);
+            expect(data.tokensOut.find((it) => it.toLowerCase() === '0xba100000625a3754423978a60c9317c58a424e3d')).to.be;
+            expect(data.expectedTokensValue.every((it) => it > 0)).to.be.true;
+          })
+          .then(done)
+          .catch((error) => done(error));
+      });
+      it("should returns call data for multiple gauge", (done) => {
+        service.claimRewardTokens(
+          ["0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae", "0x275df57d2b23d53e20322b4bb71bf1dcb21d0a00"],
+          '0x549c660ce2B988F588769d6AD87BE801695b2be3')
+          .then((data) => {
+            expect(data.callData).to.eq('0x397ada2100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002000000000000000000000000cd4722b7c24c29e0413bdcd9e51404b4539d14ae000000000000000000000000275df57d2b23d53e20322b4bb71bf1dcb21d0a00');
+            expect(data.tokensOut.length).to.eq(1);
+            expect(data.tokensOut.find((it) => it.toLowerCase() === '0xba100000625a3754423978a60c9317c58a424e3d')).to.be;
+            expect(data.expectedTokensValue.every((it) => it > 0)).to.be.true;
+          })
+          .then(done)
+          .catch((error) => done(error));
+      });
     });
   });
 
-  context("claimRewardTokens", () => {
-    it("should returns call data for one gauge", (done) => {
-      service.claimRewardTokens(
-        ["0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae"],
-        '0x549c660ce2B988F588769d6AD87BE801695b2be3')
-        .then((data) => {
-          expect(data.callData).to.eq('0x397ada2100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000cd4722b7c24c29e0413bdcd9e51404b4539d14ae');
-          expect(data.tokensOut.length).to.eq(1);
-          expect(data.tokensOut.find((it) => it.toLowerCase() === '0xba100000625a3754423978a60c9317c58a424e3d')).to.be;
-          expect(data.expectedTokensValue.every((it) => it > 0)).to.be.true;
-        })
-        .then(done)
-        .catch((error) => done(error));
-    });
-    it("should returns call data for multiple gauge", (done) => {
-      service.claimRewardTokens(
-        ["0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae", "0x275df57d2b23d53e20322b4bb71bf1dcb21d0a00"],
-        '0x549c660ce2B988F588769d6AD87BE801695b2be3')
-        .then((data) => {
-          expect(data.callData).to.eq('0x397ada2100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002000000000000000000000000cd4722b7c24c29e0413bdcd9e51404b4539d14ae000000000000000000000000275df57d2b23d53e20322b4bb71bf1dcb21d0a00');
-          expect(data.tokensOut.length).to.eq(1);
-          expect(data.tokensOut.find((it) => it.toLowerCase() === '0xba100000625a3754423978a60c9317c58a424e3d')).to.be;
-          expect(data.expectedTokensValue.every((it) => it > 0)).to.be.true;
-        })
-        .then(done)
-        .catch((error) => done(error));
-    });
-  })
-
-});
+}).timeout(40000);
 
 describe("ClaimService On Polygon", () => {
   before(() => {
@@ -106,7 +131,7 @@ describe("ClaimService On Polygon", () => {
   context("initialization", () => {
     it("should get service from SDK", (done) => {
       const service = sdk.claimService;
-      expect(service).to.be
+      expect(service).to.be;
       done();
     });
   });
@@ -117,7 +142,7 @@ describe("ClaimService On Polygon", () => {
       const service = new ClaimService(sdk.data.liquidityGauges, sdk.networkConfig.chainId, sdk.networkConfig.addresses.contracts.multicall, sdk.provider, sdk.networkConfig.addresses.contracts.gaugeClaimHelper);
       service.getClaimableTokens('0x2fec742b5b697b39362eeFC28B7E9E4DF25B8480')
         .then((gauges) => {
-          expect(gauges).not.to.be.undefined
+          expect(gauges).not.to.be.undefined;
           expect(gauges?.length).to.eq(2);
 
           let gauge = gauges.find((it) => it.address === '0x068ff98072d3eb848d012e3390703bb507729ed6');
@@ -133,7 +158,7 @@ describe("ClaimService On Polygon", () => {
         })
         .catch((error) => {
           done(error);
-        })
+        });
     });
   });
 
@@ -160,5 +185,5 @@ describe("ClaimService On Polygon", () => {
         .then(done)
         .catch((error) => done(error));
     });
-  })
+  });
 });
