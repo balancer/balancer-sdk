@@ -19,6 +19,7 @@ import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
 import { Simulation, SimulationType } from '../simulation/simulation.module';
 import { PoolGraph } from '../graph/graph';
+import { PoolFactory__factory } from './pool-factory__factory';
 import * as Queries from './queries';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { BalancerError } from '@/balancerErrors';
@@ -39,6 +40,7 @@ export class Pools implements Findable<PoolWithMethods> {
   feesService;
   volumeService;
   simulationService;
+  poolFactory;
   impermanentLossService;
   graphService;
   emissionsService;
@@ -74,6 +76,7 @@ export class Pools implements Findable<PoolWithMethods> {
     this.exitService = new Exit(this.graphService, networkConfig);
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
+    this.poolFactory = new PoolFactory__factory(networkConfig);
     this.impermanentLossService = new ImpermanentLossService(
       repositories.tokenPrices,
       repositories.tokenHistoricalPrices

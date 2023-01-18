@@ -3,7 +3,8 @@ import type { BigNumberish } from '@ethersproject/bignumber';
 import type { Contract } from '@ethersproject/contracts';
 import type { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 import type {
-  ExitPoolAttributes,
+  ExitExactBPTInAttributes,
+  ExitExactTokensOutAttributes,
   JoinPoolAttributes,
 } from './modules/pools/pool-types/concerns/types';
 import type {
@@ -73,6 +74,8 @@ export interface ContractAddresses {
   veBal?: string;
   veBalProxy?: string;
   protocolFeePercentagesProvider?: string;
+  weightedPoolFactory?: string;
+  composableStablePoolFactory?: string;
 }
 
 export interface BalancerNetworkConfig {
@@ -273,6 +276,7 @@ export interface Pool {
   poolTypeVersion: number;
   swapFee: string;
   protocolYieldFeeCache: string;
+  protocolSwapFeeCache: string;
   owner?: string;
   factory?: string;
   tokens: PoolToken[];
@@ -332,13 +336,13 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     slippage: string,
     shouldUnwrapNativeAsset?: boolean,
     singleTokenMaxOut?: string
-  ) => ExitPoolAttributes;
+  ) => ExitExactBPTInAttributes;
   buildExitExactTokensOut: (
     exiter: string,
     tokensOut: string[],
     amountsOut: string[],
     slippage: string
-  ) => ExitPoolAttributes;
+  ) => ExitExactTokensOutAttributes;
   calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
 }
 
