@@ -17,6 +17,7 @@ import {
 } from '../src/index';
 
 import { ADDRESSES } from '../src/test/lib/constants';
+import { JsonRpcProvider } from '@ethersproject/providers';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ async function getAndProcessSwaps(
     console.log('No Swap');
     return;
   }
+  console.log(swapInfo);
   // console.log(swapInfo.swaps);
   // console.log(swapInfo.tokenAddresses);
   console.log(`Return amount: `, swapInfo.returnAmount.toString());
@@ -54,9 +56,49 @@ async function getAndProcessSwaps(
   ) {
     console.log(`Swaps with join/exit paths. Must submit via Relayer.`);
     const key: any = process.env.TRADER_KEY;
-    const wallet = new Wallet(key, balancer.sor.provider);
-    const slippage = '50'; // 50 bsp = 0.5%
+    const rpcUrl = `http://127.0.0.1:8545`;
+    const provider = new JsonRpcProvider(rpcUrl, Network.MAINNET);
+    const wallet = new Wallet(key, provider);
+    const slippage = '200'; // 50 bsp = 0.5%
     try {
+      console.log('Initializing weth contract');
+
+      const wethContract = balancer.contracts.ERC20(
+        ADDRESSES[Network.MAINNET].WETH.address,
+        provider
+      );
+
+      console.log('Fetching eth and weth balances');
+      let ethBalance = await wallet.getBalance();
+      let wethBalance = await wethContract.balanceOf(wallet.address);
+
+      console.log(`Balances before: `);
+      console.log(`ETH: ${ethBalance.toString()}`);
+      console.log(`WETH: ${wethBalance.toString()}`);
+
+      console.log('Making some WETH');
+      await wallet.sendTransaction({
+        to: ADDRESSES[Network.MAINNET].WETH.address,
+        value: amount,
+      });
+
+      ethBalance = await wallet.getBalance();
+      wethBalance = await wethContract.balanceOf(wallet.address);
+      console.log(`Balances after: `);
+      console.log(`ETH: ${ethBalance.toString()}`);
+      console.log(`WETH: ${wethBalance.toString()}`);
+
+      console.log('Approving relayer');
+      const approval = balancer.contracts.vault.interface.encodeFunctionData(
+        'setRelayerApproval',
+        [wallet.address, balancer.contracts.relayerV3!.address, true]
+      );
+      await wallet.sendTransaction({
+        to: balancer.contracts.vault.address,
+        data: approval,
+      });
+
+      console.log('Assembling Relayer data');
       const relayerCallData = buildRelayerCalls(
         swapInfo,
         pools,
@@ -68,9 +110,11 @@ async function getAndProcessSwaps(
       );
       // Static calling Relayer doesn't return any useful values but will allow confirmation tx is ok
       // relayerCallData.data can be used to simulate tx on Tenderly to see token balance change, etc
-      // console.log(wallet.address);
+      console.log(wallet.address);
       // console.log(await balancer.sor.provider.getBlockNumber());
-      // console.log(relayerCallData.data);
+      // console.log('relayer data: ', relayerCallData);
+      // console.log('relayer raw data: ', relayerCallData.rawCalls);
+
       const result = await balancer.contracts.relayerV3
         ?.connect(wallet)
         .callStatic.multicall(relayerCallData.rawCalls);
@@ -78,14 +122,14 @@ async function getAndProcessSwaps(
     } catch (err: any) {
       // If error we can reprocess without join/exit paths
       console.log(`Error Using Join/Exit Paths`, err.reason);
-      await getAndProcessSwaps(
-        balancer,
-        tokenIn!,
-        tokenOut!,
-        swapType,
-        amount,
-        false
-      );
+      // await getAndProcessSwaps(
+      //   balancer,
+      //   tokenIn!,
+      //   tokenOut!,
+      //   swapType,
+      //   amount,
+      //   false
+      // );
     }
   } else {
     console.log(`Swaps via Vault.`);
@@ -121,19 +165,26 @@ async function getAndProcessSwaps(
 async function swapExample() {
   const network = Network.MAINNET;
   const rpcUrl = `https://mainnet.infura.io/v3/${process.env.INFURA}`;
+  // const rpcUrl = 'http://127.0.0.1:8545';
   const tokenIn = ADDRESSES[network].WETH.address;
   const tokenOut = ADDRESSES[network].auraBal?.address;
   const swapType = SwapTypes.SwapExactIn;
-  const amount = parseFixed('18', 18);
+  const amount = parseFixed('5', 18);
   // Currently Relayer only suitable for ExactIn and non-eth swaps
   const canUseJoinExitPaths = canUseJoinExit(swapType, tokenIn!, tokenOut!);
+
+  console.log('Can use joinexit: ', canUseJoinExitPaths);
 
   const balancer = new BalancerSDK({
     network,
     rpcUrl,
   });
 
+  console.log('Fetching pools');
+
   await balancer.swaps.sor.fetchPools();
+
+  console.log('Processing swaps');
 
   await getAndProcessSwaps(
     balancer,
