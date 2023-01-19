@@ -27,7 +27,8 @@ export enum BalancerErrorCode {
   GAUGES_HELPER_ADDRESS_NOT_PROVIDED = 'GAUGES_HELPER_ADDRESS_NOT_PROVIDED',
   GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED = 'GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED',
   GAUGES_REWARD_TOKEN_EMPTY = 'GAUGES_REWARD_TOKEN_EMPTY',
-  GAUGES_REWARD_TOKEN_ZERO = 'GAUGES_REWARD_TOKEN_ZERO',
+  REWARD_TOKEN_ZERO = 'REWARD_TOKEN_ZERO',
+  FEE_PROVIDER_NOT_PROVIDED = 'FEE_PROVIDER_NOT_PROVIDED',
 }
 
 export class BalancerError extends Error {
@@ -92,10 +93,12 @@ export class BalancerError extends Error {
         return 'Liquidity Gauges Helper Contract address has not been provided';
       case BalancerErrorCode.GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED:
         return 'Liquidity Gauges Reward Minter Contract address has not been provided';
+      case BalancerErrorCode.FEE_PROVIDER_NOT_PROVIDED:
+        return 'Fee Provider Repository has not been provided';
       case BalancerErrorCode.GAUGES_REWARD_TOKEN_EMPTY:
         return 'No Reward Tokens for Liquidity Gauges provided';
-      case BalancerErrorCode.GAUGES_REWARD_TOKEN_ZERO:
-        return 'No Values of Reward Tokens for Liquidity Gauges provided';
+      case BalancerErrorCode.REWARD_TOKEN_ZERO:
+        return 'All Zero Values for Reward Tokens';
       default:
         return 'Unknown error';
     }

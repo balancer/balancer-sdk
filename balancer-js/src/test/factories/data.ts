@@ -65,6 +65,8 @@ export const repositores = ({
         bbAUsdPrice: 1,
         balAddress: '',
       }),
+    getClaimableBalances: () => Promise.resolve({}),
+    claimBalances: () => '',
   },
   feeCollector = stubbed<number>(0),
   tokenYields = stubbed<number>(100),

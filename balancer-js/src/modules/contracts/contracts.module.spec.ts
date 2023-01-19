@@ -27,7 +27,7 @@ describe('contracts module Mainnet', () => {
       const wethAddress = await vaultContract.WETH();
       expect(wethAddress).to.eq('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2');
       const gaugeClaimHelperContract = contracts.contracts['gaugeClaimHelper'];
-      expect(gaugeClaimHelperContract).to.be.undefined
+      expect(gaugeClaimHelperContract).to.be.undefined;
     }).timeout(20000);
 
     it('instantiate via SDK', async () => {
@@ -39,7 +39,7 @@ describe('contracts module Mainnet', () => {
       const wethAddress = await vaultContract.WETH();
       expect(wethAddress).to.eq('0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2');
       const gaugeClaimHelperContract = balancer.contracts['gaugeClaimHelper'];
-      expect(gaugeClaimHelperContract).to.be.undefined
+      expect(gaugeClaimHelperContract).to.be.undefined;
     }).timeout(2e4);
   });
 });
@@ -64,8 +64,9 @@ describe('contracts module Polygon', () => {
       expect(wethAddress).to.eq('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270');
 
       const gaugeClaimHelperContract = contracts.contracts['gaugeClaimHelper'];
-      expect(gaugeClaimHelperContract?.address).to.eq('0xaeb406b0e430bf5ea2dc0b9fe62e4e53f74b3a33');
-
+      expect(gaugeClaimHelperContract?.address).to.eq(
+        '0xaeb406b0e430bf5ea2dc0b9fe62e4e53f74b3a33'
+      );
     }).timeout(20000);
 
     it('instantiate via SDK', async () => {
@@ -78,8 +79,9 @@ describe('contracts module Polygon', () => {
       expect(wethAddress).to.eq('0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270');
 
       const gaugeClaimHelperContract = balancer.contracts['gaugeClaimHelper'];
-      expect(gaugeClaimHelperContract?.address).to.eq('0xaeb406b0e430bf5ea2dc0b9fe62e4e53f74b3a33');
-
+      expect(gaugeClaimHelperContract?.address).to.eq(
+        '0xaeb406b0e430bf5ea2dc0b9fe62e4e53f74b3a33'
+      );
     }).timeout(2e4);
   });
 });
@@ -104,8 +106,9 @@ describe('contracts module Arbitrum', () => {
       expect(wethAddress).to.eq('0x82aF49447D8a07e3bd95BD0d56f35241523fBab1');
 
       const gaugeClaimHelperContract = contracts.contracts['gaugeClaimHelper'];
-      expect(gaugeClaimHelperContract?.address).to.eq('0xa0dabebaad1b243bbb243f933013d560819eb66f');
-
+      expect(gaugeClaimHelperContract?.address).to.eq(
+        '0xa0dabebaad1b243bbb243f933013d560819eb66f'
+      );
     }).timeout(20000);
 
     it('instantiate via SDK', async () => {
@@ -118,8 +121,9 @@ describe('contracts module Arbitrum', () => {
       expect(wethAddress).to.eq('0x82aF49447D8a07e3bd95BD0d56f35241523fBab1');
 
       const gaugeClaimHelperContract = balancer.contracts['gaugeClaimHelper'];
-      expect(gaugeClaimHelperContract?.address).to.eq('0xa0dabebaad1b243bbb243f933013d560819eb66f');
-
+      expect(gaugeClaimHelperContract?.address).to.eq(
+        '0xa0dabebaad1b243bbb243f933013d560819eb66f'
+      );
     }).timeout(2e4);
   });
 });

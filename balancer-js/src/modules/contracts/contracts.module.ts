@@ -18,7 +18,7 @@ import { VeBal } from './implementations/veBAL';
 import { VeBalProxy } from './implementations/veBAL-proxy';
 import { Relayer } from './implementations/relayer';
 import { LiquidityGauge } from './implementations/liquidity-gauge';
-import { GaugeClaimHelper } from "./implementations/GaugeClaimHelper";
+import { GaugeClaimHelper } from './implementations/GaugeClaimHelper';
 
 type ContractFactory = (
   address: string,
@@ -97,7 +97,10 @@ export class Contracts {
     }
 
     if (this.contractAddresses.gaugeClaimHelper)
-      this.gaugeClaimHelper = GaugeClaimHelper(this.contractAddresses.gaugeClaimHelper, provider);
+      this.gaugeClaimHelper = GaugeClaimHelper(
+        this.contractAddresses.gaugeClaimHelper,
+        provider
+      );
   }
 
   /**
@@ -115,7 +118,7 @@ export class Contracts {
       veBalProxy: this.veBalProxy,
       ERC20: this.getErc20,
       liquidityGauge: this.getLiquidityGauge,
-      gaugeClaimHelper: this.gaugeClaimHelper
+      gaugeClaimHelper: this.gaugeClaimHelper,
     };
   }
 

@@ -1,4 +1,5 @@
-import {FeeDistributor} from "@/modules/contracts/implementations/feeDistributor";
+import { TokenBalance } from '@/modules/claims/ClaimService';
+import { FeeDistributor } from '@/modules/contracts/implementations/feeDistributor';
 import { Interface } from '@ethersproject/abi';
 import { Provider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
@@ -16,16 +17,17 @@ export interface FeeDistributorData {
 
 export interface BaseFeeDistributor {
   multicallData: (ts: number) => Promise<FeeDistributorData>;
-  getClaimableBalances(userAddress: string, claimableTokens: string[]): Promise<{ [key: string]: number }>;
-  getClaimableBalance(userAddress: string, claimableToken: string): Promise<number>;
+  getClaimableBalances(
+    userAddress: string,
+    claimableTokens: string[]
+  ): Promise<{ [key: string]: number }>;
   claimBalances(userAddress: string, claimableTokens: string[]): string;
-  claimBalance(userAddress: string, claimableToken: string): string;
 }
 
 const feeDistributorInterface = new Interface([
   'function getTokensDistributedInWeek(address token, uint timestamp) view returns (uint)',
   'function claimTokens(address user, address[] tokens) returns (uint256[])',
-  'function claimToken(address user, address token) returns (uint256)'
+  'function claimToken(address user, address token) returns (uint256)',
 ]);
 
 const veBalInterface = new Interface([
@@ -110,24 +112,27 @@ export class FeeDistributorRepository implements BaseFeeDistributor {
     return Math.floor(midnight.getTime() / 1000) - daysSinceThursday * 86400;
   }
 
-  async getClaimableBalances(userAddress: string, claimableTokens: string[]): Promise<{ [key: string]: number }> {
-    const amounts = await this.feeDistributor.callStatic.claimTokens(userAddress, claimableTokens);
-    return claimableTokens.reduce((tokens: { [key:string]:number }, token, index) => {
-      tokens[token] = amounts[index];
-      return tokens;
-    }, {});
+  async getClaimableBalances(
+    userAddress: string,
+    claimableTokens: string[]
+  ): Promise<TokenBalance> {
+    const amounts = await this.feeDistributor.callStatic.claimTokens(
+      userAddress,
+      claimableTokens
+    );
+    return claimableTokens.reduce(
+      (tokens: { [key: string]: number }, token, index) => {
+        tokens[token] = amounts[index].toNumber();
+        return tokens;
+      },
+      {}
+    );
   }
 
   claimBalances(userAddress: string, claimableTokens: string[]): string {
-    return feeDistributorInterface.encodeFunctionData('claimTokens', [userAddress, claimableTokens]);
+    return feeDistributorInterface.encodeFunctionData('claimTokens', [
+      userAddress,
+      claimableTokens,
+    ]);
   }
-
-  async getClaimableBalance(userAddress: string, claimableToken: string): Promise<number> {
-    return await this.feeDistributor.claimTokens(userAddress, claimableToken);
-  }
-
-  claimBalance(userAddress: string, claimableToken: string): string {
-    return feeDistributorInterface.encodeFunctionData('claimToken', [userAddress, claimableToken]);
-  }
-
 }

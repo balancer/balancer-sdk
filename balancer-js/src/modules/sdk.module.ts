@@ -1,4 +1,4 @@
-import {ClaimService, IClaimService} from "@/modules/claims/ClaimService";
+import { ClaimService, IClaimService } from '@/modules/claims/ClaimService';
 import { BalancerSdkConfig, BalancerNetworkConfig } from '@/types';
 import { Swaps } from './swaps/swaps.module';
 import { Relayer } from './relayer/relayer.module';
@@ -63,11 +63,13 @@ export class BalancerSDK implements BalancerSDKRoot {
     if (this.data.liquidityGauges)
       this.claimService = new ClaimService(
         this.data.liquidityGauges,
+        this.data.feeDistributor,
         this.networkConfig.chainId,
         this.networkConfig.addresses.contracts.multicall,
         this.provider,
         this.networkConfig.addresses.contracts.gaugeClaimHelper,
-        this.networkConfig.addresses.contracts.balancerMinterAddress);
+        this.networkConfig.addresses.contracts.balancerMinterAddress
+      );
   }
 
   get rpcProvider(): Provider {
