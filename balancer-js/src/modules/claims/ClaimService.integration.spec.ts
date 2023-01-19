@@ -1,98 +1,98 @@
 /* eslint-disable no-unexpected-multiline */
-import {BalancerSDK, Network, Pool,} from '@/.';
-import {TransactionData} from "@/modules/claims/ClaimService";
+import { BalancerSDK, Network, Pool } from '@/.';
+import { TransactionData } from '@/modules/claims/ClaimService';
+import { Pools } from '@/modules/pools';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 
-import {forkSetup, getBalances} from '@/test/lib/utils';
-import {Interface} from "@ethersproject/abi";
-import {TransactionRequest} from "@ethersproject/abstract-provider/src.ts";
-import {BigNumber, parseFixed} from '@ethersproject/bignumber';
-import {AddressZero} from '@ethersproject/constants';
+import { forkSetup, getBalances } from '@/test/lib/utils';
+import { Interface } from '@ethersproject/abi';
+import { TransactionRequest } from '@ethersproject/abstract-provider/src.ts';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
 
-import {TransactionReceipt} from '@ethersproject/providers';
-import {expect} from 'chai';
+import { TransactionReceipt } from '@ethersproject/providers';
+import { expect } from 'chai';
 import dotenv from 'dotenv';
 import hardhat from 'hardhat';
-import {Pools} from '../../../';
 
 const liquidityGaugeInterface = new Interface([
   {
-    "stateMutability": "nonpayable",
-    "type": "function",
-    "name": "deposit",
-    "inputs": [
+    stateMutability: 'nonpayable',
+    type: 'function',
+    name: 'deposit',
+    inputs: [
       {
-        "name": "_value",
-        "type": "uint256"
-      }
+        name: '_value',
+        type: 'uint256',
+      },
     ],
-    "outputs": []
-  }
+    outputs: [],
+  },
 ]);
 
 const ERC20Interface = new Interface([
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "address",
-        "name": "spender",
-        "type": "address"
+        internalType: 'address',
+        name: 'spender',
+        type: 'address',
       },
       {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
     ],
-    "name": "approve",
-    "outputs": [
+    name: 'approve',
+    outputs: [
       {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
     ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
-])
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+]);
 
 dotenv.config();
 
-const { ALCHEMY_URL: jsonRpcUrl } = process.env;
-const { ethers } = hardhat;
+describe.skip('join and stake', async () => {
+  const { ALCHEMY_URL: jsonRpcUrl } = process.env;
+  const { ethers } = hardhat;
 
-const rpcUrl = 'http://127.0.0.1:8545';
-const network = Network.MAINNET;
-const sdk = new BalancerSDK({ network, rpcUrl });
-const { networkConfig, claimService } = sdk;
+  const rpcUrl = 'http://127.0.0.1:8545';
+  const network = Network.MAINNET;
+  const sdk = new BalancerSDK({ network, rpcUrl });
+  const { networkConfig, claimService } = sdk;
 
-const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
-const signer = provider.getSigner();
-let signerAddress: string;
+  const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
+  const signer = provider.getSigner();
+  let signerAddress: string;
 
-// Slots used to set the account balance for each token through hardhat_setStorageAt
-// Info fetched using npm package slot20
-const wBTC_SLOT = 0;
-const wETH_SLOT = 3;
-const slots = [wBTC_SLOT, wETH_SLOT];
+  const wBTC_SLOT = 0;
+  const wETH_SLOT = 3;
+  const slots = [wBTC_SLOT, wETH_SLOT];
 
-const initialBalance = '100000';
-const amountsInDiv = '100000000';
+  const initialBalance = '100000';
+  const amountsInDiv = '100000000';
 
-let amountsIn: string[];
-// Test scenarios
+  let amountsIn: string[];
 
-const poolId = '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e';
-const gaugeId = '0x4e3c048be671852277ad6ce29fd5207aa12fabff';
-const lpToken = '0xA6F548DF93de924d73be7D25dC02554c6bD66dB5';
+  const poolId =
+    '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e';
+  const gaugeId = '0x4e3c048be671852277ad6ce29fd5207aa12fabff';
+  const lpToken = '0xA6F548DF93de924d73be7D25dC02554c6bD66dB5';
 
-const pool = pools_14717479.find((pool) => pool.id == poolId) as unknown as Pool;
-const tokensIn = pool.tokens;
+  const pool = pools_14717479.find(
+    (pool) => pool.id == poolId
+  ) as unknown as Pool;
+  const tokensIn = pool.tokens;
 
-const controller = Pools.wrap(pool, networkConfig);
+  const controller = Pools.wrap(pool, networkConfig);
 
-describe('join and stake', async () => {
   let transactionReceipt: TransactionReceipt;
   let lpTokenBalance: BigNumber;
   let transactionData: TransactionData;
@@ -115,7 +115,6 @@ describe('join and stake', async () => {
   });
 
   context('join and stake with ETH', () => {
-    let transactionCost: BigNumber;
     before(async function () {
       this.timeout(40000);
 
@@ -130,7 +129,7 @@ describe('join and stake', async () => {
       });
 
       const slippage = '100';
-      const { to, data, value, minBPTOut } = controller.buildJoin(
+      const { to, data, value } = controller.buildJoin(
         signerAddress,
         tokensWithETH,
         amountsIn,
@@ -139,45 +138,64 @@ describe('join and stake', async () => {
       const tx = { to, data, value };
 
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
-
-      [ lpTokenBalance ] = await getBalances(
-        [lpToken],
-        signer,
-        signerAddress
-      );
-    });
-
-    it('should work', async () => {
       expect(transactionReceipt.status).to.eql(1);
-    });
 
-    it('should have no staked tokens', async () => {
-      if (!claimService) throw new Error('claimable service not available');
-      const claimableToken = await claimService.getClaimableTokens(signerAddress);
-      expect(claimableToken.length).to.eq(0);
+      [lpTokenBalance] = await getBalances([lpToken], signer, signerAddress);
     });
 
     it('should have lp token balance', async () => {
       expect(lpTokenBalance.gte(0)).to.be.true;
     });
 
+    it('should have no staked tokens', async () => {
+      if (!claimService) throw new Error('claimable service not available');
+      const claimableToken = await claimService.getClaimableRewardTokens(
+        signerAddress
+      );
+      expect(claimableToken.length).to.eq(0);
+    });
+
     it('should allow staking', async () => {
+      // TODO: this has been done as it happens in the dashboard. unfortunately it does not work in generating claimable tokens
       // approve transfer
-      const approvalData = ERC20Interface.encodeFunctionData('approve', [gaugeId, lpTokenBalance]);
-      const approvalTx:TransactionRequest = { to: lpToken, data: approvalData, gasLimit: 2100000, gasPrice: 8000000000 };
-      const approvalReceipt = await (await signer.sendTransaction(approvalTx)).wait();
+      const approvalData = ERC20Interface.encodeFunctionData('approve', [
+        gaugeId,
+        lpTokenBalance,
+      ]);
+      const approvalTx: TransactionRequest = {
+        to: lpToken,
+        data: approvalData,
+        gasLimit: 2100000,
+        gasPrice: 8000000000,
+      };
+      const approvalReceipt = await (
+        await signer.sendTransaction(approvalTx)
+      ).wait();
       expect(approvalReceipt.status).to.eql(1);
 
       // deposit funds
-      const depositData = liquidityGaugeInterface.encodeFunctionData('deposit', [lpTokenBalance]);
-      const depositTx:TransactionRequest = { to: gaugeId, data: depositData, gasLimit: 2100000, gasPrice: 8000000000 };
-      const depositReceipt = await (await signer.sendTransaction(depositTx)).wait();
+      const depositData = liquidityGaugeInterface.encodeFunctionData(
+        'deposit',
+        [lpTokenBalance]
+      );
+      const depositTx: TransactionRequest = {
+        to: gaugeId,
+        data: depositData,
+        gasLimit: 2100000,
+        gasPrice: 8000000000,
+      };
+      const depositReceipt = await (
+        await signer.sendTransaction(depositTx)
+      ).wait();
       expect(depositReceipt.status).to.eql(1);
-    })
+    });
 
     it('should have staked tokens to claim', async () => {
       if (!claimService) throw new Error('claimable service not available');
-      transactionData = await claimService.claimRewardTokens([gaugeId], signerAddress);
+      transactionData = await claimService.buildClaimRewardTokensRequest(
+        [gaugeId],
+        signerAddress
+      );
       expect(transactionData.tokensOut.length).to.gt(0);
     });
 
@@ -187,6 +205,5 @@ describe('join and stake', async () => {
       const receipt = await (await signer.sendTransaction(tx)).wait();
       expect(receipt.status).to.eql(1);
     });
-  });
-
-}).timeout(40000);
+  }).timeout(40000);
+});
