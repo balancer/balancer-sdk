@@ -19,8 +19,7 @@ import { ADDRESSES } from '@/test/lib/constants';
 import { getPoolBalances } from './utils';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import pools_15840286 from '@/test/lib/pools_15840286.json';
-import { checkInaccuracy } from '@/test/lib/utils';
+import pools_16428572 from '@/test/lib/pools_16428572.json';
 
 dotenv.config();
 
@@ -30,7 +29,7 @@ const poolWeighted = pools_14717479.find(
     '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
 ) as unknown as SubgraphPoolBase;
 
-const poolComposableStable = pools_15840286.find(
+const poolComposableStableNoFee = pools_16428572.find(
   (pool) =>
     pool.id ==
     '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d' // bbausd
@@ -44,7 +43,7 @@ describe('exitModel', () => {
     exitModel = new ExitModel(relayerModel);
     const poolsRepository = new MockPoolDataService([
       cloneDeep(poolWeighted),
-      cloneDeep(poolComposableStable),
+      cloneDeep(poolComposableStableNoFee),
     ]);
     const pools = new PoolsSource(
       poolsRepository,
@@ -99,7 +98,7 @@ describe('exitModel', () => {
       ).to.eq(bptIn);
     });
     it('ComposableStable - ExactBPTInForOneTokenOut', async () => {
-      const poolId = poolComposableStable.id;
+      const poolId = poolComposableStableNoFee.id;
       const exitPool = poolsDictionary[poolId];
       const bptIn = parseFixed('10', 18).toString();
       const userData = ComposableStablePoolEncoder.exitExactBPTInForOneTokenOut(
@@ -139,13 +138,8 @@ describe('exitModel', () => {
         BigNumber.from(balancesBefore[3]).sub(balancesAfter[3]).toString()
       ).to.eq('0');
       const amountOut = BigNumber.from(amounts[1]);
-      const expectedAmountOut = BigNumber.from('-9992943504916612596'); // From Tenderly simulation
-      checkInaccuracy(amountOut, expectedAmountOut, 1e-4); // inaccuracy limit of 1 bps
-      checkInaccuracy(
-        BigNumber.from(balancesBefore[0]).sub(balancesAfter[0]),
-        BigNumber.from('9992943504916612596'),
-        1e-4 // inaccuracy limit of 1 bps
-      );
+      const expectedAmountOut = BigNumber.from('-9969765758058342507'); // From Tenderly simulation
+      expect(amountOut.toString()).to.eq(expectedAmountOut.toString());
     });
   });
 });

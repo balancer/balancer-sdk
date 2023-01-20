@@ -18,8 +18,7 @@ import { ADDRESSES } from '@/test/lib/constants';
 import { getPoolBalances } from './utils';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import pools_15840286 from '@/test/lib/pools_15840286.json';
-import { checkInaccuracy } from '@/test/lib/utils';
+import pools_16428572 from '@/test/lib/pools_16428572.json';
 
 dotenv.config();
 
@@ -29,7 +28,7 @@ const poolWeighted = pools_14717479.find(
     '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
 ) as unknown as SubgraphPoolBase;
 
-const poolComposableStable = pools_15840286.find(
+const poolComposableStableNoFee = pools_16428572.find(
   (pool) =>
     pool.id ==
     '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d' // bbausd
@@ -43,7 +42,7 @@ describe('joinModel', () => {
     joinModel = new JoinModel(relayerModel);
     const poolsRepository = new MockPoolDataService([
       cloneDeep(poolWeighted),
-      cloneDeep(poolComposableStable),
+      cloneDeep(poolComposableStableNoFee),
     ]);
     const pools = new PoolsSource(
       poolsRepository,
@@ -107,7 +106,7 @@ describe('joinModel', () => {
       ).to.eq('7314757264527952668');
     });
     it('ComposableStable - joinExactTokensInForBPTOut', async () => {
-      const poolId = poolComposableStable.id;
+      const poolId = poolComposableStableNoFee.id;
       const joinPool = poolsDictionary[poolId];
       const tokensIn = [
         ADDRESSES[Network.MAINNET].bbausdt.address,
@@ -161,8 +160,8 @@ describe('joinModel', () => {
         '1099543200000000000000',
       ]); // From Tenderly
       const bptOut = BigNumber.from(amounts[3]);
-      const expectedBptOut = BigNumber.from('-1111327432434158659003'); // From Tenderly
-      checkInaccuracy(bptOut, expectedBptOut, 1e-4); // inaccuracy limit of 1 bps
+      const expectedBptOut = BigNumber.from('-1110698206088016093708'); // From Tenderly
+      expect(bptOut.toString()).to.eq(expectedBptOut.toString());
     });
   });
 });
