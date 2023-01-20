@@ -231,7 +231,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     addresses: {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
-        multicall: '0xb5b692a88bdfc81ca69dcb1d924f59f0413a602a',
+        multicall: '0xbb6fab6b627947dae0a75808250d8b2652952cb5',
         relayerV4: '0xeF606F58A4FD0fCcb066c6203d0994694d3eB2D3',
         balancerHelpers: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
         weightedPoolFactory: '0xf302f9F50958c5593770FDf4d4812309fF77414f',
