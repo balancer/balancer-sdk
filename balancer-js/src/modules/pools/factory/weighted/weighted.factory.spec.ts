@@ -15,22 +15,17 @@ import {
   WeightedPoolFactory__factory,
 } from '@balancer-labs/typechain';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { parseFixed } from '@ethersproject/bignumber';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 import { AddressZero } from '@ethersproject/constants';
 import { parseEther } from '@ethersproject/units';
 
 dotenv.config();
-//
-// const network = Network.MAINNET;
-// const rpcUrl = 'http://127.0.0.1:8545';
-// const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
-// const blockNumber = 16320000;
 
-const network = Network.GOERLI;
-const rpcUrl = 'http://127.0.0.1:8000';
-const alchemyRpcUrl = `${process.env.ALCHEMY_URL_GOERLI}`;
-const blockNumber = 8200000;
+const network = Network.MAINNET;
+const rpcUrl = 'http://127.0.0.1:8545';
+const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
+const blockNumber = 16320000;
 
 const name = 'My-Test-Pool-Name';
 const symbol = 'My-Test-Pool-Symbol';
@@ -118,34 +113,17 @@ describe('creating weighted pool', () => {
       const weightedPoolInterface = new Interface(WeightedPool__factory.abi);
       const pool = new Contract(poolAddress, weightedPoolInterface, provider);
       const poolId = await pool.getPoolId();
-
+      const amountsIn = [
+        parseFixed('2000', 6).toString(),
+        parseFixed('8000', 6).toString(),
+      ];
       const initJoinParams = weightedPoolFactory.buildInitJoin({
         joiner: signerAddress,
         poolId,
         poolAddress,
         tokensIn: tokenAddresses,
-        amountsIn: [
-          parseFixed('2000', 6).toString(),
-          parseFixed('8000', 6).toString(),
-        ],
+        amountsIn,
       });
-
-      const iERC20 = [
-        'function approve(address,uint256) nonpayable',
-        'function balanceOf(address) view returns(uint)',
-      ];
-      const erc20 = new Contract(AddressZero, iERC20);
-      // Approve vault for seeder
-      await Promise.all(
-        Object.values(tokenAddresses).map((address) => {
-          return erc20
-            .attach(address)
-            .connect(signer)
-            .approve(initJoinParams.to, parseEther('10').toString(), {
-              gasLimit: 3000000,
-            });
-        })
-      );
       const tx = await signer.sendTransaction({
         to: initJoinParams.to,
         data: initJoinParams.data,
@@ -164,7 +142,12 @@ describe('creating weighted pool', () => {
           return vaultInterface.parseLog(log);
         })
         .find((parsedLog) => parsedLog?.name === 'PoolBalanceChanged');
-      expect(!!poolInitJoinEvent).to.be.true;
+      if (!poolInitJoinEvent) {
+        throw new Error('Expected poolInitJoinEvent to be truthy');
+      }
+      const deltas = poolInitJoinEvent.args['deltas'];
+      const deltasString = deltas.map((delta: BigNumber) => delta.toString());
+      expect(deltasString.sort()).deep.equal(amountsIn.sort());
     });
   });
 });

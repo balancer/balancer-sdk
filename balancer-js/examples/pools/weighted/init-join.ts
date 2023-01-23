@@ -4,8 +4,6 @@ import { Vault__factory, WeightedPool__factory } from "@balancer-labs/typechain"
 import { Contract } from "@ethersproject/contracts";
 import { balancer, provider, signer, tokenAddresses } from "./example-config";
 import { parseFixed } from "@ethersproject/bignumber";
-import { AddressZero } from "@ethersproject/constants";
-import { parseEther } from "@ethersproject/units";
 import { Log, TransactionReceipt } from "@ethersproject/providers";
 import { isSameAddress } from "@/lib/utils";
 import { PoolType } from "@/types";
@@ -32,23 +30,7 @@ export async function initJoinWeightedPool() {
       parseFixed('8000', 6).toString(),
     ],
   });
-
-  // Approve vault for seeder
-  const iERC20 = [
-    'function approve(address,uint256) nonpayable',
-    'function balanceOf(address) view returns(uint)',
-  ];
-  const erc20 = new Contract(AddressZero, iERC20);
-  await Promise.all(
-    Object.values(tokenAddresses).map((address) => {
-      return erc20
-        .attach(address)
-        .connect(signer)
-        .approve(initJoinParams.to, parseEther('10').toString(), {
-          gasLimit: 3000000,
-        });
-    })
-  );
+  
   const tx = await signer.sendTransaction({
     to: initJoinParams.to,
     data: initJoinParams.data,
