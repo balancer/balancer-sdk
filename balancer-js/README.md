@@ -397,6 +397,7 @@ Builds a init join transaction for weighted pool.
   buildInitJoin({
     joiner,
     poolId,
+    poolAddress,
     tokensIn,
     amountsIn,
   }) => InitJoinPoolAttributes 
