@@ -100,6 +100,7 @@ export interface BalancerNetworkConfig {
   pools: {
     wETHwstETH?: PoolReference;
   };
+  poolsToIgnore?: string[];
 }
 
 export interface BalancerDataRepositories {
