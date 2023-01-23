@@ -84,7 +84,6 @@ export class WeightedFactory implements PoolFactory {
    *  * Returns a InitJoinPoolAttributes to make a init join transaction
    *  * @param joiner - The address of the joiner of the pool
    *  * @param poolId - The id of the pool
-   *  * @param poolAddress - The address of the pool
    *  * @param tokensIn - array with the address of the tokens
    *  * @param amountsIn - array with the amount of each token
    *  * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a weighted pool
