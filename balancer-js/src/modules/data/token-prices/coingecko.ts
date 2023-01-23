@@ -114,8 +114,6 @@ export class CoingeckoPriceRepository implements Findable<Price> {
         return 'polygon-pos';
       case 42161:
         return 'arbitrum-one';
-      case 100:
-        return 'xdai';
     }
 
     return '2';
