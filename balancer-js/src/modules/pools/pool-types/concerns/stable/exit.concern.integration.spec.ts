@@ -1,3 +1,4 @@
+// yarn test:only ./src/modules/pools/pool-types/concerns/stable/exit.concern.integration.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { BalancerSDK, Network, Pool } from '@/.';
@@ -9,7 +10,6 @@ import { forkSetup, getBalances } from '@/test/lib/utils';
 import { Pools } from '@/modules/pools';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import { ExitPoolAttributes } from '../types';
 
 dotenv.config();
 
@@ -66,7 +66,7 @@ describe('exit stable pools execution', async () => {
   });
 
   const testFlow = async (
-    { to, data, maxBPTIn, minAmountsOut }: ExitPoolAttributes,
+    [to, data, maxBPTIn, minAmountsOut]: [string, string, string, string[]],
     exitTokens: string[],
     exitWithETH = false
   ) => {
@@ -110,10 +110,12 @@ describe('exit stable pools execution', async () => {
     context('proportional amounts out', async () => {
       before(async function () {
         const bptIn = parseFixed('10', 18).toString();
-        await testFlow(
-          controller.buildExitExactBPTIn(signerAddress, bptIn, slippage),
-          pool.tokensList
+        const { to, data, minAmountsOut } = controller.buildExitExactBPTIn(
+          signerAddress,
+          bptIn,
+          slippage
         );
+        await testFlow([to, data, bptIn, minAmountsOut], pool.tokensList);
       });
 
       it('should work', async () => {
@@ -138,16 +140,14 @@ describe('exit stable pools execution', async () => {
     context('single token max out', async () => {
       before(async function () {
         const bptIn = parseFixed('10', 18).toString();
-        await testFlow(
-          controller.buildExitExactBPTIn(
-            signerAddress,
-            bptIn,
-            slippage,
-            false,
-            pool.tokensList[0]
-          ),
-          pool.tokensList
+        const { to, data, minAmountsOut } = controller.buildExitExactBPTIn(
+          signerAddress,
+          bptIn,
+          slippage,
+          false,
+          pool.tokensList[0]
         );
+        await testFlow([to, data, bptIn, minAmountsOut], pool.tokensList);
       });
 
       it('should work', async () => {
@@ -181,15 +181,14 @@ describe('exit stable pools execution', async () => {
             .toString()
         );
 
-        await testFlow(
-          controller.buildExitExactTokensOut(
-            signerAddress,
-            tokensOut.map((t) => t.address),
-            amountsOut,
-            slippage
-          ),
-          pool.tokensList
+        const { to, data, maxBPTIn } = controller.buildExitExactTokensOut(
+          signerAddress,
+          tokensOut.map((t) => t.address),
+          amountsOut,
+          slippage
         );
+
+        await testFlow([to, data, maxBPTIn, amountsOut], pool.tokensList);
       });
 
       it('should work', async () => {
@@ -223,15 +222,14 @@ describe('exit stable pools execution', async () => {
           return '0';
         });
 
-        await testFlow(
-          controller.buildExitExactTokensOut(
-            signerAddress,
-            tokensOut.map((t) => t.address),
-            amountsOut,
-            slippage
-          ),
-          pool.tokensList
+        const { to, data, maxBPTIn } = controller.buildExitExactTokensOut(
+          signerAddress,
+          tokensOut.map((t) => t.address),
+          amountsOut,
+          slippage
         );
+
+        await testFlow([to, data, maxBPTIn, amountsOut], pool.tokensList);
       });
 
       it('should work', async () => {

@@ -5,7 +5,8 @@ import {
   ExitExactBPTInParameters,
   ExitExactTokensOutParameters,
   ExitPool,
-  ExitPoolAttributes,
+  ExitExactBPTInAttributes,
+  ExitExactTokensOutAttributes,
 } from '../types';
 import { AssetHelpers, isSameAddress, parsePoolInfo } from '@/lib/utils';
 import { Vault__factory } from '@balancer-labs/typechain';
@@ -24,7 +25,7 @@ export class MetaStablePoolExit implements ExitConcern {
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenMaxOut,
-  }: ExitExactBPTInParameters): ExitPoolAttributes => {
+  }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
     if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
       throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
     }
@@ -82,6 +83,7 @@ export class MetaStablePoolExit implements ExitConcern {
         .toString();
     });
 
+    let expectedAmountsOut = Array(parsedTokens.length).fill('0');
     let minAmountsOut = Array(parsedTokens.length).fill('0');
     let userData: string;
 
@@ -106,6 +108,8 @@ export class MetaStablePoolExit implements ExitConcern {
         .mul(parseFixed('1', 18))
         .toString();
 
+      expectedAmountsOut[singleTokenMaxOutIndex] = amountOut;
+
       minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
         BigNumber.from(amountOut),
         BigNumber.from(slippage)
@@ -127,7 +131,7 @@ export class MetaStablePoolExit implements ExitConcern {
         ).map((amount) => amount.toString());
 
       // Reverse scaled amounts out based on token price rate
-      const amountsOut = scaledAmountsOut.map((amount, i) => {
+      expectedAmountsOut = scaledAmountsOut.map((amount, i) => {
         return BigNumber.from(amount)
           .div(BigNumber.from(sortedPriceRates[i]))
           .mul(parseFixed('1', 18))
@@ -135,7 +139,7 @@ export class MetaStablePoolExit implements ExitConcern {
       });
 
       // Apply slippage tolerance
-      minAmountsOut = amountsOut.map((amount) => {
+      minAmountsOut = expectedAmountsOut.map((amount) => {
         const minAmount = subSlippage(
           BigNumber.from(amount),
           BigNumber.from(slippage)
@@ -174,8 +178,8 @@ export class MetaStablePoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
+      expectedAmountsOut,
       minAmountsOut,
-      maxBPTIn: bptIn,
     };
   };
 
@@ -186,7 +190,7 @@ export class MetaStablePoolExit implements ExitConcern {
     amountsOut,
     slippage,
     wrappedNativeAsset,
-  }: ExitExactTokensOutParameters): ExitPoolAttributes => {
+  }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
     if (
       tokensOut.length != amountsOut.length ||
       tokensOut.length != pool.tokensList.length
@@ -293,7 +297,7 @@ export class MetaStablePoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
-      minAmountsOut,
+      expectedBPTIn: bptIn,
       maxBPTIn,
     };
   };

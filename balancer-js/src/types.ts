@@ -3,7 +3,8 @@ import type { BigNumberish } from '@ethersproject/bignumber';
 import type { Contract } from '@ethersproject/contracts';
 import type { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 import type {
-  ExitPoolAttributes,
+  ExitExactBPTInAttributes,
+  ExitExactTokensOutAttributes,
   JoinPoolAttributes,
 } from './modules/pools/pool-types/concerns/types';
 import type {
@@ -99,6 +100,7 @@ export interface BalancerNetworkConfig {
   pools: {
     wETHwstETH?: PoolReference;
   };
+  poolsToIgnore?: string[];
 }
 
 export interface BalancerDataRepositories {
@@ -333,13 +335,13 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     slippage: string,
     shouldUnwrapNativeAsset?: boolean,
     singleTokenMaxOut?: string
-  ) => ExitPoolAttributes;
+  ) => ExitExactBPTInAttributes;
   buildExitExactTokensOut: (
     exiter: string,
     tokensOut: string[],
     amountsOut: string[],
     slippage: string
-  ) => ExitPoolAttributes;
+  ) => ExitExactTokensOutAttributes;
   calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
 }
 

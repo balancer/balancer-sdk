@@ -52,6 +52,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         address: '0x32296969ef14eb0c6d29669c550d4a0449130230',
       },
     },
+    poolsToIgnore: [
+      '0xbd482ffb3e6e50dc1c437557c3bea2b68f3683ee', // a pool made by an external dev who was playing with a novel rate provider mechanism in production.
+    ],
   },
   [Network.POLYGON]: {
     chainId: Network.POLYGON, //137
@@ -73,13 +76,16 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2',
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-prune-v2',
       gaugesSubgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-polygon',
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
     },
     pools: {},
+    poolsToIgnore: [
+      '0x600bd01b6526611079e12e1ff93aba7a3e34226f', // This pool has rateProviders with incorrect scaling
+    ],
   },
   [Network.ARBITRUM]: {
     chainId: Network.ARBITRUM, //42161
@@ -231,7 +237,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     addresses: {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
-        multicall: '0xb5b692a88bdfc81ca69dcb1d924f59f0413a602a',
+        multicall: '0xbb6fab6b627947dae0a75808250d8b2652952cb5',
         relayerV4: '0xeF606F58A4FD0fCcb066c6203d0994694d3eB2D3',
         balancerHelpers: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
         weightedPoolFactory: '0xf302f9F50958c5593770FDf4d4812309fF77414f',

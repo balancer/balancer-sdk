@@ -446,7 +446,11 @@ input JoinExit_filter {
   pool_starts_with_nocase: String
   sender: Bytes
   sender_contains: Bytes
+  sender_gt: Bytes
+  sender_gte: Bytes
   sender_in: [Bytes!]
+  sender_lt: Bytes
+  sender_lte: Bytes
   sender_not: Bytes
   sender_not_contains: Bytes
   sender_not_in: [Bytes!]
@@ -460,7 +464,11 @@ input JoinExit_filter {
   timestamp_not_in: [Int!]
   tx: Bytes
   tx_contains: Bytes
+  tx_gt: Bytes
+  tx_gte: Bytes
   tx_in: [Bytes!]
+  tx_lt: Bytes
+  tx_lte: Bytes
   tx_not: Bytes
   tx_not_contains: Bytes
   tx_not_in: [Bytes!]
@@ -525,7 +533,11 @@ input LatestPrice_filter {
   _change_block: BlockChangedFilter
   asset: Bytes
   asset_contains: Bytes
+  asset_gt: Bytes
+  asset_gte: Bytes
   asset_in: [Bytes!]
+  asset_lt: Bytes
+  asset_lte: Bytes
   asset_not: Bytes
   asset_not_contains: Bytes
   asset_not_in: [Bytes!]
@@ -576,7 +588,11 @@ input LatestPrice_filter {
   price_not_in: [BigDecimal!]
   pricingAsset: Bytes
   pricingAsset_contains: Bytes
+  pricingAsset_gt: Bytes
+  pricingAsset_gte: Bytes
   pricingAsset_in: [Bytes!]
+  pricingAsset_lt: Bytes
+  pricingAsset_lte: Bytes
   pricingAsset_not: Bytes
   pricingAsset_not_contains: Bytes
   pricingAsset_not_in: [Bytes!]
@@ -699,6 +715,8 @@ type Pool {
   historicalValues(first: Int = 100, orderBy: PoolHistoricalLiquidity_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: PoolHistoricalLiquidity_filter): [PoolHistoricalLiquidity!]
   holdersCount: BigInt!
   id: ID!
+  isInRecoveryMode: Boolean
+  isPaused: Boolean
   lambda: BigDecimal
   lowerTarget: BigDecimal
   mainIndex: Int
@@ -869,7 +887,11 @@ input PoolHistoricalLiquidity_filter {
   poolTotalShares_not_in: [BigDecimal!]
   pricingAsset: Bytes
   pricingAsset_contains: Bytes
+  pricingAsset_gt: Bytes
+  pricingAsset_gte: Bytes
   pricingAsset_in: [Bytes!]
+  pricingAsset_lt: Bytes
+  pricingAsset_lte: Bytes
   pricingAsset_not: Bytes
   pricingAsset_not_contains: Bytes
   pricingAsset_not_in: [Bytes!]
@@ -1091,6 +1113,7 @@ type PoolToken {
   cashBalance: BigDecimal!
   decimals: Int!
   id: ID!
+  index: Int
   isExemptFromYieldProtocolFee: Boolean
   managedBalance: BigDecimal!
   managements(first: Int = 100, orderBy: ManagementOperation_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: ManagementOperation_filter): [ManagementOperation!]
@@ -1127,7 +1150,11 @@ input PoolToken_filter {
   address_starts_with_nocase: String
   assetManager: Bytes
   assetManager_contains: Bytes
+  assetManager_gt: Bytes
+  assetManager_gte: Bytes
   assetManager_in: [Bytes!]
+  assetManager_lt: Bytes
+  assetManager_lte: Bytes
   assetManager_not: Bytes
   assetManager_not_contains: Bytes
   assetManager_not_in: [Bytes!]
@@ -1163,6 +1190,14 @@ input PoolToken_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  index: Int
+  index_gt: Int
+  index_gte: Int
+  index_in: [Int!]
+  index_lt: Int
+  index_lte: Int
+  index_not: Int
+  index_not_in: [Int!]
   isExemptFromYieldProtocolFee: Boolean
   isExemptFromYieldProtocolFee_in: [Boolean!]
   isExemptFromYieldProtocolFee_not: Boolean
@@ -1283,6 +1318,7 @@ enum PoolToken_orderBy {
   cashBalance
   decimals
   id
+  index
   isExemptFromYieldProtocolFee
   managedBalance
   managements
@@ -1299,7 +1335,11 @@ input Pool_filter {
   _change_block: BlockChangedFilter
   address: Bytes
   address_contains: Bytes
+  address_gt: Bytes
+  address_gte: Bytes
   address_in: [Bytes!]
+  address_lt: Bytes
+  address_lte: Bytes
   address_not: Bytes
   address_not_contains: Bytes
   address_not_in: [Bytes!]
@@ -1321,7 +1361,11 @@ input Pool_filter {
   amp_not_in: [BigInt!]
   baseToken: Bytes
   baseToken_contains: Bytes
+  baseToken_gt: Bytes
+  baseToken_gte: Bytes
   baseToken_in: [Bytes!]
+  baseToken_lt: Bytes
+  baseToken_lte: Bytes
   baseToken_not: Bytes
   baseToken_not_contains: Bytes
   baseToken_not_in: [Bytes!]
@@ -1383,7 +1427,11 @@ input Pool_filter {
   expiryTime_not_in: [BigInt!]
   factory: Bytes
   factory_contains: Bytes
+  factory_gt: Bytes
+  factory_gte: Bytes
   factory_in: [Bytes!]
+  factory_lt: Bytes
+  factory_lte: Bytes
   factory_not: Bytes
   factory_not_contains: Bytes
   factory_not_in: [Bytes!]
@@ -1404,6 +1452,14 @@ input Pool_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  isInRecoveryMode: Boolean
+  isInRecoveryMode_in: [Boolean!]
+  isInRecoveryMode_not: Boolean
+  isInRecoveryMode_not_in: [Boolean!]
+  isPaused: Boolean
+  isPaused_in: [Boolean!]
+  isPaused_not: Boolean
+  isPaused_not_in: [Boolean!]
   lambda: BigDecimal
   lambda_gt: BigDecimal
   lambda_gte: BigDecimal
@@ -1462,7 +1518,11 @@ input Pool_filter {
   oracleEnabled_not_in: [Boolean!]
   owner: Bytes
   owner_contains: Bytes
+  owner_gt: Bytes
+  owner_gte: Bytes
   owner_in: [Bytes!]
+  owner_lt: Bytes
+  owner_lte: Bytes
   owner_not: Bytes
   owner_not_contains: Bytes
   owner_not_in: [Bytes!]
@@ -1497,7 +1557,11 @@ input Pool_filter {
   priceRateProviders_: PriceRateProvider_filter
   principalToken: Bytes
   principalToken_contains: Bytes
+  principalToken_gt: Bytes
+  principalToken_gte: Bytes
   principalToken_in: [Bytes!]
+  principalToken_lt: Bytes
+  principalToken_lte: Bytes
   principalToken_not: Bytes
   principalToken_not_contains: Bytes
   principalToken_not_in: [Bytes!]
@@ -1697,7 +1761,11 @@ input Pool_filter {
   totalWeight_not_in: [BigDecimal!]
   tx: Bytes
   tx_contains: Bytes
+  tx_gt: Bytes
+  tx_gte: Bytes
   tx_in: [Bytes!]
+  tx_lt: Bytes
+  tx_lte: Bytes
   tx_not: Bytes
   tx_not_contains: Bytes
   tx_not_in: [Bytes!]
@@ -1797,6 +1865,8 @@ enum Pool_orderBy {
   historicalValues
   holdersCount
   id
+  isInRecoveryMode
+  isPaused
   lambda
   lowerTarget
   mainIndex
@@ -1863,7 +1933,11 @@ input PriceRateProvider_filter {
   _change_block: BlockChangedFilter
   address: Bytes
   address_contains: Bytes
+  address_gt: Bytes
+  address_gte: Bytes
   address_in: [Bytes!]
+  address_lt: Bytes
+  address_lte: Bytes
   address_not: Bytes
   address_not_contains: Bytes
   address_not_in: [Bytes!]
@@ -3375,7 +3449,11 @@ input Swap_filter {
   _change_block: BlockChangedFilter
   caller: Bytes
   caller_contains: Bytes
+  caller_gt: Bytes
+  caller_gte: Bytes
   caller_in: [Bytes!]
+  caller_lt: Bytes
+  caller_lte: Bytes
   caller_not: Bytes
   caller_not_contains: Bytes
   caller_not_in: [Bytes!]
@@ -3454,7 +3532,11 @@ input Swap_filter {
   tokenInSym_starts_with: String
   tokenInSym_starts_with_nocase: String
   tokenIn_contains: Bytes
+  tokenIn_gt: Bytes
+  tokenIn_gte: Bytes
   tokenIn_in: [Bytes!]
+  tokenIn_lt: Bytes
+  tokenIn_lte: Bytes
   tokenIn_not: Bytes
   tokenIn_not_contains: Bytes
   tokenIn_not_in: [Bytes!]
@@ -3480,13 +3562,21 @@ input Swap_filter {
   tokenOutSym_starts_with: String
   tokenOutSym_starts_with_nocase: String
   tokenOut_contains: Bytes
+  tokenOut_gt: Bytes
+  tokenOut_gte: Bytes
   tokenOut_in: [Bytes!]
+  tokenOut_lt: Bytes
+  tokenOut_lte: Bytes
   tokenOut_not: Bytes
   tokenOut_not_contains: Bytes
   tokenOut_not_in: [Bytes!]
   tx: Bytes
   tx_contains: Bytes
+  tx_gt: Bytes
+  tx_gte: Bytes
   tx_in: [Bytes!]
+  tx_lt: Bytes
+  tx_lte: Bytes
   tx_not: Bytes
   tx_not_contains: Bytes
   tx_not_in: [Bytes!]
@@ -3578,7 +3668,11 @@ input TokenPrice_filter {
   amount_not_in: [BigDecimal!]
   asset: Bytes
   asset_contains: Bytes
+  asset_gt: Bytes
+  asset_gte: Bytes
   asset_in: [Bytes!]
+  asset_lt: Bytes
+  asset_lte: Bytes
   asset_not: Bytes
   asset_not_contains: Bytes
   asset_not_in: [Bytes!]
@@ -3629,7 +3723,11 @@ input TokenPrice_filter {
   price_not_in: [BigDecimal!]
   pricingAsset: Bytes
   pricingAsset_contains: Bytes
+  pricingAsset_gt: Bytes
+  pricingAsset_gte: Bytes
   pricingAsset_in: [Bytes!]
+  pricingAsset_lt: Bytes
+  pricingAsset_lte: Bytes
   pricingAsset_not: Bytes
   pricingAsset_not_contains: Bytes
   pricingAsset_not_in: [Bytes!]
@@ -4151,7 +4249,11 @@ input UserInternalBalance_filter {
   id_not_in: [ID!]
   token: Bytes
   token_contains: Bytes
+  token_gt: Bytes
+  token_gte: Bytes
   token_in: [Bytes!]
+  token_lt: Bytes
+  token_lte: Bytes
   token_not: Bytes
   token_not_contains: Bytes
   token_not_in: [Bytes!]
