@@ -1,6 +1,6 @@
 {
   "name": "@balancer-labs/sdk",
-  "version": "0.1.44",
+  "version": "0.1.45",
   "description": "JavaScript SDK for interacting with the Balancer Protocol V2",
   "license": "GPL-3.0-only",
   "homepage": "https://github.com/balancer-labs/balancer-sdk#readme",
@@ -28,7 +28,7 @@
     "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
     "subgraph:generate": "graphql-codegen --config src/modules/subgraph/codegen.yml -r dotenv/config",
     "examples:run": "npx ts-node -P tsconfig.testing.json -r tsconfig-paths/register",
-    "node": "npx hardhat node --tsconfig tsconfig.testing.json --fork $(grep ALCHEMY_URL .env | cut -d '=' -f2 | tail -1)",
+    "node": "npx hardhat node --tsconfig tsconfig.testing.json --fork $(. ./.env && echo $ALCHEMY_URL)",
     "node:goerli": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --fork $(grep ALCHEMY_URL_GOERLI .env | cut -d '=' -f2 | tail -1) --port 8000"
   },
   "devDependencies": {
@@ -86,6 +86,7 @@
     "@ethersproject/abi": "^5.4.0",
     "@ethersproject/abstract-signer": "^5.4.0",
     "@ethersproject/address": "^5.4.0",
+    "@ethersproject/base64": "5.5.0",
     "@ethersproject/bignumber": "^5.4.0",
     "@ethersproject/bytes": "^5.4.0",
     "@ethersproject/constants": "^5.4.0",

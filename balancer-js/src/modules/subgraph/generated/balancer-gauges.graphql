@@ -332,7 +332,11 @@ input Gauge_filter {
   addedTimestamp_not_in: [Int!]
   address: Bytes
   address_contains: Bytes
+  address_gt: Bytes
+  address_gte: Bytes
   address_in: [Bytes!]
+  address_lt: Bytes
+  address_lte: Bytes
   address_not: Bytes
   address_not_contains: Bytes
   address_not_in: [Bytes!]
@@ -529,13 +533,21 @@ input LiquidityGauge_filter {
   pool: String
   poolAddress: Bytes
   poolAddress_contains: Bytes
+  poolAddress_gt: Bytes
+  poolAddress_gte: Bytes
   poolAddress_in: [Bytes!]
+  poolAddress_lt: Bytes
+  poolAddress_lte: Bytes
   poolAddress_not: Bytes
   poolAddress_not_contains: Bytes
   poolAddress_not_in: [Bytes!]
   poolId: Bytes
   poolId_contains: Bytes
+  poolId_gt: Bytes
+  poolId_gte: Bytes
   poolId_in: [Bytes!]
+  poolId_lt: Bytes
+  poolId_lte: Bytes
   poolId_not: Bytes
   poolId_not_contains: Bytes
   poolId_not_in: [Bytes!]
@@ -570,7 +582,11 @@ input LiquidityGauge_filter {
   shares_: GaugeShare_filter
   streamer: Bytes
   streamer_contains: Bytes
+  streamer_gt: Bytes
+  streamer_gte: Bytes
   streamer_in: [Bytes!]
+  streamer_lt: Bytes
+  streamer_lte: Bytes
   streamer_not: Bytes
   streamer_not_contains: Bytes
   streamer_not_in: [Bytes!]
@@ -653,7 +669,11 @@ input Pool_filter {
   _change_block: BlockChangedFilter
   address: Bytes
   address_contains: Bytes
+  address_gt: Bytes
+  address_gte: Bytes
   address_in: [Bytes!]
+  address_lt: Bytes
+  address_lte: Bytes
   address_not: Bytes
   address_not_contains: Bytes
   address_not_in: [Bytes!]
@@ -674,7 +694,11 @@ input Pool_filter {
   id_not_in: [ID!]
   poolId: Bytes
   poolId_contains: Bytes
+  poolId_gt: Bytes
+  poolId_gte: Bytes
   poolId_in: [Bytes!]
+  poolId_lt: Bytes
+  poolId_lte: Bytes
   poolId_not: Bytes
   poolId_not_contains: Bytes
   poolId_not_in: [Bytes!]
@@ -1257,7 +1281,11 @@ input RootGauge_filter {
   isKilled_not_in: [Boolean!]
   recipient: Bytes
   recipient_contains: Bytes
+  recipient_gt: Bytes
+  recipient_gte: Bytes
   recipient_in: [Bytes!]
+  recipient_lt: Bytes
+  recipient_lte: Bytes
   recipient_not: Bytes
   recipient_not_contains: Bytes
   recipient_not_in: [Bytes!]

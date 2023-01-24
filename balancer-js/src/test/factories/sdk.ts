@@ -34,6 +34,7 @@ const poolFactory = Factory.define<Pool>(({ params, afterBuild }) => {
     swapFee: '0.001',
     swapEnabled: true,
     protocolYieldFeeCache: '0',
+    protocolSwapFeeCache: '0',
     tokens,
     tokensList: [],
     totalWeight: '1',

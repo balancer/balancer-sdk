@@ -11,6 +11,7 @@ import { aave, allYieldTokens as aaveTokens } from './tokens/aave';
 import { overnight, yieldTokens as overnightTokens } from './tokens/overnight';
 import { sfrxETH, yieldTokens as fraxTokens } from './tokens/sfrxeth';
 import { maticX, yieldTokens as staderLabsTokens } from './tokens/maticx';
+import { tranchess, yieldTokens as tranchessTokens } from './tokens/tranchess';
 import { Network, Findable } from '@/types';
 
 /**
@@ -30,6 +31,7 @@ const yieldSourceMap: { [address: string]: AprFetcher } = Object.fromEntries([
   ...Object.values(rocketpoolTokens).map((k) => [k, rocketpool]),
   ...Object.values(fraxTokens).map((k) => [k, sfrxETH]),
   ...Object.values(staderLabsTokens).map((k) => [k, maticX]),
+  ...Object.values(tranchessTokens).map((k) => [k, tranchess]),
 ]);
 
 export class TokenYieldsRepository implements Findable<number> {

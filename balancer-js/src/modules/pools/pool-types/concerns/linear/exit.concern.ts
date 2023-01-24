@@ -2,7 +2,8 @@ import {
   ExitConcern,
   ExitExactBPTInParameters,
   ExitExactTokensOutParameters,
-  ExitPoolAttributes,
+  ExitExactBPTInAttributes,
+  ExitExactTokensOutAttributes,
 } from '../types';
 
 export class LinearPoolExit implements ExitConcern {
@@ -14,7 +15,7 @@ export class LinearPoolExit implements ExitConcern {
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenMaxOut,
-  }: ExitExactBPTInParameters): ExitPoolAttributes => {
+  }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
     // TODO implementation
     console.log(
       exiter,
@@ -35,7 +36,7 @@ export class LinearPoolExit implements ExitConcern {
     amountsOut,
     slippage,
     wrappedNativeAsset,
-  }: ExitExactTokensOutParameters): ExitPoolAttributes => {
+  }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
     // TODO implementation
     console.log(
       exiter,
