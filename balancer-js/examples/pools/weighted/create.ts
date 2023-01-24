@@ -1,47 +1,26 @@
-import * as dotenv from 'dotenv';
 import {
   Log,
   TransactionReceipt,
 } from '@ethersproject/providers';
-import { BalancerSDK, isSameAddress, Network, PoolType } from 'src';
-import { ethers } from 'hardhat';
+import { isSameAddress, PoolType } from 'src';
 import { Interface, LogDescription } from '@ethersproject/abi';
-import { ADDRESSES } from '@/test/lib/constants';
 import { forkSetup } from "@/test/lib/utils";
-import { BALANCER_NETWORK_CONFIG } from "@/lib/constants/config";
 import { WeightedPoolFactory__factory } from "@balancer-labs/typechain";
-
-dotenv.config();
-
-const network = Network.GOERLI;
-const rpcUrl = 'http://127.0.0.1:8000';
-const alchemyRpcUrl = `${ process.env.ALCHEMY_URL_GOERLI }`;
-const blockNumber = 8200000;
-
-const name = 'My-Test-Pool-Name';
-const symbol = 'My-Test-Pool-Symbol';
-
-const addresses = ADDRESSES[network];
-
-const USDC_address = addresses.USDC.address;
-const USDT_address = addresses.USDT.address;
-
-const factoryAddress = `${ BALANCER_NETWORK_CONFIG[network].addresses.contracts.weightedPoolFactory }`;
-const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
-const tokenAddresses = [USDC_address, USDT_address];
-const swapFee = '0.01';
-const weights = [`${ 0.2e18 }`, `${ 0.8e18 }`];
+import {
+  alchemyRpcUrl,
+  blockNumber,
+  factoryAddress,
+  name,
+  symbol,
+  tokenAddresses,
+  weights,
+  swapFee,
+  owner, slots, balances, balancer, signer, provider
+} from "./example-config";
 
 async function createWeightedPool() {
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
-  const signer = provider.getSigner();
-  const sdkConfig = {
-    network,
-    rpcUrl,
-  };
-  const balancer = new BalancerSDK(sdkConfig);
   const weightedPoolFactory = balancer.pools.poolFactory.of(PoolType.Weighted);
-  await forkSetup(signer, [], [], [], alchemyRpcUrl, blockNumber, false);
+  await forkSetup(signer, tokenAddresses, slots, balances, alchemyRpcUrl, blockNumber, false);
   const { to, data } = weightedPoolFactory.create({
     factoryAddress,
     name,
@@ -77,6 +56,7 @@ async function createWeightedPool() {
     .find((parsedLog) => parsedLog?.name === 'PoolCreated');
   if (!poolCreationEvent) return console.error("There's no event");
   console.log("poolAddress: " + poolCreationEvent.args.pool);
+  return poolCreationEvent.args.pool;
 }
 
-createWeightedPool().then((r) => r);
+export default createWeightedPool();
