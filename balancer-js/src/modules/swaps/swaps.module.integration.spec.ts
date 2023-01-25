@@ -6,7 +6,7 @@ import { AddressZero, MaxUint256 } from '@ethersproject/constants';
 import { SwapInfo } from '@balancer-labs/sor';
 import hardhat from 'hardhat';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
-import { BigNumber } from 'ethers';
+import { BigNumber } from '@ethersproject/bignumber';
 import { getForkedPools } from '@/test/lib/mainnetPools';
 
 dotenv.config();
