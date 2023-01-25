@@ -16,7 +16,7 @@ import {
   canUseJoinExit,
 } from '../src/index';
 
-import { ADDRESSES } from '../src/test/lib/constants';
+import { ADDRESSES, PROVIDER_URLS } from '../src/test/lib/constants';
 
 dotenv.config();
 
@@ -119,12 +119,12 @@ async function getAndProcessSwaps(
 }
 
 async function swapExample() {
-  const network = Network.MAINNET;
-  const rpcUrl = `https://mainnet.infura.io/v3/${process.env.INFURA}`;
-  const tokenIn = ADDRESSES[network].WETH.address;
-  const tokenOut = ADDRESSES[network].auraBal?.address;
+  const network = Network.POLYGON;
+  const rpcUrl = PROVIDER_URLS[network];
+  const tokenIn = ADDRESSES[network].USDC.address;
+  const tokenOut = ADDRESSES[network].brz.address;
   const swapType = SwapTypes.SwapExactIn;
-  const amount = parseFixed('18', 18);
+  const amount = parseFixed('200', 6);
   // Currently Relayer only suitable for ExactIn and non-eth swaps
   const canUseJoinExitPaths = canUseJoinExit(swapType, tokenIn!, tokenOut!);
 
