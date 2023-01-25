@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { tranchess, yieldTokens } from './tranchess';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import { parseEther } from 'ethers/lib/utils';
+import { parseEther } from '@ethersproject/units';
 
 const mockedResponse = [
   {

@@ -1,5 +1,5 @@
-import { BigNumber } from 'ethers';
-import { formatEther } from 'ethers/lib/utils';
+import { BigNumber } from '@ethersproject/bignumber';
+import { formatEther } from '@ethersproject/units';
 import { AprFetcher } from '../repository';
 import axios from 'axios';
 
