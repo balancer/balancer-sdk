@@ -57,11 +57,8 @@ async function exitExactBPTIn() {
     await getBalances([pool.address, ...pool.tokensList], signer, signerAddress)
   ).map((b) => b.toString());
 
-  const { to, data, minAmountsOut } = pool.buildExitExactBPTIn(
-    signerAddress,
-    bptIn,
-    slippage
-  );
+  const { to, data, expectedAmountsOut, minAmountsOut } =
+    pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
 
   // Submit exit tx
   const transactionResponse = await signer.sendTransaction({
@@ -77,12 +74,10 @@ async function exitExactBPTIn() {
     await getBalances([pool.address, ...pool.tokensList], signer, signerAddress)
   ).map((b) => b.toString());
 
-  console.log('Balances before exit:             ', tokenBalancesBefore);
-  console.log('Balances after exit:              ', tokenBalancesAfter);
-  console.log(
-    'Min balances expected after exit: ',
-    minAmountsOut.map((a) => a.toString())
-  );
+  console.log('Balances before exit:                  ', tokenBalancesBefore);
+  console.log('Balances after exit:                   ', tokenBalancesAfter);
+  console.log('Balances expected after exit:          ', expectedAmountsOut);
+  console.log('Min balances after exit (slippage):    ', minAmountsOut);
 }
 
 // yarn examples:run ./examples/exitExactBPTIn.ts

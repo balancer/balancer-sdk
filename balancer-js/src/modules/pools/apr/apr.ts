@@ -76,7 +76,7 @@ export class PoolApr {
       return 0;
     }
     const dailyFees =
-      last24hFees * (1 - (await this.protocolSwapFeePercentage()));
+      last24hFees * (1 - (await this.protocolSwapFeePercentage(pool)));
     const feesDailyBsp = 10000 * (dailyFees / parseFloat(totalLiquidity));
 
     return Math.round(365 * feesDailyBsp);
@@ -111,7 +111,8 @@ export class PoolApr {
 
         if (tokenYield) {
           if (pool.poolType === 'MetaStable') {
-            apr = tokenYield * (1 - (await this.protocolSwapFeePercentage()));
+            apr =
+              tokenYield * (1 - (await this.protocolSwapFeePercentage(pool)));
           } else if (
             pool.poolType === 'ComposableStable' ||
             (pool.poolType === 'Weighted' && pool.poolTypeVersion === 2)
@@ -278,7 +279,7 @@ export class PoolApr {
     }
 
     const now = Math.round(new Date().getTime() / 1000);
-    const totalBalEmissions = emissions.between(now, now + 365 * 86400);
+    const totalBalEmissions = (emissions.weekly(now) / 7) * 365;
     const gaugeBalEmissions = totalBalEmissions * gauge.relativeWeight;
     const gaugeBalEmissionsUsd = gaugeBalEmissions * balPriceUsd;
     const gaugeSupply = (gauge.workingSupply + 0.4) / 0.4; // Only 40% of LP token staked accrue emissions, totalSupply = workingSupply * 2.5
@@ -457,10 +458,21 @@ export class PoolApr {
     );
   }
 
-  private async protocolSwapFeePercentage() {
-    const fee = await this.feeCollector.find('');
+  private async protocolSwapFeePercentage(pool: Pool) {
+    let fee = 0;
 
-    return fee ? fee : 0;
+    if (
+      pool.poolType == 'ComposableStable' ||
+      (pool.poolType == 'Weighted' && pool.poolTypeVersion == 2)
+    ) {
+      fee = 0;
+    } else if (pool.protocolSwapFeeCache) {
+      fee = parseFloat(pool.protocolSwapFeeCache);
+    } else {
+      fee = (await this.feeCollector.find('')) || 0;
+    }
+
+    return fee;
   }
 
   private async rewardTokenApr(tokenAddress: string, rewardData: RewardData) {

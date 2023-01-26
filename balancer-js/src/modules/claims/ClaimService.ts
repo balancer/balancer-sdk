@@ -24,10 +24,13 @@ const liquidityGaugeV5Interface = new Interface([
   'function claimable_reward(address addr, address token) view returns (uint256)',
 ]);
 
+const balancerMinterInterface = new Interface([
+  'function mintMany(address[] gauges) returns (uint256)',
+]);
+
 const gaugeClaimHelperInterface = new Interface([
   'function getPendingRewards(address gauge, address user, address token) view returns (uint256)',
   'function claimRewardsFromGauges(address[] gauges, address user)',
-  'function mintMany(address[] gauges) returns (uint256)',
 ]);
 
 export interface TransactionData {
@@ -172,7 +175,7 @@ export class ClaimService implements IClaimService {
         throw new BalancerError(
           BalancerErrorCode.GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED
         );
-      const callData = gaugeClaimHelperInterface.encodeFunctionData(
+      const callData = balancerMinterInterface.encodeFunctionData(
         'mintMany',
         [gaugeAddresses]
       );
