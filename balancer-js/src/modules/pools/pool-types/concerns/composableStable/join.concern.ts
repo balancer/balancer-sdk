@@ -8,11 +8,12 @@ import { StableMathBigInt } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
 import { subSlippage } from '@/lib/utils/slippageHelper';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber } from '@ethersproject/bignumber';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { balancerVault } from '@/lib/constants/config';
 import { Vault__factory } from '@balancer-labs/typechain';
 import { AddressZero } from '@ethersproject/constants';
+import { _upscaleArray } from '@/lib/utils/solidityMaths';
 
 export class ComposableStablePoolJoin implements JoinConcern {
   buildJoin = ({
@@ -39,44 +40,66 @@ export class ComposableStablePoolJoin implements JoinConcern {
       parsedAmp,
       parsedSwapFee,
       parsedTotalShares,
+      scalingFactors,
     } = parsePoolInfo(pool);
 
     if (!parsedAmp) {
       throw new BalancerError(BalancerErrorCode.MISSING_AMP);
     }
 
-    const bptIndex = parsedTokens.findIndex((token) => token === pool.address);
-    const parseFixedAmounts = amountsIn.map((amount) =>
-      parseFixed(amount, 18).toString()
-    );
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    const [, sortedAmountsWithTokensIn] = assetHelpers.sortTokens(
-      tokensIn,
-      parseFixedAmounts
-    ) as [string[], string[]];
-    // sort inputs
+    const parsedTokensBptIndex = parsedTokens.findIndex(
+      (token) => token === pool.address
+    );
+    /***REMAPPING AMOUNTS TO BE ORDERED FOLLOWING THE parsedTokens ARRAY, AND NOT THE tokensIn, AND SCALING IT WITH scalingFactors*/
+    //REMOVING BPT
+    const parsedTokensWithoutBpt = [
+      ...parsedTokens.slice(0, parsedTokensBptIndex),
+      ...parsedTokens.slice(parsedTokensBptIndex + 1),
+    ];
+    //GENERATING AN ARRAY OF INDEXES, if parsedTokensWithoutBpt IS [a,b,c] AND tokensIn IS [c,a,b], tokensInIndexesOnParsedTokens WILL BE [2,0,1]
+    const tokensInIndexesOnParsedTokens = parsedTokensWithoutBpt.map(
+      (tokenAddress) => tokensIn.indexOf(tokenAddress)
+    );
+    const amountsSortedByParsedTokens = tokensInIndexesOnParsedTokens.map(
+      (tokenIndex) => amountsIn[tokenIndex]
+    );
+    const amountsSortedByParsedTokensWithBpt = [
+      ...amountsSortedByParsedTokens.slice(0, parsedTokensBptIndex),
+      '0',
+      ...amountsSortedByParsedTokens.slice(parsedTokensBptIndex),
+    ];
+    const scaledAmountsSortedByParsedTokensWithBpt = _upscaleArray(
+      amountsSortedByParsedTokensWithBpt.map(BigInt),
+      scalingFactors.map(BigInt)
+    );
+    /***/
 
     const [sortedTokens, sortedAmounts, sortedBalances] =
       assetHelpers.sortTokens(
         parsedTokens,
-        [
-          ...sortedAmountsWithTokensIn.slice(0, bptIndex),
-          '0',
-          ...sortedAmountsWithTokensIn.slice(bptIndex),
-        ],
+        scaledAmountsSortedByParsedTokensWithBpt,
         parsedBalances
       ) as [string[], string[], string[]];
 
-    console.log(BigInt(parsedAmp));
-    console.log(sortedBalances.map(BigInt));
-    console.log(sortedAmounts.map(BigInt));
-    console.log(BigInt(parsedTotalShares));
-    console.log(BigInt(parsedSwapFee));
+    //THE sortedTokens BPT INDEX IS DIFFERENT OF parsedTokens INDEX
+    const sortedBptIndex = sortedTokens.findIndex(
+      (token) => token === pool.address
+    );
+    const sortedBalancesWithoutBpt = [
+      ...sortedBalances.slice(0, sortedBptIndex).map(BigInt),
+      ...sortedBalances.slice(sortedBptIndex + 1).map(BigInt),
+    ];
+    const sortedAmountsWithoutBpt = [
+      ...sortedAmounts.slice(0, sortedBptIndex).map(BigInt),
+      ...sortedAmounts.slice(sortedBptIndex + 1).map(BigInt),
+    ];
 
+    //NEED TO SEND SORTED BALANCES AND AMOUNTS WITHOUT BPT VALUES
     const expectedBPTOut = StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp),
-      sortedBalances.map(BigInt),
-      sortedAmounts.map(BigInt),
+      sortedBalancesWithoutBpt,
+      sortedAmountsWithoutBpt,
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
     );
@@ -86,11 +109,9 @@ export class ComposableStablePoolJoin implements JoinConcern {
       BigNumber.from(slippage)
     ).toString();
 
+    //NEEDS TO ENCODE DATA WITHOUT BPT AMOUNT
     const userData = ComposableStablePoolEncoder.joinExactTokensInForBPTOut(
-      [
-        ...sortedAmounts.slice(0, bptIndex),
-        ...sortedBalances.slice(bptIndex + 1),
-      ],
+      sortedAmountsWithoutBpt,
       minBPTOut
     );
 

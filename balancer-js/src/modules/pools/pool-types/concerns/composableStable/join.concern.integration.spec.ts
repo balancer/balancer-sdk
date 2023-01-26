@@ -2,12 +2,11 @@ import { Network } from '@/lib/constants';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { ethers } from 'hardhat';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import { Pool, PoolToken } from '@/types';
+import { Pool } from '@/types';
 import { Pools } from '@/modules/pools';
 import { TransactionReceipt } from '@ethersproject/providers';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { forkSetup, getBalances } from '@/test/lib/utils';
-import { ADDRESSES } from '@/test/lib/constants';
 import { expect } from 'chai';
 import dotenv from 'dotenv';
 
@@ -30,10 +29,20 @@ const poolObj = pools_14717479.find(
 ) as unknown as Pool;
 
 const tokensIn = [
-  poolObj.tokens.find(({ address }) => address === poolObj.address),
+  ...poolObj.tokens
+    .filter(({ address }) => address !== poolObj.address)
+    .map(({ address }) => address),
+];
+
+const poolTokensWithBptFirst = [
+  ...poolObj.tokens.filter(({ address }) => address === poolObj.address),
   ...poolObj.tokens.filter(({ address }) => address !== poolObj.address),
 ];
-const amountsIn = ['10', '10', '10'];
+const amountsIn = [
+  parseFixed('100', 18).toString(),
+  parseFixed('100', 18).toString(),
+  parseFixed('100', 18).toString(),
+];
 const slots = [0, 0, 0, 0];
 
 const pool = Pools.wrap(poolObj, networkConfig);
@@ -48,16 +57,16 @@ describe('join execution', async () => {
 
   before(async function () {
     this.timeout(20000);
-    const balances = tokensIn.map((token) =>
+    const balances = poolTokensWithBptFirst.map((token) =>
       token ? parseFixed(initialBalance, token.decimals).toString() : '0'
     );
     await forkSetup(
       signer,
-      tokensIn.map((t) => t.address),
+      poolTokensWithBptFirst.map((t) => t.address),
       slots,
       balances,
       jsonRpcUrl as string,
-      16340000 // holds the same state as the static repository
+      16350000 // holds the same state as the static repository
     );
     signerAddress = await signer.getAddress();
   });
@@ -69,12 +78,11 @@ describe('join execution', async () => {
         signer,
         signerAddress
       );
-      console.log(bptBalanceBefore, ...tokensBalanceBefore);
       const slippage = '100';
 
       const { to, data, minBPTOut } = pool.buildJoin(
         signerAddress,
-        pool.tokensList.filter((address) => address !== pool.address),
+        tokensIn,
         amountsIn,
         slippage
       );
@@ -91,6 +99,17 @@ describe('join execution', async () => {
     });
     it('should work', async () => {
       expect(transactionReceipt.status).to.eql(1);
+    });
+    it('should increase BPT balance', async () => {
+      expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
+        .to.be.true;
+    });
+    it('should decrease tokens balance', async () => {
+      for (let i = 0; i < tokensIn.length; i++) {
+        expect(
+          tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
+        ).to.equal(amountsIn[i]);
+      }
     });
   });
 });
