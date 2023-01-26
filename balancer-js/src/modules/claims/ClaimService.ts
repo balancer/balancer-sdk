@@ -50,8 +50,7 @@ export interface IClaimService {
   getClaimableRewardTokens(userAddress: string): Promise<LiquidityGauge[]>;
   buildClaimRewardTokensRequest(
     gaugeAddresses: string[],
-    userAddress: string,
-    receiverAddress?: string
+    userAddress: string
   ): Promise<TransactionData>;
   getClaimableVeBalTokens(
     userAddress: string,
@@ -175,10 +174,9 @@ export class ClaimService implements IClaimService {
         throw new BalancerError(
           BalancerErrorCode.GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED
         );
-      const callData = balancerMinterInterface.encodeFunctionData(
-        'mintMany',
-        [gaugeAddresses]
-      );
+      const callData = balancerMinterInterface.encodeFunctionData('mintMany', [
+        gaugeAddresses,
+      ]);
       return {
         to: this.balancerMinterAddress,
         from: userAddress,

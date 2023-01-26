@@ -195,7 +195,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         balancerHelpers: '0x5aDDCCa35b7A0D07C74063c48700C8590E87864E',
         feeDistributor: '0x7F91dcdE02F72b478Dc73cB21730cAcA907c8c44',
         weightedPoolFactory: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
-        composableStablePoolFactory: '0x85a80afee867adf27b50bdb7b76da70f1e853062',
+        composableStablePoolFactory:
+          '0x85a80afee867adf27b50bdb7b76da70f1e853062',
       },
       tokens: {
         bal: '0xfA8449189744799aD2AcE7e0EBAC8BB7575eff47',

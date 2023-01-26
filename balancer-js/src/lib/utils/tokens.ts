@@ -56,7 +56,7 @@ export const unwrapToken = (
     // Double if to avoid skipping just to at after compile: Object.keys()?.includes
     if (Object.keys(aaveWrappedMap[aaveChain]).includes(lowercase)) {
       return aaveWrappedMap[aaveChain][
-        lowercase as keyof typeof aaveWrappedMap[typeof aaveChain]
+        lowercase as keyof (typeof aaveWrappedMap)[typeof aaveChain]
       ].aToken;
     } else {
       return lowercase;

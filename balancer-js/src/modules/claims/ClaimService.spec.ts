@@ -3,8 +3,8 @@ import { ClaimService } from '@/modules/claims/ClaimService';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { forkSetup } from '@/test/lib/utils';
 import { expect } from 'chai';
-import { ethers } from 'ethers';
 import dotenv from 'dotenv';
+import hardhat from 'hardhat';
 
 dotenv.config();
 
@@ -16,6 +16,7 @@ describe('ClaimService On Ethereum', () => {
   const rpcUrl = 'http://127.0.0.1:8545';
 
   const blockNumber = 16361617;
+  const { ethers } = hardhat;
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
   const signer = provider.getSigner();
 
