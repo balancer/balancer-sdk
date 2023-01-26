@@ -879,15 +879,12 @@ signer.request(txData).then(() => { ... });
 ```javascript
 gauges = LiquidityGaugesRepository.fetch();
 claimableTokensPerGauge = LiquidityGaugesMulticallRepository.getClaimableTokens(gauges, accountAddress) {
-  tokens = gauge.rewardData
   if (MAINNET) {
     claimableTokens = this.multicall.aggregate('claimable_tokens', gauges, accountAddress);
-    claimableReward = rewardData.forEach(this.multicall.aggregate('claimable_reward', gauges, accountAddress, 
-      rewardToken);
+    claimableReward = gauge.rewardData.forEach(this.multicall.aggregate('claimable_reward', gauges, accountAddress, rewardToken);
     return aggregate(claimableReward, claimableTokens);
   } else {
-    return rewardData.forEach(this.multicall.aggregate('claimable_reward', gauges, accountAddress,
-      rewardToken);
+    return gauge.rewardData.forEach(this.multicall.aggregate('claimable_reward', gauges, accountAddress, rewardToken);
   }
 };
 
