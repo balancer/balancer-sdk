@@ -63,11 +63,11 @@ async function composableStableJoin() {
   );
   signerAddress = await signer.getAddress();
   const [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
-    pool.tokensList,
+    poolTokensWithBptFirst.map(({ address }) => address),
     signer,
     signerAddress
   );
-  
+
   const slippage = '1';
 
   const { to, data, minBPTOut } = pool.buildJoin(
@@ -84,7 +84,7 @@ async function composableStableJoin() {
   )
 
   const [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
-    [...pool.tokensList],
+    poolTokensWithBptFirst.map(({ address }) => address),
     signer,
     signerAddress
   );

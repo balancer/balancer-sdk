@@ -9,6 +9,7 @@ import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { forkSetup, getBalances } from '@/test/lib/utils';
 import { expect } from 'chai';
 import dotenv from 'dotenv';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ const network = Network.MAINNET;
 const sdk = new BalancerSDK({ network, rpcUrl });
 const { networkConfig } = sdk;
 
+const amountsInDiv = '10000';
 const initialBalance = '100000';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
@@ -38,11 +40,13 @@ const poolTokensWithBptFirst = [
   ...poolObj.tokens.filter(({ address }) => address === poolObj.address),
   ...poolObj.tokens.filter(({ address }) => address !== poolObj.address),
 ];
-const amountsIn = [
+
+let amountsIn = [
   parseFixed('100', 18).toString(),
   parseFixed('100', 18).toString(),
   parseFixed('100', 18).toString(),
 ];
+
 const slots = [0, 0, 0, 0];
 
 const pool = Pools.wrap(poolObj, networkConfig);
@@ -74,7 +78,7 @@ describe('join execution', async () => {
     before(async function () {
       this.timeout(20000);
       [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
-        pool.tokensList,
+        poolTokensWithBptFirst.map(({ address }) => address),
         signer,
         signerAddress
       );
@@ -92,7 +96,7 @@ describe('join execution', async () => {
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
       [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
-        [...pool.tokensList],
+        poolTokensWithBptFirst.map(({ address }) => address),
         signer,
         signerAddress
       );
@@ -110,6 +114,91 @@ describe('join execution', async () => {
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
         ).to.equal(amountsIn[i]);
       }
+    });
+  });
+  context('join transaction - join with params', () => {
+    before(async function () {
+      this.timeout(20000);
+
+      amountsIn = poolTokensWithBptFirst
+        .slice(1)
+        .map((t) =>
+          parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
+        );
+
+      [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
+        poolTokensWithBptFirst.map(({ address }) => address),
+        signer,
+        signerAddress
+      );
+
+      const slippage = '100';
+      const { functionName, attributes, value, minBPTOut } = pool.buildJoin(
+        signerAddress,
+        tokensIn,
+        amountsIn,
+        slippage
+      );
+      const transactionResponse = await sdk.contracts.vault
+        .connect(signer)
+        [functionName](...Object.values(attributes), { value });
+      transactionReceipt = await transactionResponse.wait();
+
+      bptMinBalanceIncrease = BigNumber.from(minBPTOut);
+      [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
+        poolTokensWithBptFirst.map(({ address }) => address),
+        signer,
+        signerAddress
+      );
+    });
+
+    it('should work', async () => {
+      expect(transactionReceipt.status).to.eql(1);
+    });
+
+    it('should increase BPT balance', async () => {
+      expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
+        .to.be.true;
+    });
+
+    it('should decrease tokens balance', async () => {
+      for (let i = 0; i < tokensIn.length; i++) {
+        expect(
+          tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
+        ).to.equal(amountsIn[i]);
+      }
+    });
+  });
+
+  context('join transaction - single token join', () => {
+    before(async function () {
+      this.timeout(20000);
+      amountsIn = [
+        parseFixed(
+          poolTokensWithBptFirst[1].balance,
+          poolTokensWithBptFirst[1].decimals
+        )
+          .div('100')
+          .toString(),
+      ];
+    });
+
+    it('should fail on number of input tokens', async () => {
+      const slippage = '10';
+      let errorMessage;
+      try {
+        pool.buildJoin(
+          signerAddress,
+          tokensIn.map((t) => t),
+          amountsIn,
+          slippage
+        );
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.contain(
+        BalancerError.getMessage(BalancerErrorCode.INPUT_LENGTH_MISMATCH)
+      );
     });
   });
 });
