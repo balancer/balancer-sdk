@@ -55,6 +55,20 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     poolsToIgnore: [
       '0xbd482ffb3e6e50dc1c437557c3bea2b68f3683ee', // a pool made by an external dev who was playing with a novel rate provider mechanism in production.
     ],
+    sorConnectingTokens: [
+      {
+        symbol: 'wEth',
+        address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+      },
+      {
+        symbol: 'wstEth',
+        address: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0',
+      },
+      {
+        symbol: 'DOLA',
+        address: '0x865377367054516e17014CcdED1e7d814EDC9ce4',
+      },
+    ],
   },
   [Network.POLYGON]: {
     chainId: Network.POLYGON, //137
@@ -86,6 +100,16 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     poolsToIgnore: [
       '0x600bd01b6526611079e12e1ff93aba7a3e34226f', // This pool has rateProviders with incorrect scaling
     ],
+    sorConnectingTokens: [
+      {
+        symbol: 'weth',
+        address: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
+      },
+      {
+        symbol: 'bbrz2',
+        address: '0xe22483774bd8611be2ad2f4194078dac9159f4ba',
+      }, // Joins Stables<>BRZ via https://app.balancer.fi/#/polygon/pool/0x4a0b73f0d13ff6d43e304a174697e3d5cfd310a400020000000000000000091c
+    ],
   },
   [Network.ARBITRUM]: {
     chainId: Network.ARBITRUM, //42161
@@ -114,6 +138,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-one-blocks',
     },
     pools: {},
+    sorConnectingTokens: [
+      {
+        symbol: 'weth',
+        address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+      },
+    ],
   },
   [Network.KOVAN]: {
     chainId: Network.KOVAN, //42
@@ -207,6 +237,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.thegraph.com/subgraphs/name/blocklytics/goerli-blocks',
     },
     pools: {},
+    sorConnectingTokens: [
+      {
+        symbol: 'weth',
+        address: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+      },
+    ],
   },
   [Network.OPTIMISM]: {
     chainId: Network.OPTIMISM, //10
@@ -231,6 +267,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       gaugesSubgraph: '',
     },
     pools: {},
+    sorConnectingTokens: [
+      {
+        symbol: 'weth',
+        address: '0x4200000000000000000000000000000000000006',
+      },
+    ],
   },
   [Network.GNOSIS]: {
     chainId: Network.GNOSIS, //100
@@ -254,6 +296,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       gaugesSubgraph: '',
     },
     pools: {},
+    sorConnectingTokens: [
+      {
+        symbol: 'weth',
+        address: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
+      },
+    ],
   },
 };
 

@@ -1,5 +1,16 @@
+import dotenv from 'dotenv';
 import { Network } from '@/lib/constants/network';
 import { AddressZero } from '@ethersproject/constants';
+
+dotenv.config();
+
+export const PROVIDER_URLS = {
+  [Network.MAINNET]: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
+  [Network.GOERLI]: `https://goerli.infura.io/v3/${process.env.INFURA}`,
+  [Network.KOVAN]: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+  [Network.POLYGON]: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA}`,
+  [Network.ARBITRUM]: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA}`,
+};
 
 export const ADDRESSES = {
   [Network.MAINNET]: {
@@ -341,6 +352,11 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'bb-am-usd',
       slot: 0,
+    },
+    brz: {
+      address: '0x491a4eb4f1fc3bff8e1d2fc856a6a46663ad556f',
+      decimals: 4,
+      symbol: 'BRZ',
     },
   },
   [Network.ARBITRUM]: {
