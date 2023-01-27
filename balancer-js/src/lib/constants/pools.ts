@@ -582,7 +582,7 @@ const POOLS_GNOSIS: Pools = {
   Stakable: {
     AllowList: [],
   },
-  Metadata: {}
+  Metadata: {},
 };
 
 const POOLS_GENERIC: Pools = {
