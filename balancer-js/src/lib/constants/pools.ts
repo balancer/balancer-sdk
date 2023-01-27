@@ -545,6 +545,46 @@ const POOLS_ARBITRUM: Pools = {
   Metadata: {},
 };
 
+const POOLS_GNOSIS: Pools = {
+  IdsMap: {},
+  Pagination: {
+    PerPage: 10,
+    PerPool: 10,
+    PerPoolInitial: 5,
+  },
+  DelegateOwner: '0xba1ba1ba1ba1ba1ba1ba1ba1ba1ba1ba1ba1ba1b',
+  ZeroAddress: '0x0000000000000000000000000000000000000000',
+  DynamicFees: {
+    Gauntlet: [],
+  },
+  BlockList: [''],
+  ExcludedPoolTypes: [
+    'Element',
+    'AaveLinear',
+    'Linear',
+    'ERC4626Linear',
+    'FX',
+    'Gyro2',
+    'Gyro3',
+    'GyroE',
+    'HighAmpComposableStable',
+  ],
+  Stable: {
+    AllowList: [
+      '0x11884da90fb4221b3aa288a7741c51ec4fc43b2f000000000000000000000004',
+      '0x707b7d4a1bae449d546dcab869256591bbb3d70b000000000000000000000000',
+    ],
+  },
+  Investment: {
+    AllowList: [],
+  },
+  Factories: {},
+  Stakable: {
+    AllowList: [],
+  },
+  Metadata: {},
+};
+
 const POOLS_GENERIC: Pools = {
   IdsMap: {},
   Pagination: {
@@ -642,6 +682,7 @@ const POOLS_MAP = {
   [Network.MAINNET]: POOLS_MAINNET,
   [Network.POLYGON]: POOLS_POLYGON,
   [Network.ARBITRUM]: POOLS_ARBITRUM,
+  [Network.GNOSIS]: POOLS_GNOSIS,
 };
 
 export function POOLS(networkId: Network): Pools {
