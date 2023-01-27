@@ -398,6 +398,33 @@ export const ADDRESSES = {
       slot: 52,
     },
   },
+  [Network.GNOSIS]: {
+    WETH: {
+      address: '0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1',
+      decimals: 18,
+      symbol: 'WETH',
+    },
+    BAL: {
+      address: '0x7eF541E2a22058048904fE5744f9c7E4C57AF717',
+      decimals: 18,
+      symbol: 'BAL',
+    },
+    USDC: {
+      address: '0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83',
+      decimals: 6,
+      symbol: 'USDC',
+    },
+    WXDAI: {
+      address: '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d',
+      decimals: 18,
+      symbol: 'DAI',
+    },
+    USDT: {
+      address: '0x4ECaBa5870353805a9F068101A40E0f32ed605C6',
+      decimals: 6,
+      symbol: 'USDT',
+    },
+  },
   [Network.GOERLI]: {
     USDC_old: {
       address: '0xe0c9275e44ea80ef17579d33c55136b7da269aeb',
