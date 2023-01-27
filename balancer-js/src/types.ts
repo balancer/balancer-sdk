@@ -101,6 +101,7 @@ export interface BalancerNetworkConfig {
     wETHwstETH?: PoolReference;
   };
   poolsToIgnore?: string[];
+  sorConnectingTokens?: { symbol: string; address: string }[];
 }
 
 export interface BalancerDataRepositories {

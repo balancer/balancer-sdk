@@ -279,7 +279,7 @@ export class PoolApr {
     }
 
     const now = Math.round(new Date().getTime() / 1000);
-    const totalBalEmissions = emissions.between(now, now + 365 * 86400);
+    const totalBalEmissions = (emissions.weekly(now) / 7) * 365;
     const gaugeBalEmissions = totalBalEmissions * gauge.relativeWeight;
     const gaugeBalEmissionsUsd = gaugeBalEmissions * balPriceUsd;
     const gaugeSupply = (gauge.workingSupply + 0.4) / 0.4; // Only 40% of LP token staked accrue emissions, totalSupply = workingSupply * 2.5

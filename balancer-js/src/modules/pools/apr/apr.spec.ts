@@ -147,7 +147,7 @@ describe('pool apr', () => {
     // Notice one token in gauge is worth 40% of it's value
     it('has bal rewards as ~40% apr', async () => {
       const now = Math.round(Date.now() / 1000);
-      const balEmissions = emissions.between(now, now + 365 * 86400);
+      const balEmissions = (emissions.weekly(now) / 7) * 365;
 
       const gauge = {
         ...baseGauge,
