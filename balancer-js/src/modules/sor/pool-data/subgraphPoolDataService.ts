@@ -13,6 +13,7 @@ import { BalancerNetworkConfig, BalancerSdkSorConfig } from '@/types';
 const NETWORKS_WITH_LINEAR_POOLS = [
   Network.MAINNET,
   Network.POLYGON,
+  Network.GNOSIS,
   Network.ROPSTEN,
   Network.RINKEBY,
   Network.GOERLI,
