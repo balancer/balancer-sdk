@@ -120,7 +120,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       BigNumber.from(slippage)
     ).toString();
 
-    //NEEDS TO ENCODE DATA WITHOUT BPT AMOUNT
+    //NEEDS TO ENCODE USER DATA WITHOUT BPT AMOUNT
     const userData = ComposableStablePoolEncoder.joinExactTokensInForBPTOut(
       sortedAmountsWithoutBpt,
       minBPTOut
@@ -128,6 +128,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
 
     const functionName = 'joinPool';
 
+    //assets AND maxAmountsIn NEEDS THE BPT VALUE IN THE ARRAY
     const attributes: JoinPool = {
       poolId: pool.id,
       sender: joiner,
