@@ -1,15 +1,16 @@
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Network } from '@/lib/constants';
 import { BalancerSDK } from '@/modules/sdk.module';
-import { ethers } from 'hardhat';
-import pools_14717479 from '@/test/lib/pools_14717479.json';
-import { Pool } from '@/types';
 import { Pools } from '@/modules/pools';
-import { TransactionReceipt } from '@ethersproject/providers';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { forkSetup, getBalances } from '@/test/lib/utils';
+import { JoinPoolRequest, Pool } from '@/types';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BytesLike } from '@ethersproject/bytes';
+import { TransactionReceipt } from '@ethersproject/providers';
+import { ethers } from 'hardhat';
 import { expect } from 'chai';
 import dotenv from 'dotenv';
-import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import pools_16350000 from '@/test/lib/pools_16350000.json';
 
 dotenv.config();
 
@@ -25,7 +26,7 @@ const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 let signerAddress: string;
 
-const poolObj = pools_14717479.find(
+const poolObj = pools_16350000.find(
   ({ id }) =>
     id == '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d'
 ) as unknown as Pool;
@@ -133,15 +134,23 @@ describe('join execution', async () => {
       );
 
       const slippage = '100';
-      const { functionName, attributes, value, minBPTOut } = pool.buildJoin(
+      const { attributes, value, minBPTOut } = pool.buildJoin(
         signerAddress,
         tokensIn,
         amountsIn,
         slippage
       );
-      const transactionResponse = await sdk.contracts.vault
-        .connect(signer)
-        [functionName](...Object.values(attributes), { value });
+      const attributesValues = Object.values(attributes) as [
+        BytesLike,
+        string,
+        string,
+        JoinPoolRequest
+      ];
+      const sendJoinTransaction = sdk.contracts.vault.connect(signer).joinPool;
+      const transactionResponse = await sendJoinTransaction(
+        ...attributesValues,
+        { value }
+      );
       transactionReceipt = await transactionResponse.wait();
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);

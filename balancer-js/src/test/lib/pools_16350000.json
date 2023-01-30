@@ -1,0 +1,65 @@
+[
+  {
+    "id": "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d",
+    "name": "Balancer Aave Boosted StablePool",
+    "address": "0xa13a9247ea42d743238089903570127dda72fe44",
+    "poolType": "ComposableStable",
+    "swapFee": "0.00001",
+    "totalShares": "63385632.664269969916874391",
+    "poolTypeVersion": 1,
+    "tokens": [
+      {
+        "id": "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d-0x2f4eb100552ef93840d5adc30560e5513dfffacb",
+        "balance": "20372159.487768353268084155",
+        "address": "0x2f4eb100552ef93840d5adc30560e5513dfffacb",
+        "name": "Balancer Aave Boosted Pool (USDT)",
+        "symbol": "bb-a-USDT",
+        "priceRate": "1.005729872617763015",
+        "decimals": 18
+      },
+      {
+        "id": "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d-0x82698aecc9e28e9bb27608bd52cf57f704bd1b83",
+        "balance": "21486294.107139932185657881",
+        "address": "0x82698aecc9e28e9bb27608bd52cf57f704bd1b83",
+        "name": "Balancer Aave Boosted Pool (USDC)",
+        "symbol": "bb-a-USDC",
+        "priceRate": "1.001810886229595273",
+        "decimals": 18
+      },
+      {
+        "id": "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d-0xa13a9247ea42d743238089903570127dda72fe44",
+        "balance": "2596148352913073.607166216183626819",
+        "address": "0xa13a9247ea42d743238089903570127dda72fe44",
+        "name": "Balancer Aave Boosted StablePool",
+        "symbol": "bb-a-USD",
+        "priceRate": "1",
+        "decimals": 18
+      },
+      {
+        "id": "0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d-0xae37d54ae477268b9997d4161b96b8200755935c",
+        "balance": "21503561.491052962939156278",
+        "address": "0xae37d54ae477268b9997d4161b96b8200755935c",
+        "name": "Balancer Aave Boosted Pool (DAI)",
+        "symbol": "bb-a-DAI",
+        "priceRate": "1.001919707893516918",
+        "decimals": 18
+      }
+    ],
+    "tokensList": [
+      "0xa13a9247ea42d743238089903570127dda72fe44",
+      "0x2f4eb100552ef93840d5adc30560e5513dfffacb",
+      "0x82698aecc9e28e9bb27608bd52cf57f704bd1b83",
+      "0xae37d54ae477268b9997d4161b96b8200755935c"
+    ],
+    "amp": "1472",
+    "expiryTime": null,
+    "unitSeconds": null,
+    "principalToken": null,
+    "baseToken": null,
+    "swapEnabled": true,
+    "wrappedIndex": null,
+    "mainIndex": null,
+    "lowerTarget": null,
+    "upperTarget": null
+  }
+]

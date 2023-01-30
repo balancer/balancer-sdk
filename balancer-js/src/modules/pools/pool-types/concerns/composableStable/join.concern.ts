@@ -86,20 +86,18 @@ export class ComposableStablePoolJoin implements JoinConcern {
     const sortedBptIndex = sortedTokens.findIndex(
       (token) => token === pool.address
     );
-    const sortedBalancesWithoutBpt = [
-      ...sortedBalances.slice(0, sortedBptIndex).map(BigInt),
-      ...sortedBalances.slice(sortedBptIndex + 1).map(BigInt),
-    ];
-    const sortedAmountsWithoutBpt = [
-      ...sortedAmounts.slice(0, sortedBptIndex).map(BigInt),
-      ...sortedAmounts.slice(sortedBptIndex + 1).map(BigInt),
-    ];
+    //REMOVING BPT TO CALCULATE BPT OUT
+    sortedBalances.splice(sortedBptIndex, 1);
+    //CREATING A CLONE BECAUSE SPLICE MUTATES THE ARRAY, AND THE "attributes" VARIABLE WILL NEED sortedAmounts WITH BPT
+    const sortedAmountsClone = [...sortedAmounts];
+    //REMOVING BPT TO CALCULATE BPT OUT
+    sortedAmountsClone.splice(sortedBptIndex, 1);
 
     //NEED TO SEND SORTED BALANCES AND AMOUNTS WITHOUT BPT VALUES
     const expectedBPTOut = StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp),
-      sortedBalancesWithoutBpt,
-      sortedAmountsWithoutBpt,
+      sortedBalances.map(BigInt),
+      sortedAmountsClone.map(BigInt),
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
     );
@@ -111,7 +109,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
 
     //NEEDS TO ENCODE DATA WITHOUT BPT AMOUNT
     const userData = ComposableStablePoolEncoder.joinExactTokensInForBPTOut(
-      sortedAmountsWithoutBpt,
+      sortedAmountsClone,
       minBPTOut
     );
 
