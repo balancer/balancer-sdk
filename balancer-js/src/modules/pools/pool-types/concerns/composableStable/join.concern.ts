@@ -42,31 +42,42 @@ export class ComposableStablePoolJoin implements JoinConcern {
       parsedTotalShares,
       scalingFactors,
     } = parsePoolInfo(pool);
-
     if (!parsedAmp) {
       throw new BalancerError(BalancerErrorCode.MISSING_AMP);
     }
 
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    const parsedTokensBptIndex = parsedTokens.findIndex(
-      (token) => token === pool.address
+
+    /***REMAPPING AMOUNTS TO BE ORDERED FOLLOWING THE parsedTokens ARRAY, AND NOT THE tokensIn, TO SCALE AMOUNTS WITH scalingFactors*/
+    //REMOVING BPT, NEEDS TO USE parsedTokens WITH BPT, SO THE SPLICE NEEDS TO BE ON A CLONE ARRAY
+    let parsedTokensBptIndex;
+    const parsedTokensWithoutBpt = parsedTokens.filter(
+      (tokenAddress, index) => {
+        if (tokenAddress === pool.address) {
+          parsedTokensBptIndex = index;
+          return false;
+        }
+        return true;
+      }
     );
-    /***REMAPPING AMOUNTS TO BE ORDERED FOLLOWING THE parsedTokens ARRAY, AND NOT THE tokensIn, AND SCALING IT WITH scalingFactors*/
-    //REMOVING BPT
-    const parsedTokensWithoutBpt = [
-      ...parsedTokens.slice(0, parsedTokensBptIndex),
-      ...parsedTokens.slice(parsedTokensBptIndex + 1),
-    ];
-    //GENERATING AN ARRAY OF INDEXES, if parsedTokensWithoutBpt IS [a,b,c] AND tokensIn IS [c,a,b], tokensInIndexesOnParsedTokens WILL BE [2,0,1]
-    const tokensInIndexesOnParsedTokens = parsedTokensWithoutBpt.map(
-      (tokenAddress) => tokensIn.indexOf(tokenAddress)
+
+    //GENERATING AN ARRAY OF INDEXES, IF parsedTokensWithoutBpt IS [a,b,c] AND tokensIn IS [c,a,b], tokensInIndexesOnParsedTokens WILL BE [2,0,1]
+    const tokensInLowerCase = tokensIn.map((address) =>
+      address.toLocaleLowerCase()
     );
-    const amountsSortedByParsedTokens = tokensInIndexesOnParsedTokens.map(
+    const parsedTokensIndexesOnTokensInArray = parsedTokensWithoutBpt.map(
+      (tokenAddress) =>
+        tokensInLowerCase.indexOf(tokenAddress.toLocaleLowerCase())
+    );
+    if (parsedTokensIndexesOnTokensInArray.indexOf(-1) > 0) {
+      throw new BalancerError(BalancerErrorCode.INPUT_TOKEN_INVALID);
+    }
+    const amountsSortedByParsedTokens = parsedTokensIndexesOnTokensInArray.map(
       (tokenIndex) => amountsIn[tokenIndex]
     );
     const amountsSortedByParsedTokensWithBpt = [
       ...amountsSortedByParsedTokens.slice(0, parsedTokensBptIndex),
-      '0',
+      '0', //BPT AMOUNT, NEEDS THE AMOUNT TO SCALE WITH SCALING FACTORS
       ...amountsSortedByParsedTokens.slice(parsedTokensBptIndex),
     ];
     const scaledAmountsSortedByParsedTokensWithBpt = _upscaleArray(
@@ -86,18 +97,20 @@ export class ComposableStablePoolJoin implements JoinConcern {
     const sortedBptIndex = sortedTokens.findIndex(
       (token) => token === pool.address
     );
+
     //REMOVING BPT TO CALCULATE BPT OUT
     sortedBalances.splice(sortedBptIndex, 1);
-    //CREATING A CLONE BECAUSE SPLICE MUTATES THE ARRAY, AND THE "attributes" VARIABLE WILL NEED sortedAmounts WITH BPT
-    const sortedAmountsClone = [...sortedAmounts];
+    //USING FILTER BECAUSE SPLICE MUTATES THE ORIGINAL ARRAY, AND THE "attributes" VARIABLE WILL NEED sortedAmounts WITH BPT
+    const sortedAmountsWithoutBpt = sortedAmounts.filter(
+      (_, index) => index !== sortedBptIndex
+    );
     //REMOVING BPT TO CALCULATE BPT OUT
-    sortedAmountsClone.splice(sortedBptIndex, 1);
 
     //NEED TO SEND SORTED BALANCES AND AMOUNTS WITHOUT BPT VALUES
     const expectedBPTOut = StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp),
       sortedBalances.map(BigInt),
-      sortedAmountsClone.map(BigInt),
+      sortedAmountsWithoutBpt.map(BigInt),
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
     );
@@ -109,7 +122,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
 
     //NEEDS TO ENCODE DATA WITHOUT BPT AMOUNT
     const userData = ComposableStablePoolEncoder.joinExactTokensInForBPTOut(
-      sortedAmountsClone,
+      sortedAmountsWithoutBpt,
       minBPTOut
     );
 
