@@ -28,7 +28,7 @@ let signerAddress: string;
 
 const poolObj = pools_16350000.find(
   ({ id }) =>
-    id == '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d'
+    id == '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d' // Balancer Aave Boosted StablePool
 ) as unknown as Pool;
 
 const poolTokensWithBptFirst = [

@@ -11,6 +11,7 @@ export enum ComposableStablePoolJoinKind {
 export enum ComposableStablePoolExitKind {
   EXACT_BPT_IN_FOR_ONE_TOKEN_OUT = 0,
   BPT_IN_FOR_EXACT_TOKENS_OUT,
+  EXACT_BPT_IN_FOR_ALL_TOKENS_OUT,
 }
 
 export class ComposableStablePoolEncoder {
@@ -91,6 +92,19 @@ export class ComposableStablePoolEncoder {
         ComposableStablePoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT,
         bptAmountIn,
         exitTokenIndex,
+      ]
+    );
+
+  /**
+   * Encodes the userData parameter for exiting a StablePool by removing tokens in return for an exact amount of BPT
+   * @param bptAmountIn - the amount of BPT to be burned
+   */
+  static exitExactBPTInForAllTokensOut = (bptAmountIn: BigNumberish): string =>
+    defaultAbiCoder.encode(
+      ['uint256', 'uint256'],
+      [
+        ComposableStablePoolExitKind.EXACT_BPT_IN_FOR_ALL_TOKENS_OUT,
+        bptAmountIn,
       ]
     );
 
