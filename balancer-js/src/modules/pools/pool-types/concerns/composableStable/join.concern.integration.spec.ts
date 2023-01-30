@@ -31,21 +31,18 @@ const poolObj = pools_16350000.find(
     id == '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d'
 ) as unknown as Pool;
 
-const tokensIn = [
-  ...poolObj.tokens
-    .filter(({ address }) => address !== poolObj.address)
-    .map(({ address }) => address),
-];
-
 const poolTokensWithBptFirst = [
   ...poolObj.tokens.filter(({ address }) => address === poolObj.address),
   ...poolObj.tokens.filter(({ address }) => address !== poolObj.address),
 ];
 
+//REMOVING BPT;
+const tokensIn = poolTokensWithBptFirst.slice(1).map(({ address }) => address);
+
 let amountsIn = [
   parseFixed('100', 18).toString(),
-  parseFixed('100', 18).toString(),
-  parseFixed('100', 18).toString(),
+  parseFixed('101', 18).toString(),
+  parseFixed('102', 18).toString(),
 ];
 
 const slots = [0, 0, 0, 0];
@@ -117,6 +114,54 @@ describe('join execution', async () => {
       }
     });
   });
+  context(
+    'join transaction - reversed array order for tokens and amounts',
+    () => {
+      before(async function () {
+        this.timeout(20000);
+        [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
+          poolTokensWithBptFirst.map(({ address }) => address),
+          signer,
+          signerAddress
+        );
+        const slippage = '1';
+        const tokensInClone = [...tokensIn];
+        const amountsInClone = [...amountsIn];
+        tokensInClone.reverse();
+        amountsInClone.reverse();
+        const { to, data, minBPTOut } = pool.buildJoin(
+          signerAddress,
+          tokensInClone,
+          amountsInClone,
+          slippage
+        );
+
+        const tx = { to, data, gasLimit: 3000000 };
+
+        bptMinBalanceIncrease = BigNumber.from(minBPTOut);
+        transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+        [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
+          poolTokensWithBptFirst.map(({ address }) => address),
+          signer,
+          signerAddress
+        );
+      });
+      it('should work', async () => {
+        expect(transactionReceipt.status).to.eql(1);
+      });
+      it('should increase BPT balance', async () => {
+        expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
+          .to.be.true;
+      });
+      it('should decrease tokens balance', async () => {
+        for (let i = 0; i < tokensIn.length; i++) {
+          expect(
+            tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
+          ).to.equal(amountsIn[i]);
+        }
+      });
+    }
+  );
   context('join transaction - join with params', () => {
     before(async function () {
       this.timeout(20000);
