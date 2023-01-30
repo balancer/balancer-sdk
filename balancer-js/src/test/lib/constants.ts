@@ -455,13 +455,13 @@ export const ADDRESSES = {
       slot: 0,
     },
     USDT: {
-      address: '0x1f1f156E0317167c11Aa412E3d1435ea29Dc3cCE',
+      address: '0x14468fd5e1de5a5a4882fa5f4e2217c5a8ddcadb',
       decimals: 6,
       symbol: 'USDT',
       slot: 0,
     },
     DAI: {
-      address: '0x8c9e6c40d3402480ACE624730524fACC5482798c',
+      address: '0xb8096bc53c3ce4c11ebb0069da0341d75264b104',
       decimals: 18,
       symbol: 'DAI',
       slot: 0,
