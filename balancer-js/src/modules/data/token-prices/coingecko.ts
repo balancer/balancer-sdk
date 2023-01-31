@@ -49,9 +49,9 @@ export class CoingeckoPriceRepository implements Findable<Price> {
       MATIC = 'matic-network',
       XDAI = 'xdai',
     }
-    let assetId = 'ethereum';
-    if (this.chainId === 137) assetId = 'matic-network';
-    if (this.chainId === 100) assetId = 'xdai';
+    let assetId: Assets = Assets.ETH;
+    if (this.chainId === 137) assetId = Assets.MATIC;
+    if (this.chainId === 100) assetId = Assets.XDAI;
     return axios
       .get<{ [key in Assets]: Price }>(
         `https://api.coingecko.com/api/v3/simple/price/?vs_currencies=eth,usd&ids=${assetId}`,
