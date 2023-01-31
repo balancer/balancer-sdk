@@ -47,70 +47,32 @@ export class ComposableStablePoolJoin implements JoinConcern {
     }
 
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-
-    /***REMAPPING AMOUNTS TO BE ORDERED FOLLOWING THE parsedTokens ARRAY, AND NOT THE tokensIn, TO SCALE AMOUNTS WITH scalingFactors*/
-    //REMOVING BPT, NEEDS TO USE parsedTokens WITH BPT, SO THE SPLICE NEEDS TO BE ON A CLONE ARRAY
-    let parsedTokensBptIndex;
-    const parsedTokensWithoutBpt = parsedTokens.filter(
-      (tokenAddress, index) => {
-        if (tokenAddress === pool.address) {
-          parsedTokensBptIndex = index;
-          return false;
-        }
-        return true;
-      }
-    );
-
-    //GENERATING AN ARRAY OF INDEXES, IF parsedTokensWithoutBpt IS [a,b,c] AND tokensIn IS [c,a,b], tokensInIndexesOnParsedTokens WILL BE [2,0,1]
-    const tokensInLowerCase = tokensIn.map((address) =>
-      address.toLocaleLowerCase()
-    );
-    const parsedTokensIndexesOnTokensInArray = parsedTokensWithoutBpt.map(
-      (tokenAddress) =>
-        tokensInLowerCase.indexOf(tokenAddress.toLocaleLowerCase())
-    );
-    if (parsedTokensIndexesOnTokensInArray.indexOf(-1) > 0) {
-      throw new BalancerError(BalancerErrorCode.INPUT_TOKEN_INVALID);
-    }
-    const amountsSortedByParsedTokens = parsedTokensIndexesOnTokensInArray.map(
-      (tokenIndex) => amountsIn[tokenIndex]
-    );
-    const amountsSortedByParsedTokensWithBpt = [
-      ...amountsSortedByParsedTokens.slice(0, parsedTokensBptIndex),
-      '0', //BPT AMOUNT, NEEDS THE AMOUNT TO SCALE WITH SCALING FACTORS
-      ...amountsSortedByParsedTokens.slice(parsedTokensBptIndex),
+    const [, sortedAmounts] = assetHelpers.sortTokens(tokensIn, amountsIn) as [
+      string[],
+      string[]
     ];
-    const scaledAmountsSortedByParsedTokensWithBpt = _upscaleArray(
-      amountsSortedByParsedTokensWithBpt.map(BigInt),
-      scalingFactors.map(BigInt)
+
+    const [sortedTokensWithBpt, sortedBalances, sortedScalingFactors] =
+      assetHelpers.sortTokens(parsedTokens, parsedBalances, scalingFactors) as [
+        string[],
+        string[],
+        string[]
+      ];
+    const bptIndex = sortedTokensWithBpt.indexOf(pool.address);
+
+    sortedAmounts.splice(bptIndex, 0, '0');
+
+    const scaledAmounts = _upscaleArray(
+      sortedAmounts.map(BigInt),
+      sortedScalingFactors.map(BigInt)
     );
-    /***/
-
-    const [sortedTokens, sortedAmounts, sortedBalances] =
-      assetHelpers.sortTokens(
-        parsedTokens,
-        scaledAmountsSortedByParsedTokensWithBpt,
-        parsedBalances
-      ) as [string[], string[], string[]];
-
-    //THE sortedTokens BPT INDEX IS DIFFERENT OF parsedTokens INDEX
-    const sortedBptIndex = sortedTokens.findIndex(
-      (token) => token === pool.address
-    );
-
-    //REMOVING BPT TO CALCULATE BPT OUT
-    sortedBalances.splice(sortedBptIndex, 1);
-    //USING FILTER BECAUSE SPLICE MUTATES THE ORIGINAL ARRAY, AND THE "attributes" VARIABLE WILL NEED sortedAmounts WITH BPT
-    const sortedAmountsWithoutBpt = sortedAmounts.filter(
-      (_, index) => index !== sortedBptIndex
-    );
-    //REMOVING BPT TO CALCULATE BPT OUT
-
+    sortedBalances.splice(bptIndex, 1);
+    scaledAmounts.splice(bptIndex, 1);
     //NEED TO SEND SORTED BALANCES AND AMOUNTS WITHOUT BPT VALUES
     const expectedBPTOut = StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp),
       sortedBalances.map(BigInt),
-      sortedAmountsWithoutBpt.map(BigInt),
+      scaledAmounts.map(BigInt),
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
     );
@@ -120,21 +82,22 @@ export class ComposableStablePoolJoin implements JoinConcern {
       BigNumber.from(slippage)
     ).toString();
 
+    sortedAmounts.splice(bptIndex, 1);
     //NEEDS TO ENCODE USER DATA WITHOUT BPT AMOUNT
     const userData = ComposableStablePoolEncoder.joinExactTokensInForBPTOut(
-      sortedAmountsWithoutBpt,
+      sortedAmounts,
       minBPTOut
     );
 
     const functionName = 'joinPool';
-
+    sortedAmounts.splice(bptIndex, 0, '0');
     //assets AND maxAmountsIn NEEDS THE BPT VALUE IN THE ARRAY
     const attributes: JoinPool = {
       poolId: pool.id,
       sender: joiner,
       recipient: joiner,
       joinPoolRequest: {
-        assets: sortedTokens,
+        assets: sortedTokensWithBpt,
         maxAmountsIn: sortedAmounts,
         userData,
         fromInternalBalance: false,
