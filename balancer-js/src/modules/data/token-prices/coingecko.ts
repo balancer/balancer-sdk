@@ -45,8 +45,9 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   }: { signal?: AbortSignal } = {}): Promise<Price> {
     console.time(`fetching coingecko for native token`);
     enum Assets {
-      ETH = 'matic-network',
-      MATIC = 'ethereum',
+      ETH = 'ethereum',
+      MATIC = 'matic-network',
+      XDAI = 'xdai',
     }
     let assetId = 'ethereum';
     if (this.chainId === 137) assetId = 'matic-network';
