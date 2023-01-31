@@ -1,4 +1,4 @@
-import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed } from '@ethersproject/bignumber';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { AddressZero, MaxUint256, WeiPerEther } from '@ethersproject/constants';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
@@ -15,7 +15,6 @@ import { Interface } from '@ethersproject/abi';
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const liquidityGauge = new Interface(liquidityGaugeAbi);
 import { Pools as PoolsProvider } from '@/modules/pools';
-import { expect } from 'chai';
 
 /**
  * Setup local fork with approved token balance for a given account
@@ -211,16 +210,14 @@ export const stake = async (
   ).wait();
 };
 
-export const checkInaccuracy = (
+export const accuracy = (
   amount: BigNumber,
-  expectedAmount: BigNumberish,
-  accuracyLimit: number
-): void => {
-  const inaccuracy = amount
-    .sub(expectedAmount)
-    .mul(WeiPerEther)
-    .div(amount)
-    .abs();
-  const inaccuracyLimit = WeiPerEther.div(1 / accuracyLimit);
-  expect(inaccuracy.lte(inaccuracyLimit)).to.be.true;
+  expectedAmount: BigNumber
+): number => {
+  if (amount.eq(expectedAmount)) return 1;
+  if (expectedAmount.eq(0))
+    throw new Error("Can't check accuracy for expectedAmount 0");
+  const accuracyEvm = amount.mul(WeiPerEther).div(expectedAmount);
+  const accuracy = formatFixed(accuracyEvm, 18);
+  return parseFloat(accuracy);
 };

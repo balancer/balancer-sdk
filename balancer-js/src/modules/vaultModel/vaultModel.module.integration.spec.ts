@@ -1,7 +1,7 @@
 // yarn test:only ./src/modules/vaultModel/vaultModel.module.integration.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { parseFixed } from '@ethersproject/bignumber';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { MaxUint256 } from '@ethersproject/constants';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import {
@@ -22,7 +22,7 @@ import {
 import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Contracts } from '../contracts/contracts.module';
-import { checkInaccuracy, forkSetup, getBalances } from '@/test/lib/utils';
+import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { VaultModel, Requests, ActionType } from './vaultModel.module';
 import { ExitPoolRequest } from './poolModel/exit';
 import { JoinPoolRequest } from './poolModel/join';
@@ -265,11 +265,12 @@ async function testFlow(
         tokenInBalanceChange.toString()
       );
       expect(modelResults[tokenOut.address].isNegative()).to.be.true;
-      checkInaccuracy(
-        modelResults[tokenOut.address].mul(-1),
-        tokenOutBalanceChange,
-        1e-2 // inaccuracy should not be over to 1%
-      );
+      expect(
+        accuracy(
+          modelResults[tokenOut.address].mul(-1),
+          BigNumber.from(tokenOutBalanceChange)
+        )
+      ).to.be.closeTo(1, 1e-2); // inaccuracy should not be over to 1%
     }).timeout(10000000);
   });
 }

@@ -12,7 +12,7 @@ import {
 } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { checkInaccuracy, forkSetup, getBalances } from '@/test/lib/utils';
+import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
@@ -203,7 +203,9 @@ const testFlow = async (
   console.log(query.minOut, 'minOut');
   console.log(query.expectedOut, 'expectedOut');
 
-  checkInaccuracy(bptBalanceAfter, query.expectedOut, 1e-2); // inaccuracy should not be over to 1%
+  expect(
+    accuracy(bptBalanceAfter, BigNumber.from(query.expectedOut))
+  ).to.be.closeTo(1, 1e-2); // inaccuracy should not be over to 1%
 };
 
 // following contexts currently applies to GOERLI only
