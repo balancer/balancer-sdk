@@ -133,8 +133,8 @@ export class MetaStablePoolExit implements ExitConcern {
       // Reverse scaled amounts out based on token price rate
       expectedAmountsOut = scaledAmountsOut.map((amount, i) => {
         return BigNumber.from(amount)
-          .div(BigNumber.from(sortedPriceRates[i]))
           .mul(parseFixed('1', 18))
+          .div(BigNumber.from(sortedPriceRates[i]))
           .toString();
       });
 
