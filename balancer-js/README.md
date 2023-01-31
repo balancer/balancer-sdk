@@ -381,6 +381,27 @@ buildJoin: (
 
 [Example](./examples/join.ts)
 
+### #buildInitJoin (Weighted Pool)
+Builds a init join transaction for weighted pool.
+```js
+  /***
+   * @param params
+   *  * Returns a InitJoinPoolAttributes to make a init join transaction
+   *  * @param joiner - The address of the joiner of the pool
+   *  * @param poolId - The id of the pool
+   *  * @param tokensIn - array with the address of the tokens
+   *  * @param amountsIn - array with the amount of each token
+   *  * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a weighted pool
+   */
+  buildInitJoin({
+    joiner,
+    poolId,
+    tokensIn,
+    amountsIn,
+  }) => InitJoinPoolAttributes 
+```
+[Example](./examples/pools/weighted/init-join.ts)
+
 ### Joining nested pools
 
 Exposes Join functionality allowing user to join a pool that has pool tokens that are BPTs of other pools, e.g.:

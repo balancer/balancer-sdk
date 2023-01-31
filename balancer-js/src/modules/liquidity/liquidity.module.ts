@@ -32,9 +32,9 @@ export class Liquidity {
         const liquidity = parseFixed(await this.getLiquidity(pool), SCALE);
         const totalBPT = parseFixed(pool.totalShares, SCALE);
         const bptInParentPool = parseFixed(token.balance, SCALE);
-        const liquidityInParentPool = liquidity
-          .mul(bptInParentPool)
-          .div(totalBPT);
+        const liquidityInParentPool = totalBPT.eq(0)
+          ? 0
+          : liquidity.mul(bptInParentPool).div(totalBPT);
 
         return {
           address: pool.address,

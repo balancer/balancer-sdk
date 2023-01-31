@@ -1,13 +1,18 @@
 import { formatFixed } from '@ethersproject/bignumber';
 import { Provider } from '@ethersproject/providers';
-import { PoolFilter, SubgraphPoolBase } from '@balancer-labs/sor';
+import {
+  PoolFilter,
+  SubgraphPoolBase,
+  SubgraphToken,
+} from '@balancer-labs/sor';
 import { Multicaller } from '@/lib/utils/multiCaller';
 import { isSameAddress } from '@/lib/utils';
 import { Vault__factory } from '@balancer-labs/typechain';
-import { Pool } from '@/types';
+import { Pool, PoolToken } from '@/types';
 
 // TODO: decide whether we want to trim these ABIs down to the relevant functions
 import aTokenRateProvider from '@/lib/abi/StaticATokenRateProvider.json';
+
 import weightedPoolAbi from '@/lib/abi/WeightedPool.json';
 import stablePoolAbi from '@/lib/abi/StablePool.json';
 import elementPoolAbi from '@/lib/abi/ConvergentCurvePool.json';
@@ -15,7 +20,9 @@ import linearPoolAbi from '@/lib/abi/LinearPool.json';
 import composableStableAbi from '@/lib/abi/ComposableStable.json';
 
 export async function getOnChainBalances<
-  GenericPool extends SubgraphPoolBase | Pool
+  GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
+    tokens: (SubgraphToken | PoolToken)[];
+  }
 >(
   subgraphPoolsOriginal: GenericPool[],
   multiAddress: string,
@@ -236,9 +243,7 @@ export async function getOnChainBalances<
       subgraphPools[index].swapFee = formatFixed(swapFee, 18);
 
       poolTokens.tokens.forEach((token, i) => {
-        // Looks like there's a TS issue that means find doesn't work on unions: https://stackoverflow.com/questions/58772314/typescript-array-prototype-map-has-error-expression-is-not-callable-when-th
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const tokens = subgraphPools[index].tokens as any[];
+        const tokens = subgraphPools[index].tokens;
         const T = tokens.find((t) => isSameAddress(t.address, token));
         if (!T) throw `Pool Missing Expected Token: ${poolId} ${token}`;
         T.balance = formatFixed(poolTokens.balances[i], T.decimals);

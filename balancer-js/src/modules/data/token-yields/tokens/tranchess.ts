@@ -1,5 +1,5 @@
-import { BigNumber } from 'ethers';
-import { formatEther } from 'ethers/lib/utils';
+import { BigNumber } from '@ethersproject/bignumber';
+import { formatEther } from '@ethersproject/units';
 import { AprFetcher } from '../repository';
 import axios from 'axios';
 
@@ -30,6 +30,7 @@ export const tranchess: AprFetcher = async () => {
     apr = Math.round(
       parseFloat(
         formatEther(
+          //The key weeklyAveragePnlPercentage is the daily yield of qETH in 18 decimals, timing 365 should give you the APR.
           BigNumber.from(weeklyAveragePnlPercentage).mul(365).mul(10000)
         )
       )

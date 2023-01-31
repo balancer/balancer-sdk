@@ -2,6 +2,8 @@
 import { TransactionRequest } from '@ethersproject/providers';
 import {
   ComposableStableCreatePoolParameters,
+  InitJoinPoolAttributes,
+  InitJoinPoolParameters,
   WeightedCreatePoolParameters,
 } from '@/modules/pools/factory/types';
 
@@ -11,5 +13,5 @@ export interface PoolFactory {
       | ComposableStableCreatePoolParameters
       | WeightedCreatePoolParameters
   ): TransactionRequest;
-  // buildInitJoin: (parameters: InitJoinPoolParameters) => InitJoinPoolAttributes;
+  buildInitJoin: (parameters: InitJoinPoolParameters) => InitJoinPoolAttributes;
 }

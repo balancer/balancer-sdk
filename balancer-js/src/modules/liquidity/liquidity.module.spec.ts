@@ -88,6 +88,12 @@ describe('Liquidity Module', () => {
       const liquidity = await liquidityProvider.getLiquidity(pool);
       expect(liquidity).to.be.eq('7781301.384420056605162613');
     });
+
+    it('Should return 0 and not throw an error if totalShares of a sub-pool is 0', async () => {
+      const pool = findPool('0xd4e2af4507b6b89333441c0c398edffb40f86f4d');
+      const liquidity = await liquidityProvider.getLiquidity(pool);
+      expect(liquidity).to.be.eq('0');
+    });
   });
 
   context('Stable Pool calculations', () => {

@@ -28,7 +28,6 @@ export interface InitJoinPoolParameters {
   poolAddress: string;
   tokensIn: string[];
   amountsIn: string[];
-  wrappedNativeAsset: string;
 }
 
 export interface InitJoinPoolAttributes {
