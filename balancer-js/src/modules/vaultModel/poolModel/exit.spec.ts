@@ -86,7 +86,7 @@ describe('exitModel', () => {
         '10000000000000000000',
         '-138218951',
         '-18666074549381720234',
-      ]); // Taken from exit module
+      ]); // Taken from Tenderly
       expect(
         BigNumber.from(balancesBefore[0]).sub(balancesAfter[0]).toString()
       ).to.eq('138218951');
