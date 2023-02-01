@@ -2,6 +2,7 @@ import { parseFixed } from '@ethersproject/bignumber';
 import { Pool } from '../../types';
 import { _computeScalingFactor } from '@/lib/utils/solidityMaths';
 import { AssetHelpers } from '@/lib/utils';
+import { AddressZero } from '@ethersproject/constants';
 
 const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
@@ -9,11 +10,20 @@ const AMP_PRECISION = 3; // number of decimals -> precision 1000
  * Parse pool info into EVM amounts. Sorts by token order if wrappedNativeAsset param passed.
  * @param {Pool}  pool
  * @param {string}  wrappedNativeAsset
+ * @param unwrapNativeAsset if true, changes wETH address to ETH address
  * @returns       parsed pool info
  */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const parsePoolInfo = (pool: Pool, wrappedNativeAsset?: string) => {
-  let parsedTokens = pool.tokens.map((token) => token.address);
+export const parsePoolInfo = (
+  pool: Pool,
+  wrappedNativeAsset?: string,
+  unwrapNativeAsset?: boolean
+) => {
+  let parsedTokens = unwrapNativeAsset
+    ? pool.tokens.map((token) => token.address)
+    : pool.tokens.map((token) =>
+        token.address === wrappedNativeAsset ? AddressZero : token.address
+      );
   let parsedDecimals = pool.tokens.map((token) => {
     return token.decimals ? token.decimals.toString() : undefined;
   });
@@ -36,7 +46,6 @@ export const parsePoolInfo = (pool: Pool, wrappedNativeAsset?: string) => {
       ? parseFixed(token.priceRate, 18).toString()
       : undefined;
   });
-
   if (wrappedNativeAsset) {
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     let sfString;
