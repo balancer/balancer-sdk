@@ -26,7 +26,6 @@ const signer = provider.getSigner();
 // Slots used to set the account balance for each token through hardhat_setStorageAt
 // Info fetched using npm package slot20
 const initialBalance = '100000';
-const amountsOutDiv = (1e7).toString(); // FIXME: depending on this number, exitExactTokenOut (single token) throws Errors.STABLE_INVARIANT_DIDNT_CONVERGE
 const slippage = '100'; // 1%
 
 const pool = pools_16350000.find(
@@ -134,9 +133,7 @@ describe('exit stable pools execution', async () => {
       before(async function () {
         amountsOut = tokensOut.map((t, i) => {
           if (i === 0) {
-            return parseFixed(t.balance, t.decimals)
-              .div(amountsOutDiv)
-              .toString();
+            return parseFixed('202.1', t.decimals).toString();
           }
           return '0';
         });

@@ -236,6 +236,12 @@ export class ComposableStablePoolExit implements ExitConcern {
 
     sortedAmountsOut.splice(bptIndex, 0, '0');
 
+    const minAmountsOut = sortedAmountsOut.map((a) =>
+      BigNumber.from(a).sub(1).isNegative()
+        ? a
+        : BigNumber.from(a).sub(1).toString()
+    );
+
     const to = balancerVault;
     const functionName = 'exitPool';
     const attributes: ExitPool = {
@@ -244,11 +250,7 @@ export class ComposableStablePoolExit implements ExitConcern {
       recipient: exiter,
       exitPoolRequest: {
         assets: sortedTokensWithBpt,
-        minAmountsOut: sortedAmountsOut.map((amount) =>
-          amount !== '0'
-            ? BigNumber.from(amount).sub(BigNumber.from('1')).toString()
-            : amount
-        ),
+        minAmountsOut,
         userData,
         toInternalBalance: false,
       },
