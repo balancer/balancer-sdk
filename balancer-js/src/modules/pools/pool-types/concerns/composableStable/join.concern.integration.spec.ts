@@ -1,16 +1,18 @@
+import dotenv from 'dotenv';
+import { expect } from 'chai';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BytesLike } from '@ethersproject/bytes';
+import { TransactionReceipt } from '@ethersproject/providers';
+import { ethers } from 'hardhat';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Network } from '@/lib/constants';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { Pools } from '@/modules/pools';
 import { forkSetup, getBalances } from '@/test/lib/utils';
-import { JoinPoolRequest, Pool } from '@/types';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { BytesLike } from '@ethersproject/bytes';
-import { TransactionReceipt } from '@ethersproject/providers';
-import { ethers } from 'hardhat';
-import { expect } from 'chai';
-import dotenv from 'dotenv';
+import { JoinPoolRequest, Pool, PoolWithMethods } from '@/types';
+
 import pools_16350000 from '@/test/lib/pools_16350000.json';
+import { JoinPoolAttributes } from '../types';
 
 dotenv.config();
 
@@ -20,34 +22,9 @@ const network = Network.MAINNET;
 const sdk = new BalancerSDK({ network, rpcUrl });
 const { networkConfig } = sdk;
 
-const amountsInDiv = '10000';
-const initialBalance = '100000';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 let signerAddress: string;
-
-const poolObj = pools_16350000.find(
-  ({ id }) =>
-    id == '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d' // Balancer Aave Boosted StablePool
-) as unknown as Pool;
-
-const poolTokensWithBptFirst = [
-  ...poolObj.tokens.filter(({ address }) => address === poolObj.address),
-  ...poolObj.tokens.filter(({ address }) => address !== poolObj.address),
-];
-
-//REMOVING BPT;
-const tokensIn = poolTokensWithBptFirst.slice(1).map(({ address }) => address);
-
-let amountsIn = [
-  parseFixed('100', 18).toString(),
-  parseFixed('101', 18).toString(),
-  parseFixed('102', 18).toString(),
-];
-
-const slots = [0, 0, 0, 0];
-
-const pool = Pools.wrap(poolObj, networkConfig);
 
 describe('join execution', async () => {
   let transactionReceipt: TransactionReceipt;
@@ -56,45 +33,68 @@ describe('join execution', async () => {
   let bptBalanceAfter: BigNumber;
   let tokensBalanceBefore: BigNumber[];
   let tokensBalanceAfter: BigNumber[];
+  let tokensWithoutBpt: string[];
+  let pool: PoolWithMethods;
 
   before(async function () {
     this.timeout(20000);
-    const balances = poolTokensWithBptFirst.map((token) =>
-      token ? parseFixed(initialBalance, token.decimals).toString() : '0'
+    const poolObj = pools_16350000.find(
+      ({ id }) =>
+        id ==
+        '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d'
+    ) as unknown as Pool;
+    const initialBalances = poolObj.tokens.map((token) =>
+      parseFixed('100000', token.decimals).toString()
     );
+    const slots = [0, 0, 0, 0];
     await forkSetup(
       signer,
-      poolTokensWithBptFirst.map((t) => t.address),
+      poolObj.tokensList,
       slots,
-      balances,
+      initialBalances,
       jsonRpcUrl as string,
       16350000 // holds the same state as the static repository
     );
     signerAddress = await signer.getAddress();
+    const bptIndex = poolObj.tokensList.indexOf(poolObj.address);
+    //REMOVING BPT
+    tokensWithoutBpt = [...poolObj.tokensList];
+    tokensWithoutBpt.splice(bptIndex, 1);
+    pool = Pools.wrap(poolObj, networkConfig);
   });
+  let joinPoolAttr: JoinPoolAttributes;
   context('join transaction - join with encoded data', () => {
+    const amountsIn = [
+      parseFixed('100', 18).toString(),
+      parseFixed('101', 18).toString(),
+      parseFixed('102', 18).toString(),
+    ];
+    const slippage = '100';
+
     before(async function () {
       this.timeout(20000);
       [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
-        poolTokensWithBptFirst.map(({ address }) => address),
+        [pool.address, ...tokensWithoutBpt],
         signer,
         signerAddress
       );
-      const slippage = '100';
-
-      const { to, data, minBPTOut } = pool.buildJoin(
+      joinPoolAttr = pool.buildJoin(
         signerAddress,
-        tokensIn,
+        tokensWithoutBpt,
         amountsIn,
         slippage
       );
 
-      const tx = { to, data, gasLimit: 3000000 };
+      const tx = {
+        to: joinPoolAttr.to,
+        data: joinPoolAttr.data,
+        gasLimit: 3000000,
+      };
 
-      bptMinBalanceIncrease = BigNumber.from(minBPTOut);
+      bptMinBalanceIncrease = BigNumber.from(joinPoolAttr.minBPTOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
       [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
-        poolTokensWithBptFirst.map(({ address }) => address),
+        [pool.address, ...tokensWithoutBpt],
         signer,
         signerAddress
       );
@@ -107,81 +107,43 @@ describe('join execution', async () => {
         .to.be.true;
     });
     it('should decrease tokens balance', async () => {
-      for (let i = 0; i < tokensIn.length; i++) {
+      for (let i = 0; i < tokensWithoutBpt.length; i++) {
         expect(
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
         ).to.equal(amountsIn[i]);
       }
     });
+    it('should build the same for reversed array order for tokens and amounts', async () => {
+      const tokensReversed = [...tokensWithoutBpt].reverse();
+      const amountsInReversed = [...amountsIn].reverse();
+      const newAttr = pool.buildJoin(
+        signerAddress,
+        tokensReversed,
+        amountsInReversed,
+        slippage
+      );
+      expect(joinPoolAttr).to.deep.eq(newAttr);
+    });
   });
-  context(
-    'join transaction - reversed array order for tokens and amounts',
-    () => {
-      before(async function () {
-        this.timeout(20000);
-        [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
-          poolTokensWithBptFirst.map(({ address }) => address),
-          signer,
-          signerAddress
-        );
-        const slippage = '1';
-        const tokensInClone = [...tokensIn];
-        const amountsInClone = [...amountsIn];
-        tokensInClone.reverse();
-        amountsInClone.reverse();
-        const { to, data, minBPTOut } = pool.buildJoin(
-          signerAddress,
-          tokensInClone,
-          amountsInClone,
-          slippage
-        );
-
-        const tx = { to, data, gasLimit: 3000000 };
-
-        bptMinBalanceIncrease = BigNumber.from(minBPTOut);
-        transactionReceipt = await (await signer.sendTransaction(tx)).wait();
-        [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
-          poolTokensWithBptFirst.map(({ address }) => address),
-          signer,
-          signerAddress
-        );
-      });
-      it('should work', async () => {
-        expect(transactionReceipt.status).to.eql(1);
-      });
-      it('should increase BPT balance', async () => {
-        expect(bptBalanceAfter.sub(bptBalanceBefore).gte(bptMinBalanceIncrease))
-          .to.be.true;
-      });
-      it('should decrease tokens balance', async () => {
-        for (let i = 0; i < tokensIn.length; i++) {
-          expect(
-            tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
-          ).to.equal(amountsIn[i]);
-        }
-      });
-    }
-  );
   context('join transaction - join with params', () => {
+    const amountsIn = [
+      parseFixed('0.001', 18).toString(),
+      parseFixed('0.2', 18).toString(),
+      parseFixed('3.1', 18).toString(),
+    ];
+    const slippage = '100';
     before(async function () {
       this.timeout(20000);
 
-      amountsIn = poolTokensWithBptFirst
-        .slice(1)
-        .map((t) =>
-          parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
-        );
-
       [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
-        poolTokensWithBptFirst.map(({ address }) => address),
+        [pool.address, ...tokensWithoutBpt],
         signer,
         signerAddress
       );
 
-      const slippage = '100';
       const { attributes, value, minBPTOut } = pool.buildJoin(
         signerAddress,
-        tokensIn,
+        tokensWithoutBpt,
         amountsIn,
         slippage
       );
@@ -200,7 +162,7 @@ describe('join execution', async () => {
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
-        poolTokensWithBptFirst.map(({ address }) => address),
+        [pool.address, ...tokensWithoutBpt],
         signer,
         signerAddress
       );
@@ -216,7 +178,7 @@ describe('join execution', async () => {
     });
 
     it('should decrease tokens balance', async () => {
-      for (let i = 0; i < tokensIn.length; i++) {
+      for (let i = 0; i < tokensWithoutBpt.length; i++) {
         expect(
           tokensBalanceBefore[i].sub(tokensBalanceAfter[i]).toString()
         ).to.equal(amountsIn[i]);
@@ -225,25 +187,14 @@ describe('join execution', async () => {
   });
 
   context('join transaction - single token join', () => {
-    before(async function () {
-      this.timeout(20000);
-      amountsIn = [
-        parseFixed(
-          poolTokensWithBptFirst[1].balance,
-          poolTokensWithBptFirst[1].decimals
-        )
-          .div('100')
-          .toString(),
-      ];
-    });
-
+    const amountsIn = [parseFixed('0.001', 18).toString()];
+    const slippage = '10';
     it('should fail on number of input tokens', async () => {
-      const slippage = '10';
       let errorMessage;
       try {
         pool.buildJoin(
           signerAddress,
-          tokensIn.map((t) => t),
+          tokensWithoutBpt.map((t) => t),
           amountsIn,
           slippage
         );
