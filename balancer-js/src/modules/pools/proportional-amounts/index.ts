@@ -32,23 +32,27 @@ export const proportionalAmounts = (
   tokens: string[];
   amounts: string[];
 } => {
-  const noBpt = pool.tokens.filter(
+  const tokensWithoutBpt = pool.tokens.filter(
     (t) => !pool.id.toLowerCase().includes(t.address.toLowerCase())
   );
-  const index = noBpt.findIndex(
+  const referenceTokenIndex = tokensWithoutBpt.findIndex(
     (t) => t.address.toLowerCase() === token.toLowerCase()
   );
 
-  if (index == -1) {
+  if (referenceTokenIndex == -1) {
     throw new Error('Token not found in pool');
   }
 
-  const balances = noBpt.map((t) => parseUnits(t.balance, t.decimals));
+  const balances = tokensWithoutBpt.map((t) =>
+    parseUnits(t.balance, t.decimals)
+  );
   const amountBn = BigNumber.from(amount);
-  const amounts = balances.map((b) => b.mul(amountBn).div(balances[index]));
+  const proportionalAmounts = balances.map((b) =>
+    b.mul(amountBn).div(balances[referenceTokenIndex])
+  );
 
   return {
-    tokens: noBpt.map((t) => t.address),
-    amounts: amounts.map((a) => a.toString()),
+    tokens: tokensWithoutBpt.map((t) => t.address),
+    amounts: proportionalAmounts.map((a) => a.toString()),
   };
 };

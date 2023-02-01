@@ -6,7 +6,7 @@ const pool = {
   tokens: [
     {
       address: '0x0000000000000000000000000000000000000001',
-      decimals: 18,
+      decimals: 6,
       balance: '10',
     },
     {
@@ -29,7 +29,7 @@ describe('proportional amounts', () => {
       '0x0000000000000000000000000000000000000001',
       '1'
     );
-    expect(amounts).to.eql(['1', '2', '3']);
+    expect(amounts).to.eql(['1', '2000000000000', '3000000000000']);
   });
 
   it('should throw an error if the token is not found in the pool', () => {
