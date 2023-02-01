@@ -138,6 +138,7 @@ export const ADDRESSES = {
       address: '0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83'.toLowerCase(),
       decimals: 18,
       symbol: 'bbausdc',
+      slot: 0,
     },
     bbausdt: {
       address: '0x2F4eb100552ef93840d5aDC30560E5513DFfFACb'.toLowerCase(),
@@ -148,6 +149,7 @@ export const ADDRESSES = {
       address: '0xae37D54Ae477268B9997d4161B96b8200755935c'.toLowerCase(),
       decimals: 18,
       symbol: 'bbadai',
+      slot: 0,
     },
     wstETH_bbaUSD: {
       id: '0x25accb7943fd73dda5e23ba6329085a3c24bfb6a000200000000000000000387',

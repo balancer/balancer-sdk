@@ -24,21 +24,22 @@ dotenv.config();
 const { TENDERLY_ACCESS_KEY, TENDERLY_PROJECT, TENDERLY_USER } = process.env;
 
 // -- Goerli network setup --
-const network = Network.GOERLI;
-const jsonRpcUrl = process.env.ALCHEMY_URL_GOERLI;
-const blockNumber = 8006790;
-const rpcUrl = 'http://127.0.0.1:8000';
-const addresses = ADDRESSES[network];
-const customSubgraphUrl =
-  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
+// const network = Network.GOERLI;
+// const jsonRpcUrl = process.env.ALCHEMY_URL_GOERLI;
+// const blockNumber = 8006790;
+// const rpcUrl = 'http://127.0.0.1:8000';
+// const customSubgraphUrl =
+//   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
 
 // -- Mainnet network setup --
-// const network = Network.MAINNET;
-// const jsonRpcUrl = process.env.ALCHEMY_URL;
-// const blockNumber = 16075635;
-// const rpcUrl = 'http://127.0.0.1:8545';
-// const customSubgraphUrl =
-//   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta';
+const network = Network.MAINNET;
+const jsonRpcUrl = process.env.ALCHEMY_URL;
+const blockNumber = 16075635;
+const rpcUrl = 'http://127.0.0.1:8545';
+const customSubgraphUrl =
+  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta';
+
+const addresses = ADDRESSES[network];
 
 // Setup local fork with correct balances/approval to join pool with DAI/USDC/bbaDAI/bbaUSDC
 async function setUp(provider: JsonRpcProvider) {
@@ -107,8 +108,8 @@ async function join() {
     addresses.bbadai?.address as string,
   ];
   const amountsIn = [
-    parseFixed('10', 6).toString(),
-    parseFixed('10', 18).toString(),
+    parseFixed('10', addresses.USDC.decimals).toString(),
+    parseFixed('10', addresses.bbadai.decimals as number).toString(),
   ];
 
   // Custom Tenderly configuration parameters - remove in order to use default values
@@ -168,7 +169,7 @@ async function join() {
   );
 
   // User reviews expectedAmountOut
-  console.log('Expected out from inital simulation: ', expectedOut);
+  console.log('Expected BPT - inital simulation: ', expectedOut);
 
   // User approves relayer
   const { contracts, contractAddresses } = new Contracts(
@@ -206,10 +207,10 @@ async function join() {
     await getBalances([bbausd2.address, ...tokensIn], signer, signerAddress)
   ).map((b) => b.toString());
 
-  console.log('Balances before exit:        ', tokenBalancesBefore);
-  console.log('Balances after exit:         ', tokenBalancesAfter);
-  console.log('Expected BPT after exit:     ', [query.expectedOut]);
-  console.log('Min BPT after exit:          ', [query.minOut]);
+  console.log('Balances before exit:          ', tokenBalancesBefore);
+  console.log('Balances after exit:           ', tokenBalancesAfter);
+  console.log('Expected BPT after exit:       ', [query.expectedOut]);
+  console.log('Min BPT after exit:            ', [query.minOut]);
 }
 
 join();
