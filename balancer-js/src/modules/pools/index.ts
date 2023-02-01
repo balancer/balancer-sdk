@@ -133,6 +133,8 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param userAddress     User address
    * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          Json RPC signer required to perform a static call if Static simulation chosen
+   * @param simulationType  Choose from Tenderly, VaultModel (TS math) or Static
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
    */

@@ -382,7 +382,9 @@ buildJoin: (
 [Example](./examples/join.ts)
 
 ### #buildInitJoin (Weighted Pool)
+
 Builds a init join transaction for weighted pool.
+
 ```js
   /***
    * @param params
@@ -398,8 +400,9 @@ Builds a init join transaction for weighted pool.
     poolId,
     tokensIn,
     amountsIn,
-  }) => InitJoinPoolAttributes 
+  }) => InitJoinPoolAttributes
 ```
+
 [Example](./examples/pools/weighted/init-join.ts)
 
 ### Joining nested pools
@@ -426,6 +429,8 @@ Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
    * @param userAddress     User address
    * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          Json RPC signer required to perform a static call if Static simulation chosen
+   * @param simulationType  Choose from Tenderly, VaultModel (TS math) or Static
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
    */
@@ -436,12 +441,15 @@ Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
     to: string;
-    callData: string;
+    encodedCall: string;
     minOut: string;
     expectedOut: string;
+    priceImpact: string;
   }>
 ```
 
