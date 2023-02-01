@@ -68,7 +68,6 @@ export class ComposableStablePoolExit implements ExitConcern {
       parsedSwapFee,
       bptIndex,
       parsedBalancesWithoutBpt,
-      scalingFactorsWithoutBpt,
       //NOT PASSING wrappedNativeAsset BECAUSE singleTokenMaxOutIndex MUST BE FROM THE ORIGINAL pool.tokens ARRAY
     } = parsePoolInfo(pool, undefined, shouldUnwrapNativeAsset);
 

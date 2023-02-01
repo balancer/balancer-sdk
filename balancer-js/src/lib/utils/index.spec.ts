@@ -7,7 +7,7 @@ describe('reorderArrays', () => {
     const original = ['b', 'f', 'e', 'c', 'd', 'a'];
     const other1 = [2, 6, 5, 3, 4, 1]; // [1, 2, 3, 4, 5, 6]
     const other2 = [1, 2, 3, 4, 5, 6]; // [6, 1, 4, 5, 3, 2]
-    const [_, result1, result2] = reorderArrays(
+    const [result1, result2] = reorderArrays(
       reference,
       original,
       other1,
