@@ -18,12 +18,8 @@ export class PoolVolume {
       yesterdaysPool = await this.yesterdaysPools.find(pool.id);
     }
 
-    if (!pool.totalSwapVolume) {
+    if (!pool.totalSwapVolume || !yesterdaysPool?.totalSwapVolume) {
       return 0;
-    }
-
-    if (!yesterdaysPool || !yesterdaysPool.totalSwapVolume) {
-      return parseFloat(pool.totalSwapVolume);
     }
 
     return (
