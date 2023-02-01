@@ -13,9 +13,9 @@ import pools_16350000 from '@/test/lib/pools_16350000.json';
 
 dotenv.config();
 
-const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const { ethers } = hardhat;
 
+const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8545';
 const network = Network.MAINNET;
 const { networkConfig } = new BalancerSDK({ network, rpcUrl });
@@ -57,7 +57,7 @@ describe('exit stable pools execution', async () => {
         parseFixed(initialBalance, 18).toString()
       ),
       jsonRpcUrl as string,
-      16320000 // holds the same state as the static repository
+      16350000 // holds the same state as the static repository
     );
     signerAddress = await signer.getAddress();
   });

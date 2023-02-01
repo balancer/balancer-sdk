@@ -12,11 +12,10 @@ import { AddressZero } from '@ethersproject/constants';
 import { AssetHelpers, isSameAddress, parsePoolInfo } from '@/lib/utils';
 import * as SOR from '@balancer-labs/sor';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
-import { _downscaleDownArray, _upscaleArray } from '@/lib/utils/solidityMaths';
+import { _upscaleArray } from '@/lib/utils/solidityMaths';
 import { balancerVault } from '@/lib/constants/config';
 import { Vault__factory } from '@balancer-labs/typechain';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
-import { StablePoolEncoder } from '@/pool-stable';
 
 export class ComposableStablePoolExit implements ExitConcern {
   buildExitExactBPTIn = ({
@@ -72,13 +71,12 @@ export class ComposableStablePoolExit implements ExitConcern {
 
     // Sort pool info based on tokens addresses
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    const [sortedTokens, sortedUpscaledBalances, sortedScalingFactors] =
-      assetHelpers.sortTokens(
-        shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens,
-        upScaledBalances,
-        scalingFactors
-      ) as [string[], string[], string[]];
-    const sortedTokensBptIndex = sortedTokens.findIndex(
+    const [sortedTokens, sortedUpscaledBalances] = assetHelpers.sortTokens(
+      shouldUnwrapNativeAsset ? unwrappedTokens : parsedTokens,
+      upScaledBalances,
+      scalingFactors
+    ) as [string[], string[], string[]];
+    const bptIndex = sortedTokens.findIndex(
       (address) => address === pool.address
     );
     const expectedAmountsOut = Array(parsedTokens.length).fill('0');
@@ -94,7 +92,7 @@ export class ComposableStablePoolExit implements ExitConcern {
       const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
         BigInt(parsedAmp as string),
         sortedUpscaledBalances
-          .filter((_, index) => index !== sortedTokensBptIndex)
+          .filter((_, index) => index !== bptIndex)
           .map((b) => BigInt(b)),
         singleTokenMaxOutIndex,
         BigInt(bptIn),
@@ -142,6 +140,9 @@ export class ComposableStablePoolExit implements ExitConcern {
       attributes.recipient,
       attributes.exitPoolRequest,
     ]);
+
+    //REMOVING BPT;
+    minAmountsOut.splice(bptIndex, 1);
 
     return {
       to,
