@@ -21,6 +21,7 @@ import { PoolFactory__factory } from './pool-factory__factory';
 import * as Queries from './queries';
 import { BalancerError } from '@/balancerErrors';
 import { EmissionsService } from './emissions';
+import { proportionalAmounts } from './proportional-amounts';
 
 const notImplemented = (poolType: string, name: string) => () => {
   throw `${name} for poolType ${poolType} not implemented`;
@@ -39,6 +40,7 @@ export class Pools implements Findable<PoolWithMethods> {
   poolFactory;
   impermanentLossService;
   emissionsService;
+  proportionalAmounts;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -72,6 +74,7 @@ export class Pools implements Findable<PoolWithMethods> {
         repositories.liquidityGauges
       );
     }
+    this.proportionalAmounts = proportionalAmounts;
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
@@ -282,6 +285,9 @@ export class Pools implements Findable<PoolWithMethods> {
             tokenOut,
             pool
           ),
+        calcProportionalAmounts: (token: string, amount: string) => {
+          return proportionalAmounts(pool, token, amount);
+        },
       };
     } catch (error) {
       if ((error as BalancerError).code != 'UNSUPPORTED_POOL_TYPE') {
