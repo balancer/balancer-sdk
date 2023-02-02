@@ -11,6 +11,19 @@ export enum SimulationType {
   Static,
 }
 
+/**
+ * Simulation module is responsible for simulating the results of a generalised
+ * join or exit using different types of simulation, such as:
+ * - Tenderly: uses Tenderly Simulation API (third party service)
+ * - VaultModel: uses TS math, which may be less accurate (min. 99% accuracy)
+ * - Static: uses staticCall, which is 100% accurate but requires vault approval
+ *
+ * This module allows a user to perform a simulation and check for expected
+ * amounts out in order to make an informed decision on whether to proceed with
+ * the transaction. These expected amounts out can be used as limits to prevent
+ * frontrunning and ensure that the transaction will return minimum amounts out.
+ */
+
 export class Simulation {
   private tenderlyHelper: TenderlyHelper;
   private vaultModel: VaultModel | undefined;
