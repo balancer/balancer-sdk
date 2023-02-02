@@ -1,6 +1,6 @@
 import { StablePhantomPoolExit } from './concerns/stablePhantom/exit.concern';
 import { StablePhantomPoolJoin } from './concerns/stablePhantom/join.concern';
-import { StablePhantomPoolLiquidity } from './concerns/stablePhantom/liquidity.concern';
+import { StablePoolLiquidity } from './concerns/stable/liquidity.concern';
 import { PhantomStablePoolSpotPrice } from './concerns/stablePhantom/spotPrice.concern';
 import { StablePhantomPriceImpact } from './concerns/stablePhantom/priceImpact.concern';
 import { PoolType } from './pool-type.interface';
@@ -16,7 +16,7 @@ export class StablePhantom implements PoolType {
   constructor(
     public exit: ExitConcern = new StablePhantomPoolExit(),
     public join: JoinConcern = new StablePhantomPoolJoin(),
-    public liquidity: LiquidityConcern = new StablePhantomPoolLiquidity(),
+    public liquidity: LiquidityConcern = new StablePoolLiquidity(),
     public spotPriceCalculator: SpotPriceConcern = new PhantomStablePoolSpotPrice(),
     public priceImpactCalculator: PriceImpactConcern = new StablePhantomPriceImpact()
   ) {}
