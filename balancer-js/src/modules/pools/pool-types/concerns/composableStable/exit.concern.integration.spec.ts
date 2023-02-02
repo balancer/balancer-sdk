@@ -26,7 +26,7 @@ const signer = provider.getSigner();
 // Slots used to set the account balance for each token through hardhat_setStorageAt
 // Info fetched using npm package slot20
 const initialBalance = '100000';
-const slippage = '100'; // 1%
+const slippage = '0'; // 1%
 
 const pool = pools_16350000.find(
   (pool) =>

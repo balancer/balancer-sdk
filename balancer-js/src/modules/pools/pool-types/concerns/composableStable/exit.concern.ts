@@ -18,7 +18,7 @@ import {
 } from '@/lib/utils';
 import * as SOR from '@balancer-labs/sor';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
-import { _upscaleArray } from '@/lib/utils/solidityMaths';
+import { _downscaleDown, _upscaleArray } from '@/lib/utils/solidityMaths';
 import { balancerVault } from '@/lib/constants/config';
 import { Vault__factory } from '@balancer-labs/typechain';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
@@ -67,7 +67,8 @@ export class ComposableStablePoolExit implements ExitConcern {
       parsedTotalShares,
       parsedSwapFee,
       bptIndex,
-      parsedBalancesWithoutBpt,
+      parsedPriceRates,
+      upScaledBalancesWithoutBpt,
       //NOT PASSING wrappedNativeAsset BECAUSE singleTokenMaxOutIndex MUST BE FROM THE ORIGINAL pool.tokens ARRAY
     } = parsePoolInfo(pool, undefined, shouldUnwrapNativeAsset);
 
@@ -81,18 +82,24 @@ export class ComposableStablePoolExit implements ExitConcern {
       // Calculate amount out given BPT in
       const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
         BigInt(parsedAmp as string),
-        parsedBalancesWithoutBpt.map(BigInt),
+        upScaledBalancesWithoutBpt.map(BigInt),
         singleTokenMaxOutIndex,
         BigInt(bptIn),
         BigInt(parsedTotalShares),
         BigInt(parsedSwapFee)
-      ).toString();
+      );
 
-      expectedAmountsOut[singleTokenMaxOutIndex] = amountOut;
+      const amountOutDownscaled = _downscaleDown(
+        amountOut,
+        BigInt(parsedPriceRates[singleTokenMaxOutIndex])
+      );
+
+      expectedAmountsOut[singleTokenMaxOutIndex] =
+        amountOutDownscaled.toString();
 
       // Applying slippage tolerance
       minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
-        BigNumber.from(amountOut),
+        BigNumber.from(amountOutDownscaled.toString()),
         BigNumber.from(slippage)
       ).toString();
 
@@ -183,8 +190,8 @@ export class ComposableStablePoolExit implements ExitConcern {
       parsedTotalShares,
       parsedSwapFee,
       upScaledBalances,
-      scalingFactorsWithoutBpt,
       bptIndex,
+      parsedPriceRatesWithoutBpt,
       //NOT PASSING wrappedNativeAsset BECAUSE AMOUNTS WILL NEED TO BE REORDERED FOLLOWING ORIGINAL POOL TOKENS ORDER
     } = parsePoolInfo(pool);
 
@@ -196,21 +203,21 @@ export class ComposableStablePoolExit implements ExitConcern {
     const [
       sortedTokensWithoutBpt,
       sortedUpScaledBalances,
-      sortedScalingFactorsWithoutBpt,
+      sortedPriceRatesWithoutBpt,
     ] = assetHelpers.sortTokens(
       parsedTokensWithoutBpt,
       upScaledBalances,
-      scalingFactorsWithoutBpt
+      parsedPriceRatesWithoutBpt
     ) as [string[], string[], string[]];
 
     const [, sortedAmountsOut] = assetHelpers.sortTokens(
       tokensOut,
       amountsOut
     ) as [string[], string[]];
-    // Maths should use upscaled amounts, e.g. 1USDC => 1e18 not 1e6
+    // Maths should use upscaled amounts with rates, e.g. 1USDC => 1e18 not 1e6
     const upScaledAmountsOut = _upscaleArray(
       sortedAmountsOut.map((a) => BigInt(a)),
-      sortedScalingFactorsWithoutBpt.map((a) => BigInt(a))
+      sortedPriceRatesWithoutBpt.map((a) => BigInt(a))
     );
     // Calculate expected BPT in given tokens out
     const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(

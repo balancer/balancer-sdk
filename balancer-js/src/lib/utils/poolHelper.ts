@@ -44,7 +44,7 @@ export const parsePoolInfo = (
   let parsedPriceRates = pool.tokens.map((token) => {
     return token.priceRate
       ? parseFixed(token.priceRate, 18).toString()
-      : undefined;
+      : '1000000000000000000';
   });
   if (wrappedNativeAsset) {
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
@@ -77,7 +77,9 @@ export const parsePoolInfo = (
 
   const scalingFactorsWithoutBpt: bigint[] = [],
     parsedTokensWithoutBpt: string[] = [],
-    parsedBalancesWithoutBpt: string[] = [];
+    parsedBalancesWithoutBpt: string[] = [],
+    parsedPriceRatesWithoutBpt: string[] = [],
+    upScaledBalancesWithoutBpt: string[] = [];
   const bptIndex = parsedTokens.indexOf(pool.address);
   if (bptIndex !== -1) {
     scalingFactors.forEach((_, i) => {
@@ -85,6 +87,8 @@ export const parsePoolInfo = (
         scalingFactorsWithoutBpt.push(scalingFactors[i]);
         parsedTokensWithoutBpt.push(parsedTokens[i]);
         parsedBalancesWithoutBpt.push(parsedBalances[i]);
+        parsedPriceRatesWithoutBpt.push(parsedPriceRates[i]);
+        upScaledBalancesWithoutBpt.push(upScaledBalances[i]);
       }
     });
   }
@@ -104,5 +108,7 @@ export const parsePoolInfo = (
     parsedTokensWithoutBpt,
     parsedBalancesWithoutBpt,
     bptIndex,
+    parsedPriceRatesWithoutBpt,
+    upScaledBalancesWithoutBpt,
   };
 };
