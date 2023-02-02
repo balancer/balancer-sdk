@@ -3,6 +3,7 @@
  *
  * 1. Pool fees in last 24hrs
  */
+import { isLessThan24Hours } from '@/lib/utils/time';
 import { Pool, Findable, PoolAttribute } from '@/types';
 
 export class PoolVolume {
@@ -18,7 +19,15 @@ export class PoolVolume {
       yesterdaysPool = await this.yesterdaysPools.find(pool.id);
     }
 
-    if (!pool.totalSwapVolume || !yesterdaysPool?.totalSwapVolume) {
+    if (!pool.totalSwapVolume) {
+      return 0;
+    }
+
+    if (!yesterdaysPool?.totalSwapVolume) {
+      // Process edge case when pool creation time is less that 24h
+      if (pool.createTime && isLessThan24Hours(pool.createTime)) {
+        return parseFloat(pool.totalSwapVolume);
+      }
       return 0;
     }
 
