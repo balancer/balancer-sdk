@@ -69,6 +69,7 @@ export class ComposableStablePoolExit implements ExitConcern {
       bptIndex,
       parsedPriceRates,
       upScaledBalancesWithoutBpt,
+      scalingFactors,
       //NOT PASSING wrappedNativeAsset BECAUSE singleTokenMaxOutIndex MUST BE FROM THE ORIGINAL pool.tokens ARRAY
     } = parsePoolInfo(pool, undefined, shouldUnwrapNativeAsset);
 
@@ -91,8 +92,9 @@ export class ComposableStablePoolExit implements ExitConcern {
 
       const amountOutDownscaled = _downscaleDown(
         amountOut,
-        BigInt(parsedPriceRates[singleTokenMaxOutIndex]) *
-          BigInt(scalingFactors[singleTokenMaxOutIndex])
+        (BigInt(parsedPriceRates[singleTokenMaxOutIndex]) *
+          BigInt(scalingFactors[singleTokenMaxOutIndex])) /
+          BigInt(1e18)
       );
 
       expectedAmountsOut[singleTokenMaxOutIndex] =
