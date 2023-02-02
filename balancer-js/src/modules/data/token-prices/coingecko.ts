@@ -45,10 +45,13 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   }: { signal?: AbortSignal } = {}): Promise<Price> {
     console.time(`fetching coingecko for native token`);
     enum Assets {
-      ETH = 'matic-network',
-      MATIC = 'ethereum',
+      ETH = 'ethereum',
+      MATIC = 'matic-network',
+      XDAI = 'xdai',
     }
-    const assetId = this.chainId === 137 ? 'matic-network' : 'ethereum';
+    let assetId: Assets = Assets.ETH;
+    if (this.chainId === 137) assetId = Assets.MATIC;
+    if (this.chainId === 100) assetId = Assets.XDAI;
     return axios
       .get<{ [key in Assets]: Price }>(
         `https://api.coingecko.com/api/v3/simple/price/?vs_currencies=eth,usd&ids=${assetId}`,
@@ -108,6 +111,8 @@ export class CoingeckoPriceRepository implements Findable<Price> {
       case 42:
       case 31337:
         return 'ethereum';
+      case 100:
+        return 'xdai';
       case 137:
         return 'polygon-pos';
       case 42161:

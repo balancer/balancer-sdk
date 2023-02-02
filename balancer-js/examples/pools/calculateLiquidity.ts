@@ -28,7 +28,7 @@ TOKENS.forEach((token) => {
 });
 
 const pools = new Map<string, Pool>();
-POOLS.forEach((pool) => pools.set(pool.id, {...pool, poolTypeVersion: 1, protocolYieldFeeCache: '0'} as Pool));
+POOLS.forEach((pool) => pools.set(pool.id, { ...pool, poolTypeVersion: 1, protocolYieldFeeCache: '0', protocolSwapFeeCache: '0' } as Pool));
 const poolProvider = findable<Pool>(pools);
 const tokenPriceProvider = new StaticTokenPriceProvider(tokenPrices);
 

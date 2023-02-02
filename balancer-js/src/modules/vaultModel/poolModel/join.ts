@@ -61,6 +61,7 @@ export class JoinModel {
   }
 
   allTokensInForExactBPTOut(encodedUserData: string, pool: Pool): string {
+    console.log(encodedUserData, pool);
     throw new Error('joinAllTokensInForExactBPTOut not supported');
     /*
           We need maths for _calcAllTokensInGivenExactBptOut

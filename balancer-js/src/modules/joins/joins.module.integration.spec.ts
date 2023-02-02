@@ -12,12 +12,11 @@ import {
 } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { forkSetup, getBalances } from '@/test/lib/utils';
+import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { SimulationType } from '../simulation/simulation.module';
-import { WeiPerEther } from '@ethersproject/constants';
 
 dotenv.config();
 
@@ -72,6 +71,7 @@ const tenderlyConfig: BalancerTenderlyConfig = {
   blockNumber,
 };
 
+// This filters to pool addresses of interest to avoid too many onchain calls during tests
 const poolAddresses = Object.values(addresses).map(
   (address) => address.address
 );
@@ -127,8 +127,6 @@ const runTests = async (tests: Test[]) => {
   for (let i = 0; i < tests.length; i++) {
     const test = tests[i];
     it(test.description, async () => {
-      // const userAddress = '0xb7d222a710169f42ddff2a9a5122bd7c724dc203';
-      // const authorisation = undefined;
       const userAddress = await test.signer.getAddress();
       const authorisation = await Relayer.signRelayerApproval(
         relayer,
@@ -205,13 +203,9 @@ const testFlow = async (
   console.log(query.minOut, 'minOut');
   console.log(query.expectedOut, 'expectedOut');
 
-  const modelInaccuracy = bptBalanceAfter
-    .sub(query.expectedOut)
-    .mul(WeiPerEther)
-    .div(query.expectedOut)
-    .abs();
-  const inaccuracyLimit = WeiPerEther.div(100); // inaccuracy should not be over to 1%
-  expect(modelInaccuracy.lte(inaccuracyLimit)).to.be.true;
+  expect(
+    accuracy(bptBalanceAfter, BigNumber.from(query.expectedOut))
+  ).to.be.closeTo(1, 1e-2); // inaccuracy should not be over to 1%
 };
 
 // following contexts currently applies to GOERLI only

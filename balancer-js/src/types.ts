@@ -3,7 +3,8 @@ import type { BigNumberish } from '@ethersproject/bignumber';
 import type { Contract } from '@ethersproject/contracts';
 import type { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 import type {
-  ExitPoolAttributes,
+  ExitExactBPTInAttributes,
+  ExitExactTokensOutAttributes,
   JoinPoolAttributes,
 } from './modules/pools/pool-types/concerns/types';
 import type {
@@ -23,7 +24,7 @@ import type {
 } from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
-import { OnChainPoolsRepository } from '@/modules/sor/pool-data/subgraphPoolDataService';
+import { SubgraphPoolDataService } from '@/modules/sor/pool-data/subgraphPoolDataService';
 import * as Queries from '@/modules/pools/queries/types';
 export * from '@/modules/data/types';
 export { Network, AprBreakdown };
@@ -73,6 +74,8 @@ export interface ContractAddresses {
   veBal?: string;
   veBalProxy?: string;
   protocolFeePercentagesProvider?: string;
+  weightedPoolFactory?: string;
+  composableStablePoolFactory?: string;
 }
 
 export interface BalancerNetworkConfig {
@@ -98,11 +101,13 @@ export interface BalancerNetworkConfig {
   pools: {
     wETHwstETH?: PoolReference;
   };
+  poolsToIgnore?: string[];
+  sorConnectingTokens?: { symbol: string; address: string }[];
 }
 
 export interface BalancerDataRepositories {
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
-  poolsForSor: OnChainPoolsRepository;
+  poolsForSor: SubgraphPoolDataService;
   poolsOnChain: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
@@ -273,6 +278,7 @@ export interface Pool {
   poolTypeVersion: number;
   swapFee: string;
   protocolYieldFeeCache: string;
+  protocolSwapFeeCache: string;
   owner?: string;
   factory?: string;
   tokens: PoolToken[];
@@ -332,18 +338,14 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     slippage: string,
     shouldUnwrapNativeAsset?: boolean,
     singleTokenMaxOut?: string
-  ) => ExitPoolAttributes;
+  ) => ExitExactBPTInAttributes;
   buildExitExactTokensOut: (
     exiter: string,
     tokensOut: string[],
     amountsOut: string[],
     slippage: string
-  ) => ExitPoolAttributes;
-  calcSpotPrice: (
-    tokenIn: string,
-    tokenOut: string,
-    isDefault?: boolean
-  ) => string;
+  ) => ExitExactTokensOutAttributes;
+  calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
 }
 
 export interface GraphQLQuery {

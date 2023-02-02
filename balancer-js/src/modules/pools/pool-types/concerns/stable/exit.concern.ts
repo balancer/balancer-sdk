@@ -3,12 +3,13 @@ import { AddressZero } from '@ethersproject/constants';
 import * as SOR from '@balancer-labs/sor';
 import {
   ExitConcern,
+  ExitExactBPTInAttributes,
+  ExitExactTokensOutAttributes,
   ExitExactBPTInParameters,
   ExitExactTokensOutParameters,
   ExitPool,
-  ExitPoolAttributes,
 } from '../types';
-import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
+import { AssetHelpers, isSameAddress, parsePoolInfo } from '@/lib/utils';
 import { Vault__factory } from '@balancer-labs/typechain';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { balancerVault } from '@/lib/constants/config';
@@ -25,14 +26,16 @@ export class StablePoolExit implements ExitConcern {
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenMaxOut,
-  }: ExitExactBPTInParameters): ExitPoolAttributes => {
+  }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
     if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
       throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
     }
     if (
       singleTokenMaxOut &&
       singleTokenMaxOut !== AddressZero &&
-      !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)
+      !pool.tokens
+        .map((t) => t.address)
+        .some((a) => isSameAddress(a, singleTokenMaxOut))
     ) {
       throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
     }
@@ -71,6 +74,7 @@ export class StablePoolExit implements ExitConcern {
         scalingFactors
       ) as [string[], string[], string[]];
 
+    let expectedAmountsOut = Array(parsedTokens.length).fill('0');
     let minAmountsOut = Array(parsedTokens.length).fill('0');
     let userData: string;
 
@@ -88,6 +92,8 @@ export class StablePoolExit implements ExitConcern {
         BigInt(parsedTotalShares),
         BigInt(parsedSwapFee)
       ).toString();
+
+      expectedAmountsOut[singleTokenMaxOutIndex] = amountOut;
 
       // Apply slippage tolerance
       minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
@@ -114,6 +120,11 @@ export class StablePoolExit implements ExitConcern {
         amountsOut.map((a) => BigInt(a)),
         sortedScalingFactors.map((a) => BigInt(a))
       );
+
+      expectedAmountsOut = amountsOutScaledDown.map((amount) =>
+        amount.toString()
+      );
+
       // Apply slippage tolerance
       minAmountsOut = amountsOutScaledDown.map((amount) => {
         const minAmount = subSlippage(
@@ -154,8 +165,8 @@ export class StablePoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
+      expectedAmountsOut,
       minAmountsOut,
-      maxBPTIn: bptIn,
     };
   };
 
@@ -166,7 +177,7 @@ export class StablePoolExit implements ExitConcern {
     amountsOut,
     slippage,
     wrappedNativeAsset,
-  }: ExitExactTokensOutParameters): ExitPoolAttributes => {
+  }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
     if (
       tokensOut.length != amountsOut.length ||
       tokensOut.length != pool.tokensList.length
@@ -256,7 +267,7 @@ export class StablePoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
-      minAmountsOut: sortedAmountsOut,
+      expectedBPTIn: bptIn,
       maxBPTIn,
     };
   };

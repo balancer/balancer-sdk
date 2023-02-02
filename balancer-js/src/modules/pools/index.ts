@@ -19,9 +19,12 @@ import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
 import { Simulation, SimulationType } from '../simulation/simulation.module';
 import { PoolGraph } from '../graph/graph';
+import { PoolFactory__factory } from './pool-factory__factory';
 import * as Queries from './queries';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { BalancerError } from '@/balancerErrors';
+import { EmissionsService } from './emissions';
+import { proportionalAmounts } from './proportional-amounts';
 
 const notImplemented = (poolType: string, name: string) => () => {
   throw `${name} for poolType ${poolType} not implemented`;
@@ -38,8 +41,11 @@ export class Pools implements Findable<PoolWithMethods> {
   feesService;
   volumeService;
   simulationService;
+  poolFactory;
   impermanentLossService;
   graphService;
+  emissionsService;
+  proportionalAmounts;
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
@@ -76,10 +82,17 @@ export class Pools implements Findable<PoolWithMethods> {
     );
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
+    this.poolFactory = new PoolFactory__factory(networkConfig);
     this.impermanentLossService = new ImpermanentLossService(
       repositories.tokenPrices,
       repositories.tokenHistoricalPrices
     );
+    if (repositories.liquidityGauges) {
+      this.emissionsService = new EmissionsService(
+        repositories.liquidityGauges
+      );
+    }
+    this.proportionalAmounts = proportionalAmounts;
   }
 
   dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
@@ -127,7 +140,7 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param userAddress     User address
    * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param signer          JsonRpcSigner that will sign the staticCall transaction
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
    * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
@@ -296,17 +309,15 @@ export class Pools implements Findable<PoolWithMethods> {
         // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
         // spotPrice: async (tokenIn: string, tokenOut: string) =>
         //   methods.spotPriceCalculator.calcPoolSpotPrice(tokenIn, tokenOut, data),
-        calcSpotPrice: (
-          tokenIn: string,
-          tokenOut: string,
-          isDefault?: boolean
-        ) =>
+        calcSpotPrice: (tokenIn: string, tokenOut: string) =>
           concerns.spotPriceCalculator.calcPoolSpotPrice(
             tokenIn,
             tokenOut,
-            pool,
-            isDefault
+            pool
           ),
+        calcProportionalAmounts: (token: string, amount: string) => {
+          return proportionalAmounts(pool, token, amount);
+        },
       };
     } catch (error) {
       if ((error as BalancerError).code != 'UNSUPPORTED_POOL_TYPE') {

@@ -1,12 +1,13 @@
 import {
   ExitConcern,
-  ExitExactBPTInSingleTokenOutParameters,
+  ExitExactBPTInParameters,
   ExitExactTokensOutParameters,
-  ExitPoolAttributes,
+  ExitExactBPTInAttributes,
+  ExitExactTokensOutAttributes,
 } from '../types';
 
 export class ComposableStablePoolExit implements ExitConcern {
-  buildExitSingleTokenOut = ({
+  buildExitExactBPTIn = ({
     exiter,
     pool,
     bptIn,
@@ -14,7 +15,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenMaxOut,
-  }: ExitExactBPTInSingleTokenOutParameters): ExitPoolAttributes => {
+  }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
     // TODO implementation
     console.log(
       exiter,
@@ -36,7 +37,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     amountsOut,
     slippage,
     wrappedNativeAsset,
-  }: ExitExactTokensOutParameters): ExitPoolAttributes => {
+  }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
     // TODO implementation
     console.log(
       exiter,

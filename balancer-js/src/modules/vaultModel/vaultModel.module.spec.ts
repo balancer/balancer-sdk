@@ -6,7 +6,6 @@ import { parseFixed } from '@ethersproject/bignumber';
 
 import { Network, SubgraphPoolBase, SwapType } from '@/.';
 import { WeightedPoolEncoder } from '@/pool-weighted/encoder';
-import { PoolType } from '@/types';
 import { VaultModel, ActionType } from './vaultModel.module';
 import { ExitPoolRequest } from './poolModel/exit';
 import { BatchSwapRequest } from './poolModel/swap';

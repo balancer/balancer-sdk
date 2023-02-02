@@ -22,7 +22,7 @@ describe('phantomStable pool spot price', () => {
         ADDRESSES[network].bbausdcOld.address,
         pool
       );
-      expect(spotPrice).to.eq('0.997873677414938406552928560423740375');
+      expect(spotPrice).to.eq('0.997841372993511964077587098034000689');
     });
   });
 });

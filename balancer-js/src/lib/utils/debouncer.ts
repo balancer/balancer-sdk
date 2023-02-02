@@ -64,8 +64,14 @@ export class Debouncer<T, A> {
           this.debounceCancel = () => {};
         })
         .catch((reason) => {
+          if (
+            reason.response &&
+            reason.response.data &&
+            reason.response.data.error
+          ) {
+            reason = reason.response.data.error;
+          }
           reject(reason);
-          console.error(reason);
         });
     }, this.wait);
 

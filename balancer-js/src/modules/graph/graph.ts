@@ -149,8 +149,7 @@ export class PoolGraph {
       const sp = spotPriceCalculator.calcPoolSpotPrice(
         token.address,
         pool.address,
-        pool,
-        true
+        pool
       );
       spotPrices[token.address] = sp;
     });

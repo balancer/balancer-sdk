@@ -1,5 +1,16 @@
+import dotenv from 'dotenv';
 import { Network } from '@/lib/constants/network';
 import { AddressZero } from '@ethersproject/constants';
+
+dotenv.config();
+
+export const PROVIDER_URLS = {
+  [Network.MAINNET]: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
+  [Network.GOERLI]: `https://goerli.infura.io/v3/${process.env.INFURA}`,
+  [Network.KOVAN]: `https://kovan.infura.io/v3/${process.env.INFURA}`,
+  [Network.POLYGON]: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA}`,
+  [Network.ARBITRUM]: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA}`,
+};
 
 export const ADDRESSES = {
   [Network.MAINNET]: {
@@ -127,6 +138,7 @@ export const ADDRESSES = {
       address: '0x82698aeCc9E28e9Bb27608Bd52cF57f704BD1B83'.toLowerCase(),
       decimals: 18,
       symbol: 'bbausdc',
+      slot: 0,
     },
     bbausdt: {
       address: '0x2F4eb100552ef93840d5aDC30560E5513DFfFACb'.toLowerCase(),
@@ -137,6 +149,7 @@ export const ADDRESSES = {
       address: '0xae37D54Ae477268B9997d4161B96b8200755935c'.toLowerCase(),
       decimals: 18,
       symbol: 'bbadai',
+      slot: 0,
     },
     wstETH_bbaUSD: {
       id: '0x25accb7943fd73dda5e23ba6329085a3c24bfb6a000200000000000000000387',
@@ -360,6 +373,11 @@ export const ADDRESSES = {
       symbol: 'bb-am-usd',
       slot: 0,
     },
+    brz: {
+      address: '0x491a4eb4f1fc3bff8e1d2fc856a6a46663ad556f',
+      decimals: 4,
+      symbol: 'BRZ',
+    },
   },
   [Network.ARBITRUM]: {
     WETH: {
@@ -414,6 +432,33 @@ export const ADDRESSES = {
       decimals: 6,
       symbol: 'waUSDT',
       slot: 52,
+    },
+  },
+  [Network.GNOSIS]: {
+    WETH: {
+      address: '0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1',
+      decimals: 18,
+      symbol: 'WETH',
+    },
+    BAL: {
+      address: '0x7eF541E2a22058048904fE5744f9c7E4C57AF717',
+      decimals: 18,
+      symbol: 'BAL',
+    },
+    USDC: {
+      address: '0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83',
+      decimals: 6,
+      symbol: 'USDC',
+    },
+    WXDAI: {
+      address: '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d',
+      decimals: 18,
+      symbol: 'DAI',
+    },
+    USDT: {
+      address: '0x4ECaBa5870353805a9F068101A40E0f32ed605C6',
+      decimals: 6,
+      symbol: 'USDT',
     },
   },
   [Network.GOERLI]: {

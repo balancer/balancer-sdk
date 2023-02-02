@@ -15,10 +15,11 @@ import { JoinModel, JoinPoolRequest } from './join';
 
 import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
+import { accuracy } from '@/test/lib/utils';
 import { getPoolBalances } from './utils';
 
 import pools_14717479 from '@/test/lib/pools_14717479.json';
-import pools_15840286 from '@/test/lib/pools_15840286.json';
+import pools_16428572 from '@/test/lib/pools_16428572.json';
 
 dotenv.config();
 
@@ -28,7 +29,7 @@ const poolWeighted = pools_14717479.find(
     '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e' // B_50WBTC_50WETH
 ) as unknown as SubgraphPoolBase;
 
-const poolComposableStable = pools_15840286.find(
+const poolComposableStableNoFee = pools_16428572.find(
   (pool) =>
     pool.id ==
     '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d' // bbausd
@@ -42,7 +43,7 @@ describe('joinModel', () => {
     joinModel = new JoinModel(relayerModel);
     const poolsRepository = new MockPoolDataService([
       cloneDeep(poolWeighted),
-      cloneDeep(poolComposableStable),
+      cloneDeep(poolComposableStableNoFee),
     ]);
     const pools = new PoolsSource(
       poolsRepository,
@@ -90,23 +91,33 @@ describe('joinModel', () => {
         { pool: joinPool, tokens: [...tokensIn, poolWeighted.address] },
       ]);
       expect(tokens).to.deep.eq([...tokensIn, joinPool.address]);
-      expect(amounts).to.deep.eq([
+      const expectedAmounts = [
         '123000000',
         '10700000000000000000',
-        '-7314757264527952668',
-      ]);
+        '-7314757293306744413', // From Tenderly Simulation
+      ];
+      amounts.forEach((a, i) => {
+        expect(
+          accuracy(BigNumber.from(a), BigNumber.from(expectedAmounts[i]))
+        ).to.be.closeTo(1, 1e-4); // inaccuracy limit of 1 bps
+      });
+
       expect(
         BigNumber.from(balancesAfter[0]).sub(balancesBefore[0]).toString()
       ).to.eq(amountsIn[0]);
       expect(
         BigNumber.from(balancesAfter[1]).sub(balancesBefore[1]).toString()
       ).to.eq(amountsIn[1]);
+      // There is an inaccuracy on the math due to unhandled protocol fees on TS math
       expect(
-        BigNumber.from(balancesAfter[2]).sub(balancesBefore[2]).toString()
-      ).to.eq('7314757264527952668');
+        accuracy(
+          BigNumber.from(balancesAfter[2]).sub(balancesBefore[2]),
+          BigNumber.from(expectedAmounts[2]).mul(-1)
+        )
+      ).to.be.closeTo(1, 1e-4);
     });
     it('ComposableStable - joinExactTokensInForBPTOut', async () => {
-      const poolId = poolComposableStable.id;
+      const poolId = poolComposableStableNoFee.id;
       const joinPool = poolsDictionary[poolId];
       const tokensIn = [
         ADDRESSES[Network.MAINNET].bbausdt.address,
@@ -153,12 +164,15 @@ describe('joinModel', () => {
       expect(
         BigNumber.from(balancesAfter[2]).sub(balancesBefore[2]).toString()
       ).to.eq(amountsIn[2]);
-      expect(amounts).to.deep.eq([
+
+      expect(amounts.slice(0, -1)).to.deep.eq([
         '1230000000000000000',
         '10700000000000000000',
         '1099543200000000000000',
-        '-1111327432434158659003', // TODO - This result is innacurate when compared to Tenderly
       ]); // From Tenderly
+      const bptOut = BigNumber.from(amounts[3]);
+      const expectedBptOut = BigNumber.from('-1110698206088016093708'); // From Tenderly
+      expect(bptOut.toString()).to.eq(expectedBptOut.toString());
     });
   });
 });

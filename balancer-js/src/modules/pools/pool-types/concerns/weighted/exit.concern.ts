@@ -5,9 +5,10 @@ import {
   ExitExactBPTInParameters,
   ExitExactTokensOutParameters,
   ExitPool,
-  ExitPoolAttributes,
+  ExitExactBPTInAttributes,
+  ExitExactTokensOutAttributes,
 } from '../types';
-import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
+import { AssetHelpers, isSameAddress, parsePoolInfo } from '@/lib/utils';
 import { Vault__factory } from '@balancer-labs/typechain';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
@@ -24,14 +25,16 @@ export class WeightedPoolExit implements ExitConcern {
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenMaxOut,
-  }: ExitExactBPTInParameters): ExitPoolAttributes => {
+  }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
     if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
       throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
     }
     if (
       singleTokenMaxOut &&
       singleTokenMaxOut !== AddressZero &&
-      !pool.tokens.map((t) => t.address).some((a) => a === singleTokenMaxOut)
+      !pool.tokens
+        .map((t) => t.address)
+        .some((a) => isSameAddress(a, singleTokenMaxOut))
     ) {
       throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
     }
@@ -63,6 +66,7 @@ export class WeightedPoolExit implements ExitConcern {
         parsedWeights
       ) as [string[], string[], string[]];
 
+    let expectedAmountsOut = Array(sortedTokens.length).fill('0');
     let minAmountsOut = Array(sortedTokens.length).fill('0');
     let userData: string;
 
@@ -80,6 +84,8 @@ export class WeightedPoolExit implements ExitConcern {
         BigInt(parsedSwapFee)
       ).toString();
 
+      expectedAmountsOut[singleTokenMaxOutIndex] = amountOut;
+
       // Apply slippage tolerance
       minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
         BigNumber.from(amountOut),
@@ -94,14 +100,14 @@ export class WeightedPoolExit implements ExitConcern {
       // Exit pool with all tokens proportinally
 
       // Calculate amounts out given BPT in
-      const amountsOut = SOR.WeightedMaths._calcTokensOutGivenExactBptIn(
+      expectedAmountsOut = SOR.WeightedMaths._calcTokensOutGivenExactBptIn(
         sortedBalances.map((b) => BigInt(b)),
         BigInt(bptIn),
         BigInt(parsedTotalShares)
       ).map((amount) => amount.toString());
 
       // Apply slippage tolerance
-      minAmountsOut = amountsOut.map((amount) => {
+      minAmountsOut = expectedAmountsOut.map((amount) => {
         const minAmount = subSlippage(
           BigNumber.from(amount),
           BigNumber.from(slippage)
@@ -140,8 +146,8 @@ export class WeightedPoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
+      expectedAmountsOut,
       minAmountsOut,
-      maxBPTIn: bptIn,
     };
   };
 
@@ -152,7 +158,7 @@ export class WeightedPoolExit implements ExitConcern {
     amountsOut,
     slippage,
     wrappedNativeAsset,
-  }: ExitExactTokensOutParameters): ExitPoolAttributes => {
+  }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
     if (
       tokensOut.length != amountsOut.length ||
       tokensOut.length != pool.tokensList.length
@@ -229,7 +235,7 @@ export class WeightedPoolExit implements ExitConcern {
       functionName,
       attributes,
       data,
-      minAmountsOut: sortedAmounts,
+      expectedBPTIn: bptIn,
       maxBPTIn,
     };
   };

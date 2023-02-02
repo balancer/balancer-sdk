@@ -1,24 +1,34 @@
 import { formatFixed } from '@ethersproject/bignumber';
 import { Provider } from '@ethersproject/providers';
-import { PoolFilter, SubgraphPoolBase } from '@balancer-labs/sor';
+import {
+  PoolFilter,
+  SubgraphPoolBase,
+  SubgraphToken,
+} from '@balancer-labs/sor';
 import { Multicaller } from '@/lib/utils/multiCaller';
 import { isSameAddress } from '@/lib/utils';
 import { Vault__factory } from '@balancer-labs/typechain';
+import { Pool, PoolToken } from '@/types';
 
 // TODO: decide whether we want to trim these ABIs down to the relevant functions
 import aTokenRateProvider from '@/lib/abi/StaticATokenRateProvider.json';
+
 import weightedPoolAbi from '@/lib/abi/WeightedPool.json';
 import stablePoolAbi from '@/lib/abi/StablePool.json';
 import elementPoolAbi from '@/lib/abi/ConvergentCurvePool.json';
 import linearPoolAbi from '@/lib/abi/LinearPool.json';
 import composableStableAbi from '@/lib/abi/ComposableStable.json';
 
-export async function getOnChainBalances(
-  subgraphPoolsOriginal: SubgraphPoolBase[],
+export async function getOnChainBalances<
+  GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
+    tokens: (SubgraphToken | PoolToken)[];
+  }
+>(
+  subgraphPoolsOriginal: GenericPool[],
   multiAddress: string,
   vaultAddress: string,
   provider: Provider
-): Promise<SubgraphPoolBase[]> {
+): Promise<GenericPool[]> {
   if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,7 +50,7 @@ export async function getOnChainBalances(
   const multiPool = new Multicaller(multiAddress, provider, abis);
 
   const supportedPoolTypes: string[] = Object.values(PoolFilter);
-  const subgraphPools: SubgraphPoolBase[] = [];
+  const subgraphPools: GenericPool[] = [];
   subgraphPoolsOriginal.forEach((pool) => {
     if (!supportedPoolTypes.includes(pool.poolType)) {
       console.error(`Unknown pool type: ${pool.poolType} ${pool.id}`);
@@ -172,7 +182,7 @@ export async function getOnChainBalances(
     throw `Issue with multicall execution.`;
   }
 
-  const onChainPools: SubgraphPoolBase[] = [];
+  const onChainPools: GenericPool[] = [];
 
   Object.entries(pools).forEach(([poolId, onchainData], index) => {
     try {
@@ -233,9 +243,8 @@ export async function getOnChainBalances(
       subgraphPools[index].swapFee = formatFixed(swapFee, 18);
 
       poolTokens.tokens.forEach((token, i) => {
-        const T = subgraphPools[index].tokens.find((t) =>
-          isSameAddress(t.address, token)
-        );
+        const tokens = subgraphPools[index].tokens;
+        const T = tokens.find((t) => isSameAddress(t.address, token));
         if (!T) throw `Pool Missing Expected Token: ${poolId} ${token}`;
         T.balance = formatFixed(poolTokens.balances[i], T.decimals);
         if (weights) {

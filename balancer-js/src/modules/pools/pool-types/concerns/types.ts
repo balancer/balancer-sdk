@@ -7,12 +7,7 @@ export interface LiquidityConcern {
 }
 
 export interface SpotPriceConcern {
-  calcPoolSpotPrice: (
-    tokenIn: string,
-    tokenOut: string,
-    pool: Pool,
-    isDefault?: boolean
-  ) => string;
+  calcPoolSpotPrice: (tokenIn: string, tokenOut: string, pool: Pool) => string;
 }
 
 export interface PriceImpactConcern {
@@ -56,7 +51,7 @@ export interface ExitConcern {
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenMaxOut,
-  }: ExitExactBPTInParameters) => ExitPoolAttributes;
+  }: ExitExactBPTInParameters) => ExitExactBPTInAttributes;
 
   /**
    * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
@@ -75,17 +70,7 @@ export interface ExitConcern {
     amountsOut,
     slippage,
     wrappedNativeAsset,
-  }: ExitExactTokensOutParameters) => ExitPoolAttributes;
-
-  buildExitSingleTokenOut?: ({
-    exiter,
-    pool,
-    bptIn,
-    slippage,
-    shouldUnwrapNativeAsset,
-    wrappedNativeAsset,
-    singleTokenMaxOut,
-  }: ExitExactBPTInSingleTokenOutParameters) => ExitPoolAttributes;
+  }: ExitExactTokensOutParameters) => ExitExactTokensOutAttributes;
 }
 
 export interface JoinPool {
@@ -120,12 +105,38 @@ export interface ExitPool {
   exitPoolRequest: ExitPoolRequest;
 }
 
-export interface ExitPoolAttributes {
+interface ExitPoolAttributes {
   to: string;
   functionName: string;
   attributes: ExitPool;
   data: string;
+}
+
+/**
+ * Exit exact BPT in transaction parameters
+ * @param to Address that will execute the transaction (vault address)
+ * @param functionName Function name to be called (exitPool)
+ * @param attributes Transaction attributes ready to be encoded
+ * @param data Encoded transaction data
+ * @param expectedAmountsOut Expected amounts out of exit transaction
+ * @param minAmountsOut Minimum amounts out of exit transaction considering slippage tolerance
+ */
+export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
+  expectedAmountsOut: string[];
   minAmountsOut: string[];
+}
+
+/**
+ * Exit exact tokens out transaction parameters
+ * @param to Address that will execute the transaction (vault address)
+ * @param functionName Function name to be called (exitPool)
+ * @param attributes Transaction attributes ready to be encoded
+ * @param data Encoded transaction data
+ * @param expectedBPTIn Expected BPT into exit transaction
+ * @param maxBPTIn Max BPT into exit transaction considering slippage tolerance
+ */
+export interface ExitExactTokensOutAttributes extends ExitPoolAttributes {
+  expectedBPTIn: string;
   maxBPTIn: string;
 }
 

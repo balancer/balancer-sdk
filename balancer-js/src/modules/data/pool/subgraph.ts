@@ -33,16 +33,16 @@ interface PoolsSubgraphRepositoryOptions {
   query?: GraphQLQuery;
 }
 
-export interface SubgraphSubPoolToken extends SubgraphSubPoolTokenFragment {
+interface SubgraphSubPoolToken extends SubgraphSubPoolTokenFragment {
   token?: SubgraphSubPoolMeta | null;
 }
 
-export interface SubgraphSubPoolMeta {
+interface SubgraphSubPoolMeta {
   latestUSDPrice?: string | null;
   pool?: SubgraphSubPool | null;
 }
 
-export interface SubgraphSubPool extends SubgraphSubPoolFragment {
+interface SubgraphSubPool extends SubgraphSubPoolFragment {
   tokens: SubgraphSubPoolToken[];
 }
 
@@ -81,7 +81,7 @@ export class PoolsSubgraphRepository
           eq: true,
         },
         totalShares: {
-          gt: 0,
+          gt: 0.000000000001,
         },
       },
     };
@@ -196,6 +196,7 @@ export class PoolsSubgraphRepository
       swapFee: subgraphPool.swapFee,
       swapEnabled: subgraphPool.swapEnabled,
       protocolYieldFeeCache: subgraphPool.protocolYieldFeeCache || '0',
+      protocolSwapFeeCache: subgraphPool.protocolSwapFeeCache || '0',
       amp: subgraphPool.amp ?? undefined,
       owner: subgraphPool.owner ?? undefined,
       factory: subgraphPool.factory ?? undefined,

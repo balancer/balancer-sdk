@@ -11,8 +11,13 @@ export class TokenPriceProvider implements Findable<Price> {
   async find(address: string): Promise<Price | undefined> {
     let price;
     try {
-      price = await this.coingeckoRepository.find(address);
-      if (!price?.usd) {
+      try {
+        price = await this.coingeckoRepository.find(address);
+        if (!price?.usd) {
+          throw new Error('Price not found');
+        }
+      } catch (err) {
+        console.error(`Coingecko API error: ${err}`);
         price = await this.subgraphRepository.find(address);
       }
     } catch (err) {
