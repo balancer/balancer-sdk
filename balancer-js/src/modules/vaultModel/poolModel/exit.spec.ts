@@ -132,7 +132,10 @@ describe('exitModel', () => {
         BigNumber.from(balancesBefore[1]).sub(balancesAfter[1]).toString()
       ).to.eq('0');
       expect(
-        BigNumber.from(balancesBefore[2]).sub(balancesAfter[2]).toString()
+        BigNumber.from(balancesBefore[2])
+          .sub(balancesAfter[2])
+          .mul(-1) // negative amount because it's comparing against the pre-minted balance decrease
+          .toString()
       ).to.eq(bptIn);
       expect(
         BigNumber.from(balancesBefore[3]).sub(balancesAfter[3]).toString()
