@@ -6,7 +6,7 @@ import {
 } from '../types';
 import { StableMathBigInt } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
+import { AssetHelpers, parsePoolInfo, insert } from '@/lib/utils';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { BigNumber } from '@ethersproject/bignumber';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
@@ -34,45 +34,37 @@ export class ComposableStablePoolJoin implements JoinConcern {
     if (pool.tokens.some((token) => !token.decimals))
       throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
 
+    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+
+    // amountsIn must be sorted in correct order. Currently ordered with relation to tokensIn so need sorted relative to those
+    const [, sortedAmountsIn] = assetHelpers.sortTokens(
+      tokensIn,
+      amountsIn
+    ) as [string[], string[]];
+
+    // This will order everything correctly based on pool tokens
     const {
       parsedTokens,
-      parsedBalances,
       parsedAmp,
       parsedSwapFee,
       parsedTotalShares,
-      scalingFactors,
-    } = parsePoolInfo(pool);
+      scalingFactorsWithoutBpt,
+      parsedBalancesWithoutBpt,
+      bptIndex,
+    } = parsePoolInfo(pool, wrappedNativeAsset);
     if (!parsedAmp) {
       throw new BalancerError(BalancerErrorCode.MISSING_AMP);
     }
 
-    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    const [, sortedAmounts] = assetHelpers.sortTokens(tokensIn, amountsIn) as [
-      string[],
-      string[]
-    ];
-
-    const [sortedTokensWithBpt, sortedBalances, sortedScalingFactors] =
-      assetHelpers.sortTokens(parsedTokens, parsedBalances, scalingFactors) as [
-        string[],
-        string[],
-        string[]
-      ];
-    const bptIndex = sortedTokensWithBpt.indexOf(pool.address);
-
-    sortedAmounts.splice(bptIndex, 0, '0');
-
-    const scaledAmounts = _upscaleArray(
-      sortedAmounts.map(BigInt),
-      sortedScalingFactors.map(BigInt)
+    const scaledAmountsIn = _upscaleArray(
+      sortedAmountsIn.map(BigInt),
+      scalingFactorsWithoutBpt.map(BigInt)
     );
-    sortedBalances.splice(bptIndex, 1);
-    scaledAmounts.splice(bptIndex, 1);
     //NEED TO SEND SORTED BALANCES AND AMOUNTS WITHOUT BPT VALUES
     const expectedBPTOut = StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp),
-      sortedBalances.map(BigInt),
-      scaledAmounts.map(BigInt),
+      parsedBalancesWithoutBpt.map(BigInt), // Should not have BPT
+      scaledAmountsIn, // Should not have BPT
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
     );
@@ -82,23 +74,21 @@ export class ComposableStablePoolJoin implements JoinConcern {
       BigNumber.from(slippage)
     ).toString();
 
-    sortedAmounts.splice(bptIndex, 1);
     //NEEDS TO ENCODE USER DATA WITHOUT BPT AMOUNT
     const userData = ComposableStablePoolEncoder.joinExactTokensInForBPTOut(
-      sortedAmounts,
+      sortedAmountsIn,
       minBPTOut
     );
 
     const functionName = 'joinPool';
-    sortedAmounts.splice(bptIndex, 0, '0');
     //assets AND maxAmountsIn NEEDS THE BPT VALUE IN THE ARRAY
     const attributes: JoinPool = {
       poolId: pool.id,
       sender: joiner,
       recipient: joiner,
       joinPoolRequest: {
-        assets: sortedTokensWithBpt,
-        maxAmountsIn: sortedAmounts,
+        assets: parsedTokens, // With BPT
+        maxAmountsIn: insert(sortedAmountsIn, bptIndex, '0'), // Need to add value for BPT
         userData,
         fromInternalBalance: false,
       },
