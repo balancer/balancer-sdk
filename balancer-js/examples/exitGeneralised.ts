@@ -9,6 +9,16 @@ import { Relayer } from '../src/modules/relayer/relayer.module';
 import { Contracts } from '../src/modules/contracts/contracts.module';
 import { SimulationType } from '../src/modules/simulation/simulation.module';
 
+// Expected frontend (FE) flow:
+// 1. User selects BPT amount to exit a pool
+// 2. FE calls exitGeneralised with simulation type VaultModel
+// 3. SDK calculates expectedAmountsOut that is at least 99% accurate
+// 4. User agrees expectedAmountsOut and approves relayer
+// 5. With approvals in place, FE calls exitGeneralised with simulation type Static
+// 6. SDK calculates expectedAmountsOut that is 100% accurate
+// 7. SDK returns exitGeneralised transaction data with proper minAmountsOut limits in place
+// 8. User is now able to submit a safe transaction to the blockchain
+
 dotenv.config();
 
 const {
@@ -29,7 +39,7 @@ const bbausd2 = {
 };
 
 // Setup local fork with correct balances/approval to exit bb-a-usd2 pool
-async function setUp(provider: JsonRpcProvider): Promise<string> {
+const setUp = async (provider: JsonRpcProvider) => {
   const signer = provider.getSigner();
   const signerAddress = await signer.getAddress();
 
@@ -45,19 +55,7 @@ async function setUp(provider: JsonRpcProvider): Promise<string> {
     jsonRpcUrl as string,
     blockNumber
   );
-
-  const { contracts, contractAddresses } = new Contracts(
-    network as number,
-    provider
-  );
-
-  return await Relayer.signRelayerApproval(
-    contractAddresses.relayerV4 as string,
-    signerAddress,
-    signer,
-    contracts.vault
-  );
-}
+};
 
 /*
 Example showing how to use the SDK generalisedExit method.
@@ -70,10 +68,10 @@ This allows exiting a ComposableStable that has nested pools, e.g.:
 
 Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
 */
-async function exit() {
+const exit = async () => {
   const provider = new JsonRpcProvider(rpcUrl, network);
   // Local fork setup
-  const relayerAuth = await setUp(provider);
+  await setUp(provider);
 
   const signer = provider.getSigner();
   const signerAddress = await signer.getAddress();
@@ -122,17 +120,43 @@ async function exit() {
   });
 
   // Use SDK to create exit transaction
-  const query = await balancer.pools.generalisedExit(
+  const { expectedAmountsOut } = await balancer.pools.generalisedExit(
     bbausd2.id,
     amount,
     signerAddress,
     slippage,
     signer,
     SimulationType.VaultModel,
+    undefined
+  );
+
+  // User reviews expectedAmountOut
+  console.log('Expected amounts out - VaultModel: ', expectedAmountsOut);
+
+  // User approves relayer
+  const { contracts, contractAddresses } = new Contracts(
+    network as number,
+    provider
+  );
+  const relayerAuth = await Relayer.signRelayerApproval(
+    contractAddresses.relayerV4 as string,
+    signerAddress,
+    signer,
+    contracts.vault
+  );
+
+  // Use SDK to create exit transaction
+  const query = await balancer.pools.generalisedExit(
+    bbausd2.id,
+    amount,
+    signerAddress,
+    slippage,
+    signer,
+    SimulationType.Static,
     relayerAuth
   );
 
-  // Checking balances to confirm success
+  // Checking balances before to confirm success
   const tokenBalancesBefore = (
     await getBalances(
       [bbausd2.address, ...query.tokensOut],
@@ -147,6 +171,7 @@ async function exit() {
     data: query.encodedCall,
   });
 
+  // Checking balances after to confirm success
   await transactionResponse.wait();
   const tokenBalancesAfter = (
     await getBalances(
@@ -162,6 +187,6 @@ async function exit() {
     expectedAmountsOut: ['0', ...query.expectedAmountsOut],
     minAmountsOut: ['0', ...query.minAmountsOut],
   });
-}
+};
 
 exit();

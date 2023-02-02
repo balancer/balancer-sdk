@@ -150,11 +150,6 @@ async function join() {
     subgraphQuery,
   });
 
-  // Checking balances to confirm success
-  const tokenBalancesBefore = (
-    await getBalances([bbausd2.address, ...tokensIn], signer, signerAddress)
-  ).map((b) => b.toString());
-
   // Use SDK to create join using either Tenderly or VaultModel simulation
   // Note that this does not require authorisation to be defined
   const { expectedOut } = await balancer.pools.generalisedJoin(
@@ -169,7 +164,7 @@ async function join() {
   );
 
   // User reviews expectedAmountOut
-  console.log('Expected BPT - inital simulation: ', expectedOut);
+  console.log('Expected BPT out - VaultModel: ', expectedOut);
 
   // User approves relayer
   const { contracts, contractAddresses } = new Contracts(
@@ -196,12 +191,18 @@ async function join() {
     authorisation
   );
 
+  // Checking balances before to confirm success
+  const tokenBalancesBefore = (
+    await getBalances([bbausd2.address, ...tokensIn], signer, signerAddress)
+  ).map((b) => b.toString());
+
   // Submit join tx
   const transactionResponse = await signer.sendTransaction({
     to: query.to,
     data: query.encodedCall,
   });
 
+  // Checking balances after to confirm success
   await transactionResponse.wait();
   const tokenBalancesAfter = (
     await getBalances([bbausd2.address, ...tokensIn], signer, signerAddress)
