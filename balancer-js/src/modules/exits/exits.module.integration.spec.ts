@@ -12,12 +12,11 @@ import {
 } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { forkSetup, getBalances } from '@/test/lib/utils';
+import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { SimulationType } from '../simulation/simulation.module';
-import { WeiPerEther } from '@ethersproject/constants';
 
 dotenv.config();
 
@@ -206,13 +205,7 @@ const testFlow = async (
     const minOut = BigNumber.from(minAmountsOut[i]);
     expect(balanceAfter.gte(minOut)).to.be.true;
     const expectedOut = BigNumber.from(expectedAmountsOut[i]);
-    const modelInaccuracy = balanceAfter
-      .sub(expectedOut)
-      .mul(WeiPerEther)
-      .div(expectedOut)
-      .abs();
-    const inaccuracyLimit = WeiPerEther.div(100); // inaccuracy should not be over to 1%
-    expect(modelInaccuracy.lte(inaccuracyLimit)).to.be.true;
+    expect(accuracy(balanceAfter, expectedOut)).to.be.closeTo(1, 1e-2); // inaccuracy should not be over to 1%
   });
 };
 
