@@ -1,22 +1,28 @@
 // yarn test:only ./src/modules/joins/joins.module.integration.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import hardhat from 'hardhat';
 
-import {
-  BalancerSDK,
-  BalancerTenderlyConfig,
-  GraphQLQuery,
-  GraphQLArgs,
-  Network,
-} from '@/.';
+import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import { Contracts } from '@/modules/contracts/contracts.module';
 import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { SimulationType } from '../simulation/simulation.module';
+
+/**
+ * -- Integration tests for generalisedJoin --
+ *
+ * It compares results from local fork transactions with simulated results from
+ * the Simulation module, which can be of 3 different types:
+ * 1. Tenderly: uses Tenderly Simulation API (third party service)
+ * 2. VaultModel: uses TS math, which may be less accurate (min. 99% accuracy)
+ * 3. Static: uses staticCall, which is 100% accurate but requires vault approval
+ */
+
+const simulationType = SimulationType.VaultModel;
 
 dotenv.config();
 
@@ -58,18 +64,7 @@ const rpcUrl = 'http://127.0.0.1:8000';
 // const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 // const rpcUrl = 'http://127.0.0.1:8545';
 
-const { TENDERLY_ACCESS_KEY, TENDERLY_USER, TENDERLY_PROJECT } = process.env;
-const { ethers } = hardhat;
-const MAX_GAS_LIMIT = 8e6;
 const addresses = ADDRESSES[network];
-
-// Custom Tenderly configuration parameters - remove in order to use default values
-const tenderlyConfig: BalancerTenderlyConfig = {
-  accessKey: TENDERLY_ACCESS_KEY as string,
-  user: TENDERLY_USER as string,
-  project: TENDERLY_PROJECT as string,
-  blockNumber,
-};
 
 // This filters to pool addresses of interest to avoid too many onchain calls during tests
 const poolAddresses = Object.values(addresses).map(
@@ -98,11 +93,10 @@ const sdk = new BalancerSDK({
   network,
   rpcUrl,
   customSubgraphUrl,
-  tenderly: tenderlyConfig,
   subgraphQuery,
 });
 const { pools } = sdk;
-const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
+const provider = new JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 const { contracts, contractAddresses } = new Contracts(
   network as number,
@@ -160,7 +154,7 @@ const testFlow = async (
     userAddress
   );
 
-  const gasLimit = MAX_GAS_LIMIT;
+  const gasLimit = 8e6;
   const slippage = '10'; // 10 bps = 0.1%
 
   const query = await pools.generalisedJoin(
@@ -171,7 +165,7 @@ const testFlow = async (
     wrapMainTokens,
     slippage,
     signer,
-    SimulationType.VaultModel,
+    simulationType,
     authorisation
   );
 
