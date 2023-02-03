@@ -10,6 +10,8 @@ export const PROVIDER_URLS = {
   [Network.KOVAN]: `https://kovan.infura.io/v3/${process.env.INFURA}`,
   [Network.POLYGON]: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA}`,
   [Network.ARBITRUM]: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA}`,
+  [Network.BSC]: `${process.env.BSC_RPC_URL}`,
+  [Network.BSCTESTNET]: `${process.env.BSCTESTNET_RPC_URL}`,
 };
 
 export const ADDRESSES = {
@@ -639,6 +641,70 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'BWMG1',
       slot: 0,
+    },
+  },
+  [Network.BSC]: {
+    BNB: {
+      address: AddressZero,
+      decimals: 18,
+      symbol: 'BNB',
+    },
+    USDC: {
+      address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+      decimals: 18,
+      symbol: 'USDC',
+    },
+    DAI: {
+      address: '0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3',
+      decimals: 18,
+      symbol: 'DAI',
+    },
+    USDT: {
+      address: '0x55d398326f99059fF775485246999027B3197955',
+      decimals: 18,
+      symbol: 'USDT',
+    },
+    BUSD: {
+      address: '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
+      decimals: 18,
+      symbol: 'BUSD',
+    },
+    BTC: {
+      address: '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c',
+      decimals: 18,
+      symbol: 'BTC',
+    },
+  },
+  [Network.BSCTESTNET]: {
+    tBNB: {
+      address: AddressZero,
+      decimals: 18,
+      symbol: 'tBNB',
+    },
+    USDC: {
+      address: '0x64544969ed7EBf5f083679233325356EbE738930',
+      decimals: 18,
+      symbol: 'USDC',
+    },
+    DAI: {
+      address: '0xEC5dCb5Dbf4B114C9d0F65BcCAb49EC54F6A0867',
+      decimals: 18,
+      symbol: 'DAI',
+    },
+    USDT: {
+      address: '0x55d398326f99059fF775485246999027B3197955',
+      decimals: 18,
+      symbol: 'USDT',
+    },
+    BUSD: {
+      address: '0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee',
+      decimals: 18,
+      symbol: 'BUSD',
+    },
+    BTC: {
+      address: '0x6ce8dA28E2f864420840cF74474eFf5fD80E65B8',
+      decimals: 18,
+      symbol: 'BTC',
     },
   },
 };

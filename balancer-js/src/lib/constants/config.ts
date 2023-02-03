@@ -274,6 +274,63 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
     ],
   },
+  [Network.BSC]: {
+    chainId: Network.BSC, //56
+    addresses: {
+      contracts: {
+        vault: '',
+        multicall: '',
+        relayerV4: '',
+        balancerHelpers: '',
+        weightedPoolFactory: '',
+        composableStablePoolFactory: '',
+      },
+      tokens: {
+        wrappedNativeAsset: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
+      gaugesSubgraph: '',
+    },
+    pools: {},
+    sorConnectingTokens: [
+      {
+        symbol: 'weth',
+        address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+      },
+    ],
+  },
+  [Network.BSCTESTNET]: {
+    chainId: Network.BSCTESTNET, //97
+    addresses: {
+      contracts: {
+        vault: '0x3ABf84a6f863D31B747fd702533d67cb4224c59d',
+        multicall: '0xA6949B8FBa9DF546b9c66F98CFCa960A96E3b68e',
+        relayerV4: '0x1ca11c7FdB41d7BD0c1df6D4a568268fCd3ADAB4',
+        balancerHelpers: '0x99fF451379772B0A1C0aA512b7794372ca0bCE29',
+        weightedPoolFactory: '0x7b61837701Fad187d24f11A0b02E08308cB3912D',
+        composableStablePoolFactory:
+          '0x3A476007D1D9996985cd8c772AF5EdFcc1547280',
+      },
+      tokens: {
+        wrappedNativeAsset: '0xE906CBeCd4A17DF62B8d6c8C82F3882af25295f5',
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
+      gaugesSubgraph: '',
+    },
+    pools: {},
+    sorConnectingTokens: [
+      {
+        symbol: 'weth',
+        address: '0xE906CBeCd4A17DF62B8d6c8C82F3882af25295f5',
+      },
+    ],
+  },
   [Network.GNOSIS]: {
     chainId: Network.GNOSIS, //100
     addresses: {
