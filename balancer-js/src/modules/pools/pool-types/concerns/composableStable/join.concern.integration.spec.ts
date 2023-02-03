@@ -1,3 +1,4 @@
+// yarn test:only ./src/modules/pools/pool-types/concerns/composableStable/join.concern.integration.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
@@ -69,7 +70,7 @@ describe('join execution', async () => {
       parseFixed('101', 18).toString(),
       parseFixed('102', 18).toString(),
     ];
-    const slippage = '100';
+    const slippage = '0';
 
     before(async function () {
       this.timeout(20000);
@@ -131,7 +132,7 @@ describe('join execution', async () => {
       parseFixed('0.2', 18).toString(),
       parseFixed('3.1', 18).toString(),
     ];
-    const slippage = '100';
+    const slippage = '0';
     before(async function () {
       this.timeout(20000);
 
@@ -188,7 +189,7 @@ describe('join execution', async () => {
 
   context('join transaction - single token join', () => {
     const amountsIn = [parseFixed('0.001', 18).toString()];
-    const slippage = '10';
+    const slippage = '0';
     it('should fail on number of input tokens', async () => {
       let errorMessage;
       try {
