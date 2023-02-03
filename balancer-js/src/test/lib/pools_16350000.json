@@ -61,5 +61,55 @@
     "mainIndex": null,
     "lowerTarget": null,
     "upperTarget": null
+  },
+  {
+    "id": "0xa13a9247ea42d743238089903570127dda72fe4500000000000000000000035e",
+    "name": "ComposableStableV2",
+    "address": "0xa13a9247ea42d743238089903570127dda72fe45",
+    "poolType": "ComposableStable",
+    "swapFee": "0.00001",
+    "totalShares": "63385632.664269969916874391",
+    "poolTypeVersion": 2,
+    "tokens": [
+      {
+        "balance": "20372159.487768353268084155",
+        "address": "0x2f4eb100552ef93840d5adc30560e5513dfffacc",
+        "name": "Balancer Aave Boosted Pool (USDT)",
+        "symbol": "bb-a-USDT",
+        "priceRate": "1.005729872617763015",
+        "decimals": 18
+      },
+      {
+        "balance": "21486294.107139932185657881",
+        "address": "0x82698aecc9e28e9bb27608bd52cf57f704bd1b84",
+        "name": "Balancer Aave Boosted Pool (USDC)",
+        "symbol": "bb-a-USDC",
+        "priceRate": "1.001810886229595273",
+        "decimals": 18
+      },
+      {
+        "balance": "2596148352913073.607166216183626819",
+        "address": "0xa13a9247ea42d743238089903570127dda72fe45",
+        "name": "Balancer Aave Boosted StablePool",
+        "symbol": "bb-a-USD",
+        "priceRate": "1",
+        "decimals": 18
+      }
+    ],
+    "tokensList": [
+      "0xa13a9247ea42d743238089903570127dda72fe45",
+      "0x2f4eb100552ef93840d5adc30560e5513dfffacc",
+      "0x82698aecc9e28e9bb27608bd52cf57f704bd1b84"
+    ],
+    "amp": "1472",
+    "expiryTime": null,
+    "unitSeconds": null,
+    "principalToken": null,
+    "baseToken": null,
+    "swapEnabled": true,
+    "wrappedIndex": null,
+    "mainIndex": null,
+    "lowerTarget": null,
+    "upperTarget": null
   }
 ]
