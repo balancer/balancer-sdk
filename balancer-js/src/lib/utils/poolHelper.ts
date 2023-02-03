@@ -1,6 +1,10 @@
 import { parseFixed } from '@ethersproject/bignumber';
 import { Pool } from '../../types';
-import { _computeScalingFactor } from '@/lib/utils/solidityMaths';
+import {
+  SolidityMaths,
+  _computeScalingFactor,
+  _upscaleArray,
+} from '@/lib/utils/solidityMaths';
 import { AssetHelpers } from '@/lib/utils';
 import { AddressZero } from '@ethersproject/constants';
 
@@ -27,16 +31,8 @@ export const parsePoolInfo = (
   let parsedDecimals = pool.tokens.map((token) => {
     return token.decimals ? token.decimals.toString() : undefined;
   });
-  let scalingFactors = parsedDecimals.map((decimals) =>
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    _computeScalingFactor(BigInt(decimals!))
-  );
   let parsedBalances = pool.tokens.map((token) =>
     parseFixed(token.balance, token.decimals).toString()
-  );
-  // This assumes token.balance is in human scale (e.g. from SG)
-  let upScaledBalances = pool.tokens.map((token) =>
-    parseFixed(token.balance, 18).toString()
   );
   let parsedWeights = pool.tokens.map((token) => {
     return token.weight ? parseFixed(token.weight, 18).toString() : undefined;
@@ -46,6 +42,21 @@ export const parsePoolInfo = (
       ? parseFixed(token.priceRate, 18).toString()
       : '1000000000000000000';
   });
+  const scalingFactorsRaw = parsedDecimals.map((decimals) =>
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    _computeScalingFactor(BigInt(decimals!))
+  );
+  let scalingFactors = scalingFactorsRaw.map((sf, i) =>
+    SolidityMaths.mulDownFixed(sf, BigInt(parsedPriceRates[i]))
+  );
+  // This assumes token.balance is in human scale (e.g. from SG)
+  let upScaledBalances = _upscaleArray(
+    parsedBalances.map(BigInt),
+    scalingFactors
+  ).map((b) => b.toString());
+  // let upScaledBalances = pool.tokens.map((token) =>
+  //   parseFixed(token.balance, 18).toString()
+  // );
   if (wrappedNativeAsset) {
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     let sfString;
