@@ -21,8 +21,6 @@ import { SimulationType } from '../src/modules/simulation/simulation.module';
 
 dotenv.config();
 
-const { TENDERLY_ACCESS_KEY, TENDERLY_PROJECT, TENDERLY_USER } = process.env;
-
 // -- Goerli network setup --
 // const network = Network.GOERLI;
 // const jsonRpcUrl = process.env.ALCHEMY_URL_GOERLI;
@@ -112,15 +110,11 @@ async function join() {
     parseFixed('10', addresses.bbadai.decimals as number).toString(),
   ];
 
-  // Custom Tenderly configuration parameters - remove in order to use default values
-  const tenderlyConfig = {
-    accessKey: TENDERLY_ACCESS_KEY as string,
-    user: TENDERLY_USER as string,
-    project: TENDERLY_PROJECT as string,
-    blockNumber,
-  };
-
-  // Example of subgraph query that allows filtering pools
+  /**
+   * Example of subgraph query that allows filtering pools.
+   * Might be useful to reduce the response time by limiting the amount of pool
+   * data that will be queried by the SDK.
+   */
   const poolAddresses = Object.values(addresses).map(
     (address) => address.address
   );
@@ -146,7 +140,6 @@ async function join() {
     network,
     rpcUrl,
     customSubgraphUrl,
-    tenderly: tenderlyConfig,
     subgraphQuery,
   });
 
