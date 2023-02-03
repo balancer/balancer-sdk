@@ -6,9 +6,9 @@ This SDK gives developers access to methods and examples for data formatting and
 
 [balancer-js](./balancer-js/README.md) A JavaScript SDK which provides commonly used utilities for interacting with IguanaDEX.
 
-[balancer-py](./balancer-py/README.md) Python tools for interacting with IguanaDEX in Python.
+[IguanaPy](https://github.com/Iguana-DEX/IguanaPy/blob/main/README.md) Python tools for interacting with IguanaDEX in Python.
 
-[balancer-sor](./balancer-sor/README.md) Smart Order Router, or SOR, is a Javascript off-chain linear optimization used to route orders across pools for best price execution.
+[iguana-sor](https://github.com/Iguana-DEX/sor/blob/main/README.md) Smart Order Router, or SOR, is a Javascript off-chain linear optimization used to route orders across pools for best price execution.
 
 ### Useful Info
 
