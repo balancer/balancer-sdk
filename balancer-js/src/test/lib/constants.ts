@@ -324,29 +324,29 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'dUSD',
     },
-    bbausd: {
-      address: 'N/A',
-      decimals: 18,
-      symbol: 'bbausd',
-    },
-    waDAI: {
-      address: '',
-      decimals: 18,
-      symbol: 'waDAI',
-      slot: 52,
-    },
-    waUSDC: {
-      address: '',
-      decimals: 6,
-      symbol: 'waUSDC',
-      slot: 52,
-    },
-    waUSDT: {
-      address: '',
-      decimals: 6,
-      symbol: 'waUSDT',
-      slot: 52,
-    },
+    // bbausd: {
+    //   address: 'N/A',
+    //   decimals: 18,
+    //   symbol: 'bbausd',
+    // },
+    // waDAI: {
+    //   address: '',
+    //   decimals: 18,
+    //   symbol: 'waDAI',
+    //   slot: 52,
+    // },
+    // waUSDC: {
+    //   address: '',
+    //   decimals: 6,
+    //   symbol: 'waUSDC',
+    //   slot: 52,
+    // },
+    // waUSDT: {
+    //   address: '',
+    //   decimals: 6,
+    //   symbol: 'waUSDT',
+    //   slot: 52,
+    // },
     bbamUSD: {
       address: '0x48e6B98ef6329f8f0A30eBB8c7C960330d648085',
       decimals: 18,
@@ -357,6 +357,18 @@ export const ADDRESSES = {
       address: '0x491a4eb4f1fc3bff8e1d2fc856a6a46663ad556f',
       decimals: 4,
       symbol: 'BRZ',
+    },
+    composableV2: {
+      id: '0x373b347bc87998b151a5e9b6bb6ca692b766648a000000000000000000000923',
+      address: '0x373b347bc87998b151a5e9b6bb6ca692b766648a',
+      decimals: 18,
+      symbol: 'composableV2',
+      slot: 0,
+    },
+    wMatic: {
+      address: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270',
+      decimals: 18,
+      symbol: 'WMATIC',
     },
   },
   [Network.ARBITRUM]: {
