@@ -48,27 +48,27 @@ export class ComposableStablePoolJoin implements JoinConcern {
       parsedAmp,
       parsedSwapFee,
       parsedTotalShares,
-      parsedBalancesWithoutBpt,
       bptIndex,
-      parsedPriceRatesWithoutBpt,
+      scalingFactorsWithoutBpt,
+      upScaledBalancesWithoutBpt,
     } = parsePoolInfo(pool, wrappedNativeAsset);
     if (!parsedAmp) {
       throw new BalancerError(BalancerErrorCode.MISSING_AMP);
     }
 
-    const scaledAmountsIn = _upscaleArray(
+    const upScaledAmountsIn = _upscaleArray(
       sortedAmountsIn.map(BigInt),
-      parsedPriceRatesWithoutBpt.map(BigInt)
+      scalingFactorsWithoutBpt.map(BigInt)
     );
-    const scaledBalancesWithoutBpt = _upscaleArray(
-      parsedBalancesWithoutBpt.map(BigInt),
-      parsedPriceRatesWithoutBpt.map(BigInt)
-    );
+    // const scaledBalancesWithoutBpt = _upscaleArray(
+    //   parsedBalancesWithoutBpt.map(BigInt),
+    //   parsedPriceRatesWithoutBpt.map(BigInt)
+    // );
     //NEED TO SEND SORTED BALANCES AND AMOUNTS WITHOUT BPT VALUES
     const expectedBPTOut = StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp),
-      scaledBalancesWithoutBpt, // Should not have BPT
-      scaledAmountsIn, // Should not have BPT
+      upScaledBalancesWithoutBpt.map(BigInt), // Should not have BPT
+      upScaledAmountsIn, // Should not have BPT
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
     );

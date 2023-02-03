@@ -67,8 +67,8 @@ export class ComposableStablePoolExit implements ExitConcern {
       parsedTotalShares,
       parsedSwapFee,
       bptIndex,
-      parsedPriceRates,
       upScaledBalancesWithoutBpt,
+      scalingFactors,
       //NOT PASSING wrappedNativeAsset BECAUSE singleTokenMaxOutIndex MUST BE FROM THE ORIGINAL pool.tokens ARRAY
     } = parsePoolInfo(pool, undefined, shouldUnwrapNativeAsset);
 
@@ -78,7 +78,6 @@ export class ComposableStablePoolExit implements ExitConcern {
 
     if (singleTokenMaxOut) {
       const singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
-
       // Calculate amount out given BPT in
       const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
         BigInt(parsedAmp as string),
@@ -89,9 +88,10 @@ export class ComposableStablePoolExit implements ExitConcern {
         BigInt(parsedSwapFee)
       );
 
+      // Downscales to token decimals and removes priceRate
       const amountOutDownscaled = _downscaleDown(
         amountOut,
-        BigInt(parsedPriceRates[singleTokenMaxOutIndex])
+        BigInt(scalingFactors[singleTokenMaxOutIndex])
       );
 
       expectedAmountsOut[singleTokenMaxOutIndex] =
@@ -189,25 +189,22 @@ export class ComposableStablePoolExit implements ExitConcern {
       parsedAmp,
       parsedTotalShares,
       parsedSwapFee,
-      upScaledBalances,
       bptIndex,
-      parsedPriceRatesWithoutBpt,
+      upScaledBalancesWithoutBpt,
+      scalingFactorsWithoutBpt,
       //NOT PASSING wrappedNativeAsset BECAUSE AMOUNTS WILL NEED TO BE REORDERED FOLLOWING ORIGINAL POOL TOKENS ORDER
     } = parsePoolInfo(pool);
 
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
 
-    //REMOVING BPT
-    upScaledBalances.splice(bptIndex, 1);
-
     const [
       sortedTokensWithoutBpt,
       sortedUpScaledBalances,
-      sortedPriceRatesWithoutBpt,
+      sortedScalingFactorsWithoutBpt,
     ] = assetHelpers.sortTokens(
       parsedTokensWithoutBpt,
-      upScaledBalances,
-      parsedPriceRatesWithoutBpt
+      upScaledBalancesWithoutBpt,
+      scalingFactorsWithoutBpt
     ) as [string[], string[], string[]];
 
     const [, sortedAmountsOut] = assetHelpers.sortTokens(
@@ -217,7 +214,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     // Maths should use upscaled amounts with rates, e.g. 1USDC => 1e18 not 1e6
     const upScaledAmountsOut = _upscaleArray(
       sortedAmountsOut.map((a) => BigInt(a)),
-      sortedPriceRatesWithoutBpt.map((a) => BigInt(a))
+      sortedScalingFactorsWithoutBpt.map((a) => BigInt(a))
     );
     // Calculate expected BPT in given tokens out
     const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(
