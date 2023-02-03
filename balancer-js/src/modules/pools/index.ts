@@ -75,7 +75,11 @@ export class Pools implements Findable<PoolWithMethods> {
       networkConfig,
       this.simulationService
     );
-    this.exitService = new Exit(this.graphService, networkConfig);
+    this.exitService = new Exit(
+      this.graphService,
+      networkConfig,
+      this.simulationService
+    );
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
     this.poolFactory = new PoolFactory__factory(networkConfig);
@@ -136,8 +140,8 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param userAddress     User address
    * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param signer          Json RPC signer required to perform a static call if Static simulation chosen
-   * @param simulationType  Choose from Tenderly, VaultModel (TS math) or Static
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
    */
@@ -174,11 +178,13 @@ export class Pools implements Findable<PoolWithMethods> {
   /**
    * Builds generalised exit transaction
    *
-   * @param poolId        Pool id
-   * @param amount        Token amount in EVM scale
-   * @param userAddress   User address
-   * @param slippage      Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param authorisation Optional auhtorisation call to be added to the chained transaction
+   * @param poolId          Pool id
+   * @param amount          Token amount in EVM scale
+   * @param userAddress     User address
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
    */
   async generalisedExit(
@@ -186,10 +192,12 @@ export class Pools implements Findable<PoolWithMethods> {
     amount: string,
     userAddress: string,
     slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
     to: string;
-    callData: string;
+    encodedCall: string;
     tokensOut: string[];
     expectedAmountsOut: string[];
     minAmountsOut: string[];
@@ -200,6 +208,8 @@ export class Pools implements Findable<PoolWithMethods> {
       amount,
       userAddress,
       slippage,
+      signer,
+      simulationType,
       authorisation
     );
   }

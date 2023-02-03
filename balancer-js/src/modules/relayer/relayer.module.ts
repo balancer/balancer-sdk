@@ -199,7 +199,7 @@ export class Relayer {
     return readonly === BigNumber.from(check)._hex.toString();
   }
 
-  static constructExitCall(params: ExitPoolData): string {
+  static formatExitPoolInput(params: ExitPoolData): EncodeExitPoolInput {
     const {
       assets,
       minAmountsOut,
@@ -227,9 +227,7 @@ export class Relayer {
       outputReferences,
       exitPoolRequest,
     };
-
-    const exitEncoded = Relayer.encodeExitPool(exitPoolInput);
-    return exitEncoded;
+    return exitPoolInput;
   }
 
   static formatJoinPoolInput(params: JoinPoolData): EncodeJoinPoolInput {
@@ -318,7 +316,7 @@ export class Relayer {
       });
     });
 
-    const exitCall = Relayer.constructExitCall({
+    const exitPoolInput = Relayer.formatExitPoolInput({
       assets: params.exitTokens,
       minAmountsOut,
       userData: params.userData,
@@ -330,6 +328,7 @@ export class Relayer {
       outputReferences: outputReferences,
       exitPoolRequest: {} as ExitPoolRequest,
     });
+    const exitCall = Relayer.encodeExitPool(exitPoolInput);
 
     // Use swapsService to get swap info for exitTokens>finalTokens
     // This will give batchSwap swap paths

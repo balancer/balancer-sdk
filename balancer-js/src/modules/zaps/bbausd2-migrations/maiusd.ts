@@ -110,7 +110,7 @@ export class MaiusdBuilder {
 
     const minAmountsOut = Array<string>(assets.length).fill('0');
 
-    const callData = Relayer.constructExitCall({
+    const exitPoolInput = Relayer.formatExitPoolInput({
       assets,
       minAmountsOut,
       userData,
@@ -122,6 +122,7 @@ export class MaiusdBuilder {
       outputReferences,
       exitPoolRequest: {} as ExitPoolRequest,
     });
+    const callData = Relayer.encodeExitPool(exitPoolInput);
 
     return callData;
   }

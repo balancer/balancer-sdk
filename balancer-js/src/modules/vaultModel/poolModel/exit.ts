@@ -133,7 +133,7 @@ export class ExitModel {
       );
       pool.updateTokenBalanceForPool(
         pool.address,
-        bptBalanceEVM.add(bptIn) // subtract value because joining pool reduces pre-minted BPT being held by the pool
+        bptBalanceEVM.add(bptIn) // add value because exiting pool increases pre-minted BPT being held by the pool
       );
     } else {
       // For pools that do not contain BPT as a token, update totalShares directly
@@ -144,14 +144,14 @@ export class ExitModel {
       (t) => !isSameAddress(t.address, pool.address)
     );
     // Update each tokens balance
-    amountsOut.forEach((t, i) => {
+    amountsOut.forEach((amountOut, i) => {
       const balanceEvm = parseFixed(
         tokensWithoutBpt[i].balance.toString(),
         tokensWithoutBpt[i].decimals
       );
       pool.updateTokenBalanceForPool(
         tokensWithoutBpt[i].address,
-        balanceEvm.sub(t)
+        balanceEvm.sub(amountOut)
       );
     });
     return [bptIn, tokensWithoutBpt.map((t) => t.address), amountsOut];
@@ -189,21 +189,35 @@ export class ExitModel {
       pairData.decimalsOut
     );
 
+    // Update balances use EVM scaled
     const poolBalances = getBalancesForTokens(pool, [
       pool.address,
       pairData.tokenOut,
     ]);
-    // Update balances use EVM scaled
-    // Exiting a pool is equivalent to removing from totalSupply so must sub here
-    pool.updateTokenBalanceForPool(
-      pool.address,
-      BigNumber.from(poolBalances[0]).sub(bptIn)
-    );
     // Subtract token out amount from pool
     pool.updateTokenBalanceForPool(
       pairData.tokenOut,
       BigNumber.from(poolBalances[1]).sub(amountOutEvm)
     );
+
+    if (
+      pool.SubgraphType == 'StablePhantom' ||
+      pool.SubgraphType == 'ComposableStable'
+    ) {
+      // Add value because exiting pool increases pre-minted BPT being held by the pool
+      // totalShares is updated as a side effect on SOR
+      pool.updateTokenBalanceForPool(
+        pool.address,
+        BigNumber.from(poolBalances[0]).add(bptIn)
+      );
+    } else {
+      // Exiting a pool is equivalent to removing from totalSupply (totalShares) so must sub here
+      pool.updateTokenBalanceForPool(
+        pool.address,
+        BigNumber.from(poolBalances[0]).sub(bptIn)
+      );
+    }
+
     const tokensWithoutBpt = pool.tokensList.filter(
       (t) => !isSameAddress(t, pool.address)
     );
@@ -247,9 +261,13 @@ export class ExitModel {
 
     // Save any chained references
     for (let i = 0; i < exitPoolRequest.outputReferences.length; i++) {
+      const tokenOut =
+        pool.tokensList[exitPoolRequest.outputReferences[i].index];
+      const tokenOutIndex = tokensOut.indexOf(tokenOut);
+      if (tokenOutIndex === -1) throw new Error('Token out not found');
       this.relayerModel.setChainedReferenceValue(
         exitPoolRequest.outputReferences[i].key.toString(),
-        amountsOut[exitPoolRequest.outputReferences[i].index]
+        amountsOut[tokenOutIndex]
       );
     }
     tokens.push(pool.address, ...tokensOut);

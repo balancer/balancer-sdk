@@ -834,7 +834,8 @@ function buildExitCall(
     exitPoolRequest: {} as ExitPoolRequest,
   };
   // console.log(exitParams);
-  const callData = Relayer.constructExitCall(exitParams);
+  const exitPoolInput = Relayer.formatExitPoolInput(exitParams);
+  const callData = Relayer.encodeExitPool(exitPoolInput);
   // These are used for final amount check
   const amountOut = action.hasTokenOut ? minAmountsOut[exitTokenIndex] : '0';
   const amountIn = action.hasTokenIn ? bptAmtIn : '0';

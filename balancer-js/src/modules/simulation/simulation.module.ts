@@ -2,13 +2,7 @@ import { PoolDataService } from '@balancer-labs/sor';
 import { defaultAbiCoder } from '@ethersproject/abi';
 import TenderlyHelper from '@/lib/utils/tenderlyHelper';
 import { BalancerNetworkConfig } from '@/types';
-import {
-  VaultModel,
-  Requests,
-  ActionType,
-} from '../vaultModel/vaultModel.module';
-import { getPoolAddress } from '@/pool-utils';
-import { Zero } from '@ethersproject/constants';
+import { VaultModel, Requests } from '../vaultModel/vaultModel.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
 
 export enum SimulationType {
@@ -16,6 +10,19 @@ export enum SimulationType {
   VaultModel,
   Static,
 }
+
+/**
+ * Simulation module is responsible for simulating the results of a generalised
+ * join or exit using different types of simulation, such as:
+ * - Tenderly: uses Tenderly Simulation API (third party service)
+ * - VaultModel: uses TS math, which may be less accurate (min. 99% accuracy)
+ * - Static: uses staticCall, which is 100% accurate but requires vault approval
+ *
+ * This module allows a user to perform a simulation and check for expected
+ * amounts out in order to make an informed decision on whether to proceed with
+ * the transaction. These expected amounts out can be used as limits to prevent
+ * frontrunning and ensure that the transaction will return minimum amounts out.
+ */
 
 export class Simulation {
   private tenderlyHelper: TenderlyHelper;
@@ -47,7 +54,8 @@ export class Simulation {
     tokensIn: string[],
     signer: JsonRpcSigner,
     simulationType: SimulationType
-  ): Promise<{ amountsOut: string[]; totalAmountOut: string }> => {
+  ): Promise<string[]> => {
+    const amountsOut: string[] = [];
     switch (simulationType) {
       case SimulationType.Tenderly: {
         const simulationResult = await this.tenderlyHelper.simulateMulticall(
@@ -56,35 +64,14 @@ export class Simulation {
           userAddress,
           tokensIn
         );
-        return this.decodeResult(simulationResult, outputIndexes);
+        amountsOut.push(...this.decodeResult(simulationResult, outputIndexes));
+        break;
       }
 
       case SimulationType.VaultModel: {
-        if (this.vaultModel === undefined)
-          throw new Error('Missing Vault Model Config.');
-        // make one mutlicall for each joinPath
-        // take only BPT delta into account
-        const amountsOut: string[] = [];
-        let totalAmountOut = Zero;
-        for (const [i, requests] of multiRequests.entries()) {
-          const lastRequest = requests[requests.length - 1];
-          let poolId = '';
-          switch (lastRequest.actionType) {
-            case ActionType.Join:
-            case ActionType.Exit:
-              poolId = lastRequest.poolId;
-              break;
-            case ActionType.BatchSwap:
-              poolId = lastRequest.swaps[0].poolId;
-          }
-          const rootPoolAddress = getPoolAddress(poolId); // BPT address of the pool being joined/exited
-          const deltas = await this.vaultModel.multicall(requests, i === 0);
-          const bptOutDelta = deltas[rootPoolAddress].mul(-1); // delta is negative for BPT out on joins
-          if (!bptOutDelta) throw new Error('No delta found for BPT out.');
-          amountsOut.push(bptOutDelta.toString());
-          totalAmountOut = totalAmountOut.add(bptOutDelta);
-        }
-        return { amountsOut, totalAmountOut: totalAmountOut.toString() };
+        const requestResult = await this.simulateRequests(multiRequests);
+        amountsOut.push(...requestResult);
+        break;
       }
       case SimulationType.Static: {
         const gasLimit = 8e6;
@@ -93,32 +80,92 @@ export class Simulation {
           data: encodedCall,
           gasLimit,
         });
-        return this.decodeResult(staticResult, outputIndexes);
+        amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
+        break;
       }
       default:
         throw new Error('Simulation type not supported');
     }
+    return amountsOut;
+  };
+
+  simulateGeneralisedExit = async (
+    to: string,
+    multiRequests: Requests[][],
+    encodedCall: string,
+    outputIndexes: number[],
+    userAddress: string,
+    tokenIn: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType
+  ): Promise<string[]> => {
+    const amountsOut: string[] = [];
+    switch (simulationType) {
+      case SimulationType.Tenderly: {
+        const simulationResult = await this.tenderlyHelper.simulateMulticall(
+          to,
+          encodedCall,
+          userAddress,
+          [tokenIn]
+        );
+        amountsOut.push(...this.decodeResult(simulationResult, outputIndexes));
+        break;
+      }
+
+      case SimulationType.VaultModel: {
+        const requestResult = await this.simulateRequests(multiRequests);
+        amountsOut.push(...requestResult);
+        break;
+      }
+      case SimulationType.Static: {
+        const gasLimit = 8e6;
+        const staticResult = await signer.call({
+          to,
+          data: encodedCall,
+          gasLimit,
+        });
+        amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
+        break;
+      }
+      default:
+        throw new Error('Simulation type not supported');
+    }
+    return amountsOut;
   };
 
   private decodeResult = (result: string, outputIndexes: number[]) => {
-    const amountsOut: string[] = [];
-    let totalAmountOut = Zero;
-
     const multicallResult = defaultAbiCoder.decode(
       ['bytes[]'],
       result
     )[0] as string[];
 
     // Decode each root output
-    outputIndexes.forEach((outputIndex) => {
-      const value = defaultAbiCoder.decode(
+    const amountsOut = outputIndexes.map((outputIndex) => {
+      const result = defaultAbiCoder.decode(
         ['uint256'],
         multicallResult[outputIndex]
       );
-      amountsOut.push(value.toString());
-      totalAmountOut = totalAmountOut.add(value.toString());
+      return result.toString();
     });
 
-    return { amountsOut, totalAmountOut: totalAmountOut.toString() };
+    return amountsOut;
+  };
+
+  private simulateRequests = async (multiRequests: Requests[][]) => {
+    if (this.vaultModel === undefined)
+      throw new Error('Missing Vault Model Config.');
+    // make one multicall for each exitPath
+    // take only bptOut/tokenOut delta into account
+    // -- works only with single bpt/token out --
+    const amountsOut: string[] = [];
+    for (const [i, requests] of multiRequests.entries()) {
+      const deltas = await this.vaultModel.multicall(requests, i === 0);
+      const tokenOutDelta = Object.values(deltas)
+        .find((d) => d.lt(0))
+        ?.mul(-1);
+      if (!tokenOutDelta) throw new Error('No delta found for token out.');
+      amountsOut.push(tokenOutDelta.toString());
+    }
+    return amountsOut;
   };
 }

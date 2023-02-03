@@ -6,16 +6,17 @@ import hardhat from 'hardhat';
 import {
   BalancerSDK,
   BalancerTenderlyConfig,
-  Network,
   GraphQLQuery,
   GraphQLArgs,
+  Network,
 } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { forkSetup, getBalances } from '@/test/lib/utils';
+import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
+import { SimulationType } from '../simulation/simulation.module';
 
 dotenv.config();
 
@@ -150,12 +151,14 @@ const testFlow = async (
   const gasLimit = MAX_GAS_LIMIT;
   const slippage = '10'; // 10 bps = 0.1%
 
-  const { to, callData, tokensOut, expectedAmountsOut, minAmountsOut } =
+  const { to, encodedCall, tokensOut, expectedAmountsOut, minAmountsOut } =
     await pools.generalisedExit(
       pool.id,
       amount,
       signerAddress,
       slippage,
+      signer,
+      SimulationType.VaultModel,
       authorisation
     );
 
@@ -167,7 +170,7 @@ const testFlow = async (
 
   const response = await signer.sendTransaction({
     to,
-    data: callData,
+    data: encodedCall,
     gasLimit,
   });
 
@@ -179,6 +182,14 @@ const testFlow = async (
     signer,
     signerAddress
   );
+
+  console.table({
+    tokensOut: tokensOut.map((t) => `${t.slice(0, 6)}...${t.slice(38, 42)}`),
+    minOut: minAmountsOut,
+    expectedOut: expectedAmountsOut,
+    balanceAfter: tokensOutBalanceAfter.map((b) => b.toString()),
+  });
+
   expect(receipt.status).to.eql(1);
   minAmountsOut.forEach((minAmountOut) => {
     expect(BigNumber.from(minAmountOut).gte('0')).to.be.true;
@@ -192,11 +203,10 @@ const testFlow = async (
   tokensOutBalanceBefore.forEach((b) => expect(b.eq(0)).to.be.true);
   tokensOutBalanceAfter.forEach((balanceAfter, i) => {
     const minOut = BigNumber.from(minAmountsOut[i]);
-    return expect(balanceAfter.gte(minOut)).to.be.true;
+    expect(balanceAfter.gte(minOut)).to.be.true;
+    const expectedOut = BigNumber.from(expectedAmountsOut[i]);
+    expect(accuracy(balanceAfter, expectedOut)).to.be.closeTo(1, 1e-2); // inaccuracy should not be over to 1%
   });
-  // console.log('bpt after', query.tokensOut.toString());
-  // console.log('minOut', minAmountsOut.toString());
-  // console.log('expectedOut', expectedAmountsOut.toString());
 };
 
 // all contexts currently applies to GOERLI only

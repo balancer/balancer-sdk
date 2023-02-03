@@ -124,7 +124,7 @@ export class StablesBuilder {
 
     const minAmountsOut = Array<string>(underlyingTokens.length).fill('0');
 
-    const callData = Relayer.constructExitCall({
+    const exitPoolInput = Relayer.formatExitPoolInput({
       assets: underlyingTokens,
       minAmountsOut,
       userData,
@@ -136,6 +136,7 @@ export class StablesBuilder {
       outputReferences,
       exitPoolRequest: {} as ExitPoolRequest,
     });
+    const callData = Relayer.encodeExitPool(exitPoolInput);
 
     return callData;
   }
