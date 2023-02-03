@@ -21,15 +21,12 @@ import { SimulationType } from '../src/modules/simulation/simulation.module';
 
 dotenv.config();
 
-const {
-  ALCHEMY_URL_GOERLI: jsonRpcUrl,
-  TENDERLY_ACCESS_KEY,
-  TENDERLY_PROJECT,
-  TENDERLY_USER,
-} = process.env;
+const jsonRpcUrl = process.env.ALCHEMY_URL_GOERLI;
 const network = Network.GOERLI;
 const blockNumber = 7890980;
 const rpcUrl = 'http://127.0.0.1:8000';
+const customSubgraphUrl =
+  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
 const addresses = ADDRESSES[network];
 const bbausd2 = {
   id: addresses.bbausd2?.id as string,
@@ -80,15 +77,12 @@ const exit = async () => {
   // Here we exit with bb-a-usd BPT
   const amount = parseFixed('10', bbausd2.decimals).toString();
 
-  // Custom Tenderly configuration parameters - remove in order to use default values
-  const tenderlyConfig = {
-    accessKey: TENDERLY_ACCESS_KEY as string,
-    user: TENDERLY_USER as string,
-    project: TENDERLY_PROJECT as string,
-    blockNumber,
-  };
-
-  // Example of subgraph query that allows filtering pools
+  /**
+   * Example of subgraph query that allows filtering pools.
+   * Might be useful to reduce the response time by limiting the amount of pool
+   * data that will be queried by the SDK. Specially when on chain data is being
+   * fetched as well.
+   */
   const poolAddresses = Object.values(addresses).map(
     (address) => address.address
   );
@@ -113,9 +107,7 @@ const exit = async () => {
   const balancer = new BalancerSDK({
     network,
     rpcUrl,
-    customSubgraphUrl:
-      'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta',
-    tenderly: tenderlyConfig,
+    customSubgraphUrl,
     subgraphQuery,
   });
 

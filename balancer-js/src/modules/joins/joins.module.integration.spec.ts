@@ -46,7 +46,7 @@ const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 const network = Network.GOERLI;
 const blockNumber = 8092113;
 const customSubgraphUrl =
-  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2';
+  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
 const { ALCHEMY_URL_GOERLI: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8000';
 
@@ -66,11 +66,15 @@ const rpcUrl = 'http://127.0.0.1:8000';
 
 const addresses = ADDRESSES[network];
 
-// This filters to pool addresses of interest to avoid too many onchain calls during tests
+/**
+ * Example of subgraph query that allows filtering pools.
+ * Might be useful to reduce the response time by limiting the amount of pool
+ * data that will be queried by the SDK. Specially when on chain data is being
+ * fetched as well.
+ */
 const poolAddresses = Object.values(addresses).map(
   (address) => address.address
 );
-
 const subgraphArgs: GraphQLArgs = {
   where: {
     swapEnabled: {

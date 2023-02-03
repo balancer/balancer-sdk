@@ -113,7 +113,8 @@ async function join() {
   /**
    * Example of subgraph query that allows filtering pools.
    * Might be useful to reduce the response time by limiting the amount of pool
-   * data that will be queried by the SDK.
+   * data that will be queried by the SDK. Specially when on chain data is being
+   * fetched as well.
    */
   const poolAddresses = Object.values(addresses).map(
     (address) => address.address
