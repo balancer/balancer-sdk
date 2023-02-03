@@ -60,6 +60,11 @@ const rpcUrl = 'http://127.0.0.1:8000';
 
 const addresses = ADDRESSES[network];
 
+// Set tenderly config blockNumber and use default values for other parameters
+const tenderlyConfig = {
+  blockNumber,
+};
+
 /**
  * Example of subgraph query that allows filtering pools.
  * Might be useful to reduce the response time by limiting the amount of pool
@@ -91,6 +96,7 @@ const sdk = new BalancerSDK({
   network,
   rpcUrl,
   customSubgraphUrl,
+  tenderly: tenderlyConfig,
   subgraphQuery,
 });
 const { pools } = sdk;
@@ -111,6 +117,7 @@ interface Test {
   };
   amount: string;
   authorisation: string | undefined;
+  simulationType?: SimulationType;
 }
 
 const runTests = async (tests: Test[]) => {
@@ -131,7 +138,8 @@ const runTests = async (tests: Test[]) => {
         signerAddress,
         test.pool,
         test.amount,
-        authorisation
+        authorisation,
+        test.simulationType
       );
     }).timeout(120000);
   }
@@ -142,7 +150,8 @@ const testFlow = async (
   signerAddress: string,
   pool: { id: string; address: string },
   amount: string,
-  authorisation: string | undefined
+  authorisation: string | undefined,
+  simulationType = SimulationType.VaultModel
 ) => {
   const gasLimit = 8e6;
   const slippage = '10'; // 10 bps = 0.1%
@@ -154,7 +163,7 @@ const testFlow = async (
       signerAddress,
       slippage,
       signer,
-      SimulationType.VaultModel,
+      simulationType,
       authorisation
     );
 
@@ -353,7 +362,7 @@ describe('generalised exit execution', async () => {
     await runTests([
       {
         signer,
-        description: 'exit pool',
+        description: 'exit pool - VaultModel',
         pool: {
           id: addresses.boostedMetaBig1.id,
           address: addresses.boostedMetaBig1.address,
@@ -363,6 +372,34 @@ describe('generalised exit execution', async () => {
           addresses.boostedMetaBig1.decimals
         ).toString(),
         authorisation: authorisation,
+      },
+      {
+        signer,
+        description: 'exit pool - Tenderly',
+        pool: {
+          id: addresses.boostedMetaBig1.id,
+          address: addresses.boostedMetaBig1.address,
+        },
+        amount: parseFixed(
+          '0.05',
+          addresses.boostedMetaBig1.decimals
+        ).toString(),
+        authorisation: authorisation,
+        simulationType: SimulationType.Tenderly,
+      },
+      {
+        signer,
+        description: 'exit pool - Static',
+        pool: {
+          id: addresses.boostedMetaBig1.id,
+          address: addresses.boostedMetaBig1.address,
+        },
+        amount: parseFixed(
+          '0.05',
+          addresses.boostedMetaBig1.decimals
+        ).toString(),
+        authorisation: authorisation,
+        simulationType: SimulationType.Static,
       },
     ]);
   });
@@ -566,7 +603,7 @@ describe('generalised exit execution', async () => {
     await runTests([
       {
         signer,
-        description: 'exit pool',
+        description: 'exit pool - VaultModel',
         pool: {
           id: addresses.boostedWeightedMetaGeneral1.id,
           address: addresses.boostedWeightedMetaGeneral1.address,
@@ -576,6 +613,34 @@ describe('generalised exit execution', async () => {
           addresses.boostedWeightedMetaGeneral1.decimals
         ).toString(),
         authorisation: authorisation,
+      },
+      {
+        signer,
+        description: 'exit pool - Tenderly',
+        pool: {
+          id: addresses.boostedWeightedMetaGeneral1.id,
+          address: addresses.boostedWeightedMetaGeneral1.address,
+        },
+        amount: parseFixed(
+          '0.05',
+          addresses.boostedWeightedMetaGeneral1.decimals
+        ).toString(),
+        authorisation: authorisation,
+        simulationType: SimulationType.Tenderly,
+      },
+      {
+        signer,
+        description: 'exit pool - Static',
+        pool: {
+          id: addresses.boostedWeightedMetaGeneral1.id,
+          address: addresses.boostedWeightedMetaGeneral1.address,
+        },
+        amount: parseFixed(
+          '0.05',
+          addresses.boostedWeightedMetaGeneral1.decimals
+        ).toString(),
+        authorisation: authorisation,
+        simulationType: SimulationType.Static,
       },
     ]);
   });
