@@ -91,8 +91,7 @@ export class ComposableStablePoolExit implements ExitConcern {
 
       const amountOutDownscaled = _downscaleDown(
         amountOut,
-        BigInt(parsedPriceRates[singleTokenMaxOutIndex]) *
-          BigInt(scalingFactors[singleTokenMaxOutIndex])
+        BigInt(parsedPriceRates[singleTokenMaxOutIndex])
       );
 
       expectedAmountsOut[singleTokenMaxOutIndex] =
