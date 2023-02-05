@@ -1,6 +1,6 @@
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
-import * as SOR from '@balancer-labs/sor';
+import * as SOR from '@iguana-dex/sor';
 import {
   ExitConcern,
   ExitExactBPTInAttributes,

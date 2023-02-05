@@ -1,4 +1,4 @@
-import { PoolDataService } from '@balancer-labs/sor';
+import { PoolDataService } from '@iguana-dex/sor';
 import { SubgraphPoolBase, BalancerError, BalancerErrorCode } from '@/.';
 
 export class MockPoolDataService implements PoolDataService {

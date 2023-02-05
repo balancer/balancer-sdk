@@ -1,4 +1,4 @@
-import { SOR, SubgraphPoolBase, SwapInfo, SwapTypes } from '@balancer-labs/sor';
+import { SOR, SubgraphPoolBase, SwapInfo, SwapTypes } from '@iguana-dex/sor';
 import { Vault__factory, Vault } from '@balancer-labs/typechain';
 import {
   BatchSwap,

@@ -1,4 +1,4 @@
-import { SwapInfo } from '@balancer-labs/sor';
+import { SwapInfo } from '@iguana-dex/sor';
 import { Vault } from '@balancer-labs/typechain';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 

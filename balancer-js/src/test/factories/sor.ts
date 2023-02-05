@@ -4,7 +4,7 @@ import {
   SubgraphToken,
   SwapInfo,
   SwapV2,
-} from '@balancer-labs/sor';
+} from '@iguana-dex/sor';
 import { BigNumber } from '@ethersproject/bignumber';
 import { formatAddress } from '../lib/utils';
 import { namedTokens } from './named-tokens';

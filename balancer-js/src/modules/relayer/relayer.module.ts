@@ -29,7 +29,7 @@ import {
   BatchSwapStep,
   FetchPoolsInput,
 } from '../swaps/types';
-import { SubgraphPoolBase } from '@balancer-labs/sor';
+import { SubgraphPoolBase } from '@iguana-dex/sor';
 import { RelayerAuthorization } from '@/lib/utils';
 
 import relayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';

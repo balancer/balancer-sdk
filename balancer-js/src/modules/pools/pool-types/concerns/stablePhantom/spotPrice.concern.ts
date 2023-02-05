@@ -1,5 +1,5 @@
 import { SpotPriceConcern } from '../types';
-import { SubgraphPoolBase, PhantomStablePool, ZERO } from '@balancer-labs/sor';
+import { SubgraphPoolBase, PhantomStablePool, ZERO } from '@iguana-dex/sor';
 import { Pool } from '@/types';
 
 export class PhantomStablePoolSpotPrice implements SpotPriceConcern {

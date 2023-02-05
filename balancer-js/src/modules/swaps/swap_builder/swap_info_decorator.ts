@@ -1,4 +1,4 @@
-import { SwapInfo } from '@balancer-labs/sor';
+import { SwapInfo } from '@iguana-dex/sor';
 import { BigNumber } from '@ethersproject/bignumber';
 import { tokenForSwaps } from './swap_utils';
 import { SwapType } from '../types';

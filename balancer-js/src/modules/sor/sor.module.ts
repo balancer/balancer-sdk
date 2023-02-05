@@ -1,4 +1,4 @@
-import { SOR, SorConfig, TokenPriceService } from '@balancer-labs/sor';
+import { SOR, SorConfig, TokenPriceService } from '@iguana-dex/sor';
 import { Provider, JsonRpcProvider } from '@ethersproject/providers';
 import { SubgraphPoolDataService } from './pool-data/subgraphPoolDataService';
 import { CoingeckoTokenPriceService } from './token-price/coingeckoTokenPriceService';

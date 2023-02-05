@@ -1,7 +1,7 @@
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { FundManagement, SingleSwap, Swap, SwapType } from '../types';
 import { Interface, JsonFragment } from '@ethersproject/abi';
-import { SwapInfo } from '@balancer-labs/sor';
+import { SwapInfo } from '@iguana-dex/sor';
 import { SDKSwapInfo, decorateSorSwapInfo } from './swap_info_decorator';
 import { AddressZero } from '@ethersproject/constants';
 import { swapFragment, relayerResolver, SwapRelayer } from './swap_utils';

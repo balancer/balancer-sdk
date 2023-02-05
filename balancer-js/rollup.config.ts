@@ -27,7 +27,7 @@ export default [
           '@ethersproject/bytes': 'bytes',
           '@ethersproject/abstract-signer': 'abstractSigner',
           '@ethersproject/contracts': 'contracts',
-          '@balancer-labs/sor': 'sor',
+          '@iguana-dex/sor': 'sor',
           '@balancer-labs/typechain': 'typechain',
           '@ethersproject/providers': 'providers',
           'graphql-request': 'graphqlRequest',

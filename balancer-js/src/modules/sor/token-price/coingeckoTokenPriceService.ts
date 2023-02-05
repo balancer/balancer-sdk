@@ -1,4 +1,4 @@
-import { TokenPriceService } from '@balancer-labs/sor';
+import { TokenPriceService } from '@iguana-dex/sor';
 import axios from 'axios';
 
 export class CoingeckoTokenPriceService implements TokenPriceService {

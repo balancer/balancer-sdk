@@ -16,7 +16,7 @@ import BatchRelayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero, MaxUint256 } from '@ethersproject/constants';
-import { SwapInfo } from '@balancer-labs/sor';
+import { SwapInfo } from '@iguana-dex/sor';
 import hardhat from 'hardhat';
 
 dotenv.config();

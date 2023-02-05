@@ -1,5 +1,5 @@
 import { SpotPriceConcern } from '../types';
-import { SubgraphPoolBase, MetaStablePool, ZERO } from '@balancer-labs/sor';
+import { SubgraphPoolBase, MetaStablePool, ZERO } from '@iguana-dex/sor';
 import { Pool } from '@/types';
 
 export class MetaStablePoolSpotPrice implements SpotPriceConcern {

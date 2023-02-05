@@ -1,4 +1,4 @@
-import * as SOR from '@balancer-labs/sor';
+import * as SOR from '@iguana-dex/sor';
 
 import {
   JoinConcern,

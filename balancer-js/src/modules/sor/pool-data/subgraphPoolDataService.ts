@@ -1,4 +1,4 @@
-import { PoolDataService, SubgraphPoolBase } from '@balancer-labs/sor';
+import { PoolDataService, SubgraphPoolBase } from '@iguana-dex/sor';
 import {
   OrderDirection,
   Pool_OrderBy,

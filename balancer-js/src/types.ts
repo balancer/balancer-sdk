@@ -1,7 +1,7 @@
 import { Network } from './lib/constants/network';
 import type { BigNumberish } from '@ethersproject/bignumber';
 import type { Contract } from '@ethersproject/contracts';
-import type { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
+import type { PoolDataService, TokenPriceService } from '@iguana-dex/sor';
 import type {
   ExitExactBPTInAttributes,
   ExitExactTokensOutAttributes,

@@ -7,7 +7,7 @@ import {
   SwapInfo,
   SwapTypes,
   SwapV2,
-} from '@balancer-labs/sor';
+} from '@iguana-dex/sor';
 import {
   Relayer,
   OutputReference,

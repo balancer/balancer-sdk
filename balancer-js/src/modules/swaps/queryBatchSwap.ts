@@ -1,6 +1,6 @@
 import { BigNumberish } from '@ethersproject/bignumber';
 import { AddressZero, Zero } from '@ethersproject/constants';
-import { SOR, SwapTypes, SwapInfo } from '@balancer-labs/sor';
+import { SOR, SwapTypes, SwapInfo } from '@iguana-dex/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
   SwapType,

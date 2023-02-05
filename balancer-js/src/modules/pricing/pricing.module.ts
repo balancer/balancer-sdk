@@ -5,7 +5,7 @@ import {
   ZERO,
   parseToPoolsDict,
   getSpotPriceAfterSwapForPath,
-} from '@balancer-labs/sor';
+} from '@iguana-dex/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export class Pricing {

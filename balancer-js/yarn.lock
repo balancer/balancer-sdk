@@ -503,13 +503,6 @@
     "@babel/helper-validator-identifier" "^7.19.1"
     to-fast-properties "^2.0.0"
 
-"@balancer-labs/sor@^4.1.0-beta.0":
-  version "4.1.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@balancer-labs/sor/-/sor-4.1.0-beta.0.tgz#9d22921bd805381b9d78cff5e5e62331b48c4e5e"
-  integrity sha512-NwnaB307u+3NCwhV4ro/jiyWgsaJQ2F7mcjBnUYrtXjDzGCMCM+0+mW21hnSBprJYZ55T6LEFAQAK0ADDT/uLQ==
-  dependencies:
-    isomorphic-fetch "^2.2.1"
-
 "@balancer-labs/typechain@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@balancer-labs/typechain/-/typechain-1.0.0.tgz#823eb13b9e166f7b50334c9d70d9ade81344f5c9"
@@ -1417,6 +1410,13 @@
   version "2.2.5"
   resolved "https://registry.yarnpkg.com/@iarna/toml/-/toml-2.2.5.tgz#b32366c89b43c6f8cefbdefac778b9c828e3ba8c"
   integrity sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==
+
+"@iguana-dex/sor@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@iguana-dex/sor/-/sor-0.0.1.tgz#736d2d4ca07db18e9c83ee475b7c098dbf10a2f7"
+  integrity sha512-0JDpcVGLgqACfFwCGFIBab06cUvb3/O9PqgpVuVlbss0UtFZC5pzHqybEqf1srQN75k7rwoh7YrVA1RYQ0N+0w==
+  dependencies:
+    isomorphic-fetch "^2.2.1"
 
 "@jridgewell/gen-mapping@^0.1.0":
   version "0.1.1"

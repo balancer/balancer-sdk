@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { Network, Swaps } from '@/.';
 import { MockPoolDataService } from '@/test/lib/mockPool';
 import { AddressZero, MaxUint256 } from '@ethersproject/constants';
-import { SwapInfo } from '@balancer-labs/sor';
+import { SwapInfo } from '@iguana-dex/sor';
 import hardhat from 'hardhat';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';

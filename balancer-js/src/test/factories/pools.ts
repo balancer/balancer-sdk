@@ -1,5 +1,5 @@
 import { Factory } from 'fishery';
-import { SubgraphPoolBase, SubgraphToken } from '@balancer-labs/sor';
+import { SubgraphPoolBase, SubgraphToken } from '@iguana-dex/sor';
 import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
 
 import { subgraphToken, subgraphPoolBase } from './sor';

@@ -42,4 +42,4 @@ export {
   PoolDictionary,
   formatSequence,
   getTokenAddressesForSwap,
-} from '@balancer-labs/sor';
+} from '@iguana-dex/sor';

@@ -4,7 +4,7 @@ import {
   WeightedPool,
   ZERO,
   SubgraphToken,
-} from '@balancer-labs/sor';
+} from '@iguana-dex/sor';
 import { Pool } from '@/types';
 
 export class WeightedPoolSpotPrice implements SpotPriceConcern {

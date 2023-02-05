@@ -9,7 +9,7 @@ import {
   SubgraphPoolBase,
   TokenPriceService,
   SwapTypes,
-} from '@balancer-labs/sor';
+} from '@iguana-dex/sor';
 import { BalancerSDK, Network, RelayerAuthorization } from '@/index';
 import { buildRelayerCalls, someJoinExit } from './joinAndExit';
 import {

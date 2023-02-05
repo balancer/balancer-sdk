@@ -10,7 +10,7 @@ import {
   SwapInfo,
   PoolFilter,
   TokenPriceService,
-} from '@balancer-labs/sor';
+} from '@iguana-dex/sor';
 import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
 import {

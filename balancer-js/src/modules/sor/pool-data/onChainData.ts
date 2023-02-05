@@ -4,7 +4,7 @@ import {
   PoolFilter,
   SubgraphPoolBase,
   SubgraphToken,
-} from '@balancer-labs/sor';
+} from '@iguana-dex/sor';
 import { Multicaller } from '@/lib/utils/multiCaller';
 import { isSameAddress } from '@/lib/utils';
 import { Vault__factory } from '@balancer-labs/typechain';
