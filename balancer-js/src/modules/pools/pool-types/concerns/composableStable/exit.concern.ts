@@ -22,6 +22,19 @@ import { _downscaleDown, _upscaleArray } from '@/lib/utils/solidityMaths';
 import { balancerVault } from '@/lib/constants/config';
 import { Vault__factory } from '@balancer-labs/typechain';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
+import { Pool } from '@/types';
+import { isUndefined } from 'lodash';
+
+interface SortedValues {
+  parsedTokens: string[];
+  parsedAmp: string;
+  parsedTotalShares: string;
+  parsedSwapFee: string;
+  bptIndex: number;
+  upScaledBalancesWithoutBpt: string[];
+  scalingFactors: bigint[];
+  singleTokenMaxOutIndex: number | undefined;
+}
 
 export class ComposableStablePoolExit implements ExitConcern {
   buildExitExactBPTIn = ({
@@ -33,79 +46,54 @@ export class ComposableStablePoolExit implements ExitConcern {
     wrappedNativeAsset,
     singleTokenMaxOut,
   }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
-    if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
-      throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
+    this.checkInputsExactBptIn(
+      bptIn,
+      singleTokenMaxOut,
+      pool,
+      shouldUnwrapNativeAsset
+    );
+
+    let sortedValues: SortedValues;
+    switch (pool.poolTypeVersion) {
+      case 1:
+        sortedValues = this.sortV1(
+          pool,
+          singleTokenMaxOut,
+          wrappedNativeAsset,
+          shouldUnwrapNativeAsset
+        );
+        break;
+      default:
+        sortedValues = this.sortV1(
+          pool,
+          singleTokenMaxOut,
+          wrappedNativeAsset,
+          shouldUnwrapNativeAsset
+        );
+        break;
     }
-    if (
-      singleTokenMaxOut &&
-      singleTokenMaxOut !== AddressZero &&
-      !pool.tokens
-        .map((t) => t.address)
-        .some((a) => isSameAddress(a, singleTokenMaxOut))
-    ) {
-      throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
-    }
 
-    if (!shouldUnwrapNativeAsset && singleTokenMaxOut === AddressZero)
-      throw new Error(
-        'shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values'
-      );
-
-    if (!singleTokenMaxOut && pool.poolTypeVersion === 1) {
-      throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE_VERSION);
-    }
-
-    // Check if there's any relevant composable stable pool info missing
-    if (pool.tokens.some((token) => !token.decimals))
-      throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
-    if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
-
+    const { parsedTokens } = sortedValues;
     // Parse pool info into EVM amounts in order to match amountsIn scalling
-    const {
-      parsedTokens,
-      parsedAmp,
-      parsedTotalShares,
-      parsedSwapFee,
-      bptIndex,
-      upScaledBalancesWithoutBpt,
-      scalingFactors,
-      //NOT PASSING wrappedNativeAsset BECAUSE singleTokenMaxOutIndex MUST BE FROM THE ORIGINAL pool.tokens ARRAY
-    } = parsePoolInfo(pool, undefined, shouldUnwrapNativeAsset);
-
     const expectedAmountsOut = Array(parsedTokens.length).fill('0');
     const minAmountsOut = Array(parsedTokens.length).fill('0');
     let userData: string;
 
-    if (singleTokenMaxOut) {
-      const singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
-      // Calculate amount out given BPT in
-      const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
-        BigInt(parsedAmp as string),
-        upScaledBalancesWithoutBpt.map(BigInt),
-        singleTokenMaxOutIndex,
-        BigInt(bptIn),
-        BigInt(parsedTotalShares),
-        BigInt(parsedSwapFee)
+    if (
+      singleTokenMaxOut &&
+      !isUndefined(sortedValues.singleTokenMaxOutIndex)
+    ) {
+      this.doMathsV1ExactBPTInSingleTokenOut(
+        sortedValues,
+        expectedAmountsOut,
+        minAmountsOut,
+        bptIn,
+        slippage
       );
-
-      // Downscales to token decimals and removes priceRate
-      const amountOutDownscaled = _downscaleDown(
-        amountOut,
-        BigInt(scalingFactors[singleTokenMaxOutIndex])
-      );
-
-      expectedAmountsOut[singleTokenMaxOutIndex] =
-        amountOutDownscaled.toString();
-
-      // Applying slippage tolerance
-      minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
-        BigNumber.from(amountOutDownscaled.toString()),
-        BigNumber.from(slippage)
-      ).toString();
 
       userData = ComposableStablePoolEncoder.exitExactBPTInForOneTokenOut(
         bptIn,
-        singleTokenMaxOutIndex
+        sortedValues.singleTokenMaxOutIndex as number
       );
     } else {
       throw new Error(
@@ -145,7 +133,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     ]);
 
     //REMOVING BPT;
-    minAmountsOut.splice(bptIndex, 1);
+    minAmountsOut.splice(sortedValues.bptIndex, 1);
 
     return {
       to,
@@ -165,24 +153,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     slippage,
     wrappedNativeAsset,
   }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
-    if (
-      tokensOut.length != amountsOut.length ||
-      tokensOut.length != pool.tokensList.length - 1
-    ) {
-      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
-    }
-    if (
-      pool.poolTypeVersion === 1 &&
-      amountsOut.filter((amount) => amount === '0').length !==
-        pool.tokensList.length - 2
-    ) {
-      throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE_VERSION);
-    }
-    // Check if there's any relevant stable pool info missing
-    if (pool.tokens.some((token) => !token.decimals))
-      throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
-    if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
-
+    this.checkInputsExactTokensOut(tokensOut, amountsOut, pool);
     // Parse pool info into EVM amounts in order to match amountsOut scalling
     const {
       parsedTokensWithoutBpt,
@@ -287,5 +258,138 @@ export class ComposableStablePoolExit implements ExitConcern {
       expectedBPTIn: bptIn,
       maxBPTIn,
     };
+  };
+
+  checkInputsExactBptIn = (
+    bptIn: string,
+    singleTokenMaxOut: string | undefined,
+    pool: Pool,
+    shouldUnwrapNativeAsset: boolean
+  ) => {
+    if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
+      throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
+    }
+    if (
+      singleTokenMaxOut &&
+      singleTokenMaxOut !== AddressZero &&
+      !pool.tokens
+        .map((t) => t.address)
+        .some((a) => isSameAddress(a, singleTokenMaxOut))
+    ) {
+      throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
+    }
+
+    if (!shouldUnwrapNativeAsset && singleTokenMaxOut === AddressZero)
+      throw new Error(
+        'shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values'
+      );
+
+    if (!singleTokenMaxOut && pool.poolTypeVersion === 1) {
+      throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE_VERSION);
+    }
+
+    // Check if there's any relevant composable stable pool info missing
+    if (pool.tokens.some((token) => !token.decimals))
+      throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+    if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+  };
+
+  checkInputsExactTokensOut = (
+    tokensOut: string[],
+    amountsOut: string[],
+    pool: Pool
+  ) => {
+    if (
+      tokensOut.length != amountsOut.length ||
+      tokensOut.length != pool.tokensList.length - 1
+    ) {
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+    }
+    if (
+      pool.poolTypeVersion === 1 &&
+      amountsOut.filter((amount) => amount === '0').length !==
+        pool.tokensList.length - 2
+    ) {
+      throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE_VERSION);
+    }
+    // Check if there's any relevant stable pool info missing
+    if (pool.tokens.some((token) => !token.decimals))
+      throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+  };
+
+  sortV1 = (
+    pool: Pool,
+    singleTokenMaxOut: string | undefined,
+    wrappedNativeAsset: string,
+    shouldUnwrapNativeAsset: boolean
+  ): SortedValues => {
+    const {
+      parsedTokens,
+      parsedAmp,
+      parsedTotalShares,
+      parsedSwapFee,
+      bptIndex,
+      upScaledBalancesWithoutBpt,
+      scalingFactors,
+      //NOT PASSING wrappedNativeAsset BECAUSE singleTokenMaxOutIndex MUST BE FROM THE ORIGINAL pool.tokens ARRAY
+    } = parsePoolInfo(pool, wrappedNativeAsset, shouldUnwrapNativeAsset);
+    let singleTokenMaxOutIndex;
+    if (singleTokenMaxOut) {
+      singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
+    }
+    if (!parsedAmp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+    return {
+      parsedTokens,
+      parsedAmp,
+      parsedTotalShares,
+      parsedSwapFee,
+      bptIndex,
+      upScaledBalancesWithoutBpt,
+      scalingFactors,
+      singleTokenMaxOutIndex,
+    };
+  };
+
+  doMathsV1ExactBPTInSingleTokenOut = (
+    sortedValues: SortedValues,
+    expectedAmountsOut: string[],
+    minAmountsOut: string[],
+    bptIn: string,
+    slippage: string
+  ) => {
+    const {
+      parsedAmp,
+      upScaledBalancesWithoutBpt,
+      singleTokenMaxOutIndex,
+      scalingFactors,
+      parsedTotalShares,
+      parsedSwapFee,
+    } = sortedValues;
+    if (isUndefined(singleTokenMaxOutIndex)) {
+      throw new Error('Invalid token');
+    }
+    // Calculate amount out given BPT in
+    const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
+      BigInt(parsedAmp as string),
+      upScaledBalancesWithoutBpt.map(BigInt),
+      singleTokenMaxOutIndex,
+      BigInt(bptIn),
+      BigInt(parsedTotalShares),
+      BigInt(parsedSwapFee)
+    );
+
+    // Downscales to token decimals and removes priceRate
+    const amountOutDownscaled = _downscaleDown(
+      amountOut,
+      BigInt(scalingFactors[singleTokenMaxOutIndex])
+    );
+
+    expectedAmountsOut[singleTokenMaxOutIndex] = amountOutDownscaled.toString();
+
+    // Applying slippage tolerance
+    minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
+      BigNumber.from(amountOutDownscaled.toString()),
+      BigNumber.from(slippage)
+    ).toString();
   };
 }
