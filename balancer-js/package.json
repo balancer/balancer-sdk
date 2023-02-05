@@ -1,6 +1,6 @@
 {
   "name": "@iguana-dex/sdk",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "JavaScript SDK for interacting with IguanaDEX",
   "license": "GPL-3.0-only",
   "homepage": "https://github.com/iguana-dex/iguana-sdk#readme",
