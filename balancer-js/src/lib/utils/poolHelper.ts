@@ -10,6 +10,25 @@ import { AddressZero } from '@ethersproject/constants';
 
 const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
+interface ParsedPoolInfo {
+  parsedTokens: string[];
+  parsedDecimals: string[];
+  parsedBalances: string[];
+  parsedWeights: string[];
+  parsedPriceRates: string[];
+  parsedAmp: string;
+  parsedTotalShares: string;
+  parsedSwapFee: string;
+  upScaledBalances: string[];
+  scalingFactors: bigint[];
+  scalingFactorsWithoutBpt: bigint[];
+  parsedTokensWithoutBpt: string[];
+  parsedBalancesWithoutBpt: string[];
+  bptIndex: number;
+  parsedPriceRatesWithoutBpt: string[];
+  upScaledBalancesWithoutBpt: string[];
+}
+
 /**
  * Parse pool info into EVM amounts. Sorts by token order if wrappedNativeAsset param passed.
  * @param {Pool}  pool
@@ -22,25 +41,26 @@ export const parsePoolInfo = (
   pool: Pool,
   wrappedNativeAsset?: string,
   unwrapNativeAsset?: boolean
-) => {
+): ParsedPoolInfo => {
+  const defaultOne = '1000000000000000000';
   let parsedTokens = unwrapNativeAsset
     ? pool.tokens.map((token) => token.address)
     : pool.tokens.map((token) =>
         token.address === wrappedNativeAsset ? AddressZero : token.address
       );
   let parsedDecimals = pool.tokens.map((token) => {
-    return token.decimals ? token.decimals.toString() : undefined;
+    return token.decimals ? token.decimals.toString() : '18';
   });
   let parsedBalances = pool.tokens.map((token) =>
     parseFixed(token.balance, token.decimals).toString()
   );
   let parsedWeights = pool.tokens.map((token) => {
-    return token.weight ? parseFixed(token.weight, 18).toString() : undefined;
+    return token.weight ? parseFixed(token.weight, 18).toString() : defaultOne;
   });
   let parsedPriceRates = pool.tokens.map((token) => {
     return token.priceRate
       ? parseFixed(token.priceRate, 18).toString()
-      : '1000000000000000000';
+      : defaultOne;
   });
   const scalingFactorsRaw = parsedDecimals.map((decimals) =>
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -82,7 +102,7 @@ export const parsePoolInfo = (
 
   const parsedAmp = pool.amp
     ? parseFixed(pool.amp, AMP_PRECISION).toString() // Solidity maths uses precison method for amp that must be replicated
-    : undefined;
+    : defaultOne;
   const parsedTotalShares = parseFixed(pool.totalShares, 18).toString();
   const parsedSwapFee = parseFixed(pool.swapFee, 18).toString();
 

@@ -24,11 +24,17 @@ export function insert<T>(arr: T[], index: number, newItem: T): T[] {
   ];
 }
 
-//REORDER ARRAYS USING A REFERENCE AND ORIGINAL ARRAY,
-// Example:
-// Input -> reference: [c,b,a], original: [a,b,c], others: [[1,2,3], [4,5,6]]
-// Output -> [[c,b,a],[3,2,1],[6,5,4]]
-
+/**
+ * REORDER ARRAYS USING A REFERENCE AND ORIGINAL ARRAY,
+ * Example:
+ * Input -> reference: [c,b,a], original: [a,b,c], others: [[1,2,3], [4,5,6]]
+ * Sorts like -> [[c,b,a],[3,2,1],[6,5,4]]
+ * Returns -> [6,5,4]
+ * @param reference
+ * @param original
+ * @param others
+ * @returns Sorted others
+ */
 export function reorderArrays<T>(
   reference: T[],
   original: T[],
