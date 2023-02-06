@@ -191,6 +191,9 @@ export class ComposableStablePoolJoin implements JoinConcern {
       functionName,
       attributes,
       data,
+      value,
+      minBPTOut,
+      expectedBPTOut,
     };
   }
 

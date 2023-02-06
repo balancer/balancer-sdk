@@ -1,6 +1,6 @@
 import { Contract } from '@ethersproject/contracts';
 import { expect } from 'chai';
-import { Vault__factory } from '@balancer-labs/typechain';
+import { Vault, Vault__factory } from '@balancer-labs/typechain';
 import {
   convertSimpleFlashSwapToBatchSwapParameters,
   querySimpleFlashSwap,
@@ -79,7 +79,7 @@ describe('querySimpleFlashSwap', () => {
     balancerVault,
     Vault__factory.abi,
     new MockProvider()
-  );
+  ) as unknown as Vault;
 
   describe('response', async function () {
     const response = await querySimpleFlashSwap({
