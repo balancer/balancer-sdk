@@ -32,10 +32,9 @@ interface SortedValues {
   parsedTokens: string[];
 }
 
-type Params = SortedValues &
+type SortedInputs = SortedValues &
   Pick<JoinPoolParameters, 'slippage' | 'joiner'> & {
     poolId: string;
-    value: BigNumber | undefined;
   };
 
 export class ComposableStablePoolJoin implements JoinConcern {
@@ -46,39 +45,67 @@ export class ComposableStablePoolJoin implements JoinConcern {
       joinParams.pool.tokensList
     );
 
-    const value = this.getEthValue(joinParams.tokensIn, joinParams.amountsIn);
-    let sortedValues: SortedValues;
+    const sortedValues = this.sortValuesBasedOnPoolVersion(joinParams);
 
-    if (joinParams.pool.poolTypeVersion === 1)
-      sortedValues = this.sortV1(
-        joinParams.wrappedNativeAsset,
-        joinParams.tokensIn,
-        joinParams.amountsIn,
-        joinParams.pool
-      );
-    else if (
-      joinParams.pool.poolTypeVersion === 2 ||
-      joinParams.pool.poolTypeVersion === 3
-    )
-      sortedValues = this.sortV2(
-        joinParams.tokensIn,
-        joinParams.amountsIn,
-        joinParams.pool
-      );
-    else
-      throw new Error(
-        `Unsupported ComposableStable Version ${joinParams.pool.poolTypeVersion}`
-      );
-
-    return this.doJoin({
+    const encodedData = this.buildExactTokensInForBPTOut({
       ...sortedValues,
       slippage: joinParams.slippage,
       joiner: joinParams.joiner,
       poolId: joinParams.pool.id,
-      value,
     });
+
+    // If joining with a native asset value must be set in call
+    const value = this.getEthValue(joinParams.tokensIn, joinParams.amountsIn);
+
+    return {
+      ...encodedData,
+      to: balancerVault,
+      value,
+    };
   };
 
+  /**
+   * Sorts inputs and pool value to be correct order and scale for maths and Vault interaction.
+   * @param values
+   * @returns
+   */
+  sortValuesBasedOnPoolVersion(
+    values: Pick<
+      JoinPoolParameters,
+      'pool' | 'wrappedNativeAsset' | 'amountsIn' | 'tokensIn'
+    >
+  ): SortedValues {
+    /**
+     * V1: Does not have proportional exits.
+     * V2: Reintroduced proportional exits. Has vulnerability.
+     * V3: Fixed vulnerability. Functionally the same as V2.
+     */
+    if (values.pool.poolTypeVersion < 4)
+      return this.sortV1(
+        values.wrappedNativeAsset,
+        values.tokensIn,
+        values.amountsIn,
+        values.pool
+      );
+    // Not release yet and needs tests to confirm
+    // else if (values.pool.poolTypeVersion === 4)
+    //   sortedValues = this.sortV4(
+    //     values.tokensIn,
+    //     values.amountsIn,
+    //     values.pool
+    //   );
+    else
+      throw new Error(
+        `Unsupported ComposablePool Version ${values.pool.poolTypeVersion}`
+      );
+  }
+
+  /**
+   * Ensure tokensIn and amountsIn match pool tokens length
+   * @param tokensIn
+   * @param amountsIn
+   * @param poolTokens
+   */
   checkInputs(
     tokensIn: string[],
     amountsIn: string[],
@@ -92,7 +119,14 @@ export class ComposableStablePoolJoin implements JoinConcern {
     }
   }
 
-  encodeUserData(
+  /**
+   * Encodes user data with slippage applied to expected BPT out.
+   * @param expectedBPTOut
+   * @param slippage
+   * @param amountsIn
+   * @returns
+   */
+  encodeUserDataExactTokensInForBPTOut(
     expectedBPTOut: bigint,
     slippage: string,
     amountsIn: string[]
@@ -112,12 +146,22 @@ export class ComposableStablePoolJoin implements JoinConcern {
     };
   }
 
-  encodeFunctionData(
+  /**
+   * Encode transaction data into an ABI byte string which can be sent to the network to be executed
+   * @param poolId
+   * @param sender
+   * @param recipient
+   * @param assetsWithBpt
+   * @param encodedUserData
+   * @param maxAmountsInWithBpt
+   * @returns
+   */
+  encodeJoinPool(
     poolId: string,
     sender: string,
     recipient: string,
     assetsWithBpt: string[],
-    userData: string,
+    encodedUserData: string,
     maxAmountsInWithBpt: string[]
   ): Pick<JoinPoolAttributes, 'functionName' | 'attributes' | 'data'> {
     const functionName = 'joinPool';
@@ -129,14 +173,13 @@ export class ComposableStablePoolJoin implements JoinConcern {
       joinPoolRequest: {
         assets: assetsWithBpt,
         maxAmountsIn: maxAmountsInWithBpt,
-        userData,
+        userData: encodedUserData,
         fromInternalBalance: false,
       },
     };
 
     const vaultInterface = Vault__factory.createInterface();
 
-    // encode transaction data into an ABI byte string which can be sent to the network to be executed
     const data = vaultInterface.encodeFunctionData(functionName, [
       attributes.poolId,
       attributes.sender,
@@ -151,6 +194,14 @@ export class ComposableStablePoolJoin implements JoinConcern {
     };
   }
 
+  /**
+   * Sorts and scales values correctly for V1-V3 ComposableStable pool.
+   * @param wrappedNativeAsset (Used for sorting)
+   * @param tokensIn Addresses of token in
+   * @param amountsIn Downscaled amounts in
+   * @param pool Pool data
+   * @returns Sorted values
+   */
   sortV1(
     wrappedNativeAsset: string,
     tokensIn: string[],
@@ -158,13 +209,12 @@ export class ComposableStablePoolJoin implements JoinConcern {
     pool: Pool
   ): SortedValues {
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    // amountsIn must be sorted in correct order for Vault interaction. Currently ordered with relation to tokensIn so need sorted relative to those
+    // Sorts amounts in into ascending order (referenced to token addresses) to match the format expected by the Vault.
     const [, sortedAmountsIn] = assetHelpers.sortTokens(
       tokensIn,
       amountsIn
     ) as [string[], string[]];
 
-    // This will order everything correctly based on pool tokens
     const {
       parsedTokens,
       parsedAmp,
@@ -189,7 +239,12 @@ export class ComposableStablePoolJoin implements JoinConcern {
     };
   }
 
-  doJoin(sortedValues: Params): JoinPoolAttributes {
+  buildExactTokensInForBPTOut(
+    sortedValues: SortedInputs
+  ): Pick<
+    JoinPoolAttributes,
+    'minBPTOut' | 'functionName' | 'attributes' | 'data'
+  > {
     const {
       sortedAmountsIn,
       scalingFactorsWithoutBpt,
@@ -202,10 +257,10 @@ export class ComposableStablePoolJoin implements JoinConcern {
       slippage,
       poolId,
       joiner,
-      value,
     } = sortedValues;
-    // BPT out doesn't need downscaled or priceRate
-    const expectedBPTOut = this.doMaths(
+    // BPT out will be in correct scale and price rate is always 1e18 do doesn't need to be considered
+    // Maths needs to have BPT values removed
+    const expectedBPTOut = this.calcBptOutGivenExactTokensIn(
       sortedAmountsIn,
       scalingFactorsWithoutBpt,
       upScaledBalancesWithoutBpt,
@@ -214,13 +269,13 @@ export class ComposableStablePoolJoin implements JoinConcern {
       parsedSwapFee
     );
 
-    const userData = this.encodeUserData(
+    const userData = this.encodeUserDataExactTokensInForBPTOut(
       expectedBPTOut,
       slippage,
       sortedAmountsIn
     );
 
-    const data = this.encodeFunctionData(
+    const data = this.encodeJoinPool(
       poolId,
       joiner,
       joiner,
@@ -231,8 +286,6 @@ export class ComposableStablePoolJoin implements JoinConcern {
 
     return {
       ...data,
-      to: balancerVault,
-      value,
       minBPTOut: userData.minBPTOut,
     };
   }
@@ -243,7 +296,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
     return values[0] ? BigNumber.from(values[0]) : undefined;
   }
 
-  doMaths(
+  calcBptOutGivenExactTokensIn(
     amountsIn: string[],
     scalingFactorsWithoutBpt: bigint[],
     upScaledBalancesWithoutBpt: string[],
@@ -254,7 +307,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
     /*
       Maths should use: 
       - upscaled amounts, e.g. 1USDC = 1e18
-      - rates
+      - rates (scaling factors should include these)
     */
     const upScaledAmountsIn = _upscaleArray(
       amountsIn.map(BigInt),
@@ -267,11 +320,13 @@ export class ComposableStablePoolJoin implements JoinConcern {
       BigInt(upscaledTotalShares),
       BigInt(upscaledSwapFee)
     );
-    // BPT out doesn't need downscaled or priceRate
+    // BPT out will be in correct scale and price rate is always 1e18 do doesn't need to be considered
     return expectedBPTOut;
   }
 
-  sortV2(tokensIn: string[], amountsIn: string[], pool: Pool): SortedValues {
+  // This uses sorting where BPT is always at index 0.
+  // Not currently released but keep for when it is.
+  sortV4(tokensIn: string[], amountsIn: string[], pool: Pool): SortedValues {
     // This will keep ordering as read from Pool
     const {
       parsedTokens,
