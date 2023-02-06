@@ -14,7 +14,6 @@ import {
   insert,
   isSameAddress,
   parsePoolInfo,
-  reorderArrays,
 } from '@/lib/utils';
 import * as SOR from '@balancer-labs/sor';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
@@ -27,14 +26,39 @@ import { isUndefined } from 'lodash';
 
 interface SortedValues {
   parsedTokens: string[];
-  parsedAmp: string;
+  parsedAmp?: string;
   parsedTotalShares: string;
   parsedSwapFee: string;
   bptIndex: number;
   upScaledBalancesWithoutBpt: string[];
+  upScaledAmountsOut: bigint[];
   scalingFactors: bigint[];
   singleTokenMaxOutIndex: number | undefined;
+  scalingFactorsWithoutBpt: bigint[];
+  minAmountsOutWithoutBpt: string[];
+  minAmountsOut: string[];
 }
+
+type DoMathsBPTInForExactTokensOutParams = SortedValues &
+  Pick<ExitExactTokensOutParameters, 'slippage'>;
+
+type GetValuesSortedParams = {
+  pool: Pool;
+  singleTokenMaxOut?: string;
+  wrappedNativeAsset: string;
+  shouldUnwrapNativeAsset?: boolean;
+  amountsOut?: string[];
+  tokensOut?: string[];
+};
+
+type DoExitParams = SortedValues &
+  Pick<ExitExactBPTInParameters, 'exiter'> & {
+    poolId: string;
+    userData: string;
+    expectedAmountsOut?: string[];
+    maxBPTIn?: string;
+    bptIn?: string;
+  };
 
 export class ComposableStablePoolExit implements ExitConcern {
   buildExitExactBPTIn = ({
@@ -53,29 +77,16 @@ export class ComposableStablePoolExit implements ExitConcern {
       shouldUnwrapNativeAsset
     );
 
-    let sortedValues: SortedValues;
-    switch (pool.poolTypeVersion) {
-      case 1:
-        sortedValues = this.sortV1(
-          pool,
-          singleTokenMaxOut,
-          wrappedNativeAsset,
-          shouldUnwrapNativeAsset
-        );
-        break;
-      default:
-        sortedValues = this.sortV1(
-          pool,
-          singleTokenMaxOut,
-          wrappedNativeAsset,
-          shouldUnwrapNativeAsset
-        );
-        break;
-    }
+    const sortedValues = this.getValuesSorted({
+      pool,
+      wrappedNativeAsset,
+      shouldUnwrapNativeAsset,
+      singleTokenMaxOut,
+    });
 
     const { parsedTokens } = sortedValues;
     // Parse pool info into EVM amounts in order to match amountsIn scalling
-    const expectedAmountsOut = Array(parsedTokens.length).fill('0');
+    const expectedAmountsOut: string[] = Array(parsedTokens.length).fill('0');
     const minAmountsOut = Array(parsedTokens.length).fill('0');
     let userData: string;
 
@@ -100,49 +111,14 @@ export class ComposableStablePoolExit implements ExitConcern {
         'Proportional Exit - To Be Implemented, use singleTokenMaxOut variable'
       );
     }
-    const to = balancerVault;
-    const functionName = 'exitPool';
-
-    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-
-    //SORTING TOKENS AND AMOUNTS BEFORE USING ON ExitPool attributes
-    const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
-      parsedTokens,
-      minAmountsOut
-    ) as [string[], string[]];
-
-    const attributes: ExitPool = {
+    return this.doExitExactBPTIn({
+      ...sortedValues,
       poolId: pool.id,
-      sender: exiter,
-      recipient: exiter,
-      exitPoolRequest: {
-        assets: sortedTokens,
-        minAmountsOut: sortedAmounts,
-        userData,
-        toInternalBalance: false,
-      },
-    };
-
-    // Encode transaction data into an ABI byte string which can be sent to the network to be executed
-    const vaultInterface = Vault__factory.createInterface();
-    const data = vaultInterface.encodeFunctionData(functionName, [
-      attributes.poolId,
-      attributes.sender,
-      attributes.recipient,
-      attributes.exitPoolRequest,
-    ]);
-
-    //REMOVING BPT;
-    minAmountsOut.splice(sortedValues.bptIndex, 1);
-
-    return {
-      to,
-      functionName,
-      attributes,
-      data,
-      expectedAmountsOut,
+      exiter,
+      userData,
       minAmountsOut,
-    };
+      expectedAmountsOut,
+    });
   };
 
   buildExitExactTokensOut = ({
@@ -154,110 +130,34 @@ export class ComposableStablePoolExit implements ExitConcern {
     wrappedNativeAsset,
   }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
     this.checkInputsExactTokensOut(tokensOut, amountsOut, pool);
-    // Parse pool info into EVM amounts in order to match amountsOut scalling
-    const {
-      parsedTokensWithoutBpt,
-      parsedAmp,
-      parsedTotalShares,
-      parsedSwapFee,
-      bptIndex,
-      upScaledBalancesWithoutBpt,
-      scalingFactorsWithoutBpt,
-      //NOT PASSING wrappedNativeAsset BECAUSE AMOUNTS WILL NEED TO BE REORDERED FOLLOWING ORIGINAL POOL TOKENS ORDER
-    } = parsePoolInfo(pool);
-
-    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-
-    const [
-      sortedTokensWithoutBpt,
-      sortedUpScaledBalances,
-      sortedScalingFactorsWithoutBpt,
-    ] = assetHelpers.sortTokens(
-      parsedTokensWithoutBpt,
-      upScaledBalancesWithoutBpt,
-      scalingFactorsWithoutBpt
-    ) as [string[], string[], string[]];
-
-    const [, sortedAmountsOut] = assetHelpers.sortTokens(
+    const sortedValues = this.getValuesSorted({
+      pool,
+      wrappedNativeAsset,
+      amountsOut,
       tokensOut,
-      amountsOut
-    ) as [string[], string[]];
-    // Maths should use upscaled amounts with rates, e.g. 1USDC => 1e18 not 1e6
-    const upScaledAmountsOut = _upscaleArray(
-      sortedAmountsOut.map((a) => BigInt(a)),
-      sortedScalingFactorsWithoutBpt.map((a) => BigInt(a))
-    );
-    // Calculate expected BPT in given tokens out
-    const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(
-      BigInt(parsedAmp as string),
-      sortedUpScaledBalances.map((b) => BigInt(b)),
-      upScaledAmountsOut,
-      BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
-    ).toString();
+    });
+    if (!sortedValues.upScaledAmountsOut) {
+      throw Error('amountsOut or tokensOut parameter invalid;');
+    }
+    //DOING THE MATHS TO CALCULATE THE bptIn AND maxBPTIn VALUES
+    const { bptIn, maxBPTIn } = this.doMathsV1BPTInExactTokensOut({
+      ...sortedValues,
+      slippage,
+    });
 
-    // Apply slippage tolerance
-    const maxBPTIn = addSlippage(
-      BigNumber.from(bptIn),
-      BigNumber.from(slippage)
-    ).toString();
-
-    //SORTING AMOUNTS FOLLOWING THE POOL TOKENS ORDER, COMPOSABLE STABLE POOLS V2 TOKENS ARE NOT SORTED BY ADDRESS, BPT IS ALWAYS THE FIRST
-    const [amountsOutSortedForEncoder] = reorderArrays(
-      parsedTokensWithoutBpt,
-      sortedTokensWithoutBpt,
-      sortedAmountsOut
-    ) as [string[]];
     const userData = ComposableStablePoolEncoder.exitBPTInForExactTokensOut(
-      amountsOutSortedForEncoder,
+      sortedValues.minAmountsOutWithoutBpt as string[],
       maxBPTIn
     );
 
-    sortedAmountsOut.splice(bptIndex, 0, '0');
-
-    const minAmountsOut = sortedAmountsOut.map((a) =>
-      BigNumber.from(a).sub(1).isNegative()
-        ? a
-        : BigNumber.from(a).sub(1).toString()
-    );
-
-    const sortedTokensWithBpt = insert(
-      sortedTokensWithoutBpt,
-      bptIndex,
-      pool.address
-    );
-
-    const to = balancerVault;
-    const functionName = 'exitPool';
-    const attributes: ExitPool = {
+    return this.doExitExactTokensOut({
+      ...sortedValues,
+      userData,
+      exiter,
       poolId: pool.id,
-      sender: exiter,
-      recipient: exiter,
-      exitPoolRequest: {
-        assets: sortedTokensWithBpt,
-        minAmountsOut,
-        userData,
-        toInternalBalance: false,
-      },
-    };
-
-    // encode transaction data into an ABI byte string which can be sent to the network to be executed
-    const vaultInterface = Vault__factory.createInterface();
-    const data = vaultInterface.encodeFunctionData(functionName, [
-      attributes.poolId,
-      attributes.sender,
-      attributes.recipient,
-      attributes.exitPoolRequest,
-    ]);
-
-    return {
-      to,
-      functionName,
-      attributes,
-      data,
-      expectedBPTIn: bptIn,
+      bptIn,
       maxBPTIn,
-    };
+    });
   };
 
   checkInputsExactBptIn = (
@@ -284,6 +184,7 @@ export class ComposableStablePoolExit implements ExitConcern {
         'shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values'
       );
 
+    //V1 COMPOSABLE STABLE POOLS ONLY SUPPORT SINGLE TOKEN OUT JOINS
     if (!singleTokenMaxOut && pool.poolTypeVersion === 1) {
       throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE_VERSION);
     }
@@ -317,36 +218,66 @@ export class ComposableStablePoolExit implements ExitConcern {
       throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
   };
 
-  sortV1 = (
-    pool: Pool,
-    singleTokenMaxOut: string | undefined,
-    wrappedNativeAsset: string,
-    shouldUnwrapNativeAsset: boolean
-  ): SortedValues => {
-    const {
-      parsedTokens,
-      parsedAmp,
-      parsedTotalShares,
-      parsedSwapFee,
-      bptIndex,
-      upScaledBalancesWithoutBpt,
-      scalingFactors,
-      //NOT PASSING wrappedNativeAsset BECAUSE singleTokenMaxOutIndex MUST BE FROM THE ORIGINAL pool.tokens ARRAY
-    } = parsePoolInfo(pool, wrappedNativeAsset, shouldUnwrapNativeAsset);
+  getValuesSorted = ({
+    pool,
+    singleTokenMaxOut,
+    wrappedNativeAsset,
+    shouldUnwrapNativeAsset,
+    amountsOut,
+    tokensOut,
+  }: GetValuesSortedParams): SortedValues => {
+    const parsedValues = parsePoolInfo(
+      pool,
+      wrappedNativeAsset,
+      shouldUnwrapNativeAsset
+    );
     let singleTokenMaxOutIndex;
+    const { parsedTokens, parsedAmp, scalingFactorsWithoutBpt } = parsedValues;
     if (singleTokenMaxOut) {
       singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
     }
     if (!parsedAmp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+
+    let upScaledAmountsOut: bigint[] = []; // ONLY FOR EXACT TOKENS OUT, EXACT BPT IN NEED TO CALCULATE
+    let minAmountsOut: string[] = []; // ONLY FOR EXACT TOKENS OUT, EXACT BPT IN NEED TO CALCULATE
+    let minAmountsOutWithoutBpt: string[] = []; // ONLY FOR EXACT TOKENS OUT, EXACT BPT IN NEED TO CALCULATE
+    if (
+      // ONLY EXITS OF "exact tokens out" KIND CAN USE THIS, BECAUSE THE AMOUNTS OUT ON "exact bpt in" KIND MUST BE CALCULATED
+      tokensOut &&
+      amountsOut &&
+      amountsOut.length > 0 &&
+      tokensOut.length === amountsOut.length
+    ) {
+      const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+      const [, sortedAmountsOut] = assetHelpers.sortTokens(
+        tokensOut,
+        amountsOut
+      ) as [string[], string[]];
+      // Maths should use upscaled amounts with rates, e.g. 1USDC => 1e18 not 1e6
+      upScaledAmountsOut = _upscaleArray(
+        sortedAmountsOut.map((a) => BigInt(a)),
+        scalingFactorsWithoutBpt.map((a) => BigInt(a))
+      );
+
+      minAmountsOutWithoutBpt = sortedAmountsOut;
+
+      minAmountsOut = insert(
+        minAmountsOutWithoutBpt,
+        parsedValues.bptIndex,
+        '0'
+      ).map((a) =>
+        BigNumber.from(a).sub(3).isNegative()
+          ? a.toString()
+          : BigNumber.from(a).sub(3).toString()
+      );
+    }
+
     return {
-      parsedTokens,
-      parsedAmp,
-      parsedTotalShares,
-      parsedSwapFee,
-      bptIndex,
-      upScaledBalancesWithoutBpt,
-      scalingFactors,
+      ...parsedValues,
       singleTokenMaxOutIndex,
+      upScaledAmountsOut,
+      minAmountsOut, // ONLY FOR EXACT TOKENS OUT, EXACT BPT IN NEED TO CALCULATE
+      minAmountsOutWithoutBpt, // ONLY FOR EXACT TOKENS OUT, EXACT BPT IN NEED TO CALCULATE
     };
   };
 
@@ -391,5 +322,134 @@ export class ComposableStablePoolExit implements ExitConcern {
       BigNumber.from(amountOutDownscaled.toString()),
       BigNumber.from(slippage)
     ).toString();
+  };
+
+  doMathsV1BPTInExactTokensOut = ({
+    parsedAmp,
+    upScaledBalancesWithoutBpt,
+    upScaledAmountsOut,
+    parsedTotalShares,
+    parsedSwapFee,
+    slippage,
+  }: DoMathsBPTInForExactTokensOutParams) => {
+    if (!upScaledAmountsOut) {
+      throw new Error('upScaledAmountsOut is undefined');
+    }
+    const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(
+      BigInt(parsedAmp as string),
+      upScaledBalancesWithoutBpt.map(BigInt),
+      upScaledAmountsOut,
+      BigInt(parsedTotalShares),
+      BigInt(parsedSwapFee)
+    ).toString();
+
+    // Apply slippage tolerance
+    const maxBPTIn = addSlippage(
+      BigNumber.from(bptIn),
+      BigNumber.from(slippage)
+    ).toString();
+
+    return { bptIn, maxBPTIn };
+  };
+
+  doExitExactBPTIn = (params: DoExitParams): ExitExactBPTInAttributes => {
+    const {
+      poolId,
+      exiter,
+      parsedTokens,
+      minAmountsOut,
+      userData,
+      bptIndex,
+      expectedAmountsOut,
+      minAmountsOutWithoutBpt,
+    } = params;
+    const to = balancerVault;
+    const functionName = 'exitPool';
+
+    if (!minAmountsOut) {
+      throw new Error('minAmountsOut invalid');
+    }
+
+    const attributes: ExitPool = {
+      poolId,
+      sender: exiter,
+      recipient: exiter,
+      exitPoolRequest: {
+        assets: parsedTokens,
+        minAmountsOut,
+        userData,
+        toInternalBalance: false,
+      },
+    };
+
+    // Encode transaction data into an ABI byte string which can be sent to the network to be executed
+    const vaultInterface = Vault__factory.createInterface();
+    const data = vaultInterface.encodeFunctionData(functionName, [
+      attributes.poolId,
+      attributes.sender,
+      attributes.recipient,
+      attributes.exitPoolRequest,
+    ]);
+
+    //REMOVING BPT;
+    minAmountsOut.splice(bptIndex, 1);
+
+    return {
+      to,
+      functionName,
+      attributes,
+      data,
+      expectedAmountsOut: expectedAmountsOut as string[],
+      minAmountsOut: minAmountsOutWithoutBpt,
+    };
+  };
+
+  doExitExactTokensOut = (
+    params: DoExitParams
+  ): ExitExactTokensOutAttributes => {
+    const {
+      exiter,
+      poolId,
+      minAmountsOut,
+      userData,
+      bptIn,
+      maxBPTIn,
+      parsedTokens,
+    } = params;
+    if (!bptIn || !maxBPTIn) {
+      throw new Error('Could not calculate bptIn');
+    }
+
+    const to = balancerVault;
+    const functionName = 'exitPool';
+    const attributes: ExitPool = {
+      poolId: poolId,
+      sender: exiter,
+      recipient: exiter,
+      exitPoolRequest: {
+        assets: parsedTokens,
+        minAmountsOut,
+        userData,
+        toInternalBalance: false,
+      },
+    };
+
+    // encode transaction data into an ABI byte string which can be sent to the network to be executed
+    const vaultInterface = Vault__factory.createInterface();
+    const data = vaultInterface.encodeFunctionData(functionName, [
+      attributes.poolId,
+      attributes.sender,
+      attributes.recipient,
+      attributes.exitPoolRequest,
+    ]);
+
+    return {
+      to,
+      functionName,
+      attributes,
+      data,
+      expectedBPTIn: bptIn,
+      maxBPTIn,
+    };
   };
 }

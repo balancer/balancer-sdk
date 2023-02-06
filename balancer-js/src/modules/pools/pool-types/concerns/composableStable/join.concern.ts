@@ -18,7 +18,7 @@ import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { balancerVault } from '@/lib/constants/config';
 import { Vault__factory } from '@balancer-labs/typechain';
 import { AddressZero } from '@ethersproject/constants';
-import { _upscale, _upscaleArray } from '@/lib/utils/solidityMaths';
+import { _upscaleArray } from '@/lib/utils/solidityMaths';
 import { Pool } from '@/types';
 
 interface SortedValues {
@@ -27,7 +27,6 @@ interface SortedValues {
   upScaledBalancesWithoutBpt: string[];
   parsedAmp: string;
   parsedTotalShares: string;
-  parsedPriceRatesWithoutBpt: string[];
   parsedSwapFee: string;
   bptIndex: number;
   parsedTokens: string[];
@@ -171,7 +170,6 @@ export class ComposableStablePoolJoin implements JoinConcern {
       parsedAmp,
       parsedSwapFee,
       parsedTotalShares,
-      parsedPriceRatesWithoutBpt,
       bptIndex,
       scalingFactorsWithoutBpt,
       upScaledBalancesWithoutBpt,
@@ -186,7 +184,6 @@ export class ComposableStablePoolJoin implements JoinConcern {
       parsedAmp,
       parsedTotalShares,
       parsedSwapFee,
-      parsedPriceRatesWithoutBpt,
       bptIndex,
       parsedTokens,
     };
@@ -200,7 +197,6 @@ export class ComposableStablePoolJoin implements JoinConcern {
       parsedAmp,
       parsedTotalShares,
       parsedSwapFee,
-      parsedPriceRatesWithoutBpt,
       bptIndex,
       parsedTokens,
       slippage,
@@ -208,7 +204,6 @@ export class ComposableStablePoolJoin implements JoinConcern {
       joiner,
       value,
     } = sortedValues;
-
     // BPT out doesn't need downscaled or priceRate
     const expectedBPTOut = this.doMaths(
       sortedAmountsIn,
@@ -216,8 +211,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       upScaledBalancesWithoutBpt,
       parsedAmp,
       parsedTotalShares,
-      parsedSwapFee,
-      parsedPriceRatesWithoutBpt
+      parsedSwapFee
     );
 
     const userData = this.encodeUserData(
@@ -255,30 +249,21 @@ export class ComposableStablePoolJoin implements JoinConcern {
     upScaledBalancesWithoutBpt: string[],
     upscaledAmp: string,
     upscaledTotalShares: string,
-    upscaledSwapFee: string,
-    parsedPriceRatesWithoutBpt: string[]
+    upscaledSwapFee: string
   ): bigint {
     /*
       Maths should use: 
       - upscaled amounts, e.g. 1USDC = 1e18
       - rates
     */
-    const upScaledAmountsInPriceRated = _upscaleArray(
+    const upScaledAmountsIn = _upscaleArray(
       amountsIn.map(BigInt),
-      scalingFactorsWithoutBpt.map((scalingFactor, i) =>
-        _upscale(BigInt(scalingFactor), BigInt(parsedPriceRatesWithoutBpt[i]))
-      )
+      scalingFactorsWithoutBpt.map(BigInt)
     );
-
-    const upScaledBalancesPriceRated = _upscaleArray(
-      upScaledBalancesWithoutBpt.map(BigInt),
-      parsedPriceRatesWithoutBpt.map(BigInt)
-    );
-
     const expectedBPTOut = StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(upscaledAmp),
-      upScaledBalancesPriceRated, // Should not have BPT
-      upScaledAmountsInPriceRated, // Should not have BPT
+      upScaledBalancesWithoutBpt.map(BigInt), // Should not have BPT
+      upScaledAmountsIn, // Should not have BPT
       BigInt(upscaledTotalShares),
       BigInt(upscaledSwapFee)
     );
@@ -296,17 +281,16 @@ export class ComposableStablePoolJoin implements JoinConcern {
       parsedTotalShares,
       scalingFactorsWithoutBpt,
       upScaledBalancesWithoutBpt,
-      parsedPriceRatesWithoutBpt,
     } = parsePoolInfo(pool);
     if (!parsedAmp) {
       throw new BalancerError(BalancerErrorCode.MISSING_AMP);
     }
     // Reorder amountsIn to match pool token order
-    const [sortedAmountsIn] = reorderArrays(
+    const [, sortedAmountsIn] = reorderArrays(
       parsedTokensWithoutBpt,
       tokensIn,
       amountsIn
-    ) as [string[]];
+    ) as [string[], string[]];
     return {
       sortedAmountsIn,
       scalingFactorsWithoutBpt,
@@ -316,7 +300,6 @@ export class ComposableStablePoolJoin implements JoinConcern {
       parsedSwapFee,
       bptIndex: 0,
       parsedTokens,
-      parsedPriceRatesWithoutBpt,
     };
   }
 }

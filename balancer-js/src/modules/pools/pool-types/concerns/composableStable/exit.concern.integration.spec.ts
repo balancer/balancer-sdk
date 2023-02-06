@@ -159,12 +159,15 @@ describe('exit stable pools execution', async () => {
         for (let i = 0; i < tokensBalanceAfter.length; i++) {
           if (!tokensBalanceAfter[i].eq(tokensBalanceBefore[i])) {
             expect(
+              //VERIFYING IF THE TOKEN BALANCE GOT NEAR WHAT IS EXPECTED, WITH 3 POINTS OF MARGIN FOR ROUNDING DIFFERENCES
               tokensBalanceAfter[i]
                 .sub(tokensBalanceBefore[i])
-                .eq(tokensMinBalanceIncrease[i].sub(BigNumber.from('1'))) ||
+                .sub(tokensMinBalanceIncrease[i])
+                .lte(BigNumber.from(3)) &&
                 tokensBalanceAfter[i]
                   .sub(tokensBalanceBefore[i])
-                  .eq(tokensMinBalanceIncrease[i])
+                  .sub(tokensMinBalanceIncrease[i])
+                  .gte(BigNumber.from(-3))
             ).to.be.true;
           }
         }
