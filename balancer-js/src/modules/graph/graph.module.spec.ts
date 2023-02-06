@@ -15,7 +15,6 @@ import {
   LinearInfo,
 } from '@/test/factories/pools';
 import { Pool as SdkPool } from '@/types';
-import { Network } from '@/lib/constants/network';
 
 function checkNode(
   node: Node,
@@ -246,10 +245,7 @@ describe('Graph', () => {
       const poolProvider = new PoolsStaticRepository(
         linearInfo.linearPools as unknown as SdkPool[]
       );
-      poolsGraph = new PoolGraph(poolProvider, {
-        network: Network.GOERLI,
-        rpcUrl: '',
-      });
+      poolsGraph = new PoolGraph(poolProvider);
     });
     context('using wrapped tokens', () => {
       before(async () => {
@@ -352,10 +348,7 @@ describe('Graph', () => {
       const poolProvider = new PoolsStaticRepository(
         pools as unknown as SdkPool[]
       );
-      poolsGraph = new PoolGraph(poolProvider, {
-        network: Network.GOERLI,
-        rpcUrl: '',
-      });
+      poolsGraph = new PoolGraph(poolProvider);
     });
 
     it('should throw when pool doesnt exist', async () => {
@@ -509,10 +502,7 @@ describe('Graph', () => {
       const poolProvider = new PoolsStaticRepository(
         pools as unknown as SdkPool[]
       );
-      poolsGraph = new PoolGraph(poolProvider, {
-        network: Network.GOERLI,
-        rpcUrl: '',
-      });
+      poolsGraph = new PoolGraph(poolProvider);
     });
 
     context('using wrapped tokens', () => {
@@ -668,10 +658,7 @@ describe('Graph', () => {
       const poolProvider = new PoolsStaticRepository(
         pools as unknown as SdkPool[]
       );
-      poolsGraph = new PoolGraph(poolProvider, {
-        network: Network.GOERLI,
-        rpcUrl: '',
-      });
+      poolsGraph = new PoolGraph(poolProvider);
     });
 
     context('using wrapped tokens', () => {

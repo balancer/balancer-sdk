@@ -64,7 +64,7 @@ describe('Liquidity Module', () => {
       const wethBalance =
         pool.tokens.find((token) => token.address === wethAddress)?.balance ||
         '0';
-      const wethPrice = tokenPrices[wethAddress].usd;
+      const wethPrice = tokenPrices[wethAddress].usd || '0';
       const expectedLiquidity = parseFixed(wethBalance, 18)
         .mul(parseFixed(wethPrice, 0))
         .mul('2');

@@ -1,7 +1,7 @@
 import { parseFixed } from '@ethersproject/bignumber';
 import { Pool } from '../../types';
 import { _computeScalingFactor } from '@/lib/utils/solidityMaths';
-import { AssetHelpers } from '@/lib/utils';
+import { AssetHelpers } from './assetHelpers';
 
 const AMP_PRECISION = 3; // number of decimals -> precision 1000
 

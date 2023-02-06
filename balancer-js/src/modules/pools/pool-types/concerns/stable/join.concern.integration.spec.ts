@@ -156,19 +156,18 @@ describe('join execution', async () => {
       );
 
       const slippage = '100';
-      const { functionName, attributes, value, minBPTOut } =
-        controller.buildJoin(
-          signerAddress,
-          tokensIn.map((t) => t.address),
-          amountsIn,
-          slippage
-        );
-      const transactionResponse = await sdk.contracts.vault
-        .connect(signer)
-        [functionName](...Object.values(attributes), { value });
-      transactionReceipt = await transactionResponse.wait();
+      const { to, data, minBPTOut } = controller.buildJoin(
+        signerAddress,
+        tokensIn.map((t) => t.address),
+        amountsIn,
+        slippage
+      );
+
+      const tx = { to, data };
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
+      transactionReceipt = await (await signer.sendTransaction(tx)).wait();
+
       [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
         [pool.address, ...pool.tokensList],
         signer,
