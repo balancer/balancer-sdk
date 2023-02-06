@@ -400,7 +400,7 @@ export class ComposableStablePoolExit implements ExitConcern {
       attributes,
       data,
       expectedAmountsOut: expectedAmountsOut as string[],
-      minAmountsOut: minAmountsOutWithoutBpt,
+      minAmountsOut,
     };
   };
 
