@@ -61,6 +61,19 @@ type DoExitParams = SortedValues &
   };
 
 export class ComposableStablePoolExit implements ExitConcern {
+  /**
+   * Builds an exit with exact bpt in transaction;
+   * @param params
+   *  @param exiter{string} is the address of the exiter of the pool
+   *  @param pool{Pool} is the pool object(it's automatically inserted when you wrap a Pool with the methods using balancer.pools.wrap function)
+   *  @param bptIn{string} the amount of bpt in the exit
+   *  @param slippage{string} the percentage of slippage,in 1:0.01% scale ('1' equals 0.01%, '10000' equals 100%)
+   *  @param shouldUnwrapNativeAsset if the wETH should be unwrapped to ETH
+   *  @param wrappedNativeAsset wETH address, used to build AssetHelpers object;
+   *  @param singleTokenMaxOut The address of the token that will be singled withdrawn in the exit transaction,
+   *                           if not passed, the transaction will do a proportional exit, only available for v2 composable stable pools
+   * @returns an object containing the attributes necessary to make an exit with exact bpt in transaction;
+   */
   buildExitExactBPTIn = ({
     exiter,
     pool,
@@ -120,7 +133,18 @@ export class ComposableStablePoolExit implements ExitConcern {
       expectedAmountsOut,
     });
   };
-
+  /**
+   * Builds an exit with exact tokens out transaction;
+   * @param params
+   *  @param exiter{string} is the address of the exiter of the pool
+   *  @param pool{Pool} is the pool object(it's automatically inserted when you wrap a Pool with the methods using balancer.pools.wrap function)
+   *  @param tokensOut{string[]} the tokensList of the pool, without BPT
+   *  @param amountsOut{string[]}  the amounts of each token in the tokensOut, sorted as the tokensOut
+   *  @param slippage the percentage of slippage,in 1:0.01% scale ('1' equals 0.01%, '10000' equals 100%)
+   *  @param wrappedNativeAsset wETH address, used to build AssetHelpers object;
+   * @returns an object containing the attributes necessary to make an exit with exact bpt in transaction;
+   *
+   */
   buildExitExactTokensOut = ({
     exiter,
     pool,
@@ -160,6 +184,9 @@ export class ComposableStablePoolExit implements ExitConcern {
     });
   };
 
+  /**
+   * Checks if the input of buildExitExactBPTIn is valid;
+   */
   checkInputsExactBptIn = (
     bptIn: string,
     singleTokenMaxOut: string | undefined,
@@ -194,7 +221,9 @@ export class ComposableStablePoolExit implements ExitConcern {
       throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
     if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
   };
-
+  /**
+   * Checks if the input of buildExitExactTokensOut is valid;
+   */
   checkInputsExactTokensOut = (
     tokensOut: string[],
     amountsOut: string[],
@@ -218,6 +247,15 @@ export class ComposableStablePoolExit implements ExitConcern {
       throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
   };
 
+  /**
+   * Sorts and returns the values of amounts, tokens, balances, indexes, that are necessary to do the maths and build the exit transactions;
+   * @param pool
+   * @param singleTokenMaxOut
+   * @param wrappedNativeAsset
+   * @param shouldUnwrapNativeAsset
+   * @param amountsOut
+   * @param tokensOut
+   */
   getValuesSorted = ({
     pool,
     singleTokenMaxOut,
@@ -280,7 +318,14 @@ export class ComposableStablePoolExit implements ExitConcern {
       minAmountsOutWithoutBpt, // ONLY FOR EXACT TOKENS OUT, EXACT BPT IN NEED TO CALCULATE
     };
   };
-
+  /**
+   * Calculate the minimum and expect amountOut of the exit with exact bpt in transaction, and passes it to minAmountsOut and expectedAmountsOut arrays passed as parameters;
+   * @param sortedValues
+   * @param expectedAmountsOut
+   * @param minAmountsOut
+   * @param bptIn
+   * @param slippage
+   */
   doMathsV1ExactBPTInSingleTokenOut = (
     sortedValues: SortedValues,
     expectedAmountsOut: string[],
@@ -323,7 +368,15 @@ export class ComposableStablePoolExit implements ExitConcern {
       BigNumber.from(slippage)
     ).toString();
   };
-
+  /**
+   * Calculate the bptIn and maxBPTIn of the exit with exact tokens out transaction and returns them;
+   * @param parsedAmp
+   * @param upScaledBalancesWithoutBpt
+   * @param upScaledAmountsOut
+   * @param parsedTotalShares
+   * @param parsedSwapFee
+   * @param slippage
+   */
   doMathsV1BPTInExactTokensOut = ({
     parsedAmp,
     upScaledBalancesWithoutBpt,
@@ -352,6 +405,10 @@ export class ComposableStablePoolExit implements ExitConcern {
     return { bptIn, maxBPTIn };
   };
 
+  /**
+   * Encodes the function data and does the final building of the exit(with exact bpt in) transaction
+   * @param params{DoExitParams}
+   */
   doExitExactBPTIn = (params: DoExitParams): ExitExactBPTInAttributes => {
     const {
       poolId,
@@ -398,7 +455,10 @@ export class ComposableStablePoolExit implements ExitConcern {
       minAmountsOut,
     };
   };
-
+  /**
+   * Encodes the function data and does the final building of the exit(with exact tokens out) transaction
+   * @param params
+   */
   doExitExactTokensOut = (
     params: DoExitParams
   ): ExitExactTokensOutAttributes => {
