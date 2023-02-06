@@ -3,6 +3,7 @@
  *
  * 1. Pool fees in last 24hrs
  */
+import { isLessThan24Hours } from '@/lib/utils/time';
 import { Pool, Findable, PoolAttribute } from '@/types';
 
 export class PoolFees {
@@ -20,9 +21,15 @@ export class PoolFees {
     if (!pool.totalSwapFee) {
       return 0;
     }
-    if (!yesterdaysPool || !yesterdaysPool.totalSwapFee) {
-      return parseFloat(pool.totalSwapFee);
+
+    if (!yesterdaysPool?.totalSwapFee) {
+      // Process edge case when pool creation time is less that 24h
+      if (pool.createTime && isLessThan24Hours(pool.createTime)) {
+        return parseFloat(pool.totalSwapFee);
+      }
+      return 0;
     }
+
     return (
       parseFloat(pool.totalSwapFee) - parseFloat(yesterdaysPool.totalSwapFee)
     );

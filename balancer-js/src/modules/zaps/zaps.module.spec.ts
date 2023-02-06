@@ -1,20 +1,16 @@
-import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { BalancerSdkConfig, Network, BalancerSDK, Relayer } from '@/.';
+import { Network, BalancerSDK } from '@/.';
 import { Zaps } from './zaps.module';
 
-dotenv.config();
-
-const sdkConfig: BalancerSdkConfig = {
+const sdkConfig = {
   network: Network.MAINNET,
-  rpcUrl: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
+  rpcUrl: '',
 };
 
 describe('zaps module', () => {
   context('instantiation', () => {
     it('instantiate via module', async () => {
-      const relayer = new Relayer(sdkConfig);
-      const zaps = new Zaps(Network.MAINNET, relayer);
+      const zaps = new Zaps(Network.MAINNET);
       expect(zaps.network).to.deep.eq(Network.MAINNET);
     });
 

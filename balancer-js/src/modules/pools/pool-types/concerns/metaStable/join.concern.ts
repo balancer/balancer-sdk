@@ -87,7 +87,6 @@ export class MetaStablePoolJoin implements JoinConcern {
         .toString();
     });
 
-    // TODO: check if it's ok to remove amounts/balances scaled logic since it's cancelling itself out
     const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp as string),
       scaledBalances.map((b) => BigInt(b)),
@@ -130,6 +129,14 @@ export class MetaStablePoolJoin implements JoinConcern {
     const values = amountsIn.filter((amount, i) => tokensIn[i] === AddressZero); // filter native asset (e.g. ETH) amounts
     const value = values[0] ? BigNumber.from(values[0]) : undefined;
 
-    return { to, functionName, attributes, data, value, minBPTOut };
+    return {
+      to,
+      functionName,
+      attributes,
+      data,
+      value,
+      minBPTOut,
+      expectedBPTOut,
+    };
   };
 }
