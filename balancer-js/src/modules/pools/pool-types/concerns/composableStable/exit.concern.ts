@@ -192,7 +192,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     singleTokenMaxOut: string | undefined,
     pool: Pool,
     shouldUnwrapNativeAsset: boolean
-  ) => {
+  ): void => {
     if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
       throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
     }
@@ -228,7 +228,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     tokensOut: string[],
     amountsOut: string[],
     pool: Pool
-  ) => {
+  ): void => {
     if (
       tokensOut.length != amountsOut.length ||
       tokensOut.length != pool.tokensList.length - 1
@@ -332,7 +332,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     minAmountsOut: string[],
     bptIn: string,
     slippage: string
-  ) => {
+  ): void => {
     const {
       parsedAmp,
       upScaledBalancesWithoutBpt,
@@ -384,7 +384,10 @@ export class ComposableStablePoolExit implements ExitConcern {
     parsedTotalShares,
     parsedSwapFee,
     slippage,
-  }: DoMathsBPTInForExactTokensOutParams) => {
+  }: DoMathsBPTInForExactTokensOutParams): {
+    bptIn: string;
+    maxBPTIn: string;
+  } => {
     if (!upScaledAmountsOut) {
       throw new Error('upScaledAmountsOut is undefined');
     }
