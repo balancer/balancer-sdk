@@ -286,11 +286,11 @@ export class ComposableStablePoolJoin implements JoinConcern {
       throw new BalancerError(BalancerErrorCode.MISSING_AMP);
     }
     // Reorder amountsIn to match pool token order
-    const [, sortedAmountsIn] = reorderArrays(
+    const [sortedAmountsIn] = reorderArrays(
       parsedTokensWithoutBpt,
       tokensIn,
       amountsIn
-    ) as [string[], string[]];
+    ) as [string[]];
     return {
       sortedAmountsIn,
       scalingFactorsWithoutBpt,
