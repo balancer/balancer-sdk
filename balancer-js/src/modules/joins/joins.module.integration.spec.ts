@@ -1386,5 +1386,4 @@ describe('generalised join execution', async () => {
       },
     ]);
   });
-  // TODO: add a test case for ComposableStableV2 pools when a pool is deployed
 });

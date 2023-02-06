@@ -13,7 +13,6 @@ export interface Node {
   joinAction: JoinAction;
   exitAction: ExitAction;
   type: string;
-  version: number;
   children: Node[];
   marked: boolean;
   index: string;
@@ -159,7 +158,6 @@ export class PoolGraph {
       address: pool.address,
       id: pool.id,
       type: pool.poolType,
-      version: pool.poolTypeVersion,
       joinAction,
       exitAction,
       children: [],
@@ -274,7 +272,6 @@ export class PoolGraph {
 
     const wrappedTokenNode: Node = {
       type: 'WrappedToken',
-      version: linearPool.poolTypeVersion,
       address: linearPool.tokensList[linearPool.wrappedIndex],
       id: 'N/A',
       children: [],
@@ -317,7 +314,6 @@ export class PoolGraph {
         address,
         id: 'N/A',
         type: 'Input',
-        version: 1,
         children: [],
         marked: false,
         joinAction: 'input',

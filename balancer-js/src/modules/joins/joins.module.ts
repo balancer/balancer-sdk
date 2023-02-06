@@ -857,9 +857,10 @@ export class Join {
       }
     });
 
-    // ComposableStabeV1 needs to include BPT and then have its tokens sorted
-    if (node.type === PoolType.ComposableStable && node.version == 1) {
+    if (node.type === PoolType.ComposableStable) {
+      // assets need to include the phantomPoolToken
       inputTokens.push(node.address);
+      // need to add a placeholder so sorting works
       inputAmts.push('0');
     }
 
@@ -869,12 +870,6 @@ export class Join {
       inputTokens,
       inputAmts
     ) as [string[], string[]];
-
-    // ComposableStableV2+ needs to include BPT as the first token
-    if (node.type === PoolType.ComposableStable && node.version > 1) {
-      sortedTokens.unshift(node.address);
-      sortedAmounts.unshift('0');
-    }
 
     // userData amounts should not include the BPT of the pool being joined
     let userDataAmounts = [];
