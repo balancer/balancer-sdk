@@ -361,14 +361,9 @@ export class ComposableStablePoolExit implements ExitConcern {
       userData,
       bptIndex,
       expectedAmountsOut,
-      minAmountsOutWithoutBpt,
     } = params;
     const to = balancerVault;
     const functionName = 'exitPool';
-
-    if (!minAmountsOut) {
-      throw new Error('minAmountsOut invalid');
-    }
 
     const attributes: ExitPool = {
       poolId,
