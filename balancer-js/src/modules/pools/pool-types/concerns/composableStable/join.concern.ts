@@ -191,9 +191,6 @@ export class ComposableStablePoolJoin implements JoinConcern {
       functionName,
       attributes,
       data,
-      value,
-      minBPTOut,
-      expectedBPTOut,
     };
   }
 
@@ -246,7 +243,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
     sortedValues: SortedInputs
   ): Pick<
     JoinPoolAttributes,
-    'minBPTOut' | 'functionName' | 'attributes' | 'data'
+    'minBPTOut' | 'functionName' | 'attributes' | 'data' | 'expectedBPTOut'
   > {
     const {
       sortedAmountsIn,
@@ -278,7 +275,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       sortedAmountsIn
     );
 
-    const data = this.encodeJoinPool(
+    const { functionName, data, attributes } = this.encodeJoinPool(
       poolId,
       joiner,
       joiner,
@@ -288,8 +285,11 @@ export class ComposableStablePoolJoin implements JoinConcern {
     );
 
     return {
-      ...data,
+      functionName,
+      data,
+      attributes,
       minBPTOut: userData.minBPTOut,
+      expectedBPTOut: expectedBPTOut.toString(),
     };
   }
 
