@@ -5,7 +5,9 @@ import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
 
 const mockedResponse = {
-  stakeApr: '1', // percentage
+  data: {
+    stakeApr: '1', // percentage
+  },
 };
 
 describe('stafi rETH apr', () => {
