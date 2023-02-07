@@ -16,6 +16,7 @@ import BatchRelayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero, MaxUint256 } from '@ethersproject/constants';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { SwapInfo } from '@balancer-labs/sor';
 import hardhat from 'hardhat';
 

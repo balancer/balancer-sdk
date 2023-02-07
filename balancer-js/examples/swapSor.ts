@@ -37,6 +37,8 @@ async function getAndProcessSwaps(
     useJoinExitPaths
   );
 
+  console.log(balancer.swaps.sor.getPools().length);
+
   if (swapInfo.returnAmount.isZero()) {
     console.log('No Swap');
     return;
@@ -119,12 +121,12 @@ async function getAndProcessSwaps(
 }
 
 async function swapExample() {
-  const network = Network.POLYGON;
+  const network = Network.GOERLI;
   const rpcUrl = PROVIDER_URLS[network];
-  const tokenIn = ADDRESSES[network].USDC.address;
-  const tokenOut = ADDRESSES[network].brz.address;
+  const tokenIn = ADDRESSES[network].DAI.address;
+  const tokenOut = ADDRESSES[network].USDT.address;
   const swapType = SwapTypes.SwapExactIn;
-  const amount = parseFixed('200', 6);
+  const amount = parseFixed('200', 18);
   // Currently Relayer only suitable for ExactIn and non-eth swaps
   const canUseJoinExitPaths = canUseJoinExit(swapType, tokenIn!, tokenOut!);
 
@@ -133,7 +135,8 @@ async function swapExample() {
     rpcUrl,
   });
 
-  await balancer.swaps.sor.fetchPools();
+  const result = await balancer.swaps.sor.fetchPools();
+  console.log(result);
 
   await getAndProcessSwaps(
     balancer,

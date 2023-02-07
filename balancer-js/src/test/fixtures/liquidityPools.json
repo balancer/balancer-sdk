@@ -559,7 +559,9 @@
     "totalSwapFee": "28947.04530037270938008629720776634",
     "chainId": 1,
     "totalLiquidity": "634448.98518992614430606016",
-    "graphData": { "totalLiquidity": "640698.368476791206945358004321879" },
+    "graphData": {
+      "totalLiquidity": "640698.368476791206945358004321879"
+    },
     "swapFee": "0.01",
     "upperTarget": null,
     "tokens": [
@@ -627,7 +629,9 @@
     "totalSwapFee": "5353.322784457539488546921754750037",
     "chainId": 1,
     "totalLiquidity": "60.450842422483721371046222",
-    "graphData": { "totalLiquidity": "107.0540296058752735129733507284743" },
+    "graphData": {
+      "totalLiquidity": "107.0540296058752735129733507284743"
+    },
     "swapFee": "0.01",
     "upperTarget": null,
     "tokens": [
@@ -1098,7 +1102,9 @@
         "priceRate": "1",
         "symbol": "AKITA",
         "decimals": 18,
-        "token": { "pool": null }
+        "token": {
+          "pool": null
+        }
       },
       {
         "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
@@ -1107,10 +1113,1020 @@
         "priceRate": "1",
         "symbol": "WETH",
         "decimals": 18,
-        "token": { "pool": null }
+        "token": {
+          "pool": null
+        }
       }
     ],
     "protocolYieldFeeCache": null,
     "priceRateProviders": []
+  },
+  {
+    "feesSnapshot": "0",
+    "tokensList": [
+      "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "0xf506984c16737b1a9577cadeda02a49fd612aff8"
+    ],
+    "apr": {
+      "protocolApr": 0,
+      "min": 0,
+      "max": 0,
+      "rewardAprs": {
+        "total": 0,
+        "breakdown": {}
+      },
+      "stakingApr": {
+        "max": 0,
+        "min": 0
+      },
+      "swapFees": 0,
+      "tokenAprs": {
+        "total": 0,
+        "breakdown": {}
+      }
+    },
+    "holdersCount": "0",
+    "swapEnabled": true,
+    "symbol": "50USDC-5013WMATIC-13WBTC-13USDC-13LINK-13WETH-13COMP-13BAL-13USDT",
+    "poolType": "Weighted",
+    "volumeSnapshot": "0",
+    "address": "0xd4e2af4507b6b89333441c0c398edffb40f86f4d",
+    "lastUpdate": 1670946730908,
+    "name": "50USDC-5013WMATIC-13WBTC-13USDC-13LINK-13WETH-13COMP-13BAL-13USDT",
+    "totalWeight": "1",
+    "swapsCount": "0",
+    "totalSwapFee": "0",
+    "chainId": 137,
+    "totalLiquidity": "0",
+    "swapFee": "0.01",
+    "id": "0xd4e2af4507b6b89333441c0c398edffb40f86f4d000200000000000000000153",
+    "tokens": [
+      {
+        "symbol": "USDC",
+        "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "priceRate": "1",
+        "balance": "0.0",
+        "decimals": 6,
+        "name": "USD Coin (PoS)",
+        "weight": "0.5",
+        "id": "0xd4e2af4507b6b89333441c0c398edffb40f86f4d000200000000000000000153-0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "invested": "0"
+      },
+      {
+        "symbol": "13WMATIC-13WBTC-13USDC-13LINK-13WETH-13COMP-13BAL-13USDT",
+        "address": "0xf506984c16737b1a9577cadeda02a49fd612aff8",
+        "priceRate": "1",
+        "balance": "0.0",
+        "decimals": 18,
+        "name": "13WMATIC-13WBTC-13USDC-13LINK-13WETH-13COMP-13BAL-13USDT",
+        "weight": "0.5",
+        "id": "0xd4e2af4507b6b89333441c0c398edffb40f86f4d000200000000000000000153-0xf506984c16737b1a9577cadeda02a49fd612aff8",
+        "invested": "0"
+      }
+    ],
+    "totalSwapVolume": "0",
+    "totalShares": "0"
+  },
+  {
+    "feesSnapshot": "0",
+    "tokensList": [
+      "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+      "0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6",
+      "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39",
+      "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+      "0x8505b9d2254a7ae468c0e9dd10ccea3a837aef5c",
+      "0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3",
+      "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
+    ],
+    "apr": {
+      "protocolApr": 0,
+      "min": 0,
+      "max": 0,
+      "rewardAprs": {
+        "total": 0,
+        "breakdown": {}
+      },
+      "stakingApr": {
+        "max": 0,
+        "min": 0
+      },
+      "swapFees": 0,
+      "tokenAprs": {
+        "total": 0,
+        "breakdown": {}
+      }
+    },
+    "holdersCount": "0",
+    "swapEnabled": true,
+    "symbol": "13WMATIC-13WBTC-13USDC-13LINK-13WETH-13COMP-13BAL-13USDT",
+    "poolType": "Weighted",
+    "volumeSnapshot": "0",
+    "address": "0xf506984c16737b1a9577cadeda02a49fd612aff8",
+    "lastUpdate": 1670946730300,
+    "name": "13WMATIC-13WBTC-13USDC-13LINK-13WETH-13COMP-13BAL-13USDT",
+    "totalWeight": "1",
+    "swapsCount": "0",
+    "totalSwapFee": "0",
+    "chainId": 137,
+    "totalLiquidity": "0",
+    "swapFee": "0.01",
+    "id": "0xf506984c16737b1a9577cadeda02a49fd612aff8000100000000000000000152",
+    "tokens": [
+      {
+        "symbol": "WMATIC",
+        "address": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+        "priceRate": "1",
+        "balance": "0.0",
+        "decimals": 18,
+        "name": "Wrapped Matic",
+        "weight": "0.125",
+        "id": "0xf506984c16737b1a9577cadeda02a49fd612aff8000100000000000000000152-0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+        "invested": "0"
+      },
+      {
+        "symbol": "WBTC",
+        "address": "0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6",
+        "priceRate": "1",
+        "balance": "0.0",
+        "decimals": 8,
+        "name": "(PoS) Wrapped BTC",
+        "weight": "0.125",
+        "id": "0xf506984c16737b1a9577cadeda02a49fd612aff8000100000000000000000152-0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6",
+        "invested": "0"
+      },
+      {
+        "symbol": "USDC",
+        "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "priceRate": "1",
+        "balance": "0.0",
+        "decimals": 6,
+        "name": "USD Coin (PoS)",
+        "weight": "0.125",
+        "id": "0xf506984c16737b1a9577cadeda02a49fd612aff8000100000000000000000152-0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "invested": "0"
+      },
+      {
+        "symbol": "LINK",
+        "address": "0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39",
+        "priceRate": "1",
+        "balance": "0.0",
+        "decimals": 18,
+        "name": "ChainLink Token",
+        "weight": "0.125",
+        "id": "0xf506984c16737b1a9577cadeda02a49fd612aff8000100000000000000000152-0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39",
+        "invested": "0"
+      },
+      {
+        "symbol": "WETH",
+        "address": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+        "priceRate": "1",
+        "balance": "0.0",
+        "decimals": 18,
+        "name": "Wrapped Ether",
+        "weight": "0.125",
+        "id": "0xf506984c16737b1a9577cadeda02a49fd612aff8000100000000000000000152-0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+        "invested": "0"
+      },
+      {
+        "symbol": "COMP",
+        "address": "0x8505b9d2254a7ae468c0e9dd10ccea3a837aef5c",
+        "priceRate": "1",
+        "balance": "0.0",
+        "decimals": 18,
+        "name": "(PoS) Compound",
+        "weight": "0.125",
+        "id": "0xf506984c16737b1a9577cadeda02a49fd612aff8000100000000000000000152-0x8505b9d2254a7ae468c0e9dd10ccea3a837aef5c",
+        "invested": "0"
+      },
+      {
+        "symbol": "BAL",
+        "address": "0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3",
+        "priceRate": "1",
+        "balance": "0.0",
+        "decimals": 18,
+        "name": "Balancer (PoS)",
+        "weight": "0.125",
+        "id": "0xf506984c16737b1a9577cadeda02a49fd612aff8000100000000000000000152-0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3",
+        "invested": "0"
+      },
+      {
+        "symbol": "USDT",
+        "address": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+        "priceRate": "1",
+        "balance": "0.0",
+        "decimals": 6,
+        "name": "(PoS) Tether USD",
+        "weight": "0.125",
+        "id": "0xf506984c16737b1a9577cadeda02a49fd612aff8000100000000000000000152-0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+        "invested": "0"
+      }
+    ],
+    "totalSwapVolume": "0",
+    "totalShares": "0"
+  },
+  {
+    "feesSnapshot": "0.054803673459113925",
+    "apr": {
+      "protocolApr": 0,
+      "min": 0,
+      "max": 0,
+      "rewardAprs": {
+        "total": 0,
+        "breakdown": {}
+      },
+      "stakingApr": {
+        "max": 0,
+        "min": 0
+      },
+      "swapFees": 0,
+      "tokenAprs": {
+        "total": 0,
+        "breakdown": {}
+      }
+    },
+    "isNew": false,
+    "lowerTarget": "0",
+    "swapEnabled": true,
+    "volumeSnapshot": "548.0367345911392",
+    "protocolYieldFeeCache": "0",
+    "name": "Balancer USD+ StablePool",
+    "poolTypeVersion": 1,
+    "priceRateProviders": [
+      {
+        "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+        "token": {
+          "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425"
+        }
+      }
+    ],
+    "owner": "0xe497285e466227f4e8648209e34b465daa1f90a0",
+    "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce",
+    "protocolSwapFeeCache": "0",
+    "totalSwapVolume": "548.036734591139229956",
+    "totalShares": "0.000000000001",
+    "tokensList": [
+      "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+      "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+      "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+      "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b"
+    ],
+    "amp": "570",
+    "mainIndex": 0,
+    "factory": "0xc128a9954e6c874ea3d62ce62b468ba073093f25",
+    "symbol": "SP-USDT/DAI/LP-USD+",
+    "wrappedIndex": 0,
+    "poolType": "StablePhantom",
+    "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+    "createTime": 1647425745,
+    "tokenAddresses": [
+      "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+      "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+      "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+      "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b"
+    ],
+    "lastUpdate": 1670946730562,
+    "totalWeight": "0",
+    "totalSwapFee": "0.0548036734591139229956",
+    "chainId": 137,
+    "totalLiquidity": "0",
+    "graphData": {
+      "totalLiquidity": "0.4754816309911924271803221050423458"
+    },
+    "swapFee": "0.0001",
+    "upperTarget": "0",
+    "tokens": [
+      {
+        "symbol": "LP-USDC-USD+",
+        "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+        "priceRate": "1.016048378760247001",
+        "balance": "2.201423527372110999",
+        "isExemptFromYieldProtocolFee": false,
+        "decimals": 18,
+        "name": "USDC-USD+ Linear Pool Token",
+        "weight": null,
+        "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce-0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+        "managedBalance": "0",
+        "token": {
+          "pool": {
+            "mainIndex": 1,
+            "tokens": [
+              {
+                "symbol": "LP-USDC-USD+",
+                "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                "priceRate": "1",
+                "balance": "5192296858534816.368054092414223148",
+                "decimals": 18,
+                "weight": null,
+                "token": {
+                  "pool": {
+                    "mainIndex": 1,
+                    "tokens": [
+                      {
+                        "symbol": "LP-USDC-USD+",
+                        "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                        "priceRate": "1",
+                        "balance": "5192296858534816.368054092414223148",
+                        "decimals": 18,
+                        "weight": null,
+                        "token": {
+                          "pool": {
+                            "mainIndex": 1,
+                            "id": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e7284250000000000000000000003b3",
+                            "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                            "poolType": "ERC4626Linear",
+                            "totalShares": "11.260476403914996947"
+                          },
+                          "latestUSDPrice": "0.08396527518775992496959587269105978"
+                        }
+                      },
+                      {
+                        "symbol": "USDC",
+                        "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+                        "priceRate": "1",
+                        "balance": "0.945489",
+                        "decimals": 6,
+                        "weight": null,
+                        "token": {
+                          "pool": null,
+                          "latestUSDPrice": "1"
+                        }
+                      },
+                      {
+                        "symbol": "stUSD+",
+                        "address": "0x5a5c6aa6164750b530b8f7658b827163b3549a4d",
+                        "priceRate": "1",
+                        "balance": "9.776388",
+                        "decimals": 6,
+                        "weight": null,
+                        "token": {
+                          "pool": null
+                        }
+                      }
+                    ],
+                    "id": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e7284250000000000000000000003b3",
+                    "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                    "poolType": "ERC4626Linear",
+                    "totalShares": "11.260476403914996947"
+                  },
+                  "latestUSDPrice": "0.08396527518775992496959587269105978"
+                }
+              },
+              {
+                "symbol": "USDC",
+                "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+                "priceRate": "1",
+                "balance": "0.945489",
+                "decimals": 6,
+                "weight": null,
+                "token": {
+                  "pool": null,
+                  "latestUSDPrice": "1"
+                }
+              },
+              {
+                "symbol": "stUSD+",
+                "address": "0x5a5c6aa6164750b530b8f7658b827163b3549a4d",
+                "priceRate": "1",
+                "balance": "9.776388",
+                "decimals": 6,
+                "weight": null,
+                "token": {
+                  "pool": null
+                }
+              }
+            ],
+            "id": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e7284250000000000000000000003b3",
+            "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+            "poolType": "ERC4626Linear",
+            "totalShares": "11.260476403914996947"
+          },
+          "latestUSDPrice": "0.08396527518775992496959587269105978"
+        }
+      },
+      {
+        "symbol": "DAI",
+        "address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "priceRate": "1",
+        "balance": "0.020578697951648256",
+        "isExemptFromYieldProtocolFee": false,
+        "decimals": 18,
+        "name": "(PoS) Dai Stablecoin",
+        "weight": null,
+        "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce-0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "managedBalance": "0",
+        "token": {
+          "pool": null,
+          "latestUSDPrice": "1.00006676758065704638574766748229"
+        }
+      },
+      {
+        "symbol": "USDT",
+        "address": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+        "priceRate": "1",
+        "balance": "0.000001",
+        "isExemptFromYieldProtocolFee": false,
+        "decimals": 6,
+        "name": "(PoS) Tether USD",
+        "weight": null,
+        "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce-0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+        "managedBalance": "0",
+        "token": {
+          "pool": null,
+          "latestUSDPrice": "0.9999445"
+        }
+      },
+      {
+        "symbol": "SP-USDT/DAI/LP-USD+",
+        "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+        "priceRate": "1",
+        "balance": "5192296858534827.628530496328220095",
+        "isExemptFromYieldProtocolFee": false,
+        "decimals": 18,
+        "name": "Balancer USD+ StablePool",
+        "weight": null,
+        "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce-0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+        "managedBalance": "0",
+        "token": {
+          "pool": {
+            "mainIndex": 0,
+            "tokens": [
+              {
+                "symbol": "LP-USDC-USD+",
+                "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                "priceRate": "1.016048378760247001",
+                "balance": "2.201423527372110999",
+                "decimals": 18,
+                "weight": null,
+                "token": {
+                  "pool": {
+                    "mainIndex": 1,
+                    "tokens": [
+                      {
+                        "symbol": "LP-USDC-USD+",
+                        "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                        "priceRate": "1",
+                        "balance": "5192296858534816.368054092414223148",
+                        "decimals": 18,
+                        "weight": null,
+                        "token": {
+                          "pool": {
+                            "mainIndex": 1,
+                            "id": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e7284250000000000000000000003b3",
+                            "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                            "poolType": "ERC4626Linear",
+                            "totalShares": "11.260476403914996947"
+                          },
+                          "latestUSDPrice": "0.08396527518775992496959587269105978"
+                        }
+                      },
+                      {
+                        "symbol": "USDC",
+                        "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+                        "priceRate": "1",
+                        "balance": "0.945489",
+                        "decimals": 6,
+                        "weight": null,
+                        "token": {
+                          "pool": null,
+                          "latestUSDPrice": "1"
+                        }
+                      },
+                      {
+                        "symbol": "stUSD+",
+                        "address": "0x5a5c6aa6164750b530b8f7658b827163b3549a4d",
+                        "priceRate": "1",
+                        "balance": "9.776388",
+                        "decimals": 6,
+                        "weight": null,
+                        "token": {
+                          "pool": null
+                        }
+                      }
+                    ],
+                    "id": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e7284250000000000000000000003b3",
+                    "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                    "poolType": "ERC4626Linear",
+                    "totalShares": "11.260476403914996947"
+                  },
+                  "latestUSDPrice": "0.08396527518775992496959587269105978"
+                }
+              },
+              {
+                "symbol": "DAI",
+                "address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+                "priceRate": "1",
+                "balance": "0.020578697951648256",
+                "decimals": 18,
+                "weight": null,
+                "token": {
+                  "pool": null,
+                  "latestUSDPrice": "1.00006676758065704638574766748229"
+                }
+              },
+              {
+                "symbol": "USDT",
+                "address": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+                "priceRate": "1",
+                "balance": "0.000001",
+                "decimals": 6,
+                "weight": null,
+                "token": {
+                  "pool": null,
+                  "latestUSDPrice": "0.9999445"
+                }
+              },
+              {
+                "symbol": "SP-USDT/DAI/LP-USD+",
+                "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+                "priceRate": "1",
+                "balance": "5192296858534827.628530496328220095",
+                "decimals": 18,
+                "weight": null,
+                "token": {
+                  "pool": {
+                    "mainIndex": 0,
+                    "tokens": [
+                      {
+                        "symbol": "LP-USDC-USD+",
+                        "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                        "priceRate": "1.016048378760247001",
+                        "balance": "2.201423527372110999",
+                        "decimals": 18,
+                        "weight": null,
+                        "token": {
+                          "pool": {
+                            "mainIndex": 1,
+                            "id": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e7284250000000000000000000003b3",
+                            "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                            "poolType": "ERC4626Linear",
+                            "totalShares": "11.260476403914996947"
+                          },
+                          "latestUSDPrice": "0.08396527518775992496959587269105978"
+                        }
+                      },
+                      {
+                        "symbol": "DAI",
+                        "address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+                        "priceRate": "1",
+                        "balance": "0.020578697951648256",
+                        "decimals": 18,
+                        "weight": null,
+                        "token": {
+                          "pool": null,
+                          "latestUSDPrice": "1.00006676758065704638574766748229"
+                        }
+                      },
+                      {
+                        "symbol": "USDT",
+                        "address": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+                        "priceRate": "1",
+                        "balance": "0.000001",
+                        "decimals": 6,
+                        "weight": null,
+                        "token": {
+                          "pool": null,
+                          "latestUSDPrice": "0.9999445"
+                        }
+                      },
+                      {
+                        "symbol": "SP-USDT/DAI/LP-USD+",
+                        "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+                        "priceRate": "1",
+                        "balance": "5192296858534827.628530496328220095",
+                        "decimals": 18,
+                        "weight": null,
+                        "token": {
+                          "pool": {
+                            "mainIndex": 0,
+                            "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce",
+                            "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+                            "poolType": "StablePhantom",
+                            "totalShares": "0.000000000001"
+                          },
+                          "latestUSDPrice": "475481630991.1924271803221050423458"
+                        }
+                      }
+                    ],
+                    "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce",
+                    "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+                    "poolType": "StablePhantom",
+                    "totalShares": "0.000000000001"
+                  },
+                  "latestUSDPrice": "475481630991.1924271803221050423458"
+                }
+              }
+            ],
+            "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce",
+            "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+            "poolType": "StablePhantom",
+            "totalShares": "0.000000000001"
+          },
+          "latestUSDPrice": "475481630991.1924271803221050423458"
+        }
+      }
+    ]
+  },
+  {
+    "feesSnapshot": "0.054803673459113925",
+    "apr": {
+      "protocolApr": 0,
+      "min": 0,
+      "max": 0,
+      "rewardAprs": {
+        "total": 0,
+        "breakdown": {}
+      },
+      "stakingApr": {
+        "max": 0,
+        "min": 0
+      },
+      "swapFees": 0,
+      "tokenAprs": {
+        "total": 0,
+        "breakdown": {}
+      }
+    },
+    "isNew": false,
+    "lowerTarget": "0",
+    "swapEnabled": true,
+    "volumeSnapshot": "548.0367345911392",
+    "protocolYieldFeeCache": "0",
+    "name": "Balancer USD+ StablePool",
+    "poolTypeVersion": 1,
+    "priceRateProviders": [
+      {
+        "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+        "token": {
+          "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425"
+        }
+      }
+    ],
+    "owner": "0xe497285e466227f4e8648209e34b465daa1f90a0",
+    "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce",
+    "protocolSwapFeeCache": "0",
+    "totalSwapVolume": "548.036734591139229956",
+    "totalShares": "0.000000000001",
+    "tokensList": [
+      "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+      "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+      "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+      "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b"
+    ],
+    "amp": "570",
+    "mainIndex": 0,
+    "factory": "0xc128a9954e6c874ea3d62ce62b468ba073093f25",
+    "symbol": "SP-USDT/DAI/LP-USD+",
+    "wrappedIndex": 0,
+    "poolType": "StablePhantom",
+    "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+    "createTime": 1647425745,
+    "tokenAddresses": [
+      "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+      "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+      "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+      "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b"
+    ],
+    "lastUpdate": 1670946730562,
+    "totalWeight": "0",
+    "totalSwapFee": "0.0548036734591139229956",
+    "chainId": 137,
+    "totalLiquidity": "0",
+    "graphData": {
+      "totalLiquidity": "0.4754816309911924271803221050423458"
+    },
+    "swapFee": "0.0001",
+    "upperTarget": "0",
+    "tokens": [
+      {
+        "symbol": "LP-USDC-USD+",
+        "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+        "priceRate": "1.016048378760247001",
+        "balance": "2.201423527372110999",
+        "isExemptFromYieldProtocolFee": false,
+        "decimals": 18,
+        "name": "USDC-USD+ Linear Pool Token",
+        "weight": null,
+        "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce-0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+        "managedBalance": "0",
+        "token": {
+          "pool": {
+            "mainIndex": 1,
+            "tokens": [
+              {
+                "symbol": "LP-USDC-USD+",
+                "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                "priceRate": "1",
+                "balance": "5192296858534816.285796939133401215",
+                "decimals": 18,
+                "weight": null,
+                "token": {
+                  "pool": {
+                    "mainIndex": 1,
+                    "tokens": [
+                      {
+                        "symbol": "LP-USDC-USD+",
+                        "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                        "priceRate": "1",
+                        "balance": "5192296858534816.285796939133401215",
+                        "decimals": 18,
+                        "weight": null,
+                        "token": {
+                          "pool": {
+                            "mainIndex": 1,
+                            "id": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e7284250000000000000000000003b3",
+                            "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                            "poolType": "ERC4626Linear",
+                            "totalShares": "11.34273355719581888"
+                          },
+                          "latestUSDPrice": "0.09089546138072975564961886600242725"
+                        }
+                      },
+                      {
+                        "symbol": "USDC",
+                        "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+                        "priceRate": "1",
+                        "balance": "1.031003",
+                        "decimals": 6,
+                        "weight": null,
+                        "token": {
+                          "pool": null,
+                          "latestUSDPrice": "0.9997488851607188225770019280540009"
+                        }
+                      },
+                      {
+                        "symbol": "stUSD+",
+                        "address": "0x5a5c6aa6164750b530b8f7658b827163b3549a4d",
+                        "priceRate": "1",
+                        "balance": "9.776388",
+                        "decimals": 6,
+                        "weight": null,
+                        "token": {
+                          "pool": null
+                        }
+                      }
+                    ],
+                    "id": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e7284250000000000000000000003b3",
+                    "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                    "poolType": "ERC4626Linear",
+                    "totalShares": "11.34273355719581888"
+                  },
+                  "latestUSDPrice": "0.09089546138072975564961886600242725"
+                }
+              },
+              {
+                "symbol": "USDC",
+                "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+                "priceRate": "1",
+                "balance": "1.031003",
+                "decimals": 6,
+                "weight": null,
+                "token": {
+                  "pool": null,
+                  "latestUSDPrice": "0.9997488851607188225770019280540009"
+                }
+              },
+              {
+                "symbol": "stUSD+",
+                "address": "0x5a5c6aa6164750b530b8f7658b827163b3549a4d",
+                "priceRate": "1",
+                "balance": "9.776388",
+                "decimals": 6,
+                "weight": null,
+                "token": {
+                  "pool": null
+                }
+              }
+            ],
+            "id": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e7284250000000000000000000003b3",
+            "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+            "poolType": "ERC4626Linear",
+            "totalShares": "11.34273355719581888"
+          },
+          "latestUSDPrice": "0.09089546138072975564961886600242725"
+        }
+      },
+      {
+        "symbol": "DAI",
+        "address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "priceRate": "1",
+        "balance": "0.020578697951648256",
+        "isExemptFromYieldProtocolFee": false,
+        "decimals": 18,
+        "name": "(PoS) Dai Stablecoin",
+        "weight": null,
+        "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce-0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "managedBalance": "0",
+        "token": {
+          "pool": null,
+          "latestUSDPrice": "0.9997783636363636363636363636363636"
+        }
+      },
+      {
+        "symbol": "USDT",
+        "address": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+        "priceRate": "1",
+        "balance": "0.000001",
+        "isExemptFromYieldProtocolFee": false,
+        "decimals": 6,
+        "name": "(PoS) Tether USD",
+        "weight": null,
+        "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce-0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+        "managedBalance": "0",
+        "token": {
+          "pool": null,
+          "latestUSDPrice": "1.000251177913782627929049983667289"
+        }
+      },
+      {
+        "symbol": "SP-USDT/DAI/LP-USD+",
+        "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+        "priceRate": "1",
+        "balance": "5192296858534827.628530496328220095",
+        "isExemptFromYieldProtocolFee": false,
+        "decimals": 18,
+        "name": "Balancer USD+ StablePool",
+        "weight": null,
+        "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce-0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+        "managedBalance": "0",
+        "token": {
+          "pool": {
+            "mainIndex": 0,
+            "tokens": [
+              {
+                "symbol": "LP-USDC-USD+",
+                "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                "priceRate": "1.016048378760247001",
+                "balance": "2.201423527372110999",
+                "decimals": 18,
+                "weight": null,
+                "token": {
+                  "pool": {
+                    "mainIndex": 1,
+                    "tokens": [
+                      {
+                        "symbol": "LP-USDC-USD+",
+                        "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                        "priceRate": "1",
+                        "balance": "5192296858534816.285796939133401215",
+                        "decimals": 18,
+                        "weight": null,
+                        "token": {
+                          "pool": {
+                            "mainIndex": 1,
+                            "id": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e7284250000000000000000000003b3",
+                            "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                            "poolType": "ERC4626Linear",
+                            "totalShares": "11.34273355719581888"
+                          },
+                          "latestUSDPrice": "0.09089546138072975564961886600242725"
+                        }
+                      },
+                      {
+                        "symbol": "USDC",
+                        "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+                        "priceRate": "1",
+                        "balance": "1.031003",
+                        "decimals": 6,
+                        "weight": null,
+                        "token": {
+                          "pool": null,
+                          "latestUSDPrice": "0.9997488851607188225770019280540009"
+                        }
+                      },
+                      {
+                        "symbol": "stUSD+",
+                        "address": "0x5a5c6aa6164750b530b8f7658b827163b3549a4d",
+                        "priceRate": "1",
+                        "balance": "9.776388",
+                        "decimals": 6,
+                        "weight": null,
+                        "token": {
+                          "pool": null
+                        }
+                      }
+                    ],
+                    "id": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e7284250000000000000000000003b3",
+                    "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                    "poolType": "ERC4626Linear",
+                    "totalShares": "11.34273355719581888"
+                  },
+                  "latestUSDPrice": "0.09089546138072975564961886600242725"
+                }
+              },
+              {
+                "symbol": "DAI",
+                "address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+                "priceRate": "1",
+                "balance": "0.020578697951648256",
+                "decimals": 18,
+                "weight": null,
+                "token": {
+                  "pool": null,
+                  "latestUSDPrice": "0.9997783636363636363636363636363636"
+                }
+              },
+              {
+                "symbol": "USDT",
+                "address": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+                "priceRate": "1",
+                "balance": "0.000001",
+                "decimals": 6,
+                "weight": null,
+                "token": {
+                  "pool": null,
+                  "latestUSDPrice": "1.000251177913782627929049983667289"
+                }
+              },
+              {
+                "symbol": "SP-USDT/DAI/LP-USD+",
+                "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+                "priceRate": "1",
+                "balance": "5192296858534827.628530496328220095",
+                "decimals": 18,
+                "weight": null,
+                "token": {
+                  "pool": {
+                    "mainIndex": 0,
+                    "tokens": [
+                      {
+                        "symbol": "LP-USDC-USD+",
+                        "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                        "priceRate": "1.016048378760247001",
+                        "balance": "2.201423527372110999",
+                        "decimals": 18,
+                        "weight": null,
+                        "token": {
+                          "pool": {
+                            "mainIndex": 1,
+                            "id": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e7284250000000000000000000003b3",
+                            "address": "0x1aafc31091d93c3ff003cff5d2d8f7ba2e728425",
+                            "poolType": "ERC4626Linear",
+                            "totalShares": "11.34273355719581888"
+                          },
+                          "latestUSDPrice": "0.09089546138072975564961886600242725"
+                        }
+                      },
+                      {
+                        "symbol": "DAI",
+                        "address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+                        "priceRate": "1",
+                        "balance": "0.020578697951648256",
+                        "decimals": 18,
+                        "weight": null,
+                        "token": {
+                          "pool": null,
+                          "latestUSDPrice": "0.9997783636363636363636363636363636"
+                        }
+                      },
+                      {
+                        "symbol": "USDT",
+                        "address": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+                        "priceRate": "1",
+                        "balance": "0.000001",
+                        "decimals": 6,
+                        "weight": null,
+                        "token": {
+                          "pool": null,
+                          "latestUSDPrice": "1.000251177913782627929049983667289"
+                        }
+                      },
+                      {
+                        "symbol": "SP-USDT/DAI/LP-USD+",
+                        "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+                        "priceRate": "1",
+                        "balance": "5192296858534827.628530496328220095",
+                        "decimals": 18,
+                        "weight": null,
+                        "token": {
+                          "pool": {
+                            "mainIndex": 0,
+                            "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce",
+                            "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+                            "poolType": "StablePhantom",
+                            "totalShares": "0.000000000001"
+                          },
+                          "latestUSDPrice": "475481630991.1924271803221050423458"
+                        }
+                      }
+                    ],
+                    "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce",
+                    "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+                    "poolType": "StablePhantom",
+                    "totalShares": "0.000000000001"
+                  },
+                  "latestUSDPrice": "475481630991.1924271803221050423458"
+                }
+              }
+            ],
+            "id": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b0000000000000000000003ce",
+            "address": "0xe051605a83deae38d26a7346b100ef1ac2ef8a0b",
+            "poolType": "StablePhantom",
+            "totalShares": "0.000000000001"
+          },
+          "latestUSDPrice": "475481630991.1924271803221050423458"
+        }
+      }
+    ]
   }
 ]
