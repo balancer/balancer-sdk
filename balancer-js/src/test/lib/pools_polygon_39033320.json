@@ -1,0 +1,56 @@
+[
+  {
+    "id": "0x373b347bc87998b151a5e9b6bb6ca692b766648a000000000000000000000923",
+    "address": "0x373b347bc87998b151a5e9b6bb6ca692b766648a",
+    "name": "DO NOT USE - Mock Composable Stable Pool",
+    "poolType": "ComposableStable",
+    "poolTypeVersion": 2,
+    "swapFee": "0.000001",
+    "totalShares": "4.466637429017792798",
+    "tokens": [
+      {
+        "address": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+        "balance": "4.722214880252044551",
+        "decimals": 18,
+        "weight": null,
+        "priceRate": "1",
+        "name": "Wrapped Matic",
+        "symbol": "WMATIC"
+      },
+      {
+        "address": "0x373b347bc87998b151a5e9b6bb6ca692b766648a",
+        "balance": "2596148429267409.34762781914681725",
+        "decimals": 18,
+        "weight": null,
+        "priceRate": "1",
+        "name": "DO NOT USE - Mock Composable Stable Pool",
+        "symbol": "TEST"
+      },
+      {
+        "address": "0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3",
+        "balance": "0.068161705506278783",
+        "decimals": 18,
+        "weight": null,
+        "priceRate": "1",
+        "name": "Balancer (PoS)",
+        "symbol": "BAL"
+      }
+    ],
+    "tokensList": [
+      "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+      "0x373b347bc87998b151a5e9b6bb6ca692b766648a",
+      "0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3"
+    ],
+    "totalWeight": "0",
+    "amp": "100",
+    "expiryTime": null,
+    "unitSeconds": null,
+    "principalToken": null,
+    "baseToken": null,
+    "swapEnabled": true,
+    "wrappedIndex": null,
+    "mainIndex": null,
+    "lowerTarget": null,
+    "upperTarget": null
+  }
+]

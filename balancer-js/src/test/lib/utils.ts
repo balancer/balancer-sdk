@@ -5,16 +5,28 @@ import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
 import { formatBytes32String } from '@ethersproject/strings';
 
-import { PoolWithMethods, BalancerError, BalancerErrorCode } from '@/.';
+import {
+  PoolWithMethods,
+  BalancerError,
+  BalancerErrorCode,
+  Network,
+  Pool,
+  Pools,
+  BalancerSDK,
+  PoolToken,
+  Address,
+} from '@/.';
 import { balancerVault } from '@/lib/constants/config';
 import { parseEther } from '@ethersproject/units';
 import { ERC20 } from '@/modules/contracts/implementations/ERC20';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 
 import { Interface } from '@ethersproject/abi';
+
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const liquidityGauge = new Interface(liquidityGaugeAbi);
 import { Pools as PoolsProvider } from '@/modules/pools';
+import { ethers } from 'hardhat';
 
 /**
  * Setup local fork with approved token balance for a given account
@@ -208,4 +220,77 @@ export const stake = async (
       data: liquidityGauge.encodeFunctionData('deposit', [balance]),
     })
   ).wait();
+};
+
+type GetTestingRelevantParamsInput = {
+  pools: unknown;
+  poolId: string;
+  network: Network;
+  rpcUrl?: string;
+  hasBPT?: boolean;
+};
+
+type TestingRelevantParams = {
+  provider: JsonRpcProvider;
+  pool: PoolWithMethods;
+  poolObj: Pool;
+  tokens: PoolToken[];
+  tokensWithoutBPT: PoolToken[];
+  tokensList: Address[];
+  tokensListWithoutBPT: Address[];
+  signer: JsonRpcSigner;
+  rpcUrl: string;
+  jsonRpcUrl: string | undefined;
+};
+export const getTestingRelevantParams = (
+  input: GetTestingRelevantParamsInput
+): TestingRelevantParams => {
+  const { network, poolId, pools, hasBPT } = input;
+  let { rpcUrl } = input;
+  let jsonRpcUrl;
+  if (network === Network.GOERLI) {
+    jsonRpcUrl = process.env.ALCHEMY_URL_GOERLI;
+    if (!rpcUrl) {
+      rpcUrl = 'http://127.0.0.1:8000';
+    }
+  } else if (network === Network.POLYGON) {
+    jsonRpcUrl = process.env.ALCHEMY_URL_POLYGON;
+    if (!rpcUrl) {
+      rpcUrl = 'http://127.0.0.1:8137';
+    }
+  } else {
+    jsonRpcUrl = process.env.ALCHEMY_URL;
+    if (!rpcUrl) {
+      rpcUrl = 'http://127.0.0.1:8545';
+    }
+  }
+  const poolObj = (pools as Pool[]).find((pool) => pool.id == poolId) as Pool;
+  const tokens = poolObj.tokens;
+  const tokensList = poolObj.tokensList;
+  let tokensWithoutBPT: PoolToken[] = [];
+  let tokensListWithoutBPT: string[] = [];
+  if (hasBPT) {
+    tokensWithoutBPT = tokens.filter(
+      ({ address }) => address !== poolObj.address
+    );
+    tokensListWithoutBPT = tokensList.filter(
+      (address) => address !== poolObj.address
+    );
+  }
+  const { networkConfig } = new BalancerSDK({ network, rpcUrl });
+  const pool = Pools.wrap(poolObj, networkConfig);
+  const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
+  const signer = provider.getSigner();
+  return {
+    provider,
+    pool,
+    poolObj,
+    tokens,
+    tokensWithoutBPT,
+    tokensList,
+    tokensListWithoutBPT,
+    signer,
+    rpcUrl,
+    jsonRpcUrl,
+  };
 };
