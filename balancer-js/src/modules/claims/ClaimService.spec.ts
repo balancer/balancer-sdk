@@ -1,5 +1,6 @@
 import { Network } from '@/lib/constants';
 import { ClaimService } from '@/modules/claims/ClaimService';
+import { ZERO } from './helper';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { forkSetup } from '@/test/lib/utils';
 import { expect } from 'chai';
@@ -70,7 +71,7 @@ describe('ClaimService On Ethereum', () => {
               gauge?.claimableTokens &&
                 gauge?.claimableTokens[
                   '0xba100000625a3754423978a60c9317c58a424e3d'
-                ] > 0
+                ].gt(ZERO)
             ).to.be.true;
 
             gauge = gauges.find(
@@ -82,7 +83,7 @@ describe('ClaimService On Ethereum', () => {
               gauge?.claimableTokens &&
                 gauge?.claimableTokens[
                   '0xba100000625a3754423978a60c9317c58a424e3d'
-                ] > 0
+                ].gt(ZERO)
             ).to.be.true;
 
             done();
@@ -112,7 +113,8 @@ describe('ClaimService On Ethereum', () => {
                   '0xba100000625a3754423978a60c9317c58a424e3d'
               )
             ).to.be;
-            expect(data.expectedTokensValue.every((it) => it > 0)).to.be.true;
+            expect(data.expectedTokensValue.every((it) => it.gt(ZERO))).to.be
+              .true;
           })
           .then(done)
           .catch((error) => done(error));
@@ -138,7 +140,8 @@ describe('ClaimService On Ethereum', () => {
                   '0xba100000625a3754423978a60c9317c58a424e3d'
               )
             ).to.be;
-            expect(data.expectedTokensValue.every((it) => it > 0)).to.be.true;
+            expect(data.expectedTokensValue.every((it) => it.gt(ZERO))).to.be
+              .true;
           })
           .then(done)
           .catch((error) => done(error));
@@ -158,9 +161,9 @@ describe('ClaimService On Ethereum', () => {
             claimableTokens
           )
           .then((tokens) => {
-            expect(tokens[claimableTokens[0]]).to.eq(0);
-            expect(tokens[claimableTokens[1]]).to.be.gt(0);
-            expect(tokens[claimableTokens[2]]).to.be.gt(0);
+            expect(tokens[claimableTokens[0]].eq(ZERO)).to.be.true;
+            expect(tokens[claimableTokens[1]].gt(ZERO)).to.be.true;
+            expect(tokens[claimableTokens[2]].gt(ZERO)).to.be.true;
           })
           .then(done)
           .catch((error) => done(error));
@@ -259,7 +262,7 @@ describe('ClaimService On Polygon', () => {
             gauge?.claimableTokens &&
               gauge?.claimableTokens[
                 '0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3'
-              ] > 0
+              ].gt(ZERO)
           ).to.be.true;
 
           gauge = gauges.find(
@@ -270,13 +273,13 @@ describe('ClaimService On Polygon', () => {
             gauge?.claimableTokens &&
               gauge?.claimableTokens[
                 '0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3'
-              ] > 0
+              ].gt(ZERO)
           ).to.be.true;
           expect(
             gauge?.claimableTokens &&
               gauge?.claimableTokens[
                 '0xc3c7d422809852031b44ab29eec9f1eff2a58756'
-              ] > 0
+              ].gt(ZERO)
           ).to.be.true;
 
           done();
@@ -334,7 +337,8 @@ describe('ClaimService On Polygon', () => {
                 '0xc3c7d422809852031b44ab29eec9f1eff2a58756'
             )
           ).to.be;
-          expect(data.expectedTokensValue.every((it) => it > 0)).to.be.true;
+          expect(data.expectedTokensValue.every((it) => it.gt(ZERO))).to.be
+            .true;
         })
         .then(done)
         .catch((error) => done(error));

@@ -8,6 +8,7 @@ import {
   LiquidityGaugeSubgraphRPCProvider,
 } from '@/modules/data';
 import { Interface } from '@ethersproject/abi';
+import { BigNumber } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/providers';
 import {
@@ -16,6 +17,7 @@ import {
   reduceClaimableRewards,
   reduceClaimableTokens,
   reduceRewardTokens,
+  ZERO,
 } from './helper';
 
 const liquidityGaugeV5Interface = new Interface([
@@ -38,12 +40,12 @@ export interface TransactionData {
   from: string;
   callData: string;
   tokensOut: string[];
-  expectedTokensValue: number[];
+  expectedTokensValue: BigNumber[];
   functionName: string;
 }
 
 export interface TokenBalance {
-  [token: string]: number;
+  [token: string]: BigNumber;
 }
 
 export interface IClaimService {
@@ -157,17 +159,17 @@ export class ClaimService implements IClaimService {
     if (!claimableTokens.length)
       throw new BalancerError(BalancerErrorCode.GAUGES_REWARD_TOKEN_EMPTY);
     const expectedValues = claimableTokens.map((tokenAddress) => {
-      return gauges.reduce((value, gauge) => {
+      return gauges.reduce((value: BigNumber, gauge) => {
         if (
           gauge.claimableTokens &&
           gauge.claimableTokens[tokenAddress] &&
-          gauge.claimableTokens[tokenAddress] > 0
+          gauge.claimableTokens[tokenAddress] !== ZERO
         )
-          value += gauge.claimableTokens[tokenAddress];
+          value = gauge.claimableTokens[tokenAddress].add(value);
         return value;
-      }, 0);
+      }, BigNumber.from(0));
     });
-    if (!expectedValues.length || expectedValues.every((it) => it === 0))
+    if (!expectedValues.length || expectedValues.every((it) => it.eq(ZERO)))
       throw new BalancerError(BalancerErrorCode.REWARD_TOKEN_ZERO);
     if (this.chainId === 1 || this.chainId === 5) {
       if (!this.balancerMinterAddress)
@@ -241,9 +243,9 @@ export class ClaimService implements IClaimService {
       claimableTokens
     );
     const expectedTokensValue = claimableTokens.map(
-      (it) => tokenBalance[it] ?? 0
+      (it) => tokenBalance[it] ?? ZERO
     );
-    if (expectedTokensValue.every((it) => it === 0))
+    if (expectedTokensValue.every((it) => it.eq(ZERO)))
       throw new BalancerError(BalancerErrorCode.REWARD_TOKEN_ZERO);
     const callData = this.feeDistributor.claimBalances(
       userAddress,

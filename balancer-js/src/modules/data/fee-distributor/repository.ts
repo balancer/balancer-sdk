@@ -21,7 +21,7 @@ export interface BaseFeeDistributor {
   getClaimableBalances(
     userAddress: string,
     claimableTokens: string[]
-  ): Promise<{ [key: string]: number }>;
+  ): Promise<TokenBalance>;
   claimBalances(userAddress: string, claimableTokens: string[]): string;
 }
 
@@ -140,12 +140,9 @@ export class FeeDistributorRepository implements BaseFeeDistributor {
     claimableTokens: string[],
     amounts: (BigNumber | undefined | null)[]
   ): TokenBalance {
-    return claimableTokens.reduce(
-      (tokens: { [key: string]: number }, token, index) => {
-        tokens[token] = amounts[index]?.toNumber() ?? 0;
-        return tokens;
-      },
-      {}
-    );
+    return claimableTokens.reduce((tokens: TokenBalance, token, index) => {
+      tokens[token] = (amounts[index] as BigNumber) ?? BigNumber.from(0);
+      return tokens;
+    }, {});
   }
 }

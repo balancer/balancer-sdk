@@ -1,7 +1,8 @@
 import { LiquidityGauge } from '@/modules/data';
+import { BigNumber } from '@ethersproject/bignumber';
 
 export interface Tokens {
-  [tokenAddress: string]: number;
+  [tokenAddress: string]: BigNumber;
 }
 
 export interface GaugeTokens {
@@ -20,10 +21,12 @@ export interface ReduceGaugeRewards {
   ): GaugeTokens;
 }
 
+export const ZERO = BigNumber.from('0');
+
 export const filterTokens = (tokens: Tokens): Tokens => {
   if (!tokens) return {};
   return Object.keys(tokens)
-    .filter((token) => tokens[token] > 0)
+    .filter((token) => tokens[token].gt(ZERO))
     .reduce((obj: Tokens, token) => {
       obj[token] = tokens[token];
       return obj;
@@ -63,8 +66,8 @@ export const reduceClaimableRewards = (res0x: string[]): ReduceGaugeRewards => {
     path: { gauge: string; token: string },
     index: number
   ): GaugeTokens => {
-    const value = parseInt(res0x[index]);
-    if (value > 0) {
+    const value = BigNumber.from(`${res0x[index]}`);
+    if (value.gt(ZERO)) {
       rewards[path.gauge] ||= {};
       rewards[path.gauge][path.token] = value;
     }
@@ -77,8 +80,8 @@ export const reduceClaimableTokens = (
   balAddress: string
 ): ReduceGaugeTokens => {
   return (p: GaugeTokens, address: string, index: number): GaugeTokens => {
-    const value = parseInt(res0x[index]);
-    if (value > 0) {
+    const value = BigNumber.from(`${res0x[index]}`);
+    if (value.gt(ZERO)) {
       p[address] ||= {};
       p[address][balAddress] = value;
     }

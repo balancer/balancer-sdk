@@ -64,6 +64,8 @@ describe('FeeDistributorRepository', () => {
       '0xba100000625a3754423978a60c9317c58a424e3D', // BAL
     ];
 
+    const ZERO = BigNumber.from('0');
+
     it('should return proper token balance', (done) => {
       const amounts = [
         BigNumber.from(0),
@@ -71,21 +73,34 @@ describe('FeeDistributorRepository', () => {
         BigNumber.from(1870979002020152),
       ];
       const balances = repo.extractTokenBalance(claimableTokens, amounts);
-      expect(balances[claimableTokens[0]]).to.eq(0);
-      expect(balances[claimableTokens[1]]).to.eq(2304141496137171);
-      expect(balances[claimableTokens[2]]).to.eq(1870979002020152);
+      expect(balances[claimableTokens[0]]).to.eql(ZERO);
+      expect(balances[claimableTokens[1]]).to.eq(amounts[1]);
+      expect(balances[claimableTokens[2]]).to.eq(amounts[2]);
+      done();
+    });
+    it('should return proper token balance for big numbers', (done) => {
+      const amounts = [
+        BigNumber.from('41581411386152819878'),
+        BigNumber.from(2304141496137171),
+        BigNumber.from(1870979002020152),
+      ];
+      const balances = repo.extractTokenBalance(claimableTokens, amounts);
+      expect(balances[claimableTokens[0]]).to.eql(amounts[0]);
+      expect(balances[claimableTokens[1]]).to.eq(amounts[1]);
+      expect(balances[claimableTokens[2]]).to.eq(amounts[2]);
       done();
     });
     it('should return proper token balance in case of undefined amounts', (done) => {
+      BigNumber.from('41581411386152819878');
       const amounts: (BigNumber | undefined)[] = [
         undefined,
         BigNumber.from(2304141496137171),
         BigNumber.from(1870979002020152),
       ];
       const balances = repo.extractTokenBalance(claimableTokens, amounts);
-      expect(balances[claimableTokens[0]]).to.eq(0);
-      expect(balances[claimableTokens[1]]).to.eq(2304141496137171);
-      expect(balances[claimableTokens[2]]).to.eq(1870979002020152);
+      expect(balances[claimableTokens[0]]).to.eql(ZERO);
+      expect(balances[claimableTokens[1]]).to.eq(amounts[1]);
+      expect(balances[claimableTokens[2]]).to.eq(amounts[2]);
       done();
     });
     it('should return proper token balance in case of null amounts', (done) => {
@@ -95,9 +110,9 @@ describe('FeeDistributorRepository', () => {
         BigNumber.from(1870979002020152),
       ];
       const balances = repo.extractTokenBalance(claimableTokens, amounts);
-      expect(balances[claimableTokens[0]]).to.eq(0);
-      expect(balances[claimableTokens[1]]).to.eq(2304141496137171);
-      expect(balances[claimableTokens[2]]).to.eq(1870979002020152);
+      expect(balances[claimableTokens[0]]).to.eql(ZERO);
+      expect(balances[claimableTokens[1]]).to.eq(amounts[1]);
+      expect(balances[claimableTokens[2]]).to.eq(amounts[2]);
       done();
     });
   });

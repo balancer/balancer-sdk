@@ -21,7 +21,7 @@ export interface LiquidityGauge {
   workingSupply: number;
   relativeWeight: number;
   rewardTokens?: { [tokenAddress: string]: RewardData };
-  claimableTokens?: { [tokenAddress: string]: number };
+  claimableTokens?: { [tokenAddress: string]: BigNumber };
 }
 
 export class LiquidityGaugeSubgraphRPCProvider
