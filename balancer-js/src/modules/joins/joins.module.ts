@@ -332,7 +332,7 @@ export class Join {
     }
   };
 
-  createCalls = async (
+  private createCalls = async (
     joinPaths: Node[][],
     userAddress: string,
     minAmountsOut?: string[], // one for each joinPath
@@ -430,7 +430,7 @@ export class Join {
   /*
   Simulate transaction and decodes each output of interest.
   */
-  amountsOutByJoinPath = async (
+  private amountsOutByJoinPath = async (
     userAddress: string,
     multiRequests: Requests[][],
     callData: string,
@@ -463,7 +463,7 @@ export class Join {
   /*
   Apply slippage to amounts
   */
-  minAmountsOutByJoinPath = (
+  private minAmountsOutByJoinPath = (
     slippage: string,
     amounts: string[],
     totalAmountOut: string
@@ -482,7 +482,7 @@ export class Join {
     };
   };
 
-  updateDeltas(
+  private updateDeltas(
     deltas: Record<string, BigNumber>,
     assets: string[],
     amounts: string[]
@@ -497,7 +497,7 @@ export class Join {
 
   // Create actions for each Node and return in multicall array
   // Create calls for each path, use value stored in minBptAmounts if available
-  createActionCalls = (
+  private createActionCalls = (
     joinPaths: Node[][],
     userAddress: string,
     minAmountsOut?: string[]
@@ -649,7 +649,7 @@ export class Join {
    * @param authorisation Encoded authorisation call.
    * @returns relayer approval call
    */
-  createSetRelayerApproval = (authorisation: string): string => {
+  private createSetRelayerApproval = (authorisation: string): string => {
     return Relayer.encodeSetRelayerApproval(this.relayer, true, authorisation);
   };
 
@@ -692,7 +692,7 @@ export class Join {
     return node;
   };
 
-  createAaveWrap = (
+  private createAaveWrap = (
     node: Node,
     nodeChildrenWithinJoinPath: Node[],
     joinPathIndex: number,
@@ -729,7 +729,7 @@ export class Join {
     return { encodedCall };
   };
 
-  createBatchSwap = (
+  private createBatchSwap = (
     node: Node,
     nodeChildrenWithinJoinPath: Node[],
     joinPathIndex: number,
@@ -824,7 +824,7 @@ export class Join {
     return { modelRequest, encodedCall, assets, amounts };
   };
 
-  createJoinPool = (
+  private createJoinPool = (
     node: Node,
     nodeChildrenWithinJoinPath: Node[],
     joinPathIndex: number,
@@ -951,7 +951,7 @@ export class Join {
     return { modelRequest, encodedCall, assets, amounts, minBptOut };
   };
 
-  getOutputRefValue = (
+  private getOutputRefValue = (
     joinPathIndex: number,
     node: Node
   ): { value: string; isRef: boolean } => {

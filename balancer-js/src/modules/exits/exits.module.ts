@@ -377,7 +377,7 @@ export class Exit {
     };
   }
 
-  updateDeltas(
+  private updateDeltas(
     deltas: Record<string, BigNumber>,
     assets: string[],
     amounts: string[]
