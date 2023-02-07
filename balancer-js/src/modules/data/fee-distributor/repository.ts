@@ -1,11 +1,12 @@
 import { TokenBalance } from '@/modules/claims/ClaimService';
 import { FeeDistributor } from '@/modules/contracts/implementations/feeDistributor';
-import { Interface } from '@ethersproject/abi';
-import { Provider } from '@ethersproject/providers';
-import { Contract } from '@ethersproject/contracts';
-import { getAddress } from '@ethersproject/address';
-import { formatUnits } from '@ethersproject/units';
 import { Multicall } from '@/modules/contracts/implementations/multicall';
+import { Interface } from '@ethersproject/abi';
+import { getAddress } from '@ethersproject/address';
+import { BigNumber } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
+import { Provider } from '@ethersproject/providers';
+import { formatUnits } from '@ethersproject/units';
 
 export interface FeeDistributorData {
   balAmount: number;
@@ -116,17 +117,16 @@ export class FeeDistributorRepository implements BaseFeeDistributor {
     userAddress: string,
     claimableTokens: string[]
   ): Promise<TokenBalance> {
-    const amounts = await this.feeDistributor.callStatic.claimTokens(
-      userAddress,
-      claimableTokens
-    );
-    return claimableTokens.reduce(
-      (tokens: { [key: string]: number }, token, index) => {
-        tokens[token] = amounts[index].toNumber();
-        return tokens;
-      },
-      {}
-    );
+    try {
+      const amounts: BigNumber[] =
+        await this.feeDistributor.callStatic.claimTokens(
+          userAddress,
+          claimableTokens
+        );
+      return this.extractTokenBalance(claimableTokens, amounts);
+    } catch (e) {
+      return {};
+    }
   }
 
   claimBalances(userAddress: string, claimableTokens: string[]): string {
@@ -134,5 +134,18 @@ export class FeeDistributorRepository implements BaseFeeDistributor {
       userAddress,
       claimableTokens,
     ]);
+  }
+
+  extractTokenBalance(
+    claimableTokens: string[],
+    amounts: (BigNumber | undefined | null)[]
+  ): TokenBalance {
+    return claimableTokens.reduce(
+      (tokens: { [key: string]: number }, token, index) => {
+        tokens[token] = amounts[index]?.toNumber() ?? 0;
+        return tokens;
+      },
+      {}
+    );
   }
 }
