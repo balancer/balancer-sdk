@@ -44,10 +44,10 @@ describe('euler apr', () => {
 
   it('is getting fetched', async () => {
     const eUSDTapr = (await euler())[yieldTokens.eUSDT];
-    expect(eUSDTapr).to.eq(226);
+    expect(eUSDTapr).to.eq(331);
     const eUSDCapr = (await euler())[yieldTokens.eUSDC];
-    expect(eUSDCapr).to.eq(331);
+    expect(eUSDCapr).to.eq(227);
     const eDAIapr = (await euler())[yieldTokens.eDAI];
-    expect(eDAIapr).to.eq(171);
+    expect(eDAIapr).to.eq(172);
   });
 });
