@@ -1,3 +1,4 @@
+import { ClaimService, IClaimService } from '@/modules/claims/ClaimService';
 import { BalancerSdkConfig, BalancerNetworkConfig } from '@/types';
 import { Swaps } from './swaps/swaps.module';
 import { Relayer } from './relayer/relayer.module';
@@ -22,6 +23,7 @@ export interface BalancerSDKRoot {
   relayer: Relayer;
   networkConfig: BalancerNetworkConfig;
   rpcProvider: Provider;
+  claimService?: IClaimService;
 }
 
 export class BalancerSDK implements BalancerSDKRoot {
@@ -35,6 +37,7 @@ export class BalancerSDK implements BalancerSDKRoot {
   vaultModel: VaultModel;
   readonly networkConfig: BalancerNetworkConfig;
   readonly provider: Provider;
+  readonly claimService?: IClaimService;
 
   constructor(
     public config: BalancerSdkConfig,
@@ -59,6 +62,16 @@ export class BalancerSDK implements BalancerSDKRoot {
       sor.provider
     );
     this.zaps = new Zaps(this.networkConfig.chainId);
+    if (this.data.liquidityGauges)
+      this.claimService = new ClaimService(
+        this.data.liquidityGauges,
+        this.data.feeDistributor,
+        this.networkConfig.chainId,
+        this.networkConfig.addresses.contracts.multicall,
+        this.provider,
+        this.networkConfig.addresses.contracts.gaugeClaimHelper,
+        this.networkConfig.addresses.contracts.balancerMinterAddress
+      );
     this.vaultModel = new VaultModel(
       this.data.poolsForSor,
       this.networkConfig.addresses.tokens.wrappedNativeAsset
