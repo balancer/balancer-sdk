@@ -111,7 +111,7 @@ export class ComposableStablePoolEncoder {
   /**
    * Encodes the userData parameter for exiting a ComposableStablePool by removing exact amounts of tokens
    * @param amountsOut - the amounts of each token to be withdrawn from the pool
-   * @param maxBPTAmountIn - the minimum acceptable BPT to burn in return for withdrawn tokens
+   * @param maxBPTAmountIn - the max acceptable BPT to burn in return for withdrawn tokens
    */
   static exitBPTInForExactTokensOut = (
     amountsOut: BigNumberish[],
