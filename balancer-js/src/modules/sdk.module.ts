@@ -10,6 +10,7 @@ import { Zaps } from './zaps/zaps.module';
 import { Pools } from './pools';
 import { Data } from './data';
 import { Provider } from '@ethersproject/providers';
+import { VaultModel } from './vaultModel/vaultModel.module';
 
 export interface BalancerSDKRoot {
   config: BalancerSdkConfig;
@@ -31,6 +32,7 @@ export class BalancerSDK implements BalancerSDKRoot {
   readonly data: Data;
   balancerContracts: Contracts;
   zaps: Zaps;
+  vaultModel: VaultModel;
   readonly networkConfig: BalancerNetworkConfig;
   readonly provider: Provider;
 
@@ -57,6 +59,10 @@ export class BalancerSDK implements BalancerSDKRoot {
       sor.provider
     );
     this.zaps = new Zaps(this.networkConfig.chainId);
+    this.vaultModel = new VaultModel(
+      this.data.poolsForSor,
+      this.networkConfig.addresses.tokens.wrappedNativeAsset
+    );
   }
 
   get rpcProvider(): Provider {

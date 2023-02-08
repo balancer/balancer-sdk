@@ -14,6 +14,7 @@ import {
   Searchable,
   Token,
 } from '@/types';
+import { SubgraphPoolDataService } from '@/modules/sor/pool-data/subgraphPoolDataService';
 
 export const findable = <T, P = string, V = any>(
   map: Map<string | V, T>
@@ -51,6 +52,7 @@ export const array2map = <T>(array: T[]): Map<string, T> => {
 
 export const repositores = ({
   pools = stubbed<Pool>(undefined),
+  poolsOnChain = stubbed<Pool>(undefined),
   yesterdaysPools = stubbed<Pool>(undefined),
   tokenPrices = stubbed<Price>({ usd: '1' }),
   tokenHistoricalPrices = stubbed<Price>({ usd: '1' }),
@@ -78,7 +80,8 @@ export const repositores = ({
   ),
 }): BalancerDataRepositories => ({
   pools,
-  poolsOnChain: pools,
+  poolsForSor: {} as SubgraphPoolDataService,
+  poolsOnChain,
   yesterdaysPools,
   tokenPrices,
   tokenHistoricalPrices,

@@ -379,15 +379,12 @@ buildJoin: (
 ) => Promise<JoinPoolAttributes>;
 ```
 
-[Example](./examples/join.ts) <br/><br/>
-Available pool types:
-- Weighted [Example](./examples/join.ts)
-- Composable Stable [Example](./examples/pools/composable-stable/join.ts)
-- Meta Stable (No example available yet)
-- Stable (No example available yet)
+[Example](./examples/join.ts)
 
-#### #buildInitJoin (Weighted Pool)
+### #buildInitJoin (Weighted Pool)
+
 Builds a init join transaction for weighted pool.
+
 ```js
   /***
    * @param params
@@ -403,9 +400,9 @@ Builds a init join transaction for weighted pool.
     poolId,
     tokensIn,
     amountsIn,
-  }) => InitJoinPoolAttributes 
+  }) => InitJoinPoolAttributes
 ```
-[Example](./examples/pools/weighted/init-join.ts) <br/><br/>
+[Example](./examples/pools/weighted/init-join.ts)
 Available pool types:
 - Weighted
 
@@ -433,6 +430,8 @@ Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
    * @param userAddress     User address
    * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
    */
@@ -443,12 +442,15 @@ Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
     to: string;
-    callData: string;
+    encodedCall: string;
     minOut: string;
     expectedOut: string;
+    priceImpact: string;
   }>
 ```
 
@@ -584,11 +586,13 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
 /**
    * Builds generalised exit transaction
    *
-   * @param poolId        Pool id
-   * @param amount        Token amount in EVM scale
-   * @param userAddress   User address
-   * @param slippage      Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param authorisation Optional auhtorisation call to be added to the chained transaction
+   * @param poolId          Pool id
+   * @param amount          Token amount in EVM scale
+   * @param userAddress     User address
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
    */
   async generalisedExit(
@@ -596,13 +600,16 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
     amount: string,
     userAddress: string,
     slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
     to: string;
-    callData: string;
+    encodedCall: string;
     tokensOut: string[];
     expectedAmountsOut: string[];
     minAmountsOut: string[];
+    priceImpact: string;
   }>
 ```
 

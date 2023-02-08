@@ -1,6 +1,6 @@
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed } from '@ethersproject/bignumber';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
-import { AddressZero, MaxUint256 } from '@ethersproject/constants';
+import { AddressZero, MaxUint256, WeiPerEther } from '@ethersproject/constants';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
 import { formatBytes32String } from '@ethersproject/strings';
@@ -293,4 +293,16 @@ export const getTestingRelevantParams = (
     rpcUrl,
     jsonRpcUrl,
   };
+};
+
+export const accuracy = (
+  amount: BigNumber,
+  expectedAmount: BigNumber
+): number => {
+  if (amount.eq(expectedAmount)) return 1;
+  if (expectedAmount.eq(0))
+    throw new Error("Can't check accuracy for expectedAmount 0");
+  const accuracyEvm = amount.mul(WeiPerEther).div(expectedAmount);
+  const accuracy = formatFixed(accuracyEvm, 18);
+  return parseFloat(accuracy);
 };

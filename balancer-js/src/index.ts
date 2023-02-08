@@ -43,3 +43,4 @@ export {
   formatSequence,
   getTokenAddressesForSwap,
 } from '@balancer-labs/sor';
+export { SimulationType } from './modules/simulation/simulation.module';

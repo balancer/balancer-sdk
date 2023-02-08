@@ -2,12 +2,23 @@ import { PoolDataService, SubgraphPoolBase } from '@balancer-labs/sor';
 import {
   OrderDirection,
   Pool_OrderBy,
+  PoolsQueryVariables,
   SubgraphClient,
 } from '@/modules/subgraph/subgraph';
 import { parseInt } from 'lodash';
 import { getOnChainBalances } from './onChainData';
 import { Provider } from '@ethersproject/providers';
-import { BalancerNetworkConfig, BalancerSdkSorConfig } from '@/types';
+import {
+  BalancerNetworkConfig,
+  BalancerSdkSorConfig,
+  GraphQLQuery,
+} from '@/types';
+import { GraphQLArgs } from '@/lib/graphql/types';
+import {
+  GraphQLArgsBuilder,
+  SubgraphArgsFormatter,
+} from '@/lib/graphql/args-builder';
+
 import { isSameAddress } from '@/lib/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,12 +41,35 @@ export function mapPools(pools: any[]): SubgraphPoolBase[] {
 }
 
 export class SubgraphPoolDataService implements PoolDataService {
+  private readonly query: GraphQLQuery;
   constructor(
     private readonly client: SubgraphClient,
     private readonly provider: Provider,
     private readonly network: BalancerNetworkConfig,
-    private readonly sorConfig: BalancerSdkSorConfig
-  ) {}
+    private readonly sorConfig?: BalancerSdkSorConfig,
+    query?: GraphQLQuery
+  ) {
+    const defaultArgs: GraphQLArgs = {
+      orderBy: Pool_OrderBy.TotalLiquidity,
+      orderDirection: OrderDirection.Desc,
+      where: {
+        swapEnabled: {
+          eq: true,
+        },
+        totalShares: {
+          gt: 0.000000000001,
+        },
+      },
+    };
+
+    const args = query?.args || defaultArgs;
+    const attrs = query?.attrs || {};
+
+    this.query = {
+      args,
+      attrs,
+    };
+  }
 
   public async getPools(): Promise<SubgraphPoolBase[]> {
     const pools = await this.getSubgraphPools();
@@ -50,7 +84,7 @@ export class SubgraphPoolDataService implements PoolDataService {
 
     const mapped = mapPools(filteredPools);
 
-    if (this.sorConfig.fetchOnChainBalances === false) {
+    if (this.sorConfig && this.sorConfig.fetchOnChainBalances === false) {
       return mapped;
     }
 
@@ -63,11 +97,12 @@ export class SubgraphPoolDataService implements PoolDataService {
   }
 
   private async getSubgraphPools() {
-    const { pool0, pool1000, pool2000 } = await this.client.AllPools({
-      where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
-      orderBy: Pool_OrderBy.TotalLiquidity,
-      orderDirection: OrderDirection.Desc,
-    });
+    const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
+      new SubgraphArgsFormatter()
+    ) as PoolsQueryVariables;
+    const { pool0, pool1000, pool2000 } = await this.client.AllPools(
+      formattedQuery
+    );
 
     const pools = [...pool0, ...pool1000, ...pool2000];
 

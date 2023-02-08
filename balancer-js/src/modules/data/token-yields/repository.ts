@@ -13,6 +13,7 @@ import { sfrxETH, yieldTokens as fraxTokens } from './tokens/sfrxeth';
 import { maticX, yieldTokens as staderLabsTokens } from './tokens/maticx';
 import { tranchess, yieldTokens as tranchessTokens } from './tokens/tranchess';
 import { usdr, yieldTokens as usdrTokens } from './tokens/usdr';
+import { stafi, yieldTokens as stafiTokens } from './tokens/stafi';
 import { tessera, yieldTokens as tesseraTokens } from './tokens/tessera';
 import { Network, Findable } from '@/types';
 
@@ -38,6 +39,7 @@ const yieldSourceMap: { [address: string]: AprFetcher } = Object.fromEntries([
   ...Object.values(staderLabsTokens).map((k) => [k, maticX]),
   ...Object.values(tranchessTokens).map((k) => [k, tranchess]),
   ...Object.values(usdrTokens).map((k) => [k, usdr]),
+  ...Object.values(stafiTokens).map((k) => [k, stafi]),
   ...Object.values(tesseraTokens).map((k) => [k, tessera]),
 ]);
 

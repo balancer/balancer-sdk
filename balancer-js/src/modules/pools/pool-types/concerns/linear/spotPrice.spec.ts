@@ -18,7 +18,7 @@ describe('Linear pool spot price', () => {
     it('should calculate spot price for pair', () => {
       const spotPrice = spotPriceCalc.calcPoolSpotPrice(
         ADDRESSES[network].USDC.address,
-        ADDRESSES[network].bbausdc.address,
+        ADDRESSES[network].bbausdcOld.address,
         pool
       );
       expect(spotPrice).to.eq('1.008078200925769181');
