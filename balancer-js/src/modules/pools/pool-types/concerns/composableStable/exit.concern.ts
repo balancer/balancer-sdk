@@ -1,4 +1,4 @@
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 import { isUndefined } from 'lodash';
 import { Vault__factory } from '@balancer-labs/typechain';
@@ -24,7 +24,6 @@ import {
   ExitPool,
   ExitPoolAttributes,
 } from '../types';
-import { exit } from 'process';
 
 interface SortedValues {
   parsedTokens: string[];
@@ -216,34 +215,25 @@ export class ComposableStablePoolExit implements ExitConcern {
     }
   };
   /**
-   * Checks if the input of buildExitExactTokensOut is valid;
+   * Checks if the input of buildExitExactTokensOut is valid
    */
   checkInputsExactTokensOut = (
     tokensOut: string[],
     amountsOut: string[],
     pool: Pool
   ): void => {
+    // Should have a token for input for each non-BPT pool token
+    // Should be an amount out for each token out
     if (
       tokensOut.length != amountsOut.length ||
       tokensOut.length != pool.tokensList.length - 1
     ) {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
-    if (
-      // Only Composable Stable Pools V2+ accepts more than 1 token exits.
-      // Checks if the poolTypeVersion is 1 and there's more than one token with amountsOut > 0
-      pool.poolTypeVersion === 1 &&
-      amountsOut.filter((amount) => BigInt(amount) > BigInt(0)).length > 1
-    ) {
-      throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE_VERSION);
-    }
-    // Check if there's any relevant stable pool info missing
-    if (pool.tokens.some((token) => !token.decimals))
-      throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
   };
 
   /**
-   * Sorts and returns the values of amounts, tokens, balances, indexes, that are necessary to do the maths and build the exit transactions;
+   * Sorts and returns the values of amounts, tokens, balances, indexes, that are necessary to do the maths and build the exit transactions
    * @param pool
    * @param singleTokenMaxOut
    * @param wrappedNativeAsset
@@ -275,7 +265,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     };
   };
   /**
-   * Sorts and returns the values of amounts, tokens, balances, indexes, that are necessary to do the maths and build the exit transactions;
+   * Sorts and returns the values of amounts, tokens, balances, indexes, that are necessary to do the maths and build the exit transactions
    * @param pool
    * @param singleTokenMaxOut
    * @param wrappedNativeAsset

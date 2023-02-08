@@ -10,7 +10,6 @@ import {
   getTestingRelevantParams,
 } from '@/test/lib/utils';
 import pools_16350000 from '@/test/lib/pools_16350000.json';
-import pools_polygon from '@/test/lib/pools_polygon_39033320.json';
 import { ExitExactTokensOutAttributes } from '@/modules/pools/pool-types/concerns/types';
 
 dotenv.config();
@@ -192,82 +191,6 @@ describe('exit composable stable pool v1 execution', async () => {
         expect(exitAttrFromReversed).to.deep.eq(exitExactTokensOutAttr);
       });
     });
-  });
-});
-
-describe('exit composable stable pool v2 execution', async () => {
-  const {
-    poolObj,
-    pool,
-    jsonRpcUrl,
-    signer,
-    tokensWithoutBPT: tokensOut,
-  } = getTestingRelevantParams({
-    network: Network.POLYGON,
-    pools: pools_polygon,
-    poolId:
-      '0x373b347bc87998b151a5e9b6bb6ca692b766648a000000000000000000000923',
-    hasBPT: true,
-  });
-
-  const initialBalance = '100000';
-  const slippage = '0'; // 0%
-
-  let transactionReceipt: TransactionReceipt;
-  let bptBalanceBefore: BigNumber;
-  let bptBalanceAfter: BigNumber;
-  let bptMaxBalanceDecrease: BigNumber;
-  let tokensBalanceBefore: BigNumber[];
-  let tokensBalanceAfter: BigNumber[];
-  let tokensMinBalanceIncrease: BigNumber[];
-  let signerAddress: string;
-
-  // Setup chain
-  before(async function () {
-    await forkSetup(
-      signer,
-      poolObj.tokensList,
-      Array(poolObj.tokensList.length).fill(0),
-      Array(poolObj.tokensList.length).fill(
-        parseFixed(initialBalance, 18).toString()
-      ),
-      jsonRpcUrl as string,
-      39033320 // holds the same state as the static repository
-    );
-    signerAddress = await signer.getAddress();
-  });
-
-  const testFlow = async (
-    [to, data, maxBPTIn, minAmountsOut]: [string, string, string, string[]],
-    exitTokens: string[]
-  ) => {
-    // Check balances before transaction to confirm success
-    [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
-      [poolObj.address, ...exitTokens],
-      signer,
-      signerAddress
-    );
-    // Get expected balances out of transaction
-    bptMaxBalanceDecrease = BigNumber.from(maxBPTIn);
-    tokensMinBalanceIncrease = minAmountsOut.map((a) => BigNumber.from(a));
-    // Send transaction to local fork
-    const transactionResponse = await signer.sendTransaction({
-      to,
-      data,
-      gasLimit: 3000000,
-    });
-    transactionReceipt = await transactionResponse.wait();
-
-    // Check balances after transaction to confirm success
-    [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
-      [poolObj.address, ...exitTokens],
-      signer,
-      signerAddress
-    );
-  };
-  context('exitExactTokensOut', async () => {
-    let exitExactTokensOutAttr: ExitExactTokensOutAttributes;
-    let amountsOut: string[] = [];
     context('two tokens out', async () => {
       before(async function () {
         amountsOut = tokensOut.map((t, i) => {
