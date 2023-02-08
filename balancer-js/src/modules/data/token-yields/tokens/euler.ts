@@ -63,7 +63,7 @@ export const euler: AprFetcher = async () => {
   };
   assets.forEach(({ eTokenAddress, supplyAPY }) => {
     const key: 'eUSDT' | 'eDAI' | 'eUSDC' = Object.entries(yieldTokens).filter(
-      ([_, value]) => {
+      ([, value]) => {
         return value.toLocaleLowerCase() === eTokenAddress.toLocaleLowerCase();
       }
     )[0][0] as 'eUSDT' | 'eDAI' | 'eUSDC';
