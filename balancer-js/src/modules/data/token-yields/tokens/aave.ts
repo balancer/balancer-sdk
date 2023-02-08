@@ -86,7 +86,7 @@ const underlyingToWrapped = {
   [Network.MAINNET]: Object.fromEntries(
     Object.keys(wrappedTokensMap[Network.MAINNET]).map((wrapped) => [
       wrappedTokensMap[Network.MAINNET][
-        wrapped as keyof typeof wrappedTokensMap[Network.MAINNET]
+        wrapped as keyof (typeof wrappedTokensMap)[Network.MAINNET]
       ].underlying,
       wrapped,
     ])
@@ -94,7 +94,7 @@ const underlyingToWrapped = {
   [Network.POLYGON]: Object.fromEntries(
     Object.keys(wrappedTokensMap[Network.POLYGON]).map((wrapped) => [
       wrappedTokensMap[Network.POLYGON][
-        wrapped as keyof typeof wrappedTokensMap[Network.POLYGON]
+        wrapped as keyof (typeof wrappedTokensMap)[Network.POLYGON]
       ].underlying,
       wrapped,
     ])

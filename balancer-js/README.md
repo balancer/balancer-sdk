@@ -777,10 +777,8 @@ async relayer.exitPoolAndBatchSwap(
 
 [Example](./examples/relayerExitPoolAndBatchSwap.ts)
 
-### Pools Impermanent Loss
+## Pools Impermanent Loss
 
-> DRAFT
->
 > impermanent loss (IL) describes the percentage by which a pool is worth less than what one would have if they had instead just held the tokens outside the pool
 
 #### Service
@@ -850,6 +848,81 @@ const IL = await pools.impermanentLoss(join.timestamp, pool);
 ```
 
 [Example](./examples/pools/impermanentLoss.ts)
+
+## Claim Tokens
+
+### Service
+
+![classes](./claim-incentives-class.png)
+
+### Claim Tokens for a veBAL Holders
+
+#### Pseudocode
+
+* **Get Claimable Rewards**
+
+```javascript
+const defaultClaimableTokens = [
+  '0x7B50775383d3D6f0215A8F290f2C9e2eEBBEceb2', // bb-a-USD v1
+  '0xA13a9247ea42D743238089903570127DdA72fE44', // bb-a-USD v2
+  '0xba100000625a3754423978a60c9317c58a424e3D', // BAL
+]
+
+const claimableTokens: string[] = userDefinedClaimableTokens ?? defaultClaimableTokens;
+
+const balances = await ClaimService.getClaimableVeBalTokens(userAddress, claimableTokens) {
+  return await this.feeDistributor.callStatic.claimTokens(userAddress,claimableTokens);
+}
+
+const txData = await getClaimableVeBalTokens.buildClaimVeBalTokensRequest(userAddress, claimableTokens) {
+  data = feeDistributorContract.claimBalances(userAddress, claimableTokens);
+  to = feeDistributorContract.encodeFunctionData('claimTokens', [userAddress, claimableTokens])
+}
+
+//on client
+signer.request(txData).then(() => { ... });
+
+```
+
+### Claim Pools Incentives
+
+#### Pseudocode
+
+* **Get Claimable Rewards**
+```javascript
+gauges = LiquidityGaugesRepository.fetch();
+claimableTokensPerGauge = LiquidityGaugesMulticallRepository.getClaimableTokens(gauges, accountAddress) {
+  if (MAINNET) {
+    claimableTokens = this.multicall.aggregate('claimable_tokens', gauges, accountAddress);
+    claimableReward = gauge.rewardData.forEach(this.multicall.aggregate('claimable_reward', gauges, accountAddress, rewardToken);
+    return aggregate(claimableReward, claimableTokens);
+  } else {
+    return gauge.rewardData.forEach(this.multicall.aggregate('claimable_reward', gauges, accountAddress, rewardToken);
+  }
+};
+
+```
+* **Claim Rewards**
+
+it returns encoded callable data to be fed to a signer and then to send to the gauge contract. 
+
+```javascript
+
+if (MAINNET) {
+  const callData = balancerMinterInterface.encodeFunctionData(
+    'mintMany',
+    [gaugeAddresses]
+  );
+  return { to: balancerMinterAddress, data: callData }
+} else {
+  const callData = gaugeClaimHelperInterface.encodeFunctionData(
+    'claimRewardsFromGauges',
+    [gaugeAddresses, userAddress]
+  );
+  return { to: gaugeClaimHelperAddress, data: callData }
+}
+
+```
 
 ## Licensing
 
