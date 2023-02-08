@@ -111,6 +111,14 @@ export class WeightedPoolJoin implements JoinConcern {
     const values = amountsIn.filter((amount, i) => tokensIn[i] === AddressZero); // filter native asset (e.g. ETH) amounts
     const value = values[0] ? BigNumber.from(values[0]) : undefined;
 
-    return { to, functionName, attributes, data, value, minBPTOut };
+    return {
+      to,
+      functionName,
+      attributes,
+      data,
+      value,
+      minBPTOut,
+      expectedBPTOut,
+    };
   };
 }

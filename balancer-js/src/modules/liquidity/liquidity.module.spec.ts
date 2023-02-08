@@ -64,7 +64,7 @@ describe('Liquidity Module', () => {
       const wethBalance =
         pool.tokens.find((token) => token.address === wethAddress)?.balance ||
         '0';
-      const wethPrice = tokenPrices[wethAddress].usd;
+      const wethPrice = tokenPrices[wethAddress].usd || '0';
       const expectedLiquidity = parseFixed(wethBalance, 18)
         .mul(parseFixed(wethPrice, 0))
         .mul('2');
@@ -121,7 +121,7 @@ describe('Liquidity Module', () => {
     });
   });
 
-  context('PhantomStable Pool calculations', () => {
+  context('StablePhantom Pool calculations', () => {
     it('Correctly calculates liquidity of a Boosted USD 3pool', async () => {
       const liquidity = await liquidityProvider.getLiquidity(
         findPool('0x7b50775383d3d6f0215a8f290f2c9e2eebbeceb2')
@@ -129,6 +129,13 @@ describe('Liquidity Module', () => {
       expect(Number(liquidity).toFixed(8).toString()).to.be.eq(
         '176802743.05530426'
       );
+    });
+
+    it('Correctly calculates liquidity of a pool with normal ERC20 tokens in it', async () => {
+      const liquidity = await liquidityProvider.getLiquidity(
+        findPool('0xe051605a83deae38d26a7346b100ef1ac2ef8a0b')
+      );
+      expect(Number(liquidity).toFixed(8).toString()).to.be.eq('0.20542282');
     });
   });
 

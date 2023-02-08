@@ -110,7 +110,7 @@ export class StaBal3Builder {
       { index: assetOrder.indexOf('USDT'), key: EXIT_USDT },
     ];
 
-    const callData = Relayer.constructExitCall({
+    const exitPoolInput = Relayer.formatExitPoolInput({
       assets,
       minAmountsOut: ['0', '0', '0'],
       userData,
@@ -122,6 +122,7 @@ export class StaBal3Builder {
       outputReferences,
       exitPoolRequest: {} as ExitPoolRequest,
     });
+    const callData = Relayer.encodeExitPool(exitPoolInput);
 
     return callData;
   }

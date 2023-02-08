@@ -20,9 +20,10 @@ import {
   GraphQLQuery,
 } from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
+import { SubgraphPoolDataService } from '../sor/pool-data/subgraphPoolDataService';
+import { PoolsSubgraphOnChainRepository } from './pool/subgraphOnChain';
 import { PoolSharesRepository } from './pool-shares/repository';
 import { PoolJoinExitRepository } from './pool-joinExit/repository';
-import { PoolsSubgraphOnChainRepository } from './pool/subgraphOnChain';
 import { PoolGaugesRepository } from './pool-gauges/repository';
 import { GaugeSharesRepository } from './gauge-shares/repository';
 import { BlockNumberRepository } from './block-number';
@@ -45,9 +46,11 @@ import { Provider } from '@ethersproject/providers';
 // TODO: we might want to replace that with what frontend is using
 import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json';
 import { SubgraphPriceRepository } from './token-prices/subgraph';
+import { createSubgraphClient } from '../subgraph/subgraph';
 
 export class Data implements BalancerDataRepositories {
   pools;
+  poolsForSor;
   poolsOnChain;
   yesterdaysPools;
   poolShares;
@@ -73,6 +76,14 @@ export class Data implements BalancerDataRepositories {
       url: networkConfig.urls.subgraph,
       chainId: networkConfig.chainId,
     });
+
+    this.poolsForSor = new SubgraphPoolDataService(
+      createSubgraphClient(networkConfig.urls.subgraph),
+      provider,
+      networkConfig,
+      undefined,
+      subgraphQuery
+    );
 
     this.poolsOnChain = new PoolsSubgraphOnChainRepository({
       url: networkConfig.urls.subgraph,
