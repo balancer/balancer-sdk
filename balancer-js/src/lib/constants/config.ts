@@ -293,6 +293,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
       gaugesSubgraph: '',
+      blockNumberSubgraph:
+        'https://api.thegraph.com/subgraphs/name/matthewlilley/bsc-blocks',
     },
     pools: {},
     sorConnectingTokens: [
@@ -312,7 +314,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         balancerHelpers: '0x99fF451379772B0A1C0aA512b7794372ca0bCE29',
         weightedPoolFactory: '0x7b61837701Fad187d24f11A0b02E08308cB3912D',
         composableStablePoolFactory:
-          '0x3A476007D1D9996985cd8c772AF5EdFcc1547280',
+          '0x7F4171E531549d3C5d463617b6Feb4eB8675525a',
       },
       tokens: {
         wrappedNativeAsset: '0xE906CBeCd4A17DF62B8d6c8C82F3882af25295f5',
@@ -320,8 +322,10 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
+        'https://api.thegraph.com/subgraphs/name/styliann-eth/iguanadex',
       gaugesSubgraph: '',
+      blockNumberSubgraph:
+        'https://api.thegraph.com/subgraphs/name/styliann-eth/bsc-testnet-blocks',
     },
     pools: {},
     sorConnectingTokens: [

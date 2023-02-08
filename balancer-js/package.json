@@ -1,6 +1,6 @@
 {
   "name": "@iguana-dex/sdk",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "JavaScript SDK for interacting with IguanaDEX",
   "license": "GPL-3.0-only",
   "homepage": "https://github.com/iguana-dex/iguana-sdk#readme",
@@ -29,7 +29,9 @@
     "subgraph:generate": "graphql-codegen --config src/modules/subgraph/codegen.yml -r dotenv/config",
     "examples:run": "npx ts-node -P tsconfig.testing.json -r tsconfig-paths/register",
     "node": "npx hardhat node --tsconfig tsconfig.testing.json --fork $(. ./.env && echo $ALCHEMY_URL)",
-    "node:goerli": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --fork $(grep ALCHEMY_URL_GOERLI .env | cut -d '=' -f2 | tail -1) --port 8000"
+    "node:goerli": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --fork $(grep ALCHEMY_URL_GOERLI .env | cut -d '=' -f2 | tail -1) --port 8000",
+    "node:bsc": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.bsc.ts node --fork $(grep GETBLOCK_URL .env | cut -d '=' -f2 | tail -1) --port 8000",
+    "node:bsctestnet": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.bsctestnet.ts node --fork $(grep GETBLOCK_URL_TEST .env | cut -d '=' -f2 | tail -1) --port 8000"
   },
   "devDependencies": {
     "@ethersproject/solidity": "^5.6.1",
@@ -63,7 +65,6 @@
     "eslint": "^7.9.0",
     "eslint-plugin-mocha-no-only": "^1.1.1",
     "eslint-plugin-prettier": "^3.1.4",
-    "ethers": "^5.0.0",
     "fishery": "^2.2.2",
     "hardhat": "^2.9.3",
     "mocha": "^8.2.1",
@@ -81,7 +82,6 @@
     "typescript": "^4.0.2"
   },
   "dependencies": {
-    "@iguana-dex/sor": "^0.0.1",
     "@balancer-labs/typechain": "^1.0.0",
     "@ethersproject/abi": "^5.4.0",
     "@ethersproject/abstract-signer": "^5.4.0",
@@ -92,7 +92,9 @@
     "@ethersproject/constants": "^5.7.0",
     "@ethersproject/contracts": "^5.4.0",
     "@ethersproject/providers": "^5.4.5",
+    "@iguana-dex/sor": "^0.0.1",
     "axios": "^0.24.0",
+    "ethers": "5.7.2",
     "graphql": "^15.6.1",
     "graphql-request": "^3.5.0",
     "json-to-graphql-query": "^2.2.4",

@@ -9,25 +9,22 @@ import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
 import { ethers } from 'hardhat';
 import { Interface, LogDescription } from '@ethersproject/abi';
 import { ADDRESSES } from '@/test/lib/constants';
-import { forkSetup } from '@/test/lib/utils';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 
 dotenv.config();
 
-const name = 'My-Test-Pool-Name';
+const name = 'Puce Pool';
 
-const symbol = 'My-Test-Pool-Symbol';
+const symbol = 'PUCE';
 
-const network = Network.GOERLI;
-const rpcUrl = 'http://127.0.0.1:8000';
-const alchemyRpcUrl = `${process.env.ALCHEMY_URL_GOERLI}`;
-const blockNumber = 8200000;
+const network = Network.BSCTESTNET;
+const rpcUrl = `${process.env.GETBLOCK_URL_TEST}`;
 
 const addresses = ADDRESSES[network];
 
-const WETH_address = addresses.WETH.address;
-const MAI_address = addresses.MAI.address;
-const tokenAddresses = [MAI_address, WETH_address];
+const BUSD_address = addresses.BUSD.address;
+const USDT_address = addresses.USDT.address;
+const tokenAddresses = [BUSD_address, USDT_address];
 
 const amplificationParameter = '1';
 
@@ -41,7 +38,7 @@ const tokenRateCacheDurations = ['0', '0'];
 const exemptFromYieldProtocolFeeFlags = [false, false];
 
 const swapFee = '0.01';
-const owner = '0x817b6923f3cB53536859b1f01262d0E7f513dB78';
+const owner = '0xfEB47392B746dA43C28683A145237aC5EC5D554B'; // Test Account
 const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`;
 
 async function createComposableStablePool() {
@@ -52,15 +49,12 @@ async function createComposableStablePool() {
     network
   );
 
-  const signer = provider.getSigner();
-  await forkSetup(signer, [], [], [], alchemyRpcUrl, blockNumber, false);
+  const wallet = new ethers.Wallet(`${process.env.TRADER_KEY}`, provider);
 
   const sdkConfig = {
     network,
     rpcUrl,
   };
-
-  // await forkSetupLocalNode(signer);
 
   const balancer = new BalancerSDK(sdkConfig);
   const composableStablePoolFactory = balancer.pools.poolFactory.of(
@@ -79,14 +73,32 @@ async function createComposableStablePool() {
     owner,
   });
 
-  const signerAddress = await signer.getAddress();
+  console.log('ComposableStablePoolFactory address: ' + to);
 
-  const tx = await signer.sendTransaction({
+  const signerAddress = await wallet.getAddress();
+
+  const tx = await wallet.sendTransaction({
     from: signerAddress,
     to,
     data,
     gasLimit: 6721975,
   });
+
+  console.log('tx sent with hash: ' + tx.hash);
+
+  try {
+    const txReceipt = await tx.wait();
+
+    console.log(
+      'Transaction included in block number:' + txReceipt.blockNumber
+    );
+  } catch (err: any) {
+    // Slippage should trigger 507 error:
+    // https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/solidity-utils/contracts/helpers/BalancerErrors.sol#L218
+    console.log(err.reason);
+    console.log('TRANSACTION: ' + JSON.stringify(err.transaction));
+    console.log('RECEIPT: ' + JSON.stringify(err.receipt));
+  }
 
   const receipt: TransactionReceipt = await provider.getTransactionReceipt(
     tx.hash

@@ -1,34 +1,38 @@
 # IguanaDEX Javascript SDK
 
-A JavaScript SDK for interactions with Iguana DEX.
+JavaScript SDK designed to interact with Iguana DEX.
 
 ## How to run the examples (Javascript)?
 
-**In order to run the examples provided, you need to follow the next steps:**
+**In order to run the examples provided, please follow the below steps:**
 
-1. git clone https://github.com/iguana-dex/iguana-sdk.git
-2. cd iguana-sdk
-3. cd balancer-js
-4. Create a .env file in the balancer-js folder
-5. In the .env file you will need to define and initialize the following variables
+1. git clone https://github.com/iguana-dex/iguana-sdk.git && cd iguana-sdk/balancer-js
+2. Create a .env file in the current folder (balancer-js)
+3. In the .env file you will need to define and initialize the following variables
 
-   We have defined both Alchemy and Infura, because some of the examples use Infura, others use Alchemy. However, feel free to modify accordingly and use your favourite one.
-   ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT]  
-   INFURA=[Infura API KEY]  
-   TRADER_KEY=[MetaMask PRIVATE KEY]  
+   Nodereal supports most EVM blockchain networks while Alchemy and Infura only support a limited selection of networks.
+   Some of the examples use Alchemy/Infura but the examples using BNB Chain use NodeReal.
+   * NODEREAL=[NODEREAL HTTPS ENDPOINT for BNB Chain]
+   * NODEREAL_TEST=[NODEREAL HTTPS ENDPOINT for BSC Testnet]
+   * ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT]
+   * INFURA=[Infura API KEY]
+   * TRADER_KEY=[MetaMask PRIVATE KEY]
+   
    Some examples also require the following Tenderly config parameters to be defined:
-   TENDERLY_ACCESS_KEY=[TENDERLY API ACCESS KEY]
-   TENDERLY_PROJECT=[TENDERLY PROJECT NAME]
-   TENDERLY_USER=[TENDERLY USERNAME]
+   * TENDERLY_ACCESS_KEY=[TENDERLY API ACCESS KEY]
+   * TENDERLY_PROJECT=[TENDERLY PROJECT NAME]
+   * TENDERLY_USER=[TENDERLY USERNAME]
 
-6. Run 'npm run node', this runs a local Hardhat Network
-7. Open a new terminal
-8. cd to balancer-js
-9. Install ts-node using: npm install ts-node
-10. Install tsconfig-paths using: npm install --save-dev tsconfig-paths
-11. Run one of the provided examples (eg: npm run examples:run -- examples/join.ts)
+4. Run 'yarn node', this runs a local Hardhat Network
+5. Open a new terminal
+6. cd to balancer-js
+7. Install ts-node using: yarn add ts-node
+8. Install tsconfig-paths using: yarn add --save-dev tsconfig-paths
+9. Run one of the provided examples e.g.:
 
-## Installation
+```bash
+ yarn examples:run examples/join.ts
+ ```
 
 ## Getting Started
 
@@ -42,7 +46,7 @@ const config: BalancerSdkConfig = {
 const balancer = new BalancerSDK(config);
 ```
 
-In some examples we present a way to make end to end trades against mainnet state. To run them you will need to setup a localhost test node using tools like ganache, hardhat, anvil.
+In some examples we present a way to make end-to end-trades against mainnet state. To run them you will need to setup a localhost test node using hardhat.
 
 Installation instructions for:
 
@@ -51,20 +55,12 @@ Installation instructions for:
   To start a MAINNET forked node:
 
   - Set env var: `ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT for MAINNET]`
-  - Run: `npm run node`
+  - Run: `yarn node`
 
   To start a GOERLI forked node:
 
   - Set env var: `ALCHEMY_URL_GOERLI=[ALCHEMY HTTPS ENDPOINT for GOERLI]`
-  - Run: `npm run node:goerli`
-
-- [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation) - use with caution, still experimental.
-
-  To start a forked node:
-
-  ```
-  anvil -f FORKABLE_RPC_URL (optional pinned block: --fork-block-number XXX)
-  ```
+  - Run: `yarn node:goerli`
 
 ## Swaps Module
 
@@ -98,7 +94,7 @@ const transactionResponse = await signer.sendTransaction({ to, data, value });
 
 ## SwapsService
 
-The SwapsService provides function to query and make swaps using Balancer V2 liquidity.
+The SwapsService provides function to query and make swaps using IguanaDEX liquidity.
 
 ```js
 const swaps = new swapService({
@@ -106,10 +102,6 @@ const swaps = new swapService({
   rpcUrl: string;
 });
 ```
-
-## Examples
-
-You can run each example with `npm run examples:run -- examples/exampleName.ts`
 
 ### #queryBatchSwap
 
@@ -289,9 +281,9 @@ async getSpotPrice(
 
 [Example](./examples/spotPrice.ts)
 
-## Simulating pool joins and exists
+## Simulating pool joins and exits
 
-The Balancer Vault provides a [method to simulate join or exit calls to a pool](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/standalone-utils/contracts/BalancerQueries.sol#L91).
+The IguanaDEX Vault provides a [method to simulate join or exit calls to a pool](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/standalone-utils/contracts/BalancerQueries.sol#L91).
 These function allows you to perform a dry run before sending an actual transaction, without checking the sender / recipient or token balances / approvals. Note that this function is not 'view' (due to implementation details): the client code must explicitly execute `eth_call` instead of `eth_sendTransaction`.
 
 ### Simulating joins

@@ -1,6 +1,6 @@
 ## IguanaDEX SDK
 
-Iguana Protocol is a community-driven protocol that empowers:
+Iguana Protocol is a community-driven protocol providing:
 * AMMs on BNB Chain - most notably the DMI Pool tracking the Digital Market Index
 * Perpetual Swaps trading on BNB Chain and the Polygon Network.
 
@@ -36,4 +36,4 @@ npm install @iguana-dex/sdk
 
 ### Contributing/Suggestions
 
-IguanaDEX is a community driven project and we welcome external contributions and feedback. Please see the Contributing guides within each project for guidance on how to submit code. If you have any suggestions or requests please open an issue in this repo with some further details and we'll be happy to investigate further.
+IguanaDEX is a community-driven project, contributions and feedback are welcome. Please refer to the Contributing guides within each GitHub repository for guidance on how to submit code. If you have any suggestions or requests please open an issue in this repo with some further details and IguanaDEX will be happy to investigate further.
