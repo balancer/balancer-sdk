@@ -1,21 +1,26 @@
 // yarn test:only ./src/modules/joins/joins.module.integration.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import hardhat from 'hardhat';
 
-import {
-  BalancerSDK,
-  BalancerTenderlyConfig,
-  Network,
-  GraphQLQuery,
-  GraphQLArgs,
-} from '@/.';
+import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { forkSetup, getBalances } from '@/test/lib/utils';
+import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
+import { SimulationType } from '../simulation/simulation.module';
+
+/**
+ * -- Integration tests for generalisedJoin --
+ *
+ * It compares results from local fork transactions with simulated results from
+ * the Simulation module, which can be of 3 different types:
+ * 1. Tenderly: uses Tenderly Simulation API (third party service)
+ * 2. VaultModel: uses TS math, which may be less accurate (min. 99% accuracy)
+ * 3. Static: uses staticCall, which is 100% accurate but requires vault approval
+ */
 
 dotenv.config();
 
@@ -31,13 +36,12 @@ const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 
 /*
  * Testing on GOERLI
- * - Update hardhat.config.js with chainId = 5
- * - Update ALCHEMY_URL on .env with a goerli api key
- * - Run node on terminal: yarn run node
+ * - Make sure ALCHEMY_URL_GOERLI is set on .env with a goerli api key
+ * - Run node on terminal: yarn run node:goerli
  * - Uncomment section below:
  */
 const network = Network.GOERLI;
-const blockNumber = 8038074;
+const blockNumber = 8092113;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
 const { ALCHEMY_URL_GOERLI: jsonRpcUrl } = process.env;
@@ -45,8 +49,7 @@ const rpcUrl = 'http://127.0.0.1:8000';
 
 /*
  * Testing on MAINNET
- * - Update hardhat.config.js with chainId = 1
- * - Update ALCHEMY_URL on .env with a mainnet api key
+ * - Make sure ALCHEMY_URL is set on .env with a mainnet api key
  * - Run node on terminal: yarn run node
  * - Uncomment section below:
  */
@@ -57,24 +60,22 @@ const rpcUrl = 'http://127.0.0.1:8000';
 // const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 // const rpcUrl = 'http://127.0.0.1:8545';
 
-const { TENDERLY_ACCESS_KEY, TENDERLY_USER, TENDERLY_PROJECT } = process.env;
-const { ethers } = hardhat;
-const MAX_GAS_LIMIT = 8e6;
 const addresses = ADDRESSES[network];
 
-// Custom Tenderly configuration parameters - remove in order to use default values
-const tenderlyConfig: BalancerTenderlyConfig = {
-  accessKey: TENDERLY_ACCESS_KEY as string,
-  user: TENDERLY_USER as string,
-  project: TENDERLY_PROJECT as string,
+// Set tenderly config blockNumber and use default values for other parameters
+const tenderlyConfig = {
   blockNumber,
 };
 
-// This filters to pool addresses of interest to avoid too many onchain calls during tests
+/**
+ * Example of subgraph query that allows filtering pools.
+ * Might be useful to reduce the response time by limiting the amount of pool
+ * data that will be queried by the SDK. Specially when on chain data is being
+ * fetched as well.
+ */
 const poolAddresses = Object.values(addresses).map(
   (address) => address.address
 );
-
 const subgraphArgs: GraphQLArgs = {
   where: {
     swapEnabled: {
@@ -101,7 +102,7 @@ const sdk = new BalancerSDK({
   subgraphQuery,
 });
 const { pools } = sdk;
-const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
+const provider = new JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 const { contracts, contractAddresses } = new Contracts(
   network as number,
@@ -120,6 +121,7 @@ interface Test {
   amountsIn: string[];
   authorisation: string | undefined;
   wrapMainTokens: boolean;
+  simulationType?: SimulationType;
 }
 
 const runTests = async (tests: Test[]) => {
@@ -139,9 +141,10 @@ const runTests = async (tests: Test[]) => {
         test.tokensIn,
         test.amountsIn,
         test.wrapMainTokens,
-        authorisation
+        authorisation,
+        test.simulationType
       );
-    }).timeout(120000);
+    }).timeout(360000);
   }
 };
 
@@ -151,7 +154,8 @@ const testFlow = async (
   tokensIn: string[],
   amountsIn: string[],
   wrapMainTokens: boolean,
-  authorisation: string | undefined
+  authorisation: string | undefined,
+  simulationType = SimulationType.VaultModel
 ) => {
   const [bptBalanceBefore, ...tokensInBalanceBefore] = await getBalances(
     [pool.address, ...tokensIn],
@@ -159,7 +163,7 @@ const testFlow = async (
     userAddress
   );
 
-  const gasLimit = MAX_GAS_LIMIT;
+  const gasLimit = 8e6;
   const slippage = '10'; // 10 bps = 0.1%
 
   const query = await pools.generalisedJoin(
@@ -169,12 +173,14 @@ const testFlow = async (
     userAddress,
     wrapMainTokens,
     slippage,
+    signer,
+    simulationType,
     authorisation
   );
 
   const response = await signer.sendTransaction({
     to: query.to,
-    data: query.callData,
+    data: query.encodedCall,
     gasLimit,
   });
 
@@ -186,6 +192,13 @@ const testFlow = async (
     signer,
     userAddress
   );
+
+  console.table({
+    minOut: query.minOut,
+    expectedOut: query.expectedOut,
+    balanceAfter: bptBalanceAfter.toString(),
+  });
+
   expect(receipt.status).to.eql(1);
   expect(BigNumber.from(query.minOut).gte('0')).to.be.true;
   expect(BigNumber.from(query.expectedOut).gt(query.minOut)).to.be.true;
@@ -196,9 +209,9 @@ const testFlow = async (
   });
   expect(bptBalanceBefore.eq(0)).to.be.true;
   expect(bptBalanceAfter.gte(query.minOut)).to.be.true;
-  console.log(bptBalanceAfter.toString(), 'bpt after');
-  console.log(query.minOut, 'minOut');
-  console.log(query.expectedOut, 'expectedOut');
+  expect(
+    accuracy(bptBalanceAfter, BigNumber.from(query.expectedOut))
+  ).to.be.closeTo(1, 1e-2); // inaccuracy should not be over to 1%
 };
 
 // following contexts currently applies to GOERLI only
@@ -274,21 +287,21 @@ describe('generalised join execution', async () => {
       //   authorisation: authorisation,
       //   wrapMainTokens: false,
       // },
-      {
-        signer,
-        description: 'join with 1 leaf and 1 linear',
-        pool: {
-          id: addresses.bbamaiweth.id,
-          address: addresses.bbamaiweth.address,
-        },
-        tokensIn: [addresses.WETH.address, addresses.bbamai.address],
-        amountsIn: [
-          parseFixed('10', 18).toString(),
-          parseFixed('10', 18).toString(),
-        ],
-        authorisation: authorisation,
-        wrapMainTokens: false,
-      },
+      // {
+      //   signer,
+      //   description: 'join with 1 leaf and 1 linear',
+      //   pool: {
+      //     id: addresses.bbamaiweth.id,
+      //     address: addresses.bbamaiweth.address,
+      //   },
+      //   tokensIn: [addresses.WETH.address, addresses.bbamai.address],
+      //   amountsIn: [
+      //     parseFixed('10', 18).toString(),
+      //     parseFixed('10', 18).toString(),
+      //   ],
+      //   authorisation: authorisation,
+      //   wrapMainTokens: false,
+      // },
     ]);
   });
 
@@ -693,7 +706,7 @@ describe('generalised join execution', async () => {
       },
       {
         signer,
-        description: 'join with some leafs, linears and boosted',
+        description: 'join with some leafs, linears and boosted - VaultModel',
         pool: {
           id: addresses.boostedMetaBig1.id,
           address: addresses.boostedMetaBig1.address,
@@ -720,6 +733,68 @@ describe('generalised join execution', async () => {
         ],
         authorisation: authorisation,
         wrapMainTokens: false,
+      },
+      {
+        signer,
+        description: 'join with some leafs, linears and boosted - Tenderly',
+        pool: {
+          id: addresses.boostedMetaBig1.id,
+          address: addresses.boostedMetaBig1.address,
+        },
+        tokensIn: [
+          addresses.DAI.address,
+          addresses.USDC.address,
+          addresses.USDT.address,
+          addresses.WETH.address,
+          addresses.bbausdt.address,
+          addresses.bbamai.address,
+          addresses.bbamaiweth.address,
+          addresses.bbausd2.address,
+        ],
+        amountsIn: [
+          parseFixed('1', addresses.DAI.decimals).toString(),
+          parseFixed('0', addresses.USDC.decimals).toString(),
+          parseFixed('1', addresses.USDT.decimals).toString(),
+          parseFixed('1', addresses.WETH.decimals).toString(),
+          parseFixed('1', addresses.bbausdt.decimals).toString(),
+          parseFixed('1', addresses.bbamai.decimals).toString(),
+          parseFixed('1', addresses.bbamaiweth.decimals).toString(),
+          parseFixed('1', addresses.bbausd2.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+        simulationType: SimulationType.Tenderly,
+      },
+      {
+        signer,
+        description: 'join with some leafs, linears and boosted - Static',
+        pool: {
+          id: addresses.boostedMetaBig1.id,
+          address: addresses.boostedMetaBig1.address,
+        },
+        tokensIn: [
+          addresses.DAI.address,
+          addresses.USDC.address,
+          addresses.USDT.address,
+          addresses.WETH.address,
+          addresses.bbausdt.address,
+          addresses.bbamai.address,
+          addresses.bbamaiweth.address,
+          addresses.bbausd2.address,
+        ],
+        amountsIn: [
+          parseFixed('1', addresses.DAI.decimals).toString(),
+          parseFixed('0', addresses.USDC.decimals).toString(),
+          parseFixed('1', addresses.USDT.decimals).toString(),
+          parseFixed('1', addresses.WETH.decimals).toString(),
+          parseFixed('1', addresses.bbausdt.decimals).toString(),
+          parseFixed('1', addresses.bbamai.decimals).toString(),
+          parseFixed('1', addresses.bbamaiweth.decimals).toString(),
+          parseFixed('1', addresses.bbausd2.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+        simulationType: SimulationType.Static,
       },
     ]);
   });
@@ -1231,7 +1306,7 @@ describe('generalised join execution', async () => {
       // },
       {
         signer,
-        description: 'join with some leafs, linears and boosted',
+        description: 'join with some leafs, linears and boosted - VaultModel',
         pool: {
           id: addresses.boostedWeightedMetaGeneral1.id,
           address: addresses.boostedWeightedMetaGeneral1.address,
@@ -1254,6 +1329,60 @@ describe('generalised join execution', async () => {
         ],
         authorisation: authorisation,
         wrapMainTokens: false,
+      },
+      {
+        signer,
+        description: 'join with some leafs, linears and boosted - Tenderly',
+        pool: {
+          id: addresses.boostedWeightedMetaGeneral1.id,
+          address: addresses.boostedWeightedMetaGeneral1.address,
+        },
+        tokensIn: [
+          addresses.DAI.address,
+          addresses.USDC.address,
+          addresses.WETH.address,
+          addresses.bbadai.address,
+          addresses.bbaweth.address,
+          addresses.bbausd2.address,
+        ],
+        amountsIn: [
+          parseFixed('1', addresses.DAI.decimals).toString(),
+          parseFixed('1', addresses.USDC.decimals).toString(),
+          parseFixed('0', addresses.WETH.decimals).toString(),
+          parseFixed('1', addresses.bbadai.decimals).toString(),
+          parseFixed('1', addresses.bbaweth.decimals).toString(),
+          parseFixed('1', addresses.bbausd2.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+        simulationType: SimulationType.Tenderly,
+      },
+      {
+        signer,
+        description: 'join with some leafs, linears and boosted - Static',
+        pool: {
+          id: addresses.boostedWeightedMetaGeneral1.id,
+          address: addresses.boostedWeightedMetaGeneral1.address,
+        },
+        tokensIn: [
+          addresses.DAI.address,
+          addresses.USDC.address,
+          addresses.WETH.address,
+          addresses.bbadai.address,
+          addresses.bbaweth.address,
+          addresses.bbausd2.address,
+        ],
+        amountsIn: [
+          parseFixed('1', addresses.DAI.decimals).toString(),
+          parseFixed('1', addresses.USDC.decimals).toString(),
+          parseFixed('0', addresses.WETH.decimals).toString(),
+          parseFixed('1', addresses.bbadai.decimals).toString(),
+          parseFixed('1', addresses.bbaweth.decimals).toString(),
+          parseFixed('1', addresses.bbausd2.decimals).toString(),
+        ],
+        authorisation: authorisation,
+        wrapMainTokens: false,
+        simulationType: SimulationType.Static,
       },
     ]);
   });

@@ -76,7 +76,8 @@ describe('weighted pool price impact', () => {
       const priceImpact = priceImpactCalc.calcPriceImpact(
         pool,
         proportionalTokenAmounts,
-        '4931900186642428185328'
+        '4931900186642428185328',
+        false
       );
       expect(priceImpact.toString()).to.eq('0');
     });

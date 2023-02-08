@@ -87,6 +87,7 @@ export interface JoinPoolAttributes {
   data: string;
   value?: BigNumber;
   minBPTOut: string;
+  expectedBPTOut: string;
 }
 
 export interface JoinPoolParameters {

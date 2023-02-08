@@ -67,7 +67,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       scaledAmountsIn, // Should not have BPT
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
-    );
+    ).toString();
 
     const minBPTOut = subSlippage(
       BigNumber.from(expectedBPTOut),
@@ -114,6 +114,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       data,
       value,
       minBPTOut,
+      expectedBPTOut,
     };
   };
 }

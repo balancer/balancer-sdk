@@ -52,20 +52,6 @@ export class Relayer {
     }
   }
 
-  /**
-   * Returns true if `amount` is not actually an amount, but rather a chained reference.
-   */
-  static isChainedReference(amount: string): boolean {
-    const amountBn = BigNumber.from(amount);
-    const mask = BigNumber.from(
-      '0xfff0000000000000000000000000000000000000000000000000000000000000'
-    );
-    const readonly =
-      '0xba10000000000000000000000000000000000000000000000000000000000000';
-    const check = amountBn.toBigInt() & mask.toBigInt();
-    return readonly === BigNumber.from(check)._hex.toString();
-  }
-
   static encodeApproveVault(tokenAddress: string, maxAmount: string): string {
     return relayerLibrary.encodeFunctionData('approveVault', [
       tokenAddress,
@@ -199,7 +185,21 @@ export class Relayer {
     return BigNumber.from(ref).sub(BigNumber.from(paddedPrefix));
   }
 
-  static constructExitCall(params: ExitPoolData): string {
+  /**
+   * Returns true if `amount` is not actually an amount, but rather a chained reference.
+   */
+  static isChainedReference(amount: string): boolean {
+    const amountBn = BigNumber.from(amount);
+    const mask = BigNumber.from(
+      '0xfff0000000000000000000000000000000000000000000000000000000000000'
+    );
+    const readonly =
+      '0xba10000000000000000000000000000000000000000000000000000000000000';
+    const check = amountBn.toBigInt() & mask.toBigInt();
+    return readonly === BigNumber.from(check)._hex.toString();
+  }
+
+  static formatExitPoolInput(params: ExitPoolData): EncodeExitPoolInput {
     const {
       assets,
       minAmountsOut,
@@ -227,12 +227,10 @@ export class Relayer {
       outputReferences,
       exitPoolRequest,
     };
-
-    const exitEncoded = Relayer.encodeExitPool(exitPoolInput);
-    return exitEncoded;
+    return exitPoolInput;
   }
 
-  static constructJoinCall(params: JoinPoolData): string {
+  static formatJoinPoolInput(params: JoinPoolData): EncodeJoinPoolInput {
     const {
       assets,
       maxAmountsIn,
@@ -263,8 +261,7 @@ export class Relayer {
       joinPoolRequest,
     };
 
-    const joinEncoded = Relayer.encodeJoinPool(joinPoolInput);
-    return joinEncoded;
+    return joinPoolInput;
   }
 
   /**
@@ -319,7 +316,7 @@ export class Relayer {
       });
     });
 
-    const exitCall = Relayer.constructExitCall({
+    const exitPoolInput = Relayer.formatExitPoolInput({
       assets: params.exitTokens,
       minAmountsOut,
       userData: params.userData,
@@ -331,6 +328,7 @@ export class Relayer {
       outputReferences: outputReferences,
       exitPoolRequest: {} as ExitPoolRequest,
     });
+    const exitCall = Relayer.encodeExitPool(exitPoolInput);
 
     // Use swapsService to get swap info for exitTokens>finalTokens
     // This will give batchSwap swap paths
