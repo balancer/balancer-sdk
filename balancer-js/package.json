@@ -81,7 +81,7 @@
     "typescript": "^4.0.2"
   },
   "dependencies": {
-    "@balancer-labs/sor": "^4.1.1-beta.0",
+    "@balancer-labs/sor": "/home/lgahdl/Documents/balancer-sor/balancer-labs-sor-v4.1.1-beta.0.tgz",
     "@balancer-labs/typechain": "^1.0.0",
     "@ethersproject/abi": "^5.4.0",
     "@ethersproject/abstract-signer": "^5.4.0",

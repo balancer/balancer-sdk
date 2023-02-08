@@ -10,6 +10,7 @@ import { isSameAddress } from '@/lib/utils';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { RelayerModel } from '../relayer';
 import { ActionType } from '../vaultModel.module';
+import { PoolToken } from '@/types';
 
 export interface JoinPoolRequest {
   actionType: ActionType.Join;
@@ -20,6 +21,7 @@ export interface JoinPoolRequest {
 
 export class JoinModel {
   constructor(private relayerModel: RelayerModel) {}
+
   /**
    * Finds join kind given encoded user data.
    * @param encodedUserData
@@ -34,6 +36,7 @@ export class JoinModel {
     if (!joinKind) throw new Error('No exit kind.');
     return joinKind.toNumber() as WeightedPoolJoinKind;
   }
+
   /**
    * Decodes user join data and returns token input amounts
    * @param encodedUserData
@@ -104,7 +107,7 @@ export class JoinModel {
     ) {
       // Update BPT balance
       // totalShares will be updated as a side effect within SOR
-      const bptAsPoolToken = pool.tokens.find((t) =>
+      const bptAsPoolToken = pool.tokens.find((t: PoolToken) =>
         isSameAddress(t.address, pool.address)
       );
       if (!bptAsPoolToken)
@@ -127,7 +130,7 @@ export class JoinModel {
     }
 
     const tokensWithoutBpt = pool.tokens.filter(
-      (t) => !isSameAddress(t.address, pool.address)
+      (t: PoolToken) => !isSameAddress(t.address, pool.address)
     );
     // Update each tokens balance
     amountsIn.forEach((amount, i) => {
@@ -142,7 +145,7 @@ export class JoinModel {
     });
     return [
       bptAmountOut.toString(),
-      tokensWithoutBpt.map((t) => t.address),
+      tokensWithoutBpt.map((t: PoolToken) => t.address),
       amountsIn,
     ];
   }
