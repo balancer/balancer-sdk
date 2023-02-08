@@ -142,12 +142,12 @@ describe('exit composable stable pool v1 execution', async () => {
         );
 
         const { to, data, maxBPTIn } = exitExactTokensOutAttr;
-        const minAmountsOut = amountsOut.map(
-          (a) =>
-            BigNumber.from(a).sub(3).isNegative()
-              ? a.toString()
-              : BigNumber.from(a).sub(3).toString() //considering a margin of rounding error of 3;
-        );
+
+        // This should not be required but there is currently a rounding issue with maths and this will ensure tx
+        const minAmountsOut = amountsOut.map((a) => {
+          const value = BigNumber.from(a);
+          return value.isZero() ? a : value.sub(1).toString();
+        });
 
         await testFlow(
           [to, data, maxBPTIn, minAmountsOut],
@@ -162,12 +162,15 @@ describe('exit composable stable pool v1 execution', async () => {
       it('tokens balance should increase by exact amountsOut', async () => {
         for (let i = 0; i < tokensBalanceAfter.length; i++) {
           if (!tokensBalanceAfter[i].eq(tokensBalanceBefore[i])) {
-            expect(
-              //verifying if the token balance got near what is expected, with 3 points of margin for rounding differences
-              tokensBalanceAfter[i]
-                .sub(tokensBalanceBefore[i])
-                .gte(tokensMinBalanceIncrease[i])
-            ).to.be.true;
+            const tokenDelta = tokensBalanceAfter[i].sub(
+              tokensBalanceBefore[i]
+            );
+            const diff = tokensMinBalanceIncrease[i]
+              .sub(tokenDelta)
+              .abs()
+              .toNumber();
+            // Expect to be within 1wei to give room for rounding error
+            expect(diff).to.be.lessThanOrEqual(1);
           }
         }
       });
@@ -211,12 +214,11 @@ describe('exit composable stable pool v1 execution', async () => {
         );
 
         const { to, data, maxBPTIn } = exitExactTokensOutAttr;
-        const minAmountsOut = amountsOut.map(
-          (a) =>
-            BigNumber.from(a).sub(3).isNegative()
-              ? a.toString()
-              : BigNumber.from(a).sub(3).toString() //considering a margin of rounding error of 3;
-        );
+        // This should not be required but there is currently a rounding issue with maths and this will ensure tx
+        const minAmountsOut = amountsOut.map((a) => {
+          const value = BigNumber.from(a);
+          return value.isZero() ? a : value.sub(1).toString();
+        });
 
         await testFlow(
           [to, data, maxBPTIn, minAmountsOut],
@@ -231,12 +233,15 @@ describe('exit composable stable pool v1 execution', async () => {
       it('tokens balance should increase by exact amountsOut', async () => {
         for (let i = 0; i < tokensBalanceAfter.length; i++) {
           if (!tokensBalanceAfter[i].eq(tokensBalanceBefore[i])) {
-            expect(
-              //verifying if the token balance got near what is expected, with 3 points of margin for rounding differences
-              tokensBalanceAfter[i]
-                .sub(tokensBalanceBefore[i])
-                .gte(tokensMinBalanceIncrease[i])
-            ).to.be.true;
+            const tokenDelta = tokensBalanceAfter[i].sub(
+              tokensBalanceBefore[i]
+            );
+            const diff = tokensMinBalanceIncrease[i]
+              .sub(tokenDelta)
+              .abs()
+              .toNumber();
+            // Expect to be within 1wei to give room for rounding error
+            expect(diff).to.be.lessThanOrEqual(1);
           }
         }
       });
