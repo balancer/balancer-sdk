@@ -354,20 +354,15 @@ export class PoolGraph {
   }
 
   // Get full graph from root pool and return ordered nodes
-  static getGraphNodes = async (
+  getGraphNodes = async (
     isJoin: boolean,
     poolId: string,
-    pools: Findable<Pool, PoolAttribute>,
     wrapMainTokens: boolean
   ): Promise<Node[]> => {
-    const rootPool = await pools.find(poolId);
+    const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-    const poolsGraph = new PoolGraph(pools);
 
-    const rootNode = await poolsGraph.buildGraphFromRootPool(
-      poolId,
-      wrapMainTokens
-    );
+    const rootNode = await this.buildGraphFromRootPool(poolId, wrapMainTokens);
 
     if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
 
