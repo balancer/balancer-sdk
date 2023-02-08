@@ -1,12 +1,12 @@
 import { parseFixed } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
 import { Pool } from '../../types';
 import {
   SolidityMaths,
   _computeScalingFactor,
   _upscaleArray,
 } from '@/lib/utils/solidityMaths';
-import { AssetHelpers } from '@/lib/utils';
-import { AddressZero } from '@ethersproject/constants';
+import { AssetHelpers } from '@/lib/utils/assetHelpers';
 
 const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
