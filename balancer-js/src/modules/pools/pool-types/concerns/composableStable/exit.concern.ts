@@ -1,3 +1,20 @@
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
+import { isUndefined } from 'lodash';
+import { Vault__factory } from '@balancer-labs/typechain';
+import * as SOR from '@balancer-labs/sor';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import {
+  AssetHelpers,
+  insert,
+  isSameAddress,
+  parsePoolInfo,
+} from '@/lib/utils';
+import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
+import { _downscaleDown, _upscaleArray } from '@/lib/utils/solidityMaths';
+import { balancerVault } from '@/lib/constants/config';
+import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
+import { Pool } from '@/types';
 import {
   ExitConcern,
   ExitExactBPTInAttributes,
@@ -7,23 +24,7 @@ import {
   ExitPool,
   ExitPoolAttributes,
 } from '../types';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { AddressZero } from '@ethersproject/constants';
-import {
-  AssetHelpers,
-  insert,
-  isSameAddress,
-  parsePoolInfo,
-} from '@/lib/utils';
-import * as SOR from '@balancer-labs/sor';
-import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
-import { _downscaleDown, _upscaleArray } from '@/lib/utils/solidityMaths';
-import { balancerVault } from '@/lib/constants/config';
-import { Vault__factory } from '@balancer-labs/typechain';
-import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
-import { Pool } from '@/types';
-import { isUndefined } from 'lodash';
+import { exit } from 'process';
 
 interface SortedValues {
   parsedTokens: string[];
@@ -75,17 +76,17 @@ type DoExitParams = SortedValues &
 
 export class ComposableStablePoolExit implements ExitConcern {
   /**
-   * Builds an exit with exact bpt in transaction;
-   * @param params
-   *  @param exiter{string} is the address of the exiter of the pool
-   *  @param pool{Pool} is the pool object(it's automatically inserted when you wrap a Pool with the methods using balancer.pools.wrap function)
-   *  @param bptIn{string} the amount of bpt in the exit
-   *  @param slippage{string} the percentage of slippage,in 1:0.01% scale ('1' equals 0.01%, '10000' equals 100%)
-   *  @param shouldUnwrapNativeAsset if the wETH should be unwrapped to ETH
-   *  @param wrappedNativeAsset wETH address, used to build AssetHelpers object;
+   *  Builds an exit with exact bpt in transaction
+   *  @param params
+   *  @param exiter Address of the exiter of the pool
+   *  @param pool Pool object (it's automatically inserted when you wrap a Pool with the methods using balancer.pools.wrap function)
+   *  @param bptIn Amount of bpt in the exit
+   *  @param slippage Maximum slippage tolerance in bps i.e. 50 = 0.5%
+   *  @param shouldUnwrapNativeAsset Set true if the weth should be unwrapped to Eth
+   *  @param wrappedNativeAsset Address of wrapped native asset for specific network config
    *  @param singleTokenMaxOut The address of the token that will be singled withdrawn in the exit transaction,
-   *                           if not passed, the transaction will do a proportional exit, only available for v2 composable stable pools
-   * @returns an object containing the attributes necessary to make an exit with exact bpt in transaction;
+   *                           if not passed, the transaction will do a proportional exit where available
+   * @returns Attributes to send transaction
    */
   buildExitExactBPTIn = ({
     exiter,
@@ -96,8 +97,17 @@ export class ComposableStablePoolExit implements ExitConcern {
     wrappedNativeAsset,
     singleTokenMaxOut,
   }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
-    this.checkInputsExactBptIn(
-      bptIn,
+    // V1 composable stable pools only supports single token out joins
+    if (!singleTokenMaxOut && pool.poolTypeVersion === 1) {
+      throw new Error('Unsupported Exit Type For Pool');
+    }
+
+    // >V2 does support proportional exit but hasn't been added yet
+    if (!singleTokenMaxOut) {
+      throw new Error('Unsupported Exit Type For Pool');
+    }
+
+    this.checkInputsForSingleTokenExit(
       singleTokenMaxOut,
       pool,
       shouldUnwrapNativeAsset
@@ -134,16 +144,15 @@ export class ComposableStablePoolExit implements ExitConcern {
   };
 
   /**
-   * Builds an exit with exact tokens out transaction;
-   * @param params
-   *  @param exiter{string} is the address of the exiter of the pool
-   *  @param pool{Pool} is the pool object(it's automatically inserted when you wrap a Pool with the methods using balancer.pools.wrap function)
-   *  @param tokensOut{string[]} the tokensList of the pool, without BPT
-   *  @param amountsOut{string[]}  the amounts of each token in the tokensOut, sorted as the tokensOut
-   *  @param slippage the percentage of slippage,in 1:0.01% scale ('1' equals 0.01%, '10000' equals 100%)
-   *  @param wrappedNativeAsset wETH address, used to build AssetHelpers object;
-   * @returns an object containing the attributes necessary to make an exit with exact bpt in transaction;
-   *
+   *  Builds an exit with exact tokens out transaction
+   *  @param params
+   *  @param exiter Address of the exiter of the pool
+   *  @param pool Pool object (it's automatically inserted when you wrap a Pool with the methods using balancer.pools.wrap function)
+   *  @param tokensOut Pool asset addresses (excluding BPT)
+   *  @param amountsOut Amount of each token from tokensOut to receive after exit
+   *  @param slippage Maximum slippage tolerance in bps i.e. 50 = 0.5%
+   *  @param wrappedNativeAsset Address of wrapped native asset for specific network config
+   *  @returns Attributes to send transaction
    */
   buildExitExactTokensOut = ({
     exiter,
@@ -160,17 +169,14 @@ export class ComposableStablePoolExit implements ExitConcern {
       amountsOut,
       tokensOut,
     });
-    if (!sortedValues.upScaledAmountsOut) {
-      throw Error('amountsOut or tokensOut parameter invalid;');
-    }
-    //doing the maths to calculate the bptIn and maxBPTIn values
+
     const { bptIn, maxBPTIn } = this.calcBptInGivenExactTokensOut({
       ...sortedValues,
       slippage,
     });
 
     const userData = ComposableStablePoolEncoder.exitBPTInForExactTokensOut(
-      sortedValues.minAmountsOutWithoutBpt as string[],
+      sortedValues.minAmountsOutWithoutBpt, /// TODO - Replace with actual amounts
       maxBPTIn
     );
 
@@ -189,46 +195,25 @@ export class ComposableStablePoolExit implements ExitConcern {
   };
 
   /**
-   * Checks if the input of buildExitExactBPTIn is valid;
+   * Checks if the input of buildExitExactBPTIn is valid
    */
-  checkInputsExactBptIn = (
-    bptIn: string,
-    singleTokenMaxOut: string | undefined,
+  checkInputsForSingleTokenExit = (
+    exitToken: string,
     pool: Pool,
     shouldUnwrapNativeAsset: boolean
   ): void => {
-    if (!singleTokenMaxOut) {
-      throw new Error(
-        'Proportional Exit - To Be Implemented, use singleTokenMaxOut variable'
-      );
+    if (exitToken === AddressZero) {
+      // If exiting to Native Assets shouldUnwrapNativeAsset should be true
+      if (!shouldUnwrapNativeAsset)
+        throw new Error(
+          'shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values'
+        );
+    } else {
+      // Exit Token must be in pool
+      if (!pool.tokensList.some((a) => isSameAddress(a, exitToken))) {
+        throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
+      }
     }
-    if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
-      throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
-    }
-    if (
-      singleTokenMaxOut &&
-      singleTokenMaxOut !== AddressZero &&
-      !pool.tokens
-        .map((t) => t.address)
-        .some((a) => isSameAddress(a, singleTokenMaxOut))
-    ) {
-      throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
-    }
-
-    if (!shouldUnwrapNativeAsset && singleTokenMaxOut === AddressZero)
-      throw new Error(
-        'shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values'
-      );
-
-    //V1 composable stable pools only support single token out joins
-    if (!singleTokenMaxOut && pool.poolTypeVersion === 1) {
-      throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE_VERSION);
-    }
-
-    // Check if there's any relevant composable stable pool info missing
-    if (pool.tokens.some((token) => !token.decimals))
-      throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
-    if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
   };
   /**
    * Checks if the input of buildExitExactTokensOut is valid;
