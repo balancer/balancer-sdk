@@ -24,6 +24,12 @@ export function insert<T>(arr: T[], index: number, newItem: T): T[] {
   ];
 }
 
+export function removeItem<T>(arr: T[], index: number): T[] {
+  const newArray = [...arr];
+  newArray.splice(index, 1);
+  return newArray;
+}
+
 /**
  * REORDER ARRAYS USING A REFERENCE AND ORIGINAL ARRAY,
  * Example:
