@@ -4,7 +4,6 @@ import { expect } from 'chai';
 import {
   BalancerError,
   BalancerErrorCode,
-  BalancerSDK,
   Network,
   PoolWithMethods,
 } from '@/.';
