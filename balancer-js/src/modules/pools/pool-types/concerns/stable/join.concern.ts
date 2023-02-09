@@ -27,6 +27,13 @@ type SortedValues = {
   sortedAmountsIn: string[];
 };
 
+type EncodeJoinPoolParams = {
+  joiner: string;
+  poolId: string;
+  minBPTOut: string;
+} & Pick<SortedValues, 'parsedTokens' | 'sortedAmountsIn'> &
+  Pick<JoinPoolParameters, 'amountsIn' | 'tokensIn'>;
+
 export class StablePoolJoin implements JoinConcern {
   /**
    * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
@@ -59,18 +66,12 @@ export class StablePoolJoin implements JoinConcern {
       slippage,
     });
 
-    const { sortedAmountsIn } = sortedValues;
-    const userData = StablePoolEncoder.joinExactTokensInForBPTOut(
-      sortedAmountsIn,
-      minBPTOut
-    );
-
     const encodedData = this.encodeJoinPool({
       joiner,
-      poolId: pool.id,
-      userData,
       amountsIn,
       tokensIn,
+      poolId: pool.id,
+      minBPTOut,
       ...sortedValues,
     });
 
@@ -177,18 +178,18 @@ export class StablePoolJoin implements JoinConcern {
     joiner,
     parsedTokens,
     sortedAmountsIn,
-    userData,
     amountsIn,
     tokensIn,
-  }: {
-    joiner: string;
-    poolId: string;
-    userData: string;
-  } & Pick<SortedValues, 'parsedTokens' | 'sortedAmountsIn'> &
-    Pick<JoinPoolParameters, 'amountsIn' | 'tokensIn'>): Pick<
+    minBPTOut,
+  }: EncodeJoinPoolParams): Pick<
     JoinPoolAttributes,
     'value' | 'data' | 'to' | 'functionName' | 'attributes'
   > => {
+    const userData = StablePoolEncoder.joinExactTokensInForBPTOut(
+      sortedAmountsIn,
+      minBPTOut
+    );
+
     const to = balancerVault;
     const functionName = 'joinPool';
     const attributes: JoinPool = {
