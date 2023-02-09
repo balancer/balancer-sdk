@@ -82,7 +82,7 @@ export class StablePoolJoin implements JoinConcern {
     };
   };
 
-  checkInputs = (amountsIn: string[], tokensIn: string[], pool: Pool) => {
+  checkInputs = (amountsIn: string[], tokensIn: string[], pool: Pool): void => {
     if (
       tokensIn.length != amountsIn.length ||
       tokensIn.length != pool.tokensList.length
