@@ -15,5 +15,15 @@ export default {
       accounts: [process.env.TRADER_KEY],
       allowUnlimitedContractSize: true,
     },
+    bsc: {
+      url: process.env.GETBLOCK_URL,
+      accounts: [process.env.TRADER_KEY],
+      allowUnlimitedContractSize: true,
+    },
+    bsctestnet: {
+      url: process.env.GETBLOCK_URL_TEST,
+      accounts: [process.env.TRADER_KEY],
+      allowUnlimitedContractSize: true,
+    },
   },
 };

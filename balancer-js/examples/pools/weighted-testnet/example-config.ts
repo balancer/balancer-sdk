@@ -10,8 +10,8 @@ dotenv.config();
 export const network = Network.GOERLI;
 export const rpcUrl = `${process.env.ALCHEMY_URL_GOERLI}`;
 
-export const name = 'Puce Pool';
-export const symbol = 'PUCE';
+export const name = 'Bobby Pool';
+export const symbol = 'BOBBY';
 
 export const addresses = ADDRESSES[network];
 

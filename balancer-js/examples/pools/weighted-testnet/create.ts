@@ -38,8 +38,8 @@ async function createWeightedPool() {
 
   const tx = await wallet.sendTransaction({
     from: walletAddress,
-    to: to,
-    data: data,
+    to,
+    data,
     // value: ethers.utils.parseEther('0.01'),
     // gasPrice: ethers.utils.hexlify(gasPrice.toNumber() * 2),
     gasLimit: ethers.utils.hexlify(300000),
