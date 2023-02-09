@@ -7,7 +7,7 @@ import { insert, Network, PoolWithMethods, removeItem } from '@/.';
 import { subSlippage, addSlippage } from '@/lib/utils/slippageHelper';
 import {
   forkSetup,
-  TestPool as TestPoolHelper,
+  TestPoolHelper,
   sendTransactionGetBalances,
 } from '@/test/lib/utils';
 

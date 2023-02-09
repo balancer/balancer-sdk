@@ -241,7 +241,7 @@ export const accuracy = (
 /**
  * Helper to efficiently retrieve pool state from Subgraph and onChain given a pool id.
  */
-export class TestPool {
+export class TestPoolHelper {
   poolsOnChain: PoolsSubgraphOnChainRepository;
   networkConfig: BalancerNetworkConfig;
 
