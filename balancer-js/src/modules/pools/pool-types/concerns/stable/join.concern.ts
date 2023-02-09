@@ -55,7 +55,7 @@ export class StablePoolJoin implements JoinConcern {
       parsedSwapFee,
       scalingFactors,
       upScaledBalances,
-    } = parsePoolInfo(pool);
+    } = parsePoolInfo(pool, wrappedNativeAsset);
 
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     // sort inputs
@@ -63,23 +63,16 @@ export class StablePoolJoin implements JoinConcern {
       tokensIn,
       amountsIn
     ) as [string[], string[]];
-    // sort pool info
-    const [, sortedUpscaledBalances, sortedScalingFactors] =
-      assetHelpers.sortTokens(
-        parsedTokens,
-        upScaledBalances,
-        scalingFactors
-      ) as [string[], string[], string[]];
 
     // Maths should use upscaled amounts, e.g. 1USDC => 1e18 not 1e6
     const scaledAmountsIn = _upscaleArray(
       sortedAmountsIn.map((a) => BigInt(a)),
-      sortedScalingFactors.map((a) => BigInt(a))
+      scalingFactors.map((a) => BigInt(a))
     );
 
     const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp as string),
-      sortedUpscaledBalances.map((b) => BigInt(b)),
+      upScaledBalances.map((b) => BigInt(b)),
       scaledAmountsIn,
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
