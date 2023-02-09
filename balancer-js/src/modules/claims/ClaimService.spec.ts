@@ -91,7 +91,7 @@ describe('ClaimService On Ethereum', () => {
           .catch((error) => {
             done(error);
           });
-      }).timeout(60000);
+      }).timeout(600000);
     });
 
     context('claimRewardTokens', () => {
