@@ -81,6 +81,28 @@ describe('exit composable stable pool v1 execution', async () => {
       );
       expect(expectedMins).to.deep.eq(minAmountsOut);
     });
+    it('should return correct attributes for exiting', async () => {
+      const bptIn = parseFixed('10', 18).toString();
+      const slippage = BigNumber.from('10');
+      const { attributes, functionName, minAmountsOut } =
+        pool.buildExitExactBPTIn(
+          signerAddress,
+          bptIn,
+          slippage.toString(),
+          false,
+          pool.tokensList[1]
+        );
+
+      expect(functionName).to.eq('exitPool');
+      expect(attributes.poolId).to.eq(testPoolId);
+      expect(attributes.recipient).to.eq(signerAddress);
+      expect(attributes.sender).to.eq(signerAddress);
+      expect(attributes.exitPoolRequest.assets).to.deep.eq(pool.tokensList);
+      expect(attributes.exitPoolRequest.toInternalBalance).to.be.false;
+      expect(attributes.exitPoolRequest.minAmountsOut).to.deep.eq(
+        insert(minAmountsOut, pool.bptIndex, '0')
+      );
+    });
   });
 
   context('exitExactTokensOut', async () => {
@@ -114,6 +136,35 @@ describe('exit composable stable pool v1 execution', async () => {
       ).toString();
       expect(expectedMaxBpt).to.deep.eq(maxBPTIn);
     });
+    it('should return correct attributes for exiting', async () => {
+      const tokensOut = removeItem(pool.tokensList, pool.bptIndex);
+      const amountsOut = tokensOut.map((_, i) =>
+        parseFixed((i * 100).toString(), 18).toString()
+      );
+      const slippage = BigNumber.from('7');
+      const { attributes, functionName } = pool.buildExitExactTokensOut(
+        signerAddress,
+        tokensOut,
+        amountsOut,
+        slippage.toString()
+      );
+
+      expect(functionName).to.eq('exitPool');
+      expect(attributes.poolId).to.eq(testPoolId);
+      expect(attributes.recipient).to.eq(signerAddress);
+      expect(attributes.sender).to.eq(signerAddress);
+      expect(attributes.exitPoolRequest.assets).to.deep.eq(pool.tokensList);
+      expect(attributes.exitPoolRequest.toInternalBalance).to.be.false;
+      const expectedAmountsOut = insert(amountsOut, pool.bptIndex, '0');
+      // Issue with rounding means we are sometimes out by 1wei
+      attributes.exitPoolRequest.minAmountsOut.forEach((a, i) => {
+        const diff = BigNumber.from(expectedAmountsOut[i])
+          .sub(a)
+          .abs()
+          .toNumber();
+        expect(diff).to.be.lte(1);
+      });
+    });
     it('single token with value', async () => {
       const tokensOut = removeItem(pool.tokensList, pool.bptIndex);
       const amountsOut = Array(tokensOut.length).fill('0');
@@ -142,6 +193,26 @@ describe('exit composable stable pool v1 execution', async () => {
         slippage
       ).toString();
       expect(expectedMaxBpt).to.deep.eq(maxBPTIn);
+    });
+    it('should automatically sort tokens/amounts in correct order', async () => {
+      const tokensOut = removeItem(pool.tokensList, pool.bptIndex);
+      const amountsOut = tokensOut.map((_, i) =>
+        parseFixed((i * 100).toString(), 18).toString()
+      );
+      const slippage = BigNumber.from('7');
+      const attributesSorted = pool.buildExitExactTokensOut(
+        signerAddress,
+        tokensOut,
+        amountsOut,
+        slippage.toString()
+      );
+      const attributesUnSorted = pool.buildExitExactTokensOut(
+        signerAddress,
+        tokensOut.reverse(),
+        amountsOut.reverse(),
+        slippage.toString()
+      );
+      expect(attributesSorted).to.deep.eq(attributesUnSorted);
     });
   });
 });
