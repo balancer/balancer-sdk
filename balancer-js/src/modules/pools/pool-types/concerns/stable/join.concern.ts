@@ -15,6 +15,17 @@ import { AddressZero } from '@ethersproject/constants';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { StablePoolEncoder } from '@/pool-stable';
 import { _upscaleArray } from '@/lib/utils/solidityMaths';
+import { Pool } from '@/types';
+
+type SortedValues = {
+  parsedTokens: string[];
+  parsedAmp: string;
+  parsedTotalShares: string;
+  parsedSwapFee: string;
+  upScaledBalances: string[];
+  upScaledAmountsIn: bigint[];
+  sortedAmountsIn: string[];
+};
 
 export class StablePoolJoin implements JoinConcern {
   /**
@@ -35,6 +46,42 @@ export class StablePoolJoin implements JoinConcern {
     slippage,
     wrappedNativeAsset,
   }: JoinPoolParameters): JoinPoolAttributes => {
+    this.checkInputs(tokensIn, amountsIn, pool);
+    const sortedValues = this.sortValues({
+      pool,
+      wrappedNativeAsset,
+      tokensIn,
+      amountsIn,
+    });
+
+    const { expectedBPTOut, minBPTOut } = this.calcBptOutGivenExactTokensIn({
+      ...sortedValues,
+      slippage,
+    });
+
+    const { sortedAmountsIn } = sortedValues;
+    const userData = StablePoolEncoder.joinExactTokensInForBPTOut(
+      sortedAmountsIn,
+      minBPTOut
+    );
+
+    const encodedData = this.encodeJoinPool({
+      joiner,
+      poolId: pool.id,
+      userData,
+      amountsIn,
+      tokensIn,
+      ...sortedValues,
+    });
+
+    return {
+      ...encodedData,
+      minBPTOut,
+      expectedBPTOut,
+    };
+  };
+
+  checkInputs = (amountsIn: string[], tokensIn: string[], pool: Pool) => {
     if (
       tokensIn.length != amountsIn.length ||
       tokensIn.length != pool.tokensList.length
@@ -46,7 +93,17 @@ export class StablePoolJoin implements JoinConcern {
     if (pool.tokens.some((token) => !token.decimals))
       throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
     if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
+  };
 
+  sortValues = ({
+    pool,
+    wrappedNativeAsset,
+    amountsIn,
+    tokensIn,
+  }: Pick<
+    JoinPoolParameters,
+    'pool' | 'wrappedNativeAsset' | 'amountsIn' | 'tokensIn'
+  >): SortedValues => {
     // Parse pool info into EVM amounts in order to match amountsIn scalling
     const {
       parsedTokens,
@@ -59,21 +116,47 @@ export class StablePoolJoin implements JoinConcern {
 
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     // sort inputs
-    const [sortedTokens, sortedAmountsIn] = assetHelpers.sortTokens(
+    const [, sortedAmountsIn] = assetHelpers.sortTokens(
       tokensIn,
       amountsIn
     ) as [string[], string[]];
 
     // Maths should use upscaled amounts, e.g. 1USDC => 1e18 not 1e6
-    const scaledAmountsIn = _upscaleArray(
+    const upScaledAmountsIn = _upscaleArray(
       sortedAmountsIn.map((a) => BigInt(a)),
       scalingFactors.map((a) => BigInt(a))
     );
+    return {
+      parsedTokens,
+      parsedAmp,
+      parsedTotalShares,
+      parsedSwapFee,
+      upScaledBalances,
+      upScaledAmountsIn,
+      sortedAmountsIn,
+    };
+  };
 
+  calcBptOutGivenExactTokensIn = ({
+    parsedAmp,
+    upScaledBalances,
+    upScaledAmountsIn,
+    parsedTotalShares,
+    parsedSwapFee,
+    slippage,
+  }: Pick<JoinPoolParameters, 'slippage'> &
+    Pick<
+      SortedValues,
+      | 'parsedAmp'
+      | 'upScaledBalances'
+      | 'upScaledAmountsIn'
+      | 'parsedTotalShares'
+      | 'parsedSwapFee'
+    >): { expectedBPTOut: string; minBPTOut: string } => {
     const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp as string),
       upScaledBalances.map((b) => BigInt(b)),
-      scaledAmountsIn,
+      upScaledAmountsIn,
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
     ).toString();
@@ -83,19 +166,37 @@ export class StablePoolJoin implements JoinConcern {
       BigNumber.from(slippage)
     ).toString();
 
-    const userData = StablePoolEncoder.joinExactTokensInForBPTOut(
-      sortedAmountsIn,
-      minBPTOut
-    );
+    return {
+      expectedBPTOut,
+      minBPTOut,
+    };
+  };
 
+  encodeJoinPool = ({
+    poolId,
+    joiner,
+    parsedTokens,
+    sortedAmountsIn,
+    userData,
+    amountsIn,
+    tokensIn,
+  }: {
+    joiner: string;
+    poolId: string;
+    userData: string;
+  } & Pick<SortedValues, 'parsedTokens' | 'sortedAmountsIn'> &
+    Pick<JoinPoolParameters, 'amountsIn' | 'tokensIn'>): Pick<
+    JoinPoolAttributes,
+    'value' | 'data' | 'to' | 'functionName' | 'attributes'
+  > => {
     const to = balancerVault;
     const functionName = 'joinPool';
     const attributes: JoinPool = {
-      poolId: pool.id,
+      poolId,
       sender: joiner,
       recipient: joiner,
       joinPoolRequest: {
-        assets: sortedTokens,
+        assets: parsedTokens,
         maxAmountsIn: sortedAmountsIn,
         userData,
         fromInternalBalance: false,
@@ -111,15 +212,12 @@ export class StablePoolJoin implements JoinConcern {
     ]);
     const values = amountsIn.filter((amount, i) => tokensIn[i] === AddressZero); // filter native asset (e.g. ETH) amounts
     const value = values[0] ? BigNumber.from(values[0]) : undefined;
-
     return {
+      value,
+      data,
       to,
       functionName,
       attributes,
-      data,
-      value,
-      minBPTOut,
-      expectedBPTOut,
     };
   };
 }
