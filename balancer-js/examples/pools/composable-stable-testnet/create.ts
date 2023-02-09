@@ -1,15 +1,14 @@
 import * as dotenv from 'dotenv';
-import {
-  JsonRpcProvider,
-  Log,
-  TransactionReceipt,
-} from '@ethersproject/providers';
-import { BalancerSDK, isSameAddress, Network, PoolType } from 'src';
+import { Log, TransactionReceipt } from '@ethersproject/providers';
+// import { BscscanProvider } from '@ethers-ancillary/bsc';
+import { isSameAddress, Network } from 'src';
 import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
 import { ethers } from 'hardhat';
 import { Interface, LogDescription } from '@ethersproject/abi';
 import { ADDRESSES } from '@/test/lib/constants';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+
+import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
 
 dotenv.config();
 
@@ -18,15 +17,22 @@ const name = 'Bobby Pool';
 const symbol = 'BOBBY';
 
 const network = Network.BSCTESTNET;
-const rpcUrl = `${process.env.GETBLOCK_URL_TEST}`;
+
+let rpcUrl = `${process.env.ALCHEMY_URL_GOERLI}`;
+if (network == Network.BSCTESTNET) {
+  rpcUrl = `${process.env.GETBLOCK_URL_TEST}`;
+} else if (network == Network.BSC) {
+  rpcUrl = `${process.env.GETBLOCK_URL}`;
+}
 
 const addresses = ADDRESSES[network];
 
-const USDC_address = addresses.USDC.address;
-const USDT_address = addresses.USDT.address;
-const tokenAddresses = [USDC_address, USDT_address];
+// DON'T FORGET TO CHANGE THIS when switching networks!
+const wrappedNativeAsset = addresses.WBNB.address;
 
-const amplificationParameter = 1;
+const tokenAddresses = [addresses.USDC.address, addresses.USDT.address];
+
+const amplificationParameter = '1';
 
 const rateProviders = [
   '0x0000000000000000000000000000000000000000',
@@ -37,14 +43,16 @@ const tokenRateCacheDurations = ['0', '0'];
 
 const exemptFromYieldProtocolFeeFlags = [false, false];
 
-const swapFee = 0.01;
+const swapFee = '0.01';
 const owner = '0xfEB47392B746dA43C28683A145237aC5EC5D554B'; // Test Account
 const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`;
 
 async function createComposableStablePool() {
-  // const rpcUrl = `https://mainnet.infura.io/v3/444153f7f8f2499db7be57a11b1f696e`;
-  // const rpcUrl = 'https://goerli.gateway.tenderly.co/4Rzjgxiyt0WELoXRl1312Q'
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
+  // const provider = new BscscanProvider(
+  //   'bsc-testnet', // could also be 'bsc-mainnet'
+  //   'MDWSE9W9DI3IIZSTK698PZQG6M11QVUU6R'
+  // );
   const wallet = new ethers.Wallet(`${process.env.TRADER_KEY}`, provider);
 
   const abi =
@@ -52,7 +60,17 @@ async function createComposableStablePool() {
 
   const factoryContract = new ethers.Contract(factoryAddress, abi, wallet);
 
-  const pool = await factoryContract.create(
+  const [
+    nameF,
+    symbolF,
+    tokenAddressesF,
+    amplificationParameterF,
+    rateProvidersF,
+    tokenRateCacheDurationsF,
+    exemptFromYieldProtocolFeeFlagsF,
+    swapFeeF,
+    ownerF,
+  ] = formatInputs(
     name,
     symbol,
     tokenAddresses,
@@ -64,43 +82,95 @@ async function createComposableStablePool() {
     owner
   );
 
-  const version = await pool.getPoolVersion();
+  const tx = await factoryContract.create(
+    nameF,
+    symbolF,
+    tokenAddressesF,
+    amplificationParameterF,
+    rateProvidersF,
+    tokenRateCacheDurationsF,
+    exemptFromYieldProtocolFeeFlagsF,
+    swapFeeF,
+    ownerF,
+    { gasLimit: 30000000 } // 6721975 }
+  );
 
-  console.log('ComposableStablePool version: ' + version);
+  console.log('Transaction hash: ' + tx.hash);
+  // console.log(JSON.stringify(tx));
 
-  // try {
-  //   const txReceipt = await tx.wait();
+  // await tx.wait();
 
-  //   console.log(
-  //     'Transaction included in block number:' + txReceipt.blockNumber
-  //   );
-  // } catch (err: any) {
-  //   // Slippage should trigger 507 error:
-  //   // https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/solidity-utils/contracts/helpers/BalancerErrors.sol#L218
-  //   console.log(err.reason);
-  //   console.log('TRANSACTION: ' + JSON.stringify(err.transaction));
-  //   console.log('RECEIPT: ' + JSON.stringify(err.receipt));
-  // }
+  try {
+    const txReceipt = await tx.wait();
 
-  // const receipt: TransactionReceipt = await provider.getTransactionReceipt(
-  //   tx.hash
-  // );
+    console.log(
+      'Transaction included in block number:' + txReceipt.blockNumber
+    );
+  } catch (err: any) {
+    // Slippage should trigger 507 error:
+    // https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/solidity-utils/contracts/helpers/BalancerErrors.sol#L218
+    console.log(err.reason);
+    console.log('TRANSACTION: ' + JSON.stringify(err.transaction));
+    console.log('RECEIPT: ' + JSON.stringify(err.receipt));
+  }
 
-  // const composableStableFactoryInterface = new Interface(
-  //   composableStableFactoryAbi
-  // );
+  const receipt: TransactionReceipt = await provider.getTransactionReceipt(
+    tx.hash
+  );
 
-  // const poolCreationEvent: LogDescription | null | undefined = receipt.logs
-  //   .filter((log: Log) => {
-  //     return isSameAddress(log.address, factoryAddress);
-  //   })
-  //   .map((log) => {
-  //     return composableStableFactoryInterface.parseLog(log);
-  //   })
-  //   .find((parsedLog) => parsedLog?.name === 'PoolCreated');
+  const composableStableFactoryInterface = new Interface(
+    composableStableFactoryAbi
+  );
 
-  // if (!poolCreationEvent) return console.error("There's no event");
-  // console.log('poolAddress: ' + poolCreationEvent.args.pool);
+  const poolCreationEvent: LogDescription | null | undefined = receipt.logs
+    .filter((log: Log) => {
+      return isSameAddress(log.address, factoryAddress);
+    })
+    .map((log) => {
+      return composableStableFactoryInterface.parseLog(log);
+    })
+    .find((parsedLog) => parsedLog?.name === 'PoolCreated');
+
+  if (!poolCreationEvent) return console.error("There's no event");
+  console.log('poolAddress: ' + poolCreationEvent.args.pool);
 }
 
 createComposableStablePool().then((r) => r);
+
+function formatInputs(
+  name: any,
+  symbol: any,
+  tokenAddresses: any,
+  amplificationParameter: any,
+  rateProviders: any,
+  tokenRateCacheDurations: any,
+  exemptFromYieldProtocolFeeFlags: any,
+  swapFee: any,
+  owner: any
+) {
+  const swapFeeScaled = parseToBigInt18(`${swapFee}`);
+  const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+  const [
+    sortedTokens,
+    sortedRateProviders,
+    sortedTokenRateCacheDurations,
+    sortedExemptFromYieldProtocols,
+  ] = assetHelpers.sortTokens(
+    tokenAddresses,
+    rateProviders,
+    tokenRateCacheDurations,
+    exemptFromYieldProtocolFeeFlags
+  ) as [string[], string[], string[], boolean[]];
+
+  return [
+    name,
+    symbol,
+    sortedTokens,
+    amplificationParameter,
+    sortedRateProviders,
+    sortedTokenRateCacheDurations,
+    sortedExemptFromYieldProtocols,
+    swapFeeScaled.toString(),
+    owner,
+  ];
+}

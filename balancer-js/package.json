@@ -83,6 +83,7 @@
   },
   "dependencies": {
     "@balancer-labs/typechain": "^1.0.0",
+    "@ethers-ancillary/bsc": "^0.0.3",
     "@ethersproject/abi": "^5.4.0",
     "@ethersproject/abstract-signer": "^5.4.0",
     "@ethersproject/address": "^5.4.0",

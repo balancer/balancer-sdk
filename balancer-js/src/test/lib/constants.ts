@@ -534,6 +534,11 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'BNB',
     },
+    WBNB: {
+      address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+      decimals: 18,
+      symbol: 'WBNB',
+    },
     USDC: {
       address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
       decimals: 18,
@@ -565,6 +570,11 @@ export const ADDRESSES = {
       address: AddressZero,
       decimals: 18,
       symbol: 'tBNB',
+    },
+    WBNB: {
+      address: '0xE906CBeCd4A17DF62B8d6c8C82F3882af25295f5',
+      decimals: 18,
+      symbol: 'WBNB',
     },
     USDC: {
       address: '0x64544969ed7EBf5f083679233325356EbE738930',
