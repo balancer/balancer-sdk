@@ -1,88 +1,56 @@
 // yarn test:only ./src/modules/pools/pool-types/concerns/composableStable/exit.concern.integration.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { insert, Network, PoolWithMethods, removeItem } from '@/.';
-import { JsonRpcSigner, TransactionReceipt } from '@ethersproject/providers';
+import { ethers } from 'hardhat';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { insert, Network, PoolWithMethods, removeItem } from '@/.';
+import { subSlippage, addSlippage } from '@/lib/utils/slippageHelper';
 import {
   forkSetup,
-  getBalances,
-  getTestingRelevantParams,
+  TestPool as TestPoolHelper,
+  sendTransactionGetBalances,
 } from '@/test/lib/utils';
-import pools_16350000 from '@/test/lib/pools_16350000.json';
-import { subSlippage, addSlippage } from '@/lib/utils/slippageHelper';
 
 dotenv.config();
 
-async function sendTransaction(
-  tokensForBalanceCheck: string[],
-  signer: JsonRpcSigner,
-  signerAddress: string,
-  to: string,
-  data: string
-): Promise<{
-  transactionReceipt: TransactionReceipt;
-  balanceDeltas: BigNumber[];
-}> {
-  const balanceBefore = await getBalances(
-    tokensForBalanceCheck,
-    signer,
-    signerAddress
-  );
-  // Send transaction to local fork
-  const transactionResponse = await signer.sendTransaction({
-    to,
-    data,
-    gasLimit: 3000000,
-  });
-  const transactionReceipt = await transactionResponse.wait();
-  const balancesAfter = await getBalances(
-    tokensForBalanceCheck,
-    signer,
-    signerAddress
-  );
-
-  const balanceDeltas = balancesAfter.map((balAfter, i) => {
-    return balAfter.sub(balanceBefore[i]).abs();
-  });
-
-  return {
-    transactionReceipt,
-    balanceDeltas,
-  };
-}
+const network = Network.MAINNET;
+const { ALCHEMY_URL: jsonRpcUrl } = process.env;
+const rpcUrl = 'http://127.0.0.1:8545';
+const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
+const signer = provider.getSigner();
+const blockNumber = 16350000;
+const testPoolId =
+  '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d';
 
 describe('exit composable stable pool v1 execution', async () => {
-  const blockNumber = 16350000;
-  let signer: JsonRpcSigner;
   let signerAddress: string;
   let pool: PoolWithMethods;
-
   // We have to rest the fork between each test as pool value changes after tx is submitted
   beforeEach(async () => {
-    const testingParams = getTestingRelevantParams({
-      network: Network.MAINNET,
-      pools: pools_16350000,
-      poolId:
-        '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d',
-      hasBPT: true,
-    });
+    signerAddress = await signer.getAddress();
 
-    signer = testingParams.signer;
-    signerAddress = await testingParams.signer.getAddress();
-    pool = testingParams.pool;
+    const testPool = new TestPoolHelper(
+      testPoolId,
+      network,
+      rpcUrl,
+      blockNumber
+    );
+
+    // Gets initial pool info from Subgraph
+    pool = await testPool.getPool();
 
     // Setup forked network, set initial token balances and allowances
     await forkSetup(
-      testingParams.signer,
-      testingParams.poolObj.tokensList,
-      Array(testingParams.poolObj.tokensList.length).fill(0),
-      Array(testingParams.poolObj.tokensList.length).fill(
-        parseFixed('100000', 18).toString()
-      ),
-      testingParams.jsonRpcUrl as string,
+      signer,
+      pool.tokensList,
+      Array(pool.tokensList.length).fill(0),
+      Array(pool.tokensList.length).fill(parseFixed('100000', 18).toString()),
+      jsonRpcUrl as string,
       blockNumber // holds the same state as the static repository
     );
+
+    // Updatate pool info with onchain state from fork block no
+    pool = await testPool.getPool();
   });
 
   context('exitExactBPTIn', async () => {
@@ -97,13 +65,14 @@ describe('exit composable stable pool v1 execution', async () => {
           false,
           pool.tokensList[1]
         );
-      const { transactionReceipt, balanceDeltas } = await sendTransaction(
-        pool.tokensList,
-        signer,
-        signerAddress,
-        to,
-        data
-      );
+      const { transactionReceipt, balanceDeltas } =
+        await sendTransactionGetBalances(
+          pool.tokensList,
+          signer,
+          signerAddress,
+          to,
+          data
+        );
       expect(transactionReceipt.status).to.eq(1);
       const expectedDeltas = insert(expectedAmountsOut, pool.bptIndex, bptIn);
       expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
@@ -128,13 +97,14 @@ describe('exit composable stable pool v1 execution', async () => {
           amountsOut,
           slippage.toString()
         );
-      const { transactionReceipt, balanceDeltas } = await sendTransaction(
-        pool.tokensList,
-        signer,
-        signerAddress,
-        to,
-        data
-      );
+      const { transactionReceipt, balanceDeltas } =
+        await sendTransactionGetBalances(
+          pool.tokensList,
+          signer,
+          signerAddress,
+          to,
+          data
+        );
       expect(transactionReceipt.status).to.eq(1);
       const expectedDeltas = insert(amountsOut, pool.bptIndex, expectedBPTIn);
       expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
@@ -156,13 +126,14 @@ describe('exit composable stable pool v1 execution', async () => {
           amountsOut,
           slippage.toString()
         );
-      const { transactionReceipt, balanceDeltas } = await sendTransaction(
-        pool.tokensList,
-        signer,
-        signerAddress,
-        to,
-        data
-      );
+      const { transactionReceipt, balanceDeltas } =
+        await sendTransactionGetBalances(
+          pool.tokensList,
+          signer,
+          signerAddress,
+          to,
+          data
+        );
       expect(transactionReceipt.status).to.eq(1);
       const expectedDeltas = insert(amountsOut, pool.bptIndex, expectedBPTIn);
       expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
