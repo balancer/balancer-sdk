@@ -402,8 +402,9 @@ Builds a init join transaction for weighted pool.
     amountsIn,
   }) => InitJoinPoolAttributes
 ```
-
 [Example](./examples/pools/weighted/init-join.ts)
+Available pool types:
+- Weighted
 
 ### Joining nested pools
 
@@ -509,7 +510,13 @@ export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
 }
 ```
 
-[Example](./examples/exitExactBPTIn.ts)
+[Example](./examples/exitExactBPTIn.ts)<br/><br/>
+Available pool types:
+- Weighted [Example](./examples/exitExactBPTIn.ts)
+- Composable Stable [Example - Single Token Out](./examples/pools/composable-stable/exitExactBPTIn-singleTokenOut.ts) 
+  - OBS: **Only Comp. Stable V2 supports proportional exits (2+ tokens out)**
+- Meta Stable (No example available yet)
+- Stable (No example available yet)
 
 ### #buildExitExactTokensOut
 
@@ -554,7 +561,13 @@ export interface ExitExactTokensOutAttributes extends ExitPoolAttributes {
 ```
 
 [Example](./examples/exitExactTokensOut.ts)
-
+<br/><br/>
+Available pool types:
+- Weighted [Example](./examples/exitExactTokensOut.ts)
+- Composable Stable [Example - Single Token Out](./examples/pools/composable-stable/exitExactTokensOut-singleTokenOut.ts)
+    - OBS: **Only Comp. Stable V2 supports 2+ tokens out**
+- Meta Stable (No example available yet)
+- Stable (No example available yet)
 ### Exiting nested pools
 
 Exposes Exit functionality allowing user to exit a pool that has pool tokens that are BPTs of other pools, e.g.:

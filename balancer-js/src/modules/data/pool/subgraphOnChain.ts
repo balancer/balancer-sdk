@@ -83,12 +83,16 @@ export class PoolsSubgraphOnChainRepository
     return onchainPools;
   }
 
-  async find(id: string): Promise<Pool | undefined> {
-    return await this.findBy('id', id);
+  async find(id: string, forceRefresh = false): Promise<Pool | undefined> {
+    return await this.findBy('id', id, forceRefresh);
   }
 
-  async findBy(param: PoolAttribute, value: string): Promise<Pool | undefined> {
-    if (!this.pools) {
+  async findBy(
+    param: PoolAttribute,
+    value: string,
+    forceRefresh = false
+  ): Promise<Pool | undefined> {
+    if (!this.pools || forceRefresh) {
       this.pools = this.fetchDefault();
     }
 

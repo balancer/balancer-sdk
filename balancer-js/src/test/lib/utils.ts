@@ -1,17 +1,33 @@
 import { BigNumber, formatFixed } from '@ethersproject/bignumber';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { AddressZero, MaxUint256, WeiPerEther } from '@ethersproject/constants';
-import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
+import {
+  JsonRpcProvider,
+  JsonRpcSigner,
+  TransactionReceipt,
+} from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
 import { formatBytes32String } from '@ethersproject/strings';
 
-import { PoolWithMethods, BalancerError, BalancerErrorCode } from '@/.';
+import {
+  PoolWithMethods,
+  BalancerError,
+  BalancerErrorCode,
+  BalancerNetworkConfig,
+  Network,
+  PoolsSubgraphOnChainRepository,
+  Pools,
+  BalancerSDK,
+  GraphQLArgs,
+  GraphQLQuery,
+} from '@/.';
 import { balancerVault } from '@/lib/constants/config';
 import { parseEther } from '@ethersproject/units';
 import { ERC20 } from '@/modules/contracts/implementations/ERC20';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 
 import { Interface } from '@ethersproject/abi';
+
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const liquidityGauge = new Interface(liquidityGaugeAbi);
 import { Pools as PoolsProvider } from '@/modules/pools';
@@ -221,3 +237,84 @@ export const accuracy = (
   const accuracy = formatFixed(accuracyEvm, 18);
   return parseFloat(accuracy);
 };
+
+/**
+ * Helper to efficiently retrieve pool state from Subgraph and onChain given a pool id.
+ */
+export class TestPoolHelper {
+  poolsOnChain: PoolsSubgraphOnChainRepository;
+  networkConfig: BalancerNetworkConfig;
+
+  constructor(
+    private poolId: string,
+    network: Network,
+    rpcUrl: string,
+    blockNumber: number
+  ) {
+    const subgraphArgs: GraphQLArgs = {
+      where: {
+        id: {
+          eq: poolId,
+        },
+      },
+      block: { number: blockNumber },
+    };
+    const subgraphQuery: GraphQLQuery = { args: subgraphArgs, attrs: {} };
+    const { networkConfig, data } = new BalancerSDK({
+      network,
+      rpcUrl,
+      subgraphQuery: subgraphQuery,
+    });
+    this.poolsOnChain = data.poolsOnChain;
+    this.networkConfig = networkConfig;
+  }
+
+  /**
+   * Will always retrieve onchain state
+   * @returns
+   */
+  async getPool(): Promise<PoolWithMethods> {
+    const onchainPool = await this.poolsOnChain.find(this.poolId, true);
+    if (onchainPool === undefined) throw new Error('Pool Not Found');
+    const wrappedPool = Pools.wrap(onchainPool, this.networkConfig);
+    return wrappedPool;
+  }
+}
+
+export async function sendTransactionGetBalances(
+  tokensForBalanceCheck: string[],
+  signer: JsonRpcSigner,
+  signerAddress: string,
+  to: string,
+  data: string
+): Promise<{
+  transactionReceipt: TransactionReceipt;
+  balanceDeltas: BigNumber[];
+}> {
+  const balanceBefore = await getBalances(
+    tokensForBalanceCheck,
+    signer,
+    signerAddress
+  );
+  // Send transaction to local fork
+  const transactionResponse = await signer.sendTransaction({
+    to,
+    data,
+    gasLimit: 3000000,
+  });
+  const transactionReceipt = await transactionResponse.wait();
+  const balancesAfter = await getBalances(
+    tokensForBalanceCheck,
+    signer,
+    signerAddress
+  );
+
+  const balanceDeltas = balancesAfter.map((balAfter, i) => {
+    return balAfter.sub(balanceBefore[i]).abs();
+  });
+
+  return {
+    transactionReceipt,
+    balanceDeltas,
+  };
+}

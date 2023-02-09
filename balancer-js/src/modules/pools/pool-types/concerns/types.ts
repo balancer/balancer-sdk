@@ -106,7 +106,7 @@ export interface ExitPool {
   exitPoolRequest: ExitPoolRequest;
 }
 
-interface ExitPoolAttributes {
+export interface ExitPoolAttributes {
   to: string;
   functionName: string;
   attributes: ExitPool;
