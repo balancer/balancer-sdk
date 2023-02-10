@@ -56,12 +56,12 @@ describe('exit composable stable pool v1 execution', async () => {
   context('exitExactBPTIn', async () => {
     it('single token max out', async () => {
       const bptIn = parseFixed('10', 18).toString();
-      const slippage = BigNumber.from('10');
+      const slippage = '10';
       const { to, data, minAmountsOut, expectedAmountsOut } =
         pool.buildExitExactBPTIn(
           signerAddress,
           bptIn,
-          slippage.toString(),
+          slippage,
           false,
           pool.tokensList[1]
         );
@@ -77,18 +77,18 @@ describe('exit composable stable pool v1 execution', async () => {
       const expectedDeltas = insert(expectedAmountsOut, pool.bptIndex, bptIn);
       expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
       const expectedMins = expectedAmountsOut.map((a) =>
-        subSlippage(BigNumber.from(a), slippage).toString()
+        subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
       );
       expect(expectedMins).to.deep.eq(minAmountsOut);
     });
     it('should return correct attributes for exiting', async () => {
       const bptIn = parseFixed('10', 18).toString();
-      const slippage = BigNumber.from('10');
+      const slippage = '10';
       const { attributes, functionName, minAmountsOut } =
         pool.buildExitExactBPTIn(
           signerAddress,
           bptIn,
-          slippage.toString(),
+          slippage,
           false,
           pool.tokensList[1]
         );
@@ -111,13 +111,13 @@ describe('exit composable stable pool v1 execution', async () => {
       const amountsOut = tokensOut.map((_, i) =>
         parseFixed((i * 100).toString(), 18).toString()
       );
-      const slippage = BigNumber.from('7');
+      const slippage = '7';
       const { to, data, maxBPTIn, expectedBPTIn } =
         pool.buildExitExactTokensOut(
           signerAddress,
           tokensOut,
           amountsOut,
-          slippage.toString()
+          slippage
         );
       const { transactionReceipt, balanceDeltas } =
         await sendTransactionGetBalances(
@@ -132,7 +132,7 @@ describe('exit composable stable pool v1 execution', async () => {
       expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
       const expectedMaxBpt = addSlippage(
         BigNumber.from(expectedBPTIn),
-        slippage
+        BigNumber.from(slippage)
       ).toString();
       expect(expectedMaxBpt).to.deep.eq(maxBPTIn);
     });
@@ -141,12 +141,12 @@ describe('exit composable stable pool v1 execution', async () => {
       const amountsOut = tokensOut.map((_, i) =>
         parseFixed((i * 100).toString(), 18).toString()
       );
-      const slippage = BigNumber.from('7');
+      const slippage = '7';
       const { attributes, functionName } = pool.buildExitExactTokensOut(
         signerAddress,
         tokensOut,
         amountsOut,
-        slippage.toString()
+        slippage
       );
 
       expect(functionName).to.eq('exitPool');
@@ -169,13 +169,13 @@ describe('exit composable stable pool v1 execution', async () => {
       const tokensOut = removeItem(pool.tokensList, pool.bptIndex);
       const amountsOut = Array(tokensOut.length).fill('0');
       amountsOut[0] = parseFixed('202', 18).toString();
-      const slippage = BigNumber.from('7');
+      const slippage = '7';
       const { to, data, maxBPTIn, expectedBPTIn } =
         pool.buildExitExactTokensOut(
           signerAddress,
           tokensOut,
           amountsOut,
-          slippage.toString()
+          slippage
         );
       const { transactionReceipt, balanceDeltas } =
         await sendTransactionGetBalances(
@@ -190,7 +190,7 @@ describe('exit composable stable pool v1 execution', async () => {
       expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
       const expectedMaxBpt = addSlippage(
         BigNumber.from(expectedBPTIn),
-        slippage
+        BigNumber.from(slippage)
       ).toString();
       expect(expectedMaxBpt).to.deep.eq(maxBPTIn);
     });
@@ -199,18 +199,18 @@ describe('exit composable stable pool v1 execution', async () => {
       const amountsOut = tokensOut.map((_, i) =>
         parseFixed((i * 100).toString(), 18).toString()
       );
-      const slippage = BigNumber.from('7');
+      const slippage = '7';
       const attributesSorted = pool.buildExitExactTokensOut(
         signerAddress,
         tokensOut,
         amountsOut,
-        slippage.toString()
+        slippage
       );
       const attributesUnSorted = pool.buildExitExactTokensOut(
         signerAddress,
         tokensOut.reverse(),
         amountsOut.reverse(),
-        slippage.toString()
+        slippage
       );
       expect(attributesSorted).to.deep.eq(attributesUnSorted);
     });
