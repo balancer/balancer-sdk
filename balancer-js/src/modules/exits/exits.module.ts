@@ -523,11 +523,21 @@ export class Exit {
       },
     ];
 
+    // Except for the first transaction, which is sent from the user's balance,
+    // all others are from internal balances
+    const fromInternalBalance = !isRootNode;
+    // Transactions should be always sent to internal balances, except for two cases:
+    // 1. The last transaction, which is sent to the user's balance
+    // 2. A transaction that will be followed by an exitPool, which is always
+    // fromInternalBalance=false, so it requires the previous one to be toInternalBalance=false
+    const toInternalBalance =
+      exitChild.exitAction !== 'output' && exitChild.exitAction !== 'exitPool';
+
     const funds: FundManagement = {
       sender,
       recipient,
-      fromInternalBalance: false,
-      toInternalBalance: false,
+      fromInternalBalance,
+      toInternalBalance,
     };
 
     const outputReferences = [
@@ -572,10 +582,11 @@ export class Exit {
 
     const modelRequest = VaultModel.mapBatchSwapRequest(call);
 
-    // If the sender is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
-    const bptIn = sender === this.relayer ? '0' : limits[1];
-    // If the receiver is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
-    const userTokenOutAmount = recipient === this.relayer ? '0' : limits[0];
+    // If node isn't rootNode, the swap is part of a chain and shouldn't be considered for user deltas
+    const bptIn = !isRootNode ? '0' : limits[1];
+    // If child exit action is not output, the swap is part of a chain and shouldn't be considered for user deltas
+    const userTokenOutAmount =
+      exitChild.exitAction !== 'output' ? '0' : limits[0];
     const amounts = [userTokenOutAmount, bptIn];
 
     return { modelRequest, encodedCall, assets, amounts };
@@ -682,6 +693,13 @@ export class Exit {
     //   )`
     // );
 
+    // Transactions should be always sent to internal balances, except for two cases:
+    // 1. The last transaction, which is sent to the user's balance
+    // 2. A transaction that will be followed by an exitPool, which is always
+    // fromInternalBalance=false, so it requires the previous one to be toInternalBalance=false
+    const toInternalBalance =
+      exitChild.exitAction !== 'output' && exitChild.exitAction !== 'exitPool';
+
     const call = Relayer.formatExitPoolInput({
       poolId: node.id,
       poolKind: 0,
@@ -692,7 +710,7 @@ export class Exit {
       assets: sortedTokens,
       minAmountsOut: sortedAmounts,
       userData,
-      toInternalBalance: false,
+      toInternalBalance,
     });
     const encodedCall = Relayer.encodeExitPool(call);
     const modelRequest = VaultModel.mapExitPoolRequest(call);
@@ -701,12 +719,13 @@ export class Exit {
       Relayer.isChainedReference(a) ? '0' : Zero.sub(a).toString()
     );
     const userBptIn = Relayer.isChainedReference(amountIn) ? '0' : amountIn;
-    // If the sender is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
-    const deltaBptIn = sender === this.relayer ? Zero.toString() : userBptIn;
-    // If the receiver is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
-    const deltaTokensOut = recipient === this.relayer ? [] : sortedTokens;
+    // If node isn't rootNode, the exit is part of a chain and shouldn't be considered for user deltas
+    const deltaBptIn = !isRootNode ? Zero.toString() : userBptIn;
+    // // If child exit action is not output, the exit is part of a chain and shouldn't be considered for user deltas
+    const deltaTokensOut =
+      exitChild.exitAction !== 'output' ? [] : sortedTokens;
     const deltaAmountsOut =
-      recipient === this.relayer ? [] : userAmountTokensOut;
+      exitChild.exitAction !== 'output' ? [] : userAmountTokensOut;
 
     return {
       modelRequest,
