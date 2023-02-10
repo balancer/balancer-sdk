@@ -1,6 +1,4 @@
-
-import hardhat from "hardhat";
-import { JsonRpcSigner } from "@ethersproject/providers";
+import { JsonRpcSigner, JsonRpcProvider } from "@ethersproject/providers";
 import { Network, PoolWithMethods } from "@/.";
 import { forkSetup, TestPoolHelper } from "@/test/lib/utils";
 
@@ -18,7 +16,8 @@ import { forkSetup, TestPoolHelper } from "@/test/lib/utils";
  * @returns 
  */
 export  async function setUpExample(rpcUrlArchive: string, rpcUrlLocal: string, network: Network, tokens: string[], slots: number[], balances: string[], poolId: string, blockNo: number): Promise<{ pool: PoolWithMethods, signer: JsonRpcSigner}> {
-  const provider = new hardhat.ethers.providers.JsonRpcProvider(rpcUrlLocal, network);
+  // const provider = new hardhat.ethers.providers.JsonRpcProvider(rpcUrlLocal, network);
+  const provider = new JsonRpcProvider(rpcUrlLocal, network);
   const signer = provider.getSigner();
   await forkSetup(
     signer,
