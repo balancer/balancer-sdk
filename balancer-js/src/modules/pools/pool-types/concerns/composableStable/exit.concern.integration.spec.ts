@@ -200,19 +200,21 @@ describe('exit composable stable pool v1 execution', async () => {
         parseFixed((i * 100).toString(), 18).toString()
       );
       const slippage = '7';
-      const attributesSorted = pool.buildExitExactTokensOut(
+      // TokensIn are already ordered as required by vault
+      const attributesA = pool.buildExitExactTokensOut(
         signerAddress,
         tokensOut,
         amountsOut,
         slippage
       );
-      const attributesUnSorted = pool.buildExitExactTokensOut(
+      // TokensIn are not ordered as required by vault and will be sorted correctly
+      const attributesB = pool.buildExitExactTokensOut(
         signerAddress,
         tokensOut.reverse(),
         amountsOut.reverse(),
         slippage
       );
-      expect(attributesSorted).to.deep.eq(attributesUnSorted);
+      expect(attributesA).to.deep.eq(attributesB);
     });
   });
 });

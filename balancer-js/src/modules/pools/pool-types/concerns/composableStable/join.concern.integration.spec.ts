@@ -148,18 +148,20 @@ describe('ComposableStable pool join functions', async () => {
       parseFixed((i * 100).toString(), 18).toString()
     );
     const slippage = '6';
-    const attributesSorted = pool.buildJoin(
+    // TokensIn are already ordered as required by vault
+    const attributesA = pool.buildJoin(
       signerAddress,
       tokensIn,
       amountsIn,
       slippage
     );
-    const attributesUnSorted = pool.buildJoin(
+    // TokensIn are not ordered as required by vault and will be sorted correctly
+    const attributesB = pool.buildJoin(
       signerAddress,
       tokensIn.reverse(),
       amountsIn.reverse(),
       slippage
     );
-    expect(attributesSorted).to.deep.eq(attributesUnSorted);
+    expect(attributesA).to.deep.eq(attributesB);
   });
 });
