@@ -35,6 +35,7 @@ type ExactBPTInSortedValues = SortedValues & {
 type ExactTokensOutSortedValues = SortedValues & {
   upScaledAmountsOut: bigint[];
   downScaledAmountsOut: string[];
+  downScaledAmountsOutWithRounding: string[];
 };
 type CalcBptInGivenExactTokensOutParams = ExactTokensOutSortedValues &
   Pick<ExitExactTokensOutParameters, 'slippage'>;
@@ -140,8 +141,11 @@ export class StablePoolExit implements ExitConcern {
       slippage,
     });
 
-    const { downScaledAmountsOut: minAmountsOut, parsedTokens: poolTokens } =
-      sortedValues;
+    const {
+      downScaledAmountsOut: minAmountsOut,
+      downScaledAmountsOutWithRounding: minAmountsOutWithRounding,
+      parsedTokens: poolTokens,
+    } = sortedValues;
     const userData = StablePoolEncoder.exitBPTInForExactTokensOut(
       minAmountsOut,
       maxBPTIn
@@ -150,7 +154,7 @@ export class StablePoolExit implements ExitConcern {
       poolId: pool.id,
       userData,
       poolTokens,
-      minAmountsOut,
+      minAmountsOut: minAmountsOutWithRounding,
       exiter,
     });
 
@@ -275,6 +279,7 @@ export class StablePoolExit implements ExitConcern {
       const value = BigNumber.from(a);
       return value.isZero() ? a : value.sub(1).toString();
     });
+
     return {
       parsedTokens,
       parsedAmp,
@@ -282,7 +287,8 @@ export class StablePoolExit implements ExitConcern {
       parsedSwapFee,
       upScaledBalances,
       upScaledAmountsOut,
-      downScaledAmountsOut: downScaledAmountsOutWithRounding,
+      downScaledAmountsOut,
+      downScaledAmountsOutWithRounding,
     };
   };
   calcTokenOutGivenExactBptIn = ({
@@ -320,12 +326,12 @@ export class StablePoolExit implements ExitConcern {
     ).toString();
 
     expectedAmountsOut[singleTokenMaxOutIndex] = amountOut;
-
     // Apply slippage tolerance
     minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
       BigNumber.from(amountOut),
       BigNumber.from(slippage)
     ).toString();
+
     return { minAmountsOut, expectedAmountsOut };
   };
 
@@ -351,7 +357,6 @@ export class StablePoolExit implements ExitConcern {
       BigInt(bptIn),
       BigInt(parsedTotalShares)
     ).map((amount) => amount.toString());
-
     // Maths return numbers scaled to 18 decimals. Must scale down to token decimals.
     const amountsOutScaledDown = _downscaleDownArray(
       amountsOut.map((a) => BigInt(a)),
@@ -361,7 +366,6 @@ export class StablePoolExit implements ExitConcern {
     const expectedAmountsOut = amountsOutScaledDown.map((amount) =>
       amount.toString()
     );
-
     // Apply slippage tolerance
     const minAmountsOut = amountsOutScaledDown.map((amount) => {
       const minAmount = subSlippage(

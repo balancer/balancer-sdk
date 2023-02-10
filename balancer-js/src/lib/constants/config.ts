@@ -3,6 +3,10 @@ import { BalancerNetworkConfig } from '@/types';
 
 export const balancerVault = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
 
+// Info fetched using npm package slot20
+export const BPT_SLOT = 0;
+export const BPT_DECIMALS = 18;
+
 export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   [Network.MAINNET]: {
     chainId: Network.MAINNET, //1
