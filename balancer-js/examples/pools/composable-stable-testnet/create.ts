@@ -19,9 +19,9 @@ const symbol = 'BOBBY';
 const network = Network.BSCTESTNET;
 
 let rpcUrl = `${process.env.ALCHEMY_URL_GOERLI}`;
-if (network == Network.BSCTESTNET) {
+if ((network as Network) == Network.BSCTESTNET) {
   rpcUrl = `${process.env.GETBLOCK_URL_TEST}`;
-} else if (network == Network.BSC) {
+} else if ((network as Network) == Network.BSC) {
   rpcUrl = `${process.env.GETBLOCK_URL}`;
 }
 
@@ -92,7 +92,10 @@ async function createComposableStablePool() {
     exemptFromYieldProtocolFeeFlagsF,
     swapFeeF,
     ownerF,
-    { gasLimit: 30000000 } // 6721975 }
+    {
+      gasLimit: 30000000, // 6721975
+      gasPrice: ethers.utils.hexlify(ethers.utils.parseUnits('20', 'gwei')),
+    }
   );
 
   console.log('Transaction hash: ' + tx.hash);
