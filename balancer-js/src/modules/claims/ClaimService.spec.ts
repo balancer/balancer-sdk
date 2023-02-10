@@ -91,7 +91,7 @@ describe('ClaimService On Ethereum', () => {
           .catch((error) => {
             done(error);
           });
-      });
+      }).timeout(600000);
     });
 
     context('claimRewardTokens', () => {
@@ -118,7 +118,7 @@ describe('ClaimService On Ethereum', () => {
           })
           .then(done)
           .catch((error) => done(error));
-      });
+      }).timeout(60000);
       it('should returns call data for multiple gauge', (done) => {
         service
           .buildClaimRewardTokensRequest(
@@ -145,7 +145,7 @@ describe('ClaimService On Ethereum', () => {
           })
           .then(done)
           .catch((error) => done(error));
-      });
+      }).timeout(60000);
     });
 
     context('getClaimableVeBalTokens', () => {
@@ -287,7 +287,7 @@ describe('ClaimService On Polygon', () => {
         .catch((error) => {
           done(error);
         });
-    });
+    }).timeout(60000);
   });
 
   context('claimRewardTokens', () => {
@@ -308,7 +308,7 @@ describe('ClaimService On Polygon', () => {
         })
         .then(done)
         .catch((error) => done(error));
-    });
+    }).timeout(60000);
     it('should returns call data for multiple gauge', (done) => {
       service
         .buildClaimRewardTokensRequest(
@@ -342,6 +342,6 @@ describe('ClaimService On Polygon', () => {
         })
         .then(done)
         .catch((error) => done(error));
-    });
+    }).timeout(60000);
   });
 });

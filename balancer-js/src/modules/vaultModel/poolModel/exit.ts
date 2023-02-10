@@ -11,6 +11,7 @@ import { isSameAddress } from '@/lib/utils';
 import { RelayerModel } from '../relayer';
 import { ActionType } from '../vaultModel.module';
 import { OutputReference } from '@/modules/relayer/types';
+import { PoolToken } from '@/types';
 
 export interface ExitPoolRequest {
   actionType: ActionType.Exit;
@@ -22,7 +23,7 @@ export interface ExitPoolRequest {
 function getBalancesForTokens(pool: Pool, tokens: string[]): string[] {
   const balances: string[] = [];
   tokens.forEach((t) => {
-    const tokenIndex = pool.tokens.findIndex((pt) =>
+    const tokenIndex = pool.tokens.findIndex((pt: PoolToken) =>
       isSameAddress(pt.address, t)
     );
     if (tokenIndex < 0) throw 'Pool does not contain tokenIn';
@@ -65,6 +66,7 @@ export class ExitModel {
       return exitKind.toNumber() as WeightedPoolExitKind;
     }
   }
+
   /**
    * Decodes user exit data and returns token input amounts
    * @param encodedUserData
@@ -113,7 +115,7 @@ export class ExitModel {
     // Calculate amount of tokens out given an exact amount of BPT in
     const amountsOut = pool
       ._calcTokensOutGivenExactBptIn(BigNumber.from(bptIn))
-      .map((a) => a.toString());
+      .map((a: BigNumber) => a.toString());
 
     // Updates BPT/totalShares value for pool
     if (
@@ -122,7 +124,7 @@ export class ExitModel {
     ) {
       // Update BPT balance
       // totalShares will be updated as a side effect within SOR
-      const bptAsPoolToken = pool.tokens.find((t) =>
+      const bptAsPoolToken = pool.tokens.find((t: PoolToken) =>
         isSameAddress(t.address, pool.address)
       );
       if (!bptAsPoolToken)
@@ -141,10 +143,10 @@ export class ExitModel {
     }
 
     const tokensWithoutBpt = pool.tokens.filter(
-      (t) => !isSameAddress(t.address, pool.address)
+      (t: PoolToken) => !isSameAddress(t.address, pool.address)
     );
     // Update each tokens balance
-    amountsOut.forEach((amountOut, i) => {
+    amountsOut.forEach((amountOut: string, i: number) => {
       const balanceEvm = parseFixed(
         tokensWithoutBpt[i].balance.toString(),
         tokensWithoutBpt[i].decimals
@@ -154,7 +156,11 @@ export class ExitModel {
         balanceEvm.sub(amountOut)
       );
     });
-    return [bptIn, tokensWithoutBpt.map((t) => t.address), amountsOut];
+    return [
+      bptIn,
+      tokensWithoutBpt.map((t: PoolToken) => t.address),
+      amountsOut,
+    ];
   }
 
   /**
@@ -219,7 +225,7 @@ export class ExitModel {
     }
 
     const tokensWithoutBpt = pool.tokensList.filter(
-      (t) => !isSameAddress(t, pool.address)
+      (t: string) => !isSameAddress(t, pool.address)
     );
     const amountsOut = new Array(tokensWithoutBpt.length).fill('0');
     amountsOut[Number(tokenIndex)] = amountOutEvm.toString();

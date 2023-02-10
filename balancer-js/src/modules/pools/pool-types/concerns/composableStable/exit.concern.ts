@@ -8,6 +8,7 @@ import {
   insert,
   isSameAddress,
   parsePoolInfo,
+  removeItem,
 } from '@/lib/utils';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { _downscaleDown, _upscaleArray } from '@/lib/utils/solidityMaths';
@@ -138,11 +139,13 @@ export class ComposableStablePoolExit implements ExitConcern {
       sortedValues.parsedTokens.length
     ).fill('0');
     expectedAmountsOut[sortedValues.singleTokenMaxOutIndex] = expectedAmountOut;
-    const expectedAmountsOutWithoutBpt = expectedAmountsOut.filter(
-      (_, i) => i !== sortedValues.bptIndex
+    const expectedAmountsOutWithoutBpt = removeItem(
+      expectedAmountsOut,
+      sortedValues.bptIndex
     );
-    const minAmountsOutWithoutBpt = minAmountsOut.filter(
-      (_, i) => i !== sortedValues.bptIndex
+    const minAmountsOutWithoutBpt = removeItem(
+      minAmountsOut,
+      sortedValues.bptIndex
     );
 
     return {

@@ -15,6 +15,7 @@ import { tranchess, yieldTokens as tranchessTokens } from './tokens/tranchess';
 import { usdr, yieldTokens as usdrTokens } from './tokens/usdr';
 import { stafi, yieldTokens as stafiTokens } from './tokens/stafi';
 import { tessera, yieldTokens as tesseraTokens } from './tokens/tessera';
+import { euler, yieldTokens as eulerTokens } from './tokens/euler';
 import { Network, Findable } from '@/types';
 
 /**
@@ -41,6 +42,7 @@ const yieldSourceMap: { [address: string]: AprFetcher } = Object.fromEntries([
   ...Object.values(usdrTokens).map((k) => [k, usdr]),
   ...Object.values(stafiTokens).map((k) => [k, stafi]),
   ...Object.values(tesseraTokens).map((k) => [k, tessera]),
+  ...Object.values(eulerTokens).map((k) => [k, euler]),
 ]);
 
 export class TokenYieldsRepository implements Findable<number> {

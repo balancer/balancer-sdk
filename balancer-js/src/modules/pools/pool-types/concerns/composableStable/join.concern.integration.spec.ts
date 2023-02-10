@@ -58,12 +58,12 @@ describe('ComposableStable pool join functions', async () => {
     const amountsIn = tokensIn.map((_, i) =>
       parseFixed((i * 100).toString(), 18).toString()
     );
-    const slippage = BigNumber.from('6');
+    const slippage = '6';
     const { to, data, minBPTOut, expectedBPTOut } = pool.buildJoin(
       signerAddress,
       tokensIn,
       amountsIn,
-      slippage.toString()
+      slippage
     );
 
     const { transactionReceipt, balanceDeltas } =
@@ -81,7 +81,7 @@ describe('ComposableStable pool join functions', async () => {
     expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
     const expectedMinBpt = subSlippage(
       BigNumber.from(expectedBPTOut),
-      slippage
+      BigNumber.from(slippage)
     ).toString();
     expect(expectedMinBpt).to.deep.eq(minBPTOut);
   });
@@ -90,12 +90,12 @@ describe('ComposableStable pool join functions', async () => {
     const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
     const amountsIn = Array(tokensIn.length).fill('0');
     amountsIn[0] = parseFixed('202', 18).toString();
-    const slippage = BigNumber.from('6');
+    const slippage = '6';
     const { to, data, minBPTOut, expectedBPTOut } = pool.buildJoin(
       signerAddress,
       tokensIn,
       amountsIn,
-      slippage.toString()
+      slippage
     );
 
     const { transactionReceipt, balanceDeltas } =
@@ -113,7 +113,7 @@ describe('ComposableStable pool join functions', async () => {
     expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
     const expectedMinBpt = subSlippage(
       BigNumber.from(expectedBPTOut),
-      slippage
+      BigNumber.from(slippage)
     ).toString();
     expect(expectedMinBpt).to.deep.eq(minBPTOut);
   });
@@ -123,12 +123,12 @@ describe('ComposableStable pool join functions', async () => {
     const amountsIn = tokensIn.map((_, i) =>
       parseFixed((i * 100).toString(), 18).toString()
     );
-    const slippage = BigNumber.from('6');
+    const slippage = '6';
     const { attributes, functionName } = pool.buildJoin(
       signerAddress,
       tokensIn,
       amountsIn,
-      slippage.toString()
+      slippage
     );
 
     expect(functionName).to.eq('joinPool');
@@ -147,19 +147,21 @@ describe('ComposableStable pool join functions', async () => {
     const amountsIn = tokensIn.map((_, i) =>
       parseFixed((i * 100).toString(), 18).toString()
     );
-    const slippage = BigNumber.from('6');
-    const attributesSorted = pool.buildJoin(
+    const slippage = '6';
+    // TokensIn are already ordered as required by vault
+    const attributesA = pool.buildJoin(
       signerAddress,
       tokensIn,
       amountsIn,
-      slippage.toString()
+      slippage
     );
-    const attributesUnSorted = pool.buildJoin(
+    // TokensIn are not ordered as required by vault and will be sorted correctly
+    const attributesB = pool.buildJoin(
       signerAddress,
       tokensIn.reverse(),
       amountsIn.reverse(),
-      slippage.toString()
+      slippage
     );
-    expect(attributesSorted).to.deep.eq(attributesUnSorted);
+    expect(attributesA).to.deep.eq(attributesB);
   });
 });
