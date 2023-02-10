@@ -378,9 +378,11 @@ export class Pools implements Findable<PoolWithMethods> {
     }
     const wrappedNativeAsset =
       networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
+    const bptIndex = pool.tokensList.indexOf(pool.address);
     return {
       ...pool,
       ...methods,
+      bptIndex,
     };
   }
 

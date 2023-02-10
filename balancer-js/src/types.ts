@@ -349,6 +349,7 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     slippage: string
   ) => ExitExactTokensOutAttributes;
   calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
+  bptIndex: number;
 }
 
 export interface GraphQLQuery {

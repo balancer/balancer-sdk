@@ -1,100 +1,67 @@
-import { Network } from "@/lib/constants";
-import { BalancerSDK } from "@/modules/sdk.module";
-import { Pools } from "@/modules/pools";
-import { forkSetup, getBalances } from "@/test/lib/utils";
-import { Pool } from "@/types";
-import { parseFixed } from "@ethersproject/bignumber";
-import { ethers } from "hardhat";
-import dotenv from "dotenv";
-import pools_16350000 from "@/test/lib/pools_16350000.json";
-
-
+// yarn examples:run ./examples/pools/composable-stable/join.ts
+import dotenv from 'dotenv';
 dotenv.config();
+import { Network } from '@/lib/constants';
+import { getBalances } from '@/test/lib/utils';
+import { parseFixed } from '@ethersproject/bignumber';
+import { setUpExample } from './helper';
+import { removeItem } from '@/index';
 
-const { ALCHEMY_URL: jsonRpcUrl } = process.env;
-const rpcUrl = 'http://127.0.0.1:8545';
-const network = Network.MAINNET;
-const blockNumber = 16350000;
+async function joinPoolExample() {
+  const { ALCHEMY_URL: rpcUrlArchive } = process.env;
+  const rpcUrlLocal = 'http://127.0.0.1:8545';
+  const network = Network.MAINNET;
+  const poolToJoin =
+    '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d';
+  const tokensIn = [
+    '0x2f4eb100552ef93840d5adc30560e5513dfffacb', // bbausdt
+    '0x82698aecc9e28e9bb27608bd52cf57f704bd1b83', // bbausdc
+    '0xae37d54ae477268b9997d4161b96b8200755935c', // bbadai
+  ];
+  const amountsIn = [
+    parseFixed('100', 18).toString(),
+    parseFixed('100', 18).toString(),
+    parseFixed('100', 18).toString(),
+  ];
+  const slippage = '100'; // 1%
 
-const poolObj = pools_16350000.find(
-  ({ id }) =>
-    id == '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d'
-) as unknown as Pool;
-
-const sdk = new BalancerSDK({ network, rpcUrl });
-
-const { networkConfig } = sdk;
-
-const initialBalance = '100000';
-
-//REMOVING THE BPT FROM THE TOKENS IN
-const tokensIn = [
-  ...poolObj.tokens
-    .filter(({ address }) => address !== poolObj.address)
-    .map(({ address }) => address),
-];
-
-const bptIndex = poolObj.tokens.findIndex(({ address }) => address === poolObj.address);
-
-const amountsIn = [
-  parseFixed('100', 18).toString(),
-  parseFixed('100', 18).toString(),
-  parseFixed('100', 18).toString(),
-];
-const slots = [0, 0, 0, 0];
-
-const pool = Pools.wrap(poolObj, networkConfig);
-
-async function composableStableJoin() {
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
-  const signer = provider.getSigner();
-  let signerAddress: string;
-  const balances = poolObj.tokens.map((token) =>
-    token ? parseFixed(initialBalance, token.decimals).toString() : '0'
+  // Example runs against a local fork of mainnet state. This sets up local fork with required token balances and approvals and retrieves pool data
+  const { pool, signer } = await setUpExample(
+    rpcUrlArchive as string,
+    rpcUrlLocal,
+    network,
+    tokensIn,
+    [0, 0, 0],
+    amountsIn,
+    poolToJoin,
+    16350000
   );
-  await forkSetup(
-    signer,
-    poolObj.tokens.map((t) => t.address),
-    slots,
-    balances,
-    jsonRpcUrl as string,
-    blockNumber
-    // holds the same state as the static repository
-  );
-  signerAddress = await signer.getAddress();
-  const tokensBalanceBefore = await getBalances(
-    poolObj.tokens.map(({ address }) => address),
-    signer,
-    signerAddress
-  );
-  const bptBalanceBefore = tokensBalanceBefore.splice(bptIndex, 1);
-  
-  const slippage = '1';
 
-  const { to, data, minBPTOut } = pool.buildJoin(
+  const signerAddress = await signer.getAddress();
+
+  // Joining with full balances of tokens in
+  const { to, data, expectedBPTOut } = pool.buildJoin(
     signerAddress,
     tokensIn,
     amountsIn,
     slippage
   );
 
-  await signer.sendTransaction(
-    {
-      to, data, gasLimit: 3000000
-    }
-  )
+  await signer.sendTransaction({ to, data });
 
   const tokensBalanceAfter = await getBalances(
-    poolObj.tokens.map(({ address }) => address),
+    pool.tokensList,
     signer,
     signerAddress
   );
-  const bptBalanceAfter = tokensBalanceAfter.splice(bptIndex, 1);
-  console.log("bptBalanceBefore: " + bptBalanceBefore);
-  console.log("bptBalanceAfter: " + bptBalanceAfter);
-  console.log("minBptBalanceExpected: " + (BigInt(bptBalanceBefore.toString()) + BigInt(minBPTOut)));
-  console.log("tokensBalanceBefore: " + tokensBalanceBefore.map(b => b.toString()));
-  console.log("tokensBalanceAfter: " + tokensBalanceAfter.map(b => b.toString()));
+  console.log(
+    `${removeItem(
+      tokensBalanceAfter,
+      pool.bptIndex
+    ).toString()}: tokensBalanceAfter`
+  );
+  console.log(`${tokensBalanceAfter[pool.bptIndex]}: bptBalanceAfter`);
+  console.log(`${expectedBPTOut}: expectedBptOut`);
 }
 
-export default composableStableJoin();
+joinPoolExample();
