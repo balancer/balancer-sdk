@@ -264,6 +264,7 @@ export enum PoolType {
   LiquidityBootstrapping = 'LiquidityBootstrapping',
   AaveLinear = 'AaveLinear',
   Linear = 'Linear',
+  EulerLinear = 'EulerLinear',
   ERC4626Linear = 'ERC4626Linear',
   Element = 'Element',
   Gyro2 = 'Gyro2',
