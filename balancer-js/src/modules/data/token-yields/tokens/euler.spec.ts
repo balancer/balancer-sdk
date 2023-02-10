@@ -24,6 +24,12 @@ const mockedResponse = {
         eTokenAddress: '0x4d19f33948b99800b6113ff3e83bec9b537c85d2',
         supplyAPY: '33108868689548850071843475',
       },
+      {
+        id: '0x853d955acef822db058eb8505911ed77f175b99e',
+        name: 'Frax',
+        eTokenAddress: '0x5484451a88a35cd0878a1be177435ca8a0e4054e',
+        supplyAPY: '3572674641745548177241989',
+      },
     ],
   },
 };
@@ -43,11 +49,14 @@ describe('euler apr', () => {
   });
 
   it('is getting fetched', async () => {
-    const eUSDTapr = (await euler())[yieldTokens.eUSDT];
+    const aprs = await euler();
+    const eUSDTapr = aprs[yieldTokens.eUSDT];
     expect(eUSDTapr).to.eq(331);
-    const eUSDCapr = (await euler())[yieldTokens.eUSDC];
+    const eUSDCapr = aprs[yieldTokens.eUSDC];
     expect(eUSDCapr).to.eq(227);
-    const eDAIapr = (await euler())[yieldTokens.eDAI];
+    const eDAIapr = aprs[yieldTokens.eDAI];
     expect(eDAIapr).to.eq(172);
+    const eFRAXapr = aprs[yieldTokens.eFRAX];
+    expect(eFRAXapr).to.eq(36);
   });
 });
