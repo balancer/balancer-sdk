@@ -8,7 +8,8 @@ import { setUpExample } from './helper';
 import { removeItem } from "@/index";
 
 async function joinPoolExample() {
-  const rpcUrl = 'http://127.0.0.1:8545';
+  const { ALCHEMY_URL: rpcUrlArchive } = process.env;
+  const rpcUrlLocal = 'http://127.0.0.1:8545';
   const network = Network.MAINNET;
   const poolToJoin = '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d';
   const tokensIn = [
@@ -24,7 +25,7 @@ async function joinPoolExample() {
   const slippage = '100'; // 1%
 
   // Example runs against a local fork of mainnet state. This sets up local fork with required token balances and approvals and retrieves pool data
-  const { pool, signer } = await setUpExample(rpcUrl, network, tokensIn, [0, 0, 0], amountsIn, poolToJoin, 16350000);
+  const { pool, signer } = await setUpExample(rpcUrlArchive as string, rpcUrlLocal, network, tokensIn, [0, 0, 0], amountsIn, poolToJoin, 16350000);
 
   const signerAddress = await signer.getAddress();
 

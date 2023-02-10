@@ -7,7 +7,8 @@ import { getBalances } from "@/test/lib/utils";
 import { setUpExample } from './helper';
 
 async function exitPoolExample() {
-  const rpcUrl = 'http://127.0.0.1:8545';
+  const { ALCHEMY_URL: rpcUrlArchive } = process.env;
+  const rpcUrlLocal = 'http://127.0.0.1:8545';
   const network = Network.MAINNET;
   const bptIn = parseFixed('10', 18).toString();
   const slippage = '100'; // 1%
@@ -17,7 +18,7 @@ async function exitPoolExample() {
   }
 
   // Example runs against a local fork of mainnet state. This sets up local fork with required BPT balance and retrieves pool data
-  const { pool, signer } = await setUpExample(rpcUrl, network, [poolToExit.address], [0], [bptIn], poolToExit.id, 16350000);
+  const { pool, signer } = await setUpExample(rpcUrlArchive as string, rpcUrlLocal, network, [poolToExit.address], [0], [bptIn], poolToExit.id, 16350000);
 
   const signerAddress = await signer.getAddress();
 
