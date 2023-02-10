@@ -18,6 +18,7 @@ export const getEncoder = (
     case PoolType.MetaStable:
     case PoolType.StablePhantom:
     case PoolType.AaveLinear:
+    case PoolType.EulerLinear:
     case PoolType.ERC4626Linear:
     case PoolType.Element:
     case PoolType.Gyro2:
