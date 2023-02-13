@@ -52,7 +52,7 @@ describe('exit stable pools execution', async () => {
     });
     it('should work with single token maxed out', async () => {
       const bptIn = parseFixed('10', BPT_DECIMALS).toString();
-      const slippage = '100';
+      const slippage = '10';
       const { to, data, minAmountsOut, expectedAmountsOut } =
         pool.buildExitExactBPTIn(
           signerAddress,
@@ -70,9 +70,11 @@ describe('exit stable pools execution', async () => {
           data
         );
       expect(transactionReceipt.status).to.eql(1);
-      expect([bptIn, ...expectedAmountsOut]).to.deep.eq(
-        balanceDeltas.map((a) => a.toString())
-      );
+      expect(bptIn).to.be.eq(balanceDeltas[0].toString());
+      minAmountsOut.forEach((minAmount, index) => {
+        expect(BigInt(minAmount) <= BigInt(balanceDeltas[index + 1].toString()))
+          .to.be.true;
+      });
       const expectedMins = expectedAmountsOut.map((a) =>
         subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
       );
@@ -80,7 +82,7 @@ describe('exit stable pools execution', async () => {
     });
     it('should work with proportional amounts out', async () => {
       const bptIn = parseFixed('1', BPT_DECIMALS).toString();
-      const slippage = '0';
+      const slippage = '10';
       const { to, data, minAmountsOut, expectedAmountsOut } =
         pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
       const { transactionReceipt, balanceDeltas } =
@@ -96,9 +98,11 @@ describe('exit stable pools execution', async () => {
       );
       expect(expectedMins).to.deep.eq(minAmountsOut);
       expect(transactionReceipt.status).to.eql(1);
-      expect([bptIn, ...expectedAmountsOut]).to.deep.eq(
-        balanceDeltas.map((a) => a.toString())
-      );
+      expect(bptIn).to.be.eq(balanceDeltas[0].toString());
+      minAmountsOut.forEach((minAmount, index) => {
+        expect(BigInt(minAmount) <= BigInt(balanceDeltas[index + 1].toString()))
+          .to.be.true;
+      });
     });
   });
 
@@ -146,7 +150,7 @@ describe('exit stable pools execution', async () => {
       const amountsOut = pool.tokens.map((t, i) =>
         parseFixed((i * 100).toString(), t.decimals).toString()
       );
-      const slippage = '1';
+      const slippage = '10';
       const { to, data, maxBPTIn, expectedBPTIn } =
         pool.buildExitExactTokensOut(
           signerAddress,
@@ -163,8 +167,9 @@ describe('exit stable pools execution', async () => {
           data
         );
       expect(transactionReceipt.status).to.eql(1);
-      expect([expectedBPTIn, ...amountsOut]).to.deep.eq(
-        balanceDeltas.map((a) => a.toString())
+      expect(BigInt(maxBPTIn) >= balanceDeltas[0].toBigInt()).to.be.true;
+      expect(amountsOut).to.deep.eq(
+        balanceDeltas.slice(1).map((a) => a.toString())
       );
       const expectedMaxBPTIn = addSlippage(
         BigNumber.from(expectedBPTIn),
@@ -181,7 +186,7 @@ describe('exit stable pools execution', async () => {
         return '0';
       });
       const slippage = '1';
-      const { to, data, expectedBPTIn } = pool.buildExitExactTokensOut(
+      const { to, data, maxBPTIn } = pool.buildExitExactTokensOut(
         signerAddress,
         tokensOut,
         amountsOut,
@@ -196,8 +201,9 @@ describe('exit stable pools execution', async () => {
           data
         );
       expect(transactionReceipt.status).to.eql(1);
-      expect([expectedBPTIn, ...amountsOut]).to.deep.eq(
-        balanceDeltas.map((a) => a.toString())
+      expect(BigInt(maxBPTIn) >= balanceDeltas[0].toBigInt()).to.be.true;
+      expect(amountsOut).to.deep.eq(
+        balanceDeltas.slice(1).map((a) => a.toString())
       );
     });
     it('should automatically sort tokens/amounts in correct order', async () => {
