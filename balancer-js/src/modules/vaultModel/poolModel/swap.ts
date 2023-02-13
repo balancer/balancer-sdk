@@ -4,10 +4,15 @@ import { bnum } from '@balancer-labs/sor';
 
 import { PoolDictionary, Pool } from '../poolSource';
 import { EncodeBatchSwapInput } from '@/modules/relayer/types';
-import { SwapType } from '@/modules/swaps/types';
+import { Swap, SwapType } from '@/modules/swaps/types';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { RelayerModel } from '../relayer';
 import { ActionType } from '../vaultModel.module';
+
+export interface SwapRequest
+  extends Pick<Swap, 'request' | 'funds' | 'outputReference'> {
+  actionType: ActionType.Swap;
+}
 
 export interface BatchSwapRequest
   extends Pick<
@@ -19,6 +24,41 @@ export interface BatchSwapRequest
 
 export class SwapModel {
   constructor(private relayerModel: RelayerModel) {}
+
+  /**
+   * Performs a single swap with one pool.
+   * @param swapRequest
+   * @returns Returns the net Vault asset balance delta. Positive amount represent token (or ETH) sent to the Vault, and negative amount represent token (or ETH) sent by the Vault. Delta corresponds to the asset out.
+   */
+  async doSingleSwap(
+    swapRequest: SwapRequest,
+    pools: PoolDictionary
+  ): Promise<string[]> {
+    const amountIn = this.relayerModel.doChainedRefReplacement(
+      swapRequest.request.amount.toString()
+    );
+
+    const pool = pools[swapRequest.request.poolId];
+    const [, amountOutEvm] = this.doSwap(
+      swapRequest.request.assetIn,
+      swapRequest.request.assetOut,
+      pool,
+      swapRequest.request.kind,
+      amountIn
+    );
+
+    const delta = Zero.sub(amountOutEvm);
+
+    // Swap return values are signed, as they are Vault deltas (positive values correspond to assets sent
+    // to the Vault, and negative values are assets received from the Vault). To simplify the chained reference
+    // value model, we simply store the absolute value.
+    this.relayerModel.setChainedReferenceValue(
+      Zero.toString(), // TODO: check if we have to handle this key differently
+      delta.abs().toString()
+    );
+    return [delta.toString(), amountIn];
+  }
+
   /**
    * Performs a series of swaps with one or multiple Pools.
    * @param batchSwapRequest
