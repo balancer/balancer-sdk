@@ -18,7 +18,6 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { balancerVault } from '@/lib/constants/config';
 import { Vault__factory } from '@balancer-labs/typechain';
-import { AddressZero } from '@ethersproject/constants';
 import { _upscaleArray } from '@/lib/utils/solidityMaths';
 import { Pool } from '@/types';
 
