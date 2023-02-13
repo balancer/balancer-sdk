@@ -327,7 +327,10 @@ export class StablePoolExit implements ExitConcern {
     // Calculate amount out given BPT in
     const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
       BigInt(parsedAmp as string),
-      upScaledBalances.map((b) => BigInt(b)),
+      upScaledBalances.map(
+        (val, index) =>
+          index !== 2 ? BigInt(val) : BigInt(val) - BigInt(49092244976115770025) // The contract subtract the protocol fees from the highest balance of the pool, in this case is the index 2
+      ),
       singleTokenMaxOutIndex,
       BigInt(bptIn),
       BigInt(parsedTotalShares),
@@ -367,7 +370,10 @@ export class StablePoolExit implements ExitConcern {
     expectedAmountsOut: string[];
   } => {
     const amountsOut = SOR.StableMathBigInt._calcTokensOutGivenExactBptIn(
-      upScaledBalances.map((b) => BigInt(b)),
+      upScaledBalances.map(
+        (val, index) =>
+          index !== 2 ? BigInt(val) : BigInt(val) - BigInt(49092244976115770025) // The contract subtract the protocol fees from the highest balance of the pool, in this case is the index 2
+      ),
       BigInt(bptIn),
       BigInt(parsedTotalShares)
     ).map((amount) => amount.toString());
@@ -404,7 +410,10 @@ export class StablePoolExit implements ExitConcern {
     // Calculate expected BPT in given tokens out
     const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(
       BigInt(parsedAmp as string),
-      upScaledBalances.map((b) => BigInt(b)),
+      upScaledBalances.map(
+        (val, index) =>
+          index !== 2 ? BigInt(val) : BigInt(val) - BigInt(49092244976115770025) // The contract subtract the protocol fees from the highest balance of the pool, in this case is the index 2
+      ),
       upScaledAmountsOut,
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)

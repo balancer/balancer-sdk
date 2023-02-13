@@ -51,8 +51,8 @@ describe('exit stable pools execution', async () => {
       signerAddress = await signer.getAddress();
     });
     it('should work with single token maxed out', async () => {
-      const bptIn = parseFixed('10', BPT_DECIMALS).toString();
-      const slippage = '100';
+      const bptIn = parseFixed('100', BPT_DECIMALS).toString();
+      const slippage = '0';
       const { to, data, minAmountsOut, expectedAmountsOut } =
         pool.buildExitExactBPTIn(
           signerAddress,
@@ -79,7 +79,7 @@ describe('exit stable pools execution', async () => {
       expect(expectedMins).to.deep.eq(minAmountsOut);
     });
     it('should work with proportional amounts out', async () => {
-      const bptIn = parseFixed('1', BPT_DECIMALS).toString();
+      const bptIn = parseFixed('10', BPT_DECIMALS).toString();
       const slippage = '0';
       const { to, data, minAmountsOut, expectedAmountsOut } =
         pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
@@ -146,7 +146,7 @@ describe('exit stable pools execution', async () => {
       const amountsOut = pool.tokens.map((t, i) =>
         parseFixed((i * 100).toString(), t.decimals).toString()
       );
-      const slippage = '1';
+      const slippage = '0';
       const { to, data, maxBPTIn, expectedBPTIn } =
         pool.buildExitExactTokensOut(
           signerAddress,
@@ -180,7 +180,7 @@ describe('exit stable pools execution', async () => {
         }
         return '0';
       });
-      const slippage = '1';
+      const slippage = '0';
       const { to, data, expectedBPTIn } = pool.buildExitExactTokensOut(
         signerAddress,
         tokensOut,
@@ -205,7 +205,7 @@ describe('exit stable pools execution', async () => {
       const amountsOut = pool.tokens.map((t, i) =>
         parseFixed((i * 100).toString(), t.decimals).toString()
       );
-      const slippage = '10';
+      const slippage = '0';
       // TokensIn are already ordered as required by vault
       const attributesA = pool.buildExitExactTokensOut(
         signerAddress,
