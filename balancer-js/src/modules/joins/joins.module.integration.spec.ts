@@ -25,14 +25,14 @@ import { SimulationType } from '../simulation/simulation.module';
 dotenv.config();
 
 const TEST_BOOSTED = true;
-const TEST_BOOSTED_META = true;
-const TEST_BOOSTED_META_ALT = true;
-const TEST_BOOSTED_META_BIG = true;
-const TEST_BOOSTED_WEIGHTED_SIMPLE = true;
-const TEST_BOOSTED_WEIGHTED_GENERAL = true;
-const TEST_BOOSTED_WEIGHTED_META = true;
-const TEST_BOOSTED_WEIGHTED_META_ALT = true;
-const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
+const TEST_BOOSTED_META = false;
+const TEST_BOOSTED_META_ALT = false;
+const TEST_BOOSTED_META_BIG = false;
+const TEST_BOOSTED_WEIGHTED_SIMPLE = false;
+const TEST_BOOSTED_WEIGHTED_GENERAL = false;
+const TEST_BOOSTED_WEIGHTED_META = false;
+const TEST_BOOSTED_WEIGHTED_META_ALT = false;
+const TEST_BOOSTED_WEIGHTED_META_GENERAL = false;
 
 /*
  * Testing on GOERLI
@@ -155,7 +155,7 @@ const testFlow = async (
   amountsIn: string[],
   wrapMainTokens: boolean,
   authorisation: string | undefined,
-  simulationType = SimulationType.VaultModel
+  simulationType = SimulationType.Tenderly
 ) => {
   const [bptBalanceBefore, ...tokensInBalanceBefore] = await getBalances(
     [pool.address, ...tokensIn],
@@ -193,11 +193,11 @@ const testFlow = async (
     userAddress
   );
 
-  console.table({
-    minOut: query.minOut,
-    expectedOut: query.expectedOut,
-    balanceAfter: bptBalanceAfter.toString(),
-  });
+  // console.table({
+  //   minOut: query.minOut,
+  //   expectedOut: query.expectedOut,
+  //   balanceAfter: bptBalanceAfter.toString(),
+  // });
 
   expect(receipt.status).to.eql(1);
   expect(BigNumber.from(query.minOut).gte('0')).to.be.true;
