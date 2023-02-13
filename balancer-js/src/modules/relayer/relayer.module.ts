@@ -28,6 +28,7 @@ import {
   FundManagement,
   BatchSwapStep,
   FetchPoolsInput,
+  Swap,
 } from '../swaps/types';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { RelayerAuthorization } from '@/lib/utils';
@@ -96,6 +97,18 @@ export class Relayer {
       sender,
       recipient,
       amount,
+    ]);
+  }
+
+  // TODO: check if it's ok to import Swap from swaps module - alternatives: move to common module or duplicate within relayer types
+  static encodeSwap(params: Swap): string {
+    return relayerLibrary.encodeFunctionData('swap', [
+      params.request,
+      params.funds,
+      params.limit,
+      params.deadline,
+      params.value,
+      params.outputReference,
     ]);
   }
 
