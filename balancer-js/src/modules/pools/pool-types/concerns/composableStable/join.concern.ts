@@ -11,6 +11,7 @@ import {
   parsePoolInfo,
   insert,
   reorderArrays,
+  getEthValue,
 } from '@/lib/utils';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -55,7 +56,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
     });
 
     // If joining with a native asset value must be set in call
-    const value = this.getEthValue(joinParams.tokensIn, joinParams.amountsIn);
+    const value = getEthValue(joinParams.tokensIn, joinParams.amountsIn);
 
     return {
       ...encodedData,
@@ -291,12 +292,6 @@ export class ComposableStablePoolJoin implements JoinConcern {
       minBPTOut: userData.minBPTOut,
       expectedBPTOut: expectedBPTOut.toString(),
     };
-  }
-
-  // filter native asset (e.g. ETH) amounts
-  getEthValue(tokens: string[], amounts: string[]): BigNumber | undefined {
-    const values = amounts.filter((amount, i) => tokens[i] === AddressZero);
-    return values[0] ? BigNumber.from(values[0]) : undefined;
   }
 
   calcBptOutGivenExactTokensIn(
