@@ -32,6 +32,7 @@ type JoinAction =
   | 'wrapERC4626';
 const joinActions = new Map<PoolType, JoinAction>();
 joinActions.set(PoolType.AaveLinear, 'batchSwap');
+joinActions.set(PoolType.EulerLinear, 'batchSwap');
 joinActions.set(PoolType.ERC4626Linear, 'batchSwap');
 joinActions.set(PoolType.Element, 'batchSwap');
 joinActions.set(PoolType.Investment, 'joinPool');
@@ -51,6 +52,7 @@ type ExitAction =
   | 'unwrapERC4626';
 const exitActions = new Map<PoolType, ExitAction>();
 exitActions.set(PoolType.AaveLinear, 'batchSwap');
+joinActions.set(PoolType.EulerLinear, 'batchSwap');
 exitActions.set(PoolType.ERC4626Linear, 'batchSwap');
 exitActions.set(PoolType.Element, 'batchSwap');
 exitActions.set(PoolType.Investment, 'exitPool');

@@ -24,6 +24,12 @@ export function insert<T>(arr: T[], index: number, newItem: T): T[] {
   ];
 }
 
+/**
+ * Removes item from array at specified index and returns new array. (Does not mutate original)
+ * @param arr Original array
+ * @param index Index of item to be removed
+ * @returns New array with item at index removed
+ */
 export function removeItem<T>(arr: T[], index: number): T[] {
   const newArray = [...arr];
   newArray.splice(index, 1);

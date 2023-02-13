@@ -53,6 +53,7 @@ export class PoolTypeConcerns {
         return new StablePhantom();
       }
       case 'AaveLinear':
+      case 'EulerLinear':
       case 'ERC4626Linear': {
         return new Linear();
       }

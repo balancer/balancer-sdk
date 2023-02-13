@@ -1,40 +1,45 @@
-
-import hardhat from "hardhat";
-import { JsonRpcSigner } from "@ethersproject/providers";
-import { Network, PoolWithMethods } from "@/.";
-import { forkSetup, TestPoolHelper } from "@/test/lib/utils";
+import { JsonRpcSigner, JsonRpcProvider } from '@ethersproject/providers';
+import { Network, PoolWithMethods } from '@/.';
+import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
 
 /**
  * Sets up fork with configure balances/allowances. Retrieves pool state for specific ID at blockNo.
- * (fetching all pool data against a local fork causes timeouts so this keeps it efficient) 
- * @param rpcUrl 
- * @param network 
- * @param tokens 
- * @param balances 
- * @param poolId 
- * @returns 
+ * (fetching all pool data against a local fork causes timeouts so this keeps it efficient)
+ * @param rpcUrlArchive
+ * @param rpcUrlLocal
+ * @param network
+ * @param tokens
+ * @param slots
+ * @param balances
+ * @param poolId
+ * @param blockNo
+ * @returns
  */
-export  async function setUpExample(rpcUrl: string, network: Network, tokens: string[], slots: number[], balances: string[], poolId: string, blockNo: number): Promise<{ pool: PoolWithMethods, signer: JsonRpcSigner}> {
-  const { ALCHEMY_URL: jsonRpcUrl } = process.env;
-  const provider = new hardhat.ethers.providers.JsonRpcProvider(rpcUrl, network);
+export async function setUpExample(
+  rpcUrlArchive: string,
+  rpcUrlLocal: string,
+  network: Network,
+  tokens: string[],
+  slots: number[],
+  balances: string[],
+  poolId: string,
+  blockNo: number
+): Promise<{ pool: PoolWithMethods; signer: JsonRpcSigner }> {
+  // const provider = new hardhat.ethers.providers.JsonRpcProvider(rpcUrlLocal, network);
+  const provider = new JsonRpcProvider(rpcUrlLocal, network);
   const signer = provider.getSigner();
   await forkSetup(
     signer,
     tokens,
     slots,
     balances,
-    jsonRpcUrl as string,
+    rpcUrlArchive as string,
     blockNo
   );
-  const testPool = new TestPoolHelper(
-    poolId,
-    network,
-    rpcUrl,
-    blockNo
-  );
+  const testPool = new TestPoolHelper(poolId, network, rpcUrlLocal, blockNo);
   const pool = await testPool.getPool();
   return {
     pool,
     signer,
-  }
+  };
 }

@@ -17,6 +17,8 @@ const tokens = [
   '0x3a58a54c066fdc0f2d55fc9c89f0415c92ebf3c4', // stMatic (polygon)
   '0xfa68fb4628dff1028cfec22b4162fccd0d45efb6', // maticX (polygon)
   '0xaf0d9d65fc54de245cda37af3d18cbec860a4d4b', // USDR
+  '0xeb91861f8a4e1c12333f42dce8fb0ecdc28da716', // eUSDC
+  '0x5484451a88a35cd0878a1be177435ca8a0e4054e', // eFRAX
 ];
 
 const main = async () => {

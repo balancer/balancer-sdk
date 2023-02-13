@@ -343,7 +343,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
     if (!parsedAmp) {
       throw new BalancerError(BalancerErrorCode.MISSING_AMP);
     }
-    // Reorder amountsIn to match pool token order
+    // Reorder amountsIn to match pool token order TODO - May have issues when adding native tokens to this mix.
     const [sortedAmountsIn] = reorderArrays(
       parsedTokensWithoutBpt,
       tokensIn,
