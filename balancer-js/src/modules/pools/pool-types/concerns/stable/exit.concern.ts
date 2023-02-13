@@ -16,7 +16,11 @@ import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { balancerVault } from '@/lib/constants/config';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { StablePoolEncoder } from '@/pool-stable';
-import { _downscaleDownArray, _upscaleArray } from '@/lib/utils/solidityMaths';
+import {
+  _downscaleDown,
+  _downscaleDownArray,
+  _upscaleArray,
+} from '@/lib/utils/solidityMaths';
 import { Pool } from '@/types';
 
 interface SortedValues {
@@ -242,26 +246,19 @@ export class StablePoolExit implements ExitConcern {
     shouldUnwrapNativeAsset,
     singleTokenMaxOut,
   }: SortValuesExactBptInParams): ExactBPTInSortedValues => {
+    const parsedPoolInfo = parsePoolInfo(
+      pool,
+      wrappedNativeAsset,
+      shouldUnwrapNativeAsset
+    );
     // Parse pool info into EVM amounts in order to match amountsIn scalling
-    const {
-      parsedTokens,
-      parsedAmp,
-      parsedTotalShares,
-      parsedSwapFee,
-      upScaledBalances,
-      scalingFactors,
-    } = parsePoolInfo(pool, wrappedNativeAsset, shouldUnwrapNativeAsset);
+    const { parsedTokens } = parsedPoolInfo;
     let singleTokenMaxOutIndex = -1;
     if (singleTokenMaxOut) {
       singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
     }
     return {
-      parsedTokens,
-      parsedAmp,
-      parsedTotalShares,
-      parsedSwapFee,
-      upScaledBalances,
-      scalingFactors,
+      ...parsedPoolInfo,
       singleTokenMaxOutIndex,
     };
   };
@@ -272,14 +269,8 @@ export class StablePoolExit implements ExitConcern {
     tokensOut,
   }: SortValuesExactTokensOutParams): ExactTokensOutSortedValues => {
     // Parse pool info into EVM amounts in order to match amountsOut scaling
-    const {
-      parsedTokens,
-      parsedAmp,
-      parsedTotalShares,
-      parsedSwapFee,
-      upScaledBalances,
-      scalingFactors,
-    } = parsePoolInfo(pool);
+    const parsedPoolInfo = parsePoolInfo(pool);
+    const { scalingFactors } = parsedPoolInfo;
 
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     // Sorts amounts in into ascending order (referenced to token addresses) to match the format expected by the Vault.
@@ -301,11 +292,7 @@ export class StablePoolExit implements ExitConcern {
     });
 
     return {
-      parsedTokens,
-      parsedAmp,
-      parsedTotalShares,
-      parsedSwapFee,
-      upScaledBalances,
+      ...parsedPoolInfo,
       upScaledAmountsOut,
       downScaledAmountsOut,
       downScaledAmountsOutWithRounding,
@@ -320,6 +307,7 @@ export class StablePoolExit implements ExitConcern {
     singleTokenMaxOutIndex,
     bptIn,
     slippage,
+    scalingFactors,
   }: Pick<
     ExactBPTInSortedValues,
     | 'parsedTokens'
@@ -328,6 +316,7 @@ export class StablePoolExit implements ExitConcern {
     | 'parsedTotalShares'
     | 'parsedSwapFee'
     | 'singleTokenMaxOutIndex'
+    | 'scalingFactors'
   > &
     Pick<ExitExactBPTInParameters, 'bptIn' | 'slippage'>): {
     minAmountsOut: string[];
@@ -345,10 +334,15 @@ export class StablePoolExit implements ExitConcern {
       BigInt(parsedSwapFee)
     ).toString();
 
-    expectedAmountsOut[singleTokenMaxOutIndex] = amountOut;
+    const downscaledAmountOut = _downscaleDown(
+      BigInt(amountOut) - BigInt(1), // The -1 is to solve rounding errors, sometimes the amount comes 1 point lower than expected
+      scalingFactors[singleTokenMaxOutIndex]
+    ).toString();
+
+    expectedAmountsOut[singleTokenMaxOutIndex] = downscaledAmountOut;
     // Apply slippage tolerance
     minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
-      BigNumber.from(amountOut),
+      BigNumber.from(downscaledAmountOut),
       BigNumber.from(slippage)
     ).toString();
 
@@ -444,7 +438,6 @@ export class StablePoolExit implements ExitConcern {
         toInternalBalance: false,
       },
     };
-
     // Encode transaction data into an ABI byte string which can be sent to the network to be executed
     const vaultInterface = Vault__factory.createInterface();
     const data = vaultInterface.encodeFunctionData(functionName, [
