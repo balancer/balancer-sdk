@@ -59,8 +59,9 @@ describe('join execution', async () => {
       slots,
       balances,
       jsonRpcUrl as string,
-      14717479 // holds the same state as the static repository
+      blockNumber
     );
+    pool = await testPoolHelper.getPool(); //Updates the pool with the new state from the forked setup
     signerAddress = await signer.getAddress();
   });
   it('should join with encoded data', async () => {
@@ -125,5 +126,56 @@ describe('join execution', async () => {
     expect(errorMessage).to.contain(
       BalancerError.getMessage(BalancerErrorCode.INPUT_LENGTH_MISMATCH)
     );
+  });
+  it('should join using encoded data - single token has value', async () => {
+    const tokensIn = pool.tokensList;
+    const amountsIn = Array(tokensIn.length).fill('0');
+    amountsIn[0] = parseFixed('202', 18).toString();
+    const slippage = '6';
+    const { to, data, minBPTOut, expectedBPTOut } = pool.buildJoin(
+      signerAddress,
+      tokensIn,
+      amountsIn,
+      slippage
+    );
+
+    const { transactionReceipt, balanceDeltas } =
+      await sendTransactionGetBalances(
+        pool.tokensList,
+        signer,
+        signerAddress,
+        to,
+        data
+      );
+
+    expect(transactionReceipt.status).to.eq(1);
+    expect(BigInt(expectedBPTOut) > 0).to.be.true;
+    expect(amountsIn).to.deep.eq(balanceDeltas.map((a) => a.toString()));
+    const expectedMinBpt = subSlippage(
+      BigNumber.from(expectedBPTOut),
+      BigNumber.from(slippage)
+    ).toString();
+    expect(expectedMinBpt).to.deep.eq(minBPTOut);
+  });
+  it('should return correct attributes for joining', async () => {
+    const tokensIn = pool.tokensList;
+    const amountsIn = pool.tokens.map((t, i) =>
+      parseFixed((i * 100).toString(), t.decimals).toString()
+    );
+    const slippage = '6';
+    const { attributes, functionName } = pool.buildJoin(
+      signerAddress,
+      tokensIn,
+      amountsIn,
+      slippage
+    );
+
+    expect(functionName).to.eq('joinPool');
+    expect(attributes.poolId).to.eq(testPoolId);
+    expect(attributes.recipient).to.eq(signerAddress);
+    expect(attributes.sender).to.eq(signerAddress);
+    expect(attributes.joinPoolRequest.assets).to.deep.eq(pool.tokensList);
+    expect(attributes.joinPoolRequest.fromInternalBalance).to.be.false;
+    expect(attributes.joinPoolRequest.maxAmountsIn).to.deep.eq(amountsIn);
   });
 }).timeout(20000);

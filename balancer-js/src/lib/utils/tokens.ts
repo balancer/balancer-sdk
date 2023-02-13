@@ -1,6 +1,8 @@
 import { Token, TokenPrices, Network } from '@/types';
 import { TOKENS } from '@/lib/constants/tokens';
 import { wrappedTokensMap as aaveWrappedMap } from '@/modules/data/token-yields/tokens/aave';
+import { BigNumber } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
 
 export function tokensToTokenPrices(tokens: Token[]): TokenPrices {
   const tokenPrices: TokenPrices = {};
@@ -64,4 +66,13 @@ export const unwrapToken = (
   } else {
     return lowercase;
   }
+};
+
+// filter native asset (e.g. ETH) amounts
+export const getEthValue = (
+  tokens: string[],
+  amounts: string[]
+): BigNumber | undefined => {
+  const values = amounts.filter((amount, i) => tokens[i] === AddressZero);
+  return values[0] ? BigNumber.from(values[0]) : undefined;
 };

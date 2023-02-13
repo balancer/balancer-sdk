@@ -1,10 +1,9 @@
-import { BigNumber } from '@ethersproject/bignumber';
-import { AddressZero } from '@ethersproject/constants';
 import * as SOR from '@balancer-labs/sor';
 import { Vault__factory } from '@balancer-labs/typechain';
+import { BigNumber } from '@ethersproject/bignumber';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { balancerVault } from '@/lib/constants/config';
-import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
+import { AssetHelpers, getEthValue, parsePoolInfo } from '@/lib/utils';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { _upscaleArray } from '@/lib/utils/solidityMaths';
 import { StablePoolEncoder } from '@/pool-stable';
@@ -81,6 +80,12 @@ export class StablePoolJoin implements JoinConcern {
     };
   };
 
+  /**
+   * Check if the input parameters of the buildJoin function are right
+   * @param amountsIn Must have an amount for each token, if the user will not deposit any amount for a token, the value shall be '0'
+   * @param tokensIn Must contain all the tokens of the pool
+   * @param pool The pool that is being joined
+   */
   checkInputs = (amountsIn: string[], tokensIn: string[], pool: Pool): void => {
     if (
       tokensIn.length != amountsIn.length ||
@@ -115,7 +120,7 @@ export class StablePoolJoin implements JoinConcern {
     } = parsePoolInfo(pool, wrappedNativeAsset);
 
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    // sort inputs
+    // Sorts amounts in into ascending order (referenced to token addresses) to match the format expected by the Vault.
     const [, sortedAmountsIn] = assetHelpers.sortTokens(
       tokensIn,
       amountsIn
@@ -210,14 +215,16 @@ export class StablePoolJoin implements JoinConcern {
       attributes.recipient,
       attributes.joinPoolRequest,
     ]);
-    const values = amountsIn.filter((amount, i) => tokensIn[i] === AddressZero); // filter native asset (e.g. ETH) amounts
-    const value = values[0] ? BigNumber.from(values[0]) : undefined;
+
+    // If joining with a native asset value must be set in call
+    const value = getEthValue(tokensIn, amountsIn);
+
     return {
-      value,
-      data,
-      to,
-      functionName,
       attributes,
+      data,
+      functionName,
+      to,
+      value,
     };
   };
 }
