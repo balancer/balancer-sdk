@@ -7,6 +7,8 @@ import { Findable } from '../data/types';
 import { PoolTypeConcerns } from '../pools/pool-type-concerns';
 
 type SpotPrices = { [tokenIn: string]: string };
+
+const supportedPoolTypes: string[] = Object.values(PoolType);
 export interface Node {
   address: string;
   id: string;
@@ -31,9 +33,10 @@ type JoinAction =
   | 'wrapAaveDynamicToken'
   | 'wrapERC4626';
 const joinActions = new Map<PoolType, JoinAction>();
-joinActions.set(PoolType.AaveLinear, 'batchSwap');
-joinActions.set(PoolType.EulerLinear, 'batchSwap');
-joinActions.set(PoolType.ERC4626Linear, 'batchSwap');
+supportedPoolTypes.forEach((type) => {
+  if (type.includes('Linear') && supportedPoolTypes.includes(type))
+    joinActions.set(type as PoolType, 'batchSwap');
+});
 joinActions.set(PoolType.Element, 'batchSwap');
 joinActions.set(PoolType.Investment, 'joinPool');
 joinActions.set(PoolType.LiquidityBootstrapping, 'joinPool');
@@ -51,9 +54,10 @@ type ExitAction =
   | 'unwrapAaveStaticToken'
   | 'unwrapERC4626';
 const exitActions = new Map<PoolType, ExitAction>();
-exitActions.set(PoolType.AaveLinear, 'batchSwap');
-joinActions.set(PoolType.EulerLinear, 'batchSwap');
-exitActions.set(PoolType.ERC4626Linear, 'batchSwap');
+supportedPoolTypes.forEach((type) => {
+  if (type.includes('Linear') && supportedPoolTypes.includes(type))
+    exitActions.set(type as PoolType, 'batchSwap');
+});
 exitActions.set(PoolType.Element, 'batchSwap');
 exitActions.set(PoolType.Investment, 'exitPool');
 exitActions.set(PoolType.LiquidityBootstrapping, 'exitPool');
