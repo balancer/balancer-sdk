@@ -28,7 +28,7 @@ export class PoolsBalancerAPIRepository
   private client: BalancerAPIClient;
   public pools: Pool[] = [];
   public skip = 0; // Keep track of how many pools to skip on next fetch, so this functions similar to subgraph repository.
-  public nextToken: string | undefined; // A token to pass to the next query to retrieve the next page of results.
+  public nextToken: string | undefined | null; // A token to pass to the next query to retrieve the next page of results. Undefined initially, null when there are no more results.
   private query: GraphQLQuery;
 
   constructor(options: PoolsBalancerAPIOptions) {
@@ -62,7 +62,7 @@ export class PoolsBalancerAPIRepository
     delete this.query.args.skip;
   }
 
-  fetchFromCache(options?: PoolsRepositoryFetchOptions): Pool[] {
+  private fetchFromCache(options?: PoolsRepositoryFetchOptions): Pool[] {
     const first = options?.first || DEFAULT_FIRST;
     const skip = options?.skip || DEFAULT_SKIP;
 
@@ -73,8 +73,9 @@ export class PoolsBalancerAPIRepository
 
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
     if (
+      this.nextToken === null ||
       this.pools.length >
-      (options?.first || DEFAULT_FIRST) + (options?.skip || DEFAULT_SKIP)
+        (options?.first || DEFAULT_FIRST) + (options?.skip || DEFAULT_SKIP)
     ) {
       return this.fetchFromCache(options);
     }
