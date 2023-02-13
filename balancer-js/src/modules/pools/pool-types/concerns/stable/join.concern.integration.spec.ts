@@ -1,16 +1,14 @@
 /* eslint-disable no-unexpected-multiline */
-import dotenv from 'dotenv';
+import { parseFixed, BigNumber } from '@ethersproject/bignumber';
 import { expect } from 'chai';
+import dotenv from 'dotenv';
+import hardhat from 'hardhat';
 import {
   BalancerError,
   BalancerErrorCode,
   Network,
   PoolWithMethods,
 } from '@/.';
-import hardhat from 'hardhat';
-
-import { parseFixed, BigNumber } from '@ethersproject/bignumber';
-
 import { ADDRESSES } from '@/test/lib/constants';
 import {
   forkSetup,

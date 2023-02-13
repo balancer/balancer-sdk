@@ -1,21 +1,20 @@
+import { BigNumber } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
 import * as SOR from '@balancer-labs/sor';
-
+import { Vault__factory } from '@balancer-labs/typechain';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { balancerVault } from '@/lib/constants/config';
+import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
+import { subSlippage } from '@/lib/utils/slippageHelper';
+import { _upscaleArray } from '@/lib/utils/solidityMaths';
+import { StablePoolEncoder } from '@/pool-stable';
+import { Pool } from '@/types';
 import {
   JoinConcern,
   JoinPool,
   JoinPoolAttributes,
   JoinPoolParameters,
 } from '../types';
-import { subSlippage } from '@/lib/utils/slippageHelper';
-import { AssetHelpers, parsePoolInfo } from '@/lib/utils';
-import { balancerVault } from '@/lib/constants/config';
-import { Vault__factory } from '@balancer-labs/typechain';
-import { BigNumber } from '@ethersproject/bignumber';
-import { AddressZero } from '@ethersproject/constants';
-import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { StablePoolEncoder } from '@/pool-stable';
-import { _upscaleArray } from '@/lib/utils/solidityMaths';
-import { Pool } from '@/types';
 
 type SortedValues = {
   parsedTokens: string[];
