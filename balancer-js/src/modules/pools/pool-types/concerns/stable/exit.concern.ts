@@ -63,6 +63,17 @@ type EncodeExitParams = Pick<ExitExactBPTInParameters, 'exiter'> & {
 };
 
 export class StablePoolExit implements ExitConcern {
+  /**
+   * Builds an exit transaction for a stable pool given the exact BPT In
+   * @param exiter Address of the exiter of the pool
+   * @param pool Pool to be exited
+   * @param bptIn quantity of bpt inserted
+   * @param slippage Maximum slippage tolerance in bps i.e. 10000 = 100%, 1 = 0.01%
+   * @param shouldUnwrapNativeAsset Set true if the weth should be unwrapped to Eth
+   * @param wrappedNativeAsset Address of wrapped native asset for specific network config
+   * @param singleTokenMaxOut The address of the token that will be singled withdrawn in the exit transaction,
+   *                          if not passed, the transaction will do a proportional exit where available
+   */
   buildExitExactBPTIn = ({
     exiter,
     pool,
@@ -128,7 +139,7 @@ export class StablePoolExit implements ExitConcern {
     slippage,
     wrappedNativeAsset,
   }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
-    this.checkInputsExactTokensOut(tokensOut, amountsOut, pool);
+    this.checkInputsExactTokensOut(amountsOut, tokensOut, pool);
 
     const sortedValues = this.sortValuesExitExactTokensOut({
       pool,
@@ -165,7 +176,11 @@ export class StablePoolExit implements ExitConcern {
     };
   };
   /**
-   * Checks if the input of buildExitExactBPTIn is valid
+   *  Checks if the input of buildExitExactBPTIn is valid
+   * @param bptIn Bpt inserted in the transaction
+   * @param singleTokenMaxOut (optional) the address of the single token that will be withdrawn, if null|undefined, all tokens will be withdrawn proportionally.
+   * @param pool the pool that is being exited
+   * @param shouldUnwrapNativeAsset Set true if the weth should be unwrapped to Eth
    */
   checkInputsExactBPTIn = ({
     bptIn,
@@ -201,10 +216,13 @@ export class StablePoolExit implements ExitConcern {
   };
   /**
    * Checks if the input of buildExitExactTokensOut is valid
+   * @param amountsOut Must have an amount for each token, if the user will not withdraw any amount for a token, the value shall be '0'
+   * @param tokensOut Must contain all the tokens of the pool
+   * @param pool The pool that is being exited
    */
   checkInputsExactTokensOut = (
-    tokensOut: string[],
     amountsOut: string[],
+    tokensOut: string[],
     pool: Pool
   ): void => {
     if (
@@ -263,8 +281,8 @@ export class StablePoolExit implements ExitConcern {
       scalingFactors,
     } = parsePoolInfo(pool);
 
-    // Sort pool info based on tokens addresses
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+    // Sorts amounts in into ascending order (referenced to token addresses) to match the format expected by the Vault.
     const [, downScaledAmountsOut] = assetHelpers.sortTokens(
       tokensOut,
       amountsOut
@@ -275,6 +293,8 @@ export class StablePoolExit implements ExitConcern {
       downScaledAmountsOut.map((a) => BigInt(a)),
       scalingFactors.map((a) => BigInt(a))
     );
+
+    // This should not be required but there is currently a rounding issue with maths and this will ensure tx
     const downScaledAmountsOutWithRounding = downScaledAmountsOut.map((a) => {
       const value = BigNumber.from(a);
       return value.isZero() ? a : value.sub(1).toString();
