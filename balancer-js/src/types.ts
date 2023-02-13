@@ -262,14 +262,15 @@ export enum PoolType {
   MetaStable = 'MetaStable',
   StablePhantom = 'StablePhantom',
   LiquidityBootstrapping = 'LiquidityBootstrapping',
-  AaveLinear = 'AaveLinear',
-  Linear = 'Linear',
-  EulerLinear = 'EulerLinear',
-  ERC4626Linear = 'ERC4626Linear',
   Element = 'Element',
   Gyro2 = 'Gyro2',
   Gyro3 = 'Gyro3',
   Managed = 'Managed',
+  // Linear Pools defined below all operate the same mathematically but have different factories and names in Subgraph
+  AaveLinear = 'AaveLinear',
+  Linear = 'Linear',
+  EulerLinear = 'EulerLinear',
+  ERC4626Linear = 'ERC4626Linear',
 }
 
 export interface Pool {
