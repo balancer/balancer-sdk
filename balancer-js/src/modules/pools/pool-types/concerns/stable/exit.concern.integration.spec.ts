@@ -38,7 +38,7 @@ describe('StablePool', async () => {
         [BPT_SLOT],
         [parseFixed(initialBalance, 18).toString()],
         jsonRpcUrl as string,
-        blockNumber // holds the same state as the static repository
+        blockNumber
       );
       const testPool = new TestPoolHelper(
         testPoolId,

@@ -1,25 +1,21 @@
 import { parseFixed } from '@ethersproject/bignumber';
 import { expect } from 'chai';
-import { ethers } from 'hardhat';
 
 import { Network, PoolWithMethods } from '@/.';
 import { TestPoolHelper } from '@/test/lib/utils';
 import { AddressZero } from '@ethersproject/constants';
 
-const rpcUrl = '';
+const rpcUrl = 'http://127.0.0.1:8545';
 const network = Network.MAINNET;
-const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
-const signer = provider.getSigner();
 // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
 const blockNumber = 13309758;
 const testPoolId =
   '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063';
 
-describe('exit module', () => {
-  let signerAddress: string;
+describe('StablePool exits', () => {
   let pool: PoolWithMethods;
+  const signerAddress = AddressZero;
   beforeEach(async function () {
-    signerAddress = await signer.getAddress();
     const testPoolHelper = new TestPoolHelper(
       testPoolId,
       network,
@@ -27,7 +23,6 @@ describe('exit module', () => {
       blockNumber
     );
     pool = await testPoolHelper.getPool();
-    signerAddress = await signer.getAddress();
   });
 
   it('should fail due to conflicting inputs', () => {

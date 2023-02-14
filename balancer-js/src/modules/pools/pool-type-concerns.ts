@@ -6,6 +6,7 @@ import { MetaStable } from './pool-types/metaStable.module';
 import { StablePhantom } from './pool-types/stablePhantom.module';
 import { Linear } from './pool-types/linear.module';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { isLinearish } from '@/lib/utils';
 
 /**
  * Wrapper around pool type specific methods.
@@ -52,13 +53,11 @@ export class PoolTypeConcerns {
       case 'StablePhantom': {
         return new StablePhantom();
       }
-      case 'AaveLinear':
-      case 'EulerLinear':
-      case 'ERC4626Linear': {
-        return new Linear();
-      }
-      default:
+      default: {
+        // Handles all Linear pool types
+        if (isLinearish(poolType)) return new Linear();
         throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
+      }
     }
   }
 }

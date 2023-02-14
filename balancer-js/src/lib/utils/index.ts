@@ -1,3 +1,4 @@
+import { PoolType } from '@/types';
 import { getAddress } from '@ethersproject/address';
 
 export * from './aaveHelpers';
@@ -72,4 +73,11 @@ export function reorderArrays<T>(
     });
   });
   return othersResorted;
+}
+
+export function isLinearish(poolType: string): boolean {
+  const supportedPoolTypes: string[] = Object.values(PoolType);
+  if (poolType.includes('Linear') && supportedPoolTypes.includes(poolType))
+    return true;
+  else return false;
 }
