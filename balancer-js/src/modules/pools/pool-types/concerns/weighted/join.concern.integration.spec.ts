@@ -81,7 +81,7 @@ describe('join execution', async () => {
     before(async function () {
       this.timeout(20000);
       amountsIn = tokensIn.map((t, i) =>
-        parseFixed((i * 10).toString(), t.decimals).toString()
+        parseFixed('1', t.decimals).toString()
       );
 
       [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
@@ -100,7 +100,6 @@ describe('join execution', async () => {
       );
 
       const tx = { to, data, gasLimit: 30000000 };
-
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
       [bptBalanceAfter, ...tokensBalanceAfter] = await getBalances(
@@ -121,7 +120,7 @@ describe('join execution', async () => {
         minBPTOut,
         true
       );
-      expect(priceImpact).to.eq('102055375201527');
+      expect(priceImpact).to.eq('618106517703400');
     });
 
     it('should increase BPT balance', async () => {
