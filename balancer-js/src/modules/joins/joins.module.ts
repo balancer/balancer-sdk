@@ -1,22 +1,15 @@
 import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import {
-  AddressZero,
-  MaxInt256,
-  WeiPerEther,
-  Zero,
-} from '@ethersproject/constants';
+import { AddressZero, WeiPerEther, Zero } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
-  EncodeBatchSwapInput,
   EncodeJoinPoolInput,
   EncodeWrapAaveDynamicTokenInput,
   Relayer,
 } from '@/modules/relayer/relayer.module';
 import {
-  BatchSwapStep,
   FundManagement,
   SingleSwap,
   Swap,
@@ -40,7 +33,7 @@ import { WeightedPoolEncoder } from '@/pool-weighted';
 import { getPoolAddress } from '@/pool-utils';
 import { Simulation, SimulationType } from '../simulation/simulation.module';
 import { Requests, VaultModel } from '../vaultModel/vaultModel.module';
-import { BatchSwapRequest, SwapRequest } from '../vaultModel/poolModel/swap';
+import { SwapRequest } from '../vaultModel/poolModel/swap';
 import { JoinPoolRequest as JoinPoolModelRequest } from '../vaultModel/poolModel/join';
 import { JsonRpcSigner } from '@ethersproject/providers';
 
@@ -766,9 +759,9 @@ export class Join {
     assets: string[];
     amounts: string[];
   } => {
-    // We only need batchSwaps for main/wrapped > linearBpt so shouldn't be more than token > token
+    // We only need swaps for main/wrapped > linearBpt so shouldn't be more than token > token
     if (nodeChildrenWithinJoinPath.length !== 1)
-      throw new Error('Unsupported batchswap');
+      throw new Error('Unsupported swap');
     const tokenIn = nodeChildrenWithinJoinPath[0].address;
     const amountIn = this.getOutputRefValue(
       joinPathIndex,
@@ -850,118 +843,6 @@ export class Join {
       node.parent != undefined
         ? '0'
         : BigNumber.from(expectedOut).mul(-1).toString(); // needs to be negative because it's handled by the vault model as an amount going out of the vault
-    const amounts = [userBptOut, userTokenIn];
-
-    return { modelRequest, encodedCall, assets, amounts };
-  };
-
-  private createBatchSwap = (
-    node: Node,
-    nodeChildrenWithinJoinPath: Node[],
-    joinPathIndex: number,
-    expectedOut: string,
-    sender: string,
-    recipient: string
-  ): {
-    modelRequest: BatchSwapRequest;
-    encodedCall: string;
-    assets: string[];
-    amounts: string[];
-  } => {
-    // We only need batchSwaps for main/wrapped > linearBpt so shouldn't be more than token > token
-    if (nodeChildrenWithinJoinPath.length !== 1)
-      throw new Error('Unsupported batchswap');
-    const inputToken = nodeChildrenWithinJoinPath[0].address;
-    const inputValue = this.getOutputRefValue(
-      joinPathIndex,
-      nodeChildrenWithinJoinPath[0]
-    );
-    const assets = [node.address, inputToken];
-
-    // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
-    // First asset will always be the output token (which will be linearBpt) so use expectedOut to set limit
-    // We don't know input amounts if they are part of a chain so set to max input
-    // TODO can we be safer?
-    const limits: string[] = [
-      BigNumber.from(expectedOut).mul(-1).toString(),
-      inputValue.isRef ? MaxInt256.toString() : inputValue.value,
-    ];
-
-    // TODO Change to single swap to save gas
-    const swaps: BatchSwapStep[] = [
-      {
-        poolId: node.id,
-        assetInIndex: 1,
-        assetOutIndex: 0,
-        amount: inputValue.value,
-        userData: '0x',
-      },
-    ];
-
-    const fromInternalBalance = !nodeChildrenWithinJoinPath.some(
-      (c) => c.joinAction === 'input' || c.joinAction === 'joinPool'
-    );
-    const toInternalBalance =
-      node.parent != undefined &&
-      !node.parent.children.some(
-        (sibling) =>
-          (sibling.joinAction === 'input' ||
-            sibling.joinAction === 'joinPool') &&
-          sibling.index != '0' // Siblings with index 0 won't affect the next transaction so they shouldn't be considered
-      );
-
-    const funds: FundManagement = {
-      sender,
-      recipient,
-      fromInternalBalance,
-      toInternalBalance,
-    };
-
-    const outputReferences = [
-      {
-        index: assets
-          .map((a) => a.toLowerCase())
-          .indexOf(node.address.toLowerCase()),
-        key: BigNumber.from(this.getOutputRefValue(joinPathIndex, node).value),
-      },
-    ];
-
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.joinAction}(
-    //     inputAmt: ${nodeChildrenWithinJoinPath[0].index},
-    //     inputToken: ${nodeChildrenWithinJoinPath[0].address},
-    //     pool: ${node.id},
-    //     outputToken: ${node.address},
-    //     outputRef: ${this.getOutputRefValue(joinPathIndex, node).value},
-    //     sender: ${sender},
-    //     recipient: ${recipient},
-    //     fromInternalBalance: ${fromInternalBalance},
-    //     toInternalBalance: ${toInternalBalance},
-    //   )`
-    // );
-
-    const call: EncodeBatchSwapInput = {
-      swapType: SwapType.SwapExactIn,
-      swaps,
-      assets,
-      funds,
-      limits,
-      deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
-      value: '0', // TODO: handle join with ETH
-      outputReferences,
-    };
-    const encodedCall = Relayer.encodeBatchSwap(call);
-
-    const modelRequest = VaultModel.mapBatchSwapRequest(call);
-
-    const hasChildInput = nodeChildrenWithinJoinPath.some(
-      (c) => c.joinAction === 'input'
-    );
-    // If node has no child input the swap is part of a chain and token in shouldn't be considered for user deltas
-    const userTokenIn = !hasChildInput ? '0' : limits[1];
-    // If node has parent the swap is part of a chain and BPT out shouldn't be considered for user deltas
-    const userBptOut = node.parent != undefined ? '0' : limits[0];
     const amounts = [userBptOut, userTokenIn];
 
     return { modelRequest, encodedCall, assets, amounts };
