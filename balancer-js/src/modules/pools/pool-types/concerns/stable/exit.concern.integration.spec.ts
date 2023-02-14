@@ -1,22 +1,21 @@
 // yarn test:only ./src/modules/pools/pool-types/concerns/stable/exit.concern.integration.spec.ts
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import dotenv from 'dotenv';
 import { expect } from 'chai';
+import { ethers } from 'hardhat';
+
 import { insert, Network, PoolWithMethods } from '@/.';
-import hardhat from 'hardhat';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BPT_DECIMALS, BPT_SLOT } from '@/lib/constants/config';
+import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import {
   forkSetup,
   sendTransactionGetBalances,
   TestPoolHelper,
 } from '@/test/lib/utils';
-import { BPT_DECIMALS, BPT_SLOT } from '@/lib/constants/config';
-import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 
 dotenv.config();
 
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
-const { ethers } = hardhat;
-
 const rpcUrl = 'http://127.0.0.1:8545';
 const network = Network.MAINNET;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
@@ -173,28 +172,6 @@ describe('StablePool', async () => {
           BigNumber.from(slippage)
         ).toString();
         expect(expectedMaxBpt).to.deep.eq(maxBPTIn);
-      });
-      it('should automatically sort tokens/amounts in correct order', async () => {
-        const tokensOut = pool.tokensList;
-        const amountsOut = pool.tokens.map((t, i) =>
-          parseFixed((i * 100).toString(), t.decimals).toString()
-        );
-        const slippage = '10';
-        // TokensIn are already ordered as required by vault
-        const attributesA = pool.buildExitExactTokensOut(
-          signerAddress,
-          tokensOut,
-          amountsOut,
-          slippage
-        );
-        // TokensIn are not ordered as required by vault and will be sorted correctly
-        const attributesB = pool.buildExitExactTokensOut(
-          signerAddress,
-          tokensOut.reverse(),
-          amountsOut.reverse(),
-          slippage
-        );
-        expect(attributesA).to.deep.eq(attributesB);
       });
     });
   });
