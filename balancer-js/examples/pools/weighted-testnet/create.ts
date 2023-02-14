@@ -1,41 +1,50 @@
 import { Log, TransactionReceipt } from '@ethersproject/providers';
 import { isSameAddress } from 'src';
 import { Interface, LogDescription } from '@ethersproject/abi';
-import { WeightedPoolFactory__factory } from '@balancer-labs/typechain';
+import WeightedPoolFactoryAbi from '@/lib/abi/WeightedPoolFactoryNew.json';
 import {
   factoryAddress,
   name,
   symbol,
-  tokenAddresses,
+  tokenSymbols,
   weights,
   rateProviders,
   swapFee,
   owner,
-  balancer,
   wallet,
   provider,
   wrappedNativeAsset,
+  addresses,
 } from './example-config';
 import { ethers } from 'hardhat';
 import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
 import { BigNumberish } from '@ethersproject/bignumber';
 
 async function createWeightedPool() {
-  const oldAbi =
-    '[{"inputs":[{"internalType":"contract IVault","name":"vault","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"pool","type":"address"}],"name":"PoolCreated","type":"event"},{"inputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"contract IERC20[]","name":"tokens","type":"address[]"},{"internalType":"uint256[]","name":"weights","type":"uint256[]"},{"internalType":"uint256","name":"swapFeePercentage","type":"uint256"},{"internalType":"address","name":"owner","type":"address"}],"name":"create","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"getPauseConfiguration","outputs":[{"internalType":"uint256","name":"pauseWindowDuration","type":"uint256"},{"internalType":"uint256","name":"bufferPeriodDuration","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getVault","outputs":[{"internalType":"contract IVault","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"pool","type":"address"}],"name":"isPoolFromFactory","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"}]';
-  const abi = '';
+  const factoryContract = new ethers.Contract(
+    factoryAddress,
+    WeightedPoolFactoryAbi,
+    wallet
+  );
 
-  const factoryContract = new ethers.Contract(factoryAddress, oldAbi, wallet);
+  // GOERLI USDC address: '0x1f1f156E0317167c11Aa412E3d1435ea29Dc3cCE'
+  // GOERLI USDT address: '0xe0C9275E44Ea80eF17579d33c55136b7DA269aEb'
+  //================================================================
+  // BSCTESTNET USDC address: '0x64544969ed7EBf5f083679233325356EbE738930'
+  // BSCTESTNET USDT address: '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd'
 
-  const [
-    tokenAddressesF,
-    weightsF,
-    // rateProvidersF,
-    swapFeeF,
-  ] = formatInputs(
+  const tokenAddresses = [];
+
+  for (let i = 0; i < tokenSymbols.length; i++) {
+    tokenAddresses.push(
+      addresses[tokenSymbols[i] as keyof typeof addresses].address
+    );
+  }
+
+  const [tokenAddressesF, rateProvidersF, weightsF, swapFeeF] = formatInputs(
     tokenAddresses,
+    rateProviders,
     weights,
-    // rateProviders,
     swapFee
   );
 
@@ -44,12 +53,12 @@ async function createWeightedPool() {
     symbol,
     tokenAddressesF,
     weightsF,
-    // rateProviders,
+    rateProvidersF, // This is only needed on BSC Testnet. Goerli uses an older version of the WeightedPoolFactory
     swapFeeF,
     owner,
     {
       gasLimit: 6721975,
-      gasPrice: ethers.utils.hexlify(ethers.utils.parseUnits('20', 'gwei')),
+      // gasPrice: ethers.utils.hexlify(ethers.utils.parseUnits('35', 'gwei')),
     }
   );
 
@@ -63,7 +72,7 @@ async function createWeightedPool() {
   }
 
   console.log('gasLimit: ' + tx.gasLimit);
-  console.log('Transaction sent with tx hash: ' + tx.hash);
+  console.log('Create tx hash: ' + tx.hash);
 
   try {
     const txReceipt = await tx.wait();
@@ -85,9 +94,7 @@ async function createWeightedPool() {
     tx.hash
   );
 
-  const weightedPoolFactoryInterface = new Interface(
-    WeightedPoolFactory__factory.abi
-  );
+  const weightedPoolFactoryInterface = new Interface(WeightedPoolFactoryAbi);
 
   const poolCreationEvent: LogDescription | null | undefined = receipt.logs
     .filter((log: Log) => {
@@ -104,14 +111,20 @@ async function createWeightedPool() {
 
 export default createWeightedPool();
 
-function formatInputs(tokenAddresses: any, weights: any, swapFee: any) {
-
+function formatInputs(
+  tokenAddresses: any,
+  rateProviders: any,
+  weights: any,
+  swapFee: any
+) {
   const swapFeeScaled = parseToBigInt18(`${swapFee}`);
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-  const [sortedTokens, sortedWeights] = assetHelpers.sortTokens(
-    tokenAddresses,
-    weights
-  ) as [string[], BigNumberish[]];
+  const [sortedTokens, sortedRateProviders, sortedWeights] =
+    assetHelpers.sortTokens(tokenAddresses, rateProviders, weights) as [
+      string[],
+      string[],
+      BigNumberish[]
+    ];
 
-  return [sortedTokens, sortedWeights, swapFeeScaled];
+  return [sortedTokens, sortedRateProviders, sortedWeights, swapFeeScaled];
 }

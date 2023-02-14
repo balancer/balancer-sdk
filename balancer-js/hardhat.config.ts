@@ -9,6 +9,7 @@ export default {
   networks: {
     hardhat: {
       chainId: 1,
+      allowUnlimitedContractSize: true,
     },
     goerli: {
       url: process.env.ALCHEMY_URL_GOERLI,

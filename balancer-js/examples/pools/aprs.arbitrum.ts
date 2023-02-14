@@ -3,7 +3,6 @@
  * Run command: yarn examples:run ./examples/pools/aprs.arbitrum.ts
  */
 import dotenv from 'dotenv';
-import type { Pool } from '../../src/types';
 import { BalancerSDK } from '../../src/modules/sdk.module';
 
 dotenv.config();
@@ -30,14 +29,14 @@ const main = async () => {
     )
   )
     .sort((a, b) => parseFloat(b.totalLiquidity) - parseFloat(a.totalLiquidity))
-    .slice(0, 30)
+    .slice(0, 30);
 
   list.forEach(async (pool) => {
     try {
-      const apr = await pools.apr(pool)
-      console.log(pool.id, apr)
+      const apr = await pools.apr(pool);
+      console.log(pool.id, apr);
     } catch (e) {
-      console.log(e)
+      console.log(e);
     }
   });
 };

@@ -16,21 +16,31 @@ const name = 'Bobby Pool';
 
 const symbol = 'BOBBY';
 
-const network = Network.BSCTESTNET;
+export const network = Network.BSCTESTNET;
 
 let rpcUrl = `${process.env.ALCHEMY_URL_GOERLI}`;
+export let wrappedNativeAsset = '0xdfcea9088c8a88a76ff74892c1457c17dfeef9c1';
+
 if ((network as Network) == Network.BSCTESTNET) {
   rpcUrl = `${process.env.GETBLOCK_URL_TEST}`;
+  wrappedNativeAsset = '0xE906CBeCd4A17DF62B8d6c8C82F3882af25295f5';
 } else if ((network as Network) == Network.BSC) {
   rpcUrl = `${process.env.GETBLOCK_URL}`;
+  wrappedNativeAsset = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
 }
 
 const addresses = ADDRESSES[network];
 
-// DON'T FORGET TO CHANGE THIS when switching networks!
-const wrappedNativeAsset = addresses.WBNB.address;
+export const tokenAmounts = ['3', '3'];
 
-const tokenAddresses = [addresses.USDC.address, addresses.USDT.address];
+export const tokenAddresses = [addresses.USDC.address, addresses.USDT.address];
+
+export const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
+// const provider = new BscscanProvider(
+//   'bsc-testnet', // could also be 'bsc-mainnet'
+//   'MDWSE9W9DI3IIZSTK698PZQG6M11QVUU6R'
+// );
+export const wallet = new ethers.Wallet(`${process.env.TRADER_KEY}`, provider);
 
 const amplificationParameter = '1';
 
@@ -45,20 +55,17 @@ const exemptFromYieldProtocolFeeFlags = [false, false];
 
 const swapFee = '0.01';
 const owner = '0xfEB47392B746dA43C28683A145237aC5EC5D554B'; // Test Account
-const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`;
+export const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`;
 
-async function createComposableStablePool() {
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
-  // const provider = new BscscanProvider(
-  //   'bsc-testnet', // could also be 'bsc-mainnet'
-  //   'MDWSE9W9DI3IIZSTK698PZQG6M11QVUU6R'
-  // );
-  const wallet = new ethers.Wallet(`${process.env.TRADER_KEY}`, provider);
+async function createComposableStablePool(): Promise<string> {
+  // const abi =
+  //   '[{"inputs":[{"internalType":"contract IVault","name":"vault","type":"address"},{"internalType":"contract IProtocolFeePercentagesProvider","name":"protocolFeeProvider","type":"address"},{"internalType":"string","name":"factoryVersion","type":"string"},{"internalType":"string","name":"poolVersion","type":"string"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[],"name":"FactoryDisabled","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"pool","type":"address"}],"name":"PoolCreated","type":"event"},{"inputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"contract IERC20[]","name":"tokens","type":"address[]"},{"internalType":"uint256","name":"amplificationParameter","type":"uint256"},{"internalType":"contract IRateProvider[]","name":"rateProviders","type":"address[]"},{"internalType":"uint256[]","name":"tokenRateCacheDurations","type":"uint256[]"},{"internalType":"bool[]","name":"exemptFromYieldProtocolFeeFlags","type":"bool[]"},{"internalType":"uint256","name":"swapFeePercentage","type":"uint256"},{"internalType":"address","name":"owner","type":"address"}],"name":"create","outputs":[{"internalType":"contract ComposableStablePool","name":"","type":"address"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"disable","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes4","name":"selector","type":"bytes4"}],"name":"getActionId","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getAuthorizer","outputs":[{"internalType":"contract IAuthorizer","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getCreationCode","outputs":[{"internalType":"bytes","name":"","type":"bytes"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getCreationCodeContracts","outputs":[{"internalType":"address","name":"contractA","type":"address"},{"internalType":"address","name":"contractB","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getPauseConfiguration","outputs":[{"internalType":"uint256","name":"pauseWindowDuration","type":"uint256"},{"internalType":"uint256","name":"bufferPeriodDuration","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getPoolVersion","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getProtocolFeePercentagesProvider","outputs":[{"internalType":"contract IProtocolFeePercentagesProvider","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getVault","outputs":[{"internalType":"contract IVault","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"isDisabled","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"pool","type":"address"}],"name":"isPoolFromFactory","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"version","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"}]';
 
-  const abi =
-    '[{"inputs":[{"internalType":"contract IVault","name":"vault","type":"address"},{"internalType":"contract IProtocolFeePercentagesProvider","name":"protocolFeeProvider","type":"address"},{"internalType":"string","name":"factoryVersion","type":"string"},{"internalType":"string","name":"poolVersion","type":"string"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[],"name":"FactoryDisabled","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"pool","type":"address"}],"name":"PoolCreated","type":"event"},{"inputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"contract IERC20[]","name":"tokens","type":"address[]"},{"internalType":"uint256","name":"amplificationParameter","type":"uint256"},{"internalType":"contract IRateProvider[]","name":"rateProviders","type":"address[]"},{"internalType":"uint256[]","name":"tokenRateCacheDurations","type":"uint256[]"},{"internalType":"bool[]","name":"exemptFromYieldProtocolFeeFlags","type":"bool[]"},{"internalType":"uint256","name":"swapFeePercentage","type":"uint256"},{"internalType":"address","name":"owner","type":"address"}],"name":"create","outputs":[{"internalType":"contract ComposableStablePool","name":"","type":"address"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"disable","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes4","name":"selector","type":"bytes4"}],"name":"getActionId","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getAuthorizer","outputs":[{"internalType":"contract IAuthorizer","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getCreationCode","outputs":[{"internalType":"bytes","name":"","type":"bytes"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getCreationCodeContracts","outputs":[{"internalType":"address","name":"contractA","type":"address"},{"internalType":"address","name":"contractB","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getPauseConfiguration","outputs":[{"internalType":"uint256","name":"pauseWindowDuration","type":"uint256"},{"internalType":"uint256","name":"bufferPeriodDuration","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getPoolVersion","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getProtocolFeePercentagesProvider","outputs":[{"internalType":"contract IProtocolFeePercentagesProvider","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getVault","outputs":[{"internalType":"contract IVault","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"isDisabled","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"pool","type":"address"}],"name":"isPoolFromFactory","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"version","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"}]';
-
-  const factoryContract = new ethers.Contract(factoryAddress, abi, wallet);
+  const factoryContract = new ethers.Contract(
+    factoryAddress,
+    composableStableFactoryAbi,
+    wallet
+  );
 
   const [
     nameF,
@@ -93,8 +100,8 @@ async function createComposableStablePool() {
     swapFeeF,
     ownerF,
     {
-      gasLimit: 30000000, // 6721975
-      gasPrice: ethers.utils.hexlify(ethers.utils.parseUnits('20', 'gwei')),
+      // gasLimit: 6721975,
+      // gasPrice: ethers.utils.hexlify(ethers.utils.parseUnits('35', 'gwei')),
     }
   );
 
@@ -134,11 +141,17 @@ async function createComposableStablePool() {
     })
     .find((parsedLog) => parsedLog?.name === 'PoolCreated');
 
-  if (!poolCreationEvent) return console.error("There's no event");
+  if (!poolCreationEvent) {
+    console.log("There's no event");
+    return "There's no event";
+  }
   console.log('poolAddress: ' + poolCreationEvent.args.pool);
+
+  return poolCreationEvent.args.pool;
 }
 
-createComposableStablePool().then((r) => r);
+export default createComposableStablePool();
+// createComposableStablePool().then((r) => r);
 
 function formatInputs(
   name: any,

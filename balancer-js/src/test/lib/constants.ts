@@ -329,20 +329,14 @@ export const ADDRESSES = {
     },
   },
   [Network.GOERLI]: {
-    USDC_old: {
-      address: '0xe0c9275e44ea80ef17579d33c55136b7da269aeb',
-      decimals: 6,
-      symbol: 'USDC_old',
-      slot: 0,
-    },
     USDC: {
-      address: '0xdabd33683bafdd448968ab6d6f47c3535c64bf0c',
+      address: '0xe0C9275E44Ea80eF17579d33c55136b7DA269aEb',
       decimals: 6,
       symbol: 'USDC',
       slot: 0,
     },
     USDT: {
-      address: '0x14468fd5e1de5a5a4882fa5f4e2217c5a8ddcadb',
+      address: '0x1f1f156E0317167c11Aa412E3d1435ea29Dc3cCE',
       decimals: 6,
       symbol: 'USDT',
       slot: 0,
@@ -587,7 +581,7 @@ export const ADDRESSES = {
       symbol: 'DAI',
     },
     USDT: {
-      address: '0x55d398326f99059fF775485246999027B3197955',
+      address: '0x337610d27c682E347C9cD60BD4b3b107C9d34dDd',
       decimals: 18,
       symbol: 'USDT',
     },

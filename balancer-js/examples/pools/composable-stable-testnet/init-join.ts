@@ -1,27 +1,25 @@
-import createWeightedPool from './create';
+import {
+  // createComposableStablePool,
+  provider,
+  network,
+  wallet,
+  tokenAmounts,
+  tokenAddresses,
+  wrappedNativeAsset,
+} from './create';
+import createComposableStablePool from './create';
 import { Interface, LogDescription } from '@ethersproject/abi';
 import { Vault__factory } from '@balancer-labs/typechain';
-import WeightedPoolAbi from '@/lib/abi/WeightedPoolNew.json';
-import {
-  provider,
-  wallet,
-  network,
-  wrappedNativeAsset,
-  tokenSymbols,
-  addresses,
-  tokenAmounts,
-} from './example-config';
-import { Log, TransactionReceipt } from '@ethersproject/providers';
-import { isSameAddress } from '@/lib/utils';
+import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
 import { ethers } from 'hardhat';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { AssetHelpers } from '@/lib/utils';
-import { WeightedPoolEncoder } from '@/pool-weighted';
-import ERC20Abi from '@/lib/abi/ERC20.json';
 import { parseFixed } from '@ethersproject/bignumber';
+import { Log, TransactionReceipt } from '@ethersproject/providers';
+import { AssetHelpers, isSameAddress } from '@/lib/utils';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 
-async function initJoinWeightedPool() {
-  const poolAddress = await createWeightedPool;
+export async function initJoinComposableStablePool() {
+  const poolAddress = await createComposableStablePool;
   const walletAddress = await wallet.getAddress();
 
   const vaultAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.vault}`;
@@ -30,12 +28,10 @@ async function initJoinWeightedPool() {
 
   const poolContract = new ethers.Contract(
     poolAddress,
-    WeightedPoolAbi,
+    composableStableFactoryAbi,
     wallet
   );
   const poolId = await poolContract.getPoolId();
-
-  console.log('poolId: ' + poolId);
 
   const vaultContract = new ethers.Contract(
     vaultAddress,
@@ -43,42 +39,9 @@ async function initJoinWeightedPool() {
     wallet
   );
 
-  const tokens = [];
-  const tokenAddresses = [];
-  const tokenContracts = [];
-  const tokenDecimals = [];
-  const tokenBalances = [];
-  const amountsIn = [];
-  let pending: number;
-
-  for (let i = 0; i < tokenSymbols.length; i++) {
-    tokens.push(addresses[tokenSymbols[i] as keyof typeof addresses]);
-
-    tokenAddresses.push(tokens[i].address);
-
-    tokenContracts.push(
-      new ethers.Contract(tokens[i].address, ERC20Abi, wallet)
-    );
-    pending = await tokenContracts[i].decimals();
-    tokenDecimals.push(pending);
-
-    pending = await tokenContracts[i].balanceOf(walletAddress);
-    tokenBalances.push(pending);
-
-    amountsIn.push(parseFixed(tokenAmounts[i], tokenDecimals[i]));
-
-    console.log(
-      tokenSymbols[i] +
-        ' being deposited: ' +
-        tokenAmounts[i] +
-        ' / ' +
-        tokenBalances[i] / Math.pow(10, tokenDecimals[i])
-    );
-  }
-
   const [tokensIn, amountsInF, userData] = formatInputs(
     tokenAddresses,
-    amountsIn
+    tokenAmounts
   );
 
   const tx = await vaultContract.joinPool(
@@ -117,6 +80,7 @@ async function initJoinWeightedPool() {
     .find((parsedLog) => parsedLog?.name === 'PoolBalanceChanged');
   if (!poolInitJoinEvent)
     return console.error("Couldn't find event in the receipt logs");
+
   const poolTokens = poolInitJoinEvent.args[2];
   const newBalances = poolInitJoinEvent.args[3];
   const oldBalances = poolInitJoinEvent.args[4];
@@ -125,7 +89,7 @@ async function initJoinWeightedPool() {
   console.log('Pool old balances: ' + oldBalances);
 }
 
-initJoinWeightedPool().then((r) => r);
+initJoinComposableStablePool().then((r) => r);
 
 function formatInputs(tokensIn: any, amountsIn: any) {
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
@@ -135,7 +99,7 @@ function formatInputs(tokensIn: any, amountsIn: any) {
     amountsIn
   ) as [string[], string[]];
 
-  const userData = WeightedPoolEncoder.joinInit(sortedAmounts);
+  const userData = ComposableStablePoolEncoder.joinInit(sortedAmounts);
 
   return [sortedTokens, sortedAmounts, userData];
 }
