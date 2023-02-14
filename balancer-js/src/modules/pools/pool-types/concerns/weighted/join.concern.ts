@@ -81,7 +81,7 @@ export class WeightedPoolJoin implements JoinConcern {
    * @param tokensIn Must contain all the tokens of the pool
    * @param pool The pool that is being joined
    */
-  checkInputs = (tokensIn: string[], amountsIn: string[], pool: Pool) => {
+  checkInputs = (tokensIn: string[], amountsIn: string[], pool: Pool): void => {
     if (
       tokensIn.length != amountsIn.length ||
       tokensIn.length != pool.tokensList.length
@@ -141,7 +141,7 @@ export class WeightedPoolJoin implements JoinConcern {
       | 'sortedAmountsIn'
       | 'parsedTotalShares'
       | 'parsedSwapFee'
-    >) => {
+    >): { expectedBPTOut: string; minBPTOut: string } => {
     const expectedBPTOut = WeightedMaths._calcBptOutGivenExactTokensIn(
       parsedBalances.map(BigInt),
       parsedWeights.map(BigInt),
