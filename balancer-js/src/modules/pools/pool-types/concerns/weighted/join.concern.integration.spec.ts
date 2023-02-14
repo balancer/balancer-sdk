@@ -39,7 +39,6 @@ const wETH_SLOT = 3;
 const slots = [wBTC_SLOT, wETH_SLOT];
 
 const initialBalance = '100000';
-const amountsInDiv = '100000000';
 
 let amountsIn: string[];
 // Test scenarios
@@ -81,8 +80,8 @@ describe('join execution', async () => {
   context('join transaction - join with encoded data', () => {
     before(async function () {
       this.timeout(20000);
-      amountsIn = tokensIn.map((t) =>
-        parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
+      amountsIn = tokensIn.map((t, i) =>
+        parseFixed((i * 10).toString(), t.decimals).toString()
       );
 
       [bptBalanceBefore, ...tokensBalanceBefore] = await getBalances(
@@ -100,7 +99,7 @@ describe('join execution', async () => {
         slippage
       );
 
-      const tx = { to, data };
+      const tx = { to, data, gasLimit: 30000000 };
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
@@ -144,8 +143,8 @@ describe('join execution', async () => {
     before(async function () {
       this.timeout(20000);
 
-      amountsIn = tokensIn.map((t) =>
-        parseFixed(t.balance, t.decimals).div(amountsInDiv).toString()
+      amountsIn = tokensIn.map((t, i) =>
+        parseFixed((i * 10).toString(), t.decimals).toString()
       );
 
       const tokensWithETH = tokensIn.map((t) => {
@@ -167,7 +166,7 @@ describe('join execution', async () => {
         amountsIn,
         slippage
       );
-      const tx = { to, data, value };
+      const tx = { to, data, value, gasLimit: 3000000 };
 
       bptMinBalanceIncrease = BigNumber.from(minBPTOut);
       transactionReceipt = await (await signer.sendTransaction(tx)).wait();
