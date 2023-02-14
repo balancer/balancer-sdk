@@ -1,4 +1,5 @@
 /* eslint-disable no-unexpected-multiline */
+// yarn test:only ./src/modules/pools/pool-types/concerns/stable/join.concern.integration.spec.ts
 import { parseFixed, BigNumber } from '@ethersproject/bignumber';
 import { expect } from 'chai';
 import dotenv from 'dotenv';
@@ -6,16 +7,17 @@ import hardhat from 'hardhat';
 import {
   BalancerError,
   BalancerErrorCode,
+  insert,
   Network,
   PoolWithMethods,
 } from '@/.';
+import { subSlippage } from '@/lib/utils/slippageHelper';
 import { ADDRESSES } from '@/test/lib/constants';
 import {
   forkSetup,
   sendTransactionGetBalances,
   TestPoolHelper,
 } from '@/test/lib/utils';
-import { subSlippage } from '@/lib/utils/slippageHelper';
 
 dotenv.config();
 
@@ -26,6 +28,7 @@ const network = Network.MAINNET;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 const initialBalance = '100000';
+// This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
 const blockNumber = 13309758;
 const testPoolId =
   '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063';
@@ -84,16 +87,14 @@ describe('join execution', async () => {
         to,
         data
       );
+    expect(transactionReceipt.status).to.eq(1);
+    expect(BigInt(expectedBPTOut) > 0).to.be.true;
+    const expectedDeltas = insert(amountsIn, 0, expectedBPTOut);
+    expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
     const expectedMinBpt = subSlippage(
       BigNumber.from(expectedBPTOut),
       BigNumber.from(slippage)
     ).toString();
-    expect(transactionReceipt.status).to.eq(1);
-    expect(BigInt(expectedBPTOut) > 0).to.be.true;
-    expect(expectedBPTOut).to.deep.eq(balanceDeltas[0].toString());
-    expect(amountsIn).to.deep.eq(
-      balanceDeltas.splice(1).map((a) => a.toString())
-    );
     expect(expectedMinBpt).to.deep.eq(minBPTOut);
   });
   it('should encode the same for different array sorting', () => {
@@ -153,10 +154,8 @@ describe('join execution', async () => {
 
     expect(transactionReceipt.status).to.eq(1);
     expect(BigInt(expectedBPTOut) > 0).to.be.true;
-    expect(expectedBPTOut).to.deep.eq(balanceDeltas[0].toString());
-    expect(amountsIn).to.deep.eq(
-      balanceDeltas.slice(1).map((a) => a.toString())
-    );
+    const expectedDeltas = insert(amountsIn, 0, expectedBPTOut);
+    expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
     const expectedMinBpt = subSlippage(
       BigNumber.from(expectedBPTOut),
       BigNumber.from(slippage)
