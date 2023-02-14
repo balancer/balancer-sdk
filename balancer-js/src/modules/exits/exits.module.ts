@@ -576,7 +576,7 @@ export class Exit {
     const modelRequest = VaultModel.mapSwapRequest(call); // TODO: handle swap request in vault model
 
     // If node isn't rootNode, the swap is part of a chain and shouldn't be considered for user deltas
-    const bptIn = isRootNode ? '0' : amountIn;
+    const bptIn = !isRootNode ? '0' : amountIn;
     // If child exit action is not output, the swap is part of a chain and shouldn't be considered for user deltas
     const userTokenOutAmount =
       exitChild.exitAction !== 'output'
