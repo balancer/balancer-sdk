@@ -48,12 +48,14 @@ export class SwapModel {
     );
 
     const delta = Zero.sub(amountOutEvm);
+    if (!swapRequest.outputReference)
+      throw new Error('Missing outputReference');
 
     // Swap return values are signed, as they are Vault deltas (positive values correspond to assets sent
     // to the Vault, and negative values are assets received from the Vault). To simplify the chained reference
     // value model, we simply store the absolute value.
     this.relayerModel.setChainedReferenceValue(
-      Zero.toString(), // TODO: check if we have to handle this key differently
+      swapRequest.outputReference.toString(),
       delta.abs().toString()
     );
     return [delta.toString(), amountIn];
