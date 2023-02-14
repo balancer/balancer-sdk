@@ -322,8 +322,6 @@ export class StablePoolExit implements ExitConcern {
     minAmountsOut: string[];
     expectedAmountsOut: string[];
   } => {
-    const expectedAmountsOut = Array(parsedTokens.length).fill('0');
-    const minAmountsOut = Array(parsedTokens.length).fill('0');
     // Calculate amount out given BPT in
     const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
       BigInt(parsedAmp as string),
@@ -338,6 +336,9 @@ export class StablePoolExit implements ExitConcern {
       BigInt(amountOut) - BigInt(1), // The -1 is to solve rounding errors, sometimes the amount comes 1 point lower than expected
       scalingFactors[singleTokenMaxOutIndex]
     ).toString();
+
+    const expectedAmountsOut = Array(parsedTokens.length).fill('0');
+    const minAmountsOut = Array(parsedTokens.length).fill('0');
 
     expectedAmountsOut[singleTokenMaxOutIndex] = downscaledAmountOut;
     // Apply slippage tolerance
@@ -374,7 +375,7 @@ export class StablePoolExit implements ExitConcern {
     // Maths return numbers scaled to 18 decimals. Must scale down to token decimals.
     const amountsOutScaledDown = _downscaleDownArray(
       amountsOut.map((a) => BigInt(a)),
-      scalingFactors.map((a) => BigInt(a))
+      scalingFactors
     );
 
     const expectedAmountsOut = amountsOutScaledDown.map((amount) =>

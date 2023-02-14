@@ -15,7 +15,7 @@ const blockNumber = 13309758;
 const testPoolId =
   '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063';
 
-describe('exit module', () => {
+describe('StablePool exits', () => {
   let signerAddress: string;
   let pool: PoolWithMethods;
   beforeEach(async function () {
