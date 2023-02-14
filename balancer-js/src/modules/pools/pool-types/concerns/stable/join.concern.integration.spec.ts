@@ -26,7 +26,7 @@ const network = Network.MAINNET;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 const initialBalance = '100000';
-const blockNumber = 14717479;
+const blockNumber = 13309758;
 const testPoolId =
   '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063';
 // Slots used to set the account balance for each token through hardhat_setStorageAt
@@ -78,7 +78,7 @@ describe('join execution', async () => {
     );
     const { transactionReceipt, balanceDeltas } =
       await sendTransactionGetBalances(
-        tokensIn,
+        [pool.address, ...tokensIn],
         signer,
         signerAddress,
         to,
@@ -90,7 +90,10 @@ describe('join execution', async () => {
     ).toString();
     expect(transactionReceipt.status).to.eq(1);
     expect(BigInt(expectedBPTOut) > 0).to.be.true;
-    expect(amountsIn).to.deep.eq(balanceDeltas.map((a) => a.toString()));
+    expect(expectedBPTOut).to.deep.eq(balanceDeltas[0].toString());
+    expect(amountsIn).to.deep.eq(
+      balanceDeltas.splice(1).map((a) => a.toString())
+    );
     expect(expectedMinBpt).to.deep.eq(minBPTOut);
   });
   it('should encode the same for different array sorting', () => {
@@ -141,7 +144,7 @@ describe('join execution', async () => {
 
     const { transactionReceipt, balanceDeltas } =
       await sendTransactionGetBalances(
-        pool.tokensList,
+        [pool.address, ...tokensIn],
         signer,
         signerAddress,
         to,
@@ -150,7 +153,10 @@ describe('join execution', async () => {
 
     expect(transactionReceipt.status).to.eq(1);
     expect(BigInt(expectedBPTOut) > 0).to.be.true;
-    expect(amountsIn).to.deep.eq(balanceDeltas.map((a) => a.toString()));
+    expect(expectedBPTOut).to.deep.eq(balanceDeltas[0].toString());
+    expect(amountsIn).to.deep.eq(
+      balanceDeltas.slice(1).map((a) => a.toString())
+    );
     const expectedMinBpt = subSlippage(
       BigNumber.from(expectedBPTOut),
       BigNumber.from(slippage)
