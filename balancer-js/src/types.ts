@@ -257,7 +257,6 @@ export enum PoolType {
   Weighted = 'Weighted',
   Investment = 'Investment',
   Stable = 'Stable',
-  HighAmpComposableStable = 'HighAmpComposableStable',
   ComposableStable = 'ComposableStable',
   MetaStable = 'MetaStable',
   StablePhantom = 'StablePhantom',
@@ -271,6 +270,13 @@ export enum PoolType {
   Linear = 'Linear',
   EulerLinear = 'EulerLinear',
   ERC4626Linear = 'ERC4626Linear',
+  BeefyLinear = 'BeefyLinear',
+  GearboxLinear = 'GearboxLinear',
+  MidasLinear = 'MidasLinear',
+  ReaperLinear = 'ReaperLinear',
+  SiloLinear = 'SiloLinear',
+  TetuLinear = 'TetuLinear',
+  YearnLinear = 'YearnLinear',
 }
 
 export interface Pool {

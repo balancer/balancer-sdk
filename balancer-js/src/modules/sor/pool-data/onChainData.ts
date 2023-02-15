@@ -1,14 +1,10 @@
 import { formatFixed } from '@ethersproject/bignumber';
 import { Provider } from '@ethersproject/providers';
-import {
-  PoolFilter,
-  SubgraphPoolBase,
-  SubgraphToken,
-} from '@balancer-labs/sor';
+import { SubgraphPoolBase, SubgraphToken } from '@balancer-labs/sor';
 import { Multicaller } from '@/lib/utils/multiCaller';
 import { isSameAddress } from '@/lib/utils';
 import { Vault__factory } from '@balancer-labs/typechain';
-import { Pool, PoolToken } from '@/types';
+import { Pool, PoolToken, PoolType } from '@/types';
 
 // TODO: decide whether we want to trim these ABIs down to the relevant functions
 import aTokenRateProvider from '@/lib/abi/StaticATokenRateProvider.json';
@@ -49,7 +45,7 @@ export async function getOnChainBalances<
 
   const multiPool = new Multicaller(multiAddress, provider, abis);
 
-  const supportedPoolTypes: string[] = Object.values(PoolFilter);
+  const supportedPoolTypes: string[] = Object.values(PoolType);
   const subgraphPools: GenericPool[] = [];
   subgraphPoolsOriginal.forEach((pool) => {
     if (!supportedPoolTypes.includes(pool.poolType)) {
