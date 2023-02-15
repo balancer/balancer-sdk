@@ -21,6 +21,7 @@ type SortedValues = {
   parsedTotalShares: string;
   parsedSwapFee: string;
   parsedBalances: string[];
+  upScaledBalances: string[];
   upScaledAmountsIn: bigint[];
   sortedAmountsIn: string[];
 };
@@ -127,25 +128,25 @@ export class WeightedPoolJoin implements JoinConcern {
   };
 
   calcBptOutGivenExactTokensIn = ({
-    parsedBalances,
+    upScaledBalances,
     parsedWeights,
-    sortedAmountsIn,
+    upScaledAmountsIn,
     parsedTotalShares,
     parsedSwapFee,
     slippage,
   }: Pick<JoinPoolParameters, 'slippage'> &
     Pick<
       SortedValues,
-      | 'parsedBalances'
+      | 'upScaledBalances'
       | 'parsedWeights'
-      | 'sortedAmountsIn'
+      | 'upScaledAmountsIn'
       | 'parsedTotalShares'
       | 'parsedSwapFee'
     >): { expectedBPTOut: string; minBPTOut: string } => {
     const expectedBPTOut = WeightedMaths._calcBptOutGivenExactTokensIn(
-      parsedBalances.map(BigInt),
+      upScaledBalances.map(BigInt),
       parsedWeights.map(BigInt),
-      sortedAmountsIn.map(BigInt),
+      upScaledAmountsIn.map(BigInt),
       BigInt(parsedTotalShares),
       BigInt(parsedSwapFee)
     ).toString();
@@ -160,7 +161,6 @@ export class WeightedPoolJoin implements JoinConcern {
       minBPTOut,
     };
   };
-
   encodeJoinPool = ({
     sortedAmountsIn,
     parsedTokens,
