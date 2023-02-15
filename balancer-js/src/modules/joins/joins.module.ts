@@ -525,23 +525,26 @@ export class Join {
       const modelRequests: Requests[] = [];
 
       joinPath.forEach((node, i) => {
-        let nodeChildrenWithinJoinPath;
+        let immediateChildrenWithinJoinPath;
         if (isLeafJoin) {
-          // Joining from leaf nodes allows joining with multiple tokens, so we need to filter child nodes within the join path
-          nodeChildrenWithinJoinPath = joinPath.filter(
+          // Joining from leaf nodes allows joining with multiple tokens. We want immediate children.
+          // We need to filter child nodes that are not in the join path
+          // bbausd as an example
+          // nodeChildrenWithinJoinPath should be - bausdc, bausdt, badai,
+          immediateChildrenWithinJoinPath = joinPath.filter(
             (joinNode) =>
               node.children.map((n) => n.address).includes(joinNode.address) &&
               node.index === joinNode.parent?.index // Ensure child nodes with same address are not included more than once
           );
         } else {
           // Joining from non-leaf nodes are always single token joins, so we can simply get the previous node in the join path
-          nodeChildrenWithinJoinPath = i > 0 ? [joinPath[i - 1]] : [];
+          immediateChildrenWithinJoinPath = i > 0 ? [joinPath[i - 1]] : [];
         }
 
         // Prevent adding action calls with input amounts equal 0
         if (
-          nodeChildrenWithinJoinPath.length > 0 &&
-          nodeChildrenWithinJoinPath.filter((c) => c.index !== '0').length === 0
+          immediateChildrenWithinJoinPath.length > 0 &&
+          immediateChildrenWithinJoinPath.filter((c) => c.index !== '0').length === 0
         ) {
           node.index = '0';
           return;
@@ -550,11 +553,14 @@ export class Join {
         // Sender's rule
         // 1. If any child node is an input node, tokens are coming from the user
         // 2. Wrapped tokens have to come from user (Relayer has no approval for wrapped tokens)
-        const hasChildInput = this.containInput(nodeChildrenWithinJoinPath);
+        const hasChildInput = this.containInput(
+          immediateChildrenWithinJoinPath
+        );
         const sender = hasChildInput ? userAddress : this.relayer;
 
         // Recipient's rule
-        // 1. Transactions with sibling inputs must be sent to user because it will be the sender of the following transaction (per sender's rule above)
+        // 1. Transactions with sibling input node must be sent to user because it will be the sender of the following transaction (per sender's rule above)
+        // e.g. boostedMetaAlt - MAI/bbausd - joining with MAI from user and bbausd from earlier actions. MAI needs to come from user.
         // 2. Last transaction must be sent to the user
         // 3. Otherwise relayer
         // Note: scenario 1 usually happens with joinPool transactions that have both BPT and undelying tokens as tokensIn
@@ -578,7 +584,7 @@ export class Join {
               // relayer has no allowance to spend its own wrapped tokens so recipient must be the user
               const { encodedCall } = this.createAaveWrap(
                 node,
-                nodeChildrenWithinJoinPath,
+                immediateChildrenWithinJoinPath,
                 j,
                 sender,
                 userAddress
@@ -592,7 +598,7 @@ export class Join {
               const { modelRequest, encodedCall, assets, amounts } =
                 this.createBatchSwap(
                   node,
-                  nodeChildrenWithinJoinPath,
+                  immediateChildrenWithinJoinPath,
                   j,
                   minOut,
                   sender,
@@ -608,7 +614,7 @@ export class Join {
               const { modelRequest, encodedCall, assets, amounts, minBptOut } =
                 this.createJoinPool(
                   node,
-                  nodeChildrenWithinJoinPath,
+                  immediateChildrenWithinJoinPath,
                   j,
                   minOut,
                   sender,
@@ -749,7 +755,7 @@ export class Join {
 
   private createBatchSwap = (
     node: Node,
-    nodeChildrenWithinJoinPath: Node[],
+    immediateChildNodesInPath: Node[],
     joinPathIndex: number,
     expectedOut: string,
     sender: string,
@@ -761,12 +767,12 @@ export class Join {
     amounts: string[];
   } => {
     // We only need batchSwaps for main/wrapped > linearBpt so shouldn't be more than token > token
-    if (nodeChildrenWithinJoinPath.length !== 1)
+    if (immediateChildNodesInPath.length !== 1)
       throw new Error('Unsupported batchswap');
-    const inputToken = nodeChildrenWithinJoinPath[0].address;
+    const inputToken = immediateChildNodesInPath[0].address;
     const inputValue = this.getOutputRefValue(
       joinPathIndex,
-      nodeChildrenWithinJoinPath[0]
+      immediateChildNodesInPath[0]
     );
     const assets = [node.address, inputToken];
 
@@ -790,9 +796,16 @@ export class Join {
       },
     ];
 
-    const fromInternalBalance = !nodeChildrenWithinJoinPath.some(
+    // nodeChildrenWithinJoinPath only has 1? So basically this is if node:
+    // - input or joinPool: false
+    // - others: true
+    const fromInternalBalance = !immediateChildNodesInPath.some(
       (c) => c.joinAction === 'input' || c.joinAction === 'joinPool'
     );
+    // Example of node.parent?
+    // If the parents children doesn't include input or joinPool then send to internal balance
+    // If next node is non-internal (node)
+       // If node is all internal - considering siblings
     const toInternalBalance =
       node.parent != undefined &&
       !node.parent.children.some(
@@ -847,7 +860,7 @@ export class Join {
 
     const modelRequest = VaultModel.mapBatchSwapRequest(call);
 
-    const hasChildInput = nodeChildrenWithinJoinPath.some(
+    const hasChildInput = immediateChildNodesInPath.some(
       (c) => c.joinAction === 'input'
     );
     // If node has no child input the swap is part of a chain and token in shouldn't be considered for user deltas
@@ -861,7 +874,7 @@ export class Join {
 
   private createJoinPool = (
     node: Node,
-    nodeChildrenWithinJoinPath: Node[],
+    immediateChildNodesInPath: Node[],
     joinPathIndex: number,
     minAmountOut: string,
     sender: string,
@@ -880,7 +893,7 @@ export class Join {
     node.children.forEach((child) => {
       inputTokens.push(child.address);
       // non-leaf joins should set input amounts only for children that are in their joinPath
-      const childWithinJoinPath = nodeChildrenWithinJoinPath.find((c) =>
+      const childWithinJoinPath = immediateChildNodesInPath.find((c) =>
         isSameAddress(c.address, child.address)
       );
       if (childWithinJoinPath) {
@@ -937,7 +950,7 @@ export class Join {
     const ethIndex = sortedTokens.indexOf(AddressZero);
     const value = ethIndex === -1 ? '0' : sortedAmounts[ethIndex];
 
-    const fromInternalBalance = !nodeChildrenWithinJoinPath.some(
+    const fromInternalBalance = !immediateChildNodesInPath.some(
       (c) => c.joinAction === 'input' || c.joinAction === 'joinPool'
     );
 
@@ -980,7 +993,7 @@ export class Join {
       ? '0'
       : minAmountOut;
 
-    const hasChildInput = nodeChildrenWithinJoinPath.some(
+    const hasChildInput = immediateChildNodesInPath.some(
       (c) => c.joinAction === 'input'
     );
     // If node has no child input the join is part of a chain and amounts in shouldn't be considered for user deltas
