@@ -1,0 +1,26 @@
+{
+  "name": "Test Weighted Pool V3",
+  "symbol": "TWPv3",
+  "poolType": "WeightedPool",
+  "swapFeePercentage": "0.1",
+  "fromInternalBalance": false,
+  "owner": "0x0000000000000000000000000000000000000000",
+  "tokens": [
+    {
+      "address": "0xdfcea9088c8a88a76ff74892c1457c17dfeef9c1",
+      "weight": "0.5",
+      "decimals": 18,
+      "initialBalance": "0.1",
+      "rateProvider": "0x0000000000000000000000000000000000000000",
+      "allowance": -1
+    },
+    {
+      "address": "0xe0C9275E44Ea80eF17579d33c55136b7DA269aEb",
+      "weight": "0.5",
+      "decimals": 6,
+      "initialBalance": "200",
+      "rateProvider": "0x0000000000000000000000000000000000000000",
+      "allowance": -1
+    }
+  ]
+}
