@@ -72,6 +72,7 @@ export type GaugeFactoryGaugesArgs = {
 export type GaugeFactory_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<GaugeFactory_Filter>>>;
   gauges_?: InputMaybe<LiquidityGauge_Filter>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
@@ -89,12 +90,13 @@ export type GaugeFactory_Filter = {
   numGauges_lte?: InputMaybe<Scalars['Int']>;
   numGauges_not?: InputMaybe<Scalars['Int']>;
   numGauges_not_in?: InputMaybe<Array<Scalars['Int']>>;
+  or?: InputMaybe<Array<InputMaybe<GaugeFactory_Filter>>>;
 };
 
 export enum GaugeFactory_OrderBy {
-  Gauges = 'gauges',
-  Id = 'id',
-  NumGauges = 'numGauges'
+  gauges = 'gauges',
+  id = 'id',
+  numGauges = 'numGauges'
 }
 
 export type GaugeShare = {
@@ -112,6 +114,7 @@ export type GaugeShare = {
 export type GaugeShare_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<GaugeShare_Filter>>>;
   balance?: InputMaybe<Scalars['BigDecimal']>;
   balance_gt?: InputMaybe<Scalars['BigDecimal']>;
   balance_gte?: InputMaybe<Scalars['BigDecimal']>;
@@ -149,6 +152,7 @@ export type GaugeShare_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<GaugeShare_Filter>>>;
   user?: InputMaybe<Scalars['String']>;
   user_?: InputMaybe<User_Filter>;
   user_contains?: InputMaybe<Scalars['String']>;
@@ -173,10 +177,20 @@ export type GaugeShare_Filter = {
 };
 
 export enum GaugeShare_OrderBy {
-  Balance = 'balance',
-  Gauge = 'gauge',
-  Id = 'id',
-  User = 'user'
+  balance = 'balance',
+  gauge = 'gauge',
+  gauge__id = 'gauge__id',
+  gauge__isKilled = 'gauge__isKilled',
+  gauge__isPreferentialGauge = 'gauge__isPreferentialGauge',
+  gauge__poolAddress = 'gauge__poolAddress',
+  gauge__poolId = 'gauge__poolId',
+  gauge__relativeWeightCap = 'gauge__relativeWeightCap',
+  gauge__streamer = 'gauge__streamer',
+  gauge__symbol = 'gauge__symbol',
+  gauge__totalSupply = 'gauge__totalSupply',
+  id = 'id',
+  user = 'user',
+  user__id = 'user__id'
 }
 
 export type GaugeType = {
@@ -190,6 +204,7 @@ export type GaugeType = {
 export type GaugeType_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<GaugeType_Filter>>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -218,11 +233,12 @@ export type GaugeType_Filter = {
   name_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
   name_starts_with?: InputMaybe<Scalars['String']>;
   name_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  or?: InputMaybe<Array<InputMaybe<GaugeType_Filter>>>;
 };
 
 export enum GaugeType_OrderBy {
-  Id = 'id',
-  Name = 'name'
+  id = 'id',
+  name = 'name'
 }
 
 export type GaugeVote = {
@@ -242,6 +258,7 @@ export type GaugeVote = {
 export type GaugeVote_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<GaugeVote_Filter>>>;
   gauge?: InputMaybe<Scalars['String']>;
   gauge_?: InputMaybe<Gauge_Filter>;
   gauge_contains?: InputMaybe<Scalars['String']>;
@@ -271,6 +288,7 @@ export type GaugeVote_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<GaugeVote_Filter>>>;
   timestamp?: InputMaybe<Scalars['BigInt']>;
   timestamp_gt?: InputMaybe<Scalars['BigInt']>;
   timestamp_gte?: InputMaybe<Scalars['BigInt']>;
@@ -311,11 +329,15 @@ export type GaugeVote_Filter = {
 };
 
 export enum GaugeVote_OrderBy {
-  Gauge = 'gauge',
-  Id = 'id',
-  Timestamp = 'timestamp',
-  User = 'user',
-  Weight = 'weight'
+  gauge = 'gauge',
+  gauge__addedTimestamp = 'gauge__addedTimestamp',
+  gauge__address = 'gauge__address',
+  gauge__id = 'gauge__id',
+  id = 'id',
+  timestamp = 'timestamp',
+  user = 'user',
+  user__id = 'user__id',
+  weight = 'weight'
 }
 
 export type Gauge_Filter = {
@@ -339,6 +361,7 @@ export type Gauge_Filter = {
   address_not?: InputMaybe<Scalars['Bytes']>;
   address_not_contains?: InputMaybe<Scalars['Bytes']>;
   address_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  and?: InputMaybe<Array<InputMaybe<Gauge_Filter>>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -368,6 +391,7 @@ export type Gauge_Filter = {
   liquidityGauge_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
   liquidityGauge_starts_with?: InputMaybe<Scalars['String']>;
   liquidityGauge_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  or?: InputMaybe<Array<InputMaybe<Gauge_Filter>>>;
   rootGauge?: InputMaybe<Scalars['String']>;
   rootGauge_?: InputMaybe<RootGauge_Filter>;
   rootGauge_contains?: InputMaybe<Scalars['String']>;
@@ -413,12 +437,28 @@ export type Gauge_Filter = {
 };
 
 export enum Gauge_OrderBy {
-  AddedTimestamp = 'addedTimestamp',
-  Address = 'address',
-  Id = 'id',
-  LiquidityGauge = 'liquidityGauge',
-  RootGauge = 'rootGauge',
-  Type = 'type'
+  addedTimestamp = 'addedTimestamp',
+  address = 'address',
+  id = 'id',
+  liquidityGauge = 'liquidityGauge',
+  liquidityGauge__id = 'liquidityGauge__id',
+  liquidityGauge__isKilled = 'liquidityGauge__isKilled',
+  liquidityGauge__isPreferentialGauge = 'liquidityGauge__isPreferentialGauge',
+  liquidityGauge__poolAddress = 'liquidityGauge__poolAddress',
+  liquidityGauge__poolId = 'liquidityGauge__poolId',
+  liquidityGauge__relativeWeightCap = 'liquidityGauge__relativeWeightCap',
+  liquidityGauge__streamer = 'liquidityGauge__streamer',
+  liquidityGauge__symbol = 'liquidityGauge__symbol',
+  liquidityGauge__totalSupply = 'liquidityGauge__totalSupply',
+  rootGauge = 'rootGauge',
+  rootGauge__chain = 'rootGauge__chain',
+  rootGauge__id = 'rootGauge__id',
+  rootGauge__isKilled = 'rootGauge__isKilled',
+  rootGauge__recipient = 'rootGauge__recipient',
+  rootGauge__relativeWeightCap = 'rootGauge__relativeWeightCap',
+  type = 'type',
+  type__id = 'type__id',
+  type__name = 'type__name'
 }
 
 export type LiquidityGauge = {
@@ -474,6 +514,7 @@ export type LiquidityGaugeTokensArgs = {
 export type LiquidityGauge_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<LiquidityGauge_Filter>>>;
   factory?: InputMaybe<Scalars['String']>;
   factory_?: InputMaybe<GaugeFactory_Filter>;
   factory_contains?: InputMaybe<Scalars['String']>;
@@ -532,6 +573,7 @@ export type LiquidityGauge_Filter = {
   isPreferentialGauge_in?: InputMaybe<Array<Scalars['Boolean']>>;
   isPreferentialGauge_not?: InputMaybe<Scalars['Boolean']>;
   isPreferentialGauge_not_in?: InputMaybe<Array<Scalars['Boolean']>>;
+  or?: InputMaybe<Array<InputMaybe<LiquidityGauge_Filter>>>;
   pool?: InputMaybe<Scalars['String']>;
   poolAddress?: InputMaybe<Scalars['Bytes']>;
   poolAddress_contains?: InputMaybe<Scalars['Bytes']>;
@@ -624,26 +666,34 @@ export type LiquidityGauge_Filter = {
 };
 
 export enum LiquidityGauge_OrderBy {
-  Factory = 'factory',
-  Gauge = 'gauge',
-  Id = 'id',
-  IsKilled = 'isKilled',
-  IsPreferentialGauge = 'isPreferentialGauge',
-  Pool = 'pool',
-  PoolAddress = 'poolAddress',
-  PoolId = 'poolId',
-  RelativeWeightCap = 'relativeWeightCap',
-  Shares = 'shares',
-  Streamer = 'streamer',
-  Symbol = 'symbol',
-  Tokens = 'tokens',
-  TotalSupply = 'totalSupply'
+  factory = 'factory',
+  factory__id = 'factory__id',
+  factory__numGauges = 'factory__numGauges',
+  gauge = 'gauge',
+  gauge__addedTimestamp = 'gauge__addedTimestamp',
+  gauge__address = 'gauge__address',
+  gauge__id = 'gauge__id',
+  id = 'id',
+  isKilled = 'isKilled',
+  isPreferentialGauge = 'isPreferentialGauge',
+  pool = 'pool',
+  poolAddress = 'poolAddress',
+  poolId = 'poolId',
+  pool__address = 'pool__address',
+  pool__id = 'pool__id',
+  pool__poolId = 'pool__poolId',
+  relativeWeightCap = 'relativeWeightCap',
+  shares = 'shares',
+  streamer = 'streamer',
+  symbol = 'symbol',
+  tokens = 'tokens',
+  totalSupply = 'totalSupply'
 }
 
 /** Defines the order direction, either ascending or descending */
 export enum OrderDirection {
-  Asc = 'asc',
-  Desc = 'desc'
+  asc = 'asc',
+  desc = 'desc'
 }
 
 export type Pool = {
@@ -684,6 +734,7 @@ export type Pool_Filter = {
   address_not?: InputMaybe<Scalars['Bytes']>;
   address_not_contains?: InputMaybe<Scalars['Bytes']>;
   address_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  and?: InputMaybe<Array<InputMaybe<Pool_Filter>>>;
   gaugesList?: InputMaybe<Array<Scalars['Bytes']>>;
   gaugesList_contains?: InputMaybe<Array<Scalars['Bytes']>>;
   gaugesList_contains_nocase?: InputMaybe<Array<Scalars['Bytes']>>;
@@ -699,6 +750,7 @@ export type Pool_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<Pool_Filter>>>;
   poolId?: InputMaybe<Scalars['Bytes']>;
   poolId_contains?: InputMaybe<Scalars['Bytes']>;
   poolId_gt?: InputMaybe<Scalars['Bytes']>;
@@ -733,12 +785,21 @@ export type Pool_Filter = {
 };
 
 export enum Pool_OrderBy {
-  Address = 'address',
-  Gauges = 'gauges',
-  GaugesList = 'gaugesList',
-  Id = 'id',
-  PoolId = 'poolId',
-  PreferentialGauge = 'preferentialGauge'
+  address = 'address',
+  gauges = 'gauges',
+  gaugesList = 'gaugesList',
+  id = 'id',
+  poolId = 'poolId',
+  preferentialGauge = 'preferentialGauge',
+  preferentialGauge__id = 'preferentialGauge__id',
+  preferentialGauge__isKilled = 'preferentialGauge__isKilled',
+  preferentialGauge__isPreferentialGauge = 'preferentialGauge__isPreferentialGauge',
+  preferentialGauge__poolAddress = 'preferentialGauge__poolAddress',
+  preferentialGauge__poolId = 'preferentialGauge__poolId',
+  preferentialGauge__relativeWeightCap = 'preferentialGauge__relativeWeightCap',
+  preferentialGauge__streamer = 'preferentialGauge__streamer',
+  preferentialGauge__symbol = 'preferentialGauge__symbol',
+  preferentialGauge__totalSupply = 'preferentialGauge__totalSupply'
 }
 
 export type Query = {
@@ -1013,6 +1074,7 @@ export type RewardToken = {
 export type RewardToken_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<RewardToken_Filter>>>;
   decimals?: InputMaybe<Scalars['Int']>;
   decimals_gt?: InputMaybe<Scalars['Int']>;
   decimals_gte?: InputMaybe<Scalars['Int']>;
@@ -1050,6 +1112,7 @@ export type RewardToken_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<RewardToken_Filter>>>;
   periodFinish?: InputMaybe<Scalars['BigInt']>;
   periodFinish_gt?: InputMaybe<Scalars['BigInt']>;
   periodFinish_gte?: InputMaybe<Scalars['BigInt']>;
@@ -1097,13 +1160,22 @@ export type RewardToken_Filter = {
 };
 
 export enum RewardToken_OrderBy {
-  Decimals = 'decimals',
-  Gauge = 'gauge',
-  Id = 'id',
-  PeriodFinish = 'periodFinish',
-  Rate = 'rate',
-  Symbol = 'symbol',
-  TotalDeposited = 'totalDeposited'
+  decimals = 'decimals',
+  gauge = 'gauge',
+  gauge__id = 'gauge__id',
+  gauge__isKilled = 'gauge__isKilled',
+  gauge__isPreferentialGauge = 'gauge__isPreferentialGauge',
+  gauge__poolAddress = 'gauge__poolAddress',
+  gauge__poolId = 'gauge__poolId',
+  gauge__relativeWeightCap = 'gauge__relativeWeightCap',
+  gauge__streamer = 'gauge__streamer',
+  gauge__symbol = 'gauge__symbol',
+  gauge__totalSupply = 'gauge__totalSupply',
+  id = 'id',
+  periodFinish = 'periodFinish',
+  rate = 'rate',
+  symbol = 'symbol',
+  totalDeposited = 'totalDeposited'
 }
 
 export type RootGauge = {
@@ -1127,6 +1199,7 @@ export type RootGauge = {
 export type RootGauge_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<RootGauge_Filter>>>;
   chain?: InputMaybe<Chain>;
   chain_in?: InputMaybe<Array<Chain>>;
   chain_not?: InputMaybe<Chain>;
@@ -1185,6 +1258,7 @@ export type RootGauge_Filter = {
   isKilled_in?: InputMaybe<Array<Scalars['Boolean']>>;
   isKilled_not?: InputMaybe<Scalars['Boolean']>;
   isKilled_not_in?: InputMaybe<Array<Scalars['Boolean']>>;
+  or?: InputMaybe<Array<InputMaybe<RootGauge_Filter>>>;
   recipient?: InputMaybe<Scalars['Bytes']>;
   recipient_contains?: InputMaybe<Scalars['Bytes']>;
   recipient_gt?: InputMaybe<Scalars['Bytes']>;
@@ -1206,13 +1280,18 @@ export type RootGauge_Filter = {
 };
 
 export enum RootGauge_OrderBy {
-  Chain = 'chain',
-  Factory = 'factory',
-  Gauge = 'gauge',
-  Id = 'id',
-  IsKilled = 'isKilled',
-  Recipient = 'recipient',
-  RelativeWeightCap = 'relativeWeightCap'
+  chain = 'chain',
+  factory = 'factory',
+  factory__id = 'factory__id',
+  factory__numGauges = 'factory__numGauges',
+  gauge = 'gauge',
+  gauge__addedTimestamp = 'gauge__addedTimestamp',
+  gauge__address = 'gauge__address',
+  gauge__id = 'gauge__id',
+  id = 'id',
+  isKilled = 'isKilled',
+  recipient = 'recipient',
+  relativeWeightCap = 'relativeWeightCap'
 }
 
 export type Subscription = {
@@ -1508,6 +1587,7 @@ export type UserVotingLocksArgs = {
 export type User_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<User_Filter>>>;
   gaugeShares_?: InputMaybe<GaugeShare_Filter>;
   gaugeVotes_?: InputMaybe<GaugeVote_Filter>;
   id?: InputMaybe<Scalars['ID']>;
@@ -1518,14 +1598,15 @@ export type User_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<User_Filter>>>;
   votingLocks_?: InputMaybe<VotingEscrowLock_Filter>;
 };
 
 export enum User_OrderBy {
-  GaugeShares = 'gaugeShares',
-  GaugeVotes = 'gaugeVotes',
-  Id = 'id',
-  VotingLocks = 'votingLocks'
+  gaugeShares = 'gaugeShares',
+  gaugeVotes = 'gaugeVotes',
+  id = 'id',
+  votingLocks = 'votingLocks'
 }
 
 export type VotingEscrow = {
@@ -1565,6 +1646,7 @@ export type VotingEscrowLock = {
 export type VotingEscrowLock_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<VotingEscrowLock_Filter>>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -1581,6 +1663,7 @@ export type VotingEscrowLock_Filter = {
   lockedBalance_lte?: InputMaybe<Scalars['BigDecimal']>;
   lockedBalance_not?: InputMaybe<Scalars['BigDecimal']>;
   lockedBalance_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  or?: InputMaybe<Array<InputMaybe<VotingEscrowLock_Filter>>>;
   unlockTime?: InputMaybe<Scalars['BigInt']>;
   unlockTime_gt?: InputMaybe<Scalars['BigInt']>;
   unlockTime_gte?: InputMaybe<Scalars['BigInt']>;
@@ -1642,17 +1725,21 @@ export type VotingEscrowLock_Filter = {
 };
 
 export enum VotingEscrowLock_OrderBy {
-  Id = 'id',
-  LockedBalance = 'lockedBalance',
-  UnlockTime = 'unlockTime',
-  UpdatedAt = 'updatedAt',
-  User = 'user',
-  VotingEscrowId = 'votingEscrowID'
+  id = 'id',
+  lockedBalance = 'lockedBalance',
+  unlockTime = 'unlockTime',
+  updatedAt = 'updatedAt',
+  user = 'user',
+  user__id = 'user__id',
+  votingEscrowID = 'votingEscrowID',
+  votingEscrowID__id = 'votingEscrowID__id',
+  votingEscrowID__stakedSupply = 'votingEscrowID__stakedSupply'
 }
 
 export type VotingEscrow_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<VotingEscrow_Filter>>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -1662,6 +1749,7 @@ export type VotingEscrow_Filter = {
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
   locks_?: InputMaybe<VotingEscrowLock_Filter>;
+  or?: InputMaybe<Array<InputMaybe<VotingEscrow_Filter>>>;
   stakedSupply?: InputMaybe<Scalars['BigDecimal']>;
   stakedSupply_gt?: InputMaybe<Scalars['BigDecimal']>;
   stakedSupply_gte?: InputMaybe<Scalars['BigDecimal']>;
@@ -1673,9 +1761,9 @@ export type VotingEscrow_Filter = {
 };
 
 export enum VotingEscrow_OrderBy {
-  Id = 'id',
-  Locks = 'locks',
-  StakedSupply = 'stakedSupply'
+  id = 'id',
+  locks = 'locks',
+  stakedSupply = 'stakedSupply'
 }
 
 export type _Block_ = {
@@ -1707,9 +1795,9 @@ export type _Meta_ = {
 
 export enum _SubgraphErrorPolicy_ {
   /** Data will be returned even if the subgraph has indexing errors */
-  Allow = 'allow',
+  allow = 'allow',
   /** If the subgraph has indexing errors, data will be omitted. The default. */
-  Deny = 'deny'
+  deny = 'deny'
 }
 
 export type GaugeShareQueryVariables = Exact<{

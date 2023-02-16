@@ -32,6 +32,7 @@ export type AmpUpdate = {
 export type AmpUpdate_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<AmpUpdate_Filter>>>;
   endAmp?: InputMaybe<Scalars['BigInt']>;
   endAmp_gt?: InputMaybe<Scalars['BigInt']>;
   endAmp_gte?: InputMaybe<Scalars['BigInt']>;
@@ -56,6 +57,7 @@ export type AmpUpdate_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<AmpUpdate_Filter>>>;
   poolId?: InputMaybe<Scalars['String']>;
   poolId_?: InputMaybe<Pool_Filter>;
   poolId_contains?: InputMaybe<Scalars['String']>;
@@ -108,6 +110,62 @@ export enum AmpUpdate_OrderBy {
   EndTimestamp = 'endTimestamp',
   Id = 'id',
   PoolId = 'poolId',
+  PoolIdAddress = 'poolId__address',
+  PoolIdAlpha = 'poolId__alpha',
+  PoolIdAmp = 'poolId__amp',
+  PoolIdBaseToken = 'poolId__baseToken',
+  PoolIdBeta = 'poolId__beta',
+  PoolIdC = 'poolId__c',
+  PoolIdCreateTime = 'poolId__createTime',
+  PoolIdDSq = 'poolId__dSq',
+  PoolIdDelta = 'poolId__delta',
+  PoolIdEpsilon = 'poolId__epsilon',
+  PoolIdExpiryTime = 'poolId__expiryTime',
+  PoolIdFactory = 'poolId__factory',
+  PoolIdHoldersCount = 'poolId__holdersCount',
+  PoolIdId = 'poolId__id',
+  PoolIdIsInRecoveryMode = 'poolId__isInRecoveryMode',
+  PoolIdIsPaused = 'poolId__isPaused',
+  PoolIdLambda = 'poolId__lambda',
+  PoolIdLowerTarget = 'poolId__lowerTarget',
+  PoolIdMainIndex = 'poolId__mainIndex',
+  PoolIdManagementFee = 'poolId__managementFee',
+  PoolIdName = 'poolId__name',
+  PoolIdOracleEnabled = 'poolId__oracleEnabled',
+  PoolIdOwner = 'poolId__owner',
+  PoolIdPoolType = 'poolId__poolType',
+  PoolIdPoolTypeVersion = 'poolId__poolTypeVersion',
+  PoolIdPrincipalToken = 'poolId__principalToken',
+  PoolIdProtocolAumFeeCache = 'poolId__protocolAumFeeCache',
+  PoolIdProtocolId = 'poolId__protocolId',
+  PoolIdProtocolSwapFeeCache = 'poolId__protocolSwapFeeCache',
+  PoolIdProtocolYieldFeeCache = 'poolId__protocolYieldFeeCache',
+  PoolIdRoot3Alpha = 'poolId__root3Alpha',
+  PoolIdS = 'poolId__s',
+  PoolIdSqrtAlpha = 'poolId__sqrtAlpha',
+  PoolIdSqrtBeta = 'poolId__sqrtBeta',
+  PoolIdStrategyType = 'poolId__strategyType',
+  PoolIdSwapEnabled = 'poolId__swapEnabled',
+  PoolIdSwapFee = 'poolId__swapFee',
+  PoolIdSwapsCount = 'poolId__swapsCount',
+  PoolIdSymbol = 'poolId__symbol',
+  PoolIdTauAlphaX = 'poolId__tauAlphaX',
+  PoolIdTauAlphaY = 'poolId__tauAlphaY',
+  PoolIdTauBetaX = 'poolId__tauBetaX',
+  PoolIdTauBetaY = 'poolId__tauBetaY',
+  PoolIdTotalLiquidity = 'poolId__totalLiquidity',
+  PoolIdTotalShares = 'poolId__totalShares',
+  PoolIdTotalSwapFee = 'poolId__totalSwapFee',
+  PoolIdTotalSwapVolume = 'poolId__totalSwapVolume',
+  PoolIdTotalWeight = 'poolId__totalWeight',
+  PoolIdTx = 'poolId__tx',
+  PoolIdU = 'poolId__u',
+  PoolIdUnitSeconds = 'poolId__unitSeconds',
+  PoolIdUpperTarget = 'poolId__upperTarget',
+  PoolIdV = 'poolId__v',
+  PoolIdW = 'poolId__w',
+  PoolIdWrappedIndex = 'poolId__wrappedIndex',
+  PoolIdZ = 'poolId__z',
   ScheduledTimestamp = 'scheduledTimestamp',
   StartAmp = 'startAmp',
   StartTimestamp = 'startTimestamp'
@@ -148,6 +206,7 @@ export type BalancerSnapshot = {
 export type BalancerSnapshot_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<BalancerSnapshot_Filter>>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -156,6 +215,7 @@ export type BalancerSnapshot_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<BalancerSnapshot_Filter>>>;
   poolCount?: InputMaybe<Scalars['Int']>;
   poolCount_gt?: InputMaybe<Scalars['Int']>;
   poolCount_gte?: InputMaybe<Scalars['Int']>;
@@ -235,12 +295,19 @@ export enum BalancerSnapshot_OrderBy {
   TotalSwapCount = 'totalSwapCount',
   TotalSwapFee = 'totalSwapFee',
   TotalSwapVolume = 'totalSwapVolume',
-  Vault = 'vault'
+  Vault = 'vault',
+  VaultId = 'vault__id',
+  VaultPoolCount = 'vault__poolCount',
+  VaultTotalLiquidity = 'vault__totalLiquidity',
+  VaultTotalSwapCount = 'vault__totalSwapCount',
+  VaultTotalSwapFee = 'vault__totalSwapFee',
+  VaultTotalSwapVolume = 'vault__totalSwapVolume'
 }
 
 export type Balancer_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<Balancer_Filter>>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -249,6 +316,7 @@ export type Balancer_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<Balancer_Filter>>>;
   poolCount?: InputMaybe<Scalars['Int']>;
   poolCount_gt?: InputMaybe<Scalars['Int']>;
   poolCount_gte?: InputMaybe<Scalars['Int']>;
@@ -326,6 +394,7 @@ export type GradualWeightUpdate = {
 export type GradualWeightUpdate_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<GradualWeightUpdate_Filter>>>;
   endTimestamp?: InputMaybe<Scalars['BigInt']>;
   endTimestamp_gt?: InputMaybe<Scalars['BigInt']>;
   endTimestamp_gte?: InputMaybe<Scalars['BigInt']>;
@@ -348,6 +417,7 @@ export type GradualWeightUpdate_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<GradualWeightUpdate_Filter>>>;
   poolId?: InputMaybe<Scalars['String']>;
   poolId_?: InputMaybe<Pool_Filter>;
   poolId_contains?: InputMaybe<Scalars['String']>;
@@ -398,6 +468,62 @@ export enum GradualWeightUpdate_OrderBy {
   EndWeights = 'endWeights',
   Id = 'id',
   PoolId = 'poolId',
+  PoolIdAddress = 'poolId__address',
+  PoolIdAlpha = 'poolId__alpha',
+  PoolIdAmp = 'poolId__amp',
+  PoolIdBaseToken = 'poolId__baseToken',
+  PoolIdBeta = 'poolId__beta',
+  PoolIdC = 'poolId__c',
+  PoolIdCreateTime = 'poolId__createTime',
+  PoolIdDSq = 'poolId__dSq',
+  PoolIdDelta = 'poolId__delta',
+  PoolIdEpsilon = 'poolId__epsilon',
+  PoolIdExpiryTime = 'poolId__expiryTime',
+  PoolIdFactory = 'poolId__factory',
+  PoolIdHoldersCount = 'poolId__holdersCount',
+  PoolIdId = 'poolId__id',
+  PoolIdIsInRecoveryMode = 'poolId__isInRecoveryMode',
+  PoolIdIsPaused = 'poolId__isPaused',
+  PoolIdLambda = 'poolId__lambda',
+  PoolIdLowerTarget = 'poolId__lowerTarget',
+  PoolIdMainIndex = 'poolId__mainIndex',
+  PoolIdManagementFee = 'poolId__managementFee',
+  PoolIdName = 'poolId__name',
+  PoolIdOracleEnabled = 'poolId__oracleEnabled',
+  PoolIdOwner = 'poolId__owner',
+  PoolIdPoolType = 'poolId__poolType',
+  PoolIdPoolTypeVersion = 'poolId__poolTypeVersion',
+  PoolIdPrincipalToken = 'poolId__principalToken',
+  PoolIdProtocolAumFeeCache = 'poolId__protocolAumFeeCache',
+  PoolIdProtocolId = 'poolId__protocolId',
+  PoolIdProtocolSwapFeeCache = 'poolId__protocolSwapFeeCache',
+  PoolIdProtocolYieldFeeCache = 'poolId__protocolYieldFeeCache',
+  PoolIdRoot3Alpha = 'poolId__root3Alpha',
+  PoolIdS = 'poolId__s',
+  PoolIdSqrtAlpha = 'poolId__sqrtAlpha',
+  PoolIdSqrtBeta = 'poolId__sqrtBeta',
+  PoolIdStrategyType = 'poolId__strategyType',
+  PoolIdSwapEnabled = 'poolId__swapEnabled',
+  PoolIdSwapFee = 'poolId__swapFee',
+  PoolIdSwapsCount = 'poolId__swapsCount',
+  PoolIdSymbol = 'poolId__symbol',
+  PoolIdTauAlphaX = 'poolId__tauAlphaX',
+  PoolIdTauAlphaY = 'poolId__tauAlphaY',
+  PoolIdTauBetaX = 'poolId__tauBetaX',
+  PoolIdTauBetaY = 'poolId__tauBetaY',
+  PoolIdTotalLiquidity = 'poolId__totalLiquidity',
+  PoolIdTotalShares = 'poolId__totalShares',
+  PoolIdTotalSwapFee = 'poolId__totalSwapFee',
+  PoolIdTotalSwapVolume = 'poolId__totalSwapVolume',
+  PoolIdTotalWeight = 'poolId__totalWeight',
+  PoolIdTx = 'poolId__tx',
+  PoolIdU = 'poolId__u',
+  PoolIdUnitSeconds = 'poolId__unitSeconds',
+  PoolIdUpperTarget = 'poolId__upperTarget',
+  PoolIdV = 'poolId__v',
+  PoolIdW = 'poolId__w',
+  PoolIdWrappedIndex = 'poolId__wrappedIndex',
+  PoolIdZ = 'poolId__z',
   ScheduledTimestamp = 'scheduledTimestamp',
   StartTimestamp = 'startTimestamp',
   StartWeights = 'startWeights'
@@ -430,6 +556,7 @@ export type JoinExit_Filter = {
   amounts_not?: InputMaybe<Array<Scalars['BigDecimal']>>;
   amounts_not_contains?: InputMaybe<Array<Scalars['BigDecimal']>>;
   amounts_not_contains_nocase?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  and?: InputMaybe<Array<InputMaybe<JoinExit_Filter>>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -438,6 +565,7 @@ export type JoinExit_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<JoinExit_Filter>>>;
   pool?: InputMaybe<Scalars['String']>;
   pool_?: InputMaybe<Pool_Filter>;
   pool_contains?: InputMaybe<Scalars['String']>;
@@ -526,11 +654,68 @@ export enum JoinExit_OrderBy {
   Amounts = 'amounts',
   Id = 'id',
   Pool = 'pool',
+  PoolAddress = 'pool__address',
+  PoolAlpha = 'pool__alpha',
+  PoolAmp = 'pool__amp',
+  PoolBaseToken = 'pool__baseToken',
+  PoolBeta = 'pool__beta',
+  PoolC = 'pool__c',
+  PoolCreateTime = 'pool__createTime',
+  PoolDSq = 'pool__dSq',
+  PoolDelta = 'pool__delta',
+  PoolEpsilon = 'pool__epsilon',
+  PoolExpiryTime = 'pool__expiryTime',
+  PoolFactory = 'pool__factory',
+  PoolHoldersCount = 'pool__holdersCount',
+  PoolId = 'pool__id',
+  PoolIsInRecoveryMode = 'pool__isInRecoveryMode',
+  PoolIsPaused = 'pool__isPaused',
+  PoolLambda = 'pool__lambda',
+  PoolLowerTarget = 'pool__lowerTarget',
+  PoolMainIndex = 'pool__mainIndex',
+  PoolManagementFee = 'pool__managementFee',
+  PoolName = 'pool__name',
+  PoolOracleEnabled = 'pool__oracleEnabled',
+  PoolOwner = 'pool__owner',
+  PoolPoolType = 'pool__poolType',
+  PoolPoolTypeVersion = 'pool__poolTypeVersion',
+  PoolPrincipalToken = 'pool__principalToken',
+  PoolProtocolAumFeeCache = 'pool__protocolAumFeeCache',
+  PoolProtocolId = 'pool__protocolId',
+  PoolProtocolSwapFeeCache = 'pool__protocolSwapFeeCache',
+  PoolProtocolYieldFeeCache = 'pool__protocolYieldFeeCache',
+  PoolRoot3Alpha = 'pool__root3Alpha',
+  PoolS = 'pool__s',
+  PoolSqrtAlpha = 'pool__sqrtAlpha',
+  PoolSqrtBeta = 'pool__sqrtBeta',
+  PoolStrategyType = 'pool__strategyType',
+  PoolSwapEnabled = 'pool__swapEnabled',
+  PoolSwapFee = 'pool__swapFee',
+  PoolSwapsCount = 'pool__swapsCount',
+  PoolSymbol = 'pool__symbol',
+  PoolTauAlphaX = 'pool__tauAlphaX',
+  PoolTauAlphaY = 'pool__tauAlphaY',
+  PoolTauBetaX = 'pool__tauBetaX',
+  PoolTauBetaY = 'pool__tauBetaY',
+  PoolTotalLiquidity = 'pool__totalLiquidity',
+  PoolTotalShares = 'pool__totalShares',
+  PoolTotalSwapFee = 'pool__totalSwapFee',
+  PoolTotalSwapVolume = 'pool__totalSwapVolume',
+  PoolTotalWeight = 'pool__totalWeight',
+  PoolTx = 'pool__tx',
+  PoolU = 'pool__u',
+  PoolUnitSeconds = 'pool__unitSeconds',
+  PoolUpperTarget = 'pool__upperTarget',
+  PoolV = 'pool__v',
+  PoolW = 'pool__w',
+  PoolWrappedIndex = 'pool__wrappedIndex',
+  PoolZ = 'pool__z',
   Sender = 'sender',
   Timestamp = 'timestamp',
   Tx = 'tx',
   Type = 'type',
   User = 'user',
+  UserId = 'user__id',
   ValueUsd = 'valueUSD'
 }
 
@@ -547,6 +732,7 @@ export type LatestPrice = {
 export type LatestPrice_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<LatestPrice_Filter>>>;
   asset?: InputMaybe<Scalars['Bytes']>;
   asset_contains?: InputMaybe<Scalars['Bytes']>;
   asset_gt?: InputMaybe<Scalars['Bytes']>;
@@ -573,6 +759,7 @@ export type LatestPrice_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<LatestPrice_Filter>>>;
   poolId?: InputMaybe<Scalars['String']>;
   poolId_?: InputMaybe<Pool_Filter>;
   poolId_contains?: InputMaybe<Scalars['String']>;
@@ -619,6 +806,62 @@ export enum LatestPrice_OrderBy {
   Block = 'block',
   Id = 'id',
   PoolId = 'poolId',
+  PoolIdAddress = 'poolId__address',
+  PoolIdAlpha = 'poolId__alpha',
+  PoolIdAmp = 'poolId__amp',
+  PoolIdBaseToken = 'poolId__baseToken',
+  PoolIdBeta = 'poolId__beta',
+  PoolIdC = 'poolId__c',
+  PoolIdCreateTime = 'poolId__createTime',
+  PoolIdDSq = 'poolId__dSq',
+  PoolIdDelta = 'poolId__delta',
+  PoolIdEpsilon = 'poolId__epsilon',
+  PoolIdExpiryTime = 'poolId__expiryTime',
+  PoolIdFactory = 'poolId__factory',
+  PoolIdHoldersCount = 'poolId__holdersCount',
+  PoolIdId = 'poolId__id',
+  PoolIdIsInRecoveryMode = 'poolId__isInRecoveryMode',
+  PoolIdIsPaused = 'poolId__isPaused',
+  PoolIdLambda = 'poolId__lambda',
+  PoolIdLowerTarget = 'poolId__lowerTarget',
+  PoolIdMainIndex = 'poolId__mainIndex',
+  PoolIdManagementFee = 'poolId__managementFee',
+  PoolIdName = 'poolId__name',
+  PoolIdOracleEnabled = 'poolId__oracleEnabled',
+  PoolIdOwner = 'poolId__owner',
+  PoolIdPoolType = 'poolId__poolType',
+  PoolIdPoolTypeVersion = 'poolId__poolTypeVersion',
+  PoolIdPrincipalToken = 'poolId__principalToken',
+  PoolIdProtocolAumFeeCache = 'poolId__protocolAumFeeCache',
+  PoolIdProtocolId = 'poolId__protocolId',
+  PoolIdProtocolSwapFeeCache = 'poolId__protocolSwapFeeCache',
+  PoolIdProtocolYieldFeeCache = 'poolId__protocolYieldFeeCache',
+  PoolIdRoot3Alpha = 'poolId__root3Alpha',
+  PoolIdS = 'poolId__s',
+  PoolIdSqrtAlpha = 'poolId__sqrtAlpha',
+  PoolIdSqrtBeta = 'poolId__sqrtBeta',
+  PoolIdStrategyType = 'poolId__strategyType',
+  PoolIdSwapEnabled = 'poolId__swapEnabled',
+  PoolIdSwapFee = 'poolId__swapFee',
+  PoolIdSwapsCount = 'poolId__swapsCount',
+  PoolIdSymbol = 'poolId__symbol',
+  PoolIdTauAlphaX = 'poolId__tauAlphaX',
+  PoolIdTauAlphaY = 'poolId__tauAlphaY',
+  PoolIdTauBetaX = 'poolId__tauBetaX',
+  PoolIdTauBetaY = 'poolId__tauBetaY',
+  PoolIdTotalLiquidity = 'poolId__totalLiquidity',
+  PoolIdTotalShares = 'poolId__totalShares',
+  PoolIdTotalSwapFee = 'poolId__totalSwapFee',
+  PoolIdTotalSwapVolume = 'poolId__totalSwapVolume',
+  PoolIdTotalWeight = 'poolId__totalWeight',
+  PoolIdTx = 'poolId__tx',
+  PoolIdU = 'poolId__u',
+  PoolIdUnitSeconds = 'poolId__unitSeconds',
+  PoolIdUpperTarget = 'poolId__upperTarget',
+  PoolIdV = 'poolId__v',
+  PoolIdW = 'poolId__w',
+  PoolIdWrappedIndex = 'poolId__wrappedIndex',
+  PoolIdZ = 'poolId__z',
   Price = 'price',
   PricingAsset = 'pricingAsset'
 }
@@ -636,6 +879,7 @@ export type ManagementOperation = {
 export type ManagementOperation_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<ManagementOperation_Filter>>>;
   cashDelta?: InputMaybe<Scalars['BigDecimal']>;
   cashDelta_gt?: InputMaybe<Scalars['BigDecimal']>;
   cashDelta_gte?: InputMaybe<Scalars['BigDecimal']>;
@@ -660,6 +904,7 @@ export type ManagementOperation_Filter = {
   managedDelta_lte?: InputMaybe<Scalars['BigDecimal']>;
   managedDelta_not?: InputMaybe<Scalars['BigDecimal']>;
   managedDelta_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  or?: InputMaybe<Array<InputMaybe<ManagementOperation_Filter>>>;
   poolTokenId?: InputMaybe<Scalars['String']>;
   poolTokenId_?: InputMaybe<PoolToken_Filter>;
   poolTokenId_contains?: InputMaybe<Scalars['String']>;
@@ -700,6 +945,19 @@ export enum ManagementOperation_OrderBy {
   Id = 'id',
   ManagedDelta = 'managedDelta',
   PoolTokenId = 'poolTokenId',
+  PoolTokenIdAddress = 'poolTokenId__address',
+  PoolTokenIdAssetManager = 'poolTokenId__assetManager',
+  PoolTokenIdBalance = 'poolTokenId__balance',
+  PoolTokenIdCashBalance = 'poolTokenId__cashBalance',
+  PoolTokenIdDecimals = 'poolTokenId__decimals',
+  PoolTokenIdId = 'poolTokenId__id',
+  PoolTokenIdIndex = 'poolTokenId__index',
+  PoolTokenIdIsExemptFromYieldProtocolFee = 'poolTokenId__isExemptFromYieldProtocolFee',
+  PoolTokenIdManagedBalance = 'poolTokenId__managedBalance',
+  PoolTokenIdName = 'poolTokenId__name',
+  PoolTokenIdPriceRate = 'poolTokenId__priceRate',
+  PoolTokenIdSymbol = 'poolTokenId__symbol',
+  PoolTokenIdWeight = 'poolTokenId__weight',
   Timestamp = 'timestamp',
   Type = 'type'
 }
@@ -857,6 +1115,7 @@ export type PoolContract = {
 export type PoolContract_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<PoolContract_Filter>>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -865,6 +1124,7 @@ export type PoolContract_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<PoolContract_Filter>>>;
   pool?: InputMaybe<Scalars['String']>;
   pool_?: InputMaybe<Pool_Filter>;
   pool_contains?: InputMaybe<Scalars['String']>;
@@ -890,7 +1150,63 @@ export type PoolContract_Filter = {
 
 export enum PoolContract_OrderBy {
   Id = 'id',
-  Pool = 'pool'
+  Pool = 'pool',
+  PoolAddress = 'pool__address',
+  PoolAlpha = 'pool__alpha',
+  PoolAmp = 'pool__amp',
+  PoolBaseToken = 'pool__baseToken',
+  PoolBeta = 'pool__beta',
+  PoolC = 'pool__c',
+  PoolCreateTime = 'pool__createTime',
+  PoolDSq = 'pool__dSq',
+  PoolDelta = 'pool__delta',
+  PoolEpsilon = 'pool__epsilon',
+  PoolExpiryTime = 'pool__expiryTime',
+  PoolFactory = 'pool__factory',
+  PoolHoldersCount = 'pool__holdersCount',
+  PoolId = 'pool__id',
+  PoolIsInRecoveryMode = 'pool__isInRecoveryMode',
+  PoolIsPaused = 'pool__isPaused',
+  PoolLambda = 'pool__lambda',
+  PoolLowerTarget = 'pool__lowerTarget',
+  PoolMainIndex = 'pool__mainIndex',
+  PoolManagementFee = 'pool__managementFee',
+  PoolName = 'pool__name',
+  PoolOracleEnabled = 'pool__oracleEnabled',
+  PoolOwner = 'pool__owner',
+  PoolPoolType = 'pool__poolType',
+  PoolPoolTypeVersion = 'pool__poolTypeVersion',
+  PoolPrincipalToken = 'pool__principalToken',
+  PoolProtocolAumFeeCache = 'pool__protocolAumFeeCache',
+  PoolProtocolId = 'pool__protocolId',
+  PoolProtocolSwapFeeCache = 'pool__protocolSwapFeeCache',
+  PoolProtocolYieldFeeCache = 'pool__protocolYieldFeeCache',
+  PoolRoot3Alpha = 'pool__root3Alpha',
+  PoolS = 'pool__s',
+  PoolSqrtAlpha = 'pool__sqrtAlpha',
+  PoolSqrtBeta = 'pool__sqrtBeta',
+  PoolStrategyType = 'pool__strategyType',
+  PoolSwapEnabled = 'pool__swapEnabled',
+  PoolSwapFee = 'pool__swapFee',
+  PoolSwapsCount = 'pool__swapsCount',
+  PoolSymbol = 'pool__symbol',
+  PoolTauAlphaX = 'pool__tauAlphaX',
+  PoolTauAlphaY = 'pool__tauAlphaY',
+  PoolTauBetaX = 'pool__tauBetaX',
+  PoolTauBetaY = 'pool__tauBetaY',
+  PoolTotalLiquidity = 'pool__totalLiquidity',
+  PoolTotalShares = 'pool__totalShares',
+  PoolTotalSwapFee = 'pool__totalSwapFee',
+  PoolTotalSwapVolume = 'pool__totalSwapVolume',
+  PoolTotalWeight = 'pool__totalWeight',
+  PoolTx = 'pool__tx',
+  PoolU = 'pool__u',
+  PoolUnitSeconds = 'pool__unitSeconds',
+  PoolUpperTarget = 'pool__upperTarget',
+  PoolV = 'pool__v',
+  PoolW = 'pool__w',
+  PoolWrappedIndex = 'pool__wrappedIndex',
+  PoolZ = 'pool__z'
 }
 
 export type PoolHistoricalLiquidity = {
@@ -907,6 +1223,7 @@ export type PoolHistoricalLiquidity = {
 export type PoolHistoricalLiquidity_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<PoolHistoricalLiquidity_Filter>>>;
   block?: InputMaybe<Scalars['BigInt']>;
   block_gt?: InputMaybe<Scalars['BigInt']>;
   block_gte?: InputMaybe<Scalars['BigInt']>;
@@ -923,6 +1240,7 @@ export type PoolHistoricalLiquidity_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<PoolHistoricalLiquidity_Filter>>>;
   poolId?: InputMaybe<Scalars['String']>;
   poolId_?: InputMaybe<Pool_Filter>;
   poolId_contains?: InputMaybe<Scalars['String']>;
@@ -984,6 +1302,62 @@ export enum PoolHistoricalLiquidity_OrderBy {
   Block = 'block',
   Id = 'id',
   PoolId = 'poolId',
+  PoolIdAddress = 'poolId__address',
+  PoolIdAlpha = 'poolId__alpha',
+  PoolIdAmp = 'poolId__amp',
+  PoolIdBaseToken = 'poolId__baseToken',
+  PoolIdBeta = 'poolId__beta',
+  PoolIdC = 'poolId__c',
+  PoolIdCreateTime = 'poolId__createTime',
+  PoolIdDSq = 'poolId__dSq',
+  PoolIdDelta = 'poolId__delta',
+  PoolIdEpsilon = 'poolId__epsilon',
+  PoolIdExpiryTime = 'poolId__expiryTime',
+  PoolIdFactory = 'poolId__factory',
+  PoolIdHoldersCount = 'poolId__holdersCount',
+  PoolIdId = 'poolId__id',
+  PoolIdIsInRecoveryMode = 'poolId__isInRecoveryMode',
+  PoolIdIsPaused = 'poolId__isPaused',
+  PoolIdLambda = 'poolId__lambda',
+  PoolIdLowerTarget = 'poolId__lowerTarget',
+  PoolIdMainIndex = 'poolId__mainIndex',
+  PoolIdManagementFee = 'poolId__managementFee',
+  PoolIdName = 'poolId__name',
+  PoolIdOracleEnabled = 'poolId__oracleEnabled',
+  PoolIdOwner = 'poolId__owner',
+  PoolIdPoolType = 'poolId__poolType',
+  PoolIdPoolTypeVersion = 'poolId__poolTypeVersion',
+  PoolIdPrincipalToken = 'poolId__principalToken',
+  PoolIdProtocolAumFeeCache = 'poolId__protocolAumFeeCache',
+  PoolIdProtocolId = 'poolId__protocolId',
+  PoolIdProtocolSwapFeeCache = 'poolId__protocolSwapFeeCache',
+  PoolIdProtocolYieldFeeCache = 'poolId__protocolYieldFeeCache',
+  PoolIdRoot3Alpha = 'poolId__root3Alpha',
+  PoolIdS = 'poolId__s',
+  PoolIdSqrtAlpha = 'poolId__sqrtAlpha',
+  PoolIdSqrtBeta = 'poolId__sqrtBeta',
+  PoolIdStrategyType = 'poolId__strategyType',
+  PoolIdSwapEnabled = 'poolId__swapEnabled',
+  PoolIdSwapFee = 'poolId__swapFee',
+  PoolIdSwapsCount = 'poolId__swapsCount',
+  PoolIdSymbol = 'poolId__symbol',
+  PoolIdTauAlphaX = 'poolId__tauAlphaX',
+  PoolIdTauAlphaY = 'poolId__tauAlphaY',
+  PoolIdTauBetaX = 'poolId__tauBetaX',
+  PoolIdTauBetaY = 'poolId__tauBetaY',
+  PoolIdTotalLiquidity = 'poolId__totalLiquidity',
+  PoolIdTotalShares = 'poolId__totalShares',
+  PoolIdTotalSwapFee = 'poolId__totalSwapFee',
+  PoolIdTotalSwapVolume = 'poolId__totalSwapVolume',
+  PoolIdTotalWeight = 'poolId__totalWeight',
+  PoolIdTx = 'poolId__tx',
+  PoolIdU = 'poolId__u',
+  PoolIdUnitSeconds = 'poolId__unitSeconds',
+  PoolIdUpperTarget = 'poolId__upperTarget',
+  PoolIdV = 'poolId__v',
+  PoolIdW = 'poolId__w',
+  PoolIdWrappedIndex = 'poolId__wrappedIndex',
+  PoolIdZ = 'poolId__z',
   PoolLiquidity = 'poolLiquidity',
   PoolShareValue = 'poolShareValue',
   PoolTotalShares = 'poolTotalShares',
@@ -1001,6 +1375,7 @@ export type PoolShare = {
 export type PoolShare_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<PoolShare_Filter>>>;
   balance?: InputMaybe<Scalars['BigDecimal']>;
   balance_gt?: InputMaybe<Scalars['BigDecimal']>;
   balance_gte?: InputMaybe<Scalars['BigDecimal']>;
@@ -1017,6 +1392,7 @@ export type PoolShare_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<PoolShare_Filter>>>;
   poolId?: InputMaybe<Scalars['String']>;
   poolId_?: InputMaybe<Pool_Filter>;
   poolId_contains?: InputMaybe<Scalars['String']>;
@@ -1065,7 +1441,64 @@ export enum PoolShare_OrderBy {
   Balance = 'balance',
   Id = 'id',
   PoolId = 'poolId',
-  UserAddress = 'userAddress'
+  PoolIdAddress = 'poolId__address',
+  PoolIdAlpha = 'poolId__alpha',
+  PoolIdAmp = 'poolId__amp',
+  PoolIdBaseToken = 'poolId__baseToken',
+  PoolIdBeta = 'poolId__beta',
+  PoolIdC = 'poolId__c',
+  PoolIdCreateTime = 'poolId__createTime',
+  PoolIdDSq = 'poolId__dSq',
+  PoolIdDelta = 'poolId__delta',
+  PoolIdEpsilon = 'poolId__epsilon',
+  PoolIdExpiryTime = 'poolId__expiryTime',
+  PoolIdFactory = 'poolId__factory',
+  PoolIdHoldersCount = 'poolId__holdersCount',
+  PoolIdId = 'poolId__id',
+  PoolIdIsInRecoveryMode = 'poolId__isInRecoveryMode',
+  PoolIdIsPaused = 'poolId__isPaused',
+  PoolIdLambda = 'poolId__lambda',
+  PoolIdLowerTarget = 'poolId__lowerTarget',
+  PoolIdMainIndex = 'poolId__mainIndex',
+  PoolIdManagementFee = 'poolId__managementFee',
+  PoolIdName = 'poolId__name',
+  PoolIdOracleEnabled = 'poolId__oracleEnabled',
+  PoolIdOwner = 'poolId__owner',
+  PoolIdPoolType = 'poolId__poolType',
+  PoolIdPoolTypeVersion = 'poolId__poolTypeVersion',
+  PoolIdPrincipalToken = 'poolId__principalToken',
+  PoolIdProtocolAumFeeCache = 'poolId__protocolAumFeeCache',
+  PoolIdProtocolId = 'poolId__protocolId',
+  PoolIdProtocolSwapFeeCache = 'poolId__protocolSwapFeeCache',
+  PoolIdProtocolYieldFeeCache = 'poolId__protocolYieldFeeCache',
+  PoolIdRoot3Alpha = 'poolId__root3Alpha',
+  PoolIdS = 'poolId__s',
+  PoolIdSqrtAlpha = 'poolId__sqrtAlpha',
+  PoolIdSqrtBeta = 'poolId__sqrtBeta',
+  PoolIdStrategyType = 'poolId__strategyType',
+  PoolIdSwapEnabled = 'poolId__swapEnabled',
+  PoolIdSwapFee = 'poolId__swapFee',
+  PoolIdSwapsCount = 'poolId__swapsCount',
+  PoolIdSymbol = 'poolId__symbol',
+  PoolIdTauAlphaX = 'poolId__tauAlphaX',
+  PoolIdTauAlphaY = 'poolId__tauAlphaY',
+  PoolIdTauBetaX = 'poolId__tauBetaX',
+  PoolIdTauBetaY = 'poolId__tauBetaY',
+  PoolIdTotalLiquidity = 'poolId__totalLiquidity',
+  PoolIdTotalShares = 'poolId__totalShares',
+  PoolIdTotalSwapFee = 'poolId__totalSwapFee',
+  PoolIdTotalSwapVolume = 'poolId__totalSwapVolume',
+  PoolIdTotalWeight = 'poolId__totalWeight',
+  PoolIdTx = 'poolId__tx',
+  PoolIdU = 'poolId__u',
+  PoolIdUnitSeconds = 'poolId__unitSeconds',
+  PoolIdUpperTarget = 'poolId__upperTarget',
+  PoolIdV = 'poolId__v',
+  PoolIdW = 'poolId__w',
+  PoolIdWrappedIndex = 'poolId__wrappedIndex',
+  PoolIdZ = 'poolId__z',
+  UserAddress = 'userAddress',
+  UserAddressId = 'userAddress__id'
 }
 
 export type PoolSnapshot = {
@@ -1091,6 +1524,7 @@ export type PoolSnapshot_Filter = {
   amounts_not?: InputMaybe<Array<Scalars['BigDecimal']>>;
   amounts_not_contains?: InputMaybe<Array<Scalars['BigDecimal']>>;
   amounts_not_contains_nocase?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  and?: InputMaybe<Array<InputMaybe<PoolSnapshot_Filter>>>;
   holdersCount?: InputMaybe<Scalars['BigInt']>;
   holdersCount_gt?: InputMaybe<Scalars['BigInt']>;
   holdersCount_gte?: InputMaybe<Scalars['BigInt']>;
@@ -1115,6 +1549,7 @@ export type PoolSnapshot_Filter = {
   liquidity_lte?: InputMaybe<Scalars['BigDecimal']>;
   liquidity_not?: InputMaybe<Scalars['BigDecimal']>;
   liquidity_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  or?: InputMaybe<Array<InputMaybe<PoolSnapshot_Filter>>>;
   pool?: InputMaybe<Scalars['String']>;
   pool_?: InputMaybe<Pool_Filter>;
   pool_contains?: InputMaybe<Scalars['String']>;
@@ -1184,6 +1619,62 @@ export enum PoolSnapshot_OrderBy {
   Id = 'id',
   Liquidity = 'liquidity',
   Pool = 'pool',
+  PoolAddress = 'pool__address',
+  PoolAlpha = 'pool__alpha',
+  PoolAmp = 'pool__amp',
+  PoolBaseToken = 'pool__baseToken',
+  PoolBeta = 'pool__beta',
+  PoolC = 'pool__c',
+  PoolCreateTime = 'pool__createTime',
+  PoolDSq = 'pool__dSq',
+  PoolDelta = 'pool__delta',
+  PoolEpsilon = 'pool__epsilon',
+  PoolExpiryTime = 'pool__expiryTime',
+  PoolFactory = 'pool__factory',
+  PoolHoldersCount = 'pool__holdersCount',
+  PoolId = 'pool__id',
+  PoolIsInRecoveryMode = 'pool__isInRecoveryMode',
+  PoolIsPaused = 'pool__isPaused',
+  PoolLambda = 'pool__lambda',
+  PoolLowerTarget = 'pool__lowerTarget',
+  PoolMainIndex = 'pool__mainIndex',
+  PoolManagementFee = 'pool__managementFee',
+  PoolName = 'pool__name',
+  PoolOracleEnabled = 'pool__oracleEnabled',
+  PoolOwner = 'pool__owner',
+  PoolPoolType = 'pool__poolType',
+  PoolPoolTypeVersion = 'pool__poolTypeVersion',
+  PoolPrincipalToken = 'pool__principalToken',
+  PoolProtocolAumFeeCache = 'pool__protocolAumFeeCache',
+  PoolProtocolId = 'pool__protocolId',
+  PoolProtocolSwapFeeCache = 'pool__protocolSwapFeeCache',
+  PoolProtocolYieldFeeCache = 'pool__protocolYieldFeeCache',
+  PoolRoot3Alpha = 'pool__root3Alpha',
+  PoolS = 'pool__s',
+  PoolSqrtAlpha = 'pool__sqrtAlpha',
+  PoolSqrtBeta = 'pool__sqrtBeta',
+  PoolStrategyType = 'pool__strategyType',
+  PoolSwapEnabled = 'pool__swapEnabled',
+  PoolSwapFee = 'pool__swapFee',
+  PoolSwapsCount = 'pool__swapsCount',
+  PoolSymbol = 'pool__symbol',
+  PoolTauAlphaX = 'pool__tauAlphaX',
+  PoolTauAlphaY = 'pool__tauAlphaY',
+  PoolTauBetaX = 'pool__tauBetaX',
+  PoolTauBetaY = 'pool__tauBetaY',
+  PoolTotalLiquidity = 'pool__totalLiquidity',
+  PoolTotalShares = 'pool__totalShares',
+  PoolTotalSwapFee = 'pool__totalSwapFee',
+  PoolTotalSwapVolume = 'pool__totalSwapVolume',
+  PoolTotalWeight = 'pool__totalWeight',
+  PoolTx = 'pool__tx',
+  PoolU = 'pool__u',
+  PoolUnitSeconds = 'pool__unitSeconds',
+  PoolUpperTarget = 'pool__upperTarget',
+  PoolV = 'pool__v',
+  PoolW = 'pool__w',
+  PoolWrappedIndex = 'pool__wrappedIndex',
+  PoolZ = 'pool__z',
   SwapFees = 'swapFees',
   SwapVolume = 'swapVolume',
   SwapsCount = 'swapsCount',
@@ -1243,6 +1734,7 @@ export type PoolToken_Filter = {
   address_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
   address_starts_with?: InputMaybe<Scalars['String']>;
   address_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  and?: InputMaybe<Array<InputMaybe<PoolToken_Filter>>>;
   assetManager?: InputMaybe<Scalars['Bytes']>;
   assetManager_contains?: InputMaybe<Scalars['Bytes']>;
   assetManager_gt?: InputMaybe<Scalars['Bytes']>;
@@ -1326,6 +1818,7 @@ export type PoolToken_Filter = {
   name_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
   name_starts_with?: InputMaybe<Scalars['String']>;
   name_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  or?: InputMaybe<Array<InputMaybe<PoolToken_Filter>>>;
   poolId?: InputMaybe<Scalars['String']>;
   poolId_?: InputMaybe<Pool_Filter>;
   poolId_contains?: InputMaybe<Scalars['String']>;
@@ -1419,9 +1912,77 @@ export enum PoolToken_OrderBy {
   Managements = 'managements',
   Name = 'name',
   PoolId = 'poolId',
+  PoolIdAddress = 'poolId__address',
+  PoolIdAlpha = 'poolId__alpha',
+  PoolIdAmp = 'poolId__amp',
+  PoolIdBaseToken = 'poolId__baseToken',
+  PoolIdBeta = 'poolId__beta',
+  PoolIdC = 'poolId__c',
+  PoolIdCreateTime = 'poolId__createTime',
+  PoolIdDSq = 'poolId__dSq',
+  PoolIdDelta = 'poolId__delta',
+  PoolIdEpsilon = 'poolId__epsilon',
+  PoolIdExpiryTime = 'poolId__expiryTime',
+  PoolIdFactory = 'poolId__factory',
+  PoolIdHoldersCount = 'poolId__holdersCount',
+  PoolIdId = 'poolId__id',
+  PoolIdIsInRecoveryMode = 'poolId__isInRecoveryMode',
+  PoolIdIsPaused = 'poolId__isPaused',
+  PoolIdLambda = 'poolId__lambda',
+  PoolIdLowerTarget = 'poolId__lowerTarget',
+  PoolIdMainIndex = 'poolId__mainIndex',
+  PoolIdManagementFee = 'poolId__managementFee',
+  PoolIdName = 'poolId__name',
+  PoolIdOracleEnabled = 'poolId__oracleEnabled',
+  PoolIdOwner = 'poolId__owner',
+  PoolIdPoolType = 'poolId__poolType',
+  PoolIdPoolTypeVersion = 'poolId__poolTypeVersion',
+  PoolIdPrincipalToken = 'poolId__principalToken',
+  PoolIdProtocolAumFeeCache = 'poolId__protocolAumFeeCache',
+  PoolIdProtocolId = 'poolId__protocolId',
+  PoolIdProtocolSwapFeeCache = 'poolId__protocolSwapFeeCache',
+  PoolIdProtocolYieldFeeCache = 'poolId__protocolYieldFeeCache',
+  PoolIdRoot3Alpha = 'poolId__root3Alpha',
+  PoolIdS = 'poolId__s',
+  PoolIdSqrtAlpha = 'poolId__sqrtAlpha',
+  PoolIdSqrtBeta = 'poolId__sqrtBeta',
+  PoolIdStrategyType = 'poolId__strategyType',
+  PoolIdSwapEnabled = 'poolId__swapEnabled',
+  PoolIdSwapFee = 'poolId__swapFee',
+  PoolIdSwapsCount = 'poolId__swapsCount',
+  PoolIdSymbol = 'poolId__symbol',
+  PoolIdTauAlphaX = 'poolId__tauAlphaX',
+  PoolIdTauAlphaY = 'poolId__tauAlphaY',
+  PoolIdTauBetaX = 'poolId__tauBetaX',
+  PoolIdTauBetaY = 'poolId__tauBetaY',
+  PoolIdTotalLiquidity = 'poolId__totalLiquidity',
+  PoolIdTotalShares = 'poolId__totalShares',
+  PoolIdTotalSwapFee = 'poolId__totalSwapFee',
+  PoolIdTotalSwapVolume = 'poolId__totalSwapVolume',
+  PoolIdTotalWeight = 'poolId__totalWeight',
+  PoolIdTx = 'poolId__tx',
+  PoolIdU = 'poolId__u',
+  PoolIdUnitSeconds = 'poolId__unitSeconds',
+  PoolIdUpperTarget = 'poolId__upperTarget',
+  PoolIdV = 'poolId__v',
+  PoolIdW = 'poolId__w',
+  PoolIdWrappedIndex = 'poolId__wrappedIndex',
+  PoolIdZ = 'poolId__z',
   PriceRate = 'priceRate',
   Symbol = 'symbol',
   Token = 'token',
+  TokenAddress = 'token__address',
+  TokenDecimals = 'token__decimals',
+  TokenId = 'token__id',
+  TokenLatestFxPrice = 'token__latestFXPrice',
+  TokenLatestUsdPrice = 'token__latestUSDPrice',
+  TokenName = 'token__name',
+  TokenSymbol = 'token__symbol',
+  TokenTotalBalanceNotional = 'token__totalBalanceNotional',
+  TokenTotalBalanceUsd = 'token__totalBalanceUSD',
+  TokenTotalSwapCount = 'token__totalSwapCount',
+  TokenTotalVolumeNotional = 'token__totalVolumeNotional',
+  TokenTotalVolumeUsd = 'token__totalVolumeUSD',
   Weight = 'weight'
 }
 
@@ -1454,6 +2015,7 @@ export type Pool_Filter = {
   amp_lte?: InputMaybe<Scalars['BigInt']>;
   amp_not?: InputMaybe<Scalars['BigInt']>;
   amp_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  and?: InputMaybe<Array<InputMaybe<Pool_Filter>>>;
   baseToken?: InputMaybe<Scalars['Bytes']>;
   baseToken_contains?: InputMaybe<Scalars['Bytes']>;
   baseToken_gt?: InputMaybe<Scalars['Bytes']>;
@@ -1607,6 +2169,7 @@ export type Pool_Filter = {
   name_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
   name_starts_with?: InputMaybe<Scalars['String']>;
   name_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  or?: InputMaybe<Array<InputMaybe<Pool_Filter>>>;
   oracleEnabled?: InputMaybe<Scalars['Boolean']>;
   oracleEnabled_in?: InputMaybe<Array<Scalars['Boolean']>>;
   oracleEnabled_not?: InputMaybe<Scalars['Boolean']>;
@@ -2006,6 +2569,12 @@ export enum Pool_OrderBy {
   UpperTarget = 'upperTarget',
   V = 'v',
   VaultId = 'vaultID',
+  VaultIdId = 'vaultID__id',
+  VaultIdPoolCount = 'vaultID__poolCount',
+  VaultIdTotalLiquidity = 'vaultID__totalLiquidity',
+  VaultIdTotalSwapCount = 'vaultID__totalSwapCount',
+  VaultIdTotalSwapFee = 'vaultID__totalSwapFee',
+  VaultIdTotalSwapVolume = 'vaultID__totalSwapVolume',
   W = 'w',
   WeightUpdates = 'weightUpdates',
   WrappedIndex = 'wrappedIndex',
@@ -2037,6 +2606,7 @@ export type PriceRateProvider_Filter = {
   address_not?: InputMaybe<Scalars['Bytes']>;
   address_not_contains?: InputMaybe<Scalars['Bytes']>;
   address_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  and?: InputMaybe<Array<InputMaybe<PriceRateProvider_Filter>>>;
   cacheDuration?: InputMaybe<Scalars['Int']>;
   cacheDuration_gt?: InputMaybe<Scalars['Int']>;
   cacheDuration_gte?: InputMaybe<Scalars['Int']>;
@@ -2069,6 +2639,7 @@ export type PriceRateProvider_Filter = {
   lastCached_lte?: InputMaybe<Scalars['Int']>;
   lastCached_not?: InputMaybe<Scalars['Int']>;
   lastCached_not_in?: InputMaybe<Array<Scalars['Int']>>;
+  or?: InputMaybe<Array<InputMaybe<PriceRateProvider_Filter>>>;
   poolId?: InputMaybe<Scalars['String']>;
   poolId_?: InputMaybe<Pool_Filter>;
   poolId_contains?: InputMaybe<Scalars['String']>;
@@ -2128,8 +2699,77 @@ export enum PriceRateProvider_OrderBy {
   Id = 'id',
   LastCached = 'lastCached',
   PoolId = 'poolId',
+  PoolIdAddress = 'poolId__address',
+  PoolIdAlpha = 'poolId__alpha',
+  PoolIdAmp = 'poolId__amp',
+  PoolIdBaseToken = 'poolId__baseToken',
+  PoolIdBeta = 'poolId__beta',
+  PoolIdC = 'poolId__c',
+  PoolIdCreateTime = 'poolId__createTime',
+  PoolIdDSq = 'poolId__dSq',
+  PoolIdDelta = 'poolId__delta',
+  PoolIdEpsilon = 'poolId__epsilon',
+  PoolIdExpiryTime = 'poolId__expiryTime',
+  PoolIdFactory = 'poolId__factory',
+  PoolIdHoldersCount = 'poolId__holdersCount',
+  PoolIdId = 'poolId__id',
+  PoolIdIsInRecoveryMode = 'poolId__isInRecoveryMode',
+  PoolIdIsPaused = 'poolId__isPaused',
+  PoolIdLambda = 'poolId__lambda',
+  PoolIdLowerTarget = 'poolId__lowerTarget',
+  PoolIdMainIndex = 'poolId__mainIndex',
+  PoolIdManagementFee = 'poolId__managementFee',
+  PoolIdName = 'poolId__name',
+  PoolIdOracleEnabled = 'poolId__oracleEnabled',
+  PoolIdOwner = 'poolId__owner',
+  PoolIdPoolType = 'poolId__poolType',
+  PoolIdPoolTypeVersion = 'poolId__poolTypeVersion',
+  PoolIdPrincipalToken = 'poolId__principalToken',
+  PoolIdProtocolAumFeeCache = 'poolId__protocolAumFeeCache',
+  PoolIdProtocolId = 'poolId__protocolId',
+  PoolIdProtocolSwapFeeCache = 'poolId__protocolSwapFeeCache',
+  PoolIdProtocolYieldFeeCache = 'poolId__protocolYieldFeeCache',
+  PoolIdRoot3Alpha = 'poolId__root3Alpha',
+  PoolIdS = 'poolId__s',
+  PoolIdSqrtAlpha = 'poolId__sqrtAlpha',
+  PoolIdSqrtBeta = 'poolId__sqrtBeta',
+  PoolIdStrategyType = 'poolId__strategyType',
+  PoolIdSwapEnabled = 'poolId__swapEnabled',
+  PoolIdSwapFee = 'poolId__swapFee',
+  PoolIdSwapsCount = 'poolId__swapsCount',
+  PoolIdSymbol = 'poolId__symbol',
+  PoolIdTauAlphaX = 'poolId__tauAlphaX',
+  PoolIdTauAlphaY = 'poolId__tauAlphaY',
+  PoolIdTauBetaX = 'poolId__tauBetaX',
+  PoolIdTauBetaY = 'poolId__tauBetaY',
+  PoolIdTotalLiquidity = 'poolId__totalLiquidity',
+  PoolIdTotalShares = 'poolId__totalShares',
+  PoolIdTotalSwapFee = 'poolId__totalSwapFee',
+  PoolIdTotalSwapVolume = 'poolId__totalSwapVolume',
+  PoolIdTotalWeight = 'poolId__totalWeight',
+  PoolIdTx = 'poolId__tx',
+  PoolIdU = 'poolId__u',
+  PoolIdUnitSeconds = 'poolId__unitSeconds',
+  PoolIdUpperTarget = 'poolId__upperTarget',
+  PoolIdV = 'poolId__v',
+  PoolIdW = 'poolId__w',
+  PoolIdWrappedIndex = 'poolId__wrappedIndex',
+  PoolIdZ = 'poolId__z',
   Rate = 'rate',
-  Token = 'token'
+  Token = 'token',
+  TokenAddress = 'token__address',
+  TokenAssetManager = 'token__assetManager',
+  TokenBalance = 'token__balance',
+  TokenCashBalance = 'token__cashBalance',
+  TokenDecimals = 'token__decimals',
+  TokenId = 'token__id',
+  TokenIndex = 'token__index',
+  TokenIsExemptFromYieldProtocolFee = 'token__isExemptFromYieldProtocolFee',
+  TokenManagedBalance = 'token__managedBalance',
+  TokenName = 'token__name',
+  TokenPriceRate = 'token__priceRate',
+  TokenSymbol = 'token__symbol',
+  TokenWeight = 'token__weight'
 }
 
 export type Query = {
@@ -3105,6 +3745,7 @@ export type SwapFeeUpdate = {
 export type SwapFeeUpdate_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<SwapFeeUpdate_Filter>>>;
   endSwapFeePercentage?: InputMaybe<Scalars['BigDecimal']>;
   endSwapFeePercentage_gt?: InputMaybe<Scalars['BigDecimal']>;
   endSwapFeePercentage_gte?: InputMaybe<Scalars['BigDecimal']>;
@@ -3129,6 +3770,7 @@ export type SwapFeeUpdate_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<SwapFeeUpdate_Filter>>>;
   pool?: InputMaybe<Scalars['String']>;
   pool_?: InputMaybe<Pool_Filter>;
   pool_contains?: InputMaybe<Scalars['String']>;
@@ -3181,6 +3823,62 @@ export enum SwapFeeUpdate_OrderBy {
   EndTimestamp = 'endTimestamp',
   Id = 'id',
   Pool = 'pool',
+  PoolAddress = 'pool__address',
+  PoolAlpha = 'pool__alpha',
+  PoolAmp = 'pool__amp',
+  PoolBaseToken = 'pool__baseToken',
+  PoolBeta = 'pool__beta',
+  PoolC = 'pool__c',
+  PoolCreateTime = 'pool__createTime',
+  PoolDSq = 'pool__dSq',
+  PoolDelta = 'pool__delta',
+  PoolEpsilon = 'pool__epsilon',
+  PoolExpiryTime = 'pool__expiryTime',
+  PoolFactory = 'pool__factory',
+  PoolHoldersCount = 'pool__holdersCount',
+  PoolId = 'pool__id',
+  PoolIsInRecoveryMode = 'pool__isInRecoveryMode',
+  PoolIsPaused = 'pool__isPaused',
+  PoolLambda = 'pool__lambda',
+  PoolLowerTarget = 'pool__lowerTarget',
+  PoolMainIndex = 'pool__mainIndex',
+  PoolManagementFee = 'pool__managementFee',
+  PoolName = 'pool__name',
+  PoolOracleEnabled = 'pool__oracleEnabled',
+  PoolOwner = 'pool__owner',
+  PoolPoolType = 'pool__poolType',
+  PoolPoolTypeVersion = 'pool__poolTypeVersion',
+  PoolPrincipalToken = 'pool__principalToken',
+  PoolProtocolAumFeeCache = 'pool__protocolAumFeeCache',
+  PoolProtocolId = 'pool__protocolId',
+  PoolProtocolSwapFeeCache = 'pool__protocolSwapFeeCache',
+  PoolProtocolYieldFeeCache = 'pool__protocolYieldFeeCache',
+  PoolRoot3Alpha = 'pool__root3Alpha',
+  PoolS = 'pool__s',
+  PoolSqrtAlpha = 'pool__sqrtAlpha',
+  PoolSqrtBeta = 'pool__sqrtBeta',
+  PoolStrategyType = 'pool__strategyType',
+  PoolSwapEnabled = 'pool__swapEnabled',
+  PoolSwapFee = 'pool__swapFee',
+  PoolSwapsCount = 'pool__swapsCount',
+  PoolSymbol = 'pool__symbol',
+  PoolTauAlphaX = 'pool__tauAlphaX',
+  PoolTauAlphaY = 'pool__tauAlphaY',
+  PoolTauBetaX = 'pool__tauBetaX',
+  PoolTauBetaY = 'pool__tauBetaY',
+  PoolTotalLiquidity = 'pool__totalLiquidity',
+  PoolTotalShares = 'pool__totalShares',
+  PoolTotalSwapFee = 'pool__totalSwapFee',
+  PoolTotalSwapVolume = 'pool__totalSwapVolume',
+  PoolTotalWeight = 'pool__totalWeight',
+  PoolTx = 'pool__tx',
+  PoolU = 'pool__u',
+  PoolUnitSeconds = 'pool__unitSeconds',
+  PoolUpperTarget = 'pool__upperTarget',
+  PoolV = 'pool__v',
+  PoolW = 'pool__w',
+  PoolWrappedIndex = 'pool__wrappedIndex',
+  PoolZ = 'pool__z',
   ScheduledTimestamp = 'scheduledTimestamp',
   StartSwapFeePercentage = 'startSwapFeePercentage',
   StartTimestamp = 'startTimestamp'
@@ -3189,6 +3887,7 @@ export enum SwapFeeUpdate_OrderBy {
 export type Swap_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<Swap_Filter>>>;
   caller?: InputMaybe<Scalars['Bytes']>;
   caller_contains?: InputMaybe<Scalars['Bytes']>;
   caller_gt?: InputMaybe<Scalars['Bytes']>;
@@ -3207,6 +3906,7 @@ export type Swap_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<Swap_Filter>>>;
   poolId?: InputMaybe<Scalars['String']>;
   poolId_?: InputMaybe<Pool_Filter>;
   poolId_contains?: InputMaybe<Scalars['String']>;
@@ -3357,6 +4057,62 @@ export enum Swap_OrderBy {
   Caller = 'caller',
   Id = 'id',
   PoolId = 'poolId',
+  PoolIdAddress = 'poolId__address',
+  PoolIdAlpha = 'poolId__alpha',
+  PoolIdAmp = 'poolId__amp',
+  PoolIdBaseToken = 'poolId__baseToken',
+  PoolIdBeta = 'poolId__beta',
+  PoolIdC = 'poolId__c',
+  PoolIdCreateTime = 'poolId__createTime',
+  PoolIdDSq = 'poolId__dSq',
+  PoolIdDelta = 'poolId__delta',
+  PoolIdEpsilon = 'poolId__epsilon',
+  PoolIdExpiryTime = 'poolId__expiryTime',
+  PoolIdFactory = 'poolId__factory',
+  PoolIdHoldersCount = 'poolId__holdersCount',
+  PoolIdId = 'poolId__id',
+  PoolIdIsInRecoveryMode = 'poolId__isInRecoveryMode',
+  PoolIdIsPaused = 'poolId__isPaused',
+  PoolIdLambda = 'poolId__lambda',
+  PoolIdLowerTarget = 'poolId__lowerTarget',
+  PoolIdMainIndex = 'poolId__mainIndex',
+  PoolIdManagementFee = 'poolId__managementFee',
+  PoolIdName = 'poolId__name',
+  PoolIdOracleEnabled = 'poolId__oracleEnabled',
+  PoolIdOwner = 'poolId__owner',
+  PoolIdPoolType = 'poolId__poolType',
+  PoolIdPoolTypeVersion = 'poolId__poolTypeVersion',
+  PoolIdPrincipalToken = 'poolId__principalToken',
+  PoolIdProtocolAumFeeCache = 'poolId__protocolAumFeeCache',
+  PoolIdProtocolId = 'poolId__protocolId',
+  PoolIdProtocolSwapFeeCache = 'poolId__protocolSwapFeeCache',
+  PoolIdProtocolYieldFeeCache = 'poolId__protocolYieldFeeCache',
+  PoolIdRoot3Alpha = 'poolId__root3Alpha',
+  PoolIdS = 'poolId__s',
+  PoolIdSqrtAlpha = 'poolId__sqrtAlpha',
+  PoolIdSqrtBeta = 'poolId__sqrtBeta',
+  PoolIdStrategyType = 'poolId__strategyType',
+  PoolIdSwapEnabled = 'poolId__swapEnabled',
+  PoolIdSwapFee = 'poolId__swapFee',
+  PoolIdSwapsCount = 'poolId__swapsCount',
+  PoolIdSymbol = 'poolId__symbol',
+  PoolIdTauAlphaX = 'poolId__tauAlphaX',
+  PoolIdTauAlphaY = 'poolId__tauAlphaY',
+  PoolIdTauBetaX = 'poolId__tauBetaX',
+  PoolIdTauBetaY = 'poolId__tauBetaY',
+  PoolIdTotalLiquidity = 'poolId__totalLiquidity',
+  PoolIdTotalShares = 'poolId__totalShares',
+  PoolIdTotalSwapFee = 'poolId__totalSwapFee',
+  PoolIdTotalSwapVolume = 'poolId__totalSwapVolume',
+  PoolIdTotalWeight = 'poolId__totalWeight',
+  PoolIdTx = 'poolId__tx',
+  PoolIdU = 'poolId__u',
+  PoolIdUnitSeconds = 'poolId__unitSeconds',
+  PoolIdUpperTarget = 'poolId__upperTarget',
+  PoolIdV = 'poolId__v',
+  PoolIdW = 'poolId__w',
+  PoolIdWrappedIndex = 'poolId__wrappedIndex',
+  PoolIdZ = 'poolId__z',
   Timestamp = 'timestamp',
   TokenAmountIn = 'tokenAmountIn',
   TokenAmountOut = 'tokenAmountOut',
@@ -3366,6 +4122,7 @@ export enum Swap_OrderBy {
   TokenOutSym = 'tokenOutSym',
   Tx = 'tx',
   UserAddress = 'userAddress',
+  UserAddressId = 'userAddress__id',
   ValueUsd = 'valueUSD'
 }
 
@@ -3410,6 +4167,7 @@ export type TokenPrice_Filter = {
   amount_lte?: InputMaybe<Scalars['BigDecimal']>;
   amount_not?: InputMaybe<Scalars['BigDecimal']>;
   amount_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  and?: InputMaybe<Array<InputMaybe<TokenPrice_Filter>>>;
   asset?: InputMaybe<Scalars['Bytes']>;
   asset_contains?: InputMaybe<Scalars['Bytes']>;
   asset_gt?: InputMaybe<Scalars['Bytes']>;
@@ -3436,6 +4194,7 @@ export type TokenPrice_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<TokenPrice_Filter>>>;
   poolId?: InputMaybe<Scalars['String']>;
   poolId_?: InputMaybe<Pool_Filter>;
   poolId_contains?: InputMaybe<Scalars['String']>;
@@ -3491,6 +4250,62 @@ export enum TokenPrice_OrderBy {
   Block = 'block',
   Id = 'id',
   PoolId = 'poolId',
+  PoolIdAddress = 'poolId__address',
+  PoolIdAlpha = 'poolId__alpha',
+  PoolIdAmp = 'poolId__amp',
+  PoolIdBaseToken = 'poolId__baseToken',
+  PoolIdBeta = 'poolId__beta',
+  PoolIdC = 'poolId__c',
+  PoolIdCreateTime = 'poolId__createTime',
+  PoolIdDSq = 'poolId__dSq',
+  PoolIdDelta = 'poolId__delta',
+  PoolIdEpsilon = 'poolId__epsilon',
+  PoolIdExpiryTime = 'poolId__expiryTime',
+  PoolIdFactory = 'poolId__factory',
+  PoolIdHoldersCount = 'poolId__holdersCount',
+  PoolIdId = 'poolId__id',
+  PoolIdIsInRecoveryMode = 'poolId__isInRecoveryMode',
+  PoolIdIsPaused = 'poolId__isPaused',
+  PoolIdLambda = 'poolId__lambda',
+  PoolIdLowerTarget = 'poolId__lowerTarget',
+  PoolIdMainIndex = 'poolId__mainIndex',
+  PoolIdManagementFee = 'poolId__managementFee',
+  PoolIdName = 'poolId__name',
+  PoolIdOracleEnabled = 'poolId__oracleEnabled',
+  PoolIdOwner = 'poolId__owner',
+  PoolIdPoolType = 'poolId__poolType',
+  PoolIdPoolTypeVersion = 'poolId__poolTypeVersion',
+  PoolIdPrincipalToken = 'poolId__principalToken',
+  PoolIdProtocolAumFeeCache = 'poolId__protocolAumFeeCache',
+  PoolIdProtocolId = 'poolId__protocolId',
+  PoolIdProtocolSwapFeeCache = 'poolId__protocolSwapFeeCache',
+  PoolIdProtocolYieldFeeCache = 'poolId__protocolYieldFeeCache',
+  PoolIdRoot3Alpha = 'poolId__root3Alpha',
+  PoolIdS = 'poolId__s',
+  PoolIdSqrtAlpha = 'poolId__sqrtAlpha',
+  PoolIdSqrtBeta = 'poolId__sqrtBeta',
+  PoolIdStrategyType = 'poolId__strategyType',
+  PoolIdSwapEnabled = 'poolId__swapEnabled',
+  PoolIdSwapFee = 'poolId__swapFee',
+  PoolIdSwapsCount = 'poolId__swapsCount',
+  PoolIdSymbol = 'poolId__symbol',
+  PoolIdTauAlphaX = 'poolId__tauAlphaX',
+  PoolIdTauAlphaY = 'poolId__tauAlphaY',
+  PoolIdTauBetaX = 'poolId__tauBetaX',
+  PoolIdTauBetaY = 'poolId__tauBetaY',
+  PoolIdTotalLiquidity = 'poolId__totalLiquidity',
+  PoolIdTotalShares = 'poolId__totalShares',
+  PoolIdTotalSwapFee = 'poolId__totalSwapFee',
+  PoolIdTotalSwapVolume = 'poolId__totalSwapVolume',
+  PoolIdTotalWeight = 'poolId__totalWeight',
+  PoolIdTx = 'poolId__tx',
+  PoolIdU = 'poolId__u',
+  PoolIdUnitSeconds = 'poolId__unitSeconds',
+  PoolIdUpperTarget = 'poolId__upperTarget',
+  PoolIdV = 'poolId__v',
+  PoolIdW = 'poolId__w',
+  PoolIdWrappedIndex = 'poolId__wrappedIndex',
+  PoolIdZ = 'poolId__z',
   Price = 'price',
   PricingAsset = 'pricingAsset',
   Timestamp = 'timestamp'
@@ -3511,6 +4326,7 @@ export type TokenSnapshot = {
 export type TokenSnapshot_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<TokenSnapshot_Filter>>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -3519,6 +4335,7 @@ export type TokenSnapshot_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<TokenSnapshot_Filter>>>;
   timestamp?: InputMaybe<Scalars['Int']>;
   timestamp_gt?: InputMaybe<Scalars['Int']>;
   timestamp_gte?: InputMaybe<Scalars['Int']>;
@@ -3594,6 +4411,18 @@ export enum TokenSnapshot_OrderBy {
   Id = 'id',
   Timestamp = 'timestamp',
   Token = 'token',
+  TokenAddress = 'token__address',
+  TokenDecimals = 'token__decimals',
+  TokenId = 'token__id',
+  TokenLatestFxPrice = 'token__latestFXPrice',
+  TokenLatestUsdPrice = 'token__latestUSDPrice',
+  TokenName = 'token__name',
+  TokenSymbol = 'token__symbol',
+  TokenTotalBalanceNotional = 'token__totalBalanceNotional',
+  TokenTotalBalanceUsd = 'token__totalBalanceUSD',
+  TokenTotalSwapCount = 'token__totalSwapCount',
+  TokenTotalVolumeNotional = 'token__totalVolumeNotional',
+  TokenTotalVolumeUsd = 'token__totalVolumeUSD',
   TotalBalanceNotional = 'totalBalanceNotional',
   TotalBalanceUsd = 'totalBalanceUSD',
   TotalSwapCount = 'totalSwapCount',
@@ -3624,6 +4453,7 @@ export type Token_Filter = {
   address_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
   address_starts_with?: InputMaybe<Scalars['String']>;
   address_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  and?: InputMaybe<Array<InputMaybe<Token_Filter>>>;
   decimals?: InputMaybe<Scalars['Int']>;
   decimals_gt?: InputMaybe<Scalars['Int']>;
   decimals_gte?: InputMaybe<Scalars['Int']>;
@@ -3697,6 +4527,7 @@ export type Token_Filter = {
   name_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
   name_starts_with?: InputMaybe<Scalars['String']>;
   name_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  or?: InputMaybe<Array<InputMaybe<Token_Filter>>>;
   pool?: InputMaybe<Scalars['String']>;
   pool_?: InputMaybe<Pool_Filter>;
   pool_contains?: InputMaybe<Scalars['String']>;
@@ -3786,9 +4617,70 @@ export enum Token_OrderBy {
   Id = 'id',
   LatestFxPrice = 'latestFXPrice',
   LatestPrice = 'latestPrice',
+  LatestPriceAsset = 'latestPrice__asset',
+  LatestPriceBlock = 'latestPrice__block',
+  LatestPriceId = 'latestPrice__id',
+  LatestPricePrice = 'latestPrice__price',
+  LatestPricePricingAsset = 'latestPrice__pricingAsset',
   LatestUsdPrice = 'latestUSDPrice',
   Name = 'name',
   Pool = 'pool',
+  PoolAddress = 'pool__address',
+  PoolAlpha = 'pool__alpha',
+  PoolAmp = 'pool__amp',
+  PoolBaseToken = 'pool__baseToken',
+  PoolBeta = 'pool__beta',
+  PoolC = 'pool__c',
+  PoolCreateTime = 'pool__createTime',
+  PoolDSq = 'pool__dSq',
+  PoolDelta = 'pool__delta',
+  PoolEpsilon = 'pool__epsilon',
+  PoolExpiryTime = 'pool__expiryTime',
+  PoolFactory = 'pool__factory',
+  PoolHoldersCount = 'pool__holdersCount',
+  PoolId = 'pool__id',
+  PoolIsInRecoveryMode = 'pool__isInRecoveryMode',
+  PoolIsPaused = 'pool__isPaused',
+  PoolLambda = 'pool__lambda',
+  PoolLowerTarget = 'pool__lowerTarget',
+  PoolMainIndex = 'pool__mainIndex',
+  PoolManagementFee = 'pool__managementFee',
+  PoolName = 'pool__name',
+  PoolOracleEnabled = 'pool__oracleEnabled',
+  PoolOwner = 'pool__owner',
+  PoolPoolType = 'pool__poolType',
+  PoolPoolTypeVersion = 'pool__poolTypeVersion',
+  PoolPrincipalToken = 'pool__principalToken',
+  PoolProtocolAumFeeCache = 'pool__protocolAumFeeCache',
+  PoolProtocolId = 'pool__protocolId',
+  PoolProtocolSwapFeeCache = 'pool__protocolSwapFeeCache',
+  PoolProtocolYieldFeeCache = 'pool__protocolYieldFeeCache',
+  PoolRoot3Alpha = 'pool__root3Alpha',
+  PoolS = 'pool__s',
+  PoolSqrtAlpha = 'pool__sqrtAlpha',
+  PoolSqrtBeta = 'pool__sqrtBeta',
+  PoolStrategyType = 'pool__strategyType',
+  PoolSwapEnabled = 'pool__swapEnabled',
+  PoolSwapFee = 'pool__swapFee',
+  PoolSwapsCount = 'pool__swapsCount',
+  PoolSymbol = 'pool__symbol',
+  PoolTauAlphaX = 'pool__tauAlphaX',
+  PoolTauAlphaY = 'pool__tauAlphaY',
+  PoolTauBetaX = 'pool__tauBetaX',
+  PoolTauBetaY = 'pool__tauBetaY',
+  PoolTotalLiquidity = 'pool__totalLiquidity',
+  PoolTotalShares = 'pool__totalShares',
+  PoolTotalSwapFee = 'pool__totalSwapFee',
+  PoolTotalSwapVolume = 'pool__totalSwapVolume',
+  PoolTotalWeight = 'pool__totalWeight',
+  PoolTx = 'pool__tx',
+  PoolU = 'pool__u',
+  PoolUnitSeconds = 'pool__unitSeconds',
+  PoolUpperTarget = 'pool__upperTarget',
+  PoolV = 'pool__v',
+  PoolW = 'pool__w',
+  PoolWrappedIndex = 'pool__wrappedIndex',
+  PoolZ = 'pool__z',
   Symbol = 'symbol',
   TotalBalanceNotional = 'totalBalanceNotional',
   TotalBalanceUsd = 'totalBalanceUSD',
@@ -3819,6 +4711,7 @@ export type TradePairSnapshot = {
 export type TradePairSnapshot_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<TradePairSnapshot_Filter>>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -3827,6 +4720,7 @@ export type TradePairSnapshot_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<TradePairSnapshot_Filter>>>;
   pair?: InputMaybe<Scalars['String']>;
   pair_?: InputMaybe<TradePair_Filter>;
   pair_contains?: InputMaybe<Scalars['String']>;
@@ -3877,6 +4771,9 @@ export type TradePairSnapshot_Filter = {
 export enum TradePairSnapshot_OrderBy {
   Id = 'id',
   Pair = 'pair',
+  PairId = 'pair__id',
+  PairTotalSwapFee = 'pair__totalSwapFee',
+  PairTotalSwapVolume = 'pair__totalSwapVolume',
   Timestamp = 'timestamp',
   TotalSwapFee = 'totalSwapFee',
   TotalSwapVolume = 'totalSwapVolume'
@@ -3885,6 +4782,7 @@ export enum TradePairSnapshot_OrderBy {
 export type TradePair_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<TradePair_Filter>>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -3893,6 +4791,7 @@ export type TradePair_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<TradePair_Filter>>>;
   token0?: InputMaybe<Scalars['String']>;
   token0_?: InputMaybe<Token_Filter>;
   token0_contains?: InputMaybe<Scalars['String']>;
@@ -3956,7 +4855,31 @@ export type TradePair_Filter = {
 export enum TradePair_OrderBy {
   Id = 'id',
   Token0 = 'token0',
+  Token0Address = 'token0__address',
+  Token0Decimals = 'token0__decimals',
+  Token0Id = 'token0__id',
+  Token0LatestFxPrice = 'token0__latestFXPrice',
+  Token0LatestUsdPrice = 'token0__latestUSDPrice',
+  Token0Name = 'token0__name',
+  Token0Symbol = 'token0__symbol',
+  Token0TotalBalanceNotional = 'token0__totalBalanceNotional',
+  Token0TotalBalanceUsd = 'token0__totalBalanceUSD',
+  Token0TotalSwapCount = 'token0__totalSwapCount',
+  Token0TotalVolumeNotional = 'token0__totalVolumeNotional',
+  Token0TotalVolumeUsd = 'token0__totalVolumeUSD',
   Token1 = 'token1',
+  Token1Address = 'token1__address',
+  Token1Decimals = 'token1__decimals',
+  Token1Id = 'token1__id',
+  Token1LatestFxPrice = 'token1__latestFXPrice',
+  Token1LatestUsdPrice = 'token1__latestUSDPrice',
+  Token1Name = 'token1__name',
+  Token1Symbol = 'token1__symbol',
+  Token1TotalBalanceNotional = 'token1__totalBalanceNotional',
+  Token1TotalBalanceUsd = 'token1__totalBalanceUSD',
+  Token1TotalSwapCount = 'token1__totalSwapCount',
+  Token1TotalVolumeNotional = 'token1__totalVolumeNotional',
+  Token1TotalVolumeUsd = 'token1__totalVolumeUSD',
   TotalSwapFee = 'totalSwapFee',
   TotalSwapVolume = 'totalSwapVolume'
 }
@@ -4007,6 +4930,7 @@ export type UserInternalBalance = {
 export type UserInternalBalance_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<UserInternalBalance_Filter>>>;
   balance?: InputMaybe<Scalars['BigDecimal']>;
   balance_gt?: InputMaybe<Scalars['BigDecimal']>;
   balance_gte?: InputMaybe<Scalars['BigDecimal']>;
@@ -4023,6 +4947,7 @@ export type UserInternalBalance_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<UserInternalBalance_Filter>>>;
   token?: InputMaybe<Scalars['Bytes']>;
   token_contains?: InputMaybe<Scalars['Bytes']>;
   token_gt?: InputMaybe<Scalars['Bytes']>;
@@ -4060,12 +4985,14 @@ export enum UserInternalBalance_OrderBy {
   Balance = 'balance',
   Id = 'id',
   Token = 'token',
-  UserAddress = 'userAddress'
+  UserAddress = 'userAddress',
+  UserAddressId = 'userAddress__id'
 }
 
 export type User_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<User_Filter>>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -4074,6 +5001,7 @@ export type User_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<User_Filter>>>;
   sharesOwned_?: InputMaybe<PoolShare_Filter>;
   swaps_?: InputMaybe<Swap_Filter>;
   userInternalBalances_?: InputMaybe<UserInternalBalance_Filter>;
@@ -4404,7 +5332,7 @@ export const SubgraphPoolFragmentDoc = gql`
   totalSwapFee
   totalLiquidity
   totalShares
-  tokens(first: 100) {
+  tokens(first: 100, orderBy: index) {
     ...SubgraphPoolToken
   }
   swapsCount
