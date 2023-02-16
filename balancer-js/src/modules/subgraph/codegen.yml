@@ -28,6 +28,8 @@ generates:
                 BigInt: string
                 Bytes: string
                 BigDecimal: string
+            namingConvention:
+                enumValues: keep
     src/modules/subgraph/generated/balancer-gauges.graphql:
         schema: ${BALANCER_GAUGES_URL:https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges}
         plugins:
