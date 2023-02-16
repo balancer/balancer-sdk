@@ -67,6 +67,17 @@ describe('Composable Stable Pool exits', () => {
         insert(minAmountsOut, pool.bptIndex, '0')
       );
     });
+    it('should fail for proportional exit on composable V1', async () => {
+      const bptIn = parseFixed('10', 18).toString();
+      const slippage = '10';
+      let errorMessage = '';
+      try {
+        pool.buildExitExactBPTIn(signerAddress, bptIn, slippage, false);
+      } catch (error) {
+        errorMessage = (error as Error).message;
+      }
+      expect(errorMessage).to.eql('Unsupported Exit Type For Pool');
+    });
   });
   context('exitExactTokensOut', async () => {
     it('should automatically sort tokens/amounts in correct order', async () => {
