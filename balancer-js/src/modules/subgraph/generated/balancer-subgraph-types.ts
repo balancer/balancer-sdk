@@ -5332,7 +5332,7 @@ export const SubgraphPoolFragmentDoc = gql`
   totalSwapFee
   totalLiquidity
   totalShares
-  tokens(first: 100) {
+  tokens(first: 100, orderBy: index) {
     ...SubgraphPoolToken
   }
   swapsCount
