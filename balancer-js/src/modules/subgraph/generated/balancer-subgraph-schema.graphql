@@ -24,6 +24,7 @@ type AmpUpdate {
 input AmpUpdate_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [AmpUpdate_filter]
   endAmp: BigInt
   endAmp_gt: BigInt
   endAmp_gte: BigInt
@@ -48,6 +49,7 @@ input AmpUpdate_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [AmpUpdate_filter]
   poolId: String
   poolId_: Pool_filter
   poolId_contains: String
@@ -100,6 +102,62 @@ enum AmpUpdate_orderBy {
   endTimestamp
   id
   poolId
+  poolId__address
+  poolId__alpha
+  poolId__amp
+  poolId__baseToken
+  poolId__beta
+  poolId__c
+  poolId__createTime
+  poolId__dSq
+  poolId__delta
+  poolId__epsilon
+  poolId__expiryTime
+  poolId__factory
+  poolId__holdersCount
+  poolId__id
+  poolId__isInRecoveryMode
+  poolId__isPaused
+  poolId__lambda
+  poolId__lowerTarget
+  poolId__mainIndex
+  poolId__managementFee
+  poolId__name
+  poolId__oracleEnabled
+  poolId__owner
+  poolId__poolType
+  poolId__poolTypeVersion
+  poolId__principalToken
+  poolId__protocolAumFeeCache
+  poolId__protocolId
+  poolId__protocolSwapFeeCache
+  poolId__protocolYieldFeeCache
+  poolId__root3Alpha
+  poolId__s
+  poolId__sqrtAlpha
+  poolId__sqrtBeta
+  poolId__strategyType
+  poolId__swapEnabled
+  poolId__swapFee
+  poolId__swapsCount
+  poolId__symbol
+  poolId__tauAlphaX
+  poolId__tauAlphaY
+  poolId__tauBetaX
+  poolId__tauBetaY
+  poolId__totalLiquidity
+  poolId__totalShares
+  poolId__totalSwapFee
+  poolId__totalSwapVolume
+  poolId__totalWeight
+  poolId__tx
+  poolId__u
+  poolId__unitSeconds
+  poolId__upperTarget
+  poolId__v
+  poolId__w
+  poolId__wrappedIndex
+  poolId__z
   scheduledTimestamp
   startAmp
   startTimestamp
@@ -129,6 +187,7 @@ type BalancerSnapshot {
 input BalancerSnapshot_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [BalancerSnapshot_filter]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -137,6 +196,7 @@ input BalancerSnapshot_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [BalancerSnapshot_filter]
   poolCount: Int
   poolCount_gt: Int
   poolCount_gte: Int
@@ -217,11 +277,18 @@ enum BalancerSnapshot_orderBy {
   totalSwapFee
   totalSwapVolume
   vault
+  vault__id
+  vault__poolCount
+  vault__totalLiquidity
+  vault__totalSwapCount
+  vault__totalSwapFee
+  vault__totalSwapVolume
 }
 
 input Balancer_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [Balancer_filter]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -230,6 +297,7 @@ input Balancer_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [Balancer_filter]
   poolCount: Int
   poolCount_gt: Int
   poolCount_gte: Int
@@ -312,6 +380,7 @@ type GradualWeightUpdate {
 input GradualWeightUpdate_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [GradualWeightUpdate_filter]
   endTimestamp: BigInt
   endTimestamp_gt: BigInt
   endTimestamp_gte: BigInt
@@ -334,6 +403,7 @@ input GradualWeightUpdate_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [GradualWeightUpdate_filter]
   poolId: String
   poolId_: Pool_filter
   poolId_contains: String
@@ -384,6 +454,62 @@ enum GradualWeightUpdate_orderBy {
   endWeights
   id
   poolId
+  poolId__address
+  poolId__alpha
+  poolId__amp
+  poolId__baseToken
+  poolId__beta
+  poolId__c
+  poolId__createTime
+  poolId__dSq
+  poolId__delta
+  poolId__epsilon
+  poolId__expiryTime
+  poolId__factory
+  poolId__holdersCount
+  poolId__id
+  poolId__isInRecoveryMode
+  poolId__isPaused
+  poolId__lambda
+  poolId__lowerTarget
+  poolId__mainIndex
+  poolId__managementFee
+  poolId__name
+  poolId__oracleEnabled
+  poolId__owner
+  poolId__poolType
+  poolId__poolTypeVersion
+  poolId__principalToken
+  poolId__protocolAumFeeCache
+  poolId__protocolId
+  poolId__protocolSwapFeeCache
+  poolId__protocolYieldFeeCache
+  poolId__root3Alpha
+  poolId__s
+  poolId__sqrtAlpha
+  poolId__sqrtBeta
+  poolId__strategyType
+  poolId__swapEnabled
+  poolId__swapFee
+  poolId__swapsCount
+  poolId__symbol
+  poolId__tauAlphaX
+  poolId__tauAlphaY
+  poolId__tauBetaX
+  poolId__tauBetaY
+  poolId__totalLiquidity
+  poolId__totalShares
+  poolId__totalSwapFee
+  poolId__totalSwapVolume
+  poolId__totalWeight
+  poolId__tx
+  poolId__u
+  poolId__unitSeconds
+  poolId__upperTarget
+  poolId__v
+  poolId__w
+  poolId__wrappedIndex
+  poolId__z
   scheduledTimestamp
   startTimestamp
   startWeights
@@ -415,6 +541,7 @@ input JoinExit_filter {
   amounts_not: [BigDecimal!]
   amounts_not_contains: [BigDecimal!]
   amounts_not_contains_nocase: [BigDecimal!]
+  and: [JoinExit_filter]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -423,6 +550,7 @@ input JoinExit_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [JoinExit_filter]
   pool: String
   pool_: Pool_filter
   pool_contains: String
@@ -511,11 +639,68 @@ enum JoinExit_orderBy {
   amounts
   id
   pool
+  pool__address
+  pool__alpha
+  pool__amp
+  pool__baseToken
+  pool__beta
+  pool__c
+  pool__createTime
+  pool__dSq
+  pool__delta
+  pool__epsilon
+  pool__expiryTime
+  pool__factory
+  pool__holdersCount
+  pool__id
+  pool__isInRecoveryMode
+  pool__isPaused
+  pool__lambda
+  pool__lowerTarget
+  pool__mainIndex
+  pool__managementFee
+  pool__name
+  pool__oracleEnabled
+  pool__owner
+  pool__poolType
+  pool__poolTypeVersion
+  pool__principalToken
+  pool__protocolAumFeeCache
+  pool__protocolId
+  pool__protocolSwapFeeCache
+  pool__protocolYieldFeeCache
+  pool__root3Alpha
+  pool__s
+  pool__sqrtAlpha
+  pool__sqrtBeta
+  pool__strategyType
+  pool__swapEnabled
+  pool__swapFee
+  pool__swapsCount
+  pool__symbol
+  pool__tauAlphaX
+  pool__tauAlphaY
+  pool__tauBetaX
+  pool__tauBetaY
+  pool__totalLiquidity
+  pool__totalShares
+  pool__totalSwapFee
+  pool__totalSwapVolume
+  pool__totalWeight
+  pool__tx
+  pool__u
+  pool__unitSeconds
+  pool__upperTarget
+  pool__v
+  pool__w
+  pool__wrappedIndex
+  pool__z
   sender
   timestamp
   tx
   type
   user
+  user__id
   valueUSD
 }
 
@@ -531,6 +716,7 @@ type LatestPrice {
 input LatestPrice_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [LatestPrice_filter]
   asset: Bytes
   asset_contains: Bytes
   asset_gt: Bytes
@@ -557,6 +743,7 @@ input LatestPrice_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [LatestPrice_filter]
   poolId: String
   poolId_: Pool_filter
   poolId_contains: String
@@ -603,6 +790,62 @@ enum LatestPrice_orderBy {
   block
   id
   poolId
+  poolId__address
+  poolId__alpha
+  poolId__amp
+  poolId__baseToken
+  poolId__beta
+  poolId__c
+  poolId__createTime
+  poolId__dSq
+  poolId__delta
+  poolId__epsilon
+  poolId__expiryTime
+  poolId__factory
+  poolId__holdersCount
+  poolId__id
+  poolId__isInRecoveryMode
+  poolId__isPaused
+  poolId__lambda
+  poolId__lowerTarget
+  poolId__mainIndex
+  poolId__managementFee
+  poolId__name
+  poolId__oracleEnabled
+  poolId__owner
+  poolId__poolType
+  poolId__poolTypeVersion
+  poolId__principalToken
+  poolId__protocolAumFeeCache
+  poolId__protocolId
+  poolId__protocolSwapFeeCache
+  poolId__protocolYieldFeeCache
+  poolId__root3Alpha
+  poolId__s
+  poolId__sqrtAlpha
+  poolId__sqrtBeta
+  poolId__strategyType
+  poolId__swapEnabled
+  poolId__swapFee
+  poolId__swapsCount
+  poolId__symbol
+  poolId__tauAlphaX
+  poolId__tauAlphaY
+  poolId__tauBetaX
+  poolId__tauBetaY
+  poolId__totalLiquidity
+  poolId__totalShares
+  poolId__totalSwapFee
+  poolId__totalSwapVolume
+  poolId__totalWeight
+  poolId__tx
+  poolId__u
+  poolId__unitSeconds
+  poolId__upperTarget
+  poolId__v
+  poolId__w
+  poolId__wrappedIndex
+  poolId__z
   price
   pricingAsset
 }
@@ -619,6 +862,7 @@ type ManagementOperation {
 input ManagementOperation_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [ManagementOperation_filter]
   cashDelta: BigDecimal
   cashDelta_gt: BigDecimal
   cashDelta_gte: BigDecimal
@@ -643,6 +887,7 @@ input ManagementOperation_filter {
   managedDelta_lte: BigDecimal
   managedDelta_not: BigDecimal
   managedDelta_not_in: [BigDecimal!]
+  or: [ManagementOperation_filter]
   poolTokenId: String
   poolTokenId_: PoolToken_filter
   poolTokenId_contains: String
@@ -683,6 +928,19 @@ enum ManagementOperation_orderBy {
   id
   managedDelta
   poolTokenId
+  poolTokenId__address
+  poolTokenId__assetManager
+  poolTokenId__balance
+  poolTokenId__cashBalance
+  poolTokenId__decimals
+  poolTokenId__id
+  poolTokenId__index
+  poolTokenId__isExemptFromYieldProtocolFee
+  poolTokenId__managedBalance
+  poolTokenId__name
+  poolTokenId__priceRate
+  poolTokenId__symbol
+  poolTokenId__weight
   timestamp
   type
 }
@@ -775,6 +1033,7 @@ type PoolContract {
 input PoolContract_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [PoolContract_filter]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -783,6 +1042,7 @@ input PoolContract_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [PoolContract_filter]
   pool: String
   pool_: Pool_filter
   pool_contains: String
@@ -809,6 +1069,62 @@ input PoolContract_filter {
 enum PoolContract_orderBy {
   id
   pool
+  pool__address
+  pool__alpha
+  pool__amp
+  pool__baseToken
+  pool__beta
+  pool__c
+  pool__createTime
+  pool__dSq
+  pool__delta
+  pool__epsilon
+  pool__expiryTime
+  pool__factory
+  pool__holdersCount
+  pool__id
+  pool__isInRecoveryMode
+  pool__isPaused
+  pool__lambda
+  pool__lowerTarget
+  pool__mainIndex
+  pool__managementFee
+  pool__name
+  pool__oracleEnabled
+  pool__owner
+  pool__poolType
+  pool__poolTypeVersion
+  pool__principalToken
+  pool__protocolAumFeeCache
+  pool__protocolId
+  pool__protocolSwapFeeCache
+  pool__protocolYieldFeeCache
+  pool__root3Alpha
+  pool__s
+  pool__sqrtAlpha
+  pool__sqrtBeta
+  pool__strategyType
+  pool__swapEnabled
+  pool__swapFee
+  pool__swapsCount
+  pool__symbol
+  pool__tauAlphaX
+  pool__tauAlphaY
+  pool__tauBetaX
+  pool__tauBetaY
+  pool__totalLiquidity
+  pool__totalShares
+  pool__totalSwapFee
+  pool__totalSwapVolume
+  pool__totalWeight
+  pool__tx
+  pool__u
+  pool__unitSeconds
+  pool__upperTarget
+  pool__v
+  pool__w
+  pool__wrappedIndex
+  pool__z
 }
 
 type PoolHistoricalLiquidity {
@@ -824,6 +1140,7 @@ type PoolHistoricalLiquidity {
 input PoolHistoricalLiquidity_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [PoolHistoricalLiquidity_filter]
   block: BigInt
   block_gt: BigInt
   block_gte: BigInt
@@ -840,6 +1157,7 @@ input PoolHistoricalLiquidity_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [PoolHistoricalLiquidity_filter]
   poolId: String
   poolId_: Pool_filter
   poolId_contains: String
@@ -901,6 +1219,62 @@ enum PoolHistoricalLiquidity_orderBy {
   block
   id
   poolId
+  poolId__address
+  poolId__alpha
+  poolId__amp
+  poolId__baseToken
+  poolId__beta
+  poolId__c
+  poolId__createTime
+  poolId__dSq
+  poolId__delta
+  poolId__epsilon
+  poolId__expiryTime
+  poolId__factory
+  poolId__holdersCount
+  poolId__id
+  poolId__isInRecoveryMode
+  poolId__isPaused
+  poolId__lambda
+  poolId__lowerTarget
+  poolId__mainIndex
+  poolId__managementFee
+  poolId__name
+  poolId__oracleEnabled
+  poolId__owner
+  poolId__poolType
+  poolId__poolTypeVersion
+  poolId__principalToken
+  poolId__protocolAumFeeCache
+  poolId__protocolId
+  poolId__protocolSwapFeeCache
+  poolId__protocolYieldFeeCache
+  poolId__root3Alpha
+  poolId__s
+  poolId__sqrtAlpha
+  poolId__sqrtBeta
+  poolId__strategyType
+  poolId__swapEnabled
+  poolId__swapFee
+  poolId__swapsCount
+  poolId__symbol
+  poolId__tauAlphaX
+  poolId__tauAlphaY
+  poolId__tauBetaX
+  poolId__tauBetaY
+  poolId__totalLiquidity
+  poolId__totalShares
+  poolId__totalSwapFee
+  poolId__totalSwapVolume
+  poolId__totalWeight
+  poolId__tx
+  poolId__u
+  poolId__unitSeconds
+  poolId__upperTarget
+  poolId__v
+  poolId__w
+  poolId__wrappedIndex
+  poolId__z
   poolLiquidity
   poolShareValue
   poolTotalShares
@@ -917,6 +1291,7 @@ type PoolShare {
 input PoolShare_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [PoolShare_filter]
   balance: BigDecimal
   balance_gt: BigDecimal
   balance_gte: BigDecimal
@@ -933,6 +1308,7 @@ input PoolShare_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [PoolShare_filter]
   poolId: String
   poolId_: Pool_filter
   poolId_contains: String
@@ -981,7 +1357,64 @@ enum PoolShare_orderBy {
   balance
   id
   poolId
+  poolId__address
+  poolId__alpha
+  poolId__amp
+  poolId__baseToken
+  poolId__beta
+  poolId__c
+  poolId__createTime
+  poolId__dSq
+  poolId__delta
+  poolId__epsilon
+  poolId__expiryTime
+  poolId__factory
+  poolId__holdersCount
+  poolId__id
+  poolId__isInRecoveryMode
+  poolId__isPaused
+  poolId__lambda
+  poolId__lowerTarget
+  poolId__mainIndex
+  poolId__managementFee
+  poolId__name
+  poolId__oracleEnabled
+  poolId__owner
+  poolId__poolType
+  poolId__poolTypeVersion
+  poolId__principalToken
+  poolId__protocolAumFeeCache
+  poolId__protocolId
+  poolId__protocolSwapFeeCache
+  poolId__protocolYieldFeeCache
+  poolId__root3Alpha
+  poolId__s
+  poolId__sqrtAlpha
+  poolId__sqrtBeta
+  poolId__strategyType
+  poolId__swapEnabled
+  poolId__swapFee
+  poolId__swapsCount
+  poolId__symbol
+  poolId__tauAlphaX
+  poolId__tauAlphaY
+  poolId__tauBetaX
+  poolId__tauBetaY
+  poolId__totalLiquidity
+  poolId__totalShares
+  poolId__totalSwapFee
+  poolId__totalSwapVolume
+  poolId__totalWeight
+  poolId__tx
+  poolId__u
+  poolId__unitSeconds
+  poolId__upperTarget
+  poolId__v
+  poolId__w
+  poolId__wrappedIndex
+  poolId__z
   userAddress
+  userAddress__id
 }
 
 type PoolSnapshot {
@@ -1006,6 +1439,7 @@ input PoolSnapshot_filter {
   amounts_not: [BigDecimal!]
   amounts_not_contains: [BigDecimal!]
   amounts_not_contains_nocase: [BigDecimal!]
+  and: [PoolSnapshot_filter]
   holdersCount: BigInt
   holdersCount_gt: BigInt
   holdersCount_gte: BigInt
@@ -1030,6 +1464,7 @@ input PoolSnapshot_filter {
   liquidity_lte: BigDecimal
   liquidity_not: BigDecimal
   liquidity_not_in: [BigDecimal!]
+  or: [PoolSnapshot_filter]
   pool: String
   pool_: Pool_filter
   pool_contains: String
@@ -1099,6 +1534,62 @@ enum PoolSnapshot_orderBy {
   id
   liquidity
   pool
+  pool__address
+  pool__alpha
+  pool__amp
+  pool__baseToken
+  pool__beta
+  pool__c
+  pool__createTime
+  pool__dSq
+  pool__delta
+  pool__epsilon
+  pool__expiryTime
+  pool__factory
+  pool__holdersCount
+  pool__id
+  pool__isInRecoveryMode
+  pool__isPaused
+  pool__lambda
+  pool__lowerTarget
+  pool__mainIndex
+  pool__managementFee
+  pool__name
+  pool__oracleEnabled
+  pool__owner
+  pool__poolType
+  pool__poolTypeVersion
+  pool__principalToken
+  pool__protocolAumFeeCache
+  pool__protocolId
+  pool__protocolSwapFeeCache
+  pool__protocolYieldFeeCache
+  pool__root3Alpha
+  pool__s
+  pool__sqrtAlpha
+  pool__sqrtBeta
+  pool__strategyType
+  pool__swapEnabled
+  pool__swapFee
+  pool__swapsCount
+  pool__symbol
+  pool__tauAlphaX
+  pool__tauAlphaY
+  pool__tauBetaX
+  pool__tauBetaY
+  pool__totalLiquidity
+  pool__totalShares
+  pool__totalSwapFee
+  pool__totalSwapVolume
+  pool__totalWeight
+  pool__tx
+  pool__u
+  pool__unitSeconds
+  pool__upperTarget
+  pool__v
+  pool__w
+  pool__wrappedIndex
+  pool__z
   swapFees
   swapVolume
   swapsCount
@@ -1148,6 +1639,7 @@ input PoolToken_filter {
   address_not_starts_with_nocase: String
   address_starts_with: String
   address_starts_with_nocase: String
+  and: [PoolToken_filter]
   assetManager: Bytes
   assetManager_contains: Bytes
   assetManager_gt: Bytes
@@ -1231,6 +1723,7 @@ input PoolToken_filter {
   name_not_starts_with_nocase: String
   name_starts_with: String
   name_starts_with_nocase: String
+  or: [PoolToken_filter]
   poolId: String
   poolId_: Pool_filter
   poolId_contains: String
@@ -1324,9 +1817,77 @@ enum PoolToken_orderBy {
   managements
   name
   poolId
+  poolId__address
+  poolId__alpha
+  poolId__amp
+  poolId__baseToken
+  poolId__beta
+  poolId__c
+  poolId__createTime
+  poolId__dSq
+  poolId__delta
+  poolId__epsilon
+  poolId__expiryTime
+  poolId__factory
+  poolId__holdersCount
+  poolId__id
+  poolId__isInRecoveryMode
+  poolId__isPaused
+  poolId__lambda
+  poolId__lowerTarget
+  poolId__mainIndex
+  poolId__managementFee
+  poolId__name
+  poolId__oracleEnabled
+  poolId__owner
+  poolId__poolType
+  poolId__poolTypeVersion
+  poolId__principalToken
+  poolId__protocolAumFeeCache
+  poolId__protocolId
+  poolId__protocolSwapFeeCache
+  poolId__protocolYieldFeeCache
+  poolId__root3Alpha
+  poolId__s
+  poolId__sqrtAlpha
+  poolId__sqrtBeta
+  poolId__strategyType
+  poolId__swapEnabled
+  poolId__swapFee
+  poolId__swapsCount
+  poolId__symbol
+  poolId__tauAlphaX
+  poolId__tauAlphaY
+  poolId__tauBetaX
+  poolId__tauBetaY
+  poolId__totalLiquidity
+  poolId__totalShares
+  poolId__totalSwapFee
+  poolId__totalSwapVolume
+  poolId__totalWeight
+  poolId__tx
+  poolId__u
+  poolId__unitSeconds
+  poolId__upperTarget
+  poolId__v
+  poolId__w
+  poolId__wrappedIndex
+  poolId__z
   priceRate
   symbol
   token
+  token__address
+  token__decimals
+  token__id
+  token__latestFXPrice
+  token__latestUSDPrice
+  token__name
+  token__symbol
+  token__totalBalanceNotional
+  token__totalBalanceUSD
+  token__totalSwapCount
+  token__totalVolumeNotional
+  token__totalVolumeUSD
   weight
 }
 
@@ -1359,6 +1920,7 @@ input Pool_filter {
   amp_lte: BigInt
   amp_not: BigInt
   amp_not_in: [BigInt!]
+  and: [Pool_filter]
   baseToken: Bytes
   baseToken_contains: Bytes
   baseToken_gt: Bytes
@@ -1512,6 +2074,7 @@ input Pool_filter {
   name_not_starts_with_nocase: String
   name_starts_with: String
   name_starts_with_nocase: String
+  or: [Pool_filter]
   oracleEnabled: Boolean
   oracleEnabled_in: [Boolean!]
   oracleEnabled_not: Boolean
@@ -1911,6 +2474,12 @@ enum Pool_orderBy {
   upperTarget
   v
   vaultID
+  vaultID__id
+  vaultID__poolCount
+  vaultID__totalLiquidity
+  vaultID__totalSwapCount
+  vaultID__totalSwapFee
+  vaultID__totalSwapVolume
   w
   weightUpdates
   wrappedIndex
@@ -1941,6 +2510,7 @@ input PriceRateProvider_filter {
   address_not: Bytes
   address_not_contains: Bytes
   address_not_in: [Bytes!]
+  and: [PriceRateProvider_filter]
   cacheDuration: Int
   cacheDuration_gt: Int
   cacheDuration_gte: Int
@@ -1973,6 +2543,7 @@ input PriceRateProvider_filter {
   lastCached_lte: Int
   lastCached_not: Int
   lastCached_not_in: [Int!]
+  or: [PriceRateProvider_filter]
   poolId: String
   poolId_: Pool_filter
   poolId_contains: String
@@ -2032,8 +2603,77 @@ enum PriceRateProvider_orderBy {
   id
   lastCached
   poolId
+  poolId__address
+  poolId__alpha
+  poolId__amp
+  poolId__baseToken
+  poolId__beta
+  poolId__c
+  poolId__createTime
+  poolId__dSq
+  poolId__delta
+  poolId__epsilon
+  poolId__expiryTime
+  poolId__factory
+  poolId__holdersCount
+  poolId__id
+  poolId__isInRecoveryMode
+  poolId__isPaused
+  poolId__lambda
+  poolId__lowerTarget
+  poolId__mainIndex
+  poolId__managementFee
+  poolId__name
+  poolId__oracleEnabled
+  poolId__owner
+  poolId__poolType
+  poolId__poolTypeVersion
+  poolId__principalToken
+  poolId__protocolAumFeeCache
+  poolId__protocolId
+  poolId__protocolSwapFeeCache
+  poolId__protocolYieldFeeCache
+  poolId__root3Alpha
+  poolId__s
+  poolId__sqrtAlpha
+  poolId__sqrtBeta
+  poolId__strategyType
+  poolId__swapEnabled
+  poolId__swapFee
+  poolId__swapsCount
+  poolId__symbol
+  poolId__tauAlphaX
+  poolId__tauAlphaY
+  poolId__tauBetaX
+  poolId__tauBetaY
+  poolId__totalLiquidity
+  poolId__totalShares
+  poolId__totalSwapFee
+  poolId__totalSwapVolume
+  poolId__totalWeight
+  poolId__tx
+  poolId__u
+  poolId__unitSeconds
+  poolId__upperTarget
+  poolId__v
+  poolId__w
+  poolId__wrappedIndex
+  poolId__z
   rate
   token
+  token__address
+  token__assetManager
+  token__balance
+  token__cashBalance
+  token__decimals
+  token__id
+  token__index
+  token__isExemptFromYieldProtocolFee
+  token__managedBalance
+  token__name
+  token__priceRate
+  token__symbol
+  token__weight
 }
 
 type Query {
@@ -3363,6 +4003,7 @@ type SwapFeeUpdate {
 input SwapFeeUpdate_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [SwapFeeUpdate_filter]
   endSwapFeePercentage: BigDecimal
   endSwapFeePercentage_gt: BigDecimal
   endSwapFeePercentage_gte: BigDecimal
@@ -3387,6 +4028,7 @@ input SwapFeeUpdate_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [SwapFeeUpdate_filter]
   pool: String
   pool_: Pool_filter
   pool_contains: String
@@ -3439,6 +4081,62 @@ enum SwapFeeUpdate_orderBy {
   endTimestamp
   id
   pool
+  pool__address
+  pool__alpha
+  pool__amp
+  pool__baseToken
+  pool__beta
+  pool__c
+  pool__createTime
+  pool__dSq
+  pool__delta
+  pool__epsilon
+  pool__expiryTime
+  pool__factory
+  pool__holdersCount
+  pool__id
+  pool__isInRecoveryMode
+  pool__isPaused
+  pool__lambda
+  pool__lowerTarget
+  pool__mainIndex
+  pool__managementFee
+  pool__name
+  pool__oracleEnabled
+  pool__owner
+  pool__poolType
+  pool__poolTypeVersion
+  pool__principalToken
+  pool__protocolAumFeeCache
+  pool__protocolId
+  pool__protocolSwapFeeCache
+  pool__protocolYieldFeeCache
+  pool__root3Alpha
+  pool__s
+  pool__sqrtAlpha
+  pool__sqrtBeta
+  pool__strategyType
+  pool__swapEnabled
+  pool__swapFee
+  pool__swapsCount
+  pool__symbol
+  pool__tauAlphaX
+  pool__tauAlphaY
+  pool__tauBetaX
+  pool__tauBetaY
+  pool__totalLiquidity
+  pool__totalShares
+  pool__totalSwapFee
+  pool__totalSwapVolume
+  pool__totalWeight
+  pool__tx
+  pool__u
+  pool__unitSeconds
+  pool__upperTarget
+  pool__v
+  pool__w
+  pool__wrappedIndex
+  pool__z
   scheduledTimestamp
   startSwapFeePercentage
   startTimestamp
@@ -3447,6 +4145,7 @@ enum SwapFeeUpdate_orderBy {
 input Swap_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [Swap_filter]
   caller: Bytes
   caller_contains: Bytes
   caller_gt: Bytes
@@ -3465,6 +4164,7 @@ input Swap_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [Swap_filter]
   poolId: String
   poolId_: Pool_filter
   poolId_contains: String
@@ -3615,6 +4315,62 @@ enum Swap_orderBy {
   caller
   id
   poolId
+  poolId__address
+  poolId__alpha
+  poolId__amp
+  poolId__baseToken
+  poolId__beta
+  poolId__c
+  poolId__createTime
+  poolId__dSq
+  poolId__delta
+  poolId__epsilon
+  poolId__expiryTime
+  poolId__factory
+  poolId__holdersCount
+  poolId__id
+  poolId__isInRecoveryMode
+  poolId__isPaused
+  poolId__lambda
+  poolId__lowerTarget
+  poolId__mainIndex
+  poolId__managementFee
+  poolId__name
+  poolId__oracleEnabled
+  poolId__owner
+  poolId__poolType
+  poolId__poolTypeVersion
+  poolId__principalToken
+  poolId__protocolAumFeeCache
+  poolId__protocolId
+  poolId__protocolSwapFeeCache
+  poolId__protocolYieldFeeCache
+  poolId__root3Alpha
+  poolId__s
+  poolId__sqrtAlpha
+  poolId__sqrtBeta
+  poolId__strategyType
+  poolId__swapEnabled
+  poolId__swapFee
+  poolId__swapsCount
+  poolId__symbol
+  poolId__tauAlphaX
+  poolId__tauAlphaY
+  poolId__tauBetaX
+  poolId__tauBetaY
+  poolId__totalLiquidity
+  poolId__totalShares
+  poolId__totalSwapFee
+  poolId__totalSwapVolume
+  poolId__totalWeight
+  poolId__tx
+  poolId__u
+  poolId__unitSeconds
+  poolId__upperTarget
+  poolId__v
+  poolId__w
+  poolId__wrappedIndex
+  poolId__z
   timestamp
   tokenAmountIn
   tokenAmountOut
@@ -3624,6 +4380,7 @@ enum Swap_orderBy {
   tokenOutSym
   tx
   userAddress
+  userAddress__id
   valueUSD
 }
 
@@ -3666,6 +4423,7 @@ input TokenPrice_filter {
   amount_lte: BigDecimal
   amount_not: BigDecimal
   amount_not_in: [BigDecimal!]
+  and: [TokenPrice_filter]
   asset: Bytes
   asset_contains: Bytes
   asset_gt: Bytes
@@ -3692,6 +4450,7 @@ input TokenPrice_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [TokenPrice_filter]
   poolId: String
   poolId_: Pool_filter
   poolId_contains: String
@@ -3747,6 +4506,62 @@ enum TokenPrice_orderBy {
   block
   id
   poolId
+  poolId__address
+  poolId__alpha
+  poolId__amp
+  poolId__baseToken
+  poolId__beta
+  poolId__c
+  poolId__createTime
+  poolId__dSq
+  poolId__delta
+  poolId__epsilon
+  poolId__expiryTime
+  poolId__factory
+  poolId__holdersCount
+  poolId__id
+  poolId__isInRecoveryMode
+  poolId__isPaused
+  poolId__lambda
+  poolId__lowerTarget
+  poolId__mainIndex
+  poolId__managementFee
+  poolId__name
+  poolId__oracleEnabled
+  poolId__owner
+  poolId__poolType
+  poolId__poolTypeVersion
+  poolId__principalToken
+  poolId__protocolAumFeeCache
+  poolId__protocolId
+  poolId__protocolSwapFeeCache
+  poolId__protocolYieldFeeCache
+  poolId__root3Alpha
+  poolId__s
+  poolId__sqrtAlpha
+  poolId__sqrtBeta
+  poolId__strategyType
+  poolId__swapEnabled
+  poolId__swapFee
+  poolId__swapsCount
+  poolId__symbol
+  poolId__tauAlphaX
+  poolId__tauAlphaY
+  poolId__tauBetaX
+  poolId__tauBetaY
+  poolId__totalLiquidity
+  poolId__totalShares
+  poolId__totalSwapFee
+  poolId__totalSwapVolume
+  poolId__totalWeight
+  poolId__tx
+  poolId__u
+  poolId__unitSeconds
+  poolId__upperTarget
+  poolId__v
+  poolId__w
+  poolId__wrappedIndex
+  poolId__z
   price
   pricingAsset
   timestamp
@@ -3766,6 +4581,7 @@ type TokenSnapshot {
 input TokenSnapshot_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [TokenSnapshot_filter]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -3774,6 +4590,7 @@ input TokenSnapshot_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [TokenSnapshot_filter]
   timestamp: Int
   timestamp_gt: Int
   timestamp_gte: Int
@@ -3849,6 +4666,18 @@ enum TokenSnapshot_orderBy {
   id
   timestamp
   token
+  token__address
+  token__decimals
+  token__id
+  token__latestFXPrice
+  token__latestUSDPrice
+  token__name
+  token__symbol
+  token__totalBalanceNotional
+  token__totalBalanceUSD
+  token__totalSwapCount
+  token__totalVolumeNotional
+  token__totalVolumeUSD
   totalBalanceNotional
   totalBalanceUSD
   totalSwapCount
@@ -3879,6 +4708,7 @@ input Token_filter {
   address_not_starts_with_nocase: String
   address_starts_with: String
   address_starts_with_nocase: String
+  and: [Token_filter]
   decimals: Int
   decimals_gt: Int
   decimals_gte: Int
@@ -3952,6 +4782,7 @@ input Token_filter {
   name_not_starts_with_nocase: String
   name_starts_with: String
   name_starts_with_nocase: String
+  or: [Token_filter]
   pool: String
   pool_: Pool_filter
   pool_contains: String
@@ -4041,9 +4872,70 @@ enum Token_orderBy {
   id
   latestFXPrice
   latestPrice
+  latestPrice__asset
+  latestPrice__block
+  latestPrice__id
+  latestPrice__price
+  latestPrice__pricingAsset
   latestUSDPrice
   name
   pool
+  pool__address
+  pool__alpha
+  pool__amp
+  pool__baseToken
+  pool__beta
+  pool__c
+  pool__createTime
+  pool__dSq
+  pool__delta
+  pool__epsilon
+  pool__expiryTime
+  pool__factory
+  pool__holdersCount
+  pool__id
+  pool__isInRecoveryMode
+  pool__isPaused
+  pool__lambda
+  pool__lowerTarget
+  pool__mainIndex
+  pool__managementFee
+  pool__name
+  pool__oracleEnabled
+  pool__owner
+  pool__poolType
+  pool__poolTypeVersion
+  pool__principalToken
+  pool__protocolAumFeeCache
+  pool__protocolId
+  pool__protocolSwapFeeCache
+  pool__protocolYieldFeeCache
+  pool__root3Alpha
+  pool__s
+  pool__sqrtAlpha
+  pool__sqrtBeta
+  pool__strategyType
+  pool__swapEnabled
+  pool__swapFee
+  pool__swapsCount
+  pool__symbol
+  pool__tauAlphaX
+  pool__tauAlphaY
+  pool__tauBetaX
+  pool__tauBetaY
+  pool__totalLiquidity
+  pool__totalShares
+  pool__totalSwapFee
+  pool__totalSwapVolume
+  pool__totalWeight
+  pool__tx
+  pool__u
+  pool__unitSeconds
+  pool__upperTarget
+  pool__v
+  pool__w
+  pool__wrappedIndex
+  pool__z
   symbol
   totalBalanceNotional
   totalBalanceUSD
@@ -4072,6 +4964,7 @@ type TradePairSnapshot {
 input TradePairSnapshot_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [TradePairSnapshot_filter]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -4080,6 +4973,7 @@ input TradePairSnapshot_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [TradePairSnapshot_filter]
   pair: String
   pair_: TradePair_filter
   pair_contains: String
@@ -4130,6 +5024,9 @@ input TradePairSnapshot_filter {
 enum TradePairSnapshot_orderBy {
   id
   pair
+  pair__id
+  pair__totalSwapFee
+  pair__totalSwapVolume
   timestamp
   totalSwapFee
   totalSwapVolume
@@ -4138,6 +5035,7 @@ enum TradePairSnapshot_orderBy {
 input TradePair_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [TradePair_filter]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -4146,6 +5044,7 @@ input TradePair_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [TradePair_filter]
   token0: String
   token0_: Token_filter
   token0_contains: String
@@ -4209,7 +5108,31 @@ input TradePair_filter {
 enum TradePair_orderBy {
   id
   token0
+  token0__address
+  token0__decimals
+  token0__id
+  token0__latestFXPrice
+  token0__latestUSDPrice
+  token0__name
+  token0__symbol
+  token0__totalBalanceNotional
+  token0__totalBalanceUSD
+  token0__totalSwapCount
+  token0__totalVolumeNotional
+  token0__totalVolumeUSD
   token1
+  token1__address
+  token1__decimals
+  token1__id
+  token1__latestFXPrice
+  token1__latestUSDPrice
+  token1__name
+  token1__symbol
+  token1__totalBalanceNotional
+  token1__totalBalanceUSD
+  token1__totalSwapCount
+  token1__totalVolumeNotional
+  token1__totalVolumeUSD
   totalSwapFee
   totalSwapVolume
 }
@@ -4231,6 +5154,7 @@ type UserInternalBalance {
 input UserInternalBalance_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [UserInternalBalance_filter]
   balance: BigDecimal
   balance_gt: BigDecimal
   balance_gte: BigDecimal
@@ -4247,6 +5171,7 @@ input UserInternalBalance_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [UserInternalBalance_filter]
   token: Bytes
   token_contains: Bytes
   token_gt: Bytes
@@ -4285,11 +5210,13 @@ enum UserInternalBalance_orderBy {
   id
   token
   userAddress
+  userAddress__id
 }
 
 input User_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [User_filter]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -4298,6 +5225,7 @@ input User_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [User_filter]
   sharesOwned_: PoolShare_filter
   swaps_: Swap_filter
   userInternalBalances_: UserInternalBalance_filter

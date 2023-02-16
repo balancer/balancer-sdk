@@ -68,6 +68,7 @@ type GaugeFactory {
 input GaugeFactory_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [GaugeFactory_filter]
   gauges_: LiquidityGauge_filter
   id: ID
   id_gt: ID
@@ -85,6 +86,7 @@ input GaugeFactory_filter {
   numGauges_lte: Int
   numGauges_not: Int
   numGauges_not_in: [Int!]
+  or: [GaugeFactory_filter]
 }
 
 enum GaugeFactory_orderBy {
@@ -110,6 +112,7 @@ type GaugeShare {
 input GaugeShare_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [GaugeShare_filter]
   balance: BigDecimal
   balance_gt: BigDecimal
   balance_gte: BigDecimal
@@ -147,6 +150,7 @@ input GaugeShare_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [GaugeShare_filter]
   user: String
   user_: User_filter
   user_contains: String
@@ -173,8 +177,18 @@ input GaugeShare_filter {
 enum GaugeShare_orderBy {
   balance
   gauge
+  gauge__id
+  gauge__isKilled
+  gauge__isPreferentialGauge
+  gauge__poolAddress
+  gauge__poolId
+  gauge__relativeWeightCap
+  gauge__streamer
+  gauge__symbol
+  gauge__totalSupply
   id
   user
+  user__id
 }
 
 type GaugeType {
@@ -188,6 +202,7 @@ type GaugeType {
 input GaugeType_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [GaugeType_filter]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -216,6 +231,7 @@ input GaugeType_filter {
   name_not_starts_with_nocase: String
   name_starts_with: String
   name_starts_with_nocase: String
+  or: [GaugeType_filter]
 }
 
 enum GaugeType_orderBy {
@@ -243,6 +259,7 @@ type GaugeVote {
 input GaugeVote_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [GaugeVote_filter]
   gauge: String
   gauge_: Gauge_filter
   gauge_contains: String
@@ -272,6 +289,7 @@ input GaugeVote_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [GaugeVote_filter]
   timestamp: BigInt
   timestamp_gt: BigInt
   timestamp_gte: BigInt
@@ -313,9 +331,13 @@ input GaugeVote_filter {
 
 enum GaugeVote_orderBy {
   gauge
+  gauge__addedTimestamp
+  gauge__address
+  gauge__id
   id
   timestamp
   user
+  user__id
   weight
 }
 
@@ -340,6 +362,7 @@ input Gauge_filter {
   address_not: Bytes
   address_not_contains: Bytes
   address_not_in: [Bytes!]
+  and: [Gauge_filter]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -369,6 +392,7 @@ input Gauge_filter {
   liquidityGauge_not_starts_with_nocase: String
   liquidityGauge_starts_with: String
   liquidityGauge_starts_with_nocase: String
+  or: [Gauge_filter]
   rootGauge: String
   rootGauge_: RootGauge_filter
   rootGauge_contains: String
@@ -418,8 +442,24 @@ enum Gauge_orderBy {
   address
   id
   liquidityGauge
+  liquidityGauge__id
+  liquidityGauge__isKilled
+  liquidityGauge__isPreferentialGauge
+  liquidityGauge__poolAddress
+  liquidityGauge__poolId
+  liquidityGauge__relativeWeightCap
+  liquidityGauge__streamer
+  liquidityGauge__symbol
+  liquidityGauge__totalSupply
   rootGauge
+  rootGauge__chain
+  rootGauge__id
+  rootGauge__isKilled
+  rootGauge__recipient
+  rootGauge__relativeWeightCap
   type
+  type__id
+  type__name
 }
 
 type LiquidityGauge {
@@ -472,6 +512,7 @@ type LiquidityGauge {
 input LiquidityGauge_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [LiquidityGauge_filter]
   factory: String
   factory_: GaugeFactory_filter
   factory_contains: String
@@ -530,6 +571,7 @@ input LiquidityGauge_filter {
   isPreferentialGauge_in: [Boolean!]
   isPreferentialGauge_not: Boolean
   isPreferentialGauge_not_in: [Boolean!]
+  or: [LiquidityGauge_filter]
   pool: String
   poolAddress: Bytes
   poolAddress_contains: Bytes
@@ -623,13 +665,21 @@ input LiquidityGauge_filter {
 
 enum LiquidityGauge_orderBy {
   factory
+  factory__id
+  factory__numGauges
   gauge
+  gauge__addedTimestamp
+  gauge__address
+  gauge__id
   id
   isKilled
   isPreferentialGauge
   pool
   poolAddress
   poolId
+  pool__address
+  pool__id
+  pool__poolId
   relativeWeightCap
   shares
   streamer
@@ -677,6 +727,7 @@ input Pool_filter {
   address_not: Bytes
   address_not_contains: Bytes
   address_not_in: [Bytes!]
+  and: [Pool_filter]
   gaugesList: [Bytes!]
   gaugesList_contains: [Bytes!]
   gaugesList_contains_nocase: [Bytes!]
@@ -692,6 +743,7 @@ input Pool_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [Pool_filter]
   poolId: Bytes
   poolId_contains: Bytes
   poolId_gt: Bytes
@@ -732,6 +784,15 @@ enum Pool_orderBy {
   id
   poolId
   preferentialGauge
+  preferentialGauge__id
+  preferentialGauge__isKilled
+  preferentialGauge__isPreferentialGauge
+  preferentialGauge__poolAddress
+  preferentialGauge__poolId
+  preferentialGauge__relativeWeightCap
+  preferentialGauge__streamer
+  preferentialGauge__symbol
+  preferentialGauge__totalSupply
 }
 
 type Query {
@@ -1101,6 +1162,7 @@ type RewardToken {
 input RewardToken_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [RewardToken_filter]
   decimals: Int
   decimals_gt: Int
   decimals_gte: Int
@@ -1138,6 +1200,7 @@ input RewardToken_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [RewardToken_filter]
   periodFinish: BigInt
   periodFinish_gt: BigInt
   periodFinish_gte: BigInt
@@ -1187,6 +1250,15 @@ input RewardToken_filter {
 enum RewardToken_orderBy {
   decimals
   gauge
+  gauge__id
+  gauge__isKilled
+  gauge__isPreferentialGauge
+  gauge__poolAddress
+  gauge__poolId
+  gauge__relativeWeightCap
+  gauge__streamer
+  gauge__symbol
+  gauge__totalSupply
   id
   periodFinish
   rate
@@ -1221,6 +1293,7 @@ type RootGauge {
 input RootGauge_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [RootGauge_filter]
   chain: Chain
   chain_in: [Chain!]
   chain_not: Chain
@@ -1279,6 +1352,7 @@ input RootGauge_filter {
   isKilled_in: [Boolean!]
   isKilled_not: Boolean
   isKilled_not_in: [Boolean!]
+  or: [RootGauge_filter]
   recipient: Bytes
   recipient_contains: Bytes
   recipient_gt: Bytes
@@ -1302,7 +1376,12 @@ input RootGauge_filter {
 enum RootGauge_orderBy {
   chain
   factory
+  factory__id
+  factory__numGauges
   gauge
+  gauge__addedTimestamp
+  gauge__address
+  gauge__id
   id
   isKilled
   recipient
@@ -1667,6 +1746,7 @@ type User {
 input User_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [User_filter]
   gaugeShares_: GaugeShare_filter
   gaugeVotes_: GaugeVote_filter
   id: ID
@@ -1677,6 +1757,7 @@ input User_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  or: [User_filter]
   votingLocks_: VotingEscrowLock_filter
 }
 
@@ -1720,6 +1801,7 @@ type VotingEscrowLock {
 input VotingEscrowLock_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [VotingEscrowLock_filter]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -1736,6 +1818,7 @@ input VotingEscrowLock_filter {
   lockedBalance_lte: BigDecimal
   lockedBalance_not: BigDecimal
   lockedBalance_not_in: [BigDecimal!]
+  or: [VotingEscrowLock_filter]
   unlockTime: BigInt
   unlockTime_gt: BigInt
   unlockTime_gte: BigInt
@@ -1802,12 +1885,16 @@ enum VotingEscrowLock_orderBy {
   unlockTime
   updatedAt
   user
+  user__id
   votingEscrowID
+  votingEscrowID__id
+  votingEscrowID__stakedSupply
 }
 
 input VotingEscrow_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
+  and: [VotingEscrow_filter]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -1817,6 +1904,7 @@ input VotingEscrow_filter {
   id_not: ID
   id_not_in: [ID!]
   locks_: VotingEscrowLock_filter
+  or: [VotingEscrow_filter]
   stakedSupply: BigDecimal
   stakedSupply_gt: BigDecimal
   stakedSupply_gte: BigDecimal

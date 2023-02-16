@@ -12,8 +12,8 @@ export class GaugeSharesRepository extends GaugesSubgraphRepository<
   GaugeShareAttributes
 > {
   async query(args: any): Promise<GaugeShare[]> {
-    if (!args.orderBy) args.orderBy = GaugeShare_OrderBy.Balance;
-    if (!args.orderDirection) args.orderDirection = OrderDirection.Desc;
+    if (!args.orderBy) args.orderBy = GaugeShare_OrderBy.balance;
+    if (!args.orderDirection) args.orderDirection = OrderDirection.desc;
     if (!args.block && this.blockHeight)
       args.block = { number: await this.blockHeight() };
 
