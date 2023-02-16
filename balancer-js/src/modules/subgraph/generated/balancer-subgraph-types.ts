@@ -5265,7 +5265,7 @@ export const TokenTreeFragmentDoc = gql`
   latestUSDPrice
   pool {
     ...SubgraphSubPool
-    tokens {
+    tokens(first: 100, orderBy: index) {
       ...SubgraphSubPoolToken
       token {
         latestUSDPrice

@@ -151,7 +151,7 @@ fragment TokenTree on Token {
   latestUSDPrice
   pool {
     ...SubgraphSubPool
-    tokens {
+    tokens(first: 100, orderBy: index) {
       ...SubgraphSubPoolToken
       token {
         latestUSDPrice
