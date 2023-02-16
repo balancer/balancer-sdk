@@ -29,7 +29,8 @@
     "subgraph:generate": "graphql-codegen --config src/modules/subgraph/codegen.yml -r dotenv/config",
     "examples:run": "npx ts-node -P tsconfig.testing.json -r tsconfig-paths/register",
     "node": "npx hardhat node --tsconfig tsconfig.testing.json --fork $(. ./.env && echo $ALCHEMY_URL)",
-    "node:goerli": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --fork $(grep ALCHEMY_URL_GOERLI .env | cut -d '=' -f2 | tail -1) --port 8000"
+    "node:goerli": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --fork $(grep ALCHEMY_URL_GOERLI .env | cut -d '=' -f2 | tail -1) --port 8000",
+    "node:polygon": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.polygon.ts node --fork $(grep ALCHEMY_URL_POLYGON .env | cut -d '=' -f2 | tail -1) --port 8137"
   },
   "devDependencies": {
     "@ethersproject/solidity": "^5.6.1",

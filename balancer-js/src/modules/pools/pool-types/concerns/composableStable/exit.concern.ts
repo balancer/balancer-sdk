@@ -403,7 +403,7 @@ export class ComposableStablePoolExit implements ExitConcern {
       scalingFactors[singleTokenMaxOutIndex]
     );
 
-    expectedAmountsOut[singleTokenMaxOutIndex] = downscaledAmountOut;
+    expectedAmountsOut[singleTokenMaxOutIndex] = downscaledAmountOut.toString();
     // Apply slippage tolerance
     minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
       BigNumber.from(downscaledAmountOut),
@@ -419,12 +419,14 @@ export class ComposableStablePoolExit implements ExitConcern {
     scalingFactors,
     bptIn,
     slippage,
+    bptIndex,
   }: Pick<
     ExactBPTInSortedValues,
     | 'upScaledBalancesWithoutBpt'
     | 'parsedTotalShares'
     | 'scalingFactors'
     | 'singleTokenMaxOutIndex'
+    | 'bptIndex'
   > &
     Pick<ExitExactBPTInParameters, 'bptIn' | 'slippage'>): {
     minAmountsOut: string[];
@@ -437,7 +439,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     ).map((amount) => amount.toString());
     // Maths return numbers scaled to 18 decimals. Must scale down to token decimals.
     const amountsOutScaledDown = _downscaleDownArray(
-      amountsOut.map((a) => BigInt(a)),
+      insert(amountsOut, bptIndex, '0').map((a) => BigInt(a)),
       scalingFactors
     );
 
