@@ -59,17 +59,18 @@ describe('happy case', () => {
     MockDate.reset();
   });
 
-  describe('duplicated pool with an empty gauge', () => {
-    it('has tokenAprs', async () => {
-      const pool = await pools.find(ethStEthCopy);
-      if (pool) {
-        const apr = await pools.apr(pool);
-        expect(apr && apr.tokenAprs.total).to.be.greaterThan(1);
-      } else {
-        throw 'no pool found';
-      }
-    }).timeout(120000);
-  });
+  // TODO Removed because duplicate pool is disabled
+  // describe('duplicated pool with an empty gauge', () => {
+  //   it('has tokenAprs', async () => {
+  //     const pool = await pools.find(ethStEthCopy);
+  //     if (pool) {
+  //       const apr = await pools.apr(pool);
+  //       expect(apr && apr.tokenAprs.total).to.be.greaterThan(1);
+  //     } else {
+  //       throw 'no pool found';
+  //     }
+  //   }).timeout(120000);
+  // });
 
   describe('pool with yield tokens', () => {
     it('has tokenAprs', async () => {
