@@ -263,8 +263,13 @@ export class StablePoolExit implements ExitConcern {
     amountsOut,
     tokensOut,
   }: SortValuesExactTokensOutParams): ExactTokensOutSortedValues => {
+    const shouldUnwrapNativeAsset = tokensOut.some((a) => a === AddressZero);
     // Parse pool info into EVM amounts in order to match amountsOut scaling
-    const parsedPoolInfo = parsePoolInfo(pool);
+    const parsedPoolInfo = parsePoolInfo(
+      pool,
+      wrappedNativeAsset,
+      shouldUnwrapNativeAsset
+    );
     const { scalingFactors } = parsedPoolInfo;
 
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
