@@ -248,7 +248,9 @@ export class WeightedPoolExit implements ExitConcern {
     const { parsedTokens } = parsedPoolInfo;
     let singleTokenMaxOutIndex = -1;
     if (singleTokenMaxOut) {
-      singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
+      singleTokenMaxOutIndex = parsedTokens.indexOf(
+        singleTokenMaxOut.toLowerCase()
+      );
     }
     return {
       ...parsedPoolInfo,

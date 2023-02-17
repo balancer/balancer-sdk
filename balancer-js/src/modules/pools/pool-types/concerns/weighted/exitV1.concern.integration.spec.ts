@@ -1,10 +1,10 @@
-// yarn test:only ./src/modules/pools/pool-types/concerns/weighted/exit.concern.integration.spec.ts
+// yarn test:only ./src/modules/pools/pool-types/concerns/weighted/exitV1.concern.integration.spec.ts
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-import { BalancerSDK, insert, Network, PoolWithMethods } from '@/.';
+import { BalancerSDK, insert, Network, PoolWithMethods, replace } from '@/.';
 import { BPT_DECIMALS, BPT_SLOT } from '@/lib/constants/config';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import {
@@ -183,12 +183,9 @@ describe('Weighted Pool - Exit Integration Test', async () => {
             ? AddressZero
             : token
         );
-        const amountsOut = pool.tokens.map((t, i) => {
-          if (i === 0) {
-            return parseFixed('100', t.decimals).toString();
-          }
-          return '0';
-        });
+        const ethIndex = tokensOut.indexOf(AddressZero);
+        const amountsOut = Array(tokensOut.length).fill('0');
+        amountsOut[ethIndex] = parseFixed('1', 18).toString();
         const slippage = '0';
         const { to, data, maxBPTIn, expectedBPTIn } =
           pool.buildExitExactTokensOut(
@@ -197,16 +194,28 @@ describe('Weighted Pool - Exit Integration Test', async () => {
             amountsOut,
             slippage
           );
-        const { transactionReceipt, balanceDeltas } =
+        const { transactionReceipt, balanceDeltas, gasUsed } =
           await sendTransactionGetBalances(
-            [pool.address, ...pool.tokensList],
+            [pool.address, ...tokensOut],
             signer,
             signerAddress,
             to,
             data
           );
         expect(transactionReceipt.status).to.eq(1);
-        const expectedDeltas = insert(amountsOut, 0, expectedBPTIn);
+        const ethAmountOutWithGasUsed = BigNumber.from(amountsOut[ethIndex])
+          .sub(gasUsed)
+          .toString();
+        const expectedBalanceDeltasWithGasUsed = replace(
+          amountsOut,
+          ethIndex,
+          ethAmountOutWithGasUsed
+        );
+        const expectedDeltas = insert(
+          expectedBalanceDeltasWithGasUsed,
+          0,
+          expectedBPTIn
+        );
         expect(expectedDeltas).to.deep.eq(
           balanceDeltas.map((a) => a.toString())
         );
