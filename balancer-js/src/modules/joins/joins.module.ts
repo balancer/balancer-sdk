@@ -248,15 +248,17 @@ export class Join {
       const nonLeafJoinPath = [inputTokenNode];
       // Add each parent to the join path until we reach the root node
       let parent = nonLeafInputNode.parent;
+      let currentChild = nonLeafInputNode;
       while (parent) {
         const parentCopy = cloneDeep(parent);
         // Update index of siblings that are not within the join path to be 0
         parentCopy.children.forEach((child) => {
-          if (child !== nonLeafInputNode) {
+          if (child !== currentChild) {
             child.index = '0';
           }
         });
         nonLeafJoinPath.push(parentCopy);
+        currentChild = parent;
         parent = parent.parent;
       }
       // Add join path to list of join paths
@@ -527,14 +529,9 @@ export class Join {
         let immediateChildrenWithinJoinPath;
         if (isLeafJoin) {
           // Joining from leaf nodes allows joining with multiple tokens. We want immediate children.
-          // We need to filter child nodes that are not in the join path
           // bbausd as an example
-          // nodeChildrenWithinJoinPath should be - bausdc, bausdt, badai,
-          immediateChildrenWithinJoinPath = joinPath.filter(
-            (joinNode) =>
-              node.children.map((n) => n.address).includes(joinNode.address) &&
-              node.index === joinNode.parent?.index // Ensure child nodes with same address are not included more than once
-          );
+          // immediateChildrenWithinJoinPath should be - bausdc, bausdt, badai,
+          immediateChildrenWithinJoinPath = node.children;
         } else {
           // Joining from non-leaf nodes are always single token joins, so we can simply get the previous node in the join path
           immediateChildrenWithinJoinPath = i > 0 ? [joinPath[i - 1]] : [];
@@ -596,14 +593,7 @@ export class Join {
           case 'batchSwap':
             {
               const { modelRequest, encodedCall, assets, amounts } =
-                this.createSwap(
-                  node,
-                  immediateChildrenWithinJoinPath,
-                  j,
-                  minOut,
-                  sender,
-                  recipient
-                );
+                this.createSwap(node, j, minOut, sender, recipient);
               modelRequests.push(modelRequest);
               encodedCalls.push(encodedCall);
               this.updateDeltas(deltas, assets, amounts);
@@ -755,7 +745,6 @@ export class Join {
 
   private createSwap = (
     node: Node,
-    immediateChildNodesInPath: Node[],
     joinPathIndex: number,
     expectedOut: string,
     sender: string,
@@ -767,13 +756,9 @@ export class Join {
     amounts: string[];
   } => {
     // We only need swaps for main/wrapped > linearBpt so shouldn't be more than token > token
-    if (immediateChildNodesInPath.length !== 1)
-      throw new Error('Unsupported batchswap');
-    const tokenIn = immediateChildNodesInPath[0].address;
-    const amountIn = this.getOutputRefValue(
-      joinPathIndex,
-      immediateChildNodesInPath[0]
-    );
+    if (node.children.length !== 1) throw new Error('Unsupported swap');
+    const tokenIn = node.children[0].address;
+    const amountIn = this.getOutputRefValue(joinPathIndex, node.children[0]);
     const assets = [node.address, tokenIn];
 
     // Single swap limits are always positive
@@ -789,24 +774,8 @@ export class Join {
       userData: '0x',
     };
 
-    // nodeChildrenWithinJoinPath only has 1? So basically this is if node:
-    // - input or joinPool: false
-    // - others: true
-    const fromInternalBalance = !immediateChildNodesInPath.some(
-      (c) => c.joinAction === 'input' || c.joinAction === 'joinPool'
-    );
-    // Example of node.parent?
-    // If the parents children doesn't include input or joinPool then send to internal balance
-    // If next node is non-internal (node)
-    // If node is all internal - considering siblings
-    const toInternalBalance =
-      node.parent != undefined &&
-      !node.parent.children.some(
-        (sibling) =>
-          (sibling.joinAction === 'input' ||
-            sibling.joinAction === 'joinPool') &&
-          sibling.index != '0' // Siblings with index 0 won't affect the next transaction so they shouldn't be considered
-      );
+    const fromInternalBalance = this.allImmediateChildrenSendToInternal(node);
+    const toInternalBalance = this.allSiblingsSendToInternal(node);
 
     const funds: FundManagement = {
       sender,
@@ -822,8 +791,8 @@ export class Join {
     // console.log(
     //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
     //   ${node.joinAction}(
-    //     inputAmt: ${nodeChildrenWithinJoinPath[0].index},
-    //     inputToken: ${nodeChildrenWithinJoinPath[0].address},
+    //     inputAmt: ${node.children[0].index},
+    //     inputToken: ${node.children[0].address},
     //     pool: ${node.id},
     //     outputToken: ${node.address},
     //     outputRef: ${this.getOutputRefValue(joinPathIndex, node).value},
@@ -847,9 +816,7 @@ export class Join {
 
     const modelRequest = VaultModel.mapSwapRequest(call);
 
-    const hasChildInput = immediateChildNodesInPath.some(
-      (c) => c.joinAction === 'input'
-    );
+    const hasChildInput = node.children.some((c) => c.joinAction === 'input');
     // If node has no child input the swap is part of a chain and token in shouldn't be considered for user deltas
     const userTokenIn = !hasChildInput ? '0' : amountIn.value;
     // If node has parent the swap is part of a chain and BPT out shouldn't be considered for user deltas
@@ -940,9 +907,7 @@ export class Join {
     const ethIndex = sortedTokens.indexOf(AddressZero);
     const value = ethIndex === -1 ? '0' : sortedAmounts[ethIndex];
 
-    const fromInternalBalance = !immediateChildNodesInPath.some(
-      (c) => c.joinAction === 'input' || c.joinAction === 'joinPool'
-    );
+    const fromInternalBalance = this.allImmediateChildrenSendToInternal(node);
 
     // console.log(
     //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
@@ -1029,6 +994,37 @@ export class Join {
         (node.joinAction === 'input' ||
           node.joinAction === 'wrapAaveDynamicToken') &&
         node.index !== '0'
+    );
+  };
+
+  // Nodes with index 0 won't affect transactions so they shouldn't be considered
+  private shouldBeConsidered = (node: Node): boolean => {
+    return node.index != '0';
+  };
+
+  // joinPool transaction always sends to non-internal balance
+  // input always behave as sending to non-internal balance
+  private sendsToInternalBalance = (node: Node): boolean => {
+    return node.joinAction !== 'input' && node.joinAction !== 'joinPool';
+  };
+
+  private allImmediateChildrenSendToInternal = (node: Node): boolean => {
+    const children = node.children.filter((c) => this.shouldBeConsidered(c));
+    if (children.length === 0) return false;
+    return (
+      children.filter((c) => this.sendsToInternalBalance(c)).length ===
+      children.length
+    );
+  };
+
+  private allSiblingsSendToInternal = (node: Node): boolean => {
+    if (!node.parent) return false;
+    const siblings = node.parent.children.filter((s) =>
+      this.shouldBeConsidered(s)
+    );
+    return (
+      siblings.filter((s) => this.sendsToInternalBalance(s)).length ===
+      siblings.length
     );
   };
 }

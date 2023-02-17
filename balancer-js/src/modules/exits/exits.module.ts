@@ -520,21 +520,11 @@ export class Exit {
       userData: '0x',
     };
 
-    // Except for the first transaction, which is sent from the user's balance,
-    // all others are from internal balances
-    const fromInternalBalance = !isRootNode;
-    // Transactions should be always sent to internal balances, except for two cases:
-    // 1. The last transaction, which is sent to the user's balance
-    // 2. A transaction that will be followed by an exitPool, which is always
-    // fromInternalBalance=false, so it requires the previous one to be toInternalBalance=false
-    const toInternalBalance =
-      exitChild.exitAction !== 'output' && exitChild.exitAction !== 'exitPool';
-
     const funds: FundManagement = {
       sender,
       recipient,
-      fromInternalBalance,
-      toInternalBalance,
+      fromInternalBalance: this.receivesFromInternal(node),
+      toInternalBalance: this.receivesFromInternal(exitChild),
     };
 
     const outputReference = Relayer.toChainedReference(
@@ -683,13 +673,6 @@ export class Exit {
     //   )`
     // );
 
-    // Transactions should be always sent to internal balances, except for two cases:
-    // 1. The last transaction, which is sent to the user's balance
-    // 2. A transaction that will be followed by an exitPool, which is always
-    // fromInternalBalance=false, so it requires the previous one to be toInternalBalance=false
-    const toInternalBalance =
-      exitChild.exitAction !== 'output' && exitChild.exitAction !== 'exitPool';
-
     const call = Relayer.formatExitPoolInput({
       poolId: node.id,
       poolKind: 0,
@@ -700,7 +683,7 @@ export class Exit {
       assets: sortedTokens,
       minAmountsOut: sortedAmounts,
       userData,
-      toInternalBalance,
+      toInternalBalance: this.receivesFromInternal(exitChild),
     });
     const encodedCall = Relayer.encodeExitPool(call);
     const modelRequest = VaultModel.mapExitPoolRequest(call);
@@ -728,5 +711,14 @@ export class Exit {
 
   private getOutputRef = (exitPathIndex: number, nodeIndex: string): number => {
     return exitPathIndex * 100 + parseInt(nodeIndex);
+  };
+
+  // node without parent is the root node and it receives from non-internal balance
+  // exitPool always expects amounts from non-internal balance
+  // output always behave as receiving from non-internal balance
+  // others should always receive from internal balance
+  private receivesFromInternal = (node: Node): boolean => {
+    if (!node.parent) return false;
+    return node.exitAction !== 'output' && node.exitAction !== 'exitPool';
   };
 }
