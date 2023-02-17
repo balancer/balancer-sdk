@@ -305,17 +305,16 @@ export class ComposableStablePoolExit implements ExitConcern {
    * @param pool
    * @param singleTokenMaxOut
    * @param wrappedNativeAsset
-   * @param shouldUnwrapNativeAsset
    * @param amountsOut
    * @param tokensOut
    */
   sortValuesExitExactTokensOut = ({
     pool,
     wrappedNativeAsset,
-    shouldUnwrapNativeAsset,
     amountsOut,
     tokensOut,
   }: SortValuesExactTokensOutParams): ExactTokensOutSortedValues => {
+    const shouldUnwrapNativeAsset = tokensOut.some((a) => a === AddressZero);
     const parsedValues = parsePoolInfo(
       pool,
       wrappedNativeAsset,
