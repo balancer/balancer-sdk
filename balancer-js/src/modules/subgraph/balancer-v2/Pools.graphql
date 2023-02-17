@@ -64,46 +64,46 @@ query Pool($id: ID!, $block: Block_height) {
 }
 
 fragment SubgraphPool on Pool {
-    id
-    address
-    poolType
-    poolTypeVersion
-    factory
-    strategyType
-    symbol
-    name
-    swapEnabled
-    swapFee
-    protocolYieldFeeCache
-    protocolSwapFeeCache
-    owner
-    totalWeight
-    totalSwapVolume
-    totalSwapFee
-    totalLiquidity
-    totalShares
-    tokens(first: 100) {
-        ...SubgraphPoolToken
-    }
-    swapsCount
-    holdersCount
-    tokensList
-    amp
-    priceRateProviders(first: 100) {
-        ...SubgraphPriceRateProvider
-    }
-    expiryTime
-    unitSeconds
-    createTime
-    principalToken
-    baseToken
-    wrappedIndex
-    mainIndex
-    lowerTarget
-    upperTarget
-    sqrtAlpha
-    sqrtBeta
-    root3Alpha
+  id
+  address
+  poolType
+  poolTypeVersion
+  factory
+  strategyType
+  symbol
+  name
+  swapEnabled
+  swapFee
+  protocolYieldFeeCache
+  protocolSwapFeeCache
+  owner
+  totalWeight
+  totalSwapVolume
+  totalSwapFee
+  totalLiquidity
+  totalShares
+  tokens(first: 100, orderBy: index) {
+    ...SubgraphPoolToken
+  }
+  swapsCount
+  holdersCount
+  tokensList
+  amp
+  priceRateProviders(first: 100) {
+    ...SubgraphPriceRateProvider
+  }
+  expiryTime
+  unitSeconds
+  createTime
+  principalToken
+  baseToken
+  wrappedIndex
+  mainIndex
+  lowerTarget
+  upperTarget
+  sqrtAlpha
+  sqrtBeta
+  root3Alpha
 }
 
 fragment SubgraphPoolToken on PoolToken {
@@ -151,13 +151,13 @@ fragment TokenTree on Token {
   latestUSDPrice
   pool {
     ...SubgraphSubPool
-    tokens {
+    tokens(first: 100, orderBy: index) {
       ...SubgraphSubPoolToken
       token {
         latestUSDPrice
         pool {
           ...SubgraphSubPool
-          tokens {
+          tokens(first: 100, orderBy: index) {
             ...SubgraphSubPoolToken
             token {
               latestUSDPrice
