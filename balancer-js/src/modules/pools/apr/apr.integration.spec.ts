@@ -25,8 +25,8 @@ const usdStable =
 const btcEth =
   '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e';
 
-const ethStEthCopy =
-  '0x851523a36690bf267bbfec389c823072d82921a90002000000000000000001ed';
+// const ethStEthCopy =
+//   '0x851523a36690bf267bbfec389c823072d82921a90002000000000000000001ed';
 
 const auraBALveBAL =
   '0x3dd0843a028c86e0b760b1a76929d1c5ef93a2dd000200000000000000000249';
@@ -59,17 +59,18 @@ describe('happy case', () => {
     MockDate.reset();
   });
 
-  describe('duplicated pool with an empty gauge', () => {
-    it('has tokenAprs', async () => {
-      const pool = await pools.find(ethStEthCopy);
-      if (pool) {
-        const apr = await pools.apr(pool);
-        expect(apr && apr.tokenAprs.total).to.be.greaterThan(1);
-      } else {
-        throw 'no pool found';
-      }
-    }).timeout(120000);
-  });
+  // TODO Removed because duplicate pool is disabled
+  // describe('duplicated pool with an empty gauge', () => {
+  //   it('has tokenAprs', async () => {
+  //     const pool = await pools.find(ethStEthCopy);
+  //     if (pool) {
+  //       const apr = await pools.apr(pool);
+  //       expect(apr && apr.tokenAprs.total).to.be.greaterThan(1);
+  //     } else {
+  //       throw 'no pool found';
+  //     }
+  //   }).timeout(120000);
+  // });
 
   describe('pool with yield tokens', () => {
     it('has tokenAprs', async () => {
