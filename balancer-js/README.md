@@ -402,8 +402,10 @@ Builds a init join transaction for weighted pool.
     amountsIn,
   }) => InitJoinPoolAttributes
 ```
+
 [Example](./examples/pools/weighted/init-join.ts)
 Available pool types:
+
 - Weighted
 
 ### Joining nested pools
@@ -428,7 +430,6 @@ Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
    * @param tokens          Token addresses
    * @param amounts         Token amounts in EVM scale
    * @param userAddress     User address
-   * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
    * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
    * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
@@ -440,7 +441,6 @@ Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
     tokens: string[],
     amounts: string[],
     userAddress: string,
-    wrapMainTokens: boolean,
     slippage: string,
     signer: JsonRpcSigner,
     simulationType: SimulationType,
@@ -512,8 +512,9 @@ export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
 
 [Example](./examples/exitExactBPTIn.ts)<br/><br/>
 Available pool types:
+
 - Weighted [Example](./examples/exitExactBPTIn.ts)
-- Composable Stable [Example](./examples/pools/composable-stable/exit.ts) 
+- Composable Stable [Example](./examples/pools/composable-stable/exit.ts)
   - OBS: **Only ComposableStable >V2 supports proportional exits**
 - Meta Stable
 - Stable
@@ -563,10 +564,12 @@ export interface ExitExactTokensOutAttributes extends ExitPoolAttributes {
 [Example](./examples/exitExactTokensOut.ts)
 <br/><br/>
 Available pool types:
+
 - Weighted [Example](./examples/exitExactTokensOut.ts)
 - Composable Stable
 - Meta Stable
 - Stable
+
 ### Exiting nested pools
 
 Exposes Exit functionality allowing user to exit a pool that has pool tokens that are BPTs of other pools, e.g.:
@@ -871,7 +874,7 @@ const IL = await pools.impermanentLoss(join.timestamp, pool);
 
 #### Pseudocode
 
-* **Get Claimable Rewards**
+- **Get Claimable Rewards**
 
 ```javascript
 const defaultClaimableTokens = [
@@ -900,7 +903,8 @@ signer.request(txData).then(() => { ... });
 
 #### Pseudocode
 
-* **Get Claimable Rewards**
+- **Get Claimable Rewards**
+
 ```javascript
 gauges = LiquidityGaugesRepository.fetch();
 claimableTokensPerGauge = LiquidityGaugesMulticallRepository.getClaimableTokens(gauges, accountAddress) {
@@ -914,26 +918,24 @@ claimableTokensPerGauge = LiquidityGaugesMulticallRepository.getClaimableTokens(
 };
 
 ```
-* **Claim Rewards**
 
-it returns encoded callable data to be fed to a signer and then to send to the gauge contract. 
+- **Claim Rewards**
+
+it returns encoded callable data to be fed to a signer and then to send to the gauge contract.
 
 ```javascript
-
 if (MAINNET) {
-  const callData = balancerMinterInterface.encodeFunctionData(
-    'mintMany',
-    [gaugeAddresses]
-  );
-  return { to: balancerMinterAddress, data: callData }
+  const callData = balancerMinterInterface.encodeFunctionData('mintMany', [
+    gaugeAddresses,
+  ]);
+  return { to: balancerMinterAddress, data: callData };
 } else {
   const callData = gaugeClaimHelperInterface.encodeFunctionData(
     'claimRewardsFromGauges',
     [gaugeAddresses, userAddress]
   );
-  return { to: gaugeClaimHelperAddress, data: callData }
+  return { to: gaugeClaimHelperAddress, data: callData };
 }
-
 ```
 
 ## Licensing

@@ -138,7 +138,6 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param tokens          Token addresses
    * @param amounts         Token amounts in EVM scale
    * @param userAddress     User address
-   * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
    * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
    * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
@@ -150,7 +149,6 @@ export class Pools implements Findable<PoolWithMethods> {
     tokens: string[],
     amounts: string[],
     userAddress: string,
-    wrapMainTokens: boolean,
     slippage: string,
     signer: JsonRpcSigner,
     simulationType: SimulationType,
@@ -167,7 +165,6 @@ export class Pools implements Findable<PoolWithMethods> {
       tokens,
       amounts,
       userAddress,
-      wrapMainTokens,
       slippage,
       signer,
       simulationType,

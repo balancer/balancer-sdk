@@ -72,11 +72,7 @@ export class Exit {
     */
 
     // Create nodes and order by breadth first
-    const orderedNodes = await this.poolGraph.getGraphNodes(
-      false,
-      poolId,
-      false
-    );
+    const orderedNodes = await this.poolGraph.getGraphNodes(false, poolId);
 
     // Create exit paths for each output node and splits amount in proportionally between them
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
@@ -169,11 +165,7 @@ export class Exit {
     amountBptIn: string
   ): Promise<string> {
     // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodesForJoin = await poolGraph.getGraphNodes(
-      true,
-      poolId,
-      false
-    );
+    const orderedNodesForJoin = await poolGraph.getGraphNodes(true, poolId);
     const joinPaths = Join.getJoinPaths(
       orderedNodesForJoin,
       tokensOut,
