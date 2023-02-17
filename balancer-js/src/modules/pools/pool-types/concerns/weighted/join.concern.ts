@@ -14,6 +14,7 @@ import {
 } from '../types';
 import { Address, Pool } from '@/types';
 import { _upscaleArray } from '@/lib/utils/solidityMaths';
+import { AddressZero } from '@ethersproject/constants';
 
 type SortedValues = {
   parsedTokens: string[];
@@ -106,8 +107,13 @@ export class WeightedPoolJoin implements JoinConcern {
     JoinPoolParameters,
     'pool' | 'wrappedNativeAsset' | 'amountsIn' | 'tokensIn'
   >): SortedValues => {
+    const shouldUnwrapNativeAsset = tokensIn.some((a) => a === AddressZero);
     // Parse pool info into EVM amounts in order to match amountsIn scalling
-    const parsedPoolInfo = parsePoolInfo(pool, wrappedNativeAsset);
+    const parsedPoolInfo = parsePoolInfo(
+      pool,
+      wrappedNativeAsset,
+      shouldUnwrapNativeAsset
+    );
 
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     // sort inputs
@@ -182,7 +188,6 @@ export class WeightedPoolJoin implements JoinConcern {
       sortedAmountsIn,
       minBPTOut
     );
-
     const to = balancerVault;
     const functionName = 'joinPool';
     const attributes: JoinPool = {
