@@ -247,19 +247,22 @@ export class Join {
       // Start join path with input node
       const nonLeafJoinPath = [inputTokenNode];
       // Add each parent to the join path until we reach the root node
-      let parent = nonLeafInputNode.parent;
-      let currentChild = nonLeafInputNode;
+      let parent = inputTokenNode.parent;
+      let currentChild = inputTokenNode;
       while (parent) {
         const parentCopy = cloneDeep(parent);
-        // Update index of siblings that are not within the join path to be 0
-        parentCopy.children.forEach((child) => {
-          if (child !== currentChild) {
-            child.index = '0';
+        parentCopy.children = parentCopy.children.map((child) => {
+          if (child.address === currentChild.address) {
+            // Replace original child with current child that was modified to handle the non-leaf join
+            return currentChild;
+          } else {
+            // Update index of siblings that are not within the join path to be 0
+            return { ...child, index: '0' };
           }
         });
         nonLeafJoinPath.push(parentCopy);
-        currentChild = parent;
-        parent = parent.parent;
+        currentChild = parentCopy;
+        parent = parentCopy.parent;
       }
       // Add join path to list of join paths
       joinPaths.push(nonLeafJoinPath);
@@ -526,22 +529,10 @@ export class Join {
       const modelRequests: Requests[] = [];
 
       joinPath.forEach((node, i) => {
-        let immediateChildrenWithinJoinPath;
-        if (isLeafJoin) {
-          // Joining from leaf nodes allows joining with multiple tokens. We want immediate children.
-          // bbausd as an example
-          // immediateChildrenWithinJoinPath should be - bausdc, bausdt, badai,
-          immediateChildrenWithinJoinPath = node.children;
-        } else {
-          // Joining from non-leaf nodes are always single token joins, so we can simply get the previous node in the join path
-          immediateChildrenWithinJoinPath = i > 0 ? [joinPath[i - 1]] : [];
-        }
-
         // Prevent adding action calls with input amounts equal 0
         if (
-          immediateChildrenWithinJoinPath.length > 0 &&
-          immediateChildrenWithinJoinPath.filter((c) => c.index !== '0')
-            .length === 0
+          node.children.length > 0 &&
+          node.children.filter((c) => this.shouldBeConsidered(c)).length === 0
         ) {
           node.index = '0';
           return;
@@ -550,9 +541,9 @@ export class Join {
         // Sender's rule
         // 1. If any child node is an input node, tokens are coming from the user
         // 2. Wrapped tokens have to come from user (Relayer has no approval for wrapped tokens)
-        const hasChildInput = this.containInput(
-          immediateChildrenWithinJoinPath
-        );
+        const hasChildInput = node.children
+          .filter((c) => this.shouldBeConsidered(c))
+          .some((c) => c.joinAction === 'input');
         const sender = hasChildInput ? userAddress : this.relayer;
 
         // Recipient's rule
@@ -562,13 +553,14 @@ export class Join {
         // 3. Otherwise relayer
         // Note: scenario 1 usually happens with joinPool transactions that have both BPT and undelying tokens as tokensIn
         const isLastChainedCall = i === joinPath.length - 1;
-        const hasSiblingInputWithinJoinPath =
-          isLeafJoin && // non-leaf joins don't have siblings within join path
-          this.containInput(node.parent?.children);
+        const hasSiblingInput =
+          (isLeafJoin && // non-leaf joins don't have siblings that should be considered
+            node.parent?.children
+              .filter((s) => this.shouldBeConsidered(s))
+              .some((s) => s.joinAction === 'input')) ??
+          false;
         const recipient =
-          isLastChainedCall || hasSiblingInputWithinJoinPath
-            ? userAddress
-            : this.relayer;
+          isLastChainedCall || hasSiblingInput ? userAddress : this.relayer;
 
         // Last action will use minBptOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
         const minOut =
@@ -581,7 +573,6 @@ export class Join {
               // relayer has no allowance to spend its own wrapped tokens so recipient must be the user
               const { encodedCall } = this.createAaveWrap(
                 node,
-                immediateChildrenWithinJoinPath,
                 j,
                 sender,
                 userAddress
@@ -602,14 +593,7 @@ export class Join {
           case 'joinPool':
             {
               const { modelRequest, encodedCall, assets, amounts, minBptOut } =
-                this.createJoinPool(
-                  node,
-                  immediateChildrenWithinJoinPath,
-                  j,
-                  minOut,
-                  sender,
-                  recipient
-                );
+                this.createJoinPool(node, j, minOut, sender, recipient);
               modelRequests.push(modelRequest);
               encodedCalls.push(encodedCall);
               this.updateDeltas(
@@ -708,16 +692,15 @@ export class Join {
 
   private createAaveWrap = (
     node: Node,
-    nodeChildrenWithinJoinPath: Node[],
     joinPathIndex: number,
     sender: string,
     recipient: string
   ): { encodedCall: string } => {
     // Throws error based on the assumption that aaveWrap apply only to input tokens from leaf nodes
-    if (nodeChildrenWithinJoinPath.length !== 1)
+    if (node.children.length !== 1)
       throw new Error('aaveWrap nodes should always have a single child node');
 
-    const childNode = nodeChildrenWithinJoinPath[0];
+    const childNode = node.children[0];
 
     const staticToken = node.address;
     const amount = childNode.index;
@@ -831,7 +814,6 @@ export class Join {
 
   private createJoinPool = (
     node: Node,
-    immediateChildNodesInPath: Node[],
     joinPathIndex: number,
     minAmountOut: string,
     sender: string,
@@ -850,13 +832,8 @@ export class Join {
     node.children.forEach((child) => {
       inputTokens.push(child.address);
       // non-leaf joins should set input amounts only for children that are in their joinPath
-      const childWithinJoinPath = immediateChildNodesInPath.find((c) =>
-        isSameAddress(c.address, child.address)
-      );
-      if (childWithinJoinPath) {
-        inputAmts.push(
-          this.getOutputRefValue(joinPathIndex, childWithinJoinPath).value
-        );
+      if (this.shouldBeConsidered(child)) {
+        inputAmts.push(this.getOutputRefValue(joinPathIndex, child).value);
       } else {
         inputAmts.push('0');
       }
@@ -948,9 +925,9 @@ export class Join {
       ? '0'
       : minAmountOut;
 
-    const hasChildInput = immediateChildNodesInPath.some(
-      (c) => c.joinAction === 'input'
-    );
+    const hasChildInput = node.children
+      .filter((c) => this.shouldBeConsidered(c))
+      .some((c) => c.joinAction === 'input');
     // If node has no child input the join is part of a chain and amounts in shouldn't be considered for user deltas
     const assets = !hasChildInput ? [] : sortedTokens;
     const amounts = !hasChildInput ? [] : userAmountsTokenIn;
@@ -984,17 +961,6 @@ export class Join {
         isRef: true,
       };
     }
-  };
-
-  // Helper method to check if a node array contains any input node
-  private containInput = (nodes?: Node[]): boolean => {
-    if (!nodes) return false;
-    return nodes.some(
-      (node) =>
-        (node.joinAction === 'input' ||
-          node.joinAction === 'wrapAaveDynamicToken') &&
-        node.index !== '0'
-    );
   };
 
   // Nodes with index 0 won't affect transactions so they shouldn't be considered
