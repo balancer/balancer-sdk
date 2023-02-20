@@ -1,40 +1,88 @@
+import { parseFixed } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
 import { expect } from 'chai';
-import { Pool } from '@/.';
-import { WeightedPoolJoin } from './join.concern';
 
-import pools_14717479 from '@/test/lib/pools_14717479.json';
+import {
+  BalancerError,
+  BalancerErrorCode,
+  Network,
+  PoolWithMethods,
+} from '@/.';
+import { TestPoolHelper } from '@/test/lib/utils';
 
-const weth_usdc_pool_id =
-  '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019';
+const rpcUrl = 'http://127.0.0.1:8545';
+const network = Network.MAINNET;
+// This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
+const blockNumber = 13309758;
+const testPoolId =
+  '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e'; // B_50WBTC_50WETH
 
-const USDC_address = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
-const WETH_address = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+describe('Weighted Pool - Join - Unit tests', () => {
+  let pool: PoolWithMethods;
+  const signerAddress = AddressZero;
+  beforeEach(async function () {
+    const testPoolHelper = new TestPoolHelper(
+      testPoolId,
+      network,
+      rpcUrl,
+      blockNumber
+    );
+    pool = await testPoolHelper.getPool();
+  });
 
-const pool = pools_14717479.find(
-  (pool) => pool.id == weth_usdc_pool_id
-) as unknown as Pool;
+  it('should return correct attributes for joining', async () => {
+    const tokensIn = pool.tokensList;
+    const amountsIn = pool.tokens.map((t, i) =>
+      parseFixed((i * 100).toString(), t.decimals).toString()
+    );
+    const slippage = '6';
+    const { attributes, functionName } = pool.buildJoin(
+      signerAddress,
+      tokensIn,
+      amountsIn,
+      slippage
+    );
 
-const concern = new WeightedPoolJoin();
-
-describe('joining weighted pool', () => {
-  describe('.buildJoin', async () => {
-    it('should return encoded params', async () => {
-      const joiner = '0x35f5a330fd2f8e521ebd259fa272ba8069590741';
-      const tokensIn = [USDC_address, WETH_address];
-      const amountsIn = ['7249202509', '2479805746401150127'];
-      const slippage = '100';
-      const { data } = concern.buildJoin({
-        joiner,
-        pool,
-        tokensIn,
-        amountsIn,
-        slippage,
-        wrappedNativeAsset: WETH_address,
-      });
-
-      expect(data).to.equal(
-        '0xb95cac2896646936b91d6b9d7d0c47c496afbf3d6ec7b6f800020000000000000000001900000000000000000000000035f5a330fd2f8e521ebd259fa272ba806959074100000000000000000000000035f5a330fd2f8e521ebd259fa272ba80695907410000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000001b0160d4d000000000000000000000000000000000000000000000000226a0a30123684af00000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000d053b627d205d2629000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000001b0160d4d000000000000000000000000000000000000000000000000226a0a30123684af'
-      );
-    });
+    expect(functionName).to.eq('joinPool');
+    expect(attributes.poolId).to.eq(testPoolId);
+    expect(attributes.recipient).to.eq(signerAddress);
+    expect(attributes.sender).to.eq(signerAddress);
+    expect(attributes.joinPoolRequest.assets).to.deep.eq(pool.tokensList);
+    expect(attributes.joinPoolRequest.fromInternalBalance).to.be.false;
+    expect(attributes.joinPoolRequest.maxAmountsIn).to.deep.eq(amountsIn);
+  });
+  it('should fail when joining with wrong amounts array length', () => {
+    const tokensIn = pool.tokensList;
+    const amountsIn = [parseFixed('1', pool.tokens[0].decimals).toString()];
+    const slippage = '0';
+    let errorMessage;
+    try {
+      pool.buildJoin(signerAddress, tokensIn, amountsIn, slippage);
+    } catch (error) {
+      errorMessage = (error as Error).message;
+    }
+    expect(errorMessage).to.contain(
+      BalancerError.getMessage(BalancerErrorCode.INPUT_LENGTH_MISMATCH)
+    );
+  });
+  it('should encode the same for different array sorting', () => {
+    const tokensIn = pool.tokensList;
+    const amountsIn = pool.tokens.map(({ decimals }, i) =>
+      parseFixed((i * 100).toString(), decimals).toString()
+    );
+    const slippage = '1';
+    const attributes = pool.buildJoin(
+      signerAddress,
+      tokensIn,
+      amountsIn,
+      slippage
+    );
+    const attributesReversed = pool.buildJoin(
+      signerAddress,
+      tokensIn.reverse(),
+      amountsIn.reverse(),
+      slippage
+    );
+    expect(attributesReversed).to.deep.eq(attributes);
   });
 });
