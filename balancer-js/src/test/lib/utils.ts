@@ -1,4 +1,4 @@
-import { BigNumber, formatFixed } from '@ethersproject/bignumber';
+import { BigNumber, BigNumberish, formatFixed } from '@ethersproject/bignumber';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { AddressZero, MaxUint256, WeiPerEther } from '@ethersproject/constants';
 import {
@@ -286,10 +286,12 @@ export async function sendTransactionGetBalances(
   signer: JsonRpcSigner,
   signerAddress: string,
   to: string,
-  data: string
+  data: string,
+  value?: BigNumberish
 ): Promise<{
   transactionReceipt: TransactionReceipt;
   balanceDeltas: BigNumber[];
+  gasUsed: BigNumber;
 }> {
   const balanceBefore = await getBalances(
     tokensForBalanceCheck,
@@ -300,6 +302,7 @@ export async function sendTransactionGetBalances(
   const transactionResponse = await signer.sendTransaction({
     to,
     data,
+    value,
     gasLimit: 3000000,
   });
   const transactionReceipt = await transactionResponse.wait();
@@ -312,9 +315,12 @@ export async function sendTransactionGetBalances(
   const balanceDeltas = balancesAfter.map((balAfter, i) => {
     return balAfter.sub(balanceBefore[i]).abs();
   });
+  const { cumulativeGasUsed, effectiveGasPrice } = transactionReceipt;
+  const gasUsed = cumulativeGasUsed.mul(effectiveGasPrice);
 
   return {
     transactionReceipt,
     balanceDeltas,
+    gasUsed,
   };
 }

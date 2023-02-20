@@ -26,6 +26,23 @@ export function insert<T>(arr: T[], index: number, newItem: T): T[] {
 }
 
 /**
+ * Replace the item on the specified index with newItem
+ * @param arr
+ * @param index
+ * @param newItem
+ */
+export function replace<T>(arr: T[], index: number, newItem: T): T[] {
+  return [
+    // part of the array before the specified index
+    ...arr.slice(0, index),
+    // inserted item
+    newItem,
+    // part of the array after the specified index
+    ...arr.slice(index + 1),
+  ];
+}
+
+/**
  * Removes item from array at specified index and returns new array. (Does not mutate original)
  * @param arr Original array
  * @param index Index of item to be removed

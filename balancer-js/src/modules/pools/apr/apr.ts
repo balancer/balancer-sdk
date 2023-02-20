@@ -115,7 +115,7 @@ export class PoolApr {
               tokenYield * (1 - (await this.protocolSwapFeePercentage(pool)));
           } else if (
             pool.poolType === 'ComposableStable' ||
-            (pool.poolType === 'Weighted' && pool.poolTypeVersion === 2)
+            (pool.poolType === 'Weighted' && pool.poolTypeVersion >= 2)
           ) {
             if (token.isExemptFromYieldProtocolFee) {
               apr = tokenYield;
