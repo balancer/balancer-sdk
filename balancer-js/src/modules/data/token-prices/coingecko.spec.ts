@@ -56,4 +56,18 @@ describe('coingecko repository', () => {
     expect(price5?.usd).to.be.undefined;
     expect(price6?.usd).to.be.undefined;
   });
+
+  context('when the response is rate limited', () => {
+    const repository = new CoingeckoPriceRepository(addresses, 1);
+
+    it('throws error with status code', async () => {
+      const status = 429;
+      mock.onGet(new RegExp('https://api.coingecko.com/*')).reply(status);
+      try {
+        await repository.find(addresses[0]);
+      } catch (error) {
+        expect(error).to.match(new RegExp(`${status}`));
+      }
+    });
+  });
 });

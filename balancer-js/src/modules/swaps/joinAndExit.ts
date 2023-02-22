@@ -803,7 +803,7 @@ function buildExitCall(
   pool: SubgraphPoolBase,
   action: ExitAction,
   wrappedNativeAsset: string
-): [string, string, string] {
+): [string, string, string, ExitPoolData] {
   const assets = pool.tokensList;
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
   // tokens must have same order as pool getTokens
@@ -834,11 +834,12 @@ function buildExitCall(
     exitPoolRequest: {} as ExitPoolRequest,
   };
   // console.log(exitParams);
-  const callData = Relayer.constructExitCall(exitParams);
+  const exitPoolInput = Relayer.formatExitPoolInput(exitParams);
+  const callData = Relayer.encodeExitPool(exitPoolInput);
   // These are used for final amount check
   const amountOut = action.hasTokenOut ? minAmountsOut[exitTokenIndex] : '0';
   const amountIn = action.hasTokenIn ? bptAmtIn : '0';
-  return [callData, amountIn, amountOut];
+  return [callData, amountIn, amountOut, exitParams];
 }
 
 /**
@@ -852,7 +853,7 @@ function buildJoinCall(
   pool: SubgraphPoolBase,
   action: JoinAction,
   wrappedNativeAsset: string
-): [string, string, string] {
+): [string, string, string, EncodeJoinPoolInput] {
   const assets = pool.tokensList;
   const assetHelpers = new AssetHelpers(wrappedNativeAsset);
   // tokens must have same order as pool getTokens
@@ -892,7 +893,7 @@ function buildJoinCall(
   const amountOut = action.hasTokenOut ? bptAmountOut : '0';
   const amountIn = action.hasTokenIn ? maxAmountsIn[joinTokenIndex] : '0';
 
-  return [callData, amountIn, amountOut];
+  return [callData, amountIn, amountOut, attributes];
 }
 
 /**
@@ -907,7 +908,7 @@ function buildBatchSwapCall(
   action: BatchSwapAction,
   tokenIn: string,
   tokenOut: string
-): [string[], string, string] {
+): [string[], string, string, EncodeBatchSwapInput] {
   const calls: string[] = [];
 
   for (const token of action.approveTokens) {
@@ -953,7 +954,7 @@ function buildBatchSwapCall(
   const amountOut = action.hasTokenOut
     ? action.limits[maintokenOutIndex].abs().toString()
     : '0';
-  return [calls, amountIn, amountOut];
+  return [calls, amountIn, amountOut, batchSwapInput];
 }
 
 /**
@@ -980,6 +981,7 @@ export function buildRelayerCalls(
   to: string;
   data: string;
   rawCalls: string[];
+  inputs: (EncodeBatchSwapInput | ExitPoolData | EncodeJoinPoolInput)[];
 } {
   // For each 'swap' create a swap/join/exit action
   const actions = getActions(
@@ -996,6 +998,8 @@ export function buildRelayerCalls(
   const orderedActions = orderActions(actions, swapInfo.tokenAddresses);
 
   const calls: string[] = [];
+  const inputs: (EncodeBatchSwapInput | ExitPoolData | EncodeJoinPoolInput)[] =
+    [];
   // These amounts are used to compare to expected amounts
   const amountsIn: BigNumber[] = [];
   const amountsOut: BigNumber[] = [];
@@ -1008,12 +1012,13 @@ export function buildRelayerCalls(
       const pool = pools.find((p) => p.id === action.poolId);
       if (pool === undefined)
         throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
-      const [call, amountIn, amountOut] = buildExitCall(
+      const [call, amountIn, amountOut, exitPoolData] = buildExitCall(
         pool,
         action,
         wrappedNativeAsset
       );
       calls.push(call);
+      inputs.push(exitPoolData);
       amountsIn.push(BigNumber.from(amountIn));
       amountsOut.push(BigNumber.from(amountOut));
     }
@@ -1021,22 +1026,21 @@ export function buildRelayerCalls(
       const pool = pools.find((p) => p.id === action.poolId);
       if (pool === undefined)
         throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
-      const [call, amountIn, amountOut] = buildJoinCall(
+      const [call, amountIn, amountOut, encodeJoinPoolInput] = buildJoinCall(
         pool,
         action,
         wrappedNativeAsset
       );
       calls.push(call);
+      inputs.push(encodeJoinPoolInput);
       amountsIn.push(BigNumber.from(amountIn));
       amountsOut.push(BigNumber.from(amountOut));
     }
     if (action.type === ActionType.BatchSwap) {
-      const [batchSwapCalls, amountIn, amountOut] = buildBatchSwapCall(
-        action,
-        swapInfo.tokenIn,
-        swapInfo.tokenOut
-      );
+      const [batchSwapCalls, amountIn, amountOut, batchSwapInput] =
+        buildBatchSwapCall(action, swapInfo.tokenIn, swapInfo.tokenOut);
       calls.push(...batchSwapCalls);
+      inputs.push(batchSwapInput);
       amountsIn.push(BigNumber.from(amountIn));
       amountsOut.push(BigNumber.from(amountOut));
     }
@@ -1053,6 +1057,7 @@ export function buildRelayerCalls(
     to: relayerAddress,
     data: callData,
     rawCalls: calls,
+    inputs,
   };
 }
 

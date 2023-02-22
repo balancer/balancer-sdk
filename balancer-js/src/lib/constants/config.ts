@@ -3,6 +3,10 @@ import { BalancerNetworkConfig } from '@/types';
 
 export const balancerVault = '0xBA12222222228d8Ba445958a75a0704d566BF2C8';
 
+// Info fetched using npm package slot20
+export const BPT_SLOT = 0;
+export const BPT_DECIMALS = 18;
+
 export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   [Network.MAINNET]: {
     chainId: Network.MAINNET, //1
@@ -11,6 +15,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xeefba1e63905ef1d7acba5a8513c70307c1ce441',
         balancerHelpers: '0x5aDDCCa35b7A0D07C74063c48700C8590E87864E',
+        balancerMinterAddress: '0x239e55F427D44C3cc793f49bFB507ebe76638a2b',
         lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
         relayerV3: '0x886A3Ec7bcC508B8795990B60Fa21f85F9dB7948',
         relayerV4: '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
@@ -27,9 +32,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       tokens: {
         wrappedNativeAsset: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
         lbpRaisingTokens: [
-          '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-          '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-          '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+          '0x6b175474e89094c44da98b954eedeac495271d0f', // DAI
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
+          '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // WETH
         ],
         stETH: '0xae7ab96520de3a18e5e111b5eaab095312d7fe84',
         wstETH: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
@@ -76,6 +81,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
+        gaugeClaimHelper: '0xaeb406b0e430bf5ea2dc0b9fe62e4e53f74b3a33',
         relayerV3: '0xcf6a66E32dCa0e26AcC3426b851FD8aCbF12Dac7',
         relayerV4: '0x28A224d9d398a1eBB7BA69BCA515898966Bb1B6b',
         balancerHelpers: '0x239e55F427D44C3cc793f49bFB507ebe76638a2b',
@@ -86,6 +92,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       tokens: {
         bal: '0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3',
         wrappedNativeAsset: '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270',
+        lbpRaisingTokens: [
+          '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063', // DAI
+          '0x2791bca1f2de4661ed88a30c99a7a9449aa84174', // USDC
+          '0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270', // WMATIC
+        ],
       },
     },
     urls: {
@@ -117,6 +128,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
+        gaugeClaimHelper: '0xa0dabebaad1b243bbb243f933013d560819eb66f',
         relayerV3: '0x42E49B48573c725ee32d2579060Ed06894f97002',
         relayerV4: '0x5bf3B7c14b10f16939d63Bd679264A1Aa951B4D5',
         balancerHelpers: '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab',
@@ -127,6 +139,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       tokens: {
         bal: '0x040d1edc9569d4bab2d15287dc5a4f10f56a56b8',
         wrappedNativeAsset: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+        lbpRaisingTokens: [
+          '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1', // DAI
+          '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8', // USDC
+          '0x82af49447d8a07e3bd95bd0d56f35241523fbab1', // WETH
+        ],
       },
     },
     urls: {
@@ -220,11 +237,13 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         veBal: '0x33A99Dcc4C85C014cf12626959111D5898bbCAbF',
         veBalProxy: '0xA1F107D1cD709514AE8A914eCB757E95f9cedB31',
         balancerHelpers: '0x5aDDCCa35b7A0D07C74063c48700C8590E87864E',
+        feeDistributor: '0x7F91dcdE02F72b478Dc73cB21730cAcA907c8c44',
         weightedPoolFactory: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
       },
       tokens: {
+        bal: '0xfA8449189744799aD2AcE7e0EBAC8BB7575eff47',
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
       },
     },
@@ -259,6 +278,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: '0x4200000000000000000000000000000000000006',
+        lbpRaisingTokens: [
+          '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1', // DAI
+          '0x7f5c764cbc14f9669b88837ca1490cca17c31607', // USDC
+          '0x4200000000000000000000000000000000000006', // WETH
+        ],
       },
     },
     urls: {

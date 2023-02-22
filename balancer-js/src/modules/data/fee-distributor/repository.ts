@@ -1,9 +1,12 @@
-import { Interface } from '@ethersproject/abi';
-import { Provider } from '@ethersproject/providers';
-import { Contract } from '@ethersproject/contracts';
-import { getAddress } from '@ethersproject/address';
-import { formatUnits } from '@ethersproject/units';
+import { TokenBalance } from '@/modules/claims/ClaimService';
+import { FeeDistributor } from '@/modules/contracts/implementations/feeDistributor';
 import { Multicall } from '@/modules/contracts/implementations/multicall';
+import { Interface } from '@ethersproject/abi';
+import { getAddress } from '@ethersproject/address';
+import { BigNumber } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
+import { Provider } from '@ethersproject/providers';
+import { formatUnits } from '@ethersproject/units';
 
 export interface FeeDistributorData {
   balAmount: number;
@@ -15,10 +18,17 @@ export interface FeeDistributorData {
 
 export interface BaseFeeDistributor {
   multicallData: (ts: number) => Promise<FeeDistributorData>;
+  getClaimableBalances(
+    userAddress: string,
+    claimableTokens: string[]
+  ): Promise<TokenBalance>;
+  claimBalances(userAddress: string, claimableTokens: string[]): string;
 }
 
 const feeDistributorInterface = new Interface([
   'function getTokensDistributedInWeek(address token, uint timestamp) view returns (uint)',
+  'function claimTokens(address user, address[] tokens) returns (uint256[])',
+  'function claimToken(address user, address token) returns (uint256)',
 ]);
 
 const veBalInterface = new Interface([
@@ -31,6 +41,7 @@ const bbAUsdInterface = new Interface([
 
 export class FeeDistributorRepository implements BaseFeeDistributor {
   multicall: Contract;
+  feeDistributor: Contract;
   data?: FeeDistributorData;
 
   constructor(
@@ -42,6 +53,7 @@ export class FeeDistributorRepository implements BaseFeeDistributor {
     provider: Provider
   ) {
     this.multicall = Multicall(multicallAddress, provider);
+    this.feeDistributor = FeeDistributor(feeDistributorAddress, provider);
   }
 
   async fetch(timestamp: number): Promise<FeeDistributorData> {
@@ -99,5 +111,38 @@ export class FeeDistributorRepository implements BaseFeeDistributor {
     daysSinceThursday = daysSinceThursday + weeksToGoBack * 7;
 
     return Math.floor(midnight.getTime() / 1000) - daysSinceThursday * 86400;
+  }
+
+  async getClaimableBalances(
+    userAddress: string,
+    claimableTokens: string[]
+  ): Promise<TokenBalance> {
+    try {
+      const amounts: BigNumber[] =
+        await this.feeDistributor.callStatic.claimTokens(
+          userAddress,
+          claimableTokens
+        );
+      return this.extractTokenBalance(claimableTokens, amounts);
+    } catch (e) {
+      return {};
+    }
+  }
+
+  claimBalances(userAddress: string, claimableTokens: string[]): string {
+    return feeDistributorInterface.encodeFunctionData('claimTokens', [
+      userAddress,
+      claimableTokens,
+    ]);
+  }
+
+  extractTokenBalance(
+    claimableTokens: string[],
+    amounts: (BigNumber | undefined | null)[]
+  ): TokenBalance {
+    return claimableTokens.reduce((tokens: TokenBalance, token, index) => {
+      tokens[token] = (amounts[index] as BigNumber) ?? BigNumber.from(0);
+      return tokens;
+    }, {});
   }
 }

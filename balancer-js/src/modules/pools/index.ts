@@ -17,8 +17,11 @@ import { Join } from '../joins/joins.module';
 import { Exit } from '../exits/exits.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
+import { Simulation, SimulationType } from '../simulation/simulation.module';
+import { PoolGraph } from '../graph/graph';
 import { PoolFactory__factory } from './pool-factory__factory';
 import * as Queries from './queries';
+import { JsonRpcSigner } from '@ethersproject/providers';
 import { BalancerError } from '@/balancerErrors';
 import { EmissionsService } from './emissions';
 import { proportionalAmounts } from './proportional-amounts';
@@ -37,8 +40,10 @@ export class Pools implements Findable<PoolWithMethods> {
   exitService;
   feesService;
   volumeService;
+  simulationService;
   poolFactory;
   impermanentLossService;
+  graphService;
   emissionsService;
   proportionalAmounts;
 
@@ -60,8 +65,21 @@ export class Pools implements Findable<PoolWithMethods> {
       repositories.pools,
       repositories.tokenPrices
     );
-    this.joinService = new Join(this.repositories.poolsOnChain, networkConfig);
-    this.exitService = new Exit(this.repositories.poolsOnChain, networkConfig);
+    this.simulationService = new Simulation(
+      networkConfig,
+      this.repositories.poolsForSor
+    );
+    this.graphService = new PoolGraph(this.repositories.poolsOnChain);
+    this.joinService = new Join(
+      this.graphService,
+      networkConfig,
+      this.simulationService
+    );
+    this.exitService = new Exit(
+      this.graphService,
+      networkConfig,
+      this.simulationService
+    );
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
     this.poolFactory = new PoolFactory__factory(networkConfig);
@@ -122,6 +140,8 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param userAddress     User address
    * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
    */
@@ -132,10 +152,12 @@ export class Pools implements Findable<PoolWithMethods> {
     userAddress: string,
     wrapMainTokens: boolean,
     slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
     to: string;
-    callData: string;
+    encodedCall: string;
     minOut: string;
     expectedOut: string;
     priceImpact: string;
@@ -147,6 +169,8 @@ export class Pools implements Findable<PoolWithMethods> {
       userAddress,
       wrapMainTokens,
       slippage,
+      signer,
+      simulationType,
       authorisation
     );
   }
@@ -154,11 +178,13 @@ export class Pools implements Findable<PoolWithMethods> {
   /**
    * Builds generalised exit transaction
    *
-   * @param poolId        Pool id
-   * @param amount        Token amount in EVM scale
-   * @param userAddress   User address
-   * @param slippage      Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param authorisation Optional auhtorisation call to be added to the chained transaction
+   * @param poolId          Pool id
+   * @param amount          Token amount in EVM scale
+   * @param userAddress     User address
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
    */
   async generalisedExit(
@@ -166,10 +192,12 @@ export class Pools implements Findable<PoolWithMethods> {
     amount: string,
     userAddress: string,
     slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
     to: string;
-    callData: string;
+    encodedCall: string;
     tokensOut: string[];
     expectedAmountsOut: string[];
     minAmountsOut: string[];
@@ -180,6 +208,8 @@ export class Pools implements Findable<PoolWithMethods> {
       amount,
       userAddress,
       slippage,
+      signer,
+      simulationType,
       authorisation
     );
   }
@@ -348,9 +378,11 @@ export class Pools implements Findable<PoolWithMethods> {
     }
     const wrappedNativeAsset =
       networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
+    const bptIndex = pool.tokensList.indexOf(pool.address);
     return {
       ...pool,
       ...methods,
+      bptIndex,
     };
   }
 

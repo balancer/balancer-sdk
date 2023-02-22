@@ -24,6 +24,7 @@ import type {
 } from './modules/data';
 import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
+import { SubgraphPoolDataService } from '@/modules/sor/pool-data/subgraphPoolDataService';
 import * as Queries from '@/modules/pools/queries/types';
 export * from '@/modules/data/types';
 export { Network, AprBreakdown };
@@ -64,7 +65,9 @@ export interface BalancerSdkSorConfig {
 export interface ContractAddresses {
   vault: string;
   multicall: string;
+  gaugeClaimHelper?: string;
   balancerHelpers: string;
+  balancerMinterAddress?: string;
   lidoRelayer?: string;
   relayerV3?: string;
   relayerV4?: string;
@@ -106,6 +109,7 @@ export interface BalancerNetworkConfig {
 
 export interface BalancerDataRepositories {
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  poolsForSor: SubgraphPoolDataService;
   poolsOnChain: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
@@ -253,19 +257,26 @@ export enum PoolType {
   Weighted = 'Weighted',
   Investment = 'Investment',
   Stable = 'Stable',
-  HighAmpComposableStable = 'HighAmpComposableStable',
   ComposableStable = 'ComposableStable',
   MetaStable = 'MetaStable',
   StablePhantom = 'StablePhantom',
   LiquidityBootstrapping = 'LiquidityBootstrapping',
-  AaveLinear = 'AaveLinear',
-  Linear = 'Linear',
-  EulerLinear = 'EulerLinear',
-  ERC4626Linear = 'ERC4626Linear',
   Element = 'Element',
   Gyro2 = 'Gyro2',
   Gyro3 = 'Gyro3',
   Managed = 'Managed',
+  // Linear Pools defined below all operate the same mathematically but have different factories and names in Subgraph
+  AaveLinear = 'AaveLinear',
+  Linear = 'Linear',
+  EulerLinear = 'EulerLinear',
+  ERC4626Linear = 'ERC4626Linear',
+  BeefyLinear = 'BeefyLinear',
+  GearboxLinear = 'GearboxLinear',
+  MidasLinear = 'MidasLinear',
+  ReaperLinear = 'ReaperLinear',
+  SiloLinear = 'SiloLinear',
+  TetuLinear = 'TetuLinear',
+  YearnLinear = 'YearnLinear',
 }
 
 export interface Pool {
@@ -345,6 +356,7 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     slippage: string
   ) => ExitExactTokensOutAttributes;
   calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
+  bptIndex: number;
 }
 
 export interface GraphQLQuery {

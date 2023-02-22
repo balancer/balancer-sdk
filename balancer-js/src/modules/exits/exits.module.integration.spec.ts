@@ -1,21 +1,26 @@
 // yarn test:only ./src/modules/exits/exits.module.integration.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import hardhat from 'hardhat';
 
-import {
-  BalancerSDK,
-  BalancerTenderlyConfig,
-  Network,
-  GraphQLQuery,
-  GraphQLArgs,
-} from '@/.';
+import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { forkSetup, getBalances } from '@/test/lib/utils';
+import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
+import { SimulationType } from '../simulation/simulation.module';
+
+/**
+ * -- Integration tests for generalisedExit --
+ *
+ * It compares results from local fork transactions with simulated results from
+ * the Simulation module, which can be of 3 different types:
+ * 1. Tenderly: uses Tenderly Simulation API (third party service)
+ * 2. VaultModel: uses TS math, which may be less accurate (min. 99% accuracy)
+ * 3. Static: uses staticCall, which is 100% accurate but requires vault approval
+ */
 
 dotenv.config();
 
@@ -53,24 +58,22 @@ const rpcUrl = 'http://127.0.0.1:8000';
 // const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 // const rpcUrl = 'http://127.0.0.1:8545';
 
-const { TENDERLY_ACCESS_KEY, TENDERLY_USER, TENDERLY_PROJECT } = process.env;
-const { ethers } = hardhat;
-const MAX_GAS_LIMIT = 8e6;
 const addresses = ADDRESSES[network];
 
-// Custom Tenderly configuration parameters - remove in order to use default values
-const tenderlyConfig: BalancerTenderlyConfig = {
-  accessKey: TENDERLY_ACCESS_KEY as string,
-  user: TENDERLY_USER as string,
-  project: TENDERLY_PROJECT as string,
+// Set tenderly config blockNumber and use default values for other parameters
+const tenderlyConfig = {
   blockNumber,
 };
 
-// This filters to pool addresses of interest to avoid too many onchain calls during tests
+/**
+ * Example of subgraph query that allows filtering pools.
+ * Might be useful to reduce the response time by limiting the amount of pool
+ * data that will be queried by the SDK. Specially when on chain data is being
+ * fetched as well.
+ */
 const poolAddresses = Object.values(addresses).map(
   (address) => address.address
 );
-
 const subgraphArgs: GraphQLArgs = {
   where: {
     swapEnabled: {
@@ -97,7 +100,7 @@ const sdk = new BalancerSDK({
   subgraphQuery,
 });
 const { pools } = sdk;
-const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
+const provider = new JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 const { contracts, contractAddresses } = new Contracts(
   network as number,
@@ -114,6 +117,7 @@ interface Test {
   };
   amount: string;
   authorisation: string | undefined;
+  simulationType?: SimulationType;
 }
 
 const runTests = async (tests: Test[]) => {
@@ -134,7 +138,8 @@ const runTests = async (tests: Test[]) => {
         signerAddress,
         test.pool,
         test.amount,
-        authorisation
+        authorisation,
+        test.simulationType
       );
     }).timeout(120000);
   }
@@ -145,17 +150,20 @@ const testFlow = async (
   signerAddress: string,
   pool: { id: string; address: string },
   amount: string,
-  authorisation: string | undefined
+  authorisation: string | undefined,
+  simulationType = SimulationType.VaultModel
 ) => {
-  const gasLimit = MAX_GAS_LIMIT;
+  const gasLimit = 8e6;
   const slippage = '10'; // 10 bps = 0.1%
 
-  const { to, callData, tokensOut, expectedAmountsOut, minAmountsOut } =
+  const { to, encodedCall, tokensOut, expectedAmountsOut, minAmountsOut } =
     await pools.generalisedExit(
       pool.id,
       amount,
       signerAddress,
       slippage,
+      signer,
+      simulationType,
       authorisation
     );
 
@@ -167,7 +175,7 @@ const testFlow = async (
 
   const response = await signer.sendTransaction({
     to,
-    data: callData,
+    data: encodedCall,
     gasLimit,
   });
 
@@ -179,6 +187,14 @@ const testFlow = async (
     signer,
     signerAddress
   );
+
+  console.table({
+    tokensOut: tokensOut.map((t) => `${t.slice(0, 6)}...${t.slice(38, 42)}`),
+    minOut: minAmountsOut,
+    expectedOut: expectedAmountsOut,
+    balanceAfter: tokensOutBalanceAfter.map((b) => b.toString()),
+  });
+
   expect(receipt.status).to.eql(1);
   minAmountsOut.forEach((minAmountOut) => {
     expect(BigNumber.from(minAmountOut).gte('0')).to.be.true;
@@ -192,11 +208,10 @@ const testFlow = async (
   tokensOutBalanceBefore.forEach((b) => expect(b.eq(0)).to.be.true);
   tokensOutBalanceAfter.forEach((balanceAfter, i) => {
     const minOut = BigNumber.from(minAmountsOut[i]);
-    return expect(balanceAfter.gte(minOut)).to.be.true;
+    expect(balanceAfter.gte(minOut)).to.be.true;
+    const expectedOut = BigNumber.from(expectedAmountsOut[i]);
+    expect(accuracy(balanceAfter, expectedOut)).to.be.closeTo(1, 1e-2); // inaccuracy should not be over to 1%
   });
-  // console.log('bpt after', query.tokensOut.toString());
-  // console.log('minOut', minAmountsOut.toString());
-  // console.log('expectedOut', expectedAmountsOut.toString());
 };
 
 // all contexts currently applies to GOERLI only
@@ -347,7 +362,7 @@ describe('generalised exit execution', async () => {
     await runTests([
       {
         signer,
-        description: 'exit pool',
+        description: 'exit pool - VaultModel',
         pool: {
           id: addresses.boostedMetaBig1.id,
           address: addresses.boostedMetaBig1.address,
@@ -357,6 +372,34 @@ describe('generalised exit execution', async () => {
           addresses.boostedMetaBig1.decimals
         ).toString(),
         authorisation: authorisation,
+      },
+      {
+        signer,
+        description: 'exit pool - Tenderly',
+        pool: {
+          id: addresses.boostedMetaBig1.id,
+          address: addresses.boostedMetaBig1.address,
+        },
+        amount: parseFixed(
+          '0.05',
+          addresses.boostedMetaBig1.decimals
+        ).toString(),
+        authorisation: authorisation,
+        simulationType: SimulationType.Tenderly,
+      },
+      {
+        signer,
+        description: 'exit pool - Static',
+        pool: {
+          id: addresses.boostedMetaBig1.id,
+          address: addresses.boostedMetaBig1.address,
+        },
+        amount: parseFixed(
+          '0.05',
+          addresses.boostedMetaBig1.decimals
+        ).toString(),
+        authorisation: authorisation,
+        simulationType: SimulationType.Static,
       },
     ]);
   });
@@ -560,7 +603,7 @@ describe('generalised exit execution', async () => {
     await runTests([
       {
         signer,
-        description: 'exit pool',
+        description: 'exit pool - VaultModel',
         pool: {
           id: addresses.boostedWeightedMetaGeneral1.id,
           address: addresses.boostedWeightedMetaGeneral1.address,
@@ -570,6 +613,34 @@ describe('generalised exit execution', async () => {
           addresses.boostedWeightedMetaGeneral1.decimals
         ).toString(),
         authorisation: authorisation,
+      },
+      {
+        signer,
+        description: 'exit pool - Tenderly',
+        pool: {
+          id: addresses.boostedWeightedMetaGeneral1.id,
+          address: addresses.boostedWeightedMetaGeneral1.address,
+        },
+        amount: parseFixed(
+          '0.05',
+          addresses.boostedWeightedMetaGeneral1.decimals
+        ).toString(),
+        authorisation: authorisation,
+        simulationType: SimulationType.Tenderly,
+      },
+      {
+        signer,
+        description: 'exit pool - Static',
+        pool: {
+          id: addresses.boostedWeightedMetaGeneral1.id,
+          address: addresses.boostedWeightedMetaGeneral1.address,
+        },
+        amount: parseFixed(
+          '0.05',
+          addresses.boostedWeightedMetaGeneral1.decimals
+        ).toString(),
+        authorisation: authorisation,
+        simulationType: SimulationType.Static,
       },
     ]);
   });

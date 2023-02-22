@@ -1,0 +1,63 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class BalancerSDK
+
+class ClaimService {
+}
+
+interface IClaimService {
++getClaimableRewardTokens(userAddress):LiquidityGauge[]
++buildClaimRewardTokensRequest(gaugeAddresses, userAddress):TransactionData
++getClaimableVeBalTokens(userAddress): TokenBalance[]
++buildClaimVeBalTokensRequest(userAddress): TransactionData
+}
+
+interface BaseFeeDistributor {
+multicallData: (ts: number) => Promise<FeeDistributorData>;
+getClaimableBalances(userAddress: string, claimableTokens: string[]): Promise<TokenBalance>;
+claimBalances(userAddress: string, claimableTokens: string[]): string;
+}
+class FeeDistributorRepository {
+}
+
+class FeeDistributor <<Contract>> {
++claimTokens(userAddress, tokens): TokenBalance
+}
+
+class TokenBalance {
+[key:string]:BigNumber
+}
+
+interface TransactionData {
++to: string
++from: string
++functionName: string
++args: any[]
++data: string
+}
+
+interface LiquidityGauge {
+  id: string;
+  address: string;
+  name: string;
+  poolId?: Maybe<string>;
+  poolAddress: string;
+  totalSupply: number;
+  workingSupply: number;
+  relativeWeight: number;
+}
+
+BalancerSDK -l-> ClaimService
+
+ClaimService .up.|> IClaimService
+ClaimService -l-> FeeDistributorRepository
+
+ClaimService .down. "produces" TransactionData
+ClaimService .down. "update" LiquidityGauge
+
+LiquidityGauge --> "*" TokenBalance: claimableTokens
+
+FeeDistributorRepository .up.|> BaseFeeDistributor
+FeeDistributorRepository -left-> FeeDistributor
+@enduml

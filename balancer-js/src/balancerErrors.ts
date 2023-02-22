@@ -5,6 +5,7 @@ export enum BalancerErrorCode {
   QUERY_BATCH_SWAP = 'QUERY_BATCH_SWAP',
   POOL_DOESNT_EXIST = 'POOL_DOESNT_EXIST',
   UNSUPPORTED_POOL_TYPE = 'UNSUPPORTED_POOL_TYPE',
+  UNSUPPORTED_POOL_TYPE_VERSION = 'UNSUPPORTED_POOL_TYPE_VERSION',
   UNSUPPORTED_PAIR = 'UNSUPPORTED_PAIR',
   NO_POOL_DATA = 'NO_POOL_DATA',
   INPUT_OUT_OF_BOUNDS = 'INPUT_OUT_OF_BOUNDS',
@@ -24,6 +25,12 @@ export enum BalancerErrorCode {
   TIMESTAMP_IN_THE_FUTURE = 'TIMESTAMP_IN_THE_FUTURE',
   JOIN_DELTA_AMOUNTS = 'JOIN_DELTA_AMOUNTS',
   EXIT_DELTA_AMOUNTS = 'EXIT_DELTA_AMOUNTS',
+  GAUGES_NOT_FOUND = 'GAUGES_NOT_FOUND',
+  GAUGES_HELPER_ADDRESS_NOT_PROVIDED = 'GAUGES_HELPER_ADDRESS_NOT_PROVIDED',
+  GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED = 'GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED',
+  GAUGES_REWARD_TOKEN_EMPTY = 'GAUGES_REWARD_TOKEN_EMPTY',
+  REWARD_TOKEN_ZERO = 'REWARD_TOKEN_ZERO',
+  FEE_PROVIDER_NOT_PROVIDED = 'FEE_PROVIDER_NOT_PROVIDED',
 }
 
 export class BalancerError extends Error {
@@ -82,6 +89,18 @@ export class BalancerError extends Error {
         return 'Error when checking join call deltas';
       case BalancerErrorCode.EXIT_DELTA_AMOUNTS:
         return 'Error when checking exit call deltas';
+      case BalancerErrorCode.GAUGES_NOT_FOUND:
+        return 'Liquidity Gauges not found with given addresses';
+      case BalancerErrorCode.GAUGES_HELPER_ADDRESS_NOT_PROVIDED:
+        return 'Liquidity Gauges Helper Contract address has not been provided';
+      case BalancerErrorCode.GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED:
+        return 'Liquidity Gauges Reward Minter Contract address has not been provided';
+      case BalancerErrorCode.FEE_PROVIDER_NOT_PROVIDED:
+        return 'Fee Provider Repository has not been provided';
+      case BalancerErrorCode.GAUGES_REWARD_TOKEN_EMPTY:
+        return 'No Reward Tokens for Liquidity Gauges provided';
+      case BalancerErrorCode.REWARD_TOKEN_ZERO:
+        return 'All Zero Values for Reward Tokens';
       default:
         return 'Unknown error';
     }

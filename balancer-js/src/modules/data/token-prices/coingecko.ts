@@ -35,6 +35,17 @@ export class CoingeckoPriceRepository implements Findable<Price> {
       .then(({ data }) => {
         return data;
       })
+      .catch((error) => {
+        const message = ['Error fetching token prices from coingecko'];
+        if (error.isAxiosError) {
+          if (error.response?.status) {
+            message.push(`with status ${error.response.status}`);
+          }
+        } else {
+          message.push(error);
+        }
+        return Promise.reject(message.join(' '));
+      })
       .finally(() => {
         console.timeEnd(`fetching coingecko for ${addresses.length} tokens`);
       });
@@ -59,6 +70,17 @@ export class CoingeckoPriceRepository implements Findable<Price> {
       )
       .then(({ data }) => {
         return data[assetId];
+      })
+      .catch((error) => {
+        const message = ['Error fetching native token from coingecko'];
+        if (error.isAxiosError) {
+          if (error.response?.status) {
+            message.push(`with status ${error.response.status}`);
+          }
+        } else {
+          message.push(error);
+        }
+        return Promise.reject(message.join(' '));
       })
       .finally(() => {
         console.timeEnd(`fetching coingecko for native token`);
