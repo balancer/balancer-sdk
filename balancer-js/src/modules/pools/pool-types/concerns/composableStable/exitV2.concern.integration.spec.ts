@@ -18,13 +18,18 @@ const { ALCHEMY_URL_POLYGON: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8137';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
-const blockNumber = 39033320;
 const testPoolId =
   '0x373b347bc87998b151a5e9b6bb6ca692b766648a000000000000000000000923';
 let signerAddress: string;
 let pool: PoolWithMethods;
+let blockNumber: number;
 
 describe('ComposableStableV2 Exits', () => {
+  // Get most recent block number and reuse on all tests to benefit from caching
+  before(async () => {
+    blockNumber = await provider.getBlockNumber();
+  });
+
   // We have to rest the fork between each test as pool value changes after tx is submitted
   beforeEach(async () => {
     signerAddress = await signer.getAddress();
@@ -46,7 +51,7 @@ describe('ComposableStableV2 Exits', () => {
       Array(pool.tokensList.length).fill(0),
       Array(pool.tokensList.length).fill(parseFixed('100000', 18).toString()),
       jsonRpcUrl as string,
-      blockNumber // holds the same state as the static repository
+      blockNumber
     );
 
     // Updatate pool info with onchain state from fork block no
