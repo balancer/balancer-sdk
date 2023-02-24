@@ -1,6 +1,4 @@
 import { Pool } from '@/types';
-import { parsePoolInfoForProtocolFee } from '@/lib/utils';
-import { calculateBalanceGivenInvariantAndAllOtherBalances } from '@/pool-stable/calculate-balance-given-invariant';
 import { expect } from 'chai';
 import StableProtocolFee from '@/pool-stable/protocol-fee';
 

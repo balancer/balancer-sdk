@@ -12,7 +12,7 @@ export const calculateBalanceGivenInvariantAndAllOtherBalances = ({
   balances: bigint[];
   invariant: bigint;
   tokenIndex: number;
-}) => {
+}): bigint => {
   const ampTimesTotal = amplificationParameter * BigInt(balances.length);
   const balancesSumWithoutChosenToken = balances.reduce(
     (acc, balance, index) => {

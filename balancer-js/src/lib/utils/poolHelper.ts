@@ -145,7 +145,15 @@ export const parsePoolInfo = (
   };
 };
 
-export const parsePoolInfoForProtocolFee = (pool: Pool) => {
+export const parsePoolInfoForProtocolFee = (
+  pool: Pool
+): {
+  higherBalanceTokenIndex: number;
+  lastInvariant: string;
+  amplificationParameter: string;
+  balances: string[];
+  protocolSwapFeePct: string;
+} => {
   const parsedBalances = pool.tokens.map((token) =>
     parseFixed(token.balance, token.decimals).toString()
   );
