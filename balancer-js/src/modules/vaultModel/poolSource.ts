@@ -11,8 +11,6 @@ import {
   ComposableStablePool,
 } from '@balancer-labs/sor';
 
-import { AssetHelpers } from '@/lib/utils';
-
 export interface PoolDictionary {
   [poolId: string]: Pool;
 }
@@ -41,16 +39,7 @@ export class PoolsSource {
   async all(refresh = false): Promise<SubgraphPoolBase[]> {
     if (refresh || this.poolsArray.length === 0) {
       const list = cloneDeep(await this.dataSource().getPools());
-      const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
       for (const pool of list) {
-        // Sort tokens here
-        // tokens must have same order as pool getTokens
-        const [sortedTokensList, sortedTokens] = assetHelpers.sortTokens(
-          pool.tokensList,
-          pool.tokens
-        );
-        pool.tokensList = sortedTokensList;
-        pool.tokens = sortedTokens as SubgraphToken[];
         // For non pre-minted BPT pools we add the BPT to the token list. This makes the SOR functions work for joins/exits
         if (
           [
