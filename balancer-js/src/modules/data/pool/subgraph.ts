@@ -195,8 +195,8 @@ export class PoolsSubgraphRepository
       poolTypeVersion: subgraphPool.poolTypeVersion || 1,
       swapFee: subgraphPool.swapFee,
       swapEnabled: subgraphPool.swapEnabled,
-      protocolYieldFeeCache: subgraphPool.protocolYieldFeeCache || '0',
-      protocolSwapFeeCache: subgraphPool.protocolSwapFeeCache || '0',
+      protocolYieldFeeCache: subgraphPool.protocolYieldFeeCache || '0.5', // Default protocol yield fee
+      protocolSwapFeeCache: subgraphPool.protocolSwapFeeCache || '0.5', // Default protocol swap fee
       amp: subgraphPool.amp ?? undefined,
       owner: subgraphPool.owner ?? undefined,
       factory: subgraphPool.factory ?? undefined,
