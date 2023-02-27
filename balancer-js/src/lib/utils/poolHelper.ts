@@ -8,6 +8,7 @@ import {
   ONE,
 } from '@/lib/utils/solidityMaths';
 import { AssetHelpers } from '@/lib/utils/assetHelpers';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
@@ -187,6 +188,9 @@ export const parsePoolInfoForProtocolFee = (
     pool.protocolSwapFeeCache || '0.2',
     18
   ).toString();
+  if (!pool.lastJoinExitInvariant) {
+    throw new BalancerError(BalancerErrorCode.MISSING_LAST_JOIN_EXIT_INVARIANT);
+  }
   return {
     higherBalanceTokenIndex,
     lastInvariant: pool.lastJoinExitInvariant,
