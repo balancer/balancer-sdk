@@ -1,21 +1,20 @@
 import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import {
-  AddressZero,
-  MaxInt256,
-  WeiPerEther,
-  Zero,
-} from '@ethersproject/constants';
+import { AddressZero, WeiPerEther, Zero } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
-  EncodeBatchSwapInput,
   EncodeJoinPoolInput,
   EncodeWrapAaveDynamicTokenInput,
   Relayer,
 } from '@/modules/relayer/relayer.module';
-import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
+import {
+  FundManagement,
+  SingleSwap,
+  Swap,
+  SwapType,
+} from '@/modules/swaps/types';
 import { StablePoolEncoder } from '@/pool-stable';
 import { BalancerNetworkConfig, JoinPoolRequest, PoolType } from '@/types';
 import { PoolGraph, Node } from '../graph/graph';
@@ -34,7 +33,7 @@ import { WeightedPoolEncoder } from '@/pool-weighted';
 import { getPoolAddress } from '@/pool-utils';
 import { Simulation, SimulationType } from '../simulation/simulation.module';
 import { Requests, VaultModel } from '../vaultModel/vaultModel.module';
-import { BatchSwapRequest } from '../vaultModel/poolModel/swap';
+import { SwapRequest } from '../vaultModel/poolModel/swap';
 import { JoinPoolRequest as JoinPoolModelRequest } from '../vaultModel/poolModel/join';
 import { JsonRpcSigner } from '@ethersproject/providers';
 
@@ -248,10 +247,22 @@ export class Join {
       // Start join path with input node
       const nonLeafJoinPath = [inputTokenNode];
       // Add each parent to the join path until we reach the root node
-      let parent = nonLeafInputNode.parent;
+      let parent = inputTokenNode.parent;
+      let currentChild = inputTokenNode;
       while (parent) {
-        nonLeafJoinPath.push(cloneDeep(parent));
-        parent = parent.parent;
+        const parentCopy = cloneDeep(parent);
+        parentCopy.children = parentCopy.children.map((child) => {
+          if (child.address === currentChild.address) {
+            // Replace original child with current child that was modified to handle the non-leaf join
+            return currentChild;
+          } else {
+            // Update index of siblings that are not within the join path to be 0
+            return { ...child, index: '0' };
+          }
+        });
+        nonLeafJoinPath.push(parentCopy);
+        currentChild = parentCopy;
+        parent = parentCopy.parent;
       }
       // Add join path to list of join paths
       joinPaths.push(nonLeafJoinPath);
@@ -516,39 +527,41 @@ export class Join {
     joinPaths.forEach((joinPath, j) => {
       const isLeafJoin = joinPath[0].isLeaf;
       const modelRequests: Requests[] = [];
-      joinPath.forEach((node, i) => {
-        let nodeChildrenWithinJoinPath;
-        if (isLeafJoin) {
-          nodeChildrenWithinJoinPath = joinPath.filter(
-            (joinNode) =>
-              node.children.map((n) => n.address).includes(joinNode.address) &&
-              node.index === joinNode.parent?.index // Ensure child nodes with same address are not included
-          );
-        } else {
-          nodeChildrenWithinJoinPath = i > 0 ? [joinPath[i - 1]] : [];
-        }
 
+      joinPath.forEach((node, i) => {
         // Prevent adding action calls with input amounts equal 0
         if (
-          nodeChildrenWithinJoinPath.length > 0 &&
-          nodeChildrenWithinJoinPath.filter((c) => c.index !== '0').length === 0
+          node.children.length > 0 &&
+          node.children.filter((c) => this.shouldBeConsidered(c)).length === 0
         ) {
           node.index = '0';
           return;
         }
 
-        // If child node was input the tokens come from user not relayer
-        // wrapped tokens have to come from user (Relayer has no approval for wrapped tokens)
-        const fromUser = nodeChildrenWithinJoinPath.some(
-          (child) =>
-            child.joinAction === 'input' ||
-            child.joinAction === 'wrapAaveDynamicToken'
-        );
-        const sender = fromUser ? userAddress : userAddress;
+        // Sender's rule
+        // 1. If any child node is an input node, tokens are coming from the user
+        // 2. Wrapped tokens have to come from user (Relayer has no approval for wrapped tokens)
+        const hasChildInput = node.children
+          .filter((c) => this.shouldBeConsidered(c))
+          .some((c) => c.joinAction === 'input');
+        const sender = hasChildInput ? userAddress : this.relayer;
 
+        // Recipient's rule
+        // 1. Transactions with sibling input node must be sent to user because it will be the sender of the following transaction (per sender's rule above)
+        // e.g. boostedMetaAlt - MAI/bbausd - joining with MAI from user and bbausd from earlier actions. MAI needs to come from user.
+        // 2. Last transaction must be sent to the user
+        // 3. Otherwise relayer
+        // Note: scenario 1 usually happens with joinPool transactions that have both BPT and undelying tokens as tokensIn
         const isLastChainedCall = i === joinPath.length - 1;
-        // Always send to user on last call otherwise send to relayer
-        const recipient = isLastChainedCall ? userAddress : userAddress;
+        const hasSiblingInput =
+          (isLeafJoin && // non-leaf joins don't have siblings that should be considered
+            node.parent?.children
+              .filter((s) => this.shouldBeConsidered(s))
+              .some((s) => s.joinAction === 'input')) ??
+          false;
+        const recipient =
+          isLastChainedCall || hasSiblingInput ? userAddress : this.relayer;
+
         // Last action will use minBptOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
         const minOut =
           isLastChainedCall && minAmountsOut ? minAmountsOut[j] : '0';
@@ -560,7 +573,6 @@ export class Join {
               // relayer has no allowance to spend its own wrapped tokens so recipient must be the user
               const { encodedCall } = this.createAaveWrap(
                 node,
-                nodeChildrenWithinJoinPath,
                 j,
                 sender,
                 userAddress
@@ -572,14 +584,7 @@ export class Join {
           case 'batchSwap':
             {
               const { modelRequest, encodedCall, assets, amounts } =
-                this.createBatchSwap(
-                  node,
-                  nodeChildrenWithinJoinPath,
-                  j,
-                  minOut,
-                  sender,
-                  recipient
-                );
+                this.createSwap(node, j, minOut, sender, recipient);
               modelRequests.push(modelRequest);
               encodedCalls.push(encodedCall);
               this.updateDeltas(deltas, assets, amounts);
@@ -588,14 +593,7 @@ export class Join {
           case 'joinPool':
             {
               const { modelRequest, encodedCall, assets, amounts, minBptOut } =
-                this.createJoinPool(
-                  node,
-                  nodeChildrenWithinJoinPath,
-                  j,
-                  minOut,
-                  sender,
-                  recipient
-                );
+                this.createJoinPool(node, j, minOut, sender, recipient);
               modelRequests.push(modelRequest);
               encodedCalls.push(encodedCall);
               this.updateDeltas(
@@ -694,16 +692,15 @@ export class Join {
 
   private createAaveWrap = (
     node: Node,
-    nodeChildrenWithinJoinPath: Node[],
     joinPathIndex: number,
     sender: string,
     recipient: string
   ): { encodedCall: string } => {
     // Throws error based on the assumption that aaveWrap apply only to input tokens from leaf nodes
-    if (nodeChildrenWithinJoinPath.length !== 1)
+    if (node.children.length !== 1)
       throw new Error('aaveWrap nodes should always have a single child node');
 
-    const childNode = nodeChildrenWithinJoinPath[0];
+    const childNode = node.children[0];
 
     const staticToken = node.address;
     const amount = childNode.index;
@@ -729,96 +726,87 @@ export class Join {
     return { encodedCall };
   };
 
-  private createBatchSwap = (
+  private createSwap = (
     node: Node,
-    nodeChildrenWithinJoinPath: Node[],
     joinPathIndex: number,
     expectedOut: string,
     sender: string,
     recipient: string
   ): {
-    modelRequest: BatchSwapRequest;
+    modelRequest: SwapRequest;
     encodedCall: string;
     assets: string[];
     amounts: string[];
   } => {
-    // We only need batchSwaps for main/wrapped > linearBpt so shouldn't be more than token > token
-    if (nodeChildrenWithinJoinPath.length !== 1)
-      throw new Error('Unsupported batchswap');
-    const inputToken = nodeChildrenWithinJoinPath[0].address;
-    const inputValue = this.getOutputRefValue(
-      joinPathIndex,
-      nodeChildrenWithinJoinPath[0]
-    );
-    const assets = [node.address, inputToken];
+    // We only need swaps for main/wrapped > linearBpt so shouldn't be more than token > token
+    if (node.children.length !== 1) throw new Error('Unsupported swap');
+    const tokenIn = node.children[0].address;
+    const amountIn = this.getOutputRefValue(joinPathIndex, node.children[0]);
+    const assets = [node.address, tokenIn];
 
-    // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
-    // First asset will always be the output token (which will be linearBpt) so use expectedOut to set limit
-    // We don't know input amounts if they are part of a chain so set to max input
-    // TODO can we be safer?
-    const limits: string[] = [
-      BigNumber.from(expectedOut).mul(-1).toString(),
-      inputValue.isRef ? MaxInt256.toString() : inputValue.value,
-    ];
+    // Single swap limits are always positive
+    // Swap within generalisedJoin is always exactIn, so use minAmountOut to set limit
+    const limit: string = expectedOut;
 
-    // TODO Change to single swap to save gas
-    const swaps: BatchSwapStep[] = [
-      {
-        poolId: node.id,
-        assetInIndex: 1,
-        assetOutIndex: 0,
-        amount: inputValue.value,
-        userData: '0x',
-      },
-    ];
+    const request: SingleSwap = {
+      poolId: node.id,
+      kind: SwapType.SwapExactIn,
+      assetIn: tokenIn,
+      assetOut: node.address,
+      amount: amountIn.value,
+      userData: '0x',
+    };
+
+    const fromInternalBalance = this.allImmediateChildrenSendToInternal(node);
+    const toInternalBalance = this.allSiblingsSendToInternal(node);
 
     const funds: FundManagement = {
       sender,
       recipient,
-      fromInternalBalance: sender === this.relayer,
-      toInternalBalance: recipient === this.relayer,
+      fromInternalBalance,
+      toInternalBalance,
     };
 
-    const outputReferences = [
-      {
-        index: assets
-          .map((a) => a.toLowerCase())
-          .indexOf(node.address.toLowerCase()),
-        key: BigNumber.from(this.getOutputRefValue(joinPathIndex, node).value),
-      },
-    ];
+    const outputReference = BigNumber.from(
+      this.getOutputRefValue(joinPathIndex, node).value
+    );
 
     // console.log(
     //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
     //   ${node.joinAction}(
-    //     inputAmt: ${nodeChildrenWithinJoinPath[0].index},
-    //     inputToken: ${nodeChildrenWithinJoinPath[0].address},
+    //     inputAmt: ${node.children[0].index},
+    //     inputToken: ${node.children[0].address},
     //     pool: ${node.id},
     //     outputToken: ${node.address},
     //     outputRef: ${this.getOutputRefValue(joinPathIndex, node).value},
     //     sender: ${sender},
-    //     recipient: ${recipient}
+    //     recipient: ${recipient},
+    //     fromInternalBalance: ${fromInternalBalance},
+    //     toInternalBalance: ${toInternalBalance},
     //   )`
     // );
 
-    const call: EncodeBatchSwapInput = {
-      swapType: SwapType.SwapExactIn,
-      swaps,
-      assets,
+    const call: Swap = {
+      request,
       funds,
-      limits,
+      limit,
       deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
-      value: '0', // TODO: handle join with ETH
-      outputReferences,
+      value: '0', // TODO: check if swap with ETH is possible in this case and handle it
+      outputReference,
     };
-    const encodedCall = Relayer.encodeBatchSwap(call);
 
-    const modelRequest = VaultModel.mapBatchSwapRequest(call);
+    const encodedCall = Relayer.encodeSwap(call);
 
-    // If the sender is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
-    const userTokenIn = sender === this.relayer ? '0' : limits[1];
-    // If the receiver is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
-    const userBptOut = recipient === this.relayer ? '0' : limits[0];
+    const modelRequest = VaultModel.mapSwapRequest(call);
+
+    const hasChildInput = node.children.some((c) => c.joinAction === 'input');
+    // If node has no child input the swap is part of a chain and token in shouldn't be considered for user deltas
+    const userTokenIn = !hasChildInput ? '0' : amountIn.value;
+    // If node has parent the swap is part of a chain and BPT out shouldn't be considered for user deltas
+    const userBptOut =
+      node.parent != undefined
+        ? '0'
+        : BigNumber.from(expectedOut).mul(-1).toString(); // needs to be negative because it's handled by the vault model as an amount going out of the vault
     const amounts = [userBptOut, userTokenIn];
 
     return { modelRequest, encodedCall, assets, amounts };
@@ -826,7 +814,6 @@ export class Join {
 
   private createJoinPool = (
     node: Node,
-    nodeChildrenWithinJoinPath: Node[],
     joinPathIndex: number,
     minAmountOut: string,
     sender: string,
@@ -845,13 +832,8 @@ export class Join {
     node.children.forEach((child) => {
       inputTokens.push(child.address);
       // non-leaf joins should set input amounts only for children that are in their joinPath
-      const childWithinJoinPath = nodeChildrenWithinJoinPath.find((c) =>
-        isSameAddress(c.address, child.address)
-      );
-      if (childWithinJoinPath) {
-        inputAmts.push(
-          this.getOutputRefValue(joinPathIndex, childWithinJoinPath).value
-        );
+      if (this.shouldBeConsidered(child)) {
+        inputAmts.push(this.getOutputRefValue(joinPathIndex, child).value);
       } else {
         inputAmts.push('0');
       }
@@ -902,6 +884,8 @@ export class Join {
     const ethIndex = sortedTokens.indexOf(AddressZero);
     const value = ethIndex === -1 ? '0' : sortedAmounts[ethIndex];
 
+    const fromInternalBalance = this.allImmediateChildrenSendToInternal(node);
+
     // console.log(
     //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
     //   ${node.joinAction}(
@@ -912,7 +896,9 @@ export class Join {
     //     minOut: ${minAmountOut},
     //     outputRef: ${this.getOutputRefValue(joinPathIndex, node).value},
     //     sender: ${sender},
-    //     recipient: ${recipient}
+    //     recipient: ${recipient},
+    //     fromInternalBalance: ${fromInternalBalance},
+    //     toInternalBalance: false,
     //   )`
     // );
 
@@ -927,7 +913,7 @@ export class Join {
       assets: sortedTokens, // Must include BPT token
       maxAmountsIn: sortedAmounts,
       userData,
-      fromInternalBalance: sender === this.relayer,
+      fromInternalBalance,
     });
     const encodedCall = Relayer.encodeJoinPool(call);
     const modelRequest = VaultModel.mapJoinPoolRequest(call);
@@ -939,12 +925,15 @@ export class Join {
       ? '0'
       : minAmountOut;
 
-    // If the sender is the Relayer the join is part of a chain and shouldn't be considered for user deltas
-    const assets = sender === this.relayer ? [] : sortedTokens;
-    const amounts = sender === this.relayer ? [] : userAmountsTokenIn;
-    // If the receiver is the Relayer the join is part of a chain and shouldn't be considered for user deltas
+    const hasChildInput = node.children
+      .filter((c) => this.shouldBeConsidered(c))
+      .some((c) => c.joinAction === 'input');
+    // If node has no child input the join is part of a chain and amounts in shouldn't be considered for user deltas
+    const assets = !hasChildInput ? [] : sortedTokens;
+    const amounts = !hasChildInput ? [] : userAmountsTokenIn;
+    // If node has parent the join is part of a chain and shouldn't be considered for user deltas
     const minBptOut =
-      recipient === this.relayer
+      node.parent != undefined
         ? Zero.toString()
         : Zero.sub(userAmountOut).toString(); // -ve because coming from Vault
 
@@ -972,5 +961,36 @@ export class Join {
         isRef: true,
       };
     }
+  };
+
+  // Nodes with index 0 won't affect transactions so they shouldn't be considered
+  private shouldBeConsidered = (node: Node): boolean => {
+    return node.index != '0';
+  };
+
+  // joinPool transaction always sends to non-internal balance
+  // input always behave as sending to non-internal balance
+  private sendsToInternalBalance = (node: Node): boolean => {
+    return node.joinAction !== 'input' && node.joinAction !== 'joinPool';
+  };
+
+  private allImmediateChildrenSendToInternal = (node: Node): boolean => {
+    const children = node.children.filter((c) => this.shouldBeConsidered(c));
+    if (children.length === 0) return false;
+    return (
+      children.filter((c) => this.sendsToInternalBalance(c)).length ===
+      children.length
+    );
+  };
+
+  private allSiblingsSendToInternal = (node: Node): boolean => {
+    if (!node.parent) return false;
+    const siblings = node.parent.children.filter((s) =>
+      this.shouldBeConsidered(s)
+    );
+    return (
+      siblings.filter((s) => this.sendsToInternalBalance(s)).length ===
+      siblings.length
+    );
   };
 }
