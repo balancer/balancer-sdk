@@ -5,10 +5,12 @@ import {
   SolidityMaths,
   _computeScalingFactor,
   _upscaleArray,
+  ONE,
 } from '@/lib/utils/solidityMaths';
 import { AssetHelpers } from '@/lib/utils/assetHelpers';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
-const AMP_PRECISION = 3; // number of decimals -> precision 1000
+export const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
 interface ParsedPoolInfo {
   parsedTokens: string[];
@@ -141,5 +143,59 @@ export const parsePoolInfo = (
     bptIndex,
     parsedPriceRatesWithoutBpt,
     upScaledBalancesWithoutBpt,
+  };
+};
+
+export const parsePoolInfoForProtocolFee = (
+  pool: Pool
+): {
+  higherBalanceTokenIndex: number;
+  lastInvariant: string;
+  amplificationParameter: string;
+  balances: string[];
+  protocolSwapFeePct: string;
+} => {
+  const parsedBalances = pool.tokens.map((token) =>
+    parseFixed(token.balance, token.decimals).toString()
+  );
+  const parsedDecimals = pool.tokens.map((token) => {
+    return token.decimals ? token.decimals.toString() : '18';
+  });
+  const scalingFactorsRaw = parsedDecimals.map((decimals) =>
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    _computeScalingFactor(BigInt(decimals!))
+  );
+  const parsedPriceRates = pool.tokens.map((token) => {
+    return token.priceRate
+      ? parseFixed(token.priceRate, 18).toString()
+      : ONE.toString();
+  });
+  const scalingFactors = scalingFactorsRaw.map((sf, i) =>
+    SolidityMaths.mulDownFixed(sf, BigInt(parsedPriceRates[i]))
+  );
+  const upScaledBalances = _upscaleArray(
+    parsedBalances.map(BigInt),
+    scalingFactors
+  ).map((b) => b.toString());
+  const poolTokensBalances = upScaledBalances.map((balance) => BigInt(balance));
+  const higherBalanceTokenIndex = poolTokensBalances.indexOf(
+    SolidityMaths.max(...poolTokensBalances)
+  );
+  const parsedAmp = pool.amp
+    ? parseFixed(pool.amp, AMP_PRECISION).toString() // Solidity maths uses precison method for amp that must be replicated
+    : ONE.toString();
+  const protocolSwapFeePct = parseFixed(
+    pool.protocolSwapFeeCache || '0.2',
+    18
+  ).toString();
+  if (!pool.lastJoinExitInvariant) {
+    throw new BalancerError(BalancerErrorCode.MISSING_LAST_JOIN_EXIT_INVARIANT);
+  }
+  return {
+    higherBalanceTokenIndex,
+    lastInvariant: pool.lastJoinExitInvariant,
+    amplificationParameter: parsedAmp,
+    balances: upScaledBalances,
+    protocolSwapFeePct,
   };
 };

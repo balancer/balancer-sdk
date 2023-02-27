@@ -81,6 +81,9 @@ export function _downscaleUp(amount: bigint, scalingFactor: bigint): bigint {
 }
 
 export class SolidityMaths {
+  // Modification: Taken from the fixed point class
+  static MAX_POW_RELATIVE_ERROR = BigInt(10000);
+
   /**
    * @dev Returns the addition of two unsigned integers of 256 bits, reverting on overflow.
    */
@@ -91,20 +94,19 @@ export class SolidityMaths {
   // }
 
   /**
+   * @dev Returns the absolute value of a;
+   * @param a
+   */
+  static abs(a: bigint): bigint {
+    return a < BigInt(0) ? -a : a;
+  }
+
+  /**
    * @dev Returns the addition of two signed integers, reverting on overflow.
    */
   static add(a: bigint, b: bigint): bigint {
     const c = a + b;
     _require((b >= 0 && c >= a) || (b < 0 && c < a), 'Errors.ADD_OVERFLOW');
-    return c;
-  }
-
-  /**
-   * @dev Returns the subtraction of two unsigned integers of 256 bits, reverting on overflow.
-   */
-  static sub(a: bigint, b: bigint): bigint {
-    _require(b <= a, 'Errors.SUB_OVERFLOW');
-    const c = a - b;
     return c;
   }
 
@@ -118,10 +120,20 @@ export class SolidityMaths {
   // }
 
   /**
+   * @dev Returns the subtraction of two unsigned integers of 256 bits, reverting on overflow.
+   */
+  static sub(a: bigint, b: bigint): bigint {
+    _require(b <= a, 'Errors.SUB_OVERFLOW');
+    const c = a - b;
+    return c;
+  }
+
+  /**
    * @dev Returns the largest of two numbers of 256 bits.
    */
-  static max(a: bigint, b: bigint): bigint {
-    return a >= b ? a : b;
+  static max(...c: bigint[]): bigint {
+    const max = c.sort((a: bigint, b: bigint) => Number(b - a))[0];
+    return max;
   }
 
   /**
@@ -155,9 +167,6 @@ export class SolidityMaths {
       return BONE + (a - BONE) / b;
     }
   }
-
-  // Modification: Taken from the fixed point class
-  static MAX_POW_RELATIVE_ERROR = BigInt(10000);
 
   static mulUpFixed(a: bigint, b: bigint): bigint {
     const product = a * b;
