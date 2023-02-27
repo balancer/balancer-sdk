@@ -76,13 +76,50 @@ export class Exit {
       false
     );
 
-    // Create exit paths for each output node and splits amount in proportionally between them
+    const isProportional = PoolGraph.isProportionalPools(orderedNodes);
+    console.log(`isProportional`, isProportional);
+
+    let exitPaths: Node[][] = [];
+    let tokensOutByExitPath: string[] = [];
+    let tokensOut: string[] = [];
+
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
+    tokensOutByExitPath = outputNodes.map((n) => n.address.toLowerCase());
+    tokensOut = [...new Set(tokensOutByExitPath)].sort();
 
-    const exitPaths = this.getExitPaths(outputNodes, amountBptIn);
-
-    const tokensOutByExitPath = outputNodes.map((n) => n.address.toLowerCase());
-    const tokensOut = [...new Set(tokensOutByExitPath)].sort();
+    if (isProportional) {
+      // All proportional will have single path from root node, exiting proportionally by ref all the way to leafs
+      const path = orderedNodes.map((node, i) => {
+        if (node.exitAction === 'exitPool') {
+          const exitTokens = node.children.map((c) => c.address);
+          const exitRefs = node.children.map((c) => c.index);
+          const amount = node.index === '0' ? amountBptIn : node.index;
+          console.log(
+            'ExitPool: ',
+            amount,
+            exitTokens.toString(),
+            exitRefs.toString()
+          );
+          // replace exitPool action with proportional so correct call is built
+          node.exitAction = 'exitPoolProportional';
+        } else if (node.exitAction === 'batchSwap') {
+          console.log(
+            'Swap: ',
+            node.address,
+            node.index,
+            node.children[0].address
+          );
+        }
+        // First node should exit with full BPT amount in
+        if (i === 0) node.index = amountBptIn;
+        return node;
+      });
+      exitPaths[0] = path;
+      // TODO tokensOut/tokensOutByExitPath might need to be different for this case?
+    } else {
+      // Create exit paths for each output node and splits amount in proportionally between them
+      exitPaths = this.getExitPaths(outputNodes, amountBptIn);
+    }
 
     // Create calls with minimum expected amount out for each exit path
     const {
@@ -457,6 +494,17 @@ export class Exit {
               [node.address, ...tokensOut],
               [bptIn, ...amountsOut]
             );
+            break;
+          }
+          case 'exitPoolProportional': {
+            console.log('TODO - Create exitProportional Call !!!!!!!');
+            // modelRequests.push(modelRequest);
+            // calls.push(encodedCall);
+            // this.updateDeltas(
+            //   deltas,
+            //   [node.address, ...tokensOut],
+            //   [bptIn, ...amountsOut]
+            // );
             break;
           }
           case 'output':

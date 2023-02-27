@@ -14,6 +14,7 @@ export interface Node {
   id: string;
   joinAction: JoinAction;
   exitAction: ExitAction;
+  isProportionalExit: boolean;
   type: string;
   children: Node[];
   marked: boolean;
@@ -51,6 +52,7 @@ type ExitAction =
   | 'batchSwap'
   | 'unwrap'
   | 'exitPool'
+  | 'exitPoolProportional'
   | 'unwrapAaveStaticToken'
   | 'unwrapERC4626';
 const exitActions = new Map<PoolType, ExitAction>();
@@ -166,6 +168,7 @@ export class PoolGraph {
       type: pool.poolType,
       joinAction,
       exitAction,
+      isProportionalExit: false,
       children: [],
       marked: false,
       index: nodeIndex.toString(),
@@ -175,6 +178,7 @@ export class PoolGraph {
       spotPrices,
       decimals,
     };
+    this.updateNodeIfProportionalExit(pool, poolNode);
     nodeIndex++;
     if (pool.poolType.toString().includes('Linear')) {
       [poolNode, nodeIndex] = this.createLinearNodeChildren(
@@ -213,6 +217,20 @@ export class PoolGraph {
       }
     }
     return [poolNode, nodeIndex];
+  }
+
+  /**
+   * Updates isProportionalExit for Node if the pool supports it
+   * @param pool
+   * @param node
+   */
+  updateNodeIfProportionalExit(pool: Pool, node: Node): void {
+    if (pool.poolType === PoolType.Weighted) node.isProportionalExit = true;
+    else if (
+      pool.poolType === PoolType.ComposableStable &&
+      pool.poolTypeVersion > 2
+    )
+      node.isProportionalExit = true;
   }
 
   createLinearNodeChildren(
@@ -284,6 +302,7 @@ export class PoolGraph {
       marked: false,
       joinAction,
       exitAction,
+      isProportionalExit: false,
       index: nodeIndex.toString(),
       parent,
       proportionOfParent,
@@ -324,6 +343,7 @@ export class PoolGraph {
         marked: false,
         joinAction: 'input',
         exitAction: 'output',
+        isProportionalExit: false,
         index: nodeIndex.toString(), // This will be updated with real amounts in join construction.
         parent,
         proportionOfParent,
@@ -357,6 +377,18 @@ export class PoolGraph {
   // Return a list of leaf token addresses
   static getLeafAddresses(nodes: Node[]): string[] {
     return nodes.filter((n) => n.isLeaf).map((n) => n.address);
+  }
+
+  /**
+   * Checks if list of Nodes only contains pools that support proportional exits
+   * @param nodes
+   * @returns
+   */
+  static isProportionalPools(nodes: Node[]): boolean {
+    return nodes.every((node) => {
+      if (node.exitAction === 'exitPool') return node.isProportionalExit;
+      else return true;
+    });
   }
 
   // Get full graph from root pool and return ordered nodes

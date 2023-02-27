@@ -158,6 +158,41 @@ export const ADDRESSES = {
       symbol: 'wstETH_bbaUSD',
       slot: 0,
     },
+    wstETH_bbeUSD: {
+      id: '0x4fd4687ec38220f805b6363c3c1e52d0df3b5023000200000000000000000473',
+      address: '0x4fd4687ec38220f805b6363c3c1e52d0df3b5023',
+      decimals: 18,
+      symbol: '50wstETH-50bb-euler-USD',
+      slot: 0,
+    },
+    bbeUSD: {
+      id: '0x50cf90b954958480b8df7958a9e965752f62712400000000000000000000046f',
+      address: '0x50cf90b954958480b8df7958a9e965752f627124',
+      decimals: 18,
+      symbol: 'bb-e-USD',
+      slot: 0,
+    },
+    bbeUSDT: {
+      id: '0x3c640f0d3036ad85afa2d5a9e32be651657b874f00000000000000000000046b',
+      address: '0x3C640f0d3036Ad85Afa2D5A9E32bE651657B874F',
+      decimals: 18,
+      symbol: 'bb-e-USDT',
+      slot: 0,
+    },
+    bbeUSDC: {
+      id: '0xd4e7c1f3da1144c9e2cfd1b015eda7652b4a439900000000000000000000046a',
+      address: '0xD4e7C1F3DA1144c9E2CfD1b015eDA7652b4a4399',
+      decimals: 18,
+      symbol: 'bb-e-USDC',
+      slot: 0,
+    },
+    bbeDAI: {
+      id: '0xeb486af868aeb3b6e53066abc9623b1041b42bc000000000000000000000046c',
+      address: '0xeB486AF868AeB3b6e53066abc9623b1041b42bc0',
+      decimals: 18,
+      symbol: 'bb-e-DAI',
+      slot: 0,
+    },
   },
   [Network.KOVAN]: {
     // Visit https://balancer-faucet.on.fleek.co/#/faucet for test tokens
