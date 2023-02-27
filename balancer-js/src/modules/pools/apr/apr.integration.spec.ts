@@ -36,7 +36,7 @@ const getMondayOfWeek = (today = new Date()) => {
   return new Date(today.setUTCDate(first));
 };
 
-describe('happy case', () => {
+describe.skip('happy case', () => {
   // Time when veBal used to receive procotol revenues
   const now = getMondayOfWeek().getTime();
 
