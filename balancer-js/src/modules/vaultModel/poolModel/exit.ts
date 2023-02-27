@@ -218,10 +218,7 @@ export class ExitModel {
       );
     } else {
       // Exiting a pool is equivalent to removing from totalSupply (totalShares) so must sub here
-      pool.updateTokenBalanceForPool(
-        pool.address,
-        BigNumber.from(poolBalances[0]).sub(bptIn)
-      );
+      pool.updateTokenBalanceForPool(pool.address, pool.totalShares.sub(bptIn));
     }
 
     const tokensWithoutBpt = pool.tokensList.filter(

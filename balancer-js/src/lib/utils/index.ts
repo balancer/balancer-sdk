@@ -98,3 +98,7 @@ export function isLinearish(poolType: string): boolean {
     return true;
   else return false;
 }
+
+export function truncateAddresses(addresses: string[]): string[] {
+  return addresses.map((t) => `${t.slice(0, 6)}...${t.slice(38, 42)}`);
+}
