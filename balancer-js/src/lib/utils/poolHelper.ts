@@ -44,7 +44,6 @@ export const parsePoolInfo = (
   wrappedNativeAsset?: string,
   unwrapNativeAsset?: boolean
 ): ParsedPoolInfo => {
-  const defaultOne = '1000000000000000000';
   let parsedTokens = unwrapNativeAsset
     ? pool.tokens.map((token) =>
         token.address === wrappedNativeAsset ? AddressZero : token.address
@@ -57,12 +56,14 @@ export const parsePoolInfo = (
     parseFixed(token.balance, token.decimals).toString()
   );
   let parsedWeights = pool.tokens.map((token) => {
-    return token.weight ? parseFixed(token.weight, 18).toString() : defaultOne;
+    return token.weight
+      ? parseFixed(token.weight, 18).toString()
+      : ONE.toString();
   });
   let parsedPriceRates = pool.tokens.map((token) => {
     return token.priceRate
       ? parseFixed(token.priceRate, 18).toString()
-      : defaultOne;
+      : ONE.toString();
   });
   const scalingFactorsRaw = parsedDecimals.map((decimals) =>
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -104,7 +105,7 @@ export const parsePoolInfo = (
 
   const parsedAmp = pool.amp
     ? parseFixed(pool.amp, AMP_PRECISION).toString() // Solidity maths uses precison method for amp that must be replicated
-    : defaultOne;
+    : ONE.toString();
   const parsedTotalShares = parseFixed(pool.totalShares, 18).toString();
   const parsedSwapFee = parseFixed(pool.swapFee, 18).toString();
 
@@ -149,10 +150,11 @@ export const parsePoolInfo = (
 export const parsePoolInfoForProtocolFee = (
   pool: Pool
 ): {
-  higherBalanceTokenIndex: number;
-  lastInvariant: string;
   amplificationParameter: string;
   balances: string[];
+  higherBalanceTokenIndex: number;
+  lastInvariant: string;
+  normalizedWeights: string[];
   protocolSwapFeePct: string;
 } => {
   const parsedBalances = pool.tokens.map((token) =>
@@ -188,12 +190,18 @@ export const parsePoolInfoForProtocolFee = (
     pool.protocolSwapFeeCache || '0.2',
     18
   ).toString();
+  const parsedWeights = pool.tokens.map((token) => {
+    return token.weight
+      ? parseFixed(token.weight, 18).toString()
+      : ONE.toString();
+  });
   if (!pool.lastJoinExitInvariant) {
     throw new BalancerError(BalancerErrorCode.MISSING_LAST_JOIN_EXIT_INVARIANT);
   }
   return {
     higherBalanceTokenIndex,
     lastInvariant: pool.lastJoinExitInvariant,
+    normalizedWeights: parsedWeights,
     amplificationParameter: parsedAmp,
     balances: upScaledBalances,
     protocolSwapFeePct,
