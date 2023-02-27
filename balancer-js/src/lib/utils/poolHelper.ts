@@ -44,10 +44,10 @@ export const parsePoolInfo = (
 ): ParsedPoolInfo => {
   const defaultOne = '1000000000000000000';
   let parsedTokens = unwrapNativeAsset
-    ? pool.tokens.map((token) => token.address)
-    : pool.tokens.map((token) =>
+    ? pool.tokens.map((token) =>
         token.address === wrappedNativeAsset ? AddressZero : token.address
-      );
+      )
+    : pool.tokens.map((token) => token.address);
   let parsedDecimals = pool.tokens.map((token) => {
     return token.decimals ? token.decimals.toString() : '18';
   });
