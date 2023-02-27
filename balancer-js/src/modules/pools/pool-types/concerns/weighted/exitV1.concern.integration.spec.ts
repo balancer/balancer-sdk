@@ -1,10 +1,10 @@
-// yarn test:only ./src/modules/pools/pool-types/concerns/metaStable/exit.concern.integration.spec.ts
+// yarn test:only ./src/modules/pools/pool-types/concerns/weighted/exitV1.concern.integration.spec.ts
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-import { insert, Network, PoolWithMethods } from '@/.';
+import { BalancerSDK, insert, Network, PoolWithMethods, replace } from '@/.';
 import { BPT_DECIMALS, BPT_SLOT } from '@/lib/constants/config';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import {
@@ -12,23 +12,26 @@ import {
   sendTransactionGetBalances,
   TestPoolHelper,
 } from '@/test/lib/utils';
+import { AddressZero } from '@ethersproject/constants';
 
 dotenv.config();
 
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8545';
 const network = Network.MAINNET;
+const sdk = new BalancerSDK({ network, rpcUrl });
+const { networkConfig } = sdk;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 
-describe('MetaStablePool - Exit Concern Integration Tests', async () => {
+describe('Weighted Pool - Exit Integration Test', async () => {
   let signerAddress: string;
   let pool: PoolWithMethods;
   const initialBalance = '100000';
   // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
   const blockNumber = 13309758;
   const testPoolId =
-    '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080';
+    '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019';
   // Setup chain
   context('exit pool functions', async () => {
     beforeEach(async function () {
@@ -81,7 +84,7 @@ describe('MetaStablePool - Exit Concern Integration Tests', async () => {
         expect(expectedMins).to.deep.eq(minAmountsOut);
       });
       it('should work with proportional amounts out', async () => {
-        const bptIn = parseFixed('1', BPT_DECIMALS).toString();
+        const bptIn = parseFixed('10', BPT_DECIMALS).toString();
         const slippage = '0';
         const { to, data, minAmountsOut, expectedAmountsOut } =
           pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
@@ -164,6 +167,55 @@ describe('MetaStablePool - Exit Concern Integration Tests', async () => {
           );
         expect(transactionReceipt.status).to.eq(1);
         const expectedDeltas = insert(amountsOut, 0, expectedBPTIn);
+        expect(expectedDeltas).to.deep.eq(
+          balanceDeltas.map((a) => a.toString())
+        );
+        const expectedMaxBpt = addSlippage(
+          BigNumber.from(expectedBPTIn),
+          BigNumber.from(slippage)
+        ).toString();
+        expect(expectedMaxBpt).to.deep.eq(maxBPTIn);
+      });
+      it('exit with ETH', async () => {
+        const tokensOut = pool.tokensList.map((token) =>
+          token ===
+          networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase()
+            ? AddressZero
+            : token
+        );
+        const ethIndex = tokensOut.indexOf(AddressZero);
+        const amountsOut = Array(tokensOut.length).fill('0');
+        amountsOut[ethIndex] = parseFixed('1', 18).toString();
+        const slippage = '0';
+        const { to, data, maxBPTIn, expectedBPTIn } =
+          pool.buildExitExactTokensOut(
+            signerAddress,
+            tokensOut,
+            amountsOut,
+            slippage
+          );
+        const { transactionReceipt, balanceDeltas, gasUsed } =
+          await sendTransactionGetBalances(
+            [pool.address, ...tokensOut],
+            signer,
+            signerAddress,
+            to,
+            data
+          );
+        expect(transactionReceipt.status).to.eq(1);
+        const ethAmountOutWithGasUsed = BigNumber.from(amountsOut[ethIndex])
+          .sub(gasUsed)
+          .toString();
+        const expectedBalanceDeltasWithGasUsed = replace(
+          amountsOut,
+          ethIndex,
+          ethAmountOutWithGasUsed
+        );
+        const expectedDeltas = insert(
+          expectedBalanceDeltasWithGasUsed,
+          0,
+          expectedBPTIn
+        );
         expect(expectedDeltas).to.deep.eq(
           balanceDeltas.map((a) => a.toString())
         );

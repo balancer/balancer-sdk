@@ -100,7 +100,6 @@ export class Relayer {
     ]);
   }
 
-  // TODO: check if it's ok to import Swap from swaps module - alternatives: move to common module or duplicate within relayer types
   static encodeSwap(params: Swap): string {
     return relayerLibrary.encodeFunctionData('swap', [
       params.request,

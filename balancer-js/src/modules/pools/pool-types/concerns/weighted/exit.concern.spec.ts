@@ -1,3 +1,4 @@
+// yarn test:only ./src/modules/pools/pool-types/concerns/weighted/exit.concern.spec.ts
 import { parseFixed } from '@ethersproject/bignumber';
 import { expect } from 'chai';
 
@@ -10,9 +11,9 @@ const network = Network.MAINNET;
 // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
 const blockNumber = 13309758;
 const testPoolId =
-  '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080';
+  '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019';
 
-describe('MetaStablePool - Exit Unit Tests', () => {
+describe('WeightedPool exits', () => {
   let pool: PoolWithMethods;
   const signerAddress = AddressZero;
   beforeEach(async function () {
