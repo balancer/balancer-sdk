@@ -110,6 +110,8 @@ export class PoolApr {
         const tokenYield = await this.tokenYields.find(token.address);
 
         if (tokenYield) {
+          // metastable pools incorrectly apply the swap fee to the yield earned.
+          // they don't have the concept of a yield fee like the newer pools do.
           if (pool.poolType === 'MetaStable') {
             apr =
               tokenYield * (1 - (await this.protocolSwapFeePercentage(pool)));

@@ -2,7 +2,13 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 
-import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '@/.';
+import {
+  BalancerSDK,
+  GraphQLQuery,
+  GraphQLArgs,
+  Network,
+  truncateAddresses,
+} from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Contracts } from '@/modules/contracts/contracts.module';
@@ -189,7 +195,7 @@ const testFlow = async (
   );
 
   console.table({
-    tokensOut: tokensOut.map((t) => `${t.slice(0, 6)}...${t.slice(38, 42)}`),
+    tokensOut: truncateAddresses(tokensOut),
     minOut: minAmountsOut,
     expectedOut: expectedAmountsOut,
     balanceAfter: tokensOutBalanceAfter.map((b) => b.toString()),
