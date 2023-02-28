@@ -8,8 +8,8 @@ import {
   GraphQLArgs,
   Network,
   truncateAddresses,
-  insert,
   PoolWithMethods,
+  removeItem,
 } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
@@ -22,7 +22,6 @@ import {
 } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
-import { JsonRpcSigner } from '@ethersproject/providers';
 import { SimulationType } from '../simulation/simulation.module';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 
@@ -114,120 +113,69 @@ const { contracts, contractAddresses } = new Contracts(
 );
 const relayer = contractAddresses.relayerV4 as string;
 
-interface Test {
-  signer: JsonRpcSigner;
-  description: string;
-  pool: PoolWithMethods;
-  amount: string;
-  simulationType?: SimulationType;
-}
-
-const runTests = async (tests: Test[]) => {
-  for (let i = 0; i < tests.length; i++) {
-    const test = tests[i];
-    it(test.description, async () => {
-      const signerAddress = await test.signer.getAddress();
-      const authorisation = await Relayer.signRelayerApproval(
-        relayer,
-        signerAddress,
-        test.signer,
-        contracts.vault
-      );
-      await testFlow(
-        test.signer,
-        signerAddress,
-        test.pool,
-        test.amount,
-        authorisation,
-        test.simulationType
-      );
-    }).timeout(120000);
-  }
-};
-
-const testFlow = async (
-  signer: JsonRpcSigner,
-  signerAddress: string,
-  pool: PoolWithMethods,
-  amount: string,
-  authorisation: string | undefined,
-  simulationType = SimulationType.VaultModel
-) => {
-  const slippage = '10'; // 10 bps = 0.1%
-
-  const { to, encodedCall, tokensOut, expectedAmountsOut, minAmountsOut } =
-    await pools.generalisedExit(
-      pool.id,
-      amount,
-      signerAddress,
-      slippage,
-      signer,
-      simulationType,
-      authorisation
-    );
-
-  const { transactionReceipt, balanceDeltas, gasUsed } =
-    await sendTransactionGetBalances(
-      [pool.address, ...tokensOut],
-      signer,
-      signerAddress,
-      to,
-      encodedCall
-    );
-
-  console.log('Gas used', gasUsed.toString());
-
-  console.table({
-    tokensOut: truncateAddresses([pool.address, ...tokensOut]),
-    minOut: minAmountsOut,
-    expectedOut: expectedAmountsOut,
-    balanceDeltas: balanceDeltas.map((b) => b.toString()),
-  });
-
-  expect(transactionReceipt.status).to.eq(1);
-  const expectedDeltas = insert(expectedAmountsOut, pool.bptIndex, amount);
-  balanceDeltas.forEach((b, i) => {
-    const minOut = BigNumber.from(minAmountsOut[i]);
-    expect(b.gte(minOut)).to.be.true;
-    expect(accuracy(b, BigNumber.from(expectedDeltas[i]))).to.be.closeTo(
-      1,
-      1e-2
-    ); // inaccuracy should be less than 1%)
-  });
-  const expectedMins = expectedAmountsOut.map((a) =>
-    subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
-  );
-  expect(expectedMins).to.deep.eq(minAmountsOut);
-};
-
-// all contexts currently applies to GOERLI only
 describe('generalised exit execution', async () => {
   let pool: PoolWithMethods;
-  beforeEach(async () => {
-    const tokens = [addresses.bbeusd.address];
-    const slots = [addresses.bbeusd.slot];
-    const balances = [parseFixed('2', addresses.bbeusd.decimals).toString()];
 
-    const testPool = new TestPoolHelper(
-      addresses.bbeusd.id,
-      network,
-      rpcUrl,
-      blockNumber
-    );
-
-    // Setup forked network, set initial token balances and allowances
-    await forkSetup(
+  const testFlow = async (
+    pool: PoolWithMethods,
+    amount: string,
+    simulationType: SimulationType
+  ) => {
+    const signerAddress = await signer.getAddress();
+    const authorisation = await Relayer.signRelayerApproval(
+      relayer,
+      signerAddress,
       signer,
-      tokens,
-      slots,
-      balances,
-      jsonRpcUrl as string,
-      blockNumber
+      contracts.vault
     );
 
-    // Updatate pool info with onchain state from fork block no
-    pool = await testPool.getPool();
-  });
+    const slippage = '10'; // 10 bps = 0.1%
+
+    const { to, encodedCall, tokensOut, expectedAmountsOut, minAmountsOut } =
+      await pools.generalisedExit(
+        pool.id,
+        amount,
+        signerAddress,
+        slippage,
+        signer,
+        simulationType,
+        authorisation
+      );
+
+    const { transactionReceipt, balanceDeltas, gasUsed } =
+      await sendTransactionGetBalances(
+        [pool.address, ...tokensOut],
+        signer,
+        signerAddress,
+        to,
+        encodedCall
+      );
+
+    console.log('Gas used', gasUsed.toString());
+
+    const deltasWithoutBPT = removeItem(balanceDeltas, 0);
+    console.table({
+      tokensOut: truncateAddresses(tokensOut),
+      minOut: minAmountsOut,
+      expectedOut: expectedAmountsOut,
+      balanceDeltas: deltasWithoutBPT.map((b) => b.toString()),
+    });
+
+    expect(transactionReceipt.status).to.eq(1);
+    deltasWithoutBPT.forEach((b, i) => {
+      const minOut = BigNumber.from(minAmountsOut[i]);
+      expect(b.gte(minOut)).to.be.true;
+      expect(accuracy(b, BigNumber.from(expectedAmountsOut[i]))).to.be.closeTo(
+        1,
+        1e-2
+      ); // inaccuracy should be less than 1%
+    });
+    const expectedMins = expectedAmountsOut.map((a) =>
+      subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
+    );
+    expect(expectedMins).to.deep.eq(minAmountsOut);
+  };
+
   /*
   bbeusd: ComposableStable, bbeusdt/bbeusdc/bbedai
   bbeusdt: Linear, eUsdt/usdt
@@ -236,27 +184,61 @@ describe('generalised exit execution', async () => {
   */
   context('bbeusd', async () => {
     if (!TEST_BBEUSD) return true;
-    await runTests([
-      {
+
+    beforeEach(async () => {
+      const tokens = [addresses.bbeusd.address];
+      const slots = [addresses.bbeusd.slot];
+      const balances = [parseFixed('2', addresses.bbeusd.decimals).toString()];
+
+      const testPool = new TestPoolHelper(
+        addresses.bbeusd.id,
+        network,
+        rpcUrl,
+        blockNumber
+      );
+
+      // Setup forked network, set initial token balances and allowances
+      await forkSetup(
         signer,
-        description: 'exit pool - VaultModel',
-        pool,
-        amount: parseFixed('2', addresses.bbeusd.decimals).toString(),
-      },
-      {
-        signer,
-        description: 'exit pool - Tenderly',
-        pool,
-        amount: parseFixed('2', addresses.bbeusd.decimals).toString(),
-        simulationType: SimulationType.Tenderly,
-      },
-      {
-        signer,
-        description: 'exit pool - Static',
-        pool,
-        amount: parseFixed('2', addresses.bbeusd.decimals).toString(),
-        simulationType: SimulationType.Static,
-      },
-    ]);
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        blockNumber
+      );
+
+      // Updatate pool info with onchain state from fork block no
+      pool = await testPool.getPool();
+    });
+
+    context('using simulation type VaultModel', async () => {
+      it('should calculate expectedAmountsOut correctly', async () => {
+        await testFlow(
+          pool,
+          parseFixed('2', addresses.bbeusd.decimals).toString(),
+          SimulationType.VaultModel
+        );
+      });
+    });
+
+    context('using simulation type Tenderly', async () => {
+      it('should calculate expectedAmountsOut correctly', async () => {
+        await testFlow(
+          pool,
+          parseFixed('2', addresses.bbeusd.decimals).toString(),
+          SimulationType.Tenderly
+        );
+      });
+    });
+
+    context('using simulation type Satic', async () => {
+      it('should calculate expectedAmountsOut correctly', async () => {
+        await testFlow(
+          pool,
+          parseFixed('2', addresses.bbeusd.decimals).toString(),
+          SimulationType.Static
+        );
+      });
+    });
   });
 });
