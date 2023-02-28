@@ -83,7 +83,7 @@ export function _downscaleUp(amount: bigint, scalingFactor: bigint): bigint {
 export class SolidityMaths {
   // Modification: Taken from the fixed point class
   static MAX_POW_RELATIVE_ERROR = BigInt(10000);
-
+  static MIN_POW_BASE_FREE_EXPONENT = BigInt(0.7e18);
   /**
    * @dev Returns the addition of two unsigned integers of 256 bits, reverting on overflow.
    */
@@ -227,6 +227,19 @@ export class SolidityMaths {
     );
 
     return this.add(raw, maxError);
+  }
+
+  static powDownFixed(x: bigint, y: bigint): bigint {
+    const raw = LogExpMath.pow(x, y);
+    const maxError = this.add(
+      this.mulUpFixed(raw, this.MAX_POW_RELATIVE_ERROR),
+      BONE
+    );
+    if (raw < maxError) {
+      return BigInt(0);
+    } else {
+      return this.sub(raw, maxError);
+    }
   }
 
   // Modification: Taken from the fixed point class
