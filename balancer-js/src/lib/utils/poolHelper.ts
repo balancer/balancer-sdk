@@ -9,6 +9,7 @@ import {
 } from '@/lib/utils/solidityMaths';
 import { AssetHelpers } from '@/lib/utils/assetHelpers';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { removeItem } from '@/lib/utils/index';
 
 export const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
@@ -152,10 +153,14 @@ export const parsePoolInfoForProtocolFee = (
 ): {
   amplificationParameter: string;
   balances: string[];
+  balancesWithoutBPT: string[];
   higherBalanceTokenIndex: number;
   lastInvariant: string;
   normalizedWeights: string[];
   protocolSwapFeePct: string;
+  totalShares: string;
+  bptIndex: number;
+  virtualSupply: string;
 } => {
   const parsedBalances = pool.tokens.map((token) =>
     parseFixed(token.balance, token.decimals).toString()
@@ -195,15 +200,29 @@ export const parsePoolInfoForProtocolFee = (
       ? parseFixed(token.weight, 18).toString()
       : ONE.toString();
   });
+  const totalShares = parseFixed(pool.totalShares, 18).toString();
+  const bptIndex = pool.tokensList.indexOf(pool.address);
+  const virtualSupply =
+    bptIndex > -1
+      ? SolidityMaths.add(
+          BigInt(totalShares),
+          BigInt(upScaledBalances[bptIndex])
+        ).toString()
+      : '0';
+  const balancesWithoutBPT = removeItem(upScaledBalances, bptIndex);
   if (!pool.lastJoinExitInvariant) {
     throw new BalancerError(BalancerErrorCode.MISSING_LAST_JOIN_EXIT_INVARIANT);
   }
   return {
+    amplificationParameter: parsedAmp,
+    balances: upScaledBalances,
+    balancesWithoutBPT,
+    bptIndex,
     higherBalanceTokenIndex,
     lastInvariant: pool.lastJoinExitInvariant,
     normalizedWeights: parsedWeights,
-    amplificationParameter: parsedAmp,
-    balances: upScaledBalances,
     protocolSwapFeePct,
+    totalShares,
+    virtualSupply,
   };
 };
