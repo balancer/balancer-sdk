@@ -4,9 +4,6 @@ import axios from 'axios';
 import { TOKENS } from '@/lib/constants/tokens';
 import { Debouncer, tokenAddressForPricing } from '@/lib/utils';
 
-/**
- * Simple coingecko price source implementation. Configurable by network and token addresses.
- */
 export class CoingeckoPriceRepository implements Findable<Price> {
   prices: { [key: string]: Promise<Price> } = {};
   nativePrice?: Promise<Price>;

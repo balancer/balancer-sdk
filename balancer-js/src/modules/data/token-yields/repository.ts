@@ -23,7 +23,7 @@ import { Network, Findable } from '@/types';
 
 /**
  * Common interface for fetching APR from external sources
- * @interal
+ * @internal
  *
  * @param network is optional, used when same source, eg: aave has multiple tokens and all of them can be fetched in one call.
  * @param other is optional, used for passing mocked data for testing.
@@ -51,6 +51,10 @@ const yieldSourceMap: { [address: string]: AprFetcher } = Object.fromEntries([
   ...Object.values(idleUsdcToken).map((k) => [k, idleUsdc]),
 ]);
 
+/**
+ * Fetching token yields from external sources
+ * @internal
+ */
 export class TokenYieldsRepository implements Findable<number> {
   private yields: { [address: string]: number } = {};
 

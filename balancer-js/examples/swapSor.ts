@@ -28,7 +28,7 @@ async function getAndProcessSwaps(
   amount: BigNumber,
   useJoinExitPaths: boolean
 ) {
-  const swapInfo = await balancer.swaps.sor.getSwaps(
+  const swapInfo = await balancer.sor.getSwaps(
     tokenIn,
     tokenOut,
     swapType,
@@ -37,7 +37,7 @@ async function getAndProcessSwaps(
     useJoinExitPaths
   );
 
-  console.log(balancer.swaps.sor.getPools().length);
+  console.log(balancer.sor.getPools().length);
 
   if (swapInfo.returnAmount.isZero()) {
     console.log('No Swap');
@@ -47,7 +47,7 @@ async function getAndProcessSwaps(
   // console.log(swapInfo.tokenAddresses);
   console.log(`Return amount: `, swapInfo.returnAmount.toString());
 
-  const pools = balancer.swaps.sor.getPools();
+  const pools = balancer.sor.getPools();
 
   // someJoinExit will check if swaps use joinExit paths which needs additional formatting
   if (
@@ -135,7 +135,7 @@ async function swapExample() {
     rpcUrl,
   });
 
-  const result = await balancer.swaps.sor.fetchPools();
+  const result = await balancer.sor.fetchPools();
   console.log(result);
 
   await getAndProcessSwaps(

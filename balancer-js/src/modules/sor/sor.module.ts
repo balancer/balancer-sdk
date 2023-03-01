@@ -14,6 +14,24 @@ import {
 import { SubgraphTokenPriceService } from './token-price/subgraphTokenPriceService';
 import { getNetworkConfig } from '@/modules/sdk.helpers';
 
+/**
+ * The Smart Order Router (SOR) is a tool designed to optimize order routing across Balancer pools for the best possible price execution. It can be accessed through the SDK, but it is also available as a standalone package for those who only need the swap routing functionality. This example code will utilize the SDK, but it is easy to understand how to make changes for the standalone SOR package.
+ *
+ * The below docs assume the SDK is installed and initialized.
+ *
+ * ```javascript
+ * import { BalancerSDK } from '@balancer-labs/sdk'
+ *
+ * const balancer = new BalancerSDK({
+ *   network: 1, // Mainnet
+ *   rpcUrl: 'https://rpc.ankr.com/eth' // rpc endpoint
+ * })
+ *
+ * const { sor } = balancer
+ * ```
+ *
+ * @category Swaps
+ */
 export class Sor extends SOR {
   constructor(sdkConfig: BalancerSdkConfig) {
     const network = getNetworkConfig(sdkConfig);

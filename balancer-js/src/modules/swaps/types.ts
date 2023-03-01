@@ -51,18 +51,18 @@ export type BatchSwap = {
   outputReferences?: { index: BigNumberish; key: BigNumberish }[];
 };
 
-export interface FetchPoolsInput {
+export type FetchPoolsInput = {
   fetchPools: boolean;
   fetchOnChain: boolean;
-}
+};
 
-export interface QueryWithSorInput {
+export type QueryWithSorInput = {
   tokensIn: string[];
   tokensOut: string[];
   swapType: SwapType;
   amounts: string[];
   fetchPools: FetchPoolsInput;
-}
+};
 
 export interface SwapInput {
   tokenIn: string;
@@ -71,39 +71,39 @@ export interface SwapInput {
   amount: string;
 }
 
-export interface QueryWithSorOutput {
+export type QueryWithSorOutput = {
   returnAmounts: string[];
   swaps: BatchSwapStep[];
   assets: string[];
   deltas: string[];
-}
+};
 
-export interface QuerySimpleFlashSwapParameters {
+export type QuerySimpleFlashSwapParameters = {
   poolIds: string[];
   assets: BatchSwap['assets'];
   flashLoanAmount: string;
   vaultContract: Vault;
-}
+};
 
-export interface SimpleFlashSwapParameters {
+export type SimpleFlashSwapParameters = {
   poolIds: string[];
   assets: BatchSwap['assets'];
   flashLoanAmount: string;
   walletAddress: string;
-}
+};
 
-export interface QuerySimpleFlashSwapResponse {
+export type QuerySimpleFlashSwapResponse = {
   profits: Record<string, string>;
   isProfitable: boolean;
-}
+};
 
-export interface FindRouteParameters {
+export type FindRouteParameters = {
   tokenIn: string;
   tokenOut: string;
   amount: BigNumber;
   gasPrice: BigNumber;
   maxPools: number;
-}
+};
 
 export interface BuildTransactionParameters {
   userAddress: string;

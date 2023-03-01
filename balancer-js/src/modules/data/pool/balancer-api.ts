@@ -21,6 +21,7 @@ const DEFAULT_FIRST = 10;
  * Access pools using the Balancer GraphQL Api.
  *
  * Balancer's API URL: https://api.balancer.fi/query/
+ * @internal
  */
 export class PoolsBalancerAPIRepository
   implements Findable<Pool, PoolAttribute>

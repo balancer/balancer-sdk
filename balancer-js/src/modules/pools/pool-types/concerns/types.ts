@@ -2,15 +2,15 @@
 import { ExitPoolRequest, JoinPoolRequest, Pool } from '@/types';
 import { BigNumber } from '@ethersproject/bignumber';
 
-export interface LiquidityConcern {
+export type LiquidityConcern = {
   calcTotal: (...args: any[]) => string;
-}
+};
 
-export interface SpotPriceConcern {
+export type SpotPriceConcern = {
   calcPoolSpotPrice: (tokenIn: string, tokenOut: string, pool: Pool) => string;
-}
+};
 
-export interface PriceImpactConcern {
+export type PriceImpactConcern = {
   bptZeroPriceImpact: (pool: Pool, tokenAmounts: bigint[]) => bigint;
   calcPriceImpact: (
     pool: Pool,
@@ -18,9 +18,9 @@ export interface PriceImpactConcern {
     bptAmount: string,
     isJoin: boolean
   ) => string;
-}
+};
 
-export interface JoinConcern {
+export type JoinConcern = {
   buildJoin: ({
     joiner,
     pool,
@@ -29,9 +29,9 @@ export interface JoinConcern {
     slippage,
     wrappedNativeAsset,
   }: JoinPoolParameters) => JoinPoolAttributes;
-}
+};
 
-export interface ExitConcern {
+export type ExitConcern = {
   /**
    * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
    * @param exiter Account address exiting pool
@@ -71,16 +71,16 @@ export interface ExitConcern {
     slippage,
     wrappedNativeAsset,
   }: ExitExactTokensOutParameters) => ExitExactTokensOutAttributes;
-}
+};
 
-export interface JoinPool {
+export type JoinPool = {
   poolId: string;
   sender: string;
   recipient: string;
   joinPoolRequest: JoinPoolRequest;
-}
+};
 
-export interface JoinPoolAttributes {
+export type JoinPoolAttributes = {
   to: string;
   functionName: string;
   attributes: JoinPool;
@@ -88,44 +88,39 @@ export interface JoinPoolAttributes {
   value?: BigNumber;
   minBPTOut: string;
   expectedBPTOut: string;
-}
+};
 
-export interface JoinPoolParameters {
+export type JoinPoolParameters = {
   joiner: string;
   pool: Pool;
   tokensIn: string[];
   amountsIn: string[];
   slippage: string;
   wrappedNativeAsset: string;
-}
+};
 
-export interface ExitPool {
+export type ExitPool = {
   poolId: string;
   sender: string;
   recipient: string;
   exitPoolRequest: ExitPoolRequest;
-}
+};
 
-export interface ExitPoolAttributes {
+export type ExitPoolAttributes = {
   to: string;
   functionName: string;
   attributes: ExitPool;
   data: string;
-}
+};
 
 /**
  * Exit exact BPT in transaction parameters
- * @param to Address that will execute the transaction (vault address)
- * @param functionName Function name to be called (exitPool)
- * @param attributes Transaction attributes ready to be encoded
- * @param data Encoded transaction data
- * @param expectedAmountsOut Expected amounts out of exit transaction
- * @param minAmountsOut Minimum amounts out of exit transaction considering slippage tolerance
  */
-export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
+export type ExitExactBPTInAttributes = ExitPoolAttributes & {
+  /** Expected amounts out of exit transaction */
   expectedAmountsOut: string[];
   minAmountsOut: string[];
-}
+};
 
 /**
  * Exit exact tokens out transaction parameters
@@ -136,12 +131,12 @@ export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
  * @param expectedBPTIn Expected BPT into exit transaction
  * @param maxBPTIn Max BPT into exit transaction considering slippage tolerance
  */
-export interface ExitExactTokensOutAttributes extends ExitPoolAttributes {
+export type ExitExactTokensOutAttributes = ExitPoolAttributes & {
   expectedBPTIn: string;
   maxBPTIn: string;
-}
+};
 
-export interface ExitExactBPTInParameters {
+export type ExitExactBPTInParameters = {
   exiter: string;
   pool: Pool;
   bptIn: string;
@@ -149,9 +144,9 @@ export interface ExitExactBPTInParameters {
   shouldUnwrapNativeAsset: boolean;
   wrappedNativeAsset: string;
   singleTokenOut?: string;
-}
+};
 
-export interface ExitExactBPTInSingleTokenOutParameters {
+export type ExitExactBPTInSingleTokenOutParameters = {
   exiter: string;
   pool: Pool;
   bptIn: string;
@@ -159,13 +154,13 @@ export interface ExitExactBPTInSingleTokenOutParameters {
   shouldUnwrapNativeAsset: boolean;
   wrappedNativeAsset: string;
   singleTokenOut: string;
-}
+};
 
-export interface ExitExactTokensOutParameters {
+export type ExitExactTokensOutParameters = {
   exiter: string;
   pool: Pool;
   tokensOut: string[];
   amountsOut: string[];
   slippage: string;
   wrappedNativeAsset: string;
-}
+};

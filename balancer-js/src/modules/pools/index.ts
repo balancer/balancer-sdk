@@ -9,7 +9,11 @@ import type {
   AprBreakdown,
   PoolAttribute,
 } from '@/types';
-import { JoinPoolAttributes } from './pool-types/concerns/types';
+import {
+  ExitExactBPTInAttributes,
+  ExitExactTokensOutAttributes,
+  JoinPoolAttributes,
+} from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
@@ -34,17 +38,15 @@ const notImplemented = (poolType: string, name: string) => () => {
  * Controller / use-case layer for interacting with pools data.
  */
 export class Pools implements Findable<PoolWithMethods> {
-  aprService;
-  liquidityService;
-  joinService;
-  exitService;
-  feesService;
-  volumeService;
-  simulationService;
-  poolFactory;
-  impermanentLossService;
-  graphService;
+  private aprService;
+  private liquidityService;
+  private joinService;
+  private exitService;
+  private feesService;
+  private volumeService;
+  private impermanentLossService;
   emissionsService;
+  poolFactory;
   proportionalAmounts;
 
   constructor(
@@ -65,21 +67,13 @@ export class Pools implements Findable<PoolWithMethods> {
       repositories.pools,
       repositories.tokenPrices
     );
-    this.simulationService = new Simulation(
+    const simulationService = new Simulation(
       networkConfig,
       this.repositories.poolsForSor
     );
-    this.graphService = new PoolGraph(this.repositories.poolsOnChain);
-    this.joinService = new Join(
-      this.graphService,
-      networkConfig,
-      this.simulationService
-    );
-    this.exitService = new Exit(
-      this.graphService,
-      networkConfig,
-      this.simulationService
-    );
+    const graphService = new PoolGraph(this.repositories.poolsOnChain);
+    this.joinService = new Join(graphService, networkConfig, simulationService);
+    this.exitService = new Exit(graphService, networkConfig, simulationService);
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
     this.poolFactory = new PoolFactory__factory(networkConfig);
@@ -229,6 +223,123 @@ export class Pools implements Findable<PoolWithMethods> {
    */
   async volume(pool: Pool): Promise<number> {
     return this.volumeService.last24h(pool);
+  }
+
+  /**
+   * Builds join transaction data
+   *
+   * ```js
+   * const balancer = new BalancerSDK(sdkConfig);
+   * const pool = await balancer.pools.find(poolId);
+   * const { to, functionName, attributes, data } = pool.buildJoin(params);
+   * const tx = await signer.sendTransaction({ to, data });
+   * ```
+   *
+   * [Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/join.ts)
+   *
+   * @param pool Pool data
+   * @param joiner Address of a user that will join the pool
+   * @param tokensIn List of tokens to join with
+   * @param amountsIn List of amounts to join with
+   * @param slippage Tollerable slippage in bps
+   * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
+   */
+  buildJoin(
+    pool: Pool,
+    joiner: string,
+    tokensIn: string[],
+    amountsIn: string[],
+    slippage: string
+  ): JoinPoolAttributes {
+    try {
+      const concerns = PoolTypeConcerns.from(pool.poolType);
+      const wrappedNativeAsset =
+        this.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
+
+      return concerns.join.buildJoin({
+        joiner,
+        pool,
+        tokensIn,
+        amountsIn,
+        slippage,
+        wrappedNativeAsset,
+      });
+    } catch (error) {
+      if ((error as BalancerError).code != 'UNSUPPORTED_POOL_TYPE') {
+        console.error(error);
+      }
+
+      throw 'buildJoin not supported';
+    }
+  }
+
+  /**
+   * Build pool exit transaction data for a given amount of BPT in
+   *
+   * @param pool Pool data
+   * @param exiter Address of a user that will exit the pool
+   * @param bptIn Amount of BPT to exit with
+   * @param slippage Tollerable slippage in bps
+   * @param shouldUnwrapNativeAsset Whether to unwrap native asset
+   * @param singleTokenOut Address of a single token to exit the whole liquidity to
+   * @returns Exit transaction data
+   */
+  buildExitExactBPTIn(
+    pool: Pool,
+    exiter: string,
+    bptIn: string,
+    slippage: string,
+    shouldUnwrapNativeAsset = false,
+    singleTokenOut?: string
+  ): ExitExactBPTInAttributes {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+    const wrappedNativeAsset =
+      this.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
+
+    if (concerns.exit.buildExitExactBPTIn) {
+      return concerns.exit.buildExitExactBPTIn({
+        exiter,
+        pool,
+        bptIn,
+        slippage,
+        shouldUnwrapNativeAsset,
+        wrappedNativeAsset,
+        singleTokenOut,
+      });
+    } else {
+      throw 'ExitExactBPTIn not supported';
+    }
+  }
+
+  /**
+   * Build pool exit transaction data for a known amount of tokens out
+   *
+   * @param pool Pool data
+   * @param exiter Address of a user that will exit the pool
+   * @param tokensOut List of tokens to exit the pool to
+   * @param amountsOut List of amounts to exit the pool to
+   * @param slippage Tollerable slippage in bps
+   * @returns Exit transaction data
+   */
+  buildExitExactTokensOut(
+    pool: Pool,
+    exiter: string,
+    tokensOut: string[],
+    amountsOut: string[],
+    slippage: string
+  ): ExitExactTokensOutAttributes {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+    const wrappedNativeAsset =
+      this.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase();
+
+    return concerns.exit.buildExitExactTokensOut({
+      exiter,
+      pool,
+      tokensOut,
+      amountsOut,
+      slippage,
+      wrappedNativeAsset,
+    });
   }
 
   static wrap(

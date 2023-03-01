@@ -9,6 +9,8 @@ import {
  * Access liquidity gauges indexed by subgraph.
  * Because we have ~100 gauges to save on repeated http calls we cache all results as `gauges` on an instance.
  * Balancer's subgraph URL: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-gauges
+ * @category Data
+ * @internal
  */
 export class LiquidityGaugesSubgraphRepository
   implements Findable<SubgraphLiquidityGauge>

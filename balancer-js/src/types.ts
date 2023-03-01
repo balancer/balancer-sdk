@@ -27,21 +27,33 @@ import type { AprBreakdown } from '@/modules/pools/apr/apr';
 import { SubgraphPoolDataService } from '@/modules/sor/pool-data/subgraphPoolDataService';
 import * as Queries from '@/modules/pools/queries/types';
 export * from '@/modules/data/types';
+export * from '@/modules/pools/pool-types/concerns/types';
 export { Network, AprBreakdown };
 
 export type Address = string;
 
-export interface BalancerSdkConfig {
-  //use a known network or provide an entirely custom config
+/**
+ * Main configuration object for the Balancer SDK
+ */
+export type BalancerSdkConfig = {
+  /** use a known network or provide an entirely custom config */
   network: Network | BalancerNetworkConfig;
   rpcUrl: string;
-  //overwrite the subgraph url if you don't want to use the balancer labs maintained version
+  /** overwrite the subgraph url if you don't want to use the balancer labs maintained version */
   customSubgraphUrl?: string;
+  /**
+   * ???
+   * @public
+   */
   subgraphQuery?: GraphQLQuery;
-  //optionally overwrite parts of the standard SOR config
+  /** optionally overwrite parts of the standard SOR config */
   sor?: Partial<BalancerSdkSorConfig>;
+  /**
+   * optionally overwrite parts of the standard Tenderly config
+   * @public
+   */
   tenderly?: BalancerTenderlyConfig;
-}
+};
 
 export interface BalancerTenderlyConfig {
   accessKey?: string;
@@ -62,7 +74,7 @@ export interface BalancerSdkSorConfig {
   fetchOnChainBalances: boolean;
 }
 
-export interface ContractAddresses {
+export type ContractAddresses = {
   vault: string;
   multicall: string;
   gaugeClaimHelper?: string;
@@ -78,9 +90,13 @@ export interface ContractAddresses {
   protocolFeePercentagesProvider?: string;
   weightedPoolFactory?: string;
   composableStablePoolFactory?: string;
-}
+};
 
-export interface BalancerNetworkConfig {
+/**
+ * A Balancer network configuration
+ */
+export type BalancerNetworkConfig = {
+  /** The chain ID of the network */
   chainId: Network;
   addresses: {
     contracts: ContractAddresses;
@@ -105,7 +121,7 @@ export interface BalancerNetworkConfig {
   };
   poolsToIgnore?: string[];
   sorConnectingTokens?: { symbol: string; address: string }[];
-}
+};
 
 export interface BalancerDataRepositories {
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
@@ -279,8 +295,15 @@ export enum PoolType {
   YearnLinear = 'YearnLinear',
 }
 
+/**
+ * Pool data
+ * @public
+ *
+ */
 export interface Pool {
+  /** Pool ID */
   id: string;
+  /** Pool Name */
   name: string;
   address: string;
   chainId: number;
@@ -331,31 +354,35 @@ export interface PriceRateProvider {
  * Pool use-cases / controller layer
  */
 export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
-  buildJoin: (
+  buildJoin(
     joiner: string,
     tokensIn: string[],
     amountsIn: string[],
     slippage: string
-  ) => JoinPoolAttributes;
-  calcPriceImpact: (
+  ): JoinPoolAttributes;
+  calcPriceImpact(
     amountsIn: string[],
     minBPTOut: string,
     isJoin: boolean
-  ) => Promise<string>;
-  buildExitExactBPTIn: (
+  ): Promise<string>;
+  buildExitExactBPTIn(
+    /** Address of the account exiting the pool */
     exiter: string,
+    /** Amount of BPT exiting the pool as a wad string */
     bptIn: string,
+    /** Maximum slippage tolerance in percentage. i.e. 0.05 = 5% */
     slippage: string,
+    /** When true wETH is unwrapped in the same transaction, default false */
     shouldUnwrapNativeAsset?: boolean,
     singleTokenOut?: string
-  ) => ExitExactBPTInAttributes;
-  buildExitExactTokensOut: (
+  ): ExitExactBPTInAttributes;
+  buildExitExactTokensOut(
     exiter: string,
     tokensOut: string[],
     amountsOut: string[],
     slippage: string
-  ) => ExitExactTokensOutAttributes;
-  calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
+  ): ExitExactTokensOutAttributes;
+  calcSpotPrice(tokenIn: string, tokenOut: string): string;
   bptIndex: number;
 }
 

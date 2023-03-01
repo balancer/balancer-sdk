@@ -24,6 +24,7 @@ const makePromise = <T>(): Promised<T> => {
 
 /**
  * Aggregates attributes and exectutes a debounced call
+ * @internal
  *
  * @param fn Function to debounce
  * @param wait Debouncing waiting time [ms]

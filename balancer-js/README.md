@@ -2,252 +2,24 @@
 
 A JavaScript SDK which provides commonly used utilties for interacting with Balancer Protocol V2.
 
-## How to run the examples (Javascript)?
-
-**In order to run the examples provided, you need to follow the next steps:**
-
-1. git clone https://github.com/balancer-labs/balancer-sdk.git
-2. cd balancer-sdk
-3. cd balancer-js
-4. Create a .env file in the balancer-js folder
-5. In the .env file you will need to define and initialize the following variables
-
-   We have defined both Alchemy and Infura, because some of the examples use Infura, others use Alchemy. However, feel free to modify accordingly and use your favourite one.
-   ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT]  
-   INFURA=[Infura API KEY]  
-   TRADER_KEY=[MetaMask PRIVATE KEY]  
-   Some examples also require the following Tenderly config parameters to be defined:
-   TENDERLY_ACCESS_KEY=[TENDERLY API ACCESS KEY]
-   TENDERLY_PROJECT=[TENDERLY PROJECT NAME]
-   TENDERLY_USER=[TENDERLY USERNAME]
-
-6. Run 'npm run node', this runs a local Hardhat Network
-7. Open a new terminal
-8. cd to balancer-js
-9. Install ts-node using: npm install ts-node
-10. Install tsconfig-paths using: npm install --save-dev tsconfig-paths
-11. Run one of the provided examples (eg: npm run examples:run -- examples/join.ts)
-
-## Installation
-
-## Getting Started
-
 ```js
-import { BalancerSDK, BalancerSdkConfig, Network } from '@balancer-labs/sdk';
+import { BalancerSDK } from '@balancer-labs/sdk';
 
-const config: BalancerSdkConfig = {
-  network: Network.MAINNET,
-  rpcUrl: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
+const config = {
+  network: 1, // 1 - Mainnet
+  rpcUrl: 'https://rpc.ankr.com/eth',
 };
 const balancer = new BalancerSDK(config);
 ```
 
-In some examples we present a way to make end to end trades against mainnet state. To run them you will need to setup a localhost test node using tools like ganache, hardhat, anvil.
+`balancer` variable exposes modules wired with the ethers provider and configuration needed for a specific network.
 
-Installation instructions for:
+Modules:
 
-- [Hardhat](https://hardhat.org/getting-started/#installation)
-
-  To start a MAINNET forked node:
-
-  - Set env var: `ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT for MAINNET]`
-  - Run: `npm run node`
-
-  To start a GOERLI forked node:
-
-  - Set env var: `ALCHEMY_URL_GOERLI=[ALCHEMY HTTPS ENDPOINT for GOERLI]`
-  - Run: `npm run node:goerli`
-
-- [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation) - use with caution, still experimental.
-
-  To start a forked node:
-
-  ```
-  anvil -f FORKABLE_RPC_URL (optional pinned block: --fork-block-number XXX)
-  ```
-
-## Swaps Module
-
-Exposes complete functionality for token swapping. An example of using the module with data fetched from the subgraph:
-
-```js
-// Uses SOR to find optimal route for a trading pair and amount
-const route = balancer.swaps.findRouteGivenIn({
-  tokenIn,
-  tokenOut,
-  amount,
-  gasPrice,
-  maxPools,
-});
-
-// Prepares transaction attributes based on the route
-const transactionAttributes = balancer.swaps.buildSwap({
-  userAddress,
-  swapInfo: route,
-  kind: 0, // 0 - givenIn, 1 - givenOut
-  deadline,
-  maxSlippage,
-});
-
-// Extract parameters required for sendTransaction
-const { to, data, value } = transactionAttributes;
-
-// Execution with ethers.js
-const transactionResponse = await signer.sendTransaction({ to, data, value });
-```
-
-## SwapsService
-
-The SwapsService provides function to query and make swaps using Balancer V2 liquidity.
-
-```js
-const swaps = new swapService({
-  network: Network;
-  rpcUrl: string;
-});
-```
-
-## Examples
-
-You can run each example with `npm run examples:run -- examples/exampleName.ts`
-
-### #queryBatchSwap
-
-The Balancer Vault provides a [method to simulate a call to batchSwap](https://github.com/balancer-labs/balancer-v2-monorepo/blob/master/pkg/vault/contracts/interfaces/IVault.sol#L644).
-This function performs no checks on the sender or recipient or token balances or approvals. Note that this function is not 'view' (due to implementation details): the client code must explicitly execute eth_call instead of eth_sendTransaction.
-
-@param batchSwap - BatchSwap information used for query.
-@param batchSwap.kind - either exactIn or exactOut.
-@param batchSwap.swaps - sequence of swaps.
-@param batchSwap.assets - array contains the addresses of all assets involved in the swaps.
-@returns Returns an array with the net Vault asset balance deltas. Positive amounts represent tokens (or ETH) sent to the Vault, and negative amounts represent tokens (or ETH) sent by the Vault. Each delta corresponds to the asset at the same index in the `assets` array.
-
-```js
-swaps.queryBatchSwap(batchSwap: {
-    kind: SwapType,
-    swaps: BatchSwapStep[],
-    assets: string[]
-}): Promise<BigNumberish[]>
-```
-
-[Example](./examples/queryBatchSwap.ts)
-
-### #queryBatchSwapWithSor
-
-Uses SOR to create and query a batchSwap for multiple tokens in > multiple tokensOut.
-
-@param queryWithSor - Swap information used for querying using SOR.
-@param queryWithSor.tokensIn - Array of addresses of assets in.
-@param queryWithSor.tokensOut - Array of addresses of assets out.
-@param queryWithSor.swapType - Type of Swap, ExactIn/Out.
-@param queryWithSor.amounts - Array of amounts used in swap.
-@param queryWithSor.fetchPools - Set whether SOR will fetch updated pool info.
-@returns Returns amount of tokens swaps along with swap and asset info that can be submitted to a batchSwap call.
-
-```js
-swaps.queryBatchSwapWithSor(queryWithSor: {
-    tokensIn: string[],
-    tokensOut: string[],
-    swapType: SwapType,
-    amounts: BigNumberish[],
-    fetchPools: FetchPoolsInput;
-}):
-Promise<QueryWithSorOutput {
-    returnAmounts: string[];
-    swaps: BatchSwapStep[];
-    assets: string[];
-    deltas: string[];
-}>
-```
-
-### #encodeBatchSwap
-
-Static method to encode a [batch swap](https://dev.balancer.fi/references/contracts/apis/the-vault#batch-swaps).
-
-_NB: This method doesn't execute a batchSwap -- it returns an [ABI byte string](https://docs.soliditylang.org/en/latest/abi-spec.html) containing the data of the function call on a contract, which can then be sent to the network (ex. [sendTransaction](https://web3js.readthedocs.io/en/v1.2.11/web3-eth.html#sendtransaction)). to be executed. See example for more info._
-
-```js
-/**
- * @param {BatchSwap}           batchSwap - BatchSwap information used for query.
- * @param {SwapType}            batchSwap.kind - either exactIn or exactOut
- * @param {BatchSwapSteps[]}    batchSwap.swaps - sequence of swaps
- * @param {string[]}            batchSwap.assets - array contains the addresses of all assets involved in the swaps
- * @param {FundManagement}      batchSwap.funds - object containing information about where funds should be taken/sent
- * @param {number[]}            batchSwap.limits - limits for each token involved in the swap, where either the maximum number of tokens to send (by passing a positive value) or the minimum amount of tokens to receive (by passing a negative value) is specified
- * @param {string}              batchSwap.deadline -  time (in Unix timestamp) after which it will no longer attempt to make a trade
- * @returns {string}            encodedBatchSwapData - Returns an ABI byte string containing the data of the function call on a contract
-*/
-Swaps.encodeBatchSwap(batchSwap: {
-    kind: SwapType,
-    swaps: BatchSwapStep[],
-    assets: string[],
-    funds: FundManagement,
-    limits: number[],
-    deadline: string
-}): string
-```
-
-[Example](./examples/batchSwap.ts)
-
-### Swap Service: Flash Swaps
-
-A [Flash Swap](https://dev.balancer.fi/resources/swaps/flash-swaps) is a special type of [batch swap](https://dev.balancer.fi/resources/swaps/batch-swaps) where the caller doesn't need to own or provide any of the input tokens -- the caller is essentially taking a "flash loan" (an uncollateralized loan) from the Balancer Vault. The full amount of the input token must be returned to the Vault by the end of the batch (plus any swap fees), however any excess of an output tokens can be sent to any address.
-
-IMPORTANT: A "simple" flash swap is an arbitrage executed with only two tokens and two pools,
-swapping in the first pool and then back in the second pool for a profit. For more
-complex flash swaps, you will have to use batch swap directly.
-
-Gotchas:
-
-- Both pools must have both assets (tokens) for swaps to work
-- No pool token balances can be zero
-- If the flash swap isn't profitable, the internal flash loan will fail.
-
-### #encodeSimpleFlashSwap
-
-Static method to encode a simple flash swap [method for a batchSwap](https://dev.balancer.fi/resources/swaps/flash-swaps).
-
-_NB: This method doesn't execute any swaps -- it returns an [ABI byte string](https://docs.soliditylang.org/en/latest/abi-spec.html) containing the data of the function call on a contract, which can then be sent to the network (ex. [sendTransaction](https://web3js.readthedocs.io/en/v1.2.11/web3-eth.html#sendtransaction)). to be executed. See example for more info._
-
-```js
-/**
- * @param {SimpleFlashSwapParameters}   params - BatchSwap information used for query.
- * @param {string}                      params.flashLoanAmount - initial input amount for the flash loan (first asset)
- * @param {string[]}                    params.poolIds - array of Balancer pool ids
- * @param {string[]}                    params.assets - array of token addresses
- * @param {string}                      params.walletAddress - array of token addresses
- * @returns {string}            encodedBatchSwapData - Returns an ABI byte string containing the data of the function call on a contract
-*/
-Swaps.encodeSimpleFlashSwap(simpleFlashSwap: {
-    flashLoanAmount: string,
-    poolIds: string[],
-    assets: string[]
-    walletAddress: string[]
-}): string
-```
-
-[Example](./examples/flashSwap.ts)
-
-### #querySimpleFlashSwap
-
-Method to test if a simple flash swap is valid and see potential profits.
-
-```js
-/**
- * @param {SimpleFlashSwapParameters}   params - BatchSwap information used for query.
- * @param {string}                      params.flashLoanAmount - initial input amount for the flash loan (first asset)
- * @param {string[]}                    params.poolIds - array of Balancer pool ids
- * @param {string[]}                    params.assets - array of token addresses
- * @returns {Promise<{profits: Record<string, string>, isProfitable: boolean}>}       Returns an ethersjs transaction response
-*/
-swaps.querySimpleFlashSwap(batchSwap: {
-    kind: SwapType,
-    swaps: BatchSwapStep[],
-    assets: string[]
-}): string
-```
-
-[Example](./examples/querySimpleFlashSwap.ts)
+* [swaps](https://docs.balancer.fi/sdk/reference/classes/Swaps.html)
+* [pools](https://docs.balancer.fi/sdk/reference/classes/Pools.html)
+* [relayer](https://docs.balancer.fi/sdk/reference/classes/Relayer.html)
+* [sor](https://docs.balancer.fi/sdk/reference/classes/Sor.html)
 
 ## Pricing
 
@@ -272,14 +44,13 @@ Find Spot Price for a token pair - finds most liquid path and uses this as refer
 
 ```js
 const pricing = new Pricing(sdkConfig);
-```
 
-@param { string } tokenIn Token in address.
-@param { string } tokenOut Token out address.
-@param { SubgraphPoolBase[] } pools Optional - Pool data. Will be fetched via dataProvider if not supplied.
-@returns { string } Spot price.
-
-```js
+/**
+ * @param { string } tokenIn Token in address.
+ * @param { string } tokenOut Token out address.
+ * @param { SubgraphPoolBase[] } pools Optional - Pool data. Will be fetched via dataProvider if not supplied.
+ * @returns { string } Spot price.
+*/
 async getSpotPrice(
     tokenIn: string,
     tokenOut: string,
@@ -287,7 +58,7 @@ async getSpotPrice(
 ): Promise<string>
 ```
 
-[Example](./examples/spotPrice.ts)
+[Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/spotPrice.ts)
 
 ## Simulating pool joins and exists
 
@@ -348,39 +119,6 @@ More examples: https://github.com/balancer-labs/balancer-sdk/blob/master/balance
 
 ## Joining Pools
 
-### Joining with pool tokens
-
-Exposes Join functionality allowing user to join pools with its pool tokens.
-
-```js
-const balancer = new BalancerSDK(sdkConfig);
-const pool = await balancer.pools.find(poolId);
-const { to, functionName, attributes, data } = pool.buildJoin(params);
-```
-
-#### #buildJoin
-
-Builds a join transaction.
-
-```js
-/**
- * @param { string }   joiner - Address used to exit pool.
- * @param { string[] } tokensIn - Token addresses provided for joining pool (same length and order as amountsIn).
- * @param { string[] } amountsIn - Token amounts provided for joining pool in EVM amounts.
- * @param { string }   slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%.
- * @returns { Promise<JoinPoolAttributes> } Returns join transaction ready to send with signer.sendTransaction.
- */
-
-buildJoin: (
-  joiner: string,
-  tokensIn: string[],
-  amountsIn: string[],
-  slippage: string
-) => Promise<JoinPoolAttributes>;
-```
-
-[Example](./examples/join.ts)
-
 ### #buildInitJoin (Weighted Pool)
 
 Builds a init join transaction for weighted pool.
@@ -403,7 +141,7 @@ Builds a init join transaction for weighted pool.
   }) => InitJoinPoolAttributes
 ```
 
-[Example](./examples/pools/weighted/init-join.ts)
+[Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/pools/weighted/init-join.ts)
 Available pool types:
 
 - Weighted
@@ -412,109 +150,53 @@ Available pool types:
 
 Exposes Join functionality allowing user to join a pool that has pool tokens that are BPTs of other pools, e.g.:
 
-```
-                  CS0
-              /        \
-            CS1        CS2
-          /    \      /   \
-         DAI   USDC  USDT  FRAX
-
-Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
-```
-
 ```js
-  /**
-   * Builds generalised join transaction
-   *
-   * @param poolId          Pool id
-   * @param tokens          Token addresses
-   * @param amounts         Token amounts in EVM scale
-   * @param userAddress     User address
-   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
-   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
-   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
-   * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
-   */
-  async generalisedJoin(
-    poolId: string,
-    tokens: string[],
-    amounts: string[],
-    userAddress: string,
-    slippage: string,
-    signer: JsonRpcSigner,
-    simulationType: SimulationType,
-    authorisation?: string
-  ): Promise<{
-    to: string;
-    encodedCall: string;
-    minOut: string;
-    expectedOut: string;
-    priceImpact: string;
-  }>
-```
+//                  CS0
+//               /        \
+//             CS1        CS2
+//           /    \      /   \
+//          DAI   USDC  USDT  FRAX
 
-[Example](./examples/joinGeneralised.ts)
+// Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
 
-## Exit Pool
-
-Exposes Exit functionality allowing user to exit pools.
-
-```js
-const balancer = new BalancerSDK(sdkConfig);
-const pool = await balancer.pools.find(poolId);
-const { to, functionName, attributes, data } = pool.buildExitExactBPTIn(params);
-```
-
-### #buildExitExactBPTIn
-
-Builds an exit transaction with exact BPT in and minimum token amounts out based on slippage tolerance.
-
-```js
-  /**
-   * @param exiter - Account address exiting pool
-   * @param bptIn - BPT provided for exiting pool
-   * @param slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-   * @param shouldUnwrapNativeAsset Indicates whether wrapped native asset should be unwrapped after exit.
-   * @param singleTokenOut - Optional: token address that if provided will exit to given token
-   * @returns transaction request ready to send with signer.sendTransaction
-   */
-  buildExitExactBPTIn: (
-    exiter: string,
-    bptIn: string,
-    slippage: string,
-    shouldUnwrapNativeAsset?: boolean,
-    singleTokenOut?: string
-  ) => Promise<ExitExactBPTInAttributes>;
-```
-
-where:
-
-```js
 /**
- * Exit exact BPT in transaction parameters
- * @param to Address that will execute the transaction (vault address)
- * @param functionName Function name to be called (exitPool)
- * @param attributes Transaction attributes ready to be encoded
- * @param data Encoded transaction data
- * @param expectedAmountsOut Expected amounts out of exit transaction
- * @param minAmountsOut Minimum amounts out of exit transaction considering slippage tolerance
+ * Builds generalised join transaction
+ *
+ * @param poolId          Pool id
+ * @param tokens          Token addresses
+ * @param amounts         Token amounts in EVM scale
+ * @param userAddress     User address
+ * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+ * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+ * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+ * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+ * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
  */
-export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
+generalisedJoin(
+  poolId: string,
+  tokens: string[],
+  amounts: string[],
+  userAddress: string,
+  slippage: string,
+  signer: JsonRpcSigner,
+  simulationType: SimulationType,
+  authorisation?: string
+): Promise<{
   to: string;
-  functionName: string;
-  attributes: ExitPool;
-  data: string;
-  expectedAmountsOut: string[];
-  minAmountsOut: string[];
-}
+  encodedCall: string;
+  minOut: string;
+  expectedOut: string;
+  priceImpact: string;
+}>
 ```
 
-[Example](./examples/exitExactBPTIn.ts)<br/><br/>
+[Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/joinGeneralised.ts)
+
+
 Available pool types:
 
-- Weighted [Example](./examples/exitExactBPTIn.ts)
-- Composable Stable [Example](./examples/pools/composable-stable/exit.ts)
+- Weighted [Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/exitExactBPTIn.ts)
+- Composable Stable [Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/pools/composable-stable/exit.ts)
   - OBS: **Only ComposableStable >V2 supports proportional exits**
 - Meta Stable
 - Stable
@@ -561,11 +243,11 @@ export interface ExitExactTokensOutAttributes extends ExitPoolAttributes {
 }
 ```
 
-[Example](./examples/exitExactTokensOut.ts)
+[Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/exitExactTokensOut.ts)
 <br/><br/>
 Available pool types:
 
-- Weighted [Example](./examples/exitExactTokensOut.ts)
+- Weighted [Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/exitExactTokensOut.ts)
 - Composable Stable
 - Meta Stable
 - Stable
@@ -615,7 +297,7 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
   }>
 ```
 
-[Example](./examples/exitGeneralised.ts)
+[Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/exitGeneralised.ts)
 
 ## Create Pool
 
@@ -649,7 +331,7 @@ create({
 }) => TransactionRequest
 ```
 
-[Example](./examples/pools/weighted/create.ts)
+[Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/pools/weighted/create.ts)
 
 ### #createComposableStablePool
 
@@ -685,7 +367,7 @@ create({
 }) => TransactionRequest
 ```
 
-[Example](./examples/pools/composable-stable/create.ts)
+[Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/pools/composable-stable/create.ts)
 
 ## RelayerService
 
@@ -702,17 +384,18 @@ const relayer = new relayerService(
 
 Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable. ExactIn - Exact amount of tokenIn to use in swap.
 
-@param tokensIn - array to token addresses for swapping as tokens in.
-@param aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
-@param amountsIn - amounts to be swapped for each token in.
-@param rates - The rate used to convert wrappedToken to underlying.
-@param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
-@param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
-@param fetchPools - Set whether SOR will fetch updated pool info.
-@returns Transaction data with calldata. Outputs.amountsOut has final amounts out of unwrapped tokens.
-
 ```js
-async relayer.swapUnwrapAaveStaticExactIn(
+/**
+ * @param tokensIn - array to token addresses for swapping as tokens in.
+ * @param aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
+ * @param amountsIn - amounts to be swapped for each token in.
+ * @param rates - The rate used to convert wrappedToken to underlying.
+ * @param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
+ * @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+ * @param fetchPools - Set whether SOR will fetch updated pool info.
+ * @returns Transaction data with calldata. Outputs.amountsOut has final amounts out of unwrapped tokens.
+ */
+relayer.swapUnwrapAaveStaticExactIn(
     tokensIn: string[],
     aaveStaticTokens: string[],
     amountsIn: BigNumberish[],
@@ -726,23 +409,24 @@ async relayer.swapUnwrapAaveStaticExactIn(
 ): Promise<TransactionData>
 ```
 
-[Example](./examples/relayerSwapUnwrap.ts)
+[Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/relayerSwapUnwrap.ts)
 
 ### #swapUnwrapAaveStaticExactOut
 
 Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable. ExactOut - Exact amount of tokens out are used for swaps.
 
-@param tokensIn - array to token addresses for swapping as tokens in.
-@param aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
-@param amountsUnwrapped - amounts of unwrapped tokens out.
-@param rates - The rate used to convert wrappedToken to underlying.
-@param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
-@param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
-@param fetchPools - Set whether SOR will fetch updated pool info.
-@returns Transaction data with calldata. Outputs.amountsIn has the amounts of tokensIn.
-
 ```js
-async relayer.swapUnwrapAaveStaticExactOut(
+/**
+ * @param tokensIn - array to token addresses for swapping as tokens in.
+ * @param aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
+ * @param amountsUnwrapped - amounts of unwrapped tokens out.
+ * @param rates - The rate used to convert wrappedToken to underlying.
+ * @param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
+ * @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+ * @param fetchPools - Set whether SOR will fetch updated pool info.
+ * @returns Transaction data with calldata. Outputs.amountsIn has the amounts of tokensIn.
+ */
+relayer.swapUnwrapAaveStaticExactOut(
     tokensIn: string[],
     aaveStaticTokens: string[],
     amountsUnwrapped: BigNumberish[],
@@ -756,26 +440,27 @@ async relayer.swapUnwrapAaveStaticExactOut(
 ): Promise<TransactionData>
 ```
 
-[Example](./examples/relayerSwapUnwrap.ts)
+[Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/relayerSwapUnwrap.ts)
 
 ### #exitPoolAndBatchSwap
 
 Chains poolExit with batchSwap to final tokens.
 
-@param params:
-@param exiter - Address used to exit pool.
-@param swapRecipient - Address that receives final tokens.
-@param poolId - Id of pool being exited.
-@param exitTokens - Array containing addresses of tokens to receive after exiting pool. (must have the same length and order as the array returned by `getPoolTokens`.)
-@param userData - Encoded exitPool data.
-@param minExitAmountsOut - Minimum amounts of exitTokens to receive when exiting pool.
-@param finalTokensOut - Array containing the addresses of the final tokens out.
-@param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
-@param fetchPools - Set whether SOR will fetch updated pool info.
-@returns Transaction data with calldata. Outputs.amountsOut has amounts of finalTokensOut returned.
-
 ```js
-async relayer.exitPoolAndBatchSwap(
+/**
+ * @param params:
+ * @param exiter - Address used to exit pool.
+ * @param swapRecipient - Address that receives final tokens.
+ * @param poolId - Id of pool being exited.
+ * @param exitTokens - Array containing addresses of tokens to receive after exiting pool. (must have the same length and order as the array returned by `getPoolTokens`.)
+ * @param userData - Encoded exitPool data.
+ * @param minExitAmountsOut - Minimum amounts of exitTokens to receive when exiting pool.
+ * @param finalTokensOut - Array containing the addresses of the final tokens out.
+ * @param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
+ * @param fetchPools - Set whether SOR will fetch updated pool info.
+ * @returns Transaction data with calldata. Outputs.amountsOut has amounts of finalTokensOut returned.
+ */
+relayer.exitPoolAndBatchSwap(
     params: ExitAndBatchSwapInput {
         exiter: string;
         swapRecipient: string;
@@ -790,7 +475,7 @@ async relayer.exitPoolAndBatchSwap(
 ): Promise<TransactionData>
 ```
 
-[Example](./examples/relayerExitPoolAndBatchSwap.ts)
+[Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/relayerExitPoolAndBatchSwap.ts)
 
 ## Pools Impermanent Loss
 
@@ -798,13 +483,13 @@ async relayer.exitPoolAndBatchSwap(
 
 #### Service
 
-![class-diagram](IL-class.png)
+![class-diagram](/images/IL-class.png)
 
 #### Algorithm
 
 Using the variation delta formula:
 
-![img.png](img.png)
+![img.png](/images/img.png)
 
 where **𝚫P<sup>i</sup>** represents the difference between the price for a single token at the date of joining the pool and the current price.
 
@@ -847,13 +532,11 @@ const IL = poolValueDelta / holdValueDelta - 1;
 #### Usage
 
 ```javascript
-async impermanentLoss(
+impermanentLoss(
   timestamp: number, // the UNIX timestamp from which the IL is desired
   pool: Pool // the pool on which the IL must be calculated
 ): Promise<number>
-```
 
-```javascript
 const pool = await sdk.pools.find(poolId);
 const joins = (await sdk.data.findByUser(userAddress)).filter(
   (it) => it.type === 'Join' && it.poolId === poolId
@@ -862,13 +545,13 @@ const join = joins[0];
 const IL = await pools.impermanentLoss(join.timestamp, pool);
 ```
 
-[Example](./examples/pools/impermanentLoss.ts)
+[Example](https://github.com/balancer-labs/balancer-sdk/blob/master/balancer-js/examples/pools/impermanentLoss.ts)
 
 ## Claim Tokens
 
 ### Service
 
-![classes](./claim-incentives-class.png)
+![classes](/images/claim-incentives-class.png)
 
 ### Claim Tokens for a veBAL Holders
 
@@ -937,6 +620,58 @@ if (MAINNET) {
   return { to: gaugeClaimHelperAddress, data: callData };
 }
 ```
+
+## Examples
+
+You can run each example with `npm run examples:run -- examples/exampleName.ts`
+
+**In order to run the examples provided, you need to follow the next steps:**
+
+1. git clone https://github.com/balancer-labs/balancer-sdk.git
+2. cd balancer-sdk
+3. cd balancer-js
+4. Create a .env file in the balancer-js folder
+5. In the .env file you will need to define and initialize the following variables
+
+   We have defined both Alchemy and Infura, because some of the examples use Infura, others use Alchemy. However, feel free to modify accordingly and use your favourite one.
+   ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT]  
+   INFURA=[Infura API KEY]  
+   TRADER_KEY=[MetaMask PRIVATE KEY]  
+   Some examples also require the following Tenderly config parameters to be defined:
+   TENDERLY_ACCESS_KEY=[TENDERLY API ACCESS KEY]
+   TENDERLY_PROJECT=[TENDERLY PROJECT NAME]
+   TENDERLY_USER=[TENDERLY USERNAME]
+
+6. Run 'npm run node', this runs a local Hardhat Network
+7. Open a new terminal
+8. cd to balancer-js
+9. Install ts-node using: npm install ts-node
+10. Install tsconfig-paths using: npm install --save-dev tsconfig-paths
+11. Run one of the provided examples (eg: npm run examples:run -- examples/join.ts)
+
+In some examples we present a way to make end to end trades against mainnet state. To run them you will need to setup a localhost test node using tools like ganache, hardhat, anvil.
+
+Installation instructions for:
+
+- [Hardhat](https://hardhat.org/getting-started/#installation)
+
+  To start a MAINNET forked node:
+
+  - Set env var: `ALCHEMY_URL=[ALCHEMY HTTPS ENDPOINT for MAINNET]`
+  - Run: `npm run node`
+
+  To start a GOERLI forked node:
+
+  - Set env var: `ALCHEMY_URL_GOERLI=[ALCHEMY HTTPS ENDPOINT for GOERLI]`
+  - Run: `npm run node:goerli`
+
+- [Anvil](https://github.com/foundry-rs/foundry/tree/master/anvil#installation) - use with caution, still experimental.
+
+  To start a forked node:
+
+  ```
+  anvil -f FORKABLE_RPC_URL (optional pinned block: --fork-block-number XXX)
+  ```
 
 ## Licensing
 

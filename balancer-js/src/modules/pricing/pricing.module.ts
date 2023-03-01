@@ -1,4 +1,4 @@
-import { Swaps } from '@/modules/swaps/swaps.module';
+import { Sor } from '@/modules/sor/sor.module';
 import { BalancerSdkConfig } from '@/types';
 import {
   SubgraphPoolBase,
@@ -8,14 +8,17 @@ import {
 } from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
+/**
+ * Spot pricing module.
+ */
 export class Pricing {
-  private readonly swaps: Swaps;
+  private readonly sor: Sor;
 
-  constructor(config: BalancerSdkConfig, swaps?: Swaps) {
-    if (swaps) {
-      this.swaps = swaps;
+  constructor(config: BalancerSdkConfig, sor?: Sor) {
+    if (sor) {
+      this.sor = sor;
     } else {
-      this.swaps = new Swaps(config);
+      this.sor = new Sor(config);
     }
   }
 
@@ -24,7 +27,7 @@ export class Pricing {
    * @returns {boolean} Boolean indicating whether pools data was fetched correctly (true) or not (false).
    */
   async fetchPools(): Promise<boolean> {
-    return this.swaps.fetchPools();
+    return this.sor.fetchPools();
   }
 
   /**
@@ -32,11 +35,12 @@ export class Pricing {
    * @returns {SubgraphPoolBase[]} pools list.
    */
   public getPools(): SubgraphPoolBase[] {
-    return this.swaps.getPools();
+    return this.sor.getPools();
   }
 
   /**
    * Calculates Spot Price for a token pair - finds most liquid path and uses this as reference SP.
+   *
    * @param { string } tokenIn Token in address.
    * @param { string } tokenOut Token out address.
    * @param { SubgraphPoolBase[] } pools Optional - Pool data. Will be fetched via dataProvider if not supplied.
@@ -56,7 +60,7 @@ export class Pricing {
     // We find the path for the pair with the highest liquidity and use this as the ref SP
     const poolsDict = parseToPoolsDict(pools, 0);
     // This creates all paths for tokenIn>Out ordered by liquidity
-    const paths = this.swaps.sor.routeProposer.getCandidatePathsFromDict(
+    const paths = this.sor.routeProposer.getCandidatePathsFromDict(
       tokenIn,
       tokenOut,
       0,

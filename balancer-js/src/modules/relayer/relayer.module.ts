@@ -39,11 +39,37 @@ export * from './types';
 
 const relayerLibrary = new Interface(relayerLibraryAbi);
 
+/**
+ * Relayers are (user opt-in, audited) contracts that can make calls to the vault (with the transaction “sender” being any arbitrary address) and use the sender’s ERC20 vault allowance, internal balance or BPTs on their behalf.
+ *
+ * Relayer instance can be created directly:
+ * ```js
+ * import { Relayer } from '@balancer-labs/sdk';
+ *
+ * const relayer = new Relayer({
+ *   network: 1,
+ *   rpcUrl: 'https://rpc.ankr.com/eth'
+ * })
+ * ```
+ * or accessed from [[BalancerSDK]] instance.
+ * ```js
+ * import { BalancerSDK } from '@balancer-labs/sdk';
+ *
+ * const balancer = new BalancerSDK({
+ *   network: 1,
+ *   rpcUrl: 'https://rpc.ankr.com/eth',
+ * });
+ * const { relayer } = balancer;
+ * ```
+ */
 export class Relayer {
   private readonly swaps: Swaps;
 
-  static CHAINED_REFERENCE_TEMP_PREFIX = 'ba10'; // Temporary reference: it is deleted after a read.
-  static CHAINED_REFERENCE_READONLY_PREFIX = 'ba11'; // Read-only reference: it is not deleted after a read.
+  /** Temporary reference: it is deleted after a read. */
+  static CHAINED_REFERENCE_TEMP_PREFIX = 'ba10';
+
+  /** Read-only reference: it is not deleted after a read. */
+  static CHAINED_REFERENCE_READONLY_PREFIX = 'ba11';
 
   constructor(swapsOrConfig: Swaps | BalancerSdkConfig) {
     if (swapsOrConfig instanceof Swaps) {
@@ -423,7 +449,8 @@ export class Relayer {
   }
 
   /**
-   * swapUnwrapAaveStaticExactIn Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable.
+   * Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable.
+   *
    * @param {string[]} tokensIn - array to token addresses for swapping as tokens in.
    * @param {string[]} aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
    * @param {string[]} amountsIn - amounts to be swapped for each token in.
@@ -502,7 +529,8 @@ export class Relayer {
   }
 
   /**
-   * swapUnwrapAaveStaticExactOut Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable.
+   * Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable.
+   *
    * @param {string[]} tokensIn - array to token addresses for swapping as tokens in.
    * @param {string[]} aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
    * @param {string[]} amountsUnwrapped - amounts of unwrapped tokens out.
@@ -579,6 +607,7 @@ export class Relayer {
 
   /**
    * Creates encoded multicalls using swap outputs as input amounts for token unwrap.
+   *
    * @param wrappedTokens
    * @param swapType
    * @param swaps
@@ -641,6 +670,9 @@ export class Relayer {
     return [encodedBatchSwap, ...unwrapCalls];
   }
 
+  /**
+   * Creates a signature for a relayer approval.
+   */
   static signRelayerApproval = async (
     relayerAddress: string,
     signerAddress: string,

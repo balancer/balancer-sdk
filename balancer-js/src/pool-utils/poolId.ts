@@ -4,6 +4,7 @@ import invariant from 'tiny-invariant';
 
 /**
  * Splits a poolId into its components, i.e. pool address, pool specialization and its nonce
+ * @category Helpers
  * @param poolId - a bytes32 string of the pool's ID
  * @returns an object with the decomposed poolId
  */
@@ -23,6 +24,7 @@ export const splitPoolId = (
 
 /**
  * Extracts a pool's address from its poolId
+ * @category Helpers
  * @param poolId - a bytes32 string of the pool's ID
  * @returns the pool's address
  */
@@ -33,6 +35,7 @@ export const getPoolAddress = (poolId: string): string => {
 
 /**
  * Extracts a pool's specialization from its poolId
+ * @category Helpers
  * @param poolId - a bytes32 string of the pool's ID
  * @returns the pool's specialization
  */
@@ -48,6 +51,7 @@ export const getPoolSpecialization = (poolId: string): PoolSpecialization => {
 
 /**
  * Extracts a pool's nonce from its poolId
+ * @category Helpers
  * @param poolId - a bytes32 string of the pool's ID
  * @returns the pool's nonce
  */

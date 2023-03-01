@@ -50,6 +50,7 @@ interface SubgraphSubPool extends SubgraphSubPoolFragment {
  * Access pools using generated subgraph client.
  *
  * Balancer's subgraph URL: https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
+ * @internal
  */
 export class PoolsSubgraphRepository
   implements Findable<Pool, PoolAttribute>, Searchable<Pool>

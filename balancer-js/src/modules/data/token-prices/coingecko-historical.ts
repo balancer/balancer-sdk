@@ -11,9 +11,6 @@ import { tokenAddressForPricing } from '@/lib/utils';
 
 const HOUR = 60 * 60;
 
-/**
- * Simple coingecko price source implementation. Configurable by network and token addresses.
- */
 export class CoingeckoHistoricalPriceRepository implements Findable<Price> {
   prices: TokenPrices = {};
   nativePrice?: Promise<Price>;

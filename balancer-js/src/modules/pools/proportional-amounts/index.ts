@@ -6,11 +6,7 @@ import { BigNumber } from '@ethersproject/bignumber';
  * Useful for calculating the amounts of tokens to be sent to a pool when joining or swapping.
  * When using proportional amounts to join a pool the price impact will be minimal.
  *
- * @param pool - Pool object
- * @param token - Token address in relation to which the amounts are calculated
- * @param amount - Amount of token
- * @returns Object with tokens and amounts
- * @example
+ * ```js
  * const pool = {
  *   id: '0x0000',
  *   tokens: [
@@ -20,16 +16,24 @@ import { BigNumber } from '@ethersproject/bignumber';
  * }
  *
  * const { tokens, amounts } = proportionalAmounts(pool, '0x1234', '1000000000000000000')
+ * ```
  */
 export const proportionalAmounts = (
+  /** Pool object */
   pool: {
+    /** Pool ID */
     id: string;
+    /** List of pool tokens */
     tokens: { address: string; balance: string; decimals?: number }[];
   },
+  /** Token address in relation to which the amounts are calculated */
   token: string,
+  /** Amount of token */
   amount: string
 ): {
+  /** list of tokens */
   tokens: string[];
+  /** list of amounts */
   amounts: string[];
 } => {
   const tokensWithoutBpt = pool.tokens.filter(

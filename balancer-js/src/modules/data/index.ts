@@ -48,7 +48,18 @@ import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json'
 import { SubgraphPriceRepository } from './token-prices/subgraph';
 import { createSubgraphClient } from '../subgraph/subgraph';
 
+/**
+ * Data sources
+ * @category Data
+ */
 export class Data implements BalancerDataRepositories {
+  /**
+   * The fallback provider takes multiple PoolRepository's in an array and uses them in order
+   * falling back to the next one if a request times out.
+   *
+   * This is useful for using the Balancer API while being able to fall back to the graph if it is down
+   * to ensure Balancer is maximally decentralized.
+   */
   pools;
   poolsForSor;
   poolsOnChain;
@@ -56,13 +67,25 @@ export class Data implements BalancerDataRepositories {
   poolShares;
   poolGauges;
   gaugeShares;
+  /**
+   * Price provider that combines the coingecko price with the aave rates and fallbacks to the subgraph if coingecko fails
+   */
   tokenPrices;
+  /**
+   * Coingecko price source
+   */
   tokenHistoricalPrices;
   tokenMeta;
+  /**
+   * Getting liquidity gauge state via RPC multicall and subgraph
+   */
   liquidityGauges;
   feeDistributor;
   feeCollector;
   protocolFees;
+  /**
+   * Fetching token yields from external sources
+   */
   tokenYields;
   blockNumbers;
   poolJoinExits;

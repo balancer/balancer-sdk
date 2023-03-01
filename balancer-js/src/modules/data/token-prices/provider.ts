@@ -1,6 +1,10 @@
 import type { Findable, Price } from '@/types';
 import { IAaveRates } from './aave-rates';
 
+/**
+ * Price provider that combines the coingecko price with the aave rates and fallbacks to the subgraph if coingecko fails
+ * @internal
+ */
 export class TokenPriceProvider implements Findable<Price> {
   constructor(
     private coingeckoRepository: Findable<Price>,

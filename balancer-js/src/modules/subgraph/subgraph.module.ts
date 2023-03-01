@@ -4,6 +4,11 @@ import { getNetworkConfig } from '../sdk.helpers';
 import { getSdk } from './generated/balancer-subgraph-types';
 import { SubgraphClient } from './subgraph';
 
+/**
+ * Subgraph client for interacting with Balancer subgraph.
+ *
+ * @category Data
+ */
 export class Subgraph {
   public readonly url: string;
   public readonly client: SubgraphClient;

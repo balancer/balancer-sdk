@@ -13,6 +13,7 @@ import {
  *
  * This is useful for using the Balancer API while being able to fall back to the graph if it is down
  * to ensure Balancer is maximally decentralized.
+ * @internal
  **/
 export class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
   currentProviderIdx: number;
