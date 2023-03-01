@@ -1,5 +1,9 @@
 import { Pool } from '@/types';
-import { parsePoolInfoForProtocolFee, replace } from '@/lib/utils';
+import {
+  parsePoolInfo,
+  parsePoolInfoForProtocolFee,
+  replace,
+} from '@/lib/utils';
 import { calculateBalanceGivenInvariantAndAllOtherBalances } from '@/pool-stable/calculate-balance-given-invariant';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
 
@@ -10,34 +14,34 @@ export default class StableProtocolFee {
    */
   static calculateProtocolFees = (pool: Pool): bigint[] => {
     const protocolFeeAmount =
-      StableProtocolFee.calDueTokenProtocolSwapFeeAmount(
-        parsePoolInfoForProtocolFee(pool)
-      );
+      StableProtocolFee.calDueTokenProtocolSwapFeeAmount(parsePoolInfo(pool));
     return protocolFeeAmount;
   };
 
   static calDueTokenProtocolSwapFeeAmount = ({
-    amplificationParameter,
-    balances,
-    lastInvariant,
+    parsedAmp,
+    upScaledBalances,
+    lastJoinExitInvariant,
     higherBalanceTokenIndex,
     protocolSwapFeePct,
   }: {
-    amplificationParameter: string;
-    balances: string[];
-    lastInvariant: string;
+    parsedAmp: string;
+    upScaledBalances: string[];
+    lastJoinExitInvariant: string;
     higherBalanceTokenIndex: number;
     protocolSwapFeePct: string;
   }): bigint[] => {
-    const dueTokenProtocolFeeAmounts = Array(balances.length).fill(BigInt(0));
+    const dueTokenProtocolFeeAmounts = Array(upScaledBalances.length).fill(
+      BigInt(0)
+    );
     const finalBalanceFeeToken =
       calculateBalanceGivenInvariantAndAllOtherBalances({
-        amplificationParameter: BigInt(amplificationParameter),
-        balances: balances.map(BigInt),
-        invariant: BigInt(lastInvariant),
+        amplificationParameter: BigInt(parsedAmp),
+        balances: upScaledBalances.map(BigInt),
+        invariant: BigInt(lastJoinExitInvariant),
         tokenIndex: higherBalanceTokenIndex,
       });
-    const higherBalance = BigInt(balances[higherBalanceTokenIndex]);
+    const higherBalance = BigInt(upScaledBalances[higherBalanceTokenIndex]);
     if (higherBalance < finalBalanceFeeToken) {
       // This shouldn't happen outside of rounding errors, but have this safeguard nonetheless to prevent the Pool
       // from entering a locked state in which joins and exits revert while computing accumulated swap fees.
@@ -48,7 +52,6 @@ export default class StableProtocolFee {
       fees,
       BigInt(protocolSwapFeePct)
     );
-    console.log(higherBalanceTokenIndex);
     return replace(
       dueTokenProtocolFeeAmounts,
       higherBalanceTokenIndex,

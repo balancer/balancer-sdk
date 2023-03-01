@@ -13,21 +13,24 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 export const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
 interface ParsedPoolInfo {
-  parsedTokens: string[];
-  parsedDecimals: string[];
-  parsedBalances: string[];
-  parsedWeights: string[];
-  parsedPriceRates: string[];
+  bptIndex: number;
+  higherBalanceTokenIndex: number;
+  lastJoinExitInvariant: string;
   parsedAmp: string;
-  parsedTotalShares: string;
+  parsedBalances: string[];
+  parsedBalancesWithoutBpt: string[];
+  parsedDecimals: string[];
+  parsedPriceRates: string[];
+  parsedPriceRatesWithoutBpt: string[];
   parsedSwapFee: string;
-  upScaledBalances: string[];
+  parsedTokens: string[];
+  parsedTokensWithoutBpt: string[];
+  parsedTotalShares: string;
+  parsedWeights: string[];
+  protocolSwapFeePct: string;
   scalingFactors: bigint[];
   scalingFactorsWithoutBpt: bigint[];
-  parsedTokensWithoutBpt: string[];
-  parsedBalancesWithoutBpt: string[];
-  bptIndex: number;
-  parsedPriceRatesWithoutBpt: string[];
+  upScaledBalances: string[];
   upScaledBalancesWithoutBpt: string[];
 }
 
@@ -107,7 +110,13 @@ export const parsePoolInfo = (
     : defaultOne;
   const parsedTotalShares = parseFixed(pool.totalShares, 18).toString();
   const parsedSwapFee = parseFixed(pool.swapFee, 18).toString();
-
+  const higherBalanceTokenIndex = upScaledBalances
+    .map(BigInt)
+    .indexOf(SolidityMaths.max(...upScaledBalances.map(BigInt)));
+  const protocolSwapFeePct = parseFixed(
+    pool.protocolSwapFeeCache,
+    18
+  ).toString();
   const scalingFactorsWithoutBpt: bigint[] = [],
     parsedTokensWithoutBpt: string[] = [],
     parsedBalancesWithoutBpt: string[] = [],
@@ -127,21 +136,24 @@ export const parsePoolInfo = (
   }
 
   return {
-    parsedTokens,
-    parsedDecimals,
-    parsedBalances,
-    parsedWeights,
-    parsedPriceRates,
+    bptIndex,
+    higherBalanceTokenIndex,
+    lastJoinExitInvariant: pool.lastJoinExitInvariant || '0',
     parsedAmp,
-    parsedTotalShares,
+    parsedBalances,
+    parsedBalancesWithoutBpt,
+    parsedDecimals,
+    parsedPriceRates,
+    parsedPriceRatesWithoutBpt,
     parsedSwapFee,
-    upScaledBalances,
+    parsedTokens,
+    parsedTokensWithoutBpt,
+    parsedTotalShares,
+    parsedWeights,
+    protocolSwapFeePct,
     scalingFactors,
     scalingFactorsWithoutBpt,
-    parsedTokensWithoutBpt,
-    parsedBalancesWithoutBpt,
-    bptIndex,
-    parsedPriceRatesWithoutBpt,
+    upScaledBalances,
     upScaledBalancesWithoutBpt,
   };
 };
@@ -178,16 +190,9 @@ export const parsePoolInfoForProtocolFee = (
     scalingFactors
   ).map((b) => b.toString());
   const poolTokensBalances = upScaledBalances.map((balance) => BigInt(balance));
-  const higherBalanceTokenIndex = poolTokensBalances.indexOf(
-    SolidityMaths.max(...poolTokensBalances)
-  );
   const parsedAmp = pool.amp
     ? parseFixed(pool.amp, AMP_PRECISION).toString() // Solidity maths uses precison method for amp that must be replicated
     : ONE.toString();
-  const protocolSwapFeePct = parseFixed(
-    pool.protocolSwapFeeCache || '0.2',
-    18
-  ).toString();
   if (!pool.lastJoinExitInvariant) {
     throw new BalancerError(BalancerErrorCode.MISSING_LAST_JOIN_EXIT_INVARIANT);
   }
