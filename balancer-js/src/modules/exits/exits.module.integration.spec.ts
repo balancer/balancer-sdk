@@ -34,15 +34,15 @@ import { ADDRESSES } from '@/test/lib/constants';
 
 dotenv.config();
 
-const TEST_BOOSTED = false;
-const TEST_BOOSTED_META = false;
-const TEST_BOOSTED_META_ALT = false;
-const TEST_BOOSTED_META_BIG = false;
-const TEST_BOOSTED_WEIGHTED_SIMPLE = false;
-const TEST_BOOSTED_WEIGHTED_GENERAL = false;
-const TEST_BOOSTED_WEIGHTED_META = false;
+const TEST_BOOSTED = true;
+const TEST_BOOSTED_META = true;
+const TEST_BOOSTED_META_ALT = true;
+const TEST_BOOSTED_META_BIG = true;
+const TEST_BOOSTED_WEIGHTED_SIMPLE = true;
+const TEST_BOOSTED_WEIGHTED_GENERAL = true;
+const TEST_BOOSTED_WEIGHTED_META = true;
 const TEST_BOOSTED_WEIGHTED_META_ALT = true;
-const TEST_BOOSTED_WEIGHTED_META_GENERAL = false;
+const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 
 /*
  * Testing on GOERLI
@@ -116,11 +116,24 @@ const { contracts, contractAddresses } = new Contracts(
 const relayer = contractAddresses.relayerV4 as string;
 
 const testFlow = async (
-  pool: { id: string; address: string },
+  pool: { id: string; address: string; slot: number },
   amount: string,
   simulationType = SimulationType.VaultModel
 ) => {
   const slippage = '10'; // 10 bps = 0.1%
+
+  const tokens = [pool.address];
+  const slots = [pool.slot];
+  const balances = [amount];
+
+  await forkSetup(
+    signer,
+    tokens,
+    slots,
+    balances,
+    jsonRpcUrl as string,
+    blockNumber
+  );
 
   const signerAddress = await signer.getAddress();
   const authorisation = await Relayer.signRelayerApproval(
@@ -185,21 +198,6 @@ describe('generalised exit execution', async () => {
     const pool = addresses.bbamaiweth;
     const amount = parseFixed('0.02', pool.decimals).toString();
 
-    beforeEach(async () => {
-      const tokens = [pool.address];
-      const slots = [pool.slot];
-      const balances = [amount];
-
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        blockNumber
-      );
-    });
-
     it('should exit pool correctly', async () => {
       await testFlow(pool, amount);
     });
@@ -215,20 +213,6 @@ describe('generalised exit execution', async () => {
     const pool = addresses.boostedMeta1;
     const amount = parseFixed('0.05', pool.decimals).toString();
 
-    beforeEach(async () => {
-      const tokens = [pool.address];
-      const slots = [pool.slot];
-      const balances = [amount];
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        blockNumber
-      );
-    });
-
     it('should exit pool correctly', async () => {
       await testFlow(pool, amount);
     });
@@ -243,20 +227,6 @@ describe('generalised exit execution', async () => {
     if (!TEST_BOOSTED_META_ALT) return true;
     const pool = addresses.boostedMetaAlt1;
     const amount = parseFixed('0.05', pool.decimals).toString();
-
-    beforeEach(async () => {
-      const tokens = [pool.address];
-      const slots = [pool.slot];
-      const balances = [amount];
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        blockNumber
-      );
-    });
 
     it('should exit pool correctly', async () => {
       await testFlow(pool, amount);
@@ -274,20 +244,6 @@ describe('generalised exit execution', async () => {
     if (!TEST_BOOSTED_META_BIG) return true;
     const pool = addresses.boostedMetaBig1;
     const amount = parseFixed('0.05', pool.decimals).toString();
-
-    beforeEach(async () => {
-      const tokens = [pool.address];
-      const slots = [pool.slot];
-      const balances = [amount];
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        blockNumber
-      );
-    });
 
     context('using simulation type VaultModel', async () => {
       it('should exit pool correctly', async () => {
@@ -318,20 +274,6 @@ describe('generalised exit execution', async () => {
     const pool = addresses.boostedWeightedSimple1;
     const amount = parseFixed('0.05', pool.decimals).toString();
 
-    beforeEach(async () => {
-      const tokens = [pool.address];
-      const slots = [pool.slot];
-      const balances = [amount];
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        blockNumber
-      );
-    });
-
     it('should exit pool correctly', async () => {
       await testFlow(pool, amount);
     });
@@ -349,20 +291,6 @@ describe('generalised exit execution', async () => {
     const pool = addresses.boostedMeta1;
     const amount = parseFixed('0.05', pool.decimals).toString();
 
-    beforeEach(async () => {
-      const tokens = [pool.address];
-      const slots = [pool.slot];
-      const balances = [amount];
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        blockNumber
-      );
-    });
-
     it('should exit pool correctly', async () => {
       await testFlow(pool, amount);
     });
@@ -379,20 +307,6 @@ describe('generalised exit execution', async () => {
     const pool = addresses.boostedWeightedMeta1;
     const amount = parseFixed('0.05', pool.decimals).toString();
 
-    beforeEach(async () => {
-      const tokens = [pool.address];
-      const slots = [pool.slot];
-      const balances = [amount];
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        blockNumber
-      );
-    });
-
     it('should exit pool correctly', async () => {
       await testFlow(pool, amount);
     });
@@ -407,20 +321,6 @@ describe('generalised exit execution', async () => {
     if (!TEST_BOOSTED_WEIGHTED_META_ALT) return true;
     const pool = addresses.boostedWeightedMetaAlt1;
     const amount = parseFixed('0.01', pool.decimals).toString();
-
-    beforeEach(async () => {
-      const tokens = [pool.address];
-      const slots = [pool.slot];
-      const balances = [amount];
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        blockNumber
-      );
-    });
 
     it('should exit pool correctly', async () => {
       await testFlow(pool, amount);
@@ -438,20 +338,6 @@ describe('generalised exit execution', async () => {
     if (!TEST_BOOSTED_WEIGHTED_META_GENERAL) return true;
     const pool = addresses.boostedWeightedMetaGeneral1;
     const amount = parseFixed('0.05', pool.decimals).toString();
-
-    beforeEach(async () => {
-      const tokens = [pool.address];
-      const slots = [pool.slot];
-      const balances = [amount];
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        blockNumber
-      );
-    });
 
     context('using simulation type VaultModel', async () => {
       it('should exit pool correctly', async () => {
