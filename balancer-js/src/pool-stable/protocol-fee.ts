@@ -48,6 +48,7 @@ export default class StableProtocolFee {
       fees,
       BigInt(protocolSwapFeePct)
     );
+    console.log(higherBalanceTokenIndex);
     return replace(
       dueTokenProtocolFeeAmounts,
       higherBalanceTokenIndex,
