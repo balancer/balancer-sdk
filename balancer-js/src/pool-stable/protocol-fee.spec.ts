@@ -45,5 +45,5 @@ const pool = {
 describe('calculate protocol fee amount of the stable pool', () => {
   const feeToPay = StableProtocolFee.calculateProtocolFees(pool);
   const expectedFeeToPay = BigInt('14511018437768543911712');
-  expect(feeToPay[1]).to.be.equal(expectedFeeToPay);
+  expect(feeToPay[0]).to.be.equal(expectedFeeToPay);
 });
