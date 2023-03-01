@@ -1,5 +1,4 @@
 import { Pool } from '@/types';
-import { calculateInvariant } from '@/pool-weighted/calculate-invariant';
 import { parseFixed, parsePoolInfo } from '@/lib/utils';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { calcDueTokenProtocolSwapFeeAmount } from '@/pool-weighted/calculate-protocol-fee-token-amount';
