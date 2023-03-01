@@ -1,13 +1,17 @@
 import { Pool } from '@/types';
 import { calculateInvariant } from '@/pool-weighted/calculate-invariant';
-import { parseFixed, parsePoolInfoForProtocolFee } from '@/lib/utils';
+import { parseFixed, parsePoolInfo } from '@/lib/utils';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { calcDueTokenProtocolSwapFeeAmount } from '@/pool-weighted/calculate-protocol-fee-token-amount';
+import { WeightedMaths } from '@balancer-labs/sor';
 
 export default class WeightedV1ProtocolFee {
   static calculateProtocolFees(pool: Pool): bigint[] {
-    const parsedPool = parsePoolInfoForProtocolFee(pool);
-    const currentInvariant = calculateInvariant(parsedPool);
+    const parsedPool = parsePoolInfo(pool);
+    const currentInvariant = WeightedMaths._calculateInvariant(
+      parsedPool.parsedWeights.map(BigInt),
+      parsedPool.upScaledBalances.map(BigInt)
+    );
     const protocolFeeAmounts = WeightedV1ProtocolFee.getDueProtocolFeeAmounts({
       ...parsedPool,
       currentInvariant,
@@ -16,30 +20,30 @@ export default class WeightedV1ProtocolFee {
   }
 
   static getDueProtocolFeeAmounts = ({
-    balances,
-    normalizedWeights,
-    lastInvariant,
+    upScaledBalances,
+    parsedWeights,
+    lastJoinExitInvariant,
     currentInvariant,
     protocolSwapFeePct,
   }: {
-    balances: string[];
-    lastInvariant: string;
-    normalizedWeights: string[];
+    upScaledBalances: string[];
+    lastJoinExitInvariant: string;
+    parsedWeights: string[];
     protocolSwapFeePct: string;
     currentInvariant: bigint;
   }): bigint[] => {
-    const protocolFeeAmounts = Array(balances.length).fill(BigInt(0));
+    const protocolFeeAmounts = Array(upScaledBalances.length).fill(BigInt(0));
     if (BigInt(protocolSwapFeePct) === BigInt(0)) {
       return protocolFeeAmounts;
     }
-    const normalizedWeightsBigInt = normalizedWeights.map(BigInt);
+    const normalizedWeightsBigInt = parsedWeights.map(BigInt);
     const maxWeightTokenIndex = normalizedWeightsBigInt.indexOf(
       SolidityMaths.max(...normalizedWeightsBigInt)
     );
     protocolFeeAmounts[maxWeightTokenIndex] = calcDueTokenProtocolSwapFeeAmount(
-      BigInt(balances[maxWeightTokenIndex]),
+      BigInt(upScaledBalances[maxWeightTokenIndex]),
       normalizedWeightsBigInt[maxWeightTokenIndex],
-      BigInt(lastInvariant),
+      BigInt(lastJoinExitInvariant),
       currentInvariant,
       parseFixed(protocolSwapFeePct, 18).toBigInt()
     );

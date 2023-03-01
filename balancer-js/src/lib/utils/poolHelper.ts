@@ -13,21 +13,24 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 export const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
 interface ParsedPoolInfo {
-  parsedTokens: string[];
-  parsedDecimals: string[];
-  parsedBalances: string[];
-  parsedWeights: string[];
-  parsedPriceRates: string[];
+  bptIndex: number;
+  higherBalanceTokenIndex: number;
+  lastJoinExitInvariant: string;
   parsedAmp: string;
-  parsedTotalShares: string;
+  parsedBalances: string[];
+  parsedBalancesWithoutBpt: string[];
+  parsedDecimals: string[];
+  parsedPriceRates: string[];
+  parsedPriceRatesWithoutBpt: string[];
   parsedSwapFee: string;
-  upScaledBalances: string[];
+  parsedTokens: string[];
+  parsedTokensWithoutBpt: string[];
+  parsedTotalShares: string;
+  parsedWeights: string[];
+  protocolSwapFeePct: string;
   scalingFactors: bigint[];
   scalingFactorsWithoutBpt: bigint[];
-  parsedTokensWithoutBpt: string[];
-  parsedBalancesWithoutBpt: string[];
-  bptIndex: number;
-  parsedPriceRatesWithoutBpt: string[];
+  upScaledBalances: string[];
   upScaledBalancesWithoutBpt: string[];
 }
 
@@ -44,6 +47,7 @@ export const parsePoolInfo = (
   wrappedNativeAsset?: string,
   unwrapNativeAsset?: boolean
 ): ParsedPoolInfo => {
+  const defaultOne = '1000000000000000000';
   let parsedTokens = unwrapNativeAsset
     ? pool.tokens.map((token) =>
         token.address === wrappedNativeAsset ? AddressZero : token.address
@@ -56,14 +60,12 @@ export const parsePoolInfo = (
     parseFixed(token.balance, token.decimals).toString()
   );
   let parsedWeights = pool.tokens.map((token) => {
-    return token.weight
-      ? parseFixed(token.weight, 18).toString()
-      : ONE.toString();
+    return token.weight ? parseFixed(token.weight, 18).toString() : defaultOne;
   });
   let parsedPriceRates = pool.tokens.map((token) => {
     return token.priceRate
       ? parseFixed(token.priceRate, 18).toString()
-      : ONE.toString();
+      : defaultOne;
   });
   const scalingFactorsRaw = parsedDecimals.map((decimals) =>
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -105,10 +107,16 @@ export const parsePoolInfo = (
 
   const parsedAmp = pool.amp
     ? parseFixed(pool.amp, AMP_PRECISION).toString() // Solidity maths uses precison method for amp that must be replicated
-    : ONE.toString();
+    : defaultOne;
   const parsedTotalShares = parseFixed(pool.totalShares, 18).toString();
   const parsedSwapFee = parseFixed(pool.swapFee, 18).toString();
-
+  const higherBalanceTokenIndex = upScaledBalances
+    .map(BigInt)
+    .indexOf(SolidityMaths.max(...upScaledBalances.map(BigInt)));
+  const protocolSwapFeePct = parseFixed(
+    pool.protocolSwapFeeCache,
+    18
+  ).toString();
   const scalingFactorsWithoutBpt: bigint[] = [],
     parsedTokensWithoutBpt: string[] = [],
     parsedBalancesWithoutBpt: string[] = [],
@@ -128,82 +136,24 @@ export const parsePoolInfo = (
   }
 
   return {
-    parsedTokens,
-    parsedDecimals,
-    parsedBalances,
-    parsedWeights,
-    parsedPriceRates,
+    bptIndex,
+    higherBalanceTokenIndex,
+    lastJoinExitInvariant: pool.lastJoinExitInvariant || '0',
     parsedAmp,
-    parsedTotalShares,
+    parsedBalances,
+    parsedBalancesWithoutBpt,
+    parsedDecimals,
+    parsedPriceRates,
+    parsedPriceRatesWithoutBpt,
     parsedSwapFee,
-    upScaledBalances,
+    parsedTokens,
+    parsedTokensWithoutBpt,
+    parsedTotalShares,
+    parsedWeights,
+    protocolSwapFeePct,
     scalingFactors,
     scalingFactorsWithoutBpt,
-    parsedTokensWithoutBpt,
-    parsedBalancesWithoutBpt,
-    bptIndex,
-    parsedPriceRatesWithoutBpt,
+    upScaledBalances,
     upScaledBalancesWithoutBpt,
-  };
-};
-
-export const parsePoolInfoForProtocolFee = (
-  pool: Pool
-): {
-  amplificationParameter: string;
-  balances: string[];
-  higherBalanceTokenIndex: number;
-  lastInvariant: string;
-  normalizedWeights: string[];
-  protocolSwapFeePct: string;
-} => {
-  const parsedBalances = pool.tokens.map((token) =>
-    parseFixed(token.balance, token.decimals).toString()
-  );
-  const parsedDecimals = pool.tokens.map((token) => {
-    return token.decimals ? token.decimals.toString() : '18';
-  });
-  const scalingFactorsRaw = parsedDecimals.map((decimals) =>
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    _computeScalingFactor(BigInt(decimals!))
-  );
-  const parsedPriceRates = pool.tokens.map((token) => {
-    return token.priceRate
-      ? parseFixed(token.priceRate, 18).toString()
-      : ONE.toString();
-  });
-  const scalingFactors = scalingFactorsRaw.map((sf, i) =>
-    SolidityMaths.mulDownFixed(sf, BigInt(parsedPriceRates[i]))
-  );
-  const upScaledBalances = _upscaleArray(
-    parsedBalances.map(BigInt),
-    scalingFactors
-  ).map((b) => b.toString());
-  const poolTokensBalances = upScaledBalances.map((balance) => BigInt(balance));
-  const higherBalanceTokenIndex = poolTokensBalances.indexOf(
-    SolidityMaths.max(...poolTokensBalances)
-  );
-  const parsedAmp = pool.amp
-    ? parseFixed(pool.amp, AMP_PRECISION).toString() // Solidity maths uses precison method for amp that must be replicated
-    : ONE.toString();
-  const protocolSwapFeePct = parseFixed(
-    pool.protocolSwapFeeCache || '0.2',
-    18
-  ).toString();
-  const parsedWeights = pool.tokens.map((token) => {
-    return token.weight
-      ? parseFixed(token.weight, 18).toString()
-      : ONE.toString();
-  });
-  if (!pool.lastJoinExitInvariant) {
-    throw new BalancerError(BalancerErrorCode.MISSING_LAST_JOIN_EXIT_INVARIANT);
-  }
-  return {
-    higherBalanceTokenIndex,
-    lastInvariant: pool.lastJoinExitInvariant,
-    normalizedWeights: parsedWeights,
-    amplificationParameter: parsedAmp,
-    balances: upScaledBalances,
-    protocolSwapFeePct,
   };
 };
