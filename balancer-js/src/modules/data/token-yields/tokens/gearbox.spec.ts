@@ -31,9 +31,8 @@ describe('gearbox apr', () => {
   });
 
   it('is getting fetched', async () => {
-    const dUSDC_apr = (await gearbox())[yieldTokens.dUSDC];
-    expect(dUSDC_apr).to.eq(100);
-    const dDAI_apr = (await gearbox())[yieldTokens.dDAI];
-    expect(dDAI_apr).to.eq(102);
+    const aprs = await gearbox();
+    expect(aprs[yieldTokens.dUSDC]).to.eq(100);
+    expect(aprs[yieldTokens.dDAI]).to.eq(102);
   });
 });
