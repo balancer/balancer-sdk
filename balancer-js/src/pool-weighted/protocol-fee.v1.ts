@@ -5,14 +5,14 @@ import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { calcDueTokenProtocolSwapFeeAmount } from '@/pool-weighted/calculate-protocol-fee-token-amount';
 
 export default class WeightedV1ProtocolFee {
-  static calculateProtocolFees(pool: Pool): bigint {
+  static calculateProtocolFees(pool: Pool): bigint[] {
     const parsedPool = parsePoolInfoForProtocolFee(pool);
     const currentInvariant = calculateInvariant(parsedPool);
     const protocolFeeAmounts = WeightedV1ProtocolFee.getDueProtocolFeeAmounts({
       ...parsedPool,
       currentInvariant,
     });
-    return BigInt(0);
+    return protocolFeeAmounts;
   }
 
   static getDueProtocolFeeAmounts = ({
