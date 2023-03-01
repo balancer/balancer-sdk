@@ -1,5 +1,6 @@
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
-import { calculateStableInvariant } from '@/pool-stable/calculate-invariant';
+import { StableMaths } from '@balancer-labs/sor';
+import { BigNumber } from '@ethersproject/bignumber';
 
 export const calculateSwapYieldFeePct = (
   amplificationParameter: string,
@@ -30,7 +31,12 @@ export const calculateSwapYieldFeePct = (
 
   const totalGrowthInvariant = !exemptedTokens.includes(true)
     ? nonExemptedYieldGrowthInvariant
-    : calculateStableInvariant(amplificationParameter, balances);
+    : BigInt(
+        StableMaths._invariant(
+          BigNumber.from(amplificationParameter),
+          balances.map(BigNumber.from)
+        ).toString()
+      );
 
   const swapFeeGrowthInvariantDelta =
     swapFeeGrowthInvariant > lastInvariant
@@ -62,16 +68,18 @@ const getSwapFeeGrowthInvariant = (
   amplificationParameter: string,
   currentPriceRates: bigint[],
   oldPriceRates: bigint[]
-) => {
+): bigint => {
   const balancesWithOldPriceRate = balances.map((balance, index) =>
     SolidityMaths.divDownFixed(
       SolidityMaths.mulDownFixed(BigInt(balance), oldPriceRates[index]),
       currentPriceRates[index]
     ).toString()
   );
-  return calculateStableInvariant(
-    amplificationParameter,
-    balancesWithOldPriceRate
+  return BigInt(
+    StableMaths._invariant(
+      BigNumber.from(amplificationParameter),
+      balancesWithOldPriceRate.map(BigNumber.from)
+    ).toString()
   );
 };
 
@@ -91,8 +99,10 @@ const getNonExemptedYieldGrowthInvariant = (
           ).toString()
         : balance
   );
-  return calculateStableInvariant(
-    amplificationParameter,
-    balancesWithOnlyExemptedTokensWithOldPriceRate
+  return BigInt(
+    StableMaths._invariant(
+      BigNumber.from(amplificationParameter),
+      balancesWithOnlyExemptedTokensWithOldPriceRate.map(BigNumber.from)
+    ).ToString()
   );
 };
