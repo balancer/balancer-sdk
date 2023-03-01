@@ -2,14 +2,14 @@ import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { calculateStableInvariant } from '@/pool-stable/calculate-invariant';
 
 export const calculateSwapYieldFeePct = (
-  balances: string[],
   amplificationParameter: string,
-  lastInvariant: bigint,
+  balances: string[],
   currentPriceRates: bigint[],
-  oldPriceRates: bigint[],
   exemptedTokens: boolean[],
-  protocolSwapFeeCache: bigint,
-  protocolYieldFeeCache: bigint
+  lastInvariant: bigint,
+  oldPriceRates: bigint[],
+  protocolSwapFee: bigint,
+  protocolYieldFee: bigint
 ): bigint => {
   const swapFeeGrowthInvariant = getSwapFeeGrowthInvariant(
     balances,
@@ -45,14 +45,14 @@ export const calculateSwapYieldFeePct = (
       swapFeeGrowthInvariantDelta,
       totalGrowthInvariant
     ),
-    protocolSwapFeeCache
+    protocolSwapFee
   );
   const protocolYieldPct = SolidityMaths.mulDownFixed(
     SolidityMaths.divDownFixed(
       nonExemptYieldGrowthInvariantDelta,
       totalGrowthInvariant
     ),
-    protocolYieldFeeCache
+    protocolYieldFee
   );
   return SolidityMaths.add(protocolSwapFeePct, protocolYieldPct);
 };

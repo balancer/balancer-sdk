@@ -1,6 +1,7 @@
 import { Pool } from '@/types';
 import { parsePoolInfoForProtocolFee } from '@/lib/utils';
 import { calculateSwapYieldFeePct } from '@/pool-composable-stable/calculate-swap-yield-fee-pct';
+import { SolidityMaths } from '@/lib/utils/solidityMaths';
 
 export default class ComposableStableProtocolFee {
   static calculateProtocolFees(pool: Pool) {
@@ -10,21 +11,48 @@ export default class ComposableStableProtocolFee {
   }
 
   static calDueBPTProtocolFeeAmount = ({
-    balancesWithoutBPT,
     amplificationParameter,
+    balancesWithoutBPT,
+    currentPriceRates,
+    exemptedTokens,
     lastInvariant,
+    oldPriceRates,
+    protocolSwapFeePct,
+    protocolYieldFeePct,
     virtualSupply,
   }: {
-    balancesWithoutBPT: string[];
     amplificationParameter: string;
+    balancesWithoutBPT: string[];
+    currentPriceRates: string[];
+    exemptedTokens: boolean[];
     lastInvariant: string;
+    oldPriceRates: string[];
+    protocolSwapFeePct: string;
+    protocolYieldFeePct: string;
     virtualSupply: string;
   }): bigint => {
     const protocolFeePct = calculateSwapYieldFeePct(
-      balancesWithoutBPT.map(BigInt),
-      BigInt(amplificationParameter),
-      BigInt(lastInvariant)
+      amplificationParameter,
+      balancesWithoutBPT,
+      currentPriceRates.map(BigInt),
+      exemptedTokens,
+      BigInt(lastInvariant),
+      oldPriceRates.map(BigInt),
+      BigInt(protocolSwapFeePct),
+      BigInt(protocolYieldFeePct)
     );
-    return BigInt(0);
+
+    // Since this fee amount will be minted as BPT, which increases the total supply, we need to mint
+    // slightly more so that it reflects this percentage of the total supply after minting.
+    //
+    // The percentage of the Pool the protocol will own after minting is given by:
+    // `protocol percentage = to mint / (current supply + to mint)`.
+    // Solving for `to mint`, we arrive at:
+    // `to mint = current supply * protocol percentage / (1 - protocol percentage)`.
+    const bptProtocolFeeAmount = SolidityMaths.divDownFixed(
+      SolidityMaths.mulDownFixed(BigInt(virtualSupply), protocolFeePct),
+      SolidityMaths.complementFixed(protocolFeePct)
+    );
+    return bptProtocolFeeAmount;
   };
 }

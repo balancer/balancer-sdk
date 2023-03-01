@@ -32,6 +32,23 @@ interface ParsedPoolInfo {
   upScaledBalancesWithoutBpt: string[];
 }
 
+interface ParsedPoolForProtocolFee {
+  amplificationParameter: string;
+  balances: string[];
+  balancesWithoutBPT: string[];
+  bptIndex: number;
+  currentPriceRates: string[];
+  exemptedTokens: boolean[];
+  higherBalanceTokenIndex: number;
+  lastInvariant: string;
+  normalizedWeights: string[];
+  oldPriceRates: string[];
+  protocolSwapFeePct: string;
+  protocolYieldFeePct: string;
+  totalShares: string;
+  virtualSupply: string;
+}
+
 /**
  * Parse pool info into EVM amounts. Sorts by token order if wrappedNativeAsset param passed.
  * @param {Pool}  pool
@@ -150,58 +167,65 @@ export const parsePoolInfo = (
 
 export const parsePoolInfoForProtocolFee = (
   pool: Pool
-): {
-  amplificationParameter: string;
-  balances: string[];
-  balancesWithoutBPT: string[];
-  higherBalanceTokenIndex: number;
-  lastInvariant: string;
-  normalizedWeights: string[];
-  protocolSwapFeePct: string;
-  totalShares: string;
-  bptIndex: number;
-  virtualSupply: string;
-} => {
+): ParsedPoolForProtocolFee => {
   const parsedBalances = pool.tokens.map((token) =>
     parseFixed(token.balance, token.decimals).toString()
   );
+
   const parsedDecimals = pool.tokens.map((token) => {
     return token.decimals ? token.decimals.toString() : '18';
   });
+
   const scalingFactorsRaw = parsedDecimals.map((decimals) =>
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     _computeScalingFactor(BigInt(decimals!))
   );
+
   const parsedPriceRates = pool.tokens.map((token) => {
     return token.priceRate
       ? parseFixed(token.priceRate, 18).toString()
       : ONE.toString();
   });
+
   const scalingFactors = scalingFactorsRaw.map((sf, i) =>
     SolidityMaths.mulDownFixed(sf, BigInt(parsedPriceRates[i]))
   );
+
   const upScaledBalances = _upscaleArray(
     parsedBalances.map(BigInt),
     scalingFactors
   ).map((b) => b.toString());
+
   const poolTokensBalances = upScaledBalances.map((balance) => BigInt(balance));
+
   const higherBalanceTokenIndex = poolTokensBalances.indexOf(
     SolidityMaths.max(...poolTokensBalances)
   );
+
   const parsedAmp = pool.amp
     ? parseFixed(pool.amp, AMP_PRECISION).toString() // Solidity maths uses precison method for amp that must be replicated
     : ONE.toString();
+
   const protocolSwapFeePct = parseFixed(
-    pool.protocolSwapFeeCache || '0.2',
+    pool.protocolSwapFeeCache,
     18
   ).toString();
+
+  const protocolYieldFeePct = parseFixed(
+    pool.protocolYieldFeeCache,
+    18
+  ).toString();
+
   const parsedWeights = pool.tokens.map((token) => {
     return token.weight
       ? parseFixed(token.weight, 18).toString()
       : ONE.toString();
   });
+
   const totalShares = parseFixed(pool.totalShares, 18).toString();
+
   const bptIndex = pool.tokensList.indexOf(pool.address);
+
   const virtualSupply =
     bptIndex > -1
       ? SolidityMaths.add(
@@ -209,7 +233,21 @@ export const parsePoolInfoForProtocolFee = (
           BigInt(upScaledBalances[bptIndex])
         ).toString()
       : '0';
+
   const balancesWithoutBPT = removeItem(upScaledBalances, bptIndex);
+
+  const oldPriceRates = pool.tokens.map(
+    ({ oldPriceRate }) => oldPriceRate
+  ) as string[];
+
+  const currentPriceRates = pool.tokens.map(
+    ({ priceRate }) => priceRate
+  ) as string[];
+
+  const exemptedTokens = pool.tokens.map(
+    ({ isExemptFromYieldProtocolFee }) => !!isExemptFromYieldProtocolFee
+  );
+
   if (!pool.lastJoinExitInvariant) {
     throw new BalancerError(BalancerErrorCode.MISSING_LAST_JOIN_EXIT_INVARIANT);
   }
@@ -218,10 +256,14 @@ export const parsePoolInfoForProtocolFee = (
     balances: upScaledBalances,
     balancesWithoutBPT,
     bptIndex,
+    currentPriceRates,
+    exemptedTokens,
     higherBalanceTokenIndex,
     lastInvariant: pool.lastJoinExitInvariant,
     normalizedWeights: parsedWeights,
+    oldPriceRates,
     protocolSwapFeePct,
+    protocolYieldFeePct,
     totalShares,
     virtualSupply,
   };
