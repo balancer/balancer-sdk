@@ -1,9 +1,5 @@
 import { Pool } from '@/types';
-import {
-  parsePoolInfo,
-  parsePoolInfoForProtocolFee,
-  replace,
-} from '@/lib/utils';
+import { parsePoolInfo, replace } from '@/lib/utils';
 import { calculateBalanceGivenInvariantAndAllOtherBalances } from '@/pool-stable/calculate-balance-given-invariant';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
 
