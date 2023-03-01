@@ -4,10 +4,11 @@ import { calculateSwapYieldFeePct } from '@/pool-composable-stable/calculate-swa
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
 
 export default class ComposableStableProtocolFee {
-  static calculateProtocolFees(pool: Pool) {
+  static calculateProtocolFees(pool: Pool): bigint {
     const parsedPool = parsePoolInfoForProtocolFee(pool);
     const protocolFeeAmount =
       ComposableStableProtocolFee.calDueBPTProtocolFeeAmount(parsedPool);
+    return protocolFeeAmount;
   }
 
   static calDueBPTProtocolFeeAmount = ({
