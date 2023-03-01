@@ -272,7 +272,7 @@ export class Pools implements Findable<PoolWithMethods> {
           bptIn: string,
           slippage: string,
           shouldUnwrapNativeAsset = false,
-          singleTokenMaxOut?: string
+          singleTokenOut?: string
         ) => {
           if (concerns.exit.buildExitExactBPTIn) {
             return concerns.exit.buildExitExactBPTIn({
@@ -282,7 +282,7 @@ export class Pools implements Findable<PoolWithMethods> {
               slippage,
               shouldUnwrapNativeAsset,
               wrappedNativeAsset,
-              singleTokenMaxOut,
+              singleTokenOut,
             });
           } else {
             throw 'ExitExactBPTIn not supported';
