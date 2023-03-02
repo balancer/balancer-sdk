@@ -112,7 +112,7 @@ export const parsePoolInfo = (
     .map(BigInt)
     .indexOf(SolidityMaths.max(...upScaledBalances.map(BigInt)));
   const protocolSwapFeePct = parseFixed(
-    pool.protocolSwapFeeCache,
+    pool.protocolSwapFeeCache || '0',
     18
   ).toString();
   const scalingFactorsWithoutBpt: bigint[] = [],
