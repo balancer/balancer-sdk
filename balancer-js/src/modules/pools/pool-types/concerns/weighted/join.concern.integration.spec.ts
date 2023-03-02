@@ -1,4 +1,3 @@
-/* eslint-disable no-unexpected-multiline */
 // yarn test:only ./src/modules/pools/pool-types/concerns/weighted/join.concern.integration.spec.ts
 import { parseFixed, BigNumber } from '@ethersproject/bignumber';
 import { expect } from 'chai';
