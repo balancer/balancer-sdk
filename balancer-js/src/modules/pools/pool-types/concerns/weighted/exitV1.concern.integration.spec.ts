@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-import { BalancerSDK, insert, Network, PoolWithMethods, replace } from '@/.';
+import { BalancerSDK, insert, Network, PoolWithMethods } from '@/.';
 import { BPT_DECIMALS, BPT_SLOT } from '@/lib/constants/config';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import {
@@ -194,7 +194,7 @@ describe('Weighted Pool - Exit Integration Test', async () => {
             amountsOut,
             slippage
           );
-        const { transactionReceipt, balanceDeltas, gasUsed } =
+        const { transactionReceipt, balanceDeltas } =
           await sendTransactionGetBalances(
             [pool.address, ...tokensOut],
             signer,
@@ -203,19 +203,7 @@ describe('Weighted Pool - Exit Integration Test', async () => {
             data
           );
         expect(transactionReceipt.status).to.eq(1);
-        const ethAmountOutWithGasUsed = BigNumber.from(amountsOut[ethIndex])
-          .sub(gasUsed)
-          .toString();
-        const expectedBalanceDeltasWithGasUsed = replace(
-          amountsOut,
-          ethIndex,
-          ethAmountOutWithGasUsed
-        );
-        const expectedDeltas = insert(
-          expectedBalanceDeltasWithGasUsed,
-          0,
-          expectedBPTIn
-        );
+        const expectedDeltas = insert(amountsOut, 0, expectedBPTIn);
         expect(expectedDeltas).to.deep.eq(
           balanceDeltas.map((a) => a.toString())
         );
