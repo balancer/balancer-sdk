@@ -74,6 +74,7 @@ async function join() {
     priceImpact,
   });
 
+  // Submit transaction and check balance deltas to confirm success
   const { balanceDeltas } = await sendTransactionGetBalances(
     [pool.address, ...tokensIn],
     signer,
