@@ -31,7 +31,7 @@ export const gearbox: AprFetcher = async () => {
     const { data } = response.data as APIResponse;
     data.forEach((token) => {
       aprs[token.dieselToken.toLowerCase()] = Math.round(
-        // depositAPY_RAY is 1e27 and apr is in bps (1e4), all we need is to parse as 1e23
+        // depositAPY_RAY is 1e27 and apr is in bps (1e4), so all we need is to format to 1e23
         parseFloat(formatFixed(BigNumber.from(token.depositAPY_RAY), 23))
       );
     });

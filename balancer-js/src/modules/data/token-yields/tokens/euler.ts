@@ -70,7 +70,7 @@ export const euler: AprFetcher = async () => {
       return value.toLocaleLowerCase() === eTokenAddress.toLocaleLowerCase();
     })[0][0] as 'eUSDT' | 'eDAI' | 'eUSDC' | 'eFRAX';
     aprs[key] = Math.round(
-      // supplyAPY is 1e27 and apr is in bps (1e4), all we need is to parse as 1e23
+      // supplyAPY is 1e27 and apr is in bps (1e4), so all we need is to format to 1e23
       parseFloat(formatFixed(BigNumber.from(supplyAPY), 23))
     );
   });
