@@ -5,11 +5,8 @@ import {
   SolidityMaths,
   _computeScalingFactor,
   _upscaleArray,
-  ONE,
 } from '@/lib/utils/solidityMaths';
 import { AssetHelpers } from '@/lib/utils/assetHelpers';
-import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { removeItem } from '@/lib/utils/index';
 
 export const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
