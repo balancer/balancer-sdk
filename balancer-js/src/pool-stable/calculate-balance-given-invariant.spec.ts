@@ -1,3 +1,4 @@
+// yarn test:only ./src/pool-stable/calculate-balance-given-invariant.spec.ts
 import { Pool } from '@/types';
 import { calculateBalanceGivenInvariantAndAllOtherBalances } from '@/pool-stable/calculate-balance-given-invariant';
 import { parsePoolInfo } from '@/lib/utils';
@@ -35,6 +36,7 @@ const pool = {
   expiryTime: null,
   unitSeconds: null,
   principalToken: null,
+  protocolSwapFeeCache: '0.2',
   baseToken: null,
   swapEnabled: true,
   wrappedIndex: 0,
@@ -50,12 +52,14 @@ describe('calculate balance given invariant', () => {
     lastJoinExitInvariant,
     higherBalanceTokenIndex,
   } = parsePoolInfo(pool);
-  const balance = calculateBalanceGivenInvariantAndAllOtherBalances({
-    amplificationParameter: BigInt(parsedAmp),
-    balances: upScaledBalances.map(BigInt),
-    invariant: BigInt(lastJoinExitInvariant),
-    tokenIndex: higherBalanceTokenIndex,
+  it('should calculate balance correctly', () => {
+    const balance = calculateBalanceGivenInvariantAndAllOtherBalances({
+      amplificationParameter: BigInt(parsedAmp),
+      balances: upScaledBalances.map(BigInt),
+      invariant: BigInt(lastJoinExitInvariant),
+      tokenIndex: higherBalanceTokenIndex,
+    });
+    const expectedBalance = BigInt('1914498997180719355831403');
+    expect(balance).to.be.equal(expectedBalance);
   });
-  const expectedBalance = BigInt('1914498997180719355831403');
-  expect(balance).to.be.equal(expectedBalance);
 });
