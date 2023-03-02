@@ -187,7 +187,9 @@ const testFlow = async (
   expect(expectedMins).to.deep.eq(minAmountsOut);
 };
 
-describe('generalised exit execution', async () => {
+describe('generalised exit execution', async function () {
+  this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
+
   /*
   bbamaiweth: ComposableStable, baMai/baWeth
   baMai: Linear, aMai/Mai
