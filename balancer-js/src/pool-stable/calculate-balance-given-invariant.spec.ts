@@ -1,6 +1,6 @@
 import { Pool } from '@/types';
 import { calculateBalanceGivenInvariantAndAllOtherBalances } from '@/pool-stable/calculate-balance-given-invariant';
-import { parsePoolInfo, parsePoolInfoForProtocolFee } from '@/lib/utils';
+import { parsePoolInfo } from '@/lib/utils';
 import { expect } from 'chai';
 
 const pool = {
