@@ -1,6 +1,6 @@
 import { Pool } from '@/types';
 import { calculateBalanceGivenInvariantAndAllOtherBalances } from '@/pool-stable/calculate-balance-given-invariant';
-import { parsePoolInfoForProtocolFee } from '@/lib/utils';
+import { parsePoolInfo, parsePoolInfoForProtocolFee } from '@/lib/utils';
 import { expect } from 'chai';
 
 const pool = {
@@ -45,15 +45,15 @@ const pool = {
 
 describe('calculate balance given invariant', () => {
   const {
-    amplificationParameter,
-    balances,
-    lastInvariant,
+    parsedAmp,
+    upScaledBalances,
+    lastJoinExitInvariant,
     higherBalanceTokenIndex,
-  } = parsePoolInfoForProtocolFee(pool);
+  } = parsePoolInfo(pool);
   const balance = calculateBalanceGivenInvariantAndAllOtherBalances({
-    amplificationParameter: BigInt(amplificationParameter),
-    balances: balances.map(BigInt),
-    invariant: BigInt(lastInvariant),
+    amplificationParameter: BigInt(parsedAmp),
+    balances: upScaledBalances.map(BigInt),
+    invariant: BigInt(lastJoinExitInvariant),
     tokenIndex: higherBalanceTokenIndex,
   });
   const expectedBalance = BigInt('1914498997180719355831403');
