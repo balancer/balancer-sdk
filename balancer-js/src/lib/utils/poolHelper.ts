@@ -11,6 +11,7 @@ import { AssetHelpers } from '@/lib/utils/assetHelpers';
 export const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
 interface ParsedPoolInfo {
+  athRateProduct: string;
   bptIndex: number;
   exemptedTokens: boolean[];
   higherBalanceTokenIndex: number;
@@ -31,6 +32,7 @@ interface ParsedPoolInfo {
   protocolYieldFeePct: string;
   scalingFactors: bigint[];
   scalingFactorsWithoutBpt: bigint[];
+  totalSupply: string;
   upScaledBalances: string[];
   upScaledBalancesWithoutBpt: string[];
   virtualSupply: string;
@@ -152,7 +154,6 @@ export const parsePoolInfo = (
     parsedPriceRatesWithoutBpt: string[] = [],
     upScaledBalancesWithoutBpt: string[] = [];
   const bptIndex = parsedTokens.indexOf(pool.address);
-  let virtualSupply = '0';
   if (bptIndex !== -1) {
     scalingFactors.forEach((_, i) => {
       if (i !== bptIndex) {
@@ -163,16 +164,11 @@ export const parsePoolInfo = (
         upScaledBalancesWithoutBpt.push(upScaledBalances[i]);
       }
     });
-    const totalShares = parseFixed(pool.totalShares, 18).toString();
-    virtualSupply =
-      bptIndex > -1
-        ? SolidityMaths.add(
-            BigInt(totalShares),
-            BigInt(upScaledBalances[bptIndex])
-          ).toString()
-        : '0';
   }
+  const virtualSupply = parseFixed(pool.totalShares || '0', 18).toString();
+  const totalSupply = parseFixed(pool.totalLiquidity || '0', 18).toString(); // TODO check if this is right
   return {
+    athRateProduct: parseFixed(pool.athRateProduct || '0', 18).toString(),
     bptIndex,
     exemptedTokens,
     higherBalanceTokenIndex,
@@ -193,6 +189,7 @@ export const parsePoolInfo = (
     protocolYieldFeePct,
     scalingFactors,
     scalingFactorsWithoutBpt,
+    totalSupply,
     upScaledBalances,
     upScaledBalancesWithoutBpt,
     virtualSupply,
