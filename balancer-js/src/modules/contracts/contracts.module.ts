@@ -14,6 +14,7 @@ import {
 } from '@balancer-labs/typechain';
 import { Multicall } from './implementations/multicall';
 import { ERC20 } from './implementations/ERC20';
+import { BasePool } from './implementations/base-pool';
 import { VeBal } from './implementations/veBAL';
 import { VeBalProxy } from './implementations/veBAL-proxy';
 import { Relayer } from './implementations/relayer';
@@ -35,6 +36,7 @@ export interface ContractInstances {
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
   ERC20: ContractFactory;
+  BasePool: ContractFactory;
   liquidityGauge: ContractFactory;
   gaugeClaimHelper?: Contract;
 }
@@ -117,6 +119,7 @@ export class Contracts {
       veBal: this.veBal,
       veBalProxy: this.veBalProxy,
       ERC20: this.getErc20,
+      BasePool: this.getBasePool,
       liquidityGauge: this.getLiquidityGauge,
       gaugeClaimHelper: this.gaugeClaimHelper,
     };
@@ -130,6 +133,16 @@ export class Contracts {
    */
   getErc20(address: string, signerOrProvider: Signer | Provider): Contract {
     return ERC20(address, signerOrProvider);
+  }
+
+  /**
+   * Helper to create base pool contract.
+   * @param { string } address pool address.
+   * @param { Signer | Provider } signerOrProvider Signer or Provider.
+   * @returns Contract.
+   */
+  getBasePool(address: string, signerOrProvider: Signer | Provider): Contract {
+    return BasePool(address, signerOrProvider);
   }
 
   /**
