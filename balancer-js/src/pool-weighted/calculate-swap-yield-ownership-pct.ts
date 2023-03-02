@@ -1,5 +1,4 @@
 import { ONE, SolidityMaths } from '@/lib/utils/solidityMaths';
-import { parseFixed } from '@ethersproject/bignumber';
 
 export const calculateSwapYieldOwnershipPct = ({
   athRateProduct,
@@ -19,7 +18,7 @@ export const calculateSwapYieldOwnershipPct = ({
   parsedWeights: string[];
   protocolSwapFeePct: string;
   protocolYieldFeePct: string;
-}) => {
+}): bigint => {
   const protocolSwapFeeOwnershipPct = _getSwapProtocolFeesPoolPercentage(
     currentInvariant,
     lastJoinExitInvariant,
@@ -71,7 +70,7 @@ const _getYieldProtocolFeesPoolPercentage = (
   parsedPriceRates: string[],
   parsedWeights: string[],
   protocolYieldFeePct: string
-) => {
+): bigint => {
   const rateProduct = calculateRateProduct(parsedWeights, parsedPriceRates);
   if (
     BigInt(athRateProduct) >= BigInt(rateProduct) ||
