@@ -152,7 +152,6 @@ export const parsePoolInfo = (
     parsedPriceRatesWithoutBpt: string[] = [],
     upScaledBalancesWithoutBpt: string[] = [];
   const bptIndex = parsedTokens.indexOf(pool.address);
-  let virtualSupply = '0';
   if (bptIndex !== -1) {
     scalingFactors.forEach((_, i) => {
       if (i !== bptIndex) {
@@ -163,15 +162,8 @@ export const parsePoolInfo = (
         upScaledBalancesWithoutBpt.push(upScaledBalances[i]);
       }
     });
-    const totalShares = parseFixed(pool.totalShares, 18).toString();
-    virtualSupply =
-      bptIndex > -1
-        ? SolidityMaths.add(
-            BigInt(totalShares),
-            BigInt(upScaledBalances[bptIndex])
-          ).toString()
-        : '0';
   }
+  const virtualSupply = parseFixed(pool.totalShares || '0', 18).toString();
   return {
     bptIndex,
     exemptedTokens,
