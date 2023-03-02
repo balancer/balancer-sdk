@@ -15,12 +15,14 @@ export const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
 interface ParsedPoolInfo {
   bptIndex: number;
+  exemptedTokens: boolean[];
   higherBalanceTokenIndex: number;
   lastJoinExitInvariant: string;
   parsedAmp: string;
   parsedBalances: string[];
   parsedBalancesWithoutBpt: string[];
   parsedDecimals: string[];
+  parsedOldPriceRates: string[];
   parsedPriceRates: string[];
   parsedPriceRatesWithoutBpt: string[];
   parsedSwapFee: string;
@@ -29,26 +31,11 @@ interface ParsedPoolInfo {
   parsedTotalShares: string;
   parsedWeights: string[];
   protocolSwapFeePct: string;
+  protocolYieldFeePct: string;
   scalingFactors: bigint[];
   scalingFactorsWithoutBpt: bigint[];
   upScaledBalances: string[];
   upScaledBalancesWithoutBpt: string[];
-}
-
-interface ParsedPoolForProtocolFee {
-  amplificationParameter: string;
-  balances: string[];
-  balancesWithoutBPT: string[];
-  bptIndex: number;
-  currentPriceRates: string[];
-  exemptedTokens: boolean[];
-  higherBalanceTokenIndex: number;
-  lastInvariant: string;
-  normalizedWeights: string[];
-  oldPriceRates: string[];
-  protocolSwapFeePct: string;
-  protocolYieldFeePct: string;
-  totalShares: string;
   virtualSupply: string;
 }
 
@@ -66,6 +53,9 @@ export const parsePoolInfo = (
   unwrapNativeAsset?: boolean
 ): ParsedPoolInfo => {
   const defaultOne = '1000000000000000000';
+  let exemptedTokens = pool.tokens.map(
+    ({ isExemptFromYieldProtocolFee }) => !!isExemptFromYieldProtocolFee
+  );
   let parsedTokens = unwrapNativeAsset
     ? pool.tokens.map((token) =>
         token.address === wrappedNativeAsset ? AddressZero : token.address
@@ -85,6 +75,11 @@ export const parsePoolInfo = (
       ? parseFixed(token.priceRate, 18).toString()
       : defaultOne;
   });
+
+  let parsedOldPriceRates = pool.tokens.map(({ oldPriceRate }) => {
+    return oldPriceRate ? parseFixed(oldPriceRate, 18).toString() : defaultOne;
+  });
+
   const scalingFactorsRaw = parsedDecimals.map((decimals) =>
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     _computeScalingFactor(BigInt(decimals!))
@@ -111,6 +106,8 @@ export const parsePoolInfo = (
       upScaledBalances,
       parsedWeights,
       parsedPriceRates,
+      parsedOldPriceRates,
+      exemptedTokens,
     ] = assetHelpers.sortTokens(
       parsedTokens,
       parsedDecimals,
@@ -118,8 +115,20 @@ export const parsePoolInfo = (
       parsedBalances,
       upScaledBalances,
       parsedWeights,
-      parsedPriceRates
-    ) as [string[], string[], string[], string[], string[], string[], string[]];
+      parsedPriceRates,
+      parsedOldPriceRates,
+      exemptedTokens
+    ) as [
+      string[],
+      string[],
+      string[],
+      string[],
+      string[],
+      string[],
+      string[],
+      string[],
+      boolean[]
+    ];
     scalingFactors = sfString.map(BigInt);
   }
 
@@ -128,10 +137,15 @@ export const parsePoolInfo = (
     : defaultOne;
   const parsedTotalShares = parseFixed(pool.totalShares, 18).toString();
   const parsedSwapFee = parseFixed(pool.swapFee, 18).toString();
+
   const higherBalanceTokenIndex = upScaledBalances
     .map(BigInt)
     .indexOf(SolidityMaths.max(...upScaledBalances.map(BigInt)));
   const protocolSwapFeePct = parseFixed(
+    pool.protocolSwapFeeCache,
+    18
+  ).toString();
+  const protocolYieldFeePct = parseFixed(
     pool.protocolSwapFeeCache,
     18
   ).toString();
@@ -141,6 +155,7 @@ export const parsePoolInfo = (
     parsedPriceRatesWithoutBpt: string[] = [],
     upScaledBalancesWithoutBpt: string[] = [];
   const bptIndex = parsedTokens.indexOf(pool.address);
+  let virtualSupply = '0';
   if (bptIndex !== -1) {
     scalingFactors.forEach((_, i) => {
       if (i !== bptIndex) {
@@ -151,16 +166,25 @@ export const parsePoolInfo = (
         upScaledBalancesWithoutBpt.push(upScaledBalances[i]);
       }
     });
+    const totalShares = parseFixed(pool.totalShares, 18).toString();
+    virtualSupply =
+      bptIndex > -1
+        ? SolidityMaths.add(
+            BigInt(totalShares),
+            BigInt(upScaledBalances[bptIndex])
+          ).toString()
+        : '0';
   }
-
   return {
     bptIndex,
+    exemptedTokens,
     higherBalanceTokenIndex,
     lastJoinExitInvariant: pool.lastJoinExitInvariant || '0',
     parsedAmp,
     parsedBalances,
     parsedBalancesWithoutBpt,
     parsedDecimals,
+    parsedOldPriceRates,
     parsedPriceRates,
     parsedPriceRatesWithoutBpt,
     parsedSwapFee,
@@ -169,9 +193,11 @@ export const parsePoolInfo = (
     parsedTotalShares,
     parsedWeights,
     protocolSwapFeePct,
+    protocolYieldFeePct,
     scalingFactors,
     scalingFactorsWithoutBpt,
     upScaledBalances,
     upScaledBalancesWithoutBpt,
+    virtualSupply,
   };
 };

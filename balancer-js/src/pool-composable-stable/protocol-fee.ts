@@ -1,44 +1,44 @@
 import { Pool } from '@/types';
-import { parsePoolInfoForProtocolFee } from '@/lib/utils';
 import { calculateSwapYieldFeePct } from '@/pool-composable-stable/calculate-swap-yield-fee-pct';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
+import { parsePoolInfo } from '@/lib/utils';
 
 export default class ComposableStableProtocolFee {
   static calculateProtocolFees(pool: Pool): bigint {
-    const parsedPool = parsePoolInfoForProtocolFee(pool);
+    const parsedPool = parsePoolInfo(pool);
     const protocolFeeAmount =
       ComposableStableProtocolFee.calDueBPTProtocolFeeAmount(parsedPool);
     return protocolFeeAmount;
   }
 
   static calDueBPTProtocolFeeAmount = ({
-    amplificationParameter,
-    balancesWithoutBPT,
-    currentPriceRates,
+    parsedAmp,
+    upScaledBalancesWithoutBpt,
+    parsedPriceRates,
     exemptedTokens,
-    lastInvariant,
-    oldPriceRates,
+    lastJoinExitInvariant,
+    parsedOldPriceRates,
     protocolSwapFeePct,
     protocolYieldFeePct,
     virtualSupply,
   }: {
-    amplificationParameter: string;
-    balancesWithoutBPT: string[];
-    currentPriceRates: string[];
+    parsedAmp: string;
+    upScaledBalancesWithoutBpt: string[];
+    parsedPriceRates: string[];
     exemptedTokens: boolean[];
-    lastInvariant: string;
-    oldPriceRates: string[];
+    lastJoinExitInvariant: string;
+    parsedOldPriceRates: string[];
     protocolSwapFeePct: string;
     protocolYieldFeePct: string;
     virtualSupply: string;
   }): bigint => {
     const protocolFeePct = calculateSwapYieldFeePct(
-      amplificationParameter,
-      balancesWithoutBPT,
-      currentPriceRates.map(BigInt),
+      parsedAmp,
+      upScaledBalancesWithoutBpt,
+      parsedPriceRates.map(BigInt),
       exemptedTokens,
-      BigInt(lastInvariant),
-      oldPriceRates.map(BigInt),
+      BigInt(lastJoinExitInvariant),
+      parsedOldPriceRates.map(BigInt),
       BigInt(protocolSwapFeePct),
       BigInt(protocolYieldFeePct)
     );
