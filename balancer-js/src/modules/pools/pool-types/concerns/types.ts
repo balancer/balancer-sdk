@@ -40,7 +40,7 @@ export interface ExitConcern {
    * @param slippage Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
    * @param shouldUnwrapNativeAsset Indicates whether wrapped native asset should be unwrapped after exit.
    * @param wrappedNativeAsset Wrapped native asset address for network being used. Required for exiting with native asset.
-   * @param singleTokenMaxOut Optional: token address that if provided will exit to given token
+   * @param singleTokenOut Optional: token address that if provided will exit to given token
    * @returns transaction request ready to send with signer.sendTransaction
    */
   buildExitExactBPTIn?: ({
@@ -50,7 +50,7 @@ export interface ExitConcern {
     slippage,
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
-    singleTokenMaxOut,
+    singleTokenOut,
   }: ExitExactBPTInParameters) => ExitExactBPTInAttributes;
 
   /**
@@ -148,7 +148,7 @@ export interface ExitExactBPTInParameters {
   slippage: string;
   shouldUnwrapNativeAsset: boolean;
   wrappedNativeAsset: string;
-  singleTokenMaxOut?: string;
+  singleTokenOut?: string;
 }
 
 export interface ExitExactBPTInSingleTokenOutParameters {
@@ -158,7 +158,7 @@ export interface ExitExactBPTInSingleTokenOutParameters {
   slippage: string;
   shouldUnwrapNativeAsset: boolean;
   wrappedNativeAsset: string;
-  singleTokenMaxOut: string;
+  singleTokenOut: string;
 }
 
 export interface ExitExactTokensOutParameters {

@@ -347,7 +347,7 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     bptIn: string,
     slippage: string,
     shouldUnwrapNativeAsset?: boolean,
-    singleTokenMaxOut?: string
+    singleTokenOut?: string
   ) => ExitExactBPTInAttributes;
   buildExitExactTokensOut: (
     exiter: string,
