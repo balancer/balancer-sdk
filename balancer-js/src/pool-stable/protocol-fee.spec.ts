@@ -31,6 +31,7 @@ const pool = {
     '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
   ],
   totalWeight: '0',
+  protocolSwapFeeCache: '0.2',
   expiryTime: null,
   unitSeconds: null,
   principalToken: null,
@@ -44,6 +45,8 @@ const pool = {
 
 describe('calculate protocol fee amount of the stable pool', () => {
   const feeToPay = StableProtocolFee.calculateProtocolFees(pool);
-  const expectedFeeToPay = BigInt('14511018437768543911712');
-  expect(feeToPay[0]).to.be.equal(expectedFeeToPay);
+  it('Should calculate the right fee to be paid', () => {
+    const expectedFeeToPay = BigInt('14511018437768543911712');
+    expect(feeToPay[0]).to.be.equal(expectedFeeToPay);
+  });
 });
