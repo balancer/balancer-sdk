@@ -224,7 +224,8 @@ describe('swaps module', () => {
     });
   });
 
-  describe('full flow', () => {
+  describe('full flow', function () {
+    this.timeout(100000);
     const swaps = new Swaps({
       network: Network.MAINNET,
       rpcUrl: `localhost:8545`,
