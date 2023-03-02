@@ -1,7 +1,6 @@
 import axios from 'axios';
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed } from '@ethersproject/bignumber';
 
-import { formatFixed } from '@/lib/utils';
 import { AprFetcher } from '../repository';
 
 export const yieldTokens = {
@@ -32,9 +31,8 @@ export const gearbox: AprFetcher = async () => {
     const { data } = response.data as APIResponse;
     data.forEach((token) => {
       aprs[token.dieselToken.toLowerCase()] = Math.round(
-        // depositAPY_RAY is 1e27 = 100% and the apy must be returned with 1e4 = 100% (100% is 10000 in this case)
-        parseFloat(formatFixed(BigNumber.from(token.depositAPY_RAY), 27)) *
-          10000
+        // depositAPY_RAY is 1e27 and apr is in bps (1e4), all we need is to parse as 1e23
+        parseFloat(formatFixed(BigNumber.from(token.depositAPY_RAY), 23))
       );
     });
   } catch (error) {

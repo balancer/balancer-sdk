@@ -1,8 +1,8 @@
-import { AprFetcher } from '../repository';
-import { Network } from '@/types';
 import axios from 'axios';
-import { formatUnits } from '@ethersproject/units';
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed } from '@ethersproject/bignumber';
+
+import { Network } from '@/types';
+import { AprFetcher } from '../repository';
 
 export const yieldTokens = {
   eUSDC: '0xeb91861f8a4e1c12333f42dce8fb0ecdc28da716',
@@ -70,8 +70,8 @@ export const euler: AprFetcher = async () => {
       return value.toLocaleLowerCase() === eTokenAddress.toLocaleLowerCase();
     })[0][0] as 'eUSDT' | 'eDAI' | 'eUSDC' | 'eFRAX';
     aprs[key] = Math.round(
-      // supplyAPY is 1e27 = 100% and the apy must be returned with 1e4 = 100% (100% is 10000 in this case)
-      parseFloat(formatUnits(BigNumber.from(supplyAPY), 27)) * 10000
+      // supplyAPY is 1e27 and apr is in bps (1e4), all we need is to parse as 1e23
+      parseFloat(formatFixed(BigNumber.from(supplyAPY), 23))
     );
   });
   return {
