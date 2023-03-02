@@ -4,14 +4,12 @@ import { Signer } from '@ethersproject/abstract-signer';
 import { ContractAddresses } from '@/types';
 import { Network } from '@/lib/constants/network';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import {
-  Vault__factory,
-  Vault,
-  LidoRelayer__factory,
-  LidoRelayer,
-  BalancerHelpers,
-  BalancerHelpers__factory,
-} from '@balancer-labs/typechain';
+import { LidoRelayer__factory } from '@/contracts/factories/LidoRelayer__factory';
+import { LidoRelayer } from '@/contracts/LidoRelayer';
+import { BalancerHelpers } from '@/contracts/BalancerHelpers';
+import { BalancerHelpers__factory } from '@/contracts/factories/BalancerHelpers__factory';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
+import { Vault } from '@/contracts/Vault';
 import { Multicall } from './implementations/multicall';
 import { ERC20 } from './implementations/ERC20';
 import { VeBal } from './implementations/veBAL';

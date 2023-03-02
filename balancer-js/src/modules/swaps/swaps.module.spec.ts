@@ -11,7 +11,7 @@ import {
 import { getNetworkConfig } from '@/modules/sdk.helpers';
 import { mockPool, mockPoolDataService } from '@/test/lib/mockPool';
 import { SwapTransactionRequest, SwapType } from './types';
-import { Vault__factory } from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import BatchRelayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';

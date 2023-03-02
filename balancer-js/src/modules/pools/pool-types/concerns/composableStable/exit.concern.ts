@@ -1,6 +1,7 @@
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
-import { Vault__factory } from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
+
 import * as SOR from '@balancer-labs/sor';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
