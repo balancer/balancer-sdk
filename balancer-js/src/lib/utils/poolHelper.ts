@@ -145,7 +145,7 @@ export const parsePoolInfo = (
     18
   ).toString();
   const protocolYieldFeePct = parseFixed(
-    pool.protocolSwapFeeCache,
+    pool.protocolYieldFeeCache || '0',
     18
   ).toString();
   const scalingFactorsWithoutBpt: bigint[] = [],
