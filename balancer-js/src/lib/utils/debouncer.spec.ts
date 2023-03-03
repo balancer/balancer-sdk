@@ -84,6 +84,26 @@ describe('Debouncer', () => {
     expect(await p2).to.eql(['second']);
   });
 
+  it('creates a new promise when limit is reached', async () => {
+    let attrs: string[] = [];
+    const asyncFunc = async (asyncAttrs: string[]) => {
+      return new Promise((resolve) =>
+        setTimeout(() => {
+          attrs = asyncAttrs;
+          resolve(attrs);
+        }, 50)
+      );
+    };
+    const subject = new Debouncer<unknown, string>(asyncFunc, 30, 1);
+
+    const p1 = subject.fetch('first');
+    const p2 = subject.fetch('second');
+    expect(attrs).to.eql([]);
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    expect(await p1).to.eql(['first']);
+    expect(await p2).to.eql(['second']);
+  });
+
   it('rejects the promise when debounced function fails', async () => {
     const asyncFunc = async (asyncAttrs: string[]) =>
       Promise.reject(asyncAttrs[0]);
