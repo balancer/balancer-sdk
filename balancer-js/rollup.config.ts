@@ -6,8 +6,6 @@ import { terser } from 'rollup-plugin-terser';
 import dts from 'rollup-plugin-dts';
 import pkg from './package.json';
 
-const external = [...Object.keys(pkg.dependencies)];
-
 export default [
   {
     input: 'src/index.ts',
@@ -32,6 +30,7 @@ export default [
           graphql: 'graphql',
           lodash: 'lodash',
           axios: 'axios',
+          ethers: 'ethers',
         },
       },
       { file: pkg.main, format: 'cjs', sourcemap: true },
@@ -53,7 +52,7 @@ export default [
         },
       }),
     ],
-    external,
+    external: [...Object.keys(pkg.dependencies), 'ethers'],
   },
   {
     input: 'src/index.ts',
