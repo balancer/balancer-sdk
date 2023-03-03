@@ -16,7 +16,10 @@ export function parseFixed(value: string, decimals?: BigNumberish): BigNumber {
   return _parseFixed(parsedValue, decimals);
 }
 
-export function formatFixed(value: BigNumber, decimals: BigNumberish): string {
+export function formatFixed(
+  value: BigNumberish,
+  decimals: BigNumberish
+): string {
   const ethersFormat = _formatFixed(value, decimals);
   return ethersFormat.replace(/(.0$)/, '');
 }

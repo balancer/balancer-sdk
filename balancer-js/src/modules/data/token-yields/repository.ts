@@ -19,6 +19,7 @@ import { euler, yieldTokens as eulerTokens } from './tokens/euler';
 import { idleDai, yieldTokens as idleDaiToken } from './tokens/idle-dai';
 import { idleUsdt, yieldTokens as idleUsdtToken } from './tokens/idle-usdt';
 import { idleUsdc, yieldTokens as idleUsdcToken } from './tokens/idle-usdc';
+import { gearbox, yieldTokens as gearboxTokens } from './tokens/gearbox';
 import { Network, Findable } from '@/types';
 
 /**
@@ -49,6 +50,7 @@ const yieldSourceMap: { [address: string]: AprFetcher } = Object.fromEntries([
   ...Object.values(idleDaiToken).map((k) => [k, idleDai]),
   ...Object.values(idleUsdtToken).map((k) => [k, idleUsdt]),
   ...Object.values(idleUsdcToken).map((k) => [k, idleUsdc]),
+  ...Object.values(gearboxTokens).map((k) => [k, gearbox]),
 ]);
 
 export class TokenYieldsRepository implements Findable<number> {
