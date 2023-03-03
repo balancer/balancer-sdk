@@ -306,6 +306,10 @@ export async function sendTransactionGetBalances(
     gasLimit: 3000000,
   });
   const transactionReceipt = await transactionResponse.wait();
+
+  const { gasUsed, effectiveGasPrice } = transactionReceipt;
+  const gasPrice = gasUsed.mul(effectiveGasPrice);
+
   const balancesAfter = await getBalances(
     tokensForBalanceCheck,
     signer,
@@ -313,10 +317,12 @@ export async function sendTransactionGetBalances(
   );
 
   const balanceDeltas = balancesAfter.map((balAfter, i) => {
+    // ignore ETH delta from gas cost
+    if (tokensForBalanceCheck[i] === AddressZero) {
+      balAfter = balAfter.add(gasPrice);
+    }
     return balAfter.sub(balanceBefore[i]).abs();
   });
-  const { cumulativeGasUsed, effectiveGasPrice } = transactionReceipt;
-  const gasUsed = cumulativeGasUsed.mul(effectiveGasPrice);
 
   return {
     transactionReceipt,
