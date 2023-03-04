@@ -57,11 +57,11 @@ const _getSwapProtocolFeesPoolPercentage = (
     ONE,
     SolidityMaths.divDownFixed(ONE, invariantRatio)
   );
-  const swapFeeProtocolPercentage = SolidityMaths.mulDownFixed(
+  const protocolSwapFeeGrowthPct = SolidityMaths.mulDownFixed(
     swapFeePercentage,
     BigInt(protocolSwapFeePct)
   );
-  return swapFeeProtocolPercentage;
+  return protocolSwapFeeGrowthPct;
 };
 
 const _getYieldProtocolFeesPoolPercentage = (
@@ -78,16 +78,19 @@ const _getYieldProtocolFeesPoolPercentage = (
   ) {
     return BigInt(0);
   }
-  const invariantRatio = SolidityMaths.divDownFixed(rateProduct, rateProduct);
+  const rateProductRatio = SolidityMaths.divDownFixed(
+    rateProduct,
+    BigInt(athRateProduct)
+  );
   const yieldFeePercentage = SolidityMaths.sub(
     ONE,
-    SolidityMaths.divDownFixed(ONE, invariantRatio)
+    SolidityMaths.divDownFixed(ONE, rateProductRatio)
   );
-  const yieldFeeProtocolPercentage = SolidityMaths.mulDownFixed(
+  const protocolYieldFeeGrowthPct = SolidityMaths.mulDownFixed(
     yieldFeePercentage,
     BigInt(protocolYieldFeePct)
   );
-  return yieldFeeProtocolPercentage;
+  return protocolYieldFeeGrowthPct;
 };
 
 const calculateRateProduct = (
@@ -96,7 +99,10 @@ const calculateRateProduct = (
 ): bigint => {
   const rateProduct = normalizedWeights.reduce(
     (acc, weight, index) =>
-      SolidityMaths.powDownFixed(BigInt(priceRates[index]), BigInt(weight)),
+      SolidityMaths.mulDownFixed(
+        acc,
+        SolidityMaths.powDownFixed(BigInt(priceRates[index]), BigInt(weight))
+      ),
     BigInt(1)
   );
   return rateProduct;
