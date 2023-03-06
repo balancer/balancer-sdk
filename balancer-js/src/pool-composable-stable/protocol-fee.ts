@@ -20,7 +20,7 @@ export default class ComposableStableProtocolFee {
     parsedOldPriceRates,
     protocolSwapFeePct,
     protocolYieldFeePct,
-    virtualSupply,
+    totalShares,
   }: {
     parsedAmp: string;
     upScaledBalancesWithoutBpt: string[];
@@ -30,7 +30,7 @@ export default class ComposableStableProtocolFee {
     parsedOldPriceRates: string[];
     protocolSwapFeePct: string;
     protocolYieldFeePct: string;
-    virtualSupply: string;
+    totalShares: string;
   }): bigint => {
     const protocolFeePct = calculateSwapYieldFeePct(
       parsedAmp,
@@ -51,7 +51,7 @@ export default class ComposableStableProtocolFee {
     // Solving for `to mint`, we arrive at:
     // `to mint = current supply * protocol percentage / (1 - protocol percentage)`.
     const bptProtocolFeeAmount = SolidityMaths.divDownFixed(
-      SolidityMaths.mulDownFixed(BigInt(virtualSupply), protocolFeePct),
+      SolidityMaths.mulDownFixed(BigInt(totalShares), protocolFeePct),
       SolidityMaths.complementFixed(protocolFeePct)
     );
     return bptProtocolFeeAmount;

@@ -32,10 +32,9 @@ interface ParsedPoolInfo {
   protocolYieldFeePct: string;
   scalingFactors: bigint[];
   scalingFactorsWithoutBpt: bigint[];
-  totalSupply: string;
   upScaledBalances: string[];
   upScaledBalancesWithoutBpt: string[];
-  virtualSupply: string;
+  totalShares: string;
 }
 
 /**
@@ -165,8 +164,7 @@ export const parsePoolInfo = (
       }
     });
   }
-  const virtualSupply = parseFixed(pool.totalShares || '0', 18).toString();
-  const totalSupply = parseFixed(pool.totalLiquidity || '0', 18).toString(); // TODO check if this is right
+  const totalShares = parseFixed(pool.totalShares || '0', 18).toString();
   return {
     athRateProduct: parseFixed(pool.athRateProduct || '0', 18).toString(),
     bptIndex,
@@ -189,9 +187,8 @@ export const parsePoolInfo = (
     protocolYieldFeePct,
     scalingFactors,
     scalingFactorsWithoutBpt,
-    totalSupply,
     upScaledBalances,
     upScaledBalancesWithoutBpt,
-    virtualSupply,
+    totalShares,
   };
 };
