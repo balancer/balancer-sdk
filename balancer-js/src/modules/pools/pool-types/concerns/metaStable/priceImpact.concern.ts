@@ -16,20 +16,16 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
   /**
    * Calculates the BPT return amount when investing with no price impact.
    * @param { Pool } pool Investment pool.
-   * @param { string [] } amounts Token amounts being invested. Needs a value for each pool token.
+   * @param { string [] } tokenAmounts Token amounts being invested. Needs a value for each pool token.
    * @returns { string } BPT amount.
    */
   bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
     if (tokenAmounts.length !== pool.tokensList.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
-    const { parsedPriceRates, parsedAmp, parsedTotalShares, upScaledBalances } =
+    const { priceRates, parsedAmp, parsedTotalShares, upScaledBalances } =
       parsePoolInfo(pool);
     const totalShares = BigInt(parsedTotalShares);
-    const priceRates = parsedPriceRates.map((rate) => {
-      if (!rate) throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
-      return BigInt(rate);
-    });
     if (!parsedAmp)
       throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
 

@@ -29,16 +29,12 @@ export class StablePhantomPriceImpact implements PriceImpactConcern {
 
     // upscales amp, swapfee, totalshares
     const {
-      parsedPriceRates,
+      priceRates,
       parsedAmp,
       parsedTotalShares,
       scalingFactors,
       upScaledBalancesWithoutBpt,
     } = parsePoolInfo(pool);
-    const priceRates = parsedPriceRates.map((rate) => {
-      if (!rate) throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
-      return BigInt(rate);
-    });
     if (!parsedAmp)
       throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
     const totalShares = BigInt(parsedTotalShares);

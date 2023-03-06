@@ -19,9 +19,9 @@ type ParsedPoolInfo = {
   parsedAmp: string;
   balancesEvm: bigint[];
   balancesEvmWithoutBpt: bigint[];
-  parsedOldPriceRates: string[];
-  parsedPriceRates: string[];
-  parsedPriceRatesWithoutBpt: string[];
+  oldPriceRates: bigint[];
+  priceRates: bigint[];
+  priceRatesWithoutBpt: bigint[];
   parsedSwapFee: string;
   parsedTokens: string[];
   parsedTokensWithoutBpt: string[];
@@ -65,23 +65,20 @@ export const parsePoolInfo = (
     parseFixed(token.balance, token.decimals).toBigInt()
   );
   let parsedWeights = pool.tokens.map((token) => {
-    return token.weight ? parseFixed(token.weight, 18).toString() : defaultOne;
+    return parseFixed(token.weight ?? '1', 18).toString();
   });
-  let parsedPriceRates = pool.tokens.map((token) => {
-    return token.priceRate
-      ? parseFixed(token.priceRate, 18).toString()
-      : defaultOne;
+  let priceRates = pool.tokens.map((token) => {
+    return parseFixed(token.priceRate ?? '1', 18).toBigInt();
   });
-
-  let parsedOldPriceRates = pool.tokens.map(({ oldPriceRate }) => {
-    return oldPriceRate ? parseFixed(oldPriceRate, 18).toString() : defaultOne;
+  let oldPriceRates = pool.tokens.map(({ oldPriceRate }) => {
+    return parseFixed(oldPriceRate ?? '1', 18).toBigInt();
   });
 
   const scalingFactorsRaw = decimals.map((d) =>
     _computeScalingFactor(BigInt(d))
   );
   let scalingFactors = scalingFactorsRaw.map((sf, i) =>
-    SolidityMaths.mulDownFixed(sf, BigInt(parsedPriceRates[i]))
+    SolidityMaths.mulDownFixed(sf, priceRates[i])
   );
   // This assumes token.balance is in human scale (e.g. from SG)
   let upScaledBalances = _upscaleArray(balancesEvm, scalingFactors).map((b) =>
@@ -100,8 +97,8 @@ export const parsePoolInfo = (
       balancesEvm,
       upScaledBalances,
       parsedWeights,
-      parsedPriceRates,
-      parsedOldPriceRates,
+      priceRates,
+      oldPriceRates,
       exemptedTokens,
     ] = assetHelpers.sortTokens(
       parsedTokens,
@@ -110,8 +107,8 @@ export const parsePoolInfo = (
       balancesEvm,
       upScaledBalances,
       parsedWeights,
-      parsedPriceRates,
-      parsedOldPriceRates,
+      priceRates,
+      oldPriceRates,
       exemptedTokens
     ) as [
       string[],
@@ -120,8 +117,8 @@ export const parsePoolInfo = (
       bigint[],
       string[],
       string[],
-      string[],
-      string[],
+      bigint[],
+      bigint[],
       boolean[]
     ];
     scalingFactors = sfString.map(BigInt);
@@ -147,7 +144,7 @@ export const parsePoolInfo = (
   const scalingFactorsWithoutBpt: bigint[] = [],
     parsedTokensWithoutBpt: string[] = [],
     balancesEvmWithoutBpt: bigint[] = [],
-    parsedPriceRatesWithoutBpt: string[] = [],
+    priceRatesWithoutBpt: bigint[] = [],
     upScaledBalancesWithoutBpt: string[] = [];
   const bptIndex = parsedTokens.indexOf(pool.address);
   if (bptIndex !== -1) {
@@ -156,7 +153,7 @@ export const parsePoolInfo = (
         scalingFactorsWithoutBpt.push(scalingFactors[i]);
         parsedTokensWithoutBpt.push(parsedTokens[i]);
         balancesEvmWithoutBpt.push(balancesEvm[i]);
-        parsedPriceRatesWithoutBpt.push(parsedPriceRates[i]);
+        priceRatesWithoutBpt.push(priceRates[i]);
         upScaledBalancesWithoutBpt.push(upScaledBalances[i]);
       }
     });
@@ -171,9 +168,9 @@ export const parsePoolInfo = (
     parsedAmp,
     balancesEvm,
     balancesEvmWithoutBpt,
-    parsedOldPriceRates,
-    parsedPriceRates,
-    parsedPriceRatesWithoutBpt,
+    oldPriceRates,
+    priceRates,
+    priceRatesWithoutBpt,
     parsedSwapFee,
     parsedTokens,
     parsedTokensWithoutBpt,
