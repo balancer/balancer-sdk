@@ -27,7 +27,7 @@ interface SortedValues {
   upScaledBalancesWithoutBpt: string[];
   parsedAmp: string;
   parsedTotalShares: string;
-  parsedSwapFee: string;
+  swapFeeEvm: bigint;
   bptIndex: number;
   parsedTokens: string[];
 }
@@ -218,7 +218,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
     const {
       parsedTokens,
       parsedAmp,
-      parsedSwapFee,
+      swapFeeEvm,
       parsedTotalShares,
       bptIndex,
       scalingFactorsWithoutBpt,
@@ -233,7 +233,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       upScaledBalancesWithoutBpt,
       parsedAmp,
       parsedTotalShares,
-      parsedSwapFee,
+      swapFeeEvm,
       bptIndex,
       parsedTokens,
     };
@@ -251,7 +251,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       upScaledBalancesWithoutBpt,
       parsedAmp,
       parsedTotalShares,
-      parsedSwapFee,
+      swapFeeEvm,
       bptIndex,
       parsedTokens,
       slippage,
@@ -266,7 +266,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       upScaledBalancesWithoutBpt,
       parsedAmp,
       parsedTotalShares,
-      parsedSwapFee
+      swapFeeEvm
     );
 
     const userData = this.encodeUserDataExactTokensInForBPTOut(
@@ -299,7 +299,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
     upScaledBalancesWithoutBpt: string[],
     upscaledAmp: string,
     upscaledTotalShares: string,
-    upscaledSwapFee: string
+    swapFeeEvm: bigint
   ): bigint {
     /*
       Maths should use: 
@@ -315,7 +315,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       upScaledBalancesWithoutBpt.map(BigInt), // Should not have BPT
       upScaledAmountsIn, // Should not have BPT
       BigInt(upscaledTotalShares),
-      BigInt(upscaledSwapFee)
+      swapFeeEvm
     );
     // BPT out will be in correct scale and price rate is always 1e18 do doesn't need to be considered
     return expectedBPTOut;
@@ -329,7 +329,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       parsedTokens,
       parsedTokensWithoutBpt,
       parsedAmp,
-      parsedSwapFee,
+      swapFeeEvm,
       parsedTotalShares,
       scalingFactorsWithoutBpt,
       upScaledBalancesWithoutBpt,
@@ -349,7 +349,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       upScaledBalancesWithoutBpt,
       parsedAmp,
       parsedTotalShares,
-      parsedSwapFee,
+      swapFeeEvm,
       bptIndex: 0,
       parsedTokens,
     };

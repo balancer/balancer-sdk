@@ -19,7 +19,7 @@ type SortedValues = {
   parsedTokens: string[];
   parsedAmp: string;
   parsedTotalShares: string;
-  parsedSwapFee: string;
+  swapFeeEvm: bigint;
   upScaledBalances: string[];
   upScaledAmountsIn: bigint[];
   sortedAmountsIn: string[];
@@ -114,7 +114,7 @@ export class StablePoolJoin implements JoinConcern {
       parsedTokens,
       parsedAmp,
       parsedTotalShares,
-      parsedSwapFee,
+      swapFeeEvm,
       scalingFactors,
       upScaledBalances,
     } = parsePoolInfo(pool, wrappedNativeAsset);
@@ -135,7 +135,7 @@ export class StablePoolJoin implements JoinConcern {
       parsedTokens,
       parsedAmp,
       parsedTotalShares,
-      parsedSwapFee,
+      swapFeeEvm,
       upScaledBalances,
       upScaledAmountsIn,
       sortedAmountsIn,
@@ -147,7 +147,7 @@ export class StablePoolJoin implements JoinConcern {
     upScaledBalances,
     upScaledAmountsIn,
     parsedTotalShares,
-    parsedSwapFee,
+    swapFeeEvm,
     slippage,
   }: Pick<JoinPoolParameters, 'slippage'> &
     Pick<
@@ -156,14 +156,14 @@ export class StablePoolJoin implements JoinConcern {
       | 'upScaledBalances'
       | 'upScaledAmountsIn'
       | 'parsedTotalShares'
-      | 'parsedSwapFee'
+      | 'swapFeeEvm'
     >): { expectedBPTOut: string; minBPTOut: string } => {
     const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp as string),
       upScaledBalances.map((b) => BigInt(b)),
       upScaledAmountsIn,
       BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      swapFeeEvm
     ).toString();
 
     const minBPTOut = subSlippage(

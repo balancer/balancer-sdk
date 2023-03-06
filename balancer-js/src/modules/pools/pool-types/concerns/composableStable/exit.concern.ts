@@ -33,7 +33,7 @@ interface SortedValues {
   parsedTokens: string[];
   parsedAmp?: string;
   parsedTotalShares: string;
-  parsedSwapFee: string;
+  swapFeeEvm: bigint;
   bptIndex: number;
   upScaledBalancesWithoutBpt: string[];
   scalingFactors: bigint[];
@@ -367,7 +367,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     singleTokenOutIndex,
     scalingFactors,
     parsedTotalShares,
-    parsedSwapFee,
+    swapFeeEvm,
     bptIn,
     slippage,
   }: Pick<
@@ -378,7 +378,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     | 'singleTokenOutIndex'
     | 'scalingFactors'
     | 'parsedTotalShares'
-    | 'parsedSwapFee'
+    | 'swapFeeEvm'
   > &
     Pick<ExitExactBPTInParameters, 'bptIn' | 'slippage'>): {
     minAmountsOut: string[];
@@ -391,7 +391,7 @@ export class ComposableStablePoolExit implements ExitConcern {
       singleTokenOutIndex,
       BigInt(bptIn),
       BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      swapFeeEvm
     );
     const expectedAmountsOut = Array(parsedTokens.length).fill('0');
     const minAmountsOut = Array(parsedTokens.length).fill('0');
@@ -461,7 +461,7 @@ export class ComposableStablePoolExit implements ExitConcern {
    * @param upScaledBalancesWithoutBpt
    * @param upScaledAmountsOut
    * @param parsedTotalShares
-   * @param parsedSwapFee
+   * @param swapFeeEvm
    * @param slippage
    */
   calcBptInGivenExactTokensOut = ({
@@ -469,7 +469,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     upScaledBalancesWithoutBpt,
     upScaledAmountsOutWithoutBpt,
     parsedTotalShares,
-    parsedSwapFee,
+    swapFeeEvm,
     slippage,
   }: CalcBptInGivenExactTokensOutParams): {
     bptIn: string;
@@ -480,7 +480,7 @@ export class ComposableStablePoolExit implements ExitConcern {
       upScaledBalancesWithoutBpt.map(BigInt),
       upScaledAmountsOutWithoutBpt,
       BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      swapFeeEvm
     ).toString();
 
     // Apply slippage tolerance

@@ -22,7 +22,7 @@ type ParsedPoolInfo = {
   oldPriceRates: bigint[];
   priceRates: bigint[];
   priceRatesWithoutBpt: bigint[];
-  parsedSwapFee: string;
+  swapFeeEvm: bigint;
   parsedTokens: string[];
   parsedTokensWithoutBpt: string[];
   parsedTotalShares: string;
@@ -128,7 +128,7 @@ export const parsePoolInfo = (
     ? parseFixed(pool.amp, AMP_PRECISION).toString() // Solidity maths uses precison method for amp that must be replicated
     : defaultOne;
   const parsedTotalShares = parseFixed(pool.totalShares, 18).toString();
-  const parsedSwapFee = parseFixed(pool.swapFee, 18).toString();
+  const swapFeeEvm = parseFixed(pool.swapFee, 18).toBigInt();
 
   const higherBalanceTokenIndex = upScaledBalances
     .map(BigInt)
@@ -171,7 +171,7 @@ export const parsePoolInfo = (
     oldPriceRates,
     priceRates,
     priceRatesWithoutBpt,
-    parsedSwapFee,
+    swapFeeEvm,
     parsedTokens,
     parsedTokensWithoutBpt,
     parsedTotalShares,

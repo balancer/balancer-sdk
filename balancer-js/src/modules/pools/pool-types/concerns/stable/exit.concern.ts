@@ -27,7 +27,7 @@ interface SortedValues {
   parsedTokens: string[];
   parsedAmp?: string;
   parsedTotalShares: string;
-  parsedSwapFee: string;
+  swapFeeEvm: bigint;
   upScaledBalances: string[];
 }
 
@@ -296,7 +296,7 @@ export class StablePoolExit implements ExitConcern {
     parsedAmp,
     upScaledBalances,
     parsedTotalShares,
-    parsedSwapFee,
+    swapFeeEvm,
     singleTokenOutIndex,
     bptIn,
     slippage,
@@ -307,7 +307,7 @@ export class StablePoolExit implements ExitConcern {
     | 'parsedAmp'
     | 'upScaledBalances'
     | 'parsedTotalShares'
-    | 'parsedSwapFee'
+    | 'swapFeeEvm'
     | 'singleTokenOutIndex'
     | 'scalingFactors'
   > &
@@ -322,7 +322,7 @@ export class StablePoolExit implements ExitConcern {
       singleTokenOutIndex,
       BigInt(bptIn),
       BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      swapFeeEvm
     ).toString();
 
     const downscaledAmountOut = _downscaleDown(
@@ -389,7 +389,7 @@ export class StablePoolExit implements ExitConcern {
     upScaledBalances,
     upScaledAmountsOut,
     parsedTotalShares,
-    parsedSwapFee,
+    swapFeeEvm,
     slippage,
   }: CalcBptInGivenExactTokensOutParams): {
     maxBPTIn: string;
@@ -401,7 +401,7 @@ export class StablePoolExit implements ExitConcern {
       upScaledBalances.map((b) => BigInt(b)),
       upScaledAmountsOut,
       BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      swapFeeEvm
     ).toString();
 
     // Apply slippage tolerance
