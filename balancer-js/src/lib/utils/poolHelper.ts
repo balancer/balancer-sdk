@@ -33,7 +33,7 @@ interface ParsedPoolInfo {
   scalingFactorsWithoutBpt: bigint[];
   upScaledBalances: string[];
   upScaledBalancesWithoutBpt: string[];
-  virtualSupply: string;
+  totalShares: string;
 }
 
 /**
@@ -163,7 +163,7 @@ export const parsePoolInfo = (
       }
     });
   }
-  const virtualSupply = parseFixed(pool.totalShares || '0', 18).toString();
+  const totalShares = parseFixed(pool.totalShares || '0', 18).toString();
   return {
     bptIndex,
     exemptedTokens,
@@ -187,6 +187,6 @@ export const parsePoolInfo = (
     scalingFactorsWithoutBpt,
     upScaledBalances,
     upScaledBalancesWithoutBpt,
-    virtualSupply,
+    totalShares,
   };
 };
