@@ -21,7 +21,6 @@ type SortedValues = {
   parsedWeights: string[];
   parsedTotalShares: string;
   parsedSwapFee: string;
-  parsedBalances: string[];
   upScaledBalances: string[];
   upScaledAmountsIn: bigint[];
   sortedAmountsIn: string[];

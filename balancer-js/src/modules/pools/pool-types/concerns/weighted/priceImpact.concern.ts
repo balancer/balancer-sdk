@@ -23,22 +23,17 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // swapFee, totalShares, totalWeight all scaled up to 18 decimals
-    const { parsedBalances, parsedDecimals, parsedTotalShares, parsedWeights } =
-      parsePoolInfo(pool);
+    const {
+      parsedTotalShares,
+      parsedWeights,
+      scalingFactors,
+      upScaledBalances,
+    } = parsePoolInfo(pool);
 
     const totalShares = BigInt(parsedTotalShares);
     const tokensList = cloneDeep(pool.tokensList);
     let bptZeroPriceImpact = BZERO;
     for (let i = 0; i < tokensList.length; i++) {
-      const decimals = parsedDecimals[i];
-      let scalingFactor: bigint;
-      let balance: bigint;
-      if (!decimals)
-        throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
-      else {
-        scalingFactor = _computeScalingFactor(BigInt(decimals));
-        balance = _upscale(BigInt(parsedBalances[i]), scalingFactor);
-      }
       const weightString = parsedWeights[i];
       let weight: bigint;
       if (!weightString)
@@ -46,7 +41,7 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
       else {
         weight = BigInt(weightString);
       }
-      const price = (weight * totalShares) / balance;
+      const price = (weight * totalShares) / upScaledBalances[i];
       const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
       const newTerm = (price * amountUpscaled) / ONE;
       bptZeroPriceImpact += newTerm;

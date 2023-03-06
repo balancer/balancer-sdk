@@ -10,16 +10,15 @@ import { AssetHelpers } from '@/lib/utils/assetHelpers';
 
 export const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
-interface ParsedPoolInfo {
+type ParsedPoolInfo = {
   athRateProduct: string;
   bptIndex: number;
   exemptedTokens: boolean[];
   higherBalanceTokenIndex: number;
   lastJoinExitInvariant: string;
   parsedAmp: string;
-  parsedBalances: string[];
-  parsedBalancesWithoutBpt: string[];
-  parsedDecimals: string[];
+  balancesEvm: bigint[];
+  balancesEvmWithoutBpt: bigint[];
   parsedOldPriceRates: string[];
   parsedPriceRates: string[];
   parsedPriceRatesWithoutBpt: string[];
@@ -35,7 +34,7 @@ interface ParsedPoolInfo {
   upScaledBalances: string[];
   upScaledBalancesWithoutBpt: string[];
   totalShares: string;
-}
+};
 
 /**
  * Parse pool info into EVM amounts. Sorts by token order if wrappedNativeAsset param passed.
@@ -59,11 +58,11 @@ export const parsePoolInfo = (
         token.address === wrappedNativeAsset ? AddressZero : token.address
       )
     : pool.tokens.map((token) => token.address);
-  let parsedDecimals = pool.tokens.map((token) => {
-    return token.decimals ? token.decimals.toString() : '18';
+  let decimals = pool.tokens.map((token) => {
+    return token.decimals ?? 18;
   });
-  let parsedBalances = pool.tokens.map((token) =>
-    parseFixed(token.balance, token.decimals).toString()
+  let balancesEvm = pool.tokens.map((token) =>
+    parseFixed(token.balance, token.decimals).toBigInt()
   );
   let parsedWeights = pool.tokens.map((token) => {
     return token.weight ? parseFixed(token.weight, 18).toString() : defaultOne;
@@ -78,18 +77,16 @@ export const parsePoolInfo = (
     return oldPriceRate ? parseFixed(oldPriceRate, 18).toString() : defaultOne;
   });
 
-  const scalingFactorsRaw = parsedDecimals.map((decimals) =>
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    _computeScalingFactor(BigInt(decimals!))
+  const scalingFactorsRaw = decimals.map((d) =>
+    _computeScalingFactor(BigInt(d))
   );
   let scalingFactors = scalingFactorsRaw.map((sf, i) =>
     SolidityMaths.mulDownFixed(sf, BigInt(parsedPriceRates[i]))
   );
   // This assumes token.balance is in human scale (e.g. from SG)
-  let upScaledBalances = _upscaleArray(
-    parsedBalances.map(BigInt),
-    scalingFactors
-  ).map((b) => b.toString());
+  let upScaledBalances = _upscaleArray(balancesEvm, scalingFactors).map((b) =>
+    b.toString()
+  );
   // let upScaledBalances = pool.tokens.map((token) =>
   //   parseFixed(token.balance, 18).toString()
   // );
@@ -98,9 +95,9 @@ export const parsePoolInfo = (
     let sfString;
     [
       parsedTokens,
-      parsedDecimals,
+      decimals,
       sfString,
-      parsedBalances,
+      balancesEvm,
       upScaledBalances,
       parsedWeights,
       parsedPriceRates,
@@ -108,9 +105,9 @@ export const parsePoolInfo = (
       exemptedTokens,
     ] = assetHelpers.sortTokens(
       parsedTokens,
-      parsedDecimals,
+      decimals,
       scalingFactors,
-      parsedBalances,
+      balancesEvm,
       upScaledBalances,
       parsedWeights,
       parsedPriceRates,
@@ -118,9 +115,9 @@ export const parsePoolInfo = (
       exemptedTokens
     ) as [
       string[],
+      number[],
       string[],
-      string[],
-      string[],
+      bigint[],
       string[],
       string[],
       string[],
@@ -149,7 +146,7 @@ export const parsePoolInfo = (
   ).toString();
   const scalingFactorsWithoutBpt: bigint[] = [],
     parsedTokensWithoutBpt: string[] = [],
-    parsedBalancesWithoutBpt: string[] = [],
+    balancesEvmWithoutBpt: bigint[] = [],
     parsedPriceRatesWithoutBpt: string[] = [],
     upScaledBalancesWithoutBpt: string[] = [];
   const bptIndex = parsedTokens.indexOf(pool.address);
@@ -158,7 +155,7 @@ export const parsePoolInfo = (
       if (i !== bptIndex) {
         scalingFactorsWithoutBpt.push(scalingFactors[i]);
         parsedTokensWithoutBpt.push(parsedTokens[i]);
-        parsedBalancesWithoutBpt.push(parsedBalances[i]);
+        balancesEvmWithoutBpt.push(balancesEvm[i]);
         parsedPriceRatesWithoutBpt.push(parsedPriceRates[i]);
         upScaledBalancesWithoutBpt.push(upScaledBalances[i]);
       }
@@ -172,9 +169,8 @@ export const parsePoolInfo = (
     higherBalanceTokenIndex,
     lastJoinExitInvariant: pool.lastJoinExitInvariant || '0',
     parsedAmp,
-    parsedBalances,
-    parsedBalancesWithoutBpt,
-    parsedDecimals,
+    balancesEvm,
+    balancesEvmWithoutBpt,
     parsedOldPriceRates,
     parsedPriceRates,
     parsedPriceRatesWithoutBpt,

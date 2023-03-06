@@ -23,19 +23,9 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
     if (tokenAmounts.length !== pool.tokensList.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
-    const {
-      parsedBalances,
-      parsedDecimals,
-      parsedPriceRates,
-      parsedAmp,
-      parsedTotalShares,
-    } = parsePoolInfo(pool);
+    const { parsedPriceRates, parsedAmp, parsedTotalShares, upScaledBalances } =
+      parsePoolInfo(pool);
     const totalShares = BigInt(parsedTotalShares);
-    const decimals = parsedDecimals.map((decimals) => {
-      if (!decimals)
-        throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
-      return BigInt(decimals);
-    });
     const priceRates = parsedPriceRates.map((rate) => {
       if (!rate) throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
       return BigInt(rate);
@@ -43,21 +33,12 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
     if (!parsedAmp)
       throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
 
-    const scalingFactors = decimals.map((decimals) =>
-      _computeScalingFactor(BigInt(decimals))
-    );
-    const balances = parsedBalances.map((balance, i) =>
-      _upscale(BigInt(balance), scalingFactors[i])
-    );
-    const balancesScaled = balances.map((balance, i) =>
-      SolidityMaths.mulDownFixed(balance, priceRates[i])
-    );
     let bptZeroPriceImpact = BZERO;
-    for (let i = 0; i < balances.length; i++) {
+    for (let i = 0; i < upScaledBalances.length; i++) {
       const price =
         (bptSpotPrice(
           BigInt(parsedAmp as string), // this already includes the extra digits from precision
-          balancesScaled,
+          upScaledBalances.map(BigInt),
           totalShares,
           i
         ) *

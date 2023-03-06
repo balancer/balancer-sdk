@@ -15,7 +15,7 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
   /**
    * Calculates the BPT return amount when investing with no price impact.
    * @param { Pool } pool Investment pool.
-   * @param { bigint [] } amounts Token amounts being invested. Needs a value for each pool token.
+   * @param { bigint [] } tokenAmounts Token amounts being invested. Needs a value for each pool token.
    * @returns { bigint } BPT amount.
    */
   bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
@@ -23,35 +23,22 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // upscales amp, swapfee, totalshares
-    const { parsedBalances, parsedDecimals, parsedAmp, parsedTotalShares } =
+    const { parsedAmp, parsedTotalShares, scalingFactors, upScaledBalances } =
       parsePoolInfo(pool);
 
-    const decimals = parsedDecimals.map((decimals) => {
-      if (!decimals)
-        throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
-      return BigInt(decimals);
-    });
     if (!parsedAmp)
       throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
     const totalShares = BigInt(parsedTotalShares);
 
-    const scalingFactors = decimals.map((decimals) =>
-      _computeScalingFactor(BigInt(decimals))
-    );
-    const balances = parsedBalances.map((balance, i) =>
-      _upscale(BigInt(balance), scalingFactors[i])
-    );
-
     let bptZeroPriceImpact = BZERO;
-    for (let i = 0; i < balances.length; i++) {
+    for (let i = 0; i < upScaledBalances.length; i++) {
       const price = bptSpotPrice(
         BigInt(parsedAmp), // this already includes the extra digits from precision
-        balances,
+        upScaledBalances.map(BigInt),
         totalShares,
         i
       );
-      const scalingFactor = _computeScalingFactor(BigInt(decimals[i]));
-      const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
+      const amountUpscaled = _upscale(tokenAmounts[i], scalingFactors[i]);
       const newTerm = (price * amountUpscaled) / ONE;
       bptZeroPriceImpact += newTerm;
     }
