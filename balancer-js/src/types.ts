@@ -215,6 +215,7 @@ export interface Token {
 export interface PoolToken extends Token {
   balance: string;
   priceRate?: string;
+  oldPriceRate?: string;
   weight?: string | null;
   isExemptFromYieldProtocolFee?: boolean;
   token?: SubPoolMeta;
@@ -282,6 +283,7 @@ export enum PoolType {
 export interface Pool {
   id: string;
   name: string;
+  athRateProduct?: string;
   address: string;
   chainId: number;
   poolType: PoolType;
@@ -318,6 +320,7 @@ export interface Pool {
   lowerTarget: string;
   upperTarget: string;
   priceRateProviders?: PriceRateProvider[];
+  lastJoinExitInvariant?: string;
 }
 
 export interface PriceRateProvider {
