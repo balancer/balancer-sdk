@@ -31,7 +31,7 @@ import {
 
 interface SortedValues {
   parsedTokens: string[];
-  parsedAmp?: string;
+  ampWithPrecision: bigint;
   totalSharesEvm: bigint;
   swapFeeEvm: bigint;
   bptIndex: number;
@@ -362,7 +362,7 @@ export class ComposableStablePoolExit implements ExitConcern {
    */
   calcTokenOutGivenExactBptIn = ({
     parsedTokens,
-    parsedAmp,
+    ampWithPrecision,
     upScaledBalancesWithoutBpt,
     singleTokenOutIndex,
     scalingFactors,
@@ -373,7 +373,7 @@ export class ComposableStablePoolExit implements ExitConcern {
   }: Pick<
     ExactBPTInSortedValues,
     | 'parsedTokens'
-    | 'parsedAmp'
+    | 'ampWithPrecision'
     | 'upScaledBalancesWithoutBpt'
     | 'singleTokenOutIndex'
     | 'scalingFactors'
@@ -386,7 +386,7 @@ export class ComposableStablePoolExit implements ExitConcern {
   } => {
     // Calculate amount out given BPT in
     const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
-      BigInt(parsedAmp as string),
+      ampWithPrecision,
       upScaledBalancesWithoutBpt,
       singleTokenOutIndex,
       BigInt(bptIn),
@@ -457,7 +457,7 @@ export class ComposableStablePoolExit implements ExitConcern {
 
   /**
    * Calculate the bptIn and maxBPTIn of the exit with exact tokens out transaction and returns them;
-   * @param parsedAmp
+   * @param ampWithPrecision
    * @param upScaledBalancesWithoutBpt
    * @param upScaledAmountsOut
    * @param totalSharesEvm
@@ -465,7 +465,7 @@ export class ComposableStablePoolExit implements ExitConcern {
    * @param slippage
    */
   calcBptInGivenExactTokensOut = ({
-    parsedAmp,
+    ampWithPrecision,
     upScaledBalancesWithoutBpt,
     upScaledAmountsOutWithoutBpt,
     totalSharesEvm,
@@ -476,7 +476,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     maxBPTIn: string;
   } => {
     const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(
-      BigInt(parsedAmp as string),
+      ampWithPrecision,
       upScaledBalancesWithoutBpt,
       upScaledAmountsOutWithoutBpt,
       totalSharesEvm,

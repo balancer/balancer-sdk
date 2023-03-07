@@ -25,7 +25,7 @@ interface SortedValues {
   sortedAmountsIn: string[];
   scalingFactorsWithoutBpt: bigint[];
   upScaledBalancesWithoutBpt: bigint[];
-  parsedAmp: string;
+  ampWithPrecision: bigint;
   totalSharesEvm: bigint;
   swapFeeEvm: bigint;
   bptIndex: number;
@@ -217,21 +217,18 @@ export class ComposableStablePoolJoin implements JoinConcern {
 
     const {
       parsedTokens,
-      parsedAmp,
+      ampWithPrecision,
       swapFeeEvm,
       totalSharesEvm,
       bptIndex,
       scalingFactorsWithoutBpt,
       upScaledBalancesWithoutBpt,
     } = parsePoolInfo(pool, wrappedNativeAsset);
-    if (!parsedAmp) {
-      throw new BalancerError(BalancerErrorCode.MISSING_AMP);
-    }
     return {
       sortedAmountsIn,
       scalingFactorsWithoutBpt,
       upScaledBalancesWithoutBpt,
-      parsedAmp,
+      ampWithPrecision,
       totalSharesEvm,
       swapFeeEvm,
       bptIndex,
@@ -249,7 +246,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       sortedAmountsIn,
       scalingFactorsWithoutBpt,
       upScaledBalancesWithoutBpt,
-      parsedAmp,
+      ampWithPrecision,
       totalSharesEvm,
       swapFeeEvm,
       bptIndex,
@@ -264,7 +261,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       sortedAmountsIn,
       scalingFactorsWithoutBpt,
       upScaledBalancesWithoutBpt,
-      parsedAmp,
+      ampWithPrecision,
       totalSharesEvm,
       swapFeeEvm
     );
@@ -297,7 +294,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
     amountsIn: string[],
     scalingFactorsWithoutBpt: bigint[],
     upScaledBalancesWithoutBpt: bigint[],
-    upscaledAmp: string,
+    ampWithPrecision: bigint,
     totalSharesEvm: bigint,
     swapFeeEvm: bigint
   ): bigint {
@@ -311,7 +308,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       scalingFactorsWithoutBpt.map(BigInt)
     );
     const expectedBPTOut = StableMathBigInt._calcBptOutGivenExactTokensIn(
-      BigInt(upscaledAmp),
+      ampWithPrecision,
       upScaledBalancesWithoutBpt,
       upScaledAmountsIn, // Should not have BPT
       totalSharesEvm,
@@ -328,15 +325,13 @@ export class ComposableStablePoolJoin implements JoinConcern {
     const {
       parsedTokens,
       parsedTokensWithoutBpt,
-      parsedAmp,
+      ampWithPrecision,
       swapFeeEvm,
       totalSharesEvm,
       scalingFactorsWithoutBpt,
       upScaledBalancesWithoutBpt,
     } = parsePoolInfo(pool);
-    if (!parsedAmp) {
-      throw new BalancerError(BalancerErrorCode.MISSING_AMP);
-    }
+
     // Reorder amountsIn to match pool token order TODO - May have issues when adding native tokens to this mix.
     const [sortedAmountsIn] = reorderArrays(
       parsedTokensWithoutBpt,
@@ -347,7 +342,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       sortedAmountsIn,
       scalingFactorsWithoutBpt,
       upScaledBalancesWithoutBpt,
-      parsedAmp,
+      ampWithPrecision,
       totalSharesEvm,
       swapFeeEvm,
       bptIndex: 0,

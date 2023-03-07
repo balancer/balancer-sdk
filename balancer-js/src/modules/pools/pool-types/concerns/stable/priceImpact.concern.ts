@@ -23,16 +23,17 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // upscales amp, swapfee, totalshares
-    const { parsedAmp, totalSharesEvm, scalingFactors, upScaledBalances } =
-      parsePoolInfo(pool);
-
-    if (!parsedAmp)
-      throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
+    const {
+      ampWithPrecision,
+      totalSharesEvm,
+      scalingFactors,
+      upScaledBalances,
+    } = parsePoolInfo(pool);
 
     let bptZeroPriceImpact = BZERO;
     for (let i = 0; i < upScaledBalances.length; i++) {
       const price = bptSpotPrice(
-        BigInt(parsedAmp), // this already includes the extra digits from precision
+        ampWithPrecision,
         upScaledBalances,
         totalSharesEvm,
         i

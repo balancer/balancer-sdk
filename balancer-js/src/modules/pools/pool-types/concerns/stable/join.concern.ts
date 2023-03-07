@@ -17,7 +17,7 @@ import {
 
 type SortedValues = {
   parsedTokens: string[];
-  parsedAmp: string;
+  ampWithPrecision: bigint;
   totalSharesEvm: bigint;
   swapFeeEvm: bigint;
   upScaledBalances: bigint[];
@@ -112,7 +112,7 @@ export class StablePoolJoin implements JoinConcern {
     // Parse pool info into EVM amounts in order to match amountsIn scalling
     const {
       parsedTokens,
-      parsedAmp,
+      ampWithPrecision,
       totalSharesEvm,
       swapFeeEvm,
       scalingFactors,
@@ -133,7 +133,7 @@ export class StablePoolJoin implements JoinConcern {
     );
     return {
       parsedTokens,
-      parsedAmp,
+      ampWithPrecision,
       totalSharesEvm,
       swapFeeEvm,
       upScaledBalances,
@@ -143,7 +143,7 @@ export class StablePoolJoin implements JoinConcern {
   };
 
   calcBptOutGivenExactTokensIn = ({
-    parsedAmp,
+    ampWithPrecision,
     upScaledBalances,
     upScaledAmountsIn,
     totalSharesEvm,
@@ -152,14 +152,14 @@ export class StablePoolJoin implements JoinConcern {
   }: Pick<JoinPoolParameters, 'slippage'> &
     Pick<
       SortedValues,
-      | 'parsedAmp'
+      | 'ampWithPrecision'
       | 'upScaledBalances'
       | 'upScaledAmountsIn'
       | 'totalSharesEvm'
       | 'swapFeeEvm'
     >): { expectedBPTOut: string; minBPTOut: string } => {
     const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
-      BigInt(parsedAmp as string),
+      ampWithPrecision,
       upScaledBalances,
       upScaledAmountsIn,
       totalSharesEvm,

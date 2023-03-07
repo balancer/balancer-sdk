@@ -16,7 +16,7 @@ type ParsedPoolInfo = {
   exemptedTokens: boolean[];
   higherBalanceTokenIndex: number;
   lastJoinExitInvariant: string;
-  parsedAmp: string;
+  ampWithPrecision: bigint;
   balancesEvm: bigint[];
   balancesEvmWithoutBpt: bigint[];
   oldPriceRates: bigint[];
@@ -48,7 +48,6 @@ export const parsePoolInfo = (
   wrappedNativeAsset?: string,
   unwrapNativeAsset?: boolean
 ): ParsedPoolInfo => {
-  const defaultOne = '1000000000000000000';
   let exemptedTokens = pool.tokens.map(
     ({ isExemptFromYieldProtocolFee }) => !!isExemptFromYieldProtocolFee
   );
@@ -118,9 +117,12 @@ export const parsePoolInfo = (
     scalingFactors = sfString.map(BigInt);
   }
 
-  const parsedAmp = pool.amp
-    ? parseFixed(pool.amp, AMP_PRECISION).toString() // Solidity maths uses precison method for amp that must be replicated
-    : defaultOne;
+  // Solidity maths uses precison method for amp that must be replicated
+  const ampWithPrecision = parseFixed(
+    pool.amp ?? '1',
+    AMP_PRECISION
+  ).toBigInt();
+
   const swapFeeEvm = parseFixed(pool.swapFee, 18).toBigInt();
 
   const higherBalanceTokenIndex = upScaledBalances.indexOf(
@@ -158,7 +160,7 @@ export const parsePoolInfo = (
     exemptedTokens,
     higherBalanceTokenIndex,
     lastJoinExitInvariant: pool.lastJoinExitInvariant || '0',
-    parsedAmp,
+    ampWithPrecision,
     balancesEvm,
     balancesEvmWithoutBpt,
     oldPriceRates,

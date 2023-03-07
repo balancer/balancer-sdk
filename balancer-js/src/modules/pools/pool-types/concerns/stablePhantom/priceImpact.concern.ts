@@ -30,13 +30,12 @@ export class StablePhantomPriceImpact implements PriceImpactConcern {
     // upscales amp, swapfee, totalshares
     const {
       priceRates,
-      parsedAmp,
+      ampWithPrecision,
       totalSharesEvm,
       scalingFactors,
       upScaledBalancesWithoutBpt,
     } = parsePoolInfo(pool);
-    if (!parsedAmp)
-      throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
+
     tokensList.splice(bptIndex, 1);
 
     if (tokenAmounts.length !== tokensList.length)
@@ -45,7 +44,7 @@ export class StablePhantomPriceImpact implements PriceImpactConcern {
     for (let i = 0; i < tokensList.length; i++) {
       const price =
         (bptSpotPrice(
-          BigInt(parsedAmp), // this already includes the extra digits from precision
+          ampWithPrecision,
           upScaledBalancesWithoutBpt,
           totalSharesEvm,
           i
