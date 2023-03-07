@@ -30,7 +30,7 @@ import {
 } from '../types';
 
 interface SortedValues {
-  parsedTokens: string[];
+  poolTokens: string[];
   ampWithPrecision: bigint;
   totalSharesEvm: bigint;
   swapFeeEvm: bigint;
@@ -133,7 +133,7 @@ export class ComposableStablePoolExit implements ExitConcern {
         : ComposableStablePoolEncoder.exitExactBPTInForAllTokensOut(bptIn);
 
     const encodedData = this.encodeExitPool({
-      poolTokens: sortedValues.parsedTokens,
+      poolTokens: sortedValues.poolTokens,
       poolId: pool.id,
       exiter,
       userData,
@@ -195,7 +195,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     );
 
     const encodedData = this.encodeExitPool({
-      poolTokens: sortedValues.parsedTokens,
+      poolTokens: sortedValues.poolTokens,
       minAmountsOut: sortedValues.downscaledAmountsOutWithBpt,
       userData,
       exiter,
@@ -292,7 +292,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     );
     let singleTokenOutIndex = -1;
     if (singleTokenOut) {
-      singleTokenOutIndex = parsedValues.parsedTokens.indexOf(singleTokenOut);
+      singleTokenOutIndex = parsedValues.poolTokens.indexOf(singleTokenOut);
     }
     return {
       ...parsedValues,
@@ -361,7 +361,7 @@ export class ComposableStablePoolExit implements ExitConcern {
    * @param slippage
    */
   calcTokenOutGivenExactBptIn = ({
-    parsedTokens,
+    poolTokens,
     ampWithPrecision,
     upScaledBalancesWithoutBpt,
     singleTokenOutIndex,
@@ -372,7 +372,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     slippage,
   }: Pick<
     ExactBPTInSortedValues,
-    | 'parsedTokens'
+    | 'poolTokens'
     | 'ampWithPrecision'
     | 'upScaledBalancesWithoutBpt'
     | 'singleTokenOutIndex'
@@ -393,8 +393,8 @@ export class ComposableStablePoolExit implements ExitConcern {
       totalSharesEvm,
       swapFeeEvm
     );
-    const expectedAmountsOut = Array(parsedTokens.length).fill('0');
-    const minAmountsOut = Array(parsedTokens.length).fill('0');
+    const expectedAmountsOut = Array(poolTokens.length).fill('0');
+    const minAmountsOut = Array(poolTokens.length).fill('0');
     // Downscales to token decimals and removes priceRate
     const downscaledAmountOut = _downscaleDown(
       amountOut,

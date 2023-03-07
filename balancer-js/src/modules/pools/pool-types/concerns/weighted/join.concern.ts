@@ -17,7 +17,7 @@ import { _upscaleArray } from '@/lib/utils/solidityMaths';
 import { AddressZero } from '@ethersproject/constants';
 
 type SortedValues = {
-  parsedTokens: string[];
+  poolTokens: string[];
   weights: bigint[];
   totalSharesEvm: bigint;
   swapFeeEvm: bigint;
@@ -168,13 +168,13 @@ export class WeightedPoolJoin implements JoinConcern {
   };
   encodeJoinPool = ({
     sortedAmountsIn,
-    parsedTokens,
+    poolTokens,
     poolId,
     joiner,
     minBPTOut,
     amountsIn,
     tokensIn,
-  }: Pick<SortedValues, 'sortedAmountsIn' | 'parsedTokens'> &
+  }: Pick<SortedValues, 'sortedAmountsIn' | 'poolTokens'> &
     Pick<JoinPoolParameters, 'joiner' | 'amountsIn' | 'tokensIn'> & {
       joiner: Address;
       poolId: string;
@@ -194,7 +194,7 @@ export class WeightedPoolJoin implements JoinConcern {
       sender: joiner,
       recipient: joiner,
       joinPoolRequest: {
-        assets: parsedTokens,
+        assets: poolTokens,
         maxAmountsIn: sortedAmountsIn,
         userData,
         fromInternalBalance: false,

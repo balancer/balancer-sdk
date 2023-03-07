@@ -16,7 +16,7 @@ import {
 } from '../types';
 
 type SortedValues = {
-  parsedTokens: string[];
+  poolTokens: string[];
   ampWithPrecision: bigint;
   totalSharesEvm: bigint;
   swapFeeEvm: bigint;
@@ -29,7 +29,7 @@ type EncodeJoinPoolParams = {
   joiner: string;
   poolId: string;
   minBPTOut: string;
-} & Pick<SortedValues, 'parsedTokens' | 'sortedAmountsIn'> &
+} & Pick<SortedValues, 'poolTokens' | 'sortedAmountsIn'> &
   Pick<JoinPoolParameters, 'amountsIn' | 'tokensIn'>;
 
 export class StablePoolJoin implements JoinConcern {
@@ -111,7 +111,7 @@ export class StablePoolJoin implements JoinConcern {
   >): SortedValues => {
     // Parse pool info into EVM amounts in order to match amountsIn scalling
     const {
-      parsedTokens,
+      poolTokens,
       ampWithPrecision,
       totalSharesEvm,
       swapFeeEvm,
@@ -132,7 +132,7 @@ export class StablePoolJoin implements JoinConcern {
       scalingFactors.map((a) => BigInt(a))
     );
     return {
-      parsedTokens,
+      poolTokens,
       ampWithPrecision,
       totalSharesEvm,
       swapFeeEvm,
@@ -180,7 +180,7 @@ export class StablePoolJoin implements JoinConcern {
   encodeJoinPool = ({
     poolId,
     joiner,
-    parsedTokens,
+    poolTokens,
     sortedAmountsIn,
     amountsIn,
     tokensIn,
@@ -201,7 +201,7 @@ export class StablePoolJoin implements JoinConcern {
       sender: joiner,
       recipient: joiner,
       joinPoolRequest: {
-        assets: parsedTokens,
+        assets: poolTokens,
         maxAmountsIn: sortedAmountsIn,
         userData,
         fromInternalBalance: false,

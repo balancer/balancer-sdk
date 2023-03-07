@@ -24,7 +24,7 @@ import {
 import { Pool } from '@/types';
 
 interface SortedValues {
-  parsedTokens: string[];
+  poolTokens: string[];
   ampWithPrecision: bigint;
   totalSharesEvm: bigint;
   swapFeeEvm: bigint;
@@ -120,7 +120,7 @@ export class StablePoolExit implements ExitConcern {
         : StablePoolEncoder.exitExactBPTInForTokensOut(bptIn);
 
     const encodedData = this.encodeExitPool({
-      poolTokens: sortedValues.parsedTokens,
+      poolTokens: sortedValues.poolTokens,
       poolId: pool.id,
       exiter,
       minAmountsOut,
@@ -155,7 +155,7 @@ export class StablePoolExit implements ExitConcern {
       slippage,
     });
 
-    const { downScaledAmountsOut, parsedTokens } = sortedValues;
+    const { downScaledAmountsOut, poolTokens } = sortedValues;
     const userData = StablePoolEncoder.exitBPTInForExactTokensOut(
       downScaledAmountsOut,
       maxBPTIn
@@ -163,7 +163,7 @@ export class StablePoolExit implements ExitConcern {
     const encodedData = this.encodeExitPool({
       poolId: pool.id,
       userData,
-      poolTokens: parsedTokens,
+      poolTokens,
       minAmountsOut: downScaledAmountsOut,
       exiter,
     });
@@ -247,10 +247,10 @@ export class StablePoolExit implements ExitConcern {
       shouldUnwrapNativeAsset
     );
     // Parse pool info into EVM amounts in order to match amountsIn scalling
-    const { parsedTokens } = parsedPoolInfo;
+    const { poolTokens } = parsedPoolInfo;
     let singleTokenOutIndex = -1;
     if (singleTokenOut) {
-      singleTokenOutIndex = parsedTokens.indexOf(singleTokenOut);
+      singleTokenOutIndex = poolTokens.indexOf(singleTokenOut);
     }
     return {
       ...parsedPoolInfo,
@@ -292,7 +292,7 @@ export class StablePoolExit implements ExitConcern {
     };
   };
   calcTokenOutGivenExactBptIn = ({
-    parsedTokens,
+    poolTokens,
     ampWithPrecision,
     upScaledBalances,
     totalSharesEvm,
@@ -303,7 +303,7 @@ export class StablePoolExit implements ExitConcern {
     scalingFactors,
   }: Pick<
     ExactBPTInSortedValues,
-    | 'parsedTokens'
+    | 'poolTokens'
     | 'ampWithPrecision'
     | 'upScaledBalances'
     | 'totalSharesEvm'
@@ -330,8 +330,8 @@ export class StablePoolExit implements ExitConcern {
       scalingFactors[singleTokenOutIndex]
     ).toString();
 
-    const expectedAmountsOut = Array(parsedTokens.length).fill('0');
-    const minAmountsOut = Array(parsedTokens.length).fill('0');
+    const expectedAmountsOut = Array(poolTokens.length).fill('0');
+    const minAmountsOut = Array(poolTokens.length).fill('0');
 
     expectedAmountsOut[singleTokenOutIndex] = downscaledAmountOut;
     // Apply slippage tolerance

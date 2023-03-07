@@ -29,7 +29,7 @@ interface SortedValues {
   totalSharesEvm: bigint;
   swapFeeEvm: bigint;
   bptIndex: number;
-  parsedTokens: string[];
+  poolTokens: string[];
 }
 
 type SortedInputs = SortedValues &
@@ -216,7 +216,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
     ) as [string[], string[]];
 
     const {
-      parsedTokens,
+      poolTokens,
       ampWithPrecision,
       swapFeeEvm,
       totalSharesEvm,
@@ -232,7 +232,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       totalSharesEvm,
       swapFeeEvm,
       bptIndex,
-      parsedTokens,
+      poolTokens,
     };
   }
 
@@ -250,7 +250,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       totalSharesEvm,
       swapFeeEvm,
       bptIndex,
-      parsedTokens,
+      poolTokens,
       slippage,
       poolId,
       joiner,
@@ -276,7 +276,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       poolId,
       joiner,
       joiner,
-      parsedTokens,
+      poolTokens,
       userData.userData,
       insert(sortedAmountsIn, bptIndex, '0') // Adds value for BPT
     );
@@ -323,8 +323,8 @@ export class ComposableStablePoolJoin implements JoinConcern {
   sortV4(tokensIn: string[], amountsIn: string[], pool: Pool): SortedValues {
     // This will keep ordering as read from Pool
     const {
-      parsedTokens,
-      parsedTokensWithoutBpt,
+      poolTokens,
+      poolTokensWithoutBpt,
       ampWithPrecision,
       swapFeeEvm,
       totalSharesEvm,
@@ -334,7 +334,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
 
     // Reorder amountsIn to match pool token order TODO - May have issues when adding native tokens to this mix.
     const [sortedAmountsIn] = reorderArrays(
-      parsedTokensWithoutBpt,
+      poolTokensWithoutBpt,
       tokensIn,
       amountsIn
     ) as [string[]];
@@ -346,7 +346,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       totalSharesEvm,
       swapFeeEvm,
       bptIndex: 0,
-      parsedTokens,
+      poolTokens,
     };
   }
 }

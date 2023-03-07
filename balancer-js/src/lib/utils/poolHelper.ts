@@ -23,8 +23,8 @@ type ParsedPoolInfo = {
   priceRates: bigint[];
   priceRatesWithoutBpt: bigint[];
   swapFeeEvm: bigint;
-  parsedTokens: string[];
-  parsedTokensWithoutBpt: string[];
+  poolTokens: string[];
+  poolTokensWithoutBpt: string[];
   weights: bigint[];
   protocolSwapFeePct: string;
   protocolYieldFeePct: string;
@@ -51,7 +51,7 @@ export const parsePoolInfo = (
   let exemptedTokens = pool.tokens.map(
     ({ isExemptFromYieldProtocolFee }) => !!isExemptFromYieldProtocolFee
   );
-  let parsedTokens = unwrapNativeAsset
+  let poolTokens = unwrapNativeAsset
     ? pool.tokens.map((token) =>
         token.address === wrappedNativeAsset ? AddressZero : token.address
       )
@@ -83,7 +83,7 @@ export const parsePoolInfo = (
   if (wrappedNativeAsset) {
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     [
-      parsedTokens,
+      poolTokens,
       decimals,
       scalingFactors,
       balancesEvm,
@@ -93,7 +93,7 @@ export const parsePoolInfo = (
       oldPriceRates,
       exemptedTokens,
     ] = assetHelpers.sortTokens(
-      parsedTokens,
+      poolTokens,
       decimals,
       scalingFactors,
       balancesEvm,
@@ -133,16 +133,16 @@ export const parsePoolInfo = (
     18
   ).toString();
   const scalingFactorsWithoutBpt: bigint[] = [],
-    parsedTokensWithoutBpt: string[] = [],
+    poolTokensWithoutBpt: string[] = [],
     balancesEvmWithoutBpt: bigint[] = [],
     priceRatesWithoutBpt: bigint[] = [],
     upScaledBalancesWithoutBpt: bigint[] = [];
-  const bptIndex = parsedTokens.indexOf(pool.address);
+  const bptIndex = poolTokens.indexOf(pool.address);
   if (bptIndex !== -1) {
     scalingFactors.forEach((_, i) => {
       if (i !== bptIndex) {
         scalingFactorsWithoutBpt.push(scalingFactors[i]);
-        parsedTokensWithoutBpt.push(parsedTokens[i]);
+        poolTokensWithoutBpt.push(poolTokens[i]);
         balancesEvmWithoutBpt.push(balancesEvm[i]);
         priceRatesWithoutBpt.push(priceRates[i]);
         upScaledBalancesWithoutBpt.push(upScaledBalances[i]);
@@ -162,8 +162,8 @@ export const parsePoolInfo = (
     priceRates,
     priceRatesWithoutBpt,
     swapFeeEvm: parseFixed(pool.swapFee, 18).toBigInt(),
-    parsedTokens,
-    parsedTokensWithoutBpt,
+    poolTokens,
+    poolTokensWithoutBpt,
     weights,
     protocolSwapFeePct,
     protocolYieldFeePct,
