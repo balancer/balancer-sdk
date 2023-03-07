@@ -26,7 +26,7 @@ import { Pool } from '@/types';
 interface SortedValues {
   parsedTokens: string[];
   parsedAmp?: string;
-  parsedTotalShares: string;
+  totalSharesEvm: bigint;
   swapFeeEvm: bigint;
   upScaledBalances: bigint[];
 }
@@ -295,7 +295,7 @@ export class StablePoolExit implements ExitConcern {
     parsedTokens,
     parsedAmp,
     upScaledBalances,
-    parsedTotalShares,
+    totalSharesEvm,
     swapFeeEvm,
     singleTokenOutIndex,
     bptIn,
@@ -306,7 +306,7 @@ export class StablePoolExit implements ExitConcern {
     | 'parsedTokens'
     | 'parsedAmp'
     | 'upScaledBalances'
-    | 'parsedTotalShares'
+    | 'totalSharesEvm'
     | 'swapFeeEvm'
     | 'singleTokenOutIndex'
     | 'scalingFactors'
@@ -321,7 +321,7 @@ export class StablePoolExit implements ExitConcern {
       upScaledBalances,
       singleTokenOutIndex,
       BigInt(bptIn),
-      BigInt(parsedTotalShares),
+      totalSharesEvm,
       swapFeeEvm
     ).toString();
 
@@ -345,14 +345,14 @@ export class StablePoolExit implements ExitConcern {
 
   calcTokensOutGivenExactBptIn = ({
     upScaledBalances,
-    parsedTotalShares,
+    totalSharesEvm,
     scalingFactors,
     bptIn,
     slippage,
   }: Pick<
     ExactBPTInSortedValues,
     | 'upScaledBalances'
-    | 'parsedTotalShares'
+    | 'totalSharesEvm'
     | 'scalingFactors'
     | 'singleTokenOutIndex'
   > &
@@ -363,7 +363,7 @@ export class StablePoolExit implements ExitConcern {
     const amountsOut = SOR.StableMathBigInt._calcTokensOutGivenExactBptIn(
       upScaledBalances,
       BigInt(bptIn),
-      BigInt(parsedTotalShares)
+      totalSharesEvm
     ).map((amount) => amount.toString());
     // Maths return numbers scaled to 18 decimals. Must scale down to token decimals.
     const amountsOutScaledDown = _downscaleDownArray(
@@ -388,7 +388,7 @@ export class StablePoolExit implements ExitConcern {
     parsedAmp,
     upScaledBalances,
     upScaledAmountsOut,
-    parsedTotalShares,
+    totalSharesEvm,
     swapFeeEvm,
     slippage,
   }: CalcBptInGivenExactTokensOutParams): {
@@ -400,7 +400,7 @@ export class StablePoolExit implements ExitConcern {
       BigInt(parsedAmp as string),
       upScaledBalances,
       upScaledAmountsOut,
-      BigInt(parsedTotalShares),
+      totalSharesEvm,
       swapFeeEvm
     ).toString();
 

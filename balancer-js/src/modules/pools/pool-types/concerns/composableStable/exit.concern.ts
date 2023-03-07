@@ -32,7 +32,7 @@ import {
 interface SortedValues {
   parsedTokens: string[];
   parsedAmp?: string;
-  parsedTotalShares: string;
+  totalSharesEvm: bigint;
   swapFeeEvm: bigint;
   bptIndex: number;
   upScaledBalancesWithoutBpt: bigint[];
@@ -366,7 +366,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     upScaledBalancesWithoutBpt,
     singleTokenOutIndex,
     scalingFactors,
-    parsedTotalShares,
+    totalSharesEvm,
     swapFeeEvm,
     bptIn,
     slippage,
@@ -377,7 +377,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     | 'upScaledBalancesWithoutBpt'
     | 'singleTokenOutIndex'
     | 'scalingFactors'
-    | 'parsedTotalShares'
+    | 'totalSharesEvm'
     | 'swapFeeEvm'
   > &
     Pick<ExitExactBPTInParameters, 'bptIn' | 'slippage'>): {
@@ -390,7 +390,7 @@ export class ComposableStablePoolExit implements ExitConcern {
       upScaledBalancesWithoutBpt,
       singleTokenOutIndex,
       BigInt(bptIn),
-      BigInt(parsedTotalShares),
+      totalSharesEvm,
       swapFeeEvm
     );
     const expectedAmountsOut = Array(parsedTokens.length).fill('0');
@@ -413,7 +413,7 @@ export class ComposableStablePoolExit implements ExitConcern {
 
   calcTokensOutGivenExactBptIn = ({
     upScaledBalancesWithoutBpt,
-    parsedTotalShares,
+    totalSharesEvm,
     scalingFactors,
     bptIn,
     slippage,
@@ -421,7 +421,7 @@ export class ComposableStablePoolExit implements ExitConcern {
   }: Pick<
     ExactBPTInSortedValues,
     | 'upScaledBalancesWithoutBpt'
-    | 'parsedTotalShares'
+    | 'totalSharesEvm'
     | 'scalingFactors'
     | 'singleTokenOutIndex'
     | 'bptIndex'
@@ -433,7 +433,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     const amountsOut = SOR.StableMathBigInt._calcTokensOutGivenExactBptIn(
       upScaledBalancesWithoutBpt,
       BigInt(bptIn),
-      BigInt(parsedTotalShares)
+      totalSharesEvm
     ).map((amount) => amount.toString());
     // Maths return numbers scaled to 18 decimals. Must scale down to token decimals.
     const amountsOutScaledDown = _downscaleDownArray(
@@ -460,7 +460,7 @@ export class ComposableStablePoolExit implements ExitConcern {
    * @param parsedAmp
    * @param upScaledBalancesWithoutBpt
    * @param upScaledAmountsOut
-   * @param parsedTotalShares
+   * @param totalSharesEvm
    * @param swapFeeEvm
    * @param slippage
    */
@@ -468,7 +468,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     parsedAmp,
     upScaledBalancesWithoutBpt,
     upScaledAmountsOutWithoutBpt,
-    parsedTotalShares,
+    totalSharesEvm,
     swapFeeEvm,
     slippage,
   }: CalcBptInGivenExactTokensOutParams): {
@@ -479,7 +479,7 @@ export class ComposableStablePoolExit implements ExitConcern {
       BigInt(parsedAmp as string),
       upScaledBalancesWithoutBpt,
       upScaledAmountsOutWithoutBpt,
-      BigInt(parsedTotalShares),
+      totalSharesEvm,
       swapFeeEvm
     ).toString();
 

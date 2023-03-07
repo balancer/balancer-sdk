@@ -23,9 +23,8 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
     if (tokenAmounts.length !== pool.tokensList.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
-    const { priceRates, parsedAmp, parsedTotalShares, upScaledBalances } =
+    const { priceRates, parsedAmp, totalSharesEvm, upScaledBalances } =
       parsePoolInfo(pool);
-    const totalShares = BigInt(parsedTotalShares);
     if (!parsedAmp)
       throw new BalancerError(BalancerErrorCode.MISSING_PRICE_RATE);
 
@@ -35,7 +34,7 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
         (bptSpotPrice(
           BigInt(parsedAmp as string), // this already includes the extra digits from precision
           upScaledBalances,
-          totalShares,
+          totalSharesEvm,
           i
         ) *
           priceRates[i]) /

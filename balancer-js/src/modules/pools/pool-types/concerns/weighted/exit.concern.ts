@@ -26,7 +26,7 @@ import { Pool } from '@/types';
 interface SortedValues {
   parsedTokens: string[];
   parsedWeights: string[];
-  parsedTotalShares: string;
+  totalSharesEvm: bigint;
   swapFeeEvm: bigint;
   upScaledBalances: bigint[];
 }
@@ -293,7 +293,7 @@ export class WeightedPoolExit implements ExitConcern {
     parsedTokens,
     parsedWeights,
     upScaledBalances,
-    parsedTotalShares,
+    totalSharesEvm,
     swapFeeEvm,
     singleTokenOutIndex,
     bptIn,
@@ -304,7 +304,7 @@ export class WeightedPoolExit implements ExitConcern {
     | 'parsedTokens'
     | 'parsedWeights'
     | 'upScaledBalances'
-    | 'parsedTotalShares'
+    | 'totalSharesEvm'
     | 'swapFeeEvm'
     | 'singleTokenOutIndex'
     | 'scalingFactors'
@@ -318,7 +318,7 @@ export class WeightedPoolExit implements ExitConcern {
       upScaledBalances[singleTokenOutIndex],
       BigInt(parsedWeights[singleTokenOutIndex]),
       BigInt(bptIn),
-      BigInt(parsedTotalShares),
+      totalSharesEvm,
       swapFeeEvm
     ).toString();
 
@@ -342,14 +342,14 @@ export class WeightedPoolExit implements ExitConcern {
 
   calcTokensOutGivenExactBptIn = ({
     upScaledBalances,
-    parsedTotalShares,
+    totalSharesEvm,
     scalingFactors,
     bptIn,
     slippage,
   }: Pick<
     ExactBPTInSortedValues,
     | 'upScaledBalances'
-    | 'parsedTotalShares'
+    | 'totalSharesEvm'
     | 'scalingFactors'
     | 'singleTokenOutIndex'
   > &
@@ -361,7 +361,7 @@ export class WeightedPoolExit implements ExitConcern {
     const amountsOut = SOR.WeightedMaths._calcTokensOutGivenExactBptIn(
       upScaledBalances,
       BigInt(bptIn),
-      BigInt(parsedTotalShares)
+      totalSharesEvm
     ).map((amount) => amount.toString());
     // Maths return numbers scaled to 18 decimals. Must scale down to token decimals.
     const amountsOutScaledDown = _downscaleDownArray(
@@ -386,7 +386,7 @@ export class WeightedPoolExit implements ExitConcern {
     parsedWeights,
     upScaledBalances,
     upScaledAmountsOut,
-    parsedTotalShares,
+    totalSharesEvm,
     swapFeeEvm,
     slippage,
   }: CalcBptInGivenExactTokensOutParams): {
@@ -398,7 +398,7 @@ export class WeightedPoolExit implements ExitConcern {
       upScaledBalances,
       parsedWeights.map((w) => BigInt(w)),
       upScaledAmountsOut,
-      BigInt(parsedTotalShares),
+      totalSharesEvm,
       swapFeeEvm
     ).toString();
 

@@ -18,7 +18,7 @@ import {
 type SortedValues = {
   parsedTokens: string[];
   parsedAmp: string;
-  parsedTotalShares: string;
+  totalSharesEvm: bigint;
   swapFeeEvm: bigint;
   upScaledBalances: bigint[];
   upScaledAmountsIn: bigint[];
@@ -113,7 +113,7 @@ export class StablePoolJoin implements JoinConcern {
     const {
       parsedTokens,
       parsedAmp,
-      parsedTotalShares,
+      totalSharesEvm,
       swapFeeEvm,
       scalingFactors,
       upScaledBalances,
@@ -134,7 +134,7 @@ export class StablePoolJoin implements JoinConcern {
     return {
       parsedTokens,
       parsedAmp,
-      parsedTotalShares,
+      totalSharesEvm,
       swapFeeEvm,
       upScaledBalances,
       upScaledAmountsIn,
@@ -146,7 +146,7 @@ export class StablePoolJoin implements JoinConcern {
     parsedAmp,
     upScaledBalances,
     upScaledAmountsIn,
-    parsedTotalShares,
+    totalSharesEvm,
     swapFeeEvm,
     slippage,
   }: Pick<JoinPoolParameters, 'slippage'> &
@@ -155,14 +155,14 @@ export class StablePoolJoin implements JoinConcern {
       | 'parsedAmp'
       | 'upScaledBalances'
       | 'upScaledAmountsIn'
-      | 'parsedTotalShares'
+      | 'totalSharesEvm'
       | 'swapFeeEvm'
     >): { expectedBPTOut: string; minBPTOut: string } => {
     const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp as string),
       upScaledBalances,
       upScaledAmountsIn,
-      BigInt(parsedTotalShares),
+      totalSharesEvm,
       swapFeeEvm
     ).toString();
 

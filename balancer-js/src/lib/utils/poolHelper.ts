@@ -25,7 +25,6 @@ type ParsedPoolInfo = {
   swapFeeEvm: bigint;
   parsedTokens: string[];
   parsedTokensWithoutBpt: string[];
-  parsedTotalShares: string;
   parsedWeights: string[];
   protocolSwapFeePct: string;
   protocolYieldFeePct: string;
@@ -33,7 +32,7 @@ type ParsedPoolInfo = {
   scalingFactorsWithoutBpt: bigint[];
   upScaledBalances: bigint[];
   upScaledBalancesWithoutBpt: bigint[];
-  totalShares: string;
+  totalSharesEvm: bigint;
 };
 
 /**
@@ -122,7 +121,6 @@ export const parsePoolInfo = (
   const parsedAmp = pool.amp
     ? parseFixed(pool.amp, AMP_PRECISION).toString() // Solidity maths uses precison method for amp that must be replicated
     : defaultOne;
-  const parsedTotalShares = parseFixed(pool.totalShares, 18).toString();
   const swapFeeEvm = parseFixed(pool.swapFee, 18).toBigInt();
 
   const higherBalanceTokenIndex = upScaledBalances.indexOf(
@@ -153,7 +151,7 @@ export const parsePoolInfo = (
       }
     });
   }
-  const totalShares = parseFixed(pool.totalShares || '0', 18).toString();
+  const totalSharesEvm = parseFixed(pool.totalShares || '0', 18).toBigInt();
   return {
     athRateProduct: parseFixed(pool.athRateProduct || '0', 18).toString(),
     bptIndex,
@@ -169,7 +167,6 @@ export const parsePoolInfo = (
     swapFeeEvm,
     parsedTokens,
     parsedTokensWithoutBpt,
-    parsedTotalShares,
     parsedWeights,
     protocolSwapFeePct,
     protocolYieldFeePct,
@@ -177,6 +174,6 @@ export const parsePoolInfo = (
     scalingFactorsWithoutBpt,
     upScaledBalances,
     upScaledBalancesWithoutBpt,
-    totalShares,
+    totalSharesEvm,
   };
 };
