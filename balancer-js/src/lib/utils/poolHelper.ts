@@ -82,11 +82,10 @@ export const parsePoolInfo = (
   let upScaledBalances = _upscaleArray(balancesEvm, scalingFactors);
   if (wrappedNativeAsset) {
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    let sfString;
     [
       parsedTokens,
       decimals,
-      sfString,
+      scalingFactors,
       balancesEvm,
       upScaledBalances,
       weights,
@@ -106,7 +105,7 @@ export const parsePoolInfo = (
     ) as [
       string[],
       number[],
-      string[],
+      bigint[],
       bigint[],
       bigint[],
       bigint[],
@@ -114,7 +113,6 @@ export const parsePoolInfo = (
       bigint[],
       boolean[]
     ];
-    scalingFactors = sfString.map(BigInt);
   }
 
   // Solidity maths uses precison method for amp that must be replicated
@@ -122,8 +120,6 @@ export const parsePoolInfo = (
     pool.amp ?? '1',
     AMP_PRECISION
   ).toBigInt();
-
-  const swapFeeEvm = parseFixed(pool.swapFee, 18).toBigInt();
 
   const higherBalanceTokenIndex = upScaledBalances.indexOf(
     SolidityMaths.max(upScaledBalances)
@@ -153,7 +149,6 @@ export const parsePoolInfo = (
       }
     });
   }
-  const totalSharesEvm = parseFixed(pool.totalShares || '0', 18).toBigInt();
   return {
     athRateProduct: parseFixed(pool.athRateProduct || '0', 18).toString(),
     bptIndex,
@@ -166,7 +161,7 @@ export const parsePoolInfo = (
     oldPriceRates,
     priceRates,
     priceRatesWithoutBpt,
-    swapFeeEvm,
+    swapFeeEvm: parseFixed(pool.swapFee, 18).toBigInt(),
     parsedTokens,
     parsedTokensWithoutBpt,
     weights,
@@ -176,6 +171,6 @@ export const parsePoolInfo = (
     scalingFactorsWithoutBpt,
     upScaledBalances,
     upScaledBalancesWithoutBpt,
-    totalSharesEvm,
+    totalSharesEvm: parseFixed(pool.totalShares || '0', 18).toBigInt(),
   };
 };
