@@ -15,7 +15,7 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
   /**
    * Calculates the BPT return amount when investing with no price impact.
    * @param { Pool } pool Investment pool.
-   * @param { bigint [] } amounts Token amounts being invested. EVM Scale. Needs a value for each pool token.
+   * @param { bigint [] } tokenAmounts Token amounts being invested. EVM Scale. Needs a value for each pool token.
    * @returns { bigint } BPT amount.
    */
   bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
@@ -23,20 +23,13 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // swapFee, totalShares, totalWeight all scaled up to 18 decimals
-    const { totalSharesEvm, parsedWeights, scalingFactors, upScaledBalances } =
+    const { totalSharesEvm, weights, scalingFactors, upScaledBalances } =
       parsePoolInfo(pool);
 
     const tokensList = cloneDeep(pool.tokensList);
     let bptZeroPriceImpact = BZERO;
     for (let i = 0; i < tokensList.length; i++) {
-      const weightString = parsedWeights[i];
-      let weight: bigint;
-      if (!weightString)
-        throw new BalancerError(BalancerErrorCode.MISSING_WEIGHT);
-      else {
-        weight = BigInt(weightString);
-      }
-      const price = (weight * totalSharesEvm) / upScaledBalances[i];
+      const price = (weights[i] * totalSharesEvm) / upScaledBalances[i];
       const amountUpscaled = _upscale(tokenAmounts[i], scalingFactors[i]);
       const newTerm = (price * amountUpscaled) / ONE;
       bptZeroPriceImpact += newTerm;

@@ -25,7 +25,7 @@ type ParsedPoolInfo = {
   swapFeeEvm: bigint;
   parsedTokens: string[];
   parsedTokensWithoutBpt: string[];
-  parsedWeights: string[];
+  weights: bigint[];
   protocolSwapFeePct: string;
   protocolYieldFeePct: string;
   scalingFactors: bigint[];
@@ -63,8 +63,8 @@ export const parsePoolInfo = (
   let balancesEvm = pool.tokens.map((token) =>
     parseFixed(token.balance, token.decimals).toBigInt()
   );
-  let parsedWeights = pool.tokens.map((token) => {
-    return parseFixed(token.weight ?? '1', 18).toString();
+  let weights = pool.tokens.map((token) => {
+    return parseFixed(token.weight ?? '1', 18).toBigInt();
   });
   let priceRates = pool.tokens.map((token) => {
     return parseFixed(token.priceRate ?? '1', 18).toBigInt();
@@ -90,7 +90,7 @@ export const parsePoolInfo = (
       sfString,
       balancesEvm,
       upScaledBalances,
-      parsedWeights,
+      weights,
       priceRates,
       oldPriceRates,
       exemptedTokens,
@@ -100,7 +100,7 @@ export const parsePoolInfo = (
       scalingFactors,
       balancesEvm,
       upScaledBalances,
-      parsedWeights,
+      weights,
       priceRates,
       oldPriceRates,
       exemptedTokens
@@ -110,7 +110,7 @@ export const parsePoolInfo = (
       string[],
       bigint[],
       bigint[],
-      string[],
+      bigint[],
       bigint[],
       bigint[],
       boolean[]
@@ -167,7 +167,7 @@ export const parsePoolInfo = (
     swapFeeEvm,
     parsedTokens,
     parsedTokensWithoutBpt,
-    parsedWeights,
+    weights,
     protocolSwapFeePct,
     protocolYieldFeePct,
     scalingFactors,

@@ -25,7 +25,7 @@ import { Pool } from '@/types';
 
 interface SortedValues {
   parsedTokens: string[];
-  parsedWeights: string[];
+  weights: bigint[];
   totalSharesEvm: bigint;
   swapFeeEvm: bigint;
   upScaledBalances: bigint[];
@@ -291,7 +291,7 @@ export class WeightedPoolExit implements ExitConcern {
   };
   calcTokenOutGivenExactBptIn = ({
     parsedTokens,
-    parsedWeights,
+    weights,
     upScaledBalances,
     totalSharesEvm,
     swapFeeEvm,
@@ -302,7 +302,7 @@ export class WeightedPoolExit implements ExitConcern {
   }: Pick<
     ExactBPTInSortedValues,
     | 'parsedTokens'
-    | 'parsedWeights'
+    | 'weights'
     | 'upScaledBalances'
     | 'totalSharesEvm'
     | 'swapFeeEvm'
@@ -316,7 +316,7 @@ export class WeightedPoolExit implements ExitConcern {
     // Calculate amount out given BPT in
     const amountOut = SOR.WeightedMaths._calcTokenOutGivenExactBptIn(
       upScaledBalances[singleTokenOutIndex],
-      BigInt(parsedWeights[singleTokenOutIndex]),
+      weights[singleTokenOutIndex],
       BigInt(bptIn),
       totalSharesEvm,
       swapFeeEvm
@@ -383,7 +383,7 @@ export class WeightedPoolExit implements ExitConcern {
     return { minAmountsOut, expectedAmountsOut };
   };
   calcBptInGivenExactTokensOut = ({
-    parsedWeights,
+    weights,
     upScaledBalances,
     upScaledAmountsOut,
     totalSharesEvm,
@@ -396,7 +396,7 @@ export class WeightedPoolExit implements ExitConcern {
     // Calculate expected BPT in given tokens out
     const bptIn = SOR.WeightedMaths._calcBptInGivenExactTokensOut(
       upScaledBalances,
-      parsedWeights.map((w) => BigInt(w)),
+      weights,
       upScaledAmountsOut,
       totalSharesEvm,
       swapFeeEvm

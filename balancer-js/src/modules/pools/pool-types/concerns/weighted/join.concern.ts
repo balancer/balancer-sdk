@@ -18,7 +18,7 @@ import { AddressZero } from '@ethersproject/constants';
 
 type SortedValues = {
   parsedTokens: string[];
-  parsedWeights: string[];
+  weights: bigint[];
   totalSharesEvm: bigint;
   swapFeeEvm: bigint;
   upScaledBalances: bigint[];
@@ -134,7 +134,7 @@ export class WeightedPoolJoin implements JoinConcern {
 
   calcBptOutGivenExactTokensIn = ({
     upScaledBalances,
-    parsedWeights,
+    weights,
     upScaledAmountsIn,
     totalSharesEvm,
     swapFeeEvm,
@@ -143,14 +143,14 @@ export class WeightedPoolJoin implements JoinConcern {
     Pick<
       SortedValues,
       | 'upScaledBalances'
-      | 'parsedWeights'
+      | 'weights'
       | 'upScaledAmountsIn'
       | 'totalSharesEvm'
       | 'swapFeeEvm'
     >): { expectedBPTOut: string; minBPTOut: string } => {
     const expectedBPTOut = WeightedMaths._calcBptOutGivenExactTokensIn(
       upScaledBalances,
-      parsedWeights.map(BigInt),
+      weights,
       upScaledAmountsIn,
       totalSharesEvm,
       swapFeeEvm
