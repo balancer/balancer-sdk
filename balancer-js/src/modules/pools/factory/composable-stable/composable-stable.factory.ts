@@ -3,14 +3,16 @@ import {
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
 } from '@/modules/pools/factory/types';
-import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
+import { AssetHelpers, parseFixed, parseToBigInt18 } from '@/lib/utils';
 import { TransactionRequest } from '@ethersproject/providers';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import composableStableAbi from '../../../../lib/abi/ComposableStableFactory.json';
 import { FunctionFragment, Interface } from '@ethersproject/abi';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { networkAddresses } from '@/lib/constants/config';
+import { balancerVault, networkAddresses } from '@/lib/constants/config';
 import { BalancerNetworkConfig } from '@/types';
+import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
+import { Vault__factory } from '@balancer-labs/typechain';
 
 export class ComposableStableFactory implements PoolFactory {
   private wrappedNativeAsset: string;
@@ -106,59 +108,47 @@ export class ComposableStableFactory implements PoolFactory {
     tokensIn,
     amountsIn,
   }: InitJoinPoolParameters): InitJoinPoolAttributes {
-    console.log(joiner, poolId, poolAddress, tokensIn, amountsIn);
-    throw new Error('To be implemented');
-    // const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
-    // // sort inputs
-    // tokensIn.push(poolAddress);
-    // amountsIn.push('0');
-    //
-    // const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
-    //   tokensIn,
-    //   amountsIn
-    // ) as [string[], string[]];
-    //
-    // let userDataAmounts;
-    // const bptIndex = sortedTokens
-    //   .map((t) => t.toLowerCase())
-    //   .indexOf(poolAddress.toLowerCase());
-    // if (bptIndex === -1) {
-    //   userDataAmounts = sortedAmounts;
-    // } else {
-    //   userDataAmounts = [
-    //     ...sortedAmounts.slice(0, bptIndex),
-    //     ...sortedAmounts.slice(bptIndex + 1),
-    //   ];
-    // }
-    //
-    // const userData = ComposableStablePoolEncoder.joinInit(userDataAmounts);
-    // const functionName = 'joinPool';
-    //
-    // const attributes = {
-    //   poolId: poolId,
-    //   sender: joiner,
-    //   recipient: joiner,
-    //   joinPoolRequest: {
-    //     assets: sortedTokens,
-    //     maxAmountsIn: sortedAmounts,
-    //     userData,
-    //     fromInternalBalance: false,
-    //   },
-    // };
-    //
-    // const vaultInterface = Vault__factory.createInterface();
-    // const data = vaultInterface.encodeFunctionData(functionName, [
-    //   attributes.poolId,
-    //   attributes.sender,
-    //   attributes.recipient,
-    //   attributes.joinPoolRequest,
-    // ]);
-    //
-    // return {
-    //   to: balancerVault,
-    //   functionName,
-    //   attributes,
-    //   data,
-    // };
+    const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
+    // sort inputs
+    const tokensWithBpt = [...tokensIn, poolAddress];
+    const amountsWithBpt = [
+      ...amountsIn,
+      parseFixed(BigInt(2 ** 53 - 1).toString(), 18).toString(), // the max amount of BPT is the max big int number;
+    ];
+
+    const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
+      tokensWithBpt,
+      amountsWithBpt
+    ) as [string[], string[]];
+
+    const userData = ComposableStablePoolEncoder.joinInit(sortedAmounts);
+
+    const functionName = 'joinPool';
+
+    const attributes = {
+      poolId: poolId,
+      sender: joiner,
+      recipient: joiner,
+      joinPoolRequest: {
+        assets: sortedTokens,
+        maxAmountsIn: sortedAmounts,
+        userData,
+        fromInternalBalance: false,
+      },
+    };
+    const vaultInterface = Vault__factory.createInterface();
+    const data = vaultInterface.encodeFunctionData(functionName, [
+      attributes.poolId,
+      attributes.sender,
+      attributes.recipient,
+      attributes.joinPoolRequest,
+    ]);
+
+    return {
+      to: balancerVault,
+      functionName,
+      attributes,
+      data,
+    };
   }
 }

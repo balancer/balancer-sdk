@@ -12,6 +12,10 @@ import { forkSetup } from '@/test/lib/utils';
 import dotenv from 'dotenv';
 import { isSameAddress } from '@/lib/utils';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { Vault__factory } from '@balancer-labs/typechain';
+import ComposableStablePoolAbi from '@/lib/abi/ComposableStable.json';
+import { Contract } from '@ethersproject/contracts';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 
 dotenv.config();
 
@@ -35,6 +39,11 @@ const tokenRateCacheDurations = ['0', '0'];
 const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`;
 const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const tokenAddresses = [USDC_address, USDT_address];
+const slots = [addresses.USDC.slot, addresses.USDT.slot];
+const balances = [
+  parseFixed('100000', 6).toString(),
+  parseFixed('100000', 6).toString(),
+];
 const amplificationParameter = '2';
 const swapFee = '0.01';
 
@@ -50,8 +59,17 @@ describe('creating composable stable pool', async () => {
     PoolType.ComposableStable
   );
   context('create', async () => {
-    beforeEach(async () => {
-      await forkSetup(signer, [], [], [], alchemyRpcUrl, blockNumber, false);
+    let poolAddress: string;
+    before(async () => {
+      await forkSetup(
+        signer,
+        tokenAddresses,
+        slots,
+        balances,
+        alchemyRpcUrl,
+        blockNumber,
+        false
+      );
     });
     it('should create a pool', async () => {
       const { to, data } = composableStablePoolFactory.create({
@@ -94,7 +112,60 @@ describe('creating composable stable pool', async () => {
           }
         })
         .find((parsedLog) => parsedLog?.name === 'PoolCreated');
+      if (poolCreationEvent) {
+        poolAddress = poolCreationEvent.args.pool;
+      }
       expect(!!poolCreationEvent).to.be.true;
+      return;
+    });
+    it('should init join a pool', async () => {
+      const signerAddress = await signer.getAddress();
+      const composableStablePoolInterface = new Interface(
+        ComposableStablePoolAbi
+      );
+      const pool = new Contract(
+        poolAddress.toLocaleLowerCase(),
+        composableStablePoolInterface,
+        provider
+      );
+      const poolId = await pool.getPoolId();
+      const amountsIn = [
+        parseFixed('200', 6).toString(),
+        parseFixed('800', 6).toString(),
+      ];
+      const initJoinParams = composableStablePoolFactory.buildInitJoin({
+        joiner: signerAddress,
+        poolId,
+        poolAddress,
+        tokensIn: tokenAddresses,
+        amountsIn,
+      });
+      const tx = await signer.sendTransaction({
+        to: initJoinParams.to,
+        data: initJoinParams.data,
+        gasLimit: 30000000,
+      });
+      await tx.wait();
+      const receipt: TransactionReceipt = await provider.getTransactionReceipt(
+        tx.hash
+      );
+      const vaultInterface = new Interface(Vault__factory.abi);
+      const poolInitJoinEvent: LogDescription | null | undefined = receipt.logs
+        .filter((log: Log) => {
+          return isSameAddress(log.address, initJoinParams.to);
+        })
+        .map((log) => {
+          return vaultInterface.parseLog(log);
+        })
+        .find((parsedLog) => parsedLog?.name === 'PoolBalanceChanged');
+      if (!poolInitJoinEvent) {
+        throw new Error('Expected poolInitJoinEvent to be truthy');
+      }
+      const deltas = poolInitJoinEvent.args['deltas'];
+      const deltasString = deltas
+        .slice(1)
+        .map((delta: BigNumber) => delta.toString());
+      expect(deltasString).deep.equal(amountsIn);
     });
   });
 });
