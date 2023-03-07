@@ -34,7 +34,7 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
     for (let i = 0; i < upScaledBalances.length; i++) {
       const price = bptSpotPrice(
         BigInt(parsedAmp), // this already includes the extra digits from precision
-        upScaledBalances.map(BigInt),
+        upScaledBalances,
         totalShares,
         i
       );

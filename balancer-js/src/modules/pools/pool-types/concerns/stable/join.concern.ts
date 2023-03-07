@@ -20,7 +20,7 @@ type SortedValues = {
   parsedAmp: string;
   parsedTotalShares: string;
   swapFeeEvm: bigint;
-  upScaledBalances: string[];
+  upScaledBalances: bigint[];
   upScaledAmountsIn: bigint[];
   sortedAmountsIn: string[];
 };
@@ -160,7 +160,7 @@ export class StablePoolJoin implements JoinConcern {
     >): { expectedBPTOut: string; minBPTOut: string } => {
     const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(parsedAmp as string),
-      upScaledBalances.map((b) => BigInt(b)),
+      upScaledBalances,
       upScaledAmountsIn,
       BigInt(parsedTotalShares),
       swapFeeEvm

@@ -24,7 +24,7 @@ import { Pool } from '@/types';
 interface SortedValues {
   sortedAmountsIn: string[];
   scalingFactorsWithoutBpt: bigint[];
-  upScaledBalancesWithoutBpt: string[];
+  upScaledBalancesWithoutBpt: bigint[];
   parsedAmp: string;
   parsedTotalShares: string;
   swapFeeEvm: bigint;
@@ -296,7 +296,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
   calcBptOutGivenExactTokensIn(
     amountsIn: string[],
     scalingFactorsWithoutBpt: bigint[],
-    upScaledBalancesWithoutBpt: string[],
+    upScaledBalancesWithoutBpt: bigint[],
     upscaledAmp: string,
     upscaledTotalShares: string,
     swapFeeEvm: bigint
@@ -312,7 +312,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
     );
     const expectedBPTOut = StableMathBigInt._calcBptOutGivenExactTokensIn(
       BigInt(upscaledAmp),
-      upScaledBalancesWithoutBpt.map(BigInt), // Should not have BPT
+      upScaledBalancesWithoutBpt,
       upScaledAmountsIn, // Should not have BPT
       BigInt(upscaledTotalShares),
       swapFeeEvm

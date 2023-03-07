@@ -41,7 +41,7 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
       else {
         weight = BigInt(weightString);
       }
-      const price = (weight * totalShares) / BigInt(upScaledBalances[i]);
+      const price = (weight * totalShares) / upScaledBalances[i];
       const amountUpscaled = _upscale(tokenAmounts[i], scalingFactors[i]);
       const newTerm = (price * amountUpscaled) / ONE;
       bptZeroPriceImpact += newTerm;

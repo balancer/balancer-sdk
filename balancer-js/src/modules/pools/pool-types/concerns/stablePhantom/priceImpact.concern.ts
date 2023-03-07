@@ -47,7 +47,7 @@ export class StablePhantomPriceImpact implements PriceImpactConcern {
       const price =
         (bptSpotPrice(
           BigInt(parsedAmp), // this already includes the extra digits from precision
-          upScaledBalancesWithoutBpt.map(BigInt),
+          upScaledBalancesWithoutBpt,
           totalShares,
           i
         ) *

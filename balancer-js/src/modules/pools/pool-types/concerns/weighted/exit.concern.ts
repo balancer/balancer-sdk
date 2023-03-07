@@ -28,7 +28,7 @@ interface SortedValues {
   parsedWeights: string[];
   parsedTotalShares: string;
   swapFeeEvm: bigint;
-  upScaledBalances: string[];
+  upScaledBalances: bigint[];
 }
 
 type ExactBPTInSortedValues = SortedValues & {
@@ -315,7 +315,7 @@ export class WeightedPoolExit implements ExitConcern {
   } => {
     // Calculate amount out given BPT in
     const amountOut = SOR.WeightedMaths._calcTokenOutGivenExactBptIn(
-      BigInt(upScaledBalances[singleTokenOutIndex]),
+      upScaledBalances[singleTokenOutIndex],
       BigInt(parsedWeights[singleTokenOutIndex]),
       BigInt(bptIn),
       BigInt(parsedTotalShares),
@@ -359,7 +359,7 @@ export class WeightedPoolExit implements ExitConcern {
   } => {
     // Calculate amounts out given BPT in
     const amountsOut = SOR.WeightedMaths._calcTokensOutGivenExactBptIn(
-      upScaledBalances.map((b) => BigInt(b)),
+      upScaledBalances,
       BigInt(bptIn),
       BigInt(parsedTotalShares)
     ).map((amount) => amount.toString());
@@ -395,9 +395,9 @@ export class WeightedPoolExit implements ExitConcern {
   } => {
     // Calculate expected BPT in given tokens out
     const bptIn = SOR.WeightedMaths._calcBptInGivenExactTokensOut(
-      upScaledBalances.map((b) => BigInt(b)),
+      upScaledBalances,
       parsedWeights.map((w) => BigInt(w)),
-      upScaledAmountsOut.map((a) => BigInt(a)),
+      upScaledAmountsOut,
       BigInt(parsedTotalShares),
       swapFeeEvm
     ).toString();

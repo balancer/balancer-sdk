@@ -28,7 +28,7 @@ interface SortedValues {
   parsedAmp?: string;
   parsedTotalShares: string;
   swapFeeEvm: bigint;
-  upScaledBalances: string[];
+  upScaledBalances: bigint[];
 }
 
 type ExactBPTInSortedValues = SortedValues & {
@@ -318,7 +318,7 @@ export class StablePoolExit implements ExitConcern {
     // Calculate amount out given BPT in
     const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
       BigInt(parsedAmp as string),
-      upScaledBalances.map((b) => BigInt(b)),
+      upScaledBalances,
       singleTokenOutIndex,
       BigInt(bptIn),
       BigInt(parsedTotalShares),
@@ -361,7 +361,7 @@ export class StablePoolExit implements ExitConcern {
     expectedAmountsOut: string[];
   } => {
     const amountsOut = SOR.StableMathBigInt._calcTokensOutGivenExactBptIn(
-      upScaledBalances.map((b) => BigInt(b)),
+      upScaledBalances,
       BigInt(bptIn),
       BigInt(parsedTotalShares)
     ).map((amount) => amount.toString());
@@ -398,7 +398,7 @@ export class StablePoolExit implements ExitConcern {
     // Calculate expected BPT in given tokens out
     const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(
       BigInt(parsedAmp as string),
-      upScaledBalances.map((b) => BigInt(b)),
+      upScaledBalances,
       upScaledAmountsOut,
       BigInt(parsedTotalShares),
       swapFeeEvm

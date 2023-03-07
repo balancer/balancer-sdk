@@ -31,8 +31,8 @@ type ParsedPoolInfo = {
   protocolYieldFeePct: string;
   scalingFactors: bigint[];
   scalingFactorsWithoutBpt: bigint[];
-  upScaledBalances: string[];
-  upScaledBalancesWithoutBpt: string[];
+  upScaledBalances: bigint[];
+  upScaledBalancesWithoutBpt: bigint[];
   totalShares: string;
 };
 
@@ -81,12 +81,7 @@ export const parsePoolInfo = (
     SolidityMaths.mulDownFixed(sf, priceRates[i])
   );
   // This assumes token.balance is in human scale (e.g. from SG)
-  let upScaledBalances = _upscaleArray(balancesEvm, scalingFactors).map((b) =>
-    b.toString()
-  );
-  // let upScaledBalances = pool.tokens.map((token) =>
-  //   parseFixed(token.balance, 18).toString()
-  // );
+  let upScaledBalances = _upscaleArray(balancesEvm, scalingFactors);
   if (wrappedNativeAsset) {
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     let sfString;
@@ -115,7 +110,7 @@ export const parsePoolInfo = (
       number[],
       string[],
       bigint[],
-      string[],
+      bigint[],
       string[],
       bigint[],
       bigint[],
@@ -130,9 +125,9 @@ export const parsePoolInfo = (
   const parsedTotalShares = parseFixed(pool.totalShares, 18).toString();
   const swapFeeEvm = parseFixed(pool.swapFee, 18).toBigInt();
 
-  const higherBalanceTokenIndex = upScaledBalances
-    .map(BigInt)
-    .indexOf(SolidityMaths.max(...upScaledBalances.map(BigInt)));
+  const higherBalanceTokenIndex = upScaledBalances.indexOf(
+    SolidityMaths.max(upScaledBalances)
+  );
   const protocolSwapFeePct = parseFixed(
     pool.protocolSwapFeeCache || '0',
     18
@@ -145,7 +140,7 @@ export const parsePoolInfo = (
     parsedTokensWithoutBpt: string[] = [],
     balancesEvmWithoutBpt: bigint[] = [],
     priceRatesWithoutBpt: bigint[] = [],
-    upScaledBalancesWithoutBpt: string[] = [];
+    upScaledBalancesWithoutBpt: bigint[] = [];
   const bptIndex = parsedTokens.indexOf(pool.address);
   if (bptIndex !== -1) {
     scalingFactors.forEach((_, i) => {
