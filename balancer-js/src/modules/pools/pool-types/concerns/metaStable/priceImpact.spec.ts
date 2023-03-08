@@ -12,14 +12,17 @@ const pool = pools_14717479.find(
   (pool) => pool.id == wstETHwETH
 ) as unknown as Pool;
 
-const tokenAmounts = ['629870162919981039400158', '615159929697'];
+const tokenAmounts = [
+  BigInt('629870162919981039400158'),
+  BigInt('615159929697'),
+];
 
 describe('metastable pool price impact', () => {
   context('bpt zero price impact', () => {
     it('non-proportional case', () => {
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
         pool,
-        tokenAmounts.map(BigInt)
+        tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('662816325116386209174659');
     });
@@ -44,7 +47,7 @@ describe('metastable pool price impact', () => {
       const priceImpact = priceImpactCalc.calcPriceImpact(
         pool,
         tokenAmounts,
-        '660816325116386208862285',
+        BigInt('660816325116386208862285'),
         true
       );
       expect(priceImpact.toString()).to.eq('3017427187914863');

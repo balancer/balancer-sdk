@@ -12,7 +12,11 @@ const pool = pools_14717479.find(
   (pool) => pool.id == staBal3Id
 ) as unknown as Pool;
 
-const tokenAmounts = ['10000100000000000000', '100000000', '20345000'];
+const tokenAmounts = [
+  BigInt('10000100000000000000'),
+  BigInt('100000000'),
+  BigInt('20345000'),
+];
 
 describe('stable pool price impact', () => {
   context('bpt zero price impact', () => {
@@ -34,7 +38,7 @@ describe('stable pool price impact', () => {
     it('non-proportional case', () => {
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
         pool,
-        tokenAmounts.map(BigInt)
+        tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('129598303041827170846');
     });
@@ -45,7 +49,7 @@ describe('stable pool price impact', () => {
       const priceImpact = priceImpactCalc.calcPriceImpact(
         pool,
         tokenAmounts,
-        '109598303041827170846',
+        BigInt('109598303041827170846'),
         true
         // this not the actual bptAmount that would result
         // but it is still useful for testing purposes

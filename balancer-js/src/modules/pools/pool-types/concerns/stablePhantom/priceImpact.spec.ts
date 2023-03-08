@@ -13,9 +13,9 @@ const pool = pools_14717479.find(
 ) as unknown as Pool;
 
 const tokenAmounts = [
-  '6298701629199810399876',
-  '615159929697',
-  '101515992969778',
+  BigInt('6298701629199810399876'),
+  BigInt('615159929697'),
+  BigInt('101515992969778'),
 ];
 
 describe('phantomStable pool price impact', () => {
@@ -23,7 +23,7 @@ describe('phantomStable pool price impact', () => {
     it('non-proportional case', () => {
       const bptZeroPriceImpact = priceImpactCalc.bptZeroPriceImpact(
         pool,
-        tokenAmounts.map(BigInt)
+        tokenAmounts
       );
       expect(bptZeroPriceImpact.toString()).to.eq('6294084206629046579738');
     });
@@ -50,7 +50,7 @@ describe('phantomStable pool price impact', () => {
       const priceImpact = priceImpactCalc.calcPriceImpact(
         pool,
         tokenAmounts,
-        '6094084206629046579738',
+        BigInt('6094084206629046579738'),
         true
       );
       expect(priceImpact.toString()).to.eq('31775869758678519');
