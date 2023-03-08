@@ -4,6 +4,7 @@ import { AddressZero, MaxUint256, WeiPerEther } from '@ethersproject/constants';
 import {
   JsonRpcProvider,
   JsonRpcSigner,
+  Log,
   TransactionReceipt,
 } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
@@ -20,13 +21,15 @@ import {
   BalancerSDK,
   GraphQLArgs,
   GraphQLQuery,
+  Address,
+  isSameAddress,
 } from '@/.';
 import { balancerVault } from '@/lib/constants/config';
 import { parseEther } from '@ethersproject/units';
 import { ERC20 } from '@/modules/contracts/implementations/ERC20';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 
-import { Interface } from '@ethersproject/abi';
+import { Interface, LogDescription } from '@ethersproject/abi';
 
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const liquidityGauge = new Interface(liquidityGaugeAbi);
@@ -303,10 +306,9 @@ export async function sendTransactionGetBalances(
     to,
     data,
     value,
-    gasLimit: 3000000,
+    gasLimit: 30000000,
   });
   const transactionReceipt = await transactionResponse.wait();
-
   const { gasUsed, effectiveGasPrice } = transactionReceipt;
   const gasPrice = gasUsed.mul(effectiveGasPrice);
 
@@ -330,3 +332,33 @@ export async function sendTransactionGetBalances(
     gasUsed,
   };
 }
+
+export const findEventInReceiptLogs = ({
+  receipt,
+  to,
+  contractInterface,
+  logName,
+}: {
+  receipt: TransactionReceipt;
+  to: Address;
+  contractInterface: Interface;
+  logName: string;
+}): LogDescription => {
+  const event = receipt.logs
+    .filter((log: Log) => {
+      return isSameAddress(log.address, to);
+    })
+    .map((log) => {
+      try {
+        return contractInterface.parseLog(log);
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    })
+    .find((parsedLog) => parsedLog?.name === logName);
+  if (!event) {
+    throw new Error('Event not found in logs');
+  }
+  return event;
+};

@@ -111,15 +111,20 @@ export class ComposableStableFactory implements PoolFactory {
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     // sort inputs
     const tokensWithBpt = [...tokensIn, poolAddress];
-    const amountsWithBpt = [
+    const amountsWithBpt = [...amountsIn, '0'];
+    const maxAmountsWithBpt = [
       ...amountsIn,
-      parseFixed(BigInt(2 ** 53 - 1).toString(), 18).toString(), // the max amount of BPT is the max big int number;
+      // this max amount needs to be >= PREMINT - bptAmountOut,
+      // The vault returns BAL#506 if it's not,
+      // PREMINT is around 2^111, but here we set the max amount of BPT as MAX_UINT_256-1 for safety
+      BigInt.asUintN(256, BigInt(-1)).toString(),
     ];
-
-    const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
-      tokensWithBpt,
-      amountsWithBpt
-    ) as [string[], string[]];
+    const [sortedTokens, sortedAmounts, sortedMaxAmounts] =
+      assetHelpers.sortTokens(
+        tokensWithBpt,
+        amountsWithBpt,
+        maxAmountsWithBpt
+      ) as [string[], string[], string[]];
 
     const userData = ComposableStablePoolEncoder.joinInit(sortedAmounts);
 
@@ -131,7 +136,7 @@ export class ComposableStableFactory implements PoolFactory {
       recipient: joiner,
       joinPoolRequest: {
         assets: sortedTokens,
-        maxAmountsIn: sortedAmounts,
+        maxAmountsIn: sortedMaxAmounts,
         userData,
         fromInternalBalance: false,
       },
