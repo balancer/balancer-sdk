@@ -46,8 +46,8 @@ const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const tokenAddresses = [USDC_address, USDT_address];
 const slots = [addresses.USDC.slot, addresses.USDT.slot];
 const balances = [
-  parseFixed('1000000000', 6).toString(),
-  parseFixed('1000000000', 6).toString(),
+  parseFixed('1000000000', addresses.USDC.decimals).toString(),
+  parseFixed('1000000000', addresses.USDT.decimals).toString(),
 ];
 const amplificationParameter = '2';
 const swapFee = '0.01';
