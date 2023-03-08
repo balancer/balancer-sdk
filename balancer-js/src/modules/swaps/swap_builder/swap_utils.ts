@@ -91,7 +91,10 @@ function swapFragment(relayer: SwapRelayer): JsonFragment[] {
     );
   else
     return Vault__factory.abi.filter(
-      (f) => f.type === 'function' && ['swap', 'batchSwap'].includes(f.name)
+      (f) =>
+        f.type === 'function' &&
+        f.name &&
+        ['swap', 'batchSwap'].includes(f.name)
     );
 }
 
