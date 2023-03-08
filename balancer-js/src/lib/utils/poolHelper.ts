@@ -109,25 +109,24 @@ export const parsePoolInfo = (
   const higherBalanceTokenIndex = upScaledBalances.indexOf(
     SolidityMaths.max(upScaledBalances)
   );
-  const scalingFactorsWithoutBpt: bigint[] = [],
-    scalingFactorsRawWithoutBpt: bigint[] = [],
-    poolTokensWithoutBpt: string[] = [],
-    balancesEvmWithoutBpt: bigint[] = [],
-    priceRatesWithoutBpt: bigint[] = [],
-    upScaledBalancesWithoutBpt: bigint[] = [];
+
+  const scalingFactorsWithoutBpt = [...scalingFactors];
+  const scalingFactorsRawWithoutBpt = [...scalingFactorsRaw];
+  const poolTokensWithoutBpt = [...poolTokens];
+  const balancesEvmWithoutBpt = [...balancesEvm];
+  const priceRatesWithoutBpt = [...priceRates];
+  const upScaledBalancesWithoutBpt = [...upScaledBalances];
+
   const bptIndex = poolTokens.indexOf(pool.address);
   if (bptIndex !== -1) {
-    scalingFactors.forEach((_, i) => {
-      if (i !== bptIndex) {
-        scalingFactorsWithoutBpt.push(scalingFactors[i]);
-        scalingFactorsRawWithoutBpt.push(scalingFactorsRaw[i]);
-        poolTokensWithoutBpt.push(poolTokens[i]);
-        balancesEvmWithoutBpt.push(balancesEvm[i]);
-        priceRatesWithoutBpt.push(priceRates[i]);
-        upScaledBalancesWithoutBpt.push(upScaledBalances[i]);
-      }
-    });
+    scalingFactorsWithoutBpt.splice(bptIndex, 1);
+    scalingFactorsRawWithoutBpt.splice(bptIndex, 1);
+    poolTokensWithoutBpt.splice(bptIndex, 1);
+    balancesEvmWithoutBpt.splice(bptIndex, 1);
+    priceRatesWithoutBpt.splice(bptIndex, 1);
+    upScaledBalancesWithoutBpt.splice(bptIndex, 1);
   }
+
   return {
     bptIndex,
     higherBalanceTokenIndex,
