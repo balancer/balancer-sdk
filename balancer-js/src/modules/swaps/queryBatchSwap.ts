@@ -9,7 +9,7 @@ import {
   QueryWithSorInput,
   QueryWithSorOutput,
 } from './types';
-import { Vault } from '@balancer-labs/typechain';
+import { Vault } from '@/contracts/Vault';
 
 /*
  * queryBatchSwap simulates a call to `batchSwap`, returning an array of Vault asset deltas. Calls to `swap` cannot be

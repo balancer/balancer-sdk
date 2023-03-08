@@ -2,7 +2,7 @@ import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Interface } from '@ethersproject/abi';
 import { MaxUint256, WeiPerEther, Zero } from '@ethersproject/constants';
-import { Vault } from '@balancer-labs/typechain';
+import { Vault } from '@/contracts/Vault';
 
 import { Swaps } from '@/modules/swaps/swaps.module';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
