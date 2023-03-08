@@ -1,3 +1,4 @@
+// yarn test:only src/modules/pools/pool-types/concerns/stable/priceImpact.spec.ts
 import { expect } from 'chai';
 import { StablePoolPriceImpact } from '@/modules/pools/pool-types/concerns/stable/priceImpact.concern';
 import pools_14717479 from '@/test/lib/pools_14717479.json';

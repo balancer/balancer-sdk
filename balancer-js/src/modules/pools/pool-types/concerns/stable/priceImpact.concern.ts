@@ -1,10 +1,5 @@
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
-import {
-  ONE,
-  BZERO,
-  _computeScalingFactor,
-  _upscale,
-} from '@/lib/utils/solidityMaths';
+import { ONE, BZERO, _upscale } from '@/lib/utils/solidityMaths';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Pool } from '@/types';
@@ -26,7 +21,7 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
     const {
       ampWithPrecision,
       totalSharesEvm,
-      scalingFactors,
+      scalingFactorsRaw,
       upScaledBalances,
     } = parsePoolInfo(pool);
 
@@ -38,7 +33,7 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
         totalSharesEvm,
         i
       );
-      const amountUpscaled = _upscale(tokenAmounts[i], scalingFactors[i]);
+      const amountUpscaled = _upscale(tokenAmounts[i], scalingFactorsRaw[i]);
       const newTerm = (price * amountUpscaled) / ONE;
       bptZeroPriceImpact += newTerm;
     }
@@ -53,7 +48,7 @@ export class StablePoolPriceImpact implements PriceImpactConcern {
   ): string {
     const bptZeroPriceImpact = this.bptZeroPriceImpact(
       pool,
-      tokenAmounts.map((a) => BigInt(a))
+      tokenAmounts.map(BigInt)
     );
     return calcPriceImpact(
       BigInt(bptAmount),

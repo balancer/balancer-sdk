@@ -1,12 +1,6 @@
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
-import {
-  ONE,
-  BZERO,
-  SolidityMaths,
-  _upscale,
-  _computeScalingFactor,
-} from '@/lib/utils/solidityMaths';
+import { ONE, BZERO, _upscale } from '@/lib/utils/solidityMaths';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Pool } from '@/types';
 import { parsePoolInfo } from '@/lib/utils';
@@ -23,20 +17,27 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
     if (tokenAmounts.length !== pool.tokensList.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
-    const { priceRates, ampWithPrecision, totalSharesEvm, upScaledBalances } =
-      parsePoolInfo(pool);
+    const {
+      priceRates,
+      ampWithPrecision,
+      scalingFactorsRaw,
+      totalSharesEvm,
+      upScaledBalances,
+    } = parsePoolInfo(pool);
 
     let bptZeroPriceImpact = BZERO;
     for (let i = 0; i < upScaledBalances.length; i++) {
-      const price =
-        (bptSpotPrice(ampWithPrecision, upScaledBalances, totalSharesEvm, i) *
-          priceRates[i]) /
-        ONE;
-      const scalingFactor = _computeScalingFactor(
-        BigInt(pool.tokens[i].decimals as number)
+      const price = bptSpotPrice(
+        ampWithPrecision,
+        upScaledBalances,
+        totalSharesEvm,
+        i
       );
-      const amountUpscaled = _upscale(tokenAmounts[i], scalingFactor);
-      const newTerm = (price * amountUpscaled) / ONE;
+      // TODO: check if it makes sense to multiply by priceRates since upscaledBalances already have the priceRate applied
+      // if yes, we should likely be able to remove this concern and reuse from stable pool
+      const priceWithRate = (price * priceRates[i]) / ONE;
+      const amountUpscaled = _upscale(tokenAmounts[i], scalingFactorsRaw[i]);
+      const newTerm = (priceWithRate * amountUpscaled) / ONE;
       bptZeroPriceImpact += newTerm;
     }
     return bptZeroPriceImpact;
@@ -50,7 +51,7 @@ export class MetaStablePoolPriceImpact implements PriceImpactConcern {
   ): string {
     const bptZeroPriceImpact = this.bptZeroPriceImpact(
       pool,
-      tokenAmounts.map((a) => BigInt(a))
+      tokenAmounts.map(BigInt)
     );
     return calcPriceImpact(
       BigInt(bptAmount),

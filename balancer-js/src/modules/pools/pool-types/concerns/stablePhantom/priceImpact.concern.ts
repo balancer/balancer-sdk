@@ -1,13 +1,6 @@
-import { cloneDeep } from 'lodash';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
-import {
-  ONE,
-  BZERO,
-  _computeScalingFactor,
-  _upscale,
-  SolidityMaths,
-} from '@/lib/utils/solidityMaths';
+import { ONE, BZERO, _upscale } from '@/lib/utils/solidityMaths';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { bptSpotPrice } from '@/lib/utils/stableMathHelpers';
 import { Pool } from '@/types';
@@ -21,38 +14,34 @@ export class StablePhantomPriceImpact implements PriceImpactConcern {
    * @returns { bigint } BPT amount.
    */
   bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
-    if (tokenAmounts.length !== pool.tokensList.length - 1)
-      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
-
-    const tokensList = cloneDeep(pool.tokensList);
-    const bptIndex = tokensList.findIndex((token) => token == pool.address);
-
     // upscales amp, swapfee, totalshares
     const {
-      priceRates,
       ampWithPrecision,
+      poolTokensWithoutBpt,
+      priceRatesWithoutBpt,
+      scalingFactorsWithoutBpt,
       totalSharesEvm,
-      scalingFactors,
       upScaledBalancesWithoutBpt,
     } = parsePoolInfo(pool);
 
-    tokensList.splice(bptIndex, 1);
-
-    if (tokenAmounts.length !== tokensList.length)
+    if (tokenAmounts.length !== poolTokensWithoutBpt.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+
     let bptZeroPriceImpact = BZERO;
-    for (let i = 0; i < tokensList.length; i++) {
-      const price =
-        (bptSpotPrice(
-          ampWithPrecision,
-          upScaledBalancesWithoutBpt,
-          totalSharesEvm,
-          i
-        ) *
-          priceRates[i]) /
-        ONE;
-      const amountUpscaled = _upscale(tokenAmounts[i], scalingFactors[i]);
-      const newTerm = (price * amountUpscaled) / ONE;
+    for (let i = 0; i < tokenAmounts.length; i++) {
+      const price = bptSpotPrice(
+        ampWithPrecision,
+        upScaledBalancesWithoutBpt,
+        totalSharesEvm,
+        i
+      );
+      // TODO: check if it makes sense to multiply by priceRates since upscaledBalances already have the priceRate applied
+      const priceWithRate = (price * priceRatesWithoutBpt[i]) / ONE;
+      const amountUpscaled = _upscale(
+        tokenAmounts[i],
+        scalingFactorsWithoutBpt[i]
+      );
+      const newTerm = (priceWithRate * amountUpscaled) / ONE;
       bptZeroPriceImpact += newTerm;
     }
     return bptZeroPriceImpact;
@@ -66,7 +55,7 @@ export class StablePhantomPriceImpact implements PriceImpactConcern {
   ): string {
     const bptZeroPriceImpact = this.bptZeroPriceImpact(
       pool,
-      tokenAmounts.map((a) => BigInt(a))
+      tokenAmounts.map(BigInt)
     );
     return calcPriceImpact(
       BigInt(bptAmount),

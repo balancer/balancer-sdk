@@ -1,12 +1,6 @@
-import { cloneDeep } from 'lodash';
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
-import {
-  ONE,
-  BZERO,
-  _computeScalingFactor,
-  _upscale,
-} from '@/lib/utils/solidityMaths';
+import { ONE, BZERO, _upscale } from '@/lib/utils/solidityMaths';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Pool } from '@/types';
 import { parsePoolInfo } from '@/lib/utils';
@@ -22,15 +16,14 @@ export class WeightedPoolPriceImpact implements PriceImpactConcern {
     if (tokenAmounts.length !== pool.tokensList.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
-    // swapFee, totalShares, totalWeight all scaled up to 18 decimals
-    const { totalSharesEvm, weights, scalingFactors, upScaledBalances } =
+    // totalShares, balances and weights all scaled up to 18 decimals
+    const { scalingFactorsRaw, totalSharesEvm, upScaledBalances, weights } =
       parsePoolInfo(pool);
 
-    const tokensList = cloneDeep(pool.tokensList);
     let bptZeroPriceImpact = BZERO;
-    for (let i = 0; i < tokensList.length; i++) {
+    for (let i = 0; i < tokenAmounts.length; i++) {
       const price = (weights[i] * totalSharesEvm) / upScaledBalances[i];
-      const amountUpscaled = _upscale(tokenAmounts[i], scalingFactors[i]);
+      const amountUpscaled = _upscale(tokenAmounts[i], scalingFactorsRaw[i]);
       const newTerm = (price * amountUpscaled) / ONE;
       bptZeroPriceImpact += newTerm;
     }

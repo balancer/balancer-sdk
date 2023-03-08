@@ -1,3 +1,4 @@
+// yarn test:only src/modules/pools/pool-types/concerns/metaStable/priceImpact.spec.ts
 import { expect } from 'chai';
 import { MetaStablePoolPriceImpact } from '@/modules/pools/pool-types/concerns/metaStable/priceImpact.concern';
 import pools_14717479 from '@/test/lib/pools_14717479.json';

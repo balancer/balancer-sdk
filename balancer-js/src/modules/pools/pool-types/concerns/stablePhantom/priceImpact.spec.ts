@@ -1,7 +1,9 @@
+// yarn test:only src/modules/pools/pool-types/concerns/stablePhantom/priceImpact.spec.ts
 import { expect } from 'chai';
 import { StablePhantomPriceImpact } from '@/modules/pools/pool-types/concerns/stablePhantom/priceImpact.concern';
 import pools_14717479 from '@/test/lib/pools_14717479.json';
 import { Pool } from '@/types';
+import { parseFixed } from '@/lib/utils';
 
 const priceImpactCalc = new StablePhantomPriceImpact();
 const bbaUSDPoolId =
@@ -39,6 +41,9 @@ describe('phantomStable pool price impact', () => {
         pool,
         tokenAmounts
       );
+      console.log(bptZeroPriceImpact.toString());
+      console.log(parseFixed(pool.totalShares, 18).toString());
+
       expect(bptZeroPriceImpact.toString()).to.eq('2584652218704385059205928');
     });
   });

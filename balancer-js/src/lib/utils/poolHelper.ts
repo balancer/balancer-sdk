@@ -30,6 +30,8 @@ type ParsedPoolInfo = {
   protocolYieldFeePct: string;
   scalingFactors: bigint[];
   scalingFactorsWithoutBpt: bigint[];
+  scalingFactorsRaw: bigint[];
+  scalingFactorsRawWithoutBpt: bigint[];
   upScaledBalances: bigint[];
   upScaledBalancesWithoutBpt: bigint[];
   totalSharesEvm: bigint;
@@ -72,9 +74,7 @@ export const parsePoolInfo = (
     return parseFixed(oldPriceRate ?? '1', 18).toBigInt();
   });
 
-  const scalingFactorsRaw = decimals.map((d) =>
-    _computeScalingFactor(BigInt(d))
-  );
+  let scalingFactorsRaw = decimals.map((d) => _computeScalingFactor(BigInt(d)));
   let scalingFactors = scalingFactorsRaw.map((sf, i) =>
     SolidityMaths.mulDownFixed(sf, priceRates[i])
   );
@@ -86,6 +86,7 @@ export const parsePoolInfo = (
       poolTokens,
       decimals,
       scalingFactors,
+      scalingFactorsRaw,
       balancesEvm,
       upScaledBalances,
       weights,
@@ -96,15 +97,18 @@ export const parsePoolInfo = (
       poolTokens,
       decimals,
       scalingFactors,
+      scalingFactorsRaw,
       balancesEvm,
       upScaledBalances,
       weights,
       priceRates,
       oldPriceRates,
-      exemptedTokens
+      exemptedTokens,
+      decimals
     ) as [
       string[],
       number[],
+      bigint[],
       bigint[],
       bigint[],
       bigint[],
@@ -133,6 +137,7 @@ export const parsePoolInfo = (
     18
   ).toString();
   const scalingFactorsWithoutBpt: bigint[] = [],
+    scalingFactorsRawWithoutBpt: bigint[] = [],
     poolTokensWithoutBpt: string[] = [],
     balancesEvmWithoutBpt: bigint[] = [],
     priceRatesWithoutBpt: bigint[] = [],
@@ -142,6 +147,7 @@ export const parsePoolInfo = (
     scalingFactors.forEach((_, i) => {
       if (i !== bptIndex) {
         scalingFactorsWithoutBpt.push(scalingFactors[i]);
+        scalingFactorsRawWithoutBpt.push(scalingFactorsRaw[i]);
         poolTokensWithoutBpt.push(poolTokens[i]);
         balancesEvmWithoutBpt.push(balancesEvm[i]);
         priceRatesWithoutBpt.push(priceRates[i]);
@@ -169,6 +175,8 @@ export const parsePoolInfo = (
     protocolYieldFeePct,
     scalingFactors,
     scalingFactorsWithoutBpt,
+    scalingFactorsRaw,
+    scalingFactorsRawWithoutBpt,
     upScaledBalances,
     upScaledBalancesWithoutBpt,
     totalSharesEvm: parseFixed(pool.totalShares || '0', 18).toBigInt(),
