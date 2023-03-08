@@ -131,6 +131,7 @@ export class Data implements BalancerDataRepositories {
         url: networkConfig.urls.subgraph,
         chainId: networkConfig.chainId,
         blockHeight: blockDayAgo,
+        query: subgraphQuery,
       });
     }
 
