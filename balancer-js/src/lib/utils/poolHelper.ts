@@ -11,23 +11,17 @@ import { AssetHelpers } from '@/lib/utils/assetHelpers';
 export const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
 type ParsedPoolInfo = {
-  athRateProduct: string;
   bptIndex: number;
-  exemptedTokens: boolean[];
   higherBalanceTokenIndex: number;
-  lastJoinExitInvariant: string;
   ampWithPrecision: bigint;
   balancesEvm: bigint[];
   balancesEvmWithoutBpt: bigint[];
-  oldPriceRates: bigint[];
   priceRates: bigint[];
   priceRatesWithoutBpt: bigint[];
   swapFeeEvm: bigint;
   poolTokens: string[];
   poolTokensWithoutBpt: string[];
   weights: bigint[];
-  protocolSwapFeePct: string;
-  protocolYieldFeePct: string;
   scalingFactors: bigint[];
   scalingFactorsWithoutBpt: bigint[];
   scalingFactorsRaw: bigint[];
@@ -50,9 +44,6 @@ export const parsePoolInfo = (
   wrappedNativeAsset?: string,
   unwrapNativeAsset?: boolean
 ): ParsedPoolInfo => {
-  let exemptedTokens = pool.tokens.map(
-    ({ isExemptFromYieldProtocolFee }) => !!isExemptFromYieldProtocolFee
-  );
   let poolTokens = unwrapNativeAsset
     ? pool.tokens.map((token) =>
         token.address === wrappedNativeAsset ? AddressZero : token.address
@@ -69,9 +60,6 @@ export const parsePoolInfo = (
   });
   let priceRates = pool.tokens.map((token) => {
     return parseFixed(token.priceRate ?? '1', 18).toBigInt();
-  });
-  let oldPriceRates = pool.tokens.map(({ oldPriceRate }) => {
-    return parseFixed(oldPriceRate ?? '1', 18).toBigInt();
   });
 
   let scalingFactorsRaw = decimals.map((d) => _computeScalingFactor(BigInt(d)));
@@ -91,8 +79,6 @@ export const parsePoolInfo = (
       upScaledBalances,
       weights,
       priceRates,
-      oldPriceRates,
-      exemptedTokens,
     ] = assetHelpers.sortTokens(
       poolTokens,
       decimals,
@@ -101,10 +87,7 @@ export const parsePoolInfo = (
       balancesEvm,
       upScaledBalances,
       weights,
-      priceRates,
-      oldPriceRates,
-      exemptedTokens,
-      decimals
+      priceRates
     ) as [
       string[],
       number[],
@@ -113,9 +96,7 @@ export const parsePoolInfo = (
       bigint[],
       bigint[],
       bigint[],
-      bigint[],
-      bigint[],
-      boolean[]
+      bigint[]
     ];
   }
 
@@ -128,14 +109,6 @@ export const parsePoolInfo = (
   const higherBalanceTokenIndex = upScaledBalances.indexOf(
     SolidityMaths.max(upScaledBalances)
   );
-  const protocolSwapFeePct = parseFixed(
-    pool.protocolSwapFeeCache || '0',
-    18
-  ).toString();
-  const protocolYieldFeePct = parseFixed(
-    pool.protocolYieldFeeCache || '0',
-    18
-  ).toString();
   const scalingFactorsWithoutBpt: bigint[] = [],
     scalingFactorsRawWithoutBpt: bigint[] = [],
     poolTokensWithoutBpt: string[] = [],
@@ -156,23 +129,17 @@ export const parsePoolInfo = (
     });
   }
   return {
-    athRateProduct: parseFixed(pool.athRateProduct || '0', 18).toString(),
     bptIndex,
-    exemptedTokens,
     higherBalanceTokenIndex,
-    lastJoinExitInvariant: pool.lastJoinExitInvariant || '0',
     ampWithPrecision,
     balancesEvm,
     balancesEvmWithoutBpt,
-    oldPriceRates,
     priceRates,
     priceRatesWithoutBpt,
     swapFeeEvm: parseFixed(pool.swapFee, 18).toBigInt(),
     poolTokens,
     poolTokensWithoutBpt,
     weights,
-    protocolSwapFeePct,
-    protocolYieldFeePct,
     scalingFactors,
     scalingFactorsWithoutBpt,
     scalingFactorsRaw,
