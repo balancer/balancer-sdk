@@ -470,11 +470,11 @@ Builds an exit transaction with exact BPT in and minimum token amounts out based
 ```js
 /**
  * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
- * @param exiter - Account address exiting pool
- * @param bptIn - BPT provided for exiting pool
- * @param slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
- * @param shouldUnwrapNativeAsset Indicates whether wrapped native asset should be unwrapped after exit.
- * @param singleTokenOut - Optional: token address that if provided will exit to given token
+ * @param exiter Account address exiting pool
+ * @param bptIn BPT provided for exiting pool in EVM scale
+ * @param slippage Maximum slippage tolerance in bps. i.e. 50 = 5%
+ * @param shouldUnwrapNativeAsset Indicates whether wrapped native asset should be unwrapped after exit. Defaults to false.
+ * @param singleTokenOut Optional: token address that if provided will exit to given token
  * @returns transaction request ready to send with signer.sendTransaction
  */
 buildExitExactBPTIn: (
