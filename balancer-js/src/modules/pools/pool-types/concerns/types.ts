@@ -7,6 +7,13 @@ export interface LiquidityConcern {
 }
 
 export interface SpotPriceConcern {
+  /**
+   * Calculate spot price for swapping tokenIn with tokenOut
+   * @param tokenIn Token address
+   * @param tokenOut Token address
+   * @param pool Pool where swap is being made
+   * @returns spot price for swapping tokenIn with tokenOut in EVM scale
+   */
   calcPoolSpotPrice: (tokenIn: string, tokenOut: string, pool: Pool) => string;
 }
 
@@ -22,7 +29,7 @@ export interface PriceImpactConcern {
   /**
    * Calculate price impact of bptAmount against zero price impact BPT amount.
    * @param pool Investment pool.
-   * @param tokenAmounts Token amounts being invested. Needs a value for each pool token.
+   * @param tokenAmounts Token amounts. Needs a value for each pool token.
    * @param bptAmount BPT amount for comparison.
    * @param isJoin boolean indicating if the price impact is for a join or exit.
    * @returns price impact in EVM scale.

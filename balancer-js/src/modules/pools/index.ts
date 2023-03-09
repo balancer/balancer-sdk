@@ -257,14 +257,14 @@ export class Pools implements Findable<PoolWithMethods> {
           });
         },
         calcPriceImpact: async (
-          amountsIn: string[],
-          minBPTOut: string,
+          tokenAmounts: string[],
+          bptAmount: string,
           isJoin: boolean
         ) =>
           concerns.priceImpactCalculator.calcPriceImpact(
             pool,
-            amountsIn.map(BigInt),
-            BigInt(minBPTOut),
+            tokenAmounts.map(BigInt),
+            BigInt(bptAmount),
             isJoin
           ),
         buildExitExactBPTIn: (
