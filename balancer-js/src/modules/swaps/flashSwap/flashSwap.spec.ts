@@ -1,6 +1,7 @@
 import { Contract } from '@ethersproject/contracts';
 import { expect } from 'chai';
-import { Vault, Vault__factory } from '@balancer-labs/typechain';
+import { Vault } from '@/contracts/Vault';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import {
   convertSimpleFlashSwapToBatchSwapParameters,
   querySimpleFlashSwap,

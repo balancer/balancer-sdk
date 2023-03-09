@@ -6,10 +6,6 @@ import { terser } from 'rollup-plugin-terser';
 import dts from 'rollup-plugin-dts';
 import pkg from './package.json';
 
-const external = [
-  ...Object.keys(pkg.dependencies)
-];
-
 export default [
   {
     input: 'src/index.ts',
@@ -28,13 +24,13 @@ export default [
           '@ethersproject/abstract-signer': 'abstractSigner',
           '@ethersproject/contracts': 'contracts',
           '@balancer-labs/sor': 'sor',
-          '@balancer-labs/typechain': 'typechain',
           '@ethersproject/providers': 'providers',
           'graphql-request': 'graphqlRequest',
           'json-to-graphql-query': 'jsonToGraphqlQuery',
           graphql: 'graphql',
           lodash: 'lodash',
           axios: 'axios',
+          ethers: 'ethers',
         },
       },
       { file: pkg.main, format: 'cjs', sourcemap: true },
@@ -49,14 +45,14 @@ export default [
       }),
       terser({
         format: {
-          comments: false
+          comments: false,
         },
         compress: {
-          pure_funcs: ['console.log', 'console.time', 'console.timeEnd']
-        }
+          pure_funcs: ['console.log', 'console.time', 'console.timeEnd'],
+        },
       }),
     ],
-    external,
+    external: [...Object.keys(pkg.dependencies), 'ethers'],
   },
   {
     input: 'src/index.ts',

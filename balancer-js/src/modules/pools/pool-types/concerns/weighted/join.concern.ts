@@ -1,5 +1,5 @@
 import { WeightedMaths } from '@balancer-labs/sor';
-import { Vault__factory } from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { BigNumber } from '@ethersproject/bignumber';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { balancerVault } from '@/lib/constants/config';

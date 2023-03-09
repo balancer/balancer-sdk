@@ -11,7 +11,7 @@ import {
   ExitPoolAttributes,
 } from '../types';
 import { AssetHelpers, isSameAddress, parsePoolInfo } from '@/lib/utils';
-import { Vault__factory } from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { balancerVault } from '@/lib/constants/config';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';

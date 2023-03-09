@@ -1,5 +1,6 @@
 import { SOR, SubgraphPoolBase, SwapInfo, SwapTypes } from '@balancer-labs/sor';
-import { Vault__factory, Vault } from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
+import { Vault } from '@/contracts/Vault';
 import {
   BatchSwap,
   QuerySimpleFlashSwapParameters,

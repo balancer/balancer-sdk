@@ -6,14 +6,10 @@ import {
 import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
 import { TransactionRequest } from '@ethersproject/providers';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
-import { FunctionFragment, Interface } from '@ethersproject/abi';
-import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { balancerVault, networkAddresses } from '@/lib/constants/config';
 import { BalancerNetworkConfig } from '@/types';
-import {
-  Vault__factory,
-  WeightedPoolFactory__factory,
-} from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
+import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
 import { BigNumberish } from '@ethersproject/bignumber';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 
@@ -52,26 +48,18 @@ export class WeightedFactory implements PoolFactory {
       tokenAddresses,
       weights
     ) as [string[], BigNumberish[]];
-    const params = [
-      name,
-      symbol,
-      sortedTokens,
-      sortedWeights,
-      swapFeeScaled.toString(),
-      owner,
-    ];
-    const weightedPoolInterface = new Interface(
-      WeightedPoolFactory__factory.abi
-    );
-    const createFunctionAbi = WeightedPoolFactory__factory.abi.find(
-      ({ name }) => name === 'create'
-    );
-    if (!createFunctionAbi)
-      throw new BalancerError(BalancerErrorCode.INTERNAL_ERROR_INVALID_ABI);
-    const createFunctionFragment = FunctionFragment.from(createFunctionAbi);
+    const weightedPoolInterface =
+      WeightedPoolFactory__factory.createInterface();
     const encodedFunctionData = weightedPoolInterface.encodeFunctionData(
-      createFunctionFragment,
-      params
+      'create',
+      [
+        name,
+        symbol,
+        sortedTokens,
+        sortedWeights,
+        swapFeeScaled.toString(),
+        owner,
+      ]
     );
     return {
       to: factoryAddress,
