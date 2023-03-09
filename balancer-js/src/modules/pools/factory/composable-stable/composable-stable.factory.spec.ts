@@ -1,9 +1,4 @@
-import {
-  BalancerNetworkConfig,
-  BalancerSdkConfig,
-  Network,
-  PoolType,
-} from '@/types';
+import { BalancerSdkConfig, Network, PoolType } from '@/types';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { ADDRESSES } from '@/test/lib/constants';
 import { AddressZero } from '@ethersproject/constants';

@@ -111,7 +111,7 @@ export class ComposableStableFactory implements PoolFactory {
     | 'tokenAddresses'
     | 'exemptFromYieldProtocolFeeFlags'
     | 'swapFee'
-  >) => {
+  >): void => {
     if (
       tokenAddresses.length !== tokenRateCacheDurations.length ||
       tokenRateCacheDurations.length !==
@@ -206,7 +206,7 @@ export class ComposableStableFactory implements PoolFactory {
   }: Pick<
     InitJoinPoolParameters,
     'tokensIn' | 'amountsIn' | 'poolId' | 'poolAddress'
-  >) => {
+  >): void => {
     if (!poolId || !poolAddress) {
       throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
     }

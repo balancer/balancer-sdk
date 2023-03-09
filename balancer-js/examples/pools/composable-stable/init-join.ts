@@ -11,7 +11,7 @@ import ComposableStablePoolAbi from '@/lib/abi/ComposableStable.json';
 import { Contract } from '@ethersproject/contracts';
 import { PoolType } from '@/types';
 import { Log, TransactionReceipt } from '@ethersproject/providers';
-import { Vault__factory } from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { isSameAddress } from '@/lib/utils';
 
 const initJoinComposableStable = async () => {
