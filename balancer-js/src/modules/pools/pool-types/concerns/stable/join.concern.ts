@@ -33,16 +33,6 @@ type EncodeJoinPoolParams = {
   Pick<JoinPoolParameters, 'amountsIn' | 'tokensIn'>;
 
 export class StablePoolJoin implements JoinConcern {
-  /**
-   * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
-   * @param {JoinPoolParameters}  params - parameters used to build exact tokens in for bpt out transaction
-   * @param {string}              params.joiner - Account address joining pool
-   * @param {Pool}                params.pool - Subgraph pool object of pool being joined
-   * @param {string[]}            params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
-   * @param {string[]}            params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
-   * @param {string}              params.slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
-   * @returns                     transaction request ready to send with signer.sendTransaction
-   */
   buildJoin = ({
     joiner,
     pool,
