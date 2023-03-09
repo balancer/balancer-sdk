@@ -26,11 +26,8 @@ export class PoolsSubgraphOnChainRepository
   /**
    * Repository using multicall to get onchain data.
    *
-   * @param url subgraph URL
-   * @param chainId current network, needed for L2s logic
-   * @param blockHeight lazy loading blockHeigh resolver
-   * @param multicall multicall address
-   * @param valt vault address
+   * @param poolsSubgraph subgraph repository
+   * @param options options containing provider, multicall and vault addresses
    */
   constructor(
     private poolsSubgraph: PoolsSubgraphRepository,
