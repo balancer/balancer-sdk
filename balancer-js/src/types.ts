@@ -282,7 +282,6 @@ export enum PoolType {
 export interface Pool {
   id: string;
   name: string;
-  athRateProduct?: string;
   address: string;
   chainId: number;
   poolType: PoolType;
