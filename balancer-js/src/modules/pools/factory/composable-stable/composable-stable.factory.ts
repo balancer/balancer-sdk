@@ -3,7 +3,7 @@ import {
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
 } from '@/modules/pools/factory/types';
-import { AssetHelpers, parseFixed, parseToBigInt18 } from '@/lib/utils';
+import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
 import { TransactionRequest } from '@ethersproject/providers';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import composableStableAbi from '../../../../lib/abi/ComposableStableFactory.json';

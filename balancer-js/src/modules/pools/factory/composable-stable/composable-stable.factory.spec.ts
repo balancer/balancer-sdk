@@ -20,7 +20,6 @@ import { Contract } from '@ethersproject/contracts';
 import { parseFixed } from '@ethersproject/bignumber';
 import { OldBigNumber, StableMaths } from '@balancer-labs/sor';
 import { _upscale, SolidityMaths } from '@/lib/utils/solidityMaths';
-import { AMP_PRECISION } from '@/lib/utils/stableMathHelpers';
 
 dotenv.config();
 
