@@ -318,6 +318,7 @@ export interface Pool {
   lowerTarget: string;
   upperTarget: string;
   priceRateProviders?: PriceRateProvider[];
+  lastJoinExitInvariant?: string;
 }
 
 export interface PriceRateProvider {

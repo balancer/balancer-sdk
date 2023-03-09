@@ -14,8 +14,8 @@ export interface PriceImpactConcern {
   bptZeroPriceImpact: (pool: Pool, tokenAmounts: bigint[]) => bigint;
   calcPriceImpact: (
     pool: Pool,
-    tokenAmounts: string[],
-    bptAmount: string,
+    tokenAmounts: bigint[],
+    bptAmount: bigint,
     isJoin: boolean
   ) => string;
 }
