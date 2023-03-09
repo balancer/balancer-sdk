@@ -75,6 +75,7 @@ export class Data implements BalancerDataRepositories {
     this.pools = new PoolsSubgraphRepository({
       url: networkConfig.urls.subgraph,
       chainId: networkConfig.chainId,
+      query: subgraphQuery,
     });
 
     this.poolsForSor = new SubgraphPoolDataService(
@@ -85,13 +86,10 @@ export class Data implements BalancerDataRepositories {
       subgraphQuery
     );
 
-    this.poolsOnChain = new PoolsSubgraphOnChainRepository({
-      url: networkConfig.urls.subgraph,
-      chainId: networkConfig.chainId,
+    this.poolsOnChain = new PoolsSubgraphOnChainRepository(this.pools, {
       provider: provider,
       multicall: networkConfig.addresses.contracts.multicall,
       vault: networkConfig.addresses.contracts.vault,
-      query: subgraphQuery,
     });
 
     this.poolShares = new PoolSharesRepository(
@@ -133,6 +131,7 @@ export class Data implements BalancerDataRepositories {
         url: networkConfig.urls.subgraph,
         chainId: networkConfig.chainId,
         blockHeight: blockDayAgo,
+        query: subgraphQuery,
       });
     }
 
