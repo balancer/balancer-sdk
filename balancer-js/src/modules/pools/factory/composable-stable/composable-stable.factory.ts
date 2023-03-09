@@ -13,6 +13,7 @@ import { balancerVault, networkAddresses } from '@/lib/constants/config';
 import { BalancerNetworkConfig } from '@/types';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { Vault__factory } from '@balancer-labs/typechain';
+import { parseFixed } from '@ethersproject/bignumber';
 
 export class ComposableStableFactory implements PoolFactory {
   private wrappedNativeAsset: string;
@@ -49,6 +50,13 @@ export class ComposableStableFactory implements PoolFactory {
     swapFee,
     owner,
   }: ComposableStableCreatePoolParameters): TransactionRequest {
+    this.checkCreateInputs({
+      rateProviders,
+      tokenAddresses,
+      tokenRateCacheDurations,
+      exemptFromYieldProtocolFeeFlags,
+      swapFee,
+    });
     const swapFeeScaled = parseToBigInt18(`${swapFee}`);
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     const [
@@ -89,6 +97,33 @@ export class ComposableStableFactory implements PoolFactory {
       data: encodedFunctionData,
     };
   }
+
+  checkCreateInputs = ({
+    tokenAddresses,
+    tokenRateCacheDurations,
+    exemptFromYieldProtocolFeeFlags,
+    rateProviders,
+    swapFee,
+  }: Pick<
+    ComposableStableCreatePoolParameters,
+    | 'rateProviders'
+    | 'tokenRateCacheDurations'
+    | 'tokenAddresses'
+    | 'exemptFromYieldProtocolFeeFlags'
+    | 'swapFee'
+  >) => {
+    if (
+      tokenAddresses.length !== tokenRateCacheDurations.length ||
+      tokenRateCacheDurations.length !==
+        exemptFromYieldProtocolFeeFlags.length ||
+      exemptFromYieldProtocolFeeFlags.length !== rateProviders.length
+    ) {
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+    }
+    if (parseFixed(swapFee.toString(), 18).toBigInt() === BigInt(0)) {
+      throw new BalancerError(BalancerErrorCode.MIN_SWAP_FEE_PERCENTAGE);
+    }
+  };
 
   /***
    * @param params
