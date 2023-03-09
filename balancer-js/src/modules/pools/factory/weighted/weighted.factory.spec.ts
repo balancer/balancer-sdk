@@ -6,7 +6,11 @@ import { Network, PoolType } from '@/types';
 import { ADDRESSES } from '@/test/lib/constants';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { Interface, LogDescription } from '@ethersproject/abi';
-import { findEventInReceiptLogs, forkSetup } from '@/test/lib/utils';
+import {
+  findEventInReceiptLogs,
+  forkSetup,
+  sendTransactionGetBalances,
+} from '@/test/lib/utils';
 import dotenv from 'dotenv';
 import { isSameAddress } from '@/lib/utils';
 import { Vault__factory } from '@/contracts/factories/Vault__factory';
@@ -20,7 +24,7 @@ dotenv.config();
 
 const network = Network.MAINNET;
 const rpcUrl = 'http://127.0.0.1:8545';
-const alchemyRpcUrl = `${ process.env.ALCHEMY_URL }`;
+const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
 const blockNumber = 16320000;
 
 const name = 'My-Test-Pool-Name';
@@ -31,11 +35,11 @@ const addresses = ADDRESSES[network];
 const USDC_address = addresses.USDC.address;
 const USDT_address = addresses.USDT.address;
 
-const factoryAddress = `${ BALANCER_NETWORK_CONFIG[network].addresses.contracts.weightedPoolFactory }`;
+const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.weightedPoolFactory}`;
 const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const tokenAddresses = [USDC_address, USDT_address];
 const swapFee = '0.01';
-const weights = [`${ 0.2e18 }`, `${ 0.8e18 }`];
+const weights = [`${0.2e18}`, `${0.8e18}`];
 const slots = [addresses.USDC.slot, addresses.USDT.slot];
 const balances = [
   parseFixed('100000', 6).toString(),
@@ -75,15 +79,12 @@ describe('creating weighted pool', () => {
         swapFee,
         owner,
       });
-      const tx = await signer.sendTransaction({
-        from: signerAddress,
-        to,
-        data,
-        gasLimit: 30000000,
-      });
-      await tx.wait();
-      const receipt: TransactionReceipt = await provider.getTransactionReceipt(
-        tx.hash
+      const { transactionReceipt } = await sendTransactionGetBalances(
+        [],
+        signer,
+        signerAddress,
+        to as string,
+        data as string
       );
 
       const weightedPoolFactoryInterface = new Interface(
@@ -91,7 +92,10 @@ describe('creating weighted pool', () => {
       );
 
       const poolCreationEvent: LogDescription = findEventInReceiptLogs({
-        receipt:
+        receipt: transactionReceipt,
+        contractInterface: weightedPoolFactoryInterface,
+        to: to as string,
+        logName: 'PoolCreated',
       });
       if (poolCreationEvent) {
         poolAddress = poolCreationEvent.args.pool;
@@ -108,37 +112,35 @@ describe('creating weighted pool', () => {
         parseFixed('2000', 6).toString(),
         parseFixed('8000', 6).toString(),
       ];
-      const initJoinParams = weightedPoolFactory.buildInitJoin({
+      const { to, data } = weightedPoolFactory.buildInitJoin({
         joiner: signerAddress,
         poolId,
         poolAddress,
         tokensIn: tokenAddresses,
         amountsIn,
       });
-      const tx = await signer.sendTransaction({
-        to: initJoinParams.to,
-        data: initJoinParams.data,
-        gasLimit: 30000000,
-      });
-      await tx.wait();
-      const receipt: TransactionReceipt = await provider.getTransactionReceipt(
-        tx.hash
-      );
+      const { transactionReceipt, balanceDeltas } =
+        await sendTransactionGetBalances(
+          [...tokenAddresses, poolAddress],
+          signer,
+          signerAddress,
+          to as string,
+          data as string
+        );
       const vaultInterface = new Interface(Vault__factory.abi);
-      const poolInitJoinEvent: LogDescription | null | undefined = receipt.logs
-        .filter((log: Log) => {
-          return isSameAddress(log.address, initJoinParams.to);
-        })
-        .map((log) => {
-          return vaultInterface.parseLog(log);
-        })
-        .find((parsedLog) => parsedLog?.name === 'PoolBalanceChanged');
-      if (!poolInitJoinEvent) {
-        throw new Error('Expected poolInitJoinEvent to be truthy');
-      }
-      const deltas = poolInitJoinEvent.args['deltas'];
-      const deltasString = deltas.map((delta: BigNumber) => delta.toString());
-      expect(deltasString.sort()).deep.equal(amountsIn.sort());
+      const poolInitJoinEvent: LogDescription = findEventInReceiptLogs({
+        receipt: transactionReceipt,
+        to,
+        contractInterface: vaultInterface,
+        logName: 'PoolBalanceChanged',
+      });
+      expect(!!poolInitJoinEvent).to.be.true;
+      expect(
+        balanceDeltas
+          .map((delta) => delta.toString())
+          .slice(0, amountsIn.length)
+      ).deep.equal(amountsIn);
+      expect(balanceDeltas[amountsIn.length].toBigInt() > BigInt(0)).to.be.true;
     });
   });
 });
