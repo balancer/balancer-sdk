@@ -1,6 +1,5 @@
 // yarn test:only ./src/modules/pools/factory/weighted/weighted.factory.spec.ts
 import { expect } from 'chai';
-import { Log, TransactionReceipt } from '@ethersproject/providers';
 import { ethers } from 'hardhat';
 import { Network, PoolType } from '@/types';
 import { ADDRESSES } from '@/test/lib/constants';
@@ -12,12 +11,11 @@ import {
   sendTransactionGetBalances,
 } from '@/test/lib/utils';
 import dotenv from 'dotenv';
-import { isSameAddress } from '@/lib/utils';
 import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { WeightedPool__factory } from '@/contracts/factories/WeightedPool__factory';
 import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 
 dotenv.config();
