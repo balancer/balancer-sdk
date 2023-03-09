@@ -407,6 +407,7 @@ Builds a init join transaction for weighted pool.
 Available pool types:
 
 - Weighted
+- ComposableStable ([Example](./examples/pools/composable-stable/init-join.ts))
 
 ### Joining nested pools
 
