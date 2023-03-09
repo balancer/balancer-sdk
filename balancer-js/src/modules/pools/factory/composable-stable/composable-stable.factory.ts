@@ -12,7 +12,7 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { balancerVault, networkAddresses } from '@/lib/constants/config';
 import { BalancerNetworkConfig } from '@/types';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
-import { Vault__factory } from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { parseFixed } from '@ethersproject/bignumber';
 
 export class ComposableStableFactory implements PoolFactory {
@@ -143,6 +143,12 @@ export class ComposableStableFactory implements PoolFactory {
     tokensIn,
     amountsIn,
   }: InitJoinPoolParameters): InitJoinPoolAttributes {
+    this.checkInitJoinInputs({
+      tokensIn,
+      amountsIn,
+      poolId,
+      poolAddress,
+    });
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     // sort inputs
     const tokensWithBpt = [...tokensIn, poolAddress];
@@ -191,4 +197,21 @@ export class ComposableStableFactory implements PoolFactory {
       data,
     };
   }
+
+  checkInitJoinInputs = ({
+    poolId,
+    poolAddress,
+    tokensIn,
+    amountsIn,
+  }: Pick<
+    InitJoinPoolParameters,
+    'tokensIn' | 'amountsIn' | 'poolId' | 'poolAddress'
+  >) => {
+    if (!poolId || !poolAddress) {
+      throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
+    }
+    if (tokensIn.length !== amountsIn.length) {
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+    }
+  };
 }

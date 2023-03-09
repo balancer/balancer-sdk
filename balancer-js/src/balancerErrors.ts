@@ -102,6 +102,8 @@ export class BalancerError extends Error {
         return 'No Reward Tokens for Liquidity Gauges provided';
       case BalancerErrorCode.REWARD_TOKEN_ZERO:
         return 'All Zero Values for Reward Tokens';
+      case BalancerErrorCode.MIN_SWAP_FEE_PERCENTAGE:
+        return 'The swap fee needs to be greater than zero';
       default:
         return 'Unknown error';
     }
