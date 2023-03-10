@@ -4,14 +4,17 @@ import {
   ComposableStableCreatePoolParameters,
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
+  LinearCreatePoolParameters,
   WeightedCreatePoolParameters,
 } from '@/modules/pools/factory/types';
 
 export interface PoolFactory {
+  buildInitJoin: (parameters: InitJoinPoolParameters) => InitJoinPoolAttributes;
+
   create(
     parameters:
       | ComposableStableCreatePoolParameters
       | WeightedCreatePoolParameters
+      | LinearCreatePoolParameters
   ): TransactionRequest;
-  buildInitJoin: (parameters: InitJoinPoolParameters) => InitJoinPoolAttributes;
 }
