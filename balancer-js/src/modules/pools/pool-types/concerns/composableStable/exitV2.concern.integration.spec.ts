@@ -135,7 +135,7 @@ describe('ComposableStableV2 Exits', () => {
     it('all tokens with value', async () => {
       const tokensOut = removeItem(pool.tokensList, pool.bptIndex);
       const amountsOut = tokensOut.map((_, i) =>
-        parseFixed((i * 0.01).toString(), 18).toString()
+        parseFixed(((i + 1) * 0.01).toString(), 18).toString()
       );
       const slippage = '7';
       const { to, data, maxBPTIn, expectedBPTIn } =
@@ -166,6 +166,35 @@ describe('ComposableStableV2 Exits', () => {
       const tokensOut = removeItem(pool.tokensList, pool.bptIndex);
       const amountsOut = Array(tokensOut.length).fill('0');
       amountsOut[0] = parseFixed('3', 18).toString();
+      const slippage = '7';
+      const { to, data, maxBPTIn, expectedBPTIn } =
+        pool.buildExitExactTokensOut(
+          signerAddress,
+          tokensOut,
+          amountsOut,
+          slippage
+        );
+      const { transactionReceipt, balanceDeltas } =
+        await sendTransactionGetBalances(
+          pool.tokensList,
+          signer,
+          signerAddress,
+          to,
+          data
+        );
+      expect(transactionReceipt.status).to.eq(1);
+      const expectedDeltas = insert(amountsOut, pool.bptIndex, expectedBPTIn);
+      expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
+      const expectedMaxBpt = addSlippage(
+        BigNumber.from(expectedBPTIn),
+        BigNumber.from(slippage)
+      ).toString();
+      expect(expectedMaxBpt).to.deep.eq(maxBPTIn);
+    });
+    it('single token with value, token after BPT index', async () => {
+      const tokensOut = removeItem(pool.tokensList, pool.bptIndex);
+      const amountsOut = Array(tokensOut.length).fill('0');
+      amountsOut[1] = parseFixed('0.01', 18).toString();
       const slippage = '7';
       const { to, data, maxBPTIn, expectedBPTIn } =
         pool.buildExitExactTokensOut(
