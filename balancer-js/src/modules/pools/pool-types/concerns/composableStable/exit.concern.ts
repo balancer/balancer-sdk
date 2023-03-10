@@ -28,6 +28,7 @@ import {
   ExitPool,
   ExitPoolAttributes,
 } from '../types';
+import { StablePoolPriceImpact } from '../stable/priceImpact.concern';
 
 interface SortedValues {
   poolTokens: string[];
@@ -146,10 +147,19 @@ export class ComposableStablePoolExit implements ExitConcern {
       minAmountsOut: minAmountsOutWithBpt,
     });
 
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
     return {
       ...encodedData,
       expectedAmountsOut,
       minAmountsOut,
+      priceImpact,
     };
   };
 
@@ -199,10 +209,19 @@ export class ComposableStablePoolExit implements ExitConcern {
       poolId: pool.id,
     });
 
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      amountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
     return {
       ...encodedData,
       maxBPTIn,
       expectedBPTIn: bptIn,
+      priceImpact,
     };
   };
 
