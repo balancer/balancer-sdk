@@ -29,7 +29,10 @@ export const testExactBptIn = async (
     );
 
   expect(transactionReceipt.status).to.eq(1);
-  const expectedDeltas = insert(expectedAmountsOut, pool.bptIndex, bptIn);
+  const expectedDeltas =
+    pool.bptIndex !== -1
+      ? insert(expectedAmountsOut, pool.bptIndex, bptIn)
+      : expectedAmountsOut;
   expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
   const expectedMins = expectedAmountsOut.map((a) =>
     subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
@@ -68,7 +71,10 @@ export const testExactTokensOut = async (
     );
 
   expect(transactionReceipt.status).to.eq(1);
-  const expectedDeltas = insert(amountsOut, pool.bptIndex, expectedBPTIn);
+  const expectedDeltas =
+    pool.bptIndex !== -1
+      ? insert(amountsOut, pool.bptIndex, expectedBPTIn)
+      : amountsOut;
   expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
   const expectedMaxBpt = addSlippage(
     BigNumber.from(expectedBPTIn),
