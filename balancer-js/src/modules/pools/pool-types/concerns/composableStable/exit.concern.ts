@@ -362,7 +362,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     ampWithPrecision,
     upScaledBalancesWithoutBpt,
     singleTokenOutIndexWithoutBpt,
-    scalingFactors,
+    scalingFactorsWithoutBpt,
     totalSharesEvm,
     swapFeeEvm,
     bptIn,
@@ -372,7 +372,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     | 'ampWithPrecision'
     | 'upScaledBalancesWithoutBpt'
     | 'singleTokenOutIndexWithoutBpt'
-    | 'scalingFactors'
+    | 'scalingFactorsWithoutBpt'
     | 'totalSharesEvm'
     | 'swapFeeEvm'
   > &
@@ -396,7 +396,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     // Downscales to token decimals and removes priceRate
     const downscaledAmountOut = _downscaleDown(
       amountOut,
-      scalingFactors[singleTokenOutIndexWithoutBpt]
+      scalingFactorsWithoutBpt[singleTokenOutIndexWithoutBpt]
     );
 
     expectedAmountsOut[singleTokenOutIndexWithoutBpt] =
