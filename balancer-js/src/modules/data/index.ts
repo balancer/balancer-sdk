@@ -135,6 +135,21 @@ export class Data implements BalancerDataRepositories {
       });
     }
 
+    // Hardcoding gnosis chain block time to 5 sec.
+    if (networkConfig.chainId === 100) {
+      const blockDayAgo = async () => {
+        const blockNumber = await provider.getBlockNumber();
+        return blockNumber - 17280;
+      };
+
+      this.yesterdaysPools = new PoolsSubgraphRepository({
+        url: networkConfig.urls.subgraph,
+        chainId: networkConfig.chainId,
+        blockHeight: blockDayAgo,
+        query: subgraphQuery,
+      });
+    }
+
     const tokenAddresses = initialCoingeckoList
       .filter((t) => t.chainId == networkConfig.chainId)
       .map((t) => t.address);
