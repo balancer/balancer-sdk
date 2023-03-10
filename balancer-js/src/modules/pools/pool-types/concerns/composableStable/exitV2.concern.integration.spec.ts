@@ -22,14 +22,9 @@ const testPoolId =
   '0x373b347bc87998b151a5e9b6bb6ca692b766648a000000000000000000000923';
 let signerAddress: string;
 let pool: PoolWithMethods;
-let blockNumber: number;
+const blockNumber = 40178348;
 
 describe('ComposableStableV2 Exits', () => {
-  // Get most recent block number and reuse on all tests to benefit from caching
-  before(async () => {
-    blockNumber = await provider.getBlockNumber();
-  });
-
   // We have to rest the fork between each test as pool value changes after tx is submitted
   beforeEach(async () => {
     signerAddress = await signer.getAddress();
@@ -69,6 +64,33 @@ describe('ComposableStableV2 Exits', () => {
           slippage,
           false,
           pool.tokensList[0]
+        );
+      const { transactionReceipt, balanceDeltas } =
+        await sendTransactionGetBalances(
+          pool.tokensList,
+          signer,
+          signerAddress,
+          to,
+          data
+        );
+      expect(transactionReceipt.status).to.eq(1);
+      const expectedDeltas = insert(expectedAmountsOut, pool.bptIndex, bptIn);
+      expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
+      const expectedMins = expectedAmountsOut.map((a) =>
+        subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
+      );
+      expect(expectedMins).to.deep.eq(minAmountsOut);
+    });
+    it('single token max out, token out after BPT index', async () => {
+      const bptIn = parseFixed('0.1', 18).toString();
+      const slippage = '10';
+      const { to, data, minAmountsOut, expectedAmountsOut } =
+        pool.buildExitExactBPTIn(
+          signerAddress,
+          bptIn,
+          slippage,
+          false,
+          pool.tokensList[2]
         );
       const { transactionReceipt, balanceDeltas } =
         await sendTransactionGetBalances(
