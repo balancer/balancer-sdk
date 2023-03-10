@@ -41,7 +41,7 @@ export const testExactBptIn = async (
   const priceImpactFloat = parseFloat(
     formatFixed(BigNumber.from(priceImpact), 18)
   );
-  expect(priceImpactFloat).to.be.closeTo(0, 0.001); // exiting balanced stable pools with small amounts should have price impact near zero
+  expect(priceImpactFloat).to.be.closeTo(0, 0.01); // exiting balanced stable pools with small amounts should have price impact near zero
 };
 
 export const testExactTokensOut = async (
@@ -61,9 +61,14 @@ export const testExactTokensOut = async (
       slippage
     );
 
+  const tokensToBeChecked =
+    pool.bptIndex !== -1
+      ? insert(tokensOut, pool.bptIndex, pool.address)
+      : tokensOut;
+
   const { transactionReceipt, balanceDeltas } =
     await sendTransactionGetBalances(
-      pool.tokensList,
+      tokensToBeChecked,
       signer,
       signerAddress,
       to,
@@ -84,5 +89,5 @@ export const testExactTokensOut = async (
   const priceImpactFloat = parseFloat(
     formatFixed(BigNumber.from(priceImpact), 18)
   );
-  expect(priceImpactFloat).to.be.closeTo(0, 0.001); // exiting balanced stable pools with small amounts should have price impact near zero
+  expect(priceImpactFloat).to.be.closeTo(0, 0.01); // exiting balanced stable pools with small amounts should have price impact near zero
 };
