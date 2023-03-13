@@ -48,4 +48,18 @@ export class StablePhantomPoolExit implements ExitConcern {
     );
     throw new Error('To be implemented');
   };
+
+  buildRecoveryExit = ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+  }: Pick<
+    ExitExactBPTInParameters,
+    'exiter' | 'pool' | 'bptIn' | 'slippage'
+  >): ExitExactBPTInAttributes => {
+    // TODO implementation
+    console.log(exiter, pool, bptIn, slippage);
+    throw new Error('To be implemented');
+  };
 }

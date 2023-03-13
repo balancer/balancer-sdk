@@ -1,6 +1,6 @@
 // yarn examples:run ./examples/recoveryExit.ts
 import dotenv from 'dotenv';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
 
 import {
@@ -10,12 +10,12 @@ import {
   getPoolAddress,
   GraphQLArgs,
   GraphQLQuery,
+  insert,
   Network,
   PoolWithMethods,
   truncateAddresses,
 } from '../src/index';
 import { forkSetup, sendTransactionGetBalances } from '../src/test/lib/utils';
-import { subSlippage } from '@/lib/utils/slippageHelper';
 
 dotenv.config();
 
@@ -37,8 +37,10 @@ async function recoveryExit() {
   const blockNumber = 16819888;
 
   const poolId =
-    '0x50cf90b954958480b8df7958a9e965752f62712400000000000000000000046f'; // bb-e-usd
-  // '0xd4e7c1f3da1144c9e2cfd1b015eda7652b4a439900000000000000000000046a'; // bb-e-usdc
+    // '0x50cf90b954958480b8df7958a9e965752f62712400000000000000000000046f'; // bb-e-usd
+    // '0xd4e7c1f3da1144c9e2cfd1b015eda7652b4a439900000000000000000000046a'; // bb-e-usdc
+    // '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d'; // bb-a-usd
+    '0xa718042e5622099e5f0ace4e7122058ab39e1bbe000200000000000000000475'; // 50temple_50bb-e-usd
   const bptIn = parseFixed('1', 18).toString();
   const slippage = '200'; // 200 bps = 2%
 
@@ -75,33 +77,8 @@ async function recoveryExit() {
     blockNumber
   );
 
-  let minAmountsOut = Array(pool.tokensList.length).fill('0');
-
-  const { attributes } = pool.recoveryExit(
-    signerAddress,
-    signerAddress,
-    bptIn,
-    minAmountsOut
-  );
-
-  const { amountsOut } =
-    await balancer.contracts.balancerHelpers.callStatic.queryExit(
-      attributes.poolId,
-      attributes.sender,
-      attributes.recipient,
-      attributes.exitPoolRequest
-    );
-
-  minAmountsOut = amountsOut.map((amount) =>
-    subSlippage(amount, BigNumber.from(slippage)).toString()
-  );
-
-  const { to, data } = pool.recoveryExit(
-    signerAddress,
-    signerAddress,
-    bptIn,
-    minAmountsOut
-  );
+  const { to, data, expectedAmountsOut, minAmountsOut } =
+    pool.buildRecoveryExit(signerAddress, bptIn, slippage);
 
   const { balanceDeltas } = await sendTransactionGetBalances(
     pool.tokensList,
@@ -113,8 +90,8 @@ async function recoveryExit() {
 
   console.table({
     tokensOut: truncateAddresses(pool.tokensList),
-    minAmountsOut: minAmountsOut,
-    expectedAmountsOut: amountsOut,
+    minAmountsOut: insert(minAmountsOut, pool.bptIndex, bptIn),
+    expectedAmountsOut: insert(expectedAmountsOut, pool.bptIndex, bptIn),
     balanceDeltas: balanceDeltas.map((b) => b.toString()),
   });
 }

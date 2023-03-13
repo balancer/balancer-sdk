@@ -28,6 +28,7 @@ import {
   ExitPool,
   ExitPoolAttributes,
 } from '../types';
+import { BasePoolEncoder } from '@/pool-base';
 
 interface SortedValues {
   poolTokens: string[];
@@ -206,6 +207,54 @@ export class ComposableStablePoolExit implements ExitConcern {
     };
   };
 
+  buildRecoveryExit = ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+  }: Pick<
+    ExitExactBPTInParameters,
+    'exiter' | 'pool' | 'bptIn' | 'slippage'
+  >): ExitExactBPTInAttributes => {
+    this.checkInputsExactBPTIn({
+      bptIn,
+      singleTokenOut: undefined,
+      pool,
+      shouldUnwrapNativeAsset: false,
+    });
+
+    const sortedValues = parsePoolInfo(pool);
+
+    const { minAmountsOut, expectedAmountsOut } =
+      this.calcTokensOutGivenExactBptIn({
+        ...sortedValues,
+        bptIn,
+        slippage,
+      });
+
+    const userData = BasePoolEncoder.recoveryModeExit(bptIn);
+
+    // MinAmounts needs a value for BPT for encoding
+    const minAmountsOutWithBpt = insert(
+      minAmountsOut,
+      sortedValues.bptIndex,
+      '0'
+    );
+    const encodedData = this.encodeExitPool({
+      poolTokens: sortedValues.poolTokens,
+      poolId: pool.id,
+      exiter,
+      userData,
+      minAmountsOut: minAmountsOutWithBpt,
+    });
+
+    return {
+      ...encodedData,
+      expectedAmountsOut,
+      minAmountsOut,
+    };
+  };
+
   /**
    *  Checks if the input of buildExitExactBPTIn is valid
    * @param bptIn Bpt inserted in the transaction
@@ -225,7 +274,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
       throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
     }
-    if (!singleTokenOut && pool.poolTypeVersion < 2) {
+    if (!singleTokenOut && pool.poolTypeVersion < 2 && !pool.isInRecoveryMode) {
       throw new Error('Unsupported Exit Type For Pool');
     }
     if (
