@@ -320,6 +320,7 @@ export interface Pool {
   upperTarget: string;
   priceRateProviders?: PriceRateProvider[];
   lastJoinExitInvariant?: string;
+  isInRecoveryMode?: boolean;
 }
 
 export interface PriceRateProvider {
