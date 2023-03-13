@@ -78,7 +78,7 @@ export class LinearFactory implements PoolFactory {
     swapFee,
     protocolId,
   }: {
-    swapFee: string;
+    swapFee: string | number;
     protocolId: ProtocolId;
   }) => {
     if (!ProtocolId[protocolId]) {
