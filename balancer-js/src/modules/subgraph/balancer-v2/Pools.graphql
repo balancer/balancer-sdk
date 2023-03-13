@@ -104,6 +104,7 @@ fragment SubgraphPool on Pool {
   sqrtAlpha
   sqrtBeta
   root3Alpha
+  isInRecoveryMode
 }
 
 fragment SubgraphPoolToken on PoolToken {
