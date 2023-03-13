@@ -3,6 +3,7 @@ import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import { ComposableStableFactory } from '@/modules/pools/factory/composable-stable/composable-stable.factory';
 import { WeightedFactory } from '@/modules/pools/factory/weighted/weighted.factory';
+import { LinearFactory } from '@/modules/pools/factory/linear/linear.factory';
 
 /**
  * Wrapper around pool type specific methods.
@@ -37,8 +38,9 @@ export class PoolFactory__factory {
         throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
       }
       case 'AaveLinear':
-      case 'ERC4626Linear': {
-        throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
+      case 'ERC4626Linear':
+      case 'EulerLinear': {
+        return new LinearFactory(this.networkConfig);
       }
       default:
         throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);

@@ -4,11 +4,14 @@ import {
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
   LinearCreatePoolParameters,
+  ProtocolId,
 } from '@/modules/pools/factory/types';
 import { parseToBigInt18 } from '@/lib/utils';
 import { BalancerNetworkConfig } from '@/types';
 import { networkAddresses } from '@/lib/constants/config';
 import { ERC4626LinearPoolFactory__factory } from '@/contracts';
+import { parseFixed } from '@ethersproject/bignumber';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export class LinearFactory implements PoolFactory {
   private wrappedNativeAsset: string;
@@ -46,6 +49,7 @@ export class LinearFactory implements PoolFactory {
     owner,
     protocolId,
   }: LinearCreatePoolParameters): TransactionRequest {
+    this.checkCreateInputs({ swapFee, protocolId });
     const swapFeeScaled = parseToBigInt18(`${swapFee}`);
     const params = [
       name,
@@ -60,8 +64,6 @@ export class LinearFactory implements PoolFactory {
     const linearPoolInterface =
       ERC4626LinearPoolFactory__factory.createInterface();
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
     const encodedFunctionData = linearPoolInterface.encodeFunctionData(
       'create',
       params
@@ -71,4 +73,19 @@ export class LinearFactory implements PoolFactory {
       data: encodedFunctionData,
     };
   }
+
+  checkCreateInputs = ({
+    swapFee,
+    protocolId,
+  }: {
+    swapFee: string;
+    protocolId: ProtocolId;
+  }) => {
+    if (!ProtocolId[protocolId]) {
+      throw new BalancerError(BalancerErrorCode.INVALID_PROTOCOL_ID);
+    }
+    if (parseFixed(swapFee.toString(), 18).toBigInt() === BigInt(0)) {
+      throw new BalancerError(BalancerErrorCode.MIN_SWAP_FEE_PERCENTAGE);
+    }
+  };
 }

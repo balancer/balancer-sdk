@@ -13,6 +13,7 @@ export enum BalancerErrorCode {
   INPUT_TOKEN_INVALID = 'INPUT_TOKEN_INVALID',
   INPUT_ZERO_NOT_ALLOWED = 'INPUT_ZERO_NOT_ALLOWED',
   INTERNAL_ERROR_INVALID_ABI = 'INTERNAL_ERROR_INVALID_ABI',
+  INVALID_PROTOCOL_ID = 'INVALID_PROTOCOL_ID',
   TOKEN_MISMATCH = 'TOKEN_MISMATCH',
   MISSING_TOKENS = 'MISSING_TOKENS',
   MISSING_AMP = 'MISSING_AMP',
@@ -104,6 +105,8 @@ export class BalancerError extends Error {
         return 'All Zero Values for Reward Tokens';
       case BalancerErrorCode.MIN_SWAP_FEE_PERCENTAGE:
         return 'The swap fee needs to be greater than zero';
+      case BalancerErrorCode.INVALID_PROTOCOL_ID:
+        return 'The provided protocol id does not correspond to a protocol';
       default:
         return 'Unknown error';
     }
