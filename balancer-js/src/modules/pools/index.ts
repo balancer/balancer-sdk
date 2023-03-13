@@ -25,7 +25,6 @@ import { JsonRpcSigner } from '@ethersproject/providers';
 import { BalancerError } from '@/balancerErrors';
 import { EmissionsService } from './emissions';
 import { proportionalAmounts } from './proportional-amounts';
-import { buildRecoveryExit } from './pool-types/concerns/recoveryExit.module';
 
 const notImplemented = (poolType: string, name: string) => () => {
   throw `${name} for poolType ${poolType} not implemented`;
@@ -381,20 +380,6 @@ export class Pools implements Findable<PoolWithMethods> {
     return {
       ...pool,
       ...methods,
-      recoveryExit: (
-        sender: string,
-        recipient: string,
-        bptAmountIn: string,
-        minAmountsOut: string[]
-      ) => {
-        return buildRecoveryExit(
-          pool,
-          sender,
-          recipient,
-          bptAmountIn,
-          minAmountsOut
-        );
-      },
       bptIndex,
     };
   }

@@ -5,7 +5,6 @@ import type { PoolDataService, TokenPriceService } from '@balancer-labs/sor';
 import type {
   ExitExactBPTInAttributes,
   ExitExactTokensOutAttributes,
-  ExitPoolAttributes,
   JoinPoolAttributes,
 } from './modules/pools/pool-types/concerns/types';
 import type {
@@ -359,12 +358,6 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     slippage: string
   ) => ExitExactTokensOutAttributes;
   calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
-  recoveryExit: (
-    sender: string,
-    recipient: string,
-    bptAmountIn: string,
-    minAmountsOut: string[]
-  ) => ExitPoolAttributes;
   bptIndex: number;
 }
 
