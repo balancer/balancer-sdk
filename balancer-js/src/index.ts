@@ -7,6 +7,7 @@ export * from './lib/constants';
 export * from './lib/utils';
 export * from './lib/graphql';
 export * from './types';
+export * from './contracts/index';
 export * from './modules/swaps/types';
 export * from './modules/swaps/helpers';
 export * from './modules/liquidity/liquidity.module';
