@@ -141,7 +141,7 @@ export class PoolsSubgraphRepository
 
   async findBy(param: PoolAttribute, value: string): Promise<Pool | undefined> {
     if (!this.pools) {
-      this.pools = this.fetchDefault();
+      this.pools = this.fetch();
     }
 
     return (await this.pools).find((pool) => pool[param] == value);
@@ -168,7 +168,7 @@ export class PoolsSubgraphRepository
 
   async all(): Promise<Pool[]> {
     if (!this.pools) {
-      this.pools = this.fetchDefault();
+      this.pools = this.fetch();
     }
     return this.pools;
   }
@@ -179,7 +179,7 @@ export class PoolsSubgraphRepository
 
   async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
     if (!this.pools) {
-      this.pools = this.fetchDefault();
+      this.pools = this.fetch();
     }
 
     return (await this.pools).filter(filter);

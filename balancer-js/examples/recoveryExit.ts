@@ -7,6 +7,9 @@ import {
   BalancerError,
   BalancerErrorCode,
   BalancerSDK,
+  getPoolAddress,
+  GraphQLArgs,
+  GraphQLQuery,
   Network,
   PoolWithMethods,
   truncateAddresses,
@@ -31,15 +34,30 @@ async function recoveryExit() {
   const provider = new JsonRpcProvider(rpcUrl, network);
   const signer = provider.getSigner();
   const signerAddress = await signer.getAddress();
+  const blockNumber = 16819888;
 
   const poolId =
     '0x50cf90b954958480b8df7958a9e965752f62712400000000000000000000046f'; // bb-e-usd
+  // '0xd4e7c1f3da1144c9e2cfd1b015eda7652b4a439900000000000000000000046a'; // bb-e-usdc
   const bptIn = parseFixed('1', 18).toString();
   const slippage = '200'; // 200 bps = 2%
+
+  const subgraphArgs: GraphQLArgs = {
+    where: {
+      address: {
+        in: [getPoolAddress(poolId)],
+      },
+    },
+    orderBy: 'totalLiquidity',
+    orderDirection: 'desc',
+    block: { number: blockNumber },
+  };
+  const subgraphQuery: GraphQLQuery = { args: subgraphArgs, attrs: {} };
 
   const sdkConfig = {
     network,
     rpcUrl,
+    subgraphQuery,
   };
   const balancer = new BalancerSDK(sdkConfig);
 
@@ -53,7 +71,8 @@ async function recoveryExit() {
     [pool.address],
     [BPT_SLOT],
     [bptIn],
-    jsonRpcUrl as string
+    jsonRpcUrl as string,
+    blockNumber
   );
 
   let minAmountsOut = Array(pool.tokensList.length).fill('0');
