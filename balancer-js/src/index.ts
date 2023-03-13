@@ -1,3 +1,4 @@
+export * from './pool-base';
 export * from './pool-stable';
 export * from './pool-weighted';
 export * from './pool-composable-stable';
