@@ -14,7 +14,7 @@ export class StablePhantomPoolExit implements ExitConcern {
     slippage,
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
-    singleTokenMaxOut,
+    singleTokenOut,
   }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
     // TODO implementation
     console.log(
@@ -24,7 +24,7 @@ export class StablePhantomPoolExit implements ExitConcern {
       slippage,
       shouldUnwrapNativeAsset,
       wrappedNativeAsset,
-      singleTokenMaxOut
+      singleTokenOut
     );
     throw new Error('To be implemented');
   };

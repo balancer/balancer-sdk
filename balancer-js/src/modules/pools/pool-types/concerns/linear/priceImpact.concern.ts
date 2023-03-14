@@ -8,8 +8,8 @@ export class LinearPriceImpact implements PriceImpactConcern {
   }
   calcPriceImpact(
     pool: Pool,
-    tokenAmounts: string[],
-    bptAmount: string
+    tokenAmounts: bigint[],
+    bptAmount: bigint
   ): string {
     throw new Error('Linear Pool Price Impact Not Implented');
   }

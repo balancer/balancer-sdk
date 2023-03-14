@@ -27,26 +27,49 @@ const makePromise = <T>(): Promised<T> => {
  *
  * @param fn Function to debounce
  * @param wait Debouncing waiting time [ms]
+ * @param limit Maximum number of attributes to execute in one promise
+ * @returns Debouncer instance
  */
 export class Debouncer<T, A> {
-  requestSet = new Set<A>(); // collection of requested attributes
+  requestSets = <Set<A>[]>[]; // new Set<A>(); // collection of requested attributes
   promisedCalls: Promised<T>[] = []; // When requesting a price we return a deferred promise
   promisedCount = 0; // New request coming when setTimeout is executing will make a new promise
   timeout?: ReturnType<typeof setTimeout>;
   debounceCancel = (): void => {}; // Allow to cancel mid-flight requests
 
-  constructor(private fn: (attrs: A[]) => Promise<T>, private wait = 200) {}
+  constructor(
+    private fn: (attrs: A[]) => Promise<T>,
+    private wait = 200,
+    private limit = 100
+  ) {}
 
   fetch(attr?: A): Promise<T> {
+    this.requestSets[this.promisedCount] ||= new Set<A>();
+
+    // Accumulate attributes for debounced execution
     if (attr) {
-      this.requestSet.add(attr);
+      this.requestSets[this.promisedCount].add(attr);
     }
 
+    // Execute immediately when limit is reached
+    if (this.requestSets[this.promisedCount].size >= this.limit) {
+      return this.execute(0);
+    }
+
+    // Return a running promise
     if (this.promisedCalls[this.promisedCount]) {
       return this.promisedCalls[this.promisedCount].promise;
     }
 
-    this.promisedCalls[this.promisedCount] = makePromise();
+    // If no promise is running, start a new one
+    return this.execute(this.wait);
+  }
+
+  execute(timeout = 0): Promise<T> {
+    // if no promise is running, start a new one
+    if (!this.promisedCalls[this.promisedCount]) {
+      this.promisedCalls[this.promisedCount] = makePromise();
+    }
 
     const { promise, resolve, reject } = this.promisedCalls[this.promisedCount];
 
@@ -54,10 +77,9 @@ export class Debouncer<T, A> {
       clearTimeout(this.timeout);
     }
 
-    this.timeout = setTimeout(() => {
-      this.promisedCount++; // after execution started any new call will get a new promise
-      const requestAttrs = [...this.requestSet];
-      this.requestSet.clear(); // clear optimistically assuming successful results
+    const call = () => {
+      const requestAttrs = [...this.requestSets[this.promisedCount]];
+      this.promisedCount++;
       this.fn(requestAttrs)
         .then((results) => {
           resolve(results);
@@ -73,7 +95,13 @@ export class Debouncer<T, A> {
           }
           reject(reason);
         });
-    }, this.wait);
+    };
+
+    if (timeout > 0) {
+      this.timeout = setTimeout(call.bind(this), timeout);
+    } else {
+      call();
+    }
 
     this.debounceCancel = () => {
       if (this.timeout) {

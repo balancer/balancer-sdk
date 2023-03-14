@@ -1,5 +1,5 @@
 import { WeightedMaths } from '@balancer-labs/sor';
-import { Vault__factory } from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { BigNumber } from '@ethersproject/bignumber';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { balancerVault } from '@/lib/constants/config';
@@ -17,12 +17,11 @@ import { _upscaleArray } from '@/lib/utils/solidityMaths';
 import { AddressZero } from '@ethersproject/constants';
 
 type SortedValues = {
-  parsedTokens: string[];
-  parsedWeights: string[];
-  parsedTotalShares: string;
-  parsedSwapFee: string;
-  parsedBalances: string[];
-  upScaledBalances: string[];
+  poolTokens: string[];
+  weights: bigint[];
+  totalSharesEvm: bigint;
+  swapFeeEvm: bigint;
+  upScaledBalances: bigint[];
   upScaledAmountsIn: bigint[];
   sortedAmountsIn: string[];
 };
@@ -135,26 +134,26 @@ export class WeightedPoolJoin implements JoinConcern {
 
   calcBptOutGivenExactTokensIn = ({
     upScaledBalances,
-    parsedWeights,
+    weights,
     upScaledAmountsIn,
-    parsedTotalShares,
-    parsedSwapFee,
+    totalSharesEvm,
+    swapFeeEvm,
     slippage,
   }: Pick<JoinPoolParameters, 'slippage'> &
     Pick<
       SortedValues,
       | 'upScaledBalances'
-      | 'parsedWeights'
+      | 'weights'
       | 'upScaledAmountsIn'
-      | 'parsedTotalShares'
-      | 'parsedSwapFee'
+      | 'totalSharesEvm'
+      | 'swapFeeEvm'
     >): { expectedBPTOut: string; minBPTOut: string } => {
     const expectedBPTOut = WeightedMaths._calcBptOutGivenExactTokensIn(
-      upScaledBalances.map(BigInt),
-      parsedWeights.map(BigInt),
-      upScaledAmountsIn.map(BigInt),
-      BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      upScaledBalances,
+      weights,
+      upScaledAmountsIn,
+      totalSharesEvm,
+      swapFeeEvm
     ).toString();
 
     const minBPTOut = subSlippage(
@@ -169,13 +168,13 @@ export class WeightedPoolJoin implements JoinConcern {
   };
   encodeJoinPool = ({
     sortedAmountsIn,
-    parsedTokens,
+    poolTokens,
     poolId,
     joiner,
     minBPTOut,
     amountsIn,
     tokensIn,
-  }: Pick<SortedValues, 'sortedAmountsIn' | 'parsedTokens'> &
+  }: Pick<SortedValues, 'sortedAmountsIn' | 'poolTokens'> &
     Pick<JoinPoolParameters, 'joiner' | 'amountsIn' | 'tokensIn'> & {
       joiner: Address;
       poolId: string;
@@ -195,7 +194,7 @@ export class WeightedPoolJoin implements JoinConcern {
       sender: joiner,
       recipient: joiner,
       joinPoolRequest: {
-        assets: parsedTokens,
+        assets: poolTokens,
         maxAmountsIn: sortedAmountsIn,
         userData,
         fromInternalBalance: false,
