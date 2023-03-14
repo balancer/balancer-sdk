@@ -75,6 +75,7 @@ export class Data implements BalancerDataRepositories {
     this.pools = new PoolsSubgraphRepository({
       url: networkConfig.urls.subgraph,
       chainId: networkConfig.chainId,
+      query: subgraphQuery,
     });
 
     this.poolsForSor = new SubgraphPoolDataService(
@@ -85,14 +86,15 @@ export class Data implements BalancerDataRepositories {
       subgraphQuery
     );
 
-    this.poolsOnChain = new PoolsSubgraphOnChainRepository({
-      url: networkConfig.urls.subgraph,
-      chainId: networkConfig.chainId,
-      provider: provider,
-      multicall: networkConfig.addresses.contracts.multicall,
-      vault: networkConfig.addresses.contracts.vault,
-      query: subgraphQuery,
-    });
+    this.poolsOnChain = new PoolsSubgraphOnChainRepository(
+      this.pools,
+      {
+        provider: provider,
+        multicall: networkConfig.addresses.contracts.multicall,
+        vault: networkConfig.addresses.contracts.vault,
+      },
+      networkConfig.poolsToIgnore
+    );
 
     this.poolShares = new PoolSharesRepository(
       networkConfig.urls.subgraph,
@@ -133,6 +135,22 @@ export class Data implements BalancerDataRepositories {
         url: networkConfig.urls.subgraph,
         chainId: networkConfig.chainId,
         blockHeight: blockDayAgo,
+        query: subgraphQuery,
+      });
+    }
+
+    // Hardcoding gnosis chain block time to 5 sec.
+    if (networkConfig.chainId === 100) {
+      const blockDayAgo = async () => {
+        const blockNumber = await provider.getBlockNumber();
+        return blockNumber - 17280;
+      };
+
+      this.yesterdaysPools = new PoolsSubgraphRepository({
+        url: networkConfig.urls.subgraph,
+        chainId: networkConfig.chainId,
+        blockHeight: blockDayAgo,
+        query: subgraphQuery,
       });
     }
 

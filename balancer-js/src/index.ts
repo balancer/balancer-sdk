@@ -1,3 +1,4 @@
+export * from './pool-base';
 export * from './pool-stable';
 export * from './pool-weighted';
 export * from './pool-composable-stable';
@@ -6,6 +7,7 @@ export * from './lib/constants';
 export * from './lib/utils';
 export * from './lib/graphql';
 export * from './types';
+export * from './contracts/index';
 export * from './modules/swaps/types';
 export * from './modules/swaps/helpers';
 export * from './modules/liquidity/liquidity.module';

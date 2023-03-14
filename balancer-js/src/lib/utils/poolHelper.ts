@@ -10,31 +10,31 @@ import { AssetHelpers } from '@/lib/utils/assetHelpers';
 
 export const AMP_PRECISION = 3; // number of decimals -> precision 1000
 
-interface ParsedPoolInfo {
+type ParsedPoolInfo = {
   bptIndex: number;
-  exemptedTokens: boolean[];
   higherBalanceTokenIndex: number;
-  lastJoinExitInvariant: string;
-  parsedAmp: string;
-  parsedBalances: string[];
-  parsedBalancesWithoutBpt: string[];
-  parsedDecimals: string[];
-  parsedOldPriceRates: string[];
-  parsedPriceRates: string[];
-  parsedPriceRatesWithoutBpt: string[];
-  parsedSwapFee: string;
-  parsedTokens: string[];
-  parsedTokensWithoutBpt: string[];
-  parsedTotalShares: string;
-  parsedWeights: string[];
-  protocolSwapFeePct: string;
-  protocolYieldFeePct: string;
+  exemptedTokens: boolean[];
+  ampWithPrecision: bigint;
+  balancesEvm: bigint[];
+  balancesEvmWithoutBpt: bigint[];
+  priceRates: bigint[];
+  priceRatesWithoutBpt: bigint[];
+  swapFeeEvm: bigint;
+  poolTokens: string[];
+  poolTokensWithoutBpt: string[];
+  oldPriceRates: bigint[];
+  weights: bigint[];
   scalingFactors: bigint[];
   scalingFactorsWithoutBpt: bigint[];
-  upScaledBalances: string[];
-  upScaledBalancesWithoutBpt: string[];
-  totalShares: string;
-}
+  scalingFactorsRaw: bigint[];
+  scalingFactorsRawWithoutBpt: bigint[];
+  upScaledBalances: bigint[];
+  upScaledBalancesWithoutBpt: bigint[];
+  totalSharesEvm: bigint;
+  lastJoinExitInvariant: string;
+  protocolSwapFeePct: string;
+  protocolYieldFeePct: string;
+};
 
 /**
  * Parse pool info into EVM amounts. Sorts by token order if wrappedNativeAsset param passed.
@@ -49,95 +49,85 @@ export const parsePoolInfo = (
   wrappedNativeAsset?: string,
   unwrapNativeAsset?: boolean
 ): ParsedPoolInfo => {
-  const defaultOne = '1000000000000000000';
   let exemptedTokens = pool.tokens.map(
     ({ isExemptFromYieldProtocolFee }) => !!isExemptFromYieldProtocolFee
   );
-  let parsedTokens = unwrapNativeAsset
+  let poolTokens = unwrapNativeAsset
     ? pool.tokens.map((token) =>
         token.address === wrappedNativeAsset ? AddressZero : token.address
       )
     : pool.tokens.map((token) => token.address);
-  let parsedDecimals = pool.tokens.map((token) => {
-    return token.decimals ? token.decimals.toString() : '18';
+  let decimals = pool.tokens.map((token) => {
+    return token.decimals ?? 18;
   });
-  let parsedBalances = pool.tokens.map((token) =>
-    parseFixed(token.balance, token.decimals).toString()
+  let balancesEvm = pool.tokens.map((token) =>
+    parseFixed(token.balance, token.decimals).toBigInt()
   );
-  let parsedWeights = pool.tokens.map((token) => {
-    return token.weight ? parseFixed(token.weight, 18).toString() : defaultOne;
+  let weights = pool.tokens.map((token) => {
+    return parseFixed(token.weight ?? '1', 18).toBigInt();
   });
-  let parsedPriceRates = pool.tokens.map((token) => {
-    return token.priceRate
-      ? parseFixed(token.priceRate, 18).toString()
-      : defaultOne;
+  let priceRates = pool.tokens.map((token) => {
+    return parseFixed(token.priceRate ?? '1', 18).toBigInt();
   });
 
-  let parsedOldPriceRates = pool.tokens.map(({ oldPriceRate }) => {
-    return oldPriceRate ? parseFixed(oldPriceRate, 18).toString() : defaultOne;
+  let oldPriceRates = pool.tokens.map(({ oldPriceRate }) => {
+    return parseFixed(oldPriceRate ?? '1', 18).toBigInt();
   });
 
-  const scalingFactorsRaw = parsedDecimals.map((decimals) =>
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    _computeScalingFactor(BigInt(decimals!))
-  );
+  let scalingFactorsRaw = decimals.map((d) => _computeScalingFactor(BigInt(d)));
+
   let scalingFactors = scalingFactorsRaw.map((sf, i) =>
-    SolidityMaths.mulDownFixed(sf, BigInt(parsedPriceRates[i]))
+    SolidityMaths.mulDownFixed(sf, priceRates[i])
   );
   // This assumes token.balance is in human scale (e.g. from SG)
-  let upScaledBalances = _upscaleArray(
-    parsedBalances.map(BigInt),
-    scalingFactors
-  ).map((b) => b.toString());
-  // let upScaledBalances = pool.tokens.map((token) =>
-  //   parseFixed(token.balance, 18).toString()
-  // );
+  let upScaledBalances = _upscaleArray(balancesEvm, scalingFactors);
   if (wrappedNativeAsset) {
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    let sfString;
     [
-      parsedTokens,
-      parsedDecimals,
-      sfString,
-      parsedBalances,
+      poolTokens,
+      decimals,
+      scalingFactors,
+      scalingFactorsRaw,
+      balancesEvm,
       upScaledBalances,
-      parsedWeights,
-      parsedPriceRates,
-      parsedOldPriceRates,
+      weights,
+      priceRates,
+      oldPriceRates,
       exemptedTokens,
     ] = assetHelpers.sortTokens(
-      parsedTokens,
-      parsedDecimals,
+      poolTokens,
+      decimals,
       scalingFactors,
-      parsedBalances,
+      scalingFactorsRaw,
+      balancesEvm,
       upScaledBalances,
-      parsedWeights,
-      parsedPriceRates,
-      parsedOldPriceRates,
+      weights,
+      priceRates,
+      oldPriceRates,
       exemptedTokens
     ) as [
       string[],
-      string[],
-      string[],
-      string[],
-      string[],
-      string[],
-      string[],
-      string[],
+      number[],
+      bigint[],
+      bigint[],
+      bigint[],
+      bigint[],
+      bigint[],
+      bigint[],
+      bigint[],
       boolean[]
     ];
-    scalingFactors = sfString.map(BigInt);
   }
 
-  const parsedAmp = pool.amp
-    ? parseFixed(pool.amp, AMP_PRECISION).toString() // Solidity maths uses precison method for amp that must be replicated
-    : defaultOne;
-  const parsedTotalShares = parseFixed(pool.totalShares, 18).toString();
-  const parsedSwapFee = parseFixed(pool.swapFee, 18).toString();
+  // Solidity maths uses precison method for amp that must be replicated
+  const ampWithPrecision = parseFixed(
+    pool.amp ?? '1',
+    AMP_PRECISION
+  ).toBigInt();
 
-  const higherBalanceTokenIndex = upScaledBalances
-    .map(BigInt)
-    .indexOf(SolidityMaths.max(...upScaledBalances.map(BigInt)));
+  const higherBalanceTokenIndex = upScaledBalances.indexOf(
+    SolidityMaths.max(upScaledBalances)
+  );
   const protocolSwapFeePct = parseFixed(
     pool.protocolSwapFeeCache || '0',
     18
@@ -146,47 +136,46 @@ export const parsePoolInfo = (
     pool.protocolYieldFeeCache || '0',
     18
   ).toString();
-  const scalingFactorsWithoutBpt: bigint[] = [],
-    parsedTokensWithoutBpt: string[] = [],
-    parsedBalancesWithoutBpt: string[] = [],
-    parsedPriceRatesWithoutBpt: string[] = [],
-    upScaledBalancesWithoutBpt: string[] = [];
-  const bptIndex = parsedTokens.indexOf(pool.address);
+  const scalingFactorsWithoutBpt = [...scalingFactors];
+  const scalingFactorsRawWithoutBpt = [...scalingFactorsRaw];
+  const poolTokensWithoutBpt = [...poolTokens];
+  const balancesEvmWithoutBpt = [...balancesEvm];
+  const priceRatesWithoutBpt = [...priceRates];
+  const upScaledBalancesWithoutBpt = [...upScaledBalances];
+
+  const bptIndex = poolTokens.indexOf(pool.address);
   if (bptIndex !== -1) {
-    scalingFactors.forEach((_, i) => {
-      if (i !== bptIndex) {
-        scalingFactorsWithoutBpt.push(scalingFactors[i]);
-        parsedTokensWithoutBpt.push(parsedTokens[i]);
-        parsedBalancesWithoutBpt.push(parsedBalances[i]);
-        parsedPriceRatesWithoutBpt.push(parsedPriceRates[i]);
-        upScaledBalancesWithoutBpt.push(upScaledBalances[i]);
-      }
-    });
+    scalingFactorsWithoutBpt.splice(bptIndex, 1);
+    scalingFactorsRawWithoutBpt.splice(bptIndex, 1);
+    poolTokensWithoutBpt.splice(bptIndex, 1);
+    balancesEvmWithoutBpt.splice(bptIndex, 1);
+    priceRatesWithoutBpt.splice(bptIndex, 1);
+    upScaledBalancesWithoutBpt.splice(bptIndex, 1);
   }
-  const totalShares = parseFixed(pool.totalShares || '0', 18).toString();
+
   return {
     bptIndex,
-    exemptedTokens,
     higherBalanceTokenIndex,
-    lastJoinExitInvariant: pool.lastJoinExitInvariant || '0',
-    parsedAmp,
-    parsedBalances,
-    parsedBalancesWithoutBpt,
-    parsedDecimals,
-    parsedOldPriceRates,
-    parsedPriceRates,
-    parsedPriceRatesWithoutBpt,
-    parsedSwapFee,
-    parsedTokens,
-    parsedTokensWithoutBpt,
-    parsedTotalShares,
-    parsedWeights,
-    protocolSwapFeePct,
-    protocolYieldFeePct,
+    ampWithPrecision,
+    balancesEvm,
+    balancesEvmWithoutBpt,
+    priceRates,
+    priceRatesWithoutBpt,
+    oldPriceRates,
+    swapFeeEvm: parseFixed(pool.swapFee, 18).toBigInt(),
+    poolTokens,
+    poolTokensWithoutBpt,
+    weights,
     scalingFactors,
     scalingFactorsWithoutBpt,
+    scalingFactorsRaw,
+    scalingFactorsRawWithoutBpt,
     upScaledBalances,
     upScaledBalancesWithoutBpt,
-    totalShares,
+    totalSharesEvm: parseFixed(pool.totalShares || '0', 18).toBigInt(),
+    protocolSwapFeePct,
+    protocolYieldFeePct,
+    lastJoinExitInvariant: pool.lastPostJoinExitInvariant || '0',
+    exemptedTokens,
   };
 };

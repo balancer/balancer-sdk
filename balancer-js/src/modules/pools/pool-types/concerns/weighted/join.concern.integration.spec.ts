@@ -1,16 +1,9 @@
-/* eslint-disable no-unexpected-multiline */
+// yarn test:only ./src/modules/pools/pool-types/concerns/weighted/join.concern.integration.spec.ts
 import { parseFixed, BigNumber } from '@ethersproject/bignumber';
 import { expect } from 'chai';
 import dotenv from 'dotenv';
 import hardhat from 'hardhat';
-import {
-  Address,
-  BalancerSDK,
-  insert,
-  replace,
-  Network,
-  PoolWithMethods,
-} from '@/.';
+import { Address, BalancerSDK, insert, Network, PoolWithMethods } from '@/.';
 import {
   forkSetup,
   sendTransactionGetBalances,
@@ -144,7 +137,7 @@ describe('Weighted Pool - Join - integration tests', async () => {
       slippage
     );
 
-    const { transactionReceipt, balanceDeltas, gasUsed } =
+    const { transactionReceipt, balanceDeltas } =
       await sendTransactionGetBalances(
         [pool.address, ...tokensIn],
         signer,
@@ -155,20 +148,7 @@ describe('Weighted Pool - Join - integration tests', async () => {
       );
     expect(transactionReceipt.status).to.eq(1);
     expect(BigInt(expectedBPTOut) > 0).to.be.true;
-
-    const ethAmountInWithGasUsed = BigNumber.from(amountsIn[ethIndex])
-      .add(gasUsed)
-      .toString();
-    const expectedBalanceDeltasWithGasUsed = replace(
-      amountsIn,
-      ethIndex,
-      ethAmountInWithGasUsed
-    );
-    const expectedDeltas = insert(
-      expectedBalanceDeltasWithGasUsed,
-      0,
-      expectedBPTOut
-    );
+    const expectedDeltas = insert(amountsIn, 0, expectedBPTOut);
     expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
     const expectedMinBpt = subSlippage(
       BigNumber.from(expectedBPTOut),

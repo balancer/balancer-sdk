@@ -51,7 +51,7 @@ describe('MetaStablePool - Exit Concern Integration Tests', async () => {
       signerAddress = await signer.getAddress();
     });
     context('buildExitExactBPTIn', async () => {
-      it('should work with single token maxed out', async () => {
+      it('should work with single token out', async () => {
         const bptIn = parseFixed('10', BPT_DECIMALS).toString();
         const slippage = '0';
         const { to, data, minAmountsOut, expectedAmountsOut } =

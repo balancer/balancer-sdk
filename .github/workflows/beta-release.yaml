@@ -30,6 +30,8 @@ jobs:
           key: yarn-v1-${{ hashFiles('**/yarn.lock') }}
       - run: yarn --immutable
         if: steps.cache.outputs.cache-hit != 'true'
+      - name: Generate Typechain
+        run: yarn typechain:generate
       - env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
           NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
