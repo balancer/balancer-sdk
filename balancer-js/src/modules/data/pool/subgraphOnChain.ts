@@ -1,19 +1,15 @@
 import { Findable, Searchable } from '../types';
 import { Provider } from '@ethersproject/providers';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
-import { GraphQLQuery, Pool } from '@/types';
-import { Network } from '@/lib/constants/network';
+import { Pool } from '@/types';
 import { getOnChainBalances } from '../../../modules/sor/pool-data/onChainData';
 import { PoolsSubgraphRepository } from './subgraph';
+import { isSameAddress } from '@/lib/utils';
 
 interface PoolsSubgraphOnChainRepositoryOptions {
-  url: string;
-  chainId: Network;
   provider: Provider;
   multicall: string;
   vault: string;
-  blockHeight?: () => Promise<number | undefined>;
-  query?: GraphQLQuery;
 }
 
 /**
@@ -22,7 +18,6 @@ interface PoolsSubgraphOnChainRepositoryOptions {
 export class PoolsSubgraphOnChainRepository
   implements Findable<Pool, PoolAttribute>, Searchable<Pool>
 {
-  private poolsSubgraph: PoolsSubgraphRepository;
   private provider: Provider;
   private pools?: Promise<Pool[]>;
   private multicall: string;
@@ -32,22 +27,28 @@ export class PoolsSubgraphOnChainRepository
   /**
    * Repository using multicall to get onchain data.
    *
-   * @param url subgraph URL
-   * @param chainId current network, needed for L2s logic
-   * @param blockHeight lazy loading blockHeigh resolver
-   * @param multicall multicall address
-   * @param valt vault address
+   * @param poolsSubgraph subgraph repository
+   * @param options options containing provider, multicall and vault addresses
    */
-  constructor(options: PoolsSubgraphOnChainRepositoryOptions) {
-    this.poolsSubgraph = new PoolsSubgraphRepository({
-      url: options.url,
-      chainId: options.chainId,
-      blockHeight: options.blockHeight,
-      query: options.query,
-    });
+  constructor(
+    private poolsSubgraph: PoolsSubgraphRepository,
+    options: PoolsSubgraphOnChainRepositoryOptions,
+    private readonly poolsToIgnore: string[] | undefined
+  ) {
     this.provider = options.provider;
     this.multicall = options.multicall;
     this.vault = options.vault;
+  }
+
+  private filterPools(pools: Pool[]): Pool[] {
+    const filteredPools = pools.filter((p) => {
+      if (!this.poolsToIgnore) return true;
+      const index = this.poolsToIgnore.findIndex((addr) =>
+        isSameAddress(addr, p.address)
+      );
+      return index === -1;
+    });
+    return filteredPools;
   }
 
   /**
@@ -60,9 +61,10 @@ export class PoolsSubgraphOnChainRepository
     console.time('fetching pools SG');
     const pools = await this.poolsSubgraph.fetch();
     console.timeEnd('fetching pools SG');
+    const filteredPools = this.filterPools(pools);
     console.time('fetching pools onchain');
     const onchainPools = await getOnChainBalances(
-      pools,
+      filteredPools,
       this.multicall,
       this.vault,
       this.provider
@@ -74,8 +76,9 @@ export class PoolsSubgraphOnChainRepository
 
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
     const pools = await this.poolsSubgraph.fetch(options);
+    const filteredPools = this.filterPools(pools);
     const onchainPools = await getOnChainBalances(
-      pools,
+      filteredPools,
       this.multicall,
       this.vault,
       this.provider

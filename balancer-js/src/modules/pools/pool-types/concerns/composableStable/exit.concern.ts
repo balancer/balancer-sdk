@@ -9,7 +9,6 @@ import {
   insert,
   isSameAddress,
   parsePoolInfo,
-  removeItem,
 } from '@/lib/utils';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import {
@@ -31,18 +30,18 @@ import {
 } from '../types';
 
 interface SortedValues {
-  parsedTokens: string[];
-  parsedAmp?: string;
-  parsedTotalShares: string;
-  parsedSwapFee: string;
+  poolTokens: string[];
+  ampWithPrecision: bigint;
+  totalSharesEvm: bigint;
+  swapFeeEvm: bigint;
   bptIndex: number;
-  upScaledBalancesWithoutBpt: string[];
+  upScaledBalancesWithoutBpt: bigint[];
   scalingFactors: bigint[];
   scalingFactorsWithoutBpt: bigint[];
 }
 
 type ExactBPTInSortedValues = SortedValues & {
-  singleTokenOutIndex: number;
+  singleTokenOutIndexWithoutBpt: number;
 };
 type ExactTokensOutSortedValues = SortedValues & {
   upScaledAmountsOutWithoutBpt: bigint[];
@@ -113,7 +112,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     });
 
     const { minAmountsOut, expectedAmountsOut } =
-      sortedValues.singleTokenOutIndex >= 0
+      sortedValues.singleTokenOutIndexWithoutBpt >= 0
         ? this.calcTokenOutGivenExactBptIn({
             ...sortedValues,
             bptIn,
@@ -126,34 +125,31 @@ export class ComposableStablePoolExit implements ExitConcern {
           });
 
     const userData =
-      sortedValues.singleTokenOutIndex >= 0
+      sortedValues.singleTokenOutIndexWithoutBpt >= 0
         ? ComposableStablePoolEncoder.exitExactBPTInForOneTokenOut(
             bptIn,
-            sortedValues.singleTokenOutIndex as number
+            sortedValues.singleTokenOutIndexWithoutBpt
           )
         : ComposableStablePoolEncoder.exitExactBPTInForAllTokensOut(bptIn);
 
+    // MinAmounts needs a value for BPT for encoding
+    const minAmountsOutWithBpt = insert(
+      minAmountsOut,
+      sortedValues.bptIndex,
+      '0'
+    );
     const encodedData = this.encodeExitPool({
-      poolTokens: sortedValues.parsedTokens,
+      poolTokens: sortedValues.poolTokens,
       poolId: pool.id,
       exiter,
       userData,
-      minAmountsOut,
+      minAmountsOut: minAmountsOutWithBpt,
     });
-
-    const expectedAmountsOutWithoutBpt = removeItem(
-      expectedAmountsOut,
-      sortedValues.bptIndex
-    );
-    const minAmountsOutWithoutBpt = removeItem(
-      minAmountsOut,
-      sortedValues.bptIndex
-    );
 
     return {
       ...encodedData,
-      expectedAmountsOut: expectedAmountsOutWithoutBpt,
-      minAmountsOut: minAmountsOutWithoutBpt,
+      expectedAmountsOut,
+      minAmountsOut,
     };
   };
 
@@ -196,7 +192,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     );
 
     const encodedData = this.encodeExitPool({
-      poolTokens: sortedValues.parsedTokens,
+      poolTokens: sortedValues.poolTokens,
       minAmountsOut: sortedValues.downscaledAmountsOutWithBpt,
       userData,
       exiter,
@@ -291,13 +287,14 @@ export class ComposableStablePoolExit implements ExitConcern {
       wrappedNativeAsset,
       shouldUnwrapNativeAsset
     );
-    let singleTokenOutIndex = -1;
+    let singleTokenOutIndexWithoutBpt = -1;
     if (singleTokenOut) {
-      singleTokenOutIndex = parsedValues.parsedTokens.indexOf(singleTokenOut);
+      singleTokenOutIndexWithoutBpt =
+        parsedValues.poolTokensWithoutBpt.indexOf(singleTokenOut);
     }
     return {
       ...parsedValues,
-      singleTokenOutIndex,
+      singleTokenOutIndexWithoutBpt,
     };
   };
   /**
@@ -362,24 +359,22 @@ export class ComposableStablePoolExit implements ExitConcern {
    * @param slippage
    */
   calcTokenOutGivenExactBptIn = ({
-    parsedTokens,
-    parsedAmp,
+    ampWithPrecision,
     upScaledBalancesWithoutBpt,
-    singleTokenOutIndex,
-    scalingFactors,
-    parsedTotalShares,
-    parsedSwapFee,
+    singleTokenOutIndexWithoutBpt,
+    scalingFactorsWithoutBpt,
+    totalSharesEvm,
+    swapFeeEvm,
     bptIn,
     slippage,
   }: Pick<
     ExactBPTInSortedValues,
-    | 'parsedTokens'
-    | 'parsedAmp'
+    | 'ampWithPrecision'
     | 'upScaledBalancesWithoutBpt'
-    | 'singleTokenOutIndex'
-    | 'scalingFactors'
-    | 'parsedTotalShares'
-    | 'parsedSwapFee'
+    | 'singleTokenOutIndexWithoutBpt'
+    | 'scalingFactorsWithoutBpt'
+    | 'totalSharesEvm'
+    | 'swapFeeEvm'
   > &
     Pick<ExitExactBPTInParameters, 'bptIn' | 'slippage'>): {
     minAmountsOut: string[];
@@ -387,24 +382,27 @@ export class ComposableStablePoolExit implements ExitConcern {
   } => {
     // Calculate amount out given BPT in
     const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
-      BigInt(parsedAmp as string),
-      upScaledBalancesWithoutBpt.map(BigInt),
-      singleTokenOutIndex,
+      ampWithPrecision,
+      upScaledBalancesWithoutBpt,
+      singleTokenOutIndexWithoutBpt,
       BigInt(bptIn),
-      BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      totalSharesEvm,
+      swapFeeEvm
     );
-    const expectedAmountsOut = Array(parsedTokens.length).fill('0');
-    const minAmountsOut = Array(parsedTokens.length).fill('0');
+    const expectedAmountsOut = Array(upScaledBalancesWithoutBpt.length).fill(
+      '0'
+    );
+    const minAmountsOut = Array(upScaledBalancesWithoutBpt.length).fill('0');
     // Downscales to token decimals and removes priceRate
     const downscaledAmountOut = _downscaleDown(
       amountOut,
-      scalingFactors[singleTokenOutIndex]
+      scalingFactorsWithoutBpt[singleTokenOutIndexWithoutBpt]
     );
 
-    expectedAmountsOut[singleTokenOutIndex] = downscaledAmountOut.toString();
+    expectedAmountsOut[singleTokenOutIndexWithoutBpt] =
+      downscaledAmountOut.toString();
     // Apply slippage tolerance
-    minAmountsOut[singleTokenOutIndex] = subSlippage(
+    minAmountsOut[singleTokenOutIndexWithoutBpt] = subSlippage(
       BigNumber.from(downscaledAmountOut),
       BigNumber.from(slippage)
     ).toString();
@@ -414,32 +412,27 @@ export class ComposableStablePoolExit implements ExitConcern {
 
   calcTokensOutGivenExactBptIn = ({
     upScaledBalancesWithoutBpt,
-    parsedTotalShares,
-    scalingFactors,
+    totalSharesEvm,
+    scalingFactorsWithoutBpt,
     bptIn,
     slippage,
-    bptIndex,
   }: Pick<
     ExactBPTInSortedValues,
-    | 'upScaledBalancesWithoutBpt'
-    | 'parsedTotalShares'
-    | 'scalingFactors'
-    | 'singleTokenOutIndex'
-    | 'bptIndex'
+    'upScaledBalancesWithoutBpt' | 'totalSharesEvm' | 'scalingFactorsWithoutBpt'
   > &
     Pick<ExitExactBPTInParameters, 'bptIn' | 'slippage'>): {
     minAmountsOut: string[];
     expectedAmountsOut: string[];
   } => {
     const amountsOut = SOR.StableMathBigInt._calcTokensOutGivenExactBptIn(
-      upScaledBalancesWithoutBpt.map((b) => BigInt(b)),
+      upScaledBalancesWithoutBpt,
       BigInt(bptIn),
-      BigInt(parsedTotalShares)
-    ).map((amount) => amount.toString());
+      totalSharesEvm
+    );
     // Maths return numbers scaled to 18 decimals. Must scale down to token decimals.
     const amountsOutScaledDown = _downscaleDownArray(
-      insert(amountsOut, bptIndex, '0').map((a) => BigInt(a)),
-      scalingFactors
+      amountsOut,
+      scalingFactorsWithoutBpt
     );
 
     const expectedAmountsOut = amountsOutScaledDown.map((amount) =>
@@ -458,30 +451,30 @@ export class ComposableStablePoolExit implements ExitConcern {
 
   /**
    * Calculate the bptIn and maxBPTIn of the exit with exact tokens out transaction and returns them;
-   * @param parsedAmp
+   * @param ampWithPrecision
    * @param upScaledBalancesWithoutBpt
    * @param upScaledAmountsOut
-   * @param parsedTotalShares
-   * @param parsedSwapFee
+   * @param totalSharesEvm
+   * @param swapFeeEvm
    * @param slippage
    */
   calcBptInGivenExactTokensOut = ({
-    parsedAmp,
+    ampWithPrecision,
     upScaledBalancesWithoutBpt,
     upScaledAmountsOutWithoutBpt,
-    parsedTotalShares,
-    parsedSwapFee,
+    totalSharesEvm,
+    swapFeeEvm,
     slippage,
   }: CalcBptInGivenExactTokensOutParams): {
     bptIn: string;
     maxBPTIn: string;
   } => {
     const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(
-      BigInt(parsedAmp as string),
-      upScaledBalancesWithoutBpt.map(BigInt),
+      ampWithPrecision,
+      upScaledBalancesWithoutBpt,
       upScaledAmountsOutWithoutBpt,
-      BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      totalSharesEvm,
+      swapFeeEvm
     ).toString();
 
     // Apply slippage tolerance

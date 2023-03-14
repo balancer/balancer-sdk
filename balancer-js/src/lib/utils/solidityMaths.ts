@@ -118,10 +118,14 @@ export class SolidityMaths {
   // }
 
   /**
-   * @dev Returns the largest of two numbers of 256 bits.
+   * @dev Returns the largest bigint in the array.
    */
-  static max(a: bigint, b: bigint): bigint {
-    return a >= b ? a : b;
+  static max(args: bigint[]): bigint {
+    if (args.length === 0) throw new Error('Errors.EMPTY_ARRAY');
+    if (args.length === 1) return args[0];
+    return args.reduce((previous, current) =>
+      current > previous ? current : previous
+    );
   }
 
   /**

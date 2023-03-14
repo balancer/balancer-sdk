@@ -263,8 +263,8 @@ export class Pools implements Findable<PoolWithMethods> {
         ) =>
           concerns.priceImpactCalculator.calcPriceImpact(
             pool,
-            amountsIn,
-            minBPTOut,
+            amountsIn.map(BigInt),
+            BigInt(minBPTOut),
             isJoin
           ),
         buildExitExactBPTIn: (
