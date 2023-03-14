@@ -31,7 +31,7 @@ describe('pools module', () => {
         maxAmountsIn: [bn(1), Zero],
       });
 
-      const join = await balancerHelpers.queryJoin(...params);
+      const join = await balancerHelpers.callStatic.queryJoin(...params);
       expect(Number(join.bptOut)).to.be.gt(0);
     });
   });

@@ -74,8 +74,8 @@ export class PoolGraph {
   getTokenTotal(pool: Pool): BigNumber {
     const bptIndex = pool.tokensList.indexOf(pool.address);
     let total = Zero;
-    const { parsedBalances } = parsePoolInfo(pool);
-    parsedBalances.forEach((balance, i) => {
+    const { balancesEvm } = parsePoolInfo(pool);
+    balancesEvm.forEach((balance, i) => {
       // Ignore phantomBpt balance
       if (bptIndex !== i) {
         total = total.add(balance);
@@ -166,7 +166,7 @@ export class PoolGraph {
         pool
       );
     } else {
-      const { parsedBalances } = parsePoolInfo(pool);
+      const { balancesEvm } = parsePoolInfo(pool);
       for (let i = 0; i < pool.tokens.length; i++) {
         // ignore any phantomBpt tokens
         if (isSameAddress(pool.tokens[i].address, pool.address)) continue;
@@ -176,7 +176,7 @@ export class PoolGraph {
           const tokenWeight = pool.tokens[i].weight as string;
           proportion = parseFixed(tokenWeight, 18);
         } else {
-          proportion = BigNumber.from(parsedBalances[i])
+          proportion = BigNumber.from(balancesEvm[i])
             .mul((1e18).toString())
             .div(tokenTotal);
         }

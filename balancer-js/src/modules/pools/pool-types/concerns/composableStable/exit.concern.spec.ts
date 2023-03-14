@@ -42,7 +42,7 @@ describe('Composable Stable Pool exits', () => {
         errorMessage = (error as Error).message;
       }
       expect(errorMessage).to.eql(
-        'shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values'
+        'shouldUnwrapNativeAsset and singleTokenOut should not have conflicting values'
       );
     });
     it('should return correct attributes for exiting', async () => {

@@ -17,7 +17,7 @@ export class TokenPriceProvider implements Findable<Price> {
           throw new Error('Price not found');
         }
       } catch (err) {
-        console.error(`Coingecko API error: ${err}`);
+        console.log(`Coingecko API error: ${err}`);
         price = await this.subgraphRepository.find(address);
       }
     } catch (err) {

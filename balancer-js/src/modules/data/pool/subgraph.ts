@@ -223,6 +223,7 @@ export class PoolsSubgraphRepository
       totalWeight: subgraphPool.totalWeight || '1',
       lowerTarget: subgraphPool.lowerTarget ?? '0',
       upperTarget: subgraphPool.upperTarget ?? '0',
+      isInRecoveryMode: subgraphPool.isInRecoveryMode ?? false,
     };
   }
 

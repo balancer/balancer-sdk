@@ -1,22 +1,19 @@
-import createWeightedPool from "./create";
-import { Interface, LogDescription } from "@ethersproject/abi";
-import { Vault__factory, WeightedPool__factory } from "@balancer-labs/typechain";
-import { Contract } from "@ethersproject/contracts";
-import { balancer, provider, signer, tokenAddresses } from "./example-config";
-import { parseFixed } from "@ethersproject/bignumber";
-import { Log, TransactionReceipt } from "@ethersproject/providers";
-import { isSameAddress } from "@/lib/utils";
-import { PoolType } from "@/types";
+import createWeightedPool from './create';
+import { Interface, LogDescription } from '@ethersproject/abi';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
+import { WeightedPool__factory } from '@/contracts/factories/WeightedPool__factory';
+import { Contract } from '@ethersproject/contracts';
+import { balancer, provider, signer, tokenAddresses } from './example-config';
+import { parseFixed } from '@ethersproject/bignumber';
+import { Log, TransactionReceipt } from '@ethersproject/providers';
+import { isSameAddress } from '@/lib/utils';
+import { PoolType } from '@/types';
 
 export async function initJoinWeightedPool() {
   const poolAddress = await createWeightedPool;
   const signerAddress = await signer.getAddress();
   const weightedPoolInterface = new Interface(WeightedPool__factory.abi);
-  const pool = new Contract(
-    poolAddress,
-    weightedPoolInterface,
-    provider
-  );
+  const pool = new Contract(poolAddress, weightedPoolInterface, provider);
   const poolId = await pool.getPoolId();
 
   const weightedPoolFactory = balancer.pools.poolFactory.of(PoolType.Weighted);
@@ -30,7 +27,7 @@ export async function initJoinWeightedPool() {
       parseFixed('8000', 6).toString(),
     ],
   });
-  
+
   const tx = await signer.sendTransaction({
     to: initJoinParams.to,
     data: initJoinParams.data,
@@ -49,13 +46,14 @@ export async function initJoinWeightedPool() {
       return vaultInterface.parseLog(log);
     })
     .find((parsedLog) => parsedLog?.name === 'PoolBalanceChanged');
-  if(!poolInitJoinEvent) return console.error("Couldn't find event in the receipt logs");
+  if (!poolInitJoinEvent)
+    return console.error("Couldn't find event in the receipt logs");
   const poolTokens = poolInitJoinEvent.args[2];
   const newBalances = poolInitJoinEvent.args[3];
   const oldBalances = poolInitJoinEvent.args[4];
-  console.log("Pool Token Addresses: " + poolTokens);
-  console.log("Pool new balances(Big Number): " + newBalances);
-  console.log("Pool old balances: " + oldBalances);
+  console.log('Pool Token Addresses: ' + poolTokens);
+  console.log('Pool new balances(Big Number): ' + newBalances);
+  console.log('Pool old balances: ' + oldBalances);
 }
 
-initJoinWeightedPool().then(r => r);
+initJoinWeightedPool().then((r) => r);

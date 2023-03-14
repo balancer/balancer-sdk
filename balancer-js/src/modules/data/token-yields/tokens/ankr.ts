@@ -18,7 +18,7 @@ interface APIResponse {
 /**
  * APR fetching
  *
- * @returns APR for idle tokens
+ * @returns APR for ankr tokens
  */
 export const ankr: AprFetcher = async () => {
   let apr = 0;
