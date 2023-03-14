@@ -1,25 +1,26 @@
 // yarn test:only ./src/modules/pools/factory/composable-stable/composable-stable.factory.integration.spec.ts
-import { expect } from 'chai';
-import { ethers } from 'hardhat';
-import { Network, PoolType } from '@/types';
-import { ADDRESSES } from '@/test/lib/constants';
-import { AddressZero } from '@ethersproject/constants';
-import { BalancerSDK } from '@/modules/sdk.module';
+import { OldBigNumber, StableMaths } from '@balancer-labs/sor';
 import { Interface, LogDescription } from '@ethersproject/abi';
+import { parseFixed } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
+import { Contract } from '@ethersproject/contracts';
+import { expect } from 'chai';
+import dotenv from 'dotenv';
+import { ethers } from 'hardhat';
+
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
+import ComposableStablePoolAbi from '@/lib/abi/ComposableStable.json';
 import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { _upscale, SolidityMaths } from '@/lib/utils/solidityMaths';
+import { BalancerSDK } from '@/modules/sdk.module';
+import { ADDRESSES } from '@/test/lib/constants';
 import {
   findEventInReceiptLogs,
   forkSetup,
   sendTransactionGetBalances,
 } from '@/test/lib/utils';
-import dotenv from 'dotenv';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { Vault__factory } from '@/contracts/factories/Vault__factory';
-import ComposableStablePoolAbi from '@/lib/abi/ComposableStable.json';
-import { Contract } from '@ethersproject/contracts';
-import { parseFixed } from '@ethersproject/bignumber';
-import { OldBigNumber, StableMaths } from '@balancer-labs/sor';
-import { _upscale, SolidityMaths } from '@/lib/utils/solidityMaths';
+import { Network, PoolType } from '@/types';
 
 dotenv.config();
 

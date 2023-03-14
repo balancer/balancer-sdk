@@ -1,3 +1,8 @@
+import { Interface, LogDescription } from '@ethersproject/abi';
+import { parseFixed } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
+import { Log, TransactionReceipt } from '@ethersproject/providers';
+
 import create, {
   addresses,
   balancer,
@@ -5,14 +10,10 @@ import create, {
   signer,
   tokenAddresses,
 } from './create';
-import { parseFixed } from '@ethersproject/bignumber';
-import { Interface, LogDescription } from '@ethersproject/abi';
-import ComposableStablePoolAbi from '@/lib/abi/ComposableStable.json';
-import { Contract } from '@ethersproject/contracts';
-import { PoolType } from '@/types';
-import { Log, TransactionReceipt } from '@ethersproject/providers';
 import { Vault__factory } from '@/contracts/factories/Vault__factory';
+import ComposableStablePoolAbi from '@/lib/abi/ComposableStable.json';
 import { isSameAddress } from '@/lib/utils';
+import { PoolType } from '@/types';
 
 const initJoinComposableStable = async () => {
   const poolAddress = await create;

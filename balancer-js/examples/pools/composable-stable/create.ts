@@ -1,17 +1,18 @@
-import * as dotenv from 'dotenv';
+import { Interface, LogDescription } from '@ethersproject/abi';
+import { parseFixed } from '@ethersproject/bignumber';
 import {
   JsonRpcProvider,
   Log,
   TransactionReceipt,
 } from '@ethersproject/providers';
-import { BalancerSDK, isSameAddress, Network, PoolType } from 'src';
-import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
+import * as dotenv from 'dotenv';
 import { ethers } from 'hardhat';
-import { Interface, LogDescription } from '@ethersproject/abi';
+
+import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { ADDRESSES } from '@/test/lib/constants';
 import { forkSetup } from '@/test/lib/utils';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { parseFixed } from '@ethersproject/bignumber';
+import { BalancerSDK, isSameAddress, Network, PoolType } from 'src';
 
 dotenv.config();
 

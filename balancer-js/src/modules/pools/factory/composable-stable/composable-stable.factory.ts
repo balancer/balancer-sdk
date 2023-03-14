@@ -1,19 +1,20 @@
+import { parseFixed } from '@ethersproject/bignumber';
+import { FunctionFragment, Interface } from '@ethersproject/abi';
+import { TransactionRequest } from '@ethersproject/providers';
+
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import {
   ComposableStableCreatePoolParameters,
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
 } from '@/modules/pools/factory/types';
-import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
-import { TransactionRequest } from '@ethersproject/providers';
-import { PoolFactory } from '@/modules/pools/factory/pool-factory';
-import composableStableAbi from '../../../../lib/abi/ComposableStableFactory.json';
-import { FunctionFragment, Interface } from '@ethersproject/abi';
-import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import composableStableAbi from '@/lib/abi/ComposableStableFactory.json';
 import { balancerVault, networkAddresses } from '@/lib/constants/config';
-import { BalancerNetworkConfig } from '@/types';
+import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
+import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
-import { Vault__factory } from '@/contracts/factories/Vault__factory';
-import { parseFixed } from '@ethersproject/bignumber';
+import { BalancerNetworkConfig } from '@/types';
 
 export class ComposableStableFactory implements PoolFactory {
   private wrappedNativeAsset: string;
