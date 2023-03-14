@@ -18,6 +18,7 @@ import {
   ExitPoolAttributes,
   ExitPool,
 } from '../types';
+import { LinearPriceImpact } from '../linear/priceImpact.concern';
 
 interface SortedValues {
   bptIndex: number;
@@ -114,11 +115,19 @@ export class LinearPoolExit implements ExitConcern {
       userData,
     });
 
+    const priceImpactConcern = new LinearPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
     return {
       ...encodedData,
       expectedAmountsOut,
       minAmountsOut,
-      priceImpact: '0',
+      priceImpact,
     };
   };
 
