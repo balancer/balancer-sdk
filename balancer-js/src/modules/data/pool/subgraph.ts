@@ -101,14 +101,16 @@ export class PoolsSubgraphRepository
    *
    * @returns Promise resolving to pools list
    */
-  private async fetchDefault(): Promise<Pool[]> {
+  private async fetchAllPools(): Promise<Pool[]> {
     console.time('fetching pools');
-    const { pool0, pool1000, pool2000 } = await this.client.AllPools({
-      where: { swapEnabled: true, totalShares_gt: '0.000000000001' },
-      orderBy: Pool_OrderBy.TotalLiquidity,
-      orderDirection: OrderDirection.Desc,
-      block: await this.block(),
-    });
+
+    const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
+      new SubgraphArgsFormatter()
+    ) as PoolsQueryVariables;
+
+    const { pool0, pool1000, pool2000 } = await this.client.AllPools(
+      formattedQuery
+    );
     console.timeEnd('fetching pools');
 
     return [...pool0, ...pool1000, ...pool2000].map(this.mapType.bind(this));
@@ -141,7 +143,7 @@ export class PoolsSubgraphRepository
 
   async findBy(param: PoolAttribute, value: string): Promise<Pool | undefined> {
     if (!this.pools) {
-      this.pools = this.fetch();
+      this.pools = this.fetchAllPools();
     }
 
     return (await this.pools).find((pool) => pool[param] == value);
@@ -168,7 +170,7 @@ export class PoolsSubgraphRepository
 
   async all(): Promise<Pool[]> {
     if (!this.pools) {
-      this.pools = this.fetch();
+      this.pools = this.fetchAllPools();
     }
     return this.pools;
   }
@@ -179,7 +181,7 @@ export class PoolsSubgraphRepository
 
   async where(filter: (pool: Pool) => boolean): Promise<Pool[]> {
     if (!this.pools) {
-      this.pools = this.fetch();
+      this.pools = this.fetchAllPools();
     }
 
     return (await this.pools).filter(filter);
