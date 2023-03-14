@@ -1,4 +1,4 @@
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 import { Vault__factory } from '@/contracts/factories/Vault__factory';
 
@@ -216,11 +216,9 @@ export class ComposableStablePoolExit implements ExitConcern {
     ExitExactBPTInParameters,
     'exiter' | 'pool' | 'bptIn' | 'slippage'
   >): ExitExactBPTInAttributes => {
-    this.checkInputsExactBPTIn({
+    this.checkInputsRecoveryExit({
       bptIn,
-      singleTokenOut: undefined,
       pool,
-      shouldUnwrapNativeAsset: false,
     });
 
     const sortedValues = parsePoolInfo(pool);
@@ -257,7 +255,7 @@ export class ComposableStablePoolExit implements ExitConcern {
 
   /**
    *  Checks if the input of buildExitExactBPTIn is valid
-   * @param bptIn Bpt inserted in the transaction
+   * @param bptIn Bpt amoun in EVM scale
    * @param singleTokenOut (optional) the address of the single token that will be withdrawn, if null|undefined, all tokens will be withdrawn proportionally.
    * @param pool the pool that is being exited
    * @param shouldUnwrapNativeAsset Set true if the weth should be unwrapped to Eth
@@ -271,10 +269,10 @@ export class ComposableStablePoolExit implements ExitConcern {
     ExitExactBPTInParameters,
     'bptIn' | 'singleTokenOut' | 'pool' | 'shouldUnwrapNativeAsset'
   >): void => {
-    if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
+    if (BigNumber.from(bptIn).lte(0)) {
       throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
     }
-    if (!singleTokenOut && pool.poolTypeVersion < 2 && !pool.isInRecoveryMode) {
+    if (!singleTokenOut && pool.poolTypeVersion < 2) {
       throw new Error('Unsupported Exit Type For Pool');
     }
     if (
@@ -314,6 +312,30 @@ export class ComposableStablePoolExit implements ExitConcern {
     ) {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
+  };
+
+  /**
+   *  Checks if the input of buildExitExactBPTIn is valid
+   * @param bptIn Bpt amount in EVM scale
+   * @param pool the pool that is being exited
+   */
+  checkInputsRecoveryExit = ({
+    bptIn,
+    pool,
+  }: Pick<ExitExactBPTInParameters, 'bptIn' | 'pool'>): void => {
+    if (BigNumber.from(bptIn).lte(0)) {
+      throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
+    }
+    if (!pool.isInRecoveryMode) {
+      throw new Error(
+        'Exit type not supported because pool is not in Recovery Mode'
+      );
+    }
+
+    // Check if there's any relevant stable pool info missing
+    if (pool.tokens.some((token) => !token.decimals))
+      throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+    if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
   };
 
   /**
