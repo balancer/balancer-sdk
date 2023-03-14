@@ -22,25 +22,29 @@ export * from './modules/sor/sor.module';
 export * from './modules/pools';
 export * from './modules/data';
 export * from './balancerErrors';
-export {
-  SwapInfo,
-  SubgraphPoolBase,
-  SwapTypes,
-  SwapOptions,
-  PoolFilter,
-  SwapV2,
-  queryBatchSwapTokensIn,
-  queryBatchSwapTokensOut,
-  phantomStableBPTForTokensZeroPriceImpact,
-  stableBPTForTokensZeroPriceImpact,
-  weightedBPTForTokensZeroPriceImpact,
-  SOR,
-  PoolDataService,
-  RouteProposer,
-  NewPath,
-  parseToPoolsDict,
-  PoolDictionary,
-  formatSequence,
-  getTokenAddressesForSwap,
-} from '@balancer-labs/sor';
+// TODO: Commented to debug bundle size
+// as balancer-sor must be tree-shakeable so that balancer-sdk does not include it and its dependencies in the final consumer bundle
+// export {
+//   SwapInfo,
+//   SubgraphPoolBase,
+//   SwapTypes,
+//   SwapOptions,
+//   PoolFilter,
+//   SwapV2,
+//   queryBatchSwapTokensIn,
+//   queryBatchSwapTokensOut,
+//   phantomStableBPTForTokensZeroPriceImpact,
+//   stableBPTForTokensZeroPriceImpact,
+//   weightedBPTForTokensZeroPriceImpact,
+//   SOR,
+//   PoolDataService,
+//   RouteProposer,
+//   NewPath,
+//   parseToPoolsDict,
+//   PoolDictionary,
+//   formatSequence,
+//   getTokenAddressesForSwap,
+// } from '@balancer-labs/sor';
 export { SimulationType } from './modules/simulation/simulation.module';
+
+export const ISOLATED_CONST = 'isolated';

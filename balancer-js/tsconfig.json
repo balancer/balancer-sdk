@@ -1,20 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es2019",
-    "module": "esnext",
+    "target": "ES2020",
+    "module": "ESNext",
     "moduleResolution": "node",
-    "outDir": "dist",
+    "outDir": "./dist/esm",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true /* Skip type checking of declaration files. */,
     "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */,
     "resolveJsonModule": true,
+    "strictPropertyInitialization": false /* Skip "has no initializer and is not definitely assigned in the constructor." errors */,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
     }
   },
-  "include": ["./src", "./examples", "src/abi/*.json"],
+  "include": ["./src", "./examples"],
   "exclude": ["node_modules"],
   "files": ["hardhat.config.ts", "hardhat.config.goerli.ts"]
 }
