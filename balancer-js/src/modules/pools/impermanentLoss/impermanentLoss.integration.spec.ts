@@ -48,7 +48,7 @@ const getPool = async (poolId: string): Promise<Pool> => {
  * TODO: add stubbing
  */
 describe('ImpermanentLossService', function () {
-  this.timeout(40000);
+  this.timeout(60000);
   context('when queried for Composable Stable Pool', () => {
     it('should return an IL gte 0', async () => {
       const testData = TEST_DATA.ComposableStablePool;
