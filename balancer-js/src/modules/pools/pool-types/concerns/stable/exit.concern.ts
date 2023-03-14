@@ -181,7 +181,7 @@ export class StablePoolExit implements ExitConcern {
     const priceImpactConcern = new StablePoolPriceImpact();
     const priceImpact = priceImpactConcern.calcPriceImpact(
       pool,
-      amountsOut.map(BigInt),
+      downScaledAmountsOut.map(BigInt),
       BigInt(expectedBPTIn),
       false
     );

@@ -181,7 +181,7 @@ export class WeightedPoolExit implements ExitConcern {
     const priceImpactConcern = new WeightedPoolPriceImpact();
     const priceImpact = priceImpactConcern.calcPriceImpact(
       pool,
-      amountsOut.map(BigInt),
+      downScaledAmountsOut.map(BigInt),
       BigInt(expectedBPTIn),
       false
     );

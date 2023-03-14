@@ -212,7 +212,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     const priceImpactConcern = new StablePoolPriceImpact();
     const priceImpact = priceImpactConcern.calcPriceImpact(
       pool,
-      amountsOut.map(BigInt),
+      sortedValues.downscaledAmountsOutWithoutBpt.map(BigInt),
       BigInt(bptIn),
       false
     );
