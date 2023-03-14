@@ -143,6 +143,7 @@ export interface ExitPoolAttributes {
 export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
   expectedAmountsOut: string[];
   minAmountsOut: string[];
+  priceImpact: string;
 }
 
 /**
@@ -157,6 +158,7 @@ export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
 export interface ExitExactTokensOutAttributes extends ExitPoolAttributes {
   expectedBPTIn: string;
   maxBPTIn: string;
+  priceImpact: string;
 }
 
 export interface ExitExactBPTInParameters {

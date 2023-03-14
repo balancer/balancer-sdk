@@ -86,11 +86,15 @@ export class Data implements BalancerDataRepositories {
       subgraphQuery
     );
 
-    this.poolsOnChain = new PoolsSubgraphOnChainRepository(this.pools, {
-      provider: provider,
-      multicall: networkConfig.addresses.contracts.multicall,
-      vault: networkConfig.addresses.contracts.vault,
-    });
+    this.poolsOnChain = new PoolsSubgraphOnChainRepository(
+      this.pools,
+      {
+        provider: provider,
+        multicall: networkConfig.addresses.contracts.multicall,
+        vault: networkConfig.addresses.contracts.vault,
+      },
+      networkConfig.poolsToIgnore
+    );
 
     this.poolShares = new PoolSharesRepository(
       networkConfig.urls.subgraph,

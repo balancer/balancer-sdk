@@ -23,6 +23,7 @@ import {
 } from '@/lib/utils/solidityMaths';
 import { Pool } from '@/types';
 import { BasePoolEncoder } from '@/pool-base';
+import { StablePoolPriceImpact } from '../stable/priceImpact.concern';
 
 interface SortedValues {
   poolTokens: string[];
@@ -128,10 +129,19 @@ export class StablePoolExit implements ExitConcern {
       userData,
     });
 
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
     return {
       ...encodedData,
       expectedAmountsOut,
       minAmountsOut,
+      priceImpact,
     };
   };
 
@@ -169,10 +179,19 @@ export class StablePoolExit implements ExitConcern {
       exiter,
     });
 
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      downScaledAmountsOut.map(BigInt),
+      BigInt(expectedBPTIn),
+      false
+    );
+
     return {
       ...encodedData,
       expectedBPTIn,
       maxBPTIn,
+      priceImpact,
     };
   };
 
