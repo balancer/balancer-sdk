@@ -476,7 +476,7 @@ Builds an exit transaction with exact BPT in and minimum token amounts out based
    * @param bptIn - BPT provided for exiting pool
    * @param slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
    * @param shouldUnwrapNativeAsset Indicates whether wrapped native asset should be unwrapped after exit.
-   * @param singleTokenMaxOut - Optional: token address that if provided will exit to given token
+   * @param singleTokenOut - Optional: token address that if provided will exit to given token
    * @returns transaction request ready to send with signer.sendTransaction
    */
   buildExitExactBPTIn: (
@@ -484,7 +484,7 @@ Builds an exit transaction with exact BPT in and minimum token amounts out based
     bptIn: string,
     slippage: string,
     shouldUnwrapNativeAsset?: boolean,
-    singleTokenMaxOut?: string
+    singleTokenOut?: string
   ) => Promise<ExitExactBPTInAttributes>;
 ```
 

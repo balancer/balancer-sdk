@@ -3,7 +3,7 @@ import { Provider } from '@ethersproject/providers';
 import { SubgraphPoolBase, SubgraphToken } from '@balancer-labs/sor';
 import { Multicaller } from '@/lib/utils/multiCaller';
 import { isSameAddress } from '@/lib/utils';
-import { Vault__factory } from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { Pool, PoolToken, PoolType } from '@/types';
 
 // TODO: decide whether we want to trim these ABIs down to the relevant functions
@@ -32,7 +32,8 @@ export async function getOnChainBalances<
     // Remove duplicate entries using their names
     Object.fromEntries(
       [
-        ...Vault__factory.abi,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...(Vault__factory.abi as any),
         ...aTokenRateProvider,
         ...weightedPoolAbi,
         ...stablePoolAbi,

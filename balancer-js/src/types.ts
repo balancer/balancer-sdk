@@ -26,7 +26,6 @@ import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
 import { SubgraphPoolDataService } from '@/modules/sor/pool-data/subgraphPoolDataService';
 import * as Queries from '@/modules/pools/queries/types';
-
 export * from '@/modules/data/types';
 export { Network, AprBreakdown };
 
@@ -319,7 +318,8 @@ export interface Pool {
   lowerTarget: string;
   upperTarget: string;
   priceRateProviders?: PriceRateProvider[];
-  lastJoinExitInvariant?: string;
+  lastPostJoinExitInvariant?: string;
+  isInRecoveryMode?: boolean;
 }
 
 export interface PriceRateProvider {
@@ -349,7 +349,7 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     bptIn: string,
     slippage: string,
     shouldUnwrapNativeAsset?: boolean,
-    singleTokenMaxOut?: string
+    singleTokenOut?: string
   ) => ExitExactBPTInAttributes;
   buildExitExactTokensOut: (
     exiter: string,

@@ -9,11 +9,9 @@ import { Interface, LogDescription } from '@ethersproject/abi';
 import { forkSetup } from '@/test/lib/utils';
 import dotenv from 'dotenv';
 import { isSameAddress } from '@/lib/utils';
-import {
-  Vault__factory,
-  WeightedPool__factory,
-  WeightedPoolFactory__factory,
-} from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
+import { WeightedPool__factory } from '@/contracts/factories/WeightedPool__factory';
+import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';

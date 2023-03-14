@@ -111,15 +111,6 @@ export class SolidityMaths {
   }
 
   /**
-   * @dev Returns the subtraction of two signed integers, reverting on overflow.
-   */
-  // sub(int256 a, int256 b) internal pure returns (int256) {
-  //     int256 c = a - b;
-  //     // _require((b >= 0 && c <= a) || (b < 0 && c > a), Errors.SUB_OVERFLOW);
-  //     return c;
-  // }
-
-  /**
    * @dev Returns the subtraction of two unsigned integers of 256 bits, reverting on overflow.
    */
   static sub(a: bigint, b: bigint): bigint {
@@ -129,11 +120,23 @@ export class SolidityMaths {
   }
 
   /**
-   * @dev Returns the largest of two numbers of 256 bits.
+   * @dev Returns the subtraction of two signed integers, reverting on overflow.
    */
-  static max(...c: bigint[]): bigint {
-    const max = c.sort((a: bigint, b: bigint) => Number(b - a))[0];
-    return max;
+  // sub(int256 a, int256 b) internal pure returns (int256) {
+  //     int256 c = a - b;
+  //     // _require((b >= 0 && c <= a) || (b < 0 && c > a), Errors.SUB_OVERFLOW);
+  //     return c;
+  // }
+
+  /**
+   * @dev Returns the largest bigint in the array.
+   */
+  static max(args: bigint[]): bigint {
+    if (args.length === 0) throw new Error('Errors.EMPTY_ARRAY');
+    if (args.length === 1) return args[0];
+    return args.reduce((previous, current) =>
+      current > previous ? current : previous
+    );
   }
 
   /**

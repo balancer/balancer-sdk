@@ -18,55 +18,54 @@ const swapType = SwapTypes.SwapExactIn;
 const amount = parseFixed('1', 18);
 
 async function swap() {
+  const balancer = new BalancerSDK({
+    network,
+    rpcUrl,
+  });
 
-    const balancer = new BalancerSDK({
-        network,
-        rpcUrl,
-    });
-    
-    await balancer.swaps.fetchPools();
+  await balancer.swaps.fetchPools();
 
-    const swapInfo = await balancer.swaps.findRouteGivenIn({
-        tokenIn,
-        tokenOut,
-        amount,
-        gasPrice: parseFixed('1', 9),
-        maxPools: 4,
-    });
+  const swapInfo = await balancer.swaps.findRouteGivenIn({
+    tokenIn,
+    tokenOut,
+    amount,
+    gasPrice: parseFixed('1', 9),
+    maxPools: 4,
+  });
 
-    if(swapInfo.returnAmount.isZero()) {
-        console.log('No Swap');
-        return;
-    }
+  if (swapInfo.returnAmount.isZero()) {
+    console.log('No Swap');
+    return;
+  }
 
-    const userAddress = AddressZero;
-    const deadline = BigNumber.from(`${Math.ceil(Date.now() / 1000) + 60}`); // 60 seconds from now
-    const maxSlippage = 50; // 50 bsp = 0.5%
+  const userAddress = AddressZero;
+  const deadline = BigNumber.from(`${Math.ceil(Date.now() / 1000) + 60}`); // 60 seconds from now
+  const maxSlippage = 50; // 50 bsp = 0.5%
 
-    const transactionAttributes = balancer.swaps.buildSwap({
-        userAddress,
-        swapInfo,
-        kind: 0,
-        deadline,
-        maxSlippage,
-    });
+  const transactionAttributes = balancer.swaps.buildSwap({
+    userAddress,
+    swapInfo,
+    kind: 0,
+    deadline,
+    maxSlippage,
+  });
 
-    const { attributes } = transactionAttributes;
+  const { attributes } = transactionAttributes;
 
-    try {
-        console.log(`Return amounts: `, swapInfo.returnAmount.toString());
-        console.log(swapInfo.swaps);
-        // Simulates a call to `batchSwap`, returning an array of Vault asset deltas.
-        const deltas = await balancer.contracts.vault.callStatic.queryBatchSwap(
-            swapType,
-            swapInfo.swaps,
-            swapInfo.tokenAddresses,
-            attributes.funds
-        );
-        console.log(deltas.toString());
-    } catch (err) {
-        console.log(err);
-    }
+  try {
+    console.log(`Return amounts: `, swapInfo.returnAmount.toString());
+    console.log(swapInfo.swaps);
+    // Simulates a call to `batchSwap`, returning an array of Vault asset deltas.
+    const deltas = await balancer.contracts.vault.callStatic.queryBatchSwap(
+      swapType,
+      swapInfo.swaps,
+      swapInfo.tokenAddresses,
+      attributes.funds
+    );
+    console.log(deltas.toString());
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 // yarn examples:run ./examples/swapQuery.ts
