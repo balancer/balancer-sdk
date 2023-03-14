@@ -80,7 +80,7 @@ export class LinearFactory implements PoolFactory {
   }: {
     swapFee: string | number;
     protocolId: ProtocolId;
-  }) => {
+  }): void => {
     if (!ProtocolId[protocolId]) {
       throw new BalancerError(BalancerErrorCode.INVALID_PROTOCOL_ID);
     }

@@ -371,7 +371,7 @@ export async function findTokenBalanceSlot(
   signer: JsonRpcSigner,
   tokenAddress: string
 ): Promise<number> {
-  const encode = (types: string[], values: any[]): string =>
+  const encode = (types: string[], values: unknown[]): string =>
     defaultAbiCoder.encode(types, values);
   const account = await signer.getAddress();
   const probeA = encode(['uint256'], [(Math.random() * 10000).toFixed()]);

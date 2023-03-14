@@ -5,7 +5,6 @@ import { AddressZero } from '@ethersproject/constants';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { assert } from 'chai';
 import { BalancerError } from '@/balancerErrors';
-import { ProtocolId } from '@/modules/pools/factory/types';
 
 const network = Network.MAINNET;
 const sdkConfig: BalancerSdkConfig = {

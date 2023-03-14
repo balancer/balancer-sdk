@@ -53,8 +53,8 @@ describe('creating linear pool', async () => {
   const AaveLinearPoolFactory = balancer.pools.poolFactory.of(
     PoolType.AaveLinear
   );
+  // let poolAddress: string;
   context('create', async () => {
-    let poolAddress: string;
     before(async () => {
       await forkSetup(
         signer,
@@ -84,9 +84,9 @@ describe('creating linear pool', async () => {
         logName: 'PoolCreated',
         contractInterface: linearPoolInterface,
       });
-      if (poolCreationEvent) {
-        poolAddress = poolCreationEvent.args.pool;
-      }
+      // if (poolCreationEvent) {
+      //   poolAddress = poolCreationEvent.args.pool;
+      // }
       expect(!!poolCreationEvent).to.be.true;
       return;
     });
