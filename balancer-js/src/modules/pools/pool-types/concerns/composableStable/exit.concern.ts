@@ -265,10 +265,19 @@ export class ComposableStablePoolExit implements ExitConcern {
       minAmountsOut: minAmountsOutWithBpt,
     });
 
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
     return {
       ...encodedData,
       expectedAmountsOut,
       minAmountsOut,
+      priceImpact,
     };
   };
 

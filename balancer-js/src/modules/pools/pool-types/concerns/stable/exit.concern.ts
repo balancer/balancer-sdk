@@ -229,10 +229,19 @@ export class StablePoolExit implements ExitConcern {
       userData,
     });
 
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
     return {
       ...encodedData,
       expectedAmountsOut,
       minAmountsOut,
+      priceImpact,
     };
   };
 

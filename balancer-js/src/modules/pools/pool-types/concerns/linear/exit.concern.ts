@@ -118,6 +118,7 @@ export class LinearPoolExit implements ExitConcern {
       ...encodedData,
       expectedAmountsOut,
       minAmountsOut,
+      priceImpact: '0',
     };
   };
 
