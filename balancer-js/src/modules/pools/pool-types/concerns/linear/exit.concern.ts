@@ -90,7 +90,7 @@ export class LinearPoolExit implements ExitConcern {
     ExitExactBPTInParameters,
     'exiter' | 'pool' | 'bptIn' | 'slippage'
   >): ExitExactBPTInAttributes => {
-    this.checkInputsRecoveryExit({
+    this.checkInputsExactBPTIn({
       bptIn,
       singleTokenOut: undefined,
       pool,
@@ -126,7 +126,7 @@ export class LinearPoolExit implements ExitConcern {
    * @param bptIn Bpt amount in EVM scale
    * @param pool the pool that is being exited
    */
-  checkInputsRecoveryExit = ({
+  checkInputsExactBPTIn = ({
     bptIn,
     pool,
   }: Pick<
