@@ -14,6 +14,14 @@ export const PROVIDER_URLS = {
 
 export const ADDRESSES = {
   [Network.MAINNET]: {
+    APE: {
+      address: '0x4d224452801ACEd8B2F0aebE155379bb5D594381',
+      decimals: 18,
+    },
+    sAPE: {
+      address: '0x7966C5BAe631294D7cFFcEA5430b78C2F76DB6Fa',
+      decimals: 18,
+    },
     BatchRelayer: {
       address: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
     },
@@ -67,10 +75,17 @@ export const ADDRESSES = {
       symbol: 'DAI',
       slot: 2,
     },
+    aDAI: {
+      address: '0xfC1E690f61EFd961294b3e1Ce3313fBD8aa4f85d',
+      decimals: 18,
+      symbol: 'aDAI',
+      slot: 0,
+    },
     STETH: {
       address: '0xae7ab96520de3a18e5e111b5eaab095312d7fe84',
       decimals: 18,
       symbol: 'STETH',
+      slot: 0,
     },
     wSTETH: {
       address: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',

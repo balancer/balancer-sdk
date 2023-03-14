@@ -33,7 +33,7 @@ export class LinearFactory implements PoolFactory {
    * @param symbol The symbol of the pool (BPT name)
    * @param mainToken The unwrapped token
    * @param wrappedToken The wrapped token
-   * @param upperTarget The maximum balance of the unwrapped(main) token
+   * @param upperTarget The maximum balance of the unwrapped(main) token (normal number, no need to fix to 18 decimals)
    * @param swapFee The swap fee of the pool
    * @param owner the address of the owner of the pool
    * @param protocolId The protocolId, to check the available value
@@ -56,18 +56,18 @@ export class LinearFactory implements PoolFactory {
       symbol,
       mainToken,
       wrappedToken,
-      upperTarget,
+      parseFixed(upperTarget, 18).toString(),
       swapFeeScaled.toString(),
       owner,
       protocolId.toString(),
     ] as [string, string, string, string, string, string, string, string];
     const linearPoolInterface =
       ERC4626LinearPoolFactory__factory.createInterface();
-
     const encodedFunctionData = linearPoolInterface.encodeFunctionData(
       'create',
       params
     );
+    console.log(encodedFunctionData);
     return {
       to: factoryAddress,
       data: encodedFunctionData,
