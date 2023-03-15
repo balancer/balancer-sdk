@@ -98,7 +98,8 @@ describe('StablePool Exits', async () => {
         testPoolId,
         network,
         rpcUrl,
-        blockNumber
+        blockNumber,
+        false
       );
       pool = await testPoolHelper.getPool();
     });

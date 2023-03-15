@@ -20,6 +20,7 @@ import {
   BalancerSDK,
   GraphQLArgs,
   GraphQLQuery,
+  PoolsSubgraphRepository,
 } from '@/.';
 import { balancerVault } from '@/lib/constants/config';
 import { parseEther } from '@ethersproject/units';
@@ -242,6 +243,7 @@ export const accuracy = (
  * Helper to efficiently retrieve pool state from Subgraph and onChain given a pool id.
  */
 export class TestPoolHelper {
+  pools: PoolsSubgraphRepository;
   poolsOnChain: PoolsSubgraphOnChainRepository;
   networkConfig: BalancerNetworkConfig;
 
@@ -249,7 +251,8 @@ export class TestPoolHelper {
     private poolId: string,
     network: Network,
     rpcUrl: string,
-    blockNumber: number
+    blockNumber: number,
+    private onChain = true
   ) {
     const subgraphArgs: GraphQLArgs = {
       where: {
@@ -265,6 +268,7 @@ export class TestPoolHelper {
       rpcUrl,
       subgraphQuery,
     });
+    this.pools = data.pools;
     this.poolsOnChain = data.poolsOnChain;
     this.networkConfig = networkConfig;
   }
@@ -274,9 +278,11 @@ export class TestPoolHelper {
    * @returns
    */
   async getPool(): Promise<PoolWithMethods> {
-    const onchainPool = await this.poolsOnChain.find(this.poolId, true);
-    if (onchainPool === undefined) throw new Error('Pool Not Found');
-    const wrappedPool = Pools.wrap(onchainPool, this.networkConfig);
+    const pool = this.onChain
+      ? await this.poolsOnChain.find(this.poolId, true)
+      : await this.pools.find(this.poolId);
+    if (pool === undefined) throw new Error('Pool Not Found');
+    const wrappedPool = Pools.wrap(pool, this.networkConfig);
     return wrappedPool;
   }
 }

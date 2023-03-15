@@ -112,7 +112,8 @@ describe('Weighted Pool - Exit Integration Test', async () => {
         testPoolId,
         network,
         rpcUrl,
-        blockNumber
+        blockNumber,
+        false
       );
       pool = await testPoolHelper.getPool();
     });

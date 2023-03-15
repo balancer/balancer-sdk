@@ -1,4 +1,4 @@
-// yarn test:only ./src/modules/pools/pool-types/concerns/metaStable/exit.concern.integration.spec.ts
+// yarn test:only ./src/modules/pools/pool-types/concerns/linear/exit.concern.integration.spec.ts
 import { parseFixed } from '@ethersproject/bignumber';
 import dotenv from 'dotenv';
 import { ethers } from 'hardhat';
@@ -44,7 +44,8 @@ describe('MetaStablePool - Exit Concern Integration Tests', async () => {
           poolIdInRecoveryMode,
           network,
           rpcUrl,
-          blockNumber
+          blockNumber,
+          false
         );
         pool = await testPoolHelper.getPool();
       });

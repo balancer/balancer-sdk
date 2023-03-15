@@ -98,7 +98,8 @@ describe('MetaStablePool - Exit Concern Integration Tests', async () => {
           poolIdInRecoveryMode,
           network,
           rpcUrl,
-          blockNumber
+          blockNumber,
+          false
         );
         pool = await testPoolHelper.getPool();
       });
