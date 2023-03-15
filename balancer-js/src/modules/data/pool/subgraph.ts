@@ -77,9 +77,6 @@ export class PoolsSubgraphRepository
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
       where: {
-        swapEnabled: {
-          eq: true,
-        },
         totalShares: {
           gt: 0.000000000001,
         },

@@ -7,9 +7,6 @@ import {
   BalancerError,
   BalancerErrorCode,
   BalancerSDK,
-  getPoolAddress,
-  GraphQLArgs,
-  GraphQLQuery,
   insert,
   Network,
   PoolWithMethods,
@@ -44,22 +41,9 @@ async function recoveryExit() {
   const bptIn = parseFixed('1', 18).toString();
   const slippage = '200'; // 200 bps = 2%
 
-  const subgraphArgs: GraphQLArgs = {
-    where: {
-      address: {
-        in: [getPoolAddress(poolId)],
-      },
-    },
-    orderBy: 'totalLiquidity',
-    orderDirection: 'desc',
-    block: { number: blockNumber },
-  };
-  const subgraphQuery: GraphQLQuery = { args: subgraphArgs, attrs: {} };
-
   const sdkConfig = {
     network,
     rpcUrl,
-    subgraphQuery,
   };
   const balancer = new BalancerSDK(sdkConfig);
 
