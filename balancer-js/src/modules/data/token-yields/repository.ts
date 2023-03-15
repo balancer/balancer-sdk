@@ -15,7 +15,7 @@ import { tranchess, yieldTokens as tranchessTokens } from './tokens/tranchess';
 import { usdr, yieldTokens as usdrTokens } from './tokens/usdr';
 import { stafi, yieldTokens as stafiTokens } from './tokens/stafi';
 import { tessera, yieldTokens as tesseraTokens } from './tokens/tessera';
-import { euler, yieldTokens as eulerTokens } from './tokens/euler';
+// import { euler, yieldTokens as eulerTokens } from './tokens/euler';
 import { idleDai, yieldTokens as idleDaiToken } from './tokens/idle-dai';
 import { idleUsdt, yieldTokens as idleUsdtToken } from './tokens/idle-usdt';
 import { idleUsdc, yieldTokens as idleUsdcToken } from './tokens/idle-usdc';
@@ -47,7 +47,7 @@ const yieldSourceMap: { [address: string]: AprFetcher } = Object.fromEntries([
   ...Object.values(usdrTokens).map((k) => [k, usdr]),
   ...Object.values(stafiTokens).map((k) => [k, stafi]),
   ...Object.values(tesseraTokens).map((k) => [k, tessera]),
-  ...Object.values(eulerTokens).map((k) => [k, euler]),
+  // ...Object.values(eulerTokens).map((k) => [k, euler]),
   ...Object.values(idleDaiToken).map((k) => [k, idleDai]),
   ...Object.values(idleUsdtToken).map((k) => [k, idleUsdt]),
   ...Object.values(idleUsdcToken).map((k) => [k, idleUsdc]),

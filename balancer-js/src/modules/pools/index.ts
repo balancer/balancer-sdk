@@ -302,6 +302,14 @@ export class Pools implements Findable<PoolWithMethods> {
             slippage,
             wrappedNativeAsset,
           }),
+        buildRecoveryExit: (exiter: string, bptIn: string, slippage: string) =>
+          concerns.exit.buildRecoveryExit({
+            exiter,
+            pool,
+            bptIn,
+            slippage,
+          }),
+
         // TODO: spotPrice fails, because it needs a subgraphType,
         // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
         // spotPrice: async (tokenIn: string, tokenOut: string) =>
@@ -333,6 +341,7 @@ export class Pools implements Findable<PoolWithMethods> {
           'buildExitExactTokensOut'
         ),
         calcSpotPrice: notImplemented(pool.poolType, 'calcSpotPrice'),
+        buildRecoveryExit: notImplemented(pool.poolType, 'buildRecoveryExit'),
       };
     }
 
