@@ -435,10 +435,10 @@ export class StablePoolExit implements ExitConcern {
       upScaledBalances,
       BigInt(bptIn),
       totalSharesEvm
-    ).map((amount) => amount.toString());
+    );
     // Maths return numbers scaled to 18 decimals. Must scale down to token decimals.
     const amountsOutScaledDown = _downscaleDownArray(
-      amountsOut.map((a) => BigInt(a)),
+      amountsOut,
       scalingFactors
     );
 

@@ -4,7 +4,11 @@ import { ethers } from 'hardhat';
 import { parseFixed } from '@ethersproject/bignumber';
 import { getPoolAddress, Network, PoolWithMethods, removeItem } from '@/.';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
-import { testExactBptIn, testExactTokensOut } from '@/test/lib/exitHelper';
+import {
+  testExactBptIn,
+  testExactTokensOut,
+  testRecoveryExit,
+} from '@/test/lib/exitHelper';
 
 dotenv.config();
 
@@ -70,6 +74,12 @@ describe('ComposableStableV1 Exits', () => {
       const amountsOut = Array(tokensOut.length).fill('0');
       amountsOut[2] = parseFixed('202', 18).toString();
       await testExactTokensOut(pool, signer, tokensOut, amountsOut);
+    });
+  });
+  context('buildRecoveryExit', async () => {
+    it('proportional exit', async () => {
+      const bptIn = parseFixed('10', 18).toString();
+      await testRecoveryExit(pool, signer, bptIn);
     });
   });
 });

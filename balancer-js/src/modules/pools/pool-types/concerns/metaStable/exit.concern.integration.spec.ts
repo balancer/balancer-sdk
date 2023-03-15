@@ -5,7 +5,11 @@ import { ethers } from 'hardhat';
 
 import { getPoolAddress, Network, PoolWithMethods } from '@/.';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
-import { testExactBptIn, testExactTokensOut } from '@/test/lib/exitHelper';
+import {
+  testExactBptIn,
+  testExactTokensOut,
+  testRecoveryExit,
+} from '@/test/lib/exitHelper';
 
 dotenv.config();
 
@@ -17,12 +21,12 @@ const signer = provider.getSigner();
 
 describe('MetaStablePool - Exit Concern Integration Tests', async () => {
   let pool: PoolWithMethods;
-  // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
-  const blockNumber = 13309758;
-  const testPoolId =
-    '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080';
-  // Setup chain
-  context('exit pool functions', async () => {
+
+  context('regular exit pool functions', async () => {
+    // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
+    const blockNumber = 13309758;
+    const testPoolId =
+      '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080';
     beforeEach(async () => {
       // Setup forked network, set initial token balances and allowances
       await forkSetup(
@@ -69,6 +73,38 @@ describe('MetaStablePool - Exit Concern Integration Tests', async () => {
         const amountsOut = Array(tokensOut.length).fill('0');
         amountsOut[0] = parseFixed('100', 18).toString();
         await testExactTokensOut(pool, signer, tokensOut, amountsOut);
+      });
+    });
+  });
+
+  // Skipping test because there is no MetaStable pool in recovery mode
+  context.skip('Recovery Mode', async () => {
+    context('buildRecoveryExit', async () => {
+      const blockNumber = 16819888;
+      const poolIdInRecoveryMode =
+        '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d';
+      beforeEach(async () => {
+        // Setup forked network, set initial token balances and allowances
+        await forkSetup(
+          signer,
+          [getPoolAddress(poolIdInRecoveryMode)],
+          [0],
+          [parseFixed('10000', 18).toString()],
+          jsonRpcUrl as string,
+          blockNumber
+        );
+        // Updatate pool info with onchain state from fork block no
+        const testPoolHelper = new TestPoolHelper(
+          poolIdInRecoveryMode,
+          network,
+          rpcUrl,
+          blockNumber
+        );
+        pool = await testPoolHelper.getPool();
+      });
+      it('proportional exit', async () => {
+        const bptIn = parseFixed('10', 18).toString();
+        await testRecoveryExit(pool, signer, bptIn);
       });
     });
   });

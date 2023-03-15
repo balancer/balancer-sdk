@@ -263,7 +263,7 @@ export class TestPoolHelper {
     const { networkConfig, data } = new BalancerSDK({
       network,
       rpcUrl,
-      subgraphQuery: subgraphQuery,
+      subgraphQuery,
     });
     this.poolsOnChain = data.poolsOnChain;
     this.networkConfig = networkConfig;
