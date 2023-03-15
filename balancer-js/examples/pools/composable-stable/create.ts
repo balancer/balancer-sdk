@@ -1,27 +1,33 @@
-import { Interface, LogDescription } from '@ethersproject/abi';
+import { LogDescription } from '@ethersproject/abi';
 import { parseFixed } from '@ethersproject/bignumber';
 import {
   JsonRpcProvider,
-  Log,
   TransactionReceipt,
+  TransactionResponse,
 } from '@ethersproject/providers';
 import * as dotenv from 'dotenv';
 import { ethers } from 'hardhat';
-
-import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { ADDRESSES } from '@/test/lib/constants';
-import { forkSetup } from '@/test/lib/utils';
-import { BalancerSDK, isSameAddress, Network, PoolType } from 'src';
+import {
+  findEventInReceiptLogs,
+  forkSetup,
+  getBalances,
+} from '@/test/lib/utils';
+import {
+  BalancerSDK,
+  ComposableStable__factory,
+  ComposableStableFactory__factory,
+  Network,
+  PoolType,
+  Vault__factory,
+} from 'src';
+import { Contract } from '@ethersproject/contracts';
 
 dotenv.config();
 
 const network = Network.MAINNET;
-const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
-const blockNumber = 16720000;
 const rpcUrl = 'http://127.0.0.1:8545';
-// const rpcUrl = `https://mainnet.infura.io/v3/444153f7f8f2499db7be57a11b1f696e`;
-// const rpcUrl = 'https://goerli.gateway.tenderly.co/4Rzjgxiyt0WELoXRl1312Q'
 export const provider: JsonRpcProvider = new ethers.providers.JsonRpcProvider(
   rpcUrl,
   network
@@ -32,41 +38,44 @@ const sdkConfig = {
   rpcUrl,
 };
 
-// await forkSetupLocalNode(signer);
-
 export const balancer = new BalancerSDK(sdkConfig);
-
-const name = 'My-Test-Pool-Name';
-const symbol = 'My-Test-Pool-Symbol';
 export const addresses = ADDRESSES[network];
-
 const USDC_address = addresses.USDC.address;
-const USDC_slot = addresses.USDC.slot;
 const USDT_address = addresses.USDT.address;
-const USDT_slot = addresses.USDT.slot;
+const tokenAddresses = [USDC_address, USDT_address];
 
-export const tokenAddresses = [USDC_address, USDT_address];
-const slots = [USDC_slot, USDT_slot];
-const initialBalances = [
-  parseFixed('1000000000', addresses.USDC.decimals).toString(),
-  parseFixed('1000000000', addresses.USDT.decimals).toString(),
-];
+const createComposablePoolParameters = {
+  factoryAddress: `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`,
+  name: 'Test-Name',
+  symbol: 'Test-Symbol',
+  tokenAddresses,
+  amplificationParameter: '72',
+  rateProviders: [
+    '0x0000000000000000000000000000000000000000',
+    '0x0000000000000000000000000000000000000000',
+  ],
+  tokenRateCacheDurations: ['100', '100'],
+  swapFee: '0.01',
+  exemptFromYieldProtocolFeeFlags: [false, false],
+  owner: undefined, // The owner will be passed as the signerAddress
+};
 
-const amplificationParameter = '1';
-
-const rateProviders = [
-  '0x0000000000000000000000000000000000000000',
-  '0x0000000000000000000000000000000000000000',
-];
-
-const tokenRateCacheDurations = ['0', '0'];
-const exemptFromYieldProtocolFeeFlags = [false, false];
-const swapFee = '0.01';
-
-const owner = '0x817b6923f3cB53536859b1f01262d0E7f513dB78';
-const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`;
-
-async function createComposableStablePool() {
+/**
+ * This function
+ * - Changes the balances of a signer for the tokens specified on tokenAddresses;
+ * - Sets the blockNumber of the hardhat fork to the blockNumber passed in the params;
+ * If you already setted your local node to run the example, you can remove this function;
+ */
+const setupFork = async () => {
+  const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
+  const blockNumber = 16720000;
+  const USDC_slot = addresses.USDC.slot;
+  const USDT_slot = addresses.USDT.slot;
+  const slots = [USDC_slot, USDT_slot];
+  const initialBalances = [
+    parseFixed('1000000000', addresses.USDC.decimals).toString(),
+    parseFixed('1000000000', addresses.USDT.decimals).toString(),
+  ];
   await forkSetup(
     signer,
     tokenAddresses,
@@ -76,51 +85,119 @@ async function createComposableStablePool() {
     blockNumber,
     false
   );
+};
+
+const createComposableStablePool = async () => {
   const composableStablePoolFactory = balancer.pools.poolFactory.of(
     PoolType.ComposableStable
   );
-  const { to, data } = composableStablePoolFactory.create({
-    factoryAddress,
-    name,
-    symbol,
-    tokenAddresses,
-    amplificationParameter,
-    rateProviders,
-    tokenRateCacheDurations,
-    exemptFromYieldProtocolFeeFlags,
-    swapFee,
-    owner,
-  });
-
   const signerAddress = await signer.getAddress();
 
-  const tx = await signer.sendTransaction({
+  const { to, data } = composableStablePoolFactory.create({
+    ...createComposablePoolParameters,
+    owner: signerAddress,
+  });
+
+  const transaction = await signer.sendTransaction({
     from: signerAddress,
     to,
     data,
     gasLimit: 6721975,
   });
+  return { transaction, to: to as string };
+};
 
+const checkIfPoolWasCreated = async (
+  transaction: TransactionResponse,
+  to: string
+) => {
   const receipt: TransactionReceipt = await provider.getTransactionReceipt(
-    tx.hash
+    transaction.hash
   );
 
-  const composableStableFactoryInterface = new Interface(
-    composableStableFactoryAbi
+  const poolCreationEvent: LogDescription = findEventInReceiptLogs({
+    receipt,
+    to,
+    contractInterface: ComposableStableFactory__factory.createInterface(),
+    logName: 'PoolCreated',
+  });
+
+  const poolAddress = poolCreationEvent.args.pool;
+  console.log('poolAddress: ' + poolAddress);
+
+  return poolAddress;
+};
+
+const initJoinComposableStablePool = async (poolAddress: string) => {
+  const composableStablePoolInterface =
+    ComposableStable__factory.createInterface();
+  const pool = new Contract(
+    poolAddress,
+    composableStablePoolInterface,
+    provider
   );
+  const composableStablePoolFactory = balancer.pools.poolFactory.of(
+    PoolType.ComposableStable
+  );
+  const amountsIn = [
+    parseFixed('10000', addresses.USDC.decimals).toString(),
+    parseFixed('10000', addresses.USDT.decimals).toString(),
+  ];
+  const poolId = await pool.getPoolId();
+  const signerAddress = await signer.getAddress();
+  const { to, data } = composableStablePoolFactory.buildInitJoin({
+    joiner: signerAddress,
+    poolId,
+    poolAddress,
+    tokensIn: tokenAddresses,
+    amountsIn,
+  });
+  const transaction = await signer.sendTransaction({
+    to,
+    data,
+    gasLimit: 30000000,
+  });
+  return { transaction, to: to as string };
+};
 
-  const poolCreationEvent: LogDescription | null | undefined = receipt.logs
-    .filter((log: Log) => {
-      return isSameAddress(log.address, factoryAddress);
-    })
-    .map((log) => {
-      return composableStableFactoryInterface.parseLog(log);
-    })
-    .find((parsedLog) => parsedLog?.name === 'PoolCreated');
+const checkIfInitJoinWorked = async (
+  transaction: TransactionResponse,
+  to: string
+) => {
+  const receipt: TransactionReceipt = await provider.getTransactionReceipt(
+    transaction.hash
+  );
+  const vaultInterface = Vault__factory.createInterface();
+  const poolInitJoinEvent: LogDescription = findEventInReceiptLogs({
+    to,
+    receipt,
+    contractInterface: vaultInterface,
+    logName: 'PoolBalanceChanged',
+  });
+  const poolTokens = poolInitJoinEvent.args[2];
+  const balances = poolInitJoinEvent.args[3];
+  return { poolTokens, balances };
+};
 
-  if (!poolCreationEvent) return console.error("There's no event");
-  console.log('poolAddress: ' + poolCreationEvent.args.pool);
-  return poolCreationEvent.args.pool;
+async function createAndInitJoinComposableStable() {
+  console.log('Setting up the hardhat fork...');
+  await setupFork();
+  console.log('Starting Pool creation...');
+  const { transaction: createTx, to: poolFactoryAddress } =
+    await createComposableStablePool();
+  const poolAddress = await checkIfPoolWasCreated(createTx, poolFactoryAddress);
+  console.log('Finished Pool creation');
+  console.log('poolAddress: ' + poolAddress);
+  console.log('Starting Pool Init Join...');
+  const { transaction: initJoinTx, to: vaultAddress } =
+    await initJoinComposableStablePool(poolAddress);
+  const { poolTokens, balances } = await checkIfInitJoinWorked(
+    initJoinTx,
+    vaultAddress
+  );
+  console.log('Finished Pool Init Join');
+  console.log('Pool Tokens Addresses(Including BPT): ' + poolTokens);
+  console.log('Pool Tokens balances(Including BPT): ' + balances);
 }
 
-export default createComposableStablePool();
+createAndInitJoinComposableStable().then((r) => r);

@@ -9,12 +9,12 @@ import {
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
 } from '@/modules/pools/factory/types';
-import composableStableAbi from '@/lib/abi/ComposableStableFactory.json';
 import { balancerVault, networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { BalancerNetworkConfig } from '@/types';
+import { ComposableStableFactory__factory } from '@/contracts';
 
 export class ComposableStableFactory implements PoolFactory {
   private wrappedNativeAsset: string;
@@ -27,17 +27,17 @@ export class ComposableStableFactory implements PoolFactory {
   /***
    * @param params
    *  * Builds a transaction for a composable pool create operation.
-   *  * @param contractAddress - The address of the factory for composable stable pool (contract address)
-   *  * @param name - The name of the pool
-   *  * @param symbol - The symbol of the pool
-   *  * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
-   *  * @param tokenAddresses - The token's addresses
+   *  * @param contractAddress The address of the factory for composable stable pool (contract address)
+   *  * @param name The name of the pool
+   *  * @param symbol The symbol of the pool
+   *  * @param swapFee The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
+   *  * @param tokenAddresses The token's addresses
    *  * @param rateProviders The addresses of the rate providers for each token, ordered
    *  * @param tokenRateCacheDurations the Token Rate Cache Duration of each token
-   *  * @param owner - The address of the owner of the pool
+   *  * @param owner The address of the owner of the pool
    *  * @param amplificationParameter The amplification parameter(must be greater than 1)
-   *  * @param exemptFromYieldProtocolFeeFlags array containing boolean for each token exemption from yield protocol fee flags
-   *  * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
+   *  * @param exemptFromYieldProtocolFeeFlags Array containing boolean for each token exemption from yield protocol fee flags
+   *  * @returns A TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
    */
   create({
     factoryAddress,
@@ -81,18 +81,21 @@ export class ComposableStableFactory implements PoolFactory {
       sortedExemptFromYieldProtocols,
       swapFeeScaled.toString(),
       owner,
+    ] as [
+      string,
+      string,
+      string[],
+      string,
+      string[],
+      string[],
+      boolean[],
+      string,
+      string
     ];
-    const composablePoolInterface = new Interface(composableStableAbi);
-    const createFunctionAbi = composableStableAbi.find(
-      ({ name }) => name === 'create'
-    );
-    if (!createFunctionAbi)
-      throw new BalancerError(BalancerErrorCode.INTERNAL_ERROR_INVALID_ABI);
-    const createFunctionFragment = FunctionFragment.from(createFunctionAbi);
-    const encodedFunctionData = composablePoolInterface.encodeFunctionData(
-      createFunctionFragment,
-      params
-    );
+    const composablePoolFactoryInterface =
+      ComposableStableFactory__factory.createInterface();
+    const encodedFunctionData =
+      composablePoolFactoryInterface.encodeFunctionData('create', params);
     return {
       to: factoryAddress,
       data: encodedFunctionData,
@@ -129,13 +132,13 @@ export class ComposableStableFactory implements PoolFactory {
   /***
    * @param params
    *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
-   *  * @param joiner - The address of the joiner of the pool
-   *  * @param poolId - The id of the pool
-   *  * @param poolAddress - The address of the pool
-   *  * @param tokensIn - array with the address of the tokens
-   *  * @param amountsIn - array with the amount of each token
-   *  * @param wrappedNativeAsset
-   *  * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
+   *  * @param joiner The address of the joiner of the pool
+   *  * @param poolId The id of the pool
+   *  * @param poolAddress The address of the pool
+   *  * @param tokensIn Array with the address of the tokens
+   *  * @param amountsIn Array with the amount of each token
+   *  * @param wrappedNativeAsset Address of wrapped ether wETH
+   *  * @returns A InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
    */
   buildInitJoin({
     joiner,

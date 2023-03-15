@@ -8,9 +8,6 @@ import { expect } from 'chai';
 import dotenv from 'dotenv';
 import { ethers } from 'hardhat';
 
-import { Vault__factory } from '@/contracts/factories/Vault__factory';
-import ComposableStablePoolAbi from '@/lib/abi/ComposableStable.json';
-import composableStableFactoryAbi from '@/lib/abi/ComposableStableFactory.json';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { _upscale, SolidityMaths } from '@/lib/utils/solidityMaths';
 import { BalancerSDK } from '@/modules/sdk.module';
@@ -21,6 +18,11 @@ import {
   sendTransactionGetBalances,
 } from '@/test/lib/utils';
 import { Network, PoolType } from '@/types';
+import {
+  Vault__factory,
+  ComposableStable__factory,
+  ComposableStableFactory__factory,
+} from '@/contracts';
 
 dotenv.config();
 
@@ -97,9 +99,8 @@ describe('creating composable stable pool', async () => {
         to as string,
         data as string
       );
-      const composableStableFactoryInterface = new Interface(
-        composableStableFactoryAbi
-      );
+      const composableStableFactoryInterface =
+        ComposableStableFactory__factory.createInterface();
       const poolCreationEvent: LogDescription = findEventInReceiptLogs({
         to: factoryAddress,
         receipt: transactionReceipt,
@@ -114,9 +115,8 @@ describe('creating composable stable pool', async () => {
     });
     it('should init join a pool', async () => {
       const signerAddress = await signer.getAddress();
-      const composableStablePoolInterface = new Interface(
-        ComposableStablePoolAbi
-      );
+      const composableStablePoolInterface =
+        ComposableStable__factory.createInterface();
       const pool = new Contract(
         poolAddress,
         composableStablePoolInterface,
@@ -143,7 +143,7 @@ describe('creating composable stable pool', async () => {
           to,
           data
         );
-      const vaultInterface = new Interface(Vault__factory.abi);
+      const vaultInterface = Vault__factory.createInterface();
       const poolInitJoinEvent: LogDescription = findEventInReceiptLogs({
         receipt: transactionReceipt,
         to,
@@ -168,13 +168,16 @@ describe('creating composable stable pool', async () => {
           return OldBigNumber(upscaledAmount, 10);
         })
       ).toString();
+
       // The amountOut of BPT shall be (invariant - 10e6) for equal amountsIn
-      const bptAmountInvariantDelta = SolidityMaths.sub(
+      const expectedBptAmountOut = SolidityMaths.sub(
         BigInt(poolInvariant),
-        BigInt(balanceDeltas[amountsIn.length].toString())
+        // 1e6 is the minimum bpt, this amount of token is sent to address 0 to prevent the Pool to ever be drained
+        BigInt(1e6)
       );
-      // 1e6 is the minimum bpt, this amount of token is sent to address 0 to prevent the Pool to ever be drained
-      expect(bptAmountInvariantDelta).to.equal(BigInt(1e6));
+      expect(balanceDeltas[amountsIn.length].toBigInt()).eq(
+        expectedBptAmountOut
+      );
     });
   });
 });
