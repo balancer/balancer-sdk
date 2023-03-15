@@ -71,6 +71,24 @@ export interface ExitConcern {
     slippage,
     wrappedNativeAsset,
   }: ExitExactTokensOutParameters) => ExitExactTokensOutAttributes;
+
+  /**
+   * Build recovery exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
+   * @param exiter Account address exiting pool
+   * @param pool Pool being exited
+   * @param bptIn BPT provided for exiting pool
+   * @param slippage Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @returns transaction request ready to send with signer.sendTransaction
+   */
+  buildRecoveryExit: ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+  }: Pick<
+    ExitExactBPTInParameters,
+    'exiter' | 'pool' | 'bptIn' | 'slippage'
+  >) => ExitExactBPTInAttributes;
 }
 
 export interface JoinPool {

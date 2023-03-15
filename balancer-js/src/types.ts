@@ -357,6 +357,11 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     amountsOut: string[],
     slippage: string
   ) => ExitExactTokensOutAttributes;
+  buildRecoveryExit: (
+    exiter: string,
+    bptIn: string,
+    slippage: string
+  ) => ExitExactBPTInAttributes;
   calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
   bptIndex: number;
 }

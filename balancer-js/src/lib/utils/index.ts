@@ -15,6 +15,9 @@ export const isSameAddress = (address1: string, address2: string): boolean =>
   getAddress(address1) === getAddress(address2);
 
 export function insert<T>(arr: T[], index: number, newItem: T): T[] {
+  if (index < 0 || index >= arr.length) {
+    return arr;
+  }
   return [
     // part of the array before the specified index
     ...arr.slice(0, index),
