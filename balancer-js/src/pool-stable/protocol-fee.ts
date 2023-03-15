@@ -2,6 +2,7 @@ import { Pool } from '@/types';
 import { parsePoolInfo, replace } from '@/lib/utils';
 import { calculateBalanceGivenInvariantAndAllOtherBalances } from '@/pool-stable/calculate-balance-given-invariant';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
+import { parseFixed } from '@ethersproject/bignumber';
 
 export default class StableProtocolFee {
   /**
@@ -15,26 +16,26 @@ export default class StableProtocolFee {
   };
 
   static calDueTokenProtocolSwapFeeAmount = ({
-    parsedAmp,
+    ampWithPrecision,
     upScaledBalances,
-    lastJoinExitInvariant,
+    lastPostJoinExitInvariant,
     higherBalanceTokenIndex,
     protocolSwapFeePct,
   }: {
-    parsedAmp: string;
-    upScaledBalances: string[];
-    lastJoinExitInvariant: string;
+    ampWithPrecision: bigint;
+    upScaledBalances: bigint[];
+    lastPostJoinExitInvariant: string;
     higherBalanceTokenIndex: number;
-    protocolSwapFeePct: string;
+    protocolSwapFeePct: bigint;
   }): bigint[] => {
     const dueTokenProtocolFeeAmounts = Array(upScaledBalances.length).fill(
       BigInt(0)
     );
     const finalBalanceFeeToken =
       calculateBalanceGivenInvariantAndAllOtherBalances({
-        amplificationParameter: BigInt(parsedAmp),
+        amplificationParameter: ampWithPrecision,
         balances: upScaledBalances.map(BigInt),
-        invariant: BigInt(lastJoinExitInvariant),
+        invariant: parseFixed(lastPostJoinExitInvariant, 18).toBigInt(),
         tokenIndex: higherBalanceTokenIndex,
       });
     const higherBalance = BigInt(upScaledBalances[higherBalanceTokenIndex]);

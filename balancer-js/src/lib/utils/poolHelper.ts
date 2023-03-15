@@ -29,8 +29,8 @@ type ParsedPoolInfo = {
   upScaledBalances: bigint[];
   upScaledBalancesWithoutBpt: bigint[];
   totalSharesEvm: bigint;
-  lastJoinExitInvariant: string;
-  protocolSwapFeePct: string;
+  lastPostJoinExitInvariant: string;
+  protocolSwapFeePct: bigint;
 };
 
 /**
@@ -109,12 +109,12 @@ export const parsePoolInfo = (
   ).toBigInt();
 
   const higherBalanceTokenIndex = upScaledBalances.indexOf(
-    SolidityMaths.max(...upScaledBalances)
+    SolidityMaths.max(upScaledBalances)
   );
   const protocolSwapFeePct = parseFixed(
     pool.protocolSwapFeeCache || '0',
     18
-  ).toString();
+  ).toBigInt();
   const scalingFactorsWithoutBpt = [...scalingFactors];
   const scalingFactorsRawWithoutBpt = [...scalingFactorsRaw];
   const poolTokensWithoutBpt = [...poolTokens];
@@ -152,6 +152,6 @@ export const parsePoolInfo = (
     upScaledBalancesWithoutBpt,
     totalSharesEvm: parseFixed(pool.totalShares || '0', 18).toBigInt(),
     protocolSwapFeePct,
-    lastJoinExitInvariant: pool.lastPostJoinExitInvariant || '0',
+    lastPostJoinExitInvariant: pool.lastPostJoinExitInvariant || '0',
   };
 };
