@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   ExitConcern,
   ExitExactBPTInParameters,
@@ -16,17 +17,11 @@ export class StablePhantomPoolExit implements ExitConcern {
     wrappedNativeAsset,
     singleTokenOut,
   }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
-    // TODO implementation
-    console.log(
-      exiter,
-      pool,
-      bptIn,
-      slippage,
-      shouldUnwrapNativeAsset,
-      wrappedNativeAsset,
-      singleTokenOut
-    );
-    throw new Error('To be implemented');
+    /**
+     * Exit type only supported when pool is in paused state and pause window
+     * has expired, so this type of exit will not be supported.
+     */
+    throw new Error('Exit type not supported');
   };
 
   buildExitExactTokensOut = ({
@@ -37,15 +32,18 @@ export class StablePhantomPoolExit implements ExitConcern {
     slippage,
     wrappedNativeAsset,
   }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
-    // TODO implementation
-    console.log(
-      exiter,
-      pool,
-      tokensOut,
-      amountsOut,
-      slippage,
-      wrappedNativeAsset
-    );
-    throw new Error('To be implemented');
+    throw new Error('Exit type not supported');
+  };
+
+  buildRecoveryExit = ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+  }: Pick<
+    ExitExactBPTInParameters,
+    'exiter' | 'pool' | 'bptIn' | 'slippage'
+  >): ExitExactBPTInAttributes => {
+    throw new Error('Exit type not supported');
   };
 }

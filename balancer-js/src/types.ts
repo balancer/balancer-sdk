@@ -319,6 +319,7 @@ export interface Pool {
   upperTarget: string;
   priceRateProviders?: PriceRateProvider[];
   lastJoinExitInvariant?: string;
+  isInRecoveryMode?: boolean;
 }
 
 export interface PriceRateProvider {
@@ -388,6 +389,18 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     amountsOut: string[],
     slippage: string
   ) => ExitExactTokensOutAttributes;
+  /**
+   * Build recovery exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
+   * @param exiter Account address exiting pool
+   * @param bptIn BPT provided for exiting pool
+   * @param slippage Maximum slippage tolerance in basis points. i.e. 50 = 5%
+   * @returns transaction request ready to send with signer.sendTransaction
+   */
+  buildRecoveryExit: (
+    exiter: string,
+    bptIn: string,
+    slippage: string
+  ) => ExitExactBPTInAttributes;
   /**
    * Calculate spot price for swapping tokenIn with tokenOut
    * @param tokenIn Token address
