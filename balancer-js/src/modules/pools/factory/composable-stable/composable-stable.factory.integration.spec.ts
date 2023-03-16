@@ -1,6 +1,6 @@
 // yarn test:only ./src/modules/pools/factory/composable-stable/composable-stable.factory.integration.spec.ts
 import { OldBigNumber, StableMaths } from '@balancer-labs/sor';
-import { Interface, LogDescription } from '@ethersproject/abi';
+import { LogDescription } from '@ethersproject/abi';
 import { parseFixed } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 import { Contract } from '@ethersproject/contracts';

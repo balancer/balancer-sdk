@@ -1,5 +1,4 @@
 import { parseFixed } from '@ethersproject/bignumber';
-import { FunctionFragment, Interface } from '@ethersproject/abi';
 import { TransactionRequest } from '@ethersproject/providers';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
