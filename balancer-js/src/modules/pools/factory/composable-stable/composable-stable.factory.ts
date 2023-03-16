@@ -193,7 +193,7 @@ export class ComposableStableFactory implements PoolFactory {
 
   /***
    * @param params
-   *  * Returns an array of calculated weights for every token in the PoolSeedToken array "tokens"
+   *  * Builds a transaction for a composable pool init join operation.
    *  * @param joiner The address of the joiner of the pool
    *  * @param poolId The id of the pool
    *  * @param poolAddress The address of the pool
