@@ -302,7 +302,10 @@ export class ComposableStableFactory implements PoolFactory {
   };
   encodeInitJoinFunctionData = (
     params: [string, string, string, JoinPoolRequestDecodedAttributes]
-  ) => {
+  ): {
+    functionName: string;
+    data: string;
+  } => {
     const functionName = 'joinPool';
     const vaultInterface = Vault__factory.createInterface();
     const data = vaultInterface.encodeFunctionData(functionName, params);
