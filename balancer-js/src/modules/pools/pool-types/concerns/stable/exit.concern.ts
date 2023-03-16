@@ -68,17 +68,6 @@ type EncodeExitParams = Pick<ExitExactBPTInParameters, 'exiter'> & {
 };
 
 export class StablePoolExit implements ExitConcern {
-  /**
-   * Builds an exit transaction for a stable pool given the exact BPT In
-   * @param exiter Address of the exiter of the pool
-   * @param pool Pool to be exited
-   * @param bptIn quantity of bpt inserted
-   * @param slippage Maximum slippage tolerance in bps i.e. 10000 = 100%, 1 = 0.01%
-   * @param shouldUnwrapNativeAsset Set true if the weth should be unwrapped to Eth
-   * @param wrappedNativeAsset Address of wrapped native asset for specific network config
-   * @param singleTokenOut The address of the token that will be singled withdrawn in the exit transaction,
-   *                          if not passed, the transaction will do a proportional exit where available
-   */
   buildExitExactBPTIn = ({
     exiter,
     pool,
