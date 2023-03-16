@@ -8,12 +8,6 @@ import { parsePoolInfo } from '@/lib/utils';
 
 // Note: this concern is used by Stable, MetaStable and StablePhantom pools
 export class StablePoolPriceImpact implements PriceImpactConcern {
-  /**
-   * Calculates the BPT return amount when investing with no price impact.
-   * @param { Pool } pool Investment pool.
-   * @param { bigint [] } tokenAmounts Token amounts being invested. Needs a value for each pool token.
-   * @returns { bigint } BPT amount.
-   */
   bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
     // upscales amp, swapfee, totalshares
     const {

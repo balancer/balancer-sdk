@@ -336,17 +336,41 @@ export interface PriceRateProvider {
  * Pool use-cases / controller layer
  */
 export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
+  /**
+   * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
+   * @param joiner Account address joining pool
+   * @param tokensIn Token addresses provided for joining pool (same length and order as amountsIn)
+   * @param amountsIn Token amounts provided for joining pool in EVM scale
+   * @param slippage Maximum slippage tolerance in bps i.e. 50 = 0.5%
+   * @returns transaction request ready to send with signer.sendTransaction
+   */
   buildJoin: (
     joiner: string,
     tokensIn: string[],
     amountsIn: string[],
     slippage: string
   ) => JoinPoolAttributes;
+  /**
+   * Calculate price impact of bptAmount against zero price impact BPT amount.
+   * @param tokenAmounts Token amounts. Needs a value for each pool token.
+   * @param bptAmount BPT amount for comparison.
+   * @param isJoin boolean indicating if the price impact is for a join or exit.
+   * @returns price impact in EVM scale.
+   */
   calcPriceImpact: (
-    amountsIn: string[],
-    minBPTOut: string,
+    tokenAmounts: string[],
+    bptAmount: string,
     isJoin: boolean
   ) => Promise<string>;
+  /**
+   * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
+   * @param exiter Account address exiting pool
+   * @param bptIn BPT provided for exiting pool in EVM scale
+   * @param slippage Maximum slippage tolerance in bps. i.e. 50 = 5%
+   * @param shouldUnwrapNativeAsset Indicates whether wrapped native asset should be unwrapped after exit. Defaults to false.
+   * @param singleTokenOut Optional: token address that if provided will exit to given token
+   * @returns transaction request ready to send with signer.sendTransaction
+   */
   buildExitExactBPTIn: (
     exiter: string,
     bptIn: string,
@@ -354,17 +378,38 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     shouldUnwrapNativeAsset?: boolean,
     singleTokenOut?: string
   ) => ExitExactBPTInAttributes;
+  /**
+   * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
+   * @param exiter Account address exiting pool
+   * @param tokensOut Tokens provided for exiting pool (same length and order as amountsOut)
+   * @param amountsOut Amounts provided for exiting pool in EVM scale
+   * @param slippage Maximum slippage tolerance in bps. i.e. 50 = 5%
+   * @returns transaction request ready to send with signer.sendTransaction
+   */
   buildExitExactTokensOut: (
     exiter: string,
     tokensOut: string[],
     amountsOut: string[],
     slippage: string
   ) => ExitExactTokensOutAttributes;
+  /**
+   * Build recovery exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
+   * @param exiter Account address exiting pool
+   * @param bptIn BPT provided for exiting pool
+   * @param slippage Maximum slippage tolerance in basis points. i.e. 50 = 5%
+   * @returns transaction request ready to send with signer.sendTransaction
+   */
   buildRecoveryExit: (
     exiter: string,
     bptIn: string,
     slippage: string
   ) => ExitExactBPTInAttributes;
+  /**
+   * Calculate spot price for swapping tokenIn with tokenOut
+   * @param tokenIn Token address
+   * @param tokenOut Token address
+   * @returns spot price for swapping tokenIn with tokenOut in EVM scale
+   */
   calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
   bptIndex: number;
 }
