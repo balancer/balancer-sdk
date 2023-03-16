@@ -77,19 +77,6 @@ type EncodeExitParams = Pick<ExitExactBPTInParameters, 'exiter'> & {
 };
 
 export class ComposableStablePoolExit implements ExitConcern {
-  /**
-   *  Builds an exit with exact bpt in transaction
-   *  @param params
-   *  @param exiter Address of the exiter of the pool
-   *  @param pool Pool object (it's automatically inserted when you wrap a Pool with the methods using balancer.pools.wrap function)
-   *  @param bptIn Amount of bpt in the exit
-   *  @param slippage Maximum slippage tolerance in bps i.e. 50 = 0.5%
-   *  @param shouldUnwrapNativeAsset Set true if the weth should be unwrapped to Eth
-   *  @param wrappedNativeAsset Address of wrapped native asset for specific network config
-   *  @param singleTokenOut The address of the token that will be singled withdrawn in the exit transaction,
-   *                           if not passed, the transaction will do a proportional exit where available
-   * @returns Attributes to send transaction
-   */
   buildExitExactBPTIn = ({
     exiter,
     pool,
@@ -164,17 +151,6 @@ export class ComposableStablePoolExit implements ExitConcern {
     };
   };
 
-  /**
-   *  Builds an exit with exact tokens out transaction
-   *  @param params
-   *  @param exiter Address of the exiter of the pool
-   *  @param pool Pool object (it's automatically inserted when you wrap a Pool with the methods using balancer.pools.wrap function)
-   *  @param tokensOut Pool asset addresses (excluding BPT)
-   *  @param amountsOut Amount of each token from tokensOut to receive after exit
-   *  @param slippage Maximum slippage tolerance in bps i.e. 50 = 0.5%
-   *  @param wrappedNativeAsset Address of wrapped native asset for specific network config
-   *  @returns Attributes to send transaction
-   */
   buildExitExactTokensOut = ({
     exiter,
     pool,
