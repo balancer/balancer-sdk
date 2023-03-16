@@ -1,10 +1,11 @@
-import { BalancerSdkConfig, Network, PoolType } from '@/types';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { ADDRESSES } from '@/test/lib/constants';
-import { AddressZero } from '@ethersproject/constants';
-import { BalancerSDK } from '@/modules/sdk.module';
 import { assert } from 'chai';
+import { AddressZero } from '@ethersproject/constants';
+
 import { BalancerError } from '@/balancerErrors';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { BalancerSDK } from '@/modules/sdk.module';
+import { ADDRESSES } from '@/test/lib/constants';
+import { BalancerSdkConfig, Network, PoolType } from '@/types';
 
 const network = Network.MAINNET;
 const sdkConfig: BalancerSdkConfig = {

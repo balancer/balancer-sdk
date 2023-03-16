@@ -1,20 +1,21 @@
 // yarn test:only ./src/modules/pools/factory/composable-stable/composable-stable.factory.integration.spec.ts
-import { expect } from 'chai';
-import { ethers } from 'hardhat';
-import { Network, PoolType } from '@/types';
-import { ADDRESSES } from '@/test/lib/constants';
-import { BalancerSDK } from '@/modules/sdk.module';
 import { LogDescription } from '@ethersproject/abi';
+import { parseFixed } from '@ethersproject/bignumber';
+import { expect } from 'chai';
+import dotenv from 'dotenv';
+import { ethers } from 'hardhat';
+
+import { ERC4626LinearPoolFactory__factory } from '@/contracts';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { ProtocolId } from '@/modules/pools/factory/types';
+import { BalancerSDK } from '@/modules/sdk.module';
+import { ADDRESSES } from '@/test/lib/constants';
 import {
   findEventInReceiptLogs,
   forkSetup,
   sendTransactionGetBalances,
 } from '@/test/lib/utils';
-import dotenv from 'dotenv';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { parseFixed } from '@ethersproject/bignumber';
-import { ProtocolId } from '@/modules/pools/factory/types';
-import { ERC4626LinearPoolFactory__factory } from '@/contracts';
+import { Network, PoolType } from '@/types';
 
 dotenv.config();
 
@@ -84,9 +85,6 @@ describe('creating linear pool', async () => {
         logName: 'PoolCreated',
         contractInterface: linearPoolInterface,
       });
-      // if (poolCreationEvent) {
-      //   poolAddress = poolCreationEvent.args.pool;
-      // }
       expect(!!poolCreationEvent).to.be.true;
       return;
     });

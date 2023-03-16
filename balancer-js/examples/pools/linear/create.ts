@@ -1,25 +1,25 @@
-import * as dotenv from 'dotenv';
-import { JsonRpcProvider } from '@ethersproject/providers';
-import { BalancerSDK, Network, PoolType } from 'src';
-import { ethers } from 'hardhat';
 import { LogDescription } from '@ethersproject/abi';
-import { ADDRESSES } from '@/test/lib/constants';
-import {
-  findEventInReceiptLogs,
-  forkSetup,
-  sendTransactionGetBalances,
-} from '@/test/lib/utils';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { parseFixed } from '@ethersproject/bignumber';
-import { ProtocolId } from '@/modules/pools/factory/types';
+import {
+  JsonRpcProvider,
+  TransactionReceipt,
+  TransactionResponse,
+} from '@ethersproject/providers';
+import * as dotenv from 'dotenv';
+import { ethers } from 'hardhat';
+
 import { ERC4626LinearPoolFactory__factory } from '@/contracts';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { ProtocolId } from '@/modules/pools/factory/types';
+import { ADDRESSES } from '@/test/lib/constants';
+import { findEventInReceiptLogs, forkSetup } from '@/test/lib/utils';
+import { BalancerSDK, Network, PoolType } from 'src';
 
 dotenv.config();
 
 const network = Network.MAINNET;
-const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
-const blockNumber = 16720000;
 const rpcUrl = 'http://127.0.0.1:8545';
+
 export const provider: JsonRpcProvider = new ethers.providers.JsonRpcProvider(
   rpcUrl,
   network
@@ -33,10 +33,6 @@ export const balancer = new BalancerSDK(sdkConfig);
 
 const { APE, sAPE } = ADDRESSES[network];
 const tokens = [APE.address, sAPE.address];
-const balances = [
-  parseFixed('1000000000', APE.decimals).toString(),
-  parseFixed('1000000000', sAPE.decimals).toString(),
-];
 
 const linearPoolCreateParams = {
   factoryAddress: `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.erc4626LinearPoolFactory}`,
@@ -50,7 +46,13 @@ const linearPoolCreateParams = {
   swapFee: '0.01',
 };
 
-async function createLinearPool() {
+const setupFork = async (): Promise<void> => {
+  const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
+  const balances = [
+    parseFixed('1000000000', APE.decimals).toString(),
+    parseFixed('1000000000', sAPE.decimals).toString(),
+  ];
+  const blockNumber = 16720000;
   await forkSetup(
     signer,
     tokens,
@@ -60,32 +62,57 @@ async function createLinearPool() {
     blockNumber,
     false
   );
+};
+
+const createLinearPool = async (): Promise<{
+  transaction: TransactionResponse;
+  to: string;
+}> => {
   const linearPoolFactory = balancer.pools.poolFactory.of(
-    PoolType.ERC4626Linear
+    PoolType.ERC4626Linear // Can be AaveLinear or EulerLinear
   );
+
   const { to, data } = linearPoolFactory.create(linearPoolCreateParams);
 
   const signerAddress = await signer.getAddress();
+  const transaction = await signer.sendTransaction({
+    from: signerAddress,
+    to,
+    data,
+    gasLimit: 6721975,
+  });
+  return { transaction, to: to as string };
+};
 
-  const { transactionReceipt } = await sendTransactionGetBalances(
-    [],
-    signer,
-    signerAddress,
-    to as string,
-    data as string
+const checkIfPoolWasCreated = async ({
+  transaction,
+  to,
+}: {
+  transaction: TransactionResponse;
+  to: string;
+}): Promise<string> => {
+  const receipt: TransactionReceipt = await provider.getTransactionReceipt(
+    transaction.hash
   );
-
   const linearPoolFactoryInterface =
     ERC4626LinearPoolFactory__factory.createInterface();
 
   const poolCreationEvent: LogDescription = findEventInReceiptLogs({
-    receipt: transactionReceipt,
-    to: to as string,
+    receipt,
+    to,
     contractInterface: linearPoolFactoryInterface,
     logName: 'PoolCreated',
   });
-  console.log('poolAddress: ' + poolCreationEvent.args.pool);
-  return poolCreationEvent.args.pool;
+  const poolAddress = poolCreationEvent.args.pool;
+  return poolAddress;
+};
+
+async function createAndInitJoinLinear() {
+  await setupFork();
+  const { transaction, to } = await createLinearPool();
+
+  const poolAddress = await checkIfPoolWasCreated({ transaction, to });
+  console.log('poolAddress: ' + poolAddress);
 }
 
-export default createLinearPool();
+createAndInitJoinLinear().then((r) => r);

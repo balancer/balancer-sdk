@@ -1,17 +1,18 @@
-import { PoolFactory } from '@/modules/pools/factory/pool-factory';
+import { parseFixed } from '@ethersproject/bignumber';
 import { TransactionRequest } from '@ethersproject/providers';
+
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { ERC4626LinearPoolFactory__factory } from '@/contracts';
+import { networkAddresses } from '@/lib/constants/config';
+import { parseToBigInt18 } from '@/lib/utils';
+import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import {
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
   LinearCreatePoolParameters,
   ProtocolId,
 } from '@/modules/pools/factory/types';
-import { parseToBigInt18 } from '@/lib/utils';
 import { BalancerNetworkConfig } from '@/types';
-import { networkAddresses } from '@/lib/constants/config';
-import { ERC4626LinearPoolFactory__factory } from '@/contracts';
-import { parseFixed } from '@ethersproject/bignumber';
-import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export class LinearFactory implements PoolFactory {
   private wrappedNativeAsset: string;
@@ -35,7 +36,7 @@ export class LinearFactory implements PoolFactory {
    * @param wrappedToken The wrapped token
    * @param upperTarget The maximum balance of the unwrapped(main) token (normal number, no need to fix to 18 decimals)
    * @param swapFee The swap fee of the pool
-   * @param owner the address of the owner of the pool
+   * @param owner The address of the owner of the pool
    * @param protocolId The protocolId, to check the available value
    */
   create({
@@ -50,27 +51,20 @@ export class LinearFactory implements PoolFactory {
     protocolId,
   }: LinearCreatePoolParameters): TransactionRequest {
     this.checkCreateInputs({ swapFee, protocolId });
-    const swapFeeScaled = parseToBigInt18(`${swapFee}`);
-    const params = [
+    const params = this.parseCreateParamsForEncoding({
       name,
       symbol,
       mainToken,
       wrappedToken,
-      parseFixed(upperTarget, 18).toString(),
-      swapFeeScaled.toString(),
+      upperTarget,
+      swapFee,
       owner,
-      protocolId.toString(),
-    ] as [string, string, string, string, string, string, string, string];
-    const linearPoolInterface =
-      ERC4626LinearPoolFactory__factory.createInterface();
-    const encodedFunctionData = linearPoolInterface.encodeFunctionData(
-      'create',
-      params
-    );
-    console.log(encodedFunctionData);
+      protocolId,
+    });
+    const data = this.encodeCreateFunctionData(params);
     return {
       to: factoryAddress,
-      data: encodedFunctionData,
+      data,
     };
   }
 
@@ -87,5 +81,50 @@ export class LinearFactory implements PoolFactory {
     if (parseFixed(swapFee.toString(), 18).toBigInt() === BigInt(0)) {
       throw new BalancerError(BalancerErrorCode.MIN_SWAP_FEE_PERCENTAGE);
     }
+  };
+
+  parseCreateParamsForEncoding = ({
+    name,
+    symbol,
+    mainToken,
+    wrappedToken,
+    upperTarget,
+    swapFee,
+    owner,
+    protocolId,
+  }: Omit<LinearCreatePoolParameters, 'factoryAddress'>): [
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string,
+    string
+  ] => {
+    const swapFeeScaled = parseToBigInt18(`${swapFee}`);
+    const params = [
+      name,
+      symbol,
+      mainToken,
+      wrappedToken,
+      parseFixed(upperTarget, 18).toString(),
+      swapFeeScaled.toString(),
+      owner,
+      protocolId.toString(),
+    ] as [string, string, string, string, string, string, string, string];
+    return params;
+  };
+
+  encodeCreateFunctionData = (
+    params: [string, string, string, string, string, string, string, string]
+  ): string => {
+    const linearPoolInterface =
+      ERC4626LinearPoolFactory__factory.createInterface();
+    const encodedFunctionData = linearPoolInterface.encodeFunctionData(
+      'create',
+      params
+    );
+    return encodedFunctionData;
   };
 }
