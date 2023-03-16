@@ -2,12 +2,13 @@ import { LogDescription } from '@ethersproject/abi';
 import { parseFixed } from '@ethersproject/bignumber';
 import {
   JsonRpcProvider,
+  JsonRpcSigner,
   TransactionReceipt,
   TransactionResponse,
 } from '@ethersproject/providers';
 import * as dotenv from 'dotenv';
 import { ethers } from 'hardhat';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { BALANCER_NETWORK_CONFIG, balancerVault } from '@/lib/constants/config';
 import { ADDRESSES } from '@/test/lib/constants';
 import {
   findEventInReceiptLogs,
@@ -152,31 +153,19 @@ const initJoinComposableStablePool = async (poolAddress: string) => {
     tokensIn: tokenAddresses,
     amountsIn,
   });
-  const transaction = await signer.sendTransaction({
+  await signer.sendTransaction({
     to,
     data,
     gasLimit: 30000000,
   });
-  return { transaction, to: to as string };
+  return { poolId };
 };
 
-const checkIfInitJoinWorked = async (
-  transaction: TransactionResponse,
-  to: string
-) => {
-  const receipt: TransactionReceipt = await provider.getTransactionReceipt(
-    transaction.hash
-  );
+const checkIfInitJoinWorked = async (poolId: string) => {
   const vaultInterface = Vault__factory.createInterface();
-  const poolInitJoinEvent: LogDescription = findEventInReceiptLogs({
-    to,
-    receipt,
-    contractInterface: vaultInterface,
-    logName: 'PoolBalanceChanged',
-  });
-  const poolTokens = poolInitJoinEvent.args[2];
-  const balances = poolInitJoinEvent.args[3];
-  return { poolTokens, balances };
+  const vault = new Contract(balancerVault, vaultInterface, signer.provider);
+  const [tokens, balances] = await vault.getPoolTokens(poolId);
+  return { tokens, balances };
 };
 
 async function createAndInitJoinComposableStable() {
@@ -189,14 +178,10 @@ async function createAndInitJoinComposableStable() {
   console.log('Finished Pool creation');
   console.log('poolAddress: ' + poolAddress);
   console.log('Starting Pool Init Join...');
-  const { transaction: initJoinTx, to: vaultAddress } =
-    await initJoinComposableStablePool(poolAddress);
-  const { poolTokens, balances } = await checkIfInitJoinWorked(
-    initJoinTx,
-    vaultAddress
-  );
+  const { poolId } = await initJoinComposableStablePool(poolAddress);
+  const { tokens, balances } = await checkIfInitJoinWorked(poolId);
   console.log('Finished Pool Init Join');
-  console.log('Pool Tokens Addresses(Including BPT): ' + poolTokens);
+  console.log('Pool Tokens Addresses(Including BPT): ' + tokens);
   console.log('Pool Tokens balances(Including BPT): ' + balances);
 }
 
