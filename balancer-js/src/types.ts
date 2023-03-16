@@ -321,6 +321,8 @@ export interface Pool {
   lowerTarget: string;
   upperTarget: string;
   priceRateProviders?: PriceRateProvider[];
+  lastJoinExitInvariant?: string;
+  isInRecoveryMode?: boolean;
 }
 
 export interface PriceRateProvider {
@@ -358,6 +360,11 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     amountsOut: string[],
     slippage: string
   ) => ExitExactTokensOutAttributes;
+  buildRecoveryExit: (
+    exiter: string,
+    bptIn: string,
+    slippage: string
+  ) => ExitExactBPTInAttributes;
   calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
   bptIndex: number;
 }

@@ -17,6 +17,11 @@ const threeTokensPool = pools_14717479.find(
   (pool) => pool.id == threeTokensPoolId
 ) as unknown as Pool;
 
+const proportionalTokenAmounts = [
+  BigInt('244477477399253547632406'),
+  BigInt('125240456379058423162'),
+];
+
 describe('weighted pool price impact', () => {
   context('bpt zero price impact', () => {
     it('two token pool', () => {
@@ -31,10 +36,6 @@ describe('weighted pool price impact', () => {
       );
       expect(bptZeroPriceImpact.toString()).to.eq('2362847643421361281550');
 
-      const proportionalTokenAmounts = [
-        BigInt('244477477399253547632406'),
-        BigInt('125240456379058423162'),
-      ];
       const proportionalBptZeroPI = priceImpactCalc.bptZeroPriceImpact(
         pool,
         proportionalTokenAmounts
@@ -69,14 +70,10 @@ describe('weighted pool price impact', () => {
 
   context('price impact', () => {
     it('calculate price impact', () => {
-      const proportionalTokenAmounts = [
-        '244477477399253547632406',
-        '125240456379058423162',
-      ];
       const priceImpact = priceImpactCalc.calcPriceImpact(
         pool,
         proportionalTokenAmounts,
-        '4931900186642428185328',
+        BigInt('4931900186642428185328'),
         false
       );
       expect(priceImpact.toString()).to.eq('0');

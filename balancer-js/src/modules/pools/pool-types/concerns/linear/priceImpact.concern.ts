@@ -3,14 +3,16 @@ import { PriceImpactConcern } from '../types';
 import { Pool } from '@/types';
 
 export class LinearPriceImpact implements PriceImpactConcern {
-  bptZeroPriceImpact(pool: Pool, amounts: bigint[]): bigint {
+  bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
     throw new Error('Linear Pool bptZeroPriceImpact Not Implented');
   }
   calcPriceImpact(
     pool: Pool,
-    tokenAmounts: string[],
-    bptAmount: string
+    tokenAmounts: bigint[],
+    bptAmount: bigint,
+    isJoin: boolean
   ): string {
-    throw new Error('Linear Pool Price Impact Not Implented');
+    // Linear pools don't have price impact
+    return '0';
   }
 }

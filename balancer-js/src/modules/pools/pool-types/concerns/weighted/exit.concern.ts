@@ -22,13 +22,15 @@ import {
   _upscaleArray,
 } from '@/lib/utils/solidityMaths';
 import { Pool } from '@/types';
+import { BasePoolEncoder } from '@/pool-base';
+import { WeightedPoolPriceImpact } from '../weighted/priceImpact.concern';
 
 interface SortedValues {
-  parsedTokens: string[];
-  parsedWeights: string[];
-  parsedTotalShares: string;
-  parsedSwapFee: string;
-  upScaledBalances: string[];
+  poolTokens: string[];
+  weights: bigint[];
+  totalSharesEvm: bigint;
+  swapFeeEvm: bigint;
+  upScaledBalances: bigint[];
 }
 
 type ExactBPTInSortedValues = SortedValues & {
@@ -120,17 +122,26 @@ export class WeightedPoolExit implements ExitConcern {
         : WeightedPoolEncoder.exitExactBPTInForTokensOut(bptIn);
 
     const encodedData = this.encodeExitPool({
-      poolTokens: sortedValues.parsedTokens,
+      poolTokens: sortedValues.poolTokens,
       poolId: pool.id,
       exiter,
       minAmountsOut,
       userData,
     });
 
+    const priceImpactConcern = new WeightedPoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
     return {
       ...encodedData,
       expectedAmountsOut,
       minAmountsOut,
+      priceImpact,
     };
   };
 
@@ -155,7 +166,7 @@ export class WeightedPoolExit implements ExitConcern {
       slippage,
     });
 
-    const { downScaledAmountsOut, parsedTokens } = sortedValues;
+    const { downScaledAmountsOut, poolTokens } = sortedValues;
     const userData = WeightedPoolEncoder.exitBPTInForExactTokensOut(
       downScaledAmountsOut,
       maxBPTIn
@@ -163,17 +174,77 @@ export class WeightedPoolExit implements ExitConcern {
     const encodedData = this.encodeExitPool({
       poolId: pool.id,
       userData,
-      poolTokens: parsedTokens,
+      poolTokens,
       minAmountsOut: downScaledAmountsOut,
       exiter,
     });
+
+    const priceImpactConcern = new WeightedPoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      downScaledAmountsOut.map(BigInt),
+      BigInt(expectedBPTIn),
+      false
+    );
 
     return {
       ...encodedData,
       expectedBPTIn,
       maxBPTIn,
+      priceImpact,
     };
   };
+
+  buildRecoveryExit = ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+  }: Pick<
+    ExitExactBPTInParameters,
+    'exiter' | 'pool' | 'bptIn' | 'slippage'
+  >): ExitExactBPTInAttributes => {
+    this.checkInputsExactBPTIn({
+      bptIn,
+      singleTokenOut: undefined,
+      pool,
+      shouldUnwrapNativeAsset: false,
+    });
+    const sortedValues = parsePoolInfo(pool);
+    const { minAmountsOut, expectedAmountsOut } =
+      this.calcTokensOutGivenExactBptIn({
+        ...sortedValues,
+        bptIn,
+        slippage,
+        singleTokenOutIndex: -1,
+      });
+
+    const userData = BasePoolEncoder.recoveryModeExit(bptIn);
+
+    const encodedData = this.encodeExitPool({
+      poolTokens: sortedValues.poolTokens,
+      poolId: pool.id,
+      exiter,
+      minAmountsOut,
+      userData,
+    });
+
+    const priceImpactConcern = new WeightedPoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
+    return {
+      ...encodedData,
+      expectedAmountsOut,
+      minAmountsOut,
+      priceImpact,
+    };
+  };
+
   /**
    *  Checks if the input of buildExitExactBPTIn is valid
    * @param bptIn Bpt inserted in the transaction
@@ -245,10 +316,10 @@ export class WeightedPoolExit implements ExitConcern {
       shouldUnwrapNativeAsset
     );
     // Parse pool info into EVM amounts in order to match amountsIn scalling
-    const { parsedTokens } = parsedPoolInfo;
+    const { poolTokens } = parsedPoolInfo;
     let singleTokenOutIndex = -1;
     if (singleTokenOut) {
-      singleTokenOutIndex = parsedTokens.indexOf(singleTokenOut.toLowerCase());
+      singleTokenOutIndex = poolTokens.indexOf(singleTokenOut.toLowerCase());
     }
     return {
       ...parsedPoolInfo,
@@ -290,22 +361,22 @@ export class WeightedPoolExit implements ExitConcern {
     };
   };
   calcTokenOutGivenExactBptIn = ({
-    parsedTokens,
-    parsedWeights,
+    poolTokens,
+    weights,
     upScaledBalances,
-    parsedTotalShares,
-    parsedSwapFee,
+    totalSharesEvm,
+    swapFeeEvm,
     singleTokenOutIndex,
     bptIn,
     slippage,
     scalingFactors,
   }: Pick<
     ExactBPTInSortedValues,
-    | 'parsedTokens'
-    | 'parsedWeights'
+    | 'poolTokens'
+    | 'weights'
     | 'upScaledBalances'
-    | 'parsedTotalShares'
-    | 'parsedSwapFee'
+    | 'totalSharesEvm'
+    | 'swapFeeEvm'
     | 'singleTokenOutIndex'
     | 'scalingFactors'
   > &
@@ -315,11 +386,11 @@ export class WeightedPoolExit implements ExitConcern {
   } => {
     // Calculate amount out given BPT in
     const amountOut = SOR.WeightedMaths._calcTokenOutGivenExactBptIn(
-      BigInt(upScaledBalances[singleTokenOutIndex]),
-      BigInt(parsedWeights[singleTokenOutIndex]),
+      upScaledBalances[singleTokenOutIndex],
+      weights[singleTokenOutIndex],
       BigInt(bptIn),
-      BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      totalSharesEvm,
+      swapFeeEvm
     ).toString();
 
     const downscaledAmountOut = _downscaleDown(
@@ -327,8 +398,8 @@ export class WeightedPoolExit implements ExitConcern {
       scalingFactors[singleTokenOutIndex]
     ).toString();
 
-    const expectedAmountsOut = Array(parsedTokens.length).fill('0');
-    const minAmountsOut = Array(parsedTokens.length).fill('0');
+    const expectedAmountsOut = Array(poolTokens.length).fill('0');
+    const minAmountsOut = Array(poolTokens.length).fill('0');
 
     expectedAmountsOut[singleTokenOutIndex] = downscaledAmountOut;
     // Apply slippage tolerance
@@ -342,14 +413,14 @@ export class WeightedPoolExit implements ExitConcern {
 
   calcTokensOutGivenExactBptIn = ({
     upScaledBalances,
-    parsedTotalShares,
+    totalSharesEvm,
     scalingFactors,
     bptIn,
     slippage,
   }: Pick<
     ExactBPTInSortedValues,
     | 'upScaledBalances'
-    | 'parsedTotalShares'
+    | 'totalSharesEvm'
     | 'scalingFactors'
     | 'singleTokenOutIndex'
   > &
@@ -359,9 +430,9 @@ export class WeightedPoolExit implements ExitConcern {
   } => {
     // Calculate amounts out given BPT in
     const amountsOut = SOR.WeightedMaths._calcTokensOutGivenExactBptIn(
-      upScaledBalances.map((b) => BigInt(b)),
+      upScaledBalances,
       BigInt(bptIn),
-      BigInt(parsedTotalShares)
+      totalSharesEvm
     ).map((amount) => amount.toString());
     // Maths return numbers scaled to 18 decimals. Must scale down to token decimals.
     const amountsOutScaledDown = _downscaleDownArray(
@@ -383,11 +454,11 @@ export class WeightedPoolExit implements ExitConcern {
     return { minAmountsOut, expectedAmountsOut };
   };
   calcBptInGivenExactTokensOut = ({
-    parsedWeights,
+    weights,
     upScaledBalances,
     upScaledAmountsOut,
-    parsedTotalShares,
-    parsedSwapFee,
+    totalSharesEvm,
+    swapFeeEvm,
     slippage,
   }: CalcBptInGivenExactTokensOutParams): {
     maxBPTIn: string;
@@ -395,11 +466,11 @@ export class WeightedPoolExit implements ExitConcern {
   } => {
     // Calculate expected BPT in given tokens out
     const bptIn = SOR.WeightedMaths._calcBptInGivenExactTokensOut(
-      upScaledBalances.map((b) => BigInt(b)),
-      parsedWeights.map((w) => BigInt(w)),
-      upScaledAmountsOut.map((a) => BigInt(a)),
-      BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      upScaledBalances,
+      weights,
+      upScaledAmountsOut,
+      totalSharesEvm,
+      swapFeeEvm
     ).toString();
 
     // Apply slippage tolerance

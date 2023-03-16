@@ -1,3 +1,4 @@
+// yarn test:only ./src/modules/pools/pool-types/concerns/stable/exit.concern.spec.ts
 import { parseFixed } from '@ethersproject/bignumber';
 import { expect } from 'chai';
 

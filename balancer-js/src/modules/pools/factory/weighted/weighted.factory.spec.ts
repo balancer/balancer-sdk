@@ -1,22 +1,23 @@
 // yarn test:only ./src/modules/pools/factory/weighted/weighted.factory.spec.ts
-import { expect } from 'chai';
-import { ethers } from 'hardhat';
-import { Network, PoolType } from '@/types';
-import { ADDRESSES } from '@/test/lib/constants';
-import { BalancerSDK } from '@/modules/sdk.module';
 import { Interface, LogDescription } from '@ethersproject/abi';
+import { parseFixed } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
+import { expect } from 'chai';
+import dotenv from 'dotenv';
+import { ethers } from 'hardhat';
+
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
+import { WeightedPool__factory } from '@/contracts/factories/WeightedPool__factory';
+import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { BalancerSDK } from '@/modules/sdk.module';
+import { ADDRESSES } from '@/test/lib/constants';
 import {
   findEventInReceiptLogs,
   forkSetup,
   sendTransactionGetBalances,
 } from '@/test/lib/utils';
-import dotenv from 'dotenv';
-import { Vault__factory } from '@/contracts/factories/Vault__factory';
-import { WeightedPool__factory } from '@/contracts/factories/WeightedPool__factory';
-import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { parseFixed } from '@ethersproject/bignumber';
-import { Contract } from '@ethersproject/contracts';
+import { Network, PoolType } from '@/types';
 
 dotenv.config();
 
