@@ -28,31 +28,26 @@ dotenv.config();
 
 const network = Network.MAINNET;
 const rpcUrl = 'http://127.0.0.1:8545';
-const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
-const blockNumber = 16720000;
-
-const name = 'My-Test-Pool-Name';
-const symbol = 'My-Test-Pool-Symbol';
 
 const addresses = ADDRESSES[network];
 
 const USDC_address = addresses.USDC.address;
 const USDT_address = addresses.USDT.address;
 
-const rateProviders = [AddressZero, AddressZero];
-
-const exemptFromYieldProtocolFeeFlags = [false, false];
-const tokenRateCacheDurations = ['0', '0'];
-const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`;
-const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const tokenAddresses = [USDC_address, USDT_address];
-const slots = [addresses.USDC.slot, addresses.USDT.slot];
-const balances = [
-  parseFixed('1000000000', addresses.USDC.decimals).toString(),
-  parseFixed('1000000000', addresses.USDT.decimals).toString(),
-];
-const amplificationParameter = '2';
-const swapFee = '0.01';
+
+const createComposableStableParams = {
+  factoryAddress: `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`,
+  name: 'My-Test-Pool-Name',
+  symbol: 'My-Test-Pool-Symbol',
+  tokenAddresses,
+  exemptFromYieldProtocolFeeFlags: [false, false],
+  rateProviders: [AddressZero, AddressZero],
+  tokenRateCacheDurations: ['0', '0'],
+  owner: undefined,
+  amplificationParameter: '92',
+  swapFee: '0.01',
+};
 
 describe('creating composable stable pool', async () => {
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
@@ -68,6 +63,13 @@ describe('creating composable stable pool', async () => {
   context('create', async () => {
     let poolAddress: string;
     before(async () => {
+      const slots = [addresses.USDC.slot, addresses.USDT.slot];
+      const balances = [
+        parseFixed('1000000000', addresses.USDC.decimals).toString(),
+        parseFixed('1000000000', addresses.USDT.decimals).toString(),
+      ];
+      const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
+      const blockNumber = 16720000;
       await forkSetup(
         signer,
         tokenAddresses,
@@ -79,19 +81,12 @@ describe('creating composable stable pool', async () => {
       );
     });
     it('should create a pool', async () => {
-      const { to, data } = composableStablePoolFactory.create({
-        factoryAddress,
-        name,
-        symbol,
-        tokenAddresses,
-        amplificationParameter,
-        rateProviders,
-        tokenRateCacheDurations,
-        exemptFromYieldProtocolFeeFlags,
-        swapFee,
-        owner,
-      });
       const signerAddress = await signer.getAddress();
+
+      const { to, data } = composableStablePoolFactory.create({
+        ...createComposableStableParams,
+        owner: signerAddress,
+      });
       const { transactionReceipt } = await sendTransactionGetBalances(
         [],
         signer,
@@ -102,7 +97,7 @@ describe('creating composable stable pool', async () => {
       const composableStableFactoryInterface =
         ComposableStableFactory__factory.createInterface();
       const poolCreationEvent: LogDescription = findEventInReceiptLogs({
-        to: factoryAddress,
+        to: to as string,
         receipt: transactionReceipt,
         logName: 'PoolCreated',
         contractInterface: composableStableFactoryInterface,
@@ -159,7 +154,7 @@ describe('creating composable stable pool', async () => {
 
       //Calculate and compare the bptAmountOut
       const poolInvariant = StableMaths._invariant(
-        parseFixed(amplificationParameter, 3),
+        parseFixed(createComposableStableParams.amplificationParameter, 3),
         amountsIn.map((amount, index) => {
           const upscaledAmount = _upscale(
             BigInt(amount),
