@@ -6,12 +6,6 @@ import { Pool } from '@/types';
 import { parsePoolInfo } from '@/lib/utils';
 
 export class WeightedPoolPriceImpact implements PriceImpactConcern {
-  /**
-   * Calculates the BPT return amount when investing with no price impact.
-   * @param { Pool } pool Investment pool.
-   * @param { bigint [] } tokenAmounts Token amounts being invested. EVM Scale. Needs a value for each pool token.
-   * @returns { bigint } BPT amount.
-   */
   bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
     if (tokenAmounts.length !== pool.tokensList.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);

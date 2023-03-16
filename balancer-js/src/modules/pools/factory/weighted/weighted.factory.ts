@@ -21,17 +21,16 @@ export class WeightedFactory implements PoolFactory {
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
   }
 
-  /***
-   * @param params
-   *  * Builds a transaction for a weighted pool create operation.
-   *  * @param factoryAddress - The address of the factory for weighted pool (contract address)
-   *  * @param name - The name of the pool
-   *  * @param symbol - The symbol of the pool
-   *  * @param tokenAddresses - The token's addresses
-   *  * @param weights The weights for each token, ordered
-   *  * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
-   *  * @param owner - The address of the owner of the pool
-   *  * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
+  /**
+   * Builds a transaction for a weighted pool create operation.
+   * @param factoryAddress - The address of the factory for weighted pool (contract address)
+   * @param name - The name of the pool
+   * @param symbol - The symbol of the pool
+   * @param tokenAddresses - The token's addresses
+   * @param weights The weights for each token, ordered
+   * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
+   * @param owner - The address of the owner of the pool
+   * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
    */
   create({
     factoryAddress,
@@ -67,14 +66,13 @@ export class WeightedFactory implements PoolFactory {
     };
   }
 
-  /***
-   * @param params
-   *  * Returns a InitJoinPoolAttributes to make a init join transaction
-   *  * @param joiner - The address of the joiner of the pool
-   *  * @param poolId - The id of the pool
-   *  * @param tokensIn - array with the address of the tokens
-   *  * @param amountsIn - array with the amount of each token
-   *  * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a weighted pool
+  /**
+   * Returns a InitJoinPoolAttributes to make a init join transaction
+   * @param joiner - The address of the joiner of the pool
+   * @param poolId - The id of the pool
+   * @param tokensIn - array with the address of the tokens
+   * @param amountsIn - array with the amount of each token
+   * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a weighted pool
    */
   buildInitJoin({
     joiner,
