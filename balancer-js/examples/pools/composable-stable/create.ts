@@ -161,7 +161,7 @@ const initJoinComposableStablePool = async (poolAddress: string) => {
   return { poolId };
 };
 
-const checkIfInitJoinWorked = async (poolId: string) => {
+const getPoolTokensAndBalances = async (poolId: string) => {
   const vaultInterface = Vault__factory.createInterface();
   const vault = new Contract(balancerVault, vaultInterface, signer.provider);
   const [tokens, balances] = await vault.getPoolTokens(poolId);
@@ -179,7 +179,7 @@ async function createAndInitJoinComposableStable() {
   console.log('poolAddress: ' + poolAddress);
   console.log('Starting Pool Init Join...');
   const { poolId } = await initJoinComposableStablePool(poolAddress);
-  const { tokens, balances } = await checkIfInitJoinWorked(poolId);
+  const { tokens, balances } = await getPoolTokensAndBalances(poolId);
   console.log('Finished Pool Init Join');
   console.log('Pool Tokens Addresses(Including BPT): ' + tokens);
   console.log('Pool Tokens balances(Including BPT): ' + balances);
