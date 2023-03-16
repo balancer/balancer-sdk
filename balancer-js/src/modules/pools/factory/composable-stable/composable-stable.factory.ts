@@ -15,6 +15,20 @@ import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { BalancerNetworkConfig } from '@/types';
 import { ComposableStableFactory__factory } from '@/contracts';
 
+type JoinPoolDecodedAttributes = {
+  poolId: string;
+  sender: string;
+  recipient: string;
+  joinPoolRequest: JoinPoolRequestDecodedAttributes;
+};
+
+type JoinPoolRequestDecodedAttributes = {
+  assets: string[];
+  maxAmountsIn: string[];
+  userData: string;
+  fromInternalBalance: boolean;
+};
+
 export class ComposableStableFactory implements PoolFactory {
   private wrappedNativeAsset: string;
 
@@ -57,6 +71,71 @@ export class ComposableStableFactory implements PoolFactory {
       exemptFromYieldProtocolFeeFlags,
       swapFee,
     });
+    const params = this.parseCreateParamsForEncoding({
+      name,
+      symbol,
+      tokenAddresses,
+      amplificationParameter,
+      rateProviders,
+      tokenRateCacheDurations,
+      exemptFromYieldProtocolFeeFlags,
+      swapFee,
+      owner,
+    });
+    const encodedFunctionData = this.encodeCreateFunctionData(params);
+    return {
+      to: factoryAddress,
+      data: encodedFunctionData,
+    };
+  }
+
+  checkCreateInputs = ({
+    tokenAddresses,
+    tokenRateCacheDurations,
+    exemptFromYieldProtocolFeeFlags,
+    rateProviders,
+    swapFee,
+  }: Pick<
+    ComposableStableCreatePoolParameters,
+    | 'rateProviders'
+    | 'tokenRateCacheDurations'
+    | 'tokenAddresses'
+    | 'exemptFromYieldProtocolFeeFlags'
+    | 'swapFee'
+  >): void => {
+    if (
+      tokenAddresses.length !== tokenRateCacheDurations.length ||
+      tokenRateCacheDurations.length !==
+        exemptFromYieldProtocolFeeFlags.length ||
+      exemptFromYieldProtocolFeeFlags.length !== rateProviders.length
+    ) {
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+    }
+    if (parseFixed(swapFee.toString(), 18).toBigInt() === BigInt(0)) {
+      throw new BalancerError(BalancerErrorCode.MIN_SWAP_FEE_PERCENTAGE);
+    }
+  };
+  parseCreateParamsForEncoding = ({
+    name,
+    symbol,
+    tokenAddresses,
+    amplificationParameter,
+    rateProviders,
+    tokenRateCacheDurations,
+    exemptFromYieldProtocolFeeFlags,
+    swapFee,
+    owner,
+  }: Omit<ComposableStableCreatePoolParameters, 'factoryAddress'>): [
+    string,
+    string,
+    string[],
+    string,
+    string[],
+    string[],
+    boolean[],
+    string,
+    string
+  ] => {
     const swapFeeScaled = parseToBigInt18(`${swapFee}`);
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     const [
@@ -91,41 +170,25 @@ export class ComposableStableFactory implements PoolFactory {
       string,
       string
     ];
+    return params;
+  };
+
+  encodeCreateFunctionData = (
+    params: [
+      string,
+      string,
+      string[],
+      string,
+      string[],
+      string[],
+      boolean[],
+      string,
+      string
+    ]
+  ): string => {
     const composablePoolFactoryInterface =
       ComposableStableFactory__factory.createInterface();
-    const encodedFunctionData =
-      composablePoolFactoryInterface.encodeFunctionData('create', params);
-    return {
-      to: factoryAddress,
-      data: encodedFunctionData,
-    };
-  }
-
-  checkCreateInputs = ({
-    tokenAddresses,
-    tokenRateCacheDurations,
-    exemptFromYieldProtocolFeeFlags,
-    rateProviders,
-    swapFee,
-  }: Pick<
-    ComposableStableCreatePoolParameters,
-    | 'rateProviders'
-    | 'tokenRateCacheDurations'
-    | 'tokenAddresses'
-    | 'exemptFromYieldProtocolFeeFlags'
-    | 'swapFee'
-  >): void => {
-    if (
-      tokenAddresses.length !== tokenRateCacheDurations.length ||
-      tokenRateCacheDurations.length !==
-        exemptFromYieldProtocolFeeFlags.length ||
-      exemptFromYieldProtocolFeeFlags.length !== rateProviders.length
-    ) {
-      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
-    }
-    if (parseFixed(swapFee.toString(), 18).toBigInt() === BigInt(0)) {
-      throw new BalancerError(BalancerErrorCode.MIN_SWAP_FEE_PERCENTAGE);
-    }
+    return composablePoolFactoryInterface.encodeFunctionData('create', params);
   };
 
   /***
@@ -152,6 +215,50 @@ export class ComposableStableFactory implements PoolFactory {
       poolId,
       poolAddress,
     });
+    const { attributes, params } = this.parseParamsForInitJoin({
+      joiner,
+      poolId,
+      poolAddress,
+      tokensIn,
+      amountsIn,
+    });
+    const { functionName, data } = this.encodeInitJoinFunctionData(params);
+
+    return {
+      to: balancerVault,
+      functionName,
+      data,
+      attributes,
+    };
+  }
+
+  checkInitJoinInputs = ({
+    poolId,
+    poolAddress,
+    tokensIn,
+    amountsIn,
+  }: Pick<
+    InitJoinPoolParameters,
+    'tokensIn' | 'amountsIn' | 'poolId' | 'poolAddress'
+  >): void => {
+    if (!poolId || !poolAddress) {
+      throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
+    }
+    if (tokensIn.length !== amountsIn.length) {
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+    }
+  };
+
+  parseParamsForInitJoin = ({
+    joiner,
+    poolId,
+    poolAddress,
+    tokensIn,
+    amountsIn,
+  }: InitJoinPoolParameters): {
+    attributes: JoinPoolDecodedAttributes;
+    params: [string, string, string, JoinPoolRequestDecodedAttributes];
+  } => {
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     // sort inputs
     const tokensWithBpt = [...tokensIn, poolAddress];
@@ -172,9 +279,7 @@ export class ComposableStableFactory implements PoolFactory {
 
     const userData = ComposableStablePoolEncoder.joinInit(sortedAmounts);
 
-    const functionName = 'joinPool';
-
-    const attributes = {
+    const attributes: JoinPoolDecodedAttributes = {
       poolId: poolId,
       sender: joiner,
       recipient: joiner,
@@ -185,36 +290,23 @@ export class ComposableStableFactory implements PoolFactory {
         fromInternalBalance: false,
       },
     };
-    const vaultInterface = Vault__factory.createInterface();
-    const data = vaultInterface.encodeFunctionData(functionName, [
-      attributes.poolId,
-      attributes.sender,
-      attributes.recipient,
-      attributes.joinPoolRequest,
-    ]);
-
     return {
-      to: balancerVault,
-      functionName,
       attributes,
-      data,
+      params: [
+        attributes.poolId,
+        attributes.sender,
+        attributes.recipient,
+        attributes.joinPoolRequest,
+      ],
     };
-  }
+  };
+  encodeInitJoinFunctionData = (
+    params: [string, string, string, JoinPoolRequestDecodedAttributes]
+  ) => {
+    const functionName = 'joinPool';
+    const vaultInterface = Vault__factory.createInterface();
+    const data = vaultInterface.encodeFunctionData(functionName, params);
 
-  checkInitJoinInputs = ({
-    poolId,
-    poolAddress,
-    tokensIn,
-    amountsIn,
-  }: Pick<
-    InitJoinPoolParameters,
-    'tokensIn' | 'amountsIn' | 'poolId' | 'poolAddress'
-  >): void => {
-    if (!poolId || !poolAddress) {
-      throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
-    }
-    if (tokensIn.length !== amountsIn.length) {
-      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
-    }
+    return { functionName, data };
   };
 }
