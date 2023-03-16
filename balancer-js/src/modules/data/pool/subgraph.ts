@@ -101,6 +101,9 @@ export class PoolsSubgraphRepository
   private async fetchAllPools(): Promise<Pool[]> {
     console.time('fetching pools');
 
+    if (this.blockHeight) {
+      this.query.args.block = { number: await this.blockHeight() };
+    }
     const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
       new SubgraphArgsFormatter()
     ) as PoolsQueryVariables;
