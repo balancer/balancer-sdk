@@ -53,6 +53,9 @@ export function replace<T>(arr: T[], index: number, newItem: T): T[] {
  */
 export function removeItem<T>(arr: T[], index: number): T[] {
   const newArray = [...arr];
+  if (index < 0 || index >= arr.length) {
+    return newArray;
+  }
   newArray.splice(index, 1);
   return newArray;
 }
