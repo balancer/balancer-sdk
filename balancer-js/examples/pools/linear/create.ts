@@ -107,12 +107,15 @@ const checkIfPoolWasCreated = async ({
   return poolAddress;
 };
 
-async function createAndInitJoinLinear() {
+async function createLinear() {
   await setupFork();
   const { transaction, to } = await createLinearPool();
 
   const poolAddress = await checkIfPoolWasCreated({ transaction, to });
   console.log('poolAddress: ' + poolAddress);
+  console.log(
+    "Note: Linear pools doesn't need to initialize, user can join them through swaps right after creation"
+  );
 }
 
-createAndInitJoinLinear().then((r) => r);
+createLinear().then((r) => r);

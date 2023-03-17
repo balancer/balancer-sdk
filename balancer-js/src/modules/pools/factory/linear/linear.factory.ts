@@ -8,7 +8,6 @@ import { parseToBigInt18 } from '@/lib/utils';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import {
   InitJoinPoolAttributes,
-  InitJoinPoolParameters,
   LinearCreatePoolParameters,
   ProtocolId,
 } from '@/modules/pools/factory/types';
@@ -22,9 +21,9 @@ export class LinearFactory implements PoolFactory {
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
   }
 
-  buildInitJoin(parameters: InitJoinPoolParameters): InitJoinPoolAttributes {
-    console.log(parameters);
-    throw new Error('To be implemented');
+  buildInitJoin(): InitJoinPoolAttributes {
+    // Linear Pools doesn't need to be initialized, they are initialized on deploy
+    throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
   }
 
   /**
