@@ -1,15 +1,15 @@
 // yarn test:only ./src/modules/pools/pool-types/concerns/composableStable/join.concern.integration.spec.ts
 import dotenv from 'dotenv';
-import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { insert, removeItem, PoolWithMethods, Network } from '@/.';
-import { subSlippage } from '@/lib/utils/slippageHelper';
+import { parseFixed } from '@ethersproject/bignumber';
+
+import { removeItem, PoolWithMethods, Network } from '@/.';
+import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
 import {
-  forkSetup,
-  TestPoolHelper,
-  sendTransactionGetBalances,
-} from '@/test/lib/utils';
+  testExactTokensIn,
+  testAttributes,
+  testSortingInputs,
+} from '@/test/lib/joinHelper';
 
 dotenv.config();
 
@@ -22,14 +22,15 @@ const blockNumber = 16350000;
 const testPoolId =
   '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d';
 
-describe('ComposableStable pool join functions', async () => {
+describe('ComposableStable Pool - Join Functions', async () => {
   let signerAddress: string;
   let pool: PoolWithMethods;
-  // We have to rest the fork between each test as pool value changes after tx is submitted
-  beforeEach(async () => {
+  let testPoolHelper: TestPoolHelper;
+
+  before(async () => {
     signerAddress = await signer.getAddress();
 
-    const testPool = new TestPoolHelper(
+    testPoolHelper = new TestPoolHelper(
       testPoolId,
       network,
       rpcUrl,
@@ -37,131 +38,57 @@ describe('ComposableStable pool join functions', async () => {
     );
 
     // Gets initial pool info from Subgraph
-    pool = await testPool.getPool();
-
-    // Setup forked network, set initial token balances and allowances
-    await forkSetup(
-      signer,
-      pool.tokensList,
-      Array(pool.tokensList.length).fill(0),
-      Array(pool.tokensList.length).fill(parseFixed('100000', 18).toString()),
-      jsonRpcUrl as string,
-      blockNumber // holds the same state as the static repository
-    );
-
-    // Updatate pool info with onchain state from fork block no
-    pool = await testPool.getPool();
+    pool = await testPoolHelper.getPool();
   });
 
-  it('should join using encoded data - all tokens have value', async () => {
-    const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
-    const amountsIn = tokensIn.map((_, i) =>
-      parseFixed((i * 100).toString(), 18).toString()
-    );
-    const slippage = '6';
-    const { to, data, minBPTOut, expectedBPTOut } = pool.buildJoin(
-      signerAddress,
-      tokensIn,
-      amountsIn,
-      slippage
-    );
-
-    const { transactionReceipt, balanceDeltas } =
-      await sendTransactionGetBalances(
-        pool.tokensList,
+  context('Integration Tests', async () => {
+    // We have to rest the fork between each test as pool value changes after tx is submitted
+    beforeEach(async () => {
+      // Setup forked network, set initial token balances and allowances
+      await forkSetup(
         signer,
-        signerAddress,
-        to,
-        data
+        pool.tokensList,
+        Array(pool.tokensList.length).fill(0),
+        Array(pool.tokensList.length).fill(parseFixed('100000', 18).toString()),
+        jsonRpcUrl as string,
+        blockNumber // holds the same state as the static repository
       );
 
-    expect(transactionReceipt.status).to.eq(1);
-    expect(BigInt(expectedBPTOut) > 0).to.be.true;
-    const expectedDeltas = insert(amountsIn, pool.bptIndex, expectedBPTOut);
-    expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
-    const expectedMinBpt = subSlippage(
-      BigNumber.from(expectedBPTOut),
-      BigNumber.from(slippage)
-    ).toString();
-    expect(expectedMinBpt).to.deep.eq(minBPTOut);
-  });
+      // Updatate pool info with onchain state from fork block no
+      pool = await testPoolHelper.getPool();
+    });
 
-  it('should join using encoded data - single token has value', async () => {
-    const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
-    const amountsIn = Array(tokensIn.length).fill('0');
-    amountsIn[0] = parseFixed('202', 18).toString();
-    const slippage = '6';
-    const { to, data, minBPTOut, expectedBPTOut } = pool.buildJoin(
-      signerAddress,
-      tokensIn,
-      amountsIn,
-      slippage
-    );
-
-    const { transactionReceipt, balanceDeltas } =
-      await sendTransactionGetBalances(
-        pool.tokensList,
-        signer,
-        signerAddress,
-        to,
-        data
+    it('should join - all tokens have value', async () => {
+      const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
+      const amountsIn = tokensIn.map((_, i) =>
+        parseFixed((i * 100).toString(), 18).toString()
       );
+      await testExactTokensIn(pool, signer, signerAddress, tokensIn, amountsIn);
+    });
 
-    expect(transactionReceipt.status).to.eq(1);
-    expect(BigInt(expectedBPTOut) > 0).to.be.true;
-    const expectedDeltas = insert(amountsIn, pool.bptIndex, expectedBPTOut);
-    expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
-    const expectedMinBpt = subSlippage(
-      BigNumber.from(expectedBPTOut),
-      BigNumber.from(slippage)
-    ).toString();
-    expect(expectedMinBpt).to.deep.eq(minBPTOut);
+    it('should join - single token has value', async () => {
+      const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
+      const amountsIn = Array(tokensIn.length).fill('0');
+      amountsIn[0] = parseFixed('202', 18).toString();
+      await testExactTokensIn(pool, signer, signerAddress, tokensIn, amountsIn);
+    });
   });
 
-  it('should return correct attributes for joining', async () => {
-    const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
-    const amountsIn = tokensIn.map((_, i) =>
-      parseFixed((i * 100).toString(), 18).toString()
-    );
-    const slippage = '6';
-    const { attributes, functionName } = pool.buildJoin(
-      signerAddress,
-      tokensIn,
-      amountsIn,
-      slippage
-    );
+  context('Unit Tests', () => {
+    it('should return correct attributes for joining', () => {
+      const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
+      const amountsIn = tokensIn.map((_, i) =>
+        parseFixed((i * 100).toString(), 18).toString()
+      );
+      testAttributes(pool, testPoolId, signerAddress, tokensIn, amountsIn);
+    });
 
-    expect(functionName).to.eq('joinPool');
-    expect(attributes.poolId).to.eq(testPoolId);
-    expect(attributes.recipient).to.eq(signerAddress);
-    expect(attributes.sender).to.eq(signerAddress);
-    expect(attributes.joinPoolRequest.assets).to.deep.eq(pool.tokensList);
-    expect(attributes.joinPoolRequest.fromInternalBalance).to.be.false;
-    expect(attributes.joinPoolRequest.maxAmountsIn).to.deep.eq(
-      insert(amountsIn, pool.bptIndex, '0')
-    );
-  });
-
-  it('should automatically sort tokens/amounts in correct order', async () => {
-    const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
-    const amountsIn = tokensIn.map((_, i) =>
-      parseFixed((i * 100).toString(), 18).toString()
-    );
-    const slippage = '6';
-    // TokensIn are already ordered as required by vault
-    const attributesA = pool.buildJoin(
-      signerAddress,
-      tokensIn,
-      amountsIn,
-      slippage
-    );
-    // TokensIn are not ordered as required by vault and will be sorted correctly
-    const attributesB = pool.buildJoin(
-      signerAddress,
-      tokensIn.reverse(),
-      amountsIn.reverse(),
-      slippage
-    );
-    expect(attributesA).to.deep.eq(attributesB);
+    it('should automatically sort tokens/amounts in correct order', () => {
+      const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
+      const amountsIn = tokensIn.map((_, i) =>
+        parseFixed((i * 100).toString(), 18).toString()
+      );
+      testSortingInputs(pool, signerAddress, tokensIn, amountsIn);
+    });
   });
 });
