@@ -138,6 +138,7 @@ export interface JoinPoolAttributes {
   value?: BigNumber;
   minBPTOut: string;
   expectedBPTOut: string;
+  priceImpact: string;
 }
 
 export interface JoinPoolParameters {
@@ -171,6 +172,7 @@ export interface ExitPoolAttributes {
  * @param data Encoded transaction data
  * @param expectedAmountsOut Expected amounts out of exit transaction
  * @param minAmountsOut Minimum amounts out of exit transaction considering slippage tolerance
+ * @param priceImpact Price impact of exit transaction
  */
 export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
   expectedAmountsOut: string[];
@@ -186,6 +188,7 @@ export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
  * @param data Encoded transaction data
  * @param expectedBPTIn Expected BPT into exit transaction
  * @param maxBPTIn Max BPT into exit transaction considering slippage tolerance
+ * @param priceImpact Price impact of exit transaction
  */
 export interface ExitExactTokensOutAttributes extends ExitPoolAttributes {
   expectedBPTIn: string;
