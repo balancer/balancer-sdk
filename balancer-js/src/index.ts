@@ -29,18 +29,8 @@ export {
   SwapOptions,
   PoolFilter,
   SwapV2,
-  queryBatchSwapTokensIn,
-  queryBatchSwapTokensOut,
-  phantomStableBPTForTokensZeroPriceImpact,
-  stableBPTForTokensZeroPriceImpact,
-  weightedBPTForTokensZeroPriceImpact,
+  stableBPTForTokensZeroPriceImpact, // TODO - Remove when fe ready
+  weightedBPTForTokensZeroPriceImpact, // TODO - Remove when fe ready
   SOR,
-  PoolDataService,
-  RouteProposer,
-  NewPath,
-  parseToPoolsDict,
-  PoolDictionary,
-  formatSequence,
-  getTokenAddressesForSwap,
 } from '@balancer-labs/sor';
 export { SimulationType } from './modules/simulation/simulation.module';
