@@ -351,7 +351,7 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
   /**
    * Calculate price impact of bptAmount against zero price impact BPT amount.
    * @param tokenAmounts Token amounts. Needs a value for each pool token.
-   * @param bptAmount BPT amount for comparison.
+   * @param bptAmount BPT amount for comparison (in EVM scale).
    * @param isJoin boolean indicating if the price impact is for a join or exit.
    * @returns price impact in EVM scale.
    */
