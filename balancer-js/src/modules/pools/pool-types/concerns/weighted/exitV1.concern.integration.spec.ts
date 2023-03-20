@@ -1,18 +1,13 @@
 // yarn test:only ./src/modules/pools/pool-types/concerns/weighted/exitV1.concern.integration.spec.ts
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@ethersproject/bignumber';
 import dotenv from 'dotenv';
-import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
-import { BalancerSDK, insert, Network, PoolWithMethods, replace } from '@/.';
+import { BalancerSDK, getPoolAddress, Network, PoolWithMethods } from '@/.';
 import { BPT_DECIMALS, BPT_SLOT } from '@/lib/constants/config';
-import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
-import {
-  forkSetup,
-  sendTransactionGetBalances,
-  TestPoolHelper,
-} from '@/test/lib/utils';
+import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
 import { AddressZero } from '@ethersproject/constants';
+import { testExactBptIn, testExactTokensOut } from '@/test/lib/exitHelper';
 
 dotenv.config();
 
@@ -25,86 +20,41 @@ const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 
 describe('Weighted Pool - Exit Integration Test', async () => {
-  let signerAddress: string;
   let pool: PoolWithMethods;
-  const initialBalance = '100000';
   // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
   const blockNumber = 13309758;
   const testPoolId =
     '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019';
   // Setup chain
   context('exit pool functions', async () => {
-    beforeEach(async function () {
+    beforeEach(async () => {
+      // Setup forked network, set initial token balances and allowances
       await forkSetup(
         signer,
-        [testPoolId.slice(0, 42)],
+        [getPoolAddress(testPoolId)],
         [BPT_SLOT],
-        [parseFixed(initialBalance, 18).toString()],
+        [parseFixed('100000', BPT_DECIMALS).toString()],
         jsonRpcUrl as string,
         blockNumber
       );
-      const testPool = new TestPoolHelper(
+      // Updatate pool info with onchain state from fork block no
+      const testPoolHelper = new TestPoolHelper(
         testPoolId,
         network,
         rpcUrl,
         blockNumber
       );
-      //updated pool, getting the pool info from the reseted fork with forkSetup
-      pool = await testPool.getPool();
-      signerAddress = await signer.getAddress();
+      pool = await testPoolHelper.getPool();
     });
     context('buildExitExactBPTIn', async () => {
-      it('should work with single token maxed out', async () => {
-        const bptIn = parseFixed('10', BPT_DECIMALS).toString();
-        const slippage = '0';
-        const { to, data, minAmountsOut, expectedAmountsOut } =
-          pool.buildExitExactBPTIn(
-            signerAddress,
-            bptIn,
-            slippage,
-            false,
-            pool.tokensList[0]
-          );
-        const { transactionReceipt, balanceDeltas } =
-          await sendTransactionGetBalances(
-            [pool.address, ...pool.tokensList],
-            signer,
-            signerAddress,
-            to,
-            data
-          );
-        expect(transactionReceipt.status).to.eq(1);
-        const expectedDeltas = insert(expectedAmountsOut, 0, bptIn);
-        expect(expectedDeltas).to.deep.eq(
-          balanceDeltas.map((a) => a.toString())
-        );
-        const expectedMins = expectedAmountsOut.map((a) =>
-          subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
-        );
-        expect(expectedMins).to.deep.eq(minAmountsOut);
+      it('single token max out', async () => {
+        const bptIn = parseFixed('10', 18).toString();
+        const tokenOut = pool.tokensList[0];
+        await testExactBptIn(pool, signer, bptIn, tokenOut);
       });
-      it('should work with proportional amounts out', async () => {
-        const bptIn = parseFixed('10', BPT_DECIMALS).toString();
-        const slippage = '0';
-        const { to, data, minAmountsOut, expectedAmountsOut } =
-          pool.buildExitExactBPTIn(signerAddress, bptIn, slippage);
-        const { transactionReceipt, balanceDeltas } =
-          await sendTransactionGetBalances(
-            [pool.address, ...pool.tokensList],
-            signer,
-            signerAddress,
-            to,
-            data
-          );
-        expect(transactionReceipt.status).to.eq(1);
-        const expectedDeltas = insert(expectedAmountsOut, 0, bptIn);
-        expect(expectedDeltas).to.deep.eq(
-          balanceDeltas.map((a) => a.toString())
-        );
-        const expectedMins = expectedAmountsOut.map((a) =>
-          subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
-        );
-        expect(expectedMins).to.deep.eq(minAmountsOut);
+      it('proportional exit', async () => {
+        const bptIn = parseFixed('10', 18).toString();
+        await testExactBptIn(pool, signer, bptIn);
       });
     });
 
@@ -112,69 +62,15 @@ describe('Weighted Pool - Exit Integration Test', async () => {
       it('all tokens with value', async () => {
         const tokensOut = pool.tokensList;
         const amountsOut = pool.tokens.map((t, i) =>
-          parseFixed((i * 100).toString(), t.decimals).toString()
+          parseFixed(((i + 1) * 10).toString(), t.decimals).toString()
         );
-        const slippage = '0';
-        const { to, data, maxBPTIn, expectedBPTIn } =
-          pool.buildExitExactTokensOut(
-            signerAddress,
-            tokensOut,
-            amountsOut,
-            slippage
-          );
-        const { transactionReceipt, balanceDeltas } =
-          await sendTransactionGetBalances(
-            [pool.address, ...pool.tokensList],
-            signer,
-            signerAddress,
-            to,
-            data
-          );
-        expect(transactionReceipt.status).to.eq(1);
-        const expectedDeltas = insert(amountsOut, 0, expectedBPTIn);
-        expect(expectedDeltas).to.deep.eq(
-          balanceDeltas.map((a) => a.toString())
-        );
-        const expectedMaxBpt = addSlippage(
-          BigNumber.from(expectedBPTIn),
-          BigNumber.from(slippage)
-        ).toString();
-        expect(expectedMaxBpt).to.deep.eq(maxBPTIn);
+        await testExactTokensOut(pool, signer, tokensOut, amountsOut);
       });
       it('single token with value', async () => {
         const tokensOut = pool.tokensList;
-        const amountsOut = pool.tokens.map((t, i) => {
-          if (i === 0) {
-            return parseFixed('100', t.decimals).toString();
-          }
-          return '0';
-        });
-        const slippage = '0';
-        const { to, data, maxBPTIn, expectedBPTIn } =
-          pool.buildExitExactTokensOut(
-            signerAddress,
-            tokensOut,
-            amountsOut,
-            slippage
-          );
-        const { transactionReceipt, balanceDeltas } =
-          await sendTransactionGetBalances(
-            [pool.address, ...pool.tokensList],
-            signer,
-            signerAddress,
-            to,
-            data
-          );
-        expect(transactionReceipt.status).to.eq(1);
-        const expectedDeltas = insert(amountsOut, 0, expectedBPTIn);
-        expect(expectedDeltas).to.deep.eq(
-          balanceDeltas.map((a) => a.toString())
-        );
-        const expectedMaxBpt = addSlippage(
-          BigNumber.from(expectedBPTIn),
-          BigNumber.from(slippage)
-        ).toString();
-        expect(expectedMaxBpt).to.deep.eq(maxBPTIn);
+        const amountsOut = Array(tokensOut.length).fill('0');
+        amountsOut[0] = parseFixed('10', pool.tokens[0].decimals).toString();
+        await testExactTokensOut(pool, signer, tokensOut, amountsOut);
       });
       it('exit with ETH', async () => {
         const tokensOut = pool.tokensList.map((token) =>
@@ -186,44 +82,7 @@ describe('Weighted Pool - Exit Integration Test', async () => {
         const ethIndex = tokensOut.indexOf(AddressZero);
         const amountsOut = Array(tokensOut.length).fill('0');
         amountsOut[ethIndex] = parseFixed('1', 18).toString();
-        const slippage = '0';
-        const { to, data, maxBPTIn, expectedBPTIn } =
-          pool.buildExitExactTokensOut(
-            signerAddress,
-            tokensOut,
-            amountsOut,
-            slippage
-          );
-        const { transactionReceipt, balanceDeltas, gasUsed } =
-          await sendTransactionGetBalances(
-            [pool.address, ...tokensOut],
-            signer,
-            signerAddress,
-            to,
-            data
-          );
-        expect(transactionReceipt.status).to.eq(1);
-        const ethAmountOutWithGasUsed = BigNumber.from(amountsOut[ethIndex])
-          .sub(gasUsed)
-          .toString();
-        const expectedBalanceDeltasWithGasUsed = replace(
-          amountsOut,
-          ethIndex,
-          ethAmountOutWithGasUsed
-        );
-        const expectedDeltas = insert(
-          expectedBalanceDeltasWithGasUsed,
-          0,
-          expectedBPTIn
-        );
-        expect(expectedDeltas).to.deep.eq(
-          balanceDeltas.map((a) => a.toString())
-        );
-        const expectedMaxBpt = addSlippage(
-          BigNumber.from(expectedBPTIn),
-          BigNumber.from(slippage)
-        ).toString();
-        expect(expectedMaxBpt).to.deep.eq(maxBPTIn);
+        await testExactTokensOut(pool, signer, tokensOut, amountsOut);
       });
     });
   });

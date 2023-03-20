@@ -7,20 +7,52 @@ export interface LiquidityConcern {
 }
 
 export interface SpotPriceConcern {
+  /**
+   * Calculate spot price for swapping tokenIn with tokenOut
+   * @param tokenIn Token address
+   * @param tokenOut Token address
+   * @param pool Pool where swap is being made
+   * @returns spot price for swapping tokenIn with tokenOut in EVM scale
+   */
   calcPoolSpotPrice: (tokenIn: string, tokenOut: string, pool: Pool) => string;
 }
 
 export interface PriceImpactConcern {
+  /**
+   * Calculate BPT return amount when investing with no price impact.
+   * @param pool Investment pool.
+   * @param tokenAmounts Token amounts being invested. Needs a value for each pool token.
+   * @returns BPT amount.
+   */
   bptZeroPriceImpact: (pool: Pool, tokenAmounts: bigint[]) => bigint;
+
+  /**
+   * Calculate price impact of bptAmount against zero price impact BPT amount.
+   * @param pool Investment pool.
+   * @param tokenAmounts Token amounts. Needs a value for each pool token.
+   * @param bptAmount BPT amount for comparison.
+   * @param isJoin boolean indicating if the price impact is for a join or exit.
+   * @returns price impact in EVM scale.
+   */
   calcPriceImpact: (
     pool: Pool,
-    tokenAmounts: string[],
-    bptAmount: string,
+    tokenAmounts: bigint[],
+    bptAmount: bigint,
     isJoin: boolean
   ) => string;
 }
 
 export interface JoinConcern {
+  /**
+   * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
+   * @param joiner Account address joining pool
+   * @param pool Subgraph pool object of pool being joined
+   * @param tokensIn Token addresses provided for joining pool (same length and order as amountsIn)
+   * @param amountsIn Token amounts provided for joining pool in EVM scale
+   * @param slippage Maximum slippage tolerance in bps i.e. 50 = 0.5%
+   * @param wrappedNativeAsset Address of wrapped native asset for specific network config. Required for joining with native asset.
+   * @returns transaction request ready to send with signer.sendTransaction
+   */
   buildJoin: ({
     joiner,
     pool,
@@ -36,11 +68,11 @@ export interface ExitConcern {
    * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
    * @param exiter Account address exiting pool
    * @param pool Pool being exited
-   * @param bptIn BPT provided for exiting pool
-   * @param slippage Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @param bptIn BPT provided for exiting pool in EVM scale
+   * @param slippage Maximum slippage tolerance in bps. i.e. 50 = 5%
    * @param shouldUnwrapNativeAsset Indicates whether wrapped native asset should be unwrapped after exit.
    * @param wrappedNativeAsset Wrapped native asset address for network being used. Required for exiting with native asset.
-   * @param singleTokenMaxOut Optional: token address that if provided will exit to given token
+   * @param singleTokenOut Optional: token address that if provided will exit to given token
    * @returns transaction request ready to send with signer.sendTransaction
    */
   buildExitExactBPTIn?: ({
@@ -50,16 +82,16 @@ export interface ExitConcern {
     slippage,
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
-    singleTokenMaxOut,
+    singleTokenOut,
   }: ExitExactBPTInParameters) => ExitExactBPTInAttributes;
 
   /**
    * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
    * @param exiter Account address exiting pool
    * @param pool Pool being exited
-   * @param tokensOut Tokens provided for exiting pool
-   * @param amountsOut Amounts provided for exiting pool
-   * @param slippage Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
+   * @param tokensOut Tokens provided for exiting pool (same length and order as amountsOut)
+   * @param amountsOut Amounts provided for exiting pool in EVM scale
+   * @param slippage Maximum slippage tolerance in bps. i.e. 50 = 5%
    * @param wrappedNativeAsset Wrapped native asset address for network being used. Required for exiting with native asset.
    * @returns transaction request ready to send with signer.sendTransaction
    */
@@ -71,6 +103,24 @@ export interface ExitConcern {
     slippage,
     wrappedNativeAsset,
   }: ExitExactTokensOutParameters) => ExitExactTokensOutAttributes;
+
+  /**
+   * Build recovery exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
+   * @param exiter Account address exiting pool
+   * @param pool Pool being exited
+   * @param bptIn BPT provided for exiting pool
+   * @param slippage Maximum slippage tolerance in basis points. i.e. 50 = 5%
+   * @returns transaction request ready to send with signer.sendTransaction
+   */
+  buildRecoveryExit: ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+  }: Pick<
+    ExitExactBPTInParameters,
+    'exiter' | 'pool' | 'bptIn' | 'slippage'
+  >) => ExitExactBPTInAttributes;
 }
 
 export interface JoinPool {
@@ -125,6 +175,7 @@ export interface ExitPoolAttributes {
 export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
   expectedAmountsOut: string[];
   minAmountsOut: string[];
+  priceImpact: string;
 }
 
 /**
@@ -139,6 +190,7 @@ export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
 export interface ExitExactTokensOutAttributes extends ExitPoolAttributes {
   expectedBPTIn: string;
   maxBPTIn: string;
+  priceImpact: string;
 }
 
 export interface ExitExactBPTInParameters {
@@ -148,7 +200,7 @@ export interface ExitExactBPTInParameters {
   slippage: string;
   shouldUnwrapNativeAsset: boolean;
   wrappedNativeAsset: string;
-  singleTokenMaxOut?: string;
+  singleTokenOut?: string;
 }
 
 export interface ExitExactBPTInSingleTokenOutParameters {
@@ -158,7 +210,7 @@ export interface ExitExactBPTInSingleTokenOutParameters {
   slippage: string;
   shouldUnwrapNativeAsset: boolean;
   wrappedNativeAsset: string;
-  singleTokenMaxOut: string;
+  singleTokenOut: string;
 }
 
 export interface ExitExactTokensOutParameters {

@@ -104,7 +104,6 @@ async function join() {
     contracts.vault
   );
 
-  const wrapLeafTokens = false;
   const slippage = '100'; // 100 bps = 1%
 
   // Here we join with DAI, but we could join with any other token or combination of tokens
@@ -117,7 +116,6 @@ async function join() {
     tokensIn,
     amountsIn,
     signerAddress,
-    wrapLeafTokens,
     slippage,
     signer,
     SimulationType.VaultModel,

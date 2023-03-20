@@ -27,7 +27,7 @@ const testPoolId =
 let signerAddress: string;
 let pool: PoolWithMethods;
 
-// TODO Add these tests back once Protocol Fees are handled
+// TODO Add these tests back once Protocol Fees are handled - check V1 and V2 tests to be used as reference
 describe.skip('ComposableStableV3 Exits', () => {
   // We have to rest the fork between each test as pool value changes after tx is submitted
   beforeEach(async () => {

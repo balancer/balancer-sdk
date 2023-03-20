@@ -94,7 +94,6 @@ async function join() {
 
   const signer = provider.getSigner();
   const signerAddress = await signer.getAddress();
-  const wrapLeafTokens = false;
   const slippage = '100'; // 100 bps = 1%
   const bbausd2 = {
     id: addresses.bbausd2?.id as string,
@@ -151,7 +150,6 @@ async function join() {
     tokensIn,
     amountsIn,
     signerAddress,
-    wrapLeafTokens,
     slippage,
     signer,
     SimulationType.VaultModel
@@ -178,7 +176,6 @@ async function join() {
     tokensIn,
     amountsIn,
     signerAddress,
-    wrapLeafTokens,
     slippage,
     signer,
     SimulationType.Static,

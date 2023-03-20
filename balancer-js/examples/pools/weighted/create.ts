@@ -1,11 +1,8 @@
-import {
-  Log,
-  TransactionReceipt,
-} from '@ethersproject/providers';
-import { isSameAddress, PoolType } from 'src';
+import { Log, TransactionReceipt } from '@ethersproject/providers';
 import { Interface, LogDescription } from '@ethersproject/abi';
-import { forkSetup } from "@/test/lib/utils";
-import { WeightedPoolFactory__factory } from "@balancer-labs/typechain";
+import { forkSetup } from '@/test/lib/utils';
+import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
+import { isSameAddress, PoolType } from 'src';
 import {
   alchemyRpcUrl,
   blockNumber,
@@ -15,12 +12,25 @@ import {
   tokenAddresses,
   weights,
   swapFee,
-  owner, slots, balances, balancer, signer, provider
-} from "./example-config";
+  owner,
+  slots,
+  balances,
+  balancer,
+  signer,
+  provider,
+} from './example-config';
 
 async function createWeightedPool() {
   const weightedPoolFactory = balancer.pools.poolFactory.of(PoolType.Weighted);
-  await forkSetup(signer, tokenAddresses, slots, balances, alchemyRpcUrl, blockNumber, false);
+  await forkSetup(
+    signer,
+    tokenAddresses,
+    slots,
+    balances,
+    alchemyRpcUrl,
+    blockNumber,
+    false
+  );
   const { to, data } = weightedPoolFactory.create({
     factoryAddress,
     name,
@@ -55,7 +65,7 @@ async function createWeightedPool() {
     })
     .find((parsedLog) => parsedLog?.name === 'PoolCreated');
   if (!poolCreationEvent) return console.error("There's no event");
-  console.log("poolAddress: " + poolCreationEvent.args.pool);
+  console.log('poolAddress: ' + poolCreationEvent.args.pool);
   return poolCreationEvent.args.pool;
 }
 

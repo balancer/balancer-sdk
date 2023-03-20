@@ -11,7 +11,7 @@ import {
   ExitPoolAttributes,
 } from '../types';
 import { AssetHelpers, isSameAddress, parsePoolInfo } from '@/lib/utils';
-import { Vault__factory } from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { balancerVault } from '@/lib/constants/config';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
@@ -22,18 +22,20 @@ import {
   _upscaleArray,
 } from '@/lib/utils/solidityMaths';
 import { Pool } from '@/types';
+import { BasePoolEncoder } from '@/pool-base';
+import { StablePoolPriceImpact } from '../stable/priceImpact.concern';
 
 interface SortedValues {
-  parsedTokens: string[];
-  parsedAmp?: string;
-  parsedTotalShares: string;
-  parsedSwapFee: string;
-  upScaledBalances: string[];
+  poolTokens: string[];
+  ampWithPrecision: bigint;
+  totalSharesEvm: bigint;
+  swapFeeEvm: bigint;
+  upScaledBalances: bigint[];
 }
 
 type ExactBPTInSortedValues = SortedValues & {
   scalingFactors: bigint[];
-  singleTokenMaxOutIndex: number;
+  singleTokenOutIndex: number;
 };
 
 type ExactTokensOutSortedValues = SortedValues & {
@@ -50,7 +52,7 @@ type SortValuesParams = {
 };
 
 type SortValuesExactBptInParams = SortValuesParams & {
-  singleTokenMaxOut?: string;
+  singleTokenOut?: string;
 };
 
 type SortValuesExactTokensOutParams = SortValuesParams & {
@@ -66,17 +68,6 @@ type EncodeExitParams = Pick<ExitExactBPTInParameters, 'exiter'> & {
 };
 
 export class StablePoolExit implements ExitConcern {
-  /**
-   * Builds an exit transaction for a stable pool given the exact BPT In
-   * @param exiter Address of the exiter of the pool
-   * @param pool Pool to be exited
-   * @param bptIn quantity of bpt inserted
-   * @param slippage Maximum slippage tolerance in bps i.e. 10000 = 100%, 1 = 0.01%
-   * @param shouldUnwrapNativeAsset Set true if the weth should be unwrapped to Eth
-   * @param wrappedNativeAsset Address of wrapped native asset for specific network config
-   * @param singleTokenMaxOut The address of the token that will be singled withdrawn in the exit transaction,
-   *                          if not passed, the transaction will do a proportional exit where available
-   */
   buildExitExactBPTIn = ({
     exiter,
     pool,
@@ -84,11 +75,11 @@ export class StablePoolExit implements ExitConcern {
     slippage,
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
-    singleTokenMaxOut,
+    singleTokenOut,
   }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
     this.checkInputsExactBPTIn({
       bptIn,
-      singleTokenMaxOut,
+      singleTokenOut,
       pool,
       shouldUnwrapNativeAsset,
     });
@@ -96,10 +87,10 @@ export class StablePoolExit implements ExitConcern {
       pool,
       wrappedNativeAsset,
       shouldUnwrapNativeAsset,
-      singleTokenMaxOut,
+      singleTokenOut,
     });
     const { minAmountsOut, expectedAmountsOut } =
-      sortedValues.singleTokenMaxOutIndex >= 0
+      sortedValues.singleTokenOutIndex >= 0
         ? this.calcTokenOutGivenExactBptIn({
             ...sortedValues,
             bptIn,
@@ -112,25 +103,34 @@ export class StablePoolExit implements ExitConcern {
           });
 
     const userData =
-      sortedValues.singleTokenMaxOutIndex >= 0
+      sortedValues.singleTokenOutIndex >= 0
         ? StablePoolEncoder.exitExactBPTInForOneTokenOut(
             bptIn,
-            sortedValues.singleTokenMaxOutIndex
+            sortedValues.singleTokenOutIndex
           )
         : StablePoolEncoder.exitExactBPTInForTokensOut(bptIn);
 
     const encodedData = this.encodeExitPool({
-      poolTokens: sortedValues.parsedTokens,
+      poolTokens: sortedValues.poolTokens,
       poolId: pool.id,
       exiter,
       minAmountsOut,
       userData,
     });
 
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
     return {
       ...encodedData,
       expectedAmountsOut,
       minAmountsOut,
+      priceImpact,
     };
   };
 
@@ -155,7 +155,7 @@ export class StablePoolExit implements ExitConcern {
       slippage,
     });
 
-    const { downScaledAmountsOut, parsedTokens } = sortedValues;
+    const { downScaledAmountsOut, poolTokens } = sortedValues;
     const userData = StablePoolEncoder.exitBPTInForExactTokensOut(
       downScaledAmountsOut,
       maxBPTIn
@@ -163,49 +163,109 @@ export class StablePoolExit implements ExitConcern {
     const encodedData = this.encodeExitPool({
       poolId: pool.id,
       userData,
-      poolTokens: parsedTokens,
+      poolTokens,
       minAmountsOut: downScaledAmountsOut,
       exiter,
     });
+
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      downScaledAmountsOut.map(BigInt),
+      BigInt(expectedBPTIn),
+      false
+    );
 
     return {
       ...encodedData,
       expectedBPTIn,
       maxBPTIn,
+      priceImpact,
     };
   };
+
+  buildRecoveryExit = ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+  }: Pick<
+    ExitExactBPTInParameters,
+    'exiter' | 'pool' | 'bptIn' | 'slippage'
+  >): ExitExactBPTInAttributes => {
+    this.checkInputsExactBPTIn({
+      bptIn,
+      singleTokenOut: undefined,
+      pool,
+      shouldUnwrapNativeAsset: false,
+    });
+    const sortedValues = parsePoolInfo(pool);
+    const { minAmountsOut, expectedAmountsOut } =
+      this.calcTokensOutGivenExactBptIn({
+        ...sortedValues,
+        singleTokenOutIndex: -1,
+        bptIn,
+        slippage,
+      });
+
+    const userData = BasePoolEncoder.recoveryModeExit(bptIn);
+
+    const encodedData = this.encodeExitPool({
+      poolTokens: sortedValues.poolTokens,
+      poolId: pool.id,
+      exiter,
+      minAmountsOut,
+      userData,
+    });
+
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
+    return {
+      ...encodedData,
+      expectedAmountsOut,
+      minAmountsOut,
+      priceImpact,
+    };
+  };
+
   /**
    *  Checks if the input of buildExitExactBPTIn is valid
    * @param bptIn Bpt inserted in the transaction
-   * @param singleTokenMaxOut (optional) the address of the single token that will be withdrawn, if null|undefined, all tokens will be withdrawn proportionally.
+   * @param singleTokenOut (optional) the address of the single token that will be withdrawn, if null|undefined, all tokens will be withdrawn proportionally.
    * @param pool the pool that is being exited
    * @param shouldUnwrapNativeAsset Set true if the weth should be unwrapped to Eth
    */
   checkInputsExactBPTIn = ({
     bptIn,
-    singleTokenMaxOut,
+    singleTokenOut,
     pool,
     shouldUnwrapNativeAsset,
   }: Pick<
     ExitExactBPTInParameters,
-    'bptIn' | 'singleTokenMaxOut' | 'pool' | 'shouldUnwrapNativeAsset'
+    'bptIn' | 'singleTokenOut' | 'pool' | 'shouldUnwrapNativeAsset'
   >): void => {
     if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
       throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
     }
     if (
-      singleTokenMaxOut &&
-      singleTokenMaxOut !== AddressZero &&
+      singleTokenOut &&
+      singleTokenOut !== AddressZero &&
       !pool.tokens
         .map((t) => t.address)
-        .some((a) => isSameAddress(a, singleTokenMaxOut))
+        .some((a) => isSameAddress(a, singleTokenOut))
     ) {
       throw new BalancerError(BalancerErrorCode.TOKEN_MISMATCH);
     }
 
-    if (!shouldUnwrapNativeAsset && singleTokenMaxOut === AddressZero)
+    if (!shouldUnwrapNativeAsset && singleTokenOut === AddressZero)
       throw new Error(
-        'shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values'
+        'shouldUnwrapNativeAsset and singleTokenOut should not have conflicting values'
       );
 
     // Check if there's any relevant stable pool info missing
@@ -239,7 +299,7 @@ export class StablePoolExit implements ExitConcern {
     pool,
     wrappedNativeAsset,
     shouldUnwrapNativeAsset,
-    singleTokenMaxOut,
+    singleTokenOut,
   }: SortValuesExactBptInParams): ExactBPTInSortedValues => {
     const parsedPoolInfo = parsePoolInfo(
       pool,
@@ -247,14 +307,14 @@ export class StablePoolExit implements ExitConcern {
       shouldUnwrapNativeAsset
     );
     // Parse pool info into EVM amounts in order to match amountsIn scalling
-    const { parsedTokens } = parsedPoolInfo;
-    let singleTokenMaxOutIndex = -1;
-    if (singleTokenMaxOut) {
-      singleTokenMaxOutIndex = parsedTokens.indexOf(singleTokenMaxOut);
+    const { poolTokens } = parsedPoolInfo;
+    let singleTokenOutIndex = -1;
+    if (singleTokenOut) {
+      singleTokenOutIndex = poolTokens.indexOf(singleTokenOut);
     }
     return {
       ...parsedPoolInfo,
-      singleTokenMaxOutIndex,
+      singleTokenOutIndex,
     };
   };
   sortValuesExitExactTokensOut = ({
@@ -292,23 +352,23 @@ export class StablePoolExit implements ExitConcern {
     };
   };
   calcTokenOutGivenExactBptIn = ({
-    parsedTokens,
-    parsedAmp,
+    poolTokens,
+    ampWithPrecision,
     upScaledBalances,
-    parsedTotalShares,
-    parsedSwapFee,
-    singleTokenMaxOutIndex,
+    totalSharesEvm,
+    swapFeeEvm,
+    singleTokenOutIndex,
     bptIn,
     slippage,
     scalingFactors,
   }: Pick<
     ExactBPTInSortedValues,
-    | 'parsedTokens'
-    | 'parsedAmp'
+    | 'poolTokens'
+    | 'ampWithPrecision'
     | 'upScaledBalances'
-    | 'parsedTotalShares'
-    | 'parsedSwapFee'
-    | 'singleTokenMaxOutIndex'
+    | 'totalSharesEvm'
+    | 'swapFeeEvm'
+    | 'singleTokenOutIndex'
     | 'scalingFactors'
   > &
     Pick<ExitExactBPTInParameters, 'bptIn' | 'slippage'>): {
@@ -317,25 +377,25 @@ export class StablePoolExit implements ExitConcern {
   } => {
     // Calculate amount out given BPT in
     const amountOut = SOR.StableMathBigInt._calcTokenOutGivenExactBptIn(
-      BigInt(parsedAmp as string),
-      upScaledBalances.map((b) => BigInt(b)),
-      singleTokenMaxOutIndex,
+      ampWithPrecision,
+      upScaledBalances,
+      singleTokenOutIndex,
       BigInt(bptIn),
-      BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      totalSharesEvm,
+      swapFeeEvm
     ).toString();
 
     const downscaledAmountOut = _downscaleDown(
       BigInt(amountOut) - BigInt(1), // The -1 is to solve rounding errors, sometimes the amount comes 1 point lower than expected
-      scalingFactors[singleTokenMaxOutIndex]
+      scalingFactors[singleTokenOutIndex]
     ).toString();
 
-    const expectedAmountsOut = Array(parsedTokens.length).fill('0');
-    const minAmountsOut = Array(parsedTokens.length).fill('0');
+    const expectedAmountsOut = Array(poolTokens.length).fill('0');
+    const minAmountsOut = Array(poolTokens.length).fill('0');
 
-    expectedAmountsOut[singleTokenMaxOutIndex] = downscaledAmountOut;
+    expectedAmountsOut[singleTokenOutIndex] = downscaledAmountOut;
     // Apply slippage tolerance
-    minAmountsOut[singleTokenMaxOutIndex] = subSlippage(
+    minAmountsOut[singleTokenOutIndex] = subSlippage(
       BigNumber.from(downscaledAmountOut),
       BigNumber.from(slippage)
     ).toString();
@@ -345,25 +405,25 @@ export class StablePoolExit implements ExitConcern {
 
   calcTokensOutGivenExactBptIn = ({
     upScaledBalances,
-    parsedTotalShares,
+    totalSharesEvm,
     scalingFactors,
     bptIn,
     slippage,
   }: Pick<
     ExactBPTInSortedValues,
     | 'upScaledBalances'
-    | 'parsedTotalShares'
+    | 'totalSharesEvm'
     | 'scalingFactors'
-    | 'singleTokenMaxOutIndex'
+    | 'singleTokenOutIndex'
   > &
     Pick<ExitExactBPTInParameters, 'bptIn' | 'slippage'>): {
     minAmountsOut: string[];
     expectedAmountsOut: string[];
   } => {
     const amountsOut = SOR.StableMathBigInt._calcTokensOutGivenExactBptIn(
-      upScaledBalances.map((b) => BigInt(b)),
+      upScaledBalances,
       BigInt(bptIn),
-      BigInt(parsedTotalShares)
+      totalSharesEvm
     ).map((amount) => amount.toString());
     // Maths return numbers scaled to 18 decimals. Must scale down to token decimals.
     const amountsOutScaledDown = _downscaleDownArray(
@@ -385,11 +445,11 @@ export class StablePoolExit implements ExitConcern {
     return { minAmountsOut, expectedAmountsOut };
   };
   calcBptInGivenExactTokensOut = ({
-    parsedAmp,
+    ampWithPrecision,
     upScaledBalances,
     upScaledAmountsOut,
-    parsedTotalShares,
-    parsedSwapFee,
+    totalSharesEvm,
+    swapFeeEvm,
     slippage,
   }: CalcBptInGivenExactTokensOutParams): {
     maxBPTIn: string;
@@ -397,11 +457,11 @@ export class StablePoolExit implements ExitConcern {
   } => {
     // Calculate expected BPT in given tokens out
     const bptIn = SOR.StableMathBigInt._calcBptInGivenExactTokensOut(
-      BigInt(parsedAmp as string),
-      upScaledBalances.map((b) => BigInt(b)),
+      ampWithPrecision,
+      upScaledBalances,
       upScaledAmountsOut,
-      BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      totalSharesEvm,
+      swapFeeEvm
     ).toString();
 
     // Apply slippage tolerance

@@ -138,7 +138,6 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param tokens          Token addresses
    * @param amounts         Token amounts in EVM scale
    * @param userAddress     User address
-   * @param wrapMainTokens  Indicates whether main tokens should be wrapped before being used
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
    * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
    * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
@@ -150,7 +149,6 @@ export class Pools implements Findable<PoolWithMethods> {
     tokens: string[],
     amounts: string[],
     userAddress: string,
-    wrapMainTokens: boolean,
     slippage: string,
     signer: JsonRpcSigner,
     simulationType: SimulationType,
@@ -167,7 +165,6 @@ export class Pools implements Findable<PoolWithMethods> {
       tokens,
       amounts,
       userAddress,
-      wrapMainTokens,
       slippage,
       signer,
       simulationType,
@@ -260,14 +257,14 @@ export class Pools implements Findable<PoolWithMethods> {
           });
         },
         calcPriceImpact: async (
-          amountsIn: string[],
-          minBPTOut: string,
+          tokenAmounts: string[],
+          bptAmount: string,
           isJoin: boolean
         ) =>
           concerns.priceImpactCalculator.calcPriceImpact(
             pool,
-            amountsIn,
-            minBPTOut,
+            tokenAmounts.map(BigInt),
+            BigInt(bptAmount),
             isJoin
           ),
         buildExitExactBPTIn: (
@@ -275,7 +272,7 @@ export class Pools implements Findable<PoolWithMethods> {
           bptIn: string,
           slippage: string,
           shouldUnwrapNativeAsset = false,
-          singleTokenMaxOut?: string
+          singleTokenOut?: string
         ) => {
           if (concerns.exit.buildExitExactBPTIn) {
             return concerns.exit.buildExitExactBPTIn({
@@ -285,7 +282,7 @@ export class Pools implements Findable<PoolWithMethods> {
               slippage,
               shouldUnwrapNativeAsset,
               wrappedNativeAsset,
-              singleTokenMaxOut,
+              singleTokenOut,
             });
           } else {
             throw 'ExitExactBPTIn not supported';
@@ -305,6 +302,14 @@ export class Pools implements Findable<PoolWithMethods> {
             slippage,
             wrappedNativeAsset,
           }),
+        buildRecoveryExit: (exiter: string, bptIn: string, slippage: string) =>
+          concerns.exit.buildRecoveryExit({
+            exiter,
+            pool,
+            bptIn,
+            slippage,
+          }),
+
         // TODO: spotPrice fails, because it needs a subgraphType,
         // either we refetch or it needs a type transformation from SDK internal to SOR (subgraph)
         // spotPrice: async (tokenIn: string, tokenOut: string) =>
@@ -336,6 +341,7 @@ export class Pools implements Findable<PoolWithMethods> {
           'buildExitExactTokensOut'
         ),
         calcSpotPrice: notImplemented(pool.poolType, 'calcSpotPrice'),
+        buildRecoveryExit: notImplemented(pool.poolType, 'buildRecoveryExit'),
       };
     }
 

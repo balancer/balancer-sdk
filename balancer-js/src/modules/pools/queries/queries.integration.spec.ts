@@ -62,7 +62,7 @@ describe('join and exit queries', () => {
         const params = queryParams.buildQueryJoinExactIn({
           maxAmountsIn,
         });
-        const join = await balancerHelpers.queryJoin(...params);
+        const join = await balancerHelpers.callStatic.queryJoin(...params);
         expect(Number(join.bptOut)).to.be.gt(0);
       });
 
@@ -71,7 +71,7 @@ describe('join and exit queries', () => {
           bptOut: bn(1),
           tokenIn: pool.tokensList[0],
         });
-        const join = await balancerHelpers.queryJoin(...params);
+        const join = await balancerHelpers.callStatic.queryJoin(...params);
         expect(Number(join.amountsIn[0])).to.be.gt(0);
         expect(Number(join.amountsIn[1])).to.eq(0);
       });
@@ -81,7 +81,7 @@ describe('join and exit queries', () => {
           bptIn: bn(10),
           tokenOut: pool.tokensList[0],
         });
-        const exit = await balancerHelpers.queryExit(...params);
+        const exit = await balancerHelpers.callStatic.queryExit(...params);
         expect(Number(exit.amountsOut[0])).to.be.gt(0);
         expect(Number(exit.amountsOut[1])).to.eq(0);
       });
@@ -93,7 +93,7 @@ describe('join and exit queries', () => {
         const params = queryParams.buildQueryExitProportionally({
           bptIn: bn(10),
         });
-        const exit = await balancerHelpers.queryExit(...params);
+        const exit = await balancerHelpers.callStatic.queryExit(...params);
         expect(Number(exit.amountsOut[0])).to.be.gt(0);
         expect(Number(exit.amountsOut[1])).to.be.gt(0);
       });
@@ -104,7 +104,7 @@ describe('join and exit queries', () => {
         const params = queryParams.buildQueryExitExactOut({
           minAmountsOut,
         });
-        const exit = await balancerHelpers.queryExit(...params);
+        const exit = await balancerHelpers.callStatic.queryExit(...params);
         expect(Number(exit.amountsOut[0])).to.be.gt(0);
         expect(Number(exit.amountsOut[1])).to.be.gt(0);
       });
