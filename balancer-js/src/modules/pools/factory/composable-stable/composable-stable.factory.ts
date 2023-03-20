@@ -47,19 +47,18 @@ export class ComposableStableFactory implements PoolFactory {
     this.contracts = contracts;
   }
 
-  /***
-   * @param params
-   *  * Builds a transaction for a composable pool create operation.
-   *  * @param name The name of the pool
-   *  * @param symbol The symbol of the pool
-   *  * @param swapFeeEvm The swapFee for the owner of the pool in string format parsed to evm(100% is 1e18, 10% is 1e17, 1% is 1e16)
-   *  * @param tokenAddresses The token's addresses
-   *  * @param rateProviders The addresses of the rate providers for each token, ordered
-   *  * @param tokenRateCacheDurations the Token Rate Cache Duration of each token
-   *  * @param owner The address of the owner of the pool
-   *  * @param amplificationParameter The amplification parameter(must be greater than 1)
-   *  * @param exemptFromYieldProtocolFeeFlags Array containing boolean for each token exemption from yield protocol fee flags
-   *  * @returns A TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
+  /**
+   * Builds a transaction for a composable pool create operation.
+   * @param name The name of the pool
+   * @param symbol The symbol of the pool
+   * @param tokenAddresses The token's addresses
+   * @param amplificationParameter The amplification parameter(must be greater than 1)
+   * @param rateProviders The addresses of the rate providers for each token, ordered
+   * @param tokenRateCacheDurations the Token Rate Cache Duration of each token
+   * @param exemptFromYieldProtocolFeeFlags Array containing boolean for each token exemption from yield protocol fee flags
+   * @param swapFeeEvm The swapFee for the owner of the pool in string format parsed to evm(100% is 1e18, 10% is 1e17, 1% is 1e16)
+   * @param owner The address of the owner of the pool
+   * @returns A TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
    */
   create({
     name,
@@ -198,16 +197,14 @@ export class ComposableStableFactory implements PoolFactory {
     return composablePoolFactoryInterface.encodeFunctionData('create', params);
   };
 
-  /***
-   * @param params
-   *  * Builds a transaction for a composable pool init join operation.
-   *  * @param joiner The address of the joiner of the pool
-   *  * @param poolId The id of the pool
-   *  * @param poolAddress The address of the pool
-   *  * @param tokensIn Array with the address of the tokens
-   *  * @param amountsIn Array with the amount of each token
-   *  * @param wrappedNativeAsset Address of wrapped ether wETH
-   *  * @returns A InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
+  /**
+   * Builds a transaction for a composable pool init join operation.
+   * @param joiner The address of the joiner of the pool
+   * @param poolId The id of the pool
+   * @param poolAddress The address of the pool
+   * @param tokensIn Array with the address of the tokens
+   * @param amountsIn Array with the amount of each token
+   * @returns A InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
    */
   buildInitJoin({
     joiner,
