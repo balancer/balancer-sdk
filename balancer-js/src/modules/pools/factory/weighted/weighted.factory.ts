@@ -4,7 +4,7 @@ import {
   WeightedCreatePoolParameters,
 } from '@/modules/pools/factory/types';
 import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
-import { TransactionRequest } from '@ethersproject/providers';
+import { BytesLike } from '@ethersproject/bytes';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import { balancerVault, networkAddresses } from '@/lib/constants/config';
 import { BalancerNetworkConfig } from '@/types';
@@ -40,7 +40,10 @@ export class WeightedFactory implements PoolFactory {
     weights,
     swapFee,
     owner,
-  }: WeightedCreatePoolParameters): TransactionRequest {
+  }: WeightedCreatePoolParameters): {
+    to: string;
+    data: BytesLike;
+  } {
     const swapFeeScaled = parseToBigInt18(`${swapFee}`);
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     const [sortedTokens, sortedWeights] = assetHelpers.sortTokens(

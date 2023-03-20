@@ -1,5 +1,4 @@
-// import { InitJoinPoolAttributes, InitJoinPoolParameters } from './types';
-import { TransactionRequest } from '@ethersproject/providers';
+import { BytesLike } from '@ethersproject/bytes';
 import {
   ComposableStableCreatePoolParameters,
   InitJoinPoolAttributes,
@@ -12,6 +11,9 @@ export interface PoolFactory {
     parameters:
       | ComposableStableCreatePoolParameters
       | WeightedCreatePoolParameters
-  ): TransactionRequest;
+  ): {
+    to: string;
+    data: BytesLike;
+  };
   buildInitJoin: (parameters: InitJoinPoolParameters) => InitJoinPoolAttributes;
 }

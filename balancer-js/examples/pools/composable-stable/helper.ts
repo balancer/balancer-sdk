@@ -1,5 +1,6 @@
 import { JsonRpcSigner, JsonRpcProvider } from '@ethersproject/providers';
 import { Network, PoolWithMethods } from '@/.';
+
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
 
 /**
@@ -36,8 +37,11 @@ export async function setUpExample(
     rpcUrlArchive as string,
     blockNo
   );
-  const testPool = new TestPoolHelper(poolId, network, rpcUrlLocal, blockNo);
-  const pool = await testPool.getPool();
+  let pool = {} as PoolWithMethods;
+  if (poolId !== '') {
+    const testPool = new TestPoolHelper(poolId, network, rpcUrlLocal, blockNo);
+    pool = await testPool.getPool();
+  }
   return {
     pool,
     signer,

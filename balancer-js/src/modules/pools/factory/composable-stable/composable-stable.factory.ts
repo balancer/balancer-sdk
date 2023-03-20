@@ -1,5 +1,5 @@
 import { parseFixed } from '@ethersproject/bignumber';
-import { TransactionRequest } from '@ethersproject/providers';
+import { BytesLike } from '@ethersproject/bytes';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Vault__factory } from '@/contracts/factories/Vault__factory';
@@ -63,7 +63,7 @@ export class ComposableStableFactory implements PoolFactory {
     exemptFromYieldProtocolFeeFlags,
     swapFee,
     owner,
-  }: ComposableStableCreatePoolParameters): TransactionRequest {
+  }: ComposableStableCreatePoolParameters): { to: string; data: BytesLike } {
     this.checkCreateInputs({
       rateProviders,
       tokenAddresses,
