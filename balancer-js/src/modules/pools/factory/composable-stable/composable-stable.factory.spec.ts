@@ -31,7 +31,7 @@ describe('ComposableStable Factory', async () => {
       rateProviders: [AddressZero, AddressZero],
       tokenRateCacheDurations: ['0', '0'],
       exemptFromYieldProtocolFeeFlags: [false, false],
-      swapFee: '0.05',
+      swapFeeEvm: `${5e16}`,
       owner: AddressZero,
     };
     it('should fail with swap fee 0', async () => {
@@ -39,7 +39,7 @@ describe('ComposableStable Factory', async () => {
         () =>
           factory.create({
             ...rightCreateParameters,
-            swapFee: '0',
+            swapFeeEvm: '0',
           }),
         BalancerError,
         'The swap fee needs to be greater than zero'

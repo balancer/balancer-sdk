@@ -37,7 +37,7 @@ const USDT_address = addresses.USDT.address;
 const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.weightedPoolFactory}`;
 const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const tokenAddresses = [USDC_address, USDT_address];
-const swapFee = '0.01';
+const swapFeeEvm = `${1e16}`;
 const weights = [`${0.2e18}`, `${0.8e18}`];
 const slots = [addresses.USDC.slot, addresses.USDT.slot];
 const balances = [
@@ -75,7 +75,7 @@ describe('creating weighted pool', () => {
         symbol,
         tokenAddresses,
         weights,
-        swapFee,
+        swapFeeEvm,
         owner,
       });
       const { transactionReceipt } = await sendTransactionGetBalances(

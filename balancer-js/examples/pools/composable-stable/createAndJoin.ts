@@ -3,59 +3,15 @@
  * Run command: yarn examples:run ./examples/pools/composable-stable/createAndJoin.ts
  */
 import * as dotenv from 'dotenv';
+
 dotenv.config();
-import { LogDescription } from '@ethersproject/abi';
 import { parseFixed } from '@ethersproject/bignumber';
-import {
-  JsonRpcProvider,
-  TransactionReceipt,
-  TransactionResponse,
-} from '@ethersproject/providers';
-import { Contract } from '@ethersproject/contracts';
 
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { ADDRESSES } from '@/test/lib/constants';
-import { findEventInReceiptLogs } from '@/test/lib/utils';
 import { setUpExample } from './helper';
 
-import {
-  BalancerSDK,
-  ComposableStable__factory,
-  ComposableStableFactory__factory,
-  Network,
-  PoolType,
-} from '@/.';
-
-// TODO - Make this a helper function on factory as is essential part of flow
-const checkIfPoolWasCreated = async (
-  provider: JsonRpcProvider,
-  transaction: TransactionResponse,
-  to: string
-) => {
-  const receipt: TransactionReceipt = await provider.getTransactionReceipt(
-    transaction.hash
-  );
-  const poolCreationEvent: LogDescription = findEventInReceiptLogs({
-    receipt,
-    to,
-    contractInterface: ComposableStableFactory__factory.createInterface(),
-    logName: 'PoolCreated',
-  });
-
-  const poolAddress = poolCreationEvent.args.pool;
-  const composableStablePoolInterface =
-    ComposableStable__factory.createInterface();
-  const pool = new Contract(
-    poolAddress,
-    composableStablePoolInterface,
-    provider
-  );
-  const poolId = await pool.getPoolId();
-  return {
-    poolAddress,
-    poolId,
-  };
-};
+import { BalancerSDK, Network, PoolType } from '@/.';
 
 async function createAndInitJoinComposableStable() {
   const { ALCHEMY_URL: rpcUrlArchive } = process.env;
@@ -99,19 +55,20 @@ async function createAndInitJoinComposableStable() {
       '0x0000000000000000000000000000000000000000',
     ],
     tokenRateCacheDurations: ['100', '100'],
-    swapFee: '0.01',
+    swapFeeEvm: `${1e16}`,
     exemptFromYieldProtocolFeeFlags: [false, false],
     owner: ownerAddress,
   };
   // Create new pool
   const createInfo = composableStablePoolFactory.create(poolParameters);
   const createTransaction = await signer.sendTransaction(createInfo);
+  const createTransactionReceipt = await createTransaction.wait();
   // Check logs of creation to get new pool ID and address
-  const { poolAddress, poolId } = await checkIfPoolWasCreated(
-    signer.provider,
-    createTransaction,
-    createInfo.to
-  );
+  const { poolAddress, poolId } =
+    await composableStablePoolFactory.getPoolAddressAndIdWithReceipt(
+      signer.provider,
+      createTransactionReceipt
+    );
   // Do initial join of pool
   const joinInfo = composableStablePoolFactory.buildInitJoin({
     joiner: ownerAddress,

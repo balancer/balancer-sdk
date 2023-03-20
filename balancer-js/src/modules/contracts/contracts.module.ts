@@ -18,6 +18,7 @@ import { VeBalProxy } from './implementations/veBAL-proxy';
 import { Relayer } from './implementations/relayer';
 import { LiquidityGauge } from './implementations/liquidity-gauge';
 import { GaugeClaimHelper } from './implementations/GaugeClaimHelper';
+import { ComposableStablePoolFactory } from '@/modules/contracts/implementations/composable-stable-pool-factory';
 
 type ContractFactory = (
   address: string,
@@ -25,31 +26,33 @@ type ContractFactory = (
 ) => Contract;
 
 export interface ContractInstances {
-  vault: Vault;
   balancerHelpers: BalancerHelpers;
+  BasePool: ContractFactory;
+  composableStablePoolFactory?: Contract;
+  ERC20: ContractFactory;
+  gaugeClaimHelper?: Contract;
   lidoRelayer?: LidoRelayer;
+  liquidityGauge: ContractFactory;
   multicall: Contract;
   relayerV3?: Contract;
   relayerV4?: Contract;
+  vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
-  ERC20: ContractFactory;
-  BasePool: ContractFactory;
-  liquidityGauge: ContractFactory;
-  gaugeClaimHelper?: Contract;
 }
 
 export class Contracts {
-  contractAddresses: ContractAddresses;
-  vault: Vault;
   balancerHelpers: BalancerHelpers;
+  composableStablePoolFactory?: Contract;
+  contractAddresses: ContractAddresses;
+  gaugeClaimHelper?: Contract;
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
   relayerV3?: Contract;
   relayerV4?: Contract;
+  vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
-  gaugeClaimHelper?: Contract;
 
   /**
    * Create instances of Balancer contracts connected to passed provider.
@@ -101,6 +104,12 @@ export class Contracts {
         this.contractAddresses.gaugeClaimHelper,
         provider
       );
+    if (this.contractAddresses.composableStablePoolFactory) {
+      this.composableStablePoolFactory = ComposableStablePoolFactory(
+        this.contractAddresses.composableStablePoolFactory,
+        provider
+      );
+    }
   }
 
   /**
@@ -108,18 +117,19 @@ export class Contracts {
    */
   get contracts(): ContractInstances {
     return {
-      vault: this.vault,
       balancerHelpers: this.balancerHelpers,
+      BasePool: this.getBasePool,
+      composableStablePoolFactory: this.composableStablePoolFactory,
+      ERC20: this.getErc20,
+      gaugeClaimHelper: this.gaugeClaimHelper,
+      liquidityGauge: this.getLiquidityGauge,
       lidoRelayer: this.lidoRelayer,
       multicall: this.multicall,
       relayerV3: this.relayerV3,
       relayerV4: this.relayerV4,
+      vault: this.vault,
       veBal: this.veBal,
       veBalProxy: this.veBalProxy,
-      ERC20: this.getErc20,
-      BasePool: this.getBasePool,
-      liquidityGauge: this.getLiquidityGauge,
-      gaugeClaimHelper: this.gaugeClaimHelper,
     };
   }
 

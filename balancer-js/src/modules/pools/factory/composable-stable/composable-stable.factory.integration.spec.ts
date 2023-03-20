@@ -18,11 +18,7 @@ import {
   sendTransactionGetBalances,
 } from '@/test/lib/utils';
 import { Network, PoolType } from '@/types';
-import {
-  Vault__factory,
-  ComposableStable__factory,
-  ComposableStableFactory__factory,
-} from '@/contracts';
+import { Vault__factory, ComposableStable__factory } from '@/contracts';
 
 dotenv.config();
 
@@ -46,7 +42,7 @@ const createComposableStableParams = {
   tokenRateCacheDurations: ['0', '0'],
   owner: undefined,
   amplificationParameter: '92',
-  swapFee: '0.01',
+  swapFeeEvm: `${1e16}`,
 };
 
 describe('creating composable stable pool', async () => {
@@ -62,6 +58,7 @@ describe('creating composable stable pool', async () => {
   );
   context('create', async () => {
     let poolAddress: string;
+    let poolId: string;
     before(async () => {
       const slots = [addresses.USDC.slot, addresses.USDT.slot];
       const balances = [
@@ -94,18 +91,18 @@ describe('creating composable stable pool', async () => {
         to as string,
         data as string
       );
-      const composableStableFactoryInterface =
-        ComposableStableFactory__factory.createInterface();
-      const poolCreationEvent: LogDescription = findEventInReceiptLogs({
-        to: to as string,
-        receipt: transactionReceipt,
-        logName: 'PoolCreated',
-        contractInterface: composableStableFactoryInterface,
-      });
-      if (poolCreationEvent) {
-        poolAddress = poolCreationEvent.args.pool;
-      }
-      expect(!!poolCreationEvent).to.be.true;
+      const poolInfo =
+        await composableStablePoolFactory.getPoolAddressAndIdWithReceipt(
+          signer.provider,
+          transactionReceipt
+        );
+      poolAddress = poolInfo.poolAddress;
+      poolId = poolInfo.poolId;
+      //Verifying if the address and id are valid
+      expect(poolId.length).to.equal(66);
+      expect(poolAddress.length).to.equal(42);
+      expect(poolId.indexOf('x')).to.equal(1);
+      expect(poolAddress.indexOf('x')).to.equal(1);
       return;
     });
     it('should init join a pool', async () => {
@@ -117,7 +114,6 @@ describe('creating composable stable pool', async () => {
         composableStablePoolInterface,
         provider
       );
-      const poolId = await pool.getPoolId();
       const scalingFactors = await pool.getScalingFactors();
       const amountsIn = [
         parseFixed('10000', 6).toString(),

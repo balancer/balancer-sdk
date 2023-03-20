@@ -3,7 +3,7 @@ import {
   InitJoinPoolParameters,
   WeightedCreatePoolParameters,
 } from '@/modules/pools/factory/types';
-import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
+import { AssetHelpers } from '@/lib/utils';
 import { BytesLike } from '@ethersproject/bytes';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import { balancerVault, networkAddresses } from '@/lib/constants/config';
@@ -12,6 +12,7 @@ import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
 import { BigNumberish } from '@ethersproject/bignumber';
 import { WeightedPoolEncoder } from '@/pool-weighted';
+import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 
 export class WeightedFactory implements PoolFactory {
   private wrappedNativeAsset: string;
@@ -28,7 +29,7 @@ export class WeightedFactory implements PoolFactory {
    * @param symbol - The symbol of the pool
    * @param tokenAddresses - The token's addresses
    * @param weights The weights for each token, ordered
-   * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
+   * @param swapFeeEvm - The swapFee for the owner of the pool in string or bigint formatted to evm(100% is 1e18, 10% is 1e17, 1% is 1e16)
    * @param owner - The address of the owner of the pool
    * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
    */
@@ -38,13 +39,12 @@ export class WeightedFactory implements PoolFactory {
     symbol,
     tokenAddresses,
     weights,
-    swapFee,
+    swapFeeEvm,
     owner,
   }: WeightedCreatePoolParameters): {
     to: string;
     data: BytesLike;
   } {
-    const swapFeeScaled = parseToBigInt18(`${swapFee}`);
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     const [sortedTokens, sortedWeights] = assetHelpers.sortTokens(
       tokenAddresses,
@@ -54,17 +54,10 @@ export class WeightedFactory implements PoolFactory {
       WeightedPoolFactory__factory.createInterface();
     const encodedFunctionData = weightedPoolInterface.encodeFunctionData(
       'create',
-      [
-        name,
-        symbol,
-        sortedTokens,
-        sortedWeights,
-        swapFeeScaled.toString(),
-        owner,
-      ]
+      [name, symbol, sortedTokens, sortedWeights, swapFeeEvm.toString(), owner]
     );
     return {
-      to: factoryAddress,
+      to: factoryAddress || '',
       data: encodedFunctionData,
     };
   }
@@ -119,5 +112,13 @@ export class WeightedFactory implements PoolFactory {
       attributes,
       data,
     };
+  }
+
+  getPoolAddressAndIdWithReceipt(
+    provider: JsonRpcProvider,
+    receipt: TransactionReceipt
+  ): Promise<{ poolId: string; poolAddress: string }> {
+    console.log(provider, receipt);
+    throw new Error('to be implemented');
   }
 }

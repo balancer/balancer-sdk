@@ -25,6 +25,7 @@ import { JsonRpcSigner } from '@ethersproject/providers';
 import { BalancerError } from '@/balancerErrors';
 import { EmissionsService } from './emissions';
 import { proportionalAmounts } from './proportional-amounts';
+import { Contracts } from '@/modules/contracts/contracts.module';
 
 const notImplemented = (poolType: string, name: string) => () => {
   throw `${name} for poolType ${poolType} not implemented`;
@@ -49,7 +50,8 @@ export class Pools implements Findable<PoolWithMethods> {
 
   constructor(
     private networkConfig: BalancerNetworkConfig,
-    private repositories: BalancerDataRepositories
+    private repositories: BalancerDataRepositories,
+    private balancerContracts: Contracts
   ) {
     this.aprService = new PoolApr(
       this.repositories.pools,
@@ -82,7 +84,10 @@ export class Pools implements Findable<PoolWithMethods> {
     );
     this.feesService = new PoolFees(repositories.yesterdaysPools);
     this.volumeService = new PoolVolume(repositories.yesterdaysPools);
-    this.poolFactory = new PoolFactory__factory(networkConfig);
+    this.poolFactory = new PoolFactory__factory(
+      networkConfig,
+      balancerContracts
+    );
     this.impermanentLossService = new ImpermanentLossService(
       repositories.tokenPrices,
       repositories.tokenHistoricalPrices
@@ -93,142 +98,6 @@ export class Pools implements Findable<PoolWithMethods> {
       );
     }
     this.proportionalAmounts = proportionalAmounts;
-  }
-
-  dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
-    // TODO: Add API data repository to data and use liveModelProvider as fallback
-    return this.repositories.pools;
-  }
-
-  /**
-   * Calculates APR on any pool data
-   *
-   * @param pool
-   * @returns
-   */
-  async apr(pool: Pool): Promise<AprBreakdown> {
-    return this.aprService.apr(pool);
-  }
-
-  /**
-   * Calculates Impermanent Loss on any pool data
-   *
-   * @param timestamp
-   * @param pool
-   * @returns
-   */
-  async impermanentLoss(timestamp: number, pool: Pool): Promise<number> {
-    return this.impermanentLossService.calcImpLoss(timestamp, pool);
-  }
-
-  /**
-   * Calculates total liquidity of the pool
-   *
-   * @param pool
-   * @returns
-   */
-  async liquidity(pool: Pool): Promise<string> {
-    return this.liquidityService.getLiquidity(pool);
-  }
-
-  /**
-   * Builds generalised join transaction
-   *
-   * @param poolId          Pool id
-   * @param tokens          Token addresses
-   * @param amounts         Token amounts in EVM scale
-   * @param userAddress     User address
-   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
-   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
-   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
-   * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
-   */
-  async generalisedJoin(
-    poolId: string,
-    tokens: string[],
-    amounts: string[],
-    userAddress: string,
-    slippage: string,
-    signer: JsonRpcSigner,
-    simulationType: SimulationType,
-    authorisation?: string
-  ): Promise<{
-    to: string;
-    encodedCall: string;
-    minOut: string;
-    expectedOut: string;
-    priceImpact: string;
-  }> {
-    return this.joinService.joinPool(
-      poolId,
-      tokens,
-      amounts,
-      userAddress,
-      slippage,
-      signer,
-      simulationType,
-      authorisation
-    );
-  }
-
-  /**
-   * Builds generalised exit transaction
-   *
-   * @param poolId          Pool id
-   * @param amount          Token amount in EVM scale
-   * @param userAddress     User address
-   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
-   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
-   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
-   * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
-   */
-  async generalisedExit(
-    poolId: string,
-    amount: string,
-    userAddress: string,
-    slippage: string,
-    signer: JsonRpcSigner,
-    simulationType: SimulationType,
-    authorisation?: string
-  ): Promise<{
-    to: string;
-    encodedCall: string;
-    tokensOut: string[];
-    expectedAmountsOut: string[];
-    minAmountsOut: string[];
-    priceImpact: string;
-  }> {
-    return this.exitService.exitPool(
-      poolId,
-      amount,
-      userAddress,
-      slippage,
-      signer,
-      simulationType,
-      authorisation
-    );
-  }
-
-  /**
-   * Calculates total fees for the pool in the last 24 hours
-   *
-   * @param pool
-   * @returns
-   */
-  async fees(pool: Pool): Promise<number> {
-    return this.feesService.last24h(pool);
-  }
-
-  /**
-   * Calculates total volume of the pool in the last 24 hours
-   *
-   * @param pool
-   * @returns
-   */
-  async volume(pool: Pool): Promise<number> {
-    return this.volumeService.last24h(pool);
   }
 
   static wrap(
@@ -390,6 +259,142 @@ export class Pools implements Findable<PoolWithMethods> {
       ...methods,
       bptIndex,
     };
+  }
+
+  dataSource(): Findable<Pool, PoolAttribute> & Searchable<Pool> {
+    // TODO: Add API data repository to data and use liveModelProvider as fallback
+    return this.repositories.pools;
+  }
+
+  /**
+   * Calculates APR on any pool data
+   *
+   * @param pool
+   * @returns
+   */
+  async apr(pool: Pool): Promise<AprBreakdown> {
+    return this.aprService.apr(pool);
+  }
+
+  /**
+   * Calculates Impermanent Loss on any pool data
+   *
+   * @param timestamp
+   * @param pool
+   * @returns
+   */
+  async impermanentLoss(timestamp: number, pool: Pool): Promise<number> {
+    return this.impermanentLossService.calcImpLoss(timestamp, pool);
+  }
+
+  /**
+   * Calculates total liquidity of the pool
+   *
+   * @param pool
+   * @returns
+   */
+  async liquidity(pool: Pool): Promise<string> {
+    return this.liquidityService.getLiquidity(pool);
+  }
+
+  /**
+   * Builds generalised join transaction
+   *
+   * @param poolId          Pool id
+   * @param tokens          Token addresses
+   * @param amounts         Token amounts in EVM scale
+   * @param userAddress     User address
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+   * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
+   */
+  async generalisedJoin(
+    poolId: string,
+    tokens: string[],
+    amounts: string[],
+    userAddress: string,
+    slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType,
+    authorisation?: string
+  ): Promise<{
+    to: string;
+    encodedCall: string;
+    minOut: string;
+    expectedOut: string;
+    priceImpact: string;
+  }> {
+    return this.joinService.joinPool(
+      poolId,
+      tokens,
+      amounts,
+      userAddress,
+      slippage,
+      signer,
+      simulationType,
+      authorisation
+    );
+  }
+
+  /**
+   * Builds generalised exit transaction
+   *
+   * @param poolId          Pool id
+   * @param amount          Token amount in EVM scale
+   * @param userAddress     User address
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+   * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
+   */
+  async generalisedExit(
+    poolId: string,
+    amount: string,
+    userAddress: string,
+    slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType,
+    authorisation?: string
+  ): Promise<{
+    to: string;
+    encodedCall: string;
+    tokensOut: string[];
+    expectedAmountsOut: string[];
+    minAmountsOut: string[];
+    priceImpact: string;
+  }> {
+    return this.exitService.exitPool(
+      poolId,
+      amount,
+      userAddress,
+      slippage,
+      signer,
+      simulationType,
+      authorisation
+    );
+  }
+
+  /**
+   * Calculates total fees for the pool in the last 24 hours
+   *
+   * @param pool
+   * @returns
+   */
+  async fees(pool: Pool): Promise<number> {
+    return this.feesService.last24h(pool);
+  }
+
+  /**
+   * Calculates total volume of the pool in the last 24 hours
+   *
+   * @param pool
+   * @returns
+   */
+  async volume(pool: Pool): Promise<number> {
+    return this.volumeService.last24h(pool);
   }
 
   async find(id: string): Promise<PoolWithMethods | undefined> {
