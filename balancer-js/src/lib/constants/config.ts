@@ -116,6 +116,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     pools: {},
     poolsToIgnore: [
       '0x600bd01b6526611079e12e1ff93aba7a3e34226f', // This pool has rateProviders with incorrect scaling
+      '0xd208168d2a512240eb82582205d94a0710bce4e7', // Stable pool with Convergence issues
     ],
     sorConnectingTokens: [
       {
