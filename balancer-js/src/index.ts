@@ -46,3 +46,4 @@ export {
   getTokenAddressesForSwap,
 } from '@balancer-labs/sor';
 export { SimulationType } from './modules/simulation/simulation.module';
+export { BALANCER_NETWORK_CONFIG } from './lib/constants/config';
