@@ -4,7 +4,6 @@ import { AddressZero, MaxUint256, WeiPerEther } from '@ethersproject/constants';
 import {
   JsonRpcProvider,
   JsonRpcSigner,
-  Log,
   TransactionReceipt,
 } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
@@ -21,15 +20,13 @@ import {
   BalancerSDK,
   GraphQLArgs,
   GraphQLQuery,
-  Address,
-  isSameAddress,
 } from '@/.';
 import { balancerVault } from '@/lib/constants/config';
 import { parseEther } from '@ethersproject/units';
 import { ERC20 } from '@/modules/contracts/implementations/ERC20';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 
-import { Interface, LogDescription } from '@ethersproject/abi';
+import { Interface } from '@ethersproject/abi';
 
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const liquidityGauge = new Interface(liquidityGaugeAbi);
