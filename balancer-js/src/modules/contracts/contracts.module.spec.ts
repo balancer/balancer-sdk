@@ -1,6 +1,6 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { expect } from 'chai';
-import { BalancerSDK } from '@/.';
+import { BalancerSDK, Network } from '@/.';
 import { Contracts } from './contracts.module';
 
 let sdkConfig = {

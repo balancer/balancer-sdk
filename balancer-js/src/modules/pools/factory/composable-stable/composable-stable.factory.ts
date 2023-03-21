@@ -16,7 +16,7 @@ import {
 } from '@/contracts';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 import { LogDescription } from '@ethersproject/abi';
-import { findEventInReceiptLogs } from '@/test/lib/utils';
+import { findEventInReceiptLogs } from '@/lib/utils';
 import { Contract } from '@ethersproject/contracts';
 import { ContractInstances } from '@/modules/contracts/contracts.module';
 import { BytesLike } from '@ethersproject/bytes';

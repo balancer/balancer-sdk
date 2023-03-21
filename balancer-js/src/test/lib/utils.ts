@@ -332,33 +332,3 @@ export async function sendTransactionGetBalances(
     gasUsed,
   };
 }
-
-export const findEventInReceiptLogs = ({
-  receipt,
-  to,
-  contractInterface,
-  logName,
-}: {
-  receipt: TransactionReceipt;
-  to: Address;
-  contractInterface: Interface;
-  logName: string;
-}): LogDescription => {
-  const event = receipt.logs
-    .filter((log: Log) => {
-      return isSameAddress(log.address, to);
-    })
-    .map((log) => {
-      try {
-        return contractInterface.parseLog(log);
-      } catch (error) {
-        console.error(error);
-        return null;
-      }
-    })
-    .find((parsedLog) => parsedLog?.name === logName);
-  if (!event) {
-    throw new Error('Event not found in logs');
-  }
-  return event;
-};

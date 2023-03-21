@@ -1,5 +1,7 @@
-import { PoolType } from '@/types';
+import { Address, PoolType } from '@/types';
 import { getAddress } from '@ethersproject/address';
+import { Log, TransactionReceipt } from '@ethersproject/providers';
+import { Interface, LogDescription } from '@ethersproject/abi';
 
 export * from './aaveHelpers';
 export * from './assetHelpers';
@@ -105,3 +107,33 @@ export function isLinearish(poolType: string): boolean {
 export function truncateAddresses(addresses: string[]): string[] {
   return addresses.map((t) => `${t.slice(0, 6)}...${t.slice(38, 42)}`);
 }
+
+export const findEventInReceiptLogs = ({
+  receipt,
+  to,
+  contractInterface,
+  logName,
+}: {
+  receipt: TransactionReceipt;
+  to: Address;
+  contractInterface: Interface;
+  logName: string;
+}): LogDescription => {
+  const event = receipt.logs
+    .filter((log: Log) => {
+      return isSameAddress(log.address, to);
+    })
+    .map((log) => {
+      try {
+        return contractInterface.parseLog(log);
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    })
+    .find((parsedLog) => parsedLog?.name === logName);
+  if (!event) {
+    throw new Error('Event not found in logs');
+  }
+  return event;
+};
