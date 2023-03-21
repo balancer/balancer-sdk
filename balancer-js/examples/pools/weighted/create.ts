@@ -11,7 +11,7 @@ import {
   symbol,
   tokenAddresses,
   weights,
-  swapFee,
+  swapFeeEvm,
   owner,
   slots,
   balances,
@@ -37,7 +37,7 @@ async function createWeightedPool() {
     symbol,
     tokenAddresses,
     weights,
-    swapFee,
+    swapFeeEvm,
     owner,
   });
   const signerAddress = await signer.getAddress();
