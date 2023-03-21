@@ -1,6 +1,3 @@
-import { parseFixed } from '@ethersproject/bignumber';
-import { TransactionRequest } from '@ethersproject/providers';
-
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import {
@@ -9,11 +6,20 @@ import {
   InitJoinPoolParameters,
 } from '@/modules/pools/factory/types';
 import { balancerVault, networkAddresses } from '@/lib/constants/config';
-import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
+import { AssetHelpers } from '@/lib/utils';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { BalancerNetworkConfig } from '@/types';
-import { ComposableStableFactory__factory } from '@/contracts';
+import {
+  ComposableStable__factory,
+  ComposableStableFactory__factory,
+} from '@/contracts';
+import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
+import { LogDescription } from '@ethersproject/abi';
+import { findEventInReceiptLogs } from '@/lib/utils';
+import { Contract } from '@ethersproject/contracts';
+import { ContractInstances } from '@/modules/contracts/contracts.module';
+import { BytesLike } from '@ethersproject/bytes';
 
 type JoinPoolDecodedAttributes = {
   poolId: string;
@@ -31,29 +37,31 @@ type JoinPoolRequestDecodedAttributes = {
 
 export class ComposableStableFactory implements PoolFactory {
   private wrappedNativeAsset: string;
+  private contracts: ContractInstances;
 
-  constructor(networkConfig: BalancerNetworkConfig) {
+  constructor(
+    networkConfig: BalancerNetworkConfig,
+    contracts: ContractInstances
+  ) {
     const { tokens } = networkAddresses(networkConfig.chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
+    this.contracts = contracts;
   }
 
-  /***
-   * @param params
-   *  * Builds a transaction for a composable pool create operation.
-   *  * @param contractAddress The address of the factory for composable stable pool (contract address)
-   *  * @param name The name of the pool
-   *  * @param symbol The symbol of the pool
-   *  * @param swapFee The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
-   *  * @param tokenAddresses The token's addresses
-   *  * @param rateProviders The addresses of the rate providers for each token, ordered
-   *  * @param tokenRateCacheDurations the Token Rate Cache Duration of each token
-   *  * @param owner The address of the owner of the pool
-   *  * @param amplificationParameter The amplification parameter(must be greater than 1)
-   *  * @param exemptFromYieldProtocolFeeFlags Array containing boolean for each token exemption from yield protocol fee flags
-   *  * @returns A TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
+  /**
+   * Builds a transaction for a composable pool create operation.
+   * @param name The name of the pool
+   * @param symbol The symbol of the pool
+   * @param tokenAddresses The token's addresses
+   * @param amplificationParameter The amplification parameter(must be greater than 1)
+   * @param rateProviders The addresses of the rate providers for each token, ordered
+   * @param tokenRateCacheDurations the Token Rate Cache Duration of each token
+   * @param exemptFromYieldProtocolFeeFlags Array containing boolean for each token exemption from yield protocol fee flags
+   * @param swapFeeEvm The swapFee for the owner of the pool in string format parsed to evm(100% is 1e18, 10% is 1e17, 1% is 1e16)
+   * @param owner The address of the owner of the pool
+   * @returns A TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
    */
   create({
-    factoryAddress,
     name,
     symbol,
     tokenAddresses,
@@ -61,15 +69,15 @@ export class ComposableStableFactory implements PoolFactory {
     rateProviders,
     tokenRateCacheDurations,
     exemptFromYieldProtocolFeeFlags,
-    swapFee,
+    swapFeeEvm,
     owner,
-  }: ComposableStableCreatePoolParameters): TransactionRequest {
+  }: ComposableStableCreatePoolParameters): { to?: string; data: BytesLike } {
     this.checkCreateInputs({
       rateProviders,
       tokenAddresses,
       tokenRateCacheDurations,
       exemptFromYieldProtocolFeeFlags,
-      swapFee,
+      swapFeeEvm,
     });
     const params = this.parseCreateParamsForEncoding({
       name,
@@ -79,12 +87,12 @@ export class ComposableStableFactory implements PoolFactory {
       rateProviders,
       tokenRateCacheDurations,
       exemptFromYieldProtocolFeeFlags,
-      swapFee,
+      swapFeeEvm,
       owner,
     });
     const encodedFunctionData = this.encodeCreateFunctionData(params);
     return {
-      to: factoryAddress,
+      to: this.contracts.composableStablePoolFactory?.address,
       data: encodedFunctionData,
     };
   }
@@ -94,14 +102,14 @@ export class ComposableStableFactory implements PoolFactory {
     tokenRateCacheDurations,
     exemptFromYieldProtocolFeeFlags,
     rateProviders,
-    swapFee,
+    swapFeeEvm,
   }: Pick<
     ComposableStableCreatePoolParameters,
     | 'rateProviders'
     | 'tokenRateCacheDurations'
     | 'tokenAddresses'
     | 'exemptFromYieldProtocolFeeFlags'
-    | 'swapFee'
+    | 'swapFeeEvm'
   >): void => {
     if (
       tokenAddresses.length !== tokenRateCacheDurations.length ||
@@ -111,7 +119,7 @@ export class ComposableStableFactory implements PoolFactory {
     ) {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
-    if (parseFixed(swapFee.toString(), 18).toBigInt() === BigInt(0)) {
+    if (BigInt(swapFeeEvm) === BigInt(0)) {
       throw new BalancerError(BalancerErrorCode.MIN_SWAP_FEE_PERCENTAGE);
     }
   };
@@ -123,7 +131,7 @@ export class ComposableStableFactory implements PoolFactory {
     rateProviders,
     tokenRateCacheDurations,
     exemptFromYieldProtocolFeeFlags,
-    swapFee,
+    swapFeeEvm,
     owner,
   }: Omit<ComposableStableCreatePoolParameters, 'factoryAddress'>): [
     string,
@@ -136,7 +144,6 @@ export class ComposableStableFactory implements PoolFactory {
     string,
     string
   ] => {
-    const swapFeeScaled = parseToBigInt18(`${swapFee}`);
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     const [
       sortedTokens,
@@ -157,7 +164,7 @@ export class ComposableStableFactory implements PoolFactory {
       sortedRateProviders,
       sortedTokenRateCacheDurations,
       sortedExemptFromYieldProtocols,
-      swapFeeScaled.toString(),
+      swapFeeEvm.toString(),
       owner,
     ] as [
       string,
@@ -191,16 +198,14 @@ export class ComposableStableFactory implements PoolFactory {
     return composablePoolFactoryInterface.encodeFunctionData('create', params);
   };
 
-  /***
-   * @param params
-   *  * Builds a transaction for a composable pool init join operation.
-   *  * @param joiner The address of the joiner of the pool
-   *  * @param poolId The id of the pool
-   *  * @param poolAddress The address of the pool
-   *  * @param tokensIn Array with the address of the tokens
-   *  * @param amountsIn Array with the amount of each token
-   *  * @param wrappedNativeAsset Address of wrapped ether wETH
-   *  * @returns A InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
+  /**
+   * Builds a transaction for a composable pool init join operation.
+   * @param joiner The address of the joiner of the pool
+   * @param poolId The id of the pool
+   * @param poolAddress The address of the pool
+   * @param tokensIn Array with the address of the tokens
+   * @param amountsIn Array with the amount of each token
+   * @returns A InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a composable stable pool
    */
   buildInitJoin({
     joiner,
@@ -311,5 +316,34 @@ export class ComposableStableFactory implements PoolFactory {
     const data = vaultInterface.encodeFunctionData(functionName, params);
 
     return { functionName, data };
+  };
+
+  getPoolAddressAndIdWithReceipt = async (
+    provider: JsonRpcProvider,
+    receipt: TransactionReceipt
+  ): Promise<{
+    poolId: string;
+    poolAddress: string;
+  }> => {
+    const poolCreationEvent: LogDescription = findEventInReceiptLogs({
+      receipt,
+      to: this.contracts.composableStablePoolFactory?.address || '',
+      contractInterface: ComposableStableFactory__factory.createInterface(),
+      logName: 'PoolCreated',
+    });
+
+    const poolAddress = poolCreationEvent.args.pool;
+    const composableStablePoolInterface =
+      ComposableStable__factory.createInterface();
+    const pool = new Contract(
+      poolAddress,
+      composableStablePoolInterface,
+      provider
+    );
+    const poolId = await pool.getPoolId();
+    return {
+      poolAddress,
+      poolId,
+    };
   };
 }

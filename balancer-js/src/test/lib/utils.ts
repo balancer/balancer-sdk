@@ -4,7 +4,6 @@ import { AddressZero, MaxUint256, WeiPerEther } from '@ethersproject/constants';
 import {
   JsonRpcProvider,
   JsonRpcSigner,
-  Log,
   TransactionReceipt,
 } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
@@ -21,15 +20,13 @@ import {
   BalancerSDK,
   GraphQLArgs,
   GraphQLQuery,
-  Address,
-  isSameAddress,
 } from '@/.';
 import { balancerVault } from '@/lib/constants/config';
 import { parseEther } from '@ethersproject/units';
 import { ERC20 } from '@/modules/contracts/implementations/ERC20';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 
-import { defaultAbiCoder, Interface, LogDescription } from '@ethersproject/abi';
+import { Interface } from '@ethersproject/abi';
 
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const liquidityGauge = new Interface(liquidityGaugeAbi);
@@ -335,78 +332,4 @@ export async function sendTransactionGetBalances(
     balanceDeltas,
     gasUsed,
   };
-}
-
-export const findEventInReceiptLogs = ({
-  receipt,
-  to,
-  contractInterface,
-  logName,
-}: {
-  receipt: TransactionReceipt;
-  to: Address;
-  contractInterface: Interface;
-  logName: string;
-}): LogDescription => {
-  const event = receipt.logs
-    .filter((log: Log) => {
-      return isSameAddress(log.address, to);
-    })
-    .map((log) => {
-      try {
-        return contractInterface.parseLog(log);
-      } catch (error) {
-        console.error(error);
-        return null;
-      }
-    })
-    .find((parsedLog) => parsedLog?.name === logName);
-  if (!event) {
-    throw new Error('Event not found in logs');
-  }
-  return event;
-};
-
-export async function findTokenBalanceSlot(
-  signer: JsonRpcSigner,
-  tokenAddress: string
-): Promise<number> {
-  const encode = (types: string[], values: unknown[]): string =>
-    defaultAbiCoder.encode(types, values);
-  const account = await signer.getAddress();
-  const probeA = encode(['uint256'], [(Math.random() * 10000).toFixed()]);
-  const probeB = encode(['uint256'], [(Math.random() * 10000).toFixed()]);
-  for (let i = 0; i < 200; i++) {
-    let probedSlot = keccak256(['uint256', 'uint256'], [account, i]);
-    // remove padding for JSON RPC
-    while (probedSlot.startsWith('0x0'))
-      probedSlot = '0x' + probedSlot.slice(3);
-    const prev = await signer.provider.send('eth_getStorageAt', [
-      tokenAddress,
-      probedSlot,
-      'latest',
-    ]);
-    // make sure the probe will change the slot value
-    const probe = prev === probeA ? probeB : probeA;
-
-    await signer.provider.send('hardhat_setStorageAt', [
-      tokenAddress,
-      probedSlot,
-      probe,
-    ]);
-
-    const balance = await getErc20Balance(
-      tokenAddress,
-      signer.provider,
-      account
-    );
-    // reset to previous value
-    await signer.provider.send('hardhat_setStorageAt', [
-      tokenAddress,
-      probedSlot,
-      prev,
-    ]);
-    if (balance.eq(BigNumber.from(probe))) return i;
-  }
-  throw 'Balances slot not found!';
 }

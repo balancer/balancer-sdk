@@ -648,7 +648,7 @@ create({
 }) => TransactionRequest
 ```
 
-[Example](./examples/pools/weighted/create.ts)
+[Example](./examples/pools/weighted/create-and-init-join.ts)
 
 ### #createComposableStablePool
 
@@ -683,7 +683,7 @@ create({
 }) => TransactionRequest
 ```
 
-[Example](./examples/pools/composable-stable/create.ts)
+[Example](./examples/pools/composable-stable/create-and-init-join.ts)
 
 ## RelayerService
 

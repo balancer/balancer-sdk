@@ -1,24 +1,35 @@
+import { LogDescription } from '@ethersproject/abi';
+import { BigNumberish } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
+import { BytesLike } from '@ethersproject/bytes';
+import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
+
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
+import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
+import { balancerVault, networkAddresses } from '@/lib/constants/config';
+import { AssetHelpers, findEventInReceiptLogs } from '@/lib/utils';
+import { ContractInstances } from '@/modules/contracts/contracts.module';
+import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import {
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
   WeightedCreatePoolParameters,
 } from '@/modules/pools/factory/types';
-import { AssetHelpers, parseToBigInt18 } from '@/lib/utils';
-import { TransactionRequest } from '@ethersproject/providers';
-import { PoolFactory } from '@/modules/pools/factory/pool-factory';
-import { balancerVault, networkAddresses } from '@/lib/constants/config';
-import { BalancerNetworkConfig } from '@/types';
-import { Vault__factory } from '@/contracts/factories/Vault__factory';
-import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
-import { BigNumberish } from '@ethersproject/bignumber';
 import { WeightedPoolEncoder } from '@/pool-weighted';
+import { BalancerNetworkConfig } from '@/types';
+import { WeightedPool__factory } from '@/contracts';
 
 export class WeightedFactory implements PoolFactory {
   private wrappedNativeAsset: string;
+  private contracts: ContractInstances;
 
-  constructor(networkConfig: BalancerNetworkConfig) {
+  constructor(
+    networkConfig: BalancerNetworkConfig,
+    contracts: ContractInstances
+  ) {
     const { tokens } = networkAddresses(networkConfig.chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
+    this.contracts = contracts;
   }
 
   /**
@@ -28,20 +39,21 @@ export class WeightedFactory implements PoolFactory {
    * @param symbol - The symbol of the pool
    * @param tokenAddresses - The token's addresses
    * @param weights The weights for each token, ordered
-   * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
+   * @param swapFeeEvm - The swapFee for the owner of the pool in string or bigint formatted to evm(100% is 1e18, 10% is 1e17, 1% is 1e16)
    * @param owner - The address of the owner of the pool
    * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
    */
   create({
-    factoryAddress,
     name,
     symbol,
     tokenAddresses,
     weights,
-    swapFee,
+    swapFeeEvm,
     owner,
-  }: WeightedCreatePoolParameters): TransactionRequest {
-    const swapFeeScaled = parseToBigInt18(`${swapFee}`);
+  }: WeightedCreatePoolParameters): {
+    to?: string;
+    data: BytesLike;
+  } {
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     const [sortedTokens, sortedWeights] = assetHelpers.sortTokens(
       tokenAddresses,
@@ -51,17 +63,10 @@ export class WeightedFactory implements PoolFactory {
       WeightedPoolFactory__factory.createInterface();
     const encodedFunctionData = weightedPoolInterface.encodeFunctionData(
       'create',
-      [
-        name,
-        symbol,
-        sortedTokens,
-        sortedWeights,
-        swapFeeScaled.toString(),
-        owner,
-      ]
+      [name, symbol, sortedTokens, sortedWeights, swapFeeEvm.toString(), owner]
     );
     return {
-      to: factoryAddress,
+      to: this.contracts.weightedPoolFactory?.address,
       data: encodedFunctionData,
     };
   }
@@ -115,6 +120,27 @@ export class WeightedFactory implements PoolFactory {
       functionName,
       attributes,
       data,
+    };
+  }
+
+  async getPoolAddressAndIdWithReceipt(
+    provider: JsonRpcProvider,
+    receipt: TransactionReceipt
+  ): Promise<{ poolId: string; poolAddress: string }> {
+    const poolCreationEvent: LogDescription = findEventInReceiptLogs({
+      receipt,
+      to: this.contracts.weightedPoolFactory?.address || '',
+      contractInterface: WeightedPoolFactory__factory.createInterface(),
+      logName: 'PoolCreated',
+    });
+
+    const poolAddress = poolCreationEvent.args.pool;
+    const weightedPoolInterface = WeightedPool__factory.createInterface();
+    const pool = new Contract(poolAddress, weightedPoolInterface, provider);
+    const poolId = await pool.getPoolId();
+    return {
+      poolAddress,
+      poolId,
     };
   }
 }
