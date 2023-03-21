@@ -7,7 +7,11 @@ import { BalancerSDK, getPoolAddress, Network, PoolWithMethods } from '@/.';
 import { BPT_DECIMALS, BPT_SLOT } from '@/lib/constants/config';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
 import { AddressZero } from '@ethersproject/constants';
-import { testExactBptIn, testExactTokensOut } from '@/test/lib/exitHelper';
+import {
+  testExactBptIn,
+  testExactTokensOut,
+  testRecoveryExit,
+} from '@/test/lib/exitHelper';
 
 dotenv.config();
 
@@ -21,12 +25,12 @@ const signer = provider.getSigner();
 
 describe('Weighted Pool - Exit Integration Test', async () => {
   let pool: PoolWithMethods;
-  // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
-  const blockNumber = 13309758;
-  const testPoolId =
-    '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019';
-  // Setup chain
-  context('exit pool functions', async () => {
+  context('Regular Exit Pool Functions', async () => {
+    // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
+    const blockNumber = 13309758;
+    const testPoolId =
+      '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019';
+
     beforeEach(async () => {
       // Setup forked network, set initial token balances and allowances
       await forkSetup(
@@ -83,6 +87,41 @@ describe('Weighted Pool - Exit Integration Test', async () => {
         const amountsOut = Array(tokensOut.length).fill('0');
         amountsOut[ethIndex] = parseFixed('1', 18).toString();
         await testExactTokensOut(pool, signer, tokensOut, amountsOut);
+      });
+    });
+  });
+
+  context('Recovery Exit', async () => {
+    // This blockNumber is after this pool was paused and set to Recovery Mode to avoid loss of funds
+    const blockNumber = 16819888;
+    const testPoolId =
+      '0xa718042e5622099e5f0ace4e7122058ab39e1bbe000200000000000000000475';
+
+    beforeEach(async () => {
+      // Setup forked network, set initial token balances and allowances
+      await forkSetup(
+        signer,
+        [getPoolAddress(testPoolId)],
+        [BPT_SLOT],
+        [parseFixed('100000', BPT_DECIMALS).toString()],
+        jsonRpcUrl as string,
+        blockNumber
+      );
+      // Updatate pool info with onchain state from fork block no
+      const testPoolHelper = new TestPoolHelper(
+        testPoolId,
+        network,
+        rpcUrl,
+        blockNumber,
+        false
+      );
+      pool = await testPoolHelper.getPool();
+    });
+
+    context('buildRecoveryExit', async () => {
+      it('proportional exit', async () => {
+        const bptIn = parseFixed('10', 18).toString();
+        await testRecoveryExit(pool, signer, bptIn);
       });
     });
   });

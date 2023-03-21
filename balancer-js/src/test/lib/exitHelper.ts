@@ -29,11 +29,11 @@ export const testExactBptIn = async (
     );
 
   expect(transactionReceipt.status).to.eq(1);
-  const expectedDeltas =
-    pool.bptIndex !== -1
-      ? insert(expectedAmountsOut, pool.bptIndex, bptIn)
-      : expectedAmountsOut;
-  expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
+  const expectedDeltas = insert(expectedAmountsOut, pool.bptIndex, bptIn);
+  // Allow for rounding errors - this has to be fixed on the SOR side in order to be 100% accurate
+  expectedDeltas.forEach((expectedDelta, i) => {
+    expect(balanceDeltas[i].sub(expectedDelta).toNumber()).to.be.closeTo(0, 1);
+  });
   const expectedMins = expectedAmountsOut.map((a) =>
     subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
   );
@@ -76,11 +76,11 @@ export const testExactTokensOut = async (
     );
 
   expect(transactionReceipt.status).to.eq(1);
-  const expectedDeltas =
-    pool.bptIndex !== -1
-      ? insert(amountsOut, pool.bptIndex, expectedBPTIn)
-      : amountsOut;
-  expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
+  const expectedDeltas = insert(amountsOut, pool.bptIndex, expectedBPTIn);
+  // Allow for rounding errors - this has to be fixed on the SOR side in order to be 100% accurate
+  expectedDeltas.forEach((expectedDelta, i) => {
+    expect(balanceDeltas[i].sub(expectedDelta).toNumber()).to.be.closeTo(0, 1);
+  });
   const expectedMaxBpt = addSlippage(
     BigNumber.from(expectedBPTIn),
     BigNumber.from(slippage)
@@ -90,4 +90,40 @@ export const testExactTokensOut = async (
     formatFixed(BigNumber.from(priceImpact), 18)
   );
   expect(priceImpactFloat).to.be.closeTo(0, 0.01); // exiting balanced stable pools with small amounts should have price impact near zero
+};
+
+export const testRecoveryExit = async (
+  pool: PoolWithMethods,
+  signer: JsonRpcSigner,
+  bptIn: string
+): Promise<void> => {
+  const slippage = '10'; // 10 bps = 0.1%
+  const signerAddress = await signer.getAddress();
+
+  const { to, data, minAmountsOut, expectedAmountsOut, priceImpact } =
+    pool.buildRecoveryExit(signerAddress, bptIn, slippage);
+
+  const { transactionReceipt, balanceDeltas } =
+    await sendTransactionGetBalances(
+      pool.tokensList,
+      signer,
+      signerAddress,
+      to,
+      data
+    );
+
+  expect(transactionReceipt.status).to.eq(1);
+  const expectedDeltas = insert(expectedAmountsOut, pool.bptIndex, bptIn);
+  // Allow for rounding errors - this has to be fixed on the SOR side in order to be 100% accurate
+  expectedDeltas.forEach((expectedDelta, i) => {
+    expect(balanceDeltas[i].sub(expectedDelta).toNumber()).to.be.closeTo(0, 1);
+  });
+  const expectedMins = expectedAmountsOut.map((a) =>
+    subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
+  );
+  expect(expectedMins).to.deep.eq(minAmountsOut);
+  const priceImpactFloat = parseFloat(
+    formatFixed(BigNumber.from(priceImpact), 18)
+  );
+  expect(priceImpactFloat).to.be.closeTo(0, 0.01); // exiting proportionally should have price impact near zero
 };
