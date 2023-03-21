@@ -61,7 +61,7 @@ describe('ComposableStable Pool - Join Functions', async () => {
     it('should join - all tokens have value', async () => {
       const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
       const amountsIn = tokensIn.map((_, i) =>
-        parseFixed((i * 100).toString(), 18).toString()
+        parseFixed(((i + 1) * 100).toString(), 18).toString()
       );
       await testExactTokensIn(pool, signer, signerAddress, tokensIn, amountsIn);
     });
@@ -78,7 +78,7 @@ describe('ComposableStable Pool - Join Functions', async () => {
     it('should return correct attributes for joining', () => {
       const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
       const amountsIn = tokensIn.map((_, i) =>
-        parseFixed((i * 100).toString(), 18).toString()
+        parseFixed(((i + 1) * 100).toString(), 18).toString()
       );
       testAttributes(pool, testPoolId, signerAddress, tokensIn, amountsIn);
     });
@@ -86,7 +86,7 @@ describe('ComposableStable Pool - Join Functions', async () => {
     it('should automatically sort tokens/amounts in correct order', () => {
       const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
       const amountsIn = tokensIn.map((_, i) =>
-        parseFixed((i * 100).toString(), 18).toString()
+        parseFixed(((i + 1) * 100).toString(), 18).toString()
       );
       testSortingInputs(pool, signerAddress, tokensIn, amountsIn);
     });

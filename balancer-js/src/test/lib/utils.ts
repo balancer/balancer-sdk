@@ -274,7 +274,7 @@ export class TestPoolHelper {
   }
 
   /**
-   * Will always retrieve onchain state
+   * Will retrieve onchain state if onChain was true in constructor.
    * @returns
    */
   async getPool(): Promise<PoolWithMethods> {

@@ -15,7 +15,7 @@ const network = Network.MAINNET;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 
-describe('MetaStablePool - Exit Concern Integration Tests', async () => {
+describe('LinearPool - Exit Concern Integration Tests', async () => {
   let pool: PoolWithMethods;
 
   /**

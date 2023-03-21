@@ -68,7 +68,7 @@ describe('Weighted Pool - Join Functions', async () => {
     it('should join - all tokens have value', async () => {
       const tokensIn = pool.tokensList;
       const amountsIn = pool.tokens.map((t, i) =>
-        parseFixed((i * 100).toString(), t.decimals).toString()
+        parseFixed(((i + 1) * 100).toString(), t.decimals).toString()
       );
       testExactTokensIn(pool, signer, signerAddress, tokensIn, amountsIn);
     });
@@ -98,7 +98,7 @@ describe('Weighted Pool - Join Functions', async () => {
     it('should return correct attributes for joining', () => {
       const tokensIn = pool.tokensList;
       const amountsIn = pool.tokens.map((t, i) =>
-        parseFixed((i * 100).toString(), t.decimals).toString()
+        parseFixed(((i + 1) * 100).toString(), t.decimals).toString()
       );
       testAttributes(pool, testPoolId, signerAddress, tokensIn, amountsIn);
     });
@@ -106,7 +106,7 @@ describe('Weighted Pool - Join Functions', async () => {
     it('should encode the same for different array sorting', () => {
       const tokensIn = pool.tokensList;
       const amountsIn = pool.tokens.map(({ decimals }, i) =>
-        parseFixed((i * 100).toString(), decimals).toString()
+        parseFixed(((i + 1) * 100).toString(), decimals).toString()
       );
       testSortingInputs(pool, signerAddress, tokensIn, amountsIn);
     });
