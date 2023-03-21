@@ -4,7 +4,7 @@ dotenv.config();
 import { Network } from '@/lib/constants';
 import { getBalances } from '@/test/lib/utils';
 import { parseFixed } from '@ethersproject/bignumber';
-import { setUpExample } from './helper';
+import { setUpExample } from '../helper';
 import { removeItem } from '@/index';
 
 async function joinPoolExample() {

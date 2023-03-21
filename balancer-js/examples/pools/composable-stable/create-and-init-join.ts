@@ -1,6 +1,6 @@
 /**
  * ComposableStable - Create and do an initial join.
- * Run command: yarn examples:run ./examples/pools/composable-stable/createAndJoin.ts
+ * Run command: yarn examples:run ./examples/pools/composable-stable/create-and-init-join.ts
  */
 import * as dotenv from 'dotenv';
 
@@ -9,7 +9,7 @@ import { parseFixed } from '@ethersproject/bignumber';
 
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { ADDRESSES } from '@/test/lib/constants';
-import { setUpExample } from './helper';
+import { setUpExample } from '../helper';
 
 import { BalancerSDK, Network, PoolType } from '@/.';
 
@@ -59,17 +59,19 @@ async function createAndInitJoinComposableStable() {
     exemptFromYieldProtocolFeeFlags: [false, false],
     owner: ownerAddress,
   };
-  // Create new pool
+
+  // Build the create transaction
   const createInfo = composableStablePoolFactory.create(poolParameters);
+  //Sends the create transaction
   const createTransaction = await signer.sendTransaction(createInfo);
   const createTransactionReceipt = await createTransaction.wait();
-  // Check logs of creation to get new pool ID and address
+  // Check logs of creation receipt to get new pool ID and address
   const { poolAddress, poolId } =
     await composableStablePoolFactory.getPoolAddressAndIdWithReceipt(
       signer.provider,
       createTransactionReceipt
     );
-  // Do initial join of pool
+  // Build initial join of pool
   const joinInfo = composableStablePoolFactory.buildInitJoin({
     joiner: ownerAddress,
     poolId,
@@ -77,6 +79,7 @@ async function createAndInitJoinComposableStable() {
     tokensIn: poolTokens,
     amountsIn,
   });
+  //Sends the initial join transaction
   await signer.sendTransaction({ to: joinInfo.to, data: joinInfo.data });
   // Check that pool balances are as expected after join
   const tokens = await balancer.contracts.vault.getPoolTokens(poolId);

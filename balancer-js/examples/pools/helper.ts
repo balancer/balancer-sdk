@@ -1,5 +1,5 @@
 import { JsonRpcSigner, JsonRpcProvider } from '@ethersproject/providers';
-import { Network, PoolWithMethods } from '@/.';
+import { Network, PoolWithMethods } from '@/index';
 
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
 

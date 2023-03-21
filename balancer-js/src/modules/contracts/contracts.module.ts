@@ -139,6 +139,7 @@ export class Contracts {
       vault: this.vault,
       veBal: this.veBal,
       veBalProxy: this.veBalProxy,
+      weightedPoolFactory: this.weightedPoolFactory,
     };
   }
 

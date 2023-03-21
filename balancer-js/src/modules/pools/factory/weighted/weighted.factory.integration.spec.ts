@@ -1,13 +1,11 @@
 // yarn test:only ./src/modules/pools/factory/weighted/weighted.factory.integration.spec.ts
 import { Interface, LogDescription } from '@ethersproject/abi';
 import { parseFixed } from '@ethersproject/bignumber';
-import { Contract } from '@ethersproject/contracts';
 import { expect } from 'chai';
 import dotenv from 'dotenv';
 import { ethers } from 'hardhat';
 
 import { Vault__factory } from '@/contracts/factories/Vault__factory';
-import { WeightedPool__factory } from '@/contracts/factories/WeightedPool__factory';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { ADDRESSES } from '@/test/lib/constants';
 import { forkSetup, sendTransactionGetBalances } from '@/test/lib/utils';
@@ -95,8 +93,6 @@ describe('creating weighted pool', () => {
     });
     it('should init join a pool', async () => {
       const signerAddress = await signer.getAddress();
-      const weightedPoolInterface = WeightedPool__factory.createInterface();
-      const pool = new Contract(poolAddress, weightedPoolInterface, provider);
       const amountsIn = [
         parseFixed('2000', 6).toString(),
         parseFixed('8000', 6).toString(),

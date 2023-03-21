@@ -28,7 +28,7 @@ export class PoolFactory__factory {
   of(poolType: PoolType): PoolFactory {
     switch (poolType) {
       case 'Weighted':
-        return new WeightedFactory(this.networkConfig);
+        return new WeightedFactory(this.networkConfig, this.contracts);
       case 'Investment':
       case 'LiquidityBootstrapping': {
         throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);

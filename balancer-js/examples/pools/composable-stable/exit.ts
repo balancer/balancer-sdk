@@ -4,7 +4,7 @@ dotenv.config();
 import { parseFixed } from '@ethersproject/bignumber';
 import { Network, removeItem } from '@/.';
 import { getBalances } from '@/test/lib/utils';
-import { setUpExample } from './helper';
+import { setUpExample } from '../helper';
 
 async function exitPoolExample() {
   const { ALCHEMY_URL: rpcUrlArchive } = process.env;
