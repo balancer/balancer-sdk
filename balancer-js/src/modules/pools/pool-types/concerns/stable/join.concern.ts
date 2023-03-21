@@ -1,13 +1,16 @@
 import * as SOR from '@balancer-labs/sor';
-import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { BigNumber } from '@ethersproject/bignumber';
+
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { balancerVault } from '@/lib/constants/config';
 import { AssetHelpers, getEthValue, parsePoolInfo } from '@/lib/utils';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { _upscaleArray } from '@/lib/utils/solidityMaths';
 import { StablePoolEncoder } from '@/pool-stable';
 import { Pool } from '@/types';
+
+import { StablePoolPriceImpact } from '../stable/priceImpact.concern';
 import {
   JoinConcern,
   JoinPool,
@@ -63,10 +66,19 @@ export class StablePoolJoin implements JoinConcern {
       ...sortedValues,
     });
 
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      sortedValues.sortedAmountsIn.map(BigInt),
+      BigInt(expectedBPTOut),
+      true
+    );
+
     return {
       ...encodedData,
       minBPTOut,
       expectedBPTOut,
+      priceImpact,
     };
   };
 

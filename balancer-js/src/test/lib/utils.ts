@@ -36,12 +36,12 @@ import { Pools as PoolsProvider } from '@/modules/pools';
 /**
  * Setup local fork with approved token balance for a given account
  *
- * @param {JsonRpcSigner} signer Account that will have token balance set and approved
- * @param {string[]}      tokens Token addresses which balance will be set and approved
- * @param {number[]}      slots Slot that stores token balance in memory - use npm package `slot20` to identify which slot to provide
- * @param {string[]}      balances Balances in EVM amounts
- * @param {string}        jsonRpcUrl Url with remote node to be forked locally
- * @param {number}        blockNumber Number of the block that the fork will happen
+ * @param signer Account that will have token balance set and approved
+ * @param tokens Token addresses which balance will be set and approved
+ * @param slots Slot that stores token balance in memory - use npm package `slot20` to identify which slot to provide
+ * @param balances Balances in EVM amounts
+ * @param jsonRpcUrl Url with remote node to be forked locally
+ * @param blockNumber Number of the block that the fork will happen
  */
 export const forkSetup = async (
   signer: JsonRpcSigner,
@@ -79,10 +79,10 @@ export const forkSetup = async (
 /**
  * Set token balance for a given account
  *
- * @param {JsonRpcSigner} signer Account that will have token balance set
- * @param {string}        token Token address which balance will be set
- * @param {number}        slot Slot memory that stores balance - use npm package `slot20` to identify which slot to provide
- * @param {string}        balance Balance in EVM amounts
+ * @param signer Account that will have token balance set
+ * @param token Token address which balance will be set
+ * @param slot Slot memory that stores balance - use npm package `slot20` to identify which slot to provide
+ * @param balance Balance in EVM amount
  */
 export const setTokenBalance = async (
   signer: JsonRpcSigner,
@@ -127,9 +127,9 @@ export const setTokenBalance = async (
 /**
  * Approve token balance for vault contract
  *
- * @param {string}        token Token address to be approved
- * @param {string}        amount Amount to be approved
- * @param {JsonRpcSigner} signer Account that will have tokens approved
+ * @param token Token address to be approved
+ * @param amount Amount to be approved
+ * @param signer Account that will have tokens approved
  */
 export const approveToken = async (
   token: string,
@@ -274,7 +274,7 @@ export class TestPoolHelper {
   }
 
   /**
-   * Will always retrieve onchain state
+   * Will retrieve onchain state if onChain was true in constructor.
    * @returns
    */
   async getPool(): Promise<PoolWithMethods> {

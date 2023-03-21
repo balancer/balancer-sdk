@@ -1,11 +1,9 @@
-import {
-  JoinPoolParameters,
-  JoinConcern,
-  JoinPoolAttributes,
-  JoinPool,
-} from '../types';
 import { StableMathBigInt } from '@balancer-labs/sor';
+import { BigNumber } from '@ethersproject/bignumber';
+
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
+import { balancerVault } from '@/lib/constants/config';
 import {
   AssetHelpers,
   parsePoolInfo,
@@ -14,12 +12,17 @@ import {
   getEthValue,
 } from '@/lib/utils';
 import { subSlippage } from '@/lib/utils/slippageHelper';
-import { BigNumber } from '@ethersproject/bignumber';
-import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
-import { balancerVault } from '@/lib/constants/config';
-import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { _upscaleArray } from '@/lib/utils/solidityMaths';
+import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { Pool } from '@/types';
+
+import { StablePoolPriceImpact } from '../stable/priceImpact.concern';
+import {
+  JoinPoolParameters,
+  JoinConcern,
+  JoinPoolAttributes,
+  JoinPool,
+} from '../types';
 
 interface SortedValues {
   sortedAmountsIn: string[];
@@ -38,55 +41,73 @@ type SortedInputs = SortedValues &
   };
 
 export class ComposableStablePoolJoin implements JoinConcern {
-  buildJoin = (joinParams: JoinPoolParameters): JoinPoolAttributes => {
-    this.checkInputs(
-      joinParams.tokensIn,
-      joinParams.amountsIn,
-      joinParams.pool.tokensList
-    );
+  buildJoin = ({
+    joiner,
+    pool,
+    tokensIn,
+    amountsIn,
+    slippage,
+    wrappedNativeAsset,
+  }: JoinPoolParameters): JoinPoolAttributes => {
+    this.checkInputs(tokensIn, amountsIn, pool.tokensList);
 
-    const sortedValues = this.sortValuesBasedOnPoolVersion(joinParams);
+    const sortedValues = this.sortValuesBasedOnPoolVersion({
+      pool,
+      wrappedNativeAsset,
+      amountsIn,
+      tokensIn,
+    });
 
     const encodedData = this.buildExactTokensInForBPTOut({
       ...sortedValues,
-      slippage: joinParams.slippage,
-      joiner: joinParams.joiner,
-      poolId: joinParams.pool.id,
+      slippage,
+      joiner,
+      poolId: pool.id,
     });
 
     // If joining with a native asset value must be set in call
-    const value = getEthValue(joinParams.tokensIn, joinParams.amountsIn);
+    const value = getEthValue(tokensIn, amountsIn);
+
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      sortedValues.sortedAmountsIn.map(BigInt),
+      BigInt(encodedData.expectedBPTOut),
+      true
+    );
 
     return {
       ...encodedData,
       to: balancerVault,
       value,
+      priceImpact,
     };
   };
 
   /**
    * Sorts inputs and pool value to be correct order and scale for maths and Vault interaction.
-   * @param values
-   * @returns
+   * @param pool Pool data
+   * @param wrappedNativeAsset (Used for sorting)
+   * @param amountsIn Downscaled amounts in
+   * @param tokensIn Addresses of token in
+   * @returns Sorted values
    */
-  sortValuesBasedOnPoolVersion(
-    values: Pick<
-      JoinPoolParameters,
-      'pool' | 'wrappedNativeAsset' | 'amountsIn' | 'tokensIn'
-    >
-  ): SortedValues {
+  sortValuesBasedOnPoolVersion({
+    pool,
+    wrappedNativeAsset,
+    amountsIn,
+    tokensIn,
+  }: Pick<
+    JoinPoolParameters,
+    'pool' | 'wrappedNativeAsset' | 'amountsIn' | 'tokensIn'
+  >): SortedValues {
     /**
      * V1: Does not have proportional exits.
      * V2: Reintroduced proportional exits. Has vulnerability.
      * V3: Fixed vulnerability. Functionally the same as V2.
      */
-    if (values.pool.poolTypeVersion < 4)
-      return this.sortV1(
-        values.wrappedNativeAsset,
-        values.tokensIn,
-        values.amountsIn,
-        values.pool
-      );
+    if (pool.poolTypeVersion < 4)
+      return this.sortV1(wrappedNativeAsset, tokensIn, amountsIn, pool);
     // Not release yet and needs tests to confirm
     // else if (values.pool.poolTypeVersion === 4)
     //   sortedValues = this.sortV4(
@@ -96,7 +117,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
     //   );
     else
       throw new Error(
-        `Unsupported ComposablePool Version ${values.pool.poolTypeVersion}`
+        `Unsupported ComposablePool Version ${pool.poolTypeVersion}`
       );
   }
 
