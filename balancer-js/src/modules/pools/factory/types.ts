@@ -4,7 +4,6 @@ import { JoinPool } from '@/modules/pools/pool-types/concerns/types';
 export type Address = string;
 
 export type CreatePoolParameters = {
-  factoryAddress?: string;
   name: string;
   symbol: string;
   tokenAddresses: string[];

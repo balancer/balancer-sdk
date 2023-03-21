@@ -1,25 +1,35 @@
+import { LogDescription } from '@ethersproject/abi';
+import { BigNumberish } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
+import { BytesLike } from '@ethersproject/bytes';
+import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
+
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
+import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
+import { balancerVault, networkAddresses } from '@/lib/constants/config';
+import { AssetHelpers, findEventInReceiptLogs } from '@/lib/utils';
+import { ContractInstances } from '@/modules/contracts/contracts.module';
+import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import {
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
   WeightedCreatePoolParameters,
 } from '@/modules/pools/factory/types';
-import { AssetHelpers } from '@/lib/utils';
-import { BytesLike } from '@ethersproject/bytes';
-import { PoolFactory } from '@/modules/pools/factory/pool-factory';
-import { balancerVault, networkAddresses } from '@/lib/constants/config';
-import { BalancerNetworkConfig } from '@/types';
-import { Vault__factory } from '@/contracts/factories/Vault__factory';
-import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
-import { BigNumberish } from '@ethersproject/bignumber';
 import { WeightedPoolEncoder } from '@/pool-weighted';
-import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
+import { BalancerNetworkConfig } from '@/types';
+import { WeightedPool__factory } from '@/contracts';
 
 export class WeightedFactory implements PoolFactory {
   private wrappedNativeAsset: string;
+  private contracts: ContractInstances;
 
-  constructor(networkConfig: BalancerNetworkConfig) {
+  constructor(
+    networkConfig: BalancerNetworkConfig,
+    contracts: ContractInstances
+  ) {
     const { tokens } = networkAddresses(networkConfig.chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
+    this.contracts = contracts;
   }
 
   /**
@@ -34,7 +44,6 @@ export class WeightedFactory implements PoolFactory {
    * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
    */
   create({
-    factoryAddress,
     name,
     symbol,
     tokenAddresses,
@@ -42,7 +51,7 @@ export class WeightedFactory implements PoolFactory {
     swapFeeEvm,
     owner,
   }: WeightedCreatePoolParameters): {
-    to: string;
+    to?: string;
     data: BytesLike;
   } {
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
@@ -57,7 +66,7 @@ export class WeightedFactory implements PoolFactory {
       [name, symbol, sortedTokens, sortedWeights, swapFeeEvm.toString(), owner]
     );
     return {
-      to: factoryAddress || '',
+      to: this.contracts.weightedPoolFactory?.address,
       data: encodedFunctionData,
     };
   }
@@ -114,11 +123,24 @@ export class WeightedFactory implements PoolFactory {
     };
   }
 
-  getPoolAddressAndIdWithReceipt(
+  async getPoolAddressAndIdWithReceipt(
     provider: JsonRpcProvider,
     receipt: TransactionReceipt
   ): Promise<{ poolId: string; poolAddress: string }> {
-    console.log(provider, receipt);
-    throw new Error('to be implemented');
+    const poolCreationEvent: LogDescription = findEventInReceiptLogs({
+      receipt,
+      to: this.contracts.weightedPoolFactory?.address || '',
+      contractInterface: WeightedPoolFactory__factory.createInterface(),
+      logName: 'PoolCreated',
+    });
+
+    const poolAddress = poolCreationEvent.args.pool;
+    const weightedPoolInterface = WeightedPool__factory.createInterface();
+    const pool = new Contract(poolAddress, weightedPoolInterface, provider);
+    const poolId = await pool.getPoolId();
+    return {
+      poolAddress,
+      poolId,
+    };
   }
 }

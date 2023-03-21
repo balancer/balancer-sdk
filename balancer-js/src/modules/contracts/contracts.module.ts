@@ -19,6 +19,7 @@ import { Relayer } from './implementations/relayer';
 import { LiquidityGauge } from './implementations/liquidity-gauge';
 import { GaugeClaimHelper } from './implementations/GaugeClaimHelper';
 import { ComposableStablePoolFactory } from '@/modules/contracts/implementations/composable-stable-pool-factory';
+import { WeightedPoolFactory } from '@/modules/contracts/implementations/weighted-pool-factory';
 
 type ContractFactory = (
   address: string,
@@ -39,6 +40,7 @@ export interface ContractInstances {
   vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
+  weightedPoolFactory?: Contract;
 }
 
 export class Contracts {
@@ -53,6 +55,7 @@ export class Contracts {
   vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
+  weightedPoolFactory?: Contract;
 
   /**
    * Create instances of Balancer contracts connected to passed provider.
@@ -107,6 +110,12 @@ export class Contracts {
     if (this.contractAddresses.composableStablePoolFactory) {
       this.composableStablePoolFactory = ComposableStablePoolFactory(
         this.contractAddresses.composableStablePoolFactory,
+        provider
+      );
+    }
+    if (this.contractAddresses.weightedPoolFactory) {
+      this.weightedPoolFactory = WeightedPoolFactory(
+        this.contractAddresses.weightedPoolFactory,
         provider
       );
     }

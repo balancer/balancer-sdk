@@ -1,4 +1,4 @@
-// yarn test:only ./src/modules/pools/factory/weighted/weighted.factory.spec.ts
+// yarn test:only ./src/modules/pools/factory/weighted/weighted.factory.integration.spec.ts
 import { Interface, LogDescription } from '@ethersproject/abi';
 import { parseFixed } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
@@ -8,16 +8,11 @@ import { ethers } from 'hardhat';
 
 import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { WeightedPool__factory } from '@/contracts/factories/WeightedPool__factory';
-import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { ADDRESSES } from '@/test/lib/constants';
-import {
-  findEventInReceiptLogs,
-  forkSetup,
-  sendTransactionGetBalances,
-} from '@/test/lib/utils';
+import { forkSetup, sendTransactionGetBalances } from '@/test/lib/utils';
 import { Network, PoolType } from '@/types';
+import { findEventInReceiptLogs } from '@/lib/utils';
 
 dotenv.config();
 
@@ -34,7 +29,6 @@ const addresses = ADDRESSES[network];
 const USDC_address = addresses.USDC.address;
 const USDT_address = addresses.USDT.address;
 
-const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.weightedPoolFactory}`;
 const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
 const tokenAddresses = [USDC_address, USDT_address];
 const swapFeeEvm = `${1e16}`;
@@ -54,6 +48,7 @@ describe('creating weighted pool', () => {
   const balancer = new BalancerSDK(sdkConfig);
   const weightedPoolFactory = balancer.pools.poolFactory.of(PoolType.Weighted);
   let poolAddress = '';
+  let poolId = '';
 
   context('create and init join', async () => {
     before(async () => {
@@ -70,7 +65,6 @@ describe('creating weighted pool', () => {
     it('should create a pool', async () => {
       const signerAddress = await signer.getAddress();
       const { to, data } = weightedPoolFactory.create({
-        factoryAddress,
         name,
         symbol,
         tokenAddresses,
@@ -86,27 +80,23 @@ describe('creating weighted pool', () => {
         data as string
       );
 
-      const weightedPoolFactoryInterface = new Interface(
-        WeightedPoolFactory__factory.abi
+      const poolInfo = await weightedPoolFactory.getPoolAddressAndIdWithReceipt(
+        signer.provider,
+        transactionReceipt
       );
-
-      const poolCreationEvent: LogDescription = findEventInReceiptLogs({
-        receipt: transactionReceipt,
-        contractInterface: weightedPoolFactoryInterface,
-        to: to as string,
-        logName: 'PoolCreated',
-      });
-      if (poolCreationEvent) {
-        poolAddress = poolCreationEvent.args.pool;
-      }
-      expect(!!poolCreationEvent).to.be.true;
+      poolAddress = poolInfo.poolAddress;
+      poolId = poolInfo.poolId;
+      //Verifying if the address and id are valid
+      expect(poolId.length).to.equal(66);
+      expect(poolAddress.length).to.equal(42);
+      expect(poolId.indexOf('x')).to.equal(1);
+      expect(poolAddress.indexOf('x')).to.equal(1);
       return;
     });
     it('should init join a pool', async () => {
       const signerAddress = await signer.getAddress();
-      const weightedPoolInterface = new Interface(WeightedPool__factory.abi);
+      const weightedPoolInterface = WeightedPool__factory.createInterface();
       const pool = new Contract(poolAddress, weightedPoolInterface, provider);
-      const poolId = await pool.getPoolId();
       const amountsIn = [
         parseFixed('2000', 6).toString(),
         parseFixed('8000', 6).toString(),

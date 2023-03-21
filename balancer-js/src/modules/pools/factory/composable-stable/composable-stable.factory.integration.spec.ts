@@ -8,17 +8,14 @@ import { expect } from 'chai';
 import dotenv from 'dotenv';
 import { ethers } from 'hardhat';
 
+import { Vault__factory, ComposableStable__factory } from '@/contracts';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { findEventInReceiptLogs } from '@/lib/utils';
 import { _upscale, SolidityMaths } from '@/lib/utils/solidityMaths';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { ADDRESSES } from '@/test/lib/constants';
-import {
-  findEventInReceiptLogs,
-  forkSetup,
-  sendTransactionGetBalances,
-} from '@/test/lib/utils';
+import { forkSetup, sendTransactionGetBalances } from '@/test/lib/utils';
 import { Network, PoolType } from '@/types';
-import { Vault__factory, ComposableStable__factory } from '@/contracts';
 
 dotenv.config();
 
