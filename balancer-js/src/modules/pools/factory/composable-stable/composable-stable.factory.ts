@@ -19,7 +19,7 @@ import { LogDescription } from '@ethersproject/abi';
 import { findEventInReceiptLogs } from '@/test/lib/utils';
 import { Contract } from '@ethersproject/contracts';
 import { ContractInstances } from '@/modules/contracts/contracts.module';
-import { BytesLike } from 'ethers';
+import { BytesLike } from '@ethersproject/bytes';
 
 type JoinPoolDecodedAttributes = {
   poolId: string;
