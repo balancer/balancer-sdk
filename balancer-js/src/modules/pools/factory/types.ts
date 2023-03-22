@@ -13,9 +13,9 @@ export type CreatePoolParameters = {
 
 export interface ComposableStableCreatePoolParameters
   extends CreatePoolParameters {
-  amplificationParameter: number | string;
+  amplificationParameter: string;
   rateProviders: string[];
-  tokenRateCacheDurations: number[] | string[];
+  tokenRateCacheDurations: string[];
   exemptFromYieldProtocolFeeFlags: boolean[];
 }
 export interface WeightedCreatePoolParameters extends CreatePoolParameters {
