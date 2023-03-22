@@ -12,13 +12,18 @@ import {
   ProtocolId,
 } from '@/modules/pools/factory/types';
 import { BalancerNetworkConfig } from '@/types';
+import { ContractInstances } from '@/modules/contracts/contracts.module';
 
 export class LinearFactory implements PoolFactory {
   private wrappedNativeAsset: string;
-
-  constructor(networkConfig: BalancerNetworkConfig) {
+  private contracts: ContractInstances;
+  constructor(
+    networkConfig: BalancerNetworkConfig,
+    contracts: ContractInstances
+  ) {
     const { tokens } = networkAddresses(networkConfig.chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
+    this.contracts = contracts;
   }
 
   buildInitJoin(): InitJoinPoolAttributes {
@@ -28,7 +33,6 @@ export class LinearFactory implements PoolFactory {
 
   /**
    *
-   * @param factoryAddress The address of the factory, can be ERC4626, Aave or Euler
    * @param name The name of the pool
    * @param symbol The symbol of the pool (BPT name)
    * @param mainToken The unwrapped token
@@ -39,13 +43,12 @@ export class LinearFactory implements PoolFactory {
    * @param protocolId The protocolId, to check the available value
    */
   create({
-    factoryAddress,
     name,
     symbol,
     mainToken,
     wrappedToken,
     upperTarget,
-    swapFee,
+    swapFeeEvm,
     owner,
     protocolId,
   }: LinearCreatePoolParameters): TransactionRequest {
@@ -56,7 +59,7 @@ export class LinearFactory implements PoolFactory {
       mainToken,
       wrappedToken,
       upperTarget,
-      swapFee,
+      swapFeeEvm,
       owner,
       protocolId,
     });
@@ -88,7 +91,7 @@ export class LinearFactory implements PoolFactory {
     mainToken,
     wrappedToken,
     upperTarget,
-    swapFee,
+    swapFeeEvm,
     owner,
     protocolId,
   }: Omit<LinearCreatePoolParameters, 'factoryAddress'>): [
@@ -101,14 +104,13 @@ export class LinearFactory implements PoolFactory {
     string,
     string
   ] => {
-    const swapFeeScaled = parseToBigInt18(`${swapFee}`);
     const params = [
       name,
       symbol,
       mainToken,
       wrappedToken,
       parseFixed(upperTarget, 18).toString(),
-      swapFeeScaled.toString(),
+      swapFeeEvm.toString(),
       owner,
       protocolId.toString(),
     ] as [string, string, string, string, string, string, string, string];

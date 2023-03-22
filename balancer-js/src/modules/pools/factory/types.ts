@@ -25,7 +25,7 @@ export interface WeightedCreatePoolParameters extends CreatePoolParameters {
 
 export type LinearCreatePoolParameters = Pick<
   CreatePoolParameters,
-  'factoryAddress' | 'name' | 'symbol' | 'swapFee' | 'owner'
+  'name' | 'symbol' | 'swapFeeEvm' | 'owner'
 > & {
   mainToken: string;
   wrappedToken: string;

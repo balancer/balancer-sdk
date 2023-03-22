@@ -49,7 +49,7 @@ export class PoolFactory__factory {
       case 'AaveLinear':
       case 'ERC4626Linear':
       case 'EulerLinear': {
-        return new LinearFactory(this.networkConfig);
+        return new LinearFactory(this.networkConfig, this.contracts);
       }
       default:
         throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
