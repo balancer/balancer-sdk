@@ -13,19 +13,16 @@ import { ADDRESSES } from '@/test/lib/constants';
 import { BalancerSDK, Network, PoolType } from 'src';
 
 async function createAndInitJoinWeightedPool() {
-  const network = Network.GOERLI;
-  const rpcUrlLocal = 'http://127.0.0.1:8000';
+  const { ALCHEMY_URL: rpcUrlArchive } = process.env;
+  const network = Network.MAINNET;
+  const rpcUrlLocal = 'http://127.0.0.1:8545';
   const addresses = ADDRESSES[network];
-  const USDC_address = addresses.USDC.address;
-  const USDT_address = addresses.USDT.address;
   const sdkConfig = {
     network,
     rpcUrl: rpcUrlLocal,
   };
   const balancer = new BalancerSDK(sdkConfig);
   const weightedPoolFactory = balancer.pools.poolFactory.of(PoolType.Weighted);
-
-  const rpcUrlArchive = `${process.env.ALCHEMY_URL_GOERLI}`;
   const balances = [
     parseFixed('100000', 6).toString(),
     parseFixed('100000', 6).toString(),
@@ -36,7 +33,7 @@ async function createAndInitJoinWeightedPool() {
     rpcUrlArchive as string,
     rpcUrlLocal,
     network,
-    [USDC_address, USDT_address],
+    [addresses.USDC.address, addresses.USDT.address],
     [addresses.USDC.slot, addresses.USDT.slot],
     balances,
     '',
@@ -47,9 +44,12 @@ async function createAndInitJoinWeightedPool() {
   const poolParameters = {
     name: 'My-Test-Pool-Name',
     symbol: 'My-Test-Pool-Symbol',
-    tokenAddresses: [USDC_address, USDT_address],
-    weights: [`${0.2e18}`, `${0.8e18}`],
-    swapFeeEvm: `${1e16}`,
+    tokenAddresses: [addresses.USDC.address, addresses.USDT.address],
+    weights: [
+      parseFixed('0.2', 18).toString(),
+      parseFixed('0.8', 18).toString(),
+    ],
+    swapFeeEvm: parseFixed('1', 16).toString(),
     owner: signerAddress,
   };
 
@@ -77,7 +77,7 @@ async function createAndInitJoinWeightedPool() {
     joiner: signerAddress,
     poolId,
     poolAddress,
-    tokensIn: [USDC_address, USDT_address],
+    tokensIn: [addresses.USDC.address, addresses.USDT.address],
     amountsIn: [
       parseFixed('2000', 6).toString(),
       parseFixed('8000', 6).toString(),

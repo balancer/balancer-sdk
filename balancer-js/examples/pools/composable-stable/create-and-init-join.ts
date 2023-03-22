@@ -53,7 +53,7 @@ async function createAndInitJoinComposableStable() {
       '0x0000000000000000000000000000000000000000',
     ],
     tokenRateCacheDurations: ['100', '100'],
-    swapFeeEvm: `${1e16}`,
+    swapFeeEvm: parseFixed('1', 16).toString(),
     exemptFromYieldProtocolFeeFlags: [false, false],
     owner: ownerAddress,
   };
