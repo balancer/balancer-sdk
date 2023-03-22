@@ -45,7 +45,6 @@ async function createAndInitJoinComposableStable() {
   );
   const ownerAddress = await signer.getAddress();
   const poolParameters = {
-    factoryAddress: `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`, // TODO - reference this via balancer.contracts.composableFactory.address once its added to Contracts module
     name: 'Test-Name',
     symbol: 'Test-Symbol',
     tokenAddresses: poolTokens,

@@ -7,7 +7,7 @@ export type CreatePoolParameters = {
   name: string;
   symbol: string;
   tokenAddresses: string[];
-  swapFeeEvm: string | bigint;
+  swapFeeEvm: string;
   owner: Address;
 };
 
