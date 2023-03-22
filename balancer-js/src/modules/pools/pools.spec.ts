@@ -3,7 +3,7 @@ import { getNetworkConfig } from '../sdk.helpers';
 import { factories } from '@/test/factories';
 import { expect } from 'chai';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { JsonRpcProvider, Provider } from '@ethersproject/providers';
+import { JsonRpcProvider } from '@ethersproject/providers';
 
 const networkConfig = getNetworkConfig({ network: 1, rpcUrl: '' });
 
