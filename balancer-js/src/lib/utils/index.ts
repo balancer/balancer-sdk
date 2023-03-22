@@ -15,6 +15,9 @@ export const isSameAddress = (address1: string, address2: string): boolean =>
   getAddress(address1) === getAddress(address2);
 
 export function insert<T>(arr: T[], index: number, newItem: T): T[] {
+  if (index < 0 || index >= arr.length) {
+    return arr;
+  }
   return [
     // part of the array before the specified index
     ...arr.slice(0, index),
@@ -50,6 +53,9 @@ export function replace<T>(arr: T[], index: number, newItem: T): T[] {
  */
 export function removeItem<T>(arr: T[], index: number): T[] {
   const newArray = [...arr];
+  if (index < 0 || index >= arr.length) {
+    return newArray;
+  }
   newArray.splice(index, 1);
   return newArray;
 }
@@ -97,4 +103,8 @@ export function isLinearish(poolType: string): boolean {
   if (poolType.includes('Linear') && supportedPoolTypes.includes(poolType))
     return true;
   else return false;
+}
+
+export function truncateAddresses(addresses: string[]): string[] {
+  return addresses.map((t) => `${t.slice(0, 6)}...${t.slice(38, 42)}`);
 }

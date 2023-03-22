@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { JoinPoolParameters, JoinConcern, JoinPoolAttributes } from '../types';
 
 export class StablePhantomPoolJoin implements JoinConcern {
@@ -9,15 +10,6 @@ export class StablePhantomPoolJoin implements JoinConcern {
     slippage,
     wrappedNativeAsset,
   }: JoinPoolParameters): JoinPoolAttributes => {
-    // TODO implementation
-    console.log(
-      joiner,
-      pool,
-      tokensIn,
-      amountsIn,
-      slippage,
-      wrappedNativeAsset
-    );
-    throw new Error('To be implemented');
+    throw new Error('Join type not supported');
   };
 }

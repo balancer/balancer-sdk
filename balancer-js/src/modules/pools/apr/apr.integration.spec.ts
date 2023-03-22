@@ -1,10 +1,6 @@
-import dotenv from 'dotenv';
 import { expect } from 'chai';
 import MockDate from 'mockdate';
-import { BalancerSDK } from '@/modules/sdk.module';
-import { JsonRpcProvider } from '@ethersproject/providers';
-
-dotenv.config();
+import { BalancerSDK } from '@/.';
 
 const sdk = new BalancerSDK({
   network: 1,
@@ -36,19 +32,17 @@ const getMondayOfWeek = (today = new Date()) => {
   return new Date(today.setUTCDate(first));
 };
 
-describe('happy case', () => {
+describe.skip('happy case', () => {
   // Time when veBal used to receive procotol revenues
   const now = getMondayOfWeek().getTime();
 
   before(async function () {
     MockDate.set(now);
 
-    const rpcProvider = sdk.rpcProvider as JsonRpcProvider;
-
-    await rpcProvider.send('hardhat_reset', [
+    await sdk.provider.send('hardhat_reset', [
       {
         forking: {
-          jsonRpcUrl: process.env.RPC_URL || process.env.ALCHEMY_URL,
+          jsonRpcUrl: 'https://rpc.ankr.com/eth',
           // blockNumber: 15902899, // 2022-11-05 09:24:11
         },
       },

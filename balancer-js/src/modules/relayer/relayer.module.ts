@@ -2,7 +2,7 @@ import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Interface } from '@ethersproject/abi';
 import { MaxUint256, WeiPerEther, Zero } from '@ethersproject/constants';
-import { Vault } from '@balancer-labs/typechain';
+import { Vault } from '@/contracts/Vault';
 
 import { Swaps } from '@/modules/swaps/swaps.module';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
@@ -28,6 +28,7 @@ import {
   FundManagement,
   BatchSwapStep,
   FetchPoolsInput,
+  Swap,
 } from '../swaps/types';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { RelayerAuthorization } from '@/lib/utils';
@@ -96,6 +97,17 @@ export class Relayer {
       sender,
       recipient,
       amount,
+    ]);
+  }
+
+  static encodeSwap(params: Swap): string {
+    return relayerLibrary.encodeFunctionData('swap', [
+      params.request,
+      params.funds,
+      params.limit,
+      params.deadline,
+      params.value,
+      params.outputReference,
     ]);
   }
 

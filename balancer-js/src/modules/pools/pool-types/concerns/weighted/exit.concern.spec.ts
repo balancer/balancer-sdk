@@ -42,7 +42,7 @@ describe('WeightedPool exits', () => {
       errorMessage = (error as Error).message;
     }
     expect(errorMessage).to.eql(
-      'shouldUnwrapNativeAsset and singleTokenMaxOut should not have conflicting values'
+      'shouldUnwrapNativeAsset and singleTokenOut should not have conflicting values'
     );
   });
   it('should automatically sort tokens/amounts in correct order', async () => {

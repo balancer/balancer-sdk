@@ -1,4 +1,3 @@
-/* eslint-disable no-unexpected-multiline */
 import { BalancerSDK, Network, Pool } from '@/.';
 import { TransactionData } from '@/modules/claims/ClaimService';
 import { Pools } from '@/modules/pools';

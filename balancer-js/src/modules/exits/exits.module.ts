@@ -1,14 +1,16 @@
 import { cloneDeep } from 'lodash';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
-import { MaxInt256, WeiPerEther, Zero } from '@ethersproject/constants';
+import { WeiPerEther, Zero } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { Relayer } from '@/modules/relayer/relayer.module';
 import {
-  EncodeBatchSwapInput,
-  Relayer,
-} from '@/modules/relayer/relayer.module';
-import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
+  FundManagement,
+  SingleSwap,
+  Swap,
+  SwapType,
+} from '@/modules/swaps/types';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { StablePoolEncoder } from '@/pool-stable';
 import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
@@ -23,7 +25,7 @@ import { Join } from '../joins/joins.module';
 import { calcPriceImpact } from '../pricing/priceImpact';
 import { Simulation, SimulationType } from '../simulation/simulation.module';
 import { Requests, VaultModel } from '../vaultModel/vaultModel.module';
-import { BatchSwapRequest } from '../vaultModel/poolModel/swap';
+import { SwapRequest } from '../vaultModel/poolModel/swap';
 import { ExitPoolRequest as ExitPoolModelRequest } from '../vaultModel/poolModel/exit';
 import { JsonRpcSigner } from '@ethersproject/providers';
 
@@ -70,11 +72,7 @@ export class Exit {
     */
 
     // Create nodes and order by breadth first
-    const orderedNodes = await this.poolGraph.getGraphNodes(
-      false,
-      poolId,
-      false
-    );
+    const orderedNodes = await this.poolGraph.getGraphNodes(false, poolId);
 
     const isProportional = PoolGraph.isProportionalPools(orderedNodes);
     console.log(`isProportional`, isProportional);
@@ -204,11 +202,7 @@ export class Exit {
     amountBptIn: string
   ): Promise<string> {
     // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodesForJoin = await poolGraph.getGraphNodes(
-      true,
-      poolId,
-      false
-    );
+    const orderedNodesForJoin = await poolGraph.getGraphNodes(true, poolId);
     const joinPaths = Join.getJoinPaths(
       orderedNodesForJoin,
       tokensOut,
@@ -464,7 +458,7 @@ export class Exit {
         switch (node.exitAction) {
           case 'batchSwap': {
             const { modelRequest, encodedCall, assets, amounts } =
-              this.createBatchSwap(
+              this.createSwap(
                 node,
                 exitChild as Node,
                 i,
@@ -530,7 +524,7 @@ export class Exit {
     return { multiRequests, calls, outputIndexes, deltas };
   }
 
-  private createBatchSwap(
+  private createSwap(
     node: Node,
     exitChild: Node,
     exitPathIndex: number,
@@ -538,7 +532,7 @@ export class Exit {
     sender: string,
     recipient: string
   ): {
-    modelRequest: BatchSwapRequest;
+    modelRequest: SwapRequest;
     encodedCall: string;
     assets: string[];
     amounts: string[];
@@ -553,41 +547,29 @@ export class Exit {
     const tokenOut = exitChild.address;
     const assets = [tokenOut, node.address];
 
-    // For tokens going in to the Vault, the limit shall be a positive number. For tokens going out of the Vault, the limit shall be a negative number.
-    // First asset will always be the output token so use expectedOut to set limit
-    const limits: string[] = [
-      BigNumber.from(minAmountOut).mul(-1).toString(),
-      Relayer.isChainedReference(amountIn) ? MaxInt256.toString() : amountIn, // We don't know input amounts if they are part of a chain so set to max input
-    ];
+    // Single swap limits are always positive
+    // Swap within generalisedExit is always exactIn, so use minAmountOut to set limit
+    const limit: string = minAmountOut;
 
-    // TODO Change to single swap to save gas
-    const swaps: BatchSwapStep[] = [
-      {
-        poolId: node.id,
-        assetInIndex: 1,
-        assetOutIndex: 0,
-        amount: amountIn,
-        userData: '0x',
-      },
-    ];
+    const request: SingleSwap = {
+      poolId: node.id,
+      kind: SwapType.SwapExactIn,
+      assetIn: node.address,
+      assetOut: tokenOut,
+      amount: amountIn,
+      userData: '0x',
+    };
 
     const funds: FundManagement = {
       sender,
       recipient,
-      fromInternalBalance: false,
-      toInternalBalance: false,
+      fromInternalBalance: this.receivesFromInternal(node),
+      toInternalBalance: this.receivesFromInternal(exitChild),
     };
 
-    const outputReferences = [
-      {
-        index: assets
-          .map((a) => a.toLowerCase())
-          .indexOf(tokenOut.toLowerCase()),
-        key: Relayer.toChainedReference(
-          this.getOutputRef(exitPathIndex, exitChild.index)
-        ),
-      },
-    ];
+    const outputReference = Relayer.toChainedReference(
+      this.getOutputRef(exitPathIndex, exitChild.index)
+    );
 
     // console.log(
     //   `${node.type} ${node.address} prop: ${formatFixed(
@@ -605,25 +587,26 @@ export class Exit {
     //   )`
     // );
 
-    const call: EncodeBatchSwapInput = {
-      swapType: SwapType.SwapExactIn,
-      swaps,
-      assets,
+    const call: Swap = {
+      request,
       funds,
-      limits,
+      limit,
       deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
-      value: '0',
-      outputReferences,
+      value: '0', // TODO: check if swap with ETH is possible in this case and handle it
+      outputReference,
     };
 
-    const encodedCall = Relayer.encodeBatchSwap(call);
+    const encodedCall = Relayer.encodeSwap(call);
 
-    const modelRequest = VaultModel.mapBatchSwapRequest(call);
+    const modelRequest = VaultModel.mapSwapRequest(call);
 
-    // If the sender is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
-    const bptIn = sender === this.relayer ? '0' : limits[1];
-    // If the receiver is the Relayer the swap is part of a chain and shouldn't be considered for user deltas
-    const userTokenOutAmount = recipient === this.relayer ? '0' : limits[0];
+    // If node isn't rootNode, the swap is part of a chain and shouldn't be considered for user deltas
+    const bptIn = !isRootNode ? '0' : amountIn;
+    // If child exit action is not output, the swap is part of a chain and shouldn't be considered for user deltas
+    const userTokenOutAmount =
+      exitChild.exitAction !== 'output'
+        ? '0'
+        : BigNumber.from(minAmountOut).mul(-1).toString(); // needs to be negative because it's handled by the vault model as an amount going out of the vault
     const amounts = [userTokenOutAmount, bptIn];
 
     return { modelRequest, encodedCall, assets, amounts };
@@ -740,7 +723,7 @@ export class Exit {
       assets: sortedTokens,
       minAmountsOut: sortedAmounts,
       userData,
-      toInternalBalance: false,
+      toInternalBalance: this.receivesFromInternal(exitChild),
     });
     const encodedCall = Relayer.encodeExitPool(call);
     const modelRequest = VaultModel.mapExitPoolRequest(call);
@@ -749,12 +732,13 @@ export class Exit {
       Relayer.isChainedReference(a) ? '0' : Zero.sub(a).toString()
     );
     const userBptIn = Relayer.isChainedReference(amountIn) ? '0' : amountIn;
-    // If the sender is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
-    const deltaBptIn = sender === this.relayer ? Zero.toString() : userBptIn;
-    // If the receiver is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
-    const deltaTokensOut = recipient === this.relayer ? [] : sortedTokens;
+    // If node isn't rootNode, the exit is part of a chain and shouldn't be considered for user deltas
+    const deltaBptIn = !isRootNode ? Zero.toString() : userBptIn;
+    // // If child exit action is not output, the exit is part of a chain and shouldn't be considered for user deltas
+    const deltaTokensOut =
+      exitChild.exitAction !== 'output' ? [] : sortedTokens;
     const deltaAmountsOut =
-      recipient === this.relayer ? [] : userAmountTokensOut;
+      exitChild.exitAction !== 'output' ? [] : userAmountTokensOut;
 
     return {
       modelRequest,
@@ -767,5 +751,14 @@ export class Exit {
 
   private getOutputRef = (exitPathIndex: number, nodeIndex: string): number => {
     return exitPathIndex * 100 + parseInt(nodeIndex);
+  };
+
+  // node without parent is the root node and it receives from non-internal balance
+  // exitPool always expects amounts from non-internal balance
+  // output always behave as receiving from non-internal balance
+  // others should always receive from internal balance
+  private receivesFromInternal = (node: Node): boolean => {
+    if (!node.parent) return false;
+    return node.exitAction !== 'output' && node.exitAction !== 'exitPool';
   };
 }

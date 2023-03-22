@@ -1,13 +1,16 @@
 import * as SOR from '@balancer-labs/sor';
-import { Vault__factory } from '@balancer-labs/typechain';
 import { BigNumber } from '@ethersproject/bignumber';
+
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { balancerVault } from '@/lib/constants/config';
 import { AssetHelpers, getEthValue, parsePoolInfo } from '@/lib/utils';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { _upscaleArray } from '@/lib/utils/solidityMaths';
 import { StablePoolEncoder } from '@/pool-stable';
 import { Pool } from '@/types';
+
+import { StablePoolPriceImpact } from '../stable/priceImpact.concern';
 import {
   JoinConcern,
   JoinPool,
@@ -16,11 +19,11 @@ import {
 } from '../types';
 
 type SortedValues = {
-  parsedTokens: string[];
-  parsedAmp: string;
-  parsedTotalShares: string;
-  parsedSwapFee: string;
-  upScaledBalances: string[];
+  poolTokens: string[];
+  ampWithPrecision: bigint;
+  totalSharesEvm: bigint;
+  swapFeeEvm: bigint;
+  upScaledBalances: bigint[];
   upScaledAmountsIn: bigint[];
   sortedAmountsIn: string[];
 };
@@ -29,20 +32,10 @@ type EncodeJoinPoolParams = {
   joiner: string;
   poolId: string;
   minBPTOut: string;
-} & Pick<SortedValues, 'parsedTokens' | 'sortedAmountsIn'> &
+} & Pick<SortedValues, 'poolTokens' | 'sortedAmountsIn'> &
   Pick<JoinPoolParameters, 'amountsIn' | 'tokensIn'>;
 
 export class StablePoolJoin implements JoinConcern {
-  /**
-   * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
-   * @param {JoinPoolParameters}  params - parameters used to build exact tokens in for bpt out transaction
-   * @param {string}              params.joiner - Account address joining pool
-   * @param {Pool}                params.pool - Subgraph pool object of pool being joined
-   * @param {string[]}            params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
-   * @param {string[]}            params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
-   * @param {string}              params.slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
-   * @returns                     transaction request ready to send with signer.sendTransaction
-   */
   buildJoin = ({
     joiner,
     pool,
@@ -73,10 +66,19 @@ export class StablePoolJoin implements JoinConcern {
       ...sortedValues,
     });
 
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      sortedValues.sortedAmountsIn.map(BigInt),
+      BigInt(expectedBPTOut),
+      true
+    );
+
     return {
       ...encodedData,
       minBPTOut,
       expectedBPTOut,
+      priceImpact,
     };
   };
 
@@ -111,10 +113,10 @@ export class StablePoolJoin implements JoinConcern {
   >): SortedValues => {
     // Parse pool info into EVM amounts in order to match amountsIn scalling
     const {
-      parsedTokens,
-      parsedAmp,
-      parsedTotalShares,
-      parsedSwapFee,
+      poolTokens,
+      ampWithPrecision,
+      totalSharesEvm,
+      swapFeeEvm,
       scalingFactors,
       upScaledBalances,
     } = parsePoolInfo(pool, wrappedNativeAsset);
@@ -132,10 +134,10 @@ export class StablePoolJoin implements JoinConcern {
       scalingFactors.map((a) => BigInt(a))
     );
     return {
-      parsedTokens,
-      parsedAmp,
-      parsedTotalShares,
-      parsedSwapFee,
+      poolTokens,
+      ampWithPrecision,
+      totalSharesEvm,
+      swapFeeEvm,
       upScaledBalances,
       upScaledAmountsIn,
       sortedAmountsIn,
@@ -143,27 +145,27 @@ export class StablePoolJoin implements JoinConcern {
   };
 
   calcBptOutGivenExactTokensIn = ({
-    parsedAmp,
+    ampWithPrecision,
     upScaledBalances,
     upScaledAmountsIn,
-    parsedTotalShares,
-    parsedSwapFee,
+    totalSharesEvm,
+    swapFeeEvm,
     slippage,
   }: Pick<JoinPoolParameters, 'slippage'> &
     Pick<
       SortedValues,
-      | 'parsedAmp'
+      | 'ampWithPrecision'
       | 'upScaledBalances'
       | 'upScaledAmountsIn'
-      | 'parsedTotalShares'
-      | 'parsedSwapFee'
+      | 'totalSharesEvm'
+      | 'swapFeeEvm'
     >): { expectedBPTOut: string; minBPTOut: string } => {
     const expectedBPTOut = SOR.StableMathBigInt._calcBptOutGivenExactTokensIn(
-      BigInt(parsedAmp as string),
-      upScaledBalances.map((b) => BigInt(b)),
+      ampWithPrecision,
+      upScaledBalances,
       upScaledAmountsIn,
-      BigInt(parsedTotalShares),
-      BigInt(parsedSwapFee)
+      totalSharesEvm,
+      swapFeeEvm
     ).toString();
 
     const minBPTOut = subSlippage(
@@ -180,7 +182,7 @@ export class StablePoolJoin implements JoinConcern {
   encodeJoinPool = ({
     poolId,
     joiner,
-    parsedTokens,
+    poolTokens,
     sortedAmountsIn,
     amountsIn,
     tokensIn,
@@ -201,7 +203,7 @@ export class StablePoolJoin implements JoinConcern {
       sender: joiner,
       recipient: joiner,
       joinPoolRequest: {
-        assets: parsedTokens,
+        assets: poolTokens,
         maxAmountsIn: sortedAmountsIn,
         userData,
         fromInternalBalance: false,

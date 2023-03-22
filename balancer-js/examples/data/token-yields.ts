@@ -2,8 +2,8 @@
  * Display token yields
  * Run command: yarn examples:run ./examples/data/token-yields.ts
  */
-import { BalancerSDK } from '../../src/modules/sdk.module';
-import { yieldTokens } from '../../src/modules/data/token-yields/tokens/aave';
+import { BalancerSDK } from '@/modules/sdk.module';
+import { yieldTokens } from '@/modules/data/token-prices/aave-rates';
 
 const sdk = new BalancerSDK({ network: 1, rpcUrl: '' });
 const { data } = sdk;
@@ -19,6 +19,8 @@ const tokens = [
   '0xaf0d9d65fc54de245cda37af3d18cbec860a4d4b', // USDR
   '0xeb91861f8a4e1c12333f42dce8fb0ecdc28da716', // eUSDC
   '0x5484451a88a35cd0878a1be177435ca8a0e4054e', // eFRAX
+  '0xc411dB5f5Eb3f7d552F9B8454B2D74097ccdE6E3', // dUSDC
+  '0x6CFaF95457d7688022FC53e7AbE052ef8DFBbdBA', // dDAI
 ];
 
 const main = async () => {

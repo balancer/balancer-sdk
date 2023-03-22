@@ -1,6 +1,6 @@
 import { SwapInfo } from '@balancer-labs/sor';
-import { Vault } from '@balancer-labs/typechain';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
+import { Vault } from '@/contracts/Vault';
 
 export enum SwapType {
   SwapExactIn,

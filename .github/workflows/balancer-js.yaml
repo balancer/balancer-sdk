@@ -54,6 +54,8 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
       - name: Generate Subgraph Queries
         run: yarn subgraph:generate
+      - name: Generate Typechain
+        run: yarn typechain:generate
       - name: Build
         run: yarn build
 
@@ -76,6 +78,8 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
       - name: Generate Subgraph Queries
         run: yarn subgraph:generate
+      - name: Generate Typechain
+        run: yarn typechain:generate
       - name: Compile
         run: yarn build
       - name: Run node in background for integration tests

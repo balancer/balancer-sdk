@@ -2,7 +2,7 @@ import { PoolDictionary } from '../poolSource';
 import { RelayerModel } from '../relayer';
 import { JoinModel, JoinPoolRequest } from './join';
 import { ExitModel, ExitPoolRequest } from './exit';
-import { SwapModel, BatchSwapRequest } from './swap';
+import { SwapModel, BatchSwapRequest, SwapRequest } from './swap';
 
 export class PoolModel {
   joinModel: JoinModel;
@@ -34,5 +34,12 @@ export class PoolModel {
     pools: PoolDictionary
   ): Promise<string[]> {
     return this.swapModel.doBatchSwap(batchSwapRequest, pools);
+  }
+
+  async doSingleSwap(
+    swapRequest: SwapRequest,
+    pools: PoolDictionary
+  ): Promise<string[]> {
+    return this.swapModel.doSingleSwap(swapRequest, pools);
   }
 }

@@ -1,5 +1,6 @@
 import { SOR, SubgraphPoolBase, SwapInfo, SwapTypes } from '@balancer-labs/sor';
-import { Vault__factory, Vault } from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
+import { Vault } from '@/contracts/Vault';
 import {
   BatchSwap,
   QuerySimpleFlashSwapParameters,
@@ -44,7 +45,9 @@ export class Swaps {
       this.chainId = (<any>this.sor.provider)['_network']['chainId'];
     } else {
       this.sor = new Sor(sorOrConfig);
-      this.chainId = sorOrConfig.network as number;
+      if (typeof sorOrConfig.network === 'number')
+        this.chainId = sorOrConfig.network as number;
+      else this.chainId = sorOrConfig.network.chainId;
     }
 
     this.vaultContract = Vault__factory.connect(

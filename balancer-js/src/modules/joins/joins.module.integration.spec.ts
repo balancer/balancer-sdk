@@ -171,7 +171,6 @@ const testFlow = async (
     tokensIn,
     amountsIn,
     userAddress,
-    wrapMainTokens,
     slippage,
     signer,
     simulationType,

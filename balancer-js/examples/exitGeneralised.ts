@@ -1,9 +1,15 @@
 // yarn examples:run ./examples/exitGeneralised.ts
 import dotenv from 'dotenv';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { parseFixed } from '@ethersproject/bignumber';
-import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '../src/index';
-import { forkSetup, getBalances } from '../src/test/lib/utils';
+import { formatFixed, parseFixed } from '@ethersproject/bignumber';
+import {
+  BalancerSDK,
+  GraphQLQuery,
+  GraphQLArgs,
+  Network,
+  truncateAddresses,
+} from '../src/index';
+import { forkSetup, sendTransactionGetBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
 import { Relayer } from '../src/modules/relayer/relayer.module';
 import { Contracts } from '../src/modules/contracts/contracts.module';
@@ -21,28 +27,35 @@ import { SimulationType } from '../src/modules/simulation/simulation.module';
 
 dotenv.config();
 
-const jsonRpcUrl = process.env.ALCHEMY_URL_GOERLI;
-const network = Network.GOERLI;
-const blockNumber = 7890980;
-const rpcUrl = 'http://127.0.0.1:8000';
+// const network = Network.GOERLI;
+// const jsonRpcUrl = process.env.ALCHEMY_URL_GOERLI;
+// const blockNumber = 7890980;
+// const rpcUrl = 'http://127.0.0.1:8000';
+// const customSubgraphUrl =
+//   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
+
+const network = Network.MAINNET;
+const jsonRpcUrl = process.env.ALCHEMY_URL;
+const blockNumber = 16685400;
+const rpcUrl = 'http://127.0.0.1:8545';
 const customSubgraphUrl =
-  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
+  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2';
+
 const addresses = ADDRESSES[network];
-const bbausd2 = {
-  id: addresses.bbausd2?.id as string,
-  address: addresses.bbausd2?.address as string,
-  decimals: addresses.bbausd2?.decimals,
-  slot: addresses.bbausd2?.slot as number,
-};
+
+// bb-e-usd
+const testPool = addresses.bbeusd;
+
+// Amount of testPool BPT that will be used to exit
+const amount = parseFixed('2', testPool.decimals).toString();
 
 // Setup local fork with correct balances/approval to exit bb-a-usd2 pool
 const setUp = async (provider: JsonRpcProvider) => {
   const signer = provider.getSigner();
-  const signerAddress = await signer.getAddress();
 
-  const mainTokens = [bbausd2.address];
-  const mainInitialBalances = [parseFixed('10', bbausd2.decimals).toString()];
-  const mainSlots = [bbausd2.slot];
+  const mainTokens = [testPool.address];
+  const mainInitialBalances = [amount];
+  const mainSlots = [testPool.slot];
 
   await forkSetup(
     signer,
@@ -73,9 +86,6 @@ const exit = async () => {
   const signer = provider.getSigner();
   const signerAddress = await signer.getAddress();
   const slippage = '100'; // 100 bps = 1%
-
-  // Here we exit with bb-a-usd BPT
-  const amount = parseFixed('10', bbausd2.decimals).toString();
 
   /**
    * Example of subgraph query that allows filtering pools.
@@ -112,18 +122,23 @@ const exit = async () => {
   });
 
   // Use SDK to create exit transaction
-  const { expectedAmountsOut } = await balancer.pools.generalisedExit(
-    bbausd2.id,
-    amount,
-    signerAddress,
-    slippage,
-    signer,
-    SimulationType.VaultModel,
-    undefined
-  );
+  const { expectedAmountsOut, tokensOut } =
+    await balancer.pools.generalisedExit(
+      testPool.id,
+      amount,
+      signerAddress,
+      slippage,
+      signer,
+      SimulationType.VaultModel,
+      undefined
+    );
 
   // User reviews expectedAmountOut
-  console.log('Expected amounts out - VaultModel: ', expectedAmountsOut);
+  console.log(' -- Simulating using Vault Model -- ');
+  console.table({
+    tokensOut: truncateAddresses([testPool.address, ...tokensOut]),
+    expectedAmountsOut: ['0', ...expectedAmountsOut],
+  });
 
   // User approves relayer
   const { contracts, contractAddresses } = new Contracts(
@@ -139,7 +154,7 @@ const exit = async () => {
 
   // Use SDK to create exit transaction
   const query = await balancer.pools.generalisedExit(
-    bbausd2.id,
+    testPool.id,
     amount,
     signerAddress,
     slippage,
@@ -148,36 +163,22 @@ const exit = async () => {
     relayerAuth
   );
 
-  // Checking balances before to confirm success
-  const tokenBalancesBefore = (
-    await getBalances(
-      [bbausd2.address, ...query.tokensOut],
-      signer,
-      signerAddress
-    )
-  ).map((b) => b.toString());
+  // Submit transaction and check balance deltas to confirm success
+  const { balanceDeltas } = await sendTransactionGetBalances(
+    [testPool.address, ...query.tokensOut],
+    signer,
+    signerAddress,
+    query.to,
+    query.encodedCall
+  );
 
-  // Submit exit tx
-  const transactionResponse = await signer.sendTransaction({
-    to: query.to,
-    data: query.encodedCall,
-  });
-
-  // Checking balances after to confirm success
-  await transactionResponse.wait();
-  const tokenBalancesAfter = (
-    await getBalances(
-      [bbausd2.address, ...query.tokensOut],
-      signer,
-      signerAddress
-    )
-  ).map((b) => b.toString());
-
+  console.log(' -- Simulating using Static Call -- ');
+  console.log('Price impact: ', formatFixed(query.priceImpact, 18));
   console.table({
-    balancesBefore: tokenBalancesBefore,
-    balancesAfter: tokenBalancesAfter,
-    expectedAmountsOut: ['0', ...query.expectedAmountsOut],
+    tokensOut: truncateAddresses([testPool.address, ...query.tokensOut]),
     minAmountsOut: ['0', ...query.minAmountsOut],
+    expectedAmountsOut: ['0', ...query.expectedAmountsOut],
+    balanceDeltas: balanceDeltas.map((b) => b.toString()),
   });
 };
 

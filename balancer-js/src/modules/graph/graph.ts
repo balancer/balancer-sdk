@@ -26,13 +26,7 @@ export interface Node {
   decimals: number;
 }
 
-type JoinAction =
-  | 'input'
-  | 'batchSwap'
-  | 'wrap'
-  | 'joinPool'
-  | 'wrapAaveDynamicToken'
-  | 'wrapERC4626';
+type JoinAction = 'input' | 'batchSwap' | 'joinPool';
 const joinActions = new Map<PoolType, JoinAction>();
 supportedPoolTypes.forEach((type) => {
   if (type.includes('Linear') && supportedPoolTypes.includes(type))
@@ -47,14 +41,7 @@ joinActions.set(PoolType.StablePhantom, 'batchSwap');
 joinActions.set(PoolType.Weighted, 'joinPool');
 joinActions.set(PoolType.ComposableStable, 'joinPool');
 
-type ExitAction =
-  | 'output'
-  | 'batchSwap'
-  | 'unwrap'
-  | 'exitPool'
-  | 'exitPoolProportional'
-  | 'unwrapAaveStaticToken'
-  | 'unwrapERC4626';
+type ExitAction = 'output' | 'batchSwap' | 'exitPool' | 'exitPoolProportional';
 const exitActions = new Map<PoolType, ExitAction>();
 supportedPoolTypes.forEach((type) => {
   if (type.includes('Linear') && supportedPoolTypes.includes(type))
@@ -72,10 +59,7 @@ exitActions.set(PoolType.ComposableStable, 'exitPool');
 export class PoolGraph {
   constructor(private pools: Findable<Pool, PoolAttribute>) {}
 
-  async buildGraphFromRootPool(
-    poolId: string,
-    wrapMainTokens: boolean
-  ): Promise<Node> {
+  async buildGraphFromRootPool(poolId: string): Promise<Node> {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
     const nodeIndex = 0;
@@ -83,8 +67,7 @@ export class PoolGraph {
       rootPool.address,
       nodeIndex,
       undefined,
-      WeiPerEther,
-      wrapMainTokens
+      WeiPerEther
     );
     return rootNode[0];
   }
@@ -92,8 +75,8 @@ export class PoolGraph {
   getTokenTotal(pool: Pool): BigNumber {
     const bptIndex = pool.tokensList.indexOf(pool.address);
     let total = Zero;
-    const { parsedBalances } = parsePoolInfo(pool);
-    parsedBalances.forEach((balance, i) => {
+    const { balancesEvm } = parsePoolInfo(pool);
+    balancesEvm.forEach((balance, i) => {
       // Ignore phantomBpt balance
       if (bptIndex !== i) {
         total = total.add(balance);
@@ -106,8 +89,7 @@ export class PoolGraph {
     address: string,
     nodeIndex: number,
     parent: Node | undefined,
-    proportionOfParent: BigNumber,
-    wrapMainTokens: boolean
+    proportionOfParent: BigNumber
   ): Promise<[Node, number]> {
     const pool = await this.pools.findBy('address', address);
 
@@ -184,11 +166,10 @@ export class PoolGraph {
       [poolNode, nodeIndex] = this.createLinearNodeChildren(
         poolNode,
         nodeIndex,
-        pool,
-        wrapMainTokens
+        pool
       );
     } else {
-      const { parsedBalances } = parsePoolInfo(pool);
+      const { balancesEvm } = parsePoolInfo(pool);
       for (let i = 0; i < pool.tokens.length; i++) {
         // ignore any phantomBpt tokens
         if (isSameAddress(pool.tokens[i].address, pool.address)) continue;
@@ -198,7 +179,7 @@ export class PoolGraph {
           const tokenWeight = pool.tokens[i].weight as string;
           proportion = parseFixed(tokenWeight, 18);
         } else {
-          proportion = BigNumber.from(parsedBalances[i])
+          proportion = BigNumber.from(balancesEvm[i])
             .mul((1e18).toString())
             .div(tokenTotal);
         }
@@ -209,8 +190,7 @@ export class PoolGraph {
           pool.tokens[i].address,
           nodeIndex,
           poolNode,
-          finalProportion,
-          wrapMainTokens
+          finalProportion
         );
         nodeIndex = childNode[1];
         if (childNode[0]) poolNode.children.push(childNode[0]);
@@ -236,95 +216,25 @@ export class PoolGraph {
   createLinearNodeChildren(
     linearPoolNode: Node,
     nodeIndex: number,
-    linearPool: Pool,
-    wrapMainTokens: boolean
+    linearPool: Pool
   ): [Node, number] {
-    if (wrapMainTokens) {
-      // Linear pool will be joined via wrapped token. This will be the child node.
-      const wrappedNodeInfo = this.createWrappedTokenNode(
-        linearPool,
-        nodeIndex,
-        linearPoolNode,
-        linearPoolNode.proportionOfParent
-      );
-      linearPoolNode.children.push(wrappedNodeInfo[0]);
-      return [linearPoolNode, wrappedNodeInfo[1]];
-    } else {
-      // Main token
-      if (linearPool.mainIndex === undefined)
-        throw new Error('Issue With Linear Pool');
-
-      const mainTokenDecimals =
-        linearPool.tokens[linearPool.mainIndex].decimals ?? 18;
-
-      const nodeInfo = PoolGraph.createInputTokenNode(
-        nodeIndex,
-        linearPool.tokensList[linearPool.mainIndex],
-        mainTokenDecimals,
-        linearPoolNode,
-        linearPoolNode.proportionOfParent
-      );
-      linearPoolNode.children.push(nodeInfo[0]);
-      nodeIndex = nodeInfo[1];
-      return [linearPoolNode, nodeIndex];
-    }
-  }
-
-  createWrappedTokenNode(
-    linearPool: Pool,
-    nodeIndex: number,
-    parent: Node | undefined,
-    proportionOfParent: BigNumber
-  ): [Node, number] {
-    if (
-      linearPool.wrappedIndex === undefined ||
-      linearPool.mainIndex === undefined
-    )
+    // Main token
+    if (linearPool.mainIndex === undefined)
       throw new Error('Issue With Linear Pool');
-
-    // Relayer can support different wrapped tokens
-    let joinAction: JoinAction = 'wrapAaveDynamicToken';
-    switch (linearPool.poolType) {
-      case PoolType.ERC4626Linear:
-        joinAction = 'wrapERC4626';
-    }
-    let exitAction: ExitAction = 'unwrapAaveStaticToken';
-    switch (linearPool.poolType) {
-      case PoolType.ERC4626Linear:
-        exitAction = 'unwrapERC4626';
-    }
-
-    const wrappedTokenNode: Node = {
-      type: 'WrappedToken',
-      address: linearPool.tokensList[linearPool.wrappedIndex],
-      id: 'N/A',
-      children: [],
-      marked: false,
-      joinAction,
-      exitAction,
-      isProportionalExit: false,
-      index: nodeIndex.toString(),
-      parent,
-      proportionOfParent,
-      isLeaf: false,
-      spotPrices: {},
-      decimals: 18,
-    };
-    nodeIndex++;
 
     const mainTokenDecimals =
       linearPool.tokens[linearPool.mainIndex].decimals ?? 18;
 
-    const inputNode = PoolGraph.createInputTokenNode(
+    const nodeInfo = PoolGraph.createInputTokenNode(
       nodeIndex,
       linearPool.tokensList[linearPool.mainIndex],
       mainTokenDecimals,
-      wrappedTokenNode,
-      proportionOfParent
+      linearPoolNode,
+      linearPoolNode.proportionOfParent
     );
-    wrappedTokenNode.children = [inputNode[0]];
-    nodeIndex = inputNode[1];
-    return [wrappedTokenNode, nodeIndex];
+    linearPoolNode.children.push(nodeInfo[0]);
+    nodeIndex = nodeInfo[1];
+    return [linearPoolNode, nodeIndex];
   }
 
   static createInputTokenNode(
@@ -392,15 +302,11 @@ export class PoolGraph {
   }
 
   // Get full graph from root pool and return ordered nodes
-  getGraphNodes = async (
-    isJoin: boolean,
-    poolId: string,
-    wrapMainTokens: boolean
-  ): Promise<Node[]> => {
+  getGraphNodes = async (isJoin: boolean, poolId: string): Promise<Node[]> => {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
-    const rootNode = await this.buildGraphFromRootPool(poolId, wrapMainTokens);
+    const rootNode = await this.buildGraphFromRootPool(poolId);
 
     if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
 

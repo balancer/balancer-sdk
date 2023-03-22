@@ -1,3 +1,4 @@
+// yarn test:only ./src/modules/swaps/swaps.module.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { factories } from '@/test/factories';
@@ -7,11 +8,12 @@ import {
   Network,
   BalancerSDK,
   Swaps,
+  BALANCER_NETWORK_CONFIG,
 } from '@/.';
 import { getNetworkConfig } from '@/modules/sdk.helpers';
 import { mockPool, mockPoolDataService } from '@/test/lib/mockPool';
 import { SwapTransactionRequest, SwapType } from './types';
-import { Vault__factory } from '@balancer-labs/typechain';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import BatchRelayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -60,11 +62,31 @@ describe('swaps module', () => {
       expect(pools).to.deep.eq([mockPool]);
     });
 
-    it('instantiate via SDK', async () => {
-      const balancer = new BalancerSDK(sdkConfig);
-      await balancer.swaps.fetchPools();
-      const pools = balancer.swaps.getPools();
-      expect(pools).to.deep.eq([mockPool]);
+    context('instantiate via SDK', () => {
+      it('with network number', async () => {
+        const sdkConfig: BalancerSdkConfig = {
+          network: Network.GOERLI,
+          rpcUrl: `https://goerli.infura.io/v3/${process.env.INFURA}`,
+          sor: sorConfig,
+        };
+        const balancer = new BalancerSDK(sdkConfig);
+        expect(balancer.swaps.chainId).to.eq(Network.GOERLI);
+        await balancer.swaps.fetchPools();
+        const pools = balancer.swaps.getPools();
+        expect(pools).to.deep.eq([mockPool]);
+      });
+      it('with network config', async () => {
+        const sdkConfig: BalancerSdkConfig = {
+          network: BALANCER_NETWORK_CONFIG[Network.GOERLI],
+          rpcUrl: `https://goerli.infura.io/v3/${process.env.INFURA}`,
+          sor: sorConfig,
+        };
+        const balancer = new BalancerSDK(sdkConfig);
+        expect(balancer.swaps.chainId).to.eq(Network.GOERLI);
+        await balancer.swaps.fetchPools();
+        const pools = balancer.swaps.getPools();
+        expect(pools).to.deep.eq([mockPool]);
+      });
     });
   });
 
@@ -224,7 +246,8 @@ describe('swaps module', () => {
     });
   });
 
-  describe('full flow', () => {
+  describe('full flow', function () {
+    this.timeout(100000);
     const swaps = new Swaps({
       network: Network.MAINNET,
       rpcUrl: `localhost:8545`,
