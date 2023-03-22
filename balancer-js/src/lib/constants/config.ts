@@ -335,6 +335,46 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
     ],
   },
+  [Network.FANTOM]: {
+    chainId: Network.FANTOM, //250
+    addresses: {
+      contracts: {
+        vault: '0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce',
+        multicall: '0x66335d7ad8011f6aa3f48aadcb523b62b38ed961',
+        gaugeClaimHelper: '0x0000000000000000000000000000000000000000', // no guages on fantom
+        relayerV3: '0xC852F984CA3310AFc596adeB17EfcB0542646920',
+        relayerV4: '0x419f7925b8c9e409b6ee8792242556fa210a7a09',
+        balancerHelpers: '0xfE18C7C70b0a2c6541bEde0367124278BC345Dc8',
+        weightedPoolFactory: '0x60467cb225092cE0c989361934311175f437Cf53',
+        composableStablePoolFactory:
+          '0x44814E3A603bb7F1198617995c5696C232F6e8Ed',
+      },
+      tokens: {
+        bal: '0xF24Bcf4d1e507740041C9cFd2DddB29585aDCe1e', //beets
+        wrappedNativeAsset: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+        lbpRaisingTokens: [
+          '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83', // WFTM
+          '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75', // USDC
+          '0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E', // DAI
+        ],
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-v2-fantom',
+      gaugesSubgraph: '', // no guages on fantom
+      blockNumberSubgraph:
+        'https://api.thegraph.com/subgraphs/name/beethovenxfi/fantom-blocks',
+    },
+    pools: {},
+    poolsToIgnore: [],
+    sorConnectingTokens: [
+      {
+        symbol: 'wftm',
+        address: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+      },
+    ],
+  },
 };
 
 export const networkAddresses = (
