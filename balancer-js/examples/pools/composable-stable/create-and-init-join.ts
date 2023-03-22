@@ -7,7 +7,6 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 import { parseFixed } from '@ethersproject/bignumber';
 
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { ADDRESSES } from '@/test/lib/constants';
 import { setUpExample } from '../helper';
 
