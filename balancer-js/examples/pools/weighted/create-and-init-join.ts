@@ -37,7 +37,7 @@ async function createAndInitJoinWeightedPool() {
     [addresses.USDC.slot, addresses.USDT.slot],
     balances,
     '',
-    8200000
+    16720000
   );
   const signerAddress = await signer.getAddress();
 
