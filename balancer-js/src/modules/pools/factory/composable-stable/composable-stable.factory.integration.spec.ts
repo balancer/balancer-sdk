@@ -65,7 +65,7 @@ describe('ComposableStable Factory', async () => {
       tokenRateCacheDurations: poolTokens.map(() => '0'),
       owner: signerAddress,
       amplificationParameter: '92',
-      swapFeeEvm: parseFixed('1', 16).toString(),
+      swapFeeEvm: parseFixed('0.10', 18).toString(),
     };
   });
   context('pool creation', async () => {

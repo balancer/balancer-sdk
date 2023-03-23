@@ -18,9 +18,11 @@ export interface ComposableStableCreatePoolParameters
   tokenRateCacheDurations: string[];
   exemptFromYieldProtocolFeeFlags: boolean[];
 }
+
 export interface WeightedCreatePoolParameters extends CreatePoolParameters {
   weights: BigNumberish[];
 }
+
 export interface InitJoinPoolParameters {
   joiner: string;
   poolId: string;
@@ -36,3 +38,17 @@ export interface InitJoinPoolAttributes {
   data: string;
   value?: BigNumber;
 }
+
+export type JoinPoolDecodedAttributes = {
+  poolId: string;
+  sender: string;
+  recipient: string;
+  joinPoolRequest: JoinPoolRequestDecodedAttributes;
+};
+
+export type JoinPoolRequestDecodedAttributes = {
+  assets: string[];
+  maxAmountsIn: string[];
+  userData: string;
+  fromInternalBalance: boolean;
+};

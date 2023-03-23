@@ -64,7 +64,7 @@ describe('creating weighted pool', () => {
           parseFixed('0.2', 18).toString(),
           parseFixed('0.8', 18).toString(),
         ],
-        swapFeeEvm: parseFixed('0.01', 18).toString(),
+        swapFeeEvm: parseFixed('1', 16).toString(),
         owner: signerAddress,
       };
     });
@@ -74,7 +74,7 @@ describe('creating weighted pool', () => {
       it('should send creation tx', async () => {
         const txInfo = weightedPoolFactory.create(poolParams);
         transactionReceipt = await (
-          await signer.sendTransaction(txInfo)
+          await signer.sendTransaction({ ...txInfo, gasLimit: 30000000 })
         ).wait();
         expect(transactionReceipt.status).to.eql(1);
       });
