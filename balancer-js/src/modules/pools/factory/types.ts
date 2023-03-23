@@ -1,14 +1,12 @@
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { JoinPool } from '@/modules/pools/pool-types/concerns/types';
 
-export type Address = string;
-
 export type CreatePoolParameters = {
   name: string;
   symbol: string;
   tokenAddresses: string[];
   swapFeeEvm: string;
-  owner: Address;
+  owner: string;
 };
 
 export interface ComposableStableCreatePoolParameters

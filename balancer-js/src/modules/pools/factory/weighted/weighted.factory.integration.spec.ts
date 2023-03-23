@@ -1,23 +1,25 @@
 // yarn test:only ./src/modules/pools/factory/weighted/weighted.factory.integration.spec.ts
-import { parseFixed } from '@ethersproject/bignumber';
-import { expect } from 'chai';
 import dotenv from 'dotenv';
-
 dotenv.config();
-
-import { BalancerSDK } from '@/modules/sdk.module';
+import { expect } from 'chai';
+import { parseFixed } from '@ethersproject/bignumber';
+import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
+import { WeightedMaths } from '@balancer-labs/sor';
+import {
+  BalancerSDK,
+  Network,
+  PoolType,
+  WeightedPool,
+  WeightedPool__factory,
+  WeightedCreatePoolParameters,
+} from '@/.';
+import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { ADDRESSES } from '@/test/lib/constants';
 import {
   forkSetup,
   getBalances,
   sendTransactionGetBalances,
 } from '@/test/lib/utils';
-import { Network, PoolType } from '@/types';
-import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
-import { WeightedCreatePoolParameters } from '@/modules/pools/factory/types';
-import { WeightedPool, WeightedPool__factory } from '@/contracts';
-import { WeightedMaths } from '@balancer-labs/sor';
-import { SolidityMaths } from '@/lib/utils/solidityMaths';
 
 const network = Network.MAINNET;
 const rpcUrl = 'http://127.0.0.1:8545';
@@ -34,9 +36,6 @@ describe('creating weighted pool', () => {
   const rawAmount = '1000000000';
   const amountsIn = poolTokens.map((p) =>
     parseFixed(rawAmount, p.decimals).toString()
-  );
-  const amountsInEvm = poolTokens.map(() =>
-    parseFixed(rawAmount, 18).toString()
   );
   const weightedPoolFactory = balancer.pools.poolFactory.of(PoolType.Weighted);
   let poolAddress: string;
@@ -128,6 +127,9 @@ describe('creating weighted pool', () => {
         poolTokenBalances.forEach((b) => expect(b.isZero()).is.true);
       });
       it('should receive correct BPT Amount', async () => {
+        const amountsInEvm = poolTokens.map(() =>
+          parseFixed(rawAmount, 18).toString()
+        );
         const bptBalance = await getBalances(
           [poolAddress],
           signer,

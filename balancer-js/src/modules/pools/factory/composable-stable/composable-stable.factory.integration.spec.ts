@@ -12,8 +12,8 @@ import {
   ComposableStable__factory,
   BalancerSDK,
   ComposableStable,
+  ComposableStableCreatePoolParameters,
 } from '@/.';
-import { ComposableStableCreatePoolParameters } from '../types';
 import { _upscale, SolidityMaths } from '@/lib/utils/solidityMaths';
 import { ADDRESSES } from '@/test/lib/constants';
 import {

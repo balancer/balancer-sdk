@@ -38,14 +38,14 @@ export class WeightedFactory implements PoolFactory {
 
   /**
    * Builds a transaction for a weighted pool create operation.
-   * @param factoryAddress - The address of the factory for weighted pool (contract address)
-   * @param name - The name of the pool
-   * @param symbol - The symbol of the pool
-   * @param tokenAddresses - The token's addresses
+   * @param factoryAddress The address of the factory for weighted pool (contract address)
+   * @param name The name of the pool
+   * @param symbol The symbol of the pool
+   * @param tokenAddresses The token's addresses
    * @param weights The weights for each token, ordered
-   * @param swapFeeEvm - The swapFee for the owner of the pool in string or bigint formatted to evm(100% is 1e18, 10% is 1e17, 1% is 1e16)
-   * @param owner - The address of the owner of the pool
-   * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
+   * @param swapFeeEvm The swapFee for the owner of the pool in string or bigint formatted to evm(100% is 1e18, 10% is 1e17, 1% is 1e16)
+   * @param owner The address of the owner of the pool
+   * @returns TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
    */
   create({
     name,
@@ -148,11 +148,11 @@ export class WeightedFactory implements PoolFactory {
 
   /**
    * Returns a InitJoinPoolAttributes to make a init join transaction
-   * @param joiner - The address of the joiner of the pool
-   * @param poolId - The id of the pool
-   * @param tokensIn - array with the address of the tokens
-   * @param amountsIn - array with the amount of each token
-   * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a weighted pool
+   * @param joiner The address of the joiner of the pool
+   * @param poolId The id of the pool
+   * @param tokensIn Array with the address of the tokens
+   * @param amountsIn Array with the amount of each token
+   * @returns InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a weighted pool
    */
   buildInitJoin({
     joiner,
