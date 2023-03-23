@@ -1,6 +1,7 @@
 export enum BalancerErrorCode {
   ABOVE_MAX_TOKENS = 'ABOVE_MAX_TOKENS',
   BELOW_MIN_TOKENS = 'BELOW_MIN_TOKENS',
+  EXIT_DELTA_AMOUNTS = 'EXIT_DELTA_AMOUNTS',
   FEE_PROVIDER_NOT_PROVIDED = 'FEE_PROVIDER_NOT_PROVIDED',
   GAUGES_HELPER_ADDRESS_NOT_PROVIDED = 'GAUGES_HELPER_ADDRESS_NOT_PROVIDED',
   GAUGES_NOT_FOUND = 'GAUGES_NOT_FOUND',
@@ -48,6 +49,8 @@ export class BalancerError extends Error {
         return 'the array contains more tokens than the maximum allowed';
       case BalancerErrorCode.BELOW_MIN_TOKENS:
         return 'the array does not contain the minimum quantity of tokens';
+      case BalancerErrorCode.EXIT_DELTA_AMOUNTS:
+        return 'Error when checking exit call deltas';
       case BalancerErrorCode.FEE_PROVIDER_NOT_PROVIDED:
         return 'Fee Provider Repository has not been provided';
       case BalancerErrorCode.GAUGES_HELPER_ADDRESS_NOT_PROVIDED:
