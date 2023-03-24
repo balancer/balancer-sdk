@@ -223,6 +223,7 @@ export interface PoolToken extends Token {
 export interface SubPoolMeta {
   pool: SubPool | null;
   latestUSDPrice?: string;
+  latestFXPrice?: string;
 }
 
 export interface SubPool {
