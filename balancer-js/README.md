@@ -132,34 +132,6 @@ swaps.queryBatchSwap(batchSwap: {
 
 [Example](./examples/queryBatchSwap.ts)
 
-### #queryBatchSwapWithSor
-
-Uses SOR to create and query a batchSwap for multiple tokens in > multiple tokensOut.
-
-@param queryWithSor - Swap information used for querying using SOR.
-@param queryWithSor.tokensIn - Array of addresses of assets in.
-@param queryWithSor.tokensOut - Array of addresses of assets out.
-@param queryWithSor.swapType - Type of Swap, ExactIn/Out.
-@param queryWithSor.amounts - Array of amounts used in swap.
-@param queryWithSor.fetchPools - Set whether SOR will fetch updated pool info.
-@returns Returns amount of tokens swaps along with swap and asset info that can be submitted to a batchSwap call.
-
-```js
-swaps.queryBatchSwapWithSor(queryWithSor: {
-    tokensIn: string[],
-    tokensOut: string[],
-    swapType: SwapType,
-    amounts: BigNumberish[],
-    fetchPools: FetchPoolsInput;
-}):
-Promise<QueryWithSorOutput {
-    returnAmounts: string[];
-    swaps: BatchSwapStep[];
-    assets: string[];
-    deltas: string[];
-}>
-```
-
 ### #encodeBatchSwap
 
 Static method to encode a [batch swap](https://dev.balancer.fi/references/contracts/apis/the-vault#batch-swaps).
