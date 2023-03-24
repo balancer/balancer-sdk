@@ -249,6 +249,7 @@ const POOLS_MAINNET: Pools = {
     'ERC4626Linear',
     'Gyro2',
     'Gyro3',
+    'GyroE',
   ],
   Stable: {
     AllowList: [
@@ -404,6 +405,7 @@ const POOLS_POLYGON: Pools = {
     'ERC4626Linear',
     'Gyro2',
     'Gyro3',
+    'GyroE',
   ],
   Stable: {
     AllowList: [
