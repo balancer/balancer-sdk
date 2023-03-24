@@ -279,6 +279,7 @@ export enum PoolType {
   SiloLinear = 'SiloLinear',
   TetuLinear = 'TetuLinear',
   YearnLinear = 'YearnLinear',
+  FX = 'FX',
 }
 
 export interface Pool {

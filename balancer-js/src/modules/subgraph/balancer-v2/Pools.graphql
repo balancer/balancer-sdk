@@ -119,6 +119,8 @@ fragment SubgraphPool on Pool {
   w
   z
   dSq
+  delta
+  epsilon
 }
 
 fragment SubgraphPoolToken on PoolToken {
@@ -164,6 +166,7 @@ fragment SubgraphSubPool on Pool {
 
 fragment TokenTree on Token {
   latestUSDPrice
+  latestFXPrice
   pool {
     ...SubgraphSubPool
     tokens(first: 100, orderBy: index) {
