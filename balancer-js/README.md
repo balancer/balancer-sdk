@@ -698,40 +698,6 @@ const relayer = new relayerService(
 );
 ```
 
-### #exitPoolAndBatchSwap
-
-Chains poolExit with batchSwap to final tokens.
-
-@param params:
-@param exiter - Address used to exit pool.
-@param swapRecipient - Address that receives final tokens.
-@param poolId - Id of pool being exited.
-@param exitTokens - Array containing addresses of tokens to receive after exiting pool. (must have the same length and order as the array returned by `getPoolTokens`.)
-@param userData - Encoded exitPool data.
-@param minExitAmountsOut - Minimum amounts of exitTokens to receive when exiting pool.
-@param finalTokensOut - Array containing the addresses of the final tokens out.
-@param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
-@param fetchPools - Set whether SOR will fetch updated pool info.
-@returns Transaction data with calldata. Outputs.amountsOut has amounts of finalTokensOut returned.
-
-```js
-async relayer.exitPoolAndBatchSwap(
-    params: ExitAndBatchSwapInput {
-        exiter: string;
-        swapRecipient: string;
-        poolId: string;
-        exitTokens: string[];
-        userData: string;
-        minExitAmountsOut: string[];
-        finalTokensOut: string[];
-        slippage: string;
-        fetchPools: FetchPoolsInput;
-    }
-): Promise<TransactionData>
-```
-
-[Example](./examples/relayerExitPoolAndBatchSwap.ts)
-
 ## Pools Impermanent Loss
 
 > impermanent loss (IL) describes the percentage by which a pool is worth less than what one would have if they had instead just held the tokens outside the pool
