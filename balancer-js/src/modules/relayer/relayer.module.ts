@@ -3,7 +3,6 @@ import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Interface } from '@ethersproject/abi';
 import { MaxUint256 } from '@ethersproject/constants';
 import { Vault } from '@/contracts/Vault';
-import { Swaps } from '@/modules/swaps/swaps.module';
 import {
   EncodeBatchSwapInput,
   EncodeExitPoolInput,
@@ -11,7 +10,7 @@ import {
   ExitPoolData,
   JoinPoolData,
 } from './types';
-import { ExitPoolRequest, JoinPoolRequest, BalancerSdkConfig } from '@/types';
+import { ExitPoolRequest, JoinPoolRequest } from '@/types';
 import { Swap } from '../swaps/types';
 import { RelayerAuthorization } from '@/lib/utils';
 
@@ -22,18 +21,8 @@ export * from './types';
 const relayerLibrary = new Interface(relayerLibraryAbi);
 
 export class Relayer {
-  private readonly swaps: Swaps;
-
   static CHAINED_REFERENCE_TEMP_PREFIX = 'ba10'; // Temporary reference: it is deleted after a read.
   static CHAINED_REFERENCE_READONLY_PREFIX = 'ba11'; // Read-only reference: it is not deleted after a read.
-
-  constructor(swapsOrConfig: Swaps | BalancerSdkConfig) {
-    if (swapsOrConfig instanceof Swaps) {
-      this.swaps = swapsOrConfig;
-    } else {
-      this.swaps = new Swaps(swapsOrConfig);
-    }
-  }
 
   static encodeApproveVault(tokenAddress: string, maxAmount: string): string {
     return relayerLibrary.encodeFunctionData('approveVault', [
