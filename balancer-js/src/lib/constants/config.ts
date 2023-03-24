@@ -27,7 +27,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         veBalProxy: '0x6f5a2eE11E7a772AeB5114A20d0D7c0ff61EB8A0',
         weightedPoolFactory: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
         composableStablePoolFactory:
-          '0x85a80afee867adf27b50bdb7b76da70f1e853062',
+          '0xdba127fBc23fb20F5929C546af220A991b5C6e01',
       },
       tokens: {
         wrappedNativeAsset: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -59,6 +59,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     poolsToIgnore: [
       '0xbd482ffb3e6e50dc1c437557c3bea2b68f3683ee', // a pool made by an external dev who was playing with a novel rate provider mechanism in production.
+      '0x0afbd58beca09545e4fb67772faf3858e610bcd0',
+      '0x2ff1a9dbdacd55297452cfd8a4d94724bc22a5f7',
+      '0xbc0f2372008005471874e426e86ccfae7b4de79d',
+      '0xdba274b4d04097b90a72b62467d828cefd708037',
+      '0xf22ff21e17157340575158ad7394e068048dd98b',
+      '0xf71d0774b214c4cf51e33eb3d30ef98132e4dbaa',
     ],
     sorConnectingTokens: [
       {
@@ -110,6 +116,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     pools: {},
     poolsToIgnore: [
       '0x600bd01b6526611079e12e1ff93aba7a3e34226f', // This pool has rateProviders with incorrect scaling
+      '0xc31a37105b94ab4efca1954a14f059af11fcd9bb', // Stable pool with Convergence issues
     ],
     sorConnectingTokens: [
       {
@@ -317,13 +324,54 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
-      gaugesSubgraph: '',
+      gaugesSubgraph:
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-gnosis-chain',
     },
     pools: {},
     sorConnectingTokens: [
       {
         symbol: 'weth',
         address: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
+      },
+    ],
+  },
+  [Network.FANTOM]: {
+    chainId: Network.FANTOM, //250
+    addresses: {
+      contracts: {
+        vault: '0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce',
+        multicall: '0x66335d7ad8011f6aa3f48aadcb523b62b38ed961',
+        gaugeClaimHelper: '0x0000000000000000000000000000000000000000', // no guages on fantom
+        relayerV3: '0xC852F984CA3310AFc596adeB17EfcB0542646920',
+        relayerV4: '0x419f7925b8c9e409b6ee8792242556fa210a7a09',
+        balancerHelpers: '0xfE18C7C70b0a2c6541bEde0367124278BC345Dc8',
+        weightedPoolFactory: '0x60467cb225092cE0c989361934311175f437Cf53',
+        composableStablePoolFactory:
+          '0x44814E3A603bb7F1198617995c5696C232F6e8Ed',
+      },
+      tokens: {
+        bal: '0xF24Bcf4d1e507740041C9cFd2DddB29585aDCe1e', //beets
+        wrappedNativeAsset: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+        lbpRaisingTokens: [
+          '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83', // WFTM
+          '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75', // USDC
+          '0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E', // DAI
+        ],
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-v2-fantom',
+      gaugesSubgraph: '', // no guages on fantom
+      blockNumberSubgraph:
+        'https://api.thegraph.com/subgraphs/name/beethovenxfi/fantom-blocks',
+    },
+    pools: {},
+    poolsToIgnore: [],
+    sorConnectingTokens: [
+      {
+        symbol: 'wftm',
+        address: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
       },
     ],
   },

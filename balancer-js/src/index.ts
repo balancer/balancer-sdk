@@ -1,3 +1,4 @@
+export * from './pool-base';
 export * from './pool-stable';
 export * from './pool-weighted';
 export * from './pool-composable-stable';
@@ -6,6 +7,7 @@ export * from './lib/constants';
 export * from './lib/utils';
 export * from './lib/graphql';
 export * from './types';
+export * from './contracts/index';
 export * from './modules/swaps/types';
 export * from './modules/swaps/helpers';
 export * from './modules/liquidity/liquidity.module';
@@ -21,6 +23,7 @@ export * from './modules/subgraph/subgraph.module';
 export * from './modules/sor/sor.module';
 export * from './modules/pools';
 export * from './modules/data';
+export * from './modules/pools/factory/types';
 export * from './balancerErrors';
 export {
   SwapInfo,
@@ -34,3 +37,4 @@ export {
   SOR,
 } from '@balancer-labs/sor';
 export { SimulationType } from './modules/simulation/simulation.module';
+export { BALANCER_NETWORK_CONFIG } from './lib/constants/config';

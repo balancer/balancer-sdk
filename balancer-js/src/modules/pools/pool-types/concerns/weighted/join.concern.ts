@@ -1,20 +1,22 @@
 import { WeightedMaths } from '@balancer-labs/sor';
-import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { BigNumber } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
+
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { balancerVault } from '@/lib/constants/config';
 import { AssetHelpers, getEthValue, parsePoolInfo } from '@/lib/utils';
-import { WeightedPoolEncoder } from '@/pool-weighted';
 import { subSlippage } from '@/lib/utils/slippageHelper';
+import { _upscaleArray } from '@/lib/utils/solidityMaths';
+import { WeightedPoolEncoder } from '@/pool-weighted';
+import { Address, Pool } from '@/types';
 import {
   JoinConcern,
   JoinPool,
   JoinPoolAttributes,
   JoinPoolParameters,
 } from '../types';
-import { Address, Pool } from '@/types';
-import { _upscaleArray } from '@/lib/utils/solidityMaths';
-import { AddressZero } from '@ethersproject/constants';
+import { WeightedPoolPriceImpact } from '../weighted/priceImpact.concern';
 
 type SortedValues = {
   poolTokens: string[];
@@ -27,17 +29,6 @@ type SortedValues = {
 };
 
 export class WeightedPoolJoin implements JoinConcern {
-  /**
-   * Build join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
-   * @param {JoinPoolParameters} params - parameters used to build exact tokens in for bpt out transaction
-   * @param {string}                          params.joiner - Account address joining pool
-   * @param {SubgraphPoolBase}                params.pool - Subgraph pool object of pool being joined
-   * @param {string[]}                        params.tokensIn - Token addresses provided for joining pool (same length and order as amountsIn)
-   * @param {string[]}                        params.amountsIn -  - Token amounts provided for joining pool in EVM amounts
-   * @param {string}                          params.slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%
-   * @param {string}                          params.wrappedNativeAsset - Address of wrapped native asset for specific network config. Required for joining with ETH.
-   * @returns                                 transaction request ready to send with signer.sendTransaction
-   */
   buildJoin = ({
     joiner,
     pool,
@@ -69,10 +60,19 @@ export class WeightedPoolJoin implements JoinConcern {
       amountsIn,
     });
 
+    const priceImpactConcern = new WeightedPoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      sortedValues.sortedAmountsIn.map(BigInt),
+      BigInt(expectedBPTOut),
+      true
+    );
+
     return {
       ...encodedFunctionData,
       minBPTOut,
       expectedBPTOut,
+      priceImpact,
     };
   };
 

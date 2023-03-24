@@ -86,11 +86,15 @@ export class Data implements BalancerDataRepositories {
       subgraphQuery
     );
 
-    this.poolsOnChain = new PoolsSubgraphOnChainRepository(this.pools, {
-      provider: provider,
-      multicall: networkConfig.addresses.contracts.multicall,
-      vault: networkConfig.addresses.contracts.vault,
-    });
+    this.poolsOnChain = new PoolsSubgraphOnChainRepository(
+      this.pools,
+      {
+        provider: provider,
+        multicall: networkConfig.addresses.contracts.multicall,
+        vault: networkConfig.addresses.contracts.vault,
+      },
+      networkConfig.poolsToIgnore
+    );
 
     this.poolShares = new PoolSharesRepository(
       networkConfig.urls.subgraph,
@@ -125,6 +129,21 @@ export class Data implements BalancerDataRepositories {
         if (this.blockNumbers) {
           return await this.blockNumbers.find('dayAgo');
         }
+      };
+
+      this.yesterdaysPools = new PoolsSubgraphRepository({
+        url: networkConfig.urls.subgraph,
+        chainId: networkConfig.chainId,
+        blockHeight: blockDayAgo,
+        query: subgraphQuery,
+      });
+    }
+
+    // Hardcoding gnosis chain block time to 5 sec.
+    if (networkConfig.chainId === 100) {
+      const blockDayAgo = async () => {
+        const blockNumber = await provider.getBlockNumber();
+        return blockNumber - 17280;
       };
 
       this.yesterdaysPools = new PoolsSubgraphRepository({
@@ -210,6 +229,6 @@ export class Data implements BalancerDataRepositories {
       );
     }
 
-    this.tokenYields = new TokenYieldsRepository(networkConfig.chainId);
+    this.tokenYields = new TokenYieldsRepository();
   }
 }

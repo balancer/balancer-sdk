@@ -188,8 +188,14 @@ export class PoolApr {
           return 0;
         }
 
-        const weight = await getWeight(token);
-        return Math.round(aprs[idx] * weight);
+        // Handle missing token weights, usually due to missing token prices
+        try {
+          const weight = await getWeight(token);
+          return Math.round(aprs[idx] * weight);
+        } catch (e) {
+          console.log(e);
+          return 0;
+        }
       })
     );
 

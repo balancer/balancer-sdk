@@ -39,7 +39,9 @@ export class Swaps {
       this.chainId = (<any>this.sor.provider)['_network']['chainId'];
     } else {
       this.sor = new Sor(sorOrConfig);
-      this.chainId = sorOrConfig.network as number;
+      if (typeof sorOrConfig.network === 'number')
+        this.chainId = sorOrConfig.network as number;
+      else this.chainId = sorOrConfig.network.chainId;
     }
 
     this.vaultContract = Vault__factory.connect(
