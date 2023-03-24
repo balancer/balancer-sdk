@@ -1,15 +1,13 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { Interface } from '@ethersproject/abi';
-import { MaxUint256, WeiPerEther, Zero } from '@ethersproject/constants';
+import { MaxUint256, WeiPerEther } from '@ethersproject/constants';
 import { Vault } from '@/contracts/Vault';
 
 import { Swaps } from '@/modules/swaps/swaps.module';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
   EncodeBatchSwapInput,
-  EncodeWrapAaveDynamicTokenInput,
-  EncodeUnwrapAaveStaticTokenInput,
   OutputReference,
   EncodeExitPoolInput,
   EncodeJoinPoolInput,
@@ -23,13 +21,7 @@ import {
   JoinPoolRequest,
   BalancerSdkConfig,
 } from '@/types';
-import {
-  SwapType,
-  FundManagement,
-  BatchSwapStep,
-  FetchPoolsInput,
-  Swap,
-} from '../swaps/types';
+import { SwapType, FundManagement, Swap } from '../swaps/types';
 import { SubgraphPoolBase } from '@balancer-labs/sor';
 import { RelayerAuthorization } from '@/lib/utils';
 
@@ -144,32 +136,6 @@ export class Relayer {
       params.joinPoolRequest,
       params.value,
       params.outputReference,
-    ]);
-  }
-
-  static encodeWrapAaveDynamicToken(
-    params: EncodeWrapAaveDynamicTokenInput
-  ): string {
-    return relayerLibrary.encodeFunctionData('wrapAaveDynamicToken', [
-      params.staticToken,
-      params.sender,
-      params.recipient,
-      params.amount,
-      params.fromUnderlying,
-      params.outputReference,
-    ]);
-  }
-
-  static encodeUnwrapAaveStaticToken(
-    params: EncodeUnwrapAaveStaticTokenInput
-  ): string {
-    return relayerLibrary.encodeFunctionData('unwrapAaveStaticToken', [
-      params.staticToken,
-      params.sender,
-      params.recipient,
-      params.amount,
-      params.toUnderlying,
-      params.outputReferences,
     ]);
   }
 
@@ -420,149 +386,6 @@ export class Relayer {
         amountsOut: queryResult.returnAmounts,
       },
     };
-  }
-
-  /**
-   * swapUnwrapAaveStaticExactIn Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable.
-   * @param {string[]} tokensIn - array to token addresses for swapping as tokens in.
-   * @param {string[]} aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
-   * @param {string[]} amountsIn - amounts to be swapped for each token in.
-   * @param {string[]} rates - The rate used to convert wrappedToken to underlying.
-   * @param {FundManagement} funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
-   * @param {string} slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
-   * @param {FetchPoolsInput} fetchPools - Set whether SOR will fetch updated pool info.
-   * @returns Transaction data with calldata. Outputs.amountsOut has final amounts out of unwrapped tokens.
-   */
-  async swapUnwrapAaveStaticExactIn(
-    tokensIn: string[],
-    aaveStaticTokens: string[],
-    amountsIn: string[],
-    rates: string[],
-    funds: FundManagement,
-    slippage: string,
-    fetchPools: FetchPoolsInput = {
-      fetchPools: true,
-      fetchOnChain: false,
-    }
-  ): Promise<TransactionData> {
-    // Use swapsService to get swap info for tokensIn>wrappedTokens
-    const queryResult = await this.swaps.queryBatchSwapWithSor({
-      tokensIn,
-      tokensOut: aaveStaticTokens,
-      swapType: SwapType.SwapExactIn,
-      amounts: amountsIn,
-      fetchPools,
-    });
-
-    // This is a safety check to avoid issues when a swap path exists with 0 value
-    if (queryResult.returnAmounts.includes('0'))
-      throw new BalancerError(BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT);
-
-    // Gets limits array for tokensIn>wrappedTokens based on input slippage
-    const limits = Swaps.getLimitsForSlippage(
-      tokensIn, // tokensIn
-      aaveStaticTokens, // tokensOut
-      SwapType.SwapExactIn,
-      queryResult.deltas,
-      queryResult.assets,
-      slippage
-    );
-
-    const calls = this.encodeSwapUnwrap(
-      aaveStaticTokens,
-      SwapType.SwapExactIn,
-      queryResult.swaps,
-      queryResult.assets,
-      funds,
-      limits
-    );
-
-    const amountsUnwrapped = queryResult.returnAmounts.map(
-      (amountWrapped, i) => {
-        const amountUnwrapped = BigNumber.from(amountWrapped)
-          .abs()
-          .mul(rates[i])
-          .div(WeiPerEther);
-
-        // This is a safety check to avoid issues when a swap path exists with 0 value
-        if (!amountUnwrapped.gt(Zero))
-          throw new BalancerError(BalancerErrorCode.UNWRAP_ZERO_AMOUNT);
-
-        return amountUnwrapped.toString();
-      }
-    );
-
-    return {
-      function: 'multicall',
-      params: calls,
-      outputs: {
-        amountsOut: amountsUnwrapped,
-      },
-    };
-  }
-
-  /**
-   * Creates encoded multicalls using swap outputs as input amounts for token unwrap.
-   * @param wrappedTokens
-   * @param swapType
-   * @param swaps
-   * @param assets
-   * @param funds
-   * @param limits
-   * @returns
-   */
-  encodeSwapUnwrap(
-    wrappedTokens: string[],
-    swapType: SwapType,
-    swaps: BatchSwapStep[],
-    assets: string[],
-    funds: FundManagement,
-    limits: BigNumberish[]
-  ): string[] {
-    // Output of swaps (wrappedTokens) is used as input to unwrap
-    // Need indices of output tokens and outputReferences need to be made with those as key
-    const outputReferences: OutputReference[] = [];
-    const unwrapCalls: string[] = [];
-    wrappedTokens.forEach((wrappedToken, i) => {
-      // Find index of wrappedToken in asset array. This is used as ref in Relayer.
-      const index = assets.findIndex(
-        (token) => token.toLowerCase() === wrappedToken.toLowerCase()
-      );
-      // There may be cases where swap isn't possible for wrappedToken
-      if (index === -1) return;
-
-      const key = Relayer.toChainedReference(i);
-
-      outputReferences.push({
-        index: index,
-        key: key,
-      });
-
-      // console.log(`Unwrapping ${wrappedToken} with amt: ${key.toHexString()}`);
-
-      const encodedUnwrap = Relayer.encodeUnwrapAaveStaticToken({
-        staticToken: wrappedToken,
-        sender: funds.recipient, // This should be relayer
-        recipient: funds.sender, // This will be caller
-        amount: key, // Use output of swap as input for unwrap
-        toUnderlying: true,
-        outputReferences: 0,
-      });
-
-      unwrapCalls.push(encodedUnwrap);
-    });
-
-    const encodedBatchSwap = Relayer.encodeBatchSwap({
-      swapType: swapType,
-      swaps: swaps,
-      assets: assets,
-      funds: funds, // Note - this should have Relayer as recipient
-      limits: limits.map((l) => l.toString()),
-      deadline: MaxUint256,
-      value: '0',
-      outputReferences: outputReferences,
-    });
-    return [encodedBatchSwap, ...unwrapCalls];
   }
 
   static signRelayerApproval = async (

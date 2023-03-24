@@ -1,6 +1,5 @@
 export enum BalancerErrorCode {
   SWAP_ZERO_RETURN_AMOUNT = 'SWAP_ZERO_RETURN_AMOUNT',
-  UNWRAP_ZERO_AMOUNT = 'UNWRAP_ZERO_AMOUNT',
   QUERY_BATCH_SWAP = 'QUERY_BATCH_SWAP',
   POOL_DOESNT_EXIST = 'POOL_DOESNT_EXIST',
   UNSUPPORTED_POOL_TYPE = 'UNSUPPORTED_POOL_TYPE',
@@ -42,8 +41,6 @@ export class BalancerError extends Error {
     switch (code) {
       case BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT:
         return 'queryBatchSwapWithSor returned 0 amount';
-      case BalancerErrorCode.UNWRAP_ZERO_AMOUNT:
-        return 'swapUnwrapAaveStaticExactIn unwrapped amount < 0';
       case BalancerErrorCode.QUERY_BATCH_SWAP:
         return 'queryBatchSwap on chain call error';
       case BalancerErrorCode.POOL_DOESNT_EXIST:

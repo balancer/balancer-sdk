@@ -698,36 +698,6 @@ const relayer = new relayerService(
 );
 ```
 
-### #swapUnwrapAaveStaticExactIn
-
-Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable. ExactIn - Exact amount of tokenIn to use in swap.
-
-@param tokensIn - array to token addresses for swapping as tokens in.
-@param aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
-@param amountsIn - amounts to be swapped for each token in.
-@param rates - The rate used to convert wrappedToken to underlying.
-@param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
-@param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
-@param fetchPools - Set whether SOR will fetch updated pool info.
-@returns Transaction data with calldata. Outputs.amountsOut has final amounts out of unwrapped tokens.
-
-```js
-async relayer.swapUnwrapAaveStaticExactIn(
-    tokensIn: string[],
-    aaveStaticTokens: string[],
-    amountsIn: BigNumberish[],
-    rates: BigNumberish[],
-    funds: FundManagement,
-    slippage: BigNumberish,
-    fetchPools: FetchPoolsInput = {
-        fetchPools: true,
-        fetchOnChain: false
-    }
-): Promise<TransactionData>
-```
-
-[Example](./examples/relayerSwapUnwrap.ts)
-
 ### #exitPoolAndBatchSwap
 
 Chains poolExit with batchSwap to final tokens.
