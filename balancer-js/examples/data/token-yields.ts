@@ -2,8 +2,8 @@
  * Display token yields
  * Run command: yarn examples:run ./examples/data/token-yields.ts
  */
-import { BalancerSDK } from '../../src/modules/sdk.module';
-import { yieldTokens } from '../../src/modules/data/token-yields/tokens/aave';
+import { BalancerSDK } from '@/modules/sdk.module';
+import { yieldTokens } from '@/modules/data/token-prices/aave-rates';
 
 const sdk = new BalancerSDK({ network: 1, rpcUrl: '' });
 const { data } = sdk;

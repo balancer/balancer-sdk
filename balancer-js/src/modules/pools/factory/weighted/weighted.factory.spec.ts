@@ -1,3 +1,4 @@
+// yarn test:only ./src/modules/pools/factory/weighted/weighted.factory.spec.ts
 import { parseFixed } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 import { assert } from 'chai';
@@ -14,8 +15,8 @@ const sdkConfig: BalancerSdkConfig = {
 };
 const balancer = new BalancerSDK(sdkConfig);
 
-describe('ComposableStable Factory', async () => {
-  const factory = balancer.pools.poolFactory.of(PoolType.ComposableStable);
+describe('Weighted Factory', async () => {
+  const factory = balancer.pools.poolFactory.of(PoolType.Weighted);
   context('Create', async () => {
     const rightCreateParameters = {
       name: 'test-pool',
@@ -24,11 +25,11 @@ describe('ComposableStable Factory', async () => {
         ADDRESSES[network].WETH.address,
         ADDRESSES[network].DAI.address,
       ],
-      amplificationParameter: '5',
-      rateProviders: [AddressZero, AddressZero],
-      tokenRateCacheDurations: ['0', '0'],
-      exemptFromYieldProtocolFeeFlags: [false, false],
-      swapFeeEvm: `${5e16}`,
+      weights: [
+        parseFixed('0.5', 18).toString(),
+        parseFixed('0.5', 18).toString(),
+      ],
+      swapFeeEvm: parseFixed('0.01', 18).toString(),
       owner: AddressZero,
     };
     it('should fail with swap fee 0', async () => {
@@ -58,10 +59,72 @@ describe('ComposableStable Factory', async () => {
         () =>
           factory.create({
             ...rightCreateParameters,
-            tokenRateCacheDurations: ['0', '0', '0'],
+            weights: [
+              parseFixed('0.2', 18).toString(),
+              parseFixed('0.2', 18).toString(),
+              parseFixed('0.6', 18).toString(),
+            ],
           }),
         BalancerError,
         BalancerError.getMessage(BalancerErrorCode.INPUT_LENGTH_MISMATCH)
+      );
+    });
+    it('should fail with more than 8 token addresses', async () => {
+      assert.throws(
+        () =>
+          factory.create({
+            ...rightCreateParameters,
+            weights: [
+              parseFixed('0.2', 18).toString(),
+              parseFixed('0.1', 18).toString(),
+              parseFixed('0.1', 18).toString(),
+              parseFixed('0.1', 18).toString(),
+              parseFixed('0.1', 18).toString(),
+              parseFixed('0.1', 18).toString(),
+              parseFixed('0.1', 18).toString(),
+              parseFixed('0.1', 18).toString(),
+              parseFixed('0.1', 18).toString(),
+            ],
+            tokenAddresses: [
+              ADDRESSES[network].WETH.address,
+              ADDRESSES[network].DAI.address,
+              ADDRESSES[network].USDC.address,
+              ADDRESSES[network].USDT.address,
+              ADDRESSES[network].WBTC.address,
+              ADDRESSES[network].BAL.address,
+              ADDRESSES[network].waUSDC.address,
+              ADDRESSES[network].WBTC.address,
+              ADDRESSES[network].auraBal.address,
+            ],
+          }),
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.ABOVE_MAX_TOKENS)
+      );
+    });
+    it('should fail with less than 2 token addresses', async () => {
+      assert.throws(
+        () =>
+          factory.create({
+            ...rightCreateParameters,
+            weights: [parseFixed('1', 18).toString()],
+            tokenAddresses: [ADDRESSES[network].WETH.address],
+          }),
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.BELOW_MIN_TOKENS)
+      );
+    });
+    it('should fail with weight values that not sum 1e18', () => {
+      assert.throws(
+        () =>
+          factory.create({
+            ...rightCreateParameters,
+            weights: [
+              parseFixed('0.2', 18).toString(),
+              parseFixed('0.2', 18).toString(),
+            ],
+          }),
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.INVALID_WEIGHTS)
       );
     });
   });
@@ -79,18 +142,6 @@ describe('ComposableStable Factory', async () => {
         ADDRESSES[network].DAI.address,
       ],
     };
-    it('should fail with poolAddress missing', () => {
-      assert.throws(
-        () => {
-          factory.buildInitJoin({
-            ...rightInitJoinParameters,
-            poolAddress: '',
-          });
-        },
-        BalancerError,
-        BalancerError.getMessage(BalancerErrorCode.NO_POOL_DATA)
-      );
-    });
     it('should fail with poolId missing', () => {
       assert.throws(
         () => {

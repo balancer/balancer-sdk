@@ -4,6 +4,8 @@ import {
   ComposableStableCreatePoolParameters,
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
+  JoinPoolDecodedAttributes,
+  JoinPoolRequestDecodedAttributes,
 } from '@/modules/pools/factory/types';
 import { balancerVault, networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
@@ -20,20 +22,6 @@ import { findEventInReceiptLogs } from '@/lib/utils';
 import { Contract } from '@ethersproject/contracts';
 import { ContractInstances } from '@/modules/contracts/contracts.module';
 import { BytesLike } from '@ethersproject/bytes';
-
-type JoinPoolDecodedAttributes = {
-  poolId: string;
-  sender: string;
-  recipient: string;
-  joinPoolRequest: JoinPoolRequestDecodedAttributes;
-};
-
-type JoinPoolRequestDecodedAttributes = {
-  assets: string[];
-  maxAmountsIn: string[];
-  userData: string;
-  fromInternalBalance: boolean;
-};
 
 export class ComposableStableFactory implements PoolFactory {
   private wrappedNativeAsset: string;
@@ -119,8 +107,8 @@ export class ComposableStableFactory implements PoolFactory {
     ) {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
-    if (BigInt(swapFeeEvm) === BigInt(0)) {
-      throw new BalancerError(BalancerErrorCode.MIN_SWAP_FEE_PERCENTAGE);
+    if (BigInt(swapFeeEvm) <= BigInt(0) || BigInt(swapFeeEvm) > BigInt(1e17)) {
+      throw new BalancerError(BalancerErrorCode.INVALID_SWAP_FEE_PERCENTAGE);
     }
   };
   parseCreateParamsForEncoding = ({
@@ -133,7 +121,7 @@ export class ComposableStableFactory implements PoolFactory {
     exemptFromYieldProtocolFeeFlags,
     swapFeeEvm,
     owner,
-  }: Omit<ComposableStableCreatePoolParameters, 'factoryAddress'>): [
+  }: ComposableStableCreatePoolParameters): [
     string,
     string,
     string[],

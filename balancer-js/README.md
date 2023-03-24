@@ -378,6 +378,32 @@ buildJoin: (
 ) => JoinPoolAttributes;
 ```
 
+where `JoinPoolAttributes` is:
+
+```js
+/**
+ * Join with exact tokens in transaction parameters
+ * @param to Address that will execute the transaction (vault address)
+ * @param functionName Function name to be called (joinPool)
+ * @param attributes Transaction attributes ready to be encoded
+ * @param data Encoded transaction data
+ * @param value (Optional) ETH amount that must be informed when joining with ETH
+ * @param minBptOut Minimum BPT amoutn out of join transaction considering slippage tolerance
+ * @param expectedBptOut Expected BPT amount out of join transaction
+ * @param priceImpact Price impact of join transaction
+ */
+export interface JoinPoolAttributes {
+  to: string;
+  functionName: string;
+  attributes: JoinPool;
+  data: string;
+  value?: BigNumber;
+  minBPTOut: string;
+  expectedBPTOut: string;
+  priceImpact: string;
+}
+```
+
 [Example](./examples/join.ts)
 
 ### #buildInitJoin (Weighted Pool)

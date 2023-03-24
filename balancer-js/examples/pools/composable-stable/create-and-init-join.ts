@@ -7,7 +7,6 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 import { parseFixed } from '@ethersproject/bignumber';
 
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { ADDRESSES } from '@/test/lib/constants';
 import { setUpExample } from '../helper';
 
@@ -45,7 +44,6 @@ async function createAndInitJoinComposableStable() {
   );
   const ownerAddress = await signer.getAddress();
   const poolParameters = {
-    factoryAddress: `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.composableStablePoolFactory}`, // TODO - reference this via balancer.contracts.composableFactory.address once its added to Contracts module
     name: 'Test-Name',
     symbol: 'Test-Symbol',
     tokenAddresses: poolTokens,
@@ -55,7 +53,7 @@ async function createAndInitJoinComposableStable() {
       '0x0000000000000000000000000000000000000000',
     ],
     tokenRateCacheDurations: ['100', '100'],
-    swapFeeEvm: `${1e16}`,
+    swapFeeEvm: parseFixed('1', 16).toString(),
     exemptFromYieldProtocolFeeFlags: [false, false],
     owner: ownerAddress,
   };

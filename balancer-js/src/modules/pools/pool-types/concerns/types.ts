@@ -21,16 +21,16 @@ export interface PriceImpactConcern {
   /**
    * Calculate BPT return amount when investing with no price impact.
    * @param pool Investment pool.
-   * @param tokenAmounts Token amounts being invested. Needs a value for each pool token.
-   * @returns BPT amount.
+   * @param tokenAmounts Token amounts in EVM scale. Needs a value for each pool token.
+   * @returns BPT amount in EVM scale.
    */
   bptZeroPriceImpact: (pool: Pool, tokenAmounts: bigint[]) => bigint;
 
   /**
    * Calculate price impact of bptAmount against zero price impact BPT amount.
    * @param pool Investment pool.
-   * @param tokenAmounts Token amounts. Needs a value for each pool token.
-   * @param bptAmount BPT amount for comparison.
+   * @param tokenAmounts Token amounts in EVM scale. Needs a value for each pool token.
+   * @param bptAmount BPT amount for comparison (in EVM scale)
    * @param isJoin boolean indicating if the price impact is for a join or exit.
    * @returns price impact in EVM scale.
    */
@@ -130,6 +130,17 @@ export interface JoinPool {
   joinPoolRequest: JoinPoolRequest;
 }
 
+/**
+ * Join with exact tokens in transaction parameters
+ * @param to Address that will execute the transaction (vault address)
+ * @param functionName Function name to be called (joinPool)
+ * @param attributes Transaction attributes ready to be encoded
+ * @param data Encoded transaction data
+ * @param value Optional: ETH amount in EVM scale (required when joining with ETH)
+ * @param minBptOut Minimum BPT amount out of join transaction considering slippage tolerance in EVM scale
+ * @param expectedBptOut Expected BPT amount out of join transaction in EVM scale
+ * @param priceImpact Price impact of join transaction in EVM scale
+ */
 export interface JoinPoolAttributes {
   to: string;
   functionName: string;
@@ -138,6 +149,7 @@ export interface JoinPoolAttributes {
   value?: BigNumber;
   minBPTOut: string;
   expectedBPTOut: string;
+  priceImpact: string;
 }
 
 export interface JoinPoolParameters {
@@ -169,8 +181,9 @@ export interface ExitPoolAttributes {
  * @param functionName Function name to be called (exitPool)
  * @param attributes Transaction attributes ready to be encoded
  * @param data Encoded transaction data
- * @param expectedAmountsOut Expected amounts out of exit transaction
- * @param minAmountsOut Minimum amounts out of exit transaction considering slippage tolerance
+ * @param expectedAmountsOut Expected amounts out of exit transaction in EVM scale
+ * @param minAmountsOut Minimum amounts out of exit transaction (considering slippage tolerance) in EVM scale
+ * @param priceImpact Price impact of exit transaction in EVM scale
  */
 export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
   expectedAmountsOut: string[];
@@ -184,8 +197,9 @@ export interface ExitExactBPTInAttributes extends ExitPoolAttributes {
  * @param functionName Function name to be called (exitPool)
  * @param attributes Transaction attributes ready to be encoded
  * @param data Encoded transaction data
- * @param expectedBPTIn Expected BPT into exit transaction
- * @param maxBPTIn Max BPT into exit transaction considering slippage tolerance
+ * @param expectedBPTIn Expected BPT into exit transaction in EVM scale
+ * @param maxBPTIn Max BPT into exit transaction (considering slippage tolerance) in EVM scale
+ * @param priceImpact Price impact of exit transaction in EVM scale
  */
 export interface ExitExactTokensOutAttributes extends ExitPoolAttributes {
   expectedBPTIn: string;

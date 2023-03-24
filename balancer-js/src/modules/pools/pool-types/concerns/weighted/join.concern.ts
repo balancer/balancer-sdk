@@ -1,20 +1,22 @@
 import { WeightedMaths } from '@balancer-labs/sor';
-import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { BigNumber } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
+
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { balancerVault } from '@/lib/constants/config';
 import { AssetHelpers, getEthValue, parsePoolInfo } from '@/lib/utils';
-import { WeightedPoolEncoder } from '@/pool-weighted';
 import { subSlippage } from '@/lib/utils/slippageHelper';
+import { _upscaleArray } from '@/lib/utils/solidityMaths';
+import { WeightedPoolEncoder } from '@/pool-weighted';
+import { Address, Pool } from '@/types';
 import {
   JoinConcern,
   JoinPool,
   JoinPoolAttributes,
   JoinPoolParameters,
 } from '../types';
-import { Address, Pool } from '@/types';
-import { _upscaleArray } from '@/lib/utils/solidityMaths';
-import { AddressZero } from '@ethersproject/constants';
+import { WeightedPoolPriceImpact } from '../weighted/priceImpact.concern';
 
 type SortedValues = {
   poolTokens: string[];
@@ -58,10 +60,19 @@ export class WeightedPoolJoin implements JoinConcern {
       amountsIn,
     });
 
+    const priceImpactConcern = new WeightedPoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      sortedValues.sortedAmountsIn.map(BigInt),
+      BigInt(expectedBPTOut),
+      true
+    );
+
     return {
       ...encodedFunctionData,
       minBPTOut,
       expectedBPTOut,
+      priceImpact,
     };
   };
 

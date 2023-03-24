@@ -23,6 +23,7 @@ export * from './modules/subgraph/subgraph.module';
 export * from './modules/sor/sor.module';
 export * from './modules/pools';
 export * from './modules/data';
+export * from './modules/pools/factory/types';
 export * from './balancerErrors';
 export {
   SwapInfo,
@@ -46,3 +47,4 @@ export {
   getTokenAddressesForSwap,
 } from '@balancer-labs/sor';
 export { SimulationType } from './modules/simulation/simulation.module';
+export { BALANCER_NETWORK_CONFIG } from './lib/constants/config';

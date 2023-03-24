@@ -13,11 +13,15 @@ import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import {
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
+  JoinPoolDecodedAttributes,
+  JoinPoolRequestDecodedAttributes,
   WeightedCreatePoolParameters,
 } from '@/modules/pools/factory/types';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { BalancerNetworkConfig } from '@/types';
 import { WeightedPool__factory } from '@/contracts';
+import { SolidityMaths } from '@/lib/utils/solidityMaths';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 
 export class WeightedFactory implements PoolFactory {
   private wrappedNativeAsset: string;
@@ -34,14 +38,14 @@ export class WeightedFactory implements PoolFactory {
 
   /**
    * Builds a transaction for a weighted pool create operation.
-   * @param factoryAddress - The address of the factory for weighted pool (contract address)
-   * @param name - The name of the pool
-   * @param symbol - The symbol of the pool
-   * @param tokenAddresses - The token's addresses
+   * @param factoryAddress The address of the factory for weighted pool (contract address)
+   * @param name The name of the pool
+   * @param symbol The symbol of the pool
+   * @param tokenAddresses The token's addresses
    * @param weights The weights for each token, ordered
-   * @param swapFeeEvm - The swapFee for the owner of the pool in string or bigint formatted to evm(100% is 1e18, 10% is 1e17, 1% is 1e16)
-   * @param owner - The address of the owner of the pool
-   * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
+   * @param swapFeeEvm The swapFee for the owner of the pool in string or bigint formatted to evm(100% is 1e18, 10% is 1e17, 1% is 1e16)
+   * @param owner The address of the owner of the pool
+   * @returns TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
    */
   create({
     name,
@@ -54,30 +58,101 @@ export class WeightedFactory implements PoolFactory {
     to?: string;
     data: BytesLike;
   } {
-    const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
-    const [sortedTokens, sortedWeights] = assetHelpers.sortTokens(
+    this.checkCreateInputs({
       tokenAddresses,
-      weights
-    ) as [string[], BigNumberish[]];
-    const weightedPoolInterface =
-      WeightedPoolFactory__factory.createInterface();
-    const encodedFunctionData = weightedPoolInterface.encodeFunctionData(
-      'create',
-      [name, symbol, sortedTokens, sortedWeights, swapFeeEvm.toString(), owner]
-    );
+      weights,
+      swapFeeEvm,
+    });
+    const params = this.parseCreateParamsForEncoding({
+      name,
+      symbol,
+      tokenAddresses,
+      weights,
+      swapFeeEvm,
+      owner,
+    });
+    const encodedFunctionData = this.encodeCreateFunctionData(params);
     return {
       to: this.contracts.weightedPoolFactory?.address,
       data: encodedFunctionData,
     };
   }
 
+  checkCreateInputs({
+    tokenAddresses,
+    weights,
+    swapFeeEvm,
+  }: Pick<
+    WeightedCreatePoolParameters,
+    'tokenAddresses' | 'weights' | 'swapFeeEvm'
+  >): void {
+    if (tokenAddresses.length !== weights.length) {
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+    }
+    if (tokenAddresses.length < 2) {
+      throw new BalancerError(BalancerErrorCode.BELOW_MIN_TOKENS);
+    }
+    if (tokenAddresses.length > 8) {
+      throw new BalancerError(BalancerErrorCode.ABOVE_MAX_TOKENS);
+    }
+    if (BigInt(swapFeeEvm) <= BigInt(0) || BigInt(swapFeeEvm) > BigInt(1e17)) {
+      throw new BalancerError(BalancerErrorCode.INVALID_SWAP_FEE_PERCENTAGE);
+    }
+    const weightsSum = (weights as string[]).reduce(
+      (acc, cur) => SolidityMaths.add(acc, BigInt(cur)),
+      BigInt(0)
+    );
+    if (weightsSum !== BigInt(1e18)) {
+      throw new BalancerError(BalancerErrorCode.INVALID_WEIGHTS);
+    }
+  }
+
+  parseCreateParamsForEncoding = ({
+    name,
+    symbol,
+    tokenAddresses,
+    weights,
+    swapFeeEvm,
+    owner,
+  }: WeightedCreatePoolParameters): [
+    string,
+    string,
+    string[],
+    BigNumberish[],
+    string,
+    string
+  ] => {
+    const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
+    const [sortedTokens, sortedWeights] = assetHelpers.sortTokens(
+      tokenAddresses,
+      weights
+    ) as [string[], BigNumberish[]];
+    return [
+      name,
+      symbol,
+      sortedTokens,
+      sortedWeights,
+      swapFeeEvm.toString(),
+      owner,
+    ];
+  };
+
+  encodeCreateFunctionData = (
+    params: [string, string, string[], BigNumberish[], string, string]
+  ): string => {
+    const weightedPoolInterface =
+      WeightedPoolFactory__factory.createInterface();
+
+    return weightedPoolInterface.encodeFunctionData('create', params);
+  };
+
   /**
    * Returns a InitJoinPoolAttributes to make a init join transaction
-   * @param joiner - The address of the joiner of the pool
-   * @param poolId - The id of the pool
-   * @param tokensIn - array with the address of the tokens
-   * @param amountsIn - array with the amount of each token
-   * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a weighted pool
+   * @param joiner The address of the joiner of the pool
+   * @param poolId The id of the pool
+   * @param tokensIn Array with the address of the tokens
+   * @param amountsIn Array with the amount of each token
+   * @returns InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a weighted pool
    */
   buildInitJoin({
     joiner,
@@ -85,6 +160,36 @@ export class WeightedFactory implements PoolFactory {
     tokensIn,
     amountsIn,
   }: InitJoinPoolParameters): InitJoinPoolAttributes {
+    this.checkInitJoinInputs({
+      poolId,
+      tokensIn,
+      amountsIn,
+    });
+    const { attributes, params } = this.parseParamsForInitJoin({
+      joiner,
+      poolId,
+      tokensIn,
+      amountsIn,
+    });
+    const { functionName, data } = this.encodeInitJoinFunctionData(params);
+
+    return {
+      to: balancerVault,
+      functionName,
+      data,
+      attributes,
+    };
+  }
+
+  parseParamsForInitJoin = ({
+    joiner,
+    poolId,
+    tokensIn,
+    amountsIn,
+  }: Omit<InitJoinPoolParameters, 'poolAddress'>): {
+    attributes: JoinPoolDecodedAttributes;
+    params: [string, string, string, JoinPoolRequestDecodedAttributes];
+  } => {
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
 
     const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
@@ -93,7 +198,6 @@ export class WeightedFactory implements PoolFactory {
     ) as [string[], string[]];
 
     const userData = WeightedPoolEncoder.joinInit(sortedAmounts);
-    const functionName = 'joinPool';
 
     const attributes = {
       poolId: poolId,
@@ -107,21 +211,44 @@ export class WeightedFactory implements PoolFactory {
       },
     };
 
-    const vaultInterface = Vault__factory.createInterface();
-    const data = vaultInterface.encodeFunctionData(functionName, [
-      attributes.poolId,
-      attributes.sender,
-      attributes.recipient,
-      attributes.joinPoolRequest,
-    ]);
-
     return {
-      to: balancerVault,
-      functionName,
       attributes,
-      data,
+      params: [
+        attributes.poolId,
+        attributes.sender,
+        attributes.recipient,
+        attributes.joinPoolRequest,
+      ],
     };
-  }
+  };
+
+  encodeInitJoinFunctionData = (
+    params: [string, string, string, JoinPoolRequestDecodedAttributes]
+  ): {
+    functionName: string;
+    data: string;
+  } => {
+    const functionName = 'joinPool';
+
+    const vaultInterface = Vault__factory.createInterface();
+    const data = vaultInterface.encodeFunctionData(functionName, params);
+    return { functionName, data };
+  };
+  checkInitJoinInputs = ({
+    poolId,
+    tokensIn,
+    amountsIn,
+  }: Pick<
+    InitJoinPoolParameters,
+    'tokensIn' | 'amountsIn' | 'poolId'
+  >): void => {
+    if (!poolId) {
+      throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
+    }
+    if (tokensIn.length !== amountsIn.length) {
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+    }
+  };
 
   async getPoolAddressAndIdWithReceipt(
     provider: JsonRpcProvider,
