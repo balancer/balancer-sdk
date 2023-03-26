@@ -31,7 +31,7 @@
     "node": "npx hardhat node --tsconfig tsconfig.testing.json --fork $(. ./.env && echo $ALCHEMY_URL)",
     "node:goerli": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --fork $(grep ALCHEMY_URL_GOERLI .env | cut -d '=' -f2 | tail -1) --port 8000",
     "node:polygon": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.polygon.ts node --fork $(grep ALCHEMY_URL_POLYGON .env | cut -d '=' -f2 | tail -1) --port 8137",
-    "typechain:generate": "npx typechain --target ethers-v5 --out-dir src/contracts './src/lib/abi/Vault.json' './src/lib/abi/WeightedPoolFactory.json' './src/lib/abi/ComposableStableFactory.json' './src/lib/abi/BalancerHelpers.json' './src/lib/abi/LidoRelayer.json' './src/lib/abi/WeightedPool.json' './src/lib/abi/ComposableStable.json'"
+    "typechain:generate": "npx typechain --target ethers-v5 --out-dir src/contracts './src/lib/abi/*.json'"
   },
   "devDependencies": {
     "@ethersproject/solidity": "^5.6.1",
