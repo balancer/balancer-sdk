@@ -7,6 +7,7 @@ import {
   WeightedCreatePoolParameters,
 } from '@/modules/pools/factory/types';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
+import { PoolType } from '@/types';
 
 export interface PoolFactory {
   buildInitJoin: (parameters: InitJoinPoolParameters) => InitJoinPoolAttributes;
@@ -19,6 +20,7 @@ export interface PoolFactory {
     parameters:
       | ComposableStableCreatePoolParameters
       | WeightedCreatePoolParameters
+      | LinearCreatePoolParameters
   ): {
     to?: string;
     data: BytesLike;

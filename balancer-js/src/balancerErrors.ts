@@ -25,6 +25,7 @@ export enum BalancerErrorCode {
   NO_POOL_DATA = 'NO_POOL_DATA',
   NO_VALUE_PARAMETER = 'NO_VALUE_PARAMETER',
   POOL_DOESNT_EXIST = 'POOL_DOESNT_EXIST',
+  POOL_TYPE_NOT_PROVIDED = 'POOL_TYPE_NOT_PROVIDED',
   QUERY_BATCH_SWAP = 'QUERY_BATCH_SWAP',
   RELAY_SWAP_AMOUNTS = 'RELAY_SWAP_AMOUNTS',
   REWARD_TOKEN_ZERO = 'REWARD_TOKEN_ZERO',
@@ -94,6 +95,8 @@ export class BalancerError extends Error {
         return 'Illegal value passed as parameter';
       case BalancerErrorCode.POOL_DOESNT_EXIST:
         return 'balancer pool does not exist';
+      case BalancerErrorCode.POOL_TYPE_NOT_PROVIDED:
+        return 'Pool Type has not been provided';
       case BalancerErrorCode.RELAY_SWAP_AMOUNTS:
         return 'Error when checking swap amounts';
       case BalancerErrorCode.REWARD_TOKEN_ZERO:

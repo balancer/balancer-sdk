@@ -27,7 +27,7 @@ import { parseEther } from '@ethersproject/units';
 import { ERC20 } from '@/modules/contracts/implementations/ERC20';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 
-import { Interface } from '@ethersproject/abi';
+import { defaultAbiCoder, Interface } from '@ethersproject/abi';
 
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const liquidityGauge = new Interface(liquidityGaugeAbi);
@@ -64,6 +64,7 @@ export const forkSetup = async (
     slots = await Promise.all(
       tokens.map(async (token) => findTokenBalanceSlot(signer, token))
     );
+    console.log(slots);
   }
   for (let i = 0; i < tokens.length; i++) {
     // Set initial account balance for each token that will be used to join pool
@@ -338,4 +339,47 @@ export async function sendTransactionGetBalances(
     balanceDeltas,
     gasUsed,
   };
+}
+export async function findTokenBalanceSlot(
+  signer: JsonRpcSigner,
+  tokenAddress: string
+): Promise<number> {
+  const encode = (types: string[], values: unknown[]): string =>
+    defaultAbiCoder.encode(types, values);
+  const account = await signer.getAddress();
+  const probeA = encode(['uint256'], [(Math.random() * 10000).toFixed()]);
+  const probeB = encode(['uint256'], [(Math.random() * 10000).toFixed()]);
+  for (let i = 0; i < 200; i++) {
+    let probedSlot = keccak256(['uint256', 'uint256'], [account, i]);
+    // remove padding for JSON RPC
+    while (probedSlot.startsWith('0x0'))
+      probedSlot = '0x' + probedSlot.slice(3);
+    const prev = await signer.provider.send('eth_getStorageAt', [
+      tokenAddress,
+      probedSlot,
+      'latest',
+    ]);
+    // make sure the probe will change the slot value
+    const probe = prev === probeA ? probeB : probeA;
+
+    await signer.provider.send('hardhat_setStorageAt', [
+      tokenAddress,
+      probedSlot,
+      probe,
+    ]);
+
+    const balance = await getErc20Balance(
+      tokenAddress,
+      signer.provider,
+      account
+    );
+    // reset to previous value
+    await signer.provider.send('hardhat_setStorageAt', [
+      tokenAddress,
+      probedSlot,
+      prev,
+    ]);
+    if (balance.eq(BigNumber.from(probe))) return i;
+  }
+  throw 'Balances slot not found!';
 }

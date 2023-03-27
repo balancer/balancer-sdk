@@ -1,11 +1,11 @@
 import { assert } from 'chai';
 import { AddressZero } from '@ethersproject/constants';
 
-import { BalancerError } from '@/balancerErrors';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { ADDRESSES } from '@/test/lib/constants';
 import { BalancerSdkConfig, Network, PoolType } from '@/types';
+import { parseFixed } from '@ethersproject/bignumber';
 
 const network = Network.MAINNET;
 const sdkConfig: BalancerSdkConfig = {
@@ -18,13 +18,11 @@ describe('Linear Factory - Unit tests', async () => {
   const factory = balancer.pools.poolFactory.of(PoolType.AaveLinear);
   context('Create', async () => {
     const rightCreateParameters = {
-      factoryAddress: BALANCER_NETWORK_CONFIG[network].addresses.contracts
-        .composableStablePoolFactory as string,
       name: 'eth-weth-test',
       symbol: 'eth-weth-test',
       mainToken: ADDRESSES[network].ETH.address,
       wrappedToken: ADDRESSES[network].WETH.address,
-      swapFee: '0.05',
+      swapFeeEvm: parseFixed('0.05', 18).toString(),
       owner: AddressZero,
       protocolId: 2,
       upperTarget: '20000',
@@ -34,10 +32,32 @@ describe('Linear Factory - Unit tests', async () => {
         () =>
           factory.create({
             ...rightCreateParameters,
-            swapFee: '0',
+            swapFeeEvm: '0',
           }),
         BalancerError,
-        'The swap fee needs to be greater than zero'
+        BalancerError.getMessage(BalancerErrorCode.INVALID_SWAP_FEE_PERCENTAGE)
+      );
+    });
+    it('should fail with swap fee bigger than 1e17', () => {
+      assert.throws(
+        () =>
+          factory.create({
+            ...rightCreateParameters,
+            swapFeeEvm: parseFixed('1.01', 17).toString(),
+          }),
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.INVALID_SWAP_FEE_PERCENTAGE)
+      );
+    });
+    it('should fail with poolType not supported in the network', () => {
+      const factory = balancer.pools.poolFactory.of(PoolType.YearnLinear);
+      assert.throws(
+        () =>
+          factory.create({
+            ...rightCreateParameters,
+          }),
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.UNSUPPORTED_POOL_TYPE)
       );
     });
     it('should fail with invalid protocolId', () => {
@@ -48,7 +68,7 @@ describe('Linear Factory - Unit tests', async () => {
             protocolId: 19,
           }),
         BalancerError,
-        'The provided protocol id does not correspond to a protocol'
+        BalancerError.getMessage(BalancerErrorCode.INVALID_PROTOCOL_ID)
       );
     });
   });

@@ -17,10 +17,12 @@ export const ADDRESSES = {
     APE: {
       address: '0x4d224452801ACEd8B2F0aebE155379bb5D594381',
       decimals: 18,
+      slot: 0,
     },
     sAPE: {
       address: '0x7966C5BAe631294D7cFFcEA5430b78C2F76DB6Fa',
       decimals: 18,
+      slot: 3,
     },
     BatchRelayer: {
       address: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
