@@ -64,7 +64,6 @@ export const forkSetup = async (
     slots = await Promise.all(
       tokens.map(async (token) => findTokenBalanceSlot(signer, token))
     );
-    console.log(slots);
   }
   for (let i = 0; i < tokens.length; i++) {
     // Set initial account balance for each token that will be used to join pool
@@ -340,6 +339,7 @@ export async function sendTransactionGetBalances(
     gasUsed,
   };
 }
+
 export async function findTokenBalanceSlot(
   signer: JsonRpcSigner,
   tokenAddress: string

@@ -643,11 +643,10 @@ async generalisedExit(
 
 [Example](./examples/exitGeneralised.ts)
 
-## Create Pool
+# Factory
+### Creating Pools
 
-Exposes create functionality allowing user to create pools.
-
-### #createWeightedPool
+### WeightedPool
 
 Builds a transaction to create a weighted pool.
 
@@ -671,12 +670,15 @@ create({
     weights,
     swapFee,
     owner,
-}) => TransactionRequest
+}) =>  {
+    to?: string;
+    data: BytesLike;
+}
 ```
 
 [Example](./examples/pools/weighted/create-and-init-join.ts)
 
-### #createComposableStablePool
+### Composable Stable Pool
 
 Builds a transaction to create a composable stable pool.
 
@@ -706,11 +708,44 @@ create({
     exemptFromYieldProtocolFeeFlags,
     swapFee,
     owner,
-}) => TransactionRequest
+}) =>  {
+    to?: string;
+    data: BytesLike;
+}
 ```
-
 [Example](./examples/pools/composable-stable/create-and-init-join.ts)
 
+### Linear Pool
+
+Builds a transaction to create a linear pool.
+
+```js
+  /**
+   *
+   * @param name The name of the pool
+   * @param symbol The symbol of the pool (BPT name)
+   * @param mainToken The unwrapped token
+   * @param wrappedToken The wrapped token
+   * @param upperTarget The maximum balance of the unwrapped(main) token (normal number, no need to fix to 18 decimals)
+   * @param swapFeeEvm The swap fee of the pool
+   * @param owner The address of the owner of the pool
+   * @param protocolId The protocolId, to check the available value
+   */
+  create({
+    name,
+    symbol,
+    mainToken,
+    wrappedToken,
+    upperTarget,
+    swapFeeEvm,
+    owner,
+    protocolId,
+  }: LinearCreatePoolParameters) => {
+    to?: string;
+    data: BytesLike;
+  }
+```
+[Example](./examples/pools/linear/create.ts)
 ## RelayerService
 
 Relayers are (user opt-in, audited) contracts that can make calls to the vault (with the transaction “sender” being any arbitrary address) and use the sender’s ERC20 vault allowance, internal balance or BPTs on their behalf.

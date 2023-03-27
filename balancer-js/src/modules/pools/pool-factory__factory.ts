@@ -46,6 +46,7 @@ export class PoolFactory__factory {
       case 'StablePhantom': {
         throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
       }
+      case 'Linear':
       case 'AaveLinear':
       case 'ERC4626Linear':
       case 'EulerLinear':

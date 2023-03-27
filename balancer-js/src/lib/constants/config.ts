@@ -30,7 +30,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         composableStablePoolFactory:
           '0xdba127fBc23fb20F5929C546af220A991b5C6e01',
         erc4626LinearPoolFactory: '0x67A25ca2350Ebf4a0C475cA74C257C94a373b828',
-        aaveLinearPoolFactory: '0xf23b4DB826DbA14c0e857029dfF076b1c0264843',
+        // aaveLinearPoolFactory: '0xf23b4DB826DbA14c0e857029dfF076b1c0264843', // This address is not right
         eulerLinearPoolFactory: '0x5F43FBa61f63Fa6bFF101a0A0458cEA917f6B347',
       },
       tokens: {

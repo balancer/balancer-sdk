@@ -3,10 +3,13 @@ import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
+  AaveLinearPool__factory,
   AaveLinearPoolFactory__factory,
+  ERC4626LinearPool__factory,
   ERC4626LinearPoolFactory__factory,
+  EulerLinearPool__factory,
   EulerLinearPoolFactory__factory,
-  WeightedPool__factory,
+  YearnLinearPool__factory,
   YearnLinearPoolFactory__factory,
 } from '@/contracts';
 import { AaveLinearPoolFactoryInterface } from '@/contracts/AaveLinearPoolFactory';
@@ -26,6 +29,10 @@ import { BytesLike } from '@ethersproject/bytes';
 import { LogDescription } from '@ethersproject/abi';
 import { findEventInReceiptLogs } from '@/lib/utils';
 import { Contract } from '@ethersproject/contracts';
+import { ERC4626LinearPoolInterface } from '@/contracts/ERC4626LinearPool';
+import { EulerLinearPoolInterface } from '@/contracts/EulerLinearPool';
+import { AaveLinearPoolInterface } from '@/contracts/AaveLinearPool';
+import { YearnLinearPoolInterface } from '@/contracts/YearnLinearPool';
 
 type LinearPoolFactoryInterface =
   | AaveLinearPoolFactoryInterface
@@ -75,18 +82,37 @@ export class LinearFactory implements PoolFactory {
     this.poolType = poolType;
   }
 
-  static getPoolInterface = (
-    poolType: PoolType
-  ): LinearPoolFactoryInterface => {
-    switch (poolType) {
+  getPoolFactoryInterface = (): LinearPoolFactoryInterface => {
+    switch (this.poolType) {
       case PoolType.AaveLinear:
         return AaveLinearPoolFactory__factory.createInterface();
+      case PoolType.Linear:
       case PoolType.ERC4626Linear:
         return ERC4626LinearPoolFactory__factory.createInterface();
       case PoolType.EulerLinear:
         return EulerLinearPoolFactory__factory.createInterface();
       case PoolType.YearnLinear:
         return YearnLinearPoolFactory__factory.createInterface();
+      default:
+        throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
+    }
+  };
+
+  getPoolInterface = ():
+    | ERC4626LinearPoolInterface
+    | EulerLinearPoolInterface
+    | AaveLinearPoolInterface
+    | YearnLinearPoolInterface => {
+    switch (this.poolType) {
+      case PoolType.Linear:
+      case PoolType.ERC4626Linear:
+        return ERC4626LinearPool__factory.createInterface();
+      case PoolType.EulerLinear:
+        return EulerLinearPool__factory.createInterface();
+      case PoolType.AaveLinear:
+        return AaveLinearPool__factory.createInterface();
+      case PoolType.YearnLinear:
+        return YearnLinearPool__factory.createInterface();
       default:
         throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
     }
@@ -107,7 +133,6 @@ export class LinearFactory implements PoolFactory {
    * @param swapFeeEvm The swap fee of the pool
    * @param owner The address of the owner of the pool
    * @param protocolId The protocolId, to check the available value
-   * @param poolType The Linear Subtype, used to define the pool factory address(Aave, Erc4626, Euler, Yearn, etc)
    */
   create({
     name,
@@ -134,7 +159,6 @@ export class LinearFactory implements PoolFactory {
       protocolId,
     });
     const data = this.encodeCreateFunctionData(params);
-    console.log(this.getFactoryAddress(this.poolType));
     return {
       to: this.getFactoryAddress(this.poolType),
       data,
@@ -199,8 +223,7 @@ export class LinearFactory implements PoolFactory {
     params: LinearPoolParamsToEncode | YearnLinearPoolParamsToEncode
   ): string => {
     const linearPoolInterface: LinearPoolFactoryInterface =
-      LinearFactory.getPoolInterface(this.poolType);
-    console.log(this.poolType === PoolType.YearnLinear);
+      this.getPoolFactoryInterface();
     const encodedData =
       // YearnLinearPools doesn't have protocolId, the encoding of the params is different
       this.poolType === PoolType.YearnLinear
@@ -222,6 +245,7 @@ export class LinearFactory implements PoolFactory {
         if (this.contracts.aaveLinearPoolFactory) {
           return this.contracts.aaveLinearPoolFactory.address;
         } else throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
+      case PoolType.Linear:
       case PoolType.ERC4626Linear:
         if (this.contracts.erc4626LinearPoolFactory) {
           return this.contracts.erc4626LinearPoolFactory.address;
@@ -246,13 +270,13 @@ export class LinearFactory implements PoolFactory {
     const poolCreationEvent: LogDescription = findEventInReceiptLogs({
       receipt,
       to: this.getFactoryAddress(this.poolType) || '',
-      contractInterface: LinearFactory.getPoolInterface(this.poolType),
+      contractInterface: this.getPoolFactoryInterface(),
       logName: 'PoolCreated',
     });
 
     const poolAddress = poolCreationEvent.args.pool;
-    const weightedPoolInterface = WeightedPool__factory.createInterface();
-    const pool = new Contract(poolAddress, weightedPoolInterface, provider);
+    const linearPoolInterface = this.getPoolInterface();
+    const pool = new Contract(poolAddress, linearPoolInterface, provider);
     const poolId = await pool.getPoolId();
     return {
       poolAddress,

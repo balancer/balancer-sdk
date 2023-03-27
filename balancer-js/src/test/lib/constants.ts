@@ -83,6 +83,12 @@ export const ADDRESSES = {
       symbol: 'aDAI',
       slot: 0,
     },
+    eDAI: {
+      address: '0xe025e3ca2be02316033184551d4d3aa22024d9dc',
+      decimals: 18,
+      symbol: 'eDAI',
+      slot: 0,
+    },
     STETH: {
       address: '0xae7ab96520de3a18e5e111b5eaab095312d7fe84',
       decimals: 18,

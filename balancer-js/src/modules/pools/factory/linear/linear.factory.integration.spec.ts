@@ -1,6 +1,7 @@
 // yarn test:only ./src/modules/pools/factory/composable-stable/composable-stable.factory.integration.spec.ts
-import { LogDescription } from '@ethersproject/abi';
 import { parseFixed } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
+import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 import { expect } from 'chai';
 import dotenv from 'dotenv';
 
@@ -10,16 +11,14 @@ import {
 } from '@/modules/pools/factory/types';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { ADDRESSES } from '@/test/lib/constants';
-import { forkSetup, sendTransactionGetBalances } from '@/test/lib/utils';
+import { forkSetup } from '@/test/lib/utils';
 import { Network, PoolType } from '@/types';
-import { findEventInReceiptLogs } from '@/lib/utils';
-import { JsonRpcProvider } from '@ethersproject/providers';
-import { LinearFactory } from '@/modules/pools/factory/linear/linear.factory';
+import { ERC4626LinearPool, EulerLinearPool } from '@/contracts';
 
 dotenv.config();
 
-const network = Network.GOERLI;
-const rpcUrl = 'http://127.0.0.1:8000';
+const network = Network.MAINNET;
+const rpcUrl = 'http://127.0.0.1:8545';
 const balancer = new BalancerSDK({
   network,
   rpcUrl,
@@ -29,12 +28,11 @@ const signer = provider.getSigner();
 const addresses = ADDRESSES[network];
 
 describe('creating linear pool', async () => {
+  // Euler pools needs to be created with euler wrapped tokens
+  // const poolType = PoolType.EulerLinear;
+  // const poolTokens = [addresses.DAI, addresses.eDAI];
+  const poolType = PoolType.ERC4626Linear;
   const poolTokens = [addresses.APE, addresses.sAPE];
-  const rawAmount = '100000';
-  const amountsIn = poolTokens.map((p) =>
-    parseFixed(rawAmount, p.decimals).toString()
-  );
-  const poolType = PoolType.AaveLinear;
   const linearPoolFactory = balancer.pools.poolFactory.of(poolType);
   let poolParams: LinearCreatePoolParameters;
   let signerAddress: string;
@@ -42,10 +40,9 @@ describe('creating linear pool', async () => {
     signerAddress = await signer.getAddress();
     await forkSetup(
       signer,
-      poolTokens.map((p) => p.address),
-      // poolTokens.map((p) => p.slot),
-      undefined,
-      amountsIn,
+      [],
+      [],
+      [],
       `${process.env.ALCHEMY_URL}`,
       16720000,
       false
@@ -62,25 +59,44 @@ describe('creating linear pool', async () => {
     };
   });
   context('create', async () => {
-    it('should create a pool', async () => {
-      const { to, data } = linearPoolFactory.create(poolParams);
-      const signerAddress = await signer.getAddress();
-      const { transactionReceipt } = await sendTransactionGetBalances(
-        [],
-        signer,
-        signerAddress,
-        to as string,
-        data as string
+    let transactionReceipt: TransactionReceipt;
+    it('should send the create transaction', async () => {
+      const txInfo = linearPoolFactory.create(poolParams);
+      transactionReceipt = await (await signer.sendTransaction(txInfo)).wait();
+      expect(transactionReceipt.status).to.eql(1);
+    });
+    it('should have correct pool info on creation', async () => {
+      const { poolId, poolAddress } =
+        await linearPoolFactory.getPoolAddressAndIdWithReceipt(
+          provider,
+          transactionReceipt
+        );
+      const linearPoolInterface = linearPoolFactory.getPoolInterface();
+      const pool = new Contract(poolAddress, linearPoolInterface, provider) as
+        | ERC4626LinearPool
+        | EulerLinearPool;
+      const id = await pool.getPoolId();
+      const name = await pool.name();
+      const symbol = await pool.symbol();
+      const swapFee = await pool.getSwapFeePercentage();
+      const owner = await pool.getOwner();
+      const mainToken = await pool.getMainToken();
+      const wrappedToken = await pool.getWrappedToken();
+      const { upperTarget } = await pool.getTargets();
+      expect(id).to.eql(poolId);
+      expect(name).to.eql(poolParams.name);
+      expect(symbol).to.eql(poolParams.symbol);
+      expect(swapFee.toString()).to.eql(poolParams.swapFeeEvm);
+      expect(owner).to.eql(poolParams.owner);
+      expect(mainToken.toLocaleLowerCase()).to.eql(
+        poolParams.mainToken.toLocaleLowerCase()
       );
-      const linearPoolInterface = LinearFactory.getPoolInterface(poolType);
-      const poolCreationEvent: LogDescription = findEventInReceiptLogs({
-        to: to as string,
-        receipt: transactionReceipt,
-        logName: 'PoolCreated',
-        contractInterface: linearPoolInterface,
-      });
-      expect(!!poolCreationEvent).to.be.true;
-      return;
+      expect(wrappedToken.toLocaleLowerCase()).to.eql(
+        poolParams.wrappedToken.toLocaleLowerCase()
+      );
+      expect(upperTarget.toString()).to.eql(
+        parseFixed(poolParams.upperTarget, 18).toString()
+      );
     });
   });
 });
