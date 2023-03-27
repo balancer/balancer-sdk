@@ -4,7 +4,6 @@ import { parseFixed } from '@ethersproject/bignumber';
 import { expect } from 'chai';
 import dotenv from 'dotenv';
 
-import { ERC4626LinearPoolFactory__factory } from '@/contracts';
 import {
   LinearCreatePoolParameters,
   ProtocolId,
@@ -19,8 +18,8 @@ import { LinearFactory } from '@/modules/pools/factory/linear/linear.factory';
 
 dotenv.config();
 
-const network = Network.MAINNET;
-const rpcUrl = 'http://127.0.0.1:8545';
+const network = Network.GOERLI;
+const rpcUrl = 'http://127.0.0.1:8000';
 const balancer = new BalancerSDK({
   network,
   rpcUrl,
@@ -44,7 +43,8 @@ describe('creating linear pool', async () => {
     await forkSetup(
       signer,
       poolTokens.map((p) => p.address),
-      poolTokens.map((p) => p.slot),
+      // poolTokens.map((p) => p.slot),
+      undefined,
       amountsIn,
       `${process.env.ALCHEMY_URL}`,
       16720000,

@@ -1,4 +1,4 @@
-import { BigNumberish, parseFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
@@ -27,6 +27,38 @@ import { LogDescription } from '@ethersproject/abi';
 import { findEventInReceiptLogs } from '@/lib/utils';
 import { Contract } from '@ethersproject/contracts';
 
+type LinearPoolFactoryInterface =
+  | AaveLinearPoolFactoryInterface
+  | ERC4626LinearPoolFactoryInterface
+  | EulerLinearPoolFactoryInterface
+  | YearnLinearPoolFactoryInterface;
+
+type LinearPoolFactoryInterfaceWithoutYearn =
+  | AaveLinearPoolFactoryInterface
+  | ERC4626LinearPoolFactoryInterface
+  | EulerLinearPoolFactoryInterface;
+
+type LinearPoolParamsToEncode = [
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string
+];
+
+type YearnLinearPoolParamsToEncode = [
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string
+];
+
 export class LinearFactory implements PoolFactory {
   private wrappedNativeAsset: string;
   private contracts: ContractInstances;
@@ -42,6 +74,23 @@ export class LinearFactory implements PoolFactory {
     this.contracts = contracts;
     this.poolType = poolType;
   }
+
+  static getPoolInterface = (
+    poolType: PoolType
+  ): LinearPoolFactoryInterface => {
+    switch (poolType) {
+      case PoolType.AaveLinear:
+        return AaveLinearPoolFactory__factory.createInterface();
+      case PoolType.ERC4626Linear:
+        return ERC4626LinearPoolFactory__factory.createInterface();
+      case PoolType.EulerLinear:
+        return EulerLinearPoolFactory__factory.createInterface();
+      case PoolType.YearnLinear:
+        return YearnLinearPoolFactory__factory.createInterface();
+      default:
+        throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
+    }
+  };
 
   buildInitJoin(): InitJoinPoolAttributes {
     // Linear Pools doesn't need to be initialized, they are initialized on deploy
@@ -85,6 +134,7 @@ export class LinearFactory implements PoolFactory {
       protocolId,
     });
     const data = this.encodeCreateFunctionData(params);
+    console.log(this.getFactoryAddress(this.poolType));
     return {
       to: this.getFactoryAddress(this.poolType),
       data,
@@ -116,17 +166,24 @@ export class LinearFactory implements PoolFactory {
     swapFeeEvm,
     owner,
     protocolId,
-  }: Omit<LinearCreatePoolParameters, 'poolType'>): [
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string
-  ] => {
-    const params = [
+  }: Omit<LinearCreatePoolParameters, 'poolType'>):
+    | LinearPoolParamsToEncode
+    | YearnLinearPoolParamsToEncode => {
+    let params: LinearPoolParamsToEncode | YearnLinearPoolParamsToEncode;
+    if (this.poolType !== PoolType.YearnLinear) {
+      params = [
+        name,
+        symbol,
+        mainToken,
+        wrappedToken,
+        parseFixed(upperTarget, 18).toString(),
+        swapFeeEvm.toString(),
+        owner,
+        protocolId.toString(),
+      ] as [string, string, string, string, string, string, string, string];
+      return params;
+    }
+    params = [
       name,
       symbol,
       mainToken,
@@ -134,25 +191,28 @@ export class LinearFactory implements PoolFactory {
       parseFixed(upperTarget, 18).toString(),
       swapFeeEvm.toString(),
       owner,
-      protocolId.toString(),
-    ] as [string, string, string, string, string, string, string, string];
+    ] as [string, string, string, string, string, string, string];
     return params;
   };
 
   encodeCreateFunctionData = (
-    params: [string, string, string, string, string, string, string, string]
+    params: LinearPoolParamsToEncode | YearnLinearPoolParamsToEncode
   ): string => {
     const linearPoolInterface: LinearPoolFactoryInterface =
       LinearFactory.getPoolInterface(this.poolType);
-    // TODO: Find an alternative solution to this TS Bug
-    // TS Bug report: https://github.com/microsoft/TypeScript/issues/14107
-    // TS2769: No overload matches this call. The last overload gave the following error.
-    // Argument of type '"create"' is not assignable to parameter of type '"isPoolFromFactory"'.
-    console.log(params);
-    const encodedData = (
-      linearPoolInterface as AaveLinearPoolFactoryInterface
-    ).encodeFunctionData('create', params);
-    console.log(encodedData);
+    console.log(this.poolType === PoolType.YearnLinear);
+    const encodedData =
+      // YearnLinearPools doesn't have protocolId, the encoding of the params is different
+      this.poolType === PoolType.YearnLinear
+        ? (
+            linearPoolInterface as YearnLinearPoolFactoryInterface
+          ).encodeFunctionData(
+            'create',
+            params as YearnLinearPoolParamsToEncode
+          )
+        : (
+            linearPoolInterface as LinearPoolFactoryInterfaceWithoutYearn
+          ).encodeFunctionData('create', params as LinearPoolParamsToEncode);
     return encodedData;
   };
 
@@ -174,22 +234,6 @@ export class LinearFactory implements PoolFactory {
         if (this.contracts.yearnLinearPoolFactory) {
           return this.contracts.yearnLinearPoolFactory.address;
         } else throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
-      default:
-        throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
-    }
-  };
-  static getPoolInterface = (
-    poolType: PoolType
-  ): LinearPoolFactoryInterface => {
-    switch (poolType) {
-      case PoolType.AaveLinear:
-        return AaveLinearPoolFactory__factory.createInterface();
-      case PoolType.ERC4626Linear:
-        return ERC4626LinearPoolFactory__factory.createInterface();
-      case PoolType.EulerLinear:
-        return EulerLinearPoolFactory__factory.createInterface();
-      case PoolType.YearnLinear:
-        return YearnLinearPoolFactory__factory.createInterface();
       default:
         throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
     }
@@ -216,9 +260,3 @@ export class LinearFactory implements PoolFactory {
     };
   };
 }
-
-type LinearPoolFactoryInterface =
-  | AaveLinearPoolFactoryInterface
-  | ERC4626LinearPoolFactoryInterface
-  | EulerLinearPoolFactoryInterface
-  | YearnLinearPoolFactoryInterface;

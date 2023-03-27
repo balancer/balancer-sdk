@@ -6,7 +6,7 @@ import { Contract } from '@ethersproject/contracts';
 export const EulerLinearPoolFactory = (
   address: string,
   signerOrProvider: Signer | Provider
-) => {
+): Contract => {
   return new Contract(
     address,
     EulerLinearPoolFactory__factory.createInterface(),

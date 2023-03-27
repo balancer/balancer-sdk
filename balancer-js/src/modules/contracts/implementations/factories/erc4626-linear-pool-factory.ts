@@ -6,7 +6,7 @@ import { Contract } from '@ethersproject/contracts';
 export const Erc4626LinearPoolFactory = (
   address: string,
   signerOrProvider: Signer | Provider
-) => {
+): Contract => {
   return new Contract(
     address,
     ERC4626LinearPoolFactory__factory.createInterface(),
