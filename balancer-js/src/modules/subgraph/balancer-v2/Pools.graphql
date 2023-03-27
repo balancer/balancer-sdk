@@ -105,6 +105,22 @@ fragment SubgraphPool on Pool {
   sqrtBeta
   root3Alpha
   isInRecoveryMode
+  alpha
+  beta
+  c
+  s
+  lambda
+  tauAlphaX
+  tauAlphaY
+  tauBetaX
+  tauBetaY
+  u
+  v
+  w
+  z
+  dSq
+  delta
+  epsilon
 }
 
 fragment SubgraphPoolToken on PoolToken {
@@ -150,6 +166,7 @@ fragment SubgraphSubPool on Pool {
 
 fragment TokenTree on Token {
   latestUSDPrice
+  latestFXPrice
   pool {
     ...SubgraphSubPool
     tokens(first: 100, orderBy: index) {
