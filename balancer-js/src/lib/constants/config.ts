@@ -30,8 +30,10 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         composableStablePoolFactory:
           '0xdba127fBc23fb20F5929C546af220A991b5C6e01',
         erc4626LinearPoolFactory: '0x67A25ca2350Ebf4a0C475cA74C257C94a373b828',
-        // aaveLinearPoolFactory: '0xf23b4DB826DbA14c0e857029dfF076b1c0264843', // This address is not right
-        eulerLinearPoolFactory: '0x5F43FBa61f63Fa6bFF101a0A0458cEA917f6B347',
+        aaveLinearPoolFactory: '0xb9f8ab3ed3f3acba64bc6cd2dca74b7f38fd7b88',
+        eulerLinearPoolFactory: '0x5f43fba61f63fa6bff101a0a0458cea917f6b347',
+        gearboxLinearPoolFactory: '0x2ebe41e1aa44d61c206a94474932dadc7d3fd9e3',
+        yearnLinearPoolFactory: '0x8b7854708c0c54f9d7d1ff351d4f84e6de0e134c',
       },
       tokens: {
         wrappedNativeAsset: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -101,6 +103,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
         erc4626LinearPoolFactory: '0xa3b9515a9c557455bc53f7a535a85219b59e8b2e',
         aaveLinearPoolFactory: '0xf23b4db826dba14c0e857029dff076b1c0264843',
+        yearnLinearPoolFactory: '0x7396f99b48e7436b152427bfa3dd6aa8c7c6d05b',
       },
       tokens: {
         bal: '0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3',
@@ -152,6 +155,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
         erc4626LinearPoolFactory: '0xa3b9515a9c557455bc53f7a535a85219b59e8b2e',
         aaveLinearPoolFactory: '0xf23b4db826dba14c0e857029dff076b1c0264843',
+        yearnLinearPoolFactory: '0xd8b6b96c88ad626eb6209c4876e3b14f45f8803a',
       },
       tokens: {
         bal: '0x040d1edc9569d4bab2d15287dc5a4f10f56a56b8',
@@ -299,6 +303,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
         erc4626LinearPoolFactory: '0xa3b9515a9c557455bc53f7a535a85219b59e8b2e',
         aaveLinearPoolFactory: '0xf23b4db826dba14c0e857029dff076b1c0264843',
+        yearnLinearPoolFactory: '0xd8b6b96c88ad626eb6209c4876e3b14f45f8803a',
       },
       tokens: {
         wrappedNativeAsset: '0x4200000000000000000000000000000000000006',
@@ -334,6 +339,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         weightedPoolFactory: '0xf302f9F50958c5593770FDf4d4812309fF77414f',
         composableStablePoolFactory:
           '0x76578ecf9a141296ec657847fb45b0585bcda3a6',
+        aaveLinearPoolFactory: '0x9da18982a33fd0c7051b19f0d7c76f2d5e7e017c',
       },
       tokens: {
         wrappedNativeAsset: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',

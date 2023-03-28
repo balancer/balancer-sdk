@@ -25,7 +25,7 @@ describe('Linear Factory - Unit tests', async () => {
       swapFeeEvm: parseFixed('0.05', 18).toString(),
       owner: AddressZero,
       protocolId: 2,
-      upperTarget: '20000',
+      upperTargetEvm: parseFixed('20000', 18).toString(),
     };
     it('should fail with swap fee 0', () => {
       assert.throws(

@@ -24,6 +24,7 @@ import { AaveLinearPoolFactory } from '@/modules/contracts/implementations/facto
 import { Erc4626LinearPoolFactory } from '@/modules/contracts/implementations/factories/erc4626-linear-pool-factory';
 import { EulerLinearPoolFactory } from '@/modules/contracts/implementations/factories/euler-linear-pool-factory';
 import { YearnLinearPoolFactory } from '@/modules/contracts/implementations/factories/yearn-linear-pool-factory';
+import { GearboxLinearPoolFactory } from '@/modules/contracts/implementations/factories/gearbox-linear-pool-factory';
 
 type ContractFactory = (
   address: string,
@@ -39,6 +40,7 @@ export interface ContractInstances {
   erc4626LinearPoolFactory?: Contract;
   eulerLinearPoolFactory?: Contract;
   gaugeClaimHelper?: Contract;
+  gearboxLinearPoolFactory?: Contract;
   lidoRelayer?: LidoRelayer;
   liquidityGauge: ContractFactory;
   multicall: Contract;
@@ -59,6 +61,7 @@ export class Contracts {
   erc4626LinearPoolFactory?: Contract;
   eulerLinearPoolFactory?: Contract;
   gaugeClaimHelper?: Contract;
+  gearboxLinearPoolFactory?: Contract;
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
   relayerV3?: Contract;
@@ -149,6 +152,12 @@ export class Contracts {
         provider
       );
     }
+    if (this.contractAddresses.gearboxLinearPoolFactory) {
+      this.gearboxLinearPoolFactory = GearboxLinearPoolFactory(
+        this.contractAddresses.gearboxLinearPoolFactory,
+        provider
+      );
+    }
     if (this.contractAddresses.yearnLinearPoolFactory) {
       this.yearnLinearPoolFactory = YearnLinearPoolFactory(
         this.contractAddresses.yearnLinearPoolFactory,
@@ -170,6 +179,7 @@ export class Contracts {
       erc4626LinearPoolFactory: this.erc4626LinearPoolFactory,
       eulerLinearPoolFactory: this.eulerLinearPoolFactory,
       gaugeClaimHelper: this.gaugeClaimHelper,
+      gearboxLinearPoolFactory: this.gearboxLinearPoolFactory,
       liquidityGauge: this.getLiquidityGauge,
       lidoRelayer: this.lidoRelayer,
       multicall: this.multicall,

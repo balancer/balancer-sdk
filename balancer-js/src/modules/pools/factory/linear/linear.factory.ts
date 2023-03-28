@@ -9,6 +9,8 @@ import {
   ERC4626LinearPoolFactory__factory,
   EulerLinearPool__factory,
   EulerLinearPoolFactory__factory,
+  GearboxLinearPool__factory,
+  GearboxLinearPoolFactory__factory,
   YearnLinearPool__factory,
   YearnLinearPoolFactory__factory,
 } from '@/contracts';
@@ -16,7 +18,6 @@ import { AaveLinearPoolFactoryInterface } from '@/contracts/AaveLinearPoolFactor
 import { ERC4626LinearPoolFactoryInterface } from '@/contracts/ERC4626LinearPoolFactory';
 import { EulerLinearPoolFactoryInterface } from '@/contracts/EulerLinearPoolFactory';
 import { YearnLinearPoolFactoryInterface } from '@/contracts/YearnLinearPoolFactory';
-import { networkAddresses } from '@/lib/constants/config';
 import { ContractInstances } from '@/modules/contracts/contracts.module';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import {
@@ -24,7 +25,7 @@ import {
   LinearCreatePoolParameters,
   ProtocolId,
 } from '@/modules/pools/factory/types';
-import { BalancerNetworkConfig, PoolType } from '@/types';
+import { PoolType } from '@/types';
 import { BytesLike } from '@ethersproject/bytes';
 import { LogDescription } from '@ethersproject/abi';
 import { findEventInReceiptLogs } from '@/lib/utils';
@@ -33,11 +34,14 @@ import { ERC4626LinearPoolInterface } from '@/contracts/ERC4626LinearPool';
 import { EulerLinearPoolInterface } from '@/contracts/EulerLinearPool';
 import { AaveLinearPoolInterface } from '@/contracts/AaveLinearPool';
 import { YearnLinearPoolInterface } from '@/contracts/YearnLinearPool';
+import { GearboxLinearPoolFactoryInterface } from '@/contracts/GearboxLinearPoolFactory';
+import { GearboxLinearPoolInterface } from '@/contracts/GearboxLinearPool';
 
 type LinearPoolFactoryInterface =
   | AaveLinearPoolFactoryInterface
   | ERC4626LinearPoolFactoryInterface
   | EulerLinearPoolFactoryInterface
+  | GearboxLinearPoolFactoryInterface
   | YearnLinearPoolFactoryInterface;
 
 type LinearPoolFactoryInterfaceWithoutYearn =
@@ -67,17 +71,10 @@ type YearnLinearPoolParamsToEncode = [
 ];
 
 export class LinearFactory implements PoolFactory {
-  private wrappedNativeAsset: string;
   private contracts: ContractInstances;
   private readonly poolType: PoolType;
 
-  constructor(
-    networkConfig: BalancerNetworkConfig,
-    contracts: ContractInstances,
-    poolType: PoolType
-  ) {
-    const { tokens } = networkAddresses(networkConfig.chainId);
-    this.wrappedNativeAsset = tokens.wrappedNativeAsset;
+  constructor(contracts: ContractInstances, poolType: PoolType) {
     this.contracts = contracts;
     this.poolType = poolType;
   }
@@ -91,6 +88,8 @@ export class LinearFactory implements PoolFactory {
         return ERC4626LinearPoolFactory__factory.createInterface();
       case PoolType.EulerLinear:
         return EulerLinearPoolFactory__factory.createInterface();
+      case PoolType.GearboxLinear:
+        return GearboxLinearPoolFactory__factory.createInterface();
       case PoolType.YearnLinear:
         return YearnLinearPoolFactory__factory.createInterface();
       default:
@@ -99,18 +98,21 @@ export class LinearFactory implements PoolFactory {
   };
 
   getPoolInterface = ():
+    | AaveLinearPoolInterface
     | ERC4626LinearPoolInterface
     | EulerLinearPoolInterface
-    | AaveLinearPoolInterface
+    | GearboxLinearPoolInterface
     | YearnLinearPoolInterface => {
     switch (this.poolType) {
+      case PoolType.AaveLinear:
+        return AaveLinearPool__factory.createInterface();
       case PoolType.Linear:
       case PoolType.ERC4626Linear:
         return ERC4626LinearPool__factory.createInterface();
       case PoolType.EulerLinear:
         return EulerLinearPool__factory.createInterface();
-      case PoolType.AaveLinear:
-        return AaveLinearPool__factory.createInterface();
+      case PoolType.GearboxLinear:
+        return GearboxLinearPool__factory.createInterface();
       case PoolType.YearnLinear:
         return YearnLinearPool__factory.createInterface();
       default:
@@ -127,9 +129,9 @@ export class LinearFactory implements PoolFactory {
    *
    * @param name The name of the pool
    * @param symbol The symbol of the pool (BPT name)
-   * @param mainToken The unwrapped token
+   * @param mainToken The main token
    * @param wrappedToken The wrapped token
-   * @param upperTarget The maximum balance of the unwrapped(main) token (normal number, no need to fix to 18 decimals)
+   * @param upperTargetEvm The maximum balance of the unwrapped(main) token formatted on EVM (18 decimals)
    * @param swapFeeEvm The swap fee of the pool
    * @param owner The address of the owner of the pool
    * @param protocolId The protocolId, to check the available value
@@ -139,7 +141,7 @@ export class LinearFactory implements PoolFactory {
     symbol,
     mainToken,
     wrappedToken,
-    upperTarget,
+    upperTargetEvm,
     swapFeeEvm,
     owner,
     protocolId,
@@ -153,14 +155,14 @@ export class LinearFactory implements PoolFactory {
       symbol,
       mainToken,
       wrappedToken,
-      upperTarget,
+      upperTargetEvm,
       swapFeeEvm,
       owner,
       protocolId,
     });
     const data = this.encodeCreateFunctionData(params);
     return {
-      to: this.getFactoryAddress(this.poolType),
+      to: this.getFactoryAddress(),
       data,
     };
   }
@@ -178,7 +180,7 @@ export class LinearFactory implements PoolFactory {
     if (BigInt(swapFeeEvm) <= BigInt(0) || BigInt(swapFeeEvm) > BigInt(1e17)) {
       throw new BalancerError(BalancerErrorCode.INVALID_SWAP_FEE_PERCENTAGE);
     }
-    this.getFactoryAddress(this.poolType);
+    this.getFactoryAddress();
   };
 
   parseCreateParamsForEncoding = ({
@@ -186,7 +188,7 @@ export class LinearFactory implements PoolFactory {
     symbol,
     mainToken,
     wrappedToken,
-    upperTarget,
+    upperTargetEvm,
     swapFeeEvm,
     owner,
     protocolId,
@@ -200,8 +202,8 @@ export class LinearFactory implements PoolFactory {
         symbol,
         mainToken,
         wrappedToken,
-        parseFixed(upperTarget, 18).toString(),
-        swapFeeEvm.toString(),
+        upperTargetEvm,
+        swapFeeEvm,
         owner,
         protocolId.toString(),
       ] as [string, string, string, string, string, string, string, string];
@@ -212,8 +214,8 @@ export class LinearFactory implements PoolFactory {
       symbol,
       mainToken,
       wrappedToken,
-      parseFixed(upperTarget, 18).toString(),
-      swapFeeEvm.toString(),
+      upperTargetEvm,
+      swapFeeEvm,
       owner,
     ] as [string, string, string, string, string, string, string];
     return params;
@@ -239,8 +241,8 @@ export class LinearFactory implements PoolFactory {
     return encodedData;
   };
 
-  getFactoryAddress = (poolType: PoolType): string => {
-    switch (poolType) {
+  getFactoryAddress = (): string => {
+    switch (this.poolType) {
       case PoolType.AaveLinear:
         if (this.contracts.aaveLinearPoolFactory) {
           return this.contracts.aaveLinearPoolFactory.address;
@@ -253,6 +255,10 @@ export class LinearFactory implements PoolFactory {
       case PoolType.EulerLinear:
         if (this.contracts.eulerLinearPoolFactory) {
           return this.contracts.eulerLinearPoolFactory.address;
+        } else throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
+      case PoolType.GearboxLinear:
+        if (this.contracts.gearboxLinearPoolFactory) {
+          return this.contracts.gearboxLinearPoolFactory.address;
         } else throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
       case PoolType.YearnLinear:
         if (this.contracts.yearnLinearPoolFactory) {
@@ -269,7 +275,7 @@ export class LinearFactory implements PoolFactory {
   ): Promise<{ poolId: string; poolAddress: string }> => {
     const poolCreationEvent: LogDescription = findEventInReceiptLogs({
       receipt,
-      to: this.getFactoryAddress(this.poolType) || '',
+      to: this.getFactoryAddress() || '',
       contractInterface: this.getPoolFactoryInterface(),
       logName: 'PoolCreated',
     });

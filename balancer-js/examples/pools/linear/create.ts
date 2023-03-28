@@ -40,7 +40,7 @@ async function createLinearPool() {
     symbol: 'My-Test-Pool-Symbol',
     mainToken: poolTokens[0],
     wrappedToken: poolTokens[1],
-    upperTarget: '20000',
+    upperTargetEvm: parseFixed('20000', 18).toString(),
     owner: ownerAddress,
     protocolId: ProtocolId.EULER,
     swapFeeEvm: parseFixed('0.01', 18).toString(),

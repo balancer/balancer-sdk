@@ -27,7 +27,7 @@ export type LinearCreatePoolParameters = Pick<
 > & {
   mainToken: string;
   wrappedToken: string;
-  upperTarget: string;
+  upperTargetEvm: string;
   protocolId: ProtocolId;
 };
 
@@ -47,6 +47,7 @@ export interface InitJoinPoolAttributes {
   value?: BigNumber;
 }
 
+// Source of the protocolId's: https://github.com/balancer/balancer-v2-monorepo/blob/647320a4a375c724276af8e1ae26948de8fa411b/pkg/interfaces/contracts/standalone-utils/IProtocolIdRegistry.sol#L54-L72
 export enum ProtocolId {
   AAVE_V1 = 0,
   AAVE_V2 = 1,

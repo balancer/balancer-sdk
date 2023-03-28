@@ -1,4 +1,4 @@
-// yarn test:only ./src/modules/pools/factory/composable-stable/composable-stable.factory.integration.spec.ts
+// yarn test:only ./src/modules/pools/factory/linear/linear.factory.integration.spec.ts
 import { parseFixed } from '@ethersproject/bignumber';
 import { Contract } from '@ethersproject/contracts';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
@@ -13,7 +13,7 @@ import { BalancerSDK } from '@/modules/sdk.module';
 import { ADDRESSES } from '@/test/lib/constants';
 import { forkSetup } from '@/test/lib/utils';
 import { Network, PoolType } from '@/types';
-import { ERC4626LinearPool, EulerLinearPool } from '@/contracts';
+import { ERC4626LinearPool } from '@/contracts';
 
 dotenv.config();
 
@@ -28,9 +28,6 @@ const signer = provider.getSigner();
 const addresses = ADDRESSES[network];
 
 describe('creating linear pool', async () => {
-  // Euler pools needs to be created with euler wrapped tokens
-  // const poolType = PoolType.EulerLinear;
-  // const poolTokens = [addresses.DAI, addresses.eDAI];
   const poolType = PoolType.ERC4626Linear;
   const poolTokens = [addresses.APE, addresses.sAPE];
   const linearPoolFactory = balancer.pools.poolFactory.of(poolType);
@@ -52,7 +49,7 @@ describe('creating linear pool', async () => {
       symbol: 'My-Test-Pool-Symbol',
       mainToken: poolTokens[0].address,
       wrappedToken: poolTokens[1].address,
-      upperTarget: '20000',
+      upperTargetEvm: parseFixed('20000', 18).toString(),
       owner: signerAddress,
       protocolId: ProtocolId.EULER,
       swapFeeEvm: parseFixed('0.01', 18).toString(),
@@ -72,9 +69,11 @@ describe('creating linear pool', async () => {
           transactionReceipt
         );
       const linearPoolInterface = linearPoolFactory.getPoolInterface();
-      const pool = new Contract(poolAddress, linearPoolInterface, provider) as
-        | ERC4626LinearPool
-        | EulerLinearPool;
+      const pool = new Contract(
+        poolAddress,
+        linearPoolInterface,
+        provider
+      ) as ERC4626LinearPool;
       const id = await pool.getPoolId();
       const name = await pool.name();
       const symbol = await pool.symbol();
@@ -94,9 +93,7 @@ describe('creating linear pool', async () => {
       expect(wrappedToken.toLocaleLowerCase()).to.eql(
         poolParams.wrappedToken.toLocaleLowerCase()
       );
-      expect(upperTarget.toString()).to.eql(
-        parseFixed(poolParams.upperTarget, 18).toString()
-      );
+      expect(upperTarget.toString()).to.eql(poolParams.upperTargetEvm);
     });
   });
 });

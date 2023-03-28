@@ -80,7 +80,11 @@ export interface ContractAddresses {
   weightedPoolFactory?: string;
   composableStablePoolFactory?: string;
 
-  [key: string]: string | undefined;
+  aaveLinearPoolFactory?: string;
+  erc4626LinearPoolFactory?: string;
+  eulerLinearPoolFactory?: string;
+  gearboxLinearPoolFactory?: string;
+  yearnLinearPoolFactory?: string;
 }
 
 export interface BalancerNetworkConfig {
