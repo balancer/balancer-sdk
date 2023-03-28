@@ -1,16 +1,20 @@
 /*
-  Linear - Create. (Linear Pools doesn't need to be initialized)
+  Linear - Create. (Linear Pools are initialized upon creation and can be immediately after creation joined using swaps)
   Run command: yarn examples:run ./examples/pools/linear/create.ts
  */
-import { parseFixed } from '@ethersproject/bignumber';
 import * as dotenv from 'dotenv';
-
-import { ProtocolId } from '@/modules/pools/factory/types';
+dotenv.config();
+import { parseFixed } from '@ethersproject/bignumber';
 import { ADDRESSES } from '@/test/lib/constants';
-import { BalancerSDK, Network, PoolType } from 'src';
 import { setUpExample } from '../helper';
 
-dotenv.config();
+import {
+  BalancerSDK,
+  LinearCreatePoolParameters,
+  Network,
+  PoolType,
+  ProtocolId,
+} from '@/.';
 
 async function createLinearPool() {
   const { ALCHEMY_URL: rpcUrlArchive } = process.env;
@@ -22,7 +26,7 @@ async function createLinearPool() {
   };
   const balancer = new BalancerSDK(sdkConfig);
   const addresses = ADDRESSES[network];
-  const poolTokens = [addresses.DAI.address, addresses.eDAI.address];
+  const poolTokens = [addresses.DAI.address, addresses.sAPE.address];
   const { signer } = await setUpExample(
     rpcUrlArchive as string,
     rpcUrlLocal,
@@ -34,19 +38,20 @@ async function createLinearPool() {
     16720000
   );
   const ownerAddress = await signer.getAddress();
-  const poolType = PoolType.EulerLinear;
-  const poolParameters = {
+  const poolParameters: LinearCreatePoolParameters = {
     name: 'My-Test-Pool-Name',
     symbol: 'My-Test-Pool-Symbol',
     mainToken: poolTokens[0],
     wrappedToken: poolTokens[1],
     upperTarget: '20000',
     owner: ownerAddress,
-    protocolId: ProtocolId.EULER,
+    protocolId: ProtocolId.TESSERA,
     swapFeeEvm: parseFixed('0.01', 18).toString(),
   };
   // Build the create transaction
-  const linearPoolFactory = balancer.pools.poolFactory.of(poolType);
+  const linearPoolFactory = balancer.pools.poolFactory.of(
+    PoolType.ERC4626Linear
+  );
   const { to, data } = linearPoolFactory.create(poolParameters);
 
   //Sends the create transaction
