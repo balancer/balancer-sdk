@@ -2,8 +2,15 @@
 import dotenv from 'dotenv';
 import { ethers } from 'hardhat';
 import { parseFixed } from '@ethersproject/bignumber';
-import { getPoolAddress, Network, PoolWithMethods, removeItem } from '@/.';
-import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
+import {
+  BALANCER_NETWORK_CONFIG,
+  getPoolAddress,
+  Network,
+  Pools,
+  PoolWithMethods,
+  removeItem,
+} from '@/.';
+import { forkSetup, getPoolFromFile, updateFromChain } from '@/test/lib/utils';
 import {
   testExactBptIn,
   testExactTokensOut,
@@ -33,14 +40,12 @@ describe('ComposableStableV1 Exits', () => {
       jsonRpcUrl as string,
       blockNumber
     );
+
+    let testPool = await getPoolFromFile(testPoolId, network);
     // Updatate pool info with onchain state from fork block no
-    const testPoolHelper = new TestPoolHelper(
-      testPoolId,
-      network,
-      rpcUrl,
-      blockNumber
-    );
-    pool = await testPoolHelper.getPool();
+    testPool = await updateFromChain(testPool, network, provider);
+
+    pool = Pools.wrap(testPool, BALANCER_NETWORK_CONFIG[network]);
   });
   context('exitExactBPTIn', async () => {
     it('single token max out', async () => {
