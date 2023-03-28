@@ -5,6 +5,7 @@ import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 import { expect } from 'chai';
 import dotenv from 'dotenv';
 
+import { ERC4626LinearPool } from '@/contracts';
 import {
   LinearCreatePoolParameters,
   ProtocolId,
@@ -13,7 +14,6 @@ import { BalancerSDK } from '@/modules/sdk.module';
 import { ADDRESSES } from '@/test/lib/constants';
 import { forkSetup } from '@/test/lib/utils';
 import { Network, PoolType } from '@/types';
-import { ERC4626LinearPool } from '@/contracts';
 
 dotenv.config();
 

@@ -1,4 +1,6 @@
-import { parseFixed } from '@ethersproject/bignumber';
+import { LogDescription } from '@ethersproject/abi';
+import { BytesLike } from '@ethersproject/bytes';
+import { Contract } from '@ethersproject/contracts';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
@@ -14,9 +16,15 @@ import {
   YearnLinearPool__factory,
   YearnLinearPoolFactory__factory,
 } from '@/contracts';
+import { AaveLinearPoolInterface } from '@/contracts/AaveLinearPool';
 import { AaveLinearPoolFactoryInterface } from '@/contracts/AaveLinearPoolFactory';
+import { ERC4626LinearPoolInterface } from '@/contracts/ERC4626LinearPool';
 import { ERC4626LinearPoolFactoryInterface } from '@/contracts/ERC4626LinearPoolFactory';
+import { EulerLinearPoolInterface } from '@/contracts/EulerLinearPool';
 import { EulerLinearPoolFactoryInterface } from '@/contracts/EulerLinearPoolFactory';
+import { GearboxLinearPoolInterface } from '@/contracts/GearboxLinearPool';
+import { GearboxLinearPoolFactoryInterface } from '@/contracts/GearboxLinearPoolFactory';
+import { YearnLinearPoolInterface } from '@/contracts/YearnLinearPool';
 import { YearnLinearPoolFactoryInterface } from '@/contracts/YearnLinearPoolFactory';
 import { ContractInstances } from '@/modules/contracts/contracts.module';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
@@ -26,16 +34,7 @@ import {
   ProtocolId,
 } from '@/modules/pools/factory/types';
 import { PoolType } from '@/types';
-import { BytesLike } from '@ethersproject/bytes';
-import { LogDescription } from '@ethersproject/abi';
 import { findEventInReceiptLogs } from '@/lib/utils';
-import { Contract } from '@ethersproject/contracts';
-import { ERC4626LinearPoolInterface } from '@/contracts/ERC4626LinearPool';
-import { EulerLinearPoolInterface } from '@/contracts/EulerLinearPool';
-import { AaveLinearPoolInterface } from '@/contracts/AaveLinearPool';
-import { YearnLinearPoolInterface } from '@/contracts/YearnLinearPool';
-import { GearboxLinearPoolFactoryInterface } from '@/contracts/GearboxLinearPoolFactory';
-import { GearboxLinearPoolInterface } from '@/contracts/GearboxLinearPool';
 
 type LinearPoolFactoryInterface =
   | AaveLinearPoolFactoryInterface

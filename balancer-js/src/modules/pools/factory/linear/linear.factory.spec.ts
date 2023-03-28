@@ -1,11 +1,11 @@
-import { assert } from 'chai';
+import { parseFixed } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
+import { assert } from 'chai';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { ADDRESSES } from '@/test/lib/constants';
 import { BalancerSdkConfig, Network, PoolType } from '@/types';
-import { parseFixed } from '@ethersproject/bignumber';
 
 const network = Network.MAINNET;
 const sdkConfig: BalancerSdkConfig = {
