@@ -230,6 +230,7 @@ export interface PoolToken extends Token {
 export interface SubPoolMeta {
   pool: SubPool | null;
   latestUSDPrice?: string;
+  latestFXPrice?: string;
 }
 
 export interface SubPool {
@@ -271,6 +272,7 @@ export enum PoolType {
   Element = 'Element',
   Gyro2 = 'Gyro2',
   Gyro3 = 'Gyro3',
+  GyroE = 'GyroE',
   Managed = 'Managed',
   // Linear Pools defined below all operate the same mathematically but have different factories and names in Subgraph
   AaveLinear = 'AaveLinear',
@@ -284,6 +286,7 @@ export enum PoolType {
   SiloLinear = 'SiloLinear',
   TetuLinear = 'TetuLinear',
   YearnLinear = 'YearnLinear',
+  FX = 'FX',
 }
 
 export interface Pool {

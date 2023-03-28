@@ -237,7 +237,8 @@ export async function getOnChainBalances<
         );
       }
 
-      subgraphPools[index].swapFee = formatFixed(swapFee, 18);
+      if (subgraphPools[index].poolType !== 'FX')
+        subgraphPools[index].swapFee = formatFixed(swapFee, 18);
 
       poolTokens.tokens.forEach((token, i) => {
         const tokens = subgraphPools[index].tokens;

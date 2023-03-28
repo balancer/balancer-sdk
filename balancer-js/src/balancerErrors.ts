@@ -25,18 +25,14 @@ export enum BalancerErrorCode {
   NO_POOL_DATA = 'NO_POOL_DATA',
   NO_VALUE_PARAMETER = 'NO_VALUE_PARAMETER',
   POOL_DOESNT_EXIST = 'POOL_DOESNT_EXIST',
-  POOL_TYPE_NOT_PROVIDED = 'POOL_TYPE_NOT_PROVIDED',
   QUERY_BATCH_SWAP = 'QUERY_BATCH_SWAP',
   RELAY_SWAP_AMOUNTS = 'RELAY_SWAP_AMOUNTS',
   REWARD_TOKEN_ZERO = 'REWARD_TOKEN_ZERO',
-  SWAP_ZERO_RETURN_AMOUNT = 'SWAP_ZERO_RETURN_AMOUNT',
   TIMESTAMP_IN_THE_FUTURE = 'TIMESTAMP_IN_THE_FUTURE',
   TOKEN_MISMATCH = 'TOKEN_MISMATCH',
   UNSUPPORTED_PAIR = 'UNSUPPORTED_PAIR',
   UNSUPPORTED_POOL_TYPE = 'UNSUPPORTED_POOL_TYPE',
   UNSUPPORTED_POOL_TYPE_VERSION = 'UNSUPPORTED_POOL_TYPE_VERSION',
-  UNWRAP_ZERO_AMOUNT = 'UNWRAP_ZERO_AMOUNT',
-  WRAP_ZERO_AMOUNT = 'WRAP_ZERO_AMOUNT',
 }
 
 export class BalancerError extends Error {
@@ -95,14 +91,10 @@ export class BalancerError extends Error {
         return 'Illegal value passed as parameter';
       case BalancerErrorCode.POOL_DOESNT_EXIST:
         return 'balancer pool does not exist';
-      case BalancerErrorCode.POOL_TYPE_NOT_PROVIDED:
-        return 'Pool Type has not been provided';
       case BalancerErrorCode.RELAY_SWAP_AMOUNTS:
         return 'Error when checking swap amounts';
       case BalancerErrorCode.REWARD_TOKEN_ZERO:
         return 'All Zero Values for Reward Tokens';
-      case BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT:
-        return 'queryBatchSwapWithSor returned 0 amount';
       case BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE:
         return 'Timestamp cannot be in the future';
       case BalancerErrorCode.TOKEN_MISMATCH:
@@ -111,10 +103,6 @@ export class BalancerError extends Error {
         return 'unsupported token pair';
       case BalancerErrorCode.UNSUPPORTED_POOL_TYPE:
         return 'unsupported pool type';
-      case BalancerErrorCode.UNWRAP_ZERO_AMOUNT:
-        return 'swapUnwrapAaveStaticExactIn unwrapped amount < 0';
-      case BalancerErrorCode.WRAP_ZERO_AMOUNT:
-        return 'swapUnwrapAaveStaticExactOut wrapped amount < 0';
       default:
         return 'Unknown error';
     }
