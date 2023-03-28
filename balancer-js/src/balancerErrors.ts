@@ -1,36 +1,36 @@
 export enum BalancerErrorCode {
-  SWAP_ZERO_RETURN_AMOUNT = 'SWAP_ZERO_RETURN_AMOUNT',
-  UNWRAP_ZERO_AMOUNT = 'UNWRAP_ZERO_AMOUNT',
-  WRAP_ZERO_AMOUNT = 'WRAP_ZERO_AMOUNT',
-  QUERY_BATCH_SWAP = 'QUERY_BATCH_SWAP',
-  POOL_DOESNT_EXIST = 'POOL_DOESNT_EXIST',
-  UNSUPPORTED_POOL_TYPE = 'UNSUPPORTED_POOL_TYPE',
-  UNSUPPORTED_POOL_TYPE_VERSION = 'UNSUPPORTED_POOL_TYPE_VERSION',
-  UNSUPPORTED_PAIR = 'UNSUPPORTED_PAIR',
-  NO_POOL_DATA = 'NO_POOL_DATA',
-  INPUT_OUT_OF_BOUNDS = 'INPUT_OUT_OF_BOUNDS',
+  ABOVE_MAX_TOKENS = 'ABOVE_MAX_TOKENS',
+  BELOW_MIN_TOKENS = 'BELOW_MIN_TOKENS',
+  EXIT_DELTA_AMOUNTS = 'EXIT_DELTA_AMOUNTS',
+  FEE_PROVIDER_NOT_PROVIDED = 'FEE_PROVIDER_NOT_PROVIDED',
+  GAUGES_HELPER_ADDRESS_NOT_PROVIDED = 'GAUGES_HELPER_ADDRESS_NOT_PROVIDED',
+  GAUGES_NOT_FOUND = 'GAUGES_NOT_FOUND',
+  GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED = 'GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED',
+  GAUGES_REWARD_TOKEN_EMPTY = 'GAUGES_REWARD_TOKEN_EMPTY',
+  ILLEGAL_PARAMETER = 'ILLEGAL_PARAMETER',
+  INTERNAL_ERROR_INVALID_ABI = 'INTERNAL_ERROR_INVALID_ABI',
   INPUT_LENGTH_MISMATCH = 'INPUT_LENGTH_MISMATCH',
+  INPUT_OUT_OF_BOUNDS = 'INPUT_OUT_OF_BOUNDS',
   INPUT_TOKEN_INVALID = 'INPUT_TOKEN_INVALID',
   INPUT_ZERO_NOT_ALLOWED = 'INPUT_ZERO_NOT_ALLOWED',
-  INTERNAL_ERROR_INVALID_ABI = 'INTERNAL_ERROR_INVALID_ABI',
-  TOKEN_MISMATCH = 'TOKEN_MISMATCH',
-  MISSING_TOKENS = 'MISSING_TOKENS',
+  INVALID_SWAP_FEE_PERCENTAGE = 'INVALID_SWAP_FEE_PERCENTAGE',
+  INVALID_WEIGHTS = 'INVALID_WEIGHTS',
+  JOIN_DELTA_AMOUNTS = 'JOIN_DELTA_AMOUNTS',
   MISSING_AMP = 'MISSING_AMP',
   MISSING_DECIMALS = 'MISSING_DECIMALS',
   MISSING_PRICE_RATE = 'MISSING_PRICE_RATE',
+  MISSING_TOKENS = 'MISSING_TOKENS',
   MISSING_WEIGHT = 'MISSING_WEIGHT',
-  RELAY_SWAP_AMOUNTS = 'RELAY_SWAP_AMOUNTS',
+  NO_POOL_DATA = 'NO_POOL_DATA',
   NO_VALUE_PARAMETER = 'NO_VALUE_PARAMETER',
-  ILLEGAL_PARAMETER = 'ILLEGAL_PARAMETER',
-  TIMESTAMP_IN_THE_FUTURE = 'TIMESTAMP_IN_THE_FUTURE',
-  JOIN_DELTA_AMOUNTS = 'JOIN_DELTA_AMOUNTS',
-  EXIT_DELTA_AMOUNTS = 'EXIT_DELTA_AMOUNTS',
-  GAUGES_NOT_FOUND = 'GAUGES_NOT_FOUND',
-  GAUGES_HELPER_ADDRESS_NOT_PROVIDED = 'GAUGES_HELPER_ADDRESS_NOT_PROVIDED',
-  GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED = 'GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED',
-  GAUGES_REWARD_TOKEN_EMPTY = 'GAUGES_REWARD_TOKEN_EMPTY',
+  POOL_DOESNT_EXIST = 'POOL_DOESNT_EXIST',
+  RELAY_SWAP_AMOUNTS = 'RELAY_SWAP_AMOUNTS',
   REWARD_TOKEN_ZERO = 'REWARD_TOKEN_ZERO',
-  FEE_PROVIDER_NOT_PROVIDED = 'FEE_PROVIDER_NOT_PROVIDED',
+  TIMESTAMP_IN_THE_FUTURE = 'TIMESTAMP_IN_THE_FUTURE',
+  TOKEN_MISMATCH = 'TOKEN_MISMATCH',
+  UNSUPPORTED_PAIR = 'UNSUPPORTED_PAIR',
+  UNSUPPORTED_POOL_TYPE = 'UNSUPPORTED_POOL_TYPE',
+  UNSUPPORTED_POOL_TYPE_VERSION = 'UNSUPPORTED_POOL_TYPE_VERSION',
 }
 
 export class BalancerError extends Error {
@@ -41,66 +41,64 @@ export class BalancerError extends Error {
 
   static getMessage(code: BalancerErrorCode): string {
     switch (code) {
-      case BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT:
-        return 'queryBatchSwapWithSor returned 0 amount';
-      case BalancerErrorCode.UNWRAP_ZERO_AMOUNT:
-        return 'swapUnwrapAaveStaticExactIn unwrapped amount < 0';
-      case BalancerErrorCode.WRAP_ZERO_AMOUNT:
-        return 'swapUnwrapAaveStaticExactOut wrapped amount < 0';
-      case BalancerErrorCode.QUERY_BATCH_SWAP:
-        return 'queryBatchSwap on chain call error';
-      case BalancerErrorCode.POOL_DOESNT_EXIST:
-        return 'balancer pool does not exist';
-      case BalancerErrorCode.UNSUPPORTED_POOL_TYPE:
-        return 'unsupported pool type';
-      case BalancerErrorCode.UNSUPPORTED_PAIR:
-        return 'unsupported token pair';
-      case BalancerErrorCode.NO_POOL_DATA:
-        return 'no pool data';
-      case BalancerErrorCode.INPUT_OUT_OF_BOUNDS:
-        return 'input out of bounds';
-      case BalancerErrorCode.INPUT_LENGTH_MISMATCH:
-        return 'input length mismatch';
-      case BalancerErrorCode.INPUT_TOKEN_INVALID:
-        return 'input token invalid';
-      case BalancerErrorCode.TOKEN_MISMATCH:
-        return 'token mismatch';
-      case BalancerErrorCode.MISSING_DECIMALS:
-        return 'missing decimals';
-      case BalancerErrorCode.MISSING_TOKENS:
-        return 'missing tokens';
-      case BalancerErrorCode.MISSING_AMP:
-        return 'missing amp';
-      case BalancerErrorCode.MISSING_PRICE_RATE:
-        return 'missing price rate';
-      case BalancerErrorCode.MISSING_WEIGHT:
-        return 'missing weight';
-      case BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED:
-        return 'zero input not allowed';
-      case BalancerErrorCode.RELAY_SWAP_AMOUNTS:
-        return 'Error when checking swap amounts';
-      case BalancerErrorCode.NO_VALUE_PARAMETER:
-        return 'Illegal value passed as parameter';
-      case BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE:
-        return 'Timestamp cannot be in the future';
-      case BalancerErrorCode.ILLEGAL_PARAMETER:
-        return 'An illegal parameter has been passed';
-      case BalancerErrorCode.JOIN_DELTA_AMOUNTS:
-        return 'Error when checking join call deltas';
+      case BalancerErrorCode.ABOVE_MAX_TOKENS:
+        return 'the array contains more tokens than the maximum allowed';
+      case BalancerErrorCode.BELOW_MIN_TOKENS:
+        return 'the array does not contain the minimum quantity of tokens';
       case BalancerErrorCode.EXIT_DELTA_AMOUNTS:
         return 'Error when checking exit call deltas';
-      case BalancerErrorCode.GAUGES_NOT_FOUND:
-        return 'Liquidity Gauges not found with given addresses';
-      case BalancerErrorCode.GAUGES_HELPER_ADDRESS_NOT_PROVIDED:
-        return 'Liquidity Gauges Helper Contract address has not been provided';
-      case BalancerErrorCode.GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED:
-        return 'Liquidity Gauges Reward Minter Contract address has not been provided';
       case BalancerErrorCode.FEE_PROVIDER_NOT_PROVIDED:
         return 'Fee Provider Repository has not been provided';
+      case BalancerErrorCode.GAUGES_HELPER_ADDRESS_NOT_PROVIDED:
+        return 'Liquidity Gauges Helper Contract address has not been provided';
+      case BalancerErrorCode.GAUGES_NOT_FOUND:
+        return 'Liquidity Gauges not found with given addresses';
+      case BalancerErrorCode.GAUGES_REWARD_MINTER_ADDRESS_NOT_PROVIDED:
+        return 'Liquidity Gauges Reward Minter Contract address has not been provided';
       case BalancerErrorCode.GAUGES_REWARD_TOKEN_EMPTY:
         return 'No Reward Tokens for Liquidity Gauges provided';
+      case BalancerErrorCode.INPUT_LENGTH_MISMATCH:
+        return 'input length mismatch';
+      case BalancerErrorCode.INPUT_OUT_OF_BOUNDS:
+        return 'input out of bounds';
+      case BalancerErrorCode.INPUT_TOKEN_INVALID:
+        return 'input token invalid';
+      case BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED:
+        return 'zero input not allowed';
+      case BalancerErrorCode.INVALID_SWAP_FEE_PERCENTAGE:
+        return 'The swap fee needs to be greater than zero and less than 1e17(10%)';
+      case BalancerErrorCode.INVALID_WEIGHTS:
+        return 'The sum of the weights needs to be equal to 1e18(100%)';
+      case BalancerErrorCode.JOIN_DELTA_AMOUNTS:
+        return 'Error when checking join call deltas';
+      case BalancerErrorCode.MISSING_AMP:
+        return 'missing amp';
+      case BalancerErrorCode.MISSING_DECIMALS:
+        return 'missing decimals';
+      case BalancerErrorCode.MISSING_PRICE_RATE:
+        return 'missing price rate';
+      case BalancerErrorCode.MISSING_TOKENS:
+        return 'missing tokens';
+      case BalancerErrorCode.MISSING_WEIGHT:
+        return 'missing weight';
+      case BalancerErrorCode.NO_POOL_DATA:
+        return 'no pool data';
+      case BalancerErrorCode.NO_VALUE_PARAMETER:
+        return 'Illegal value passed as parameter';
+      case BalancerErrorCode.POOL_DOESNT_EXIST:
+        return 'balancer pool does not exist';
+      case BalancerErrorCode.RELAY_SWAP_AMOUNTS:
+        return 'Error when checking swap amounts';
       case BalancerErrorCode.REWARD_TOKEN_ZERO:
         return 'All Zero Values for Reward Tokens';
+      case BalancerErrorCode.TIMESTAMP_IN_THE_FUTURE:
+        return 'Timestamp cannot be in the future';
+      case BalancerErrorCode.TOKEN_MISMATCH:
+        return 'token mismatch';
+      case BalancerErrorCode.UNSUPPORTED_PAIR:
+        return 'unsupported token pair';
+      case BalancerErrorCode.UNSUPPORTED_POOL_TYPE:
+        return 'unsupported pool type';
       default:
         return 'Unknown error';
     }

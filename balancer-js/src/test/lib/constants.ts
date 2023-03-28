@@ -447,6 +447,11 @@ export const ADDRESSES = {
       decimals: 4,
       symbol: 'BRZ',
     },
+    XSGD: {
+      address: '0xdc3326e71d45186f113a2f448984ca0e8d201995',
+      decimals: 6,
+      symbol: 'XSGD',
+    },
   },
   [Network.ARBITRUM]: {
     WETH: {
