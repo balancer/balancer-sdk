@@ -23,6 +23,7 @@ import { WeightedPool__factory } from '@/contracts';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { WeightedPoolInterface } from '@/contracts/WeightedPool';
+import { HashZero } from '@ethersproject/constants';
 
 export class WeightedFactory implements PoolFactory {
   private wrappedNativeAsset: string;
@@ -43,34 +44,41 @@ export class WeightedFactory implements PoolFactory {
    * @param name The name of the pool
    * @param symbol The symbol of the pool
    * @param tokenAddresses The token's addresses
-   * @param weights The weights for each token, ordered
+   * @param normalizedWeights The weights for each token, ordered
+   * @param rateProviders The rate providers for each token, ordered
    * @param swapFeeEvm The swapFee for the owner of the pool in string or bigint formatted to evm(100% is 1e18, 10% is 1e17, 1% is 1e16)
    * @param owner The address of the owner of the pool
+   * @param salt The salt of the pool (bytes32)
    * @returns TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
    */
   create({
     name,
     symbol,
     tokenAddresses,
-    weights,
+    normalizedWeights,
+    rateProviders,
     swapFeeEvm,
     owner,
+    salt,
   }: WeightedCreatePoolParameters): {
     to?: string;
     data: BytesLike;
   } {
     this.checkCreateInputs({
       tokenAddresses,
-      weights,
+      normalizedWeights,
       swapFeeEvm,
+      rateProviders,
     });
     const params = this.parseCreateParamsForEncoding({
       name,
       symbol,
       tokenAddresses,
-      weights,
+      normalizedWeights,
+      rateProviders,
       swapFeeEvm,
       owner,
+      salt,
     });
     const encodedFunctionData = this.encodeCreateFunctionData(params);
     return {
@@ -81,13 +89,17 @@ export class WeightedFactory implements PoolFactory {
 
   checkCreateInputs({
     tokenAddresses,
-    weights,
+    normalizedWeights,
     swapFeeEvm,
+    rateProviders,
   }: Pick<
     WeightedCreatePoolParameters,
-    'tokenAddresses' | 'weights' | 'swapFeeEvm'
+    'tokenAddresses' | 'normalizedWeights' | 'swapFeeEvm' | 'rateProviders'
   >): void {
-    if (tokenAddresses.length !== weights.length) {
+    if (
+      tokenAddresses.length !== normalizedWeights.length ||
+      normalizedWeights.length !== rateProviders.length
+    ) {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
     if (tokenAddresses.length < 2) {
@@ -99,11 +111,11 @@ export class WeightedFactory implements PoolFactory {
     if (BigInt(swapFeeEvm) <= BigInt(0) || BigInt(swapFeeEvm) > BigInt(1e17)) {
       throw new BalancerError(BalancerErrorCode.INVALID_SWAP_FEE_PERCENTAGE);
     }
-    const weightsSum = (weights as string[]).reduce(
+    const normalizedWeightsSum = (normalizedWeights as string[]).reduce(
       (acc, cur) => SolidityMaths.add(acc, BigInt(cur)),
       BigInt(0)
     );
-    if (weightsSum !== BigInt(1e18)) {
+    if (normalizedWeightsSum !== BigInt(1e18)) {
       throw new BalancerError(BalancerErrorCode.INVALID_WEIGHTS);
     }
   }
@@ -112,34 +124,51 @@ export class WeightedFactory implements PoolFactory {
     name,
     symbol,
     tokenAddresses,
-    weights,
+    normalizedWeights,
+    rateProviders,
     swapFeeEvm,
     owner,
+    salt,
   }: WeightedCreatePoolParameters): [
     string,
     string,
     string[],
     BigNumberish[],
+    string[],
     string,
-    string
+    string,
+    BytesLike
   ] => {
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
-    const [sortedTokens, sortedWeights] = assetHelpers.sortTokens(
-      tokenAddresses,
-      weights
-    ) as [string[], BigNumberish[]];
+    const [sortedTokens, sortedNormalizedWeights, sortedRateProviders] =
+      assetHelpers.sortTokens(
+        tokenAddresses,
+        normalizedWeights,
+        rateProviders
+      ) as [string[], BigNumberish[], string[]];
     return [
       name,
       symbol,
       sortedTokens,
-      sortedWeights,
+      sortedNormalizedWeights,
+      sortedRateProviders,
       swapFeeEvm.toString(),
       owner,
+      salt || HashZero,
     ];
   };
 
   encodeCreateFunctionData = (
-    params: [string, string, string[], BigNumberish[], string, string]
+    params: [
+      string,
+      string,
+      string[],
+      BigNumberish[],
+      string[],
+      string,
+      string,
+      BytesLike
+    ]
   ): string => {
     const weightedPoolInterface =
       WeightedPoolFactory__factory.createInterface();
