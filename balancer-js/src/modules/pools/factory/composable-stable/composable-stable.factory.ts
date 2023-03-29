@@ -22,6 +22,7 @@ import { findEventInReceiptLogs } from '@/lib/utils';
 import { Contract } from '@ethersproject/contracts';
 import { ContractInstances } from '@/modules/contracts/contracts.module';
 import { BytesLike } from '@ethersproject/bytes';
+import { ComposableStableInterface } from '@/contracts/ComposableStable';
 
 export class ComposableStableFactory implements PoolFactory {
   private wrappedNativeAsset: string;
@@ -321,8 +322,7 @@ export class ComposableStableFactory implements PoolFactory {
     });
 
     const poolAddress = poolCreationEvent.args.pool;
-    const composableStablePoolInterface =
-      ComposableStable__factory.createInterface();
+    const composableStablePoolInterface = this.getPoolInterface();
     const pool = new Contract(
       poolAddress,
       composableStablePoolInterface,
@@ -334,4 +334,8 @@ export class ComposableStableFactory implements PoolFactory {
       poolId,
     };
   };
+
+  getPoolInterface(): ComposableStableInterface {
+    return ComposableStable__factory.createInterface();
+  }
 }

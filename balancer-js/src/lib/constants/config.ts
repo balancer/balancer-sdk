@@ -11,6 +11,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   [Network.MAINNET]: {
     chainId: Network.MAINNET, //1
     addresses: {
+      //Mainnet deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/mainnet.html
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xeefba1e63905ef1d7acba5a8513c70307c1ce441',
@@ -28,6 +29,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         weightedPoolFactory: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
         composableStablePoolFactory:
           '0xdba127fBc23fb20F5929C546af220A991b5C6e01',
+        erc4626LinearPoolFactory: '0x67A25ca2350Ebf4a0C475cA74C257C94a373b828',
+        aaveLinearPoolFactory: '0xb9f8ab3ed3f3acba64bc6cd2dca74b7f38fd7b88',
+        eulerLinearPoolFactory: '0x5f43fba61f63fa6bff101a0a0458cea917f6b347',
+        gearboxLinearPoolFactory: '0x2ebe41e1aa44d61c206a94474932dadc7d3fd9e3',
+        yearnLinearPoolFactory: '0x8b7854708c0c54f9d7d1ff351d4f84e6de0e134c',
       },
       tokens: {
         wrappedNativeAsset: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -84,6 +90,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   [Network.POLYGON]: {
     chainId: Network.POLYGON, //137
     addresses: {
+      //Polygon deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/polygon.html
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
@@ -94,6 +101,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         weightedPoolFactory: '0x0e39C3D9b2ec765eFd9c5c70BB290B1fCD8536E3',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
+        erc4626LinearPoolFactory: '0xa3b9515a9c557455bc53f7a535a85219b59e8b2e',
+        aaveLinearPoolFactory: '0xf23b4db826dba14c0e857029dff076b1c0264843',
+        yearnLinearPoolFactory: '0x7396f99b48e7436b152427bfa3dd6aa8c7c6d05b',
       },
       tokens: {
         bal: '0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3',
@@ -131,6 +141,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   },
   [Network.ARBITRUM]: {
     chainId: Network.ARBITRUM, //42161
+    //Arbitrum deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/arbitrum.html
     addresses: {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
@@ -142,6 +153,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         weightedPoolFactory: '0x8df6EfEc5547e31B0eb7d1291B511FF8a2bf987c',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
+        erc4626LinearPoolFactory: '0xa3b9515a9c557455bc53f7a535a85219b59e8b2e',
+        aaveLinearPoolFactory: '0xf23b4db826dba14c0e857029dff076b1c0264843',
+        yearnLinearPoolFactory: '0xd8b6b96c88ad626eb6209c4876e3b14f45f8803a',
       },
       tokens: {
         bal: '0x040d1edc9569d4bab2d15287dc5a4f10f56a56b8',
@@ -234,6 +248,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   },
   [Network.GOERLI]: {
     chainId: Network.GOERLI, //5
+    //Goerli deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/goerli.html
     addresses: {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
@@ -248,6 +263,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         weightedPoolFactory: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
+        erc4626LinearPoolFactory: '0xba240c856498e2d7a70af4911aafae0d6b565a5b',
+        aaveLinearPoolFactory: '0x76578ecf9a141296ec657847fb45b0585bcda3a6',
+        eulerLinearPoolFactory: '0x813ee7a840ce909e7fea2117a44a90b8063bd4fd',
       },
       tokens: {
         bal: '0xfA8449189744799aD2AcE7e0EBAC8BB7575eff47',
@@ -272,6 +290,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   },
   [Network.OPTIMISM]: {
     chainId: Network.OPTIMISM, //10
+    // Optimism deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/optimism.html
     addresses: {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
@@ -282,6 +301,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         weightedPoolFactory: '0x0e39C3D9b2ec765eFd9c5c70BB290B1fCD8536E3',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
+        erc4626LinearPoolFactory: '0xa3b9515a9c557455bc53f7a535a85219b59e8b2e',
+        aaveLinearPoolFactory: '0xf23b4db826dba14c0e857029dff076b1c0264843',
+        yearnLinearPoolFactory: '0xd8b6b96c88ad626eb6209c4876e3b14f45f8803a',
       },
       tokens: {
         wrappedNativeAsset: '0x4200000000000000000000000000000000000006',
@@ -307,6 +329,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   },
   [Network.GNOSIS]: {
     chainId: Network.GNOSIS, //100
+    // Gnosis deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/gnosis.html
     addresses: {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
@@ -316,6 +339,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         weightedPoolFactory: '0xf302f9F50958c5593770FDf4d4812309fF77414f',
         composableStablePoolFactory:
           '0x76578ecf9a141296ec657847fb45b0585bcda3a6',
+        aaveLinearPoolFactory: '0x9da18982a33fd0c7051b19f0d7c76f2d5e7e017c',
       },
       tokens: {
         wrappedNativeAsset: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
@@ -337,6 +361,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   },
   [Network.FANTOM]: {
     chainId: Network.FANTOM, //250
+    //Fantom deployment addresses: https://docs.beets.fi/technicals/deployments
     addresses: {
       contracts: {
         vault: '0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce',
@@ -348,6 +373,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         weightedPoolFactory: '0x60467cb225092cE0c989361934311175f437Cf53',
         composableStablePoolFactory:
           '0x44814E3A603bb7F1198617995c5696C232F6e8Ed',
+        yearnLinearPoolFactory: '0x1f73ae6ed391a2b1e84ff988a1bb5394b78a4a71',
       },
       tokens: {
         bal: '0xF24Bcf4d1e507740041C9cFd2DddB29585aDCe1e', //beets
