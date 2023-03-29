@@ -1,11 +1,10 @@
 // yarn test:only ./src/modules/pools/factory/linear/linear.factory.integration.spec.ts
 import { parseFixed } from '@ethersproject/bignumber';
-import { Contract } from '@ethersproject/contracts';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 import { expect } from 'chai';
 import dotenv from 'dotenv';
 
-import { ERC4626LinearPool } from '@/contracts';
+import { ERC4626LinearPool__factory } from '@/contracts';
 import {
   LinearCreatePoolParameters,
   ProtocolId,
@@ -51,7 +50,7 @@ describe('creating linear pool', async () => {
       wrappedToken: poolTokens[1].address,
       upperTargetEvm: parseFixed('20000', 18).toString(),
       owner: signerAddress,
-      protocolId: ProtocolId.EULER,
+      protocolId: ProtocolId.TESSERA,
       swapFeeEvm: parseFixed('0.01', 18).toString(),
     };
   });
@@ -68,12 +67,7 @@ describe('creating linear pool', async () => {
           provider,
           transactionReceipt
         );
-      const linearPoolInterface = linearPoolFactory.getPoolInterface();
-      const pool = new Contract(
-        poolAddress,
-        linearPoolInterface,
-        provider
-      ) as ERC4626LinearPool;
+      const pool = ERC4626LinearPool__factory.connect(poolAddress, provider);
       const id = await pool.getPoolId();
       const name = await pool.name();
       const symbol = await pool.symbol();

@@ -130,7 +130,7 @@ export class LinearFactory implements PoolFactory {
    * @param symbol The symbol of the pool (BPT name)
    * @param mainToken The main token
    * @param wrappedToken The wrapped token
-   * @param upperTargetEvm The maximum balance of the unwrapped(main) token formatted on EVM (18 decimals)
+   * @param upperTargetEvm The maximum balance of the main token
    * @param swapFeeEvm The swap fee of the pool
    * @param owner The address of the owner of the pool
    * @param protocolId The protocolId, to check the available value
