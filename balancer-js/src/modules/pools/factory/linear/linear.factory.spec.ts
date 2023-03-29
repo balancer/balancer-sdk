@@ -7,7 +7,7 @@ import { BalancerSDK } from '@/modules/sdk.module';
 import { ADDRESSES } from '@/test/lib/constants';
 import { BalancerSdkConfig, Network, PoolType } from '@/types';
 
-const network = Network.MAINNET;
+const network = Network.GOERLI;
 const sdkConfig: BalancerSdkConfig = {
   network,
   rpcUrl: '',
@@ -20,8 +20,8 @@ describe('Linear Factory - Unit tests', async () => {
     const rightCreateParameters = {
       name: 'eth-weth-test',
       symbol: 'eth-weth-test',
-      mainToken: ADDRESSES[network].ETH.address,
-      wrappedToken: ADDRESSES[network].WETH.address,
+      mainToken: ADDRESSES[network].DAI.address,
+      wrappedToken: ADDRESSES[network].waDAI.address,
       swapFeeEvm: parseFixed('0.05', 18).toString(),
       owner: AddressZero,
       protocolId: 2,
@@ -50,7 +50,7 @@ describe('Linear Factory - Unit tests', async () => {
       );
     });
     it('should fail with poolType not supported in the network', () => {
-      const factory = balancer.pools.poolFactory.of(PoolType.YearnLinear);
+      const factory = balancer.pools.poolFactory.of(PoolType.GearboxLinear);
       assert.throws(
         () =>
           factory.create({
