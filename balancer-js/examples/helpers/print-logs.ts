@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any */
 import dotenv from 'dotenv';
-import { ethers } from 'ethers';
+import { Contract } from '@ethersproject/contracts';
+import { formatEther } from '@ethersproject/units';
 import { shortenAddress } from '.';
-import { formatEther } from 'ethers/lib/utils'
 
 dotenv.config();
 const { ETHERSCAN_API_KEY } = process.env;
@@ -15,7 +16,7 @@ const abis = new Map<string, any>();
 
 const decodeLog = async (log: any, abi: any) => {
   let decoded;
-  const contract = new ethers.Contract(log.address, abi);
+  const contract = new Contract(log.address, abi);
 
   try {
     decoded = contract.interface.parseLog(log);
@@ -39,7 +40,7 @@ export const decodeLogs = async (logs: any[]) => {
       abis.set(log.address, abi);
     }
     const decoded = await decodeLog(log, abi);
-    if (decoded) decodedLogs.push({...decoded, address: log.address});
+    if (decoded) decodedLogs.push({ ...decoded, address: log.address });
   }
 
   return decodedLogs;
@@ -57,34 +58,34 @@ export const printLogs = async (logs: any[]) => {
         amountIn: formatEther(amountIn),
         amountOut: formatEther(amountOut),
       }))
-    )
-  }
+    );
+  };
 
   const printPoolBalanceChanged = (log: any) => {
-    console.log(log.args.poolId)
+    console.log(log.args.poolId);
     console.table({
       tokens: log?.args.tokens.map(shortenAddress),
       deltas: log?.args.deltas.map((delta: string) => formatEther(delta)),
-    })
-  }
+    });
+  };
 
   const printTransfer = (log: any) => {
     console.log(log.address);
-    const { from, to, value, src, dst, wad } = log.args
-    console.log('\x1b[32m%s\x1b[0m', 'From: ', from || src)
-    console.log('\x1b[32m%s\x1b[0m', 'To:   ', to || dst)
-    console.log('\x1b[32m%s\x1b[0m', 'Value:', formatEther(value || wad))
-  }
+    const { from, to, value, src, dst, wad } = log.args;
+    console.log('\x1b[32m%s\x1b[0m', 'From: ', from || src);
+    console.log('\x1b[32m%s\x1b[0m', 'To:   ', to || dst);
+    console.log('\x1b[32m%s\x1b[0m', 'Value:', formatEther(value || wad));
+  };
 
   decodedLogs.map((log) => {
-    console.log('-'.repeat(80))
-    console.log(log.name)
+    console.log('-'.repeat(80));
+    console.log(log.name);
     if (log.name === 'Swap') {
-      printSwap(log)
+      printSwap(log);
     } else if (log.name === 'PoolBalanceChanged') {
-      printPoolBalanceChanged(log)
+      printPoolBalanceChanged(log);
     } else if (log.name === 'Transfer') {
-      printTransfer(log)
+      printTransfer(log);
     }
   });
 };

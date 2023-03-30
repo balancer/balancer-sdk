@@ -22,6 +22,7 @@ import { BalancerNetworkConfig } from '@/types';
 import { WeightedPool__factory } from '@/contracts';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { WeightedPoolInterface } from '@/contracts/WeightedPool';
 
 export class WeightedFactory implements PoolFactory {
   private wrappedNativeAsset: string;
@@ -262,12 +263,16 @@ export class WeightedFactory implements PoolFactory {
     });
 
     const poolAddress = poolCreationEvent.args.pool;
-    const weightedPoolInterface = WeightedPool__factory.createInterface();
+    const weightedPoolInterface = this.getPoolInterface();
     const pool = new Contract(poolAddress, weightedPoolInterface, provider);
     const poolId = await pool.getPoolId();
     return {
       poolAddress,
       poolId,
     };
+  }
+
+  getPoolInterface(): WeightedPoolInterface {
+    return WeightedPool__factory.createInterface();
   }
 }

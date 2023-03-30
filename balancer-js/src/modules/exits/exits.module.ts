@@ -1,5 +1,4 @@
 import { cloneDeep } from 'lodash';
-import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { WeiPerEther, Zero } from '@ethersproject/constants';
 
@@ -17,7 +16,6 @@ import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
 import { PoolGraph, Node } from '../graph/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
-import balancerRelayerAbi from '@/lib/abi/RelayerV4.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers } from '@/lib/utils';
 import { getPoolAddress } from '@/pool-utils';
@@ -29,7 +27,7 @@ import { SwapRequest } from '../vaultModel/poolModel/swap';
 import { ExitPoolRequest as ExitPoolModelRequest } from '../vaultModel/poolModel/exit';
 import { JsonRpcSigner } from '@ethersproject/providers';
 
-const balancerRelayerInterface = new Interface(balancerRelayerAbi);
+import { RelayerV5__factory } from '@/contracts';
 
 export class Exit {
   private wrappedNativeAsset: string;
@@ -42,7 +40,7 @@ export class Exit {
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
-    this.relayer = contracts.relayerV4 as string;
+    this.relayer = contracts.relayerV5 as string;
   }
 
   async exitPool(
@@ -393,10 +391,10 @@ export class Exit {
       );
     }
 
-    const encodedCall = balancerRelayerInterface.encodeFunctionData(
-      'multicall',
-      [calls]
-    );
+    const relayerInterface = RelayerV5__factory.createInterface();
+    const encodedCall = relayerInterface.encodeFunctionData('multicall', [
+      calls,
+    ]);
 
     return {
       multiRequests,

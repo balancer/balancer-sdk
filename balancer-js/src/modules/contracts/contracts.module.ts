@@ -18,8 +18,13 @@ import { VeBalProxy } from './implementations/veBAL-proxy';
 import { Relayer } from './implementations/relayer';
 import { LiquidityGauge } from './implementations/liquidity-gauge';
 import { GaugeClaimHelper } from './implementations/GaugeClaimHelper';
-import { ComposableStablePoolFactory } from '@/modules/contracts/implementations/composable-stable-pool-factory';
-import { WeightedPoolFactory } from '@/modules/contracts/implementations/weighted-pool-factory';
+import { ComposableStablePoolFactory } from '@/modules/contracts/implementations/factories/composable-stable-pool-factory';
+import { WeightedPoolFactory } from '@/modules/contracts/implementations/factories/weighted-pool-factory';
+import { AaveLinearPoolFactory } from '@/modules/contracts/implementations/factories/aave-linear-pool-factory';
+import { Erc4626LinearPoolFactory } from '@/modules/contracts/implementations/factories/erc4626-linear-pool-factory';
+import { EulerLinearPoolFactory } from '@/modules/contracts/implementations/factories/euler-linear-pool-factory';
+import { YearnLinearPoolFactory } from '@/modules/contracts/implementations/factories/yearn-linear-pool-factory';
+import { GearboxLinearPoolFactory } from '@/modules/contracts/implementations/factories/gearbox-linear-pool-factory';
 
 type ContractFactory = (
   address: string,
@@ -27,35 +32,47 @@ type ContractFactory = (
 ) => Contract;
 
 export interface ContractInstances {
+  aaveLinearPoolFactory?: Contract;
   balancerHelpers: BalancerHelpers;
   BasePool: ContractFactory;
   composableStablePoolFactory?: Contract;
   ERC20: ContractFactory;
+  erc4626LinearPoolFactory?: Contract;
+  eulerLinearPoolFactory?: Contract;
   gaugeClaimHelper?: Contract;
+  gearboxLinearPoolFactory?: Contract;
   lidoRelayer?: LidoRelayer;
   liquidityGauge: ContractFactory;
   multicall: Contract;
   relayerV3?: Contract;
   relayerV4?: Contract;
+  relayerV5?: Contract;
   vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
   weightedPoolFactory?: Contract;
+  yearnLinearPoolFactory?: Contract;
 }
 
 export class Contracts {
+  aaveLinearPoolFactory?: Contract;
   balancerHelpers: BalancerHelpers;
   composableStablePoolFactory?: Contract;
   contractAddresses: ContractAddresses;
+  erc4626LinearPoolFactory?: Contract;
+  eulerLinearPoolFactory?: Contract;
   gaugeClaimHelper?: Contract;
+  gearboxLinearPoolFactory?: Contract;
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
   relayerV3?: Contract;
   relayerV4?: Contract;
+  relayerV5?: Contract;
   vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
   weightedPoolFactory?: Contract;
+  yearnLinearPoolFactory?: Contract;
 
   /**
    * Create instances of Balancer contracts connected to passed provider.
@@ -93,6 +110,8 @@ export class Contracts {
       this.relayerV3 = Relayer(this.contractAddresses.relayerV3, provider, 3);
     if (this.contractAddresses.relayerV4)
       this.relayerV4 = Relayer(this.contractAddresses.relayerV4, provider, 4);
+    if (this.contractAddresses.relayerV5)
+      this.relayerV5 = Relayer(this.contractAddresses.relayerV5, provider, 5);
 
     if (this.contractAddresses.veBal) {
       this.veBal = new VeBal(this.contractAddresses, provider);
@@ -119,6 +138,36 @@ export class Contracts {
         provider
       );
     }
+    if (this.contractAddresses.aaveLinearPoolFactory) {
+      this.aaveLinearPoolFactory = AaveLinearPoolFactory(
+        this.contractAddresses.aaveLinearPoolFactory,
+        provider
+      );
+    }
+    if (this.contractAddresses.erc4626LinearPoolFactory) {
+      this.erc4626LinearPoolFactory = Erc4626LinearPoolFactory(
+        this.contractAddresses.erc4626LinearPoolFactory,
+        provider
+      );
+    }
+    if (this.contractAddresses.eulerLinearPoolFactory) {
+      this.eulerLinearPoolFactory = EulerLinearPoolFactory(
+        this.contractAddresses.eulerLinearPoolFactory,
+        provider
+      );
+    }
+    if (this.contractAddresses.gearboxLinearPoolFactory) {
+      this.gearboxLinearPoolFactory = GearboxLinearPoolFactory(
+        this.contractAddresses.gearboxLinearPoolFactory,
+        provider
+      );
+    }
+    if (this.contractAddresses.yearnLinearPoolFactory) {
+      this.yearnLinearPoolFactory = YearnLinearPoolFactory(
+        this.contractAddresses.yearnLinearPoolFactory,
+        provider
+      );
+    }
   }
 
   /**
@@ -126,11 +175,15 @@ export class Contracts {
    */
   get contracts(): ContractInstances {
     return {
+      aaveLinearPoolFactory: this.aaveLinearPoolFactory,
       balancerHelpers: this.balancerHelpers,
       BasePool: this.getBasePool,
       composableStablePoolFactory: this.composableStablePoolFactory,
       ERC20: this.getErc20,
+      erc4626LinearPoolFactory: this.erc4626LinearPoolFactory,
+      eulerLinearPoolFactory: this.eulerLinearPoolFactory,
       gaugeClaimHelper: this.gaugeClaimHelper,
+      gearboxLinearPoolFactory: this.gearboxLinearPoolFactory,
       liquidityGauge: this.getLiquidityGauge,
       lidoRelayer: this.lidoRelayer,
       multicall: this.multicall,
@@ -140,6 +193,7 @@ export class Contracts {
       veBal: this.veBal,
       veBalProxy: this.veBalProxy,
       weightedPoolFactory: this.weightedPoolFactory,
+      yearnLinearPoolFactory: this.yearnLinearPoolFactory,
     };
   }
 

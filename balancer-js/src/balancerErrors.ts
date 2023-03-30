@@ -13,6 +13,7 @@ export enum BalancerErrorCode {
   INPUT_OUT_OF_BOUNDS = 'INPUT_OUT_OF_BOUNDS',
   INPUT_TOKEN_INVALID = 'INPUT_TOKEN_INVALID',
   INPUT_ZERO_NOT_ALLOWED = 'INPUT_ZERO_NOT_ALLOWED',
+  INVALID_PROTOCOL_ID = 'INVALID_PROTOCOL_ID',
   INVALID_SWAP_FEE_PERCENTAGE = 'INVALID_SWAP_FEE_PERCENTAGE',
   INVALID_WEIGHTS = 'INVALID_WEIGHTS',
   JOIN_DELTA_AMOUNTS = 'JOIN_DELTA_AMOUNTS',
@@ -24,6 +25,7 @@ export enum BalancerErrorCode {
   NO_POOL_DATA = 'NO_POOL_DATA',
   NO_VALUE_PARAMETER = 'NO_VALUE_PARAMETER',
   POOL_DOESNT_EXIST = 'POOL_DOESNT_EXIST',
+  QUERY_BATCH_SWAP = 'QUERY_BATCH_SWAP',
   RELAY_SWAP_AMOUNTS = 'RELAY_SWAP_AMOUNTS',
   REWARD_TOKEN_ZERO = 'REWARD_TOKEN_ZERO',
   TIMESTAMP_IN_THE_FUTURE = 'TIMESTAMP_IN_THE_FUTURE',
@@ -65,6 +67,8 @@ export class BalancerError extends Error {
         return 'input token invalid';
       case BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED:
         return 'zero input not allowed';
+      case BalancerErrorCode.INVALID_PROTOCOL_ID:
+        return 'The provided protocol id does not correspond to a protocol';
       case BalancerErrorCode.INVALID_SWAP_FEE_PERCENTAGE:
         return 'The swap fee needs to be greater than zero and less than 1e17(10%)';
       case BalancerErrorCode.INVALID_WEIGHTS:

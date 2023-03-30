@@ -2,15 +2,17 @@ import axios from 'axios';
 import { Findable } from '@/types';
 
 export class TokenYieldsRepository implements Findable<number> {
-  private yields: { [address: string]: number } = {};
+  private yields: { [address: string]: Promise<number> } = {};
 
   constructor(private url = 'https://yield-tokens.balancer.workers.dev/') {}
 
-  async fetch(): Promise<void> {
+  async fetch(): Promise<{ [address: string]: number }> {
     let aprs = {};
 
     try {
+      console.time(`fetching token yields`);
       const response = await axios.get(this.url);
+      console.timeEnd(`fetching token yields`);
 
       aprs = response.data as {
         [key: string]: number;
@@ -23,20 +25,22 @@ export class TokenYieldsRepository implements Findable<number> {
       ...this.yields,
       ...aprs,
     };
+
+    return aprs;
   }
 
-  async find(address: string): Promise<number | undefined> {
+  async find(address: string): Promise<number> {
     const lowercase = address.toLocaleLowerCase();
     if (Object.keys(this.yields).length == 0) {
-      await this.fetch();
+      this.yields[lowercase] = this.fetch().then((r) => r[lowercase] || 0);
     }
 
-    return this.yields[lowercase];
+    return this.yields[lowercase] || 0;
   }
 
-  async findBy(attribute: string, value: string): Promise<number | undefined> {
+  async findBy(attribute: string, value: string): Promise<number> {
     if (attribute != 'address') {
-      return undefined;
+      return 0;
     }
 
     return this.find(value);

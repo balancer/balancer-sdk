@@ -8,6 +8,7 @@ import {
 } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
 import { formatBytes32String } from '@ethersproject/strings';
+import { getOnChainBalances } from '@/modules/sor/pool-data/onChainData';
 
 import {
   PoolWithMethods,
@@ -21,17 +22,27 @@ import {
   GraphQLArgs,
   GraphQLQuery,
   PoolsSubgraphRepository,
+  Pool,
+  BALANCER_NETWORK_CONFIG,
 } from '@/.';
 import { balancerVault } from '@/lib/constants/config';
 import { parseEther } from '@ethersproject/units';
 import { ERC20 } from '@/modules/contracts/implementations/ERC20';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 
-import { Interface } from '@ethersproject/abi';
+import { defaultAbiCoder, Interface } from '@ethersproject/abi';
 
 const liquidityGaugeAbi = ['function deposit(uint value) payable'];
 const liquidityGauge = new Interface(liquidityGaugeAbi);
 import { Pools as PoolsProvider } from '@/modules/pools';
+import mainnetPools from '../fixtures/pools-mainnet.json';
+import polygonPools from '../fixtures/pools-polygon.json';
+import { PoolsJsonRepository } from './pools-json-repository';
+
+const jsonPools = {
+  [Network.MAINNET]: mainnetPools,
+  [Network.POLYGON]: polygonPools,
+};
 
 /**
  * Setup local fork with approved token balance for a given account
@@ -46,7 +57,7 @@ import { Pools as PoolsProvider } from '@/modules/pools';
 export const forkSetup = async (
   signer: JsonRpcSigner,
   tokens: string[],
-  slots: number[],
+  slots: number[] | undefined,
   balances: string[],
   jsonRpcUrl: string,
   blockNumber?: number,
@@ -60,7 +71,11 @@ export const forkSetup = async (
       },
     },
   ]);
-
+  if (!slots) {
+    slots = await Promise.all(
+      tokens.map(async (token) => findTokenBalanceSlot(signer, token))
+    );
+  }
   for (let i = 0; i < tokens.length; i++) {
     // Set initial account balance for each token that will be used to join pool
     await setTokenBalance(
@@ -287,6 +302,45 @@ export class TestPoolHelper {
   }
 }
 
+/**
+ * Returns a pool from the json file as a Pool type defined in SubgraphPoolRepository.
+ *
+ * @param id pool ID
+ * @param network we only support 1 and 137
+ * @returns Pool as from the SubgraphPoolRepository
+ */
+export const getPoolFromFile = async (
+  id: string,
+  network: 1 | 137
+): Promise<Pool> => {
+  const pool = await new PoolsJsonRepository(jsonPools[network], network).find(
+    id
+  );
+  if (pool === undefined) throw new Error('Pool Not Found');
+  return pool;
+};
+
+/**
+ * Updates pool balances with onchain state.
+ *
+ * @param pool pool from repository
+ * @param network we only support 1, 137 and 42161
+ * @returns Pool as from the SubgraphPoolRepository
+ */
+export const updateFromChain = async (
+  pool: Pool,
+  network: 1 | 137 | 42161,
+  provider: JsonRpcProvider
+): Promise<Pool> => {
+  const onChainPool = await getOnChainBalances(
+    [pool],
+    BALANCER_NETWORK_CONFIG[network].addresses.contracts.multicall,
+    BALANCER_NETWORK_CONFIG[network].addresses.contracts.vault,
+    provider
+  );
+  return onChainPool[0];
+};
+
 export async function sendTransactionGetBalances(
   tokensForBalanceCheck: string[],
   signer: JsonRpcSigner,
@@ -334,4 +388,48 @@ export async function sendTransactionGetBalances(
     balanceDeltas,
     gasUsed,
   };
+}
+
+export async function findTokenBalanceSlot(
+  signer: JsonRpcSigner,
+  tokenAddress: string
+): Promise<number> {
+  const encode = (types: string[], values: unknown[]): string =>
+    defaultAbiCoder.encode(types, values);
+  const account = await signer.getAddress();
+  const probeA = encode(['uint256'], [(Math.random() * 10000).toFixed()]);
+  const probeB = encode(['uint256'], [(Math.random() * 10000).toFixed()]);
+  for (let i = 0; i < 200; i++) {
+    let probedSlot = keccak256(['uint256', 'uint256'], [account, i]);
+    // remove padding for JSON RPC
+    while (probedSlot.startsWith('0x0'))
+      probedSlot = '0x' + probedSlot.slice(3);
+    const prev = await signer.provider.send('eth_getStorageAt', [
+      tokenAddress,
+      probedSlot,
+      'latest',
+    ]);
+    // make sure the probe will change the slot value
+    const probe = prev === probeA ? probeB : probeA;
+
+    await signer.provider.send('hardhat_setStorageAt', [
+      tokenAddress,
+      probedSlot,
+      probe,
+    ]);
+
+    const balance = await getErc20Balance(
+      tokenAddress,
+      signer.provider,
+      account
+    );
+    // reset to previous value
+    await signer.provider.send('hardhat_setStorageAt', [
+      tokenAddress,
+      probedSlot,
+      prev,
+    ]);
+    if (balance.eq(BigNumber.from(probe))) return i;
+  }
+  throw 'Balances slot not found!';
 }
