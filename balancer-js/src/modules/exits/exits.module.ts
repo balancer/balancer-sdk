@@ -1,32 +1,32 @@
 import { cloneDeep } from 'lodash';
 import { BigNumber } from '@ethersproject/bignumber';
 import { WeiPerEther, Zero } from '@ethersproject/constants';
+import { JsonRpcSigner } from '@ethersproject/providers';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { networkAddresses } from '@/lib/constants/config';
+import { AssetHelpers, subSlippage } from '@/lib/utils';
+import { PoolGraph, Node } from '@/modules/graph/graph';
+import { Join } from '@/modules/joins/joins.module';
+import { calcPriceImpact } from '@/modules/pricing/priceImpact';
 import { Relayer } from '@/modules/relayer/relayer.module';
+import {
+  Simulation,
+  SimulationType,
+} from '@/modules/simulation/simulation.module';
 import {
   FundManagement,
   SingleSwap,
   Swap,
   SwapType,
 } from '@/modules/swaps/types';
-import { WeightedPoolEncoder } from '@/pool-weighted';
+import { ExitPoolRequest as ExitPoolModelRequest } from '@/modules/vaultModel/poolModel/exit';
+import { SwapRequest } from '@/modules/vaultModel/poolModel/swap';
+import { Requests, VaultModel } from '@/modules/vaultModel/vaultModel.module';
 import { StablePoolEncoder } from '@/pool-stable';
-import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
-import { PoolGraph, Node } from '../graph/graph';
-
-import { subSlippage } from '@/lib/utils/slippageHelper';
-import { networkAddresses } from '@/lib/constants/config';
-import { AssetHelpers } from '@/lib/utils';
 import { getPoolAddress } from '@/pool-utils';
-import { Join } from '../joins/joins.module';
-import { calcPriceImpact } from '../pricing/priceImpact';
-import { Simulation, SimulationType } from '../simulation/simulation.module';
-import { Requests, VaultModel } from '../vaultModel/vaultModel.module';
-import { SwapRequest } from '../vaultModel/poolModel/swap';
-import { ExitPoolRequest as ExitPoolModelRequest } from '../vaultModel/poolModel/exit';
-import { JsonRpcSigner } from '@ethersproject/providers';
-
+import { WeightedPoolEncoder } from '@/pool-weighted';
+import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
 import { RelayerV5__factory } from '@/contracts';
 
 export class Exit {
@@ -86,28 +86,18 @@ export class Exit {
     if (isProportional) {
       // All proportional will have single path from root node, exiting proportionally by ref all the way to leafs
       const path = orderedNodes.map((node, i) => {
-        if (node.exitAction === 'exitPool') {
-          const exitTokens = node.children.map((c) => c.address);
-          const exitRefs = node.children.map((c) => c.index);
-          const amount = node.index === '0' ? amountBptIn : node.index;
-          console.log(
-            'ExitPool: ',
-            amount,
-            exitTokens.toString(),
-            exitRefs.toString()
-          );
-          // replace exitPool action with proportional so correct call is built
-          node.exitAction = 'exitPoolProportional';
-        } else if (node.exitAction === 'batchSwap') {
-          console.log(
-            'Swap: ',
-            node.address,
-            node.index,
-            node.children[0].address
-          );
-        }
         // First node should exit with full BPT amount in
         if (i === 0) node.index = amountBptIn;
+        const amount = node.index;
+        const exitTokens = node.children.map((c) => c.address);
+        const exitRefs = node.children.map((c) => c.index);
+        console.log(
+          node.exitAction,
+          node.address,
+          amount,
+          exitTokens.toString(),
+          exitRefs.toString()
+        );
         return node;
       });
       exitPaths[0] = path;
@@ -125,6 +115,7 @@ export class Exit {
     } = await this.createCalls(
       exitPaths,
       userAddress,
+      isProportional,
       undefined,
       authorisation
     );
@@ -156,6 +147,7 @@ export class Exit {
     const { encodedCall, deltas } = await this.createCalls(
       exitPaths,
       userAddress,
+      isProportional,
       minAmountsOutByExitPath,
       authorisation
     );
@@ -374,6 +366,7 @@ export class Exit {
   private async createCalls(
     exitPaths: Node[][],
     userAddress: string,
+    isProportional: boolean,
     minAmountsOut?: string[],
     authorisation?: string
   ): Promise<{
@@ -383,7 +376,12 @@ export class Exit {
     deltas: Record<string, BigNumber>;
   }> {
     const { multiRequests, calls, outputIndexes, deltas } =
-      this.createActionCalls(cloneDeep(exitPaths), userAddress, minAmountsOut);
+      this.createActionCalls(
+        cloneDeep(exitPaths),
+        userAddress,
+        isProportional,
+        minAmountsOut
+      );
 
     if (authorisation) {
       calls.unshift(
@@ -422,6 +420,7 @@ export class Exit {
   private createActionCalls(
     exitPaths: Node[][],
     userAddress: string,
+    isProportional: boolean,
     minAmountsOut?: string[]
   ): {
     multiRequests: Requests[][];
@@ -453,6 +452,11 @@ export class Exit {
         const minAmountOut =
           isLastActionFromExitPath && minAmountsOut ? minAmountsOut[i] : '0';
 
+        const minAmountsOutProportional =
+          isLastActionFromExitPath && minAmountsOut
+            ? minAmountsOut
+            : Array(node.children.length).fill('0');
+
         switch (node.exitAction) {
           case 'batchSwap': {
             const { modelRequest, encodedCall, assets, amounts } =
@@ -470,8 +474,16 @@ export class Exit {
             break;
           }
           case 'exitPool': {
-            const { modelRequest, encodedCall, bptIn, tokensOut, amountsOut } =
-              this.createExitPool(
+            let exit;
+            if (isProportional) {
+              exit = this.createExitPoolProportional(
+                node,
+                minAmountsOutProportional,
+                sender,
+                recipient
+              );
+            } else {
+              exit = this.createExitPool(
                 node,
                 exitChild as Node,
                 i,
@@ -479,6 +491,9 @@ export class Exit {
                 sender,
                 recipient
               );
+            }
+            const { modelRequest, encodedCall, bptIn, tokensOut, amountsOut } =
+              exit;
             modelRequests.push(modelRequest);
             calls.push(encodedCall);
             this.updateDeltas(
@@ -486,17 +501,6 @@ export class Exit {
               [node.address, ...tokensOut],
               [bptIn, ...amountsOut]
             );
-            break;
-          }
-          case 'exitPoolProportional': {
-            console.log('TODO - Create exitProportional Call !!!!!!!');
-            // modelRequests.push(modelRequest);
-            // calls.push(encodedCall);
-            // this.updateDeltas(
-            //   deltas,
-            //   [node.address, ...tokensOut],
-            //   [bptIn, ...amountsOut]
-            // );
             break;
           }
           case 'output':
@@ -737,6 +741,113 @@ export class Exit {
       exitChild.exitAction !== 'output' ? [] : sortedTokens;
     const deltaAmountsOut =
       exitChild.exitAction !== 'output' ? [] : userAmountTokensOut;
+
+    return {
+      modelRequest,
+      encodedCall,
+      bptIn: deltaBptIn,
+      tokensOut: deltaTokensOut,
+      amountsOut: deltaAmountsOut,
+    };
+  }
+
+  private createExitPoolProportional(
+    node: Node,
+    minAmountsOut: string[],
+    sender: string,
+    recipient: string
+  ): {
+    modelRequest: ExitPoolModelRequest;
+    encodedCall: string;
+    bptIn: string;
+    tokensOut: string[];
+    amountsOut: string[];
+  } {
+    const isRootNode = !node.parent;
+    const amountIn = isRootNode
+      ? node.index
+      : Relayer.toChainedReference(this.getOutputRef(0, node.index)).toString();
+
+    const tokensOut = node.children.map((child) => child.address);
+    const amountsOut = [...minAmountsOut];
+
+    if (node.type === PoolType.ComposableStable) {
+      // assets need to include the phantomPoolToken
+      tokensOut.push(node.address);
+      // need to add a placeholder so sorting works
+      amountsOut.push('0');
+    }
+
+    // TODO: we shoule consider let the graph handle sorting instead of manipulating
+    // token order within actions - specially now that we have different sorting
+    // cases and that the subgraph is already handling them properly
+
+    // sort inputs
+    const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
+    const [sortedTokens, sortedAmounts] = assetHelpers.sortTokens(
+      tokensOut,
+      amountsOut
+    ) as [string[], string[]];
+
+    let userData: string;
+    if (node.type === PoolType.Weighted) {
+      userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(amountIn);
+    } else {
+      userData = StablePoolEncoder.exitExactBPTInForTokensOut(amountIn);
+    }
+
+    const outputReferences = node.children.map((child) => {
+      return {
+        index: sortedTokens
+          .map((t) => t.toLowerCase())
+          .indexOf(child.address.toLowerCase()),
+        key: Relayer.toChainedReference(this.getOutputRef(0, child.index)),
+      };
+    });
+
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${formatFixed(
+    //     node.proportionOfParent,
+    //     18
+    //   )}
+    //   ${node.exitAction}(
+    //     poolId: ${node.id},
+    //     tokensOut: ${sortedTokens},
+    //     tokenOut: ${sortedTokens[sortedTokens.indexOf(tokenOut)].toString()},
+    //     amountOut: ${sortedAmounts[sortedTokens.indexOf(tokenOut)].toString()},
+    //     amountIn: ${amountIn},
+    //     minAmountOut: ${minAmountOut},
+    //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)},
+    //     sender: ${sender},
+    //     recipient: ${recipient}
+    //   )`
+    // );
+
+    const call = Relayer.formatExitPoolInput({
+      poolId: node.id,
+      poolKind: 0,
+      sender,
+      recipient,
+      outputReferences,
+      exitPoolRequest: {} as ExitPoolRequest,
+      assets: sortedTokens,
+      minAmountsOut: sortedAmounts,
+      userData,
+      toInternalBalance: false,
+    });
+    const encodedCall = Relayer.encodeExitPool(call);
+    const modelRequest = VaultModel.mapExitPoolRequest(call);
+
+    const userAmountTokensOut = sortedAmounts.map((a) =>
+      Relayer.isChainedReference(a) ? '0' : Zero.sub(a).toString()
+    );
+    const userBptIn = Relayer.isChainedReference(amountIn) ? '0' : amountIn;
+    // If the sender is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
+    const deltaBptIn = sender === this.relayer ? Zero.toString() : userBptIn;
+    // If the receiver is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
+    const deltaTokensOut = recipient === this.relayer ? [] : sortedTokens;
+    const deltaAmountsOut =
+      recipient === this.relayer ? [] : userAmountTokensOut;
 
     return {
       modelRequest,

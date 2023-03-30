@@ -2,22 +2,19 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 
-import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { JsonRpcProvider } from '@ethersproject/providers';
-import { Contracts } from '@/modules/contracts/contracts.module';
+import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
+
+import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '@/.';
+import { Relayer } from '@/modules/relayer/relayer.module';
 import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
-import { Relayer } from '@/modules/relayer/relayer.module';
-import { JsonRpcSigner } from '@ethersproject/providers';
 import { SimulationType } from '../simulation/simulation.module';
 
 dotenv.config();
 
 const network = Network.MAINNET;
-const blockNumber = 16690077;
-const customSubgraphUrl =
-  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2';
+const blockNumber = 16940624;
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8545';
 
@@ -58,18 +55,14 @@ const subgraphQuery: GraphQLQuery = { args: subgraphArgs, attrs: {} };
 const sdk = new BalancerSDK({
   network,
   rpcUrl,
-  customSubgraphUrl,
   tenderly: tenderlyConfig,
   subgraphQuery,
 });
-const { pools } = sdk;
+const { pools, balancerContracts } = sdk;
 const provider = new JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
-const { contracts, contractAddresses } = new Contracts(
-  network as number,
-  provider
-);
-const relayer = contractAddresses.relayerV4 as string;
+const { contracts, contractAddresses } = balancerContracts;
+const relayerAddress = contractAddresses.relayerV5 as string;
 
 interface Test {
   signer: JsonRpcSigner;
@@ -89,12 +82,11 @@ const runTests = async (tests: Test[]) => {
     it(test.description, async () => {
       const signerAddress = await test.signer.getAddress();
       const authorisation = await Relayer.signRelayerApproval(
-        relayer,
+        relayerAddress,
         signerAddress,
         test.signer,
         contracts.vault
       );
-      // const authorisation = undefined;
       await testFlow(
         test.signer,
         signerAddress,
@@ -179,12 +171,12 @@ const testFlow = async (
 describe('generalised exit execution', async () => {
   context('boosted', async () => {
     let authorisation: string | undefined;
+    const testPool = addresses.bbausd2;
+
     beforeEach(async () => {
-      const tokens = [addresses.wstETH_bbeUSD.address];
-      const slots = [addresses.wstETH_bbeUSD.slot];
-      const balances = [
-        parseFixed('0.02', addresses.wstETH_bbeUSD.decimals).toString(),
-      ];
+      const tokens = [testPool.address];
+      const slots = [testPool.slot];
+      const balances = [parseFixed('0.02', testPool.decimals).toString()];
       await forkSetup(
         signer,
         tokens,
@@ -200,11 +192,11 @@ describe('generalised exit execution', async () => {
         signer,
         description: 'exit pool',
         pool: {
-          id: addresses.wstETH_bbeUSD.id,
-          address: addresses.wstETH_bbeUSD.address,
+          id: testPool.id,
+          address: testPool.address,
         },
-        amount: parseFixed('0.01', addresses.wstETH_bbeUSD.decimals).toString(),
-        authorisation: authorisation,
+        amount: parseFixed('0.01', testPool.decimals).toString(),
+        authorisation,
       },
     ]);
   });
