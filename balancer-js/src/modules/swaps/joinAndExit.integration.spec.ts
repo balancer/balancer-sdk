@@ -17,8 +17,6 @@ import {
   AURA_BAL_STABLE,
   getForkedPools,
   GRAVI_AURA,
-  B_50auraBAL_50wstETH,
-  B_stETH_STABLE,
   B_50WBTC_50WETH,
 } from '@/test/lib/mainnetPools';
 import { MockPoolDataService } from '@/test/lib/mockPool';
