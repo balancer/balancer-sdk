@@ -70,8 +70,7 @@ export interface ContractAddresses {
   balancerHelpers: string;
   balancerMinterAddress?: string;
   lidoRelayer?: string;
-  relayerV3?: string;
-  relayerV4?: string;
+  relayer: string;
   gaugeController?: string;
   feeDistributor?: string;
   veBal?: string;

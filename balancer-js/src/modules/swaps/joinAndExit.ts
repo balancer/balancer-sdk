@@ -1,5 +1,4 @@
 import { cloneDeep } from 'lodash';
-import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero, MaxInt256, MaxUint256 } from '@ethersproject/constants';
 import {
@@ -22,8 +21,7 @@ import { WeightedPoolEncoder } from '@/pool-weighted';
 import { AssetHelpers } from '@/lib/utils';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-
-import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
+import { BalancerRelayer__factory } from '@/contracts/factories/BalancerRelayer__factory';
 
 export enum ActionStep {
   Direct,
@@ -115,7 +113,7 @@ const EMPTY_BATCHSWAP_ACTION: BatchSwapAction = {
 type Actions = JoinAction | ExitAction | SwapAction | BatchSwapAction;
 type OrderedActions = JoinAction | ExitAction | BatchSwapAction;
 
-const balancerRelayerInterface = new Interface(balancerRelayerAbi);
+const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
 function getOutputRef(key: number, index: number): OutputReference {
   const keyRef = Relayer.toChainedReference(key);

@@ -44,8 +44,7 @@ export interface ContractInstances {
   lidoRelayer?: LidoRelayer;
   liquidityGauge: ContractFactory;
   multicall: Contract;
-  relayerV3?: Contract;
-  relayerV4?: Contract;
+  relayer: Contract;
   vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
@@ -64,8 +63,7 @@ export class Contracts {
   gearboxLinearPoolFactory?: Contract;
   lidoRelayer?: LidoRelayer;
   multicall: Contract;
-  relayerV3?: Contract;
-  relayerV4?: Contract;
+  relayer: Contract;
   vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
@@ -104,10 +102,7 @@ export class Contracts {
     // These contracts aren't included in Balancer Typechain but are still useful.
     // TO DO - Possibly create via Typechain but seems unnecessary?
     this.multicall = Multicall(this.contractAddresses.multicall, provider);
-    if (this.contractAddresses.relayerV3)
-      this.relayerV3 = Relayer(this.contractAddresses.relayerV3, provider, 3);
-    if (this.contractAddresses.relayerV4)
-      this.relayerV4 = Relayer(this.contractAddresses.relayerV4, provider, 4);
+    this.relayer = Relayer(this.contractAddresses.relayer, provider);
 
     if (this.contractAddresses.veBal) {
       this.veBal = new VeBal(this.contractAddresses, provider);
@@ -183,8 +178,7 @@ export class Contracts {
       liquidityGauge: this.getLiquidityGauge,
       lidoRelayer: this.lidoRelayer,
       multicall: this.multicall,
-      relayerV3: this.relayerV3,
-      relayerV4: this.relayerV4,
+      relayer: this.relayer,
       vault: this.vault,
       veBal: this.veBal,
       veBalProxy: this.veBalProxy,

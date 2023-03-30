@@ -98,7 +98,7 @@ async function join() {
 
   // Need to sign the approval only once per relayer
   const relayerAuth = await Relayer.signRelayerApproval(
-    contracts.relayerV4?.address as string,
+    contracts.relayer.address,
     signerAddress,
     signer,
     contracts.vault

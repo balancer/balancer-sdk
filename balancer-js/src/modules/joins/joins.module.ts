@@ -1,5 +1,4 @@
 import { cloneDeep } from 'lodash';
-import { Interface } from '@ethersproject/abi';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { AddressZero, WeiPerEther, Zero } from '@ethersproject/constants';
 
@@ -16,7 +15,6 @@ import { BalancerNetworkConfig, JoinPoolRequest, PoolType } from '@/types';
 import { PoolGraph, Node } from '../graph/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
-import balancerRelayerAbi from '@/lib/abi/RelayerV4.json';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers, isSameAddress } from '@/lib/utils';
 import {
@@ -32,8 +30,9 @@ import { Requests, VaultModel } from '../vaultModel/vaultModel.module';
 import { SwapRequest } from '../vaultModel/poolModel/swap';
 import { JoinPoolRequest as JoinPoolModelRequest } from '../vaultModel/poolModel/join';
 import { JsonRpcSigner } from '@ethersproject/providers';
+import { BalancerRelayer__factory } from '@/contracts/factories/BalancerRelayer__factory';
 
-const balancerRelayerInterface = new Interface(balancerRelayerAbi);
+const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
 export class Join {
   private relayer: string;
@@ -44,7 +43,7 @@ export class Join {
     private simulationService: Simulation
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
-    this.relayer = contracts.relayerV4 as string;
+    this.relayer = contracts.relayer;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
   }
 

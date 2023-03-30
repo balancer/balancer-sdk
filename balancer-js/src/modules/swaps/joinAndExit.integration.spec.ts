@@ -10,7 +10,12 @@ import {
   TokenPriceService,
   SwapTypes,
 } from '@balancer-labs/sor';
-import { BalancerSDK, Network, RelayerAuthorization } from '@/index';
+import {
+  BalancerSDK,
+  Network,
+  RelayerAuthorization,
+  BALANCER_NETWORK_CONFIG,
+} from '@/index';
 import { buildRelayerCalls, someJoinExit } from './joinAndExit';
 import {
   BAL_WETH,
@@ -37,8 +42,10 @@ let sor: SOR;
 const { contracts } = new Contracts(networkId, provider);
 
 const signer = provider.getSigner();
-const relayerV4Address = '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA';
-const wrappedNativeAsset = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+const relayerAddress =
+  BALANCER_NETWORK_CONFIG[networkId].addresses.contracts.relayer;
+const wrappedNativeAsset =
+  BALANCER_NETWORK_CONFIG[networkId].addresses.tokens.wrappedNativeAsset;
 
 describe('join and exit integration tests', async () => {
   await testFlow(
@@ -203,7 +210,7 @@ async function testFlow(
       );
       const signerAddr = await signer.getAddress();
       const authorisation = await signRelayerApproval(
-        ADDRESSES[networkId].BatchRelayerV4.address,
+        relayerAddress,
         signerAddr,
         signer
       );
@@ -215,7 +222,7 @@ async function testFlow(
         swapInfo,
         pools,
         signerAddr,
-        relayerV4Address,
+        relayerAddress,
         wrappedNativeAsset,
         slippage,
         authorisation
