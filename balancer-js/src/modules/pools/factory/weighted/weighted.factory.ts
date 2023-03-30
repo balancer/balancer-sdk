@@ -27,7 +27,6 @@ import { WeightedPool__factory } from '@/contracts';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { WeightedPoolInterface } from '@/contracts/WeightedPool';
-import { HashZero } from '@ethersproject/constants';
 
 export class WeightedFactory implements PoolFactory {
   private wrappedNativeAsset: string;
