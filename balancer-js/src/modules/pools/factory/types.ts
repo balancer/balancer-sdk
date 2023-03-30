@@ -1,5 +1,6 @@
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { JoinPool } from '@/modules/pools/pool-types/concerns/types';
+import { BytesLike } from '@ethersproject/bytes';
 
 export type CreatePoolParameters = {
   name: string;
@@ -18,7 +19,9 @@ export interface ComposableStableCreatePoolParameters
 }
 
 export interface WeightedCreatePoolParameters extends CreatePoolParameters {
-  weights: BigNumberish[];
+  rateProviders: string[];
+  normalizedWeights: BigNumberish[];
+  salt?: BytesLike;
 }
 
 export type LinearCreatePoolParameters = Pick<
