@@ -25,7 +25,6 @@ import { Erc4626LinearPoolFactory } from '@/modules/contracts/implementations/fa
 import { EulerLinearPoolFactory } from '@/modules/contracts/implementations/factories/euler-linear-pool-factory';
 import { YearnLinearPoolFactory } from '@/modules/contracts/implementations/factories/yearn-linear-pool-factory';
 import { GearboxLinearPoolFactory } from '@/modules/contracts/implementations/factories/gearbox-linear-pool-factory';
-import { RelayerV5, RelayerV5__factory } from '@/contracts';
 
 type ContractFactory = (
   address: string,
@@ -47,7 +46,7 @@ export interface ContractInstances {
   multicall: Contract;
   relayerV3?: Contract;
   relayerV4?: Contract;
-  relayerV5?: RelayerV5;
+  relayerV5?: Contract;
   vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
@@ -68,7 +67,7 @@ export class Contracts {
   multicall: Contract;
   relayerV3?: Contract;
   relayerV4?: Contract;
-  relayerV5?: RelayerV5;
+  relayerV5?: Contract;
   vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
@@ -112,10 +111,7 @@ export class Contracts {
     if (this.contractAddresses.relayerV4)
       this.relayerV4 = Relayer(this.contractAddresses.relayerV4, provider, 4);
     if (this.contractAddresses.relayerV5)
-      this.relayerV5 = RelayerV5__factory.connect(
-        this.contractAddresses.relayerV5,
-        provider
-      );
+      this.relayerV5 = Relayer(this.contractAddresses.relayerV5, provider, 5);
 
     if (this.contractAddresses.veBal) {
       this.veBal = new VeBal(this.contractAddresses, provider);
