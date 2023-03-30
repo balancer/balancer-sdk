@@ -29,7 +29,7 @@ import { BalancerSDK, Network } from '@/.';
 import { SimulationType } from '@/modules/simulation/simulation.module';
 
 const network = Network.MAINNET;
-const blockNumber = 16411000;
+const blockNumber = 16940624;
 const jsonRpcUrl = 'https://rpc.ankr.com/eth';
 const rpcUrl = 'http://127.0.0.1:8545';
 
@@ -46,8 +46,8 @@ const balancer = new BalancerSDK({
       where: {
         address: {
           in: [
-            '0xa13a9247ea42d743238089903570127dda72fe44',
-            '0xae37d54ae477268b9997d4161b96b8200755935c',
+            '0xa13a9247ea42d743238089903570127dda72fe44', // bbausd2
+            '0xae37d54ae477268b9997d4161b96b8200755935c', // bbadai
           ],
         },
       },
@@ -56,7 +56,7 @@ const balancer = new BalancerSDK({
   },
 });
 
-const { provider, contracts } = balancer;
+const { provider, contracts, balancerContracts } = balancer;
 const { ERC20 } = contracts;
 const signer = (provider as JsonRpcProvider).getSigner();
 
@@ -77,15 +77,17 @@ async function getTokens(signerAddress: string): Promise<void> {
     },
   ]);
 
-  // Lets impersonate Binance with loads of DAI and transfer some to the signer
+  // Lets impersonate an address with loads of DAI and transfer some to the signer
   await signer.provider.send('hardhat_impersonateAccount', [
-    '0xF977814e90dA44bFA03b6295A0616a897441aceC',
+    '0x60FaAe176336dAb62e284Fe19B885B095d29fB7F',
   ]);
-  const binance = signer.provider.getSigner(
-    '0xF977814e90dA44bFA03b6295A0616a897441aceC'
+  const impersonatedAddress = signer.provider.getSigner(
+    '0x60FaAe176336dAb62e284Fe19B885B095d29fB7F'
   );
 
-  await (await ERC20(dai, binance).transfer(signerAddress, amount)).wait();
+  await (
+    await ERC20(dai, impersonatedAddress).transfer(signerAddress, amount)
+  ).wait();
 
   await (
     await ERC20(dai, signer).approve(contracts.vault.address, amount)
@@ -96,9 +98,12 @@ async function join() {
   const signerAddress = await signer.getAddress();
   await getTokens(signerAddress);
 
+  const relayerAddress = balancerContracts.relayerV5?.address as string;
+  console.log('Relayer address:', relayerAddress);
+
   // Need to sign the approval only once per relayer
   const relayerAuth = await Relayer.signRelayerApproval(
-    contracts.relayerV4?.address as string,
+    relayerAddress,
     signerAddress,
     signer,
     contracts.vault
@@ -127,6 +132,7 @@ async function join() {
     await signer.sendTransaction({
       to: query.to,
       data: query.encodedCall,
+      gasLimit: 8e6,
     })
   ).wait();
 
