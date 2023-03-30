@@ -1,5 +1,4 @@
 import { cloneDeep } from 'lodash';
-import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero, MaxInt256, MaxUint256 } from '@ethersproject/constants';
 import {
@@ -8,6 +7,10 @@ import {
   SwapTypes,
   SwapV2,
 } from '@balancer-labs/sor';
+
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { RelayerV5__factory } from '@/contracts';
+import { AssetHelpers, subSlippage } from '@/lib/utils';
 import {
   Relayer,
   OutputReference,
@@ -16,14 +19,10 @@ import {
   ExitPoolData,
 } from '@/modules/relayer/relayer.module';
 import { getPoolAddress } from '@/pool-utils';
-import { ExitPoolRequest } from '@/types';
-import { FundManagement, SwapType } from './types';
 import { WeightedPoolEncoder } from '@/pool-weighted';
-import { AssetHelpers } from '@/lib/utils';
-import { subSlippage } from '@/lib/utils/slippageHelper';
-import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { ExitPoolRequest } from '@/types';
 
-import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
+import { FundManagement, SwapType } from './types';
 
 export enum ActionStep {
   Direct,
@@ -115,7 +114,7 @@ const EMPTY_BATCHSWAP_ACTION: BatchSwapAction = {
 type Actions = JoinAction | ExitAction | SwapAction | BatchSwapAction;
 type OrderedActions = JoinAction | ExitAction | BatchSwapAction;
 
-const balancerRelayerInterface = new Interface(balancerRelayerAbi);
+const balancerRelayerInterface = RelayerV5__factory.createInterface();
 
 function getOutputRef(key: number, index: number): OutputReference {
   const keyRef = Relayer.toChainedReference(key);
