@@ -7,7 +7,11 @@ import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
 import { balancerVault, networkAddresses } from '@/lib/constants/config';
-import { AssetHelpers, findEventInReceiptLogs } from '@/lib/utils';
+import {
+  AssetHelpers,
+  findEventInReceiptLogs,
+  getRandomBytes32,
+} from '@/lib/utils';
 import { ContractInstances } from '@/modules/contracts/contracts.module';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import {
@@ -154,7 +158,7 @@ export class WeightedFactory implements PoolFactory {
       sortedRateProviders,
       swapFeeEvm.toString(),
       owner,
-      salt || HashZero,
+      salt || getRandomBytes32(),
     ];
   };
 
