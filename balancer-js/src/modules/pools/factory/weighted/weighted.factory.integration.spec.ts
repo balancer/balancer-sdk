@@ -1,5 +1,6 @@
 // yarn test:only ./src/modules/pools/factory/weighted/weighted.factory.integration.spec.ts
 import dotenv from 'dotenv';
+
 dotenv.config();
 import { expect } from 'chai';
 import { parseFixed } from '@ethersproject/bignumber';
@@ -20,6 +21,7 @@ import {
   getBalances,
   sendTransactionGetBalances,
 } from '@/test/lib/utils';
+import { AddressZero } from '@ethersproject/constants';
 
 const network = Network.MAINNET;
 const rpcUrl = 'http://127.0.0.1:8545';
@@ -52,24 +54,25 @@ describe('creating weighted pool', () => {
         poolTokens.map((p) => p.slot),
         amountsIn,
         `${process.env.ALCHEMY_URL}`,
-        16720000,
+        16920000,
         false
       );
       poolParams = {
         name: 'My-Test-Pool-Name',
         symbol: 'My-Test-Pool-Symbol',
         tokenAddresses: poolTokens.map((p) => p.address),
-        weights: [
+        normalizedWeights: [
           parseFixed('0.2', 18).toString(),
           parseFixed('0.8', 18).toString(),
         ],
-        swapFeeEvm: parseFixed('1', 16).toString(),
+        rateProviders: [AddressZero, AddressZero],
+        swapFeeEvm: parseFixed('0.005', 18).toString(),
         owner: signerAddress,
+        salt: '0x1230000000000000000000000000000000000000000000000000000000000000',
       };
     });
     context('pool creation', async () => {
       let transactionReceipt: TransactionReceipt;
-
       it('should send creation tx', async () => {
         const txInfo = weightedPoolFactory.create(poolParams);
         transactionReceipt = await (
@@ -96,7 +99,7 @@ describe('creating weighted pool', () => {
         expect(swapFee.toString()).to.eq(poolParams.swapFeeEvm);
         expect(
           normalizedWeights.map((weight) => weight.toString())
-        ).to.deep.equal(poolParams.weights);
+        ).to.deep.equal(poolParams.normalizedWeights);
         expect(owner).to.eq(poolParams.owner);
       });
     });
@@ -135,12 +138,13 @@ describe('creating weighted pool', () => {
           signer,
           signerAddress
         );
-
         // The BPT Amount is calculated as:
         // BPTAmount = invariant * n - 1000000
         // where n is the number of tokens in the pool
         const invariantAfterJoin = WeightedMaths._calculateInvariant(
-          poolParams.weights.map((weight) => BigInt(weight.toString())),
+          poolParams.normalizedWeights.map((weight) =>
+            BigInt(weight.toString())
+          ),
           amountsInEvm.map(BigInt)
         );
         const invariantAfterJoinMultipliedByN = SolidityMaths.mul(
