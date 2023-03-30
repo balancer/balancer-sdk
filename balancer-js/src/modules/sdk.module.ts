@@ -7,7 +7,6 @@ import { Sor } from './sor/sor.module';
 import { getNetworkConfig } from './sdk.helpers';
 import { Pricing } from './pricing/pricing.module';
 import { ContractInstances, Contracts } from './contracts/contracts.module';
-import { Zaps } from './zaps/zaps.module';
 import { Pools } from './pools';
 import { Data } from './data';
 import { VaultModel } from './vaultModel/vaultModel.module';
@@ -33,7 +32,6 @@ export class BalancerSDK implements BalancerSDKRoot {
   readonly pools: Pools;
   readonly data: Data;
   balancerContracts: Contracts;
-  zaps: Zaps;
   vaultModel: VaultModel;
   readonly networkConfig: BalancerNetworkConfig;
   readonly provider: JsonRpcProvider;
@@ -67,7 +65,6 @@ export class BalancerSDK implements BalancerSDKRoot {
       this.balancerContracts
     );
 
-    this.zaps = new Zaps(this.networkConfig.chainId);
     if (this.data.liquidityGauges)
       this.claimService = new ClaimService(
         this.data.liquidityGauges,
