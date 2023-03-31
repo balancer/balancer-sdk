@@ -250,6 +250,34 @@ export const ADDRESSES = {
       symbol: 'bbedai',
       slot: 0,
     },
+    wstETH_rETH_sfrxETH: {
+      id: '0x5aee1e99fe86960377de9f88689616916d5dcabe000000000000000000000467',
+      address: '0x5aee1e99fe86960377de9f88689616916d5dcabe',
+      decimals: 18,
+      symbol: 'wstETH-rETH-sfrxETH-BPT',
+      slot: 0,
+    },
+    rETH: {
+      id: '',
+      address: '0xac3e018457b222d93114458476f3e3416abbe38f',
+      decimals: 18,
+      symbol: 'rETH',
+      slot: 0,
+    },
+    sfrxETH: {
+      id: '',
+      address: '0xae78736cd615f374d3085123a210448e74fc6393',
+      decimals: 18,
+      symbol: 'sfrxETH',
+      slot: 0,
+    },
+    bbgusd: {
+      id: '0x99c88ad7dc566616548adde8ed3effa730eb6c3400000000000000000000049a',
+      address: '0x99c88ad7dc566616548adde8ed3effa730eb6c34',
+      decimals: 18,
+      symbol: 'bb-g-USD',
+      slot: 0,
+    },
   },
   [Network.KOVAN]: {
     // Visit https://balancer-faucet.on.fleek.co/#/faucet for test tokens

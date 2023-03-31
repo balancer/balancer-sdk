@@ -28,6 +28,7 @@ import { getPoolAddress } from '@/pool-utils';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
 import { RelayerV5__factory } from '@/contracts';
+import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 
 export class Exit {
   private wrappedNativeAsset: string;
@@ -792,7 +793,11 @@ export class Exit {
     let userData: string;
     if (node.type === PoolType.Weighted) {
       userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(amountIn);
+    } else if (node.type === PoolType.ComposableStable) {
+      userData =
+        ComposableStablePoolEncoder.exitExactBPTInForAllTokensOut(amountIn);
     } else {
+      // TODO: double check if it's ok to set the Stable Pool Encoder as the default/else case
       userData = StablePoolEncoder.exitExactBPTInForTokensOut(amountIn);
     }
 

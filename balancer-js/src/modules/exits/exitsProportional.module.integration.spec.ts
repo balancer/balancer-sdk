@@ -105,7 +105,7 @@ const testFlow = async (
   pool: { id: string; address: string },
   amount: string,
   authorisation: string | undefined,
-  simulationType = SimulationType.VaultModel
+  simulationType = SimulationType.Tenderly
 ) => {
   const gasLimit = 8e6;
   const slippage = '10'; // 10 bps = 0.1%
@@ -171,7 +171,7 @@ const testFlow = async (
 describe('generalised exit execution', async () => {
   context('boosted', async () => {
     let authorisation: string | undefined;
-    const testPool = addresses.bbausd2;
+    const testPool = addresses.wstETH_rETH_sfrxETH;
 
     beforeEach(async () => {
       const tokens = [testPool.address];
