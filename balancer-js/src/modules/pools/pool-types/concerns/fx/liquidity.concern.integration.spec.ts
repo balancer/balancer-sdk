@@ -1,14 +1,12 @@
 // yarn test:only ./src/modules/pools/pool-types/concerns/fx/liquidity.concern.integration.spec.ts
 import dotenv from 'dotenv';
-import { Network, PoolWithMethods, SubPoolMeta } from '@/types';
+import { Network, PoolWithMethods } from '@/types';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
 import { ethers } from 'hardhat';
 import { BalancerSDK } from '@/modules/sdk.module';
 import { FXPool__factory } from '@/contracts';
 import { Contract } from '@ethersproject/contracts';
 import { expect } from 'chai';
-import { SolidityMaths } from '@/lib/utils/solidityMaths';
-import { parseFixed } from '@ethersproject/bignumber';
 
 dotenv.config();
 
@@ -30,7 +28,6 @@ describe('FX Pool - Calculate Liquidity', () => {
   };
   const balancer = new BalancerSDK(sdkConfig);
   before(async () => {
-    signerAddress = await signer.getAddress();
     const blockNumber = 40767042;
     const testPool = new TestPoolHelper(
       testPoolId,
@@ -56,5 +53,6 @@ describe('FX Pool - Calculate Liquidity', () => {
     ).total_.toBigInt();
     console.log(liquidityFromContract);
     console.log(liquidity);
+    expect(parseFloat(liquidity)).to.be.gt(0);
   });
 });
