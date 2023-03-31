@@ -18,7 +18,6 @@ const provider = new ethers.providers.JsonRpcProvider(rpcUrlLocal, network);
 const signer = provider.getSigner();
 const testPoolId =
   '0x726e324c29a1e49309672b244bdc4ff62a270407000200000000000000000702';
-let signerAddress: string;
 let pool: PoolWithMethods;
 
 describe('FX Pool - Calculate Liquidity', () => {
