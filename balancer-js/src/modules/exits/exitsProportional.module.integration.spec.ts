@@ -60,7 +60,7 @@ const sdk = new BalancerSDK({
 });
 const { pools, balancerContracts } = sdk;
 const provider = new JsonRpcProvider(rpcUrl, network);
-const signer = provider.getSigner();
+const signer = provider.getSigner(1);
 const { contracts, contractAddresses } = balancerContracts;
 const relayerAddress = contractAddresses.relayerV5 as string;
 
@@ -169,9 +169,40 @@ const testFlow = async (
 };
 
 describe('generalised exit execution', async () => {
-  context('boosted', async () => {
+  context('composable stable pool - non-boosted', async () => {
     let authorisation: string | undefined;
     const testPool = addresses.wstETH_rETH_sfrxETH;
+
+    beforeEach(async () => {
+      const tokens = [testPool.address];
+      const slots = [testPool.slot];
+      const balances = [parseFixed('0.02', testPool.decimals).toString()];
+      await forkSetup(
+        signer,
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        blockNumber
+      );
+    });
+
+    await runTests([
+      {
+        signer,
+        description: 'exit pool',
+        pool: {
+          id: testPool.id,
+          address: testPool.address,
+        },
+        amount: parseFixed('0.01', testPool.decimals).toString(),
+        authorisation,
+      },
+    ]);
+  });
+  context('composable stable pool - boosted', async () => {
+    let authorisation: string | undefined;
+    const testPool = addresses.bbgusd;
 
     beforeEach(async () => {
       const tokens = [testPool.address];

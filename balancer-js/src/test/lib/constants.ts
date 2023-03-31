@@ -278,6 +278,20 @@ export const ADDRESSES = {
       symbol: 'bb-g-USD',
       slot: 0,
     },
+    bbgusdc: {
+      id: '0x4a82b580365cff9b146281ab72500957a849abdc000000000000000000000494',
+      address: '0x4a82b580365cff9b146281ab72500957a849abdc',
+      decimals: 18,
+      symbol: 'bb-g-USDC',
+      slot: 0,
+    },
+    bbgdai: {
+      id: '0xe03af00fabe8401560c1ff7d242d622a5b601573000000000000000000000493',
+      address: '0xe03af00fabe8401560c1ff7d242d622a5b601573',
+      decimals: 18,
+      symbol: 'bb-g-DAI',
+      slot: 0,
+    },
   },
   [Network.KOVAN]: {
     // Visit https://balancer-faucet.on.fleek.co/#/faucet for test tokens

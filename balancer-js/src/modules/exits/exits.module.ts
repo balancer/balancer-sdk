@@ -439,6 +439,9 @@ export class Exit {
 
     exitPaths.forEach((exitPath, i) => {
       const modelRequests: Requests[] = [];
+      const outputNodes = exitPath.filter(
+        (node) => node.exitAction === 'output'
+      );
       exitPath.forEach((node) => {
         // Calls from root node are sent by the user. Otherwise sent by the relayer
         const isRootNode = !node.parent;
@@ -450,8 +453,12 @@ export class Exit {
         const isLastActionFromExitPath = exitChild?.exitAction === 'output';
         const recipient = isLastActionFromExitPath ? userAddress : this.relayer;
         // Last calls will use minAmountsOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
-        const minAmountOut =
-          isLastActionFromExitPath && minAmountsOut ? minAmountsOut[i] : '0';
+        let minAmountOut = '0';
+        if (isLastActionFromExitPath && minAmountsOut) {
+          minAmountOut = isProportional
+            ? minAmountsOut[outputNodes.indexOf(exitChild)] // Proportional exits have a minAmountOut for each output node
+            : minAmountsOut[i]; // Non-proportional exits have a minAmountOut for each exit path
+        }
 
         const minAmountsOutProportional =
           isLastActionFromExitPath && minAmountsOut
