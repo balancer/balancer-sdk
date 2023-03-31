@@ -32,7 +32,7 @@ dotenv.config();
 // -- Mainnet network setup --
 const network = Network.MAINNET;
 const jsonRpcUrl = process.env.ALCHEMY_URL;
-const blockNumber = 16075635;
+const blockNumber = 16940624;
 const rpcUrl = 'http://127.0.0.1:8545';
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta';
@@ -164,7 +164,7 @@ async function join() {
     provider
   );
   const authorisation = await Relayer.signRelayerApproval(
-    contractAddresses.relayerV4 as string,
+    contractAddresses.relayerV5 as string,
     signerAddress,
     signer,
     contracts.vault
