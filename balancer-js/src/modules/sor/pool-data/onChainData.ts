@@ -236,7 +236,6 @@ export async function getOnChainBalances<
           18
         );
       }
-      subgraphPools[index].swapFee = formatFixed(swapFee || '0', 18);
 
       if (subgraphPools[index].poolType !== 'FX')
         subgraphPools[index].swapFee = formatFixed(swapFee, 18);
