@@ -18,10 +18,8 @@ import { subSlippage } from '@/lib/utils/slippageHelper';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
   buildExitCall,
-  buildJoinCall,
   buildBatchSwapCall,
   createExitAction,
-  createJoinAction,
   createSwapAction,
   orderActions,
   ActionType,
@@ -29,6 +27,7 @@ import {
 } from './actions';
 
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
+import { Join } from './actions/join';
 
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
@@ -143,7 +142,7 @@ export function getActions(
   let previousAction: Actions = {} as Actions;
   for (const swap of swaps) {
     if (isJoin(swap, assets)) {
-      const [joinAction, newOpRefKey] = createJoinAction(
+      const newJoin = new Join(
         swap,
         tokenInIndex,
         tokenOutIndex,
@@ -153,9 +152,9 @@ export function getActions(
         user,
         relayer
       );
-      opRefKey = newOpRefKey;
-      actions.push(joinAction);
-      previousAction = joinAction;
+      opRefKey = newJoin.nextOpRefKey;
+      actions.push(newJoin);
+      previousAction = newJoin;
       continue;
     } else if (isExit(swap, assets)) {
       const [exitAction, newOpRefKey] = createExitAction(
@@ -185,18 +184,21 @@ export function getActions(
         user,
         relayer
       );
-      if (previousAction.type === ActionType.Swap && amount === '0') {
-        /*
+      // TODO - Should be able to remove this
+      if ('toInternal' in previousAction) {
+        if (previousAction.type === ActionType.Swap && amount === '0') {
+          /*
         If its part of a multihop swap the amount will be 0 (and should remain 0)
         The source will be same as previous swap so set previous receiver to match sender. Receiver set as is.
         */
-        previousAction.receiver = previousAction.sender;
-        previousAction.toInternal = previousAction.fromInternal;
-        previousAction.opRef = [];
-        swapAction.sender = previousAction.receiver;
-        swapAction.fromInternal = previousAction.fromInternal;
-        swapAction.amountIn = '0';
-        swapAction.swap.amount = '0';
+          previousAction.receiver = previousAction.sender;
+          previousAction.toInternal = previousAction.fromInternal;
+          previousAction.opRef = [];
+          swapAction.sender = previousAction.receiver;
+          swapAction.fromInternal = previousAction.fromInternal;
+          swapAction.amountIn = '0';
+          swapAction.swap.amount = '0';
+        }
       }
       opRefKey = newOpRefKey;
       actions.push(swapAction);
@@ -279,15 +281,13 @@ export function buildRelayerCalls(
       const pool = pools.find((p) => p.id === action.poolId);
       if (pool === undefined)
         throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
-      const [call, amountIn, amountOut, encodeJoinPoolInput] = buildJoinCall(
-        pool,
-        action,
-        wrappedNativeAsset
+      const { params, encoded } = action.callData(pool, wrappedNativeAsset);
+      calls.push(encoded);
+      inputs.push(params);
+      amountsIn.push(
+        BigNumber.from(action.getAmountIn(pool, wrappedNativeAsset))
       );
-      calls.push(call);
-      inputs.push(encodeJoinPoolInput);
-      amountsIn.push(BigNumber.from(amountIn));
-      amountsOut.push(BigNumber.from(amountOut));
+      amountsOut.push(BigNumber.from(action.getAmountOut()));
     }
     if (action.type === ActionType.BatchSwap) {
       const [batchSwapCalls, amountIn, amountOut, batchSwapInput] =

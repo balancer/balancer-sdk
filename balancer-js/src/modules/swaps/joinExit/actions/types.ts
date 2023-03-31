@@ -1,6 +1,10 @@
 import { BigNumber } from '@ethersproject/bignumber';
-import { SwapV2 } from '@balancer-labs/sor';
-import { OutputReference } from '@/modules/relayer/relayer.module';
+import { SwapV2, SubgraphPoolBase } from '@balancer-labs/sor';
+import {
+  OutputReference,
+  EncodeJoinPoolInput,
+} from '@/modules/relayer/relayer.module';
+import { Join } from './join';
 
 export enum ActionStep {
   Direct,
@@ -73,8 +77,8 @@ export interface BatchSwapAction extends BaseAction {
   receiver: string;
 }
 
-export type Actions = JoinAction | ExitAction | SwapAction | BatchSwapAction;
-export type OrderedActions = JoinAction | ExitAction | BatchSwapAction;
+export type Actions = ExitAction | SwapAction | BatchSwapAction | Join;
+export type OrderedActions = ExitAction | BatchSwapAction | Join;
 
 export const EMPTY_BATCHSWAP_ACTION: BatchSwapAction = {
   type: ActionType.BatchSwap,
@@ -91,3 +95,16 @@ export const EMPTY_BATCHSWAP_ACTION: BatchSwapAction = {
   sender: '',
   receiver: '',
 };
+
+export interface Action {
+  type: ActionType.Join;
+  callData(pool: SubgraphPoolBase, wrappedNativeAsset: string): CallData;
+  getAmountIn(pool: SubgraphPoolBase, wrappedNativeAsset: string): string;
+  getAmountOut(): string;
+  opRefKey: number;
+}
+
+export interface CallData {
+  params: EncodeJoinPoolInput;
+  encoded: string;
+}

@@ -1,8 +1,12 @@
 import { SubgraphPoolBase, SwapV2 } from '@balancer-labs/sor';
-import { Relayer, EncodeJoinPoolInput } from '@/modules/relayer/relayer.module';
+import {
+  Relayer,
+  EncodeJoinPoolInput,
+  OutputReference,
+} from '@/modules/relayer/relayer.module';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { AssetHelpers } from '@/lib/utils';
-import { ActionStep, ActionType, JoinAction } from './types';
+import { ActionStep, ActionType, Action, CallData } from './types';
 import {
   getActionStep,
   getActionAmount,
@@ -10,134 +14,138 @@ import {
   getActionOutputRef,
 } from './helpers';
 
-/**
- * Create a JoinAction with relevant info
- * @param swapType
- * @param swap
- * @param mainTokenInIndex
- * @param mainTokenOutIndex
- * @param opRefKey
- * @param assets
- * @param slippage
- * @returns
- */
-export function createJoinAction(
-  swap: SwapV2,
-  mainTokenInIndex: number,
-  mainTokenOutIndex: number,
-  opRefKey: number,
-  assets: string[],
-  slippage: string,
-  user: string,
-  relayerAddress: string
-): [JoinAction, number] {
-  const actionStep = getActionStep(
-    mainTokenInIndex,
-    mainTokenOutIndex,
-    swap.assetInIndex,
-    swap.assetOutIndex
-  );
-  // Will get actual amount if input or chain amount if part of chain
-  const amountIn = getActionAmount(
-    swap.amount,
-    ActionType.Join,
-    actionStep,
-    opRefKey
-  );
-  // This will be 0 if not a mainTokenOut action otherwise amount using slippage
-  const minOut = getActionMinOut(swap.returnAmount ?? '0', slippage);
-  // This will set opRef for next chained action if required
-  const [opRef, newOpRefKey] = getActionOutputRef(
-    actionStep,
-    swap.assetOutIndex,
-    opRefKey
-  );
-  let sender = relayerAddress;
-  let fromInternal = true;
-  let hasTokenIn = false;
-  // If using mainTokenIn we can assume it comes from user
-  if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn) {
-    sender = user;
-    fromInternal = false;
-    hasTokenIn = true;
-  }
-  let receiver = relayerAddress;
-  let hasTokenOut = false;
-  // If using mainTokenOut we can assume it goes to user
-  if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenOut) {
-    receiver = user;
-    hasTokenOut = true;
-  }
+export class Join implements Action {
+  type: ActionType.Join;
+  poolId: string;
+  sender: string;
+  receiver: string;
+  fromInternal: boolean;
+  tokenIn: string;
+  amountIn: string;
+  hasTokenIn: boolean;
+  hasTokenOut: boolean;
+  minAmountOut: string;
+  opRef: OutputReference;
+  nextOpRefKey: number;
 
-  const joinAction: JoinAction = {
-    type: ActionType.Join,
-    poolId: swap.poolId,
-    tokenIn: assets[swap.assetInIndex],
-    bpt: assets[swap.assetOutIndex],
-    opRef,
-    minOut,
-    amountIn,
-    assets,
-    actionStep,
-    sender,
-    receiver,
-    fromInternal,
-    hasTokenIn,
-    hasTokenOut,
-  };
-  return [joinAction, newOpRefKey];
-}
-
-/**
- * Creates encoded joinPool call.
- * @param pool
- * @param action
- * @param wrappedNativeAsset
- * @returns
- */
-export function buildJoinCall(
-  pool: SubgraphPoolBase,
-  action: JoinAction,
-  wrappedNativeAsset: string
-): [string, string, string, EncodeJoinPoolInput] {
-  const assets = pool.tokensList;
-  const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-  // tokens must have same order as pool getTokens
-  const [sortedTokens] = assetHelpers.sortTokens(assets) as [string[]];
-  const joinToken = action.tokenIn;
-  const joinTokenIndex = sortedTokens.findIndex(
-    (t) => t.toLowerCase() === joinToken.toLowerCase()
-  );
-  const maxAmountsIn = Array(assets.length).fill('0');
-  // Uses exact amounts of tokens in
-  maxAmountsIn[joinTokenIndex] = action.amountIn;
-  // Variable amount of BPT out (this has slippage applied)
-  const bptAmountOut = action.minOut;
-  const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
-    maxAmountsIn,
-    bptAmountOut
-  );
-  const attributes: EncodeJoinPoolInput = {
-    poolId: action.poolId,
-    sender: action.sender,
-    recipient: action.receiver,
-    kind: 0,
-    joinPoolRequest: {
-      assets: sortedTokens,
+  constructor(
+    swap: SwapV2,
+    mainTokenInIndex: number,
+    mainTokenOutIndex: number,
+    public opRefKey: number,
+    assets: string[],
+    slippage: string,
+    user: string,
+    relayerAddress: string
+  ) {
+    this.poolId = swap.poolId;
+    this.tokenIn = assets[swap.assetInIndex];
+    const actionStep = getActionStep(
+      mainTokenInIndex,
+      mainTokenOutIndex,
+      swap.assetInIndex,
+      swap.assetOutIndex
+    );
+    // Will get actual amount if input or chain amount if part of chain
+    this.amountIn = getActionAmount(
+      swap.amount,
+      ActionType.Join,
+      actionStep,
+      opRefKey
+    );
+    this.sender = relayerAddress;
+    this.fromInternal = true;
+    this.hasTokenIn = false;
+    // If using mainTokenIn we can assume it comes from user
+    if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn) {
+      this.sender = user;
+      this.fromInternal = false;
+      this.hasTokenIn = true;
+    }
+    this.hasTokenOut = false;
+    this.receiver = relayerAddress;
+    // If using mainTokenOut we can assume it goes to user
+    if (
+      actionStep === ActionStep.Direct ||
+      actionStep === ActionStep.TokenOut
+    ) {
+      this.receiver = user;
+      this.hasTokenOut = true;
+    }
+    // This will be 0 if not a mainTokenOut action otherwise amount using slippage
+    this.minAmountOut = getActionMinOut(swap.returnAmount ?? '0', slippage);
+    // This will set opRef for next chained action if required
+    const [opRef, nextOpRefKey] = getActionOutputRef(
+      actionStep,
+      swap.assetOutIndex,
+      opRefKey
+    );
+    this.opRef = opRef;
+    this.nextOpRefKey = nextOpRefKey;
+    this.type = ActionType.Join;
+  }
+  public callData(
+    pool: SubgraphPoolBase,
+    wrappedNativeAsset: string
+  ): CallData {
+    const assets = pool.tokensList;
+    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+    // tokens must have same order as pool getTokens
+    const [sortedTokens] = assetHelpers.sortTokens(assets) as [string[]];
+    const joinToken = this.tokenIn;
+    const joinTokenIndex = sortedTokens.findIndex(
+      (t) => t.toLowerCase() === joinToken.toLowerCase()
+    );
+    const maxAmountsIn = Array(assets.length).fill('0');
+    // Uses exact amounts of tokens in
+    maxAmountsIn[joinTokenIndex] = this.amountIn;
+    // Variable amount of BPT out (this has slippage applied)
+    const bptAmountOut = this.minAmountOut;
+    const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
       maxAmountsIn,
-      userData,
-      fromInternalBalance: action.fromInternal,
-    },
-    value: '0',
-    outputReference: action.opRef.key ? action.opRef.key.toString() : '0',
-  };
+      bptAmountOut
+    );
+    const params: EncodeJoinPoolInput = {
+      poolId: this.poolId,
+      sender: this.sender,
+      recipient: this.receiver,
+      kind: 0,
+      joinPoolRequest: {
+        assets: sortedTokens,
+        maxAmountsIn,
+        userData,
+        fromInternalBalance: this.fromInternal,
+      },
+      value: '0',
+      outputReference: this.opRef.key ? this.opRef.key.toString() : '0',
+    };
+    const callData = Relayer.encodeJoinPool(params);
 
-  // console.log(attributes);
+    return {
+      params,
+      encoded: callData,
+    };
+  }
 
-  const callData = Relayer.encodeJoinPool(attributes);
-  // These are used for final amount check
-  const amountOut = action.hasTokenOut ? bptAmountOut : '0';
-  const amountIn = action.hasTokenIn ? maxAmountsIn[joinTokenIndex] : '0';
+  public getAmountIn(
+    pool: SubgraphPoolBase,
+    wrappedNativeAsset: string
+  ): string {
+    const assets = pool.tokensList;
+    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
+    // tokens must have same order as pool getTokens
+    const [sortedTokens] = assetHelpers.sortTokens(assets) as [string[]];
+    const joinToken = this.tokenIn;
+    const joinTokenIndex = sortedTokens.findIndex(
+      (t) => t.toLowerCase() === joinToken.toLowerCase()
+    );
+    const maxAmountsIn = Array(assets.length).fill('0');
+    // Uses exact amounts of tokens in
+    maxAmountsIn[joinTokenIndex] = this.amountIn;
+    return this.hasTokenIn ? maxAmountsIn[joinTokenIndex] : '0';
+  }
 
-  return [callData, amountIn, amountOut, attributes];
+  public getAmountOut(): string {
+    return this.hasTokenOut ? this.minAmountOut : '0';
+  }
 }
