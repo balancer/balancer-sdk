@@ -1,4 +1,4 @@
-// yarn test:only ./src/modules/swaps/joinAndExit.integration.spec.ts
+// yarn test:only ./src/modules/swaps/joinExit/joinAndExit.integration.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { parseFixed } from '@ethersproject/bignumber';
@@ -23,7 +23,7 @@ import {
 } from '@/test/lib/mainnetPools';
 import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
-import { Contracts } from '../contracts/contracts.module';
+import { Contracts } from '../../contracts/contracts.module';
 import { forkSetup, getBalances } from '@/test/lib/utils';
 dotenv.config();
 
@@ -126,7 +126,7 @@ describe('join and exit integration tests', async () => {
     ADDRESSES[networkId].WETH,
     ADDRESSES[networkId].auraBal,
     '10', // 10 bsp = 0.1%
-    15773550
+    16940624
   );
   // Removed ExactOut cases for now as Relayer formatting is difficult
   // await testFlow(

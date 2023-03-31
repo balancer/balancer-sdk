@@ -1,4 +1,4 @@
-// yarn test:only ./src/modules/swaps/joinAndExit.spec.ts
+// yarn test:only ./src/modules/swaps/joinExit/joinAndExit.spec.ts
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config();
 import { expect } from 'chai';
@@ -18,17 +18,17 @@ import {
   ActionType,
   BatchSwapAction,
   ExitAction,
-  getActions,
   JoinAction,
   orderActions,
   SwapAction,
   getNumberOfOutputActions,
-} from './joinAndExit';
+} from './actions';
+import { getActions } from './joinAndExit';
 
 import poolsList from '@/test/lib/joinExitPools.json';
 import { Network } from '@/types';
-import { BalancerSDK } from '../sdk.module';
-import { OutputReference } from '../relayer/types';
+import { BalancerSDK } from '../../sdk.module';
+import { OutputReference } from '../../relayer/types';
 import { MaxInt256 } from '@ethersproject/constants';
 
 const pool1Bpt = '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56';

@@ -11,7 +11,10 @@ import {
   SwapTypes,
 } from '@balancer-labs/sor';
 import { BalancerSDK, Network, RelayerAuthorization } from '@/index';
-import { buildRelayerCalls, someJoinExit } from '@/modules/swaps/joinAndExit';
+import {
+  buildRelayerCalls,
+  someJoinExit,
+} from '@/modules/swaps/joinExit/joinAndExit';
 import {
   BAL_WETH,
   AURA_BAL_STABLE,
