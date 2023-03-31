@@ -2,34 +2,56 @@
     {
         "inputs": [
             {
+                "components": [
+                    {
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "symbol",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "contract IERC20[]",
+                        "name": "tokens",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "uint256[]",
+                        "name": "normalizedWeights",
+                        "type": "uint256[]"
+                    },
+                    {
+                        "internalType": "contract IRateProvider[]",
+                        "name": "rateProviders",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "assetManagers",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "swapFeePercentage",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct WeightedPool.NewPoolParams",
+                "name": "params",
+                "type": "tuple"
+            },
+            {
                 "internalType": "contract IVault",
                 "name": "vault",
                 "type": "address"
             },
             {
-                "internalType": "string",
-                "name": "name",
-                "type": "string"
-            },
-            {
-                "internalType": "string",
-                "name": "symbol",
-                "type": "string"
-            },
-            {
-                "internalType": "contract IERC20[]",
-                "name": "tokens",
-                "type": "address[]"
-            },
-            {
-                "internalType": "uint256[]",
-                "name": "normalizedWeights",
-                "type": "uint256[]"
-            },
-            {
-                "internalType": "uint256",
-                "name": "swapFeePercentage",
-                "type": "uint256"
+                "internalType": "contract IProtocolFeePercentagesProvider",
+                "name": "protocolFeeProvider",
+                "type": "address"
             },
             {
                 "internalType": "uint256",
@@ -45,6 +67,11 @@
                 "internalType": "address",
                 "name": "owner",
                 "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "version",
+                "type": "string"
             }
         ],
         "stateMutability": "nonpayable",
@@ -92,6 +119,38 @@
         "anonymous": false,
         "inputs": [
             {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "feeType",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "protocolFeePercentage",
+                "type": "uint256"
+            }
+        ],
+        "name": "ProtocolFeePercentageCacheUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "bool",
+                "name": "enabled",
+                "type": "bool"
+            }
+        ],
+        "name": "RecoveryModeStateChanged",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
                 "indexed": false,
                 "internalType": "uint256",
                 "name": "swapFeePercentage",
@@ -125,6 +184,19 @@
         ],
         "name": "Transfer",
         "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "DELEGATE_PROTOCOL_SWAP_FEES_SENTINEL",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
     },
     {
         "inputs": [],
@@ -216,7 +288,7 @@
                 "type": "uint8"
             }
         ],
-        "stateMutability": "pure",
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -232,7 +304,7 @@
                 "type": "uint256"
             }
         ],
-        "name": "decreaseApproval",
+        "name": "decreaseAllowance",
         "outputs": [
             {
                 "internalType": "bool",
@@ -241,6 +313,33 @@
             }
         ],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "disableRecoveryMode",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "enableRecoveryMode",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getATHRateProduct",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -264,12 +363,38 @@
     },
     {
         "inputs": [],
+        "name": "getActualSupply",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "getAuthorizer",
         "outputs": [
             {
                 "internalType": "contract IAuthorizer",
                 "name": "",
                 "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getDomainSeparator",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
             }
         ],
         "stateMutability": "view",
@@ -290,7 +415,26 @@
     },
     {
         "inputs": [],
-        "name": "getLastInvariant",
+        "name": "getLastPostJoinExitInvariant",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            }
+        ],
+        "name": "getNextNonce",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -364,13 +508,71 @@
         "type": "function"
     },
     {
-        "inputs": [],
-        "name": "getRate",
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "feeType",
+                "type": "uint256"
+            }
+        ],
+        "name": "getProtocolFeePercentageCache",
         "outputs": [
             {
                 "internalType": "uint256",
                 "name": "",
                 "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getProtocolFeesCollector",
+        "outputs": [
+            {
+                "internalType": "contract IProtocolFeesCollector",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getProtocolSwapFeeDelegation",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getRateProviders",
+        "outputs": [
+            {
+                "internalType": "contract IRateProvider[]",
+                "name": "",
+                "type": "address[]"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getScalingFactors",
+        "outputs": [
+            {
+                "internalType": "uint256[]",
+                "name": "",
+                "type": "uint256[]"
             }
         ],
         "stateMutability": "view",
@@ -403,6 +605,19 @@
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "inRecoveryMode",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "address",
@@ -411,11 +626,11 @@
             },
             {
                 "internalType": "uint256",
-                "name": "amount",
+                "name": "addedValue",
                 "type": "uint256"
             }
         ],
-        "name": "increaseApproval",
+        "name": "increaseAllowance",
         "outputs": [
             {
                 "internalType": "bool",
@@ -639,7 +854,14 @@
                 "type": "uint256"
             }
         ],
-        "stateMutability": "view",
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "pause",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -736,7 +958,7 @@
                 "type": "uint256[]"
             }
         ],
-        "stateMutability": "view",
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
@@ -790,18 +1012,23 @@
                 "type": "uint256[]"
             }
         ],
-        "stateMutability": "view",
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
         "inputs": [
             {
-                "internalType": "bool",
-                "name": "paused",
-                "type": "bool"
+                "internalType": "contract IERC20",
+                "name": "token",
+                "type": "address"
+            },
+            {
+                "internalType": "bytes",
+                "name": "poolConfig",
+                "type": "bytes"
             }
         ],
-        "name": "setPaused",
+        "name": "setAssetManagerPoolConfig",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -896,6 +1123,33 @@
             }
         ],
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "unpause",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "updateProtocolFeePercentageCache",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "version",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
         "type": "function"
     }
 ]
