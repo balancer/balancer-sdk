@@ -16,17 +16,12 @@ import {
 import { getPoolAddress } from '@/pool-utils';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import {
-  buildBatchSwapCall,
-  createSwapAction,
-  orderActions,
-  ActionType,
-  Actions,
-} from './actions';
+import { orderActions, ActionType, Actions } from './actions';
 
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { Join } from './actions/join';
 import { Exit } from './actions/exit';
+import { Swap } from './actions/swap';
 
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
@@ -138,7 +133,6 @@ export function getActions(
   );
   const actions: Actions[] = [];
   let opRefKey = 0;
-  let previousAction: Actions = {} as Actions;
   for (const swap of swaps) {
     if (isJoin(swap, assets)) {
       const newJoin = new Join(
@@ -153,7 +147,6 @@ export function getActions(
       );
       opRefKey = newJoin.nextOpRefKey;
       actions.push(newJoin);
-      previousAction = newJoin;
       continue;
     } else if (isExit(swap, assets)) {
       const newExit = new Exit(
@@ -168,11 +161,9 @@ export function getActions(
       );
       opRefKey = newExit.nextOpRefKey;
       actions.push(newExit);
-      previousAction = newExit;
       continue;
     } else {
-      const amount = swap.amount;
-      const [swapAction, newOpRefKey] = createSwapAction(
+      const newSwap = new Swap(
         swap,
         tokenInIndex,
         tokenOutIndex,
@@ -183,25 +174,8 @@ export function getActions(
         user,
         relayer
       );
-      // TODO - Should be able to remove this
-      if ('toInternal' in previousAction) {
-        if (previousAction.type === ActionType.BatchSwap && amount === '0') {
-          /*
-        If its part of a multihop swap the amount will be 0 (and should remain 0)
-        The source will be same as previous swap so set previous receiver to match sender. Receiver set as is.
-        */
-          previousAction.receiver = previousAction.sender;
-          previousAction.toInternal = previousAction.fromInternal;
-          previousAction.opRef = [];
-          swapAction.sender = previousAction.receiver;
-          swapAction.fromInternal = previousAction.fromInternal;
-          swapAction.amountIn = '0';
-          swapAction.swaps[0].amount = '0';
-        }
-      }
-      opRefKey = newOpRefKey;
-      actions.push(swapAction);
-      previousAction = swapAction;
+      opRefKey = newSwap.nextOpRefKey;
+      actions.push(newSwap);
       continue;
     }
   }
@@ -246,14 +220,11 @@ export function buildRelayerCalls(
     relayerAddress
   );
   // Arrange action into order that will create minimal amount of calls
-  const orderedActions = orderActions(actions, swapInfo.tokenAddresses);
+  const orderedActions = orderActions(actions);
 
   const calls: string[] = [];
   const inputs: (EncodeBatchSwapInput | ExitPoolData | EncodeJoinPoolInput)[] =
     [];
-  // These amounts are used to compare to expected amounts
-  const amountsIn: BigNumber[] = [];
-  const amountsOut: BigNumber[] = [];
   if (authorisation)
     // Uses relayer to approve itself to act in behalf of the user
     calls.push(
@@ -267,23 +238,23 @@ export function buildRelayerCalls(
       if (pool === undefined)
         throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
       const { params, encoded } = action.callData(pool, wrappedNativeAsset);
-      calls.push(encoded);
+      calls.push(encoded as string);
       inputs.push(params);
-      amountsIn.push(BigNumber.from(action.getAmountIn()));
-      amountsOut.push(BigNumber.from(action.getAmountOut()));
     }
     if (action.type === ActionType.BatchSwap) {
-      const [batchSwapCalls, amountIn, amountOut, batchSwapInput] =
-        buildBatchSwapCall(action, swapInfo.tokenIn, swapInfo.tokenOut);
-      calls.push(...batchSwapCalls);
-      inputs.push(batchSwapInput);
-      amountsIn.push(BigNumber.from(amountIn));
-      amountsOut.push(BigNumber.from(amountOut));
+      const { params, encoded } = action.callData();
+      calls.push(...encoded);
+      inputs.push(params);
     }
   }
 
   // Safety check to make sure amounts/limits from calls match expected
-  checkAmounts(amountsIn, amountsOut, swapInfo, slippage);
+  checkAmounts(
+    orderedActions.map((a) => BigNumber.from(a.getAmountIn())),
+    orderedActions.map((a) => BigNumber.from(a.getAmountOut())),
+    swapInfo,
+    slippage
+  );
   // encode relayer multicall
   const callData = balancerRelayerInterface.encodeFunctionData('multicall', [
     calls,
