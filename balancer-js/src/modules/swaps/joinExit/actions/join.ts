@@ -127,22 +127,8 @@ export class Join implements Action {
     };
   }
 
-  public getAmountIn(
-    pool: SubgraphPoolBase,
-    wrappedNativeAsset: string
-  ): string {
-    const assets = pool.tokensList;
-    const assetHelpers = new AssetHelpers(wrappedNativeAsset);
-    // tokens must have same order as pool getTokens
-    const [sortedTokens] = assetHelpers.sortTokens(assets) as [string[]];
-    const joinToken = this.tokenIn;
-    const joinTokenIndex = sortedTokens.findIndex(
-      (t) => t.toLowerCase() === joinToken.toLowerCase()
-    );
-    const maxAmountsIn = Array(assets.length).fill('0');
-    // Uses exact amounts of tokens in
-    maxAmountsIn[joinTokenIndex] = this.amountIn;
-    return this.hasTokenIn ? maxAmountsIn[joinTokenIndex] : '0';
+  public getAmountIn(): string {
+    return this.hasTokenIn ? this.amountIn : '0';
   }
 
   public getAmountOut(): string {

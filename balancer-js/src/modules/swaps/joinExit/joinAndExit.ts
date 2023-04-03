@@ -17,9 +17,7 @@ import { getPoolAddress } from '@/pool-utils';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import {
-  buildExitCall,
   buildBatchSwapCall,
-  createExitAction,
   createSwapAction,
   orderActions,
   ActionType,
@@ -28,6 +26,7 @@ import {
 
 import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { Join } from './actions/join';
+import { Exit } from './actions/exit';
 
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
@@ -157,7 +156,7 @@ export function getActions(
       previousAction = newJoin;
       continue;
     } else if (isExit(swap, assets)) {
-      const [exitAction, newOpRefKey] = createExitAction(
+      const newExit = new Exit(
         swap,
         tokenInIndex,
         tokenOutIndex,
@@ -167,9 +166,9 @@ export function getActions(
         user,
         relayer
       );
-      opRefKey = newOpRefKey;
-      actions.push(exitAction);
-      previousAction = exitAction;
+      opRefKey = newExit.nextOpRefKey;
+      actions.push(newExit);
+      previousAction = newExit;
       continue;
     } else {
       const amount = swap.amount;
@@ -263,30 +262,14 @@ export function buildRelayerCalls(
 
   // Create encoded call for each action
   for (const action of orderedActions) {
-    if (action.type === ActionType.Exit) {
-      const pool = pools.find((p) => p.id === action.poolId);
-      if (pool === undefined)
-        throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
-      const [call, amountIn, amountOut, exitPoolData] = buildExitCall(
-        pool,
-        action,
-        wrappedNativeAsset
-      );
-      calls.push(call);
-      inputs.push(exitPoolData);
-      amountsIn.push(BigNumber.from(amountIn));
-      amountsOut.push(BigNumber.from(amountOut));
-    }
-    if (action.type === ActionType.Join) {
+    if (action.type === ActionType.Exit || action.type === ActionType.Join) {
       const pool = pools.find((p) => p.id === action.poolId);
       if (pool === undefined)
         throw new BalancerError(BalancerErrorCode.NO_POOL_DATA);
       const { params, encoded } = action.callData(pool, wrappedNativeAsset);
       calls.push(encoded);
       inputs.push(params);
-      amountsIn.push(
-        BigNumber.from(action.getAmountIn(pool, wrappedNativeAsset))
-      );
+      amountsIn.push(BigNumber.from(action.getAmountIn()));
       amountsOut.push(BigNumber.from(action.getAmountOut()));
     }
     if (action.type === ActionType.BatchSwap) {
