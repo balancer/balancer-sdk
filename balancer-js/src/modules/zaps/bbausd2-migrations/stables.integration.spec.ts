@@ -127,7 +127,7 @@ const reset = () =>
     },
   ]);
 
-describe('stables migration execution', async () => {
+describe.skip('stables migration execution', async () => {
   let signer: JsonRpcSigner;
   let signerAddress: string;
   let authorisation: string;

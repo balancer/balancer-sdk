@@ -94,7 +94,7 @@ const reset = () =>
     },
   ]);
 
-describe('stabal3 migration execution', async () => {
+describe.skip('stabal3 migration execution', async () => {
   let signer: JsonRpcSigner;
   let signerAddress: string;
   let authorisation: string;

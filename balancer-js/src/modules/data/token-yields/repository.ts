@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Findable } from '@/types';
 
 export class TokenYieldsRepository implements Findable<number> {
-  private yields: { [address: string]: Promise<number> } = {};
+  private yields?: Promise<{ [address: string]: number }>;
 
   constructor(private url = 'https://yield-tokens.balancer.workers.dev/') {}
 
@@ -21,21 +21,16 @@ export class TokenYieldsRepository implements Findable<number> {
       console.error('Failed to fetch yield tokens:', error);
     }
 
-    this.yields = {
-      ...this.yields,
-      ...aprs,
-    };
-
     return aprs;
   }
 
   async find(address: string): Promise<number> {
-    const lowercase = address.toLocaleLowerCase();
-    if (Object.keys(this.yields).length == 0) {
-      this.yields[lowercase] = this.fetch().then((r) => r[lowercase] || 0);
+    const lc = address.toLocaleLowerCase();
+    if (!this.yields) {
+      this.yields = this.fetch();
     }
 
-    return this.yields[lowercase] || 0;
+    return this.yields.then((r) => (r[lc] && r[lc] > 0 ? r[lc] : 0));
   }
 
   async findBy(attribute: string, value: string): Promise<number> {
