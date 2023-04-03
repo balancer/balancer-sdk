@@ -16,7 +16,6 @@ export enum ActionStep {
 }
 
 export enum ActionType {
-  Swap,
   BatchSwap,
   Join,
   Exit,
@@ -55,18 +54,6 @@ export interface ExitAction extends BaseAction {
   toInternal: boolean;
 }
 
-export interface SwapAction extends BaseAction {
-  type: ActionType.Swap;
-  swap: SwapV2;
-  opRef: OutputReference[];
-  amountIn: string;
-  fromInternal: boolean;
-  toInternal: boolean;
-  sender: string;
-  receiver: string;
-  isBptIn: boolean;
-}
-
 export interface BatchSwapAction extends BaseAction {
   type: ActionType.BatchSwap;
   swaps: SwapV2[];
@@ -77,10 +64,11 @@ export interface BatchSwapAction extends BaseAction {
   approveTokens: string[];
   sender: string;
   receiver: string;
+  amountIn: string;
+  isBptIn: boolean;
 }
 
-export type Actions = Exit | SwapAction | BatchSwapAction | Join;
-export type OrderedActions = Exit | BatchSwapAction | Join;
+export type Actions = Exit | BatchSwapAction | Join;
 
 export const EMPTY_BATCHSWAP_ACTION: BatchSwapAction = {
   type: ActionType.BatchSwap,
@@ -96,6 +84,8 @@ export const EMPTY_BATCHSWAP_ACTION: BatchSwapAction = {
   approveTokens: [],
   sender: '',
   receiver: '',
+  amountIn: '',
+  isBptIn: false,
 };
 
 export interface Action {

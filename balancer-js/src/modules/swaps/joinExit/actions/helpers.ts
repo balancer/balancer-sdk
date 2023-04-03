@@ -7,9 +7,8 @@ import {
   ActionStep,
   ActionType,
   Actions,
-  OrderedActions,
-  SwapAction,
   EMPTY_BATCHSWAP_ACTION,
+  BatchSwapAction,
 } from './types';
 
 /**
@@ -116,7 +115,7 @@ export function getActionStep(
  * @param actions
  * @returns
  */
-export function getNumberOfOutputActions(actions: OrderedActions[]): number {
+export function getNumberOfOutputActions(actions: Actions[]): number {
   let outputCount = 0;
   for (const a of actions) {
     if (a.hasTokenOut) outputCount++;
@@ -161,46 +160,45 @@ export function categorizeActions(actions: Actions[]): Actions[] {
 export function batchSwapActions(
   allActions: Actions[],
   assets: string[]
-): OrderedActions[] {
+): Actions[] {
   /*
   batchSwaps are a collection of swaps that can all be called in a single batchSwap
   Can batch all swaps with same source
   Any swap without tokenIn && not BPT should be coming from internal balances
   Any swap with tokenIn or BPT should be coming from external balances
   */
-  const orderedActions: OrderedActions[] = [];
+  const orderedActions: Actions[] = [];
   let batchSwaps = cloneDeep(EMPTY_BATCHSWAP_ACTION);
-  batchSwaps.assets = assets;
-  batchSwaps.limits = Array(assets.length).fill(BigNumber.from('0'));
-
   let isFirstSwap = true;
-  let lastSwap: SwapAction = {} as SwapAction;
+  let previousSwap: BatchSwapAction = {} as BatchSwapAction;
 
   for (const a of allActions) {
-    if (a.type === ActionType.Swap) {
+    if (a.type === ActionType.BatchSwap) {
       if (isFirstSwap) {
-        lastSwap = a;
+        previousSwap = a;
+        batchSwaps.assets = a.assets;
+        batchSwaps.limits = Array(a.assets.length).fill(BigNumber.from('0'));
         isFirstSwap = false;
       }
       if (a.isBptIn) {
         // Older pools don't have pre-approval so need to add this as a step
-        batchSwaps.approveTokens.push(a.assets[a.swap.assetInIndex]);
+        batchSwaps.approveTokens.push(a.assets[a.swaps[0].assetInIndex]);
       }
       // If swap has different send/receive params than previous then it will need to be done separately
       if (
-        a.fromInternal !== lastSwap.fromInternal ||
-        a.toInternal !== lastSwap.toInternal ||
-        a.receiver !== lastSwap.receiver ||
-        a.sender !== lastSwap.sender
+        a.fromInternal !== previousSwap.fromInternal ||
+        a.toInternal !== previousSwap.toInternal ||
+        a.receiver !== previousSwap.receiver ||
+        a.sender !== previousSwap.sender
       ) {
         if (batchSwaps.swaps.length > 0) {
           orderedActions.push(batchSwaps);
           batchSwaps = cloneDeep(EMPTY_BATCHSWAP_ACTION);
-          batchSwaps.assets = assets;
-          batchSwaps.limits = Array(assets.length).fill(BigNumber.from('0'));
+          batchSwaps.assets = a.assets;
+          batchSwaps.limits = Array(a.assets.length).fill(BigNumber.from('0'));
         }
       }
-      batchSwaps.swaps.push(a.swap);
+      batchSwaps.swaps.push(a.swaps[0]);
       batchSwaps.opRef.push(...a.opRef);
       batchSwaps.fromInternal = a.fromInternal;
       batchSwaps.toInternal = a.toInternal;
@@ -209,29 +207,28 @@ export function batchSwapActions(
       if (a.hasTokenIn) {
         batchSwaps.hasTokenIn = true;
         // We need to add amount for each swap that uses tokenIn to get correct total
-        batchSwaps.limits[a.swap.assetInIndex] = batchSwaps.limits[
-          a.swap.assetInIndex
+        batchSwaps.limits[a.swaps[0].assetInIndex] = batchSwaps.limits[
+          a.swaps[0].assetInIndex
         ].add(a.amountIn);
       } else {
         // This will be a chained swap/input amount
-        batchSwaps.limits[a.swap.assetInIndex] = MaxInt256;
+        batchSwaps.limits[a.swaps[0].assetInIndex] = MaxInt256;
       }
       if (a.hasTokenOut) {
         // We need to add amount for each swap that uses tokenOut to get correct total (should be negative)
         batchSwaps.hasTokenOut = true;
-        batchSwaps.limits[a.swap.assetOutIndex] = batchSwaps.limits[
-          a.swap.assetOutIndex
+        batchSwaps.limits[a.swaps[0].assetOutIndex] = batchSwaps.limits[
+          a.swaps[0].assetOutIndex
         ].sub(a.minOut);
       }
-      lastSwap = a;
+      previousSwap = a;
     } else {
       // Non swap action
       if (batchSwaps.swaps.length > 0) {
         orderedActions.push(batchSwaps);
         // new batchSwap collection as there is a chained join/exit inbetween
         batchSwaps = cloneDeep(EMPTY_BATCHSWAP_ACTION);
-        batchSwaps.assets = assets;
-        batchSwaps.limits = Array(assets.length).fill(BigNumber.from('0'));
+        isFirstSwap = true;
       }
       orderedActions.push(a);
     }
@@ -246,10 +243,7 @@ export function batchSwapActions(
  * @param assets
  * @returns
  */
-export function orderActions(
-  actions: Actions[],
-  assets: string[]
-): OrderedActions[] {
+export function orderActions(actions: Actions[], assets: string[]): Actions[] {
   const categorizedActions = categorizeActions(actions);
   const orderedActions = batchSwapActions(categorizedActions, assets);
   return orderedActions;

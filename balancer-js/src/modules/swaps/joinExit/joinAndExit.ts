@@ -185,7 +185,7 @@ export function getActions(
       );
       // TODO - Should be able to remove this
       if ('toInternal' in previousAction) {
-        if (previousAction.type === ActionType.Swap && amount === '0') {
+        if (previousAction.type === ActionType.BatchSwap && amount === '0') {
           /*
         If its part of a multihop swap the amount will be 0 (and should remain 0)
         The source will be same as previous swap so set previous receiver to match sender. Receiver set as is.
@@ -196,7 +196,7 @@ export function getActions(
           swapAction.sender = previousAction.receiver;
           swapAction.fromInternal = previousAction.fromInternal;
           swapAction.amountIn = '0';
-          swapAction.swap.amount = '0';
+          swapAction.swaps[0].amount = '0';
         }
       }
       opRefKey = newOpRefKey;

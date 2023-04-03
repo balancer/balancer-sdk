@@ -6,7 +6,7 @@ import {
   EncodeBatchSwapInput,
 } from '@/modules/relayer/relayer.module';
 import { FundManagement, SwapType } from '../../types';
-import { ActionStep, ActionType, SwapAction, BatchSwapAction } from './types';
+import { ActionStep, ActionType, BatchSwapAction } from './types';
 import {
   getActionStep,
   getActionAmount,
@@ -42,7 +42,7 @@ export function createSwapAction(
   pools: SubgraphPoolBase[],
   user: string,
   relayer: string
-): [SwapAction, number] {
+): [BatchSwapAction, number] {
   const actionStep = getActionStep(
     mainTokenInIndex,
     mainTokenOutIndex,
@@ -52,7 +52,7 @@ export function createSwapAction(
   // Will get actual amount if input or chain amount if part of chain
   const amountIn = getActionAmount(
     swap.amount,
-    ActionType.Swap,
+    ActionType.BatchSwap,
     actionStep,
     opRefKey
   );
@@ -99,13 +99,13 @@ export function createSwapAction(
     receiver = relayer;
   }
 
-  const swapAction: SwapAction = {
-    type: ActionType.Swap,
+  const swapAction: BatchSwapAction = {
+    type: ActionType.BatchSwap,
     opRef: opRef.key ? [opRef] : [],
     minOut,
     amountIn,
     assets,
-    swap: swap,
+    swaps: [swap],
     hasTokenIn,
     hasTokenOut,
     fromInternal,
@@ -113,6 +113,8 @@ export function createSwapAction(
     isBptIn,
     sender,
     receiver,
+    limits: assets.map(() => BigNumber.from(0)),
+    approveTokens: [],
   };
   return [swapAction, newOpRefKey];
 }
