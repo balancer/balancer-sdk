@@ -7,6 +7,8 @@ import { BalancerSDK } from '@/modules/sdk.module';
 import { FXPool__factory } from '@/contracts';
 import { Contract } from '@ethersproject/contracts';
 import { expect } from 'chai';
+import { parseFixed } from '@ethersproject/bignumber';
+import { SolidityMaths } from '@/lib/utils/solidityMaths';
 
 dotenv.config();
 
@@ -50,8 +52,13 @@ describe('FX Pool - Calculate Liquidity', () => {
     const liquidityFromContract = (
       await poolContract.liquidity()
     ).total_.toBigInt();
-    console.log(liquidityFromContract);
-    console.log(liquidity);
-    expect(parseFloat(liquidity)).to.be.gt(0);
+    const liquidityBigInt = parseFixed(liquidity, 18).toBigInt();
+    // expecting 5% of margin error
+    expect(
+      SolidityMaths.divDownFixed(liquidityBigInt, liquidityFromContract) <
+        parseFixed('1.05', 18).toBigInt() &&
+        SolidityMaths.divDownFixed(liquidityBigInt, liquidityFromContract) >
+          parseFixed('0.95', 18).toBigInt()
+    ).to.be.true;
   });
 });
