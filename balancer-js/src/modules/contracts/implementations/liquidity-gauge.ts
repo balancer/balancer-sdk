@@ -1,9 +1,14 @@
 import { Provider } from '@ethersproject/providers';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Contract } from '@ethersproject/contracts';
-import abi from '@/lib/abi/LiquidityGaugeV5.json';
+import { LiquidityGaugeV5__factory } from '@/contracts';
 
 export const LiquidityGauge = (
   address: string,
   signerOrProvider: Signer | Provider
-): Contract => new Contract(address, abi, signerOrProvider);
+): Contract =>
+  new Contract(
+    address,
+    LiquidityGaugeV5__factory.createInterface(),
+    signerOrProvider
+  );
