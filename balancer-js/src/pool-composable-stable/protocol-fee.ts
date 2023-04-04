@@ -50,6 +50,8 @@ export default class ComposableStableProtocolFee {
     // `protocol percentage = to mint / (current supply + to mint)`.
     // Solving for `to mint`, we arrive at:
     // `to mint = current supply * protocol percentage / (1 - protocol percentage)`.
+    console.log(totalSharesEvm);
+    console.log(protocolFeePct);
     const bptProtocolFeeAmount = SolidityMaths.divDownFixed(
       SolidityMaths.mulDownFixed(totalSharesEvm, protocolFeePct),
       SolidityMaths.complementFixed(protocolFeePct)
