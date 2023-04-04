@@ -3,13 +3,12 @@ import { ADDRESSES } from './addresses';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { ExitPoolRequest } from '@/types';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
-import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { MaxInt256 } from '@ethersproject/constants';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-// TODO - Ask Nico to update Typechain?
-import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
-const balancerRelayerInterface = new Interface(balancerRelayerAbi);
+import { RelayerV3__factory } from '@/contracts';
+
+const balancerRelayerInterface = RelayerV3__factory.createInterface();
 
 const EXIT_MIMATIC = Relayer.toChainedReference('20');
 const EXIT_DAI = Relayer.toChainedReference('21');

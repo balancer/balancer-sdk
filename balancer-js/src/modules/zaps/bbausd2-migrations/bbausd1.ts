@@ -3,11 +3,11 @@ import { Relayer } from '@/modules/relayer/relayer.module';
 import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
 import { Interface } from '@ethersproject/abi';
 // TODO - Ask Nico to update Typechain?
-import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Zero } from '@ethersproject/constants';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-const balancerRelayerInterface = new Interface(balancerRelayerAbi);
+import { BalancerRelayer__factory } from '@/contracts';
+const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
 const SWAP_RESULT_BBAUSD = Relayer.toChainedReference('24');
 export class BbaUsd1Builder {

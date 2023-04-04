@@ -1,8 +1,10 @@
 import { Contract } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/providers';
-import RelayerV3ABI from '@/lib/abi/BalancerRelayer.json';
-import RelayerV4ABI from '@/lib/abi/RelayerV4.json';
-import RelayerV5ABI from '@/lib/abi/RelayerV5.json';
+import {
+  RelayerV3__factory,
+  RelayerV4__factory,
+  RelayerV5__factory,
+} from '@/contracts';
 
 export const Relayer = (
   address: string,
@@ -11,11 +13,23 @@ export const Relayer = (
 ): Contract => {
   switch (version) {
     case 3:
-      return new Contract(address, RelayerV3ABI, provider);
+      return new Contract(
+        address,
+        RelayerV3__factory.createInterface(),
+        provider
+      );
     case 4:
-      return new Contract(address, RelayerV4ABI, provider);
+      return new Contract(
+        address,
+        RelayerV4__factory.createInterface(),
+        provider
+      );
     case 5:
-      return new Contract(address, RelayerV5ABI, provider);
+      return new Contract(
+        address,
+        RelayerV5__factory.createInterface(),
+        provider
+      );
     default:
       throw new Error('relayer not supported');
   }

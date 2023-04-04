@@ -1,14 +1,14 @@
-import { StablePoolEncoder } from '@/pool-stable/encoder';
-import { ADDRESSES } from './addresses';
-import { Relayer } from '@/modules/relayer/relayer.module';
-import { ExitPoolRequest } from '@/types';
-import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
-import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { MaxInt256 } from '@ethersproject/constants';
-// TODO - Ask Nico to update Typechain?
-import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
-const balancerRelayerInterface = new Interface(balancerRelayerAbi);
+
+import { RelayerV3__factory } from '@/contracts';
+import { Relayer } from '@/modules/relayer/relayer.module';
+import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
+import { StablePoolEncoder } from '@/pool-stable/encoder';
+import { ExitPoolRequest } from '@/types';
+import { ADDRESSES } from './addresses';
+
+const balancerRelayerInterface = RelayerV3__factory.createInterface();
 
 const SWAP_RESULT = Relayer.toChainedReference('0');
 const EXIT_RESULTS: BigNumber[] = [];
