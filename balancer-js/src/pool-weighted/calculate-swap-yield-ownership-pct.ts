@@ -4,31 +4,31 @@ export const calculateSwapYieldOwnershipPct = ({
   athRateProduct,
   currentInvariant,
   exemptedTokens,
-  lastJoinExitInvariant,
-  parsedPriceRates,
-  parsedWeights,
+  lastPostJoinExitInvariant,
+  priceRates,
+  weights,
   protocolSwapFeePct,
   protocolYieldFeePct,
 }: {
-  athRateProduct: string;
+  athRateProduct: bigint;
   currentInvariant: bigint;
   exemptedTokens: boolean[];
-  lastJoinExitInvariant: string;
-  parsedPriceRates: string[];
-  parsedWeights: string[];
-  protocolSwapFeePct: string;
-  protocolYieldFeePct: string;
+  lastPostJoinExitInvariant: bigint;
+  priceRates: bigint[];
+  weights: bigint[];
+  protocolSwapFeePct: bigint;
+  protocolYieldFeePct: bigint;
 }): bigint => {
   const protocolSwapFeeOwnershipPct = _getSwapProtocolFeesPoolPercentage(
     currentInvariant,
-    lastJoinExitInvariant,
+    lastPostJoinExitInvariant,
     protocolSwapFeePct
   );
   const protocolYieldFeeOwnershipPct = _getYieldProtocolFeesPoolPercentage(
     athRateProduct,
     exemptedTokens,
-    parsedPriceRates,
-    parsedWeights,
+    priceRates,
+    weights,
     protocolYieldFeePct
   );
   const poolOwnershipPercentage = SolidityMaths.add(
@@ -40,18 +40,18 @@ export const calculateSwapYieldOwnershipPct = ({
 
 const _getSwapProtocolFeesPoolPercentage = (
   currentInvariant: bigint,
-  lastJoinExitInvariant: string,
-  protocolSwapFeePct: string
+  lastPostJoinExitInvariant: bigint,
+  protocolSwapFeePct: bigint
 ): bigint => {
   if (
-    BigInt(protocolSwapFeePct) <= BigInt(0) ||
-    currentInvariant <= BigInt(lastJoinExitInvariant)
+    protocolSwapFeePct <= BigInt(0) ||
+    currentInvariant <= lastPostJoinExitInvariant
   ) {
     return BigInt(0);
   }
   const invariantRatio = SolidityMaths.divDownFixed(
     currentInvariant,
-    BigInt(lastJoinExitInvariant)
+    lastPostJoinExitInvariant
   );
   const swapFeePercentage = SolidityMaths.sub(
     ONE,
@@ -59,23 +59,20 @@ const _getSwapProtocolFeesPoolPercentage = (
   );
   const protocolSwapFeeGrowthPct = SolidityMaths.mulDownFixed(
     swapFeePercentage,
-    BigInt(protocolSwapFeePct)
+    protocolSwapFeePct
   );
   return protocolSwapFeeGrowthPct;
 };
 
 const _getYieldProtocolFeesPoolPercentage = (
-  athRateProduct: string,
+  athRateProduct: bigint,
   exemptedTokens: boolean[],
-  parsedPriceRates: string[],
-  parsedWeights: string[],
-  protocolYieldFeePct: string
+  priceRates: bigint[],
+  weights: bigint[],
+  protocolYieldFeePct: bigint
 ): bigint => {
-  const rateProduct = calculateRateProduct(parsedWeights, parsedPriceRates);
-  if (
-    BigInt(athRateProduct) >= BigInt(rateProduct) ||
-    BigInt(protocolYieldFeePct) <= 0
-  ) {
+  const rateProduct = calculateRateProduct(weights, priceRates);
+  if (athRateProduct >= rateProduct || protocolYieldFeePct <= 0) {
     return BigInt(0);
   }
   const rateProductRatio = SolidityMaths.divDownFixed(
@@ -94,14 +91,14 @@ const _getYieldProtocolFeesPoolPercentage = (
 };
 
 const calculateRateProduct = (
-  normalizedWeights: string[],
-  priceRates: string[]
+  normalizedWeights: bigint[],
+  priceRates: bigint[]
 ): bigint => {
   const rateProduct = normalizedWeights.reduce(
     (acc, weight, index) =>
       SolidityMaths.mulDownFixed(
         acc,
-        SolidityMaths.powDownFixed(BigInt(priceRates[index]), BigInt(weight))
+        SolidityMaths.powDownFixed(priceRates[index], weight)
       ),
     BigInt(1)
   );

@@ -5,15 +5,17 @@ import { WeightedMaths } from '@balancer-labs/sor';
 import { calculateSwapYieldOwnershipPct } from '@/pool-weighted/calculate-swap-yield-ownership-pct';
 
 export default class WeightedV2ProtocolFee {
-  static calculateProtocolFees(pool: Pool): bigint {
+  static async calculateProtocolFees(pool: Pool): Promise<bigint> {
     const parsedPool = parsePoolInfo(pool);
     const currentInvariant = WeightedMaths._calculateInvariant(
-      parsedPool.parsedWeights.map(BigInt),
-      parsedPool.upScaledBalances.map(BigInt)
+      parsedPool.weights,
+      parsedPool.upScaledBalances
     );
+    const athRateProduct = BigInt(0);
     const protocolFeeAmounts =
       WeightedV2ProtocolFee.getDueBPTProtocolFeeAmounts({
         ...parsedPool,
+        athRateProduct,
         currentInvariant,
       });
     return protocolFeeAmounts;
@@ -23,30 +25,30 @@ export default class WeightedV2ProtocolFee {
     athRateProduct,
     currentInvariant,
     exemptedTokens,
-    lastJoinExitInvariant,
-    parsedPriceRates,
-    parsedWeights,
+    lastPostJoinExitInvariant,
+    priceRates,
+    weights,
     protocolSwapFeePct,
     protocolYieldFeePct,
-    totalShares,
+    totalSharesEvm,
   }: {
-    athRateProduct: string;
+    athRateProduct: bigint;
     currentInvariant: bigint;
     exemptedTokens: boolean[];
-    lastJoinExitInvariant: string;
-    parsedPriceRates: string[];
-    parsedWeights: string[];
-    protocolSwapFeePct: string;
-    protocolYieldFeePct: string;
-    totalShares: string;
+    lastPostJoinExitInvariant: bigint;
+    priceRates: bigint[];
+    weights: bigint[];
+    protocolSwapFeePct: bigint;
+    protocolYieldFeePct: bigint;
+    totalSharesEvm: bigint;
   }): bigint => {
     const poolOwnershipPercentage = calculateSwapYieldOwnershipPct({
       athRateProduct,
       currentInvariant,
       exemptedTokens,
-      lastJoinExitInvariant,
-      parsedPriceRates,
-      parsedWeights,
+      lastPostJoinExitInvariant,
+      priceRates,
+      weights,
       protocolSwapFeePct,
       protocolYieldFeePct,
     });
@@ -55,7 +57,7 @@ export default class WeightedV2ProtocolFee {
     // Solving for `bptAmount`, we arrive at:
     // `bptAmount = totalSupply * poolOwnershipPercentage / (1 - poolOwnershipPercentage)`.
     const bptAmount = SolidityMaths.divDownFixed(
-      SolidityMaths.mulUpFixed(BigInt(totalShares), poolOwnershipPercentage),
+      SolidityMaths.mulUpFixed(totalSharesEvm, poolOwnershipPercentage),
       SolidityMaths.complementFixed(poolOwnershipPercentage)
     );
     return bptAmount;

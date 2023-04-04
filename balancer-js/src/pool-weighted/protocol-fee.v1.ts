@@ -1,5 +1,5 @@
 import { Pool } from '@/types';
-import { parseFixed, parsePoolInfo } from '@/lib/utils';
+import { parsePoolInfo } from '@/lib/utils';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { calcDueTokenProtocolSwapFeeAmount } from '@/pool-weighted/calculate-protocol-fee-token-amount';
 import { WeightedMaths } from '@balancer-labs/sor';
@@ -26,7 +26,7 @@ export default class WeightedV1ProtocolFee {
     protocolSwapFeePct,
   }: {
     upScaledBalances: bigint[];
-    lastPostJoinExitInvariant: string;
+    lastPostJoinExitInvariant: bigint;
     weights: bigint[];
     protocolSwapFeePct: bigint;
     currentInvariant: bigint;
@@ -35,14 +35,11 @@ export default class WeightedV1ProtocolFee {
     if (BigInt(protocolSwapFeePct) === BigInt(0)) {
       return protocolFeeAmounts;
     }
-    const normalizedWeightsBigInt = weights;
-    const maxWeightTokenIndex = normalizedWeightsBigInt.indexOf(
-      SolidityMaths.max(normalizedWeightsBigInt)
-    );
+    const maxWeightTokenIndex = weights.indexOf(SolidityMaths.max(weights));
     protocolFeeAmounts[maxWeightTokenIndex] = calcDueTokenProtocolSwapFeeAmount(
-      BigInt(upScaledBalances[maxWeightTokenIndex]),
-      normalizedWeightsBigInt[maxWeightTokenIndex],
-      BigInt(lastPostJoinExitInvariant),
+      upScaledBalances[maxWeightTokenIndex],
+      weights[maxWeightTokenIndex],
+      lastPostJoinExitInvariant,
       currentInvariant,
       protocolSwapFeePct
     );

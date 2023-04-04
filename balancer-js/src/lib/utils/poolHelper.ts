@@ -32,9 +32,9 @@ type ParsedPoolInfo = {
   upScaledBalances: bigint[];
   upScaledBalancesWithoutBpt: bigint[];
   totalSharesEvm: bigint;
-  lastJoinExitInvariant: string;
-  protocolSwapFeePct: string;
-  protocolYieldFeePct: string;
+  lastPostJoinExitInvariant: bigint;
+  protocolSwapFeePct: bigint;
+  protocolYieldFeePct: bigint;
 };
 
 /**
@@ -135,7 +135,7 @@ export const parsePoolInfo = (
   const protocolYieldFeePct = parseFixed(
     pool.protocolYieldFeeCache || '0',
     18
-  ).toString();
+  ).toBigInt();
   const scalingFactorsWithoutBpt = [...scalingFactors];
   const scalingFactorsRawWithoutBpt = [...scalingFactorsRaw];
   const poolTokensWithoutBpt = [...poolTokens];
@@ -176,7 +176,9 @@ export const parsePoolInfo = (
     totalSharesEvm: parseFixed(pool.totalShares || '0', 18).toBigInt(),
     protocolSwapFeePct,
     protocolYieldFeePct,
-    lastJoinExitInvariant: pool.lastPostJoinExitInvariant || '0',
+    lastPostJoinExitInvariant: parseFixed(
+      pool.lastPostJoinExitInvariant || '0'
+    ).toBigInt(),
     exemptedTokens,
   };
 };

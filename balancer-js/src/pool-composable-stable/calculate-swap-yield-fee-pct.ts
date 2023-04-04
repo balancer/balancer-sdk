@@ -3,8 +3,8 @@ import { StableMaths } from '@balancer-labs/sor';
 import { BigNumber } from '@ethersproject/bignumber';
 
 export const calculateSwapYieldFeePct = (
-  amplificationParameter: string,
-  balances: string[],
+  amplificationParameter: bigint,
+  balances: bigint[],
   currentPriceRates: bigint[],
   exemptedTokens: boolean[],
   lastInvariant: bigint,
@@ -64,14 +64,14 @@ export const calculateSwapYieldFeePct = (
 };
 
 const getSwapFeeGrowthInvariant = (
-  balances: string[],
-  amplificationParameter: string,
+  balances: bigint[],
+  amplificationParameter: bigint,
   currentPriceRates: bigint[],
   oldPriceRates: bigint[]
 ): bigint => {
   const balancesWithOldPriceRate = balances.map((balance, index) =>
     SolidityMaths.divDownFixed(
-      SolidityMaths.mulDownFixed(BigInt(balance), oldPriceRates[index]),
+      SolidityMaths.mulDownFixed(balance, oldPriceRates[index]),
       currentPriceRates[index]
     ).toString()
   );
@@ -84,8 +84,8 @@ const getSwapFeeGrowthInvariant = (
 };
 
 const getNonExemptedYieldGrowthInvariant = (
-  balances: string[],
-  amplificationParameter: string,
+  balances: bigint[],
+  amplificationParameter: bigint,
   currentPriceRates: bigint[],
   oldPriceRates: bigint[],
   exemptedTokens: boolean[]
@@ -94,7 +94,7 @@ const getNonExemptedYieldGrowthInvariant = (
     (balance, index) =>
       exemptedTokens[index]
         ? SolidityMaths.divDownFixed(
-            SolidityMaths.mulDownFixed(BigInt(balance), oldPriceRates[index]),
+            SolidityMaths.mulDownFixed(balance, oldPriceRates[index]),
             currentPriceRates[index]
           ).toString()
         : balance

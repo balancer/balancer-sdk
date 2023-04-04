@@ -24,7 +24,7 @@ export default class StableProtocolFee {
   }: {
     ampWithPrecision: bigint;
     upScaledBalances: bigint[];
-    lastPostJoinExitInvariant: string;
+    lastPostJoinExitInvariant: bigint;
     higherBalanceTokenIndex: number;
     protocolSwapFeePct: bigint;
   }): bigint[] => {
@@ -35,7 +35,7 @@ export default class StableProtocolFee {
       calculateBalanceGivenInvariantAndAllOtherBalances({
         amplificationParameter: ampWithPrecision,
         balances: upScaledBalances.map(BigInt),
-        invariant: parseFixed(lastPostJoinExitInvariant, 18).toBigInt(),
+        invariant: lastPostJoinExitInvariant,
         tokenIndex: higherBalanceTokenIndex,
       });
     const higherBalance = BigInt(upScaledBalances[higherBalanceTokenIndex]);

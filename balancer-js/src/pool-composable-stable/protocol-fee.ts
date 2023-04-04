@@ -12,35 +12,35 @@ export default class ComposableStableProtocolFee {
   }
 
   static calDueBPTProtocolFeeAmount = ({
-    parsedAmp,
+    ampWithPrecision,
     upScaledBalancesWithoutBpt,
-    parsedPriceRates,
+    priceRates,
     exemptedTokens,
-    lastJoinExitInvariant,
-    parsedOldPriceRates,
+    lastPostJoinExitInvariant,
+    oldPriceRates,
     protocolSwapFeePct,
     protocolYieldFeePct,
-    totalShares,
+    totalSharesEvm,
   }: {
-    parsedAmp: string;
-    upScaledBalancesWithoutBpt: string[];
-    parsedPriceRates: string[];
+    ampWithPrecision: bigint;
+    upScaledBalancesWithoutBpt: bigint[];
+    priceRates: bigint[];
     exemptedTokens: boolean[];
-    lastJoinExitInvariant: string;
-    parsedOldPriceRates: string[];
-    protocolSwapFeePct: string;
-    protocolYieldFeePct: string;
-    totalShares: string;
+    lastPostJoinExitInvariant: bigint;
+    oldPriceRates: bigint[];
+    protocolSwapFeePct: bigint;
+    protocolYieldFeePct: bigint;
+    totalSharesEvm: bigint;
   }): bigint => {
     const protocolFeePct = calculateSwapYieldFeePct(
-      parsedAmp,
+      ampWithPrecision,
       upScaledBalancesWithoutBpt,
-      parsedPriceRates.map(BigInt),
+      priceRates,
       exemptedTokens,
-      BigInt(lastJoinExitInvariant),
-      parsedOldPriceRates.map(BigInt),
-      BigInt(protocolSwapFeePct),
-      BigInt(protocolYieldFeePct)
+      lastPostJoinExitInvariant,
+      oldPriceRates,
+      protocolSwapFeePct,
+      protocolYieldFeePct
     );
 
     // Since this fee amount will be minted as BPT, which increases the total supply, we need to mint
@@ -51,7 +51,7 @@ export default class ComposableStableProtocolFee {
     // Solving for `to mint`, we arrive at:
     // `to mint = current supply * protocol percentage / (1 - protocol percentage)`.
     const bptProtocolFeeAmount = SolidityMaths.divDownFixed(
-      SolidityMaths.mulDownFixed(BigInt(totalShares), protocolFeePct),
+      SolidityMaths.mulDownFixed(totalSharesEvm, protocolFeePct),
       SolidityMaths.complementFixed(protocolFeePct)
     );
     return bptProtocolFeeAmount;
