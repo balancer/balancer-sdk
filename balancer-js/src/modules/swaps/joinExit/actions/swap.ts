@@ -7,29 +7,17 @@ import {
   OutputReference,
 } from '@/modules/relayer/relayer.module';
 import { FundManagement, SwapType } from '../../types';
-import { ActionStep, ActionType, Action, CallData } from './types';
-import {
-  getActionStep,
-  getActionAmount,
-  getActionMinOut,
-  getActionOutputRef,
-} from './helpers';
+import { ActionType, Action, CallData } from './types';
+import { BaseAction } from '.';
 
-export class Swap implements Action {
+export class Swap extends BaseAction implements Action {
   type: ActionType.BatchSwap;
   swaps: SwapV2[];
-  nextOpRefKey: number;
-  hasTokenOut: boolean;
-  private hasTokenIn: boolean;
-  private toInternal = false;
-  private fromInternal = false;
-  private sender = '';
-  private receiver = '';
   private limits: BigNumber[];
   private approveTokens: string[] = [];
-  private opRef: OutputReference[] = [];
-  private minOut: string;
-  private amountIn: string;
+  opRef: OutputReference[] = [];
+  fromInternal;
+  toInternal;
 
   constructor(
     swap: SwapV2,
@@ -42,51 +30,29 @@ export class Swap implements Action {
     private user: string,
     private relayer: string
   ) {
-    this.type = ActionType.BatchSwap;
-    const actionStep = getActionStep(
+    super(
       mainTokenInIndex,
       mainTokenOutIndex,
       swap.assetInIndex,
-      swap.assetOutIndex
-    );
-    // Will get actual amount if input or chain amount if part of chain
-    this.amountIn = getActionAmount(
+      swap.assetOutIndex,
       swap.amount,
-      ActionType.BatchSwap,
-      actionStep,
-      opRefKey
+      swap.returnAmount ?? '0',
+      opRefKey,
+      slippage,
+      user,
+      relayer
     );
+    this.type = ActionType.BatchSwap;
     // Updates swap data to use chainedRef if required
     this.swaps = [{ ...swap, amount: this.amountIn }];
-    // This will be 0 if not a mainTokenOut action otherwise amount using slippage
-    this.minOut = getActionMinOut(swap.returnAmount ?? '0', slippage);
-    this.hasTokenIn = this.actionHasTokenIn(actionStep);
-    this.hasTokenOut = this.actionHasTokenOut(actionStep);
-
-    // This will set opRef for next chained action if required
-    const [opRef, nextOpRefKey] = getActionOutputRef(
-      actionStep,
-      swap.assetOutIndex,
-      opRefKey
-    );
-    this.nextOpRefKey = nextOpRefKey;
-    if (opRef.index) {
-      this.opRef.push(opRef);
-    }
     const isBptIn = this.isBpt(pools, assets[swap.assetInIndex]);
     if (isBptIn) {
       // Older pools don't have pre-approval so need to add this as a step
       this.approveTokens.push(assets[swap.assetInIndex]);
     }
     this.fromInternal = this.getFromInternal(this.hasTokenIn, isBptIn);
-    this.toInternal = this.getToInternal(
-      this.hasTokenOut,
-      pools,
-      assets,
-      swap.assetOutIndex
-    );
-    this.sender = this.getSender(this.hasTokenIn, user, relayer);
-    this.receiver = this.getReceiver(this.hasTokenOut, user, relayer);
+    const isBptOut = this.isBpt(pools, assets[swap.assetOutIndex]);
+    this.toInternal = this.getToInternal(this.hasTokenOut, isBptOut);
     this.limits = this.getLimits(
       assets,
       swap.assetInIndex,
@@ -96,38 +62,9 @@ export class Swap implements Action {
       this.hasTokenOut,
       this.minOut
     );
-  }
-
-  private actionHasTokenIn(actionStep: ActionStep): boolean {
-    return actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn
-      ? true
-      : false;
-  }
-
-  private actionHasTokenOut(actionStep: ActionStep): boolean {
-    return actionStep === ActionStep.Direct ||
-      actionStep === ActionStep.TokenOut
-      ? true
-      : false;
-  }
-
-  private getToInternal(
-    hasTokenOut: boolean,
-    pools: SubgraphPoolBase[],
-    assets: string[],
-    assetOutIndex: number
-  ): boolean {
-    // exits - can't exit using BPT from internal balances
-    // Because of ^ we can assume that any tokenOut BPT is going to external (either to user or exit)
-    if (hasTokenOut || this.isBpt(pools, assets[assetOutIndex])) return false;
-    else return true;
-  }
-
-  private getFromInternal(hasTokenIn: boolean, isBptIn: boolean): boolean {
-    // joins - can't join a pool and send BPT to internal balances
-    // Because of ^ we can assume that any BPT is coming from external (either from user or join)
-    if (hasTokenIn || isBptIn) return false;
-    else return true;
+    if (this.opRefStart.index) {
+      this.opRef.push(this.opRefStart);
+    }
   }
 
   private getLimits(
@@ -151,26 +88,6 @@ export class Swap implements Action {
       limits[assetOutIndex] = BigNumber.from(minOut);
     }
     return limits;
-  }
-
-  private getSender(
-    hasTokenIn: boolean,
-    user: string,
-    relayer: string
-  ): string {
-    // tokenIn/Out will come from/go to the user. Any other tokens are intermediate and will be from/to Relayer
-    if (hasTokenIn) return user;
-    else return relayer;
-  }
-
-  private getReceiver(
-    hasTokenOut: boolean,
-    user: string,
-    relayer: string
-  ): string {
-    // tokenIn/Out will come from/go to the user. Any other tokens are intermediate and will be from/to Relayer
-    if (hasTokenOut) return user;
-    else return relayer;
   }
 
   private updateLimits(limits: BigNumber[], newSwap: Swap): void {

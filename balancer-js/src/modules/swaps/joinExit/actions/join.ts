@@ -6,27 +6,15 @@ import {
 } from '@/modules/relayer/relayer.module';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { AssetHelpers } from '@/lib/utils';
-import { ActionStep, ActionType, Action, CallData } from './types';
-import {
-  getActionStep,
-  getActionAmount,
-  getActionMinOut,
-  getActionOutputRef,
-} from './helpers';
+import { ActionType, Action, CallData } from './types';
+import { BaseAction } from '.';
 
-export class Join implements Action {
+export class Join extends BaseAction implements Action {
   type: ActionType.Join;
   poolId: string;
-  nextOpRefKey: number;
-  hasTokenIn: boolean;
-  hasTokenOut: boolean;
-  private sender: string;
-  private receiver: string;
-  private fromInternal: boolean;
-  private tokenIn: string;
-  private amountIn: string;
-  private minAmountOut: string;
-  private opRef: OutputReference;
+  tokenIn: string;
+  opRef: OutputReference;
+  fromInternal;
 
   constructor(
     swap: SwapV2,
@@ -38,76 +26,23 @@ export class Join implements Action {
     user: string,
     relayerAddress: string
   ) {
-    this.type = ActionType.Join;
-    this.poolId = swap.poolId;
-    this.tokenIn = assets[swap.assetInIndex];
-
-    const actionStep = getActionStep(
+    super(
       mainTokenInIndex,
       mainTokenOutIndex,
       swap.assetInIndex,
-      swap.assetOutIndex
-    );
-    // Will get actual amount if input or chain amount if part of chain
-    this.amountIn = getActionAmount(
-      swap.amount,
-      ActionType.Join,
-      actionStep,
-      opRefKey
-    );
-    this.hasTokenIn = this.actionHasTokenIn(actionStep);
-    this.hasTokenOut = this.actionHasTokenOut(actionStep);
-    this.fromInternal = this.getFromInternal(this.hasTokenIn);
-    this.sender = this.getSender(this.hasTokenIn, user, relayerAddress);
-    this.receiver = this.getReceiver(this.hasTokenOut, user, relayerAddress);
-    // This will be 0 if not a mainTokenOut action otherwise amount using slippage
-    this.minAmountOut = getActionMinOut(swap.returnAmount ?? '0', slippage);
-    // This will set opRef for next chained action if required
-    const [opRef, nextOpRefKey] = getActionOutputRef(
-      actionStep,
       swap.assetOutIndex,
-      opRefKey
+      swap.amount,
+      swap.returnAmount ?? '0',
+      opRefKey,
+      slippage,
+      user,
+      relayerAddress
     );
-    this.opRef = opRef;
-    this.nextOpRefKey = nextOpRefKey;
-  }
-
-  private getFromInternal(hasTokenIn: boolean): boolean {
-    if (hasTokenIn) return false;
-    else return true;
-  }
-
-  private actionHasTokenIn(actionStep: ActionStep): boolean {
-    return actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn
-      ? true
-      : false;
-  }
-
-  private actionHasTokenOut(actionStep: ActionStep): boolean {
-    return actionStep === ActionStep.Direct ||
-      actionStep === ActionStep.TokenOut
-      ? true
-      : false;
-  }
-
-  private getSender(
-    hasTokenIn: boolean,
-    user: string,
-    relayer: string
-  ): string {
-    // tokenIn/Out will come from/go to the user. Any other tokens are intermediate and will be from/to Relayer
-    if (hasTokenIn) return user;
-    else return relayer;
-  }
-
-  private getReceiver(
-    hasTokenOut: boolean,
-    user: string,
-    relayer: string
-  ): string {
-    // tokenIn/Out will come from/go to the user. Any other tokens are intermediate and will be from/to Relayer
-    if (hasTokenOut) return user;
-    else return relayer;
+    this.type = ActionType.Join;
+    this.poolId = swap.poolId;
+    this.tokenIn = assets[swap.assetInIndex];
+    this.fromInternal = this.getFromInternal(this.hasTokenIn);
+    this.opRef = this.opRefStart;
   }
 
   public callData(
@@ -126,7 +61,7 @@ export class Join implements Action {
     // Uses exact amounts of tokens in
     maxAmountsIn[joinTokenIndex] = this.amountIn;
     // Variable amount of BPT out (this has slippage applied)
-    const bptAmountOut = this.minAmountOut;
+    const bptAmountOut = this.minOut;
     const userData = WeightedPoolEncoder.joinExactTokensInForBPTOut(
       maxAmountsIn,
       bptAmountOut
@@ -158,6 +93,6 @@ export class Join implements Action {
   }
 
   public getAmountOut(): string {
-    return this.hasTokenOut ? this.minAmountOut : '0';
+    return this.hasTokenOut ? this.minOut : '0';
   }
 }
