@@ -1,6 +1,6 @@
 import { Token, TokenPrices, Network } from '@/types';
 import { TOKENS } from '@/lib/constants/tokens';
-import { wrappedTokensMap as aaveWrappedMap } from '@/modules/data/token-yields/tokens/aave';
+import { wrappedTokensMap as aaveWrappedMap } from '@/modules/data/token-prices/aave-rates';
 import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 

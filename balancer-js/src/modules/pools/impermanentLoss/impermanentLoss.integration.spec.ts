@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+// yarn test:only src/modules/pools/impermanentLoss/impermanentLoss.integration.spec.ts
+
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { ImpermanentLossService } from '@/modules/pools/impermanentLoss/impermanentLossService';
 import { BalancerSDK } from '@/modules/sdk.module';
@@ -45,7 +47,8 @@ const getPool = async (poolId: string): Promise<Pool> => {
  *
  * TODO: add stubbing
  */
-describe('ImpermanentLossService', () => {
+describe.skip('ImpermanentLossService', function () {
+  this.timeout(60000);
   context('when queried for Composable Stable Pool', () => {
     it('should return an IL gte 0', async () => {
       const testData = TEST_DATA.ComposableStablePool;

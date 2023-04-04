@@ -53,14 +53,20 @@ export class BalancerSDK implements BalancerSDKRoot {
       config.subgraphQuery
     );
     this.swaps = new Swaps(this.config);
-    this.relayer = new Relayer(this.swaps);
+    this.relayer = new Relayer();
     this.pricing = new Pricing(config, this.swaps);
-    this.pools = new Pools(this.networkConfig, this.data);
 
     this.balancerContracts = new Contracts(
       this.networkConfig.addresses.contracts,
       sor.provider
     );
+
+    this.pools = new Pools(
+      this.networkConfig,
+      this.data,
+      this.balancerContracts
+    );
+
     this.zaps = new Zaps(this.networkConfig.chainId);
     if (this.data.liquidityGauges)
       this.claimService = new ClaimService(

@@ -51,31 +51,11 @@ export type BatchSwap = {
   outputReferences?: { index: BigNumberish; key: BigNumberish }[];
 };
 
-export interface FetchPoolsInput {
-  fetchPools: boolean;
-  fetchOnChain: boolean;
-}
-
-export interface QueryWithSorInput {
-  tokensIn: string[];
-  tokensOut: string[];
-  swapType: SwapType;
-  amounts: string[];
-  fetchPools: FetchPoolsInput;
-}
-
 export interface SwapInput {
   tokenIn: string;
   tokenOut: string;
   swapType: SwapType;
   amount: string;
-}
-
-export interface QueryWithSorOutput {
-  returnAmounts: string[];
-  swaps: BatchSwapStep[];
-  assets: string[];
-  deltas: string[];
 }
 
 export interface QuerySimpleFlashSwapParameters {

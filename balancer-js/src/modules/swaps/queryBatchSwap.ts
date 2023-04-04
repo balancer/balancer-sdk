@@ -1,14 +1,7 @@
 import { BigNumberish } from '@ethersproject/bignumber';
-import { AddressZero, Zero } from '@ethersproject/constants';
+import { AddressZero } from '@ethersproject/constants';
 import { SOR, SwapTypes, SwapInfo } from '@balancer-labs/sor';
-import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import {
-  SwapType,
-  BatchSwapStep,
-  FundManagement,
-  QueryWithSorInput,
-  QueryWithSorOutput,
-} from './types';
+import { SwapType, BatchSwapStep, FundManagement } from './types';
 import { Vault } from '@/contracts/Vault';
 
 /*
@@ -46,73 +39,6 @@ export async function queryBatchSwap(
 }
 
 /*
-Uses SOR to create a batchSwap which is then queried onChain.
-*/
-export async function queryBatchSwapWithSor(
-  sor: SOR,
-  vaultContract: Vault,
-  queryWithSor: QueryWithSorInput
-): Promise<QueryWithSorOutput> {
-  if (queryWithSor.fetchPools.fetchPools) await sor.fetchPools();
-
-  const swaps: BatchSwapStep[][] = [];
-  const assetArray: string[][] = [];
-  // get path information for each tokenIn
-  for (let i = 0; i < queryWithSor.tokensIn.length; i++) {
-    const swap = await getSorSwapInfo(
-      queryWithSor.tokensIn[i],
-      queryWithSor.tokensOut[i],
-      queryWithSor.swapType,
-      queryWithSor.amounts[i].toString(),
-      sor
-    );
-    if (!swap.returnAmount.gt(Zero))
-      // Throw here because swaps with 0 amounts has no path and has misleading result for query
-      throw new BalancerError(BalancerErrorCode.SWAP_ZERO_RETURN_AMOUNT);
-
-    swaps.push(swap.swaps);
-    assetArray.push(swap.tokenAddresses);
-  }
-
-  // Join swaps and assets together correctly
-  const batchedSwaps = batchSwaps(assetArray, swaps);
-
-  const returnTokens =
-    queryWithSor.swapType === SwapType.SwapExactIn
-      ? queryWithSor.tokensOut
-      : queryWithSor.tokensIn;
-  const returnAmounts: string[] = Array(returnTokens.length).fill('0');
-  let deltas: BigNumberish[] = Array(batchedSwaps.assets.length).fill('0');
-  try {
-    // Onchain query
-    deltas = await queryBatchSwap(
-      vaultContract,
-      queryWithSor.swapType,
-      batchedSwaps.swaps,
-      batchedSwaps.assets
-    );
-
-    if (deltas.length > 0) {
-      returnTokens.forEach(
-        (t, i) =>
-          (returnAmounts[i] =
-            deltas[batchedSwaps.assets.indexOf(t.toLowerCase())].toString() ??
-            Zero.toString())
-      );
-    }
-  } catch (err) {
-    throw new BalancerError(BalancerErrorCode.QUERY_BATCH_SWAP);
-  }
-
-  return {
-    returnAmounts,
-    swaps: batchedSwaps.swaps,
-    assets: batchedSwaps.assets,
-    deltas: deltas.map((d) => d.toString()),
-  };
-}
-
-/*
 Use SOR to get swapInfo for tokenIn>tokenOut.
 SwapInfos.swaps has path information.
 */
@@ -134,31 +60,4 @@ export async function getSorSwapInfo(
     amount
   );
   return swapInfo;
-}
-
-/*
-Format multiple individual swaps/assets into a single swap/asset.
-*/
-function batchSwaps(
-  assetArray: string[][],
-  swaps: BatchSwapStep[][]
-): { swaps: BatchSwapStep[]; assets: string[] } {
-  // asset addresses without duplicates
-  const newAssetArray = [...new Set(assetArray.flat())];
-
-  // Update indices of each swap to use new asset array
-  swaps.forEach((swap, i) => {
-    swap.forEach((poolSwap) => {
-      poolSwap.assetInIndex = newAssetArray.indexOf(
-        assetArray[i][poolSwap.assetInIndex]
-      );
-      poolSwap.assetOutIndex = newAssetArray.indexOf(
-        assetArray[i][poolSwap.assetOutIndex]
-      );
-    });
-  });
-
-  // Join Swaps into a single batchSwap
-  const batchedSwaps = swaps.flat();
-  return { swaps: batchedSwaps, assets: newAssetArray };
 }

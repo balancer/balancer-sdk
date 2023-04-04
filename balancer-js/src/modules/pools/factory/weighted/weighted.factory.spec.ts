@@ -1,149 +1,166 @@
 // yarn test:only ./src/modules/pools/factory/weighted/weighted.factory.spec.ts
-import { expect } from 'chai';
-import { Log, TransactionReceipt } from '@ethersproject/providers';
-import { ethers } from 'hardhat';
-import { Network, PoolType } from '@/types';
-import { ADDRESSES } from '@/test/lib/constants';
-import { BalancerSDK } from '@/modules/sdk.module';
-import { Interface, LogDescription } from '@ethersproject/abi';
-import { forkSetup } from '@/test/lib/utils';
-import dotenv from 'dotenv';
-import { isSameAddress } from '@/lib/utils';
-import { Vault__factory } from '@/contracts/factories/Vault__factory';
-import { WeightedPool__factory } from '@/contracts/factories/WeightedPool__factory';
-import { WeightedPoolFactory__factory } from '@/contracts/factories/WeightedPoolFactory__factory';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { Contract } from '@ethersproject/contracts';
+import { parseFixed } from '@ethersproject/bignumber';
+import { AddressZero } from '@ethersproject/constants';
+import { assert } from 'chai';
 
-dotenv.config();
+import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { BalancerSDK } from '@/modules/sdk.module';
+import { ADDRESSES } from '@/test/lib/constants';
+import { BalancerSdkConfig, Network, PoolType } from '@/types';
 
 const network = Network.MAINNET;
-const rpcUrl = 'http://127.0.0.1:8545';
-const alchemyRpcUrl = `${process.env.ALCHEMY_URL}`;
-const blockNumber = 16320000;
+const sdkConfig: BalancerSdkConfig = {
+  network,
+  rpcUrl: '',
+};
+const balancer = new BalancerSDK(sdkConfig);
 
-const name = 'My-Test-Pool-Name';
-const symbol = 'My-Test-Pool-Symbol';
-
-const addresses = ADDRESSES[network];
-
-const USDC_address = addresses.USDC.address;
-const USDT_address = addresses.USDT.address;
-
-const factoryAddress = `${BALANCER_NETWORK_CONFIG[network].addresses.contracts.weightedPoolFactory}`;
-const owner = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
-const tokenAddresses = [USDC_address, USDT_address];
-const swapFee = '0.01';
-const weights = [`${0.2e18}`, `${0.8e18}`];
-const slots = [addresses.USDC.slot, addresses.USDT.slot];
-const balances = [
-  parseFixed('100000', 6).toString(),
-  parseFixed('100000', 6).toString(),
-];
-describe('creating weighted pool', () => {
-  const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
-  const signer = provider.getSigner();
-  const sdkConfig = {
-    network,
-    rpcUrl,
-  };
-  const balancer = new BalancerSDK(sdkConfig);
-  const weightedPoolFactory = balancer.pools.poolFactory.of(PoolType.Weighted);
-  let poolAddress = '';
-
-  context('create and init join', async () => {
-    before(async () => {
-      await forkSetup(
-        signer,
-        tokenAddresses,
-        slots,
-        balances,
-        alchemyRpcUrl,
-        blockNumber,
-        false
+describe('Weighted Factory', async () => {
+  const factory = balancer.pools.poolFactory.of(PoolType.Weighted);
+  context('Create', async () => {
+    const rightCreateParameters = {
+      name: 'test-pool',
+      symbol: 'test-pool',
+      tokenAddresses: [
+        ADDRESSES[network].WETH.address,
+        ADDRESSES[network].DAI.address,
+      ],
+      normalizedWeights: [
+        parseFixed('0.5', 18).toString(),
+        parseFixed('0.5', 18).toString(),
+      ],
+      rateProviders: [AddressZero, AddressZero],
+      swapFeeEvm: parseFixed('0.01', 18).toString(),
+      owner: AddressZero,
+    };
+    it('should fail with swap fee 0', async () => {
+      assert.throws(
+        () =>
+          factory.create({
+            ...rightCreateParameters,
+            swapFeeEvm: '0',
+          }),
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.INVALID_SWAP_FEE_PERCENTAGE)
       );
     });
-    it('should create a pool', async () => {
-      const signerAddress = await signer.getAddress();
-      const { to, data } = weightedPoolFactory.create({
-        factoryAddress,
-        name,
-        symbol,
-        tokenAddresses,
-        weights,
-        swapFee,
-        owner,
-      });
-      const tx = await signer.sendTransaction({
-        from: signerAddress,
-        to,
-        data,
-        gasLimit: 30000000,
-      });
-      await tx.wait();
-      const receipt: TransactionReceipt = await provider.getTransactionReceipt(
-        tx.hash
+    it('should fail with swap fee greater than 1e18', async () => {
+      assert.throws(
+        () =>
+          factory.create({
+            ...rightCreateParameters,
+            swapFeeEvm: parseFixed('1.01', 17).toString(),
+          }),
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.INVALID_SWAP_FEE_PERCENTAGE)
       );
-
-      const weightedPoolFactoryInterface = new Interface(
-        WeightedPoolFactory__factory.abi
-      );
-
-      const poolCreationEvent: LogDescription | null | undefined = receipt.logs
-        .filter((log: Log) => {
-          return isSameAddress(log.address, factoryAddress);
-        })
-        .map((log) => {
-          return weightedPoolFactoryInterface.parseLog(log);
-        })
-        .find((parsedLog) => parsedLog?.name === 'PoolCreated');
-      if (poolCreationEvent) {
-        poolAddress = poolCreationEvent.args.pool;
-      }
-      expect(!!poolCreationEvent).to.be.true;
-      return;
     });
-    it('should init join a pool', async () => {
-      const signerAddress = await signer.getAddress();
-      const weightedPoolInterface = new Interface(WeightedPool__factory.abi);
-      const pool = new Contract(poolAddress, weightedPoolInterface, provider);
-      const poolId = await pool.getPoolId();
-      const amountsIn = [
-        parseFixed('2000', 6).toString(),
-        parseFixed('8000', 6).toString(),
-      ];
-      const initJoinParams = weightedPoolFactory.buildInitJoin({
-        joiner: signerAddress,
-        poolId,
-        poolAddress,
-        tokensIn: tokenAddresses,
-        amountsIn,
-      });
-      const tx = await signer.sendTransaction({
-        to: initJoinParams.to,
-        data: initJoinParams.data,
-        gasLimit: 30000000,
-      });
-      await tx.wait();
-      const receipt: TransactionReceipt = await provider.getTransactionReceipt(
-        tx.hash
+    it('should fail with input length mismatch', async () => {
+      assert.throws(
+        () =>
+          factory.create({
+            ...rightCreateParameters,
+            normalizedWeights: [
+              parseFixed('0.2', 18).toString(),
+              parseFixed('0.2', 18).toString(),
+              parseFixed('0.6', 18).toString(),
+            ],
+          }),
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.INPUT_LENGTH_MISMATCH)
       );
-      const vaultInterface = new Interface(Vault__factory.abi);
-      const poolInitJoinEvent: LogDescription | null | undefined = receipt.logs
-        .filter((log: Log) => {
-          return isSameAddress(log.address, initJoinParams.to);
-        })
-        .map((log) => {
-          return vaultInterface.parseLog(log);
-        })
-        .find((parsedLog) => parsedLog?.name === 'PoolBalanceChanged');
-      if (!poolInitJoinEvent) {
-        throw new Error('Expected poolInitJoinEvent to be truthy');
-      }
-      const deltas = poolInitJoinEvent.args['deltas'];
-      const deltasString = deltas.map((delta: BigNumber) => delta.toString());
-      expect(deltasString.sort()).deep.equal(amountsIn.sort());
+    });
+    it('should fail with more than 8 token addresses', async () => {
+      assert.throws(
+        () =>
+          factory.create({
+            ...rightCreateParameters,
+            rateProviders: Array(9).fill(AddressZero),
+            normalizedWeights: [
+              parseFixed('0.2', 18).toString(),
+              ...Array(8).fill(parseFixed('0.1', 18).toString()),
+            ],
+            tokenAddresses: [
+              ADDRESSES[network].WETH.address,
+              ADDRESSES[network].DAI.address,
+              ADDRESSES[network].USDC.address,
+              ADDRESSES[network].USDT.address,
+              ADDRESSES[network].WBTC.address,
+              ADDRESSES[network].BAL.address,
+              ADDRESSES[network].waUSDC.address,
+              ADDRESSES[network].WBTC.address,
+              ADDRESSES[network].auraBal.address,
+            ],
+          }),
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.ABOVE_MAX_TOKENS)
+      );
+    });
+    it('should fail with less than 2 token addresses', async () => {
+      assert.throws(
+        () =>
+          factory.create({
+            ...rightCreateParameters,
+            normalizedWeights: [parseFixed('1', 18).toString()],
+            rateProviders: [AddressZero],
+            tokenAddresses: [ADDRESSES[network].WETH.address],
+          }),
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.BELOW_MIN_TOKENS)
+      );
+    });
+    it('should fail with weight values that not sum 1e18', () => {
+      assert.throws(
+        () =>
+          factory.create({
+            ...rightCreateParameters,
+            normalizedWeights: [
+              parseFixed('0.2', 18).toString(),
+              parseFixed('0.2', 18).toString(),
+            ],
+          }),
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.INVALID_WEIGHTS)
+      );
+    });
+  });
+  context('Init Join', async () => {
+    const rightInitJoinParameters = {
+      joiner: AddressZero,
+      poolId: 'TestPoolId',
+      poolAddress: AddressZero,
+      amountsIn: [
+        parseFixed('10000', 18).toString(),
+        parseFixed('10000', 6).toString(),
+      ],
+      tokensIn: [
+        ADDRESSES[network].WETH.address,
+        ADDRESSES[network].DAI.address,
+      ],
+    };
+    it('should fail with poolId missing', () => {
+      assert.throws(
+        () => {
+          factory.buildInitJoin({
+            ...rightInitJoinParameters,
+            poolId: '',
+          });
+        },
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.NO_POOL_DATA)
+      );
+    });
+    it('should fail with input length mismatch', () => {
+      assert.throws(
+        () => {
+          factory.buildInitJoin({
+            ...rightInitJoinParameters,
+            amountsIn: ['0', '0', '0'],
+          });
+        },
+        BalancerError,
+        BalancerError.getMessage(BalancerErrorCode.INPUT_LENGTH_MISMATCH)
+      );
     });
   });
 });

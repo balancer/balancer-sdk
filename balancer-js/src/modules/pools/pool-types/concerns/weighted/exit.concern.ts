@@ -22,6 +22,8 @@ import {
   _upscaleArray,
 } from '@/lib/utils/solidityMaths';
 import { Pool } from '@/types';
+import { BasePoolEncoder } from '@/pool-base';
+import { WeightedPoolPriceImpact } from '../weighted/priceImpact.concern';
 
 interface SortedValues {
   poolTokens: string[];
@@ -66,17 +68,6 @@ type EncodeExitParams = Pick<ExitExactBPTInParameters, 'exiter'> & {
 };
 
 export class WeightedPoolExit implements ExitConcern {
-  /**
-   * Builds an exit transaction for a weighted pool given the exact BPT In
-   * @param exiter Address of the exiter of the pool
-   * @param pool Pool to be exited
-   * @param bptIn quantity of bpt inserted
-   * @param slippage Maximum slippage tolerance in bps i.e. 10000 = 100%, 1 = 0.01%
-   * @param shouldUnwrapNativeAsset Set true if the weth should be unwrapped to Eth
-   * @param wrappedNativeAsset Address of wrapped native asset for specific network config
-   * @param singleTokenOut The address of the token that will be singled withdrawn in the exit transaction,
-   *                          if not passed, the transaction will do a proportional exit where available
-   */
   buildExitExactBPTIn = ({
     exiter,
     pool,
@@ -127,10 +118,19 @@ export class WeightedPoolExit implements ExitConcern {
       userData,
     });
 
+    const priceImpactConcern = new WeightedPoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
     return {
       ...encodedData,
       expectedAmountsOut,
       minAmountsOut,
+      priceImpact,
     };
   };
 
@@ -168,12 +168,72 @@ export class WeightedPoolExit implements ExitConcern {
       exiter,
     });
 
+    const priceImpactConcern = new WeightedPoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      downScaledAmountsOut.map(BigInt),
+      BigInt(expectedBPTIn),
+      false
+    );
+
     return {
       ...encodedData,
       expectedBPTIn,
       maxBPTIn,
+      priceImpact,
     };
   };
+
+  buildRecoveryExit = ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+  }: Pick<
+    ExitExactBPTInParameters,
+    'exiter' | 'pool' | 'bptIn' | 'slippage'
+  >): ExitExactBPTInAttributes => {
+    this.checkInputsExactBPTIn({
+      bptIn,
+      singleTokenOut: undefined,
+      pool,
+      shouldUnwrapNativeAsset: false,
+    });
+    const sortedValues = parsePoolInfo(pool);
+    const { minAmountsOut, expectedAmountsOut } =
+      this.calcTokensOutGivenExactBptIn({
+        ...sortedValues,
+        bptIn,
+        slippage,
+        singleTokenOutIndex: -1,
+      });
+
+    const userData = BasePoolEncoder.recoveryModeExit(bptIn);
+
+    const encodedData = this.encodeExitPool({
+      poolTokens: sortedValues.poolTokens,
+      poolId: pool.id,
+      exiter,
+      minAmountsOut,
+      userData,
+    });
+
+    const priceImpactConcern = new WeightedPoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
+    return {
+      ...encodedData,
+      expectedAmountsOut,
+      minAmountsOut,
+      priceImpact,
+    };
+  };
+
   /**
    *  Checks if the input of buildExitExactBPTIn is valid
    * @param bptIn Bpt inserted in the transaction

@@ -1,5 +1,7 @@
-import { PoolType } from '@/types';
+import { Address, PoolType } from '@/types';
 import { getAddress } from '@ethersproject/address';
+import { Log, TransactionReceipt } from '@ethersproject/providers';
+import { Interface, LogDescription } from '@ethersproject/abi';
 
 export * from './aaveHelpers';
 export * from './assetHelpers';
@@ -10,11 +12,15 @@ export * from './signatures';
 export * from './tokens';
 export * from './debouncer';
 export * from './math';
+export * from './slippageHelper';
 
 export const isSameAddress = (address1: string, address2: string): boolean =>
   getAddress(address1) === getAddress(address2);
 
 export function insert<T>(arr: T[], index: number, newItem: T): T[] {
+  if (index < 0 || index >= arr.length) {
+    return arr;
+  }
   return [
     // part of the array before the specified index
     ...arr.slice(0, index),
@@ -50,6 +56,9 @@ export function replace<T>(arr: T[], index: number, newItem: T): T[] {
  */
 export function removeItem<T>(arr: T[], index: number): T[] {
   const newArray = [...arr];
+  if (index < 0 || index >= arr.length) {
+    return newArray;
+  }
   newArray.splice(index, 1);
   return newArray;
 }
@@ -102,3 +111,39 @@ export function isLinearish(poolType: string): boolean {
 export function truncateAddresses(addresses: string[]): string[] {
   return addresses.map((t) => `${t.slice(0, 6)}...${t.slice(38, 42)}`);
 }
+
+export const findEventInReceiptLogs = ({
+  receipt,
+  to,
+  contractInterface,
+  logName,
+}: {
+  receipt: TransactionReceipt;
+  to: Address;
+  contractInterface: Interface;
+  logName: string;
+}): LogDescription => {
+  const event = receipt.logs
+    .filter((log: Log) => {
+      return isSameAddress(log.address, to);
+    })
+    .map((log) => {
+      try {
+        return contractInterface.parseLog(log);
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    })
+    .find((parsedLog) => parsedLog?.name === logName);
+  if (!event) {
+    throw new Error('Event not found in logs');
+  }
+  return event;
+};
+
+export const getRandomBytes32 = (): string => {
+  const getRandomBytes8 = () => Math.random().toString(16).slice(2, 10);
+  const randomBytes32 = Array(4).fill(null).map(getRandomBytes8).join();
+  return `0x${randomBytes32}`;
+};

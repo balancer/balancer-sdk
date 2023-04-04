@@ -5,19 +5,13 @@ import {
   BatchSwap,
   QuerySimpleFlashSwapParameters,
   QuerySimpleFlashSwapResponse,
-  QueryWithSorInput,
-  QueryWithSorOutput,
   SimpleFlashSwapParameters,
   FindRouteParameters,
   BuildTransactionParameters,
   SwapAttributes,
   SwapType,
 } from './types';
-import {
-  queryBatchSwap,
-  queryBatchSwapWithSor,
-  getSorSwapInfo,
-} from './queryBatchSwap';
+import { queryBatchSwap, getSorSwapInfo } from './queryBatchSwap';
 import { balancerVault } from '@/lib/constants/config';
 import { getLimitsForSlippage } from './helpers';
 import { BalancerSdkConfig } from '@/types';
@@ -45,7 +39,9 @@ export class Swaps {
       this.chainId = (<any>this.sor.provider)['_network']['chainId'];
     } else {
       this.sor = new Sor(sorOrConfig);
-      this.chainId = sorOrConfig.network as number;
+      if (typeof sorOrConfig.network === 'number')
+        this.chainId = sorOrConfig.network as number;
+      else this.chainId = sorOrConfig.network.chainId;
     }
 
     this.vaultContract = Vault__factory.connect(
@@ -253,26 +249,6 @@ export class Swaps {
       batchSwap.kind,
       batchSwap.swaps,
       batchSwap.assets
-    );
-  }
-
-  /**
-   * Uses SOR to create and query a batchSwap.
-   * @param {QueryWithSorInput} queryWithSor - Swap information used for querying using SOR.
-   * @param {string[]} queryWithSor.tokensIn - Array of addresses of assets in.
-   * @param {string[]} queryWithSor.tokensOut - Array of addresses of assets out.
-   * @param {SwapType} queryWithSor.swapType - Type of Swap, ExactIn/Out.
-   * @param {string[]} queryWithSor.amounts - Array of amounts used in swap.
-   * @param {FetchPoolsInput} queryWithSor.fetchPools - Set whether SOR will fetch updated pool info.
-   * @returns {Promise<QueryWithSorOutput>} Returns amount of tokens swaps along with swap and asset info that can be submitted to a batchSwap call.
-   */
-  async queryBatchSwapWithSor(
-    queryWithSor: QueryWithSorInput
-  ): Promise<QueryWithSorOutput> {
-    return await queryBatchSwapWithSor(
-      this.sor,
-      this.vaultContract,
-      queryWithSor
     );
   }
 

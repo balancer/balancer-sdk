@@ -1,17 +1,12 @@
 import { SpotPriceConcern } from '../types';
-import {
-  SubgraphPoolBase,
-  WeightedPool,
-  ZERO,
-  SubgraphToken,
-} from '@balancer-labs/sor';
-import { Pool } from '@/types';
+import { SubgraphPoolBase, WeightedPool, ZERO } from '@balancer-labs/sor';
+import { Pool, PoolToken } from '@/types';
 
 export class WeightedPoolSpotPrice implements SpotPriceConcern {
   calcPoolSpotPrice(tokenIn: string, tokenOut: string, pool: Pool): string {
     const isBPTAsToken = tokenIn === pool.address || tokenOut === pool.address;
     if (isBPTAsToken) {
-      const bptAsToken: SubgraphToken = {
+      const bptAsToken: PoolToken = {
         address: pool.address,
         balance: pool.totalShares,
         decimals: 18,

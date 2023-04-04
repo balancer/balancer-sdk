@@ -5,8 +5,8 @@ const bpsPerOne = BigNumber.from('10000'); // number of basis points in 100%
 /**
  * Multiplies input by slippage amount
  *
- * @param {BigNumber} amount Input amount (not parsed)
- * @param {BigNumber} slippage Slippage value in bps - i.e. 50 = 0.5%
+ * @param amount Input amount (not parsed)
+ * @param slippage Slippage value in bps - i.e. 50 = 0.5%
  * @returns Result delta from multiplying amount and slippage
  */
 export const mulSlippage = (
@@ -20,8 +20,8 @@ export const mulSlippage = (
 /**
  * Reduce input amount by slippage factor
  *
- * @param {BigNumber} amount Input in EVM amounts
- * @param {BigNumber} slippage Slippage value in bps - i.e. 50 = 0.5%
+ * @param amount Input in EVM amounts
+ * @param slippage Slippage value in bps - i.e. 50 = 0.5%
  * @returns Result amount subtracting slippage
  */
 export const subSlippage = (
@@ -35,8 +35,8 @@ export const subSlippage = (
 /**
  * Increase input amount by slippage factor
  *
- * @param {BigNumber} amount Input in EVM amounts
- * @param {BigNumber} slippage Slippage value in bps - i.e. 50 = 0.5%
+ * @param amount Input in EVM amounts
+ * @param slippage Slippage value in bps - i.e. 50 = 0.5%
  * @returns Result amount adding slippage
  */
 export const addSlippage = (
