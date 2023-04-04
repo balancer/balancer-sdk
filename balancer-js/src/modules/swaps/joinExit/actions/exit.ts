@@ -7,27 +7,15 @@ import {
 import { ExitPoolRequest } from '@/types';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { AssetHelpers } from '@/lib/utils';
-import { ActionStep, ActionType, Action, CallData } from './types';
-import {
-  getActionStep,
-  getActionAmount,
-  getActionMinOut,
-  getActionOutputRef,
-} from './helpers';
+import { ActionType, Action, CallData } from './types';
+import { BaseAction } from '.';
 
-export class Exit implements Action {
+export class Exit extends BaseAction implements Action {
   type: ActionType.Exit;
   poolId: string;
   tokenOut: string;
-  hasTokenOut: boolean;
-  minAmountOut: string;
-  bptAmtIn: string;
-  sender: string;
-  receiver: string;
-  hasTokenIn: boolean;
   toInternalBalance: boolean;
   opRef: OutputReference;
-  nextOpRefKey: number;
 
   constructor(
     swap: SwapV2,
@@ -39,54 +27,23 @@ export class Exit implements Action {
     user: string,
     relayerAddress: string
   ) {
-    this.poolId = swap.poolId;
-    this.type = ActionType.Exit;
-    this.tokenOut = assets[swap.assetOutIndex];
-
-    const actionStep = getActionStep(
+    super(
       mainTokenInIndex,
       mainTokenOutIndex,
       swap.assetInIndex,
-      swap.assetOutIndex
-    );
-
-    // Will get actual amount if input or chain amount if part of chain
-    this.bptAmtIn = getActionAmount(
-      swap.amount,
-      ActionType.Exit,
-      actionStep,
-      opRefKey
-    );
-
-    this.sender = relayerAddress;
-    this.hasTokenIn = false;
-    if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn) {
-      this.sender = user;
-      this.hasTokenIn = true;
-    }
-
-    // Send to relayer unless this is main token out
-    this.hasTokenOut = false;
-    this.toInternalBalance = true;
-    this.receiver = relayerAddress;
-    if (
-      actionStep === ActionStep.Direct ||
-      actionStep === ActionStep.TokenOut
-    ) {
-      this.receiver = user;
-      this.toInternalBalance = false;
-      this.hasTokenOut = true;
-    }
-    // This will be 0 if not a mainTokenOut action otherwise amount using slippage
-    this.minAmountOut = getActionMinOut(swap.returnAmount ?? '0', slippage);
-    // This will set opRef for next chained action if required
-    const [opRef, nextOpRefKey] = getActionOutputRef(
-      actionStep,
       swap.assetOutIndex,
-      opRefKey
+      swap.amount,
+      swap.returnAmount ?? '0',
+      opRefKey,
+      slippage,
+      user,
+      relayerAddress
     );
-    this.opRef = opRef;
-    this.nextOpRefKey = nextOpRefKey;
+    this.type = ActionType.Exit;
+    this.poolId = swap.poolId;
+    this.tokenOut = assets[swap.assetOutIndex];
+    this.toInternalBalance = this.getToInternal(this.hasTokenOut);
+    this.opRef = this.opRefStart;
   }
 
   public callData(
@@ -103,9 +60,9 @@ export class Exit implements Action {
     );
     const minAmountsOut = Array(assets.length).fill('0');
     // Variable amount of token out (this has slippage applied)
-    minAmountsOut[exitTokenIndex] = this.minAmountOut;
+    minAmountsOut[exitTokenIndex] = this.minOut;
     // Uses exact amount in
-    const bptAmtIn = this.bptAmtIn;
+    const bptAmtIn = this.amountIn;
     const userData = WeightedPoolEncoder.exitExactBPTInForOneTokenOut(
       bptAmtIn,
       exitTokenIndex
@@ -132,10 +89,10 @@ export class Exit implements Action {
   }
 
   public getAmountIn(): string {
-    return this.hasTokenIn ? this.bptAmtIn : '0';
+    return this.hasTokenIn ? this.amountIn : '0';
   }
 
   public getAmountOut(): string {
-    return this.hasTokenOut ? this.minAmountOut : '0';
+    return this.hasTokenOut ? this.minOut : '0';
   }
 }

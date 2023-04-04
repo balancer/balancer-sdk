@@ -62,7 +62,7 @@ export class BaseAction {
     else return true;
   }
 
-  getToInternal(hasTokenOut: boolean, isBptOut: boolean): boolean {
+  getToInternal(hasTokenOut: boolean, isBptOut?: boolean): boolean {
     // exits - can't exit using BPT from internal balances
     // Because of ^ we can assume that any tokenOut BPT is going to external (either to user or exit)
     if (hasTokenOut || isBptOut) return false;
