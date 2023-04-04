@@ -17,16 +17,16 @@ import {
 export class Join implements Action {
   type: ActionType.Join;
   poolId: string;
-  sender: string;
-  receiver: string;
-  fromInternal: boolean;
-  tokenIn: string;
-  amountIn: string;
+  nextOpRefKey: number;
   hasTokenIn: boolean;
   hasTokenOut: boolean;
-  minAmountOut: string;
-  opRef: OutputReference;
-  nextOpRefKey: number;
+  private sender: string;
+  private receiver: string;
+  private fromInternal: boolean;
+  private tokenIn: string;
+  private amountIn: string;
+  private minAmountOut: string;
+  private opRef: OutputReference;
 
   constructor(
     swap: SwapV2,
@@ -38,8 +38,10 @@ export class Join implements Action {
     user: string,
     relayerAddress: string
   ) {
+    this.type = ActionType.Join;
     this.poolId = swap.poolId;
     this.tokenIn = assets[swap.assetInIndex];
+
     const actionStep = getActionStep(
       mainTokenInIndex,
       mainTokenOutIndex,
@@ -53,25 +55,11 @@ export class Join implements Action {
       actionStep,
       opRefKey
     );
-    this.sender = relayerAddress;
-    this.fromInternal = true;
-    this.hasTokenIn = false;
-    // If using mainTokenIn we can assume it comes from user
-    if (actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn) {
-      this.sender = user;
-      this.fromInternal = false;
-      this.hasTokenIn = true;
-    }
-    this.hasTokenOut = false;
-    this.receiver = relayerAddress;
-    // If using mainTokenOut we can assume it goes to user
-    if (
-      actionStep === ActionStep.Direct ||
-      actionStep === ActionStep.TokenOut
-    ) {
-      this.receiver = user;
-      this.hasTokenOut = true;
-    }
+    this.hasTokenIn = this.actionHasTokenIn(actionStep);
+    this.hasTokenOut = this.actionHasTokenOut(actionStep);
+    this.fromInternal = this.getFromInternal(this.hasTokenIn);
+    this.sender = this.getSender(this.hasTokenIn, user, relayerAddress);
+    this.receiver = this.getReceiver(this.hasTokenOut, user, relayerAddress);
     // This will be 0 if not a mainTokenOut action otherwise amount using slippage
     this.minAmountOut = getActionMinOut(swap.returnAmount ?? '0', slippage);
     // This will set opRef for next chained action if required
@@ -82,8 +70,46 @@ export class Join implements Action {
     );
     this.opRef = opRef;
     this.nextOpRefKey = nextOpRefKey;
-    this.type = ActionType.Join;
   }
+
+  private getFromInternal(hasTokenIn: boolean): boolean {
+    if (hasTokenIn) return false;
+    else return true;
+  }
+
+  private actionHasTokenIn(actionStep: ActionStep): boolean {
+    return actionStep === ActionStep.Direct || actionStep === ActionStep.TokenIn
+      ? true
+      : false;
+  }
+
+  private actionHasTokenOut(actionStep: ActionStep): boolean {
+    return actionStep === ActionStep.Direct ||
+      actionStep === ActionStep.TokenOut
+      ? true
+      : false;
+  }
+
+  private getSender(
+    hasTokenIn: boolean,
+    user: string,
+    relayer: string
+  ): string {
+    // tokenIn/Out will come from/go to the user. Any other tokens are intermediate and will be from/to Relayer
+    if (hasTokenIn) return user;
+    else return relayer;
+  }
+
+  private getReceiver(
+    hasTokenOut: boolean,
+    user: string,
+    relayer: string
+  ): string {
+    // tokenIn/Out will come from/go to the user. Any other tokens are intermediate and will be from/to Relayer
+    if (hasTokenOut) return user;
+    else return relayer;
+  }
+
   public callData(
     pool: SubgraphPoolBase,
     wrappedNativeAsset: string
