@@ -8,7 +8,7 @@ export default class WeightedV1ProtocolFee {
   static calculateProtocolFees(pool: Pool): bigint[] {
     const parsedPool = parsePoolInfo(pool);
     const currentInvariant = WeightedMaths._calculateInvariant(
-      parsedPool.parsedWeights.map(BigInt),
+      parsedPool.weights.map(BigInt),
       parsedPool.upScaledBalances.map(BigInt)
     );
     const protocolFeeAmounts = WeightedV1ProtocolFee.getDueProtocolFeeAmounts({
@@ -20,31 +20,31 @@ export default class WeightedV1ProtocolFee {
 
   static getDueProtocolFeeAmounts = ({
     upScaledBalances,
-    parsedWeights,
-    lastJoinExitInvariant,
+    weights,
+    lastPostJoinExitInvariant,
     currentInvariant,
     protocolSwapFeePct,
   }: {
-    upScaledBalances: string[];
-    lastJoinExitInvariant: string;
-    parsedWeights: string[];
-    protocolSwapFeePct: string;
+    upScaledBalances: bigint[];
+    lastPostJoinExitInvariant: string;
+    weights: bigint[];
+    protocolSwapFeePct: bigint;
     currentInvariant: bigint;
   }): bigint[] => {
     const protocolFeeAmounts = Array(upScaledBalances.length).fill(BigInt(0));
     if (BigInt(protocolSwapFeePct) === BigInt(0)) {
       return protocolFeeAmounts;
     }
-    const normalizedWeightsBigInt = parsedWeights.map(BigInt);
+    const normalizedWeightsBigInt = weights;
     const maxWeightTokenIndex = normalizedWeightsBigInt.indexOf(
-      SolidityMaths.max(...normalizedWeightsBigInt)
+      SolidityMaths.max(normalizedWeightsBigInt)
     );
     protocolFeeAmounts[maxWeightTokenIndex] = calcDueTokenProtocolSwapFeeAmount(
       BigInt(upScaledBalances[maxWeightTokenIndex]),
       normalizedWeightsBigInt[maxWeightTokenIndex],
-      BigInt(lastJoinExitInvariant),
+      BigInt(lastPostJoinExitInvariant),
       currentInvariant,
-      parseFixed(protocolSwapFeePct, 18).toBigInt()
+      protocolSwapFeePct
     );
     return protocolFeeAmounts;
   };
