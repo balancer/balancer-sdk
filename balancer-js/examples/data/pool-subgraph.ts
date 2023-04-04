@@ -7,19 +7,19 @@ const pools = new PoolsSubgraphRepository({
     args: {
       where: {
         isInRecoveryMode: {
-          eq: true
-        }
+          eq: true,
+        },
       },
     },
-    attrs: {}
-  }
-})
+    attrs: {},
+  },
+});
 
 async function main() {
   const results = await pools.fetch();
   console.log('Filter pools by attributes', results[0]);
 }
 
-main()
+main();
 
 // yarn run examples:run ./examples/data/pool-subgraph.ts

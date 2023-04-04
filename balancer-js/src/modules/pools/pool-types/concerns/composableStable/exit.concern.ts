@@ -1,4 +1,4 @@
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
 import { Vault__factory } from '@/contracts/factories/Vault__factory';
 
@@ -28,6 +28,8 @@ import {
   ExitPool,
   ExitPoolAttributes,
 } from '../types';
+import { BasePoolEncoder } from '@/pool-base';
+import { StablePoolPriceImpact } from '../stable/priceImpact.concern';
 
 interface SortedValues {
   poolTokens: string[];
@@ -75,19 +77,6 @@ type EncodeExitParams = Pick<ExitExactBPTInParameters, 'exiter'> & {
 };
 
 export class ComposableStablePoolExit implements ExitConcern {
-  /**
-   *  Builds an exit with exact bpt in transaction
-   *  @param params
-   *  @param exiter Address of the exiter of the pool
-   *  @param pool Pool object (it's automatically inserted when you wrap a Pool with the methods using balancer.pools.wrap function)
-   *  @param bptIn Amount of bpt in the exit
-   *  @param slippage Maximum slippage tolerance in bps i.e. 50 = 0.5%
-   *  @param shouldUnwrapNativeAsset Set true if the weth should be unwrapped to Eth
-   *  @param wrappedNativeAsset Address of wrapped native asset for specific network config
-   *  @param singleTokenOut The address of the token that will be singled withdrawn in the exit transaction,
-   *                           if not passed, the transaction will do a proportional exit where available
-   * @returns Attributes to send transaction
-   */
   buildExitExactBPTIn = ({
     exiter,
     pool,
@@ -146,24 +135,22 @@ export class ComposableStablePoolExit implements ExitConcern {
       minAmountsOut: minAmountsOutWithBpt,
     });
 
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
     return {
       ...encodedData,
       expectedAmountsOut,
       minAmountsOut,
+      priceImpact,
     };
   };
 
-  /**
-   *  Builds an exit with exact tokens out transaction
-   *  @param params
-   *  @param exiter Address of the exiter of the pool
-   *  @param pool Pool object (it's automatically inserted when you wrap a Pool with the methods using balancer.pools.wrap function)
-   *  @param tokensOut Pool asset addresses (excluding BPT)
-   *  @param amountsOut Amount of each token from tokensOut to receive after exit
-   *  @param slippage Maximum slippage tolerance in bps i.e. 50 = 0.5%
-   *  @param wrappedNativeAsset Address of wrapped native asset for specific network config
-   *  @returns Attributes to send transaction
-   */
   buildExitExactTokensOut = ({
     exiter,
     pool,
@@ -199,16 +186,80 @@ export class ComposableStablePoolExit implements ExitConcern {
       poolId: pool.id,
     });
 
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      sortedValues.downscaledAmountsOutWithoutBpt.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
     return {
       ...encodedData,
       maxBPTIn,
       expectedBPTIn: bptIn,
+      priceImpact,
+    };
+  };
+
+  buildRecoveryExit = ({
+    exiter,
+    pool,
+    bptIn,
+    slippage,
+  }: Pick<
+    ExitExactBPTInParameters,
+    'exiter' | 'pool' | 'bptIn' | 'slippage'
+  >): ExitExactBPTInAttributes => {
+    this.checkInputsRecoveryExit({
+      bptIn,
+      pool,
+    });
+
+    const sortedValues = parsePoolInfo(pool);
+
+    const { minAmountsOut, expectedAmountsOut } =
+      this.calcTokensOutGivenExactBptIn({
+        ...sortedValues,
+        bptIn,
+        slippage,
+      });
+
+    const userData = BasePoolEncoder.recoveryModeExit(bptIn);
+
+    // MinAmounts needs a value for BPT for encoding
+    const minAmountsOutWithBpt = insert(
+      minAmountsOut,
+      sortedValues.bptIndex,
+      '0'
+    );
+    const encodedData = this.encodeExitPool({
+      poolTokens: sortedValues.poolTokens,
+      poolId: pool.id,
+      exiter,
+      userData,
+      minAmountsOut: minAmountsOutWithBpt,
+    });
+
+    const priceImpactConcern = new StablePoolPriceImpact();
+    const priceImpact = priceImpactConcern.calcPriceImpact(
+      pool,
+      expectedAmountsOut.map(BigInt),
+      BigInt(bptIn),
+      false
+    );
+
+    return {
+      ...encodedData,
+      expectedAmountsOut,
+      minAmountsOut,
+      priceImpact,
     };
   };
 
   /**
    *  Checks if the input of buildExitExactBPTIn is valid
-   * @param bptIn Bpt inserted in the transaction
+   * @param bptIn Bpt amoun in EVM scale
    * @param singleTokenOut (optional) the address of the single token that will be withdrawn, if null|undefined, all tokens will be withdrawn proportionally.
    * @param pool the pool that is being exited
    * @param shouldUnwrapNativeAsset Set true if the weth should be unwrapped to Eth
@@ -222,7 +273,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     ExitExactBPTInParameters,
     'bptIn' | 'singleTokenOut' | 'pool' | 'shouldUnwrapNativeAsset'
   >): void => {
-    if (!bptIn.length || parseFixed(bptIn, 18).isNegative()) {
+    if (BigNumber.from(bptIn).lte(0)) {
       throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
     }
     if (!singleTokenOut && pool.poolTypeVersion < 2) {
@@ -265,6 +316,30 @@ export class ComposableStablePoolExit implements ExitConcern {
     ) {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
+  };
+
+  /**
+   *  Checks if the input of buildExitExactBPTIn is valid
+   * @param bptIn Bpt amount in EVM scale
+   * @param pool the pool that is being exited
+   */
+  checkInputsRecoveryExit = ({
+    bptIn,
+    pool,
+  }: Pick<ExitExactBPTInParameters, 'bptIn' | 'pool'>): void => {
+    if (BigNumber.from(bptIn).lte(0)) {
+      throw new BalancerError(BalancerErrorCode.INPUT_OUT_OF_BOUNDS);
+    }
+    if (!pool.isInRecoveryMode) {
+      throw new Error(
+        'Exit type not supported because pool is not in Recovery Mode'
+      );
+    }
+
+    // Check if there's any relevant stable pool info missing
+    if (pool.tokens.some((token) => !token.decimals))
+      throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
+    if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
   };
 
   /**

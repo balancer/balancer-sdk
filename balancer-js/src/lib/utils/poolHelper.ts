@@ -39,12 +39,11 @@ type ParsedPoolInfo = {
 
 /**
  * Parse pool info into EVM amounts. Sorts by token order if wrappedNativeAsset param passed.
- * @param {Pool}  pool
- * @param {string}  wrappedNativeAsset
+ * @param pool Pool object to be parsed
+ * @param wrappedNativeAsset e.g. wETH address
  * @param unwrapNativeAsset if true, changes wETH address to ETH address
- * @returns       parsed pool info
+ * @returns parsed pool info
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const parsePoolInfo = (
   pool: Pool,
   wrappedNativeAsset?: string,

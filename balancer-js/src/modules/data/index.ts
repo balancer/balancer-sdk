@@ -229,6 +229,6 @@ export class Data implements BalancerDataRepositories {
       );
     }
 
-    this.tokenYields = new TokenYieldsRepository(networkConfig.chainId);
+    this.tokenYields = new TokenYieldsRepository();
   }
 }

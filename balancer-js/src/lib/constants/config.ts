@@ -11,6 +11,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   [Network.MAINNET]: {
     chainId: Network.MAINNET, //1
     addresses: {
+      //Mainnet deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/mainnet.html
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xeefba1e63905ef1d7acba5a8513c70307c1ce441',
@@ -19,15 +20,21 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
         relayerV3: '0x886A3Ec7bcC508B8795990B60Fa21f85F9dB7948',
         relayerV4: '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
+        relayerV5: '0xfeA793Aa415061C483D2390414275AD314B3F621',
         gaugeController: '0xc128468b7ce63ea702c1f104d55a2566b13d3abd',
         feeDistributor: '0xD3cf852898b21fc233251427c2DC93d3d604F3BB',
         protocolFeePercentagesProvider:
           '0x97207B095e4D5C9a6e4cfbfcd2C3358E03B90c4A',
         veBal: '0xC128a9954e6c874eA3d62ce62B468bA073093F25',
         veBalProxy: '0x6f5a2eE11E7a772AeB5114A20d0D7c0ff61EB8A0',
-        weightedPoolFactory: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        weightedPoolFactory: '0x897888115ada5773e02aa29f775430bfb5f34c51',
         composableStablePoolFactory:
-          '0x85a80afee867adf27b50bdb7b76da70f1e853062',
+          '0xdba127fBc23fb20F5929C546af220A991b5C6e01',
+        erc4626LinearPoolFactory: '0x67A25ca2350Ebf4a0C475cA74C257C94a373b828',
+        aaveLinearPoolFactory: '0xb9f8ab3ed3f3acba64bc6cd2dca74b7f38fd7b88',
+        eulerLinearPoolFactory: '0x5f43fba61f63fa6bff101a0a0458cea917f6b347',
+        gearboxLinearPoolFactory: '0x2ebe41e1aa44d61c206a94474932dadc7d3fd9e3',
+        yearnLinearPoolFactory: '0x8b7854708c0c54f9d7d1ff351d4f84e6de0e134c',
       },
       tokens: {
         wrappedNativeAsset: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -84,16 +91,21 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   [Network.POLYGON]: {
     chainId: Network.POLYGON, //137
     addresses: {
+      //Polygon deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/polygon.html
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
         gaugeClaimHelper: '0xaeb406b0e430bf5ea2dc0b9fe62e4e53f74b3a33',
         relayerV3: '0xcf6a66E32dCa0e26AcC3426b851FD8aCbF12Dac7',
         relayerV4: '0x28A224d9d398a1eBB7BA69BCA515898966Bb1B6b',
+        relayerV5: '0xd18d5D377eb23362e54Fa496597d7E962d56C554',
         balancerHelpers: '0x239e55F427D44C3cc793f49bFB507ebe76638a2b',
-        weightedPoolFactory: '0x0e39C3D9b2ec765eFd9c5c70BB290B1fCD8536E3',
+        weightedPoolFactory: '0xfc8a407bba312ac761d8bfe04ce1201904842b76',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
+        erc4626LinearPoolFactory: '0xa3b9515a9c557455bc53f7a535a85219b59e8b2e',
+        aaveLinearPoolFactory: '0xf23b4db826dba14c0e857029dff076b1c0264843',
+        yearnLinearPoolFactory: '0x7396f99b48e7436b152427bfa3dd6aa8c7c6d05b',
       },
       tokens: {
         bal: '0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3',
@@ -116,6 +128,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     pools: {},
     poolsToIgnore: [
       '0x600bd01b6526611079e12e1ff93aba7a3e34226f', // This pool has rateProviders with incorrect scaling
+      '0xc31a37105b94ab4efca1954a14f059af11fcd9bb', // Stable pool with Convergence issues
     ],
     sorConnectingTokens: [
       {
@@ -130,6 +143,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   },
   [Network.ARBITRUM]: {
     chainId: Network.ARBITRUM, //42161
+    //Arbitrum deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/arbitrum.html
     addresses: {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
@@ -137,10 +151,14 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         gaugeClaimHelper: '0xa0dabebaad1b243bbb243f933013d560819eb66f',
         relayerV3: '0x42E49B48573c725ee32d2579060Ed06894f97002',
         relayerV4: '0x5bf3B7c14b10f16939d63Bd679264A1Aa951B4D5',
+        relayerV5: '0x598ce0f1ab64B27256759ef99d883EE51138b9bd',
         balancerHelpers: '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab',
-        weightedPoolFactory: '0x8df6EfEc5547e31B0eb7d1291B511FF8a2bf987c',
+        weightedPoolFactory: '0xc7e5ed1054a24ef31d827e6f86caa58b3bc168d7',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
+        erc4626LinearPoolFactory: '0xa3b9515a9c557455bc53f7a535a85219b59e8b2e',
+        aaveLinearPoolFactory: '0xf23b4db826dba14c0e857029dff076b1c0264843',
+        yearnLinearPoolFactory: '0xd8b6b96c88ad626eb6209c4876e3b14f45f8803a',
       },
       tokens: {
         bal: '0x040d1edc9569d4bab2d15287dc5a4f10f56a56b8',
@@ -233,20 +251,25 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   },
   [Network.GOERLI]: {
     chainId: Network.GOERLI, //5
+    //Goerli deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/goerli.html
     addresses: {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
         relayerV3: '0x7b9B6f094DC2Bd1c12024b0D9CC63d6993Be1888',
         relayerV4: '0x00e695aA8000df01B8DC8401B4C34Fba5D56BBb2',
+        relayerV5: '0x03F1ab8b19bcE21EB06C364aEc9e40322572a1e9',
         gaugeController: '0xBB1CE49b16d55A1f2c6e88102f32144C7334B116',
         veBal: '0x33A99Dcc4C85C014cf12626959111D5898bbCAbF',
         veBalProxy: '0xA1F107D1cD709514AE8A914eCB757E95f9cedB31',
         balancerHelpers: '0x5aDDCCa35b7A0D07C74063c48700C8590E87864E',
         feeDistributor: '0x7F91dcdE02F72b478Dc73cB21730cAcA907c8c44',
-        weightedPoolFactory: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        weightedPoolFactory: '0x230a59f4d9adc147480f03b0d3fffecd56c3289a',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
+        erc4626LinearPoolFactory: '0xba240c856498e2d7a70af4911aafae0d6b565a5b',
+        aaveLinearPoolFactory: '0x76578ecf9a141296ec657847fb45b0585bcda3a6',
+        eulerLinearPoolFactory: '0x813ee7a840ce909e7fea2117a44a90b8063bd4fd',
       },
       tokens: {
         bal: '0xfA8449189744799aD2AcE7e0EBAC8BB7575eff47',
@@ -271,16 +294,21 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   },
   [Network.OPTIMISM]: {
     chainId: Network.OPTIMISM, //10
+    // Optimism deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/optimism.html
     addresses: {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x2dc0e2aa608532da689e89e237df582b783e552c',
         relayerV3: '0x195CcCBE464EF9073d1f7A1ba1C9Bf0f56dfFFff',
         relayerV4: '0x1a58897Ab366082028ced3740900ecBD765Af738',
+        relayerV5: '0x03F1ab8b19bcE21EB06C364aEc9e40322572a1e9',
         balancerHelpers: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
-        weightedPoolFactory: '0x0e39C3D9b2ec765eFd9c5c70BB290B1fCD8536E3',
+        weightedPoolFactory: '0x230a59f4d9adc147480f03b0d3fffecd56c3289a',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
+        erc4626LinearPoolFactory: '0xa3b9515a9c557455bc53f7a535a85219b59e8b2e',
+        aaveLinearPoolFactory: '0xf23b4db826dba14c0e857029dff076b1c0264843',
+        yearnLinearPoolFactory: '0xd8b6b96c88ad626eb6209c4876e3b14f45f8803a',
       },
       tokens: {
         wrappedNativeAsset: '0x4200000000000000000000000000000000000006',
@@ -306,15 +334,18 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
   },
   [Network.GNOSIS]: {
     chainId: Network.GNOSIS, //100
+    // Gnosis deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/gnosis.html
     addresses: {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xbb6fab6b627947dae0a75808250d8b2652952cb5',
         relayerV4: '0xeF606F58A4FD0fCcb066c6203d0994694d3eB2D3',
+        relayerV5: '0x3536fD480CA495Ac91E698A703248A8915c137a3',
         balancerHelpers: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
-        weightedPoolFactory: '0xf302f9F50958c5593770FDf4d4812309fF77414f',
+        weightedPoolFactory: '0x6cad2ea22bfa7f4c14aae92e47f510cd5c509bc7',
         composableStablePoolFactory:
           '0x76578ecf9a141296ec657847fb45b0585bcda3a6',
+        aaveLinearPoolFactory: '0x9da18982a33fd0c7051b19f0d7c76f2d5e7e017c',
       },
       tokens: {
         wrappedNativeAsset: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
@@ -323,13 +354,56 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
-      gaugesSubgraph: '',
+      gaugesSubgraph:
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-gnosis-chain',
     },
     pools: {},
     sorConnectingTokens: [
       {
         symbol: 'weth',
         address: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
+      },
+    ],
+  },
+  [Network.FANTOM]: {
+    chainId: Network.FANTOM, //250
+    //Fantom deployment addresses: https://docs.beets.fi/technicals/deployments
+    addresses: {
+      contracts: {
+        vault: '0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce',
+        multicall: '0x66335d7ad8011f6aa3f48aadcb523b62b38ed961',
+        gaugeClaimHelper: '0x0000000000000000000000000000000000000000', // no guages on fantom
+        relayerV3: '0xC852F984CA3310AFc596adeB17EfcB0542646920',
+        relayerV4: '0x419f7925b8c9e409b6ee8792242556fa210a7a09',
+        balancerHelpers: '0xfE18C7C70b0a2c6541bEde0367124278BC345Dc8',
+        weightedPoolFactory: '0x60467cb225092cE0c989361934311175f437Cf53',
+        composableStablePoolFactory:
+          '0x44814E3A603bb7F1198617995c5696C232F6e8Ed',
+        yearnLinearPoolFactory: '0x1f73ae6ed391a2b1e84ff988a1bb5394b78a4a71',
+      },
+      tokens: {
+        bal: '0xF24Bcf4d1e507740041C9cFd2DddB29585aDCe1e', //beets
+        wrappedNativeAsset: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
+        lbpRaisingTokens: [
+          '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83', // WFTM
+          '0x04068DA6C83AFCFA0e13ba15A6696662335D5B75', // USDC
+          '0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E', // DAI
+        ],
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-v2-fantom',
+      gaugesSubgraph: '', // no guages on fantom
+      blockNumberSubgraph:
+        'https://api.thegraph.com/subgraphs/name/beethovenxfi/fantom-blocks',
+    },
+    pools: {},
+    poolsToIgnore: [],
+    sorConnectingTokens: [
+      {
+        symbol: 'wftm',
+        address: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83',
       },
     ],
   },

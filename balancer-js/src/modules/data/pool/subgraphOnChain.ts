@@ -42,6 +42,7 @@ export class PoolsSubgraphOnChainRepository
 
   private filterPools(pools: Pool[]): Pool[] {
     const filteredPools = pools.filter((p) => {
+      if (p.swapEnabled === false) return false;
       if (!this.poolsToIgnore) return true;
       const index = this.poolsToIgnore.findIndex((addr) =>
         isSameAddress(addr, p.address)

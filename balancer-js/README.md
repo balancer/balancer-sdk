@@ -132,34 +132,6 @@ swaps.queryBatchSwap(batchSwap: {
 
 [Example](./examples/queryBatchSwap.ts)
 
-### #queryBatchSwapWithSor
-
-Uses SOR to create and query a batchSwap for multiple tokens in > multiple tokensOut.
-
-@param queryWithSor - Swap information used for querying using SOR.
-@param queryWithSor.tokensIn - Array of addresses of assets in.
-@param queryWithSor.tokensOut - Array of addresses of assets out.
-@param queryWithSor.swapType - Type of Swap, ExactIn/Out.
-@param queryWithSor.amounts - Array of amounts used in swap.
-@param queryWithSor.fetchPools - Set whether SOR will fetch updated pool info.
-@returns Returns amount of tokens swaps along with swap and asset info that can be submitted to a batchSwap call.
-
-```js
-swaps.queryBatchSwapWithSor(queryWithSor: {
-    tokensIn: string[],
-    tokensOut: string[],
-    swapType: SwapType,
-    amounts: BigNumberish[],
-    fetchPools: FetchPoolsInput;
-}):
-Promise<QueryWithSorOutput {
-    returnAmounts: string[];
-    swaps: BatchSwapStep[];
-    assets: string[];
-    deltas: string[];
-}>
-```
-
 ### #encodeBatchSwap
 
 Static method to encode a [batch swap](https://dev.balancer.fi/references/contracts/apis/the-vault#batch-swaps).
@@ -360,23 +332,48 @@ const { to, functionName, attributes, data } = pool.buildJoin(params);
 
 #### #buildJoin
 
-Builds a join transaction.
+Builds join pool transaction parameters with exact tokens in and minimum BPT out based on slippage tolerance
 
 ```js
 /**
- * @param { string }   joiner - Address used to exit pool.
- * @param { string[] } tokensIn - Token addresses provided for joining pool (same length and order as amountsIn).
- * @param { string[] } amountsIn - Token amounts provided for joining pool in EVM amounts.
- * @param { string }   slippage - Maximum slippage tolerance in bps i.e. 50 = 0.5%.
- * @returns { Promise<JoinPoolAttributes> } Returns join transaction ready to send with signer.sendTransaction.
+ * @param joiner Account address joining pool
+ * @param tokensIn Token addresses provided for joining pool (same length and order as amountsIn)
+ * @param amountsIn Token amounts provided for joining pool in EVM scale
+ * @param slippage Maximum slippage tolerance in bps i.e. 50 = 0.5%
+ * @returns transaction request ready to send with signer.sendTransaction
  */
-
 buildJoin: (
   joiner: string,
   tokensIn: string[],
   amountsIn: string[],
   slippage: string
-) => Promise<JoinPoolAttributes>;
+) => JoinPoolAttributes;
+```
+
+where `JoinPoolAttributes` is:
+
+```js
+/**
+ * Join with exact tokens in transaction parameters
+ * @param to Address that will execute the transaction (vault address)
+ * @param functionName Function name to be called (joinPool)
+ * @param attributes Transaction attributes ready to be encoded
+ * @param data Encoded transaction data
+ * @param value (Optional) ETH amount that must be informed when joining with ETH
+ * @param minBptOut Minimum BPT amoutn out of join transaction considering slippage tolerance
+ * @param expectedBptOut Expected BPT amount out of join transaction
+ * @param priceImpact Price impact of join transaction
+ */
+export interface JoinPoolAttributes {
+  to: string;
+  functionName: string;
+  attributes: JoinPool;
+  data: string;
+  value?: BigNumber;
+  minBPTOut: string;
+  expectedBPTOut: string;
+  priceImpact: string;
+}
 ```
 
 [Example](./examples/join.ts)
@@ -386,27 +383,26 @@ buildJoin: (
 Builds a init join transaction for weighted pool.
 
 ```js
-  /***
-   * @param params
-   *  * Returns a InitJoinPoolAttributes to make a init join transaction
-   *  * @param joiner - The address of the joiner of the pool
-   *  * @param poolId - The id of the pool
-   *  * @param tokensIn - array with the address of the tokens
-   *  * @param amountsIn - array with the amount of each token
-   *  * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a weighted pool
-   */
-  buildInitJoin({
-    joiner,
-    poolId,
-    tokensIn,
-    amountsIn,
-  }) => InitJoinPoolAttributes
+/**
+ * @param joiner - The address of the joiner of the pool
+ * @param poolId - The id of the pool
+ * @param tokensIn - array with the address of the tokens
+ * @param amountsIn - array with the amount of each token
+ * @returns a InitJoinPoolAttributes object, which can be directly inserted in the transaction to init join a weighted pool
+ */
+buildInitJoin({
+  joiner,
+  poolId,
+  tokensIn,
+  amountsIn,
+}) => InitJoinPoolAttributes
 ```
 
 [Example](./examples/pools/weighted/init-join.ts)
 Available pool types:
 
 - Weighted
+- ComposableStable ([Example](./examples/pools/composable-stable/init-join.ts))
 
 ### Joining nested pools
 
@@ -423,35 +419,35 @@ Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
 ```
 
 ```js
-  /**
-   * Builds generalised join transaction
-   *
-   * @param poolId          Pool id
-   * @param tokens          Token addresses
-   * @param amounts         Token amounts in EVM scale
-   * @param userAddress     User address
-   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
-   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
-   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
-   * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
-   */
-  async generalisedJoin(
-    poolId: string,
-    tokens: string[],
-    amounts: string[],
-    userAddress: string,
-    slippage: string,
-    signer: JsonRpcSigner,
-    simulationType: SimulationType,
-    authorisation?: string
-  ): Promise<{
-    to: string;
-    encodedCall: string;
-    minOut: string;
-    expectedOut: string;
-    priceImpact: string;
-  }>
+/**
+ * Builds generalised join transaction
+ *
+ * @param poolId          Pool id
+ * @param tokens          Token addresses
+ * @param amounts         Token amounts in EVM scale
+ * @param userAddress     User address
+ * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+ * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+ * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+ * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+ * @returns transaction data ready to be sent to the network along with min and expected BPT amounts out.
+ */
+async generalisedJoin(
+  poolId: string,
+  tokens: string[],
+  amounts: string[],
+  userAddress: string,
+  slippage: string,
+  signer: JsonRpcSigner,
+  simulationType: SimulationType,
+  authorisation?: string
+): Promise<{
+  to: string;
+  encodedCall: string;
+  minOut: string;
+  expectedOut: string;
+  priceImpact: string;
+}>
 ```
 
 [Example](./examples/joinGeneralised.ts)
@@ -471,24 +467,25 @@ const { to, functionName, attributes, data } = pool.buildExitExactBPTIn(params);
 Builds an exit transaction with exact BPT in and minimum token amounts out based on slippage tolerance.
 
 ```js
-  /**
-   * @param exiter - Account address exiting pool
-   * @param bptIn - BPT provided for exiting pool
-   * @param slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-   * @param shouldUnwrapNativeAsset Indicates whether wrapped native asset should be unwrapped after exit.
-   * @param singleTokenOut - Optional: token address that if provided will exit to given token
-   * @returns transaction request ready to send with signer.sendTransaction
-   */
-  buildExitExactBPTIn: (
-    exiter: string,
-    bptIn: string,
-    slippage: string,
-    shouldUnwrapNativeAsset?: boolean,
-    singleTokenOut?: string
-  ) => Promise<ExitExactBPTInAttributes>;
+/**
+ * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
+ * @param exiter Account address exiting pool
+ * @param bptIn BPT provided for exiting pool in EVM scale
+ * @param slippage Maximum slippage tolerance in bps. i.e. 50 = 5%
+ * @param shouldUnwrapNativeAsset Indicates whether wrapped native asset should be unwrapped after exit. Defaults to false.
+ * @param singleTokenOut Optional: token address that if provided will exit to given token
+ * @returns transaction request ready to send with signer.sendTransaction
+ */
+buildExitExactBPTIn: (
+  exiter: string,
+  bptIn: string,
+  slippage: string,
+  shouldUnwrapNativeAsset?: boolean,
+  singleTokenOut?: string
+) => ExitExactBPTInAttributes;
 ```
 
-where:
+where `ExitExactBPTInAttributes` is:
 
 ```js
 /**
@@ -524,22 +521,23 @@ Available pool types:
 Builds an exit transaction with exact tokens out and maximum BPT in based on slippage tolerance.
 
 ```js
-  /**
-   * @param {string}    exiter - Account address exiting pool
-   * @param {string[]}  tokensOut - Tokens provided for exiting pool
-   * @param {string[]}  amountsOut - Amounts provided for exiting pool
-   * @param {string}    slippage - Maximum slippage tolerance in percentage. i.e. 0.05 = 5%
-   * @returns           transaction request ready to send with signer.sendTransaction
-   */
-  buildExitExactTokensOut: (
-    exiter: string,
-    tokensOut: string[],
-    amountsOut: string[],
-    slippage: string
-  ) => Promise<ExitExactTokensOutAttributes>;
+/**
+ * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
+ * @param exiter Account address exiting pool
+ * @param tokensOut Tokens provided for exiting pool (same length and order as amountsOut)
+ * @param amountsOut Amounts provided for exiting pool in EVM scale
+ * @param slippage Maximum slippage tolerance in bps. i.e. 50 = 5%
+ * @returns transaction request ready to send with signer.sendTransaction
+ */
+buildExitExactTokensOut: (
+  exiter: string,
+  tokensOut: string[],
+  amountsOut: string[],
+  slippage: string
+) => ExitExactTokensOutAttributes;
 ```
 
-where:
+where `ExitExactTokensOutAttributes` is:
 
 ```js
 /**
@@ -586,57 +584,55 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
 
 ```js
 /**
-   * Builds generalised exit transaction
-   *
-   * @param poolId          Pool id
-   * @param amount          Token amount in EVM scale
-   * @param userAddress     User address
-   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
-   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
-   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
-   * @param authorisation   Optional auhtorisation call to be added to the chained transaction
-   * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
-   */
-  async generalisedExit(
-    poolId: string,
-    amount: string,
-    userAddress: string,
-    slippage: string,
-    signer: JsonRpcSigner,
-    simulationType: SimulationType,
-    authorisation?: string
-  ): Promise<{
-    to: string;
-    encodedCall: string;
-    tokensOut: string[];
-    expectedAmountsOut: string[];
-    minAmountsOut: string[];
-    priceImpact: string;
-  }>
+ * Builds generalised exit transaction
+ *
+ * @param poolId          Pool id
+ * @param amount          Token amount in EVM scale
+ * @param userAddress     User address
+ * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+ * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+ * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+ * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+ * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
+ */
+async generalisedExit(
+  poolId: string,
+  amount: string,
+  userAddress: string,
+  slippage: string,
+  signer: JsonRpcSigner,
+  simulationType: SimulationType,
+  authorisation?: string
+): Promise<{
+  to: string;
+  encodedCall: string;
+  tokensOut: string[];
+  expectedAmountsOut: string[];
+  minAmountsOut: string[];
+  priceImpact: string;
+}>
 ```
 
 [Example](./examples/exitGeneralised.ts)
 
-## Create Pool
+# Factory
+### Creating Pools
 
-Exposes create functionality allowing user to create pools.
-
-### #createWeightedPool
+### WeightedPool
 
 Builds a transaction to create a weighted pool.
 
 ```js
-/***
- * @param params
- *  * Builds a transaction for a weighted pool create operation.
- *  * @param factoryAddress - The address of the factory for weighted pool (contract address)
- *  * @param name - The name of the pool
- *  * @param symbol - The symbol of the pool
- *  * @param tokenAddresses - The token's addresses
- *  * @param weights The weights for each token, ordered
- *  * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
- *  * @param owner - The address of the owner of the pool
- *  * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
+/**
+ * Builds a transaction for a weighted pool create operation.
+ * @param factoryAddress - The address of the factory for weighted pool (contract address)
+ * @param name - The name of the pool
+ * @param symbol - The symbol of the pool
+ * @param tokenAddresses - The token's addresses
+ * @param weights The weights for each token, ordered
+ * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
+ * @param owner - The address of the owner of the pool
+ * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a weighted pool
  */
 create({
     factoryAddress,
@@ -646,30 +642,32 @@ create({
     weights,
     swapFee,
     owner,
-}) => TransactionRequest
+}) =>  {
+    to?: string;
+    data: BytesLike;
+}
 ```
 
-[Example](./examples/pools/weighted/create.ts)
+[Example](./examples/pools/weighted/create-and-init-join.ts)
 
-### #createComposableStablePool
+### Composable Stable Pool
 
 Builds a transaction to create a composable stable pool.
 
 ```js
-  /***
- * @param params
- *  * Builds a transaction for a composable pool create operation.
- *  * @param contractAddress - The address of the factory for composable stable pool (contract address)
- *  * @param name - The name of the pool
- *  * @param symbol - The symbol of the pool
- *  * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
- *  * @param tokenAddresses - The token's addresses
- *  * @param rateProviders The addresses of the rate providers for each token, ordered
- *  * @param tokenRateCacheDurations the Token Rate Cache Duration of each token
- *  * @param owner - The address of the owner of the pool
- *  * @param amplificationParameter The amplification parameter(must be greater than 1)
- *  * @param exemptFromYieldProtocolFeeFlags array containing boolean for each token exemption from yield protocol fee flags
- *  * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
+/**
+ * Builds a transaction for a composable pool create operation.
+ * @param contractAddress - The address of the factory for composable stable pool (contract address)
+ * @param name - The name of the pool
+ * @param symbol - The symbol of the pool
+ * @param swapFee - The swapFee for the owner of the pool in string or number format(100% is "1.00" or 1, 10% is "0.1" or 0.1, 1% is "0.01" or 0.01)
+ * @param tokenAddresses - The token's addresses
+ * @param rateProviders The addresses of the rate providers for each token, ordered
+ * @param tokenRateCacheDurations the Token Rate Cache Duration of each token
+ * @param owner - The address of the owner of the pool
+ * @param amplificationParameter The amplification parameter(must be greater than 1)
+ * @param exemptFromYieldProtocolFeeFlags array containing boolean for each token exemption from yield protocol fee flags
+ * @returns a TransactionRequest object, which can be directly inserted in the transaction to create a composable stable pool
  */
 create({
     factoryAddress,
@@ -682,11 +680,44 @@ create({
     exemptFromYieldProtocolFeeFlags,
     swapFee,
     owner,
-}) => TransactionRequest
+}) =>  {
+    to?: string;
+    data: BytesLike;
+}
 ```
+[Example](./examples/pools/composable-stable/create-and-init-join.ts)
 
-[Example](./examples/pools/composable-stable/create.ts)
+### Linear Pool
 
+Builds a transaction to create a linear pool.
+
+```js
+  /**
+   *
+   * @param name The name of the pool
+   * @param symbol The symbol of the pool (BPT name)
+   * @param mainToken The unwrapped token
+   * @param wrappedToken The wrapped token
+   * @param upperTarget The maximum balance of the unwrapped(main) token (normal number, no need to fix to 18 decimals)
+   * @param swapFeeEvm The swap fee of the pool
+   * @param owner The address of the owner of the pool
+   * @param protocolId The protocolId, to check the available value
+   */
+  create({
+    name,
+    symbol,
+    mainToken,
+    wrappedToken,
+    upperTarget,
+    swapFeeEvm,
+    owner,
+    protocolId,
+  }: LinearCreatePoolParameters) => {
+    to?: string;
+    data: BytesLike;
+  }
+```
+[Example](./examples/pools/linear/create.ts)
 ## RelayerService
 
 Relayers are (user opt-in, audited) contracts that can make calls to the vault (with the transaction “sender” being any arbitrary address) and use the sender’s ERC20 vault allowance, internal balance or BPTs on their behalf.
@@ -697,100 +728,6 @@ const relayer = new relayerService(
     rpcUrl: string;
 );
 ```
-
-### #swapUnwrapAaveStaticExactIn
-
-Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable. ExactIn - Exact amount of tokenIn to use in swap.
-
-@param tokensIn - array to token addresses for swapping as tokens in.
-@param aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
-@param amountsIn - amounts to be swapped for each token in.
-@param rates - The rate used to convert wrappedToken to underlying.
-@param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
-@param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
-@param fetchPools - Set whether SOR will fetch updated pool info.
-@returns Transaction data with calldata. Outputs.amountsOut has final amounts out of unwrapped tokens.
-
-```js
-async relayer.swapUnwrapAaveStaticExactIn(
-    tokensIn: string[],
-    aaveStaticTokens: string[],
-    amountsIn: BigNumberish[],
-    rates: BigNumberish[],
-    funds: FundManagement,
-    slippage: BigNumberish,
-    fetchPools: FetchPoolsInput = {
-        fetchPools: true,
-        fetchOnChain: false
-    }
-): Promise<TransactionData>
-```
-
-[Example](./examples/relayerSwapUnwrap.ts)
-
-### #swapUnwrapAaveStaticExactOut
-
-Finds swaps for tokenIn>wrapped Aave static tokens and chains with unwrap to underlying stable. ExactOut - Exact amount of tokens out are used for swaps.
-
-@param tokensIn - array to token addresses for swapping as tokens in.
-@param aaveStaticTokens - array contains the addresses of the Aave static tokens that tokenIn will be swapped to. These will be unwrapped.
-@param amountsUnwrapped - amounts of unwrapped tokens out.
-@param rates - The rate used to convert wrappedToken to underlying.
-@param funds - Funding info for swap. Note - recipient should be relayer and sender should be caller.
-@param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
-@param fetchPools - Set whether SOR will fetch updated pool info.
-@returns Transaction data with calldata. Outputs.amountsIn has the amounts of tokensIn.
-
-```js
-async relayer.swapUnwrapAaveStaticExactOut(
-    tokensIn: string[],
-    aaveStaticTokens: string[],
-    amountsUnwrapped: BigNumberish[],
-    rates: BigNumberish[],
-    funds: FundManagement,
-    slippage: BigNumberish,
-    fetchPools: FetchPoolsInput = {
-        fetchPools: true,
-        fetchOnChain: false
-    }
-): Promise<TransactionData>
-```
-
-[Example](./examples/relayerSwapUnwrap.ts)
-
-### #exitPoolAndBatchSwap
-
-Chains poolExit with batchSwap to final tokens.
-
-@param params:
-@param exiter - Address used to exit pool.
-@param swapRecipient - Address that receives final tokens.
-@param poolId - Id of pool being exited.
-@param exitTokens - Array containing addresses of tokens to receive after exiting pool. (must have the same length and order as the array returned by `getPoolTokens`.)
-@param userData - Encoded exitPool data.
-@param minExitAmountsOut - Minimum amounts of exitTokens to receive when exiting pool.
-@param finalTokensOut - Array containing the addresses of the final tokens out.
-@param slippage - Slippage to be applied to swap section. i.e. 5%=50000000000000000.
-@param fetchPools - Set whether SOR will fetch updated pool info.
-@returns Transaction data with calldata. Outputs.amountsOut has amounts of finalTokensOut returned.
-
-```js
-async relayer.exitPoolAndBatchSwap(
-    params: ExitAndBatchSwapInput {
-        exiter: string;
-        swapRecipient: string;
-        poolId: string;
-        exitTokens: string[];
-        userData: string;
-        minExitAmountsOut: string[];
-        finalTokensOut: string[];
-        slippage: string;
-        fetchPools: FetchPoolsInput;
-    }
-): Promise<TransactionData>
-```
-
-[Example](./examples/relayerExitPoolAndBatchSwap.ts)
 
 ## Pools Impermanent Loss
 

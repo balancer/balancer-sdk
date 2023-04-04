@@ -201,7 +201,7 @@ export class PoolApr {
 
     // sum them up to get pool APRs
     const apr = weightedAprs.reduce((sum, apr) => sum + apr, 0);
-    const breakdown = pickBy(
+    const breakdown = pickBy<number>(
       zipObject(
         bptFreeTokens.map((t) => t.address),
         weightedAprs
