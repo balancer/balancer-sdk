@@ -1,13 +1,13 @@
-import { ADDRESSES } from './addresses';
-import { Relayer } from '@/modules/relayer/relayer.module';
-import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
-import { Interface } from '@ethersproject/abi';
-// TODO - Ask Nico to update Typechain?
 import { BigNumber } from '@ethersproject/bignumber';
 import { Zero } from '@ethersproject/constants';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { BalancerRelayer__factory } from '@/contracts';
-const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
+import { RelayerV3__factory } from '@/contracts';
+import { BatchSwapStep, FundManagement, SwapType } from '@/modules/swaps/types';
+import { Relayer } from '@/modules/relayer/relayer.module';
+import { ADDRESSES } from './addresses';
+
+// TODO - Ask Nico to update Typechain?
+const balancerRelayerInterface = RelayerV3__factory.createInterface();
 
 const SWAP_RESULT_BBAUSD = Relayer.toChainedReference('24');
 export class BbaUsd1Builder {
