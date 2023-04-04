@@ -26,7 +26,7 @@ export const calcDueTokenProtocolSwapFeeAmount = (
   // Because the exponent is larger than one, the base of the power function has a lower bound. We cap to this
   // value to avoid numeric issues, which means in the extreme case (where the invariant growth is larger than
   // 1 / min exponent) the Pool will pay less in protocol fees than it should.
-  base = SolidityMaths.max(base, SolidityMaths.MIN_POW_BASE_FREE_EXPONENT);
+  base = SolidityMaths.max([base, SolidityMaths.MIN_POW_BASE_FREE_EXPONENT]);
 
   const power = SolidityMaths.powUpFixed(base, exponent);
   const tokenAccruedFees = SolidityMaths.mulDownFixed(

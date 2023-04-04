@@ -131,7 +131,7 @@ export const parsePoolInfo = (
   const protocolSwapFeePct = parseFixed(
     pool.protocolSwapFeeCache || '0',
     18
-  ).toString();
+  ).toBigInt();
   const protocolYieldFeePct = parseFixed(
     pool.protocolYieldFeeCache || '0',
     18
