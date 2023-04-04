@@ -26,9 +26,8 @@ export type Actions = Exit | Swap | Join;
 export interface Action {
   type: ActionType.Join | ActionType.Exit | ActionType.BatchSwap;
   callData(pool: SubgraphPoolBase, wrappedNativeAsset: string): CallData;
-  getAmountIn(pool: SubgraphPoolBase, wrappedNativeAsset: string): string;
+  getAmountIn(): string;
   getAmountOut(): string;
-  opRefKey: number;
 }
 
 export interface CallData {

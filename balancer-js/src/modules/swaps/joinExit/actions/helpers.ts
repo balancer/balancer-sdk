@@ -158,48 +158,32 @@ export function batchSwapActions(allActions: Actions[]): Actions[] {
   Any swap with tokenIn or BPT should be coming from external balances
   */
   const orderedActions: Actions[] = [];
-  let batchSwaps: Swap = {} as Swap;
-  let isFirstSwap = true;
-  let previousSwap: Swap = {} as Swap;
+  let batchedSwaps: Swap | undefined = undefined;
 
   for (const a of allActions) {
     if (a.type === ActionType.BatchSwap) {
-      if (isFirstSwap) {
-        previousSwap = a.copy();
-        batchSwaps = a.copy();
-        isFirstSwap = false;
+      if (!batchedSwaps) {
+        batchedSwaps = a.copy();
       } else {
-        // If swap has different send/receive params than previous then it will need to be done separately
-        if (
-          a.fromInternal !== previousSwap.fromInternal ||
-          a.toInternal !== previousSwap.toInternal ||
-          a.receiver !== previousSwap.receiver ||
-          a.sender !== previousSwap.sender
-        ) {
-          if (a.swaps.length > 0) {
-            orderedActions.push(batchSwaps);
-            previousSwap = a.copy();
-            batchSwaps = a.copy();
-            isFirstSwap = true;
-          }
+        if (batchedSwaps.canAddSwap(a)) {
+          batchedSwaps.addSwap(a);
         } else {
-          batchSwaps.addSwap(a);
-          previousSwap = batchSwaps.copy();
+          orderedActions.push(batchedSwaps);
+          batchedSwaps = a.copy();
         }
       }
     } else {
       // Non swap action
-      if (batchSwaps.swaps && batchSwaps.swaps.length > 0) {
-        orderedActions.push(batchSwaps);
+      if (batchedSwaps) {
+        orderedActions.push(batchedSwaps);
         // new batchSwap collection as there is a chained join/exit inbetween
-        batchSwaps = {} as Swap;
-        isFirstSwap = true;
+        batchedSwaps = undefined;
       }
       orderedActions.push(a);
     }
   }
-  if (batchSwaps.swaps && batchSwaps.swaps.length === 1)
-    orderedActions.push(batchSwaps);
+  if (batchedSwaps && batchedSwaps.swaps.length === 1)
+    orderedActions.push(batchedSwaps);
 
   return orderedActions;
 }
