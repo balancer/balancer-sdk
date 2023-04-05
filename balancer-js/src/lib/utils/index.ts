@@ -19,7 +19,7 @@ export const isSameAddress = (address1: string, address2: string): boolean =>
 
 export function insert<T>(arr: T[], index: number, newItem: T): T[] {
   if (index < 0 || index > arr.length) {
-    throw new Error("Index out of bounds. Can't insert item.");
+    return arr;
   }
   return [
     // part of the array before the specified index
@@ -39,7 +39,7 @@ export function insert<T>(arr: T[], index: number, newItem: T): T[] {
  */
 export function replace<T>(arr: T[], index: number, newItem: T): T[] {
   if (index < 0 || index >= arr.length) {
-    throw new Error("Index out of bounds. Can't replace item.");
+    return arr;
   }
   return [
     // part of the array before the specified index
