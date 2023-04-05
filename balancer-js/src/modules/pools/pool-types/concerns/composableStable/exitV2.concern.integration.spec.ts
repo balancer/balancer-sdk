@@ -2,9 +2,20 @@
 import dotenv from 'dotenv';
 import { ethers } from 'hardhat';
 import { parseFixed } from '@ethersproject/bignumber';
-import { getPoolAddress, Network, PoolWithMethods, removeItem } from '@/.';
-import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
-import { testExactBptIn, testExactTokensOut } from '@/test/lib/exitHelper';
+import {
+  BALANCER_NETWORK_CONFIG,
+  getPoolAddress,
+  Network,
+  PoolWithMethods,
+  removeItem,
+  Pools,
+} from '@/.';
+import { forkSetup, getPoolFromFile, updateFromChain } from '@/test/lib/utils';
+import {
+  testExactBptIn,
+  testExactTokensOut,
+  testRecoveryExit,
+} from '@/test/lib/exitHelper';
 
 dotenv.config();
 
@@ -15,7 +26,7 @@ const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 const testPoolId =
   '0x373b347bc87998b151a5e9b6bb6ca692b766648a000000000000000000000923';
-const blockNumber = 40178348;
+const blockNumber = 40818844;
 let pool: PoolWithMethods;
 
 describe('ComposableStableV2 Exits', () => {
@@ -31,15 +42,11 @@ describe('ComposableStableV2 Exits', () => {
       blockNumber
     );
 
-    const testPool = new TestPoolHelper(
-      testPoolId,
-      network,
-      rpcUrl,
-      blockNumber
-    );
+    let testPool = await getPoolFromFile(testPoolId, network);
+    testPool = await updateFromChain(testPool, network, provider);
 
     // Updatate pool info with onchain state from fork block no
-    pool = await testPool.getPool();
+    pool = Pools.wrap(testPool, BALANCER_NETWORK_CONFIG[network]);
   });
 
   context('exitExactBPTIn', async () => {
@@ -78,6 +85,13 @@ describe('ComposableStableV2 Exits', () => {
       const amountsOut = Array(tokensOut.length).fill('0');
       amountsOut[1] = parseFixed('0.00001', 18).toString();
       await testExactTokensOut(pool, signer, tokensOut, amountsOut);
+    });
+  });
+
+  context('buildRecoveryExit', async () => {
+    it('proportional exit', async () => {
+      const bptIn = parseFixed('0.001', 18).toString();
+      await testRecoveryExit(pool, signer, bptIn);
     });
   });
 });

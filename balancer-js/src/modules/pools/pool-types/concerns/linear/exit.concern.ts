@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as SOR from '@balancer-labs/sor';
 import { BigNumber } from '@ethersproject/bignumber';
 
@@ -49,17 +50,7 @@ export class LinearPoolExit implements ExitConcern {
     wrappedNativeAsset,
     singleTokenOut,
   }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
-    // TODO implementation
-    console.log(
-      exiter,
-      pool,
-      bptIn,
-      slippage,
-      shouldUnwrapNativeAsset,
-      wrappedNativeAsset,
-      singleTokenOut
-    );
-    throw new Error('To be implemented');
+    throw new Error('Exit type not supported');
   };
 
   buildExitExactTokensOut = ({
@@ -70,16 +61,7 @@ export class LinearPoolExit implements ExitConcern {
     slippage,
     wrappedNativeAsset,
   }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
-    // TODO implementation
-    console.log(
-      exiter,
-      pool,
-      tokensOut,
-      amountsOut,
-      slippage,
-      wrappedNativeAsset
-    );
-    throw new Error('To be implemented');
+    throw new Error('Exit type not supported');
   };
 
   buildRecoveryExit = ({

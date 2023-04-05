@@ -26,6 +26,7 @@ import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
 import { SubgraphPoolDataService } from '@/modules/sor/pool-data/subgraphPoolDataService';
 import * as Queries from '@/modules/pools/queries/types';
+
 export * from '@/modules/data/types';
 export { Network, AprBreakdown };
 
@@ -71,6 +72,7 @@ export interface ContractAddresses {
   lidoRelayer?: string;
   relayerV3?: string;
   relayerV4?: string;
+  relayerV5?: string;
   gaugeController?: string;
   feeDistributor?: string;
   veBal?: string;
@@ -78,6 +80,12 @@ export interface ContractAddresses {
   protocolFeePercentagesProvider?: string;
   weightedPoolFactory?: string;
   composableStablePoolFactory?: string;
+
+  aaveLinearPoolFactory?: string;
+  erc4626LinearPoolFactory?: string;
+  eulerLinearPoolFactory?: string;
+  gearboxLinearPoolFactory?: string;
+  yearnLinearPoolFactory?: string;
 }
 
 export interface BalancerNetworkConfig {
@@ -223,6 +231,7 @@ export interface PoolToken extends Token {
 export interface SubPoolMeta {
   pool: SubPool | null;
   latestUSDPrice?: string;
+  latestFXPrice?: string;
 }
 
 export interface SubPool {
@@ -264,6 +273,7 @@ export enum PoolType {
   Element = 'Element',
   Gyro2 = 'Gyro2',
   Gyro3 = 'Gyro3',
+  GyroE = 'GyroE',
   Managed = 'Managed',
   // Linear Pools defined below all operate the same mathematically but have different factories and names in Subgraph
   AaveLinear = 'AaveLinear',
@@ -277,6 +287,7 @@ export enum PoolType {
   SiloLinear = 'SiloLinear',
   TetuLinear = 'TetuLinear',
   YearnLinear = 'YearnLinear',
+  FX = 'FX',
 }
 
 export interface Pool {
@@ -347,10 +358,11 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     amountsIn: string[],
     slippage: string
   ) => JoinPoolAttributes;
+
   /**
    * Calculate price impact of bptAmount against zero price impact BPT amount.
    * @param tokenAmounts Token amounts. Needs a value for each pool token.
-   * @param bptAmount BPT amount for comparison.
+   * @param bptAmount BPT amount for comparison (in EVM scale).
    * @param isJoin boolean indicating if the price impact is for a join or exit.
    * @returns price impact in EVM scale.
    */
@@ -359,6 +371,7 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     bptAmount: string,
     isJoin: boolean
   ) => Promise<string>;
+
   /**
    * Build exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
    * @param exiter Account address exiting pool
@@ -375,6 +388,7 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     shouldUnwrapNativeAsset?: boolean,
     singleTokenOut?: string
   ) => ExitExactBPTInAttributes;
+
   /**
    * Build exit pool transaction parameters with exact tokens out and maximum BPT in based on slippage tolerance
    * @param exiter Account address exiting pool
@@ -389,10 +403,11 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     amountsOut: string[],
     slippage: string
   ) => ExitExactTokensOutAttributes;
+
   /**
    * Build recovery exit pool transaction parameters with exact BPT in and minimum token amounts out based on slippage tolerance
    * @param exiter Account address exiting pool
-   * @param bptIn BPT provided for exiting pool
+   * @param bptIn BPT amount in EVM scale
    * @param slippage Maximum slippage tolerance in basis points. i.e. 50 = 5%
    * @returns transaction request ready to send with signer.sendTransaction
    */
@@ -401,6 +416,7 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     bptIn: string,
     slippage: string
   ) => ExitExactBPTInAttributes;
+
   /**
    * Calculate spot price for swapping tokenIn with tokenOut
    * @param tokenIn Token address
@@ -408,6 +424,7 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
    * @returns spot price for swapping tokenIn with tokenOut in EVM scale
    */
   calcSpotPrice: (tokenIn: string, tokenOut: string) => string;
+
   bptIndex: number;
 }
 
