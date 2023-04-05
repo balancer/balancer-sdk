@@ -437,6 +437,24 @@ export class Exit {
     const isPeek = !minAmountsOut;
     const deltas: Record<string, BigNumber> = {};
 
+    const getSenderAddress = (exitPath: Node[], node: Node) => {
+      // Calls from root node are sent by the user
+      if (!node.parent) return userAddress;
+      // Otherwise sent by the parent's recipient
+      return getRecipientAddress(exitPath, node.parent);
+    };
+
+    const getRecipientAddress = (exitPath: Node[], node: Node) => {
+      // Always send to user on calls that contain outputs, otherwise send to relayer
+      const exitChildren = node.children.filter((child) =>
+        exitPath.map((n) => n.index).includes(child.index)
+      );
+      const hasOutputChild = exitChildren.some(
+        (c) => c.exitAction === 'output'
+      );
+      return hasOutputChild ? userAddress : this.relayer;
+    };
+
     // Create actions for each Node and return in multicall array
 
     exitPaths.forEach((exitPath, i) => {
@@ -445,53 +463,55 @@ export class Exit {
         (node) => node.exitAction === 'output'
       );
       exitPath.forEach((node) => {
-        // Calls from root node are sent by the user. Otherwise sent by the relayer
-        const isRootNode = !node.parent;
-        const hasOutputSiblings = node.parent?.children.some(
-          (s) =>
-            s.exitAction === 'output' &&
-            exitPath.map((n) => n.index).includes(s.index)
+        // Find the exit child node
+        const exitChild = node.children.find((child) =>
+          exitPath.map((n) => n.index).includes(child.index)
         );
-        const sender =
-          isRootNode || hasOutputSiblings ? userAddress : this.relayer;
 
-        // Always send to user on output calls otherwise send to relayer
+        const sender = getSenderAddress(exitPath, node);
+        const recipient = getRecipientAddress(exitPath, node);
+
         const exitChildren = node.children.filter((child) =>
           exitPath.map((n) => n.index).includes(child.index)
         );
         const hasOutputChild = exitChildren.some(
           (c) => c.exitAction === 'output'
         );
-        const recipient = hasOutputChild ? userAddress : this.relayer;
 
         // Last calls will use minAmountsOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
         let minAmountOut = '0';
-        if (hasOutputChild && minAmountsOut) {
-          minAmountOut = isProportional
-            ? minAmountsOut[outputNodes.indexOf(exitChildren[0])] // Proportional exits have a minAmountOut for each output node within a single exit path
-            : minAmountsOut[i]; // Non-proportional exits have a minAmountOut for each exit path
-        }
-
-        /**
-         * minAmountsOut is related to the whole multicall transaction, while
-         * minAmountsOutProportional is related only to the current node/transaction
-         * This section is responsible for mapping each minAmountOut to their
-         * respective position on the minAmountsOutProportional array
-         */
         const minAmountsOutProportional = Array(node.children.length).fill('0');
-        node.children.forEach((child, i) => {
-          if (minAmountsOut && child.exitAction === 'output') {
-            minAmountsOutProportional[i] =
-              minAmountsOut[outputNodes.indexOf(child)];
+        if (minAmountsOut && hasOutputChild) {
+          if (isProportional) {
+            /**
+             * minAmountsOut is related to the whole multicall transaction, while
+             * minAmountsOutProportional is related only to the current node/transaction
+             * This section is responsible for mapping each minAmountOut to their
+             * respective position on the minAmountsOutProportional array
+             * TODO: extract to a function so it's easier to understand
+             */
+            node.children.forEach((child, i) => {
+              if (child.exitAction === 'output') {
+                minAmountsOutProportional[i] =
+                  minAmountsOut[outputNodes.indexOf(child)];
+              }
+            });
+
+            // Proportional exits have a minAmountOut for each output node within a single exit path
+            minAmountOut =
+              minAmountsOut[outputNodes.indexOf(exitChild as Node)];
+          } else {
+            // Non-proportional exits have a minAmountOut for each exit path
+            minAmountOut = minAmountsOut[i];
           }
-        });
+        }
 
         switch (node.exitAction) {
           case 'batchSwap': {
             const { modelRequest, encodedCall, assets, amounts } =
               this.createSwap(
                 node,
-                exitChildren[0],
+                exitChild as Node,
                 i,
                 minAmountOut,
                 sender,
@@ -514,7 +534,7 @@ export class Exit {
             } else {
               exit = this.createExitPool(
                 node,
-                exitChildren[0],
+                exitChild as Node,
                 i,
                 minAmountOut,
                 sender,
