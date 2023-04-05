@@ -2,19 +2,6 @@ import { ActionType, Actions } from './types';
 import { Swap } from './swap';
 
 /**
- * Find the number of actions that end with tokenOut
- * @param actions
- * @returns
- */
-export function getNumberOfOutputActions(actions: Actions[]): number {
-  let outputCount = 0;
-  for (const a of actions) {
-    if (a.hasTokenOut) outputCount++;
-  }
-  return outputCount;
-}
-
-/**
  * Categorize each action into a Join, Middle or Exit.
  * @param actions
  * @returns
@@ -80,8 +67,7 @@ export function batchSwapActions(allActions: Actions[]): Actions[] {
       orderedActions.push(a);
     }
   }
-  if (batchedSwaps && batchedSwaps.swaps.length === 1)
-    orderedActions.push(batchedSwaps);
+  if (batchedSwaps) orderedActions.push(batchedSwaps);
 
   return orderedActions;
 }

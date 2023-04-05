@@ -13,7 +13,7 @@ import { BaseAction } from '.';
 export class Swap extends BaseAction implements Action {
   type: ActionType.BatchSwap;
   swaps: SwapV2[];
-  private limits: BigNumber[];
+  limits: BigNumber[];
   private approveTokens: string[] = [];
   opRef: OutputReference[] = [];
   fromInternal;
@@ -23,7 +23,7 @@ export class Swap extends BaseAction implements Action {
     swap: SwapV2,
     private mainTokenInIndex: number,
     private mainTokenOutIndex: number,
-    private opRefKey: number,
+    public opRefKey: number,
     private assets: string[],
     private slippage: string,
     private pools: SubgraphPoolBase[],
@@ -85,7 +85,7 @@ export class Swap extends BaseAction implements Action {
       limits[assetInIndex] = MaxInt256;
     }
     if (hasTokenOut) {
-      limits[assetOutIndex] = BigNumber.from(minOut);
+      limits[assetOutIndex] = BigNumber.from(minOut).mul(-1);
     }
     return limits;
   }
@@ -96,9 +96,6 @@ export class Swap extends BaseAction implements Action {
       limits[newSwap.swaps[0].assetInIndex] = limits[
         newSwap.swaps[0].assetInIndex
       ].add(newSwap.amountIn);
-    } else {
-      // This will be a chained swap/input amount
-      limits[newSwap.swaps[0].assetInIndex] = MaxInt256;
     }
     if (newSwap.hasTokenOut) {
       // We need to add amount for each swap that uses tokenOut to get correct total (should be negative)
@@ -108,8 +105,18 @@ export class Swap extends BaseAction implements Action {
     }
   }
 
+  isChainedSwap(swap: Swap): boolean {
+    return (
+      this.opRef[this.swaps.length - 1] &&
+      this.toInternal === swap.fromInternal &&
+      this.receiver === swap.sender &&
+      this.opRef[this.swaps.length - 1].key.toString() === swap.amountIn
+    );
+  }
+
   // If swap has different send/receive params than previous then it will need to be done separately
   canAddSwap(newSwap: Swap): boolean {
+    if (this.isChainedSwap(newSwap)) return true;
     return (
       newSwap.fromInternal === this.fromInternal &&
       newSwap.toInternal === this.toInternal &&
@@ -180,13 +187,22 @@ export class Swap extends BaseAction implements Action {
   }
 
   addSwap(swap: Swap): void {
-    // Update swaps and opRef arrays with additonal
+    const isChainedSwap = this.isChainedSwap(swap);
     this.swaps.push(swap.swaps[0]);
-    if (swap.opRef[0]) this.opRef.push(swap.opRef[0]);
     // Merge approveTokens without any duplicates
     this.approveTokens = [
       ...new Set([...this.approveTokens, ...swap.approveTokens]),
     ];
+    this.toInternal = swap.toInternal;
+    this.receiver = swap.receiver;
+    this.hasTokenOut = swap.hasTokenOut;
+    this.minOut = swap.minOut;
+    this.opRef = [...this.opRef, ...swap.opRef];
+    if (!isChainedSwap) {
+      this.amountIn = BigNumber.from(this.amountIn)
+        .add(swap.amountIn)
+        .toString();
+    }
     this.updateLimits(this.limits, swap);
   }
 

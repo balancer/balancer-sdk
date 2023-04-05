@@ -38,11 +38,11 @@ export class BaseAction {
       actionStep,
       opRefKey
     );
-    // This will be 0 if not a mainTokenOut action otherwise amount using slippage
-    this.minOut = this.getActionMinOut(swapReturn ?? '0', slippage);
     this.hasTokenIn = this.actionHasTokenIn(actionStep);
     this.hasTokenOut = this.actionHasTokenOut(actionStep);
-
+    // This will be 0 if not a mainTokenOut action otherwise amount using slippage
+    const amountOut = this.hasTokenOut ? swapReturn : '0';
+    this.minOut = this.getActionMinOut(amountOut, slippage);
     // This will set opRef for next chained action if required
     const [opRef, nextOpRefKey] = this.getActionOutputRef(
       actionStep,
