@@ -82,6 +82,7 @@ export class Exit {
 
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
     tokensOutByExitPath = outputNodes.map((n) => n.address.toLowerCase());
+
     tokensOut = [...new Set(tokensOutByExitPath)].sort();
 
     if (isProportional) {
@@ -102,6 +103,7 @@ export class Exit {
         return node;
       });
       exitPaths[0] = path;
+
       // TODO tokensOut/tokensOutByExitPath might need to be different for this case?
     } else {
       // Create exit paths for each output node and splits amount in proportionally between them
@@ -445,32 +447,51 @@ export class Exit {
       exitPath.forEach((node) => {
         // Calls from root node are sent by the user. Otherwise sent by the relayer
         const isRootNode = !node.parent;
-        const sender = isRootNode ? userAddress : this.relayer;
+        const hasOutputSiblings = node.parent?.children.some(
+          (s) =>
+            s.exitAction === 'output' &&
+            exitPath.map((n) => n.index).includes(s.index)
+        );
+        const sender =
+          isRootNode || hasOutputSiblings ? userAddress : this.relayer;
+
         // Always send to user on output calls otherwise send to relayer
-        const exitChild = node.children.find((child) =>
+        const exitChildren = node.children.filter((child) =>
           exitPath.map((n) => n.index).includes(child.index)
         );
-        const isLastActionFromExitPath = exitChild?.exitAction === 'output';
-        const recipient = isLastActionFromExitPath ? userAddress : this.relayer;
+        const hasOutputChild = exitChildren.some(
+          (c) => c.exitAction === 'output'
+        );
+        const recipient = hasOutputChild ? userAddress : this.relayer;
+
         // Last calls will use minAmountsOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
         let minAmountOut = '0';
-        if (isLastActionFromExitPath && minAmountsOut) {
+        if (hasOutputChild && minAmountsOut) {
           minAmountOut = isProportional
-            ? minAmountsOut[outputNodes.indexOf(exitChild)] // Proportional exits have a minAmountOut for each output node
+            ? minAmountsOut[outputNodes.indexOf(exitChildren[0])] // Proportional exits have a minAmountOut for each output node within a single exit path
             : minAmountsOut[i]; // Non-proportional exits have a minAmountOut for each exit path
         }
 
-        const minAmountsOutProportional =
-          isLastActionFromExitPath && minAmountsOut
-            ? minAmountsOut
-            : Array(node.children.length).fill('0');
+        /**
+         * minAmountsOut is related to the whole multicall transaction, while
+         * minAmountsOutProportional is related only to the current node/transaction
+         * This section is responsible for mapping each minAmountOut to their
+         * respective position on the minAmountsOutProportional array
+         */
+        const minAmountsOutProportional = Array(node.children.length).fill('0');
+        node.children.forEach((child, i) => {
+          if (minAmountsOut && child.exitAction === 'output') {
+            minAmountsOutProportional[i] =
+              minAmountsOut[outputNodes.indexOf(child)];
+          }
+        });
 
         switch (node.exitAction) {
           case 'batchSwap': {
             const { modelRequest, encodedCall, assets, amounts } =
               this.createSwap(
                 node,
-                exitChild as Node,
+                exitChildren[0],
                 i,
                 minAmountOut,
                 sender,
@@ -493,7 +514,7 @@ export class Exit {
             } else {
               exit = this.createExitPool(
                 node,
-                exitChild as Node,
+                exitChildren[0],
                 i,
                 minAmountOut,
                 sender,
@@ -854,12 +875,18 @@ export class Exit {
       Relayer.isChainedReference(a) ? '0' : Zero.sub(a).toString()
     );
     const userBptIn = Relayer.isChainedReference(amountIn) ? '0' : amountIn;
-    // If the sender is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
-    const deltaBptIn = sender === this.relayer ? Zero.toString() : userBptIn;
-    // If the receiver is the Relayer the exit is part of a chain and shouldn't be considered for user deltas
-    const deltaTokensOut = recipient === this.relayer ? [] : sortedTokens;
-    const deltaAmountsOut =
-      recipient === this.relayer ? [] : userAmountTokensOut;
+    // If current node is the root node the exit the delta BPT in should be considered for user deltas
+    const deltaBptIn = isRootNode ? userBptIn : Zero.toString();
+    // If the respective child node is an output, it should be considered for user deltas
+    const deltaTokensOut = sortedTokens.filter((t) =>
+      node.children
+        .filter((c) => c.exitAction === 'output')
+        .map((c) => c.address)
+        .includes(t)
+    );
+    const deltaAmountsOut = userAmountTokensOut.filter((_, i) =>
+      deltaTokensOut.includes(sortedTokens[i])
+    );
 
     return {
       modelRequest,
