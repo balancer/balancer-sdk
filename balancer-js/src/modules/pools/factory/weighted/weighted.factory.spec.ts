@@ -25,10 +25,11 @@ describe('Weighted Factory', async () => {
         ADDRESSES[network].WETH.address,
         ADDRESSES[network].DAI.address,
       ],
-      weights: [
+      normalizedWeights: [
         parseFixed('0.5', 18).toString(),
         parseFixed('0.5', 18).toString(),
       ],
+      rateProviders: [AddressZero, AddressZero],
       swapFeeEvm: parseFixed('0.01', 18).toString(),
       owner: AddressZero,
     };
@@ -59,7 +60,7 @@ describe('Weighted Factory', async () => {
         () =>
           factory.create({
             ...rightCreateParameters,
-            weights: [
+            normalizedWeights: [
               parseFixed('0.2', 18).toString(),
               parseFixed('0.2', 18).toString(),
               parseFixed('0.6', 18).toString(),
@@ -74,16 +75,10 @@ describe('Weighted Factory', async () => {
         () =>
           factory.create({
             ...rightCreateParameters,
-            weights: [
+            rateProviders: Array(9).fill(AddressZero),
+            normalizedWeights: [
               parseFixed('0.2', 18).toString(),
-              parseFixed('0.1', 18).toString(),
-              parseFixed('0.1', 18).toString(),
-              parseFixed('0.1', 18).toString(),
-              parseFixed('0.1', 18).toString(),
-              parseFixed('0.1', 18).toString(),
-              parseFixed('0.1', 18).toString(),
-              parseFixed('0.1', 18).toString(),
-              parseFixed('0.1', 18).toString(),
+              ...Array(8).fill(parseFixed('0.1', 18).toString()),
             ],
             tokenAddresses: [
               ADDRESSES[network].WETH.address,
@@ -106,7 +101,8 @@ describe('Weighted Factory', async () => {
         () =>
           factory.create({
             ...rightCreateParameters,
-            weights: [parseFixed('1', 18).toString()],
+            normalizedWeights: [parseFixed('1', 18).toString()],
+            rateProviders: [AddressZero],
             tokenAddresses: [ADDRESSES[network].WETH.address],
           }),
         BalancerError,
@@ -118,7 +114,7 @@ describe('Weighted Factory', async () => {
         () =>
           factory.create({
             ...rightCreateParameters,
-            weights: [
+            normalizedWeights: [
               parseFixed('0.2', 18).toString(),
               parseFixed('0.2', 18).toString(),
             ],

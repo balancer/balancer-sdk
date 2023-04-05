@@ -351,7 +351,6 @@ export class Join {
     if (authorisation) {
       encodedCalls.unshift(this.createSetRelayerApproval(authorisation));
     }
-
     const encodedCall = balancerRelayerInterface.encodeFunctionData(
       'multicall',
       [encodedCalls]

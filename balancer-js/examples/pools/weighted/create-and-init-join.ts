@@ -11,6 +11,7 @@ import { parseFixed } from '@ethersproject/bignumber';
 import { setUpExample } from '../helper';
 import { ADDRESSES } from '@/test/lib/constants';
 import { BalancerSDK, Network, PoolType } from 'src';
+import { AddressZero } from '@ethersproject/constants';
 
 async function createAndInitJoinWeightedPool() {
   const { ALCHEMY_URL: rpcUrlArchive } = process.env;
@@ -37,7 +38,7 @@ async function createAndInitJoinWeightedPool() {
     [addresses.USDC.slot, addresses.USDT.slot],
     balances,
     '',
-    16720000
+    16920000
   );
   const signerAddress = await signer.getAddress();
 
@@ -45,10 +46,11 @@ async function createAndInitJoinWeightedPool() {
     name: 'My-Test-Pool-Name',
     symbol: 'My-Test-Pool-Symbol',
     tokenAddresses: [addresses.USDC.address, addresses.USDT.address],
-    weights: [
+    normalizedWeights: [
       parseFixed('0.2', 18).toString(),
       parseFixed('0.8', 18).toString(),
     ],
+    rateProviders: [AddressZero, AddressZero],
     swapFeeEvm: parseFixed('1', 16).toString(),
     owner: signerAddress,
   };
@@ -93,8 +95,8 @@ async function createAndInitJoinWeightedPool() {
 
   // Check that pool balances are as expected after join
   const tokens = await balancer.contracts.vault.getPoolTokens(poolId);
-  console.log('Pool Tokens Addresses (Includes BPT): ' + tokens.tokens);
-  console.log('Pool Tokens balances (Includes BPT): ' + tokens.balances);
+  console.log('Pool Tokens Addresses: ' + tokens.tokens);
+  console.log('Pool Tokens balances: ' + tokens.balances);
 }
 
 createAndInitJoinWeightedPool();

@@ -18,14 +18,14 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         balancerHelpers: '0x5aDDCCa35b7A0D07C74063c48700C8590E87864E',
         balancerMinterAddress: '0x239e55F427D44C3cc793f49bFB507ebe76638a2b',
         lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
-        relayer: '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
+        relayer: '0xfeA793Aa415061C483D2390414275AD314B3F621',
         gaugeController: '0xc128468b7ce63ea702c1f104d55a2566b13d3abd',
         feeDistributor: '0xD3cf852898b21fc233251427c2DC93d3d604F3BB',
         protocolFeePercentagesProvider:
           '0x97207B095e4D5C9a6e4cfbfcd2C3358E03B90c4A',
         veBal: '0xC128a9954e6c874eA3d62ce62B468bA073093F25',
         veBalProxy: '0x6f5a2eE11E7a772AeB5114A20d0D7c0ff61EB8A0',
-        weightedPoolFactory: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        weightedPoolFactory: '0x897888115ada5773e02aa29f775430bfb5f34c51',
         composableStablePoolFactory:
           '0xdba127fBc23fb20F5929C546af220A991b5C6e01',
         erc4626LinearPoolFactory: '0x67A25ca2350Ebf4a0C475cA74C257C94a373b828',
@@ -94,9 +94,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
         gaugeClaimHelper: '0xaeb406b0e430bf5ea2dc0b9fe62e4e53f74b3a33',
-        relayer: '0x28A224d9d398a1eBB7BA69BCA515898966Bb1B6b',
+        relayer: '0xd18d5D377eb23362e54Fa496597d7E962d56C554',
         balancerHelpers: '0x239e55F427D44C3cc793f49bFB507ebe76638a2b',
-        weightedPoolFactory: '0x0e39C3D9b2ec765eFd9c5c70BB290B1fCD8536E3',
+        weightedPoolFactory: '0xfc8a407bba312ac761d8bfe04ce1201904842b76',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
         erc4626LinearPoolFactory: '0xa3b9515a9c557455bc53f7a535a85219b59e8b2e',
@@ -145,9 +145,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
         gaugeClaimHelper: '0xa0dabebaad1b243bbb243f933013d560819eb66f',
-        relayer: '0x5bf3B7c14b10f16939d63Bd679264A1Aa951B4D5',
+        relayer: '0x598ce0f1ab64B27256759ef99d883EE51138b9bd',
         balancerHelpers: '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab',
-        weightedPoolFactory: '0x8df6EfEc5547e31B0eb7d1291B511FF8a2bf987c',
+        weightedPoolFactory: '0xc7e5ed1054a24ef31d827e6f86caa58b3bc168d7',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
         erc4626LinearPoolFactory: '0xa3b9515a9c557455bc53f7a535a85219b59e8b2e',
@@ -253,13 +253,13 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
-        relayer: '0x00e695aA8000df01B8DC8401B4C34Fba5D56BBb2',
+        relayer: '0x03F1ab8b19bcE21EB06C364aEc9e40322572a1e9',
         gaugeController: '0xBB1CE49b16d55A1f2c6e88102f32144C7334B116',
         veBal: '0x33A99Dcc4C85C014cf12626959111D5898bbCAbF',
         veBalProxy: '0xA1F107D1cD709514AE8A914eCB757E95f9cedB31',
         balancerHelpers: '0x5aDDCCa35b7A0D07C74063c48700C8590E87864E',
         feeDistributor: '0x7F91dcdE02F72b478Dc73cB21730cAcA907c8c44',
-        weightedPoolFactory: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        weightedPoolFactory: '0x230a59f4d9adc147480f03b0d3fffecd56c3289a',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
         erc4626LinearPoolFactory: '0xba240c856498e2d7a70af4911aafae0d6b565a5b',
@@ -294,9 +294,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x2dc0e2aa608532da689e89e237df582b783e552c',
-        relayer: '0x1a58897Ab366082028ced3740900ecBD765Af738',
+        relayer: '0x03F1ab8b19bcE21EB06C364aEc9e40322572a1e9',
         balancerHelpers: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
-        weightedPoolFactory: '0x0e39C3D9b2ec765eFd9c5c70BB290B1fCD8536E3',
+        weightedPoolFactory: '0x230a59f4d9adc147480f03b0d3fffecd56c3289a',
         composableStablePoolFactory:
           '0x85a80afee867adf27b50bdb7b76da70f1e853062',
         erc4626LinearPoolFactory: '0xa3b9515a9c557455bc53f7a535a85219b59e8b2e',
@@ -332,9 +332,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xbb6fab6b627947dae0a75808250d8b2652952cb5',
-        relayer: '0xeF606F58A4FD0fCcb066c6203d0994694d3eB2D3',
+        relayer: '0x3536fD480CA495Ac91E698A703248A8915c137a3',
         balancerHelpers: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
-        weightedPoolFactory: '0xf302f9F50958c5593770FDf4d4812309fF77414f',
+        weightedPoolFactory: '0x6cad2ea22bfa7f4c14aae92e47f510cd5c509bc7',
         composableStablePoolFactory:
           '0x76578ecf9a141296ec657847fb45b0585bcda3a6',
         aaveLinearPoolFactory: '0x9da18982a33fd0c7051b19f0d7c76f2d5e7e017c',

@@ -50,7 +50,7 @@ const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
  * - Uncomment section below:
  */
 const network = Network.GOERLI;
-const blockNumber = 7890980;
+const blockNumber = 8744170;
 const { ALCHEMY_URL_GOERLI: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8000';
 

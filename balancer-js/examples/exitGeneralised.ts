@@ -36,15 +36,15 @@ dotenv.config();
 
 const network = Network.MAINNET;
 const jsonRpcUrl = process.env.ALCHEMY_URL;
-const blockNumber = 16685400;
+const blockNumber = 16940624;
 const rpcUrl = 'http://127.0.0.1:8545';
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2';
 
 const addresses = ADDRESSES[network];
 
-// bb-e-usd
-const testPool = addresses.bbeusd;
+// bb-a-usd
+const testPool = addresses.bbausd2;
 
 // Amount of testPool BPT that will be used to exit
 const amount = parseFixed('2', testPool.decimals).toString();

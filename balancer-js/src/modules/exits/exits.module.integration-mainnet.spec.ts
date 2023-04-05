@@ -193,7 +193,8 @@ const testFlow = async (
   });
 };
 
-describe('generalised exit execution', async () => {
+// Skipping Euler specific tests while eTokens transactions are paused
+describe.skip('generalised exit execution', async () => {
   /*
   bbeusd: ComposableStable, bbeusdt/bbeusdc/bbedai
   bbeusdt: Linear, eUsdt/usdt

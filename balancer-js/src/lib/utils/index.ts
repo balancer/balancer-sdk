@@ -12,6 +12,7 @@ export * from './signatures';
 export * from './tokens';
 export * from './debouncer';
 export * from './math';
+export * from './slippageHelper';
 
 export const isSameAddress = (address1: string, address2: string): boolean =>
   getAddress(address1) === getAddress(address2);
@@ -139,4 +140,10 @@ export const findEventInReceiptLogs = ({
     throw new Error('Event not found in logs');
   }
   return event;
+};
+
+export const getRandomBytes32 = (): string => {
+  const getRandomBytes8 = () => Math.random().toString(16).slice(2, 10);
+  const randomBytes32 = Array(4).fill(null).map(getRandomBytes8).join();
+  return `0x${randomBytes32}`;
 };
