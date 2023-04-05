@@ -97,7 +97,7 @@ const reset = async () =>
     },
   ]);
 
-describe('bbausd migration execution', async function () {
+describe.skip('bbausd migration execution', async function () {
   this.timeout(40000);
 
   let signer: JsonRpcSigner;

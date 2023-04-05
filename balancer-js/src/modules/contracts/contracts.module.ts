@@ -46,6 +46,7 @@ export interface ContractInstances {
   multicall: Contract;
   relayerV3?: Contract;
   relayerV4?: Contract;
+  relayerV5?: Contract;
   vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
@@ -66,6 +67,7 @@ export class Contracts {
   multicall: Contract;
   relayerV3?: Contract;
   relayerV4?: Contract;
+  relayerV5?: Contract;
   vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
@@ -108,6 +110,8 @@ export class Contracts {
       this.relayerV3 = Relayer(this.contractAddresses.relayerV3, provider, 3);
     if (this.contractAddresses.relayerV4)
       this.relayerV4 = Relayer(this.contractAddresses.relayerV4, provider, 4);
+    if (this.contractAddresses.relayerV5)
+      this.relayerV5 = Relayer(this.contractAddresses.relayerV5, provider, 5);
 
     if (this.contractAddresses.veBal) {
       this.veBal = new VeBal(this.contractAddresses, provider);

@@ -41,7 +41,7 @@ const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
  * - Uncomment section below:
  */
 const network = Network.GOERLI;
-const blockNumber = 8092113;
+const blockNumber = 8744170;
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
 const { ALCHEMY_URL_GOERLI: jsonRpcUrl } = process.env;
@@ -108,7 +108,7 @@ const { contracts, contractAddresses } = new Contracts(
   network as number,
   provider
 );
-const relayer = contractAddresses.relayerV4 as string;
+const relayer = contractAddresses.relayerV5 as string;
 
 interface Test {
   signer: JsonRpcSigner;
