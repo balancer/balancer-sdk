@@ -28,8 +28,8 @@ const decodeLog = async (log: any, abi: any) => {
 };
 
 export const decodeLogs = async (logs: any[]) => {
-  const decodedLogs = [];
-  let abi;
+  const decodedLogs: any[] = [];
+  let abi: any;
 
   for (const log of logs) {
     abi = abis.get(log.address);
@@ -69,21 +69,30 @@ export const printLogs = async (logs: any[]) => {
     });
   };
 
+  const printInternalBalanceChanged = (log: any) => {
+    const { user, token, delta } = log.args
+    console.log('\x1b[32m%s\x1b[0m', 'User: ', user)
+    console.log('\x1b[32m%s\x1b[0m', 'Token:', token)
+    console.log('\x1b[32m%s\x1b[0m', 'Delta:', formatEther(delta))
+  }
+
   const printTransfer = (log: any) => {
     console.log(log.address);
-    const { from, to, value, src, dst, wad } = log.args;
-    console.log('\x1b[32m%s\x1b[0m', 'From: ', from || src);
-    console.log('\x1b[32m%s\x1b[0m', 'To:   ', to || dst);
-    console.log('\x1b[32m%s\x1b[0m', 'Value:', formatEther(value || wad));
-  };
+    const { from, to, value, src, dst, wad, _to, _from, _value } = log.args
+    console.log('\x1b[32m%s\x1b[0m', 'From: ', from || _from || src)
+    console.log('\x1b[32m%s\x1b[0m', 'To:   ', to || _to || dst)
+    console.log('\x1b[32m%s\x1b[0m', 'Value:', formatEther(value || _value || wad))
+  }
 
-  decodedLogs.map((log) => {
+  decodedLogs.map((log: any) => {
     console.log('-'.repeat(80));
     console.log(log.name);
     if (log.name === 'Swap') {
       printSwap(log);
     } else if (log.name === 'PoolBalanceChanged') {
       printPoolBalanceChanged(log);
+    } else if (log.name === 'InternalBalanceChanged') {
+      printInternalBalanceChanged(log);
     } else if (log.name === 'Transfer') {
       printTransfer(log);
     }
