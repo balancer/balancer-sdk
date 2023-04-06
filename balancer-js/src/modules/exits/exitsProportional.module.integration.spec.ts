@@ -14,7 +14,7 @@ import { SimulationType } from '../simulation/simulation.module';
 dotenv.config();
 
 const network = Network.MAINNET;
-const blockNumber = 16940624;
+const blockNumber = 16990000;
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8545';
 
@@ -105,7 +105,7 @@ const testFlow = async (
   pool: { id: string; address: string },
   amount: string,
   authorisation: string | undefined,
-  simulationType = SimulationType.Tenderly
+  simulationType = SimulationType.VaultModel
 ) => {
   const gasLimit = 8e6;
   const slippage = '10'; // 10 bps = 0.1%
