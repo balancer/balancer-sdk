@@ -1,5 +1,5 @@
 import { Findable, Pool, PoolAttribute } from '@/types';
-import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
+import balancerRelayerAbi from '@/lib/abi/RelayerV3.json';
 import { Interface } from '@ethersproject/abi';
 
 export const balancerRelayerInterface = new Interface(balancerRelayerAbi);
