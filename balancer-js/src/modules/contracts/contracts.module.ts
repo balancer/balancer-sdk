@@ -1,30 +1,48 @@
 import { Contract } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/providers';
 import { Signer } from '@ethersproject/abstract-signer';
-import { ContractAddresses } from '@/types';
-import { Network } from '@/lib/constants/network';
-import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { LidoRelayer__factory } from '@/contracts/factories/LidoRelayer__factory';
-import { LidoRelayer } from '@/contracts/LidoRelayer';
-import { BalancerHelpers } from '@/contracts/BalancerHelpers';
-import { BalancerHelpers__factory } from '@/contracts/factories/BalancerHelpers__factory';
-import { Vault__factory } from '@/contracts/factories/Vault__factory';
-import { Vault } from '@/contracts/Vault';
+
 import { Multicall } from './implementations/multicall';
-import { ERC20 } from './implementations/ERC20';
 import { BasePool } from './implementations/base-pool';
 import { VeBal } from './implementations/veBAL';
 import { VeBalProxy } from './implementations/veBAL-proxy';
-import { Relayer } from './implementations/relayer';
-import { LiquidityGauge } from './implementations/liquidity-gauge';
-import { GaugeClaimHelper } from './implementations/GaugeClaimHelper';
-import { ComposableStablePoolFactory } from '@/modules/contracts/implementations/factories/composable-stable-pool-factory';
-import { WeightedPoolFactory } from '@/modules/contracts/implementations/factories/weighted-pool-factory';
-import { AaveLinearPoolFactory } from '@/modules/contracts/implementations/factories/aave-linear-pool-factory';
-import { Erc4626LinearPoolFactory } from '@/modules/contracts/implementations/factories/erc4626-linear-pool-factory';
-import { EulerLinearPoolFactory } from '@/modules/contracts/implementations/factories/euler-linear-pool-factory';
-import { YearnLinearPoolFactory } from '@/modules/contracts/implementations/factories/yearn-linear-pool-factory';
-import { GearboxLinearPoolFactory } from '@/modules/contracts/implementations/factories/gearbox-linear-pool-factory';
+import {
+  AaveLinearPoolFactory,
+  AaveLinearPoolFactory__factory,
+  BalancerHelpers,
+  BalancerHelpers__factory,
+  ComposableStablePoolFactory,
+  ComposableStablePoolFactory__factory,
+  ERC20,
+  ERC20__factory,
+  ERC4626LinearPoolFactory,
+  ERC4626LinearPoolFactory__factory,
+  EulerLinearPoolFactory,
+  EulerLinearPoolFactory__factory,
+  GaugeClaimHelper,
+  GaugeClaimHelper__factory,
+  GearboxLinearPoolFactory,
+  GearboxLinearPoolFactory__factory,
+  LidoRelayer,
+  LidoRelayer__factory,
+  LiquidityGaugeV5,
+  LiquidityGaugeV5__factory,
+  RelayerV3,
+  RelayerV3__factory,
+  RelayerV4,
+  RelayerV4__factory,
+  RelayerV5,
+  RelayerV5__factory,
+  Vault,
+  Vault__factory,
+  WeightedPoolFactory,
+  WeightedPoolFactory__factory,
+  YearnLinearPoolFactory,
+  YearnLinearPoolFactory__factory,
+} from '@/contracts';
+import { Network } from '@/lib/constants/network';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { ContractAddresses } from '@/types';
 
 type ContractFactory = (
   address: string,
@@ -32,47 +50,47 @@ type ContractFactory = (
 ) => Contract;
 
 export interface ContractInstances {
-  aaveLinearPoolFactory?: Contract;
+  aaveLinearPoolFactory?: AaveLinearPoolFactory;
   balancerHelpers: BalancerHelpers;
   BasePool: ContractFactory;
-  composableStablePoolFactory?: Contract;
+  composableStablePoolFactory?: ComposableStablePoolFactory;
   ERC20: ContractFactory;
-  erc4626LinearPoolFactory?: Contract;
-  eulerLinearPoolFactory?: Contract;
-  gaugeClaimHelper?: Contract;
-  gearboxLinearPoolFactory?: Contract;
+  erc4626LinearPoolFactory?: ERC4626LinearPoolFactory;
+  eulerLinearPoolFactory?: EulerLinearPoolFactory;
+  gaugeClaimHelper?: GaugeClaimHelper;
+  gearboxLinearPoolFactory?: GearboxLinearPoolFactory;
   lidoRelayer?: LidoRelayer;
   liquidityGauge: ContractFactory;
   multicall: Contract;
-  relayerV3?: Contract;
-  relayerV4?: Contract;
-  relayerV5?: Contract;
+  relayerV3?: RelayerV3;
+  relayerV4?: RelayerV4;
+  relayerV5?: RelayerV5;
   vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
-  weightedPoolFactory?: Contract;
-  yearnLinearPoolFactory?: Contract;
+  weightedPoolFactory?: WeightedPoolFactory;
+  yearnLinearPoolFactory?: YearnLinearPoolFactory;
 }
 
 export class Contracts {
-  aaveLinearPoolFactory?: Contract;
-  balancerHelpers: BalancerHelpers;
-  composableStablePoolFactory?: Contract;
+  aaveLinearPoolFactory?: ContractInstances['aaveLinearPoolFactory'];
+  balancerHelpers: ContractInstances['balancerHelpers'];
+  composableStablePoolFactory?: ContractInstances['composableStablePoolFactory'];
   contractAddresses: ContractAddresses;
-  erc4626LinearPoolFactory?: Contract;
-  eulerLinearPoolFactory?: Contract;
-  gaugeClaimHelper?: Contract;
-  gearboxLinearPoolFactory?: Contract;
-  lidoRelayer?: LidoRelayer;
+  erc4626LinearPoolFactory?: ContractInstances['erc4626LinearPoolFactory'];
+  eulerLinearPoolFactory?: ContractInstances['eulerLinearPoolFactory'];
+  gaugeClaimHelper?: ContractInstances['gaugeClaimHelper'];
+  gearboxLinearPoolFactory?: ContractInstances['gearboxLinearPoolFactory'];
+  lidoRelayer?: ContractInstances['lidoRelayer'];
   multicall: Contract;
-  relayerV3?: Contract;
-  relayerV4?: Contract;
-  relayerV5?: Contract;
-  vault: Vault;
-  veBal?: VeBal;
-  veBalProxy?: VeBalProxy;
-  weightedPoolFactory?: Contract;
-  yearnLinearPoolFactory?: Contract;
+  relayerV3?: ContractInstances['relayerV3'];
+  relayerV4?: ContractInstances['relayerV4'];
+  relayerV5?: ContractInstances['relayerV5'];
+  vault: ContractInstances['vault'];
+  veBal?: ContractInstances['veBal'];
+  veBalProxy?: ContractInstances['veBalProxy'];
+  weightedPoolFactory?: ContractInstances['weightedPoolFactory'];
+  yearnLinearPoolFactory?: ContractInstances['yearnLinearPoolFactory'];
 
   /**
    * Create instances of Balancer contracts connected to passed provider.
@@ -103,15 +121,23 @@ export class Contracts {
         provider
       );
 
-    // These contracts aren't included in Balancer Typechain but are still useful.
     // TO DO - Possibly create via Typechain but seems unnecessary?
     this.multicall = Multicall(this.contractAddresses.multicall, provider);
     if (this.contractAddresses.relayerV3)
-      this.relayerV3 = Relayer(this.contractAddresses.relayerV3, provider, 3);
+      this.relayerV3 = RelayerV3__factory.connect(
+        this.contractAddresses.relayerV3,
+        provider
+      );
     if (this.contractAddresses.relayerV4)
-      this.relayerV4 = Relayer(this.contractAddresses.relayerV4, provider, 4);
+      this.relayerV4 = RelayerV4__factory.connect(
+        this.contractAddresses.relayerV4,
+        provider
+      );
     if (this.contractAddresses.relayerV5)
-      this.relayerV5 = Relayer(this.contractAddresses.relayerV5, provider, 5);
+      this.relayerV5 = RelayerV5__factory.connect(
+        this.contractAddresses.relayerV5,
+        provider
+      );
 
     if (this.contractAddresses.veBal) {
       this.veBal = new VeBal(this.contractAddresses, provider);
@@ -122,48 +148,49 @@ export class Contracts {
     }
 
     if (this.contractAddresses.gaugeClaimHelper)
-      this.gaugeClaimHelper = GaugeClaimHelper(
+      this.gaugeClaimHelper = GaugeClaimHelper__factory.connect(
         this.contractAddresses.gaugeClaimHelper,
         provider
       );
     if (this.contractAddresses.composableStablePoolFactory) {
-      this.composableStablePoolFactory = ComposableStablePoolFactory(
-        this.contractAddresses.composableStablePoolFactory,
-        provider
-      );
+      this.composableStablePoolFactory =
+        ComposableStablePoolFactory__factory.connect(
+          this.contractAddresses.composableStablePoolFactory,
+          provider
+        );
     }
     if (this.contractAddresses.weightedPoolFactory) {
-      this.weightedPoolFactory = WeightedPoolFactory(
+      this.weightedPoolFactory = WeightedPoolFactory__factory.connect(
         this.contractAddresses.weightedPoolFactory,
         provider
       );
     }
     if (this.contractAddresses.aaveLinearPoolFactory) {
-      this.aaveLinearPoolFactory = AaveLinearPoolFactory(
+      this.aaveLinearPoolFactory = AaveLinearPoolFactory__factory.connect(
         this.contractAddresses.aaveLinearPoolFactory,
         provider
       );
     }
     if (this.contractAddresses.erc4626LinearPoolFactory) {
-      this.erc4626LinearPoolFactory = Erc4626LinearPoolFactory(
+      this.erc4626LinearPoolFactory = ERC4626LinearPoolFactory__factory.connect(
         this.contractAddresses.erc4626LinearPoolFactory,
         provider
       );
     }
     if (this.contractAddresses.eulerLinearPoolFactory) {
-      this.eulerLinearPoolFactory = EulerLinearPoolFactory(
+      this.eulerLinearPoolFactory = EulerLinearPoolFactory__factory.connect(
         this.contractAddresses.eulerLinearPoolFactory,
         provider
       );
     }
     if (this.contractAddresses.gearboxLinearPoolFactory) {
-      this.gearboxLinearPoolFactory = GearboxLinearPoolFactory(
+      this.gearboxLinearPoolFactory = GearboxLinearPoolFactory__factory.connect(
         this.contractAddresses.gearboxLinearPoolFactory,
         provider
       );
     }
     if (this.contractAddresses.yearnLinearPoolFactory) {
-      this.yearnLinearPoolFactory = YearnLinearPoolFactory(
+      this.yearnLinearPoolFactory = YearnLinearPoolFactory__factory.connect(
         this.contractAddresses.yearnLinearPoolFactory,
         provider
       );
@@ -203,8 +230,8 @@ export class Contracts {
    * @param { Signer | Provider } signerOrProvider Signer or Provider.
    * @returns Contract.
    */
-  getErc20(address: string, signerOrProvider: Signer | Provider): Contract {
-    return ERC20(address, signerOrProvider);
+  getErc20(address: string, signerOrProvider: Signer | Provider): ERC20 {
+    return ERC20__factory.connect(address, signerOrProvider);
   }
 
   /**
@@ -226,7 +253,7 @@ export class Contracts {
   getLiquidityGauge(
     address: string,
     signerOrProvider: Signer | Provider
-  ): Contract {
-    return LiquidityGauge(address, signerOrProvider);
+  ): LiquidityGaugeV5 {
+    return LiquidityGaugeV5__factory.connect(address, signerOrProvider);
   }
 }

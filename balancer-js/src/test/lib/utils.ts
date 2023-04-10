@@ -24,10 +24,10 @@ import {
   PoolsSubgraphRepository,
   Pool,
   BALANCER_NETWORK_CONFIG,
+  ERC20__factory,
 } from '@/.';
 import { balancerVault } from '@/lib/constants/config';
 import { parseEther } from '@ethersproject/units';
-import { ERC20 } from '@/modules/contracts/implementations/ERC20';
 import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 
 import { defaultAbiCoder, Interface } from '@ethersproject/abi';
@@ -151,8 +151,11 @@ export const approveToken = async (
   amount: string,
   signer: JsonRpcSigner
 ): Promise<boolean> => {
-  const tokenContract = ERC20(token, signer.provider);
-  return await tokenContract.connect(signer).approve(balancerVault, amount);
+  const tokenContract = ERC20__factory.connect(token, signer);
+  const txReceipt = await (
+    await tokenContract.approve(balancerVault, amount)
+  ).wait();
+  return txReceipt.status === 1;
 };
 
 export const setupPool = async (
@@ -168,7 +171,8 @@ export const getErc20Balance = (
   token: string,
   provider: JsonRpcProvider,
   holder: string
-): Promise<BigNumber> => ERC20(token, provider).balanceOf(holder);
+): Promise<BigNumber> =>
+  ERC20__factory.connect(token, provider).balanceOf(holder);
 
 export const getBalances = async (
   tokens: string[],
@@ -204,7 +208,9 @@ export const move = async (
 ): Promise<BigNumber> => {
   const holder = await impersonateAccount(from, provider);
   const balance = await getErc20Balance(token, provider, from);
-  await ERC20(token, provider).connect(holder).transfer(to, balance);
+  await ERC20__factory.connect(token, provider)
+    .connect(holder)
+    .transfer(to, balance);
 
   return balance;
 };
@@ -229,9 +235,7 @@ export const stake = async (
   balance: BigNumber
 ): Promise<void> => {
   await (
-    await ERC20(pool, signer.provider)
-      .connect(signer)
-      .approve(gauge, MaxUint256)
+    await ERC20__factory.connect(pool, signer).approve(gauge, MaxUint256)
   ).wait();
 
   await (
