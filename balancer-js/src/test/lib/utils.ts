@@ -91,6 +91,21 @@ export const forkSetup = async (
   }
 };
 
+export const reset = async (
+  jsonRpcUrl: string,
+  provider: JsonRpcProvider,
+  blockNumber?: number
+): Promise<void> => {
+  await provider.send('hardhat_reset', [
+    {
+      forking: {
+        jsonRpcUrl,
+        blockNumber,
+      },
+    },
+  ]);
+};
+
 /**
  * Set token balance for a given account
  *
@@ -112,7 +127,6 @@ export const setTokenBalance = async (
 
   const setStorageAt = async (token: string, index: string, value: string) => {
     await signer.provider.send('hardhat_setStorageAt', [token, index, value]);
-    await signer.provider.send('evm_mine', []); // Just mines to the next block
   };
 
   const signerAddress = await signer.getAddress();
