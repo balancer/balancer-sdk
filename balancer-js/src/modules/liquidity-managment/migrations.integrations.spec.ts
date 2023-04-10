@@ -1,9 +1,8 @@
 import { impersonateAccount, reset } from '@/test/lib/utils';
 import { expect } from 'chai';
-import { Vault__factory } from '@/contracts';
+import { ERC20__factory, Vault__factory } from '@/contracts';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
-import { ERC20 } from '@/modules/contracts/implementations/ERC20';
 import {
   vitaDao1,
   vitaDao2,
@@ -54,7 +53,11 @@ describe('Migrations', () => {
         });
 
         it('joins a new pool with an limit', async () => {
-          const balance = await ERC20(from.address, signer).balanceOf(address);
+          const balance = (
+            await ERC20__factory.connect(from.address, signer).balanceOf(
+              address
+            )
+          ).toString();
           const peek = await migrations.pool2pool(
             address,
             from.id,
@@ -74,11 +77,11 @@ describe('Migrations', () => {
 
           await (await signer.sendTransaction(txParams)).wait();
 
-          const balanceAfter = await ERC20(to.address, signer).balanceOf(
-            address
-          );
+          const balanceAfter = (
+            await ERC20__factory.connect(to.address, signer).balanceOf(address)
+          ).toString();
 
-          expect(String(balanceAfter)).to.be.eq(expectedBptOut);
+          expect(balanceAfter).to.be.eq(expectedBptOut);
         });
       });
 
@@ -91,7 +94,9 @@ describe('Migrations', () => {
           const gauge = (await gaugesRepository.findBy('poolId', from.id)) as {
             id: string;
           };
-          const balance = await ERC20(gauge.id, signer).balanceOf(address);
+          const balance = (
+            await ERC20__factory.connect(gauge.id, signer).balanceOf(address)
+          ).toString();
 
           const peek = await migrations.pool2poolWithGauges(
             address,
@@ -112,9 +117,11 @@ describe('Migrations', () => {
 
           await (await signer.sendTransaction(txParams)).wait();
 
-          const balanceAfter = await ERC20(gauge.id, signer).balanceOf(address);
+          const balanceAfter = (
+            await ERC20__factory.connect(gauge.id, signer).balanceOf(address)
+          ).toString();
 
-          expect(String(balanceAfter)).to.be.eq(expectedBptOut);
+          expect(balanceAfter).to.be.eq(expectedBptOut);
         });
       });
     });
@@ -126,7 +133,9 @@ describe('Migrations', () => {
 
       it('should build a migration using exit / join', async () => {
         const pool = composableStable;
-        const balance = await ERC20(pool.address, signer).balanceOf(address);
+        const balance = (
+          await ERC20__factory.connect(pool.address, signer).balanceOf(address)
+        ).toString();
 
         const peek = await migrations.pool2pool(
           address,
@@ -154,9 +163,9 @@ describe('Migrations', () => {
 
         await (await signer.sendTransaction(txParams)).wait();
 
-        const balanceAfter = await ERC20(pool.address, signer).balanceOf(
-          address
-        );
+        const balanceAfter = (
+          await ERC20__factory.connect(pool.address, signer).balanceOf(address)
+        ).toString();
 
         // NOTICE: We don't know the exact amount of BPT that will be minted,
         // because swaps from the linear pool are not deterministic due to external rates
@@ -174,7 +183,9 @@ describe('Migrations', () => {
       it('should build a migration using exit / join', async () => {
         const from = vitaDao1;
         const to = vitaDao2;
-        const balance = await ERC20(from.address, signer).balanceOf(address);
+        const balance = (
+          await ERC20__factory.connect(from.address, signer).balanceOf(address)
+        ).toString();
         const peek = await migrations.pool2pool(
           address,
           from.id,
@@ -194,9 +205,11 @@ describe('Migrations', () => {
 
         await (await signer.sendTransaction(txParams)).wait();
 
-        const balanceAfter = await ERC20(to.address, signer).balanceOf(address);
+        const balanceAfter = (
+          await ERC20__factory.connect(to.address, signer).balanceOf(address)
+        ).toString();
 
-        expect(String(balanceAfter)).to.be.eq(expectedBptOut);
+        expect(balanceAfter).to.be.eq(expectedBptOut);
       });
     });
 
@@ -208,7 +221,9 @@ describe('Migrations', () => {
       it('should build a migration using exit / join and stake tokens in the gauge', async () => {
         const from = '0xa6468eca7633246dcb24e5599681767d27d1f978';
         const to = '0x57ab3b673878c3feab7f8ff434c40ab004408c4c';
-        const balance = await ERC20(from, provider).balanceOf(address);
+        const balance = (
+          await ERC20__factory.connect(from, provider).balanceOf(address)
+        ).toString();
 
         const txParams = await migrations.gauge2gauge(
           address,
@@ -219,7 +234,9 @@ describe('Migrations', () => {
 
         await (await signer.sendTransaction(txParams)).wait();
 
-        const balanceAfter = await ERC20(to, provider).balanceOf(address);
+        const balanceAfter = (
+          await ERC20__factory.connect(to, provider).balanceOf(address)
+        ).toString();
 
         expect(balanceAfter).to.be.eql(balance);
       });
@@ -260,7 +277,9 @@ describe('Migrations', () => {
 
       it('should build a migration using exit / join', async () => {
         const pool = polygonComposableStable;
-        const balance = await ERC20(pool.address, signer).balanceOf(address);
+        const balance = (
+          await ERC20__factory.connect(pool.address, signer).balanceOf(address)
+        ).toString();
 
         const peek = await migrations.pool2pool(
           address,
@@ -288,9 +307,9 @@ describe('Migrations', () => {
 
         await (await signer.sendTransaction(txParams)).wait();
 
-        const balanceAfter = await ERC20(pool.address, signer).balanceOf(
-          address
-        );
+        const balanceAfter = (
+          await ERC20__factory.connect(pool.address, signer).balanceOf(address)
+        ).toString();
 
         // NOTICE: We don't know the exact amount of BPT that will be minted,
         // because swaps from the linear pool are not deterministic due to external rates
