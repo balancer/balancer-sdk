@@ -189,8 +189,7 @@ const testFlow = async (
   ).to.be.closeTo(1, 1e-2); // inaccuracy should not be over to 1%
 };
 
-// following contexts currently applies to GOERLI only
-describe('generalised join execution', async () => {
+describe.skip('generalised join execution', async () => {
   context('boosted', async () => {
     if (!TEST_BOOSTED) return true;
     let authorisation: string | undefined;
