@@ -73,24 +73,8 @@ export interface ContractInstances {
 }
 
 export class Contracts {
-  aaveLinearPoolFactory?: ContractInstances['aaveLinearPoolFactory'];
-  balancerHelpers: ContractInstances['balancerHelpers'];
-  composableStablePoolFactory?: ContractInstances['composableStablePoolFactory'];
   contractAddresses: ContractAddresses;
-  erc4626LinearPoolFactory?: ContractInstances['erc4626LinearPoolFactory'];
-  eulerLinearPoolFactory?: ContractInstances['eulerLinearPoolFactory'];
-  gaugeClaimHelper?: ContractInstances['gaugeClaimHelper'];
-  gearboxLinearPoolFactory?: ContractInstances['gearboxLinearPoolFactory'];
-  lidoRelayer?: ContractInstances['lidoRelayer'];
-  multicall: Contract;
-  relayerV3?: ContractInstances['relayerV3'];
-  relayerV4?: ContractInstances['relayerV4'];
-  relayerV5?: ContractInstances['relayerV5'];
-  vault: ContractInstances['vault'];
-  veBal?: ContractInstances['veBal'];
-  veBalProxy?: ContractInstances['veBalProxy'];
-  weightedPoolFactory?: ContractInstances['weightedPoolFactory'];
-  yearnLinearPoolFactory?: ContractInstances['yearnLinearPoolFactory'];
+  private instances: ContractInstances;
 
   /**
    * Create instances of Balancer contracts connected to passed provider.
@@ -109,119 +93,137 @@ export class Contracts {
       this.contractAddresses = networkOrAddresses;
     }
 
-    this.vault = Vault__factory.connect(this.contractAddresses.vault, provider);
-    this.balancerHelpers = BalancerHelpers__factory.connect(
+    const vault: Vault = Vault__factory.connect(
+      this.contractAddresses.vault,
+      provider
+    );
+    const balancerHelpers: BalancerHelpers = BalancerHelpers__factory.connect(
       this.contractAddresses.balancerHelpers,
       provider
     );
-
+    let lidoRelayer: undefined | LidoRelayer;
     if (this.contractAddresses.lidoRelayer)
-      this.lidoRelayer = LidoRelayer__factory.connect(
+      lidoRelayer = LidoRelayer__factory.connect(
         this.contractAddresses.lidoRelayer,
         provider
       );
 
     // TO DO - Possibly create via Typechain but seems unnecessary?
-    this.multicall = Multicall(this.contractAddresses.multicall, provider);
+    const multicall: Contract = Multicall(
+      this.contractAddresses.multicall,
+      provider
+    );
+    let relayerV3: undefined | RelayerV3;
     if (this.contractAddresses.relayerV3)
-      this.relayerV3 = RelayerV3__factory.connect(
+      relayerV3 = RelayerV3__factory.connect(
         this.contractAddresses.relayerV3,
         provider
       );
+    let relayerV4: undefined | RelayerV4;
     if (this.contractAddresses.relayerV4)
-      this.relayerV4 = RelayerV4__factory.connect(
+      relayerV4 = RelayerV4__factory.connect(
         this.contractAddresses.relayerV4,
         provider
       );
+    let relayerV5: undefined | RelayerV5;
     if (this.contractAddresses.relayerV5)
-      this.relayerV5 = RelayerV5__factory.connect(
+      relayerV5 = RelayerV5__factory.connect(
         this.contractAddresses.relayerV5,
         provider
       );
-
+    let veBal: undefined | VeBal;
     if (this.contractAddresses.veBal) {
-      this.veBal = new VeBal(this.contractAddresses, provider);
+      veBal = new VeBal(this.contractAddresses, provider);
     }
-
+    let veBalProxy: undefined | VeBalProxy;
     if (this.contractAddresses.veBalProxy) {
-      this.veBalProxy = new VeBalProxy(this.contractAddresses, provider);
+      veBalProxy = new VeBalProxy(this.contractAddresses, provider);
     }
-
+    let gaugeClaimHelper: undefined | GaugeClaimHelper;
     if (this.contractAddresses.gaugeClaimHelper)
-      this.gaugeClaimHelper = GaugeClaimHelper__factory.connect(
+      gaugeClaimHelper = GaugeClaimHelper__factory.connect(
         this.contractAddresses.gaugeClaimHelper,
         provider
       );
+    let composableStablePoolFactory: undefined | ComposableStablePoolFactory;
     if (this.contractAddresses.composableStablePoolFactory) {
-      this.composableStablePoolFactory =
+      composableStablePoolFactory =
         ComposableStablePoolFactory__factory.connect(
           this.contractAddresses.composableStablePoolFactory,
           provider
         );
     }
+    let weightedPoolFactory: undefined | WeightedPoolFactory;
     if (this.contractAddresses.weightedPoolFactory) {
-      this.weightedPoolFactory = WeightedPoolFactory__factory.connect(
+      weightedPoolFactory = WeightedPoolFactory__factory.connect(
         this.contractAddresses.weightedPoolFactory,
         provider
       );
     }
+    let aaveLinearPoolFactory: undefined | AaveLinearPoolFactory;
     if (this.contractAddresses.aaveLinearPoolFactory) {
-      this.aaveLinearPoolFactory = AaveLinearPoolFactory__factory.connect(
+      aaveLinearPoolFactory = AaveLinearPoolFactory__factory.connect(
         this.contractAddresses.aaveLinearPoolFactory,
         provider
       );
     }
+    let erc4626LinearPoolFactory: undefined | ERC4626LinearPoolFactory;
     if (this.contractAddresses.erc4626LinearPoolFactory) {
-      this.erc4626LinearPoolFactory = ERC4626LinearPoolFactory__factory.connect(
+      erc4626LinearPoolFactory = ERC4626LinearPoolFactory__factory.connect(
         this.contractAddresses.erc4626LinearPoolFactory,
         provider
       );
     }
+    let eulerLinearPoolFactory: undefined | EulerLinearPoolFactory;
     if (this.contractAddresses.eulerLinearPoolFactory) {
-      this.eulerLinearPoolFactory = EulerLinearPoolFactory__factory.connect(
+      eulerLinearPoolFactory = EulerLinearPoolFactory__factory.connect(
         this.contractAddresses.eulerLinearPoolFactory,
         provider
       );
     }
+    let gearboxLinearPoolFactory: undefined | GearboxLinearPoolFactory;
     if (this.contractAddresses.gearboxLinearPoolFactory) {
-      this.gearboxLinearPoolFactory = GearboxLinearPoolFactory__factory.connect(
+      gearboxLinearPoolFactory = GearboxLinearPoolFactory__factory.connect(
         this.contractAddresses.gearboxLinearPoolFactory,
         provider
       );
     }
+    let yearnLinearPoolFactory: undefined | YearnLinearPoolFactory;
     if (this.contractAddresses.yearnLinearPoolFactory) {
-      this.yearnLinearPoolFactory = YearnLinearPoolFactory__factory.connect(
+      yearnLinearPoolFactory = YearnLinearPoolFactory__factory.connect(
         this.contractAddresses.yearnLinearPoolFactory,
         provider
       );
     }
+    this.instances = {
+      aaveLinearPoolFactory,
+      balancerHelpers,
+      BasePool: this.getBasePool,
+      composableStablePoolFactory,
+      ERC20: this.getErc20,
+      erc4626LinearPoolFactory,
+      eulerLinearPoolFactory,
+      gaugeClaimHelper,
+      gearboxLinearPoolFactory,
+      liquidityGauge: this.getLiquidityGauge,
+      lidoRelayer,
+      multicall,
+      relayerV3,
+      relayerV4,
+      relayerV5,
+      veBal,
+      veBalProxy,
+      weightedPoolFactory,
+      yearnLinearPoolFactory,
+      vault,
+    };
   }
 
   /**
    * Expose contract instances.
    */
   get contracts(): ContractInstances {
-    return {
-      aaveLinearPoolFactory: this.aaveLinearPoolFactory,
-      balancerHelpers: this.balancerHelpers,
-      BasePool: this.getBasePool,
-      composableStablePoolFactory: this.composableStablePoolFactory,
-      ERC20: this.getErc20,
-      erc4626LinearPoolFactory: this.erc4626LinearPoolFactory,
-      eulerLinearPoolFactory: this.eulerLinearPoolFactory,
-      gaugeClaimHelper: this.gaugeClaimHelper,
-      gearboxLinearPoolFactory: this.gearboxLinearPoolFactory,
-      liquidityGauge: this.getLiquidityGauge,
-      lidoRelayer: this.lidoRelayer,
-      multicall: this.multicall,
-      relayerV3: this.relayerV3,
-      relayerV4: this.relayerV4,
-      vault: this.vault,
-      veBal: this.veBal,
-      veBalProxy: this.veBalProxy,
-      weightedPoolFactory: this.weightedPoolFactory,
-      yearnLinearPoolFactory: this.yearnLinearPoolFactory,
-    };
+    return this.instances;
   }
 
   /**

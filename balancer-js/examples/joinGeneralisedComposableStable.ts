@@ -98,7 +98,8 @@ async function join() {
   const signerAddress = await signer.getAddress();
   await getTokens(signerAddress);
 
-  const relayerAddress = balancerContracts.relayerV5?.address as string;
+  const relayerAddress = balancerContracts.contracts.relayerV5
+    ?.address as string;
   console.log('Relayer address:', relayerAddress);
 
   // Need to sign the approval only once per relayer
