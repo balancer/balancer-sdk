@@ -7,7 +7,7 @@ import { BalancerSDK } from '@/modules/sdk.module';
 import { FXPool__factory } from '@/contracts';
 import { Contract } from '@ethersproject/contracts';
 import { expect } from 'chai';
-import { parseFixed } from '@ethersproject/bignumber';
+import { formatFixed, parseFixed } from '@ethersproject/bignumber';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
 
 dotenv.config();
@@ -29,7 +29,7 @@ describe('FX Pool - Calculate Liquidity', () => {
   };
   const balancer = new BalancerSDK(sdkConfig);
   before(async () => {
-    const blockNumber = 40767042;
+    const blockNumber = await provider.getBlockNumber();
     const testPool = new TestPoolHelper(
       testPoolId,
       network,
@@ -40,7 +40,7 @@ describe('FX Pool - Calculate Liquidity', () => {
     pool = await testPool.getPool();
 
     // Setup forked network, set initial token balances and allowances
-    await forkSetup(signer, [], [], [], rpcUrlArchive as string, blockNumber);
+    await forkSetup(signer, [], [], [], rpcUrlArchive as string, undefined);
 
     // Update pool info with onchain state from fork block no
     pool = await testPool.getPool();
@@ -54,11 +54,19 @@ describe('FX Pool - Calculate Liquidity', () => {
     ).total_.toBigInt();
     const liquidityBigInt = parseFixed(liquidity, 18).toBigInt();
     // expecting 5% of margin error
+    console.log(
+      formatFixed(
+        SolidityMaths.divDownFixed(liquidityBigInt, liquidityFromContract),
+        18
+      ).toString()
+    );
     expect(
-      SolidityMaths.divDownFixed(liquidityBigInt, liquidityFromContract) <
-        parseFixed('1.05', 18).toBigInt() &&
-        SolidityMaths.divDownFixed(liquidityBigInt, liquidityFromContract) >
-          parseFixed('0.95', 18).toBigInt()
-    ).to.be.true;
+      parseFloat(
+        formatFixed(
+          SolidityMaths.divDownFixed(liquidityBigInt, liquidityFromContract),
+          18
+        ).toString()
+      )
+    ).to.be.closeTo(1, 0.05);
   });
 });
