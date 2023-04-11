@@ -25,7 +25,7 @@ export const namedTokens: Record<string, any> = {
     decimals: 18,
   },
   bDAI: {
-    address: '0x804cdb9116a10bb78768d3252355a1b18067bf8f',
+    address: '0xae37d54ae477268b9997d4161b96b8200755935c',
     decimals: 18,
   },
   USDC: {
@@ -37,7 +37,7 @@ export const namedTokens: Record<string, any> = {
     decimals: 18,
   },
   bUSDC: {
-    address: '0x9210f1204b5a24742eba12f710636d76240df3d0',
+    address: '0x82698aecc9e28e9bb27608bd52cf57f704bd1b83',
     decimals: 18,
   },
   USDT: {
@@ -49,7 +49,43 @@ export const namedTokens: Record<string, any> = {
     decimals: 18,
   },
   bUSDT: {
-    address: '0x2bbf681cc4eb09218bee85ea2a5d3d13fa40fc0c',
+    address: '0x2f4eb100552ef93840d5adc30560e5513dfffacb',
+    decimals: 18,
+  },
+  'polygon-DAI': {
+    address: '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063',
+    decimals: 18,
+  },
+  'polygon-aDAI': {
+    address: '0xee029120c72b0607344f35b17cdd90025e647b00',
+    decimals: 18,
+  },
+  'polygon-bDAI': {
+    address: '0x178e029173417b1f9c8bc16dcec6f697bc323746',
+    decimals: 18,
+  },
+  'polygon-USDC': {
+    address: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174',
+    decimals: 6,
+  },
+  'polygon-aUSDC': {
+    address: '0x221836a597948dce8f3568e044ff123108acc42a',
+    decimals: 18,
+  },
+  'polygon-bUSDC': {
+    address: '0xf93579002dbe8046c43fefe86ec78b1112247bb8',
+    decimals: 18,
+  },
+  'polygon-USDT': {
+    address: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
+    decimals: 6,
+  },
+  'polygon-aUSDT': {
+    address: '0x19c60a251e525fa88cd6f3768416a8024e98fc19',
+    decimals: 18,
+  },
+  'polygon-bUSDT': {
+    address: '0xff4ce5aaab5a627bf82f4a571ab1ce94aa365ea6',
     decimals: 18,
   },
   BAL: {

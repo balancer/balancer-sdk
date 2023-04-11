@@ -12,6 +12,7 @@ import { Pools } from './pools';
 import { Data } from './data';
 import { VaultModel } from './vaultModel/vaultModel.module';
 import { JsonRpcProvider } from '@ethersproject/providers';
+import { Migrations } from './liquidity-managment/migrations';
 
 export interface BalancerSDKRoot {
   config: BalancerSdkConfig;
@@ -38,6 +39,7 @@ export class BalancerSDK implements BalancerSDKRoot {
   readonly networkConfig: BalancerNetworkConfig;
   readonly provider: JsonRpcProvider;
   readonly claimService?: IClaimService;
+  readonly migrationService?: Migrations;
 
   constructor(
     public config: BalancerSdkConfig,
@@ -68,7 +70,7 @@ export class BalancerSDK implements BalancerSDKRoot {
     );
 
     this.zaps = new Zaps(this.networkConfig.chainId);
-    if (this.data.liquidityGauges)
+    if (this.data.liquidityGauges) {
       this.claimService = new ClaimService(
         this.data.liquidityGauges,
         this.data.feeDistributor,
@@ -78,6 +80,13 @@ export class BalancerSDK implements BalancerSDKRoot {
         this.networkConfig.addresses.contracts.gaugeClaimHelper,
         this.networkConfig.addresses.contracts.balancerMinterAddress
       );
+      this.migrationService = new Migrations(
+        this.networkConfig.addresses.contracts.relayerV5 as string,
+        this.data.pools,
+        this.data.liquidityGauges.subgraph,
+        this.provider
+      );
+    }
     this.vaultModel = new VaultModel(
       this.data.poolsForSor,
       this.networkConfig.addresses.tokens.wrappedNativeAsset

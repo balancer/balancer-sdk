@@ -17,6 +17,7 @@ import {
   JoinPoolAttributes,
   JoinPoolParameters,
 } from '../types';
+import { AddressZero } from '@ethersproject/constants';
 
 type SortedValues = {
   poolTokens: string[];
@@ -119,7 +120,7 @@ export class StablePoolJoin implements JoinConcern {
       swapFeeEvm,
       scalingFactors,
       upScaledBalances,
-    } = parsePoolInfo(pool, wrappedNativeAsset);
+    } = parsePoolInfo(pool, wrappedNativeAsset, tokensIn.includes(AddressZero));
 
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     // Sorts amounts in into ascending order (referenced to token addresses) to match the format expected by the Vault.
