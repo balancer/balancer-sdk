@@ -37,6 +37,7 @@ describe('Composable Stable Pool exits', () => {
         slippage: '100',
         shouldUnwrapNativeAsset: false,
         wrappedNativeAsset,
+        toInternalBalance: false,
       };
     });
 

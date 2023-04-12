@@ -69,7 +69,10 @@ type SortValuesExactTokensOutParams = SortValuesParams & {
   tokensOut: string[];
 };
 
-type EncodeExitParams = Pick<ExitExactBPTInParameters, 'exiter'> & {
+type EncodeExitParams = Pick<
+  ExitExactBPTInParameters,
+  'exiter' | 'toInternalBalance'
+> & {
   poolTokens: string[];
   poolId: string;
   userData: string;
@@ -85,6 +88,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenOut,
+    toInternalBalance,
   }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
     this.checkInputsExactBPTIn({
       bptIn,
@@ -133,6 +137,7 @@ export class ComposableStablePoolExit implements ExitConcern {
       exiter,
       userData,
       minAmountsOut: minAmountsOutWithBpt,
+      toInternalBalance,
     });
 
     const priceImpactConcern = new StablePoolPriceImpact();
@@ -207,9 +212,10 @@ export class ComposableStablePoolExit implements ExitConcern {
     pool,
     bptIn,
     slippage,
+    toInternalBalance,
   }: Pick<
     ExitExactBPTInParameters,
-    'exiter' | 'pool' | 'bptIn' | 'slippage'
+    'exiter' | 'pool' | 'bptIn' | 'slippage' | 'toInternalBalance'
   >): ExitExactBPTInAttributes => {
     this.checkInputsRecoveryExit({
       bptIn,
@@ -239,6 +245,7 @@ export class ComposableStablePoolExit implements ExitConcern {
       exiter,
       userData,
       minAmountsOut: minAmountsOutWithBpt,
+      toInternalBalance,
     });
 
     const priceImpactConcern = new StablePoolPriceImpact();
@@ -566,7 +573,14 @@ export class ComposableStablePoolExit implements ExitConcern {
    * @param params
    */
   encodeExitPool = (params: EncodeExitParams): ExitPoolAttributes => {
-    const { exiter, poolId, minAmountsOut, userData, poolTokens } = params;
+    const {
+      exiter,
+      poolId,
+      minAmountsOut,
+      userData,
+      poolTokens,
+      toInternalBalance,
+    } = params;
 
     const to = balancerVault;
     const functionName = 'exitPool';
@@ -578,7 +592,7 @@ export class ComposableStablePoolExit implements ExitConcern {
         assets: poolTokens,
         minAmountsOut,
         userData,
-        toInternalBalance: false,
+        toInternalBalance,
       },
     };
 
