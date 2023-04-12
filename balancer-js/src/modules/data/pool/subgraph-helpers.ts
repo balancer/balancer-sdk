@@ -27,6 +27,7 @@ export const mapType = (subgraphPool: SubgraphPool, chainId: number): Pool => {
     chainId: chainId,
     poolType: subgraphPool.poolType as PoolType,
     poolTypeVersion: subgraphPool.poolTypeVersion || 1,
+    lastPostJoinExitInvariant: subgraphPool.lastPostJoinExitInvariant,
     swapFee: subgraphPool.swapFee,
     swapEnabled: subgraphPool.swapEnabled,
     protocolYieldFeeCache: subgraphPool.protocolYieldFeeCache || '0.5', // Default protocol yield fee

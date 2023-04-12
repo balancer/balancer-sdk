@@ -70,8 +70,10 @@ export const parsePoolInfo = (
     return parseFixed(token.priceRate ?? '1', 18).toBigInt();
   });
 
-  let oldPriceRates = pool.tokens.map(({ oldPriceRate }) => {
-    return parseFixed(oldPriceRate ?? '1', 18).toBigInt();
+  console.log(pool.tokens);
+
+  let oldPriceRates = pool.tokens.map(({ oldPriceRate, priceRate }) => {
+    return parseFixed(oldPriceRate ?? priceRate ?? '1', 18).toBigInt();
   });
 
   let scalingFactorsRaw = decimals.map((d) => _computeScalingFactor(BigInt(d)));
@@ -177,7 +179,8 @@ export const parsePoolInfo = (
     protocolSwapFeePct,
     protocolYieldFeePct,
     lastPostJoinExitInvariant: parseFixed(
-      pool.lastPostJoinExitInvariant || '0'
+      pool.lastPostJoinExitInvariant || '0',
+      18
     ).toBigInt(),
     exemptedTokens,
   };

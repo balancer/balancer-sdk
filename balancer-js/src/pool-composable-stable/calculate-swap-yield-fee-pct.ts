@@ -1,6 +1,6 @@
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { OldBigNumber, StableMaths } from '@balancer-labs/sor';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
 
 export const calculateSwapYieldFeePct = (
   amplificationParameter: bigint,
@@ -28,14 +28,15 @@ export const calculateSwapYieldFeePct = (
         oldPriceRates,
         exemptedTokens
       );
-
   const totalGrowthInvariant = !exemptedTokens.includes(true)
     ? nonExemptedYieldGrowthInvariant
     : BigInt(
         StableMaths._invariant(
           BigNumber.from(amplificationParameter),
-          balances.map(BigNumber.from)
-        ).toString()
+          balances.map((balance) => new OldBigNumber(balance))
+        )
+          .toString()
+          .split('.')[0]
       );
 
   const swapFeeGrowthInvariantDelta =
@@ -46,10 +47,13 @@ export const calculateSwapYieldFeePct = (
     nonExemptedYieldGrowthInvariant > swapFeeGrowthInvariant
       ? nonExemptedYieldGrowthInvariant - swapFeeGrowthInvariant
       : BigInt(0);
-  console.log('total invariant:' + totalGrowthInvariant);
-  console.log('swap invariant delta :' + swapFeeGrowthInvariantDelta);
+  console.log('last invariant: ' + lastInvariant);
+  console.log('total invariant: ' + totalGrowthInvariant);
+  console.log('swap invariant: ' + swapFeeGrowthInvariant);
+  console.log('non exempt invariant: ' + nonExemptedYieldGrowthInvariant);
+  console.log('swap invariant delta: ' + swapFeeGrowthInvariantDelta);
   console.log(
-    'non exempt invariant delta :' + nonExemptYieldGrowthInvariantDelta
+    'non exempt invariant delta:' + nonExemptYieldGrowthInvariantDelta
   );
   const protocolSwapFeePct = SolidityMaths.mulDownFixed(
     SolidityMaths.divDownFixed(
@@ -80,13 +84,14 @@ const getSwapFeeGrowthInvariant = (
       currentPriceRates[index]
     ).toString()
   );
-  return parseFixed(
+  return BigInt(
     StableMaths._invariant(
       BigNumber.from(amplificationParameter),
       balancesWithOldPriceRate.map((balance) => new OldBigNumber(balance))
-    ).toString(),
-    18
-  ).toBigInt();
+    )
+      .toString()
+      .split('.')[0]
+  );
 };
 
 const getNonExemptedYieldGrowthInvariant = (
@@ -105,13 +110,16 @@ const getNonExemptedYieldGrowthInvariant = (
           ).toString()
         : balance
   );
-  return parseFixed(
+  console.log(balances);
+  console.log(balancesWithOnlyExemptedTokensWithOldPriceRate);
+  return BigInt(
     StableMaths._invariant(
       BigNumber.from(amplificationParameter),
       balancesWithOnlyExemptedTokensWithOldPriceRate.map(
         (balance) => new OldBigNumber(balance)
       )
-    ).toString(),
-    18
-  ).toBigInt();
+    )
+      .toString()
+      .split('.')[0]
+  );
 };

@@ -13,8 +13,8 @@ import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { BalancerNetworkConfig } from '@/types';
 import {
-  ComposableStablePool__factory,
-  ComposableStablePoolFactory__factory,
+  ComposableStable__factory,
+  ComposableStableFactory__factory,
 } from '@/contracts';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 import { LogDescription } from '@ethersproject/abi';
@@ -183,7 +183,7 @@ export class ComposableStableFactory implements PoolFactory {
     ]
   ): string => {
     const composablePoolFactoryInterface =
-      ComposableStablePoolFactory__factory.createInterface();
+      ComposableStableFactory__factory.createInterface();
     return composablePoolFactoryInterface.encodeFunctionData('create', params);
   };
 
@@ -317,7 +317,7 @@ export class ComposableStableFactory implements PoolFactory {
     const poolCreationEvent: LogDescription = findEventInReceiptLogs({
       receipt,
       to: this.contracts.composableStablePoolFactory?.address || '',
-      contractInterface: ComposableStablePoolFactory__factory.createInterface(),
+      contractInterface: ComposableStableFactory__factory.createInterface(),
       logName: 'PoolCreated',
     });
 
@@ -336,6 +336,6 @@ export class ComposableStableFactory implements PoolFactory {
   };
 
   getPoolInterface(): ComposableStablePoolInterface {
-    return ComposableStablePool__factory.createInterface();
+    return ComposableStable__factory.createInterface();
   }
 }

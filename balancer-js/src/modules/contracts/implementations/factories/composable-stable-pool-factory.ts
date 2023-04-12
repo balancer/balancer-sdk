@@ -1,7 +1,7 @@
 import { Provider } from '@ethersproject/providers';
 import { Signer } from '@ethersproject/abstract-signer';
 import { Contract } from '@ethersproject/contracts';
-import { ComposableStablePoolFactory__factory } from '@/contracts';
+import { ComposableStableFactory__factory } from '@/contracts';
 
 export const ComposableStablePoolFactory = (
   address: string,
@@ -9,7 +9,7 @@ export const ComposableStablePoolFactory = (
 ): Contract => {
   return new Contract(
     address,
-    ComposableStablePoolFactory__factory.createInterface(),
+    ComposableStableFactory__factory.createInterface(),
     signerOrProvider
   );
 };

@@ -43,7 +43,7 @@ async function joinPoolExample() {
     undefined,
     amountsIn,
     poolToJoin,
-    16720000
+    17034893
   );
   const fee = ComposableStableProtocolFee.calculateProtocolFees(pool);
   console.log(fee);
