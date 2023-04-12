@@ -206,7 +206,7 @@ export class LinearPoolExit implements ExitConcern {
         assets: poolTokens,
         minAmountsOut,
         userData,
-        toInternalBalance: false,
+        toInternalBalance,
       },
     };
 
