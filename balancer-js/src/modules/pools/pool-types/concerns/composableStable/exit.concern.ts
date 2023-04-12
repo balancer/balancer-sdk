@@ -163,6 +163,7 @@ export class ComposableStablePoolExit implements ExitConcern {
     amountsOut,
     slippage,
     wrappedNativeAsset,
+    toInternalBalance,
   }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
     this.checkInputsExactTokensOut(tokensOut, amountsOut, pool);
     const sortedValues = this.sortValuesExitExactTokensOut({
@@ -189,6 +190,7 @@ export class ComposableStablePoolExit implements ExitConcern {
       userData,
       exiter,
       poolId: pool.id,
+      toInternalBalance,
     });
 
     const priceImpactConcern = new StablePoolPriceImpact();
