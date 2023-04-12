@@ -12,13 +12,21 @@ export const testExactBptIn = async (
   pool: PoolWithMethods,
   signer: JsonRpcSigner,
   bptIn: string,
-  tokenOut?: string
+  tokenOut?: string,
+  toInternalBalance = false
 ): Promise<void> => {
   const slippage = '20'; // 20 bps = 0.2% - this is a high slippage to differences between static call and actual transaction
   const signerAddress = await signer.getAddress();
 
   const { to, data, minAmountsOut, expectedAmountsOut, priceImpact } =
-    pool.buildExitExactBPTIn(signerAddress, bptIn, slippage, false, tokenOut);
+    pool.buildExitExactBPTIn(
+      signerAddress,
+      bptIn,
+      slippage,
+      false,
+      tokenOut,
+      toInternalBalance
+    );
 
   const { transactionReceipt, balanceDeltas } =
     await sendTransactionGetBalances(
@@ -50,7 +58,8 @@ export const testExactTokensOut = async (
   pool: PoolWithMethods,
   signer: JsonRpcSigner,
   tokensOut: string[],
-  amountsOut: string[]
+  amountsOut: string[],
+  toInternalBalance = false
 ): Promise<void> => {
   const slippage = '20'; // 20 bps = 0.2% - below it prediction fails with 207 - not enough bptIn
   const signerAddress = await signer.getAddress();
@@ -60,7 +69,8 @@ export const testExactTokensOut = async (
       signerAddress,
       tokensOut,
       amountsOut,
-      slippage
+      slippage,
+      toInternalBalance
     );
 
   const tokensToBeChecked =
@@ -98,13 +108,14 @@ export const testExactTokensOut = async (
 export const testRecoveryExit = async (
   pool: PoolWithMethods,
   signer: JsonRpcSigner,
-  bptIn: string
+  bptIn: string,
+  toInternalBalance = false
 ): Promise<void> => {
   const slippage = '10'; // 10 bps = 0.1%
   const signerAddress = await signer.getAddress();
 
   const { to, data, minAmountsOut, expectedAmountsOut, priceImpact } =
-    pool.buildRecoveryExit(signerAddress, bptIn, slippage);
+    pool.buildRecoveryExit(signerAddress, bptIn, slippage, toInternalBalance);
 
   const { transactionReceipt, balanceDeltas } =
     await sendTransactionGetBalances(

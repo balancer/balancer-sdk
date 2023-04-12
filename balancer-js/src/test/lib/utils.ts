@@ -38,6 +38,7 @@ import { Pools as PoolsProvider } from '@/modules/pools';
 import mainnetPools from '../fixtures/pools-mainnet.json';
 import polygonPools from '../fixtures/pools-polygon.json';
 import { PoolsJsonRepository } from './pools-json-repository';
+import { Contracts } from '@/modules/contracts/contracts.module';
 
 const jsonPools = {
   [Network.MAINNET]: mainnetPools,
@@ -199,6 +200,16 @@ export const getBalances = async (
     }
   }
   return Promise.all(balances);
+};
+
+export const getBalancesInternal = async (
+  tokens: string[],
+  signer: JsonRpcSigner,
+  signerAddress: string
+): Promise<Promise<BigNumber[]>> => {
+  const chainId = await signer.getChainId();
+  const { vault } = new Contracts(chainId, signer.provider);
+  return vault.getInternalBalance(signerAddress, tokens);
 };
 
 export const formatAddress = (text: string): string => {
@@ -373,6 +384,11 @@ export async function sendTransactionGetBalances(
     signer,
     signerAddress
   );
+  const balanceBeforeInternal = await getBalancesInternal(
+    tokensForBalanceCheck,
+    signer,
+    signerAddress
+  );
   // Send transaction to local fork
   const transactionResponse = await signer.sendTransaction({
     to,
@@ -389,12 +405,22 @@ export async function sendTransactionGetBalances(
     signer,
     signerAddress
   );
-  const balanceDeltas = balancesAfter.map((balAfter, i) => {
+  const balancesAfterInternal = await getBalancesInternal(
+    tokensForBalanceCheck,
+    signer,
+    signerAddress
+  );
+  const balanceDeltas = balancesAfter.map((balanceAfter, i) => {
     // ignore ETH delta from gas cost
     if (tokensForBalanceCheck[i] === AddressZero) {
-      balAfter = balAfter.add(gasPrice);
+      balanceAfter = balanceAfter.add(gasPrice);
     }
-    return balAfter.sub(balanceBefore[i]).abs();
+    // check for deltas not taking into account if they are internal balances or not
+    return balanceAfter
+      .add(balancesAfterInternal[i])
+      .sub(balanceBefore[i])
+      .sub(balanceBeforeInternal[i])
+      .abs();
   });
 
   return {
