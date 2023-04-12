@@ -1,3 +1,4 @@
+// yarn test:only ./src/modules/liquidity-managment/migrations.integrations.spec.ts
 import { impersonateAccount, reset } from '@/test/lib/utils';
 import { expect } from 'chai';
 import { Vault__factory } from '@/contracts';
@@ -16,7 +17,8 @@ import {
 } from './migrations/builder.spec-helpers';
 import { Migrations } from './migrations';
 
-describe('Migrations', () => {
+describe('Migrations', function () {
+  this.timeout(30000);
   context('mainnet', () => {
     const {
       addresses: { contracts },
