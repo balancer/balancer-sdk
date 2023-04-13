@@ -4,7 +4,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { expect } from 'chai';
 import { formatFixed } from '@ethersproject/bignumber';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
-import { sendTransactionGetBalances } from '@/test/lib/utils';
+import { accuracy, sendTransactionGetBalances } from '@/test/lib/utils';
 import { insert } from '@/lib/utils';
 import { formatEther } from '@ethersproject/units';
 
@@ -28,7 +28,7 @@ export const testExactBptIn = async (
       toInternalBalance
     );
 
-  const { transactionReceipt, balanceDeltas } =
+  const { transactionReceipt, balanceDeltas, internalBalanceDeltas } =
     await sendTransactionGetBalances(
       pool.tokensList,
       signer,
@@ -39,10 +39,13 @@ export const testExactBptIn = async (
 
   expect(transactionReceipt.status).to.eq(1);
   const expectedDeltas = insert(expectedAmountsOut, pool.bptIndex, bptIn);
-  // Allow for rounding errors - this has to be fixed on the SOR side in order to be 100% accurate
   expectedDeltas.forEach((expectedDelta, i) => {
-    const delta = Number(formatEther(balanceDeltas[i].sub(expectedDelta)));
-    expect(delta).to.be.closeTo(0, 1);
+    const balanceDelta = toInternalBalance
+      ? balanceDeltas[i].add(internalBalanceDeltas[i])
+      : balanceDeltas[i];
+    // Allow up to 1% error due to protocol fees not being considered on SOR math
+    const deltaAccuracy = accuracy(balanceDelta, BigNumber.from(expectedDelta));
+    expect(deltaAccuracy).to.be.closeTo(1, 1e-2);
   });
   const expectedMins = expectedAmountsOut.map((a) =>
     subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
@@ -78,7 +81,7 @@ export const testExactTokensOut = async (
       ? insert(tokensOut, pool.bptIndex, pool.address)
       : tokensOut;
 
-  const { transactionReceipt, balanceDeltas } =
+  const { transactionReceipt, balanceDeltas, internalBalanceDeltas } =
     await sendTransactionGetBalances(
       tokensToBeChecked,
       signer,
@@ -91,8 +94,12 @@ export const testExactTokensOut = async (
   const expectedDeltas = insert(amountsOut, pool.bptIndex, expectedBPTIn);
   // Allow for rounding errors - this has to be fixed on the SOR side in order to be 100% accurate
   expectedDeltas.forEach((expectedDelta, i) => {
-    const delta = Number(formatEther(balanceDeltas[i].sub(expectedDelta)));
-    expect(delta).to.be.closeTo(0, 1);
+    const balanceDelta = toInternalBalance
+      ? balanceDeltas[i].add(internalBalanceDeltas[i])
+      : balanceDeltas[i];
+    // Allow up to 1% error due to protocol fees not being considered on SOR math
+    const deltaAccuracy = accuracy(balanceDelta, BigNumber.from(expectedDelta));
+    expect(deltaAccuracy).to.be.closeTo(1, 1e-2);
   });
   const expectedMaxBpt = addSlippage(
     BigNumber.from(expectedBPTIn),
@@ -117,7 +124,7 @@ export const testRecoveryExit = async (
   const { to, data, minAmountsOut, expectedAmountsOut, priceImpact } =
     pool.buildRecoveryExit(signerAddress, bptIn, slippage, toInternalBalance);
 
-  const { transactionReceipt, balanceDeltas } =
+  const { transactionReceipt, balanceDeltas, internalBalanceDeltas } =
     await sendTransactionGetBalances(
       pool.tokensList,
       signer,
@@ -130,7 +137,11 @@ export const testRecoveryExit = async (
   const expectedDeltas = insert(expectedAmountsOut, pool.bptIndex, bptIn);
   // Allow for rounding errors - this has to be fixed on the SOR side in order to be 100% accurate
   expectedDeltas.forEach((expectedDelta, i) => {
-    expect(balanceDeltas[i].sub(expectedDelta).toNumber()).to.be.closeTo(0, 1);
+    const balanceDelta = toInternalBalance
+      ? balanceDeltas[i].add(internalBalanceDeltas[i])
+      : balanceDeltas[i];
+    const delta = balanceDelta.sub(expectedDelta).toNumber();
+    expect(delta).to.be.closeTo(0, 1);
   });
   const expectedMins = expectedAmountsOut.map((a) =>
     subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()

@@ -377,6 +377,7 @@ export async function sendTransactionGetBalances(
 ): Promise<{
   transactionReceipt: TransactionReceipt;
   balanceDeltas: BigNumber[];
+  internalBalanceDeltas: BigNumber[];
   gasUsed: BigNumber;
 }> {
   const balanceBefore = await getBalances(
@@ -384,7 +385,7 @@ export async function sendTransactionGetBalances(
     signer,
     signerAddress
   );
-  const balanceBeforeInternal = await getBalancesInternal(
+  const balancesBeforeInternal = await getBalancesInternal(
     tokensForBalanceCheck,
     signer,
     signerAddress
@@ -410,22 +411,23 @@ export async function sendTransactionGetBalances(
     signer,
     signerAddress
   );
+
   const balanceDeltas = balancesAfter.map((balanceAfter, i) => {
     // ignore ETH delta from gas cost
     if (tokensForBalanceCheck[i] === AddressZero) {
       balanceAfter = balanceAfter.add(gasPrice);
     }
-    // check for deltas not taking into account if they are internal balances or not
-    return balanceAfter
-      .add(balancesAfterInternal[i])
-      .sub(balanceBefore[i])
-      .sub(balanceBeforeInternal[i])
-      .abs();
+    return balanceAfter.sub(balanceBefore[i]).abs();
+  });
+
+  const internalBalanceDeltas = balancesAfterInternal.map((b, i) => {
+    return b.sub(balancesBeforeInternal[i]).abs();
   });
 
   return {
     transactionReceipt,
     balanceDeltas,
+    internalBalanceDeltas,
     gasUsed,
   };
 }
