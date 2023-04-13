@@ -196,6 +196,7 @@ export class StablePoolExit implements ExitConcern {
     pool,
     bptIn,
     slippage,
+    toInternalBalance,
   }: Pick<
     ExitExactBPTInParameters,
     'exiter' | 'pool' | 'bptIn' | 'slippage' | 'toInternalBalance'
