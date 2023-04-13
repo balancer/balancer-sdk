@@ -4,6 +4,7 @@ import { WeiPerEther, Zero } from '@ethersproject/constants';
 import { JsonRpcSigner } from '@ethersproject/providers';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { BalancerRelayer__factory } from '@/contracts/factories/BalancerRelayer__factory';
 import { networkAddresses } from '@/lib/constants/config';
 import { AssetHelpers, subSlippage } from '@/lib/utils';
 import { PoolGraph, Node } from '@/modules/graph/graph';
@@ -23,12 +24,13 @@ import {
 import { ExitPoolRequest as ExitPoolModelRequest } from '@/modules/vaultModel/poolModel/exit';
 import { SwapRequest } from '@/modules/vaultModel/poolModel/swap';
 import { Requests, VaultModel } from '@/modules/vaultModel/vaultModel.module';
+import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { StablePoolEncoder } from '@/pool-stable';
 import { getPoolAddress } from '@/pool-utils';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
-import { RelayerV5__factory } from '@/contracts';
-import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
+
+const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
 export class Exit {
   private wrappedNativeAsset: string;
@@ -41,7 +43,7 @@ export class Exit {
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
-    this.relayer = contracts.relayerV5 as string;
+    this.relayer = contracts.relayer;
   }
 
   async exitPool(
@@ -392,10 +394,10 @@ export class Exit {
       );
     }
 
-    const relayerInterface = RelayerV5__factory.createInterface();
-    const encodedCall = relayerInterface.encodeFunctionData('multicall', [
-      calls,
-    ]);
+    const encodedCall = balancerRelayerInterface.encodeFunctionData(
+      'multicall',
+      [calls]
+    );
 
     return {
       multiRequests,

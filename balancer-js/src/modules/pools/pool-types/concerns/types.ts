@@ -83,6 +83,7 @@ export interface ExitConcern {
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenOut,
+    toInternalBalance,
   }: ExitExactBPTInParameters) => ExitExactBPTInAttributes;
 
   /**
@@ -102,6 +103,7 @@ export interface ExitConcern {
     amountsOut,
     slippage,
     wrappedNativeAsset,
+    toInternalBalance,
   }: ExitExactTokensOutParameters) => ExitExactTokensOutAttributes;
 
   /**
@@ -117,9 +119,10 @@ export interface ExitConcern {
     pool,
     bptIn,
     slippage,
+    toInternalBalance,
   }: Pick<
     ExitExactBPTInParameters,
-    'exiter' | 'pool' | 'bptIn' | 'slippage'
+    'exiter' | 'pool' | 'bptIn' | 'slippage' | 'toInternalBalance'
   >) => ExitExactBPTInAttributes;
 }
 
@@ -215,6 +218,7 @@ export interface ExitExactBPTInParameters {
   shouldUnwrapNativeAsset: boolean;
   wrappedNativeAsset: string;
   singleTokenOut?: string;
+  toInternalBalance: boolean;
 }
 
 export interface ExitExactBPTInSingleTokenOutParameters {
@@ -234,4 +238,5 @@ export interface ExitExactTokensOutParameters {
   amountsOut: string[];
   slippage: string;
   wrappedNativeAsset: string;
+  toInternalBalance: boolean;
 }

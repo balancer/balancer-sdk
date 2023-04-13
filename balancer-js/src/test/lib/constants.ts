@@ -24,12 +24,6 @@ export const ADDRESSES = {
       decimals: 18,
       slot: 3,
     },
-    BatchRelayer: {
-      address: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
-    },
-    BatchRelayerV4: {
-      address: '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
-    },
     ETH: {
       address: AddressZero,
       decimals: 18,
@@ -295,9 +289,6 @@ export const ADDRESSES = {
   },
   [Network.KOVAN]: {
     // Visit https://balancer-faucet.on.fleek.co/#/faucet for test tokens
-    BatchRelayer: {
-      address: '0x41B953164995c11C81DA73D212ED8Af25741b7Ac',
-    },
     ETH: {
       address: AddressZero,
       decimals: 18,

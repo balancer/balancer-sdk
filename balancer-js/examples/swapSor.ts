@@ -63,7 +63,7 @@ async function getAndProcessSwaps(
         swapInfo,
         pools,
         wallet.address,
-        balancer.contracts.relayerV3!.address,
+        balancer.contracts.relayer.address,
         balancer.networkConfig.addresses.tokens.wrappedNativeAsset,
         slippage,
         undefined
@@ -73,7 +73,7 @@ async function getAndProcessSwaps(
       // console.log(wallet.address);
       // console.log(await balancer.sor.provider.getBlockNumber());
       // console.log(relayerCallData.data);
-      const result = await balancer.contracts.relayerV3
+      const result = await balancer.contracts.relayer
         ?.connect(wallet)
         .callStatic.multicall(relayerCallData.rawCalls);
       console.log(result);
