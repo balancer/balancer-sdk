@@ -1,40 +1,20 @@
-// yarn test:only ./src/modules/exits/exits.module.integration-mainnet.spec.ts
+// yarn test:only ./src/modules/exits/exitsProportional.module.integration.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 
-import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
-import { JsonRpcProvider } from '@ethersproject/providers';
-import { Contracts } from '@/modules/contracts/contracts.module';
+import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
+
+import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '@/.';
+import { Relayer } from '@/modules/relayer/relayer.module';
 import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
-import { Relayer } from '@/modules/relayer/relayer.module';
-import { JsonRpcSigner } from '@ethersproject/providers';
 import { SimulationType } from '../simulation/simulation.module';
-
-/**
- * -- Integration tests for generalisedExit --
- *
- * It compares results from local fork transactions with simulated results from
- * the Simulation module, which can be of 3 different types:
- * 1. Tenderly: uses Tenderly Simulation API (third party service)
- * 2. VaultModel: uses TS math, which may be less accurate (min. 99% accuracy)
- * 3. Static: uses staticCall, which is 100% accurate but requires vault approval
- */
 
 dotenv.config();
 
-const TEST_BBEUSD = true;
-
-/*
- * Testing on MAINNET
- * - Run node on terminal: yarn run node
- * - Uncomment section below:
- */
 const network = Network.MAINNET;
-const blockNumber = 16685902;
-const customSubgraphUrl =
-  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2';
+const blockNumber = 16990000;
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8545';
 
@@ -75,18 +55,14 @@ const subgraphQuery: GraphQLQuery = { args: subgraphArgs, attrs: {} };
 const sdk = new BalancerSDK({
   network,
   rpcUrl,
-  customSubgraphUrl,
   tenderly: tenderlyConfig,
   subgraphQuery,
 });
-const { pools } = sdk;
+const { pools, balancerContracts } = sdk;
 const provider = new JsonRpcProvider(rpcUrl, network);
-const signer = provider.getSigner(1); // signer 0 at this blockNumber has DAI balance and tests were failling
-const { contracts, contractAddresses } = new Contracts(
-  network as number,
-  provider
-);
-const relayer = contractAddresses.relayer;
+const signer = provider.getSigner(1);
+const { contracts, contractAddresses } = balancerContracts;
+const relayerAddress = contractAddresses.relayer as string;
 
 interface Test {
   signer: JsonRpcSigner;
@@ -106,7 +82,7 @@ const runTests = async (tests: Test[]) => {
     it(test.description, async () => {
       const signerAddress = await test.signer.getAddress();
       const authorisation = await Relayer.signRelayerApproval(
-        relayer,
+        relayerAddress,
         signerAddress,
         test.signer,
         contracts.vault
@@ -171,7 +147,6 @@ const testFlow = async (
     minOut: minAmountsOut,
     expectedOut: expectedAmountsOut,
     balanceAfter: tokensOutBalanceAfter.map((b) => b.toString()),
-    balanceBefore: tokensOutBalanceBefore.map((b) => b.toString()),
   });
 
   expect(receipt.status).to.eql(1);
@@ -193,21 +168,15 @@ const testFlow = async (
   });
 };
 
-// Skipping Euler specific tests while eTokens transactions are paused
-describe.skip('generalised exit execution', async () => {
-  /*
-  bbeusd: ComposableStable, bbeusdt/bbeusdc/bbedai
-  bbeusdt: Linear, eUsdt/usdt
-  bbeusdc: Linear, eUsdc/usdc
-  bbedai: Linear, eDai/dai
-  */
-  context('bbeusd', async () => {
-    if (!TEST_BBEUSD) return true;
+describe('generalised exit execution', async () => {
+  context('composable stable pool - non-boosted', async () => {
     let authorisation: string | undefined;
+    const testPool = addresses.wstETH_rETH_sfrxETH;
+
     beforeEach(async () => {
-      const tokens = [addresses.bbeusd.address];
-      const slots = [addresses.bbeusd.slot];
-      const balances = [parseFixed('2', addresses.bbeusd.decimals).toString()];
+      const tokens = [testPool.address];
+      const slots = [testPool.slot];
+      const balances = [parseFixed('0.02', testPool.decimals).toString()];
       await forkSetup(
         signer,
         tokens,
@@ -223,33 +192,42 @@ describe.skip('generalised exit execution', async () => {
         signer,
         description: 'exit pool',
         pool: {
-          id: addresses.bbeusd.id,
-          address: addresses.bbeusd.address,
+          id: testPool.id,
+          address: testPool.address,
         },
-        amount: parseFixed('2', addresses.bbeusd.decimals).toString(),
-        authorisation: authorisation,
-        simulationType: SimulationType.Tenderly,
+        amount: parseFixed('0.01', testPool.decimals).toString(),
+        authorisation,
       },
+    ]);
+  });
+  context('composable stable pool - boosted', async () => {
+    let authorisation: string | undefined;
+    const testPool = addresses.bbgusd;
+
+    beforeEach(async () => {
+      const tokens = [testPool.address];
+      const slots = [testPool.slot];
+      const balances = [parseFixed('0.02', testPool.decimals).toString()];
+      await forkSetup(
+        signer,
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        blockNumber
+      );
+    });
+
+    await runTests([
       {
         signer,
         description: 'exit pool',
         pool: {
-          id: addresses.bbeusd.id,
-          address: addresses.bbeusd.address,
+          id: testPool.id,
+          address: testPool.address,
         },
-        amount: parseFixed('2', addresses.bbeusd.decimals).toString(),
-        authorisation: authorisation,
-        simulationType: SimulationType.Static,
-      },
-      {
-        signer,
-        description: 'exit pool',
-        pool: {
-          id: addresses.bbeusd.id,
-          address: addresses.bbeusd.address,
-        },
-        amount: parseFixed('2', addresses.bbeusd.decimals).toString(),
-        authorisation: authorisation,
+        amount: parseFixed('0.01', testPool.decimals).toString(),
+        authorisation,
       },
     ]);
   });

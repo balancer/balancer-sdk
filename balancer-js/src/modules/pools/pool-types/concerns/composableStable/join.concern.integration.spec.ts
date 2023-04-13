@@ -25,7 +25,7 @@ const { ALCHEMY_URL_POLYGON: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8137';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
-const blockNumber = 40767042;
+const blockNumber = 41400000;
 const testPoolId =
   '0x02d2e2d7a89d6c5cb3681cfcb6f7dac02a55eda400000000000000000000088f';
 
@@ -33,7 +33,6 @@ describe('ComposableStable Pool - Join Functions', async () => {
   let signerAddress: string;
   let pool: PoolWithMethods;
   let testPoolHelper: TestPoolHelper;
-
   before(async () => {
     signerAddress = await signer.getAddress();
 

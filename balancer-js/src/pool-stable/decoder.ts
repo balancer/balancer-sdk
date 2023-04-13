@@ -1,6 +1,6 @@
 import { defaultAbiCoder, Result } from '@ethersproject/abi';
 
-export class StablePoolEncoder {
+export class StablePoolDecoder {
   /**
    * Cannot be constructed.
    */

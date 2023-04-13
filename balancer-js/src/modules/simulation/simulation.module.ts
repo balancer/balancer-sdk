@@ -156,15 +156,13 @@ export class Simulation {
       throw new Error('Missing Vault Model Config.');
     // make one multicall for each exitPath
     // take only bptOut/tokenOut delta into account
-    // -- works only with single bpt/token out --
     const amountsOut: string[] = [];
     for (const [i, requests] of multiRequests.entries()) {
       const deltas = await this.vaultModel.multicall(requests, i === 0);
-      const tokenOutDelta = Object.values(deltas)
-        .find((d) => d.lt(0))
-        ?.mul(-1);
-      if (!tokenOutDelta) throw new Error('No delta found for token out.');
-      amountsOut.push(tokenOutDelta.toString());
+      const tokenOutDeltas = Object.values(deltas).filter((d) => d.lt(0));
+      if (tokenOutDeltas.length === 0)
+        throw new Error('No delta found for token out.');
+      amountsOut.push(...tokenOutDeltas.map((d) => d.mul(-1).toString()));
     }
     return amountsOut;
   };

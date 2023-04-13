@@ -9,7 +9,7 @@ import { OldBigNumber, StableMaths } from '@balancer-labs/sor';
 import {
   Network,
   PoolType,
-  ComposableStable__factory,
+  ComposableStablePool__factory,
   BalancerSDK,
   ComposableStable,
   ComposableStableCreatePoolParameters,
@@ -82,7 +82,7 @@ describe('ComposableStable Factory', async () => {
           provider,
           transactionReceipt
         ));
-      pool = ComposableStable__factory.connect(poolAddress, provider);
+      pool = ComposableStablePool__factory.connect(poolAddress, provider);
       const id = await pool.getPoolId();
       const owner = await pool.getOwner();
       const swapFee = await pool.getSwapFeePercentage();
