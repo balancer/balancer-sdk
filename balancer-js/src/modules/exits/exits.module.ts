@@ -26,6 +26,7 @@ import {
 } from '@/modules/swaps/types';
 import { ExitPoolRequest as ExitPoolModelRequest } from '@/modules/vaultModel/poolModel/exit';
 import { SwapRequest } from '@/modules/vaultModel/poolModel/swap';
+import { UnwrapRequest } from '@/modules/vaultModel/poolModel/unwrap';
 import { Requests, VaultModel } from '@/modules/vaultModel/vaultModel.module';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { StablePoolEncoder } from '@/pool-stable';
@@ -66,6 +67,8 @@ export class Exit {
     minAmountsOut: string[];
     priceImpact: string;
   }> {
+    console.log('unwrapTokens', unwrapTokens);
+
     /*
     Overall exit flow description:
     - Create calls with 0 expected min amount for each token out
@@ -525,15 +528,16 @@ export class Exit {
 
         switch (node.exitAction) {
           case 'unwrap': {
-            const { encodedCall, assets, amounts } = this.createUnwrap(
-              node,
-              exitChild as Node,
-              i,
-              minAmountOut,
-              sender,
-              recipient
-            );
-            // modelRequests.push(modelRequest); // TODO: add model request for unwrap to work with vault model
+            const { modelRequest, encodedCall, assets, amounts } =
+              this.createUnwrap(
+                node,
+                exitChild as Node,
+                i,
+                minAmountOut,
+                sender,
+                recipient
+              );
+            modelRequests.push(modelRequest);
             calls.push(encodedCall);
             this.updateDeltas(deltas, assets, amounts);
             break;
@@ -614,6 +618,7 @@ export class Exit {
     sender: string,
     recipient: string
   ): {
+    modelRequest: UnwrapRequest;
     encodedCall: string;
     assets: string[];
     amounts: string[];
@@ -650,9 +655,15 @@ export class Exit {
       outputReference,
     };
     const encodedCall = Relayer.encodeUnwrapAaveStaticToken(call);
+
+    const modelRequest = VaultModel.mapUnwrapRequest(
+      call,
+      node.parent?.id as string // linear pool id
+    );
+
     const assets = [exitChild.address];
     const amounts = [Zero.sub(minAmountOut).toString()]; // needs to be negative because it's handled by the vault model as an amount going out of the vault
-    return { encodedCall, assets, amounts };
+    return { modelRequest, encodedCall, assets, amounts };
   };
 
   private createSwap(

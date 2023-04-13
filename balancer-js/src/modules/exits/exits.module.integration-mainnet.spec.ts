@@ -43,7 +43,7 @@ const TEST_BBAUSD2 = true;
  * - Uncomment section below:
  */
 const network = Network.MAINNET;
-const blockNumber = 17026902;
+const blockNumber = 17040540;
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8545';
 
@@ -99,7 +99,7 @@ const relayer = contractAddresses.relayer;
 const testFlow = async (
   pool: { id: string; address: string; slot: number },
   amount: string,
-  simulationType = SimulationType.Tenderly
+  simulationType = SimulationType.VaultModel
 ) => {
   const slippage = '10'; // 10 bps = 0.1%
 
