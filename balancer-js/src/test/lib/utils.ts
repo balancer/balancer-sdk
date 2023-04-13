@@ -38,6 +38,7 @@ import { Pools as PoolsProvider } from '@/modules/pools';
 import mainnetPools from '../fixtures/pools-mainnet.json';
 import polygonPools from '../fixtures/pools-polygon.json';
 import { PoolsJsonRepository } from './pools-json-repository';
+import { Contracts } from '@/modules/contracts/contracts.module';
 
 const jsonPools = {
   [Network.MAINNET]: mainnetPools,
@@ -75,6 +76,7 @@ export const forkSetup = async (
     slots = await Promise.all(
       tokens.map(async (token) => findTokenBalanceSlot(signer, token))
     );
+    console.log('slots: ' + slots);
   }
   for (let i = 0; i < tokens.length; i++) {
     // Set initial account balance for each token that will be used to join pool
@@ -198,6 +200,16 @@ export const getBalances = async (
     }
   }
   return Promise.all(balances);
+};
+
+export const getBalancesInternal = async (
+  tokens: string[],
+  signer: JsonRpcSigner,
+  signerAddress: string
+): Promise<Promise<BigNumber[]>> => {
+  const chainId = await signer.getChainId();
+  const { vault } = new Contracts(chainId, signer.provider);
+  return vault.getInternalBalance(signerAddress, tokens);
 };
 
 export const formatAddress = (text: string): string => {
@@ -365,9 +377,15 @@ export async function sendTransactionGetBalances(
 ): Promise<{
   transactionReceipt: TransactionReceipt;
   balanceDeltas: BigNumber[];
+  internalBalanceDeltas: BigNumber[];
   gasUsed: BigNumber;
 }> {
   const balanceBefore = await getBalances(
+    tokensForBalanceCheck,
+    signer,
+    signerAddress
+  );
+  const balancesBeforeInternal = await getBalancesInternal(
     tokensForBalanceCheck,
     signer,
     signerAddress
@@ -388,18 +406,28 @@ export async function sendTransactionGetBalances(
     signer,
     signerAddress
   );
+  const balancesAfterInternal = await getBalancesInternal(
+    tokensForBalanceCheck,
+    signer,
+    signerAddress
+  );
 
-  const balanceDeltas = balancesAfter.map((balAfter, i) => {
+  const balanceDeltas = balancesAfter.map((balanceAfter, i) => {
     // ignore ETH delta from gas cost
     if (tokensForBalanceCheck[i] === AddressZero) {
-      balAfter = balAfter.add(gasPrice);
+      balanceAfter = balanceAfter.add(gasPrice);
     }
-    return balAfter.sub(balanceBefore[i]).abs();
+    return balanceAfter.sub(balanceBefore[i]).abs();
+  });
+
+  const internalBalanceDeltas = balancesAfterInternal.map((b, i) => {
+    return b.sub(balancesBeforeInternal[i]).abs();
   });
 
   return {
     transactionReceipt,
     balanceDeltas,
+    internalBalanceDeltas,
     gasUsed,
   };
 }
@@ -445,5 +473,5 @@ export async function findTokenBalanceSlot(
     ]);
     if (balance.eq(BigNumber.from(probe))) return i;
   }
-  throw 'Balances slot not found!';
+  throw new Error('Balance slot not found!');
 }

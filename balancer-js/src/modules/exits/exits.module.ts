@@ -26,8 +26,9 @@ import { Requests, VaultModel } from '../vaultModel/vaultModel.module';
 import { SwapRequest } from '../vaultModel/poolModel/swap';
 import { ExitPoolRequest as ExitPoolModelRequest } from '../vaultModel/poolModel/exit';
 import { JsonRpcSigner } from '@ethersproject/providers';
+import { BalancerRelayer__factory } from '@/contracts/factories/BalancerRelayer__factory';
 
-import { RelayerV5__factory } from '@/contracts';
+const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
 export class Exit {
   private wrappedNativeAsset: string;
@@ -40,7 +41,7 @@ export class Exit {
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
-    this.relayer = contracts.relayerV5 as string;
+    this.relayer = contracts.relayer;
   }
 
   async exitPool(
@@ -354,10 +355,10 @@ export class Exit {
       );
     }
 
-    const relayerInterface = RelayerV5__factory.createInterface();
-    const encodedCall = relayerInterface.encodeFunctionData('multicall', [
-      calls,
-    ]);
+    const encodedCall = balancerRelayerInterface.encodeFunctionData(
+      'multicall',
+      [calls]
+    );
 
     return {
       multiRequests,

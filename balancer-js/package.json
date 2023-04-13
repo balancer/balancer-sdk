@@ -1,6 +1,6 @@
 {
   "name": "@balancer-labs/sdk",
-  "version": "1.0.4-beta.0",
+  "version": "1.0.5-beta.1",
   "description": "JavaScript SDK for interacting with the Balancer Protocol V2",
   "license": "GPL-3.0-only",
   "homepage": "https://github.com/balancer-labs/balancer-sdk#readme",
@@ -32,7 +32,7 @@
     "node:goerli": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --fork $(. ./.env && echo $ALCHEMY_URL_GOERLI) --port 8000",
     "node:polygon": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.polygon.ts node --fork $(. ./.env && echo $ALCHEMY_URL_POLYGON) --port 8137",
     "node:arbitrum": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.arbitrum.ts node --fork $(. ./.env && echo $ALCHEMY_URL_ARBITRUM) --port 8161",
-    "typechain:generate": "npx typechain --target ethers-v5 --out-dir src/contracts './src/lib/abi/Vault.json' './src/lib/abi/WeightedPoolFactory.json' './src/lib/abi/ComposableStableFactory.json' './src/lib/abi/BalancerHelpers.json' './src/lib/abi/LidoRelayer.json' './src/lib/abi/WeightedPool.json' './src/lib/abi/ComposableStable.json' './src/lib/abi/ERC4626LinearPoolFactory.json' './src/lib/abi/ERC4626LinearPool.json' './src/lib/abi/AaveLinearPoolFactory.json' './src/lib/abi/AaveLinearPool.json' './src/lib/abi/EulerLinearPoolFactory.json' './src/lib/abi/EulerLinearPool.json' './src/lib/abi/GearboxLinearPoolFactory.json' './src/lib/abi/GearboxLinearPool.json' './src/lib/abi/YearnLinearPoolFactory.json' './src/lib/abi/YearnLinearPool.json' './src/lib/abi/RelayerV5.json'"
+    "typechain:generate": "npx typechain --target ethers-v5 --out-dir src/contracts './src/lib/abi/Vault.json' './src/lib/abi/WeightedPoolFactory.json' './src/lib/abi/ComposableStableFactory.json' './src/lib/abi/BalancerHelpers.json' './src/lib/abi/LidoRelayer.json' './src/lib/abi/WeightedPool.json' './src/lib/abi/ComposableStable.json' './src/lib/abi/ERC4626LinearPoolFactory.json' './src/lib/abi/ERC4626LinearPool.json' './src/lib/abi/AaveLinearPoolFactory.json' './src/lib/abi/AaveLinearPool.json' './src/lib/abi/EulerLinearPoolFactory.json' './src/lib/abi/EulerLinearPool.json' './src/lib/abi/GearboxLinearPoolFactory.json' './src/lib/abi/GearboxLinearPool.json' './src/lib/abi/YearnLinearPoolFactory.json' './src/lib/abi/YearnLinearPool.json' './src/lib/abi/BalancerRelayer.json'"
   },
   "devDependencies": {
     "@ethersproject/solidity": "^5.6.1",

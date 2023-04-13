@@ -16,6 +16,7 @@ export class StablePhantomPoolExit implements ExitConcern {
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenOut,
+    toInternalBalance,
   }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
     /**
      * Exit type only supported when pool is in paused state and pause window
@@ -31,6 +32,7 @@ export class StablePhantomPoolExit implements ExitConcern {
     amountsOut,
     slippage,
     wrappedNativeAsset,
+    toInternalBalance,
   }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
     throw new Error('Exit type not supported');
   };
@@ -40,9 +42,10 @@ export class StablePhantomPoolExit implements ExitConcern {
     pool,
     bptIn,
     slippage,
+    toInternalBalance,
   }: Pick<
     ExitExactBPTInParameters,
-    'exiter' | 'pool' | 'bptIn' | 'slippage'
+    'exiter' | 'pool' | 'bptIn' | 'slippage' | 'toInternalBalance'
   >): ExitExactBPTInAttributes => {
     throw new Error('Exit type not supported');
   };
