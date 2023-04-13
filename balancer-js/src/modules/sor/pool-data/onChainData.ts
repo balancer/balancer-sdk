@@ -177,7 +177,7 @@ export async function getOnChainBalances<
       }
     >;
   } catch (err) {
-    throw `Issue with multicall execution.`;
+    throw new Error(`Issue with multicall execution.`);
   }
 
   const onChainPools: GenericPool[] = [];
@@ -276,7 +276,7 @@ export async function getOnChainBalances<
 
       onChainPools.push(subgraphPools[index]);
     } catch (err) {
-      throw `Issue with pool onchain data: ${err}`;
+      throw new Error(`Issue with pool onchain data: ${err}`);
     }
   });
 
