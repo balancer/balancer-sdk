@@ -17,7 +17,8 @@ import {
 } from './migrations/builder.spec-helpers';
 import { Migrations } from './migrations';
 
-describe('Migrations', () => {
+describe('Migrations', function () {
+  this.timeout(30000);
   context('mainnet', () => {
     const {
       addresses: { contracts },

@@ -384,7 +384,8 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     bptIn: string,
     slippage: string,
     shouldUnwrapNativeAsset?: boolean,
-    singleTokenOut?: string
+    singleTokenOut?: string,
+    toInternalBalance?: boolean
   ) => ExitExactBPTInAttributes;
 
   /**
@@ -399,7 +400,8 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     exiter: string,
     tokensOut: string[],
     amountsOut: string[],
-    slippage: string
+    slippage: string,
+    toInternalBalance?: boolean
   ) => ExitExactTokensOutAttributes;
 
   /**
@@ -412,7 +414,8 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
   buildRecoveryExit: (
     exiter: string,
     bptIn: string,
-    slippage: string
+    slippage: string,
+    toInternalBalance?: boolean
   ) => ExitExactBPTInAttributes;
 
   /**
