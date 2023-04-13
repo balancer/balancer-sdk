@@ -13,8 +13,8 @@ import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { BalancerNetworkConfig } from '@/types';
 import {
-  ComposableStable__factory,
-  ComposableStableFactory__factory,
+  ComposableStablePool__factory,
+  ComposableStablePoolFactory__factory,
 } from '@/contracts';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 import { LogDescription } from '@ethersproject/abi';
@@ -22,7 +22,7 @@ import { findEventInReceiptLogs } from '@/lib/utils';
 import { Contract } from '@ethersproject/contracts';
 import { ContractInstances } from '@/modules/contracts/contracts.module';
 import { BytesLike } from '@ethersproject/bytes';
-import { ComposableStableInterface } from '@/contracts/ComposableStable';
+import { ComposableStablePoolInterface } from '@/contracts/ComposableStablePool';
 
 export class ComposableStableFactory implements PoolFactory {
   private wrappedNativeAsset: string;
@@ -183,7 +183,7 @@ export class ComposableStableFactory implements PoolFactory {
     ]
   ): string => {
     const composablePoolFactoryInterface =
-      ComposableStableFactory__factory.createInterface();
+      ComposableStablePoolFactory__factory.createInterface();
     return composablePoolFactoryInterface.encodeFunctionData('create', params);
   };
 
@@ -317,7 +317,7 @@ export class ComposableStableFactory implements PoolFactory {
     const poolCreationEvent: LogDescription = findEventInReceiptLogs({
       receipt,
       to: this.contracts.composableStablePoolFactory?.address || '',
-      contractInterface: ComposableStableFactory__factory.createInterface(),
+      contractInterface: ComposableStablePoolFactory__factory.createInterface(),
       logName: 'PoolCreated',
     });
 
@@ -335,7 +335,7 @@ export class ComposableStableFactory implements PoolFactory {
     };
   };
 
-  getPoolInterface(): ComposableStableInterface {
-    return ComposableStable__factory.createInterface();
+  getPoolInterface(): ComposableStablePoolInterface {
+    return ComposableStablePool__factory.createInterface();
   }
 }

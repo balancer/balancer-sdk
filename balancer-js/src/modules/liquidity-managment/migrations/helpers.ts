@@ -1,8 +1,8 @@
 import { Findable, Pool, PoolAttribute } from '@/types';
-import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
-import { Interface } from '@ethersproject/abi';
+import { BalancerRelayer__factory } from '@/contracts';
 
-export const balancerRelayerInterface = new Interface(balancerRelayerAbi);
+export const balancerRelayerInterface =
+  BalancerRelayer__factory.createInterface();
 
 /**
  * Using array of objects to preserve the tokens order

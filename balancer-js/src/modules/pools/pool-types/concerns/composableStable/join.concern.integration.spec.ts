@@ -33,7 +33,6 @@ describe('ComposableStable Pool - Join Functions', async () => {
   let signerAddress: string;
   let pool: PoolWithMethods;
   let testPoolHelper: TestPoolHelper;
-
   before(async () => {
     signerAddress = await signer.getAddress();
 

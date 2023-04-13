@@ -1,7 +1,6 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
-
-import aTokenRateProviderAbi from '../abi/StaticATokenRateProvider.json';
+import { StaticATokenRateProvider__factory } from '@/contracts';
 
 export class AaveHelpers {
   static async getRate(
@@ -10,7 +9,7 @@ export class AaveHelpers {
   ): Promise<string> {
     const rateProviderContract = new Contract(
       rateProviderAddress,
-      aTokenRateProviderAbi,
+      StaticATokenRateProvider__factory.createInterface(),
       provider
     );
 
