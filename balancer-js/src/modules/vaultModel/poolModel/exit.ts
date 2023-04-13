@@ -59,6 +59,11 @@ export class ExitModel {
         ComposableStablePoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT
       )
         return WeightedPoolExitKind.BPT_IN_FOR_EXACT_TOKENS_OUT;
+      if (
+        exitKind.toNumber() ===
+        ComposableStablePoolExitKind.EXACT_BPT_IN_FOR_ALL_TOKENS_OUT
+      )
+        return WeightedPoolExitKind.EXACT_BPT_IN_FOR_TOKENS_OUT;
       else {
         return WeightedPoolExitKind.EXACT_BPT_IN_FOR_ONE_TOKEN_OUT;
       }
