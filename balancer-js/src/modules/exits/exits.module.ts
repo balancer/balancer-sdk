@@ -92,21 +92,9 @@ export class Exit {
       const path = orderedNodes.map((node, i) => {
         // First node should exit with full BPT amount in
         if (i === 0) node.index = amountBptIn;
-        const amount = node.index;
-        const exitTokens = node.children.map((c) => c.address);
-        const exitRefs = node.children.map((c) => c.index);
-        console.log(
-          node.exitAction,
-          node.address,
-          amount,
-          exitTokens.toString(),
-          exitRefs.toString()
-        );
         return node;
       });
       exitPaths[0] = path;
-
-      // TODO tokensOut/tokensOutByExitPath might need to be different for this case?
     } else {
       // Create exit paths for each output node and splits amount in proportionally between them
       exitPaths = this.getExitPaths(outputNodes, amountBptIn);
