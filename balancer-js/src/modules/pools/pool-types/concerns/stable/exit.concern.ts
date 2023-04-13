@@ -60,7 +60,10 @@ type SortValuesExactTokensOutParams = SortValuesParams & {
   tokensOut: string[];
 };
 
-type EncodeExitParams = Pick<ExitExactBPTInParameters, 'exiter'> & {
+type EncodeExitParams = Pick<
+  ExitExactBPTInParameters,
+  'exiter' | 'toInternalBalance'
+> & {
   poolTokens: string[];
   poolId: string;
   userData: string;
@@ -76,6 +79,7 @@ export class StablePoolExit implements ExitConcern {
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenOut,
+    toInternalBalance,
   }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
     this.checkInputsExactBPTIn({
       bptIn,
@@ -116,6 +120,7 @@ export class StablePoolExit implements ExitConcern {
       exiter,
       minAmountsOut,
       userData,
+      toInternalBalance,
     });
 
     const priceImpactConcern = new StablePoolPriceImpact();
@@ -141,6 +146,7 @@ export class StablePoolExit implements ExitConcern {
     amountsOut,
     slippage,
     wrappedNativeAsset,
+    toInternalBalance,
   }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
     this.checkInputsExactTokensOut(amountsOut, tokensOut, pool);
 
@@ -166,6 +172,7 @@ export class StablePoolExit implements ExitConcern {
       poolTokens,
       minAmountsOut: downScaledAmountsOut,
       exiter,
+      toInternalBalance,
     });
 
     const priceImpactConcern = new StablePoolPriceImpact();
@@ -191,7 +198,7 @@ export class StablePoolExit implements ExitConcern {
     slippage,
   }: Pick<
     ExitExactBPTInParameters,
-    'exiter' | 'pool' | 'bptIn' | 'slippage'
+    'exiter' | 'pool' | 'bptIn' | 'slippage' | 'toInternalBalance'
   >): ExitExactBPTInAttributes => {
     this.checkInputsExactBPTIn({
       bptIn,
@@ -216,6 +223,7 @@ export class StablePoolExit implements ExitConcern {
       exiter,
       minAmountsOut,
       userData,
+      toInternalBalance,
     });
 
     const priceImpactConcern = new StablePoolPriceImpact();
@@ -478,6 +486,7 @@ export class StablePoolExit implements ExitConcern {
     poolTokens,
     minAmountsOut,
     userData,
+    toInternalBalance,
   }: EncodeExitParams): ExitPoolAttributes => {
     const to = balancerVault;
     const functionName = 'exitPool';
@@ -489,7 +498,7 @@ export class StablePoolExit implements ExitConcern {
         assets: poolTokens,
         minAmountsOut,
         userData,
-        toInternalBalance: false,
+        toInternalBalance,
       },
     };
     // Encode transaction data into an ABI byte string which can be sent to the network to be executed

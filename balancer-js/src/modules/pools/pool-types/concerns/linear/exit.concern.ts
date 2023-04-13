@@ -33,7 +33,10 @@ type ExactBPTInSortedValues = SortedValues & {
   scalingFactors: bigint[];
 };
 
-type EncodeExitParams = Pick<ExitExactBPTInParameters, 'exiter'> & {
+type EncodeExitParams = Pick<
+  ExitExactBPTInParameters,
+  'exiter' | 'toInternalBalance'
+> & {
   poolTokens: string[];
   poolId: string;
   userData: string;
@@ -49,6 +52,7 @@ export class LinearPoolExit implements ExitConcern {
     shouldUnwrapNativeAsset,
     wrappedNativeAsset,
     singleTokenOut,
+    toInternalBalance,
   }: ExitExactBPTInParameters): ExitExactBPTInAttributes => {
     throw new Error('Exit type not supported');
   };
@@ -60,6 +64,7 @@ export class LinearPoolExit implements ExitConcern {
     amountsOut,
     slippage,
     wrappedNativeAsset,
+    toInternalBalance,
   }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes => {
     throw new Error('Exit type not supported');
   };
@@ -69,9 +74,10 @@ export class LinearPoolExit implements ExitConcern {
     pool,
     bptIn,
     slippage,
+    toInternalBalance,
   }: Pick<
     ExitExactBPTInParameters,
-    'exiter' | 'pool' | 'bptIn' | 'slippage'
+    'exiter' | 'pool' | 'bptIn' | 'slippage' | 'toInternalBalance'
   >): ExitExactBPTInAttributes => {
     this.checkInputsExactBPTIn({
       bptIn,
@@ -95,6 +101,7 @@ export class LinearPoolExit implements ExitConcern {
       exiter,
       minAmountsOut,
       userData,
+      toInternalBalance,
     });
 
     const priceImpactConcern = new LinearPriceImpact();
@@ -180,7 +187,14 @@ export class LinearPoolExit implements ExitConcern {
    * @param params
    */
   encodeExitPool = (params: EncodeExitParams): ExitPoolAttributes => {
-    const { exiter, poolId, minAmountsOut, userData, poolTokens } = params;
+    const {
+      exiter,
+      poolId,
+      minAmountsOut,
+      userData,
+      poolTokens,
+      toInternalBalance,
+    } = params;
 
     const to = balancerVault;
     const functionName = 'exitPool';
@@ -192,7 +206,7 @@ export class LinearPoolExit implements ExitConcern {
         assets: poolTokens,
         minAmountsOut,
         userData,
-        toInternalBalance: false,
+        toInternalBalance,
       },
     };
 

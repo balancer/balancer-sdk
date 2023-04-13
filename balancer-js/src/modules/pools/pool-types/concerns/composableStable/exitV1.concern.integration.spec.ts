@@ -86,5 +86,10 @@ describe('ComposableStableV1 Exits', () => {
       const bptIn = parseFixed('10', 18).toString();
       await testRecoveryExit(pool, signer, bptIn);
     });
+
+    it('proportional exit - to internal balance', async () => {
+      const bptIn = parseFixed('10', 18).toString();
+      await testRecoveryExit(pool, signer, bptIn, true);
+    });
   });
 });
