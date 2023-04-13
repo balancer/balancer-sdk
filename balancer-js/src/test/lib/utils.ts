@@ -75,6 +75,7 @@ export const forkSetup = async (
     slots = await Promise.all(
       tokens.map(async (token) => findTokenBalanceSlot(signer, token))
     );
+    console.log('slots: ' + slots);
   }
   for (let i = 0; i < tokens.length; i++) {
     // Set initial account balance for each token that will be used to join pool
@@ -89,6 +90,21 @@ export const forkSetup = async (
     // Approve appropriate allowances so that vault contract can move tokens
     await approveToken(tokens[i], MaxUint256.toString(), signer);
   }
+};
+
+export const reset = async (
+  jsonRpcUrl: string,
+  provider: JsonRpcProvider,
+  blockNumber?: number
+): Promise<void> => {
+  await provider.send('hardhat_reset', [
+    {
+      forking: {
+        jsonRpcUrl,
+        blockNumber,
+      },
+    },
+  ]);
 };
 
 /**
@@ -112,7 +128,6 @@ export const setTokenBalance = async (
 
   const setStorageAt = async (token: string, index: string, value: string) => {
     await signer.provider.send('hardhat_setStorageAt', [token, index, value]);
-    await signer.provider.send('evm_mine', []); // Just mines to the next block
   };
 
   const signerAddress = await signer.getAddress();
@@ -374,7 +389,6 @@ export async function sendTransactionGetBalances(
     signer,
     signerAddress
   );
-
   const balanceDeltas = balancesAfter.map((balAfter, i) => {
     // ignore ETH delta from gas cost
     if (tokensForBalanceCheck[i] === AddressZero) {
@@ -431,5 +445,5 @@ export async function findTokenBalanceSlot(
     ]);
     if (balance.eq(BigNumber.from(probe))) return i;
   }
-  throw 'Balances slot not found!';
+  throw new Error('Balance slot not found!');
 }
