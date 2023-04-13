@@ -6,7 +6,6 @@ import { formatFixed } from '@ethersproject/bignumber';
 import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
 import { accuracy, sendTransactionGetBalances } from '@/test/lib/utils';
 import { insert } from '@/lib/utils';
-import { formatEther } from '@ethersproject/units';
 
 export const testExactBptIn = async (
   pool: PoolWithMethods,
