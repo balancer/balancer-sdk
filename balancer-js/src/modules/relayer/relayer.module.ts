@@ -7,6 +7,8 @@ import {
   EncodeBatchSwapInput,
   EncodeExitPoolInput,
   EncodeJoinPoolInput,
+  EncodeUnwrapAaveStaticTokenInput,
+  EncodeWrapAaveDynamicTokenInput,
   ExitPoolData,
   JoinPoolData,
 } from './types';
@@ -114,6 +116,32 @@ export class Relayer {
       params.recipient,
       params.joinPoolRequest,
       params.value,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeWrapAaveDynamicToken(
+    params: EncodeWrapAaveDynamicTokenInput
+  ): string {
+    return relayerLibrary.encodeFunctionData('wrapAaveDynamicToken', [
+      params.staticToken,
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.fromUnderlying,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeUnwrapAaveStaticToken(
+    params: EncodeUnwrapAaveStaticTokenInput
+  ): string {
+    return relayerLibrary.encodeFunctionData('unwrapAaveStaticToken', [
+      params.staticToken,
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.toUnderlying,
       params.outputReference,
     ]);
   }

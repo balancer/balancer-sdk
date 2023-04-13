@@ -3,7 +3,11 @@ import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { AddressZero, WeiPerEther, Zero } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { EncodeJoinPoolInput, Relayer } from '@/modules/relayer/relayer.module';
+import {
+  EncodeJoinPoolInput,
+  EncodeWrapAaveDynamicTokenInput,
+  Relayer,
+} from '@/modules/relayer/relayer.module';
 import {
   FundManagement,
   SingleSwap,
@@ -67,7 +71,11 @@ export class Join {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodes = await this.poolGraph.getGraphNodes(true, poolId);
+    const orderedNodes = await this.poolGraph.getGraphNodes(
+      true,
+      poolId,
+      false
+    );
 
     const joinPaths = Join.getJoinPaths(orderedNodes, tokensIn, amountsIn);
 
@@ -556,6 +564,18 @@ export class Join {
           isLastChainedCall && minAmountsOut ? minAmountsOut[j] : '0';
 
         switch (node.joinAction) {
+          case 'wrap':
+            {
+              const { encodedCall } = this.createWrap(
+                node,
+                j,
+                sender,
+                recipient
+              );
+              // modelRequests.push(modelRequest); // TODO: add model request when available
+              encodedCalls.push(encodedCall);
+            }
+            break;
           case 'batchSwap':
             {
               const { modelRequest, encodedCall, assets, amounts } =
@@ -663,6 +683,42 @@ export class Join {
     //   )`
     // );
     return node;
+  };
+
+  private createWrap = (
+    node: Node,
+    joinPathIndex: number,
+    sender: string,
+    recipient: string
+  ): { encodedCall: string } => {
+    // Throws error based on the assumption that aaveWrap apply only to input tokens from leaf nodes
+    if (node.children.length !== 1)
+      throw new Error('aaveWrap nodes should always have a single child node');
+
+    const childNode = node.children[0];
+
+    const staticToken = node.address;
+    const amount = childNode.index;
+    const call: EncodeWrapAaveDynamicTokenInput = {
+      staticToken,
+      sender,
+      recipient,
+      amount,
+      fromUnderlying: true,
+      outputReference: this.getOutputRefValue(joinPathIndex, node).value,
+    };
+    const encodedCall = Relayer.encodeWrapAaveDynamicToken(call);
+
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
+    //   ${node.joinAction} (
+    //     staticToken: ${staticToken},
+    //     input: ${amount},
+    //     outputRef: ${node.index.toString()}
+    //   )`
+    // );
+
+    return { encodedCall };
   };
 
   private createSwap = (

@@ -2,14 +2,24 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 
-import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '@/.';
+import {
+  BalancerSDK,
+  GraphQLQuery,
+  GraphQLArgs,
+  Network,
+  truncateAddresses,
+  subSlippage,
+} from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
+import {
+  accuracy,
+  forkSetup,
+  sendTransactionGetBalances,
+} from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
-import { JsonRpcSigner } from '@ethersproject/providers';
 import { SimulationType } from '../simulation/simulation.module';
 
 /**
@@ -24,7 +34,8 @@ import { SimulationType } from '../simulation/simulation.module';
 
 dotenv.config();
 
-const TEST_BBEUSD = true;
+const TEST_BBEUSD = false;
+const TEST_BBAUSD2 = true;
 
 /*
  * Testing on MAINNET
@@ -32,9 +43,7 @@ const TEST_BBEUSD = true;
  * - Uncomment section below:
  */
 const network = Network.MAINNET;
-const blockNumber = 16685902;
-const customSubgraphUrl =
-  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2';
+const blockNumber = 17026902;
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8545';
 
@@ -75,64 +84,45 @@ const subgraphQuery: GraphQLQuery = { args: subgraphArgs, attrs: {} };
 const sdk = new BalancerSDK({
   network,
   rpcUrl,
-  customSubgraphUrl,
   tenderly: tenderlyConfig,
   subgraphQuery,
 });
 const { pools } = sdk;
 const provider = new JsonRpcProvider(rpcUrl, network);
-const signer = provider.getSigner(1); // signer 0 at this blockNumber has DAI balance and tests were failling
+const signer = provider.getSigner();
 const { contracts, contractAddresses } = new Contracts(
   network as number,
   provider
 );
 const relayer = contractAddresses.relayer;
 
-interface Test {
-  signer: JsonRpcSigner;
-  description: string;
-  pool: {
-    id: string;
-    address: string;
-  };
-  amount: string;
-  authorisation: string | undefined;
-  simulationType?: SimulationType;
-}
-
-const runTests = async (tests: Test[]) => {
-  for (let i = 0; i < tests.length; i++) {
-    const test = tests[i];
-    it(test.description, async () => {
-      const signerAddress = await test.signer.getAddress();
-      const authorisation = await Relayer.signRelayerApproval(
-        relayer,
-        signerAddress,
-        test.signer,
-        contracts.vault
-      );
-      await testFlow(
-        test.signer,
-        signerAddress,
-        test.pool,
-        test.amount,
-        authorisation,
-        test.simulationType
-      );
-    }).timeout(120000);
-  }
-};
-
 const testFlow = async (
-  signer: JsonRpcSigner,
-  signerAddress: string,
-  pool: { id: string; address: string },
+  pool: { id: string; address: string; slot: number },
   amount: string,
-  authorisation: string | undefined,
-  simulationType = SimulationType.VaultModel
+  simulationType = SimulationType.Tenderly
 ) => {
-  const gasLimit = 8e6;
   const slippage = '10'; // 10 bps = 0.1%
+
+  const tokens = [pool.address];
+  const slots = [pool.slot];
+  const balances = [amount];
+
+  await forkSetup(
+    signer,
+    tokens,
+    slots,
+    balances,
+    jsonRpcUrl as string,
+    blockNumber
+  );
+
+  const signerAddress = await signer.getAddress();
+  const authorisation = await Relayer.signRelayerApproval(
+    relayer,
+    signerAddress,
+    signer,
+    contracts.vault
+  );
 
   const { to, encodedCall, tokensOut, expectedAmountsOut, minAmountsOut } =
     await pools.generalisedExit(
@@ -145,112 +135,59 @@ const testFlow = async (
       authorisation
     );
 
-  const [bptBalanceBefore, ...tokensOutBalanceBefore] = await getBalances(
-    [pool.address, ...tokensOut],
-    signer,
-    signerAddress
-  );
+  const { transactionReceipt, balanceDeltas, gasUsed } =
+    await sendTransactionGetBalances(
+      tokensOut,
+      signer,
+      signerAddress,
+      to,
+      encodedCall
+    );
 
-  const response = await signer.sendTransaction({
-    to,
-    data: encodedCall,
-    gasLimit,
-  });
-
-  const receipt = await response.wait();
-  console.log('Gas used', receipt.gasUsed.toString());
-
-  const [bptBalanceAfter, ...tokensOutBalanceAfter] = await getBalances(
-    [pool.address, ...tokensOut],
-    signer,
-    signerAddress
-  );
+  console.log('Gas used', gasUsed.toString());
 
   console.table({
-    tokensOut: tokensOut.map((t) => `${t.slice(0, 6)}...${t.slice(38, 42)}`),
+    tokensOut: truncateAddresses(tokensOut),
     minOut: minAmountsOut,
     expectedOut: expectedAmountsOut,
-    balanceAfter: tokensOutBalanceAfter.map((b) => b.toString()),
-    balanceBefore: tokensOutBalanceBefore.map((b) => b.toString()),
+    balanceDeltas: balanceDeltas.map((b) => b.toString()),
   });
 
-  expect(receipt.status).to.eql(1);
-  minAmountsOut.forEach((minAmountOut) => {
-    expect(BigNumber.from(minAmountOut).gte('0')).to.be.true;
-  });
-  expectedAmountsOut.forEach((expectedAmountOut, i) => {
-    expect(
-      BigNumber.from(expectedAmountOut).gte(BigNumber.from(minAmountsOut[i]))
-    ).to.be.true;
-  });
-  expect(bptBalanceAfter.eq(bptBalanceBefore.sub(amount))).to.be.true;
-  tokensOutBalanceBefore.forEach((b) => expect(b.eq(0)).to.be.true);
-  tokensOutBalanceAfter.forEach((balanceAfter, i) => {
+  expect(transactionReceipt.status).to.eq(1);
+  balanceDeltas.forEach((b, i) => {
     const minOut = BigNumber.from(minAmountsOut[i]);
-    expect(balanceAfter.gte(minOut)).to.be.true;
-    const expectedOut = BigNumber.from(expectedAmountsOut[i]);
-    expect(accuracy(balanceAfter, expectedOut)).to.be.closeTo(1, 1e-2); // inaccuracy should not be over to 1%
+    expect(b.gte(minOut)).to.be.true;
+    expect(accuracy(b, BigNumber.from(expectedAmountsOut[i]))).to.be.closeTo(
+      1,
+      1e-2
+    ); // inaccuracy should be less than 1%
   });
+  const expectedMins = expectedAmountsOut.map((a) =>
+    subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
+  );
+  expect(expectedMins).to.deep.eq(minAmountsOut);
 };
 
-// Skipping Euler specific tests while eTokens transactions are paused
-describe.skip('generalised exit execution', async () => {
-  /*
-  bbeusd: ComposableStable, bbeusdt/bbeusdc/bbedai
-  bbeusdt: Linear, eUsdt/usdt
-  bbeusdc: Linear, eUsdc/usdc
-  bbedai: Linear, eDai/dai
-  */
+describe('generalised exit execution', async function () {
+  this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
+
   context('bbeusd', async () => {
     if (!TEST_BBEUSD) return true;
-    let authorisation: string | undefined;
-    beforeEach(async () => {
-      const tokens = [addresses.bbeusd.address];
-      const slots = [addresses.bbeusd.slot];
-      const balances = [parseFixed('2', addresses.bbeusd.decimals).toString()];
-      await forkSetup(
-        signer,
-        tokens,
-        slots,
-        balances,
-        jsonRpcUrl as string,
-        blockNumber
-      );
-    });
+    const pool = addresses.bbeusd;
+    const amount = parseFixed('2', pool.decimals).toString();
 
-    await runTests([
-      {
-        signer,
-        description: 'exit pool',
-        pool: {
-          id: addresses.bbeusd.id,
-          address: addresses.bbeusd.address,
-        },
-        amount: parseFixed('2', addresses.bbeusd.decimals).toString(),
-        authorisation: authorisation,
-        simulationType: SimulationType.Tenderly,
-      },
-      {
-        signer,
-        description: 'exit pool',
-        pool: {
-          id: addresses.bbeusd.id,
-          address: addresses.bbeusd.address,
-        },
-        amount: parseFixed('2', addresses.bbeusd.decimals).toString(),
-        authorisation: authorisation,
-        simulationType: SimulationType.Static,
-      },
-      {
-        signer,
-        description: 'exit pool',
-        pool: {
-          id: addresses.bbeusd.id,
-          address: addresses.bbeusd.address,
-        },
-        amount: parseFixed('2', addresses.bbeusd.decimals).toString(),
-        authorisation: authorisation,
-      },
-    ]);
+    it('should exit pool correctly', async () => {
+      await testFlow(pool, amount);
+    });
+  });
+
+  context('bbausd2', async () => {
+    if (!TEST_BBAUSD2) return true;
+    const pool = addresses.bbausd2;
+    const amount = parseFixed('0.2', pool.decimals).toString();
+
+    it('should exit pool correctly', async () => {
+      await testFlow(pool, amount);
+    });
   });
 });

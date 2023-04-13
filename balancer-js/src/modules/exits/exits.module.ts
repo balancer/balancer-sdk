@@ -10,7 +10,10 @@ import { AssetHelpers, subSlippage } from '@/lib/utils';
 import { PoolGraph, Node } from '@/modules/graph/graph';
 import { Join } from '@/modules/joins/joins.module';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
-import { Relayer } from '@/modules/relayer/relayer.module';
+import {
+  EncodeUnwrapAaveStaticTokenInput,
+  Relayer,
+} from '@/modules/relayer/relayer.module';
 import {
   Simulation,
   SimulationType,
@@ -53,7 +56,8 @@ export class Exit {
     slippage: string,
     signer: JsonRpcSigner,
     simulationType: SimulationType,
-    authorisation?: string
+    authorisation?: string,
+    unwrapTokens = false
   ): Promise<{
     to: string;
     encodedCall: string;
@@ -73,7 +77,11 @@ export class Exit {
     */
 
     // Create nodes and order by breadth first
-    const orderedNodes = await this.poolGraph.getGraphNodes(false, poolId);
+    const orderedNodes = await this.poolGraph.getGraphNodes(
+      false,
+      poolId,
+      unwrapTokens
+    );
 
     const isProportional = PoolGraph.isProportionalPools(orderedNodes);
     console.log(`isProportional`, isProportional);
@@ -136,6 +144,21 @@ export class Exit {
         slippage
       );
 
+    // TODO: If expectedAmountsOut are greater than mainTokens balance, exit by unwrapping wrappedTokens
+    const insufficientMainTokenBalance = false;
+    if (unwrapTokens === false && insufficientMainTokenBalance) {
+      return this.exitPool(
+        poolId,
+        amountBptIn,
+        userAddress,
+        slippage,
+        signer,
+        simulationType,
+        authorisation,
+        true
+      );
+    }
+
     // Create calls with minimum expected amount out for each exit path
     const { encodedCall, deltas } = await this.createCalls(
       exitPaths,
@@ -185,7 +208,11 @@ export class Exit {
     amountBptIn: string
   ): Promise<string> {
     // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodesForJoin = await poolGraph.getGraphNodes(true, poolId);
+    const orderedNodesForJoin = await poolGraph.getGraphNodes(
+      true,
+      poolId,
+      false
+    );
     const joinPaths = Join.getJoinPaths(
       orderedNodesForJoin,
       tokensOut,
@@ -497,6 +524,20 @@ export class Exit {
         }
 
         switch (node.exitAction) {
+          case 'unwrap': {
+            const { encodedCall, assets, amounts } = this.createUnwrap(
+              node,
+              exitChild as Node,
+              i,
+              minAmountOut,
+              sender,
+              recipient
+            );
+            // modelRequests.push(modelRequest); // TODO: add model request for unwrap to work with vault model
+            calls.push(encodedCall);
+            this.updateDeltas(deltas, assets, amounts);
+            break;
+          }
           case 'batchSwap': {
             const { modelRequest, encodedCall, assets, amounts } =
               this.createSwap(
@@ -565,6 +606,55 @@ export class Exit {
     return { multiRequests, calls, outputIndexes, deltas };
   }
 
+  private createUnwrap = (
+    node: Node,
+    exitChild: Node,
+    exitPathIndex: number,
+    minAmountOut: string,
+    sender: string,
+    recipient: string
+  ): {
+    encodedCall: string;
+    assets: string[];
+    amounts: string[];
+  } => {
+    const amount = Relayer.toChainedReference(
+      this.getOutputRef(exitPathIndex, node.index)
+    ).toString();
+    const outputReference = Relayer.toChainedReference(
+      this.getOutputRef(exitPathIndex, exitChild.index)
+    );
+
+    // console.log(
+    //   `${node.type} ${node.address} prop: ${formatFixed(
+    //     node.proportionOfParent,
+    //     18
+    //   )}
+    //   ${node.exitAction}(
+    //     inputAmt: ${amount},
+    //     inputToken: ${node.address},
+    //     pool: ${node.id},
+    //     outputToken: ${exitChild.address},
+    //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)},
+    //     sender: ${sender},
+    //     recipient: ${recipient}
+    //   )`
+    // );
+
+    const call: EncodeUnwrapAaveStaticTokenInput = {
+      staticToken: node.address,
+      sender,
+      recipient,
+      amount,
+      toUnderlying: true,
+      outputReference,
+    };
+    const encodedCall = Relayer.encodeUnwrapAaveStaticToken(call);
+    const assets = [exitChild.address];
+    const amounts = [Zero.sub(minAmountOut).toString()]; // needs to be negative because it's handled by the vault model as an amount going out of the vault
+    return { encodedCall, assets, amounts };
+  };
+
   private createSwap(
     node: Node,
     exitChild: Node,
@@ -601,11 +691,14 @@ export class Exit {
       userData: '0x',
     };
 
+    const fromInternalBalance = this.receivesFromInternal(node);
+    const toInternalBalance = this.receivesFromInternal(exitChild);
+
     const funds: FundManagement = {
       sender,
       recipient,
-      fromInternalBalance: this.receivesFromInternal(node),
-      toInternalBalance: this.receivesFromInternal(exitChild),
+      fromInternalBalance,
+      toInternalBalance,
     };
 
     const outputReference = Relayer.toChainedReference(
@@ -624,7 +717,9 @@ export class Exit {
     //     outputToken: ${exitChild.address},
     //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)},
     //     sender: ${sender},
-    //     recipient: ${recipient}
+    //     recipient: ${recipient},
+    //     fromInternalBalance: ${fromInternalBalance},
+    //     toInternalBalance: ${toInternalBalance}
     //   )`
     // );
 
@@ -736,6 +831,8 @@ export class Exit {
       },
     ];
 
+    const toInternalBalance = this.receivesFromInternal(exitChild);
+
     // console.log(
     //   `${node.type} ${node.address} prop: ${formatFixed(
     //     node.proportionOfParent,
@@ -750,7 +847,8 @@ export class Exit {
     //     minAmountOut: ${minAmountOut},
     //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)},
     //     sender: ${sender},
-    //     recipient: ${recipient}
+    //     recipient: ${recipient},
+    //     toInternalBalance: ${toInternalBalance}
     //   )`
     // );
 
@@ -764,7 +862,7 @@ export class Exit {
       assets: sortedTokens,
       minAmountsOut: sortedAmounts,
       userData,
-      toInternalBalance: this.receivesFromInternal(exitChild),
+      toInternalBalance,
     });
     const encodedCall = Relayer.encodeExitPool(call);
     const modelRequest = VaultModel.mapExitPoolRequest(call);
@@ -917,6 +1015,10 @@ export class Exit {
   // others should always receive from internal balance
   private receivesFromInternal = (node: Node): boolean => {
     if (!node.parent) return false;
-    return node.exitAction !== 'output' && node.exitAction !== 'exitPool';
+    return (
+      node.exitAction !== 'output' &&
+      node.exitAction !== 'unwrap' &&
+      node.exitAction !== 'exitPool'
+    );
   };
 }
