@@ -1,22 +1,7 @@
 import { Contract } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/providers';
-import RelayerV3ABI from '@/lib/abi/BalancerRelayer.json';
-import RelayerV4ABI from '@/lib/abi/RelayerV4.json';
-import RelayerV5ABI from '@/lib/abi/RelayerV5.json';
+import { BalancerRelayer__factory } from '@/contracts/factories/BalancerRelayer__factory';
 
-export const Relayer = (
-  address: string,
-  provider: Provider,
-  version: number
-): Contract => {
-  switch (version) {
-    case 3:
-      return new Contract(address, RelayerV3ABI, provider);
-    case 4:
-      return new Contract(address, RelayerV4ABI, provider);
-    case 5:
-      return new Contract(address, RelayerV5ABI, provider);
-    default:
-      throw new Error('relayer not supported');
-  }
+export const Relayer = (address: string, provider: Provider): Contract => {
+  return BalancerRelayer__factory.connect(address, provider);
 };

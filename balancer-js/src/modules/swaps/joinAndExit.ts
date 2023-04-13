@@ -9,7 +9,6 @@ import {
 } from '@balancer-labs/sor';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
-import { RelayerV5__factory } from '@/contracts';
 import { AssetHelpers, subSlippage } from '@/lib/utils';
 import {
   Relayer,
@@ -20,6 +19,7 @@ import {
 } from '@/modules/relayer/relayer.module';
 import { getPoolAddress } from '@/pool-utils';
 import { WeightedPoolEncoder } from '@/pool-weighted';
+import { BalancerRelayer__factory } from '@/contracts/factories/BalancerRelayer__factory';
 import { ExitPoolRequest } from '@/types';
 
 import { FundManagement, SwapType } from './types';
@@ -114,7 +114,7 @@ const EMPTY_BATCHSWAP_ACTION: BatchSwapAction = {
 type Actions = JoinAction | ExitAction | SwapAction | BatchSwapAction;
 type OrderedActions = JoinAction | ExitAction | BatchSwapAction;
 
-const balancerRelayerInterface = RelayerV5__factory.createInterface();
+const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
 function getOutputRef(key: number, index: number): OutputReference {
   const keyRef = Relayer.toChainedReference(key);
