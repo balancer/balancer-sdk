@@ -56,7 +56,7 @@ const balancer = new BalancerSDK({
   },
 });
 
-const { provider, contracts, balancerContracts } = balancer;
+const { provider, contracts } = balancer;
 const { ERC20 } = contracts;
 const signer = (provider as JsonRpcProvider).getSigner();
 
@@ -98,13 +98,12 @@ async function join() {
   const signerAddress = await signer.getAddress();
   await getTokens(signerAddress);
 
-  const relayerAddress = balancerContracts.contracts.relayerV5
-    ?.address as string;
+  const relayerAddress = contracts.relayer.address as string;
   console.log('Relayer address:', relayerAddress);
 
   // Need to sign the approval only once per relayer
   const relayerAuth = await Relayer.signRelayerApproval(
-    relayerAddress,
+    contracts.relayer.address,
     signerAddress,
     signer,
     contracts.vault

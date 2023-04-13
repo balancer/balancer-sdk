@@ -1,3 +1,4 @@
+// yarn test:only ./src/modules/liquidity-managment/migrations.integrations.spec.ts
 import { impersonateAccount, reset } from '@/test/lib/utils';
 import { expect } from 'chai';
 import { ERC20__factory, Vault__factory } from '@/contracts';
@@ -15,12 +16,13 @@ import {
 } from './migrations/builder.spec-helpers';
 import { Migrations } from './migrations';
 
-describe('Migrations', () => {
+describe('Migrations', function () {
+  this.timeout(30000);
   context('mainnet', () => {
     const {
       addresses: { contracts },
     } = BALANCER_NETWORK_CONFIG[1];
-    const relayerAddress = contracts.relayerV5 as string;
+    const relayerAddress = contracts.relayer;
     const provider = new JsonRpcProvider('http://127.0.0.1:8545');
     const vault = Vault__factory.connect(contracts.vault, provider);
     let signer: JsonRpcSigner;
@@ -247,7 +249,7 @@ describe('Migrations', () => {
     const {
       addresses: { contracts },
     } = BALANCER_NETWORK_CONFIG[137];
-    const relayerAddress = contracts.relayerV5 as string;
+    const relayerAddress = contracts.relayer;
     const provider = new JsonRpcProvider('http://127.0.0.1:8137');
     const vault = Vault__factory.connect(contracts.vault, provider);
     let signer: JsonRpcSigner;

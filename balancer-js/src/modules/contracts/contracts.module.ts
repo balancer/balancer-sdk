@@ -11,6 +11,7 @@ import {
   AaveLinearPoolFactory__factory,
   BalancerHelpers,
   BalancerHelpers__factory,
+  BalancerRelayer__factory,
   ComposableStablePoolFactory,
   ComposableStablePoolFactory__factory,
   ERC20,
@@ -27,12 +28,6 @@ import {
   LidoRelayer__factory,
   LiquidityGaugeV5,
   LiquidityGaugeV5__factory,
-  RelayerV3,
-  RelayerV3__factory,
-  RelayerV4,
-  RelayerV4__factory,
-  RelayerV5,
-  RelayerV5__factory,
   Vault,
   Vault__factory,
   WeightedPoolFactory,
@@ -62,9 +57,7 @@ export interface ContractInstances {
   lidoRelayer?: LidoRelayer;
   liquidityGauge: ContractFactory;
   multicall: Contract;
-  relayerV3?: RelayerV3;
-  relayerV4?: RelayerV4;
-  relayerV5?: RelayerV5;
+  relayer: Contract;
   vault: Vault;
   veBal?: VeBal;
   veBalProxy?: VeBalProxy;
@@ -108,29 +101,16 @@ export class Contracts {
         provider
       );
 
+    // These contracts aren't included in Balancer Typechain but are still useful.
     // TO DO - Possibly create via Typechain but seems unnecessary?
     const multicall: Contract = Multicall(
       this.contractAddresses.multicall,
       provider
     );
-    let relayerV3: undefined | RelayerV3;
-    if (this.contractAddresses.relayerV3)
-      relayerV3 = RelayerV3__factory.connect(
-        this.contractAddresses.relayerV3,
-        provider
-      );
-    let relayerV4: undefined | RelayerV4;
-    if (this.contractAddresses.relayerV4)
-      relayerV4 = RelayerV4__factory.connect(
-        this.contractAddresses.relayerV4,
-        provider
-      );
-    let relayerV5: undefined | RelayerV5;
-    if (this.contractAddresses.relayerV5)
-      relayerV5 = RelayerV5__factory.connect(
-        this.contractAddresses.relayerV5,
-        provider
-      );
+    const relayer = BalancerRelayer__factory.connect(
+      this.contractAddresses.relayer,
+      provider
+    );
     let veBal: undefined | VeBal;
     if (this.contractAddresses.veBal) {
       veBal = new VeBal(this.contractAddresses, provider);
@@ -208,9 +188,7 @@ export class Contracts {
       liquidityGauge: this.getLiquidityGauge,
       lidoRelayer,
       multicall,
-      relayerV3,
-      relayerV4,
-      relayerV5,
+      relayer,
       veBal,
       veBalProxy,
       weightedPoolFactory,

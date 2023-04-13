@@ -1,7 +1,8 @@
 import { Findable, Pool, PoolAttribute } from '@/types';
-import { RelayerV3__factory } from '@/contracts';
+import { BalancerRelayer__factory } from '@/contracts';
 
-export const balancerRelayerInterface = RelayerV3__factory.createInterface();
+export const balancerRelayerInterface =
+  BalancerRelayer__factory.createInterface();
 
 /**
  * Using array of objects to preserve the tokens order
