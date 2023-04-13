@@ -3,6 +3,13 @@ import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { ExitPoolRequest, JoinPoolRequest } from '@/types';
 import { SwapType, BatchSwapStep, FundManagement } from '@/modules/swaps/types';
 
+export enum PoolKind {
+  WEIGHTED = 0,
+  LEGACY_STABLE,
+  COMPOSABLE_STABLE,
+  COMPOSABLE_STABLE_V2,
+}
+
 export type OutputReference = {
   index: number;
   key: BigNumber;
