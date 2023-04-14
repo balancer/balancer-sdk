@@ -16,13 +16,13 @@ let bptIndex: number;
 const exiter = AddressZero;
 const concern = new LinearPoolExit();
 
-describe('Composable Stable Pool exits', () => {
+describe('Linear Pool exits', () => {
   before(async () => {
     pool = await getPoolFromFile(testPoolId, 1);
     bptIndex = pool.tokensList.indexOf(pool.address);
   });
 
-  context('exitExactBPTIn', async () => {
+  context('Recovery Exit', async () => {
     let defaultParams: Pick<
       ExitExactBPTInParameters,
       'exiter' | 'pool' | 'bptIn' | 'slippage' | 'toInternalBalance'
