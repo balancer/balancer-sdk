@@ -5,7 +5,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Vault__factory } from '@/contracts';
 import { balancerVault } from '@/lib/constants/config';
-import { parsePoolInfo } from '@/lib/utils';
+import { insert, parsePoolInfo, removeItem } from '@/lib/utils';
 import { _downscaleDownArray } from '@/lib/utils/solidityMaths';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { BasePoolEncoder } from '@/pool-base';
@@ -95,11 +95,18 @@ export class LinearPoolExit implements ExitConcern {
 
     const userData = BasePoolEncoder.recoveryModeExit(bptIn);
 
+    // MinAmounts needs a value for BPT for encoding
+    const minAmountsOutWithBpt = insert(
+      minAmountsOut,
+      sortedValues.bptIndex,
+      '0'
+    );
+
     const encodedData = this.encodeExitPool({
       poolTokens: sortedValues.poolTokens,
       poolId: pool.id,
       exiter,
-      minAmountsOut,
+      minAmountsOut: minAmountsOutWithBpt,
       userData,
       toInternalBalance,
     });
@@ -168,11 +175,11 @@ export class LinearPoolExit implements ExitConcern {
       scalingFactors
     );
 
-    const expectedAmountsOut = amountsOutScaledDown.map((amount) =>
-      amount.toString()
+    const expectedAmountsOut = removeItem(amountsOutScaledDown, bptIndex).map(
+      (amount) => amount.toString()
     );
     // Apply slippage tolerance
-    const minAmountsOut = amountsOutScaledDown.map((amount) => {
+    const minAmountsOut = expectedAmountsOut.map((amount) => {
       const minAmount = subSlippage(
         BigNumber.from(amount),
         BigNumber.from(slippage)
