@@ -35,7 +35,7 @@ import { SimulationType } from '../simulation/simulation.module';
 dotenv.config();
 
 const TEST_BBEUSD = false;
-const TEST_BBAUSD2 = true;
+const TEST_ETH_STABLE = true;
 
 /*
  * Testing on MAINNET
@@ -181,9 +181,9 @@ describe('generalised exit execution', async function () {
     });
   });
 
-  context('bbausd2', async () => {
-    if (!TEST_BBAUSD2) return true;
-    const pool = addresses.bbausd2;
+  context('wstETH_rETH_sfrxETH', async () => {
+    if (!TEST_ETH_STABLE) return true;
+    const pool = addresses.wstETH_rETH_sfrxETH;
     const amount = parseFixed('0.2', pool.decimals).toString();
 
     it('should exit pool correctly', async () => {
