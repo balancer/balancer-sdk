@@ -40,13 +40,13 @@ async function joinPoolExample() {
     rpcUrlLocal,
     network,
     tokensIn,
-    undefined,
+    [0, 3, 1],
     amountsIn,
     poolToJoin,
-    17034893
+    17045919
   );
   const fee = ComposableStableProtocolFee.calculateProtocolFees(pool);
-  console.log(fee);
+  console.log('fee: ' + fee);
   const signerAddress = await signer.getAddress();
 
   // Joining with full balances of tokens in
@@ -56,7 +56,6 @@ async function joinPoolExample() {
     amountsIn,
     slippage
   );
-
   await signer.sendTransaction({ to, data, gasLimit: 30000000 });
 
   const tokensBalanceAfter = await getBalances(
@@ -64,14 +63,14 @@ async function joinPoolExample() {
     signer,
     signerAddress
   );
-  console.log(
-    `${removeItem(
-      tokensBalanceAfter,
-      pool.bptIndex
-    ).toString()}: tokensBalanceAfter`
-  );
-  console.log(`${tokensBalanceAfter[pool.bptIndex]}: bptBalanceAfter`);
-  console.log(`${expectedBPTOut}: expectedBptOut`);
+  // console.log(
+  //   `${removeItem(
+  //     tokensBalanceAfter,
+  //     pool.bptIndex
+  //   ).toString()}: tokensBalanceAfter`
+  // );
+  // console.log(`${tokensBalanceAfter[pool.bptIndex]}: bptBalanceAfter`);
+  // console.log(`${expectedBPTOut}: expectedBptOut`);
 }
 
 joinPoolExample();

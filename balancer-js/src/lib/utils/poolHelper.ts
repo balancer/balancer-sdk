@@ -70,8 +70,6 @@ export const parsePoolInfo = (
     return parseFixed(token.priceRate ?? '1', 18).toBigInt();
   });
 
-  console.log(pool.tokens);
-
   let oldPriceRates = pool.tokens.map(({ oldPriceRate, priceRate }) => {
     return parseFixed(oldPriceRate ?? priceRate ?? '1', 18).toBigInt();
   });

@@ -33,12 +33,20 @@ export default class ComposableStableProtocolFee {
     totalSharesEvm: bigint;
   }): bigint => {
     const protocolFeePct = calculateSwapYieldFeePct(
-      ampWithPrecision,
-      upScaledBalancesWithoutBpt,
-      priceRates,
+      BigInt('137829'),
+      [
+        '10114027899187223149028',
+        '8044099761409589443827',
+        '6760384866742710404312',
+      ].map(BigInt),
+      ['1118868797946620780', '1033965969078691411', '1066035430901015801'].map(
+        BigInt
+      ),
       exemptedTokens,
-      lastPostJoinExitInvariant,
-      oldPriceRates,
+      BigInt('24916006192749840322600'),
+      ['1118868797946620780', '1033960875886006099', '1066035430901015801'].map(
+        BigInt
+      ),
       protocolSwapFeePct,
       protocolYieldFeePct
     );

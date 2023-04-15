@@ -17,12 +17,11 @@ export const calculateStableInvariant = (
 ): bigint => {
   const numTokens = normalizedBalances.length;
   const balancesSum: bigint = normalizedBalances.reduce((acc, balance) => {
-    return acc + balance;
+    return SolidityMaths.add(acc, balance);
   }, BigInt(0));
   if (balancesSum === BigInt(0)) {
     return BigInt(0);
   }
-  let previousInvariant; // in the for loop, it will compare the invariant from i with the i-1
   let invariant = balancesSum; // invariant starts being the sum of balances, but with each iteration, the invariant variable approximates more from the real invariant.
   const ampTimesTotal = SolidityMaths.mul(
     amplificationParameter,
@@ -55,31 +54,33 @@ export const calculateStableInvariant = (
     let D_P = invariant;
     normalizedBalances.forEach((normalizedBalance) => {
       //D_P = D^(n+1)/P*(n^n)
-      D_P = SolidityMaths.divDownFixed(
+      D_P = SolidityMaths.divDown(
         SolidityMaths.mul(D_P, invariant),
         SolidityMaths.mul(normalizedBalance, BigInt(numTokens))
       );
     });
-    previousInvariant = invariant;
+    const previousInvariant = invariant;
     const g_D0 = SolidityMaths.mul(
       // (((ampTimesTotal * sum) / AMP_PRECISION) + D_P * numTokens) * invariant
       SolidityMaths.divDown(
         SolidityMaths.mul(ampTimesTotal, balancesSum),
-        BigInt(AMP_PRECISION)
+        BigInt(Math.pow(10, AMP_PRECISION))
       ) + SolidityMaths.mul(D_P, BigInt(numTokens)),
       invariant
     );
     const h_D0 =
       SolidityMaths.divDown(
         // (((ampTimesTotal - _AMP_PRECISION) * invariant) / _AMP_PRECISION) + (numTokens + 1) * D_P
-        SolidityMaths.mul(ampTimesTotal - BigInt(AMP_PRECISION), invariant),
-        BigInt(AMP_PRECISION)
+        SolidityMaths.mul(
+          ampTimesTotal - BigInt(Math.pow(10, AMP_PRECISION)),
+          invariant
+        ),
+        BigInt(Math.pow(10, AMP_PRECISION))
       ) + SolidityMaths.mul(BigInt(numTokens + 1), D_P);
-
     invariant = SolidityMaths.divDown(g_D0, h_D0);
 
     //if the difference between D0 and D1 is less than 1, returns D1
-    if (SolidityMaths.abs(invariant - previousInvariant) < 1) {
+    if (invariant - previousInvariant === BigInt(0)) {
       return invariant;
     }
   }

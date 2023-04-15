@@ -199,7 +199,6 @@ export class ComposableStablePoolJoin implements JoinConcern {
         fromInternalBalance: false,
       },
     };
-
     const vaultInterface = Vault__factory.createInterface();
 
     const data = vaultInterface.encodeFunctionData(functionName, [
