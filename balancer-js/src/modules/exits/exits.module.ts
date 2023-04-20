@@ -147,21 +147,6 @@ export class Exit {
         slippage
       );
 
-    // TODO: If expectedAmountsOut are greater than mainTokens balance, exit by unwrapping wrappedTokens
-    const insufficientMainTokenBalance = false;
-    if (unwrapTokens === false && insufficientMainTokenBalance) {
-      return this.exitPool(
-        poolId,
-        amountBptIn,
-        userAddress,
-        slippage,
-        signer,
-        simulationType,
-        authorisation,
-        true
-      );
-    }
-
     // Create calls with minimum expected amount out for each exit path
     const { encodedCall, deltas } = await this.createCalls(
       exitPaths,

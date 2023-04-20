@@ -99,8 +99,9 @@ const relayer = contractAddresses.relayer;
 const testFlow = async (
   pool: { id: string; address: string; slot: number },
   amount: string,
+  unwrapTokens = false,
   simulationType = SimulationType.VaultModel
-) => {
+): Promise<string[]> => {
   const slippage = '10'; // 10 bps = 0.1%
 
   const tokens = [pool.address];
@@ -132,7 +133,8 @@ const testFlow = async (
       slippage,
       signer,
       simulationType,
-      authorisation
+      authorisation,
+      unwrapTokens
     );
 
   const { transactionReceipt, balanceDeltas, gasUsed } =
@@ -166,6 +168,7 @@ const testFlow = async (
     subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
   );
   expect(expectedMins).to.deep.eq(minAmountsOut);
+  return expectedAmountsOut;
 };
 
 describe('generalised exit execution', async function () {
@@ -185,9 +188,25 @@ describe('generalised exit execution', async function () {
     if (!TEST_ETH_STABLE) return true;
     const pool = addresses.wstETH_rETH_sfrxETH;
     const amount = parseFixed('0.2', pool.decimals).toString();
+    let mainTokensAmountsOut: string[];
+    let unwrappingTokensAmountsOut: string[];
 
-    it('should exit pool correctly', async () => {
-      await testFlow(pool, amount);
+    context('exit by unwrapping tokens', async () => {
+      it('should exit pool correctly', async () => {
+        unwrappingTokensAmountsOut = await testFlow(pool, amount, true);
+      });
+    });
+
+    context('exit to main tokens directly', async () => {
+      it('should exit pool correctly', async () => {
+        mainTokensAmountsOut = await testFlow(pool, amount);
+      });
+    });
+
+    context('exit by unwrapping vs exit to main tokens', async () => {
+      it('should return the same amount out', async () => {
+        expect(mainTokensAmountsOut).to.deep.eq(unwrappingTokensAmountsOut);
+      });
     });
   });
 });
