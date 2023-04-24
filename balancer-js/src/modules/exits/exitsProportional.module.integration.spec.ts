@@ -14,7 +14,7 @@ import { SimulationType } from '../simulation/simulation.module';
 dotenv.config();
 
 const network = Network.MAINNET;
-const blockNumber = 16990000;
+const blockNumber = 17116836;
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8545';
 
@@ -227,6 +227,37 @@ describe('generalised exit execution', async () => {
           address: testPool.address,
         },
         amount: parseFixed('0.01', testPool.decimals).toString(),
+        authorisation,
+      },
+    ]);
+  });
+  context('weighted with boosted', async () => {
+    let authorisation: string | undefined;
+    const testPool = addresses.STG_BBAUSD;
+
+    beforeEach(async () => {
+      const tokens = [testPool.address];
+      const slots = [testPool.slot];
+      const balances = [parseFixed('25.111', testPool.decimals).toString()];
+      await forkSetup(
+        signer,
+        tokens,
+        slots,
+        balances,
+        jsonRpcUrl as string,
+        blockNumber
+      );
+    });
+
+    await runTests([
+      {
+        signer,
+        description: 'exit pool',
+        pool: {
+          id: testPool.id,
+          address: testPool.address,
+        },
+        amount: parseFixed('25.111', testPool.decimals).toString(),
         authorisation,
       },
     ]);

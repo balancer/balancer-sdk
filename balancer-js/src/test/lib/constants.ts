@@ -109,6 +109,13 @@ export const ADDRESSES = {
       symbol: 'bbausd2',
       slot: 0,
     },
+    bbausd3: {
+      id: '0xfebb0bbf162e64fb9d0dfe186e517d84c395f016000000000000000000000502',
+      address: '0xfebb0bbf162e64fb9d0dfe186e517d84c395f016',
+      decimals: 18,
+      symbol: 'bbausd3',
+      slot: 0,
+    },
     bbausdcOld: {
       address: '0x9210F1204b5a24742Eba12f710636D76240dF3d0',
       decimals: 18,
@@ -164,6 +171,23 @@ export const ADDRESSES = {
     },
     bbadai: {
       address: '0xae37D54Ae477268B9997d4161B96b8200755935c'.toLowerCase(),
+      decimals: 18,
+      symbol: 'bbadai',
+      slot: 0,
+    },
+    bbausdc3: {
+      address: '0xcbfa4532d8b2ade2c261d3dd5ef2a2284f792692'.toLowerCase(),
+      decimals: 18,
+      symbol: 'bbausdc',
+      slot: 0,
+    },
+    bbausdt3: {
+      address: '0xa1697f9af0875b63ddc472d6eebada8c1fab8568'.toLowerCase(),
+      decimals: 18,
+      symbol: 'bbausdt',
+    },
+    bbadai3: {
+      address: '0x6667c6fa9f2b3fc1cc8d85320b62703d938e4385'.toLowerCase(),
       decimals: 18,
       symbol: 'bbadai',
       slot: 0,
@@ -284,6 +308,19 @@ export const ADDRESSES = {
       address: '0xe03af00fabe8401560c1ff7d242d622a5b601573',
       decimals: 18,
       symbol: 'bb-g-DAI',
+      slot: 0,
+    },
+    STG_BBAUSD: {
+      id: '0x639883476960a23b38579acfd7d71561a0f408cf000200000000000000000505',
+      address: '0x639883476960a23b38579acfd7d71561a0f408cf',
+      decimals: 18,
+      symbol: 'stg-bbausd',
+      slot: 0,
+    },
+    STG: {
+      address: '0xAf5191B0De278C7286d6C7CC6ab6BB8A73bA2Cd6'.toLowerCase(),
+      decimals: 18,
+      symbol: 'STG',
       slot: 0,
     },
   },
