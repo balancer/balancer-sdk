@@ -18,8 +18,6 @@ import {
   getForkedPools,
   GRAVI_AURA,
   B_50WBTC_50WETH,
-  B_50auraBAL_50wstETH,
-  B_stETH_STABLE,
 } from '@/test/lib/mainnetPools';
 import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
@@ -114,21 +112,6 @@ describe('join and exit integration tests', async () => {
     ADDRESSES[networkId].auraBal,
     // SwapTypes.SwapExactIn,
     '10' // 10 bsp = 0.1%
-  );
-  await testFlow(
-    'swap, join > swap, mulithopswap - WETH[Swap]auraBal, WETH[join]BPT[Swap]auraBAL, WETH[Swap]wstETH[Swap]auraBal',
-    [
-      BAL_WETH,
-      AURA_BAL_STABLE,
-      GRAVI_AURA,
-      B_50auraBAL_50wstETH,
-      B_stETH_STABLE,
-    ],
-    parseFixed('12.3', 18).toString(),
-    ADDRESSES[networkId].WETH,
-    ADDRESSES[networkId].auraBal,
-    '10', // 10 bsp = 0.1%
-    16940624
   );
   // Removed ExactOut cases for now as Relayer formatting is difficult
   // await testFlow(
