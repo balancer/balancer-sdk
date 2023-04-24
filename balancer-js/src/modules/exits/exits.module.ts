@@ -866,9 +866,17 @@ export class Exit {
     //   )`
     // );
 
+    // We have to use correct pool type based off following from Relayer:
+    // enum PoolKind { WEIGHTED, LEGACY_STABLE, COMPOSABLE_STABLE, COMPOSABLE_STABLE_V2 }
+    // (note only Weighted and COMPOSABLE_STABLE_V2 will support proportional exits)
+    let kind = 0;
+    if (node.type === PoolType.ComposableStable) {
+      kind = 3;
+    }
+
     const call = Relayer.formatExitPoolInput({
       poolId: node.id,
-      poolKind: 0,
+      poolKind: kind,
       sender,
       recipient,
       outputReferences,
