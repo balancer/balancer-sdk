@@ -2,7 +2,6 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { ActionStep, ActionType } from './types';
 import { Relayer, OutputReference } from '@/modules/relayer/relayer.module';
-import { PoolType } from '@/types';
 
 export class BaseAction {
   nextOpRefKey;
