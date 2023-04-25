@@ -9,13 +9,13 @@ import { ADDRESSES } from '../src/test/lib/constants';
 
 dotenv.config();
 
-const network = Network.POLYGON;
-// const rpcUrl = `https://mainnet.infura.io/v3/${process.env.INFURA}`;
-const rpcUrl = `https://polygon-mainnet.infura.io/v3/${process.env.INFURA}`;
+const network = Network.MAINNET;
+const rpcUrl = `https://mainnet.infura.io/v3/${process.env.INFURA}`;
+// const rpcUrl = `https://polygon-mainnet.infura.io/v3/${process.env.INFURA}`;
 const tokenIn = ADDRESSES[network].DAI.address;
 const tokenOut = ADDRESSES[network].USDC.address;
 const swapType = SwapTypes.SwapExactIn;
-const amount = parseFixed('1', 18);
+const amount = parseFixed('100', 18);
 
 async function swap() {
   const balancer = new BalancerSDK({
