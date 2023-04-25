@@ -70,7 +70,7 @@ export class Join extends BaseAction implements Action {
       poolId: this.poolId,
       sender: this.sender,
       recipient: this.receiver,
-      kind: 0,
+      kind: this.getPoolKind(pool.poolType),
       joinPoolRequest: {
         assets: sortedTokens,
         maxAmountsIn,

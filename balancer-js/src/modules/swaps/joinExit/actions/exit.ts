@@ -73,7 +73,7 @@ export class Exit extends BaseAction implements Action {
       userData,
       toInternalBalance: this.toInternalBalance,
       poolId: this.poolId,
-      poolKind: 0, // TODO - This will always be 0 to match supported Relayer types
+      poolKind: this.getPoolKind(pool.poolType),
       sender: this.sender,
       recipient: this.receiver,
       outputReferences: this.opRef.key ? [this.opRef] : [],

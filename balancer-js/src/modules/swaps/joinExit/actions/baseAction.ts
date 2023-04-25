@@ -2,6 +2,7 @@ import { BigNumber } from '@ethersproject/bignumber';
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { ActionStep, ActionType } from './types';
 import { Relayer, OutputReference } from '@/modules/relayer/relayer.module';
+import { PoolType } from '@/types';
 
 export class BaseAction {
   nextOpRefKey;
@@ -189,5 +190,19 @@ export class BaseAction {
     // tokenIn/Out will come from/go to the user. Any other tokens are intermediate and will be from/to Relayer
     if (hasTokenOut) return user;
     else return relayer;
+  }
+
+  getPoolKind(poolType: string): number {
+    // We have to use correct pool type based off following from Relayer:
+    // enum PoolKind { WEIGHTED, LEGACY_STABLE, COMPOSABLE_STABLE, COMPOSABLE_STABLE_V2 }
+    // (note only Weighted and COMPOSABLE_STABLE_V2 will support proportional exits)
+    let kind = 0;
+    if ([`MetaStable`, `Stable`, `StablePhantom`].includes(poolType)) {
+      kind = 1;
+    } else if (poolType === `ComposableStable`) {
+      // In this case we are only doing BPT <> singleToken, not BPT <> tokens, so encoding matches and avoids need to check version so default to 3
+      kind = 3;
+    }
+    return kind;
   }
 }
