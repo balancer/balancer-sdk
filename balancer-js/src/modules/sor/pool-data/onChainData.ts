@@ -50,7 +50,7 @@ export async function getOnChainBalances<
   const supportedPoolTypes: string[] = Object.values(PoolType);
   const subgraphPools: GenericPool[] = [];
   subgraphPoolsOriginal.forEach((pool) => {
-    if (pool.poolType === 'FX' || !supportedPoolTypes.includes(pool.poolType)) {
+    if (!supportedPoolTypes.includes(pool.poolType)) {
       console.error(`Unknown pool type: ${pool.poolType} ${pool.id}`);
       return;
     }
