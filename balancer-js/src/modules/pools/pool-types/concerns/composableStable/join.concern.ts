@@ -23,6 +23,7 @@ import {
   JoinPoolAttributes,
   JoinPool,
 } from '../types';
+import { AddressZero } from '@ethersproject/constants';
 
 interface SortedValues {
   sortedAmountsIn: string[];
@@ -244,7 +245,7 @@ export class ComposableStablePoolJoin implements JoinConcern {
       bptIndex,
       scalingFactorsWithoutBpt,
       upScaledBalancesWithoutBpt,
-    } = parsePoolInfo(pool, wrappedNativeAsset);
+    } = parsePoolInfo(pool, wrappedNativeAsset, tokensIn.includes(AddressZero));
     return {
       sortedAmountsIn,
       scalingFactorsWithoutBpt,

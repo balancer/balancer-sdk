@@ -10,7 +10,12 @@ import {
   TokenPriceService,
   SwapTypes,
 } from '@balancer-labs/sor';
-import { BalancerSDK, Network, RelayerAuthorization } from '@/index';
+import {
+  BalancerSDK,
+  Network,
+  RelayerAuthorization,
+  BALANCER_NETWORK_CONFIG,
+} from '@/index';
 import { buildRelayerCalls, someJoinExit } from './joinAndExit';
 import {
   BAL_WETH,
@@ -23,7 +28,6 @@ import { MockPoolDataService } from '@/test/lib/mockPool';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Contracts } from '../../contracts/contracts.module';
 import { forkSetup, getBalances } from '@/test/lib/utils';
-import { networkAddresses } from '@/lib/constants/config';
 dotenv.config();
 
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
@@ -34,11 +38,12 @@ const gasLimit = 8e6;
 let sor: SOR;
 
 const { contracts } = new Contracts(networkId, provider);
-const { tokens, contracts: contractAddresses } = networkAddresses(networkId);
 
 const signer = provider.getSigner();
-const relayerAddress = contractAddresses.relayerV5 as string;
-const wrappedNativeAsset = tokens.wrappedNativeAsset;
+const relayerAddress =
+  BALANCER_NETWORK_CONFIG[networkId].addresses.contracts.relayer;
+const wrappedNativeAsset =
+  BALANCER_NETWORK_CONFIG[networkId].addresses.tokens.wrappedNativeAsset;
 
 describe('join and exit integration tests', async () => {
   await testFlow(

@@ -16,11 +16,23 @@ import {
 } from '@/types';
 import { SubgraphPoolDataService } from '@/modules/sor/pool-data/subgraphPoolDataService';
 
+const searchMap = (map: Map<any, any>, field: string, fieldValue: string) => {
+  let foundEntry = undefined;
+  map.forEach((value, key) => {
+    if (value[field] === fieldValue) {
+      foundEntry = value;
+    }
+  });
+
+  return foundEntry;
+};
+
 export const findable = <T, P = string, V = any>(
   map: Map<string | V, T>
 ): Findable<T, P> & Searchable<T> => ({
   find: (id: string) => Promise.resolve(map.get(id)),
-  findBy: (param: P, value: V) => Promise.resolve(map.get(value)),
+  findBy: (param: P, value: V) =>
+    Promise.resolve(searchMap(map, param as string, value as string)),
   all: () => Promise.resolve(Object.values(map)),
   where: (filters: (arg: T) => boolean) => Promise.resolve(Object.values(map)),
 });

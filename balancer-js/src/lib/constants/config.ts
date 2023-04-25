@@ -18,9 +18,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         balancerHelpers: '0x5aDDCCa35b7A0D07C74063c48700C8590E87864E',
         balancerMinterAddress: '0x239e55F427D44C3cc793f49bFB507ebe76638a2b',
         lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
-        relayerV3: '0x886A3Ec7bcC508B8795990B60Fa21f85F9dB7948',
-        relayerV4: '0x2536dfeeCB7A0397CF98eDaDA8486254533b1aFA',
-        relayerV5: '0xfeA793Aa415061C483D2390414275AD314B3F621',
+        relayer: '0xfeA793Aa415061C483D2390414275AD314B3F621',
         gaugeController: '0xc128468b7ce63ea702c1f104d55a2566b13d3abd',
         feeDistributor: '0xD3cf852898b21fc233251427c2DC93d3d604F3BB',
         protocolFeePercentagesProvider:
@@ -96,9 +94,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
         gaugeClaimHelper: '0xaeb406b0e430bf5ea2dc0b9fe62e4e53f74b3a33',
-        relayerV3: '0xcf6a66E32dCa0e26AcC3426b851FD8aCbF12Dac7',
-        relayerV4: '0x28A224d9d398a1eBB7BA69BCA515898966Bb1B6b',
-        relayerV5: '0xd18d5D377eb23362e54Fa496597d7E962d56C554',
+        relayer: '0xd18d5D377eb23362e54Fa496597d7E962d56C554',
         balancerHelpers: '0x239e55F427D44C3cc793f49bFB507ebe76638a2b',
         weightedPoolFactory: '0xfc8a407bba312ac761d8bfe04ce1201904842b76',
         composableStablePoolFactory:
@@ -149,9 +145,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
         gaugeClaimHelper: '0xa0dabebaad1b243bbb243f933013d560819eb66f',
-        relayerV3: '0x42E49B48573c725ee32d2579060Ed06894f97002',
-        relayerV4: '0x5bf3B7c14b10f16939d63Bd679264A1Aa951B4D5',
-        relayerV5: '0x598ce0f1ab64B27256759ef99d883EE51138b9bd',
+        relayer: '0x598ce0f1ab64B27256759ef99d883EE51138b9bd',
         balancerHelpers: '0x77d46184d22CA6a3726a2F500c776767b6A3d6Ab',
         weightedPoolFactory: '0xc7e5ed1054a24ef31d827e6f86caa58b3bc168d7',
         composableStablePoolFactory:
@@ -196,6 +190,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         veBalProxy: '0x98D0d0a65cBeCCaa647a5a95cf27Cf2f00E1231C',
         balancerHelpers: '0x94905e703fEAd7f0fD0eEe355D267eE909784e6d',
         weightedPoolFactory: '0x8df6EfEc5547e31B0eb7d1291B511FF8a2bf987c',
+        relayer: '',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
@@ -216,6 +211,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x53c43764255c17bd724f74c4ef150724ac50a3ed',
         balancerHelpers: '',
+        relayer: '',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
@@ -236,6 +232,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         multicall: '0x42ad527de7d4e9d9d011ac45b31d8551f8fe9821',
         balancerHelpers: '0x5aDDCCa35b7A0D07C74063c48700C8590E87864E',
         weightedPoolFactory: '0x8df6EfEc5547e31B0eb7d1291B511FF8a2bf987c',
+        relayer: '',
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
@@ -256,9 +253,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
-        relayerV3: '0x7b9B6f094DC2Bd1c12024b0D9CC63d6993Be1888',
-        relayerV4: '0x00e695aA8000df01B8DC8401B4C34Fba5D56BBb2',
-        relayerV5: '0x03F1ab8b19bcE21EB06C364aEc9e40322572a1e9',
+        relayer: '0x03F1ab8b19bcE21EB06C364aEc9e40322572a1e9',
         gaugeController: '0xBB1CE49b16d55A1f2c6e88102f32144C7334B116',
         veBal: '0x33A99Dcc4C85C014cf12626959111D5898bbCAbF',
         veBalProxy: '0xA1F107D1cD709514AE8A914eCB757E95f9cedB31',
@@ -299,9 +294,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0x2dc0e2aa608532da689e89e237df582b783e552c',
-        relayerV3: '0x195CcCBE464EF9073d1f7A1ba1C9Bf0f56dfFFff',
-        relayerV4: '0x1a58897Ab366082028ced3740900ecBD765Af738',
-        relayerV5: '0x03F1ab8b19bcE21EB06C364aEc9e40322572a1e9',
+        relayer: '0x03F1ab8b19bcE21EB06C364aEc9e40322572a1e9',
         balancerHelpers: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
         weightedPoolFactory: '0x230a59f4d9adc147480f03b0d3fffecd56c3289a',
         composableStablePoolFactory:
@@ -339,8 +332,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
         multicall: '0xbb6fab6b627947dae0a75808250d8b2652952cb5',
-        relayerV4: '0xeF606F58A4FD0fCcb066c6203d0994694d3eB2D3',
-        relayerV5: '0x3536fD480CA495Ac91E698A703248A8915c137a3',
+        relayer: '0x3536fD480CA495Ac91E698A703248A8915c137a3',
         balancerHelpers: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
         weightedPoolFactory: '0x6cad2ea22bfa7f4c14aae92e47f510cd5c509bc7',
         composableStablePoolFactory:
@@ -373,8 +365,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         vault: '0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce',
         multicall: '0x66335d7ad8011f6aa3f48aadcb523b62b38ed961',
         gaugeClaimHelper: '0x0000000000000000000000000000000000000000', // no guages on fantom
-        relayerV3: '0xC852F984CA3310AFc596adeB17EfcB0542646920',
-        relayerV4: '0x419f7925b8c9e409b6ee8792242556fa210a7a09',
+        relayer: '0x419f7925b8c9e409b6ee8792242556fa210a7a09',
         balancerHelpers: '0xfE18C7C70b0a2c6541bEde0367124278BC345Dc8',
         weightedPoolFactory: '0x60467cb225092cE0c989361934311175f437Cf53',
         composableStablePoolFactory:

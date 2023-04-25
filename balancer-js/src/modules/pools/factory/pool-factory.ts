@@ -8,7 +8,7 @@ import {
 } from '@/modules/pools/factory/types';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 import { WeightedPoolInterface } from '@/contracts/WeightedPool';
-import { ComposableStableInterface } from '@/contracts/ComposableStable';
+import { ComposableStablePoolInterface } from '@/contracts/ComposableStablePool';
 import { ERC4626LinearPoolInterface } from '@/contracts/ERC4626LinearPool';
 import { EulerLinearPoolInterface } from '@/contracts/EulerLinearPool';
 import { AaveLinearPoolInterface } from '@/contracts/AaveLinearPool';
@@ -33,7 +33,7 @@ export interface PoolFactory {
 
   getPoolInterface():
     | WeightedPoolInterface
-    | ComposableStableInterface
+    | ComposableStablePoolInterface
     | ERC4626LinearPoolInterface
     | EulerLinearPoolInterface
     | AaveLinearPoolInterface

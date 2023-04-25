@@ -1,8 +1,9 @@
-import { ContractAddresses } from '@/types';
 import { Provider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
 import { formatUnits } from '@ethersproject/units';
-import veBalProxyAbi from '@/lib/abi/veDelegationProxy.json';
+
+import { VeDelegationProxy__factory } from '@/contracts';
+import { ContractAddresses } from '@/types';
 
 export class VeBalProxy {
   instance: Contract;
@@ -10,7 +11,10 @@ export class VeBalProxy {
   constructor(addresses: ContractAddresses, provider: Provider) {
     if (!addresses.veBalProxy)
       throw new Error('veBalProxy address must be defined');
-    this.instance = new Contract(addresses.veBalProxy, veBalProxyAbi, provider);
+    this.instance = VeDelegationProxy__factory.connect(
+      addresses.veBalProxy,
+      provider
+    );
   }
 
   async getAdjustedBalance(account: string): Promise<string> {

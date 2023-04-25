@@ -9,13 +9,12 @@ import {
   BalancerSDK,
   Swaps,
   BALANCER_NETWORK_CONFIG,
+  BatchRelayerLibrary__factory,
 } from '@/.';
 import { getNetworkConfig } from '@/modules/sdk.helpers';
 import { mockPool, mockPoolDataService } from '@/test/lib/mockPool';
 import { SwapTransactionRequest, SwapType } from './types';
 import { Vault__factory } from '@/contracts/factories/Vault__factory';
-import BatchRelayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
-import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero, MaxUint256 } from '@ethersproject/constants';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
@@ -37,7 +36,7 @@ const sdkConfig: BalancerSdkConfig = {
 };
 
 const vaultInterface = Vault__factory.createInterface();
-const vaultActions = new Interface(BatchRelayerLibraryAbi);
+const vaultActions = BatchRelayerLibrary__factory.createInterface();
 
 const funds = {
   fromInternalBalance: false,

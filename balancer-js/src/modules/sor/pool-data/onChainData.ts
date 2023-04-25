@@ -7,13 +7,15 @@ import { Vault__factory } from '@/contracts/factories/Vault__factory';
 import { Pool, PoolToken, PoolType } from '@/types';
 
 // TODO: decide whether we want to trim these ABIs down to the relevant functions
-import aTokenRateProvider from '@/lib/abi/StaticATokenRateProvider.json';
-
-import weightedPoolAbi from '@/lib/abi/WeightedPool.json';
-import stablePoolAbi from '@/lib/abi/StablePool.json';
-import elementPoolAbi from '@/lib/abi/ConvergentCurvePool.json';
-import linearPoolAbi from '@/lib/abi/LinearPool.json';
-import composableStableAbi from '@/lib/abi/ComposableStable.json';
+import {
+  ComposableStablePool__factory,
+  ConvergentCurvePool__factory,
+  LinearPool__factory,
+  StablePool__factory,
+  StaticATokenRateProvider__factory,
+  WeightedPool__factory,
+} from '@/contracts';
+import { JsonFragment } from '@ethersproject/abi';
 
 export async function getOnChainBalances<
   GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
@@ -32,14 +34,13 @@ export async function getOnChainBalances<
     // Remove duplicate entries using their names
     Object.fromEntries(
       [
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ...(Vault__factory.abi as any),
-        ...aTokenRateProvider,
-        ...weightedPoolAbi,
-        ...stablePoolAbi,
-        ...elementPoolAbi,
-        ...linearPoolAbi,
-        ...composableStableAbi,
+        ...(Vault__factory.abi as readonly JsonFragment[]),
+        ...(StaticATokenRateProvider__factory.abi as readonly JsonFragment[]),
+        ...(WeightedPool__factory.abi as readonly JsonFragment[]),
+        ...(StablePool__factory.abi as readonly JsonFragment[]),
+        ...(ConvergentCurvePool__factory.abi as readonly JsonFragment[]),
+        ...(LinearPool__factory.abi as readonly JsonFragment[]),
+        ...(ComposableStablePool__factory.abi as readonly JsonFragment[]),
       ].map((row) => [row.name, row])
     )
   );
@@ -176,7 +177,7 @@ export async function getOnChainBalances<
       }
     >;
   } catch (err) {
-    throw `Issue with multicall execution.`;
+    throw new Error(`Issue with multicall execution.`);
   }
 
   const onChainPools: GenericPool[] = [];
@@ -275,7 +276,7 @@ export async function getOnChainBalances<
 
       onChainPools.push(subgraphPools[index]);
     } catch (err) {
-      throw `Issue with pool onchain data: ${err}`;
+      throw new Error(`Issue with pool onchain data: ${err}`);
     }
   });
 

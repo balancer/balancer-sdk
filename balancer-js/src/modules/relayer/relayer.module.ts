@@ -1,8 +1,8 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
-import { Interface } from '@ethersproject/abi';
 import { MaxUint256 } from '@ethersproject/constants';
-import { Vault } from '@/contracts/Vault';
+import { BatchRelayerLibrary__factory } from '@/contracts';
+import { IVault, Vault } from '@/contracts/Vault';
 import {
   EncodeBatchSwapInput,
   EncodeExitPoolInput,
@@ -13,12 +13,12 @@ import {
 import { ExitPoolRequest, JoinPoolRequest } from '@/types';
 import { Swap } from '../swaps/types';
 import { RelayerAuthorization } from '@/lib/utils';
-
-import relayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
+import FundManagementStruct = IVault.FundManagementStruct;
+import SingleSwapStruct = IVault.SingleSwapStruct;
 
 export * from './types';
 
-const relayerLibrary = new Interface(relayerLibraryAbi);
+const relayerLibrary = BatchRelayerLibrary__factory.createInterface();
 
 export class Relayer {
   static CHAINED_REFERENCE_TEMP_PREFIX = 'ba10'; // Temporary reference: it is deleted after a read.
@@ -73,12 +73,12 @@ export class Relayer {
 
   static encodeSwap(params: Swap): string {
     return relayerLibrary.encodeFunctionData('swap', [
-      params.request,
-      params.funds,
+      params.request as SingleSwapStruct,
+      params.funds as FundManagementStruct,
       params.limit,
-      params.deadline,
-      params.value,
-      params.outputReference,
+      params.deadline as BigNumberish,
+      params.value as BigNumberish,
+      params.outputReference as BigNumberish,
     ]);
   }
 

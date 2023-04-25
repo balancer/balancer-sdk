@@ -21,7 +21,7 @@ export async function setUpExample(
   rpcUrlLocal: string,
   network: Network,
   tokens: string[],
-  slots: number[],
+  slots: number[] | undefined,
   balances: string[],
   poolId: string,
   blockNo: number

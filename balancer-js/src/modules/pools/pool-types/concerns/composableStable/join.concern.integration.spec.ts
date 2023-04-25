@@ -3,30 +3,36 @@ import dotenv from 'dotenv';
 import { ethers } from 'hardhat';
 import { parseFixed } from '@ethersproject/bignumber';
 
-import { removeItem, PoolWithMethods, Network } from '@/.';
+import {
+  removeItem,
+  PoolWithMethods,
+  Network,
+  replace,
+  BALANCER_NETWORK_CONFIG,
+} from '@/.';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
 import {
   testExactTokensIn,
   testAttributes,
   testSortingInputs,
 } from '@/test/lib/joinHelper';
+import { AddressZero } from '@ethersproject/constants';
 
 dotenv.config();
 
-const network = Network.MAINNET;
-const { ALCHEMY_URL: jsonRpcUrl } = process.env;
-const rpcUrl = 'http://127.0.0.1:8545';
+const network = Network.POLYGON;
+const { ALCHEMY_URL_POLYGON: jsonRpcUrl } = process.env;
+const rpcUrl = 'http://127.0.0.1:8137';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
-const blockNumber = 16350000;
+const blockNumber = 41400000;
 const testPoolId =
-  '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d';
+  '0x02d2e2d7a89d6c5cb3681cfcb6f7dac02a55eda400000000000000000000088f';
 
 describe('ComposableStable Pool - Join Functions', async () => {
   let signerAddress: string;
   let pool: PoolWithMethods;
   let testPoolHelper: TestPoolHelper;
-
   before(async () => {
     signerAddress = await signer.getAddress();
 
@@ -48,7 +54,7 @@ describe('ComposableStable Pool - Join Functions', async () => {
       await forkSetup(
         signer,
         pool.tokensList,
-        Array(pool.tokensList.length).fill(0),
+        [0, 3, 0],
         Array(pool.tokensList.length).fill(parseFixed('100000', 18).toString()),
         jsonRpcUrl as string,
         blockNumber // holds the same state as the static repository
@@ -70,6 +76,21 @@ describe('ComposableStable Pool - Join Functions', async () => {
       const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
       const amountsIn = Array(tokensIn.length).fill('0');
       amountsIn[0] = parseFixed('202', 18).toString();
+      await testExactTokensIn(pool, signer, signerAddress, tokensIn, amountsIn);
+    });
+
+    it('should join - native asset', async () => {
+      const wrappedNativeAssetIndex = pool.tokensList.indexOf(
+        BALANCER_NETWORK_CONFIG[
+          network
+        ].addresses.tokens.wrappedNativeAsset.toLowerCase()
+      );
+      const tokensIn = removeItem(
+        replace(pool.tokensList, wrappedNativeAssetIndex, AddressZero),
+        pool.bptIndex
+      );
+      const amountsIn = Array(tokensIn.length).fill('0');
+      amountsIn[wrappedNativeAssetIndex] = parseFixed('202', 18).toString();
       await testExactTokensIn(pool, signer, signerAddress, tokensIn, amountsIn);
     });
   });

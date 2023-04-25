@@ -16,12 +16,8 @@ export const testExactTokensIn = async (
 ): Promise<void> => {
   const slippage = '6'; // 6 bps = 0.06%
 
-  const { to, data, minBPTOut, expectedBPTOut, priceImpact } = pool.buildJoin(
-    signerAddress,
-    tokensIn,
-    amountsIn,
-    slippage
-  );
+  const { to, data, minBPTOut, expectedBPTOut, priceImpact, value } =
+    pool.buildJoin(signerAddress, tokensIn, amountsIn, slippage);
 
   const { transactionReceipt, balanceDeltas } =
     await sendTransactionGetBalances(
@@ -29,7 +25,8 @@ export const testExactTokensIn = async (
       signer,
       signerAddress,
       to,
-      data
+      data,
+      value
     );
 
   expect(transactionReceipt.status).to.eq(1);

@@ -141,7 +141,8 @@ export class Pools implements Findable<PoolWithMethods> {
           bptIn: string,
           slippage: string,
           shouldUnwrapNativeAsset = false,
-          singleTokenOut?: string
+          singleTokenOut?: string,
+          toInternalBalance = false
         ) => {
           if (concerns.exit.buildExitExactBPTIn) {
             return concerns.exit.buildExitExactBPTIn({
@@ -152,6 +153,7 @@ export class Pools implements Findable<PoolWithMethods> {
               shouldUnwrapNativeAsset,
               wrappedNativeAsset,
               singleTokenOut,
+              toInternalBalance,
             });
           } else {
             throw 'ExitExactBPTIn not supported';
@@ -161,7 +163,8 @@ export class Pools implements Findable<PoolWithMethods> {
           exiter: string,
           tokensOut: string[],
           amountsOut: string[],
-          slippage: string
+          slippage: string,
+          toInternalBalance = false
         ) =>
           concerns.exit.buildExitExactTokensOut({
             exiter,
@@ -170,13 +173,20 @@ export class Pools implements Findable<PoolWithMethods> {
             amountsOut,
             slippage,
             wrappedNativeAsset,
+            toInternalBalance,
           }),
-        buildRecoveryExit: (exiter: string, bptIn: string, slippage: string) =>
+        buildRecoveryExit: (
+          exiter: string,
+          bptIn: string,
+          slippage: string,
+          toInternalBalance = false
+        ) =>
           concerns.exit.buildRecoveryExit({
             exiter,
             pool,
             bptIn,
             slippage,
+            toInternalBalance,
           }),
 
         // TODO: spotPrice fails, because it needs a subgraphType,
