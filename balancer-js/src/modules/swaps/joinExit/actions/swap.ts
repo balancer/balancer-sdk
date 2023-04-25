@@ -8,7 +8,7 @@ import {
 } from '@/modules/relayer/relayer.module';
 import { FundManagement, SwapType } from '../../types';
 import { ActionType, Action, CallData } from './types';
-import { BaseAction } from '.';
+import { BaseAction } from './baseAction';
 
 export class Swap extends BaseAction implements Action {
   type: ActionType.BatchSwap;

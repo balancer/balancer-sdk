@@ -8,7 +8,7 @@ import { ExitPoolRequest } from '@/types';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { AssetHelpers } from '@/lib/utils';
 import { ActionType, Action, CallData } from './types';
-import { BaseAction } from '.';
+import { BaseAction } from './baseAction';
 
 export class Exit extends BaseAction implements Action {
   type: ActionType.Exit;

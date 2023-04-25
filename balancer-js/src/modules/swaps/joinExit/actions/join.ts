@@ -7,7 +7,7 @@ import {
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { AssetHelpers } from '@/lib/utils';
 import { ActionType, Action, CallData } from './types';
-import { BaseAction } from '.';
+import { BaseAction } from './baseAction';
 
 export class Join extends BaseAction implements Action {
   type: ActionType.Join;
