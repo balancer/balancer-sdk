@@ -9,6 +9,9 @@ const pools = new PoolsSubgraphRepository({
         isInRecoveryMode: {
           eq: true,
         },
+        isPaused: {
+          eq: true,
+        },
       },
     },
     attrs: {},

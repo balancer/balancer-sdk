@@ -329,6 +329,7 @@ export interface Pool {
   priceRateProviders?: PriceRateProvider[];
   lastJoinExitInvariant?: string;
   isInRecoveryMode?: boolean;
+  isPaused?: boolean;
 }
 
 export interface PriceRateProvider {
