@@ -1,7 +1,7 @@
 import { Vault__factory } from '@/contracts/factories/Vault__factory';
-import BatchRelayerLibraryAbi from '@/lib/abi/BatchRelayerLibrary.json';
 import { JsonFragment } from '@ethersproject/abi';
 import { networkAddresses } from '@/lib/constants/config';
+import { BatchRelayerLibrary__factory } from '@/contracts';
 
 /**
  * Maps SOR data to get the tokenIn used in swaps.
@@ -86,8 +86,11 @@ function relayerResolver(
 
 function swapFragment(relayer: SwapRelayer): JsonFragment[] {
   if (relayer.id === Relayers.lido)
-    return BatchRelayerLibraryAbi.filter(
-      (fn) => fn.name && ['swap', 'batchSwap'].includes(fn.name)
+    return BatchRelayerLibrary__factory.abi.filter(
+      (f) =>
+        f.type === 'function' &&
+        f.name &&
+        ['swap', 'batchSwap'].includes(f.name)
     );
   else
     return Vault__factory.abi.filter(
@@ -106,8 +109,8 @@ function batchSwapFragment(
   const { tokens, contracts } = networkAddresses(chainId);
   if (tokens.stETH && contracts.lidoRelayer) {
     if ([assetIn, assetOut].includes(tokens.stETH)) {
-      const relayerSignaturesForSwaps = BatchRelayerLibraryAbi.filter(
-        (fn) => fn.name && ['batchSwap'].includes(fn.name)
+      const relayerSignaturesForSwaps = BatchRelayerLibrary__factory.abi.filter(
+        (f) => f.type === 'function' && f.name === 'batchSwap'
       );
       return relayerSignaturesForSwaps;
     }

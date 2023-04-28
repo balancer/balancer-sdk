@@ -30,7 +30,9 @@ import { Requests, VaultModel } from '../vaultModel/vaultModel.module';
 import { SwapRequest } from '../vaultModel/poolModel/swap';
 import { JoinPoolRequest as JoinPoolModelRequest } from '../vaultModel/poolModel/join';
 import { JsonRpcSigner } from '@ethersproject/providers';
-import { RelayerV5__factory } from '@/contracts';
+import { BalancerRelayer__factory } from '@/contracts/factories/BalancerRelayer__factory';
+
+const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
 export class Join {
   private relayer: string;
@@ -41,7 +43,7 @@ export class Join {
     private simulationService: Simulation
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
-    this.relayer = contracts.relayerV5 as string;
+    this.relayer = contracts.relayer;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
   }
 
@@ -349,11 +351,10 @@ export class Join {
     if (authorisation) {
       encodedCalls.unshift(this.createSetRelayerApproval(authorisation));
     }
-
-    const relayerInterface = RelayerV5__factory.createInterface();
-    const encodedCall = relayerInterface.encodeFunctionData('multicall', [
-      encodedCalls,
-    ]);
+    const encodedCall = balancerRelayerInterface.encodeFunctionData(
+      'multicall',
+      [encodedCalls]
+    );
 
     return {
       multiRequests,

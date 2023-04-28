@@ -12,7 +12,6 @@ export enum BalancerErrorCode {
   INPUT_LENGTH_MISMATCH = 'INPUT_LENGTH_MISMATCH',
   INPUT_OUT_OF_BOUNDS = 'INPUT_OUT_OF_BOUNDS',
   INPUT_TOKEN_INVALID = 'INPUT_TOKEN_INVALID',
-  INPUT_ZERO_NOT_ALLOWED = 'INPUT_ZERO_NOT_ALLOWED',
   INVALID_PROTOCOL_ID = 'INVALID_PROTOCOL_ID',
   INVALID_SWAP_FEE_PERCENTAGE = 'INVALID_SWAP_FEE_PERCENTAGE',
   INVALID_WEIGHTS = 'INVALID_WEIGHTS',
@@ -65,8 +64,6 @@ export class BalancerError extends Error {
         return 'input out of bounds';
       case BalancerErrorCode.INPUT_TOKEN_INVALID:
         return 'input token invalid';
-      case BalancerErrorCode.INPUT_ZERO_NOT_ALLOWED:
-        return 'zero input not allowed';
       case BalancerErrorCode.INVALID_PROTOCOL_ID:
         return 'The provided protocol id does not correspond to a protocol';
       case BalancerErrorCode.INVALID_SWAP_FEE_PERCENTAGE:

@@ -13,7 +13,10 @@ const sdk = new BalancerSDK({
   rpcUrl: 'https://eth-rpc.gateway.pokt.network',
 });
 
-const { pools, balancerContracts: contracts } = sdk;
+const {
+  pools,
+  balancerContracts: { contracts },
+} = sdk;
 
 // Joining with a single token
 const queryJoin = async (pool: PoolWithMethods) => {

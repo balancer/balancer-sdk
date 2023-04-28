@@ -1,10 +1,11 @@
-import { Provider } from '@ethersproject/providers';
+import { JsonFragment } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
+import { Provider } from '@ethersproject/providers';
 import { formatUnits } from '@ethersproject/units';
+import { VeBal__factory } from '@/contracts';
 import { Multicaller } from '@/lib/utils/multiCaller';
 import { toJsTimestamp } from '@/lib/utils/time';
 import { ContractAddresses } from '@/types';
-import veBalAbi from '@/lib/abi/veBal.json';
 
 export type VeBalLockInfo = {
   lockedEndDate: number;
@@ -38,7 +39,7 @@ export class VeBal {
     const multicaller = new Multicaller(
       this.addresses.multicall,
       this.provider,
-      veBalAbi
+      [...(VeBal__factory.abi as readonly JsonFragment[])]
     );
 
     multicaller.call('locked', this.addresses.veBal, 'locked', [account]);

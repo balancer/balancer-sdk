@@ -26,10 +26,10 @@ function amountForLimit(amount: BigNumber): AmountForLimit {
   return {
     amount,
     max: (maxSlippage: number): BigNumber => {
-      return amount.mul(1e3 + maxSlippage).div(1e3);
+      return amount.mul(1e4 + maxSlippage).div(1e4);
     },
     min: (maxSlippage: number): BigNumber => {
-      return amount.mul(1e3 - maxSlippage).div(1e3);
+      return amount.mul(1e4 - maxSlippage).div(1e4);
     },
   };
 }

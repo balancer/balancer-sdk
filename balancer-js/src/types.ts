@@ -70,9 +70,7 @@ export interface ContractAddresses {
   balancerHelpers: string;
   balancerMinterAddress?: string;
   lidoRelayer?: string;
-  relayerV3?: string;
-  relayerV4?: string;
-  relayerV5?: string;
+  relayer: string;
   gaugeController?: string;
   feeDistributor?: string;
   veBal?: string;
@@ -331,6 +329,7 @@ export interface Pool {
   priceRateProviders?: PriceRateProvider[];
   lastJoinExitInvariant?: string;
   isInRecoveryMode?: boolean;
+  isPaused?: boolean;
 }
 
 export interface PriceRateProvider {
@@ -386,7 +385,8 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     bptIn: string,
     slippage: string,
     shouldUnwrapNativeAsset?: boolean,
-    singleTokenOut?: string
+    singleTokenOut?: string,
+    toInternalBalance?: boolean
   ) => ExitExactBPTInAttributes;
 
   /**
@@ -401,7 +401,8 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
     exiter: string,
     tokensOut: string[],
     amountsOut: string[],
-    slippage: string
+    slippage: string,
+    toInternalBalance?: boolean
   ) => ExitExactTokensOutAttributes;
 
   /**
@@ -414,7 +415,8 @@ export interface PoolWithMethods extends Pool, Queries.ParamsBuilder {
   buildRecoveryExit: (
     exiter: string,
     bptIn: string,
-    slippage: string
+    slippage: string,
+    toInternalBalance?: boolean
   ) => ExitExactBPTInAttributes;
 
   /**

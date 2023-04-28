@@ -37,6 +37,7 @@ describe('Composable Stable Pool exits', () => {
         slippage: '100',
         shouldUnwrapNativeAsset: false,
         wrappedNativeAsset,
+        toInternalBalance: false,
       };
     });
 
@@ -86,6 +87,7 @@ describe('Composable Stable Pool exits', () => {
         amountsOut: tokensOut.map((_, i) => String(parseEther(`${i * 100}`))),
         slippage: '100',
         wrappedNativeAsset,
+        toInternalBalance: false,
       };
     });
 
