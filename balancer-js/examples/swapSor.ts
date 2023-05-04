@@ -121,12 +121,12 @@ async function getAndProcessSwaps(
 }
 
 async function swapExample() {
-  const network = Network.GOERLI;
+  const network = Network.POLYGON;
   const rpcUrl = PROVIDER_URLS[network];
-  const tokenIn = ADDRESSES[network].DAI.address;
-  const tokenOut = ADDRESSES[network].USDT.address;
+  const tokenIn = ADDRESSES[network].stMATIC.address;
+  const tokenOut = ADDRESSES[network].MATIC.address;
   const swapType = SwapTypes.SwapExactIn;
-  const amount = parseFixed('200', 18);
+  const amount = parseFixed('20', 18);
   // Currently Relayer only suitable for ExactIn and non-eth swaps
   const canUseJoinExitPaths = canUseJoinExit(swapType, tokenIn!, tokenOut!);
 
