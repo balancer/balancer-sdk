@@ -4,8 +4,6 @@ import { Network, PoolWithMethods } from '@/types';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
 import { ethers } from 'hardhat';
 import { BalancerSDK } from '@/modules/sdk.module';
-import { FXPool__factory, GyroEPool__factory } from '@/contracts';
-import { Contract } from '@ethersproject/contracts';
 import { expect } from 'chai';
 import { formatFixed, parseFixed } from '@ethersproject/bignumber';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
