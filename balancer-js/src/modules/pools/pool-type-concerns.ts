@@ -8,6 +8,7 @@ import { Linear } from './pool-types/linear.module';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { isLinearish } from '@/lib/utils';
 import { FX } from '@/modules/pools/pool-types/fx.module';
+import { GyroE } from '@/modules/pools/pool-types/gyro-e.module';
 
 /**
  * Wrapper around pool type specific methods.
@@ -36,25 +37,28 @@ export class PoolTypeConcerns {
     | Linear {
     // Calculate spot price using pool type
     switch (poolType) {
-      case 'Weighted':
-      case 'Investment':
-      case 'LiquidityBootstrapping': {
-        return new Weighted();
-      }
-      case 'Stable': {
-        return new Stable();
-      }
       case 'ComposableStable': {
         return new ComposableStable();
+      }
+      case 'FX': {
+        return new FX();
+      }
+      case 'GyroE': {
+        return new GyroE();
       }
       case 'MetaStable': {
         return new MetaStable();
       }
+      case 'Stable': {
+        return new Stable();
+      }
       case 'StablePhantom': {
         return new StablePhantom();
       }
-      case 'FX': {
-        return new FX();
+      case 'Investment':
+      case 'LiquidityBootstrapping':
+      case 'Weighted': {
+        return new Weighted();
       }
       default: {
         // Handles all Linear pool types
