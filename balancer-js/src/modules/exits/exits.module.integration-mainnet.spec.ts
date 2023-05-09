@@ -43,7 +43,7 @@ const TEST_ETH_STABLE = true;
  * - Uncomment section below:
  */
 const network = Network.MAINNET;
-const blockNumber = 17040540;
+const blockNumber = 17223300;
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8545';
 
@@ -100,8 +100,11 @@ const testFlow = async (
   pool: { id: string; address: string; slot: number },
   amount: string,
   unwrapTokens = false,
-  simulationType = SimulationType.VaultModel
-): Promise<string[]> => {
+  simulationType = SimulationType.Tenderly
+): Promise<{
+  expectedAmountsOut: string[];
+  gasUsed: BigNumber;
+}> => {
   const slippage = '10'; // 10 bps = 0.1%
 
   const tokens = [pool.address];
@@ -168,7 +171,7 @@ const testFlow = async (
     subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
   );
   expect(expectedMins).to.deep.eq(minAmountsOut);
-  return expectedAmountsOut;
+  return { expectedAmountsOut, gasUsed };
 };
 
 describe('generalised exit execution', async function () {
@@ -184,28 +187,41 @@ describe('generalised exit execution', async function () {
     });
   });
 
-  context('wstETH_rETH_sfrxETH', async () => {
+  context('bbausd3', async () => {
     if (!TEST_ETH_STABLE) return true;
-    const pool = addresses.wstETH_rETH_sfrxETH;
+    const pool = addresses.bbausd3;
     const amount = parseFixed('0.2', pool.decimals).toString();
-    let mainTokensAmountsOut: string[];
     let unwrappingTokensAmountsOut: string[];
+    let unwrappingTokensGasUsed: BigNumber;
+    let mainTokensAmountsOut: string[];
+    let mainTokensGasUsed: BigNumber;
 
     context('exit by unwrapping tokens', async () => {
       it('should exit pool correctly', async () => {
-        unwrappingTokensAmountsOut = await testFlow(pool, amount, true);
+        const { expectedAmountsOut, gasUsed } = await testFlow(
+          pool,
+          amount,
+          true
+        );
+        unwrappingTokensAmountsOut = expectedAmountsOut;
+        unwrappingTokensGasUsed = gasUsed;
       });
     });
 
     context('exit to main tokens directly', async () => {
       it('should exit pool correctly', async () => {
-        mainTokensAmountsOut = await testFlow(pool, amount);
+        const { expectedAmountsOut, gasUsed } = await testFlow(pool, amount);
+        mainTokensAmountsOut = expectedAmountsOut;
+        mainTokensGasUsed = gasUsed;
       });
     });
 
     context('exit by unwrapping vs exit to main tokens', async () => {
       it('should return the same amount out', async () => {
         expect(mainTokensAmountsOut).to.deep.eq(unwrappingTokensAmountsOut);
+      });
+      it('should spend more gas when unwrapping tokens', async () => {
+        expect(unwrappingTokensGasUsed.gt(mainTokensGasUsed)).to.be.true;
       });
     });
   });
