@@ -54,12 +54,6 @@ describe('FX Pool - Calculate Liquidity', () => {
     ).total_.toBigInt();
     const liquidityBigInt = parseFixed(liquidity, 18).toBigInt();
     // expecting 5% of margin error
-    console.log(
-      formatFixed(
-        SolidityMaths.divDownFixed(liquidityBigInt, liquidityFromContract),
-        18
-      ).toString()
-    );
     expect(
       parseFloat(
         formatFixed(
