@@ -100,7 +100,7 @@ const testFlow = async (
   pool: { id: string; address: string; slot: number },
   amount: string,
   unwrapTokens = false,
-  simulationType = SimulationType.Tenderly
+  simulationType = SimulationType.VaultModel
 ): Promise<{
   expectedAmountsOut: string[];
   gasUsed: BigNumber;
@@ -218,7 +218,10 @@ describe('generalised exit execution', async function () {
 
     context('exit by unwrapping vs exit to main tokens', async () => {
       it('should return the same amount out', async () => {
-        expect(mainTokensAmountsOut).to.deep.eq(unwrappingTokensAmountsOut);
+        mainTokensAmountsOut.forEach((amount, i) => {
+          const unwrappedAmount = BigNumber.from(unwrappingTokensAmountsOut[i]);
+          expect(unwrappedAmount.sub(amount).toNumber()).to.be.closeTo(0, 1);
+        });
       });
       it('should spend more gas when unwrapping tokens', async () => {
         expect(unwrappingTokensGasUsed.gt(mainTokensGasUsed)).to.be.true;

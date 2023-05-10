@@ -8,6 +8,7 @@ import {
   EncodeExitPoolInput,
   EncodeJoinPoolInput,
   EncodeUnwrapAaveStaticTokenInput,
+  EncodeUnwrapERC4626Input,
   EncodeWrapAaveDynamicTokenInput,
   ExitPoolData,
   JoinPoolData,
@@ -142,6 +143,16 @@ export class Relayer {
       params.recipient,
       params.amount,
       params.toUnderlying,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeUnwrapERC4626(params: EncodeUnwrapERC4626Input): string {
+    return relayerLibrary.encodeFunctionData('unwrapERC4626', [
+      params.wrappedToken,
+      params.sender,
+      params.recipient,
+      params.amount,
       params.outputReference,
     ]);
   }

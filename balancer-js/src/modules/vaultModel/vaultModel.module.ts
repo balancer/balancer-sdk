@@ -13,7 +13,7 @@ import {
   EncodeBatchSwapInput,
   EncodeJoinPoolInput,
   EncodeExitPoolInput,
-  EncodeUnwrapAaveStaticTokenInput,
+  EncodeUnwrapERC4626Input,
 } from '../relayer/types';
 import { Swap } from '../swaps/types';
 
@@ -139,7 +139,7 @@ export class VaultModel {
   }
 
   static mapUnwrapRequest(
-    call: EncodeUnwrapAaveStaticTokenInput,
+    call: EncodeUnwrapERC4626Input,
     poolId: string
   ): UnwrapRequest {
     const unwrapRequest: UnwrapRequest = {

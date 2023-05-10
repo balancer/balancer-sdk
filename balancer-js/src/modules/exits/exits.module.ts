@@ -11,7 +11,7 @@ import { PoolGraph, Node } from '@/modules/graph/graph';
 import { Join } from '@/modules/joins/joins.module';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
 import {
-  EncodeUnwrapAaveStaticTokenInput,
+  EncodeUnwrapERC4626Input,
   Relayer,
 } from '@/modules/relayer/relayer.module';
 import {
@@ -631,15 +631,14 @@ export class Exit {
     //   )`
     // );
 
-    const call: EncodeUnwrapAaveStaticTokenInput = {
-      staticToken: node.address,
+    const call: EncodeUnwrapERC4626Input = {
+      wrappedToken: node.address,
       sender,
       recipient,
       amount,
-      toUnderlying: true,
       outputReference,
     };
-    const encodedCall = Relayer.encodeUnwrapAaveStaticToken(call);
+    const encodedCall = Relayer.encodeUnwrapERC4626(call);
 
     const modelRequest = VaultModel.mapUnwrapRequest(
       call,
