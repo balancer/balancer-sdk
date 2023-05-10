@@ -6,7 +6,7 @@ import {
   ExitExactTokensOutParameters,
 } from '@/modules/pools/pool-types/concerns/types';
 
-export class GyroEExitConcern implements ExitConcern {
+export class GyroExitConcern implements ExitConcern {
   buildExitExactTokensOut({
     exiter,
     pool,

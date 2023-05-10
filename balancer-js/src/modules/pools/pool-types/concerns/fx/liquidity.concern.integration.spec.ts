@@ -21,7 +21,7 @@ const signer = provider.getSigner();
 const testPoolId =
   '0x726e324c29a1e49309672b244bdc4ff62a270407000200000000000000000702';
 let pool: PoolWithMethods;
-const blockNumber = 41400000;
+const blockNumber = 42505555;
 
 describe('FX Pool - Calculate Liquidity', () => {
   const sdkConfig = {

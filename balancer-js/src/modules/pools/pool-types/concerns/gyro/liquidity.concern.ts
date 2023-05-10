@@ -6,7 +6,7 @@ import { SolidityMaths } from '@/lib/utils/solidityMaths';
 
 const SCALING_FACTOR = 18;
 
-export class GyroELiquidityConcern implements LiquidityConcern {
+export class GyroLiquidityConcern implements LiquidityConcern {
   calcTotal(tokens: PoolToken[]): string {
     let sumBalance = BigInt(0);
     let sumValue = BigInt(0);

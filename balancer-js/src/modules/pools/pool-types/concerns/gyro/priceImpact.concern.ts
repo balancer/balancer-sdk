@@ -1,7 +1,7 @@
 import { PriceImpactConcern } from '@/modules/pools/pool-types/concerns/types';
 import { Pool } from '@/types';
 
-export class GyroEPriceImpactConcern implements PriceImpactConcern {
+export class GyroPriceImpactConcern implements PriceImpactConcern {
   bptZeroPriceImpact(pool: Pool, tokenAmounts: bigint[]): bigint {
     console.log(pool, tokenAmounts);
     throw new Error('Not implemented');

@@ -8,7 +8,7 @@ import { Linear } from './pool-types/linear.module';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { isLinearish } from '@/lib/utils';
 import { FX } from '@/modules/pools/pool-types/fx.module';
-import { GyroE } from '@/modules/pools/pool-types/gyro-e.module';
+import { Gyro } from '@/modules/pools/pool-types/gyro.module';
 
 /**
  * Wrapper around pool type specific methods.
@@ -43,8 +43,10 @@ export class PoolTypeConcerns {
       case 'FX': {
         return new FX();
       }
-      case 'GyroE': {
-        return new GyroE();
+      case 'GyroE':
+      case 'Gyro2':
+      case 'Gyro3': {
+        return new Gyro();
       }
       case 'MetaStable': {
         return new MetaStable();

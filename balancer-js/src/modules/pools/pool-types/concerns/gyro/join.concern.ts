@@ -4,7 +4,7 @@ import {
   JoinPoolParameters,
 } from '@/modules/pools/pool-types/concerns/types';
 
-export class GyroEJoinConcern implements JoinConcern {
+export class GyroJoinConcern implements JoinConcern {
   buildJoin({
     joiner,
     pool,
