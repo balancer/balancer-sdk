@@ -67,8 +67,6 @@ export class Exit {
     minAmountsOut: string[];
     priceImpact: string;
   }> {
-    console.log('unwrapTokens', unwrapTokens);
-
     /*
     Overall exit flow description:
     - Create calls with 0 expected min amount for each token out
@@ -94,6 +92,7 @@ export class Exit {
     let tokensOut: string[] = [];
 
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
+    const outputBalances = outputNodes.map((n) => n.balance);
     tokensOutByExitPath = outputNodes.map((n) => n.address.toLowerCase());
 
     tokensOut = [...new Set(tokensOutByExitPath)].sort();
@@ -133,6 +132,35 @@ export class Exit {
       signer,
       simulationType
     );
+
+    const hasSufficientBalance = outputBalances.every((balance, i) =>
+      BigNumber.from(balance).gt(expectedAmountsOutByExitPath[i])
+    );
+
+    if (!hasSufficientBalance) {
+      if (unwrapTokens) {
+        /**
+         * This case might happen when a whale tries to exit with an amount that
+         * is at the same time larger than both main and wrapped token balances
+         */
+        throw new Error(
+          'Insufficient pool balance to perform generalised exit - try exitting with smaller amounts'
+        );
+      } else {
+        return this.exitPool(
+          poolId,
+          amountBptIn,
+          userAddress,
+          slippage,
+          signer,
+          simulationType,
+          authorisation,
+          true
+        );
+      }
+    }
+
+    console.log('unwrapTokens', unwrapTokens);
 
     const expectedAmountsOutByTokenOut = this.amountsOutByTokenOut(
       tokensOut,

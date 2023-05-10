@@ -24,6 +24,7 @@ export interface Node {
   isLeaf: boolean;
   spotPrices: SpotPrices;
   decimals: number;
+  balance: string;
 }
 
 type JoinAction = 'input' | 'batchSwap' | 'wrap' | 'joinPool';
@@ -104,21 +105,21 @@ export class PoolGraph {
         throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
       } else {
         // If pool not found by address, but it has parent, assume it's a leaf token and add a leafTokenNode
-        // TODO: maybe it's a safety issue? Can we be safer?
         const parentPool = (await this.pools.findBy(
           'address',
           parent.address
         )) as Pool;
-        const leafTokenDecimals =
-          parentPool.tokens[parentPool.tokensList.indexOf(address)].decimals ??
-          18;
+        const tokenIndex = parentPool.tokensList.indexOf(address);
+        const leafTokenDecimals = parentPool.tokens[tokenIndex].decimals ?? 18;
+        const { balancesEvm } = parsePoolInfo(parentPool);
 
         const nodeInfo = PoolGraph.createInputTokenNode(
           nodeIndex,
           address,
           leafTokenDecimals,
           parent,
-          proportionOfParent
+          proportionOfParent,
+          balancesEvm[tokenIndex].toString()
         );
         return nodeInfo;
       }
@@ -164,6 +165,7 @@ export class PoolGraph {
       isLeaf: false,
       spotPrices,
       decimals,
+      balance: pool.totalShares,
     };
     this.updateNodeIfProportionalExit(pool, poolNode);
     nodeIndex++;
@@ -229,6 +231,7 @@ export class PoolGraph {
     // Main token
     if (linearPool.mainIndex === undefined)
       throw new Error('Issue With Linear Pool');
+
     if (wrapMainTokens) {
       // Linear pool will be joined via wrapped token. This will be the child node.
       const wrappedNodeInfo = this.createWrappedTokenNode(
@@ -240,6 +243,7 @@ export class PoolGraph {
       linearPoolNode.children.push(wrappedNodeInfo[0]);
       return [linearPoolNode, wrappedNodeInfo[1]];
     } else {
+      const { balancesEvm } = parsePoolInfo(linearPool);
       const mainTokenDecimals =
         linearPool.tokens[linearPool.mainIndex].decimals ?? 18;
 
@@ -248,7 +252,8 @@ export class PoolGraph {
         linearPool.tokensList[linearPool.mainIndex],
         mainTokenDecimals,
         linearPoolNode,
-        linearPoolNode.proportionOfParent
+        linearPoolNode.proportionOfParent,
+        balancesEvm[linearPool.mainIndex].toString()
       );
       linearPoolNode.children.push(nodeInfo[0]);
       nodeIndex = nodeInfo[1];
@@ -268,6 +273,8 @@ export class PoolGraph {
     )
       throw new Error('Issue With Linear Pool');
 
+    const { balancesEvm, upScaledBalances } = parsePoolInfo(linearPool);
+
     const wrappedTokenNode: Node = {
       type: 'WrappedToken',
       address: linearPool.tokensList[linearPool.wrappedIndex],
@@ -283,6 +290,7 @@ export class PoolGraph {
       isLeaf: false,
       spotPrices: {},
       decimals: 18,
+      balance: balancesEvm[linearPool.wrappedIndex].toString(),
     };
     nodeIndex++;
 
@@ -294,7 +302,8 @@ export class PoolGraph {
       linearPool.tokensList[linearPool.mainIndex],
       mainTokenDecimals,
       wrappedTokenNode,
-      proportionOfParent
+      proportionOfParent,
+      upScaledBalances[linearPool.wrappedIndex].toString() // takes price rate into account
     );
     wrappedTokenNode.children = [inputNode[0]];
     nodeIndex = inputNode[1];
@@ -306,7 +315,8 @@ export class PoolGraph {
     address: string,
     decimals: number,
     parent: Node | undefined,
-    proportionOfParent: BigNumber
+    proportionOfParent: BigNumber,
+    balance: string
   ): [Node, number] {
     return [
       {
@@ -324,6 +334,7 @@ export class PoolGraph {
         isLeaf: true,
         spotPrices: {},
         decimals,
+        balance,
       },
       nodeIndex + 1,
     ];

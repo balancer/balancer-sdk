@@ -98,7 +98,6 @@ const relayer = contractAddresses.relayer;
 const testFlow = async (
   pool: { id: string; address: string; slot: number },
   amount: string,
-  unwrapTokens = false,
   simulationType = SimulationType.VaultModel
 ): Promise<{
   expectedAmountsOut: string[];
@@ -135,8 +134,7 @@ const testFlow = async (
       slippage,
       signer,
       simulationType,
-      authorisation,
-      unwrapTokens
+      authorisation
     );
 
   const { transactionReceipt, balanceDeltas, gasUsed } =
@@ -179,18 +177,22 @@ describe('generalised exit execution', async function () {
   context('bbausd3', async () => {
     if (!TEST_ETH_STABLE) return true;
     const pool = addresses.bbausd3;
-    const amount = parseFixed('0.2', pool.decimals).toString();
     let unwrappingTokensAmountsOut: string[];
     let unwrappingTokensGasUsed: BigNumber;
     let mainTokensAmountsOut: string[];
     let mainTokensGasUsed: BigNumber;
 
+    const amountRatio = 10;
+    // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
+    const unwrapExitAmount = parseFixed('6000000', pool.decimals);
+    // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
+    const mainExitAmount = unwrapExitAmount.div(amountRatio);
+
     context('exit by unwrapping tokens', async () => {
       it('should exit pool correctly', async () => {
         const { expectedAmountsOut, gasUsed } = await testFlow(
           pool,
-          amount,
-          true
+          unwrapExitAmount.toString()
         );
         unwrappingTokensAmountsOut = expectedAmountsOut;
         unwrappingTokensGasUsed = gasUsed;
@@ -199,17 +201,24 @@ describe('generalised exit execution', async function () {
 
     context('exit to main tokens directly', async () => {
       it('should exit pool correctly', async () => {
-        const { expectedAmountsOut, gasUsed } = await testFlow(pool, amount);
+        const { expectedAmountsOut, gasUsed } = await testFlow(
+          pool,
+          mainExitAmount.toString()
+        );
         mainTokensAmountsOut = expectedAmountsOut;
         mainTokensGasUsed = gasUsed;
       });
     });
 
     context('exit by unwrapping vs exit to main tokens', async () => {
-      it('should return the same amount out', async () => {
+      it('should return similar amounts (proportional to the input)', async () => {
         mainTokensAmountsOut.forEach((amount, i) => {
-          const unwrappedAmount = BigNumber.from(unwrappingTokensAmountsOut[i]);
-          expect(unwrappedAmount.sub(amount).toNumber()).to.be.closeTo(0, 1);
+          const unwrappedAmount = BigNumber.from(
+            unwrappingTokensAmountsOut[i]
+          ).div(amountRatio);
+          expect(
+            accuracy(unwrappedAmount, BigNumber.from(amount))
+          ).to.be.closeTo(1, 1e-4); // inaccuracy should not be over 1 bps
         });
       });
       it('should spend more gas when unwrapping tokens', async () => {

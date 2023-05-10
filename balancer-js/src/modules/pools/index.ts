@@ -358,7 +358,6 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
    * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
-   * @param unwrapTokens    true = exit by unwrapping wrapped tokens, false = exit to main tokens direclty
    * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
    */
   async generalisedExit(
@@ -368,8 +367,7 @@ export class Pools implements Findable<PoolWithMethods> {
     slippage: string,
     signer: JsonRpcSigner,
     simulationType: SimulationType,
-    authorisation?: string,
-    unwrapTokens = false
+    authorisation?: string
   ): Promise<{
     to: string;
     encodedCall: string;
@@ -386,7 +384,7 @@ export class Pools implements Findable<PoolWithMethods> {
       signer,
       simulationType,
       authorisation,
-      unwrapTokens
+      false
     );
   }
 
