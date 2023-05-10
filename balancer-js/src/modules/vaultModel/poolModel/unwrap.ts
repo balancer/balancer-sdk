@@ -19,9 +19,10 @@ export class UnwrapModel {
   constructor(private relayerModel: RelayerModel) {}
 
   /**
-   * Perform the specified exit type.
-   * @param exitPoolRequest
-   * @returns tokens out
+   * Perform the specified unwrap type.
+   * @param unwrapRequest
+   * @param pools
+   * @returns tokens out and their respective deltas
    */
   async doUnwrap(
     unwrapRequest: UnwrapRequest,
