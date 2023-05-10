@@ -34,7 +34,6 @@ import { SimulationType } from '../simulation/simulation.module';
 
 dotenv.config();
 
-const TEST_BBEUSD = false;
 const TEST_ETH_STABLE = true;
 
 /*
@@ -176,16 +175,6 @@ const testFlow = async (
 
 describe('generalised exit execution', async function () {
   this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
-
-  context('bbeusd', async () => {
-    if (!TEST_BBEUSD) return true;
-    const pool = addresses.bbeusd;
-    const amount = parseFixed('2', pool.decimals).toString();
-
-    it('should exit pool correctly', async () => {
-      await testFlow(pool, amount);
-    });
-  });
 
   context('bbausd3', async () => {
     if (!TEST_ETH_STABLE) return true;
