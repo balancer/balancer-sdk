@@ -34,7 +34,7 @@ import { SimulationType } from '../simulation/simulation.module';
 
 dotenv.config();
 
-const TEST_ETH_STABLE = true;
+const TEST_BBAUSD3 = true;
 
 /*
  * Testing on MAINNET
@@ -175,7 +175,7 @@ describe('generalised exit execution', async function () {
   this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
 
   context('bbausd3', async () => {
-    if (!TEST_ETH_STABLE) return true;
+    if (!TEST_BBAUSD3) return true;
     const pool = addresses.bbausd3;
     let unwrappingTokensAmountsOut: string[];
     let unwrappingTokensGasUsed: BigNumber;

@@ -1,8 +1,11 @@
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { Zero, WeiPerEther } from '@ethersproject/constants';
+
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { isSameAddress, parsePoolInfo } from '@/lib/utils';
+import { _downscaleDown } from '@/lib/utils/solidityMaths';
 import { Pool, PoolAttribute, PoolType } from '@/types';
-import { Zero, WeiPerEther } from '@ethersproject/constants';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+
 import { Findable } from '../data/types';
 import { PoolTypeConcerns } from '../pools/pool-type-concerns';
 
@@ -273,7 +276,8 @@ export class PoolGraph {
     )
       throw new Error('Issue With Linear Pool');
 
-    const { balancesEvm, upScaledBalances } = parsePoolInfo(linearPool);
+    const { balancesEvm, upScaledBalances, scalingFactorsRaw } =
+      parsePoolInfo(linearPool);
 
     const wrappedTokenNode: Node = {
       type: 'WrappedToken',
@@ -297,13 +301,22 @@ export class PoolGraph {
     const mainTokenDecimals =
       linearPool.tokens[linearPool.mainIndex].decimals ?? 18;
 
+    /**
+     * - upscaledBalances takes price rate into account, which is equivalent to unwrapping tokens
+     * - downscaling with scalingFactorsRaw will downscale the unwrapped balance to the main token decimals
+     */
+    const unwrappedBalance = _downscaleDown(
+      upScaledBalances[linearPool.wrappedIndex],
+      scalingFactorsRaw[linearPool.mainIndex]
+    ).toString();
+
     const inputNode = PoolGraph.createInputTokenNode(
       nodeIndex,
       linearPool.tokensList[linearPool.mainIndex],
       mainTokenDecimals,
       wrappedTokenNode,
       proportionOfParent,
-      upScaledBalances[linearPool.wrappedIndex].toString() // takes price rate into account
+      unwrappedBalance
     );
     wrappedTokenNode.children = [inputNode[0]];
     nodeIndex = inputNode[1];
