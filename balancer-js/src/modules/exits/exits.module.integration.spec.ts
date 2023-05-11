@@ -117,8 +117,7 @@ const relayer = contractAddresses.relayer;
 
 const testFlow = async (
   pool: { id: string; address: string; slot: number },
-  amount: string,
-  simulationType = SimulationType.VaultModel
+  amount: string
 ) => {
   const slippage = '10'; // 10 bps = 0.1%
 
@@ -136,6 +135,23 @@ const testFlow = async (
   );
 
   const signerAddress = await signer.getAddress();
+
+  const query = await pools.generalisedExit(
+    pool.id,
+    amount,
+    signerAddress,
+    slippage,
+    signer,
+    SimulationType.VaultModel
+  );
+
+  // User reviews expectedAmountOut
+  console.log(' -- Simulating using Vault Model -- ');
+  console.table({
+    tokensOut: truncateAddresses([pool.address, ...query.tokensOut]),
+    expectedAmountsOut: ['0', ...query.expectedAmountsOut],
+  });
+
   const authorisation = await Relayer.signRelayerApproval(
     relayer,
     signerAddress,
@@ -150,7 +166,7 @@ const testFlow = async (
       signerAddress,
       slippage,
       signer,
-      simulationType,
+      SimulationType.Static,
       authorisation
     );
 
@@ -163,14 +179,14 @@ const testFlow = async (
       encodedCall
     );
 
-  console.log('Gas used', gasUsed.toString());
-
+  console.log(' -- Simulating using Static Call -- ');
   console.table({
-    tokensOut: truncateAddresses(tokensOut),
-    minOut: minAmountsOut,
-    expectedOut: expectedAmountsOut,
+    tokensOut: truncateAddresses([pool.address, ...tokensOut]),
+    minAmountsOut: ['0', ...minAmountsOut],
+    expectedAmountsOut: ['0', ...expectedAmountsOut],
     balanceDeltas: balanceDeltas.map((b) => b.toString()),
   });
+  console.log('Gas used', gasUsed.toString());
 
   expect(transactionReceipt.status).to.eq(1);
   balanceDeltas.forEach((b, i) => {
@@ -247,22 +263,8 @@ describe('generalised exit execution', async function () {
     const pool = addresses.boostedMetaBig1;
     const amount = parseFixed('0.05', pool.decimals).toString();
 
-    context('using simulation type VaultModel', async () => {
-      it('should exit pool correctly', async () => {
-        await testFlow(pool, amount, SimulationType.VaultModel);
-      });
-    });
-
-    context('using simulation type Tenderly', async () => {
-      it('should exit pool correctly', async () => {
-        await testFlow(pool, amount, SimulationType.Tenderly);
-      });
-    });
-
-    context('using simulation type Satic', async () => {
-      it('should exit pool correctly', async () => {
-        await testFlow(pool, amount, SimulationType.Static);
-      });
+    it('should exit pool correctly', async () => {
+      await testFlow(pool, amount);
     });
   });
 
@@ -341,22 +343,8 @@ describe('generalised exit execution', async function () {
     const pool = addresses.boostedWeightedMetaGeneral1;
     const amount = parseFixed('0.05', pool.decimals).toString();
 
-    context('using simulation type VaultModel', async () => {
-      it('should exit pool correctly', async () => {
-        await testFlow(pool, amount, SimulationType.VaultModel);
-      });
-    });
-
-    context('using simulation type Tenderly', async () => {
-      it('should exit pool correctly', async () => {
-        await testFlow(pool, amount, SimulationType.Tenderly);
-      });
-    });
-
-    context('using simulation type Satic', async () => {
-      it('should exit pool correctly', async () => {
-        await testFlow(pool, amount, SimulationType.Static);
-      });
+    it('should exit pool correctly', async () => {
+      await testFlow(pool, amount);
     });
   });
 });
