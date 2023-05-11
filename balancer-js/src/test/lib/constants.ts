@@ -640,7 +640,7 @@ export const ADDRESSES = {
       address: '0x519cCe718FCD11AC09194CFf4517F12D263BE067',
       decimals: 18,
       symbol: 'bbUSD_PLUS',
-      slot: 52,
+      slot: 0,
     },
     bbDAI_PLUS: {
       address: '0x117a3d474976274b37b7b94af5dcade5c90c6e85',

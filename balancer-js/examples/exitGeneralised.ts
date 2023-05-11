@@ -38,7 +38,7 @@ const addresses = ADDRESSES[network];
 const testPool = addresses.bbUSD_PLUS;
 
 // Amount of testPool BPT that will be used to exit
-const amount = parseFixed('2', testPool.decimals).toString();
+const amount = parseFixed('1000', testPool.decimals).toString();
 
 // Setup local fork with correct balances/approval to exit bb-a-usd2 pool
 const setUp = async (provider: JsonRpcProvider) => {
