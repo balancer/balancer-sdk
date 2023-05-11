@@ -40,7 +40,7 @@ describe('ClaimService On Ethereum', () => {
         sdk.networkConfig.addresses.contracts.multicall,
         sdk.provider,
         sdk.networkConfig.addresses.contracts.gaugeClaimHelper,
-        sdk.networkConfig.addresses.contracts.balancerMinterAddress
+        sdk.networkConfig.addresses.contracts.balancerMinter
       );
     });
 
@@ -224,7 +224,7 @@ describe('ClaimService On Polygon', () => {
       sdk.networkConfig.addresses.contracts.multicall,
       sdk.provider,
       sdk.networkConfig.addresses.contracts.gaugeClaimHelper,
-      sdk.networkConfig.addresses.contracts.balancerMinterAddress
+      sdk.networkConfig.addresses.contracts.balancerMinter
     );
   });
 

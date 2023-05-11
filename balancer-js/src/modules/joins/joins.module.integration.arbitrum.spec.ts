@@ -84,7 +84,7 @@ const { contracts, contractAddresses } = new Contracts(
   network as number,
   provider
 );
-const relayer = contractAddresses.relayer as string;
+const relayer = contractAddresses.balancerRelayer as string;
 
 interface Test {
   signer: JsonRpcSigner;

@@ -62,7 +62,7 @@ const { pools, balancerContracts } = sdk;
 const provider = new JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner(1);
 const { contracts, contractAddresses } = balancerContracts;
-const relayerAddress = contractAddresses.relayer as string;
+const relayerAddress = contractAddresses.balancerRelayer as string;
 
 interface Test {
   signer: JsonRpcSigner;

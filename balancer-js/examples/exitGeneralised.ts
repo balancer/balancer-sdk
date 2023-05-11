@@ -146,7 +146,7 @@ const exit = async () => {
     provider
   );
   const relayerAuth = await Relayer.signRelayerApproval(
-    contractAddresses.relayer,
+    contractAddresses.balancerRelayer,
     signerAddress,
     signer,
     contracts.vault

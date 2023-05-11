@@ -113,7 +113,7 @@ const { contracts, contractAddresses } = new Contracts(
   network as number,
   provider
 );
-const relayer = contractAddresses.relayer;
+const relayer = contractAddresses.balancerRelayer;
 
 const testFlow = async (
   pool: { id: string; address: string; slot: number },

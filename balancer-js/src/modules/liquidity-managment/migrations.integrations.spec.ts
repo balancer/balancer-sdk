@@ -22,7 +22,7 @@ describe('Migrations', function () {
     const {
       addresses: { contracts },
     } = BALANCER_NETWORK_CONFIG[1];
-    const relayerAddress = contracts.relayer;
+    const relayerAddress = contracts.balancerRelayer;
     const provider = new JsonRpcProvider('http://127.0.0.1:8545');
     const vault = Vault__factory.connect(contracts.vault, provider);
     let signer: JsonRpcSigner;
@@ -249,7 +249,7 @@ describe('Migrations', function () {
     const {
       addresses: { contracts },
     } = BALANCER_NETWORK_CONFIG[137];
-    const relayerAddress = contracts.relayer;
+    const relayerAddress = contracts.balancerRelayer;
     const provider = new JsonRpcProvider('http://127.0.0.1:8137');
     const vault = Vault__factory.connect(contracts.vault, provider);
     let signer: JsonRpcSigner;

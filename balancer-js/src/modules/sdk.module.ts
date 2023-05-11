@@ -75,10 +75,10 @@ export class BalancerSDK implements BalancerSDKRoot {
         this.networkConfig.addresses.contracts.multicall,
         this.provider,
         this.networkConfig.addresses.contracts.gaugeClaimHelper,
-        this.networkConfig.addresses.contracts.balancerMinterAddress
+        this.networkConfig.addresses.contracts.balancerMinter
       );
       this.migrationService = new Migrations(
-        this.networkConfig.addresses.contracts.relayer,
+        this.networkConfig.addresses.contracts.balancerRelayer,
         this.data.pools,
         this.data.liquidityGauges.subgraph,
         this.provider

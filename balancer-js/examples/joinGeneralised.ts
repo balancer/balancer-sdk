@@ -164,7 +164,7 @@ async function join() {
     provider
   );
   const authorisation = await Relayer.signRelayerApproval(
-    contractAddresses.relayer,
+    contractAddresses.balancerRelayer,
     signerAddress,
     signer,
     contracts.vault
