@@ -386,6 +386,10 @@ export class Exit {
       'multicall',
       [calls]
     );
+    // console.log(`---------------------------`);
+    // console.log(JSON.stringify(calls));
+    // console.log(`++++++++++++++++++++++++++---------------------------`);
+
 
     return {
       multiRequests,
@@ -498,6 +502,7 @@ export class Exit {
 
         switch (node.exitAction) {
           case 'batchSwap': {
+            console.log('batchSwap');
             const { modelRequest, encodedCall, assets, amounts } =
               this.createSwap(
                 node,
@@ -513,6 +518,7 @@ export class Exit {
             break;
           }
           case 'exitPool': {
+            console.log('exitPool');
             let exit;
             if (isProportional) {
               exit = this.createExitPoolProportional(
@@ -543,6 +549,7 @@ export class Exit {
             break;
           }
           case 'output':
+            console.log('output');
             if (isPeek) {
               calls.push(
                 Relayer.encodePeekChainedReferenceValue(
@@ -552,6 +559,7 @@ export class Exit {
                   )
                 )
               );
+              console.log(calls[calls.length - 1].toString());
               outputIndexes.push(calls.length - 1);
             }
             break;
@@ -636,6 +644,9 @@ export class Exit {
       value: '0', // TODO: check if swap with ETH is possible in this case and handle it
       outputReference,
     };
+
+    console.log(call);
+    console.log(call.outputReference?.toString());
 
     const encodedCall = Relayer.encodeSwap(call);
 
@@ -766,6 +777,7 @@ export class Exit {
       userData,
       toInternalBalance: this.receivesFromInternal(exitChild),
     });
+    console.log(call);
     const encodedCall = Relayer.encodeExitPool(call);
     const modelRequest = VaultModel.mapExitPoolRequest(call);
 
@@ -884,8 +896,10 @@ export class Exit {
       assets: sortedTokens,
       minAmountsOut: sortedAmounts,
       userData,
-      toInternalBalance: false,
+      toInternalBalance: true, // this.receivesFromInternal(exitChild),
     });
+    console.log(call);
+    call.outputReferences.forEach(op => console.log(op.index, op.key.toString()));
     const encodedCall = Relayer.encodeExitPool(call);
     const modelRequest = VaultModel.mapExitPoolRequest(call);
 

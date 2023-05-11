@@ -27,24 +27,15 @@ import { SimulationType } from '../src/modules/simulation/simulation.module';
 
 dotenv.config();
 
-// const network = Network.GOERLI;
-// const jsonRpcUrl = process.env.ALCHEMY_URL_GOERLI;
-// const blockNumber = 7890980;
-// const rpcUrl = 'http://127.0.0.1:8000';
-// const customSubgraphUrl =
-//   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
-
-const network = Network.MAINNET;
-const jsonRpcUrl = process.env.ALCHEMY_URL;
-const blockNumber = 16940624;
-const rpcUrl = 'http://127.0.0.1:8545';
-const customSubgraphUrl =
-  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2';
+const network = Network.ARBITRUM;
+const jsonRpcUrl = process.env.ALCHEMY_URL_ARBITRUM;
+const blockNumber = 89431060;
+const rpcUrl = 'http://127.0.0.1:8161';
 
 const addresses = ADDRESSES[network];
 
 // bb-a-usd
-const testPool = addresses.bbausd2;
+const testPool = addresses.bbUSD_PLUS;
 
 // Amount of testPool BPT that will be used to exit
 const amount = parseFixed('2', testPool.decimals).toString();
@@ -117,7 +108,6 @@ const exit = async () => {
   const balancer = new BalancerSDK({
     network,
     rpcUrl,
-    customSubgraphUrl,
     subgraphQuery,
   });
 
@@ -135,6 +125,8 @@ const exit = async () => {
 
   // User reviews expectedAmountOut
   console.log(' -- Simulating using Vault Model -- ');
+  console.log(signerAddress);
+
   console.table({
     tokensOut: truncateAddresses([testPool.address, ...tokensOut]),
     expectedAmountsOut: ['0', ...expectedAmountsOut],
