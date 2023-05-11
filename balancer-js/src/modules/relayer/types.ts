@@ -71,5 +71,36 @@ export interface EncodeUnwrapERC4626Input {
   outputReference: BigNumberish;
 }
 
+export interface EncodeUnwrapGearboxInput {
+  wrappedToken: string;
+  sender: string;
+  recipient: string;
+  dieselAmount: BigNumberish;
+  outputReference: BigNumberish;
+}
+
+export interface EncodeUnwrapReaperInput {
+  vaultToken: string;
+  sender: string;
+  recipient: string;
+  amount: BigNumberish;
+  outputReference: BigNumberish;
+}
+
+export interface EncodeUnwrapUnbuttonTokenInput {
+  wrapperToken: string;
+  sender: string;
+  recipient: string;
+  amount: BigNumberish;
+  outputReference: BigNumberish;
+}
+
+export interface EncodeUnwrapWstETHInput {
+  sender: string;
+  recipient: string;
+  amount: BigNumberish;
+  outputReference: BigNumberish;
+}
+
 export type ExitPoolData = ExitPoolRequest & EncodeExitPoolInput;
 export type JoinPoolData = JoinPoolRequest & EncodeJoinPoolInput;

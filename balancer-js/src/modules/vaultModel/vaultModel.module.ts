@@ -1,4 +1,4 @@
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { Zero } from '@ethersproject/constants';
 import { PoolDataService } from '@balancer-labs/sor';
 
@@ -13,7 +13,6 @@ import {
   EncodeBatchSwapInput,
   EncodeJoinPoolInput,
   EncodeExitPoolInput,
-  EncodeUnwrapERC4626Input,
 } from '../relayer/types';
 import { Swap } from '../swaps/types';
 
@@ -139,14 +138,15 @@ export class VaultModel {
   }
 
   static mapUnwrapRequest(
-    call: EncodeUnwrapERC4626Input,
+    amount: BigNumberish,
+    outputReference: BigNumberish,
     poolId: string
   ): UnwrapRequest {
     const unwrapRequest: UnwrapRequest = {
       actionType: ActionType.Unwrap,
       poolId,
-      amount: call.amount,
-      outputReference: call.outputReference,
+      amount,
+      outputReference,
     };
     return unwrapRequest;
   }

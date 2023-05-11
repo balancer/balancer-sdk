@@ -10,10 +10,7 @@ import { AssetHelpers, subSlippage } from '@/lib/utils';
 import { PoolGraph, Node } from '@/modules/graph/graph';
 import { Join } from '@/modules/joins/joins.module';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
-import {
-  EncodeUnwrapERC4626Input,
-  Relayer,
-} from '@/modules/relayer/relayer.module';
+import { Relayer } from '@/modules/relayer/relayer.module';
 import {
   Simulation,
   SimulationType,
@@ -659,17 +656,75 @@ export class Exit {
     //   )`
     // );
 
-    const call: EncodeUnwrapERC4626Input = {
-      wrappedToken: node.address,
-      sender,
-      recipient,
-      amount,
-      outputReference,
-    };
-    const encodedCall = Relayer.encodeUnwrapERC4626(call);
+    const linearPoolType = node.parent?.type as string;
+    console.log('linear type: ', linearPoolType);
+
+    let encodedCall = '';
+
+    switch (linearPoolType) {
+      case 'ERC4626Linear':
+        {
+          encodedCall = Relayer.encodeUnwrapERC4626({
+            wrappedToken: node.address,
+            sender,
+            recipient,
+            amount,
+            outputReference,
+          });
+        }
+        break;
+      case 'AaveLinear':
+        {
+          encodedCall = Relayer.encodeUnwrapAaveStaticToken({
+            staticToken: node.address,
+            sender,
+            recipient,
+            amount,
+            toUnderlying: true,
+            outputReference,
+          });
+        }
+        break;
+      case 'EulerLinear':
+        {
+          encodedCall = Relayer.encodeUnwrapEuler({
+            wrappedToken: node.address,
+            sender,
+            recipient,
+            amount,
+            outputReference,
+          });
+        }
+        break;
+      case 'GearboxLinear':
+        {
+          encodedCall = Relayer.encodeUnwrapGearbox({
+            wrappedToken: node.address,
+            sender,
+            recipient,
+            dieselAmount: amount,
+            outputReference,
+          });
+        }
+        break;
+      case 'ReaperLinear':
+        {
+          encodedCall = Relayer.encodeUnwrapReaper({
+            vaultToken: node.address,
+            sender,
+            recipient,
+            amount,
+            outputReference,
+          });
+        }
+        break;
+      default:
+        throw new Error('Unsupported linear pool type');
+    }
 
     const modelRequest = VaultModel.mapUnwrapRequest(
-      call,
+      amount,
+      outputReference,
       node.parent?.id as string // linear pool id
     );
 

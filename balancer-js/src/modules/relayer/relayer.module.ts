@@ -9,6 +9,10 @@ import {
   EncodeJoinPoolInput,
   EncodeUnwrapAaveStaticTokenInput,
   EncodeUnwrapERC4626Input,
+  EncodeUnwrapGearboxInput,
+  EncodeUnwrapReaperInput,
+  EncodeUnwrapUnbuttonTokenInput,
+  EncodeUnwrapWstETHInput,
   EncodeWrapAaveDynamicTokenInput,
   ExitPoolData,
   JoinPoolData,
@@ -150,6 +154,57 @@ export class Relayer {
   static encodeUnwrapERC4626(params: EncodeUnwrapERC4626Input): string {
     return relayerLibrary.encodeFunctionData('unwrapERC4626', [
       params.wrappedToken,
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeUnwrapEuler(params: EncodeUnwrapERC4626Input): string {
+    return relayerLibrary.encodeFunctionData('unwrapEuler', [
+      params.wrappedToken,
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeUnwrapGearbox(params: EncodeUnwrapGearboxInput): string {
+    return relayerLibrary.encodeFunctionData('unwrapGearbox', [
+      params.wrappedToken,
+      params.sender,
+      params.recipient,
+      params.dieselAmount,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeUnwrapReaper(params: EncodeUnwrapReaperInput): string {
+    return relayerLibrary.encodeFunctionData('unwrapReaperVaultToken', [
+      params.vaultToken,
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeUnwrapUnbuttonToken(
+    params: EncodeUnwrapUnbuttonTokenInput
+  ): string {
+    return relayerLibrary.encodeFunctionData('unwrapUnbuttonToken', [
+      params.wrapperToken,
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeUnwrapWstETH(params: EncodeUnwrapWstETHInput): string {
+    return relayerLibrary.encodeFunctionData('unwrapWstETH', [
       params.sender,
       params.recipient,
       params.amount,
