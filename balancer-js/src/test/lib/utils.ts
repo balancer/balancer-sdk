@@ -40,6 +40,13 @@ import polygonPools from '../fixtures/pools-polygon.json';
 import { PoolsJsonRepository } from './pools-json-repository';
 import { Contracts } from '@/modules/contracts/contracts.module';
 
+export interface TxResult {
+  transactionReceipt: TransactionReceipt;
+  balanceDeltas: BigNumber[];
+  internalBalanceDeltas: BigNumber[];
+  gasUsed: BigNumber;
+}
+
 const jsonPools = {
   [Network.MAINNET]: mainnetPools,
   [Network.POLYGON]: polygonPools,
@@ -378,12 +385,7 @@ export async function sendTransactionGetBalances(
   to: string,
   data: string,
   value?: BigNumberish
-): Promise<{
-  transactionReceipt: TransactionReceipt;
-  balanceDeltas: BigNumber[];
-  internalBalanceDeltas: BigNumber[];
-  gasUsed: BigNumber;
-}> {
+): Promise<TxResult> {
   const balanceBefore = await getBalances(
     tokensForBalanceCheck,
     signer,

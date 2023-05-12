@@ -36,6 +36,22 @@ import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
 
 const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
+export interface GeneralisedExitOutput {
+  to: string;
+  encodedCall: string;
+  tokensOut: string[];
+  expectedAmountsOut: string[];
+  minAmountsOut: string[];
+  priceImpact: string;
+}
+
+export interface ExitInfo {
+  tokensOut: string[];
+  estimatedAmountsOut: string[];
+  priceImpact: string;
+  needsUnwrap: boolean;
+}
+
 // Quickly switch useful debug logs on/off
 const DEBUG = false;
 
