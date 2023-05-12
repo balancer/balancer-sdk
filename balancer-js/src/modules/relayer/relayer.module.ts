@@ -165,6 +165,15 @@ export class Relayer {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let unwrapType: any;
 
+    /**
+     * Other unwrap types available on BatchRelayerLibrary that does not seem to
+     * have a respective Linear pool type in the SDK:
+     * - unwrapCompoundV2
+     * - unwrapShareToken
+     * - unwrapUnbuttonToken
+     * - unwrapWstETH
+     */
+
     switch (linearPoolType) {
       case 'AaveLinear':
         return this.encodeUnwrapAaveStaticToken({
@@ -175,29 +184,17 @@ export class Relayer {
           toUnderlying: true,
           outputReference: params.outputReference,
         });
-      case 'Linear':
-        unwrapType = 'unwrapCompoundV2';
+      case 'ERC4626Linear':
+        unwrapType = 'unwrapERC4626';
         break;
       case 'EulerLinear':
         unwrapType = 'unwrapEuler';
         break;
-      case 'ERC4626Linear':
-        unwrapType = 'unwrapERC4626';
-        break;
-      case 'BeefyLinear':
-        unwrapType = 'unwrapBeefy';
-        break;
       case 'GearboxLinear':
         unwrapType = 'unwrapGearbox';
         break;
-      case 'MidasLinear':
-        unwrapType = 'unwrapMidas';
-        break;
       case 'ReaperLinear':
         unwrapType = 'unwrapReaperVaultToken';
-        break;
-      case 'SiloLinear':
-        unwrapType = 'unwrapSilo';
         break;
       case 'TetuLinear':
         unwrapType = 'unwrapTetu';
@@ -205,8 +202,14 @@ export class Relayer {
       case 'YearnLinear':
         unwrapType = 'unwrapYearn';
         break;
+      case 'Linear':
+      case 'BeefyLinear':
+      case 'MidasLinear':
+      case 'SiloLinear':
       default:
-        throw new Error('Unsupported linear pool type');
+        throw new Error(
+          'Unwrapping not supported for this pool type: ' + linearPoolType
+        );
     }
 
     return relayerLibrary.encodeFunctionData(unwrapType, [
