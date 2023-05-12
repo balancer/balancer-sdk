@@ -87,18 +87,10 @@ export class Exit {
       SimulationType.VaultModel
     );
 
-    const priceImpact = await this.calculatePriceImpact(
-      poolId,
-      this.poolGraph,
-      exit.tokensOut,
-      exit.expectedAmountsOut,
-      amountBptIn
-    );
-
     return {
       tokensOut: exit.tokensOut,
       estimatedAmountsOut: exit.expectedAmountsOut,
-      priceImpact,
+      priceImpact: exit.priceImpact,
       needsUnwrap: exit.unwrap,
     };
   }
@@ -168,21 +160,13 @@ export class Exit {
       minAmountsOutByTokenOut
     );
 
-    const priceImpact = await this.calculatePriceImpact(
-      poolId,
-      this.poolGraph,
-      exit.tokensOut,
-      exit.expectedAmountsOut,
-      amountBptIn
-    );
-
     return {
       to: this.relayer,
       encodedCall,
       tokensOut: exit.tokensOut,
       expectedAmountsOut: exit.expectedAmountsOut,
       minAmountsOut: minAmountsOutByTokenOut,
-      priceImpact,
+      priceImpact: exit.priceImpact,
     };
   }
 
@@ -201,6 +185,7 @@ export class Exit {
     isProportional: boolean;
     expectedAmountsOut: string[];
     expectedAmountsOutByExitPath: string[];
+    priceImpact: string;
   }> {
     // Create nodes and order by breadth first - initially trys with no unwrapping
     const orderedNodes = await this.poolGraph.getGraphNodes(
@@ -287,6 +272,15 @@ export class Exit {
         tokensOutByExitPath,
         expectedAmountsOutByExitPath
       );
+
+      const priceImpact = await this.calculatePriceImpact(
+        poolId,
+        this.poolGraph,
+        tokensOut,
+        expectedAmountsOut,
+        amountBptIn
+      );
+
       return {
         unwrap: doUnwrap,
         tokensOut,
@@ -294,6 +288,7 @@ export class Exit {
         isProportional,
         expectedAmountsOut,
         expectedAmountsOutByExitPath,
+        priceImpact,
       };
     }
   }
