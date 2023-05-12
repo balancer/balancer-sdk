@@ -109,7 +109,7 @@ export class Exit {
     userAddress: string,
     slippage: string,
     signer: JsonRpcSigner,
-    simulationType: SimulationType, // TODO - Narrow this to only static/tenderly as options
+    simulationType: SimulationType.Static | SimulationType.Tenderly,
     unwrapTokens: boolean,
     authorisation?: string
   ): Promise<{
@@ -132,8 +132,6 @@ export class Exit {
     - Return minAmoutsOut, UI would use this to display to user
     - Return updatedCalls, UI would use this to execute tx
     */
-    if (simulationType === SimulationType.VaultModel)
-      throw new Error(`Cant use VaultModel as simulation type in build call`);
 
     const exit = await this.getExit(
       poolId,

@@ -356,7 +356,7 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param userAddress     User address
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
    * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
-   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+   * @param simulationType  Simulation type (Tenderly or Static) - VaultModel should not be used to build exit transaction
    * @param unwrapTokens    Determines if wrapped tokens should be unwrapped
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
    * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
@@ -367,7 +367,7 @@ export class Pools implements Findable<PoolWithMethods> {
     userAddress: string,
     slippage: string,
     signer: JsonRpcSigner,
-    simulationType: SimulationType,
+    simulationType: SimulationType.Static | SimulationType.Tenderly,
     unwrapTokens: boolean,
     authorisation?: string
   ): Promise<{
