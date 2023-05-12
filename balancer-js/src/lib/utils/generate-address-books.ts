@@ -2,7 +2,6 @@ import axios from 'axios';
 import { Network } from '@/types';
 import _ from 'lodash';
 import * as fs from 'fs';
-import addresses from '../constants/addresses.json';
 
 type AddressDictByNetwork = {
   [key: string]: {
