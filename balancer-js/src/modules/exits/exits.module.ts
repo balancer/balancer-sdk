@@ -73,6 +73,119 @@ export class Exit {
     this.relayer = contracts.relayer;
   }
 
+  async getExitInfo(
+    poolId: string,
+    amountBptIn: string,
+    userAddress: string,
+    signer: JsonRpcSigner
+  ): Promise<{
+    tokensOut: string[];
+    estimatedAmountsOut: string[];
+    priceImpact: string;
+    needsUnwrap: boolean;
+  }> {
+    debugLog(`\n--- getExitInfo()`);
+    /*
+    Overall exit flow description:
+    - Create calls with 0 expected min amount for each token out
+    - static call (or V4 special call) to get actual amounts for each token out
+    - Apply slippage to amountsOut
+    - Recreate calls with minAmounts === actualAmountsWithSlippage
+    - Return minAmoutsOut, UI would use this to display to user
+    - Return updatedCalls, UI would use this to execute tx
+    */
+    const exit = await this.getExit(
+      poolId,
+      amountBptIn,
+      userAddress,
+      signer,
+      false,
+      SimulationType.VaultModel
+    );
+
+    return {
+      tokensOut: exit.tokensOut,
+      estimatedAmountsOut: exit.expectedAmountsOut,
+      priceImpact: exit.priceImpact,
+      needsUnwrap: exit.unwrap,
+    };
+  }
+
+  async buildExitCall(
+    poolId: string,
+    amountBptIn: string,
+    userAddress: string,
+    slippage: string,
+    signer: JsonRpcSigner,
+    simulationType: SimulationType.Static | SimulationType.Tenderly,
+    unwrapTokens: boolean,
+    authorisation?: string
+  ): Promise<{
+    to: string;
+    encodedCall: string;
+    tokensOut: string[];
+    expectedAmountsOut: string[];
+    minAmountsOut: string[];
+    priceImpact: string;
+  }> {
+    debugLog(
+      `\n--- exitPool(): unwrapTokens, ${unwrapTokens}, simulationType: ${simulationType}`
+    );
+    /*
+    Overall exit flow description:
+    - Create calls with 0 expected min amount for each token out
+    - static call (or V4 special call) to get actual amounts for each token out
+    - Apply slippage to amountsOut
+    - Recreate calls with minAmounts === actualAmountsWithSlippage
+    - Return minAmoutsOut, UI would use this to display to user
+    - Return updatedCalls, UI would use this to execute tx
+    */
+
+    const exit = await this.getExit(
+      poolId,
+      amountBptIn,
+      userAddress,
+      signer,
+      unwrapTokens,
+      simulationType,
+      authorisation
+    );
+
+    const { minAmountsOutByExitPath, minAmountsOutByTokenOut } =
+      this.minAmountsOut(
+        exit.expectedAmountsOutByExitPath,
+        exit.expectedAmountsOut,
+        slippage
+      );
+
+    debugLog(`------------ Updating limits...`);
+    // Create calls with minimum expected amount out for each exit path
+    const { encodedCall, deltas } = await this.createCalls(
+      exit.exitPaths,
+      userAddress,
+      exit.isProportional,
+      minAmountsOutByExitPath,
+      authorisation
+    );
+
+    this.assertDeltas(
+      poolId,
+      deltas,
+      amountBptIn,
+      exit.tokensOut,
+      minAmountsOutByTokenOut
+    );
+
+    return {
+      to: this.relayer,
+      encodedCall,
+      tokensOut: exit.tokensOut,
+      expectedAmountsOut: exit.expectedAmountsOut,
+      minAmountsOut: minAmountsOutByTokenOut,
+      priceImpact: exit.priceImpact,
+    };
+  }
+
   private async getExit(
     poolId: string,
     amountBptIn: string,
@@ -88,6 +201,7 @@ export class Exit {
     isProportional: boolean;
     expectedAmountsOut: string[];
     expectedAmountsOutByExitPath: string[];
+    priceImpact: string;
   }> {
     // Create nodes and order by breadth first - initially trys with no unwrapping
     const orderedNodes = await this.poolGraph.getGraphNodes(
@@ -174,6 +288,15 @@ export class Exit {
         tokensOutByExitPath,
         expectedAmountsOutByExitPath
       );
+
+      const priceImpact = await this.calculatePriceImpact(
+        poolId,
+        this.poolGraph,
+        tokensOut,
+        expectedAmountsOut,
+        amountBptIn
+      );
+
       return {
         unwrap: doUnwrap,
         tokensOut,
@@ -181,129 +304,9 @@ export class Exit {
         isProportional,
         expectedAmountsOut,
         expectedAmountsOutByExitPath,
+        priceImpact,
       };
     }
-  }
-
-  async getExitInfo(
-    poolId: string,
-    amountBptIn: string,
-    userAddress: string,
-    signer: JsonRpcSigner,
-    authorisation?: string
-  ): Promise<ExitInfo> {
-    debugLog(`\n--- getExitInfo()`);
-    /*
-    Overall exit flow description:
-    - Create calls with 0 expected min amount for each token out
-    - static call (or V4 special call) to get actual amounts for each token out
-    - Apply slippage to amountsOut
-    - Recreate calls with minAmounts === actualAmountsWithSlippage
-    - Return minAmoutsOut, UI would use this to display to user
-    - Return updatedCalls, UI would use this to execute tx
-    */
-    const exit = await this.getExit(
-      poolId,
-      amountBptIn,
-      userAddress,
-      signer,
-      false,
-      SimulationType.VaultModel,
-      authorisation
-    );
-
-    const priceImpact = await this.calculatePriceImpact(
-      poolId,
-      this.poolGraph,
-      exit.tokensOut,
-      exit.expectedAmountsOut,
-      amountBptIn
-    );
-
-    return {
-      tokensOut: exit.tokensOut,
-      estimatedAmountsOut: exit.expectedAmountsOut,
-      priceImpact,
-      needsUnwrap: exit.unwrap,
-    };
-  }
-
-  async buildExitCall(
-    poolId: string,
-    amountBptIn: string,
-    userAddress: string,
-    slippage: string,
-    signer: JsonRpcSigner,
-    simulationType: SimulationType, // TODO - Narrow this to only static/tenderly as options
-    unwrapTokens: boolean,
-    authorisation?: string
-  ): Promise<GeneralisedExitOutput> {
-    debugLog(
-      `\n--- exitPool(): unwrapTokens, ${unwrapTokens}, simulationType: ${simulationType}`
-    );
-    /*
-    Overall exit flow description:
-    - Create calls with 0 expected min amount for each token out
-    - static call (or V4 special call) to get actual amounts for each token out
-    - Apply slippage to amountsOut
-    - Recreate calls with minAmounts === actualAmountsWithSlippage
-    - Return minAmoutsOut, UI would use this to display to user
-    - Return updatedCalls, UI would use this to execute tx
-    */
-    if (simulationType === SimulationType.VaultModel)
-      throw new Error(`Cant use VaultModel as simulation type in build call`);
-
-    const exit = await this.getExit(
-      poolId,
-      amountBptIn,
-      userAddress,
-      signer,
-      unwrapTokens,
-      simulationType,
-      authorisation
-    );
-
-    const { minAmountsOutByExitPath, minAmountsOutByTokenOut } =
-      this.minAmountsOut(
-        exit.expectedAmountsOutByExitPath,
-        exit.expectedAmountsOut,
-        slippage
-      );
-
-    debugLog(`------------ Updating limits...`);
-    // Create calls with minimum expected amount out for each exit path
-    const { encodedCall, deltas } = await this.createCalls(
-      exit.exitPaths,
-      userAddress,
-      exit.isProportional,
-      minAmountsOutByExitPath,
-      authorisation
-    );
-
-    this.assertDeltas(
-      poolId,
-      deltas,
-      amountBptIn,
-      exit.tokensOut,
-      minAmountsOutByTokenOut
-    );
-
-    const priceImpact = await this.calculatePriceImpact(
-      poolId,
-      this.poolGraph,
-      exit.tokensOut,
-      exit.expectedAmountsOut,
-      amountBptIn
-    );
-
-    return {
-      to: this.relayer,
-      encodedCall,
-      tokensOut: exit.tokensOut,
-      expectedAmountsOut: exit.expectedAmountsOut,
-      minAmountsOut: minAmountsOutByTokenOut,
-      priceImpact,
-    };
   }
 
   /*
