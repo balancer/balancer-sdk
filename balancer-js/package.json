@@ -20,7 +20,7 @@
     "dist/"
   ],
   "scripts": {
-    "address-books:generate": "npx ts-node -P tsconfig.testing.json -r tsconfig-paths/register ./src/lib/utils/generate-address-books.ts",
+    "address-book:generate": "npx ts-node -P tsconfig.testing.json -r tsconfig-paths/register ./src/lib/utils/generate-address-books.ts",
     "build": "rimraf dist && rollup -c",
     "dev": "rollup -c -w",
     "examples:run": "npx ts-node -P tsconfig.testing.json -r tsconfig-paths/register",

@@ -2,20 +2,32 @@ import axios from 'axios';
 import { Network } from '@/types';
 import _ from 'lodash';
 import * as fs from 'fs';
+import addresses from '../constants/addresses.json';
+
+type AddressDictByNetwork = {
+  [key: string]: {
+    contracts: AddressDict;
+    tokens: AddressDict;
+  };
+};
+
+type AddressDict = {
+  [key: string]: string;
+};
 
 const addressBookUrl =
   'https://raw.githubusercontent.com/BalancerMaxis/bal_addresses/main/outputs/addressbook.json';
 
+const developAddressBookOutputUrl =
+  'https://raw.githubusercontent.com/balancer/balancer-sdk/develop/balancer-js/src/lib/constants/address.json';
 const generateAddressesFile = async () => {
   //Fetching the addresses
   const addressBook = (await axios.get(addressBookUrl)).data;
   //creating output empty object
-  let output: {
-    [p: number]: {
-      contracts: { [k: string]: string };
-      tokens: { [k: string]: string };
-    };
-  } = {};
+  let output: AddressDictByNetwork = {};
+  //Getting the current addressBook from develop branch
+  const developAddressBook = (await axios.get(developAddressBookOutputUrl))
+    .data;
   //Filtering the addressBook to get active addresses by network
   Object.entries(Network)
     .filter(([key]) => {
@@ -61,6 +73,7 @@ const generateAddressesFile = async () => {
           tokens,
         },
       };
+      compareOutputWithDevelop(output[value], developAddressBook[value], key);
     });
   //Writing the output to the file
   fs.writeFile(
@@ -94,6 +107,58 @@ const sortEntriesAlphabetically = (
   [b]: [string, unknown]
 ) => {
   return a.localeCompare(b);
+};
+
+const compareOutputWithDevelop = (
+  output: {
+    contracts: AddressDict;
+    tokens: AddressDict;
+  },
+  develop: {
+    contracts: AddressDict;
+    tokens: AddressDict;
+  },
+  network: string
+) => {
+  console.log('Comparing Contracts of network: ', network);
+  const outputContractsKeys = Object.keys(output.contracts);
+  const developContractsKeys = Object.keys(develop.contracts);
+  outputContractsKeys.map((key) => {
+    if (developContractsKeys.includes(key)) {
+      if (
+        output.contracts[key].toLowerCase() !==
+        develop.contracts[key].toLowerCase()
+      ) {
+        console.log(
+          `Contract ${key} has different addresses in develop and active`
+        );
+        console.log('Develop: ', develop.contracts[key]);
+        console.log('Active: ', output.contracts[key]);
+      }
+    } else {
+      console.log(`Contract ${key} is new, not present in develop`);
+      console.log('Address: ', output.contracts[key]);
+    }
+  });
+  //Do the same for output.tokens
+  const outputTokensKeys = Object.keys(output.tokens);
+  const developTokensKeys = Object.keys(develop.tokens);
+  outputTokensKeys.map((key) => {
+    if (developTokensKeys.includes(key)) {
+      if (
+        output.tokens[key].toLowerCase() !== develop.tokens[key].toLowerCase()
+      ) {
+        console.log(
+          `Token ${key} has different addresses in develop and active`
+        );
+        console.log('Develop: ', develop.tokens[key]);
+        console.log('Active: ', output.tokens[key]);
+      }
+    } else {
+      console.log(`Token ${key} is new, not present in develop`);
+      console.log('Address: ', output.tokens[key]);
+    }
+  });
 };
 
 generateAddressesFile();
