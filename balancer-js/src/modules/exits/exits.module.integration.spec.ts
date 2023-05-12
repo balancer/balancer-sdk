@@ -1,23 +1,9 @@
 // yarn test:only ./src/modules/exits/exits.module.integration.spec.ts
 import dotenv from 'dotenv';
 import { parseFixed } from '@ethersproject/bignumber';
-import { JsonRpcProvider } from '@ethersproject/providers';
-
-import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '@/.';
-import { SimulationType } from '@/modules/simulation/simulation.module';
-import { forkSetup } from '@/test/lib/utils';
+import { Network } from '@/.';
 import { ADDRESSES } from '@/test/lib/constants';
-import { testGeneralisedExit } from '@/test/lib/exitHelper';
-
-/**
- * -- Integration tests for generalisedExit --
- *
- * It compares results from local fork transactions with simulated results from
- * the Simulation module, which can be of 3 different types:
- * 1. Tenderly: uses Tenderly Simulation API (third party service)
- * 2. VaultModel: uses TS math, which may be less accurate (min. 99% accuracy)
- * 3. Static: uses staticCall, which is 100% accurate but requires vault approval
- */
+import { testFlow } from './testHelper';
 
 dotenv.config();
 
@@ -31,89 +17,16 @@ const TEST_BOOSTED_WEIGHTED_META = true;
 const TEST_BOOSTED_WEIGHTED_META_ALT = true;
 const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 
-/*
- * Testing on GOERLI
- * - Run node on terminal: yarn run node:goerli
- * - Uncomment section below:
- */
 const network = Network.GOERLI;
 const blockNumber = 8744170;
-const { ALCHEMY_URL_GOERLI: jsonRpcUrl } = process.env;
-const rpcUrl = 'http://127.0.0.1:8000';
-
-/*
- * Testing on MAINNET
- * - Run node on terminal: yarn run node
- * - Uncomment section below:
- */
-// const network = Network.MAINNET;
-// const blockNumber = 15519886;
-// const customSubgraphUrl =
-//   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta';
-// const { ALCHEMY_URL: jsonRpcUrl } = process.env;
-// const rpcUrl = 'http://127.0.0.1:8545';
-
-const addresses = ADDRESSES[network];
-
-// Set tenderly config blockNumber and use default values for other parameters
-const tenderlyConfig = {
-  blockNumber,
-};
-
-/**
- * Example of subgraph query that allows filtering pools.
- * Might be useful to reduce the response time by limiting the amount of pool
- * data that will be queried by the SDK. Specially when on chain data is being
- * fetched as well.
- */
-const poolAddresses = Object.values(addresses).map(
+const slippage = '10'; // 10 bps = 0.1%
+const poolAddresses = Object.values(ADDRESSES[network]).map(
   (address) => address.address
 );
-const subgraphArgs: GraphQLArgs = {
-  where: {
-    swapEnabled: {
-      eq: true,
-    },
-    totalShares: {
-      gt: 0.000000000001,
-    },
-    address: {
-      in: poolAddresses,
-    },
-  },
-  orderBy: 'totalLiquidity',
-  orderDirection: 'desc',
-  block: { number: blockNumber },
-};
-const subgraphQuery: GraphQLQuery = { args: subgraphArgs, attrs: {} };
-
-const sdk = new BalancerSDK({
-  network,
-  rpcUrl,
-  tenderly: tenderlyConfig,
-  subgraphQuery,
-});
-const { pools } = sdk;
-const provider = new JsonRpcProvider(rpcUrl, network);
-const signer = provider.getSigner();
-
-const simulationType = SimulationType.Static;
+const addresses = ADDRESSES[network];
 
 describe('generalised exit execution', async function () {
   this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
-  let pool = { id: '', address: '', decimals: 0, slot: 0 };
-  let amount = '';
-
-  beforeEach(async () => {
-    await forkSetup(
-      signer,
-      [pool.address],
-      [pool.slot],
-      [amount],
-      jsonRpcUrl as string,
-      blockNumber
-    );
-  });
 
   /*
   bbamaiweth: ComposableStable, baMai/baWeth
@@ -122,14 +35,19 @@ describe('generalised exit execution', async function () {
   */
   context('boosted', async () => {
     if (!TEST_BOOSTED) return true;
-
-    before(() => {
-      pool = addresses.bbamaiweth;
-      amount = parseFixed('0.02', pool.decimals).toString();
-    });
+    const pool = addresses.bbamaiweth;
+    const amount = parseFixed('0.02', pool.decimals).toString();
 
     it('should exit pool correctly', async () => {
-      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
+      await testFlow(
+        pool,
+        slippage,
+        amount,
+        false,
+        network,
+        blockNumber,
+        poolAddresses
+      );
     });
   });
 
@@ -140,13 +58,19 @@ describe('generalised exit execution', async function () {
     */
   context('boostedMeta', async () => {
     if (!TEST_BOOSTED_META) return true;
-    before(() => {
-      pool = addresses.boostedMeta1;
-      amount = parseFixed('0.05', pool.decimals).toString();
-    });
+    const pool = addresses.boostedMeta1;
+    const amount = parseFixed('0.05', pool.decimals).toString();
 
     it('should exit pool correctly', async () => {
-      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
+      await testFlow(
+        pool,
+        slippage,
+        amount,
+        false,
+        network,
+        blockNumber,
+        poolAddresses
+      );
     });
   });
 
@@ -157,13 +81,19 @@ describe('generalised exit execution', async function () {
     */
   context('boostedMetaAlt', async () => {
     if (!TEST_BOOSTED_META_ALT) return true;
-    before(() => {
-      pool = addresses.boostedMetaAlt1;
-      amount = parseFixed('0.05', pool.decimals).toString();
-    });
+    const pool = addresses.boostedMetaAlt1;
+    const amount = parseFixed('0.05', pool.decimals).toString();
 
     it('should exit pool correctly', async () => {
-      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
+      await testFlow(
+        pool,
+        slippage,
+        amount,
+        false,
+        network,
+        blockNumber,
+        poolAddresses
+      );
     });
   });
 
@@ -176,14 +106,19 @@ describe('generalised exit execution', async function () {
   */
   context('boostedMetaBig', async () => {
     if (!TEST_BOOSTED_META_BIG) return true;
-
-    before(() => {
-      pool = addresses.boostedMetaBig1;
-      amount = parseFixed('0.05', pool.decimals).toString();
-    });
+    const pool = addresses.boostedMetaBig1;
+    const amount = parseFixed('0.05', pool.decimals).toString();
 
     it('should exit pool correctly', async () => {
-      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
+      await testFlow(
+        pool,
+        slippage,
+        amount,
+        false,
+        network,
+        blockNumber,
+        poolAddresses
+      );
     });
   });
 
@@ -194,14 +129,19 @@ describe('generalised exit execution', async function () {
   */
   context('boostedWeightedSimple', async () => {
     if (!TEST_BOOSTED_WEIGHTED_SIMPLE) return true;
-
-    before(() => {
-      pool = addresses.boostedWeightedSimple1;
-      amount = parseFixed('0.05', pool.decimals).toString();
-    });
+    const pool = addresses.boostedWeightedSimple1;
+    const amount = parseFixed('0.05', pool.decimals).toString();
 
     it('should exit pool correctly', async () => {
-      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
+      await testFlow(
+        pool,
+        slippage,
+        amount,
+        false,
+        network,
+        blockNumber,
+        poolAddresses
+      );
     });
   });
 
@@ -214,14 +154,19 @@ describe('generalised exit execution', async function () {
   */
   context('boostedWeightedGeneral', async () => {
     if (!TEST_BOOSTED_WEIGHTED_GENERAL) return true;
-
-    before(() => {
-      pool = addresses.boostedMeta1;
-      amount = parseFixed('0.05', pool.decimals).toString();
-    });
+    const pool = addresses.boostedMeta1;
+    const amount = parseFixed('0.05', pool.decimals).toString();
 
     it('should exit pool correctly', async () => {
-      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
+      await testFlow(
+        pool,
+        slippage,
+        amount,
+        false,
+        network,
+        blockNumber,
+        poolAddresses
+      );
     });
   });
 
@@ -233,14 +178,19 @@ describe('generalised exit execution', async function () {
   */
   context('boostedWeightedMeta', async () => {
     if (!TEST_BOOSTED_WEIGHTED_META) return true;
-
-    before(() => {
-      pool = addresses.boostedWeightedMeta1;
-      amount = parseFixed('0.05', pool.decimals).toString();
-    });
+    const pool = addresses.boostedWeightedMeta1;
+    const amount = parseFixed('0.05', pool.decimals).toString();
 
     it('should exit pool correctly', async () => {
-      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
+      await testFlow(
+        pool,
+        slippage,
+        amount,
+        false,
+        network,
+        blockNumber,
+        poolAddresses
+      );
     });
   });
 
@@ -251,14 +201,19 @@ describe('generalised exit execution', async function () {
   */
   context('boostedWeightedMetaAlt', async () => {
     if (!TEST_BOOSTED_WEIGHTED_META_ALT) return true;
-
-    before(() => {
-      pool = addresses.boostedWeightedMetaAlt1;
-      amount = parseFixed('0.01', pool.decimals).toString();
-    });
+    const pool = addresses.boostedWeightedMetaAlt1;
+    const amount = parseFixed('0.01', pool.decimals).toString();
 
     it('should exit pool correctly', async () => {
-      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
+      await testFlow(
+        pool,
+        slippage,
+        amount,
+        false,
+        network,
+        blockNumber,
+        poolAddresses
+      );
     });
   });
 
@@ -271,14 +226,19 @@ describe('generalised exit execution', async function () {
   */
   context('boostedWeightedMetaGeneral', async () => {
     if (!TEST_BOOSTED_WEIGHTED_META_GENERAL) return true;
-
-    before(() => {
-      pool = addresses.boostedWeightedMetaGeneral1;
-      amount = parseFixed('0.05', pool.decimals).toString();
-    });
+    const pool = addresses.boostedWeightedMetaGeneral1;
+    const amount = parseFixed('0.05', pool.decimals).toString();
 
     it('should exit pool correctly', async () => {
-      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
+      await testFlow(
+        pool,
+        slippage,
+        amount,
+        false,
+        network,
+        blockNumber,
+        poolAddresses
+      );
     });
   });
 });

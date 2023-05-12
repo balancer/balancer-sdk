@@ -28,6 +28,7 @@ export interface Node {
   spotPrices: SpotPrices;
   decimals: number;
   balance: string;
+  priceRate: string;
 }
 
 type JoinAction = 'input' | 'batchSwap' | 'wrap' | 'joinPool';
@@ -169,6 +170,7 @@ export class PoolGraph {
       spotPrices,
       decimals,
       balance: pool.totalShares,
+      priceRate: WeiPerEther.toString(),
     };
     this.updateNodeIfProportionalExit(pool, poolNode);
     nodeIndex++;
@@ -276,7 +278,7 @@ export class PoolGraph {
     )
       throw new Error('Issue With Linear Pool');
 
-    const { balancesEvm, upScaledBalances, scalingFactorsRaw } =
+    const { balancesEvm, upScaledBalances, scalingFactorsRaw, priceRates } =
       parsePoolInfo(linearPool);
 
     const wrappedTokenNode: Node = {
@@ -295,6 +297,7 @@ export class PoolGraph {
       spotPrices: {},
       decimals: 18,
       balance: balancesEvm[linearPool.wrappedIndex].toString(),
+      priceRate: priceRates[linearPool.wrappedIndex].toString(),
     };
     nodeIndex++;
 
@@ -348,6 +351,7 @@ export class PoolGraph {
         spotPrices: {},
         decimals,
         balance,
+        priceRate: WeiPerEther.toString(),
       },
       nodeIndex + 1,
     ];

@@ -33,6 +33,22 @@ import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
 
 const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
+export interface GeneralisedExitOutput {
+  to: string;
+  encodedCall: string;
+  tokensOut: string[];
+  expectedAmountsOut: string[];
+  minAmountsOut: string[];
+  priceImpact: string;
+}
+
+export interface ExitInfo {
+  tokensOut: string[];
+  estimatedAmountsOut: string[];
+  priceImpact: string;
+  needsUnwrap: boolean;
+}
+
 // Quickly switch useful debug logs on/off
 const DEBUG = false;
 
@@ -192,7 +208,7 @@ export class Exit {
     );
 
     const isProportional = PoolGraph.isProportionalPools(orderedNodes);
-    debugLog(`isProportional, ${isProportional}`);
+    debugLog(`\nisProportional = ${isProportional}`);
 
     let exitPaths: Node[][] = [];
     let tokensOutByExitPath: string[] = [];
@@ -587,15 +603,18 @@ export class Exit {
         const exitChildren = node.children.filter((child) =>
           exitPath.map((n) => n.index).includes(child.index)
         );
-        const hasOutputChild = exitChildren.some(
-          (c) => c.exitAction === 'output'
+        // An action that has either outputs or unwraps as child actions is the last action where we're able to set limits on expected output amounts
+        const isLastActionWithLimits = exitChildren.some(
+          (c) => c.exitAction === 'output' || c.exitAction === 'unwrap'
         );
 
         // Last calls will use minAmountsOut to protect user. Middle calls can safely have 0 minimum as tx will revert if last fails.
         let minAmountOut = '0';
         const minAmountsOutProportional = Array(node.children.length).fill('0');
-        if (minAmountsOut && hasOutputChild) {
+        if (minAmountsOut && isLastActionWithLimits) {
           if (isProportional) {
+            // Proportional exits have a minAmountOut for each output node within a single exit path
+
             /**
              * minAmountsOut is related to the whole multicall transaction, while
              * minAmountsOutProportional is related only to the current node/transaction
@@ -604,18 +623,27 @@ export class Exit {
              * TODO: extract to a function so it's easier to understand
              */
             node.children.forEach((child, i) => {
-              if (child.exitAction === 'output') {
-                minAmountsOutProportional[i] =
-                  minAmountsOut[outputNodes.indexOf(child)];
+              let outputChildIndex: number;
+              if (child.exitAction === 'unwrap') {
+                outputChildIndex = outputNodes.indexOf(child.children[0]);
+                minAmountOut = WeiPerEther.mul(minAmountsOut[outputChildIndex])
+                  .div(child.priceRate)
+                  .toString();
+              } else if (child.exitAction === 'output') {
+                outputChildIndex = outputNodes.indexOf(child);
+                minAmountOut = minAmountsOut[outputChildIndex];
               }
+              minAmountsOutProportional[i] = minAmountOut;
             });
-
-            // Proportional exits have a minAmountOut for each output node within a single exit path
-            minAmountOut =
-              minAmountsOut[outputNodes.indexOf(exitChild as Node)];
           } else {
             // Non-proportional exits have a minAmountOut for each exit path
-            minAmountOut = minAmountsOut[i];
+            if (exitChild?.exitAction === 'unwrap') {
+              minAmountOut = WeiPerEther.mul(minAmountsOut[i])
+                .div(exitChild.priceRate)
+                .toString();
+            } else {
+              minAmountOut = minAmountsOut[i];
+            }
           }
         }
 
