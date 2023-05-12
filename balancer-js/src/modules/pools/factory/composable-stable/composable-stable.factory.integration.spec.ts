@@ -6,7 +6,6 @@ import { expect } from 'chai';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
 import { parseFixed } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
-import { OldBigNumber, StableMaths } from '@balancer-labs/sor';
 import {
   Network,
   PoolType,
@@ -15,7 +14,7 @@ import {
   ComposableStablePool,
   ComposableStableCreatePoolParameters,
 } from '@/.';
-import { _upscale, SolidityMaths } from '@/lib/utils/solidityMaths';
+import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { ADDRESSES } from '@/test/lib/constants';
 import {
   forkSetup,
@@ -54,7 +53,7 @@ describe('ComposableStable Factory', async () => {
       poolTokens.map((p) => p.slot),
       amountsIn,
       `${process.env.ALCHEMY_URL}`,
-      16720000,
+      17040000,
       false
     );
     poolParams = {
@@ -126,27 +125,15 @@ describe('ComposableStable Factory', async () => {
       );
       poolTokenBalances.forEach((b) => expect(b.isZero()).is.true);
     });
-    it('should recieve correct BPT amount', async () => {
+    it('should receive correct BPT amount', async () => {
       const bptBalance = (
-        await getBalances([poolAddress], signer, signerAddress)
+        await getBalances([pool.address], signer, signerAddress)
       )[0];
-      const scalingFactors = await pool.getScalingFactors();
-
-      //Calculate and compare the bptAmountOut
-      const poolInvariant = StableMaths._invariant(
-        parseFixed(poolParams.amplificationParameter, 3),
-        amountsIn.map((amount, index) => {
-          const upscaledAmount = _upscale(
-            BigInt(amount),
-            scalingFactors[index + 1].toBigInt()
-          ).toString();
-          return OldBigNumber(upscaledAmount, 10);
-        })
-      ).toString();
-
+      const { lastPostJoinExitInvariant: poolInvariant } =
+        await pool.getLastJoinExitData();
       // The amountOut of BPT shall be (invariant - 10e6) for equal amountsIn
       const expectedBptAmountOut = SolidityMaths.sub(
-        BigInt(poolInvariant),
+        parseFixed(poolInvariant.toString()).toBigInt(),
         // 1e6 is the minimum bpt, this amount of token is sent to address 0 to prevent the Pool to ever be drained
         BigInt(1e6)
       );
