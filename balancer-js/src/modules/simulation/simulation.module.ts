@@ -118,11 +118,9 @@ export class Simulation {
         break;
       }
       case SimulationType.Static: {
-        const gasLimit = 8e6;
         const staticResult = await signer.call({
           to,
           data: encodedCall,
-          gasLimit,
         });
         amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
         break;
