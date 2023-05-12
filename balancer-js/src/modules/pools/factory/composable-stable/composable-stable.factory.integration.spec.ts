@@ -1,5 +1,6 @@
 // yarn test:only ./src/modules/pools/factory/composable-stable/composable-stable.factory.integration.spec.ts
 import dotenv from 'dotenv';
+
 dotenv.config();
 import { expect } from 'chai';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
@@ -11,7 +12,7 @@ import {
   PoolType,
   ComposableStablePool__factory,
   BalancerSDK,
-  ComposableStable,
+  ComposableStablePool,
   ComposableStableCreatePoolParameters,
 } from '@/.';
 import { _upscale, SolidityMaths } from '@/lib/utils/solidityMaths';
@@ -44,7 +45,7 @@ describe('ComposableStable Factory', async () => {
   let poolAddress: string;
   let poolId: string;
   let signerAddress: string;
-  let pool: ComposableStable;
+  let pool: ComposableStablePool;
   before(async () => {
     signerAddress = await signer.getAddress();
     await forkSetup(
