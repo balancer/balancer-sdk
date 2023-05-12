@@ -61,8 +61,7 @@ export class Exit {
     poolId: string,
     amountBptIn: string,
     userAddress: string,
-    signer: JsonRpcSigner,
-    authorisation?: string
+    signer: JsonRpcSigner
   ): Promise<{
     tokensOut: string[];
     estimatedAmountsOut: string[];
@@ -85,8 +84,7 @@ export class Exit {
       userAddress,
       signer,
       false,
-      SimulationType.VaultModel,
-      authorisation
+      SimulationType.VaultModel
     );
 
     const priceImpact = await this.calculatePriceImpact(

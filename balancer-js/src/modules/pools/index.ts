@@ -390,12 +390,20 @@ export class Pools implements Findable<PoolWithMethods> {
     );
   }
 
+  /**
+   * Gets info required to build generalised exit transaction
+   *
+   * @param poolId          Pool id
+   * @param amountBptIn     BPT amount in EVM scale
+   * @param userAddress     User address
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+   * @returns info required to build a generalised exit transaction including whether tokens need to be unwrapped
+   */
   async getExitInfo(
     poolId: string,
     amountBptIn: string,
     userAddress: string,
-    signer: JsonRpcSigner,
-    authorisation?: string
+    signer: JsonRpcSigner
   ): Promise<{
     tokensOut: string[];
     estimatedAmountsOut: string[];
@@ -406,8 +414,7 @@ export class Pools implements Findable<PoolWithMethods> {
       poolId,
       amountBptIn,
       userAddress,
-      signer,
-      authorisation
+      signer
     );
   }
 
