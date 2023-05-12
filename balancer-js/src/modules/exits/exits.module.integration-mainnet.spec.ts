@@ -9,6 +9,7 @@ import {
   Network,
   truncateAddresses,
   subSlippage,
+  removeItem,
 } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
@@ -97,7 +98,8 @@ const relayer = contractAddresses.relayer;
 
 const testFlow = async (
   pool: { id: string; address: string; slot: number },
-  amount: string
+  exitAmount: string,
+  expectUnwrap: boolean
 ): Promise<{
   expectedAmountsOut: string[];
   gasUsed: BigNumber;
@@ -106,7 +108,7 @@ const testFlow = async (
 
   const tokens = [pool.address];
   const slots = [pool.slot];
-  const balances = [amount];
+  const balances = [exitAmount];
 
   await forkSetup(
     signer,
@@ -119,21 +121,17 @@ const testFlow = async (
 
   const signerAddress = await signer.getAddress();
 
-  const query = await pools.generalisedExit(
-    pool.id,
-    amount,
-    signerAddress,
-    slippage,
-    signer,
-    SimulationType.VaultModel
-  );
+  // Replicating UI user flow:
 
-  // User reviews expectedAmountOut
-  console.log(' -- Simulating using Vault Model -- ');
-  console.table({
-    tokensOut: truncateAddresses([pool.address, ...query.tokensOut]),
-    expectedAmountsOut: ['0', ...query.expectedAmountsOut],
-  });
+  // 1. Gets exitInfo
+  //    - this helps user to decide if they will approve relayer, etc by returning estimated amounts out/pi.
+  //    - also returns tokensOut and whether or not unwrap should be used
+  const exitInfo = await pools.getExitInfo(
+    pool.id,
+    exitAmount,
+    signerAddress,
+    signer
+  );
 
   const authorisation = await Relayer.signRelayerApproval(
     relayer,
@@ -142,37 +140,45 @@ const testFlow = async (
     contracts.vault
   );
 
+  // 2. Get call data and expected/min amounts out
+  //    - Uses a Static/Tenderly call to simulate tx then applies slippage
   const { to, encodedCall, tokensOut, expectedAmountsOut, minAmountsOut } =
     await pools.generalisedExit(
       pool.id,
-      amount,
+      exitAmount,
       signerAddress,
       slippage,
       signer,
       SimulationType.Static,
+      exitInfo.needsUnwrap,
       authorisation
     );
 
+  // 3. Sends tx
   const { transactionReceipt, balanceDeltas, gasUsed } =
     await sendTransactionGetBalances(
-      tokensOut,
+      [pool.address, ...tokensOut],
       signer,
       signerAddress,
       to,
       encodedCall
     );
 
-  console.log(' -- Simulating using Static Call -- ');
+  const tokensOutDeltas = removeItem(balanceDeltas, 0);
   console.table({
-    tokensOut: truncateAddresses([pool.address, ...tokensOut]),
-    minAmountsOut: ['0', ...minAmountsOut],
-    expectedAmountsOut: ['0', ...expectedAmountsOut],
-    balanceDeltas: balanceDeltas.map((b) => b.toString()),
+    tokensOut: truncateAddresses(tokensOut),
+    estimateAmountsOut: exitInfo.estimatedAmountsOut,
+    minAmountsOut: minAmountsOut,
+    expectedAmountsOut: expectedAmountsOut,
+    balanceDeltas: tokensOutDeltas.map((b) => b.toString()),
   });
   console.log('Gas used', gasUsed.toString());
+  console.log(`Should unwrap: `, exitInfo.needsUnwrap);
 
   expect(transactionReceipt.status).to.eq(1);
-  balanceDeltas.forEach((b, i) => {
+  expect(balanceDeltas[0].toString()).to.eq(exitAmount.toString());
+  expect(exitInfo.needsUnwrap).to.eq(expectUnwrap);
+  tokensOutDeltas.forEach((b, i) => {
     const minOut = BigNumber.from(minAmountsOut[i]);
     expect(b.gte(minOut)).to.be.true;
     expect(accuracy(b, BigNumber.from(expectedAmountsOut[i]))).to.be.closeTo(
@@ -208,7 +214,8 @@ describe('generalised exit execution', async function () {
       it('should exit pool correctly', async () => {
         const { expectedAmountsOut, gasUsed } = await testFlow(
           pool,
-          unwrapExitAmount.toString()
+          unwrapExitAmount.toString(),
+          true
         );
         unwrappingTokensAmountsOut = expectedAmountsOut;
         unwrappingTokensGasUsed = gasUsed;
@@ -219,7 +226,8 @@ describe('generalised exit execution', async function () {
       it('should exit pool correctly', async () => {
         const { expectedAmountsOut, gasUsed } = await testFlow(
           pool,
-          mainExitAmount.toString()
+          mainExitAmount.toString(),
+          false
         );
         mainTokensAmountsOut = expectedAmountsOut;
         mainTokensGasUsed = gasUsed;
