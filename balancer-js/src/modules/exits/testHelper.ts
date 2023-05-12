@@ -34,7 +34,7 @@ const FORK_NODES: Record<number, string> = {
   [Network.ARBITRUM]: `${process.env.ALCHEMY_URL_ARBITRUM}`,
 };
 
-interface Pool {
+export interface Pool {
   id: string;
   address: string;
   slot: number;
