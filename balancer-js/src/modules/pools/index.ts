@@ -384,7 +384,7 @@ export class Pools implements Findable<PoolWithMethods> {
       signer,
       simulationType,
       authorisation,
-      false
+      false // This is initially false as the function will auto switch to unwrap method if needed
     );
   }
 

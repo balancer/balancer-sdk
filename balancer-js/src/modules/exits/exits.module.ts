@@ -147,6 +147,7 @@ export class Exit {
           'Insufficient pool balance to perform generalised exit - try exitting with smaller amounts'
         );
       } else {
+        // If there is not sufficient main token balance to exit we must exit using unwrap method
         return this.exitPool(
           poolId,
           amountBptIn,
