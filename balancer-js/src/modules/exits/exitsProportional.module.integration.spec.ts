@@ -105,7 +105,7 @@ const testFlow = async (
   pool: { id: string; address: string },
   amount: string,
   authorisation: string | undefined,
-  simulationType = SimulationType.VaultModel
+  simulationType = SimulationType.Static
 ) => {
   const gasLimit = 8e6;
   const slippage = '10'; // 10 bps = 0.1%
@@ -118,6 +118,7 @@ const testFlow = async (
       slippage,
       signer,
       simulationType,
+      false,
       authorisation
     );
 

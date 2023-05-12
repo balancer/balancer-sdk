@@ -57,15 +57,53 @@ export class Exit {
     this.relayer = contracts.relayer;
   }
 
-  async exitPool(
+  async getExitInfo(
+    poolId: string,
+    amountBptIn: string,
+    userAddress: string,
+    signer: JsonRpcSigner
+  ): Promise<{
+    tokensOut: string[];
+    estimatedAmountsOut: string[];
+    priceImpact: string;
+    needsUnwrap: boolean;
+  }> {
+    debugLog(`\n--- getExitInfo()`);
+    /*
+    Overall exit flow description:
+    - Create calls with 0 expected min amount for each token out
+    - static call (or V4 special call) to get actual amounts for each token out
+    - Apply slippage to amountsOut
+    - Recreate calls with minAmounts === actualAmountsWithSlippage
+    - Return minAmoutsOut, UI would use this to display to user
+    - Return updatedCalls, UI would use this to execute tx
+    */
+    const exit = await this.getExit(
+      poolId,
+      amountBptIn,
+      userAddress,
+      signer,
+      false,
+      SimulationType.VaultModel
+    );
+
+    return {
+      tokensOut: exit.tokensOut,
+      estimatedAmountsOut: exit.expectedAmountsOut,
+      priceImpact: exit.priceImpact,
+      needsUnwrap: exit.unwrap,
+    };
+  }
+
+  async buildExitCall(
     poolId: string,
     amountBptIn: string,
     userAddress: string,
     slippage: string,
     signer: JsonRpcSigner,
-    simulationType: SimulationType,
-    authorisation?: string,
-    unwrapTokens = false
+    simulationType: SimulationType.Static | SimulationType.Tenderly,
+    unwrapTokens: boolean,
+    authorisation?: string
   ): Promise<{
     to: string;
     encodedCall: string;
@@ -87,15 +125,77 @@ export class Exit {
     - Return updatedCalls, UI would use this to execute tx
     */
 
-    // Create nodes and order by breadth first
+    const exit = await this.getExit(
+      poolId,
+      amountBptIn,
+      userAddress,
+      signer,
+      unwrapTokens,
+      simulationType,
+      authorisation
+    );
+
+    const { minAmountsOutByExitPath, minAmountsOutByTokenOut } =
+      this.minAmountsOut(
+        exit.expectedAmountsOutByExitPath,
+        exit.expectedAmountsOut,
+        slippage
+      );
+
+    debugLog(`------------ Updating limits...`);
+    // Create calls with minimum expected amount out for each exit path
+    const { encodedCall, deltas } = await this.createCalls(
+      exit.exitPaths,
+      userAddress,
+      exit.isProportional,
+      minAmountsOutByExitPath,
+      authorisation
+    );
+
+    this.assertDeltas(
+      poolId,
+      deltas,
+      amountBptIn,
+      exit.tokensOut,
+      minAmountsOutByTokenOut
+    );
+
+    return {
+      to: this.relayer,
+      encodedCall,
+      tokensOut: exit.tokensOut,
+      expectedAmountsOut: exit.expectedAmountsOut,
+      minAmountsOut: minAmountsOutByTokenOut,
+      priceImpact: exit.priceImpact,
+    };
+  }
+
+  private async getExit(
+    poolId: string,
+    amountBptIn: string,
+    userAddress: string,
+    signer: JsonRpcSigner,
+    doUnwrap: boolean,
+    simulationType: SimulationType,
+    authorisation?: string
+  ): Promise<{
+    unwrap: boolean;
+    tokensOut: string[];
+    exitPaths: Node[][];
+    isProportional: boolean;
+    expectedAmountsOut: string[];
+    expectedAmountsOutByExitPath: string[];
+    priceImpact: string;
+  }> {
+    // Create nodes and order by breadth first - initially trys with no unwrapping
     const orderedNodes = await this.poolGraph.getGraphNodes(
       false,
       poolId,
-      unwrapTokens
+      doUnwrap
     );
 
     const isProportional = PoolGraph.isProportionalPools(orderedNodes);
-    console.log(`isProportional`, isProportional);
+    debugLog(`isProportional, ${isProportional}`);
 
     let exitPaths: Node[][] = [];
     let tokensOutByExitPath: string[] = [];
@@ -148,7 +248,7 @@ export class Exit {
     );
 
     if (!hasSufficientBalance) {
-      if (unwrapTokens) {
+      if (doUnwrap)
         /**
          * This case might happen when a whale tries to exit with an amount that
          * is at the same time larger than both main and wrapped token balances
@@ -156,68 +256,41 @@ export class Exit {
         throw new Error(
           'Insufficient pool balance to perform generalised exit - try exitting with smaller amounts'
         );
-      } else {
-        // If there is not sufficient main token balance to exit we must exit using unwrap method
-        return this.exitPool(
+      else
+        return await this.getExit(
           poolId,
           amountBptIn,
           userAddress,
-          slippage,
           signer,
+          true,
           simulationType,
-          authorisation,
-          true
+          authorisation
         );
-      }
-    }
-
-    const expectedAmountsOutByTokenOut = this.amountsOutByTokenOut(
-      tokensOut,
-      tokensOutByExitPath,
-      expectedAmountsOutByExitPath
-    );
-
-    const { minAmountsOutByExitPath, minAmountsOutByTokenOut } =
-      this.minAmountsOut(
-        expectedAmountsOutByExitPath,
-        expectedAmountsOutByTokenOut,
-        slippage
+    } else {
+      const expectedAmountsOut = this.amountsOutByTokenOut(
+        tokensOut,
+        tokensOutByExitPath,
+        expectedAmountsOutByExitPath
       );
 
-    debugLog(`------------ Updating limits...`);
-    // Create calls with minimum expected amount out for each exit path
-    const { encodedCall, deltas } = await this.createCalls(
-      exitPaths,
-      userAddress,
-      isProportional,
-      minAmountsOutByExitPath,
-      authorisation
-    );
+      const priceImpact = await this.calculatePriceImpact(
+        poolId,
+        this.poolGraph,
+        tokensOut,
+        expectedAmountsOut,
+        amountBptIn
+      );
 
-    this.assertDeltas(
-      poolId,
-      deltas,
-      amountBptIn,
-      tokensOut,
-      minAmountsOutByTokenOut
-    );
-
-    const priceImpact = await this.calculatePriceImpact(
-      poolId,
-      this.poolGraph,
-      tokensOut,
-      expectedAmountsOutByTokenOut,
-      amountBptIn
-    );
-
-    return {
-      to: this.relayer,
-      encodedCall,
-      tokensOut,
-      expectedAmountsOut: expectedAmountsOutByTokenOut,
-      minAmountsOut: minAmountsOutByTokenOut,
-      priceImpact,
-    };
+      return {
+        unwrap: doUnwrap,
+        tokensOut,
+        exitPaths,
+        isProportional,
+        expectedAmountsOut,
+        expectedAmountsOutByExitPath,
+        priceImpact,
+      };
+    }
   }
 
   /*

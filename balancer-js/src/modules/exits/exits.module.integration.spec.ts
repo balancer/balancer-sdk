@@ -136,20 +136,18 @@ const testFlow = async (
 
   const signerAddress = await signer.getAddress();
 
-  const query = await pools.generalisedExit(
+  const exitInfo = await pools.getExitInfo(
     pool.id,
     amount,
     signerAddress,
-    slippage,
-    signer,
-    SimulationType.VaultModel
+    signer
   );
 
   // User reviews expectedAmountOut
   console.log(' -- Simulating using Vault Model -- ');
   console.table({
-    tokensOut: truncateAddresses([pool.address, ...query.tokensOut]),
-    expectedAmountsOut: ['0', ...query.expectedAmountsOut],
+    tokensOut: truncateAddresses([pool.address, ...exitInfo.tokensOut]),
+    expectedAmountsOut: ['0', ...exitInfo.estimatedAmountsOut],
   });
 
   const authorisation = await Relayer.signRelayerApproval(
@@ -167,6 +165,7 @@ const testFlow = async (
       slippage,
       signer,
       SimulationType.Static,
+      exitInfo.needsUnwrap,
       authorisation
     );
 
