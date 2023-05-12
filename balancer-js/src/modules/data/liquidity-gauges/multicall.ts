@@ -80,6 +80,32 @@ export class LiquidityGaugesMulticallRepository {
     return workingSupplies;
   }
 
+  async getInflationRates(
+    gaugeAddresses: string[]
+  ): Promise<{ [gaugeAddress: string]: number }> {
+    const currentWeek = Math.floor(Date.now() / 1000 / 604800);
+    const payload = gaugeAddresses.map((gaugeAddress) => ({
+      target: gaugeAddress,
+      callData: childLiquidityGaugeInterface.encodeFunctionData(
+        'inflation_rate',
+        [currentWeek]
+      ),
+    }));
+    const [, res] = await this.multicall.callStatic.aggregate(payload);
+    // Handle 0x
+    const res0x = res.map((r: string) => (r == '0x' ? '0x0' : r));
+
+    const inflationRates = gaugeAddresses.reduce(
+      (p: { [key: string]: number }, a, i) => {
+        p[a] ||= parseFloat(formatUnits(res0x[i], 18));
+        return p;
+      },
+      {}
+    );
+
+    return inflationRates;
+  }
+
   async getRewardCounts(
     gaugeAddresses: string[]
   ): Promise<{ [gaugeAddress: string]: number }> {

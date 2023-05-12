@@ -49,6 +49,13 @@ describe('Liquidity gauge multicall', () => {
     );
   });
 
+  it('is fetching inflation rates', async () => {
+    const inflationRates = await fetcher.getInflationRates(gaugeAddresses);
+
+    expect(Object.keys(inflationRates).length).to.eq(3);
+    expect(inflationRates[gaugeAddresses[0]]).to.satisfy((n: number) => n >= 0);
+  });
+
   describe('with all gauges from subgraph', () => {
     const provider = new JsonRpcProvider('http://127.0.0.1:8545', 1);
     const multicall = Multicall__factory.connect(
