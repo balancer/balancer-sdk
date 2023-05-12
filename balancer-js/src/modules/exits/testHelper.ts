@@ -79,6 +79,7 @@ export const testFlow = async (
   console.log('Gas used', txResult.gasUsed.toString());
   console.log(`Should unwrap: `, exitInfo.needsUnwrap);
 
+  expect(txResult.transactionReceipt.status).to.eq(1);
   expect(txResult.balanceDeltas[0].toString()).to.eq(exitAmount.toString());
   expect(exitInfo.needsUnwrap).to.eq(expectUnwrap);
   tokensOutDeltas.forEach((b, i) => {
