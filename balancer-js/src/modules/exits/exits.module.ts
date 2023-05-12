@@ -632,6 +632,8 @@ export class Exit {
               } else if (child.exitAction === 'output') {
                 outputChildIndex = outputNodes.indexOf(child);
                 minAmountOut = minAmountsOut[outputChildIndex];
+              } else {
+                minAmountOut = '0'; // clears minAmountOut if it's not an output or unwrap
               }
               minAmountsOutProportional[i] = minAmountOut;
             });
