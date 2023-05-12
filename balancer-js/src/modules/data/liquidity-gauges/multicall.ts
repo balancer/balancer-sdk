@@ -1,7 +1,5 @@
-import { Multicall } from '@/modules/contracts/implementations/multicall';
-import { Provider } from '@ethersproject/providers';
+import { Multicall } from '@/contracts';
 import { Interface } from '@ethersproject/abi';
-import { Contract } from '@ethersproject/contracts';
 import { formatUnits } from '@ethersproject/units';
 import { BigNumber } from '@ethersproject/bignumber';
 import type { Network } from '@/types';
@@ -12,6 +10,10 @@ const liquidityGaugeV5Interface = new Interface([
   'function reward_count() view returns (uint)',
   'function reward_tokens(uint rewardIndex) view returns (address)',
   'function reward_data(address rewardToken) view returns (tuple(address token, address distributor, uint period_finish, uint rate, uint last_update, uint integral) data)',
+]);
+
+const childLiquidityGaugeInterface = new Interface([
+  'function inflation_rate(uint currentWeekTimestamp) view returns (uint)',
 ]);
 
 export interface RewardData {
@@ -29,24 +31,16 @@ export interface RewardData {
  * TODO: reseach helper contracts or extend subgraph
  */
 export class LiquidityGaugesMulticallRepository {
-  multicall: Contract;
-
-  constructor(
-    multicallAddress: string,
-    private chainId: Network,
-    provider: Provider
-  ) {
-    this.multicall = Multicall(multicallAddress, provider);
-  }
+  constructor(private multicall: Multicall, private chainId: Network) {}
 
   async getTotalSupplies(
     gaugeAddresses: string[]
   ): Promise<{ [gaugeAddress: string]: number }> {
-    const payload = gaugeAddresses.map((gaugeAddress) => [
-      gaugeAddress,
-      liquidityGaugeV5Interface.encodeFunctionData('totalSupply', []),
-    ]);
-    const [, res] = await this.multicall.aggregate(payload);
+    const payload = gaugeAddresses.map((gaugeAddress) => ({
+      target: gaugeAddress,
+      callData: liquidityGaugeV5Interface.encodeFunctionData('totalSupply', []),
+    }));
+    const [, res] = await this.multicall.callStatic.aggregate(payload);
     // Handle 0x
     const res0x = res.map((r: string) => (r == '0x' ? '0x0' : r));
 
@@ -64,11 +58,14 @@ export class LiquidityGaugesMulticallRepository {
   async getWorkingSupplies(
     gaugeAddresses: string[]
   ): Promise<{ [gaugeAddress: string]: number }> {
-    const payload = gaugeAddresses.map((gaugeAddress) => [
-      gaugeAddress,
-      liquidityGaugeV5Interface.encodeFunctionData('working_supply', []),
-    ]);
-    const [, res] = await this.multicall.aggregate(payload);
+    const payload = gaugeAddresses.map((gaugeAddress) => ({
+      target: gaugeAddress,
+      callData: liquidityGaugeV5Interface.encodeFunctionData(
+        'working_supply',
+        []
+      ),
+    }));
+    const [, res] = await this.multicall.callStatic.aggregate(payload);
     // Handle 0x
     const res0x = res.map((r: string) => (r == '0x' ? '0x0' : r));
 
@@ -88,11 +85,14 @@ export class LiquidityGaugesMulticallRepository {
   ): Promise<{ [gaugeAddress: string]: number }> {
     let rewardCounts;
     if (this.chainId == 1) {
-      const payload = gaugeAddresses.map((gaugeAddress) => [
-        gaugeAddress,
-        liquidityGaugeV5Interface.encodeFunctionData('reward_count', []),
-      ]);
-      const [, res] = await this.multicall.aggregate(payload);
+      const payload = gaugeAddresses.map((gaugeAddress) => ({
+        target: gaugeAddress,
+        callData: liquidityGaugeV5Interface.encodeFunctionData(
+          'reward_count',
+          []
+        ),
+      }));
+      const [, res] = await this.multicall.callStatic.aggregate(payload);
       // Handle 0x return values
       const res0x = res.map((r: string) => (r == '0x' ? '0x0' : r));
 
@@ -130,17 +130,20 @@ export class LiquidityGaugesMulticallRepository {
       .map((gaugeAddress, gaugeIndex) => {
         const calls = [];
         for (let i = 0; i < rewardCounts[gaugeAddress]; i++) {
-          calls.push([
-            gaugeAddress,
-            liquidityGaugeV5Interface.encodeFunctionData('reward_tokens', [i]),
-          ]);
+          calls.push({
+            target: gaugeAddress,
+            callData: liquidityGaugeV5Interface.encodeFunctionData(
+              'reward_tokens',
+              [i]
+            ),
+          });
         }
         startIndexes[gaugeIndex + 1] =
           startIndexes[gaugeIndex] + rewardCounts[gaugeAddress];
         return calls;
       })
       .flat();
-    const [, res] = await this.multicall.aggregate(payload);
+    const [, res] = await this.multicall.callStatic.aggregate(payload);
 
     const rewardTokens = gaugesWithRewards.reduce(
       (p: { [key: string]: string[] }, a, i) => {
@@ -178,19 +181,20 @@ export class LiquidityGaugesMulticallRepository {
       .map((gaugeAddress, gaugeIndex) => {
         const calls = [];
         for (let i = 0; i < rewardTokens[gaugeAddress].length; i++) {
-          calls.push([
-            gaugeAddress,
-            liquidityGaugeV5Interface.encodeFunctionData('reward_data', [
-              rewardTokens[gaugeAddress][i],
-            ]),
-          ]);
+          calls.push({
+            target: gaugeAddress,
+            callData: liquidityGaugeV5Interface.encodeFunctionData(
+              'reward_data',
+              [rewardTokens[gaugeAddress][i]]
+            ),
+          });
         }
         startIndexes[gaugeIndex + 1] =
           startIndexes[gaugeIndex] + rewardTokens[gaugeAddress].length;
         return calls;
       })
       .flat();
-    const [, res] = (await this.multicall.aggregate(payload)) as [
+    const [, res] = (await this.multicall.callStatic.aggregate(payload)) as [
       unknown,
       string[]
     ];

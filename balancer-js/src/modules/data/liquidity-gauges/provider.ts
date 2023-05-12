@@ -8,8 +8,8 @@ import type {
   SubgraphLiquidityGauge,
 } from '@/modules/subgraph/subgraph';
 import type { Findable } from '../types';
-import type { Provider } from '@ethersproject/providers';
 import type { Network } from '@/types';
+import { Multicall } from '@/contracts';
 
 export interface LiquidityGauge {
   id: string;
@@ -39,23 +39,17 @@ export class LiquidityGaugeSubgraphRPCProvider
 
   constructor(
     subgraphUrl: string,
-    multicallAddress: string,
+    multicall: Multicall,
     gaugeControllerAddress: string,
-    private chainId: Network,
-    provider: Provider
+    private chainId: Network
   ) {
     if (gaugeControllerAddress) {
       this.gaugeController = new GaugeControllerMulticallRepository(
-        multicallAddress,
-        gaugeControllerAddress,
-        provider
+        multicall,
+        gaugeControllerAddress
       );
     }
-    this.multicall = new LiquidityGaugesMulticallRepository(
-      multicallAddress,
-      chainId,
-      provider
-    );
+    this.multicall = new LiquidityGaugesMulticallRepository(multicall, chainId);
     this.subgraph = new LiquidityGaugesSubgraphRepository(subgraphUrl);
   }
 
