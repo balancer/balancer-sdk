@@ -57,118 +57,6 @@ export class Exit {
     this.relayer = contracts.relayer;
   }
 
-  private async getExit(
-    poolId: string,
-    amountBptIn: string,
-    userAddress: string,
-    signer: JsonRpcSigner,
-    doUnwrap: boolean,
-    simulationType: SimulationType,
-    authorisation?: string
-  ): Promise<{
-    unwrap: boolean;
-    tokensOut: string[];
-    exitPaths: Node[][];
-    isProportional: boolean;
-    expectedAmountsOut: string[];
-    expectedAmountsOutByExitPath: string[];
-  }> {
-    // Create nodes and order by breadth first - initially trys with no unwrapping
-    const orderedNodes = await this.poolGraph.getGraphNodes(
-      false,
-      poolId,
-      doUnwrap
-    );
-
-    const isProportional = PoolGraph.isProportionalPools(orderedNodes);
-    debugLog(`isProportional, ${isProportional}`);
-
-    let exitPaths: Node[][] = [];
-    let tokensOutByExitPath: string[] = [];
-    let tokensOut: string[] = [];
-
-    const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
-    const outputBalances = outputNodes.map((n) => n.balance);
-    tokensOutByExitPath = outputNodes.map((n) => n.address.toLowerCase());
-
-    tokensOut = [...new Set(tokensOutByExitPath)].sort();
-
-    if (isProportional) {
-      // All proportional will have single path from root node, exiting proportionally by ref all the way to leafs
-      const path = orderedNodes.map((node, i) => {
-        // First node should exit with full BPT amount in
-        if (i === 0) node.index = amountBptIn;
-        return node;
-      });
-      exitPaths[0] = path;
-    } else {
-      // Create exit paths for each output node and splits amount in proportionally between them
-      exitPaths = this.getExitPaths(outputNodes, amountBptIn);
-    }
-
-    // Create calls with minimum expected amount out for each exit path
-    const {
-      multiRequests,
-      encodedCall: queryData,
-      outputIndexes,
-    } = await this.createCalls(
-      exitPaths,
-      userAddress,
-      isProportional,
-      undefined,
-      authorisation
-    );
-
-    const expectedAmountsOutByExitPath = await this.amountsOutByExitPath(
-      userAddress,
-      multiRequests,
-      queryData,
-      orderedNodes[0].address,
-      outputIndexes,
-      signer,
-      simulationType
-    );
-
-    const hasSufficientBalance = outputBalances.every((balance, i) =>
-      BigNumber.from(balance).gt(expectedAmountsOutByExitPath[i])
-    );
-
-    if (!hasSufficientBalance) {
-      if (doUnwrap)
-        /**
-         * This case might happen when a whale tries to exit with an amount that
-         * is at the same time larger than both main and wrapped token balances
-         */
-        throw new Error(
-          'Insufficient pool balance to perform generalised exit - try exitting with smaller amounts'
-        );
-      else
-        return await this.getExit(
-          poolId,
-          amountBptIn,
-          userAddress,
-          signer,
-          true,
-          simulationType,
-          authorisation
-        );
-    } else {
-      const expectedAmountsOut = this.amountsOutByTokenOut(
-        tokensOut,
-        tokensOutByExitPath,
-        expectedAmountsOutByExitPath
-      );
-      return {
-        unwrap: doUnwrap,
-        tokensOut,
-        exitPaths,
-        isProportional,
-        expectedAmountsOut,
-        expectedAmountsOutByExitPath,
-      };
-    }
-  }
-
   async getExitInfo(
     poolId: string,
     amountBptIn: string,
@@ -300,6 +188,118 @@ export class Exit {
       minAmountsOut: minAmountsOutByTokenOut,
       priceImpact,
     };
+  }
+
+  private async getExit(
+    poolId: string,
+    amountBptIn: string,
+    userAddress: string,
+    signer: JsonRpcSigner,
+    doUnwrap: boolean,
+    simulationType: SimulationType,
+    authorisation?: string
+  ): Promise<{
+    unwrap: boolean;
+    tokensOut: string[];
+    exitPaths: Node[][];
+    isProportional: boolean;
+    expectedAmountsOut: string[];
+    expectedAmountsOutByExitPath: string[];
+  }> {
+    // Create nodes and order by breadth first - initially trys with no unwrapping
+    const orderedNodes = await this.poolGraph.getGraphNodes(
+      false,
+      poolId,
+      doUnwrap
+    );
+
+    const isProportional = PoolGraph.isProportionalPools(orderedNodes);
+    debugLog(`isProportional, ${isProportional}`);
+
+    let exitPaths: Node[][] = [];
+    let tokensOutByExitPath: string[] = [];
+    let tokensOut: string[] = [];
+
+    const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
+    const outputBalances = outputNodes.map((n) => n.balance);
+    tokensOutByExitPath = outputNodes.map((n) => n.address.toLowerCase());
+
+    tokensOut = [...new Set(tokensOutByExitPath)].sort();
+
+    if (isProportional) {
+      // All proportional will have single path from root node, exiting proportionally by ref all the way to leafs
+      const path = orderedNodes.map((node, i) => {
+        // First node should exit with full BPT amount in
+        if (i === 0) node.index = amountBptIn;
+        return node;
+      });
+      exitPaths[0] = path;
+    } else {
+      // Create exit paths for each output node and splits amount in proportionally between them
+      exitPaths = this.getExitPaths(outputNodes, amountBptIn);
+    }
+
+    // Create calls with minimum expected amount out for each exit path
+    const {
+      multiRequests,
+      encodedCall: queryData,
+      outputIndexes,
+    } = await this.createCalls(
+      exitPaths,
+      userAddress,
+      isProportional,
+      undefined,
+      authorisation
+    );
+
+    const expectedAmountsOutByExitPath = await this.amountsOutByExitPath(
+      userAddress,
+      multiRequests,
+      queryData,
+      orderedNodes[0].address,
+      outputIndexes,
+      signer,
+      simulationType
+    );
+
+    const hasSufficientBalance = outputBalances.every((balance, i) =>
+      BigNumber.from(balance).gt(expectedAmountsOutByExitPath[i])
+    );
+
+    if (!hasSufficientBalance) {
+      if (doUnwrap)
+        /**
+         * This case might happen when a whale tries to exit with an amount that
+         * is at the same time larger than both main and wrapped token balances
+         */
+        throw new Error(
+          'Insufficient pool balance to perform generalised exit - try exitting with smaller amounts'
+        );
+      else
+        return await this.getExit(
+          poolId,
+          amountBptIn,
+          userAddress,
+          signer,
+          true,
+          simulationType,
+          authorisation
+        );
+    } else {
+      const expectedAmountsOut = this.amountsOutByTokenOut(
+        tokensOut,
+        tokensOutByExitPath,
+        expectedAmountsOutByExitPath
+      );
+      return {
+        unwrap: doUnwrap,
+        tokensOut,
+        exitPaths,
+        isProportional,
+        expectedAmountsOut,
+        expectedAmountsOutByExitPath,
+      };
+    }
   }
 
   /*
