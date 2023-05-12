@@ -122,22 +122,19 @@ const exit = async () => {
   });
 
   // Use SDK to create exit transaction
-  const { expectedAmountsOut, tokensOut } =
-    await balancer.pools.generalisedExit(
+  const { estimatedAmountsOut, tokensOut, needsUnwrap } =
+    await balancer.pools.getExitInfo(
       testPool.id,
       amount,
       signerAddress,
-      slippage,
-      signer,
-      SimulationType.VaultModel,
-      undefined
+      signer
     );
 
   // User reviews expectedAmountOut
-  console.log(' -- Simulating using Vault Model -- ');
+  console.log(' -- getExitInfo() -- ');
   console.table({
     tokensOut: truncateAddresses([testPool.address, ...tokensOut]),
-    expectedAmountsOut: ['0', ...expectedAmountsOut],
+    estimatedAmountsOut: ['0', ...estimatedAmountsOut],
   });
 
   // User approves relayer
@@ -160,6 +157,7 @@ const exit = async () => {
     slippage,
     signer,
     SimulationType.Static,
+    needsUnwrap,
     relayerAuth
   );
 

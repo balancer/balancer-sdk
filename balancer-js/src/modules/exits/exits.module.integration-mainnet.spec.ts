@@ -7,20 +7,13 @@ import {
   GraphQLQuery,
   GraphQLArgs,
   Network,
-  truncateAddresses,
-  subSlippage,
+  SimulationType,
 } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { Contracts } from '@/modules/contracts/contracts.module';
-import {
-  accuracy,
-  forkSetup,
-  sendTransactionGetBalances,
-} from '@/test/lib/utils';
+import { accuracy, forkSetup } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
-import { Relayer } from '@/modules/relayer/relayer.module';
-import { SimulationType } from '../simulation/simulation.module';
+import { testGeneralisedExit } from '@/test/lib/exitHelper';
 
 /**
  * -- Integration tests for generalisedExit --
@@ -89,103 +82,8 @@ const sdk = new BalancerSDK({
 const { pools } = sdk;
 const provider = new JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
-const { contracts, contractAddresses } = new Contracts(
-  network as number,
-  provider
-);
-const relayer = contractAddresses.relayer;
 
-const testFlow = async (
-  pool: { id: string; address: string; slot: number },
-  amount: string
-): Promise<{
-  expectedAmountsOut: string[];
-  gasUsed: BigNumber;
-}> => {
-  const slippage = '10'; // 10 bps = 0.1%
-
-  const tokens = [pool.address];
-  const slots = [pool.slot];
-  const balances = [amount];
-
-  await forkSetup(
-    signer,
-    tokens,
-    slots,
-    balances,
-    jsonRpcUrl as string,
-    blockNumber
-  );
-
-  const signerAddress = await signer.getAddress();
-
-  const query = await pools.generalisedExit(
-    pool.id,
-    amount,
-    signerAddress,
-    slippage,
-    signer,
-    SimulationType.VaultModel
-  );
-
-  // User reviews expectedAmountOut
-  console.log(' -- Simulating using Vault Model -- ');
-  console.table({
-    tokensOut: truncateAddresses([pool.address, ...query.tokensOut]),
-    expectedAmountsOut: ['0', ...query.expectedAmountsOut],
-  });
-
-  const authorisation = await Relayer.signRelayerApproval(
-    relayer,
-    signerAddress,
-    signer,
-    contracts.vault
-  );
-
-  const { to, encodedCall, tokensOut, expectedAmountsOut, minAmountsOut } =
-    await pools.generalisedExit(
-      pool.id,
-      amount,
-      signerAddress,
-      slippage,
-      signer,
-      SimulationType.Static,
-      authorisation
-    );
-
-  const { transactionReceipt, balanceDeltas, gasUsed } =
-    await sendTransactionGetBalances(
-      tokensOut,
-      signer,
-      signerAddress,
-      to,
-      encodedCall
-    );
-
-  console.log(' -- Simulating using Static Call -- ');
-  console.table({
-    tokensOut: truncateAddresses([pool.address, ...tokensOut]),
-    minAmountsOut: ['0', ...minAmountsOut],
-    expectedAmountsOut: ['0', ...expectedAmountsOut],
-    balanceDeltas: balanceDeltas.map((b) => b.toString()),
-  });
-  console.log('Gas used', gasUsed.toString());
-
-  expect(transactionReceipt.status).to.eq(1);
-  balanceDeltas.forEach((b, i) => {
-    const minOut = BigNumber.from(minAmountsOut[i]);
-    expect(b.gte(minOut)).to.be.true;
-    expect(accuracy(b, BigNumber.from(expectedAmountsOut[i]))).to.be.closeTo(
-      1,
-      1e-2
-    ); // inaccuracy should be less than 1%
-  });
-  const expectedMins = expectedAmountsOut.map((a) =>
-    subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
-  );
-  expect(expectedMins).to.deep.eq(minAmountsOut);
-  return { expectedAmountsOut, gasUsed };
-};
+const simulationType = SimulationType.Static;
 
 describe('generalised exit execution', async function () {
   this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
@@ -204,11 +102,26 @@ describe('generalised exit execution', async function () {
     // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
     const mainExitAmount = unwrapExitAmount.div(amountRatio);
 
+    beforeEach(async () => {
+      await forkSetup(
+        signer,
+        [pool.address],
+        [pool.slot],
+        [unwrapExitAmount.toString()],
+        jsonRpcUrl as string,
+        blockNumber
+      );
+    });
+
     context('exit by unwrapping tokens', async () => {
       it('should exit pool correctly', async () => {
-        const { expectedAmountsOut, gasUsed } = await testFlow(
+        const { expectedAmountsOut, gasUsed } = await testGeneralisedExit(
           pool,
-          unwrapExitAmount.toString()
+          pools,
+          signer,
+          unwrapExitAmount.toString(),
+          simulationType,
+          true
         );
         unwrappingTokensAmountsOut = expectedAmountsOut;
         unwrappingTokensGasUsed = gasUsed;
@@ -217,9 +130,13 @@ describe('generalised exit execution', async function () {
 
     context('exit to main tokens directly', async () => {
       it('should exit pool correctly', async () => {
-        const { expectedAmountsOut, gasUsed } = await testFlow(
+        const { expectedAmountsOut, gasUsed } = await testGeneralisedExit(
           pool,
-          mainExitAmount.toString()
+          pools,
+          signer,
+          mainExitAmount.toString(),
+          simulationType,
+          false
         );
         mainTokensAmountsOut = expectedAmountsOut;
         mainTokensGasUsed = gasUsed;

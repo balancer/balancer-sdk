@@ -1,11 +1,15 @@
-import { PoolWithMethods } from '@/types';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';
-import { expect } from 'chai';
 import { formatFixed } from '@ethersproject/bignumber';
-import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
+import { expect } from 'chai';
+
+import { truncateAddresses, removeItem, SimulationType } from '@/.';
+import { insert, addSlippage, subSlippage } from '@/lib/utils';
+import { Contracts } from '@/modules/contracts/contracts.module';
+import { Pools } from '@/modules/pools';
+import { Relayer } from '@/modules/relayer/relayer.module';
 import { accuracy, sendTransactionGetBalances } from '@/test/lib/utils';
-import { insert } from '@/lib/utils';
+import { PoolWithMethods } from '@/types';
 
 export const testExactBptIn = async (
   pool: PoolWithMethods,
@@ -150,4 +154,95 @@ export const testRecoveryExit = async (
     formatFixed(BigNumber.from(priceImpact), 18)
   );
   expect(priceImpactFloat).to.be.closeTo(0, 0.01); // exiting proportionally should have price impact near zero
+};
+
+export const testGeneralisedExit = async (
+  pool: { id: string; address: string; slot: number },
+  pools: Pools,
+  signer: JsonRpcSigner,
+  exitAmount: string,
+  simulationType: SimulationType.Static | SimulationType.Tenderly,
+  expectUnwrap = false
+): Promise<{
+  expectedAmountsOut: string[];
+  gasUsed: BigNumber;
+}> => {
+  const slippage = '10'; // 10 bps = 0.1%
+
+  const signerAddress = await signer.getAddress();
+  const { contracts, contractAddresses } = new Contracts(
+    signer.provider.network.chainId,
+    signer.provider
+  );
+
+  // Replicating UI user flow:
+
+  // 1. Gets exitInfo
+  //    - this helps user to decide if they will approve relayer, etc by returning estimated amounts out/pi.
+  //    - also returns tokensOut and whether or not unwrap should be used
+  const exitInfo = await pools.getExitInfo(
+    pool.id,
+    exitAmount,
+    signerAddress,
+    signer
+  );
+
+  const authorisation = await Relayer.signRelayerApproval(
+    contractAddresses.relayer,
+    signerAddress,
+    signer,
+    contracts.vault
+  );
+
+  // 2. Get call data and expected/min amounts out
+  //    - Uses a Static/Tenderly call to simulate tx then applies slippage
+  const { to, encodedCall, tokensOut, expectedAmountsOut, minAmountsOut } =
+    await pools.generalisedExit(
+      pool.id,
+      exitAmount,
+      signerAddress,
+      slippage,
+      signer,
+      simulationType,
+      exitInfo.needsUnwrap,
+      authorisation
+    );
+
+  // 3. Sends tx
+  const { transactionReceipt, balanceDeltas, gasUsed } =
+    await sendTransactionGetBalances(
+      [pool.address, ...tokensOut],
+      signer,
+      signerAddress,
+      to,
+      encodedCall
+    );
+
+  const tokensOutDeltas = removeItem(balanceDeltas, 0);
+  console.table({
+    tokensOut: truncateAddresses(tokensOut),
+    estimateAmountsOut: exitInfo.estimatedAmountsOut,
+    minAmountsOut: minAmountsOut,
+    expectedAmountsOut: expectedAmountsOut,
+    balanceDeltas: tokensOutDeltas.map((b) => b.toString()),
+  });
+  console.log('Gas used', gasUsed.toString());
+  console.log(`Should unwrap: `, exitInfo.needsUnwrap);
+
+  expect(transactionReceipt.status).to.eq(1);
+  expect(balanceDeltas[0].toString()).to.eq(exitAmount.toString());
+  expect(exitInfo.needsUnwrap).to.eq(expectUnwrap);
+  tokensOutDeltas.forEach((b, i) => {
+    const minOut = BigNumber.from(minAmountsOut[i]);
+    expect(b.gte(minOut)).to.be.true;
+    expect(accuracy(b, BigNumber.from(expectedAmountsOut[i]))).to.be.closeTo(
+      1,
+      1e-2
+    ); // inaccuracy should be less than 1%
+  });
+  const expectedMins = expectedAmountsOut.map((a) =>
+    subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
+  );
+  expect(expectedMins).to.deep.eq(minAmountsOut);
+  return { expectedAmountsOut, gasUsed };
 };
