@@ -635,6 +635,25 @@ export const ADDRESSES = {
       symbol: 'bb-rf-dai',
       slot: 52,
     },
+    bbUSD_PLUS: {
+      id: '0x519cce718fcd11ac09194cff4517f12d263be067000000000000000000000382',
+      address: '0x519cCe718FCD11AC09194CFf4517F12D263BE067',
+      decimals: 18,
+      symbol: 'bbUSD_PLUS',
+      slot: 0,
+    },
+    bbDAI_PLUS: {
+      address: '0x117a3d474976274b37b7b94af5dcade5c90c6e85',
+      decimals: 18,
+      symbol: 'bbDAI_PLUS',
+      slot: 52,
+    },
+    bbUSDC_PLUS: {
+      address: '0x284eb68520c8fa83361c1a3a5910aec7f873c18b',
+      decimals: 18,
+      symbol: 'bbUSDC_PLUS',
+      slot: 52,
+    },
   },
   [Network.GNOSIS]: {
     WETH: {
