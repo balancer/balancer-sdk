@@ -754,68 +754,16 @@ export class Exit {
     const linearPoolType = node.parent?.type as string;
     console.log('linear type: ', linearPoolType);
 
-    let encodedCall = '';
-
-    switch (linearPoolType) {
-      case 'ERC4626Linear':
-        {
-          encodedCall = Relayer.encodeUnwrapERC4626({
-            wrappedToken: node.address,
-            sender,
-            recipient,
-            amount,
-            outputReference,
-          });
-        }
-        break;
-      case 'AaveLinear':
-        {
-          encodedCall = Relayer.encodeUnwrapAaveStaticToken({
-            staticToken: node.address,
-            sender,
-            recipient,
-            amount,
-            toUnderlying: true,
-            outputReference,
-          });
-        }
-        break;
-      case 'EulerLinear':
-        {
-          encodedCall = Relayer.encodeUnwrapEuler({
-            wrappedToken: node.address,
-            sender,
-            recipient,
-            amount,
-            outputReference,
-          });
-        }
-        break;
-      case 'GearboxLinear':
-        {
-          encodedCall = Relayer.encodeUnwrapGearbox({
-            wrappedToken: node.address,
-            sender,
-            recipient,
-            dieselAmount: amount,
-            outputReference,
-          });
-        }
-        break;
-      case 'ReaperLinear':
-        {
-          encodedCall = Relayer.encodeUnwrapReaper({
-            vaultToken: node.address,
-            sender,
-            recipient,
-            amount,
-            outputReference,
-          });
-        }
-        break;
-      default:
-        throw new Error('Unsupported linear pool type');
-    }
+    const encodedCall = Relayer.encodeUnwrap(
+      {
+        wrappedToken: node.address,
+        sender,
+        recipient,
+        amount,
+        outputReference,
+      },
+      linearPoolType
+    );
 
     // debugLog('\nUwrap:');
     // debugLog(JSON.stringify(call));

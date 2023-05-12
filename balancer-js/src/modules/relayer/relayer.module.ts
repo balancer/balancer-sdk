@@ -8,20 +8,18 @@ import {
   EncodeExitPoolInput,
   EncodeJoinPoolInput,
   EncodeUnwrapAaveStaticTokenInput,
-  EncodeUnwrapERC4626Input,
-  EncodeUnwrapGearboxInput,
-  EncodeUnwrapReaperInput,
-  EncodeUnwrapUnbuttonTokenInput,
+  EncodeUnwrapInput,
   EncodeUnwrapWstETHInput,
   EncodeWrapAaveDynamicTokenInput,
   ExitPoolData,
   JoinPoolData,
 } from './types';
-import { ExitPoolRequest, JoinPoolRequest } from '@/types';
+import { ExitPoolRequest, JoinPoolRequest, PoolType } from '@/types';
 import { Swap } from '../swaps/types';
 import { RelayerAuthorization } from '@/lib/utils';
 import FundManagementStruct = IVault.FundManagementStruct;
 import SingleSwapStruct = IVault.SingleSwapStruct;
+import { isLinearish } from '@/lib/utils';
 
 export * from './types';
 
@@ -151,60 +149,68 @@ export class Relayer {
     ]);
   }
 
-  static encodeUnwrapERC4626(params: EncodeUnwrapERC4626Input): string {
-    return relayerLibrary.encodeFunctionData('unwrapERC4626', [
-      params.wrappedToken,
-      params.sender,
-      params.recipient,
-      params.amount,
-      params.outputReference,
-    ]);
-  }
-
-  static encodeUnwrapEuler(params: EncodeUnwrapERC4626Input): string {
-    return relayerLibrary.encodeFunctionData('unwrapEuler', [
-      params.wrappedToken,
-      params.sender,
-      params.recipient,
-      params.amount,
-      params.outputReference,
-    ]);
-  }
-
-  static encodeUnwrapGearbox(params: EncodeUnwrapGearboxInput): string {
-    return relayerLibrary.encodeFunctionData('unwrapGearbox', [
-      params.wrappedToken,
-      params.sender,
-      params.recipient,
-      params.dieselAmount,
-      params.outputReference,
-    ]);
-  }
-
-  static encodeUnwrapReaper(params: EncodeUnwrapReaperInput): string {
-    return relayerLibrary.encodeFunctionData('unwrapReaperVaultToken', [
-      params.vaultToken,
-      params.sender,
-      params.recipient,
-      params.amount,
-      params.outputReference,
-    ]);
-  }
-
-  static encodeUnwrapUnbuttonToken(
-    params: EncodeUnwrapUnbuttonTokenInput
-  ): string {
-    return relayerLibrary.encodeFunctionData('unwrapUnbuttonToken', [
-      params.wrapperToken,
-      params.sender,
-      params.recipient,
-      params.amount,
-      params.outputReference,
-    ]);
-  }
-
   static encodeUnwrapWstETH(params: EncodeUnwrapWstETHInput): string {
     return relayerLibrary.encodeFunctionData('unwrapWstETH', [
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeUnwrap(
+    params: EncodeUnwrapInput,
+    linearPoolType: string
+  ): string {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let unwrapType: any;
+
+    switch (linearPoolType) {
+      case 'AaveLinear':
+        return this.encodeUnwrapAaveStaticToken({
+          staticToken: params.wrappedToken,
+          sender: params.sender,
+          recipient: params.recipient,
+          amount: params.amount,
+          toUnderlying: true,
+          outputReference: params.outputReference,
+        });
+      case 'Linear':
+        unwrapType = 'unwrapCompoundV2';
+        break;
+      case 'EulerLinear':
+        unwrapType = 'unwrapEuler';
+        break;
+      case 'ERC4626Linear':
+        unwrapType = 'unwrapERC4626';
+        break;
+      case 'BeefyLinear':
+        unwrapType = 'unwrapBeefy';
+        break;
+      case 'GearboxLinear':
+        unwrapType = 'unwrapGearbox';
+        break;
+      case 'MidasLinear':
+        unwrapType = 'unwrapMidas';
+        break;
+      case 'ReaperLinear':
+        unwrapType = 'unwrapReaperVaultToken';
+        break;
+      case 'SiloLinear':
+        unwrapType = 'unwrapSilo';
+        break;
+      case 'TetuLinear':
+        unwrapType = 'unwrapTetu';
+        break;
+      case 'YearnLinear':
+        unwrapType = 'unwrapYearn';
+        break;
+      default:
+        throw new Error('Unsupported linear pool type');
+    }
+
+    return relayerLibrary.encodeFunctionData(unwrapType, [
+      params.wrappedToken,
       params.sender,
       params.recipient,
       params.amount,

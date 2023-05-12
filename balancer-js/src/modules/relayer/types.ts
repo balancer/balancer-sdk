@@ -63,32 +63,8 @@ export interface EncodeUnwrapAaveStaticTokenInput {
   outputReference: BigNumberish;
 }
 
-export interface EncodeUnwrapERC4626Input {
+export interface EncodeUnwrapInput {
   wrappedToken: string;
-  sender: string;
-  recipient: string;
-  amount: BigNumberish;
-  outputReference: BigNumberish;
-}
-
-export interface EncodeUnwrapGearboxInput {
-  wrappedToken: string;
-  sender: string;
-  recipient: string;
-  dieselAmount: BigNumberish;
-  outputReference: BigNumberish;
-}
-
-export interface EncodeUnwrapReaperInput {
-  vaultToken: string;
-  sender: string;
-  recipient: string;
-  amount: BigNumberish;
-  outputReference: BigNumberish;
-}
-
-export interface EncodeUnwrapUnbuttonTokenInput {
-  wrapperToken: string;
   sender: string;
   recipient: string;
   amount: BigNumberish;
