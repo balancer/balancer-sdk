@@ -36,6 +36,22 @@ import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
 
 const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
+export interface GeneralisedExitOutput {
+  to: string;
+  encodedCall: string;
+  tokensOut: string[];
+  expectedAmountsOut: string[];
+  minAmountsOut: string[];
+  priceImpact: string;
+}
+
+export interface ExitInfo {
+  tokensOut: string[];
+  estimatedAmountsOut: string[];
+  priceImpact: string;
+  needsUnwrap: boolean;
+}
+
 // Quickly switch useful debug logs on/off
 const DEBUG = false;
 
@@ -175,12 +191,7 @@ export class Exit {
     userAddress: string,
     signer: JsonRpcSigner,
     authorisation?: string
-  ): Promise<{
-    tokensOut: string[];
-    estimatedAmountsOut: string[];
-    priceImpact: string;
-    needsUnwrap: boolean;
-  }> {
+  ): Promise<ExitInfo> {
     debugLog(`\n--- getExitInfo()`);
     /*
     Overall exit flow description:
@@ -226,14 +237,7 @@ export class Exit {
     simulationType: SimulationType, // TODO - Narrow this to only static/tenderly as options
     unwrapTokens: boolean,
     authorisation?: string
-  ): Promise<{
-    to: string;
-    encodedCall: string;
-    tokensOut: string[];
-    expectedAmountsOut: string[];
-    minAmountsOut: string[];
-    priceImpact: string;
-  }> {
+  ): Promise<GeneralisedExitOutput> {
     debugLog(
       `\n--- exitPool(): unwrapTokens, ${unwrapTokens}, simulationType: ${simulationType}`
     );

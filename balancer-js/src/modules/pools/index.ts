@@ -14,7 +14,7 @@ import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
 import { Join } from '../joins/joins.module';
-import { Exit } from '../exits/exits.module';
+import { Exit, GeneralisedExitOutput, ExitInfo } from '../exits/exits.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
 import { Simulation, SimulationType } from '../simulation/simulation.module';
@@ -370,14 +370,7 @@ export class Pools implements Findable<PoolWithMethods> {
     simulationType: SimulationType,
     unwrapTokens: boolean,
     authorisation?: string
-  ): Promise<{
-    to: string;
-    encodedCall: string;
-    tokensOut: string[];
-    expectedAmountsOut: string[];
-    minAmountsOut: string[];
-    priceImpact: string;
-  }> {
+  ): Promise<GeneralisedExitOutput> {
     return this.exitService.buildExitCall(
       poolId,
       amount,
@@ -396,12 +389,7 @@ export class Pools implements Findable<PoolWithMethods> {
     userAddress: string,
     signer: JsonRpcSigner,
     authorisation?: string
-  ): Promise<{
-    tokensOut: string[];
-    estimatedAmountsOut: string[];
-    priceImpact: string;
-    needsUnwrap: boolean;
-  }> {
+  ): Promise<ExitInfo> {
     return this.exitService.getExitInfo(
       poolId,
       amountBptIn,
