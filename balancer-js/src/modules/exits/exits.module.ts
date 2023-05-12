@@ -36,6 +36,13 @@ import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
 
 const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
+// Quickly switch useful debug logs on/off
+const DEBUG = false;
+
+function debugLog(log: string) {
+  if (DEBUG) console.log(log);
+}
+
 export class Exit {
   private wrappedNativeAsset: string;
   private relayer: string;
@@ -67,6 +74,9 @@ export class Exit {
     minAmountsOut: string[];
     priceImpact: string;
   }> {
+    debugLog(
+      `\n--- exitPool(): unwrapTokens, ${unwrapTokens}, simulationType: ${simulationType}`
+    );
     /*
     Overall exit flow description:
     - Create calls with 0 expected min amount for each token out
@@ -161,8 +171,6 @@ export class Exit {
       }
     }
 
-    console.log('unwrapTokens', unwrapTokens);
-
     const expectedAmountsOutByTokenOut = this.amountsOutByTokenOut(
       tokensOut,
       tokensOutByExitPath,
@@ -176,6 +184,7 @@ export class Exit {
         slippage
       );
 
+    debugLog(`------------ Updating limits...`);
     // Create calls with minimum expected amount out for each exit path
     const { encodedCall, deltas } = await this.createCalls(
       exitPaths,
@@ -643,23 +652,6 @@ export class Exit {
     const outputReference = Relayer.toChainedReference(
       this.getOutputRef(exitPathIndex, exitChild.index)
     );
-
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${formatFixed(
-    //     node.proportionOfParent,
-    //     18
-    //   )}
-    //   ${node.exitAction}(
-    //     inputAmt: ${amount},
-    //     inputToken: ${node.address},
-    //     pool: ${node.id},
-    //     outputToken: ${exitChild.address},
-    //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)},
-    //     sender: ${sender},
-    //     recipient: ${recipient}
-    //   )`
-    // );
-
     const call: EncodeUnwrapERC4626Input = {
       wrappedToken: node.address,
       sender,
@@ -667,6 +659,8 @@ export class Exit {
       amount,
       outputReference,
     };
+    debugLog('\nUwrap:');
+    debugLog(JSON.stringify(call));
     const encodedCall = Relayer.encodeUnwrapERC4626(call);
 
     const modelRequest = VaultModel.mapUnwrapRequest(
@@ -729,24 +723,6 @@ export class Exit {
       this.getOutputRef(exitPathIndex, exitChild.index)
     );
 
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${formatFixed(
-    //     node.proportionOfParent,
-    //     18
-    //   )}
-    //   ${node.exitAction}(
-    //     inputAmt: ${amountIn},
-    //     inputToken: ${node.address},
-    //     pool: ${node.id},
-    //     outputToken: ${exitChild.address},
-    //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)},
-    //     sender: ${sender},
-    //     recipient: ${recipient},
-    //     fromInternalBalance: ${fromInternalBalance},
-    //     toInternalBalance: ${toInternalBalance}
-    //   )`
-    // );
-
     const call: Swap = {
       request,
       funds,
@@ -755,6 +731,8 @@ export class Exit {
       value: '0', // TODO: check if swap with ETH is possible in this case and handle it
       outputReference,
     };
+    debugLog('\nSwap:');
+    debugLog(JSON.stringify(call));
 
     const encodedCall = Relayer.encodeSwap(call);
 
@@ -857,25 +835,6 @@ export class Exit {
 
     const toInternalBalance = this.receivesFromInternal(exitChild);
 
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${formatFixed(
-    //     node.proportionOfParent,
-    //     18
-    //   )}
-    //   ${node.exitAction}(
-    //     poolId: ${node.id},
-    //     tokensOut: ${sortedTokens},
-    //     tokenOut: ${sortedTokens[sortedTokens.indexOf(tokenOut)].toString()},
-    //     amountOut: ${sortedAmounts[sortedTokens.indexOf(tokenOut)].toString()},
-    //     amountIn: ${amountIn},
-    //     minAmountOut: ${minAmountOut},
-    //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)},
-    //     sender: ${sender},
-    //     recipient: ${recipient},
-    //     toInternalBalance: ${toInternalBalance}
-    //   )`
-    // );
-
     const call = Relayer.formatExitPoolInput({
       poolId: node.id,
       poolKind: 0,
@@ -888,6 +847,9 @@ export class Exit {
       userData,
       toInternalBalance,
     });
+    debugLog('\nExit:');
+    debugLog(JSON.stringify(call));
+
     const encodedCall = Relayer.encodeExitPool(call);
     const modelRequest = VaultModel.mapExitPoolRequest(call);
 
@@ -969,25 +931,6 @@ export class Exit {
         key: Relayer.toChainedReference(this.getOutputRef(0, child.index)),
       };
     });
-
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${formatFixed(
-    //     node.proportionOfParent,
-    //     18
-    //   )}
-    //   ${node.exitAction}(
-    //     poolId: ${node.id},
-    //     tokensOut: ${sortedTokens},
-    //     tokenOut: ${sortedTokens[sortedTokens.indexOf(tokenOut)].toString()},
-    //     amountOut: ${sortedAmounts[sortedTokens.indexOf(tokenOut)].toString()},
-    //     amountIn: ${amountIn},
-    //     minAmountOut: ${minAmountOut},
-    //     outputRef: ${this.getOutputRef(exitPathIndex, exitChild.index)},
-    //     sender: ${sender},
-    //     recipient: ${recipient}
-    //   )`
-    // );
-
     // We have to use correct pool type based off following from Relayer:
     // enum PoolKind { WEIGHTED, LEGACY_STABLE, COMPOSABLE_STABLE, COMPOSABLE_STABLE_V2 }
     // (note only Weighted and COMPOSABLE_STABLE_V2 will support proportional exits)
@@ -1008,6 +951,8 @@ export class Exit {
       userData,
       toInternalBalance: false,
     });
+    debugLog('\nExitProportional:');
+    debugLog(JSON.stringify(call));
     const encodedCall = Relayer.encodeExitPool(call);
     const modelRequest = VaultModel.mapExitPoolRequest(call);
 
