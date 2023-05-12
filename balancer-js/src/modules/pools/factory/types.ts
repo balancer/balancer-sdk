@@ -16,6 +16,8 @@ export interface ComposableStableCreatePoolParameters
   rateProviders: string[];
   tokenRateCacheDurations: string[];
   exemptFromYieldProtocolFeeFlags: boolean[];
+
+  salt?: BytesLike;
 }
 
 export interface WeightedCreatePoolParameters extends CreatePoolParameters {
