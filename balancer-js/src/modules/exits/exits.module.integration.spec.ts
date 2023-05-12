@@ -1,26 +1,13 @@
 // yarn test:only ./src/modules/exits/exits.module.integration.spec.ts
 import dotenv from 'dotenv';
-import { expect } from 'chai';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
 
-import {
-  BalancerSDK,
-  GraphQLQuery,
-  GraphQLArgs,
-  Network,
-  truncateAddresses,
-} from '@/.';
-import { subSlippage } from '@/lib/utils/slippageHelper';
-import { Relayer } from '@/modules/relayer/relayer.module';
+import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '@/.';
 import { SimulationType } from '@/modules/simulation/simulation.module';
-import { Contracts } from '@/modules/contracts/contracts.module';
-import {
-  accuracy,
-  forkSetup,
-  sendTransactionGetBalances,
-} from '@/test/lib/utils';
+import { forkSetup } from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
+import { testGeneralisedExit } from '@/test/lib/exitHelper';
 
 /**
  * -- Integration tests for generalisedExit --
@@ -109,86 +96,24 @@ const sdk = new BalancerSDK({
 const { pools } = sdk;
 const provider = new JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
-const { contracts, contractAddresses } = new Contracts(
-  network as number,
-  provider
-);
-const relayer = contractAddresses.relayer;
 
-const testFlow = async (
-  pool: { id: string; address: string; slot: number },
-  amount: string,
-  simulationType = SimulationType.VaultModel
-) => {
-  const slippage = '10'; // 10 bps = 0.1%
-
-  const tokens = [pool.address];
-  const slots = [pool.slot];
-  const balances = [amount];
-
-  await forkSetup(
-    signer,
-    tokens,
-    slots,
-    balances,
-    jsonRpcUrl as string,
-    blockNumber
-  );
-
-  const signerAddress = await signer.getAddress();
-  const authorisation = await Relayer.signRelayerApproval(
-    relayer,
-    signerAddress,
-    signer,
-    contracts.vault
-  );
-
-  const { to, encodedCall, tokensOut, expectedAmountsOut, minAmountsOut } =
-    await pools.generalisedExit(
-      pool.id,
-      amount,
-      signerAddress,
-      slippage,
-      signer,
-      simulationType,
-      authorisation
-    );
-
-  const { transactionReceipt, balanceDeltas, gasUsed } =
-    await sendTransactionGetBalances(
-      tokensOut,
-      signer,
-      signerAddress,
-      to,
-      encodedCall
-    );
-
-  console.log('Gas used', gasUsed.toString());
-
-  console.table({
-    tokensOut: truncateAddresses(tokensOut),
-    minOut: minAmountsOut,
-    expectedOut: expectedAmountsOut,
-    balanceDeltas: balanceDeltas.map((b) => b.toString()),
-  });
-
-  expect(transactionReceipt.status).to.eq(1);
-  balanceDeltas.forEach((b, i) => {
-    const minOut = BigNumber.from(minAmountsOut[i]);
-    expect(b.gte(minOut)).to.be.true;
-    expect(accuracy(b, BigNumber.from(expectedAmountsOut[i]))).to.be.closeTo(
-      1,
-      1e-2
-    ); // inaccuracy should be less than 1%
-  });
-  const expectedMins = expectedAmountsOut.map((a) =>
-    subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
-  );
-  expect(expectedMins).to.deep.eq(minAmountsOut);
-};
+const simulationType = SimulationType.Static;
 
 describe('generalised exit execution', async function () {
   this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
+  let pool = { id: '', address: '', decimals: 0, slot: 0 };
+  let amount = '';
+
+  beforeEach(async () => {
+    await forkSetup(
+      signer,
+      [pool.address],
+      [pool.slot],
+      [amount],
+      jsonRpcUrl as string,
+      blockNumber
+    );
+  });
 
   /*
   bbamaiweth: ComposableStable, baMai/baWeth
@@ -197,11 +122,14 @@ describe('generalised exit execution', async function () {
   */
   context('boosted', async () => {
     if (!TEST_BOOSTED) return true;
-    const pool = addresses.bbamaiweth;
-    const amount = parseFixed('0.02', pool.decimals).toString();
+
+    before(() => {
+      pool = addresses.bbamaiweth;
+      amount = parseFixed('0.02', pool.decimals).toString();
+    });
 
     it('should exit pool correctly', async () => {
-      await testFlow(pool, amount);
+      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
     });
   });
 
@@ -212,11 +140,13 @@ describe('generalised exit execution', async function () {
     */
   context('boostedMeta', async () => {
     if (!TEST_BOOSTED_META) return true;
-    const pool = addresses.boostedMeta1;
-    const amount = parseFixed('0.05', pool.decimals).toString();
+    before(() => {
+      pool = addresses.boostedMeta1;
+      amount = parseFixed('0.05', pool.decimals).toString();
+    });
 
     it('should exit pool correctly', async () => {
-      await testFlow(pool, amount);
+      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
     });
   });
 
@@ -227,11 +157,13 @@ describe('generalised exit execution', async function () {
     */
   context('boostedMetaAlt', async () => {
     if (!TEST_BOOSTED_META_ALT) return true;
-    const pool = addresses.boostedMetaAlt1;
-    const amount = parseFixed('0.05', pool.decimals).toString();
+    before(() => {
+      pool = addresses.boostedMetaAlt1;
+      amount = parseFixed('0.05', pool.decimals).toString();
+    });
 
     it('should exit pool correctly', async () => {
-      await testFlow(pool, amount);
+      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
     });
   });
 
@@ -244,25 +176,14 @@ describe('generalised exit execution', async function () {
   */
   context('boostedMetaBig', async () => {
     if (!TEST_BOOSTED_META_BIG) return true;
-    const pool = addresses.boostedMetaBig1;
-    const amount = parseFixed('0.05', pool.decimals).toString();
 
-    context('using simulation type VaultModel', async () => {
-      it('should exit pool correctly', async () => {
-        await testFlow(pool, amount, SimulationType.VaultModel);
-      });
+    before(() => {
+      pool = addresses.boostedMetaBig1;
+      amount = parseFixed('0.05', pool.decimals).toString();
     });
 
-    context('using simulation type Tenderly', async () => {
-      it('should exit pool correctly', async () => {
-        await testFlow(pool, amount, SimulationType.Tenderly);
-      });
-    });
-
-    context('using simulation type Satic', async () => {
-      it('should exit pool correctly', async () => {
-        await testFlow(pool, amount, SimulationType.Static);
-      });
+    it('should exit pool correctly', async () => {
+      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
     });
   });
 
@@ -273,11 +194,14 @@ describe('generalised exit execution', async function () {
   */
   context('boostedWeightedSimple', async () => {
     if (!TEST_BOOSTED_WEIGHTED_SIMPLE) return true;
-    const pool = addresses.boostedWeightedSimple1;
-    const amount = parseFixed('0.05', pool.decimals).toString();
+
+    before(() => {
+      pool = addresses.boostedWeightedSimple1;
+      amount = parseFixed('0.05', pool.decimals).toString();
+    });
 
     it('should exit pool correctly', async () => {
-      await testFlow(pool, amount);
+      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
     });
   });
 
@@ -290,11 +214,14 @@ describe('generalised exit execution', async function () {
   */
   context('boostedWeightedGeneral', async () => {
     if (!TEST_BOOSTED_WEIGHTED_GENERAL) return true;
-    const pool = addresses.boostedMeta1;
-    const amount = parseFixed('0.05', pool.decimals).toString();
+
+    before(() => {
+      pool = addresses.boostedMeta1;
+      amount = parseFixed('0.05', pool.decimals).toString();
+    });
 
     it('should exit pool correctly', async () => {
-      await testFlow(pool, amount);
+      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
     });
   });
 
@@ -306,11 +233,14 @@ describe('generalised exit execution', async function () {
   */
   context('boostedWeightedMeta', async () => {
     if (!TEST_BOOSTED_WEIGHTED_META) return true;
-    const pool = addresses.boostedWeightedMeta1;
-    const amount = parseFixed('0.05', pool.decimals).toString();
+
+    before(() => {
+      pool = addresses.boostedWeightedMeta1;
+      amount = parseFixed('0.05', pool.decimals).toString();
+    });
 
     it('should exit pool correctly', async () => {
-      await testFlow(pool, amount);
+      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
     });
   });
 
@@ -321,11 +251,14 @@ describe('generalised exit execution', async function () {
   */
   context('boostedWeightedMetaAlt', async () => {
     if (!TEST_BOOSTED_WEIGHTED_META_ALT) return true;
-    const pool = addresses.boostedWeightedMetaAlt1;
-    const amount = parseFixed('0.01', pool.decimals).toString();
+
+    before(() => {
+      pool = addresses.boostedWeightedMetaAlt1;
+      amount = parseFixed('0.01', pool.decimals).toString();
+    });
 
     it('should exit pool correctly', async () => {
-      await testFlow(pool, amount);
+      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
     });
   });
 
@@ -338,25 +271,14 @@ describe('generalised exit execution', async function () {
   */
   context('boostedWeightedMetaGeneral', async () => {
     if (!TEST_BOOSTED_WEIGHTED_META_GENERAL) return true;
-    const pool = addresses.boostedWeightedMetaGeneral1;
-    const amount = parseFixed('0.05', pool.decimals).toString();
 
-    context('using simulation type VaultModel', async () => {
-      it('should exit pool correctly', async () => {
-        await testFlow(pool, amount, SimulationType.VaultModel);
-      });
+    before(() => {
+      pool = addresses.boostedWeightedMetaGeneral1;
+      amount = parseFixed('0.05', pool.decimals).toString();
     });
 
-    context('using simulation type Tenderly', async () => {
-      it('should exit pool correctly', async () => {
-        await testFlow(pool, amount, SimulationType.Tenderly);
-      });
-    });
-
-    context('using simulation type Satic', async () => {
-      it('should exit pool correctly', async () => {
-        await testFlow(pool, amount, SimulationType.Static);
-      });
+    it('should exit pool correctly', async () => {
+      await testGeneralisedExit(pool, pools, signer, amount, simulationType);
     });
   });
 });

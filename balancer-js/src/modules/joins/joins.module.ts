@@ -233,7 +233,8 @@ export class Join {
         nonLeafInputNode.address,
         nonLeafInputNode.decimals,
         nonLeafInputNode.parent,
-        WeiPerEther
+        WeiPerEther,
+        nonLeafInputNode.balance
       );
       // Update index to be actual amount in
       inputTokenNode.index = proportionalNonLeafAmountIn;

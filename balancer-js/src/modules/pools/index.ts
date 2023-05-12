@@ -356,9 +356,9 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param userAddress     User address
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
    * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
-   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+   * @param simulationType  Simulation type (Tenderly or Static) - VaultModel should not be used to build exit transaction
+   * @param unwrapTokens    Determines if wrapped tokens should be unwrapped
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
-   * @param unwrapTokens    true = exit by unwrapping wrapped tokens, false = exit to main tokens direclty
    * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
    */
   async generalisedExit(
@@ -367,9 +367,9 @@ export class Pools implements Findable<PoolWithMethods> {
     userAddress: string,
     slippage: string,
     signer: JsonRpcSigner,
-    simulationType: SimulationType,
-    authorisation?: string,
-    unwrapTokens = false
+    simulationType: SimulationType.Static | SimulationType.Tenderly,
+    unwrapTokens: boolean,
+    authorisation?: string
   ): Promise<{
     to: string;
     encodedCall: string;
@@ -378,15 +378,43 @@ export class Pools implements Findable<PoolWithMethods> {
     minAmountsOut: string[];
     priceImpact: string;
   }> {
-    return this.exitService.exitPool(
+    return this.exitService.buildExitCall(
       poolId,
       amount,
       userAddress,
       slippage,
       signer,
       simulationType,
-      authorisation,
-      unwrapTokens
+      unwrapTokens,
+      authorisation
+    );
+  }
+
+  /**
+   * Gets info required to build generalised exit transaction
+   *
+   * @param poolId          Pool id
+   * @param amountBptIn     BPT amount in EVM scale
+   * @param userAddress     User address
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+   * @returns info required to build a generalised exit transaction including whether tokens need to be unwrapped
+   */
+  async getExitInfo(
+    poolId: string,
+    amountBptIn: string,
+    userAddress: string,
+    signer: JsonRpcSigner
+  ): Promise<{
+    tokensOut: string[];
+    estimatedAmountsOut: string[];
+    priceImpact: string;
+    needsUnwrap: boolean;
+  }> {
+    return this.exitService.getExitInfo(
+      poolId,
+      amountBptIn,
+      userAddress,
+      signer
     );
   }
 
