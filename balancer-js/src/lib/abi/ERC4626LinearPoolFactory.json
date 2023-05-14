@@ -119,6 +119,11 @@
         "internalType": "uint256",
         "name": "protocolId",
         "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "salt",
+        "type": "bytes32"
       }
     ],
     "name": "create",

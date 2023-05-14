@@ -4,6 +4,8 @@ import {
   InitJoinPoolAttributes,
   InitJoinPoolParameters,
   LinearCreatePoolParameters,
+  LinearPoolFactoryInterface,
+  LinearPoolInterface,
   WeightedCreatePoolParameters,
 } from '@/modules/pools/factory/types';
 import { JsonRpcProvider, TransactionReceipt } from '@ethersproject/providers';
@@ -34,8 +36,5 @@ export interface PoolFactory {
   getPoolInterface():
     | WeightedPoolInterface
     | ComposableStablePoolInterface
-    | ERC4626LinearPoolInterface
-    | EulerLinearPoolInterface
-    | AaveLinearPoolInterface
-    | YearnLinearPoolInterface;
+    | LinearPoolInterface;
 }
