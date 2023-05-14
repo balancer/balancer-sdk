@@ -1,6 +1,16 @@
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { JoinPool } from '@/modules/pools/pool-types/concerns/types';
 import { BytesLike } from '@ethersproject/bytes';
+import { ERC4626LinearPoolInterface } from '@/contracts/ERC4626LinearPool';
+import { GearboxLinearPoolInterface } from '@/contracts/GearboxLinearPool';
+import { EulerLinearPoolInterface } from '@/contracts/EulerLinearPool';
+import { AaveLinearPoolInterface } from '@/contracts/AaveLinearPool';
+import { YearnLinearPoolInterface } from '@/contracts/YearnLinearPool';
+import { AaveLinearPoolFactoryInterface } from '@/contracts/AaveLinearPoolFactory';
+import { ERC4626LinearPoolFactoryInterface } from '@/contracts/ERC4626LinearPoolFactory';
+import { EulerLinearPoolFactoryInterface } from '@/contracts/EulerLinearPoolFactory';
+import { GearboxLinearPoolFactoryInterface } from '@/contracts/GearboxLinearPoolFactory';
+import { YearnLinearPoolFactoryInterface } from '@/contracts/YearnLinearPoolFactory';
 
 export type CreatePoolParameters = {
   name: string;
@@ -8,6 +18,7 @@ export type CreatePoolParameters = {
   tokenAddresses: string[];
   swapFeeEvm: string;
   owner: string;
+  salt?: BytesLike;
 };
 
 export interface ComposableStableCreatePoolParameters
@@ -21,12 +32,11 @@ export interface ComposableStableCreatePoolParameters
 export interface WeightedCreatePoolParameters extends CreatePoolParameters {
   rateProviders: string[];
   normalizedWeights: BigNumberish[];
-  salt?: BytesLike;
 }
 
 export type LinearCreatePoolParameters = Pick<
   CreatePoolParameters,
-  'name' | 'symbol' | 'swapFeeEvm' | 'owner'
+  'name' | 'symbol' | 'swapFeeEvm' | 'owner' | 'salt'
 > & {
   mainToken: string;
   wrappedToken: string;
@@ -86,3 +96,17 @@ export type JoinPoolRequestDecodedAttributes = {
   userData: string;
   fromInternalBalance: boolean;
 };
+
+export type LinearPoolInterface =
+  | ERC4626LinearPoolInterface
+  | EulerLinearPoolInterface
+  | AaveLinearPoolInterface
+  | YearnLinearPoolInterface
+  | GearboxLinearPoolInterface;
+
+export type LinearPoolFactoryInterface =
+  | AaveLinearPoolFactoryInterface
+  | ERC4626LinearPoolFactoryInterface
+  | EulerLinearPoolFactoryInterface
+  | GearboxLinearPoolFactoryInterface
+  | YearnLinearPoolFactoryInterface;
