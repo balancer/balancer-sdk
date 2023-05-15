@@ -1,4 +1,4 @@
-// yarn test:only ./src/modules/pools/pool-types/concerns/fx/liquidity.concern.integration.spec.ts
+// yarn test:only ./src/modules/pools/pool-types/concerns/gyro/liquidity.concern.integration.spec.ts
 import dotenv from 'dotenv';
 import { Network, PoolWithMethods } from '@/types';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
