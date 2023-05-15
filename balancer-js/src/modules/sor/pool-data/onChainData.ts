@@ -21,6 +21,7 @@ import { JsonFragment } from '@ethersproject/abi';
 export async function getOnChainBalances<
   GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
     tokens: (SubgraphToken | PoolToken)[];
+    tokenRates?: string[];
   }
 >(
   subgraphPoolsOriginal: GenericPool[],
@@ -141,7 +142,7 @@ export async function getOnChainBalances<
         'getSwapFeePercentage'
       );
     }
-    if (pool.poolType.toString() === 'GyroE' && pool.poolTypeVersion === 2) {
+    if (['GyroE', 'Gyro2', 'Gyro3'].includes(pool.poolType.toString())) {
       multiPool.call(`${pool.id}.tokenRates`, pool.address, 'getTokenRates');
     }
   });
@@ -283,12 +284,13 @@ export async function getOnChainBalances<
       }
 
       if (
-        subgraphPools[index].poolType === 'GyroE' &&
-        subgraphPools[index].poolTypeVersion == 2
+        ['GyroE', 'Gyro2', 'Gyro3'].includes(
+          subgraphPools[index].poolType.toString()
+        )
       ) {
         if (!Array.isArray(tokenRates) || tokenRates.length !== 2) {
           console.error(
-            `GyroEV2 pool with missing or invalid tokenRates: ${poolId}`
+            `Gyro pool with missing or invalid tokenRates: ${poolId}`
           );
           return;
         }
