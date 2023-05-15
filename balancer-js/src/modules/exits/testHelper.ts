@@ -136,8 +136,8 @@ async function userFlow(
     slippage,
     signer,
     SimulationType.Static,
-    exitInfo.needsUnwrap,
-    authorisation
+    authorisation,
+    exitInfo.needsUnwrap
   );
   // 3. Sends tx
   const txResult = await sendTransactionGetBalances(

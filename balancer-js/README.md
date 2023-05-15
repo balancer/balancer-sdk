@@ -593,6 +593,7 @@ Can exit with CS0_BPT proportionally to: DAI, USDC, USDT and FRAX
  * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
  * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
  * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+ * @param unwrapTokens    Determines if wrapped tokens should be unwrapped. Default = false
  * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
  */
 async generalisedExit(
@@ -602,7 +603,8 @@ async generalisedExit(
   slippage: string,
   signer: JsonRpcSigner,
   simulationType: SimulationType,
-  authorisation?: string
+  authorisation?: string,
+  unwrapTokens = false
 ): Promise<{
   to: string;
   encodedCall: string;
@@ -616,6 +618,7 @@ async generalisedExit(
 [Example](./examples/exitGeneralised.ts)
 
 # Factory
+
 ### Creating Pools
 
 ### WeightedPool
@@ -685,6 +688,7 @@ create({
     data: BytesLike;
 }
 ```
+
 [Example](./examples/pools/composable-stable/create-and-init-join.ts)
 
 ### Linear Pool
@@ -717,7 +721,9 @@ Builds a transaction to create a linear pool.
     data: BytesLike;
   }
 ```
+
 [Example](./examples/pools/linear/create.ts)
+
 ## RelayerService
 
 Relayers are (user opt-in, audited) contracts that can make calls to the vault (with the transaction “sender” being any arbitrary address) and use the sender’s ERC20 vault allowance, internal balance or BPTs on their behalf.

@@ -357,8 +357,8 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
    * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
    * @param simulationType  Simulation type (Tenderly or Static) - VaultModel should not be used to build exit transaction
-   * @param unwrapTokens    Determines if wrapped tokens should be unwrapped
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+   * @param unwrapTokens    Determines if wrapped tokens should be unwrapped. Default = false
    * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
    */
   async generalisedExit(
@@ -368,8 +368,8 @@ export class Pools implements Findable<PoolWithMethods> {
     slippage: string,
     signer: JsonRpcSigner,
     simulationType: SimulationType.Static | SimulationType.Tenderly,
-    unwrapTokens: boolean,
-    authorisation?: string
+    authorisation?: string,
+    unwrapTokens = false
   ): Promise<GeneralisedExitOutput> {
     return this.exitService.buildExitCall(
       poolId,
@@ -378,8 +378,8 @@ export class Pools implements Findable<PoolWithMethods> {
       slippage,
       signer,
       simulationType,
-      unwrapTokens,
-      authorisation
+      authorisation,
+      unwrapTokens
     );
   }
 

@@ -158,8 +158,8 @@ const exit = async () => {
     slippage,
     signer,
     SimulationType.Static,
-    needsUnwrap,
-    relayerAuth
+    relayerAuth,
+    needsUnwrap
   );
 
   // Submit transaction and check balance deltas to confirm success

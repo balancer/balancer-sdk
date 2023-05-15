@@ -115,8 +115,8 @@ export class Exit {
     slippage: string,
     signer: JsonRpcSigner,
     simulationType: SimulationType.Static | SimulationType.Tenderly,
-    unwrapTokens: boolean,
-    authorisation?: string
+    authorisation?: string,
+    unwrapTokens = false
   ): Promise<{
     to: string;
     encodedCall: string;
