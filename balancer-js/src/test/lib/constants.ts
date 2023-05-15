@@ -323,6 +323,20 @@ export const ADDRESSES = {
       symbol: 'STG',
       slot: 0,
     },
+    wstEthBoostedApe: {
+      id: '0x959216bb492b2efa72b15b7aacea5b5c984c3cca000200000000000000000472',
+      address: '0x959216BB492B2efa72b15B7AAcEa5B5C984c3ccA',
+      decimals: 18,
+      symbol: '50wstETH-50stk-APE',
+      slot: 0,
+    },
+    bbtape: {
+      id: '0x126e7643235ec0ab9c103c507642dc3f4ca23c66000000000000000000000468',
+      address: '0x126e7643235ec0ab9c103c507642dC3F4cA23C66',
+      decimals: 18,
+      symbol: 'bb-t-stkAPE',
+      slot: 0,
+    },
   },
   [Network.KOVAN]: {
     // Visit https://balancer-faucet.on.fleek.co/#/faucet for test tokens
