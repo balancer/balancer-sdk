@@ -167,8 +167,6 @@ export class Relayer {
     /**
      * Other unwrap types available on BatchRelayerLibrary that does not seem to
      * have a respective Linear pool type in the SDK:
-     * - unwrapCompoundV2
-     * - unwrapShareToken
      * - unwrapUnbuttonToken
      * - unwrapWstETH
      */
@@ -183,6 +181,7 @@ export class Relayer {
           toUnderlying: true,
           outputReference: params.outputReference,
         });
+      case 'BeefyLinear':
       case 'ERC4626Linear':
         unwrapType = 'unwrapERC4626';
         break;
@@ -201,10 +200,12 @@ export class Relayer {
       case 'YearnLinear':
         unwrapType = 'unwrapYearn';
         break;
-      case 'Linear':
-      case 'BeefyLinear':
       case 'MidasLinear':
+        unwrapType = 'unwrapCompoundV2';
+        break;
       case 'SiloLinear':
+        unwrapType = 'unwrapShareToken';
+        break;
       default:
         throw new Error(
           'Unwrapping not supported for this pool type: ' + linearPoolType
