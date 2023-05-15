@@ -63,8 +63,15 @@ export interface EncodeUnwrapAaveStaticTokenInput {
   outputReference: BigNumberish;
 }
 
-export interface EncodeUnwrapERC4626Input {
+export interface EncodeUnwrapInput {
   wrappedToken: string;
+  sender: string;
+  recipient: string;
+  amount: BigNumberish;
+  outputReference: BigNumberish;
+}
+
+export interface EncodeUnwrapWstETHInput {
   sender: string;
   recipient: string;
   amount: BigNumberish;
