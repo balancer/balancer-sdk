@@ -14,12 +14,11 @@ import {
   ExitPoolData,
   JoinPoolData,
 } from './types';
-import { ExitPoolRequest, JoinPoolRequest, PoolType } from '@/types';
+import { ExitPoolRequest, JoinPoolRequest } from '@/types';
 import { Swap } from '../swaps/types';
 import { RelayerAuthorization } from '@/lib/utils';
 import FundManagementStruct = IVault.FundManagementStruct;
 import SingleSwapStruct = IVault.SingleSwapStruct;
-import { isLinearish } from '@/lib/utils';
 
 export * from './types';
 
