@@ -10,7 +10,7 @@ import { AssetHelpers, subSlippage } from '@/lib/utils';
 import { PoolGraph, Node } from '@/modules/graph/graph';
 import { Join } from '@/modules/joins/joins.module';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
-import { Relayer } from '@/modules/relayer/relayer.module';
+import { EncodeUnwrapInput, Relayer } from '@/modules/relayer/relayer.module';
 import {
   Simulation,
   SimulationType,
@@ -754,21 +754,20 @@ export class Exit {
     );
 
     const linearPoolType = node.parent?.type as string;
+
+    const call: EncodeUnwrapInput = {
+      wrappedToken: node.address,
+      sender,
+      recipient,
+      amount,
+      outputReference,
+    };
+
+    const encodedCall = Relayer.encodeUnwrap(call, linearPoolType);
+
     debugLog(`linear type: , ${linearPoolType}`);
-
-    const encodedCall = Relayer.encodeUnwrap(
-      {
-        wrappedToken: node.address,
-        sender,
-        recipient,
-        amount,
-        outputReference,
-      },
-      linearPoolType
-    );
-
-    // debugLog('\nUwrap:');
-    // debugLog(JSON.stringify(call));
+    debugLog('\nUwrap:');
+    debugLog(JSON.stringify(call));
 
     const modelRequest = VaultModel.mapUnwrapRequest(
       amount,
