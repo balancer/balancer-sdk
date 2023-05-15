@@ -35,7 +35,7 @@ describe('generalised exit execution', async function () {
     const mainExitAmount = unwrapExitAmount.div(amountRatio);
 
     context('exit by unwrapping tokens', async () => {
-      it('should exit pool correctly', async () => {
+      it('should exit via unwrapping', async () => {
         const { expectedAmountsOut, gasUsed } = await testFlow(
           pool,
           slippage,
@@ -51,7 +51,7 @@ describe('generalised exit execution', async function () {
     });
 
     context('exit to main tokens directly', async () => {
-      it('should exit pool correctly', async () => {
+      it('should exit to main tokens directly', async () => {
         const { expectedAmountsOut, gasUsed } = await testFlow(
           pool,
           slippage,
@@ -102,7 +102,7 @@ describe('generalised exit execution', async function () {
     const mainExitAmount = unwrapExitAmount.div(amountRatio);
 
     context('exit by unwrapping tokens', async () => {
-      it('should exit pool correctly', async () => {
+      it('should exit via unwrapping', async () => {
         const { expectedAmountsOut, gasUsed } = await testFlow(
           pool,
           slippage,
@@ -118,7 +118,7 @@ describe('generalised exit execution', async function () {
     });
 
     context('exit to main tokens directly', async () => {
-      it('should exit pool correctly', async () => {
+      it('should exit to main tokens directly', async () => {
         const { expectedAmountsOut, gasUsed } = await testFlow(
           pool,
           slippage,
