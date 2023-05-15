@@ -754,7 +754,7 @@ export class Exit {
     );
 
     const linearPoolType = node.parent?.type as string;
-    console.log('linear type: ', linearPoolType);
+    debugLog(`linear type: , ${linearPoolType}`);
 
     const encodedCall = Relayer.encodeUnwrap(
       {
