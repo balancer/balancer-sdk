@@ -398,6 +398,40 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
     ],
   },
+  [Network.SEPOLIA]: {
+    chainId: Network.SEPOLIA, //11155111
+    addresses: {
+      contracts: {
+        aaveLinearPoolFactory: '0xdf9b5b00ef9bca66e9902bd813db14e4343be025',
+        balancerHelpers: '0xdae7e32adc5d490a43ccba1f0c736033f2b4efca',
+        balancerMinterAddress: '0x1783cd84b3d01854a96b4ed5843753c2ccbd574a',
+        composableStablePoolFactory:
+          '0xa3fd20e29358c056b727657e83dfd139abbc9924',
+        erc4626LinearPoolFactory: '0x59562f93c447656f6e4799fc1fc7c3d977c3324f',
+        feeDistributor: '0xa6971317fb06c76ef731601c64433a4846fca707',
+        gaugeController: '0x577e5993b9cc480f07f98b5ebd055604bd9071c4',
+        gearboxLinearPoolFactory: '0x8df317a729fcaa260306d7de28888932cb579b88',
+        multicall: '',
+        protocolFeePercentagesProvider:
+          '0xf7d5dce55e6d47852f054697bab6a1b48a00ddbd',
+        relayer: '0x6d5342d716c13d9a3f072a2b11498624ade27f90',
+        vault: '0xba12222222228d8ba445958a75a0704d566bf2c8',
+        weightedPoolFactory: '0x7920bfa1b2041911b354747ca7a6cdd2dfc50cfd',
+        yearnLinearPoolFactory: '0xacf05be5134d64d150d153818f8c67ee36996650',
+      },
+      tokens: {
+        bal: '0xb19382073c7a0addbb56ac6af1808fa49e377b75',
+        wrappedNativeAsset: '0x7b79995e5f793a07bc00c21412e50ecae098e7f9',
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.studio.thegraph.com/proxy/24660/balancer-sepolia-v2/v0.0.1',
+    },
+    pools: {},
+    poolsToIgnore: [],
+    sorConnectingTokens: [],
+  },
 };
 
 export const networkAddresses = (

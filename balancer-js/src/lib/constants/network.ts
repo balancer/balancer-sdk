@@ -10,4 +10,5 @@ export enum Network {
   POLYGON = 137,
   ARBITRUM = 42161,
   FANTOM = 250,
+  SEPOLIA = 11155111,
 }
