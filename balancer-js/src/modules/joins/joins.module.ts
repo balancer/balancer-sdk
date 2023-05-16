@@ -67,11 +67,7 @@ export class Join {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodes = await this.poolGraph.getGraphNodes(
-      true,
-      poolId,
-      false
-    );
+    const orderedNodes = await this.poolGraph.getGraphNodes(true, poolId, []);
 
     const joinPaths = Join.getJoinPaths(orderedNodes, tokensIn, amountsIn);
 

@@ -17,10 +17,10 @@ import { SimulationType } from '../src/modules/simulation/simulation.module';
 
 // Expected frontend (FE) flow:
 // 1. User selects BPT amount to exit a pool
-// 2. FE calls exitGeneralised with simulation type VaultModel
-// 3. SDK calculates expectedAmountsOut that is at least 99% accurate
+// 2. FE calls exitInfo
+// 3. SDK returns expectedAmountsOut that is at least 99% accurate and indicates which tokens should be unwrapped (tokensToUnwrap)
 // 4. User agrees expectedAmountsOut and approves relayer
-// 5. With approvals in place, FE calls exitGeneralised with simulation type Static
+// 5. With approvals in place, FE calls exitGeneralised with simulation type Static and tokensToUnwrap
 // 6. SDK calculates expectedAmountsOut that is 100% accurate
 // 7. SDK returns exitGeneralised transaction data with proper minAmountsOut limits in place
 // 8. User is now able to submit a safe transaction to the blockchain
