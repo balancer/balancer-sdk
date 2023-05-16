@@ -411,7 +411,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         feeDistributor: '0xa6971317fb06c76ef731601c64433a4846fca707',
         gaugeController: '0x577e5993b9cc480f07f98b5ebd055604bd9071c4',
         gearboxLinearPoolFactory: '0x8df317a729fcaa260306d7de28888932cb579b88',
-        multicall: '',
+        multicall: '0x25eef291876194aefad0d60dff89e268b90754bb',
         protocolFeePercentagesProvider:
           '0xf7d5dce55e6d47852f054697bab6a1b48a00ddbd',
         relayer: '0x6d5342d716c13d9a3f072a2b11498624ade27f90',
