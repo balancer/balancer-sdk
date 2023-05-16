@@ -43,7 +43,7 @@ describe('generalised exit execution', async function () {
         pool,
         slippage,
         amount,
-        false,
+        [],
         network,
         blockNumber,
         poolAddresses
@@ -66,7 +66,7 @@ describe('generalised exit execution', async function () {
         pool,
         slippage,
         amount,
-        false,
+        [],
         network,
         blockNumber,
         poolAddresses
@@ -89,7 +89,7 @@ describe('generalised exit execution', async function () {
         pool,
         slippage,
         amount,
-        false,
+        [],
         network,
         blockNumber,
         poolAddresses
@@ -114,7 +114,7 @@ describe('generalised exit execution', async function () {
         pool,
         slippage,
         amount,
-        false,
+        [],
         network,
         blockNumber,
         poolAddresses
@@ -137,7 +137,7 @@ describe('generalised exit execution', async function () {
         pool,
         slippage,
         amount,
-        false,
+        [],
         network,
         blockNumber,
         poolAddresses
@@ -162,7 +162,7 @@ describe('generalised exit execution', async function () {
         pool,
         slippage,
         amount,
-        false,
+        [],
         network,
         blockNumber,
         poolAddresses
@@ -186,7 +186,7 @@ describe('generalised exit execution', async function () {
         pool,
         slippage,
         amount,
-        false,
+        [],
         network,
         blockNumber,
         poolAddresses
@@ -209,7 +209,7 @@ describe('generalised exit execution', async function () {
         pool,
         slippage,
         amount,
-        false,
+        [],
         network,
         blockNumber,
         poolAddresses
@@ -234,7 +234,7 @@ describe('generalised exit execution', async function () {
         pool,
         slippage,
         amount,
-        false,
+        [],
         network,
         blockNumber,
         poolAddresses
