@@ -45,5 +45,38 @@ export interface EncodeJoinPoolInput {
   outputReference: string;
 }
 
+export interface EncodeWrapAaveDynamicTokenInput {
+  staticToken: string;
+  sender: string;
+  recipient: string;
+  amount: BigNumberish;
+  fromUnderlying: boolean;
+  outputReference: BigNumberish;
+}
+
+export interface EncodeUnwrapAaveStaticTokenInput {
+  staticToken: string;
+  sender: string;
+  recipient: string;
+  amount: BigNumberish;
+  toUnderlying: boolean;
+  outputReference: BigNumberish;
+}
+
+export interface EncodeUnwrapInput {
+  wrappedToken: string;
+  sender: string;
+  recipient: string;
+  amount: BigNumberish;
+  outputReference: BigNumberish;
+}
+
+export interface EncodeUnwrapWstETHInput {
+  sender: string;
+  recipient: string;
+  amount: BigNumberish;
+  outputReference: BigNumberish;
+}
+
 export type ExitPoolData = ExitPoolRequest & EncodeExitPoolInput;
 export type JoinPoolData = JoinPoolRequest & EncodeJoinPoolInput;

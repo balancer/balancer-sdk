@@ -67,7 +67,11 @@ export class Join {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
 
     // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodes = await this.poolGraph.getGraphNodes(true, poolId);
+    const orderedNodes = await this.poolGraph.getGraphNodes(
+      true,
+      poolId,
+      false
+    );
 
     const joinPaths = Join.getJoinPaths(orderedNodes, tokensIn, amountsIn);
 
@@ -229,7 +233,8 @@ export class Join {
         nonLeafInputNode.address,
         nonLeafInputNode.decimals,
         nonLeafInputNode.parent,
-        WeiPerEther
+        WeiPerEther,
+        nonLeafInputNode.balance
       );
       // Update index to be actual amount in
       inputTokenNode.index = proportionalNonLeafAmountIn;
@@ -529,7 +534,6 @@ export class Join {
 
         // Sender's rule
         // 1. If any child node is an input node, tokens are coming from the user
-        // 2. Wrapped tokens have to come from user (Relayer has no approval for wrapped tokens)
         const hasChildInput = node.children
           .filter((c) => this.shouldBeConsidered(c))
           .some((c) => c.joinAction === 'input');
@@ -677,7 +681,7 @@ export class Join {
     assets: string[];
     amounts: string[];
   } => {
-    // We only need swaps for main/wrapped > linearBpt so shouldn't be more than token > token
+    // We only need swaps for main > linearBpt so shouldn't be more than token > token
     if (node.children.length !== 1) throw new Error('Unsupported swap');
     const tokenIn = node.children[0].address;
     const amountIn = this.getOutputRefValue(joinPathIndex, node.children[0]);

@@ -27,18 +27,29 @@ import { SimulationType } from '../src/modules/simulation/simulation.module';
 
 dotenv.config();
 
-const network = Network.ARBITRUM;
-const jsonRpcUrl = process.env.ALCHEMY_URL_ARBITRUM;
-const blockNumber = 89431060;
-const rpcUrl = 'http://127.0.0.1:8161';
+const RPC_URLS: Record<number, string> = {
+  [Network.MAINNET]: `http://127.0.0.1:8545`,
+  [Network.GOERLI]: `http://127.0.0.1:8000`,
+  [Network.POLYGON]: `http://127.0.0.1:8137`,
+  [Network.ARBITRUM]: `http://127.0.0.1:8161`,
+};
 
+const FORK_NODES: Record<number, string> = {
+  [Network.MAINNET]: `${process.env.ALCHEMY_URL}`,
+  [Network.GOERLI]: `${process.env.ALCHEMY_URL_GOERLI}`,
+  [Network.POLYGON]: `${process.env.ALCHEMY_URL_POLYGON}`,
+  [Network.ARBITRUM]: `${process.env.ALCHEMY_URL_ARBITRUM}`,
+};
+
+const network = Network.MAINNET;
+const blockNumber = 17263241;
 const addresses = ADDRESSES[network];
-
+const jsonRpcUrl = FORK_NODES[network];
+const rpcUrl = RPC_URLS[network];
 // bb-a-usd
-const testPool = addresses.bbUSD_PLUS;
-
+const testPool = addresses.bbgusd;
 // Amount of testPool BPT that will be used to exit
-const amount = parseFixed('1000', testPool.decimals).toString();
+const amount = parseFixed('1000000', testPool.decimals).toString();
 
 // Setup local fork with correct balances/approval to exit bb-a-usd2 pool
 const setUp = async (provider: JsonRpcProvider) => {
@@ -112,24 +123,19 @@ const exit = async () => {
   });
 
   // Use SDK to create exit transaction
-  const { expectedAmountsOut, tokensOut } =
-    await balancer.pools.generalisedExit(
+  const { estimatedAmountsOut, tokensOut, needsUnwrap } =
+    await balancer.pools.getExitInfo(
       testPool.id,
       amount,
       signerAddress,
-      slippage,
-      signer,
-      SimulationType.VaultModel,
-      undefined
+      signer
     );
 
   // User reviews expectedAmountOut
-  console.log(' -- Simulating using Vault Model -- ');
-  console.log(signerAddress);
-
+  console.log(' -- getExitInfo() -- ');
   console.table({
     tokensOut: truncateAddresses([testPool.address, ...tokensOut]),
-    expectedAmountsOut: ['0', ...expectedAmountsOut],
+    estimatedAmountsOut: ['0', ...estimatedAmountsOut],
   });
 
   // User approves relayer
@@ -152,7 +158,8 @@ const exit = async () => {
     slippage,
     signer,
     SimulationType.Static,
-    relayerAuth
+    relayerAuth,
+    needsUnwrap
   );
 
   // Submit transaction and check balance deltas to confirm success
