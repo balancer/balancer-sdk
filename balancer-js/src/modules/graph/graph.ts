@@ -66,7 +66,7 @@ export class PoolGraph {
 
   async buildGraphFromRootPool(
     poolId: string,
-    wrapMainTokens: boolean
+    tokensToUnwrap: string[]
   ): Promise<Node> {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
@@ -76,7 +76,7 @@ export class PoolGraph {
       nodeIndex,
       undefined,
       WeiPerEther,
-      wrapMainTokens
+      tokensToUnwrap
     );
     return rootNode[0];
   }
@@ -99,7 +99,7 @@ export class PoolGraph {
     nodeIndex: number,
     parent: Node | undefined,
     proportionOfParent: BigNumber,
-    wrapMainTokens: boolean
+    tokensToUnwrap: string[]
   ): Promise<[Node, number]> {
     const pool = await this.pools.findBy('address', address);
 
@@ -179,7 +179,7 @@ export class PoolGraph {
         poolNode,
         nodeIndex,
         pool,
-        wrapMainTokens
+        tokensToUnwrap
       );
     } else {
       const { balancesEvm } = parsePoolInfo(pool);
@@ -204,7 +204,7 @@ export class PoolGraph {
           nodeIndex,
           poolNode,
           finalProportion,
-          wrapMainTokens
+          tokensToUnwrap
         );
         nodeIndex = childNode[1];
         if (childNode[0]) poolNode.children.push(childNode[0]);
@@ -231,13 +231,17 @@ export class PoolGraph {
     linearPoolNode: Node,
     nodeIndex: number,
     linearPool: Pool,
-    wrapMainTokens: boolean
+    tokensToUnwrap: string[]
   ): [Node, number] {
     // Main token
     if (linearPool.mainIndex === undefined)
       throw new Error('Issue With Linear Pool');
 
-    if (wrapMainTokens) {
+    if (
+      tokensToUnwrap
+        .map((t) => t.toLowerCase())
+        .includes(linearPool.tokensList[linearPool.mainIndex].toLowerCase())
+    ) {
       // Linear pool will be joined via wrapped token. This will be the child node.
       const wrappedNodeInfo = this.createWrappedTokenNode(
         linearPool,
@@ -397,12 +401,12 @@ export class PoolGraph {
   getGraphNodes = async (
     isJoin: boolean,
     poolId: string,
-    wrapMainTokens: boolean
+    tokensToUnwrap: string[]
   ): Promise<Node[]> => {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
-    const rootNode = await this.buildGraphFromRootPool(poolId, wrapMainTokens);
+    const rootNode = await this.buildGraphFromRootPool(poolId, tokensToUnwrap);
 
     if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
 

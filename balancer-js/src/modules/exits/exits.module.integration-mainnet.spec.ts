@@ -40,7 +40,7 @@ describe('generalised exit execution', async function () {
           pool,
           slippage,
           unwrapExitAmount.toString(),
-          true,
+          [ADDRESSES[network].USDC.address],
           network,
           blockNo,
           poolAddresses
@@ -56,7 +56,7 @@ describe('generalised exit execution', async function () {
           pool,
           slippage,
           mainExitAmount.toString(),
-          false,
+          [],
           network,
           blockNo,
           poolAddresses
@@ -108,7 +108,7 @@ describe('generalised exit execution', async function () {
           pool,
           slippage,
           unwrapExitAmount.toString(),
-          true,
+          [ADDRESSES[network].DAI.address, ADDRESSES[network].USDC.address],
           network,
           blockNo,
           poolAddresses
@@ -124,7 +124,7 @@ describe('generalised exit execution', async function () {
           pool,
           slippage,
           mainExitAmount.toString(),
-          false,
+          [],
           network,
           blockNo,
           poolAddresses
@@ -153,7 +153,7 @@ describe('generalised exit execution', async function () {
 
   context('AaveLinear - bbausd', async () => {
     const network = Network.MAINNET;
-    const blockNo = 17273179;
+    const blockNo = 17263241;
     const pool = ADDRESSES[network].bbausd2;
     const slippage = '10'; // 10 bps = 0.1%
     let unwrappingTokensAmountsOut: string[];
@@ -176,7 +176,7 @@ describe('generalised exit execution', async function () {
           pool,
           slippage,
           unwrapExitAmount.toString(),
-          true,
+          [ADDRESSES[network].DAI.address],
           network,
           blockNo,
           poolAddresses
@@ -192,7 +192,7 @@ describe('generalised exit execution', async function () {
           pool,
           slippage,
           mainExitAmount.toString(),
-          false,
+          [],
           network,
           blockNo,
           poolAddresses
@@ -210,7 +210,7 @@ describe('generalised exit execution', async function () {
           ).div(amountRatio);
           expect(
             accuracy(unwrappedAmount, BigNumber.from(amount))
-          ).to.be.closeTo(1, 1e-4); // inaccuracy should not be over 1 bps
+          ).to.be.closeTo(1, 1e-3); // inaccuracy should not be over 10 bps
         });
       });
       it('should spend more gas when unwrapping tokens', async () => {

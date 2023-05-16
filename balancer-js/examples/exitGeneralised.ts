@@ -123,7 +123,7 @@ const exit = async () => {
   });
 
   // Use SDK to create exit transaction
-  const { estimatedAmountsOut, tokensOut, needsUnwrap } =
+  const { estimatedAmountsOut, tokensOut, tokensToUnwrap } =
     await balancer.pools.getExitInfo(
       testPool.id,
       amount,
@@ -136,6 +136,7 @@ const exit = async () => {
   console.table({
     tokensOut: truncateAddresses([testPool.address, ...tokensOut]),
     estimatedAmountsOut: ['0', ...estimatedAmountsOut],
+    tokensToUnwrap,
   });
 
   // User approves relayer
@@ -159,7 +160,7 @@ const exit = async () => {
     signer,
     SimulationType.Static,
     relayerAuth,
-    needsUnwrap
+    tokensToUnwrap
   );
 
   // Submit transaction and check balance deltas to confirm success

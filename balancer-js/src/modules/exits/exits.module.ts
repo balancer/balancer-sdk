@@ -46,7 +46,7 @@ export interface ExitInfo {
   tokensOut: string[];
   estimatedAmountsOut: string[];
   priceImpact: string;
-  needsUnwrap: boolean;
+  tokensToUnwrap: string[];
 }
 
 // Quickly switch useful debug logs on/off
@@ -79,7 +79,7 @@ export class Exit {
     tokensOut: string[];
     estimatedAmountsOut: string[];
     priceImpact: string;
-    needsUnwrap: boolean;
+    tokensToUnwrap: string[];
   }> {
     debugLog(`\n--- getExitInfo()`);
     /*
@@ -96,7 +96,7 @@ export class Exit {
       amountBptIn,
       userAddress,
       signer,
-      false,
+      [],
       SimulationType.VaultModel
     );
 
@@ -104,7 +104,7 @@ export class Exit {
       tokensOut: exit.tokensOut,
       estimatedAmountsOut: exit.expectedAmountsOut,
       priceImpact: exit.priceImpact,
-      needsUnwrap: exit.unwrap,
+      tokensToUnwrap: exit.tokensToUnwrap,
     };
   }
 
@@ -116,7 +116,7 @@ export class Exit {
     signer: JsonRpcSigner,
     simulationType: SimulationType.Static | SimulationType.Tenderly,
     authorisation?: string,
-    unwrapTokens = false
+    tokensToUnwrap?: string[]
   ): Promise<{
     to: string;
     encodedCall: string;
@@ -126,7 +126,7 @@ export class Exit {
     priceImpact: string;
   }> {
     debugLog(
-      `\n--- exitPool(): unwrapTokens, ${unwrapTokens}, simulationType: ${simulationType}`
+      `\n--- exitPool(): simulationType: ${simulationType} - tokensToUnwrap: ${tokensToUnwrap}`
     );
     /*
     Overall exit flow description:
@@ -143,7 +143,7 @@ export class Exit {
       amountBptIn,
       userAddress,
       signer,
-      unwrapTokens,
+      tokensToUnwrap ?? [],
       simulationType,
       authorisation
     );
@@ -188,11 +188,11 @@ export class Exit {
     amountBptIn: string,
     userAddress: string,
     signer: JsonRpcSigner,
-    doUnwrap: boolean,
+    tokensToUnwrap: string[],
     simulationType: SimulationType,
     authorisation?: string
   ): Promise<{
-    unwrap: boolean;
+    tokensToUnwrap: string[];
     tokensOut: string[];
     exitPaths: Node[][];
     isProportional: boolean;
@@ -204,7 +204,7 @@ export class Exit {
     const orderedNodes = await this.poolGraph.getGraphNodes(
       false,
       poolId,
-      doUnwrap
+      tokensToUnwrap
     );
 
     const isProportional = PoolGraph.isProportionalPools(orderedNodes);
@@ -215,7 +215,6 @@ export class Exit {
     let tokensOut: string[] = [];
 
     const outputNodes = orderedNodes.filter((n) => n.exitAction === 'output');
-    const outputBalances = outputNodes.map((n) => n.balance);
     tokensOutByExitPath = outputNodes.map((n) => n.address.toLowerCase());
 
     tokensOut = [...new Set(tokensOutByExitPath)].sort();
@@ -256,29 +255,33 @@ export class Exit {
       simulationType
     );
 
-    const hasSufficientBalance = outputBalances.every((balance, i) =>
-      BigNumber.from(balance).gt(expectedAmountsOutByExitPath[i])
-    );
+    const tokensWithInsufficientBalance = outputNodes
+      .filter((outputNode, i) =>
+        BigNumber.from(expectedAmountsOutByExitPath[i]).gt(outputNode.balance)
+      )
+      .map((node) => node.address.toLowerCase());
 
-    if (!hasSufficientBalance) {
-      if (doUnwrap)
-        /**
-         * This case might happen when a whale tries to exit with an amount that
-         * is at the same time larger than both main and wrapped token balances
-         */
-        throw new Error(
-          'Insufficient pool balance to perform generalised exit - try exitting with smaller amounts'
-        );
-      else
-        return await this.getExit(
-          poolId,
-          amountBptIn,
-          userAddress,
-          signer,
-          true,
-          simulationType,
-          authorisation
-        );
+    if (
+      tokensToUnwrap.some((t) =>
+        tokensWithInsufficientBalance.includes(t.toLowerCase())
+      )
+    ) {
+      /**
+       * This means there is not enough balance to exit to main or wrapped tokens only
+       */
+      throw new Error(
+        'Insufficient pool balance to perform generalised exit - try exitting with smaller amounts'
+      );
+    } else if (tokensWithInsufficientBalance.length > 0) {
+      return await this.getExit(
+        poolId,
+        amountBptIn,
+        userAddress,
+        signer,
+        [...new Set(tokensWithInsufficientBalance)].sort(),
+        simulationType,
+        authorisation
+      );
     } else {
       const expectedAmountsOut = this.amountsOutByTokenOut(
         tokensOut,
@@ -295,7 +298,7 @@ export class Exit {
       );
 
       return {
-        unwrap: doUnwrap,
+        tokensToUnwrap,
         tokensOut,
         exitPaths,
         isProportional,
@@ -320,11 +323,7 @@ export class Exit {
     amountBptIn: string
   ): Promise<string> {
     // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodesForJoin = await poolGraph.getGraphNodes(
-      true,
-      poolId,
-      false
-    );
+    const orderedNodesForJoin = await poolGraph.getGraphNodes(true, poolId, []);
     const joinPaths = Join.getJoinPaths(
       orderedNodesForJoin,
       tokensOut,
