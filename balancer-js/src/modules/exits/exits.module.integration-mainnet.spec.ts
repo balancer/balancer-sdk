@@ -82,6 +82,7 @@ describe('generalised exit execution', async function () {
       });
     });
   });
+
   context('GearboxLinear - bbgusd', async () => {
     const network = Network.MAINNET;
     const blockNo = 17263241;
@@ -98,6 +99,74 @@ describe('generalised exit execution', async function () {
     const amountRatio = 100000;
     // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
     const unwrapExitAmount = parseFixed('1000000', pool.decimals);
+    // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
+    const mainExitAmount = unwrapExitAmount.div(amountRatio);
+
+    context('exit by unwrapping tokens', async () => {
+      it('should exit via unwrapping', async () => {
+        const { expectedAmountsOut, gasUsed } = await testFlow(
+          pool,
+          slippage,
+          unwrapExitAmount.toString(),
+          true,
+          network,
+          blockNo,
+          poolAddresses
+        );
+        unwrappingTokensAmountsOut = expectedAmountsOut;
+        unwrappingTokensGasUsed = gasUsed;
+      });
+    });
+
+    context('exit to main tokens directly', async () => {
+      it('should exit to main tokens directly', async () => {
+        const { expectedAmountsOut, gasUsed } = await testFlow(
+          pool,
+          slippage,
+          mainExitAmount.toString(),
+          false,
+          network,
+          blockNo,
+          poolAddresses
+        );
+        mainTokensAmountsOut = expectedAmountsOut;
+        mainTokensGasUsed = gasUsed;
+      });
+    });
+
+    context('exit by unwrapping vs exit to main tokens', async () => {
+      it('should return similar amounts (proportional to the input)', async () => {
+        mainTokensAmountsOut.forEach((amount, i) => {
+          const unwrappedAmount = BigNumber.from(
+            unwrappingTokensAmountsOut[i]
+          ).div(amountRatio);
+          expect(
+            accuracy(unwrappedAmount, BigNumber.from(amount))
+          ).to.be.closeTo(1, 1e-4); // inaccuracy should not be over 1 bps
+        });
+      });
+      it('should spend more gas when unwrapping tokens', async () => {
+        expect(unwrappingTokensGasUsed.gt(mainTokensGasUsed)).to.be.true;
+      });
+    });
+  });
+
+  context('AaveLinear - bbausd', async () => {
+    const network = Network.MAINNET;
+    const blockNo = 17273179;
+    const pool = ADDRESSES[network].bbausd2;
+    const slippage = '10'; // 10 bps = 0.1%
+    let unwrappingTokensAmountsOut: string[];
+    let unwrappingTokensGasUsed: BigNumber;
+    let mainTokensAmountsOut: string[];
+    let mainTokensGasUsed: BigNumber;
+    const poolAddresses = Object.values(ADDRESSES[network]).map(
+      (address) => address.address
+    );
+
+    const amountRatio = 1000;
+    // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
+    const unwrapExitAmount = parseFixed('3000000', pool.decimals);
     // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
     const mainExitAmount = unwrapExitAmount.div(amountRatio);
 
