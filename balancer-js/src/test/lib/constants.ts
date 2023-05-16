@@ -10,6 +10,7 @@ export const PROVIDER_URLS = {
   [Network.KOVAN]: `https://kovan.infura.io/v3/${process.env.INFURA}`,
   [Network.POLYGON]: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA}`,
   [Network.ARBITRUM]: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA}`,
+  [Network.SEPOLIA]: `https://sepolia.infura.io/v3/${process.env.INFURA}`,
 };
 
 export const ADDRESSES = {
@@ -882,6 +883,18 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'BWMG1',
       slot: 0,
+    },
+  },
+  [Network.SEPOLIA]: {
+    WETH: {
+      address: '0x7b79995e5f793a07bc00c21412e50ecae098e7f9',
+      decimals: 18,
+      symbol: 'WETH',
+    },
+    BAL: {
+      address: '0xb19382073c7a0addbb56ac6af1808fa49e377b75',
+      decimals: 18,
+      symbol: 'BAL',
     },
   },
 };
