@@ -8,6 +8,7 @@ import {
   GraphQLArgs,
   Network,
   truncateAddresses,
+  removeItem,
 } from '../src/index';
 import { forkSetup, sendTransactionGetBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
@@ -17,12 +18,12 @@ import { SimulationType } from '../src/modules/simulation/simulation.module';
 
 // Expected frontend (FE) flow:
 // 1. User selects BPT amount to exit a pool
-// 2. FE calls exitGeneralised with simulation type VaultModel
-// 3. SDK calculates expectedAmountsOut that is at least 99% accurate
-// 4. User agrees expectedAmountsOut and approves relayer
-// 5. With approvals in place, FE calls exitGeneralised with simulation type Static
+// 2. FE calls exitInfo
+// 3. SDK returns estimatedAmountsOut that is at least 99% accurate and indicates which tokens should be unwrapped (tokensToUnwrap)
+// 4. User agrees estimatedAmountsOut and approves relayer
+// 5. With approvals in place, FE calls exitGeneralised with simulation type Static and tokensToUnwrap
 // 6. SDK calculates expectedAmountsOut that is 100% accurate
-// 7. SDK returns exitGeneralised transaction data with proper minAmountsOut limits in place
+// 7. SDK returns exitGeneralised transaction data with proper minAmountsOut limits in place (calculated using user defined slippage)
 // 8. User is now able to submit a safe transaction to the blockchain
 
 dotenv.config();
@@ -123,7 +124,7 @@ const exit = async () => {
   });
 
   // Use SDK to create exit transaction
-  const { estimatedAmountsOut, tokensOut, needsUnwrap } =
+  const { estimatedAmountsOut, tokensOut, tokensToUnwrap } =
     await balancer.pools.getExitInfo(
       testPool.id,
       amount,
@@ -133,9 +134,11 @@ const exit = async () => {
 
   // User reviews expectedAmountOut
   console.log(' -- getExitInfo() -- ');
+  console.log(tokensToUnwrap.toString());
   console.table({
-    tokensOut: truncateAddresses([testPool.address, ...tokensOut]),
-    estimatedAmountsOut: ['0', ...estimatedAmountsOut],
+    tokensOut: truncateAddresses(tokensOut),
+    estimatedAmountsOut: estimatedAmountsOut,
+    unwrap: tokensOut.map((t) => tokensToUnwrap.includes(t)),
   });
 
   // User approves relayer
@@ -159,7 +162,7 @@ const exit = async () => {
     signer,
     SimulationType.Static,
     relayerAuth,
-    needsUnwrap
+    tokensToUnwrap
   );
 
   // Submit transaction and check balance deltas to confirm success
@@ -173,11 +176,12 @@ const exit = async () => {
 
   console.log(' -- Simulating using Static Call -- ');
   console.log('Price impact: ', formatFixed(query.priceImpact, 18));
+  console.log(`Amount Pool Token In: ${balanceDeltas[0].toString()}`);
   console.table({
-    tokensOut: truncateAddresses([testPool.address, ...query.tokensOut]),
-    minAmountsOut: ['0', ...query.minAmountsOut],
-    expectedAmountsOut: ['0', ...query.expectedAmountsOut],
-    balanceDeltas: balanceDeltas.map((b) => b.toString()),
+    tokensOut: truncateAddresses(query.tokensOut),
+    minAmountsOut: query.minAmountsOut,
+    expectedAmountsOut: query.expectedAmountsOut,
+    balanceDeltas: removeItem(balanceDeltas, 0).map((b) => b.toString()),
   });
 };
 

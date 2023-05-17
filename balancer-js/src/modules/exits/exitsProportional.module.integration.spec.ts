@@ -29,7 +29,7 @@ const runTests = async (tests: Test[]) => {
         test.pool,
         slippage,
         test.amount,
-        false,
+        [],
         network,
         blockNumber,
         poolAddresses

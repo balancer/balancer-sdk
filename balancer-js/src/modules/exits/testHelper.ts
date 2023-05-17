@@ -44,7 +44,7 @@ export const testFlow = async (
   pool: Pool,
   slippage: string,
   exitAmount: string,
-  expectUnwrap: boolean,
+  expectToUnwrap: string[],
   network: Network,
   blockNumber: number,
   poolAddressesToConsider: string[]
@@ -77,11 +77,11 @@ export const testFlow = async (
     balanceDeltas: tokensOutDeltas.map((b) => b.toString()),
   });
   console.log('Gas used', txResult.gasUsed.toString());
-  console.log(`Should unwrap: `, exitInfo.needsUnwrap);
+  console.log(`Tokens to unwrap: `, exitInfo.tokensToUnwrap);
 
   expect(txResult.transactionReceipt.status).to.eq(1);
   expect(txResult.balanceDeltas[0].toString()).to.eq(exitAmount.toString());
-  expect(exitInfo.needsUnwrap).to.eq(expectUnwrap);
+  expect(exitInfo.tokensToUnwrap).to.deep.eq(expectToUnwrap);
   tokensOutDeltas.forEach((b, i) => {
     const minOut = BigNumber.from(exitOutput.minAmountsOut[i]);
     expect(b.gte(minOut)).to.be.true;
@@ -137,7 +137,7 @@ async function userFlow(
     signer,
     SimulationType.Static,
     authorisation,
-    exitInfo.needsUnwrap
+    exitInfo.tokensToUnwrap
   );
   // 3. Sends tx
   const txResult = await sendTransactionGetBalances(
