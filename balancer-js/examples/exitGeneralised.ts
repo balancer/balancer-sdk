@@ -8,6 +8,7 @@ import {
   GraphQLArgs,
   Network,
   truncateAddresses,
+  removeItem,
 } from '../src/index';
 import { forkSetup, sendTransactionGetBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
@@ -133,10 +134,11 @@ const exit = async () => {
 
   // User reviews expectedAmountOut
   console.log(' -- getExitInfo() -- ');
+  console.log(tokensToUnwrap.toString());
   console.table({
-    tokensOut: truncateAddresses([testPool.address, ...tokensOut]),
-    estimatedAmountsOut: ['0', ...estimatedAmountsOut],
-    tokensToUnwrap,
+    tokensOut: truncateAddresses(tokensOut),
+    estimatedAmountsOut: estimatedAmountsOut,
+    unwrap: tokensOut.map((t) => tokensToUnwrap.includes(t)),
   });
 
   // User approves relayer
@@ -174,11 +176,12 @@ const exit = async () => {
 
   console.log(' -- Simulating using Static Call -- ');
   console.log('Price impact: ', formatFixed(query.priceImpact, 18));
+  console.log(`Amount Pool Token In: ${balanceDeltas[0].toString()}`);
   console.table({
-    tokensOut: truncateAddresses([testPool.address, ...query.tokensOut]),
-    minAmountsOut: ['0', ...query.minAmountsOut],
-    expectedAmountsOut: ['0', ...query.expectedAmountsOut],
-    balanceDeltas: balanceDeltas.map((b) => b.toString()),
+    tokensOut: truncateAddresses(query.tokensOut),
+    minAmountsOut: query.minAmountsOut,
+    expectedAmountsOut: query.expectedAmountsOut,
+    balanceDeltas: removeItem(balanceDeltas, 0).map((b) => b.toString()),
   });
 };
 
