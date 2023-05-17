@@ -61,6 +61,16 @@ export const B_50auraBAL_50wstETH = factories.subgraphPoolBase.build({
   ],
 });
 
+export const wstETH_rETH_sfrxETH = factories.subgraphPoolBase.build({
+  id: '0x5aee1e99fe86960377de9f88689616916d5dcabe000000000000000000000467',
+  address: '0x5aee1e99fe86960377de9f88689616916d5dcabe'.toLowerCase(),
+  tokens: [
+    factories.subgraphToken.transient({ symbol: 'wstETH' }).build(),
+    factories.subgraphToken.transient({ symbol: 'rETH' }).build(),
+    factories.subgraphToken.transient({ symbol: 'sfrxETH' }).build(),
+  ],
+});
+
 export const getForkedPools = async (
   provider: JsonRpcProvider,
   pools: SubgraphPoolBase[] = [B_50WBTC_50WETH]
