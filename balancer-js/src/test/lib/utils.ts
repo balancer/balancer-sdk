@@ -87,7 +87,7 @@ export const forkSetup = async (
   balances: string[],
   jsonRpcUrl: string,
   blockNumber?: number,
-  isVyperMapping = false
+  isVyperMapping: boolean[] = Array(tokens.length).fill(false)
 ): Promise<void> => {
   await signer.provider.send('hardhat_reset', [
     {
@@ -110,7 +110,7 @@ export const forkSetup = async (
       tokens[i],
       slots[i],
       balances[i],
-      isVyperMapping
+      isVyperMapping[i]
     );
 
     // Approve appropriate allowances so that vault contract can move tokens
