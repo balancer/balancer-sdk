@@ -8,6 +8,8 @@ import { ADDRESSES } from '../src/test/lib/constants';
 import { Relayer } from '../src/modules/relayer/relayer.module';
 import { Contracts } from '../src/modules/contracts/contracts.module';
 import { SimulationType } from '../src/modules/simulation/simulation.module';
+import { AddressZero } from '@ethersproject/constants';
+import { parseEther } from '@ethersproject/units';
 
 // Expected frontend (FE) flow:
 // 1. User selects tokens and amounts to join a pool
@@ -32,7 +34,7 @@ dotenv.config();
 // -- Mainnet network setup --
 const network = Network.MAINNET;
 const jsonRpcUrl = process.env.ALCHEMY_URL;
-const blockNumber = 16940624;
+const blockNumber = 17170000;
 const rpcUrl = 'http://127.0.0.1:8545';
 const customSubgraphUrl =
   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta';
@@ -127,7 +129,12 @@ async function join() {
         gt: 0.000000000001,
       },
       address: {
-        in: poolAddresses,
+        in: [
+          ...poolAddresses,
+          '0x02d928e68d8f10c0358566152677db51e1e2dc8c',
+          '0x60d604890feaa0b5460b28a424407c24fe89374a',
+          '0xf951e335afb289353dc249e82926178eac7ded78',
+        ],
       },
     },
     orderBy: 'totalLiquidity',
@@ -146,9 +153,12 @@ async function join() {
   // Use SDK to create join using either Tenderly or VaultModel simulation
   // Note that this does not require authorisation to be defined
   const { expectedOut } = await balancer.pools.generalisedJoin(
-    bbausd2.id,
-    tokensIn,
-    amountsIn,
+    // bbausd2.id,
+    // tokensIn,
+    // amountsIn,
+    '0x02d928e68d8f10c0358566152677db51e1e2dc8c00000000000000000000051e',
+    [AddressZero],
+    [parseEther('0.1').toString()],
     signerAddress,
     slippage,
     signer,

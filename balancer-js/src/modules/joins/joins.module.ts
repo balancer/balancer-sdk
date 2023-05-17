@@ -69,7 +69,17 @@ export class Join {
     // Create nodes for each pool/token interaction and order by breadth first
     const orderedNodes = await this.poolGraph.getGraphNodes(true, poolId, []);
 
-    const joinPaths = Join.getJoinPaths(orderedNodes, tokensIn, amountsIn);
+    const tokensWithWrappedNativeAsset = tokensIn.map((token) =>
+      token.toLowerCase() === AddressZero
+        ? this.wrappedNativeAsset
+        : token.toLowerCase()
+    );
+
+    const joinPaths = Join.getJoinPaths(
+      orderedNodes,
+      tokensWithWrappedNativeAsset,
+      amountsIn
+    );
 
     const totalBptZeroPi = Join.totalBptZeroPriceImpact(joinPaths);
     /*
@@ -123,7 +133,13 @@ export class Join {
       authorisation
     );
 
-    this.assertDeltas(poolId, deltas, tokensIn, amountsIn, totalMinAmountOut);
+    this.assertDeltas(
+      poolId,
+      deltas,
+      tokensWithWrappedNativeAsset,
+      amountsIn,
+      totalMinAmountOut
+    );
 
     return {
       to: this.relayer,
