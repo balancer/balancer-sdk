@@ -445,7 +445,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         feeDistributor: '',
         gaugeController: '',
         gearboxLinearPoolFactory: '0x687b8C9b41E01Be8B591725fac5d5f52D0564d79',
-        multicall: '0xca11bde05977b3631167028862be2a173976ca11',
+        multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
         protocolFeePercentagesProvider:
           '0x1802953277FD955f9a254B80Aa0582f193cF1d77',
         relayer: '0x4678731DC41142A902a114aC5B2F77b63f4a259D',
@@ -460,7 +460,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.studio.thegraph.com/query/24660/balancer-polygon-zkevm-v2/v0.0.1',
+        'https://api.studio.thegraph.com/query/24660/balancer-polygon-zkevm-v2/v0.0.2',
     },
     pools: {},
     poolsToIgnore: [],
