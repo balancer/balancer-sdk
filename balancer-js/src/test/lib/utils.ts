@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+
 import { BigNumber, BigNumberish, formatFixed } from '@ethersproject/bignumber';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { AddressZero, MaxUint256, WeiPerEther } from '@ethersproject/constants';
@@ -40,6 +42,8 @@ import polygonPools from '../fixtures/pools-polygon.json';
 import { PoolsJsonRepository } from './pools-json-repository';
 import { Contracts } from '@/modules/contracts/contracts.module';
 
+dotenv.config();
+
 export interface TxResult {
   transactionReceipt: TransactionReceipt;
   balanceDeltas: BigNumber[];
@@ -50,6 +54,20 @@ export interface TxResult {
 const jsonPools = {
   [Network.MAINNET]: mainnetPools,
   [Network.POLYGON]: polygonPools,
+};
+
+export const RPC_URLS: Record<number, string> = {
+  [Network.MAINNET]: `http://127.0.0.1:8545`,
+  [Network.GOERLI]: `http://127.0.0.1:8000`,
+  [Network.POLYGON]: `http://127.0.0.1:8137`,
+  [Network.ARBITRUM]: `http://127.0.0.1:8161`,
+};
+
+export const FORK_NODES: Record<number, string> = {
+  [Network.MAINNET]: `${process.env.ALCHEMY_URL}`,
+  [Network.GOERLI]: `${process.env.ALCHEMY_URL_GOERLI}`,
+  [Network.POLYGON]: `${process.env.ALCHEMY_URL_POLYGON}`,
+  [Network.ARBITRUM]: `${process.env.ALCHEMY_URL_ARBITRUM}`,
 };
 
 /**

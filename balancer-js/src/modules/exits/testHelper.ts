@@ -15,24 +15,12 @@ import {
   accuracy,
   forkSetup,
   sendTransactionGetBalances,
+  FORK_NODES,
+  RPC_URLS,
 } from '@/test/lib/utils';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { SimulationType } from '../simulation/simulation.module';
 import { GeneralisedExitOutput, ExitInfo } from '../exits/exits.module';
-
-const RPC_URLS: Record<number, string> = {
-  [Network.MAINNET]: `http://127.0.0.1:8545`,
-  [Network.GOERLI]: `http://127.0.0.1:8000`,
-  [Network.POLYGON]: `http://127.0.0.1:8137`,
-  [Network.ARBITRUM]: `http://127.0.0.1:8161`,
-};
-
-const FORK_NODES: Record<number, string> = {
-  [Network.MAINNET]: `${process.env.ALCHEMY_URL}`,
-  [Network.GOERLI]: `${process.env.ALCHEMY_URL_GOERLI}`,
-  [Network.POLYGON]: `${process.env.ALCHEMY_URL_POLYGON}`,
-  [Network.ARBITRUM]: `${process.env.ALCHEMY_URL_ARBITRUM}`,
-};
 
 export interface Pool {
   id: string;
