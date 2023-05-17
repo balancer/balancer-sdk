@@ -25,8 +25,15 @@ const generateAddressesFile = async () => {
   //creating output empty object
   let output: AddressDictByNetwork = {};
   //Getting the current addressBook from develop branch
-  const developAddressBook = (await axios.get(developAddressBookOutputUrl))
-    .data;
+  let data;
+  try {
+    const response = await axios.get(developAddressBookOutputUrl);
+    data = response.data;
+  } catch (e) {
+    console.log('Error fetching develop address book');
+  }
+  const developAddressBook = data;
+
   //Filtering the addressBook to get active addresses by network
   Object.entries(Network)
     .filter(([key]) => {
@@ -72,7 +79,9 @@ const generateAddressesFile = async () => {
           tokens,
         },
       };
-      compareOutputWithDevelop(output[value], developAddressBook[value], key);
+      if (developAddressBook) {
+        compareOutputWithDevelop(output[value], developAddressBook[value], key);
+      }
     });
   //Writing the output to the file
   fs.writeFile(
