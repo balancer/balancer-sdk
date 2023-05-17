@@ -16,6 +16,7 @@ import {
   LinearInfo,
 } from '@/test/factories/pools';
 import { Pool as SdkPool } from '@/types';
+import { formatAddress } from '@/test/lib/utils';
 
 function checkNode(
   node: Node,
@@ -52,7 +53,7 @@ function checkLinearNode(
   wrappedTokens: SubgraphToken[],
   mainTokens: SubgraphToken[],
   expectedOutPutReference: number,
-  wrapMainTokens: boolean
+  tokensToUnwrap: string[]
 ): void {
   checkNode(
     linearNode,
@@ -65,7 +66,11 @@ function checkLinearNode(
     expectedOutPutReference.toString(),
     linearPools[poolIndex].proportionOfParent
   );
-  if (wrapMainTokens) {
+  const mainToken =
+    linearPools[poolIndex].tokensList[
+      linearPools[poolIndex].mainIndex as number
+    ];
+  if (tokensToUnwrap.includes(mainToken)) {
     checkNode(
       linearNode.children[0],
       'N/A',
@@ -112,7 +117,7 @@ function checkBoosted(
   boostedPoolInfo: BoostedInfo,
   boostedIndex: number,
   expectedProportionOfParent: string,
-  wrapMainTokens: boolean
+  tokensToUnwrap: string[]
 ): void {
   checkNode(
     boostedNode,
@@ -127,7 +132,7 @@ function checkBoosted(
   );
   boostedNode.children.forEach((linearNode, i) => {
     let linearInputRef;
-    if (wrapMainTokens) linearInputRef = boostedIndex + 1 + i * 3;
+    if (tokensToUnwrap.length > 0) linearInputRef = boostedIndex + 1 + i * 3;
     else linearInputRef = boostedIndex + 1 + i * 2;
     checkLinearNode(
       linearNode,
@@ -136,7 +141,7 @@ function checkBoosted(
       boostedPoolInfo.wrappedTokens,
       boostedPoolInfo.mainTokens,
       linearInputRef,
-      wrapMainTokens
+      tokensToUnwrap
     );
   });
 }
@@ -147,7 +152,7 @@ Checks a boostedMeta, a phantomStable with one Linear and one boosted.
 function checkBoostedMeta(
   rootNode: Node,
   boostedMetaInfo: BoostedMetaInfo,
-  wrapMainTokens: boolean
+  tokensToUnwrap: string[]
 ): void {
   // Check parent node
   checkNode(
@@ -168,10 +173,10 @@ function checkBoostedMeta(
     boostedMetaInfo.childBoostedInfo,
     1,
     boostedMetaInfo.childBoostedInfo.proportion,
-    wrapMainTokens
+    tokensToUnwrap
   );
   let expectedOutputReference = 11;
-  if (!wrapMainTokens) expectedOutputReference = 8;
+  if (tokensToUnwrap.length === 0) expectedOutputReference = 8;
   // Check child Linear node
   checkLinearNode(
     rootNode.children[1],
@@ -180,7 +185,7 @@ function checkBoostedMeta(
     boostedMetaInfo.childLinearInfo.wrappedTokens,
     boostedMetaInfo.childLinearInfo.mainTokens,
     expectedOutputReference,
-    wrapMainTokens
+    tokensToUnwrap
   );
 }
 
@@ -190,7 +195,7 @@ Checks a boostedBig, a phantomStable with two Boosted.
 function checkBoostedMetaBig(
   rootNode: Node,
   boostedMetaBigInfo: BoostedMetaBigInfo,
-  wrapMainTokens: boolean
+  tokensToUnwrap: string[]
 ): void {
   // Check parent node
   checkNode(
@@ -212,9 +217,9 @@ function checkBoostedMetaBig(
       boostedMetaBigInfo.childPoolsInfo[i],
       numberOfNodes,
       boostedMetaBigInfo.childPoolsInfo[i].proportion,
-      wrapMainTokens
+      tokensToUnwrap
     );
-    if (wrapMainTokens)
+    if (tokensToUnwrap.length > 0)
       numberOfNodes =
         boostedMetaBigInfo.childPoolsInfo[i].linearPools.length * 3 + 2;
     else
@@ -252,7 +257,7 @@ describe('Graph', () => {
       before(async () => {
         rootNode = await poolsGraph.buildGraphFromRootPool(
           linearInfo.linearPools[0].id,
-          false
+          []
         );
       });
       it('should build single linearPool graph', async () => {
@@ -263,7 +268,7 @@ describe('Graph', () => {
           linearInfo.wrappedTokens,
           linearInfo.mainTokens,
           0,
-          false
+          []
         );
       });
 
@@ -328,7 +333,7 @@ describe('Graph', () => {
     it('should throw when pool doesnt exist', async () => {
       let errorMessage = '';
       try {
-        await poolsGraph.buildGraphFromRootPool('thisisntapool', true);
+        await poolsGraph.buildGraphFromRootPool('thisisntapool', []);
       } catch (error) {
         errorMessage = (error as Error).message;
       }
@@ -336,10 +341,16 @@ describe('Graph', () => {
     });
 
     context('using wrapped tokens', () => {
+      let tokensToUnwrap: string[];
       before(async () => {
+        tokensToUnwrap = [
+          '0x6b175474e89094c44da98b954eedeac495271d0f', // DAI
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
+          '0xdac17f958d2ee523a2206206994597c13d831ec7', // USDT
+        ];
         boostedNode = await poolsGraph.buildGraphFromRootPool(
           boostedPool.id,
-          true
+          tokensToUnwrap
         );
       });
 
@@ -350,7 +361,7 @@ describe('Graph', () => {
           boostedPoolInfo,
           0,
           '1',
-          true
+          tokensToUnwrap
         );
       });
 
@@ -374,7 +385,7 @@ describe('Graph', () => {
       before(async () => {
         boostedNode = await poolsGraph.buildGraphFromRootPool(
           boostedPool.id,
-          false
+          []
         );
       });
 
@@ -385,7 +396,7 @@ describe('Graph', () => {
           boostedPoolInfo,
           0,
           '1',
-          false
+          []
         );
       });
 
@@ -480,15 +491,22 @@ describe('Graph', () => {
     });
 
     context('using wrapped tokens', () => {
+      let tokensToUnwrap: string[];
       before(async () => {
+        tokensToUnwrap = [
+          '0x6b175474e89094c44da98b954eedeac495271d0f', // DAI
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
+          '0xdac17f958d2ee523a2206206994597c13d831ec7', // USDT
+          formatAddress(`address_STABLE`),
+        ];
         boostedNode = await poolsGraph.buildGraphFromRootPool(
           rootPool.id,
-          true
+          tokensToUnwrap
         );
       });
 
       it('should build boostedPool graph', async () => {
-        checkBoostedMeta(boostedNode, boostedMetaInfo, true);
+        checkBoostedMeta(boostedNode, boostedMetaInfo, tokensToUnwrap);
       });
 
       it('should sort in breadth first order', async () => {
@@ -513,14 +531,11 @@ describe('Graph', () => {
 
     context('using non-wrapped tokens', () => {
       before(async () => {
-        boostedNode = await poolsGraph.buildGraphFromRootPool(
-          rootPool.id,
-          false
-        );
+        boostedNode = await poolsGraph.buildGraphFromRootPool(rootPool.id, []);
       });
 
       it('should build boostedPool graph', async () => {
-        checkBoostedMeta(boostedNode, boostedMetaInfo, false);
+        checkBoostedMeta(boostedNode, boostedMetaInfo, []);
       });
 
       it('should sort in breadth first order', async () => {
@@ -636,15 +651,21 @@ describe('Graph', () => {
     });
 
     context('using wrapped tokens', () => {
+      let tokensToUnwrap: string[];
       before(async () => {
+        tokensToUnwrap = [
+          '0x6b175474e89094c44da98b954eedeac495271d0f', // DAI
+          '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
+          '0xdac17f958d2ee523a2206206994597c13d831ec7', // USDT
+        ];
         boostedNode = await poolsGraph.buildGraphFromRootPool(
           boostedPool.id,
-          true
+          tokensToUnwrap
         );
       });
 
       it('should build boostedPool graph', async () => {
-        checkBoostedMetaBig(boostedNode, boostedMetaBigInfo, true);
+        checkBoostedMetaBig(boostedNode, boostedMetaBigInfo, tokensToUnwrap);
       });
 
       it('should sort in breadth first order', async () => {
@@ -678,12 +699,12 @@ describe('Graph', () => {
       before(async () => {
         boostedNode = await poolsGraph.buildGraphFromRootPool(
           boostedPool.id,
-          false
+          []
         );
       });
 
       it('should build boostedPool graph', async () => {
-        checkBoostedMetaBig(boostedNode, boostedMetaBigInfo, false);
+        checkBoostedMetaBig(boostedNode, boostedMetaBigInfo, []);
       });
 
       it('should sort in breadth first order', async () => {
