@@ -32,6 +32,7 @@
     "node:goerli": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --fork $(. ./.env && echo $ALCHEMY_URL_GOERLI) --port 8000",
     "node:polygon": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.polygon.ts node --fork $(. ./.env && echo $ALCHEMY_URL_POLYGON) --port 8137",
     "node:arbitrum": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.arbitrum.ts node --fork $(. ./.env && echo $ALCHEMY_URL_ARBITRUM) --port 8161",
+    "node:gnosis": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.gnosis.ts node --fork $(. ./.env && echo $RPC_URL_GNOSIS) --port 8100",
     "typechain:generate": "npx typechain --target ethers-v5 --out-dir src/contracts './src/lib/abi/*.json'"
   },
   "devDependencies": {

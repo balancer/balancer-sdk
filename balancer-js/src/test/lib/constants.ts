@@ -689,12 +689,24 @@ export const ADDRESSES = {
     WXDAI: {
       address: '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d',
       decimals: 18,
-      symbol: 'DAI',
+      symbol: 'WXDAI',
+      slot: 3,
     },
     USDT: {
       address: '0x4ECaBa5870353805a9F068101A40E0f32ed605C6',
       decimals: 6,
       symbol: 'USDT',
+    },
+    WXDAI_MPS: {
+      id: '0x4bcf6b48906fa0f68bea1fc255869a41241d4851000200000000000000000021',
+      address: '0x4bcf6b48906fa0f68bea1fc255869a41241d4851',
+      decimals: 18,
+      symbol: 'WXDAI_MPS',
+    },
+    MPS: {
+      address: '0xfa57aa7beed63d03aaf85ffd1753f5f6242588fb',
+      decimals: 0,
+      symbol: 'MPS',
     },
   },
   [Network.GOERLI]: {
