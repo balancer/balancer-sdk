@@ -1045,6 +1045,10 @@ export class Exit {
       kind = 3;
     }
 
+    const allChildrenReceiveFromInternal = node.children.every((child) =>
+      this.receivesFromInternal(child)
+    );
+
     const call = Relayer.formatExitPoolInput({
       poolId: node.id,
       poolKind: kind,
@@ -1055,7 +1059,7 @@ export class Exit {
       assets: sortedTokens,
       minAmountsOut: sortedAmounts,
       userData,
-      toInternalBalance: false,
+      toInternalBalance: allChildrenReceiveFromInternal,
     });
     debugLog('\nExitProportional:');
     debugLog(JSON.stringify(call));
