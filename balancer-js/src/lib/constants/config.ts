@@ -432,6 +432,40 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     poolsToIgnore: [],
     sorConnectingTokens: [],
   },
+  [Network.ZKEVM]: {
+    chainId: Network.ZKEVM, //1101
+    addresses: {
+      contracts: {
+        aaveLinearPoolFactory: '0x4b7b369989e613ff2C65768B7Cf930cC927F901E',
+        balancerHelpers: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        balancerMinterAddress: '0x475D18169BE8a89357A9ee3Ab00ca386d20fA229',
+        composableStablePoolFactory:
+          '0x8eA89804145c007e7D226001A96955ad53836087',
+        erc4626LinearPoolFactory: '0x6B1Da720Be2D11d95177ccFc40A917c2688f396c',
+        feeDistributor: '',
+        gaugeController: '',
+        gearboxLinearPoolFactory: '0x687b8C9b41E01Be8B591725fac5d5f52D0564d79',
+        multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
+        protocolFeePercentagesProvider:
+          '0x1802953277FD955f9a254B80Aa0582f193cF1d77',
+        relayer: '0x4678731DC41142A902a114aC5B2F77b63f4a259D',
+        vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+        weightedPoolFactory: '0x03F3Fb107e74F2EAC9358862E91ad3c692712054',
+        yearnLinearPoolFactory: '',
+      },
+      tokens: {
+        bal: '0x120eF59b80774F02211563834d8E3b72cb1649d6',
+        wrappedNativeAsset: '0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9',
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.studio.thegraph.com/query/24660/balancer-polygon-zkevm-v2/v0.0.2',
+    },
+    pools: {},
+    poolsToIgnore: [],
+    sorConnectingTokens: [],
+  },
 };
 
 export const networkAddresses = (
