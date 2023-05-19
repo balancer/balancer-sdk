@@ -1,5 +1,7 @@
 import { TokenPriceService } from '@balancer-labs/sor';
 import axios from 'axios';
+import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { Network, BalancerNetworkConfig } from '@/types';
 
 export class CoingeckoTokenPriceService implements TokenPriceService {
   constructor(private readonly chainId: number) {}
@@ -37,36 +39,14 @@ export class CoingeckoTokenPriceService implements TokenPriceService {
   }
 
   private get platformId(): string {
-    switch (this.chainId) {
-      case 1:
-        return 'ethereum';
-      case 42:
-        return 'ethereum';
-      case 137:
-        return 'polygon-pos';
-      case 42161:
-        return 'arbitrum-one';
-      case 100:
-        return 'xdai';
-    }
-
-    return '2';
+    const networkConfig: BalancerNetworkConfig =
+      BALANCER_NETWORK_CONFIG[this.chainId as Network];
+    return networkConfig.thirdParty.coingecko.platformId || '2';
   }
 
   private get nativeAssetId(): string {
-    switch (this.chainId) {
-      case 1:
-        return 'eth';
-      case 42:
-        return 'eth';
-      case 137:
-        return '';
-      case 42161:
-        return 'eth';
-      case 100:
-        return 'xdai';
-    }
-
-    return '';
+    const networkConfig: BalancerNetworkConfig =
+      BALANCER_NETWORK_CONFIG[this.chainId as Network];
+    return networkConfig.thirdParty.coingecko.nativeAssetId || '';
   }
 }
