@@ -25,6 +25,13 @@ import { Swap } from './actions/swap';
 
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
+// Quickly switch useful debug logs on/off
+const DEBUG = false;
+
+function debugLog(log: string) {
+  if (DEBUG) console.log(log);
+}
+
 export function canUseJoinExit(
   swapType: SwapTypes,
   tokenIn: string,
@@ -282,14 +289,16 @@ function checkAmounts(
   );
   // totalIn should equal the original input swap amount
   // totalOut should equal the return amount from SOR minus any slippage allowance
-  // console.log(totalIn.toString(), 'totalIn');
-  // console.log(swapInfo.swapAmount.toString(), 'swapInfo.swapAmount');
-  // console.log(totalOut.toString(), 'totalOut');
-  // console.log(
-  //   subSlippage(swapInfo.returnAmount, BigNumber.from(slippage)).toString(),
-  //   'slippage'
-  // );
-  // console.log(swapInfo.returnAmount.toString(), 'swapInfo.returnAmount');
+  debugLog(`${totalIn.toString()} totalIn`);
+  debugLog(`${swapInfo.swapAmount.toString()} swapInfo.swapAmount`);
+  debugLog(`${totalOut.toString()} totalOut`);
+  debugLog(
+    `${subSlippage(
+      swapInfo.returnAmount,
+      BigNumber.from(slippage)
+    ).toString()} slippage`
+  );
+  debugLog(`${swapInfo.returnAmount.toString()} swapInfo.returnAmount`);
   const diffOut = totalOut.sub(
     subSlippage(swapInfo.returnAmount, BigNumber.from(slippage))
   );
