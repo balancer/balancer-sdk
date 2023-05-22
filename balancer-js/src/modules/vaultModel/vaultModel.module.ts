@@ -1,4 +1,4 @@
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { Zero } from '@ethersproject/constants';
 import { PoolDataService } from '@balancer-labs/sor';
 
@@ -6,6 +6,7 @@ import { PoolModel } from './poolModel/poolModel';
 import { JoinPoolRequest } from './poolModel/join';
 import { ExitPoolRequest } from './poolModel/exit';
 import { BatchSwapRequest, SwapRequest } from './poolModel/swap';
+import { UnwrapRequest } from './poolModel/unwrap';
 import { RelayerModel } from './relayer';
 import { PoolsSource } from './poolSource';
 import {
@@ -20,13 +21,15 @@ export enum ActionType {
   Join,
   Exit,
   Swap,
+  Unwrap,
 }
 
 export type Requests =
   | BatchSwapRequest
   | JoinPoolRequest
   | ExitPoolRequest
-  | SwapRequest;
+  | SwapRequest
+  | UnwrapRequest;
 
 /**
  * Controller / use-case layer for interacting with pools data.
@@ -59,24 +62,35 @@ export class VaultModel {
     const pools = await this.poolsSource.poolsDictionary(refresh);
     const deltas: Record<string, BigNumber> = {};
     for (const call of rawCalls) {
-      if (call.actionType === ActionType.Join) {
-        const [tokens, amounts] = await poolModel.doJoin(call, pools);
-        // const [tokens, amounts] = await this.doJoinPool(call);
-        this.updateDeltas(deltas, tokens, amounts);
-      } else if (call.actionType === ActionType.Exit) {
-        const [tokens, amounts] = await poolModel.doExit(call, pools);
-        this.updateDeltas(deltas, tokens, amounts);
-      } else if (call.actionType === ActionType.BatchSwap) {
-        const swapDeltas = await poolModel.doBatchSwap(call, pools);
-        this.updateDeltas(deltas, call.assets, swapDeltas);
-      } else {
-        const swapDeltas = await poolModel.doSingleSwap(call, pools);
-        this.updateDeltas(
-          deltas,
-          [call.request.assetOut, call.request.assetIn],
-          swapDeltas
-        );
+      let tokens: string[] = [];
+      let amounts: string[] = [];
+      switch (call.actionType) {
+        case ActionType.Join: {
+          [tokens, amounts] = await poolModel.doJoin(call, pools);
+          break;
+        }
+        case ActionType.Exit: {
+          [tokens, amounts] = await poolModel.doExit(call, pools);
+          break;
+        }
+        case ActionType.BatchSwap: {
+          tokens = call.assets;
+          amounts = await poolModel.doBatchSwap(call, pools);
+          break;
+        }
+        case ActionType.Swap: {
+          tokens = [call.request.assetOut, call.request.assetIn];
+          amounts = await poolModel.doSingleSwap(call, pools);
+          break;
+        }
+        case ActionType.Unwrap: {
+          [tokens, amounts] = await poolModel.doUnwrap(call, pools);
+          break;
+        }
+        default:
+          break;
       }
+      this.updateDeltas(deltas, tokens, amounts);
     }
     return deltas;
   }
@@ -121,5 +135,19 @@ export class VaultModel {
       outputReferences: call.outputReferences,
     };
     return exitPoolRequest;
+  }
+
+  static mapUnwrapRequest(
+    amount: BigNumberish,
+    outputReference: BigNumberish,
+    poolId: string
+  ): UnwrapRequest {
+    const unwrapRequest: UnwrapRequest = {
+      actionType: ActionType.Unwrap,
+      poolId,
+      amount,
+      outputReference,
+    };
+    return unwrapRequest;
   }
 }

@@ -8,6 +8,8 @@ export enum Network {
   KOVAN = 42,
   GNOSIS = 100,
   POLYGON = 137,
+  ZKEVM = 1101,
   ARBITRUM = 42161,
   FANTOM = 250,
+  SEPOLIA = 11155111,
 }

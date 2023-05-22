@@ -21,7 +21,7 @@ const signer = provider.getSigner();
 const testPoolId =
   '0x726e324c29a1e49309672b244bdc4ff62a270407000200000000000000000702';
 let pool: PoolWithMethods;
-const blockNumber = 41400000;
+const blockNumber = 43015527;
 
 describe('FX Pool - Calculate Liquidity', () => {
   const sdkConfig = {
@@ -54,12 +54,6 @@ describe('FX Pool - Calculate Liquidity', () => {
     ).total_.toBigInt();
     const liquidityBigInt = parseFixed(liquidity, 18).toBigInt();
     // expecting 5% of margin error
-    console.log(
-      formatFixed(
-        SolidityMaths.divDownFixed(liquidityBigInt, liquidityFromContract),
-        18
-      ).toString()
-    );
     expect(
       parseFloat(
         formatFixed(

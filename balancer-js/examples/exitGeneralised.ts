@@ -8,6 +8,7 @@ import {
   GraphQLArgs,
   Network,
   truncateAddresses,
+  removeItem,
 } from '../src/index';
 import { forkSetup, sendTransactionGetBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
@@ -17,37 +18,39 @@ import { SimulationType } from '../src/modules/simulation/simulation.module';
 
 // Expected frontend (FE) flow:
 // 1. User selects BPT amount to exit a pool
-// 2. FE calls exitGeneralised with simulation type VaultModel
-// 3. SDK calculates expectedAmountsOut that is at least 99% accurate
-// 4. User agrees expectedAmountsOut and approves relayer
-// 5. With approvals in place, FE calls exitGeneralised with simulation type Static
+// 2. FE calls exitInfo
+// 3. SDK returns estimatedAmountsOut that is at least 99% accurate and indicates which tokens should be unwrapped (tokensToUnwrap)
+// 4. User agrees estimatedAmountsOut and approves relayer
+// 5. With approvals in place, FE calls exitGeneralised with simulation type Static and tokensToUnwrap
 // 6. SDK calculates expectedAmountsOut that is 100% accurate
-// 7. SDK returns exitGeneralised transaction data with proper minAmountsOut limits in place
+// 7. SDK returns exitGeneralised transaction data with proper minAmountsOut limits in place (calculated using user defined slippage)
 // 8. User is now able to submit a safe transaction to the blockchain
 
 dotenv.config();
 
-// const network = Network.GOERLI;
-// const jsonRpcUrl = process.env.ALCHEMY_URL_GOERLI;
-// const blockNumber = 7890980;
-// const rpcUrl = 'http://127.0.0.1:8000';
-// const customSubgraphUrl =
-//   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
+const RPC_URLS: Record<number, string> = {
+  [Network.MAINNET]: `http://127.0.0.1:8545`,
+  [Network.GOERLI]: `http://127.0.0.1:8000`,
+  [Network.POLYGON]: `http://127.0.0.1:8137`,
+  [Network.ARBITRUM]: `http://127.0.0.1:8161`,
+};
+
+const FORK_NODES: Record<number, string> = {
+  [Network.MAINNET]: `${process.env.ALCHEMY_URL}`,
+  [Network.GOERLI]: `${process.env.ALCHEMY_URL_GOERLI}`,
+  [Network.POLYGON]: `${process.env.ALCHEMY_URL_POLYGON}`,
+  [Network.ARBITRUM]: `${process.env.ALCHEMY_URL_ARBITRUM}`,
+};
 
 const network = Network.MAINNET;
-const jsonRpcUrl = process.env.ALCHEMY_URL;
-const blockNumber = 16940624;
-const rpcUrl = 'http://127.0.0.1:8545';
-const customSubgraphUrl =
-  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2';
-
+const blockNumber = 17263241;
 const addresses = ADDRESSES[network];
-
+const jsonRpcUrl = FORK_NODES[network];
+const rpcUrl = RPC_URLS[network];
 // bb-a-usd
-const testPool = addresses.bbausd2;
-
+const testPool = addresses.bbgusd;
 // Amount of testPool BPT that will be used to exit
-const amount = parseFixed('2', testPool.decimals).toString();
+const amount = parseFixed('1000000', testPool.decimals).toString();
 
 // Setup local fork with correct balances/approval to exit bb-a-usd2 pool
 const setUp = async (provider: JsonRpcProvider) => {
@@ -117,27 +120,25 @@ const exit = async () => {
   const balancer = new BalancerSDK({
     network,
     rpcUrl,
-    customSubgraphUrl,
     subgraphQuery,
   });
 
   // Use SDK to create exit transaction
-  const { expectedAmountsOut, tokensOut } =
-    await balancer.pools.generalisedExit(
+  const { estimatedAmountsOut, tokensOut, tokensToUnwrap } =
+    await balancer.pools.getExitInfo(
       testPool.id,
       amount,
       signerAddress,
-      slippage,
-      signer,
-      SimulationType.VaultModel,
-      undefined
+      signer
     );
 
   // User reviews expectedAmountOut
-  console.log(' -- Simulating using Vault Model -- ');
+  console.log(' -- getExitInfo() -- ');
+  console.log(tokensToUnwrap.toString());
   console.table({
-    tokensOut: truncateAddresses([testPool.address, ...tokensOut]),
-    expectedAmountsOut: ['0', ...expectedAmountsOut],
+    tokensOut: truncateAddresses(tokensOut),
+    estimatedAmountsOut: estimatedAmountsOut,
+    unwrap: tokensOut.map((t) => tokensToUnwrap.includes(t)),
   });
 
   // User approves relayer
@@ -160,7 +161,8 @@ const exit = async () => {
     slippage,
     signer,
     SimulationType.Static,
-    relayerAuth
+    relayerAuth,
+    tokensToUnwrap
   );
 
   // Submit transaction and check balance deltas to confirm success
@@ -174,11 +176,12 @@ const exit = async () => {
 
   console.log(' -- Simulating using Static Call -- ');
   console.log('Price impact: ', formatFixed(query.priceImpact, 18));
+  console.log(`Amount Pool Token In: ${balanceDeltas[0].toString()}`);
   console.table({
-    tokensOut: truncateAddresses([testPool.address, ...query.tokensOut]),
-    minAmountsOut: ['0', ...query.minAmountsOut],
-    expectedAmountsOut: ['0', ...query.expectedAmountsOut],
-    balanceDeltas: balanceDeltas.map((b) => b.toString()),
+    tokensOut: truncateAddresses(query.tokensOut),
+    minAmountsOut: query.minAmountsOut,
+    expectedAmountsOut: query.expectedAmountsOut,
+    balanceDeltas: removeItem(balanceDeltas, 0).map((b) => b.toString()),
   });
 };
 
