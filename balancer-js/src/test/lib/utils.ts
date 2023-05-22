@@ -41,6 +41,7 @@ import mainnetPools from '../fixtures/pools-mainnet.json';
 import polygonPools from '../fixtures/pools-polygon.json';
 import { PoolsJsonRepository } from './pools-json-repository';
 import { Contracts } from '@/modules/contracts/contracts.module';
+import { SubgraphPool } from '@/modules/subgraph/subgraph';
 
 dotenv.config();
 
@@ -51,9 +52,11 @@ export interface TxResult {
   gasUsed: BigNumber;
 }
 
-const jsonPools = {
-  [Network.MAINNET]: mainnetPools,
-  [Network.POLYGON]: polygonPools,
+type JsonPools = { [key: number]: { data: { pools: SubgraphPool[] } } };
+
+const jsonPools: JsonPools = {
+  [Network.MAINNET]: mainnetPools as { data: { pools: SubgraphPool[] } },
+  [Network.POLYGON]: polygonPools as { data: { pools: SubgraphPool[] } },
 };
 
 export const RPC_URLS: Record<number, string> = {
@@ -368,6 +371,8 @@ export const getPoolFromFile = async (
   id: string,
   network: Network
 ): Promise<Pool> => {
+  if (jsonPools[network] === undefined)
+    throw new Error('No Pools JSON file for this network');
   const pool = await new PoolsJsonRepository(jsonPools[network], network).find(
     id
   );
