@@ -1,13 +1,14 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { expect } from 'chai';
 import { GaugeControllerMulticallRepository } from './multicall';
+import { Contracts } from '@/modules/contracts/contracts.module';
 
 describe('Gauge controller', () => {
   const provider = new JsonRpcProvider('http://127.0.0.1:8545', 1);
+  const { contracts } = new Contracts(1, provider);
   const fetcher = new GaugeControllerMulticallRepository(
-    '0xeefba1e63905ef1d7acba5a8513c70307c1ce441',
-    '0xc128468b7ce63ea702c1f104d55a2566b13d3abd',
-    provider
+    contracts.multicall,
+    '0xc128468b7ce63ea702c1f104d55a2566b13d3abd'
   );
 
   it('is fetching relative weights for current period', async () => {

@@ -1,11 +1,9 @@
 import { JsonFragment } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
-import { Provider } from '@ethersproject/providers';
 import { formatUnits } from '@ethersproject/units';
-import { VeBal__factory } from '@/contracts';
+import { Multicall, VeBal__factory } from '@/contracts';
 import { Multicaller } from '@/lib/utils/multiCaller';
 import { toJsTimestamp } from '@/lib/utils/time';
-import { ContractAddresses } from '@/types';
 
 export type VeBalLockInfo = {
   lockedEndDate: number;
@@ -23,28 +21,20 @@ type VeBalLockInfoResult = {
 };
 
 export class VeBal {
-  addresses: ContractAddresses;
-  provider: Provider;
-
-  constructor(addresses: ContractAddresses, provider: Provider) {
-    this.addresses = addresses;
-    this.provider = provider;
-  }
+  constructor(private veBalAddress: string, private multicall: Multicall) {}
 
   public async getLockInfo(
     account: string
   ): Promise<VeBalLockInfo | undefined> {
-    if (!this.addresses.veBal) throw new Error('veBal address must be defined');
+    if (!this.veBalAddress) throw new Error('veBal address must be defined');
 
-    const multicaller = new Multicaller(
-      this.addresses.multicall,
-      this.provider,
-      [...(VeBal__factory.abi as readonly JsonFragment[])]
-    );
+    const multicaller = new Multicaller(this.multicall, [
+      ...(VeBal__factory.abi as readonly JsonFragment[]),
+    ]);
 
-    multicaller.call('locked', this.addresses.veBal, 'locked', [account]);
-    multicaller.call('epoch', this.addresses.veBal, 'epoch');
-    multicaller.call('totalSupply', this.addresses.veBal, 'totalSupply()');
+    multicaller.call('locked', this.veBalAddress, 'locked', [account]);
+    multicaller.call('epoch', this.veBalAddress, 'epoch');
+    multicaller.call('totalSupply', this.veBalAddress, 'totalSupply()');
 
     const result = <VeBalLockInfoResult>await multicaller.execute();
 
