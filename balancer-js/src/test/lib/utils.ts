@@ -366,7 +366,7 @@ export class TestPoolHelper {
  */
 export const getPoolFromFile = async (
   id: string,
-  network: 1 | 137
+  network: Network
 ): Promise<Pool> => {
   const pool = await new PoolsJsonRepository(jsonPools[network], network).find(
     id
@@ -384,7 +384,7 @@ export const getPoolFromFile = async (
  */
 export const updateFromChain = async (
   pool: Pool,
-  network: 1 | 137 | 42161,
+  network: Network,
   provider: JsonRpcProvider
 ): Promise<Pool> => {
   const onChainPool = await getOnChainBalances(

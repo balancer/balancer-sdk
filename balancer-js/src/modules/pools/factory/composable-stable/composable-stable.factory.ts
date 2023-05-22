@@ -185,12 +185,12 @@ export class ComposableStableFactory implements PoolFactory {
       string[],
       boolean[],
       string,
-      string
+      string,
+      BytesLike
     ]
   ): string => {
     const composablePoolFactoryInterface =
       ComposableStablePoolFactory__factory.createInterface();
-    console.log(params);
     return composablePoolFactoryInterface.encodeFunctionData('create', params);
   };
 
