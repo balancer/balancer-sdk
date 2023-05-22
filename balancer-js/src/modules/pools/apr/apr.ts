@@ -285,7 +285,7 @@ export class PoolApr {
       } else if (gauge.balInflationRate) {
         const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
         const rewardValue = gauge.balInflationRate * 3600 * 24 * 365;
-        return Math.round(10000 * rewardValue) / totalSupplyUsd;
+        return Math.round(boost * 10000 * rewardValue) / totalSupplyUsd;
       } else {
         return 0;
       }
