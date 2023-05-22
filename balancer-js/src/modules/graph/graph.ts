@@ -1,8 +1,11 @@
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { Zero, WeiPerEther } from '@ethersproject/constants';
+
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { isSameAddress, parsePoolInfo } from '@/lib/utils';
+import { _downscaleDown } from '@/lib/utils/solidityMaths';
 import { Pool, PoolAttribute, PoolType } from '@/types';
-import { Zero, WeiPerEther } from '@ethersproject/constants';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+
 import { Findable } from '../data/types';
 import { PoolTypeConcerns } from '../pools/pool-type-concerns';
 
@@ -24,9 +27,11 @@ export interface Node {
   isLeaf: boolean;
   spotPrices: SpotPrices;
   decimals: number;
+  balance: string;
+  priceRate: string;
 }
 
-type JoinAction = 'input' | 'batchSwap' | 'joinPool';
+type JoinAction = 'input' | 'batchSwap' | 'wrap' | 'joinPool';
 const joinActions = new Map<PoolType, JoinAction>();
 supportedPoolTypes.forEach((type) => {
   if (type.includes('Linear') && supportedPoolTypes.includes(type))
@@ -41,7 +46,7 @@ joinActions.set(PoolType.StablePhantom, 'batchSwap');
 joinActions.set(PoolType.Weighted, 'joinPool');
 joinActions.set(PoolType.ComposableStable, 'joinPool');
 
-type ExitAction = 'output' | 'batchSwap' | 'exitPool' | 'exitPoolProportional';
+type ExitAction = 'output' | 'batchSwap' | 'unwrap' | 'exitPool';
 const exitActions = new Map<PoolType, ExitAction>();
 supportedPoolTypes.forEach((type) => {
   if (type.includes('Linear') && supportedPoolTypes.includes(type))
@@ -59,7 +64,10 @@ exitActions.set(PoolType.ComposableStable, 'exitPool');
 export class PoolGraph {
   constructor(private pools: Findable<Pool, PoolAttribute>) {}
 
-  async buildGraphFromRootPool(poolId: string): Promise<Node> {
+  async buildGraphFromRootPool(
+    poolId: string,
+    tokensToUnwrap: string[]
+  ): Promise<Node> {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
     const nodeIndex = 0;
@@ -67,7 +75,8 @@ export class PoolGraph {
       rootPool.address,
       nodeIndex,
       undefined,
-      WeiPerEther
+      WeiPerEther,
+      tokensToUnwrap
     );
     return rootNode[0];
   }
@@ -89,7 +98,8 @@ export class PoolGraph {
     address: string,
     nodeIndex: number,
     parent: Node | undefined,
-    proportionOfParent: BigNumber
+    proportionOfParent: BigNumber,
+    tokensToUnwrap: string[]
   ): Promise<[Node, number]> {
     const pool = await this.pools.findBy('address', address);
 
@@ -99,21 +109,21 @@ export class PoolGraph {
         throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
       } else {
         // If pool not found by address, but it has parent, assume it's a leaf token and add a leafTokenNode
-        // TODO: maybe it's a safety issue? Can we be safer?
         const parentPool = (await this.pools.findBy(
           'address',
           parent.address
         )) as Pool;
-        const leafTokenDecimals =
-          parentPool.tokens[parentPool.tokensList.indexOf(address)].decimals ??
-          18;
+        const tokenIndex = parentPool.tokensList.indexOf(address);
+        const leafTokenDecimals = parentPool.tokens[tokenIndex].decimals ?? 18;
+        const { balancesEvm } = parsePoolInfo(parentPool);
 
         const nodeInfo = PoolGraph.createInputTokenNode(
           nodeIndex,
           address,
           leafTokenDecimals,
           parent,
-          proportionOfParent
+          proportionOfParent,
+          balancesEvm[tokenIndex].toString()
         );
         return nodeInfo;
       }
@@ -159,6 +169,8 @@ export class PoolGraph {
       isLeaf: false,
       spotPrices,
       decimals,
+      balance: pool.totalShares,
+      priceRate: WeiPerEther.toString(),
     };
     this.updateNodeIfProportionalExit(pool, poolNode);
     nodeIndex++;
@@ -166,7 +178,8 @@ export class PoolGraph {
       [poolNode, nodeIndex] = this.createLinearNodeChildren(
         poolNode,
         nodeIndex,
-        pool
+        pool,
+        tokensToUnwrap
       );
     } else {
       const { balancesEvm } = parsePoolInfo(pool);
@@ -190,7 +203,8 @@ export class PoolGraph {
           pool.tokens[i].address,
           nodeIndex,
           poolNode,
-          finalProportion
+          finalProportion,
+          tokensToUnwrap
         );
         nodeIndex = childNode[1];
         if (childNode[0]) poolNode.children.push(childNode[0]);
@@ -216,25 +230,104 @@ export class PoolGraph {
   createLinearNodeChildren(
     linearPoolNode: Node,
     nodeIndex: number,
-    linearPool: Pool
+    linearPool: Pool,
+    tokensToUnwrap: string[]
   ): [Node, number] {
     // Main token
     if (linearPool.mainIndex === undefined)
       throw new Error('Issue With Linear Pool');
 
+    if (
+      tokensToUnwrap
+        .map((t) => t.toLowerCase())
+        .includes(linearPool.tokensList[linearPool.mainIndex].toLowerCase())
+    ) {
+      // Linear pool will be joined via wrapped token. This will be the child node.
+      const wrappedNodeInfo = this.createWrappedTokenNode(
+        linearPool,
+        nodeIndex,
+        linearPoolNode,
+        linearPoolNode.proportionOfParent
+      );
+      linearPoolNode.children.push(wrappedNodeInfo[0]);
+      return [linearPoolNode, wrappedNodeInfo[1]];
+    } else {
+      const { balancesEvm } = parsePoolInfo(linearPool);
+      const mainTokenDecimals =
+        linearPool.tokens[linearPool.mainIndex].decimals ?? 18;
+
+      const nodeInfo = PoolGraph.createInputTokenNode(
+        nodeIndex,
+        linearPool.tokensList[linearPool.mainIndex],
+        mainTokenDecimals,
+        linearPoolNode,
+        linearPoolNode.proportionOfParent,
+        balancesEvm[linearPool.mainIndex].toString()
+      );
+      linearPoolNode.children.push(nodeInfo[0]);
+      nodeIndex = nodeInfo[1];
+      return [linearPoolNode, nodeIndex];
+    }
+  }
+
+  createWrappedTokenNode(
+    linearPool: Pool,
+    nodeIndex: number,
+    parent: Node | undefined,
+    proportionOfParent: BigNumber
+  ): [Node, number] {
+    if (
+      linearPool.wrappedIndex === undefined ||
+      linearPool.mainIndex === undefined
+    )
+      throw new Error('Issue With Linear Pool');
+
+    const { balancesEvm, upScaledBalances, scalingFactorsRaw, priceRates } =
+      parsePoolInfo(linearPool);
+
+    const wrappedTokenNode: Node = {
+      type: 'WrappedToken',
+      address: linearPool.tokensList[linearPool.wrappedIndex],
+      id: 'N/A',
+      children: [],
+      marked: false,
+      joinAction: 'wrap',
+      exitAction: 'unwrap',
+      isProportionalExit: false,
+      index: nodeIndex.toString(),
+      parent,
+      proportionOfParent,
+      isLeaf: false,
+      spotPrices: {},
+      decimals: 18,
+      balance: balancesEvm[linearPool.wrappedIndex].toString(),
+      priceRate: priceRates[linearPool.wrappedIndex].toString(),
+    };
+    nodeIndex++;
+
     const mainTokenDecimals =
       linearPool.tokens[linearPool.mainIndex].decimals ?? 18;
 
-    const nodeInfo = PoolGraph.createInputTokenNode(
+    /**
+     * - upscaledBalances takes price rate into account, which is equivalent to unwrapping tokens
+     * - downscaling with scalingFactorsRaw will downscale the unwrapped balance to the main token decimals
+     */
+    const unwrappedBalance = _downscaleDown(
+      upScaledBalances[linearPool.wrappedIndex],
+      scalingFactorsRaw[linearPool.mainIndex]
+    ).toString();
+
+    const inputNode = PoolGraph.createInputTokenNode(
       nodeIndex,
       linearPool.tokensList[linearPool.mainIndex],
       mainTokenDecimals,
-      linearPoolNode,
-      linearPoolNode.proportionOfParent
+      wrappedTokenNode,
+      proportionOfParent,
+      unwrappedBalance
     );
-    linearPoolNode.children.push(nodeInfo[0]);
-    nodeIndex = nodeInfo[1];
-    return [linearPoolNode, nodeIndex];
+    wrappedTokenNode.children = [inputNode[0]];
+    nodeIndex = inputNode[1];
+    return [wrappedTokenNode, nodeIndex];
   }
 
   static createInputTokenNode(
@@ -242,7 +335,8 @@ export class PoolGraph {
     address: string,
     decimals: number,
     parent: Node | undefined,
-    proportionOfParent: BigNumber
+    proportionOfParent: BigNumber,
+    balance: string
   ): [Node, number] {
     return [
       {
@@ -260,6 +354,8 @@ export class PoolGraph {
         isLeaf: true,
         spotPrices: {},
         decimals,
+        balance,
+        priceRate: WeiPerEther.toString(),
       },
       nodeIndex + 1,
     ];
@@ -302,11 +398,15 @@ export class PoolGraph {
   }
 
   // Get full graph from root pool and return ordered nodes
-  getGraphNodes = async (isJoin: boolean, poolId: string): Promise<Node[]> => {
+  getGraphNodes = async (
+    isJoin: boolean,
+    poolId: string,
+    tokensToUnwrap: string[]
+  ): Promise<Node[]> => {
     const rootPool = await this.pools.find(poolId);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
-    const rootNode = await this.buildGraphFromRootPool(poolId);
+    const rootNode = await this.buildGraphFromRootPool(poolId, tokensToUnwrap);
 
     if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
 

@@ -86,6 +86,7 @@ async function join() {
   console.log('Balances before exit:        ', tokenBalancesBefore);
   console.log('Balances after exit:         ', tokenBalancesAfter);
   console.log('Min BPT expected after exit: ', [minBPTOut.toString()]);
+  console.log('Price impact:                ', priceImpact.toString());
 }
 
 // yarn examples:run ./examples/join.ts

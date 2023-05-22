@@ -58,6 +58,7 @@ export const mapType = (subgraphPool: SubgraphPool, chainId: number): Pool => {
     lowerTarget: subgraphPool.lowerTarget ?? '0',
     upperTarget: subgraphPool.upperTarget ?? '0',
     isInRecoveryMode: subgraphPool.isInRecoveryMode ?? false,
+    isPaused: subgraphPool.isPaused ?? false,
   };
 };
 

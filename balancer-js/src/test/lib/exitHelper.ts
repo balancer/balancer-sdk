@@ -1,11 +1,11 @@
-import { PoolWithMethods } from '@/types';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumber } from '@ethersproject/bignumber';
-import { expect } from 'chai';
 import { formatFixed } from '@ethersproject/bignumber';
-import { addSlippage, subSlippage } from '@/lib/utils/slippageHelper';
+import { expect } from 'chai';
+
+import { insert, addSlippage, subSlippage } from '@/lib/utils';
 import { accuracy, sendTransactionGetBalances } from '@/test/lib/utils';
-import { insert } from '@/lib/utils';
+import { PoolWithMethods } from '@/types';
 
 export const testExactBptIn = async (
   pool: PoolWithMethods,

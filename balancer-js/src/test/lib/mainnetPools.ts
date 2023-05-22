@@ -42,6 +42,44 @@ export const GRAVI_AURA = factories.subgraphPoolBase.build({
   ],
 });
 
+export const B_stETH_STABLE = factories.subgraphPoolBase.build({
+  id: '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080',
+  address: '0x32296969Ef14EB0c6d29669C550D4a0449130230'.toLowerCase(),
+  tokens: [
+    factories.subgraphToken.transient({ symbol: 'wETH' }).build(),
+    factories.subgraphToken.transient({ symbol: 'wstETH' }).build(),
+  ],
+  poolType: 'MetaStable',
+});
+
+export const B_50auraBAL_50wstETH = factories.subgraphPoolBase.build({
+  id: '0x0731399bd09ced6765ff1e0cb884bd223298a5a6000200000000000000000398',
+  address: '0x0731399bD09CED6765ff1e0cB884bd223298a5a6'.toLowerCase(),
+  tokens: [
+    factories.subgraphToken.transient({ symbol: 'wstETH' }).build(),
+    factories.subgraphToken.transient({ symbol: 'auraBAL' }).build(),
+  ],
+});
+
+export const wstETH_rETH_sfrxETH = factories.subgraphPoolBase.build({
+  id: '0x5aee1e99fe86960377de9f88689616916d5dcabe000000000000000000000467',
+  address: '0x5aee1e99fe86960377de9f88689616916d5dcabe'.toLowerCase(),
+  tokens: [
+    factories.subgraphToken.transient({ symbol: 'wstETH' }).build(),
+    factories.subgraphToken.transient({ symbol: 'rETH' }).build(),
+    factories.subgraphToken.transient({ symbol: 'sfrxETH' }).build(),
+  ],
+});
+
+export const UZD_bbausd3 = factories.subgraphPoolBase.build({
+  id: '0xec3626fee40ef95e7c0cbb1d495c8b67b34d398300000000000000000000053d',
+  address: '0xec3626fee40ef95e7c0cbb1d495c8b67b34d3983'.toLowerCase(),
+  tokens: [
+    factories.subgraphToken.transient({ symbol: 'UZD' }).build(),
+    factories.subgraphToken.transient({ symbol: 'bb-a-USD' }).build(),
+  ],
+});
+
 export const getForkedPools = async (
   provider: JsonRpcProvider,
   pools: SubgraphPoolBase[] = [B_50WBTC_50WETH]

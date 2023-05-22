@@ -14,6 +14,7 @@ import {
   StablePool__factory,
   StaticATokenRateProvider__factory,
   WeightedPool__factory,
+  GyroEV2__factory,
 } from '@/contracts';
 import { JsonFragment } from '@ethersproject/abi';
 
@@ -41,6 +42,7 @@ export async function getOnChainBalances<
         ...(ConvergentCurvePool__factory.abi as readonly JsonFragment[]),
         ...(LinearPool__factory.abi as readonly JsonFragment[]),
         ...(ComposableStablePool__factory.abi as readonly JsonFragment[]),
+        ...(GyroEV2__factory.abi as readonly JsonFragment[]),
       ].map((row) => [row.name, row])
     )
   );
@@ -139,6 +141,9 @@ export async function getOnChainBalances<
         'getSwapFeePercentage'
       );
     }
+    if (pool.poolType.toString() === 'GyroE' && pool.poolTypeVersion === 2) {
+      multiPool.call(`${pool.id}.tokenRates`, pool.address, 'getTokenRates');
+    }
   });
 
   let pools = {} as Record<
@@ -156,6 +161,7 @@ export async function getOnChainBalances<
       virtualSupply?: string;
       rate?: string;
       actualSupply?: string;
+      tokenRates?: string[];
     }
   >;
 
@@ -174,6 +180,7 @@ export async function getOnChainBalances<
         virtualSupply?: string;
         rate?: string;
         actualSupply?: string;
+        tokenRates?: string[];
       }
     >;
   } catch (err) {
@@ -191,6 +198,7 @@ export async function getOnChainBalances<
         totalSupply,
         virtualSupply,
         actualSupply,
+        tokenRates,
       } = onchainData;
 
       if (
@@ -272,6 +280,21 @@ export async function getOnChainBalances<
         subgraphPools[index].totalShares = formatFixed(actualSupply, 18);
       } else {
         subgraphPools[index].totalShares = formatFixed(totalSupply, 18);
+      }
+
+      if (
+        subgraphPools[index].poolType === 'GyroE' &&
+        subgraphPools[index].poolTypeVersion == 2
+      ) {
+        if (!Array.isArray(tokenRates) || tokenRates.length !== 2) {
+          console.error(
+            `GyroEV2 pool with missing or invalid tokenRates: ${poolId}`
+          );
+          return;
+        }
+        subgraphPools[index].tokenRates = tokenRates.map((rate) =>
+          formatFixed(rate, 18)
+        );
       }
 
       onChainPools.push(subgraphPools[index]);

@@ -1,4 +1,4 @@
-// yarn test:only ./src/modules/pools/pool-types/concerns/composableStable/exitV3.concern.integration.spec.ts
+// yarn test:only ./src/modules/pools/pool-types/concerns/composableStable/exitV4.concern.integration.spec.ts
 import dotenv from 'dotenv';
 import { parseFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
@@ -20,14 +20,14 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
-const blockNumber = 16649181;
+const blockNumber = 17280000;
 
 // wstETH-rETH-sfrxETH-BPT
 const testPoolId =
-  '0x5aee1e99fe86960377de9f88689616916d5dcabe000000000000000000000467';
+  '0xec3626fee40ef95e7c0cbb1d495c8b67b34d398300000000000000000000053d';
 let pool: PoolWithMethods;
 
-describe('ComposableStableV3 Exits', () => {
+describe('ComposableStableV4 Exits', () => {
   beforeEach(async () => {
     // Setup forked network, set initial token balances and allowances
     await forkSetup(
@@ -79,7 +79,7 @@ describe('ComposableStableV3 Exits', () => {
     it('single token with value, token out after BPT index', async () => {
       const tokensOut = removeItem(pool.tokensList, pool.bptIndex);
       const amountsOut = Array(tokensOut.length).fill('0');
-      amountsOut[2] = parseFixed('0.1', 18).toString();
+      amountsOut[1] = parseFixed('0.1', 18).toString();
       await testExactTokensOut(pool, signer, tokensOut, amountsOut);
     });
   });

@@ -14,7 +14,7 @@ import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
 import { Join } from '../joins/joins.module';
-import { Exit } from '../exits/exits.module';
+import { Exit, GeneralisedExitOutput, ExitInfo } from '../exits/exits.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
 import { Simulation, SimulationType } from '../simulation/simulation.module';
@@ -356,8 +356,9 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param userAddress     User address
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
    * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
-   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+   * @param simulationType  Simulation type (Tenderly or Static) - VaultModel should not be used to build exit transaction
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+   * @param tokensToUnwrap  List all tokens that requires exit by unwrapping - info provided by getExitInfo
    * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
    */
   async generalisedExit(
@@ -366,24 +367,42 @@ export class Pools implements Findable<PoolWithMethods> {
     userAddress: string,
     slippage: string,
     signer: JsonRpcSigner,
-    simulationType: SimulationType,
-    authorisation?: string
-  ): Promise<{
-    to: string;
-    encodedCall: string;
-    tokensOut: string[];
-    expectedAmountsOut: string[];
-    minAmountsOut: string[];
-    priceImpact: string;
-  }> {
-    return this.exitService.exitPool(
+    simulationType: SimulationType.Static | SimulationType.Tenderly,
+    authorisation?: string,
+    tokensToUnwrap?: string[]
+  ): Promise<GeneralisedExitOutput> {
+    return this.exitService.buildExitCall(
       poolId,
       amount,
       userAddress,
       slippage,
       signer,
       simulationType,
-      authorisation
+      authorisation,
+      tokensToUnwrap
+    );
+  }
+
+  /**
+   * Gets info required to build generalised exit transaction
+   *
+   * @param poolId          Pool id
+   * @param amountBptIn     BPT amount in EVM scale
+   * @param userAddress     User address
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+   * @returns info required to build a generalised exit transaction including whether tokens need to be unwrapped
+   */
+  async getExitInfo(
+    poolId: string,
+    amountBptIn: string,
+    userAddress: string,
+    signer: JsonRpcSigner
+  ): Promise<ExitInfo> {
+    return this.exitService.getExitInfo(
+      poolId,
+      amountBptIn,
+      userAddress,
+      signer
     );
   }
 
