@@ -1,4 +1,4 @@
-// yarn test:only ./src/modules/pools/pool-types/concerns/fx/liquidity.concern.integration.spec.ts
+// yarn test:only ./src/modules/pools/pool-types/concerns/gyro/liquidity.concern.integration.spec.ts
 import dotenv from 'dotenv';
 import { Network, PoolWithMethods } from '@/types';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
@@ -16,7 +16,7 @@ const rpcUrlLocal = 'http://127.0.0.1:8137';
 
 const provider = new ethers.providers.JsonRpcProvider(rpcUrlLocal, network);
 const signer = provider.getSigner();
-const blockNumber = 42505555;
+const blockNumber = 43015527;
 
 describe('Gyro Pools - Calculate Liquidity', () => {
   const sdkConfig = {
