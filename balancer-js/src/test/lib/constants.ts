@@ -338,6 +338,20 @@ export const ADDRESSES = {
       symbol: 'bb-t-stkAPE',
       slot: 0,
     },
+    swEth_bbaweth: {
+      id: '0x02d928e68d8f10c0358566152677db51e1e2dc8c00000000000000000000051e',
+      address: '0x02d928e68d8f10c0358566152677db51e1e2dc8c',
+      decimals: 18,
+      symbol: 'swETH-bbawETH-BPT',
+      slot: 0,
+    },
+    bbaweth: {
+      id: '0x60d604890feaa0b5460b28a424407c24fe89374a0000000000000000000004fc',
+      address: '0x60d604890feaa0b5460b28a424407c24fe89374a',
+      decimals: 18,
+      symbol: 'bbaweth',
+      slot: 0,
+    },
   },
   [Network.KOVAN]: {
     // Visit https://balancer-faucet.on.fleek.co/#/faucet for test tokens
