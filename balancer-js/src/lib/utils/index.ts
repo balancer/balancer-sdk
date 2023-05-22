@@ -147,6 +147,6 @@ export const findEventInReceiptLogs = ({
 
 export const getRandomBytes32 = (): string => {
   const getRandomBytes8 = () => Math.random().toString(16).slice(2, 10);
-  const randomBytes32 = Array(4).fill(null).map(getRandomBytes8).join();
+  const randomBytes32 = Array(8).fill(null).map(getRandomBytes8).join('');
   return `0x${randomBytes32}`;
 };

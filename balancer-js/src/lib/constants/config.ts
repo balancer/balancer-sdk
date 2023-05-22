@@ -27,7 +27,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         veBalProxy: '0x6f5a2eE11E7a772AeB5114A20d0D7c0ff61EB8A0',
         weightedPoolFactory: '0x897888115ada5773e02aa29f775430bfb5f34c51',
         composableStablePoolFactory:
-          '0xdba127fBc23fb20F5929C546af220A991b5C6e01',
+          '0xfADa0f4547AB2de89D1304A668C39B3E09Aa7c76',
         erc4626LinearPoolFactory: '0x67A25ca2350Ebf4a0C475cA74C257C94a373b828',
         aaveLinearPoolFactory: '0xb9f8ab3ed3f3acba64bc6cd2dca74b7f38fd7b88',
         eulerLinearPoolFactory: '0x5f43fba61f63fa6bff101a0a0458cea917f6b347',
