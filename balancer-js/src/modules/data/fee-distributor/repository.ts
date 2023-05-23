@@ -1,6 +1,6 @@
 import { TokenBalance } from '@/modules/claims/ClaimService';
 import { FeeDistributor } from '@/modules/contracts/implementations/feeDistributor';
-import { Multicall } from '@/modules/contracts/implementations/multicall';
+import { Multicall } from '@/contracts';
 import { Interface } from '@ethersproject/abi';
 import { getAddress } from '@ethersproject/address';
 import { BigNumber } from '@ethersproject/bignumber';
@@ -40,43 +40,47 @@ const bbAUsdInterface = new Interface([
 ]);
 
 export class FeeDistributorRepository implements BaseFeeDistributor {
-  multicall: Contract;
   feeDistributor: Contract;
   data?: FeeDistributorData;
 
   constructor(
-    multicallAddress: string,
+    private multicall: Multicall,
     private feeDistributorAddress: string,
     private balAddress: string,
     private veBalAddress: string,
     private bbAUsdAddress: string,
     provider: Provider
   ) {
-    this.multicall = Multicall(multicallAddress, provider);
     this.feeDistributor = FeeDistributor(feeDistributorAddress, provider);
   }
 
   async fetch(timestamp: number): Promise<FeeDistributorData> {
     const previousWeek = this.getPreviousWeek(timestamp);
     const payload = [
-      [
-        this.feeDistributorAddress,
-        feeDistributorInterface.encodeFunctionData(
+      {
+        target: this.feeDistributorAddress,
+        callData: feeDistributorInterface.encodeFunctionData(
           'getTokensDistributedInWeek',
           [getAddress(this.balAddress), previousWeek]
         ),
-      ],
-      [
-        this.feeDistributorAddress,
-        feeDistributorInterface.encodeFunctionData(
+      },
+      {
+        target: this.feeDistributorAddress,
+        callData: feeDistributorInterface.encodeFunctionData(
           'getTokensDistributedInWeek',
           [getAddress(this.bbAUsdAddress), previousWeek]
         ),
-      ],
-      [this.veBalAddress, veBalInterface.encodeFunctionData('totalSupply', [])],
-      [this.bbAUsdAddress, bbAUsdInterface.encodeFunctionData('getRate', [])],
+      },
+      {
+        target: this.veBalAddress,
+        callData: veBalInterface.encodeFunctionData('totalSupply', []),
+      },
+      {
+        target: this.bbAUsdAddress,
+        callData: bbAUsdInterface.encodeFunctionData('getRate', []),
+      },
     ];
-    const [, res] = await this.multicall.aggregate(payload);
+    const [, res] = await this.multicall.callStatic.aggregate(payload);
 
     const data = {
       balAmount: parseFloat(formatUnits(res[0], 18)),

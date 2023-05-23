@@ -37,8 +37,7 @@ describe('ClaimService On Ethereum', () => {
         sdk.data.liquidityGauges,
         sdk.data.feeDistributor,
         sdk.networkConfig.chainId,
-        sdk.networkConfig.addresses.contracts.multicall,
-        sdk.provider,
+        sdk.contracts.multicall,
         sdk.networkConfig.addresses.contracts.gaugeClaimHelper,
         sdk.networkConfig.addresses.contracts.balancerMinterAddress
       );
@@ -221,8 +220,7 @@ describe('ClaimService On Polygon', () => {
       sdk.data.liquidityGauges,
       sdk.data.feeDistributor,
       sdk.networkConfig.chainId,
-      sdk.networkConfig.addresses.contracts.multicall,
-      sdk.provider,
+      sdk.contracts.multicall,
       sdk.networkConfig.addresses.contracts.gaugeClaimHelper,
       sdk.networkConfig.addresses.contracts.balancerMinterAddress
     );
@@ -244,8 +242,7 @@ describe('ClaimService On Polygon', () => {
         sdk.data.liquidityGauges,
         sdk.data.feeDistributor,
         sdk.networkConfig.chainId,
-        sdk.networkConfig.addresses.contracts.multicall,
-        sdk.provider,
+        sdk.contracts.multicall,
         sdk.networkConfig.addresses.contracts.gaugeClaimHelper
       );
       service

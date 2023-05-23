@@ -2,15 +2,18 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import { expect } from 'chai';
 import { BigNumber } from '@ethersproject/bignumber';
 import { FeeDistributorRepository } from './repository';
+import { Multicall__factory } from '@/contracts';
 
 describe('FeeDistributorRepository', () => {
+  const provider = new JsonRpcProvider('', 1);
+  const multicall = Multicall__factory.connect('', provider);
   const repo = new FeeDistributorRepository(
+    multicall,
     '',
     '',
     '',
     '',
-    '',
-    new JsonRpcProvider('', 1)
+    provider
   );
 
   const claimableTokens: string[] = [

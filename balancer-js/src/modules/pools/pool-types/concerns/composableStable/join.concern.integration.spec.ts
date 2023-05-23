@@ -8,12 +8,14 @@ import {
   Network,
   replace,
   BALANCER_NETWORK_CONFIG,
+  Pools,
 } from '@/.';
 import {
   FORK_NODES,
   forkSetup,
+  getPoolFromFile,
   RPC_URLS,
-  TestPoolHelper,
+  updateFromChain,
 } from '@/test/lib/utils';
 import {
   testExactTokensIn,
@@ -23,18 +25,17 @@ import {
 import { AddressZero } from '@ethersproject/constants';
 
 describe('ComposableStable Pool - Join Functions', async () => {
-  let signerAddress: string;
-  let pool: PoolWithMethods;
-  let testPoolHelper: TestPoolHelper;
-  let network: Network;
-  let jsonRpcUrl: string;
-  let rpcUrl: string;
-  let provider: JsonRpcProvider;
-  let signer: JsonRpcSigner;
-  let blockNumber: number;
-  let testPoolId: string;
-
   context('Integration Tests - Join V1', async () => {
+    let signerAddress: string;
+    let pool: PoolWithMethods;
+    let network: Network;
+    let jsonRpcUrl: string;
+    let rpcUrl: string;
+    let provider: JsonRpcProvider;
+    let signer: JsonRpcSigner;
+    let blockNumber: number;
+    let testPoolId: string;
+
     before(async () => {
       network = Network.POLYGON;
       rpcUrl = RPC_URLS[network];
@@ -42,19 +43,14 @@ describe('ComposableStable Pool - Join Functions', async () => {
       signer = provider.getSigner();
       signerAddress = await signer.getAddress();
       jsonRpcUrl = FORK_NODES[network];
-      blockNumber = 42745087;
+      blockNumber = 40818844;
       testPoolId =
         '0x02d2e2d7a89d6c5cb3681cfcb6f7dac02a55eda400000000000000000000088f';
 
-      testPoolHelper = new TestPoolHelper(
-        testPoolId,
-        network,
-        rpcUrl,
-        blockNumber
-      );
+      let testPool = await getPoolFromFile(testPoolId, network);
+      testPool = await updateFromChain(testPool, network, provider);
 
-      // Gets initial pool info from Subgraph
-      pool = await testPoolHelper.getPool();
+      pool = Pools.wrap(testPool, BALANCER_NETWORK_CONFIG[network]);
     });
 
     // We have to rest the fork between each test as pool value changes after tx is submitted
@@ -68,9 +64,10 @@ describe('ComposableStable Pool - Join Functions', async () => {
         jsonRpcUrl,
         blockNumber // holds the same state as the static repository
       );
+      let testPool = await getPoolFromFile(testPoolId, network);
+      testPool = await updateFromChain(testPool, network, provider);
 
-      // Updatate pool info with onchain state from fork block no
-      pool = await testPoolHelper.getPool();
+      pool = Pools.wrap(testPool, BALANCER_NETWORK_CONFIG[network]);
     });
 
     it('should join - all tokens have value', async () => {
@@ -105,31 +102,32 @@ describe('ComposableStable Pool - Join Functions', async () => {
   });
 
   context('Integration Tests - Join V4', async () => {
-    beforeEach(async () => {
+    let signerAddress: string;
+    let pool: PoolWithMethods;
+    let network: Network;
+    let jsonRpcUrl: string;
+    let rpcUrl: string;
+    let provider: JsonRpcProvider;
+    let signer: JsonRpcSigner;
+    let blockNumber: number;
+    let testPoolId: string;
+    before(async () => {
       network = Network.MAINNET;
       rpcUrl = RPC_URLS[network];
       provider = new JsonRpcProvider(rpcUrl, network);
       signer = provider.getSigner();
       signerAddress = await signer.getAddress();
       jsonRpcUrl = FORK_NODES[network];
-      blockNumber = 17280000;
+      blockNumber = 17317373;
       testPoolId =
         '0xd61e198e139369a40818fe05f5d5e6e045cd6eaf000000000000000000000540';
 
-      testPoolHelper = new TestPoolHelper(
-        testPoolId,
-        network,
-        rpcUrl,
-        blockNumber
-      );
+      let testPool = await getPoolFromFile(testPoolId, network);
+      testPool = await updateFromChain(testPool, network, provider);
 
-      // Gets initial pool info from Subgraph
-      pool = await testPoolHelper.getPool();
+      pool = Pools.wrap(testPool, BALANCER_NETWORK_CONFIG[network]);
     });
-
-    // We have to rest the fork between each test as pool value changes after tx is submitted
     beforeEach(async () => {
-      // Setup forked network, set initial token balances and allowances
       await forkSetup(
         signer,
         pool.tokensList,
@@ -140,8 +138,10 @@ describe('ComposableStable Pool - Join Functions', async () => {
         [false, true, false]
       );
 
-      // Updatate pool info with onchain state from fork block no
-      pool = await testPoolHelper.getPool();
+      let testPool = await getPoolFromFile(testPoolId, network);
+      testPool = await updateFromChain(testPool, network, provider);
+
+      pool = Pools.wrap(testPool, BALANCER_NETWORK_CONFIG[network]);
     });
 
     it('should join - all tokens have value', async () => {
@@ -161,6 +161,27 @@ describe('ComposableStable Pool - Join Functions', async () => {
   });
 
   context('Unit Tests', () => {
+    let signerAddress: string;
+    let pool: PoolWithMethods;
+    let network: Network;
+    let rpcUrl: string;
+    let provider: JsonRpcProvider;
+    let signer: JsonRpcSigner;
+    let testPoolId: string;
+    before(async () => {
+      network = Network.MAINNET;
+      rpcUrl = RPC_URLS[network];
+      provider = new JsonRpcProvider(rpcUrl, network);
+      signer = provider.getSigner();
+      signerAddress = await signer.getAddress();
+      testPoolId =
+        '0xd61e198e139369a40818fe05f5d5e6e045cd6eaf000000000000000000000540';
+
+      let testPool = await getPoolFromFile(testPoolId, network);
+      testPool = await updateFromChain(testPool, network, provider);
+
+      pool = Pools.wrap(testPool, BALANCER_NETWORK_CONFIG[network]);
+    });
     it('should return correct attributes for joining', () => {
       const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
       const amountsIn = tokensIn.map((_, i) =>

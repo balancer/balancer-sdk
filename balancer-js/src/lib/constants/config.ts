@@ -27,12 +27,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         veBalProxy: '0x6f5a2eE11E7a772AeB5114A20d0D7c0ff61EB8A0',
         weightedPoolFactory: '0x897888115ada5773e02aa29f775430bfb5f34c51',
         composableStablePoolFactory:
-          '0xdba127fBc23fb20F5929C546af220A991b5C6e01',
-        erc4626LinearPoolFactory: '0x67A25ca2350Ebf4a0C475cA74C257C94a373b828',
-        aaveLinearPoolFactory: '0xb9f8ab3ed3f3acba64bc6cd2dca74b7f38fd7b88',
+          '0xfADa0f4547AB2de89D1304A668C39B3E09Aa7c76',
+        erc4626LinearPoolFactory: '0x813ee7a840ce909e7fea2117a44a90b8063bd4fd',
+        aaveLinearPoolFactory: '0x0b576c1245f479506e7c8bbc4db4db07c1cd31f9',
         eulerLinearPoolFactory: '0x5f43fba61f63fa6bff101a0a0458cea917f6b347',
-        gearboxLinearPoolFactory: '0x2ebe41e1aa44d61c206a94474932dadc7d3fd9e3',
-        yearnLinearPoolFactory: '0x8b7854708c0c54f9d7d1ff351d4f84e6de0e134c',
+        gearboxLinearPoolFactory: '0x39a79eb449fc05c92c39aa6f0e9bfac03be8de5b',
+        yearnLinearPoolFactory: '0x5f5222ffa40f2aed6380d022184d6ea67c776ee0',
       },
       tokens: {
         wrappedNativeAsset: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -55,6 +55,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/blocklytics/ethereum-blocks',
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'ethereum',
+      },
     },
     pools: {
       wETHwstETH: {
@@ -121,6 +127,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: '',
+        platformId: 'polygon-pos',
+      },
+    },
     pools: {},
     poolsToIgnore: [
       '0x600bd01b6526611079e12e1ff93aba7a3e34226f', // This pool has rateProviders with incorrect scaling
@@ -172,6 +184,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-one-blocks',
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'arbitrum-one',
+      },
+    },
     pools: {},
     sorConnectingTokens: [
       {
@@ -202,6 +220,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       gaugesSubgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'ethereum',
+      },
+    },
     pools: {},
   },
   [Network.ROPSTEN]: {
@@ -221,6 +245,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       subgraph: '',
       gaugesSubgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'ethereum',
+      },
     },
     pools: {},
   },
@@ -243,6 +273,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-rinkeby-v2',
       gaugesSubgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'ethereum',
+      },
     },
     pools: {},
   },
@@ -279,6 +315,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/blocklytics/goerli-blocks',
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'ethereum',
+      },
+    },
     pools: {},
     sorConnectingTokens: [
       {
@@ -310,6 +352,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
           '0x7f5c764cbc14f9669b88837ca1490cca17c31607', // USDC
           '0x4200000000000000000000000000000000000006', // WETH
         ],
+      },
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'optimism',
       },
     },
     urls: {
@@ -348,6 +396,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
       gaugesSubgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-gnosis-chain',
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'xdai',
+        platformId: 'xdai',
+      },
     },
     pools: {},
     sorConnectingTokens: [
@@ -389,6 +443,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/beethovenxfi/fantom-blocks',
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'ftm',
+        platformId: 'fantom',
+      },
+    },
     pools: {},
     poolsToIgnore: [],
     sorConnectingTokens: [
@@ -428,6 +488,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       subgraph:
         'https://api.studio.thegraph.com/proxy/24660/balancer-sepolia-v2/v0.0.1',
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'ethereum',
+      },
+    },
     pools: {},
     poolsToIgnore: [],
     sorConnectingTokens: [],
@@ -461,6 +527,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     urls: {
       subgraph:
         'https://api.studio.thegraph.com/query/24660/balancer-polygon-zkevm-v2/v0.0.2',
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'polygon-zkevm',
+      },
     },
     pools: {},
     poolsToIgnore: [],
