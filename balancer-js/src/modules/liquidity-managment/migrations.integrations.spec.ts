@@ -9,7 +9,7 @@ import {
   vitaDao2,
   metaStable,
   composableStable,
-  poolRepository,
+  poolsRepository,
   gaugesRepository,
   polygonComposableStable,
   polygonPoolRepository,
@@ -29,12 +29,12 @@ describe('Migrations', function () {
     let signer: JsonRpcSigner;
     let address: string;
 
-    const migrations = new Migrations(
+    const migrations = new Migrations({
       relayerAddress,
-      poolRepository,
+      poolsRepository,
       gaugesRepository,
-      provider
-    );
+      provider,
+    });
 
     context('user did not approve the relayer', () => {
       let authorisation = '';
@@ -66,13 +66,13 @@ describe('Migrations', function () {
           await ERC20__factory.connect(from, provider).balanceOf(address)
         ).toString();
 
-        const txParams = await migrations.gauge2gauge(
-          address,
+        const txParams = await migrations.gauge2gauge({
+          user: address,
           from,
           to,
           balance,
-          authorisation
-        );
+          authorisation,
+        });
 
         await (await signer.sendTransaction(txParams)).wait();
 
@@ -110,22 +110,22 @@ describe('Migrations', function () {
                 address
               )
             ).toString();
-            const peek = await migrations.pool2pool(
-              address,
-              from.id,
-              to.id,
-              balance
-            );
+            const peek = await migrations.pool2pool({
+              user: address,
+              from: from.id,
+              to: to.id,
+              balance,
+            });
             const peekResult = await signer.call({ ...peek, gasLimit: 8e6 });
             const expectedBptOut = Migrations.getMinBptOut(peekResult);
 
-            const txParams = await migrations.pool2pool(
-              address,
-              from.id,
-              to.id,
+            const txParams = await migrations.pool2pool({
+              user: address,
+              from: from.id,
+              to: to.id,
               balance,
-              expectedBptOut
-            );
+              minBptOut: expectedBptOut,
+            });
 
             await (await signer.sendTransaction(txParams)).wait();
 
@@ -155,22 +155,22 @@ describe('Migrations', function () {
               await ERC20__factory.connect(gauge.id, signer).balanceOf(address)
             ).toString();
 
-            const peek = await migrations.pool2poolWithGauges(
-              address,
-              from.id,
-              to.id,
-              balance
-            );
+            const peek = await migrations.pool2poolWithGauges({
+              user: address,
+              from: from.id,
+              to: to.id,
+              balance,
+            });
             const peekResult = await signer.call({ ...peek, gasLimit: 8e6 });
             const expectedBptOut = Migrations.getMinBptOut(peekResult);
 
-            const txParams = await migrations.pool2poolWithGauges(
-              address,
-              from.id,
-              to.id,
+            const txParams = await migrations.pool2poolWithGauges({
+              user: address,
+              from: from.id,
+              to: to.id,
               balance,
-              expectedBptOut
-            );
+              minBptOut: expectedBptOut,
+            });
 
             await (await signer.sendTransaction(txParams)).wait();
 
@@ -196,12 +196,12 @@ describe('Migrations', function () {
             )
           ).toString();
 
-          const peek = await migrations.pool2pool(
-            address,
-            pool.id,
-            pool.id,
-            balance
-          );
+          const peek = await migrations.pool2pool({
+            user: address,
+            from: pool.id,
+            to: pool.id,
+            balance,
+          });
           const peekResult = await signer.call({ ...peek, gasLimit: 8e6 });
           const expectedBptOut = Migrations.getMinBptOut(peekResult);
 
@@ -212,13 +212,13 @@ describe('Migrations', function () {
           const buffer = BigInt(expectedBptOut) / BigInt(1e9);
           const minBptOut = String(BigInt(expectedBptOut) - buffer);
 
-          const txParams = await migrations.pool2pool(
-            address,
-            pool.id,
-            pool.id,
+          const txParams = await migrations.pool2pool({
+            user: address,
+            from: pool.id,
+            to: pool.id,
             balance,
-            minBptOut
-          );
+            minBptOut,
+          });
 
           await (await signer.sendTransaction(txParams)).wait();
 
@@ -249,22 +249,22 @@ describe('Migrations', function () {
               address
             )
           ).toString();
-          const peek = await migrations.pool2pool(
-            address,
-            from.id,
-            to.id,
-            balance
-          );
+          const peek = await migrations.pool2pool({
+            user: address,
+            from: from.id,
+            to: to.id,
+            balance,
+          });
           const peekResult = await signer.call({ ...peek, gasLimit: 8e6 });
           const expectedBptOut = Migrations.getMinBptOut(peekResult);
 
-          const txParams = await migrations.pool2pool(
-            address,
-            from.id,
-            to.id,
+          const txParams = await migrations.pool2pool({
+            user: address,
+            from: from.id,
+            to: to.id,
             balance,
-            expectedBptOut
-          );
+            minBptOut: expectedBptOut,
+          });
 
           await (await signer.sendTransaction(txParams)).wait();
 
@@ -288,12 +288,12 @@ describe('Migrations', function () {
             await ERC20__factory.connect(from, provider).balanceOf(address)
           ).toString();
 
-          const txParams = await migrations.gauge2gauge(
-            address,
+          const txParams = await migrations.gauge2gauge({
+            user: address,
             from,
             to,
-            balance
-          );
+            balance,
+          });
 
           await (await signer.sendTransaction(txParams)).wait();
 
@@ -316,12 +316,12 @@ describe('Migrations', function () {
       let signer: JsonRpcSigner;
       let address: string;
 
-      const migrations = new Migrations(
+      const migrations = new Migrations({
         relayerAddress,
-        polygonPoolRepository,
+        poolsRepository: polygonPoolRepository,
         gaugesRepository,
-        provider
-      );
+        provider,
+      });
 
       beforeEach(async () => {
         await reset('https://rpc.ankr.com/polygon', provider, 42462957);
@@ -346,12 +346,12 @@ describe('Migrations', function () {
             )
           ).toString();
 
-          const peek = await migrations.pool2pool(
-            address,
-            pool.id,
-            pool.id,
-            balance
-          );
+          const peek = await migrations.pool2pool({
+            user: address,
+            from: pool.id,
+            to: pool.id,
+            balance,
+          });
           const peekResult = await signer.call({ ...peek, gasLimit: 8e6 });
           const expectedBptOut = Migrations.getMinBptOut(peekResult);
 
@@ -362,13 +362,13 @@ describe('Migrations', function () {
           const buffer = BigInt(expectedBptOut) / BigInt(1e14); // 0.0000001%
           const minBptOut = String(BigInt(expectedBptOut) - buffer);
 
-          const txParams = await migrations.pool2pool(
-            address,
-            pool.id,
-            pool.id,
+          const txParams = await migrations.pool2pool({
+            user: address,
+            from: pool.id,
+            to: pool.id,
             balance,
-            minBptOut
-          );
+            minBptOut,
+          });
 
           await (await signer.sendTransaction(txParams)).wait();
 

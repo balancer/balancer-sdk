@@ -29,13 +29,13 @@ const main = async () => {
   await sdk.contracts.vault.connect(signer).setRelayerApproval(user, migrationService.relayerAddress, true)
 
   // Query for the minimum amount of BPT to receive
-  const peek = await migrationService.pool2pool(user, from, to, balance)
+  const peek = await migrationService.pool2pool({user, from, to, balance})
   const peekResult = await provider.call({ ...peek, from: user, gasLimit: 8e6 });
-  const expectedBptOut = migrationService.getMinBptOut(peekResult);
-  console.log('expectedBptOut', expectedBptOut.toString(), 'BPT')
+  const minBptOut = migrationService.getMinBptOut(peekResult);
+  console.log('expectedBptOut', minBptOut.toString(), 'BPT')
 
   // Build the migration with the minimum amount of BPT to receive
-  const txParams = await migrationService.pool2pool(user, from, to, balance, expectedBptOut)
+  const txParams = await migrationService.pool2pool({user, from, to, balance, minBptOut})
   console.log(txParams.data)
 }
 

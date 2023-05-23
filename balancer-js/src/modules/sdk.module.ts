@@ -78,12 +78,12 @@ export class BalancerSDK implements BalancerSDKRoot {
         this.networkConfig.addresses.contracts.gaugeClaimHelper,
         this.networkConfig.addresses.contracts.balancerMinterAddress
       );
-      this.migrationService = new Migrations(
-        this.networkConfig.addresses.contracts.relayer,
-        this.data.pools,
-        this.data.liquidityGauges.subgraph,
-        this.provider
-      );
+      this.migrationService = new Migrations({
+        relayerAddress: this.networkConfig.addresses.contracts.relayer,
+        poolsRepository: this.data.pools,
+        gaugesRepository: this.data.liquidityGauges.subgraph,
+        provider: this.provider,
+      });
     }
     this.vaultModel = new VaultModel(
       this.data.poolsForSor,
