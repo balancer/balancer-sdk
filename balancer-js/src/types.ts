@@ -106,6 +106,12 @@ export interface BalancerNetworkConfig {
     gaugesSubgraph?: string;
     blockNumberSubgraph?: string;
   };
+  thirdParty: {
+    coingecko: {
+      nativeAssetId: string;
+      platformId: string;
+    };
+  };
   pools: {
     wETHwstETH?: PoolReference;
   };
