@@ -91,7 +91,7 @@ export class WeightedPoolJoin implements JoinConcern {
     }
 
     // Check if there's any relevant weighted pool info missing
-    if (pool.tokens.some((token) => !token.decimals))
+    if (pool.tokens.some((token) => token.decimals === undefined))
       throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
     if (pool.tokens.some((token) => !token.weight))
       throw new BalancerError(BalancerErrorCode.MISSING_WEIGHT);

@@ -8058,6 +8058,199 @@
         "strategyType": 1,
         "swapsCount": "723",
         "holdersCount": "4"
+      },
+      {
+        "id": "0xec3626fee40ef95e7c0cbb1d495c8b67b34d398300000000000000000000053d",
+        "name": "Balancer UZD/bb-a-USD stableswap",
+        "symbol": "B-S-UZD-BB-A-USD",
+        "address": "0xec3626fee40ef95e7c0cbb1d495c8b67b34d3983",
+        "poolType": "ComposableStable",
+        "poolTypeVersion": 4,
+        "swapFee": "0.0004",
+        "swapEnabled": true,
+        "protocolYieldFeeCache": "0.5",
+        "protocolSwapFeeCache": "0.5",
+        "amp": "500",
+        "owner": "0xba1ba1ba1ba1ba1ba1ba1ba1ba1ba1ba1ba1ba1b",
+        "factory": "0xfada0f4547ab2de89d1304a668c39b3e09aa7c76",
+        "tokensList": [
+          "0xb40b6608b2743e691c9b54ddbdee7bf03cd79f1c",
+          "0xec3626fee40ef95e7c0cbb1d495c8b67b34d3983",
+          "0xfebb0bbf162e64fb9d0dfe186e517d84c395f016"
+        ],
+        "tokens": [
+          {
+            "id": "0xec3626fee40ef95e7c0cbb1d495c8b67b34d398300000000000000000000053d-0xb40b6608b2743e691c9b54ddbdee7bf03cd79f1c",
+            "symbol": "UZD",
+            "name": "UZD Zunami Stable",
+            "decimals": 18,
+            "address": "0xb40b6608b2743e691c9b54ddbdee7bf03cd79f1c",
+            "balance": "5000",
+            "managedBalance": "0",
+            "weight": null,
+            "priceRate": "1",
+            "token": {
+              "latestUSDPrice": null,
+              "pool": null
+            },
+            "isExemptFromYieldProtocolFee": false
+          },
+          {
+            "id": "0xec3626fee40ef95e7c0cbb1d495c8b67b34d398300000000000000000000053d-0xec3626fee40ef95e7c0cbb1d495c8b67b34d3983",
+            "symbol": "B-S-UZD-BB-A-USD",
+            "name": "Balancer UZD/bb-a-USD stableswap",
+            "decimals": 18,
+            "address": "0xec3626fee40ef95e7c0cbb1d495c8b67b34d3983",
+            "balance": "2596148429257413.218796159909145654",
+            "managedBalance": "0",
+            "weight": null,
+            "priceRate": "1",
+            "token": {
+              "latestUSDPrice": "0.4999798622425397962243462434197151",
+              "pool": {
+                "id": "0xec3626fee40ef95e7c0cbb1d495c8b67b34d398300000000000000000000053d",
+                "address": "0xec3626fee40ef95e7c0cbb1d495c8b67b34d3983",
+                "totalShares": "10000.595469088255464394"
+              }
+            },
+            "isExemptFromYieldProtocolFee": false
+          },
+          {
+            "id": "0xec3626fee40ef95e7c0cbb1d495c8b67b34d398300000000000000000000053d-0xfebb0bbf162e64fb9d0dfe186e517d84c395f016",
+            "symbol": "bb-a-USD",
+            "name": "Balancer Aave v3 Boosted StablePool",
+            "decimals": 18,
+            "address": "0xfebb0bbf162e64fb9d0dfe186e517d84c395f016",
+            "balance": "5000",
+            "managedBalance": "0",
+            "weight": null,
+            "priceRate": "1.000119093824728186",
+            "token": {
+              "latestUSDPrice": "1.000034802450382120947007057396189",
+              "pool": {
+                "id": "0xfebb0bbf162e64fb9d0dfe186e517d84c395f016000000000000000000000502",
+                "address": "0xfebb0bbf162e64fb9d0dfe186e517d84c395f016",
+                "totalShares": "21811046.145758434854302198"
+              }
+            },
+            "isExemptFromYieldProtocolFee": true
+          }
+        ],
+        "totalLiquidity": "5000.09634497811362010324384540818",
+        "totalShares": "10000.595469088255464394",
+        "totalSwapFee": "0",
+        "totalSwapVolume": "0",
+        "priceRateProviders": [
+          {
+            "address": "0xfebb0bbf162e64fb9d0dfe186e517d84c395f016",
+            "token": {
+              "address": "0xfebb0bbf162e64fb9d0dfe186e517d84c395f016"
+            }
+          }
+        ],
+        "createTime": 1683442295,
+        "mainIndex": null,
+        "wrappedIndex": null,
+        "totalWeight": "0",
+        "lowerTarget": null,
+        "upperTarget": null,
+        "isInRecoveryMode": null,
+        "strategyType": 0,
+        "swapsCount": "0",
+        "holdersCount": "3"
+      },
+      {
+        "id": "0xd61e198e139369a40818fe05f5d5e6e045cd6eaf000000000000000000000540",
+        "name": "Balancer yBAL Stable Pool",
+        "symbol": "B-yBAL-STABLE",
+        "address": "0xd61e198e139369a40818fe05f5d5e6e045cd6eaf",
+        "poolType": "ComposableStable",
+        "poolTypeVersion": 4,
+        "swapFee": "0.002",
+        "swapEnabled": true,
+        "protocolYieldFeeCache": "0.5",
+        "protocolSwapFeeCache": "0.5",
+        "amp": "30",
+        "owner": "0xfeb4acf3df3cdea7399794d0869ef76a6efaff52",
+        "factory": "0xfada0f4547ab2de89d1304a668c39b3e09aa7c76",
+        "tokensList": [
+          "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56",
+          "0x98e86ed5b0e48734430bfbe92101156c75418cad",
+          "0xd61e198e139369a40818fe05f5d5e6e045cd6eaf"
+        ],
+        "tokens": [
+          {
+            "id": "0xd61e198e139369a40818fe05f5d5e6e045cd6eaf000000000000000000000540-0x5c6ee304399dbdb9c8ef030ab642b10820db8f56",
+            "symbol": "B-80BAL-20WETH",
+            "name": "Balancer 80 BAL 20 WETH",
+            "address": "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56",
+            "decimals": 18,
+            "managedBalance": "0",
+            "balance": "30.442205057787039744",
+            "weight": null,
+            "priceRate": "1",
+            "token": {
+              "latestUSDPrice": "14.65279753126490497135037205436516",
+              "pool": {
+                "id": "0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014"
+              }
+            },
+            "isExemptFromYieldProtocolFee": false
+          },
+          {
+            "id": "0xd61e198e139369a40818fe05f5d5e6e045cd6eaf000000000000000000000540-0x98e86ed5b0e48734430bfbe92101156c75418cad",
+            "symbol": "yBAL",
+            "name": "Yearn BAL",
+            "address": "0x98e86ed5b0e48734430bfbe92101156c75418cad",
+            "decimals": 18,
+            "managedBalance": "0",
+            "balance": "30.442205057787039744",
+            "weight": null,
+            "priceRate": "1",
+            "token": {
+              "latestUSDPrice": null,
+              "pool": null
+            },
+            "isExemptFromYieldProtocolFee": false
+          },
+          {
+            "id": "0xd61e198e139369a40818fe05f5d5e6e045cd6eaf000000000000000000000540-0xd61e198e139369a40818fe05f5d5e6e045cd6eaf",
+            "symbol": "B-yBAL-STABLE",
+            "name": "Balancer yBAL Stable Pool",
+            "address": "0xd61e198e139369a40818fe05f5d5e6e045cd6eaf",
+            "decimals": 18,
+            "managedBalance": "0",
+            "balance": "2596148429267352.92985513259053056",
+            "weight": null,
+            "priceRate": "1",
+            "token": {
+              "latestUSDPrice": "7.605081427440115066605209695257204",
+              "pool": {
+                "id": "0xd61e198e139369a40818fe05f5d5e6e045cd6eaf000000000000000000000540"
+              }
+            },
+            "isExemptFromYieldProtocolFee": false
+          }
+        ],
+        "totalLiquidity": "463.0308965905995015700452582897116",
+        "totalShares": "60.884410115574079488",
+        "totalWeight": "0",
+        "totalSwapFee": "0",
+        "totalSwapVolume": "0",
+        "priceRateProviders": [],
+        "createTime": 1683589367,
+        "mainIndex": null,
+        "wrappedIndex": null,
+        "principalToken": null,
+        "baseToken": null,
+        "lowerTarget": null,
+        "upperTarget": null,
+        "isInRecoveryMode": null,
+        "strategyType": 0,
+        "swapsCount": "0",
+        "holdersCount": "3",
+        "expiryTime": null,
+        "unitSeconds": null
       }
     ]
   }

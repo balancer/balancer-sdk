@@ -10,6 +10,16 @@
         "internalType": "contract IProtocolFeePercentagesProvider",
         "name": "protocolFeeProvider",
         "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "factoryVersion",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "poolVersion",
+        "type": "string"
       }
     ],
     "stateMutability": "nonpayable",
@@ -80,6 +90,11 @@
         "internalType": "address",
         "name": "owner",
         "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "salt",
+        "type": "bytes32"
       }
     ],
     "name": "create",
@@ -183,6 +198,32 @@
   },
   {
     "inputs": [],
+    "name": "getPoolVersion",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getProtocolFeePercentagesProvider",
+    "outputs": [
+      {
+        "internalType": "contract IProtocolFeePercentagesProvider",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "getVault",
     "outputs": [
       {
@@ -221,6 +262,19 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "version",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
       }
     ],
     "stateMutability": "view",

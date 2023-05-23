@@ -246,8 +246,9 @@ export class PoolApr {
     const gauge = await this.liquidityGauges.findBy('poolId', pool.id);
     if (
       !gauge ||
-      (pool.chainId == 1 && gauge.workingSupply == 0) ||
-      (pool.chainId > 1 && gauge.totalSupply == 0)
+      (pool.chainId == 1 && gauge.workingSupply === 0) ||
+      (pool.chainId > 1 && gauge.totalSupply === 0) ||
+      (pool.chainId > 1 && gauge.balInflationRate === 0)
     ) {
       return 0;
     }
@@ -281,6 +282,10 @@ export class PoolApr {
         const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
         const rewardValue = reward.value / totalSupplyUsd;
         return Math.round(10000 * rewardValue);
+      } else if (gauge.balInflationRate) {
+        const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
+        const rewardValue = gauge.balInflationRate * 3600 * 24 * 365;
+        return Math.round(boost * 10000 * rewardValue) / totalSupplyUsd;
       } else {
         return 0;
       }

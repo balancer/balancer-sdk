@@ -278,7 +278,7 @@ export class WeightedPoolExit implements ExitConcern {
       );
 
     // Check if there's any relevant weighted pool info missing
-    if (pool.tokens.some((token) => !token.decimals))
+    if (pool.tokens.some((token) => token.decimals === undefined))
       throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
   };
   /**
@@ -299,7 +299,7 @@ export class WeightedPoolExit implements ExitConcern {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
     // Check if there's any important weighted pool info missing
-    if (pool.tokens.some((token) => !token.decimals))
+    if (pool.tokens.some((token) => token.decimals === undefined))
       throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
   };
   sortValuesExitExactBptIn = ({

@@ -30,7 +30,7 @@ const blockNumber = 40818844;
 let pool: PoolWithMethods;
 
 describe('ComposableStableV2 Exits', () => {
-  // We have to rest the fork between each test as pool value changes after tx is submitted
+  // We have to reset the fork between each test as pool value changes after tx is submitted
   beforeEach(async () => {
     // Setup forked network, set initial token balances and allowances
     await forkSetup(

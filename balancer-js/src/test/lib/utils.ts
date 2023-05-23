@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+
 import { BigNumber, BigNumberish, formatFixed } from '@ethersproject/bignumber';
 import { hexlify, zeroPad } from '@ethersproject/bytes';
 import { AddressZero, MaxUint256, WeiPerEther } from '@ethersproject/constants';
@@ -39,10 +41,36 @@ import mainnetPools from '../fixtures/pools-mainnet.json';
 import polygonPools from '../fixtures/pools-polygon.json';
 import { PoolsJsonRepository } from './pools-json-repository';
 import { Contracts } from '@/modules/contracts/contracts.module';
+import { SubgraphPool } from '@/modules/subgraph/subgraph';
 
-const jsonPools = {
-  [Network.MAINNET]: mainnetPools,
-  [Network.POLYGON]: polygonPools,
+dotenv.config();
+
+export interface TxResult {
+  transactionReceipt: TransactionReceipt;
+  balanceDeltas: BigNumber[];
+  internalBalanceDeltas: BigNumber[];
+  gasUsed: BigNumber;
+}
+
+type JsonPools = { [key: number]: { data: { pools: SubgraphPool[] } } };
+
+const jsonPools: JsonPools = {
+  [Network.MAINNET]: mainnetPools as { data: { pools: SubgraphPool[] } },
+  [Network.POLYGON]: polygonPools as { data: { pools: SubgraphPool[] } },
+};
+
+export const RPC_URLS: Record<number, string> = {
+  [Network.MAINNET]: `http://127.0.0.1:8545`,
+  [Network.GOERLI]: `http://127.0.0.1:8000`,
+  [Network.POLYGON]: `http://127.0.0.1:8137`,
+  [Network.ARBITRUM]: `http://127.0.0.1:8161`,
+};
+
+export const FORK_NODES: Record<number, string> = {
+  [Network.MAINNET]: `${process.env.ALCHEMY_URL}`,
+  [Network.GOERLI]: `${process.env.ALCHEMY_URL_GOERLI}`,
+  [Network.POLYGON]: `${process.env.ALCHEMY_URL_POLYGON}`,
+  [Network.ARBITRUM]: `${process.env.ALCHEMY_URL_ARBITRUM}`,
 };
 
 /**
@@ -62,7 +90,7 @@ export const forkSetup = async (
   balances: string[],
   jsonRpcUrl: string,
   blockNumber?: number,
-  isVyperMapping = false
+  isVyperMapping: boolean[] = Array(tokens.length).fill(false)
 ): Promise<void> => {
   await signer.provider.send('hardhat_reset', [
     {
@@ -85,7 +113,7 @@ export const forkSetup = async (
       tokens[i],
       slots[i],
       balances[i],
-      isVyperMapping
+      isVyperMapping[i]
     );
 
     // Approve appropriate allowances so that vault contract can move tokens
@@ -341,8 +369,10 @@ export class TestPoolHelper {
  */
 export const getPoolFromFile = async (
   id: string,
-  network: 1 | 137
+  network: Network
 ): Promise<Pool> => {
+  if (jsonPools[network] === undefined)
+    throw new Error('No Pools JSON file for this network');
   const pool = await new PoolsJsonRepository(jsonPools[network], network).find(
     id
   );
@@ -359,7 +389,7 @@ export const getPoolFromFile = async (
  */
 export const updateFromChain = async (
   pool: Pool,
-  network: 1 | 137 | 42161,
+  network: Network,
   provider: JsonRpcProvider
 ): Promise<Pool> => {
   const onChainPool = await getOnChainBalances(
@@ -378,12 +408,7 @@ export async function sendTransactionGetBalances(
   to: string,
   data: string,
   value?: BigNumberish
-): Promise<{
-  transactionReceipt: TransactionReceipt;
-  balanceDeltas: BigNumber[];
-  internalBalanceDeltas: BigNumber[];
-  gasUsed: BigNumber;
-}> {
+): Promise<TxResult> {
   const balanceBefore = await getBalances(
     tokensForBalanceCheck,
     signer,

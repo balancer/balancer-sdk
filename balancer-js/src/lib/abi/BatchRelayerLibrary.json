@@ -35,7 +35,7 @@
     ],
     "name": "approveVault",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -143,13 +143,7 @@
       }
     ],
     "name": "batchSwap",
-    "outputs": [
-      {
-        "internalType": "int256[]",
-        "name": "",
-        "type": "int256[]"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "payable",
     "type": "function"
   },
@@ -662,13 +656,7 @@
       }
     ],
     "name": "swap",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "payable",
     "type": "function"
   },
@@ -713,6 +701,39 @@
   {
     "inputs": [
       {
+        "internalType": "contract ICToken",
+        "name": "wrappedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "unwrapCompoundV2",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "contract IERC4626",
         "name": "wrappedToken",
         "type": "address"
@@ -739,6 +760,171 @@
       }
     ],
     "name": "unwrapERC4626",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IEulerToken",
+        "name": "wrappedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "unwrapEuler",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IGearboxDieselToken",
+        "name": "wrappedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dieselAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "unwrapGearbox",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IReaperTokenVault",
+        "name": "vaultToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "unwrapReaperVaultToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IShareToken",
+        "name": "wrappedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "unwrapShareToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract ITetuSmartVault",
+        "name": "wrappedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "unwrapTetu",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -800,6 +986,39 @@
       }
     ],
     "name": "unwrapWstETH",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IYearnTokenVault",
+        "name": "wrappedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "unwrapYearn",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -936,6 +1155,39 @@
   {
     "inputs": [
       {
+        "internalType": "contract ICToken",
+        "name": "wrappedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "wrapCompoundV2",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "contract IERC4626",
         "name": "wrappedToken",
         "type": "address"
@@ -962,6 +1214,143 @@
       }
     ],
     "name": "wrapERC4626",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IEulerToken",
+        "name": "wrappedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "eulerProtocol",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "wrapEuler",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IGearboxDieselToken",
+        "name": "wrappedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "mainAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "wrapGearbox",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IReaperTokenVault",
+        "name": "vaultToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "wrapReaperVaultToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IShareToken",
+        "name": "wrappedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "wrapShareToken",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -997,6 +1386,39 @@
   {
     "inputs": [
       {
+        "internalType": "contract ITetuSmartVault",
+        "name": "wrappedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "wrapTetu",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "contract IUnbuttonToken",
         "name": "wrapperToken",
         "type": "address"
@@ -1023,6 +1445,39 @@
       }
     ],
     "name": "wrapUnbuttonToken",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IYearnTokenVault",
+        "name": "wrappedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "outputReference",
+        "type": "uint256"
+      }
+    ],
+    "name": "wrapYearn",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"

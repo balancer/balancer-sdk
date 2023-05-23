@@ -10,6 +10,7 @@ export const PROVIDER_URLS = {
   [Network.KOVAN]: `https://kovan.infura.io/v3/${process.env.INFURA}`,
   [Network.POLYGON]: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA}`,
   [Network.ARBITRUM]: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA}`,
+  [Network.SEPOLIA]: `https://sepolia.infura.io/v3/${process.env.INFURA}`,
 };
 
 export const ADDRESSES = {
@@ -321,6 +322,20 @@ export const ADDRESSES = {
       address: '0xAf5191B0De278C7286d6C7CC6ab6BB8A73bA2Cd6'.toLowerCase(),
       decimals: 18,
       symbol: 'STG',
+      slot: 0,
+    },
+    wstEthBoostedApe: {
+      id: '0x959216bb492b2efa72b15b7aacea5b5c984c3cca000200000000000000000472',
+      address: '0x959216BB492B2efa72b15B7AAcEa5B5C984c3ccA',
+      decimals: 18,
+      symbol: '50wstETH-50stk-APE',
+      slot: 0,
+    },
+    bbtape: {
+      id: '0x126e7643235ec0ab9c103c507642dc3f4ca23c66000000000000000000000468',
+      address: '0x126e7643235ec0ab9c103c507642dC3F4cA23C66',
+      decimals: 18,
+      symbol: 'bb-t-stkAPE',
       slot: 0,
     },
   },
@@ -674,12 +689,24 @@ export const ADDRESSES = {
     WXDAI: {
       address: '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d',
       decimals: 18,
-      symbol: 'DAI',
+      symbol: 'WXDAI',
+      slot: 3,
     },
     USDT: {
       address: '0x4ECaBa5870353805a9F068101A40E0f32ed605C6',
       decimals: 6,
       symbol: 'USDT',
+    },
+    WXDAI_MPS: {
+      id: '0x4bcf6b48906fa0f68bea1fc255869a41241d4851000200000000000000000021',
+      address: '0x4bcf6b48906fa0f68bea1fc255869a41241d4851',
+      decimals: 18,
+      symbol: 'WXDAI_MPS',
+    },
+    MPS: {
+      address: '0xfa57aa7beed63d03aaf85ffd1753f5f6242588fb',
+      decimals: 0,
+      symbol: 'MPS',
     },
   },
   [Network.GOERLI]: {
@@ -882,6 +909,18 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'BWMG1',
       slot: 0,
+    },
+  },
+  [Network.SEPOLIA]: {
+    WETH: {
+      address: '0x7b79995e5f793a07bc00c21412e50ecae098e7f9',
+      decimals: 18,
+      symbol: 'WETH',
+    },
+    BAL: {
+      address: '0xb19382073c7a0addbb56ac6af1808fa49e377b75',
+      decimals: 18,
+      symbol: 'BAL',
     },
   },
 };

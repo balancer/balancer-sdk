@@ -42,7 +42,7 @@ describe('ComposableStableV1 Exits', () => {
     );
 
     let testPool = await getPoolFromFile(testPoolId, network);
-    // Updatate pool info with onchain state from fork block no
+    // Update pool info with onchain state from fork block no
     testPool = await updateFromChain(testPool, network, provider);
 
     pool = Pools.wrap(testPool, BALANCER_NETWORK_CONFIG[network]);
