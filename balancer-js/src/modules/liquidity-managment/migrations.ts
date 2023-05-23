@@ -64,6 +64,7 @@ export class Migrations {
    * @param to - pool ID
    * @param balance - amount of liquidity to migrate in WAL (wei-ether)
    * @param minBptOut - minimum amount of BPT to receive, when 0 it will include a peek for the amount
+   * @param authorisation? - signed user's authorisation to approve relayer in the vault
    * @returns transaction data
    */
   async pool2pool(
@@ -71,7 +72,8 @@ export class Migrations {
     from: string,
     to: string,
     balance: string,
-    minBptOut = '0'
+    minBptOut = '0',
+    authorisation?: string
   ): Promise<{ to: string; data: string }> {
     const fromPool = await buildMigrationPool(from, this.poolsRepository);
     const toPool = await buildMigrationPool(to, this.poolsRepository);
@@ -83,7 +85,10 @@ export class Migrations {
       minBptOut,
       fromPool,
       toPool,
-      minBptOut == '0' // if minBptOut is 0, we peek for the join amount
+      minBptOut == '0', // if minBptOut is 0, we peek for the join amount
+      undefined,
+      undefined,
+      authorisation
     );
 
     return {
@@ -100,6 +105,8 @@ export class Migrations {
    * @param from - pool ID
    * @param to - pool ID
    * @param balance - amount of liquidity to migrate in WAL (wei-ether)
+   * @param minBptOut - minimum amount of BPT to receive, when 0 it will include a peek for the amount
+   * @param authorisation? - signed user's authorisation to approve relayer in the vault
    * @returns transaction data
    */
   async pool2poolWithGauges(
@@ -107,7 +114,8 @@ export class Migrations {
     from: string,
     to: string,
     balance: string,
-    minBptOut = '0'
+    minBptOut = '0',
+    authorisation?: string
   ): Promise<{ to: string; data: string }> {
     const fromGauge = await this.gaugesRepository.findBy('poolId', from);
     const toGauge = await this.gaugesRepository.findBy('poolId', to);
@@ -132,7 +140,8 @@ export class Migrations {
       toPool,
       minBptOut == '0', // if minBptOut is 0, we peek for the join amount
       fromGauge.id,
-      toGauge.id
+      toGauge.id,
+      authorisation
     );
 
     return {
@@ -148,18 +157,26 @@ export class Migrations {
    * @param from - gauge address
    * @param to - gauge address
    * @param balance - amount of liquidity to migrate in WAL (wei-ether)
+   * @param authorisation? - signed user's authorisation to approve relayer in the vault
    * @returns transaction data
    */
   async gauge2gauge(
     user: string,
     from: string,
     to: string,
-    balance: string
+    balance: string,
+    authorisation?: string
   ): Promise<{ to: string; data: string }> {
     const steps = [
       actions.gaugeWithdrawal(from, user, this.relayerAddress, balance),
       actions.gaugeDeposit(to, this.relayerAddress, user, balance),
     ];
+
+    if (authorisation) {
+      steps.unshift(
+        actions.setRelayerApproval(this.relayerAddress, true, authorisation)
+      );
+    }
 
     const data = balancerRelayerInterface.encodeFunctionData('multicall', [
       steps,
