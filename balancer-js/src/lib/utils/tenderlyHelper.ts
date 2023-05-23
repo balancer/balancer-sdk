@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { AddressZero, MaxInt256 } from '@ethersproject/constants';
+
 import { networkAddresses } from '@/lib/constants/config';
 import { BalancerTenderlyConfig } from '@/types';
 
@@ -40,7 +41,8 @@ export default class TenderlyHelper {
     to: string,
     data: string,
     userAddress: string,
-    tokens: string[]
+    tokens: string[],
+    value = '0'
   ): Promise<string> => {
     const tokensOverrides = await this.encodeBalanceAndAllowanceOverrides(
       userAddress,
@@ -58,7 +60,8 @@ export default class TenderlyHelper {
       to,
       data,
       userAddress,
-      encodedStateOverrides
+      encodedStateOverrides,
+      value
     );
   };
 
@@ -66,7 +69,8 @@ export default class TenderlyHelper {
     to: string,
     data: string,
     userAddress: string,
-    encodedStateOverrides: StateOverrides
+    encodedStateOverrides: StateOverrides,
+    value: string
   ): Promise<string> => {
     // Map encoded-state response into simulate request body by replacing property names
     const state_objects = Object.fromEntries(
@@ -85,7 +89,7 @@ export default class TenderlyHelper {
       input: data,
       // gas: 8000000,
       // gas_price: '0',
-      // value: '0',
+      value,
       // -- Simulation config (tenderly specific) --
       save_if_fails: true,
       // save: true,

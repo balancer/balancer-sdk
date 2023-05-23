@@ -1,3 +1,8 @@
+import { BigNumberish } from '@ethersproject/bignumber';
+import { JsonRpcSigner } from '@ethersproject/providers';
+
+import { BalancerError } from '@/balancerErrors';
+import { Contracts } from '@/modules/contracts/contracts.module';
 import { ImpermanentLossService } from '@/modules/pools/impermanentLoss/impermanentLossService';
 import type {
   BalancerNetworkConfig,
@@ -9,6 +14,7 @@ import type {
   AprBreakdown,
   PoolAttribute,
 } from '@/types';
+
 import { JoinPoolAttributes } from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
@@ -21,11 +27,8 @@ import { Simulation, SimulationType } from '../simulation/simulation.module';
 import { PoolGraph } from '../graph/graph';
 import { PoolFactory__factory } from './pool-factory__factory';
 import * as Queries from './queries';
-import { JsonRpcSigner } from '@ethersproject/providers';
-import { BalancerError } from '@/balancerErrors';
 import { EmissionsService } from './emissions';
 import { proportionalAmounts } from './proportional-amounts';
-import { Contracts } from '@/modules/contracts/contracts.module';
 
 const notImplemented = (poolType: string, name: string) => () => {
   throw `${name} for poolType ${poolType} not implemented`;
@@ -335,6 +338,7 @@ export class Pools implements Findable<PoolWithMethods> {
     minOut: string;
     expectedOut: string;
     priceImpact: string;
+    value: BigNumberish;
   }> {
     return this.joinService.joinPool(
       poolId,

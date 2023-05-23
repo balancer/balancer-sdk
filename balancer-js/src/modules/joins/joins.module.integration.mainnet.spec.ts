@@ -142,7 +142,7 @@ const testFlow = async (
 ) => {
   const slippage = '10'; // 10 bps = 0.1%
 
-  const { to, encodedCall, minOut, expectedOut, priceImpact } =
+  const { to, encodedCall, minOut, expectedOut, priceImpact, value } =
     await pools.generalisedJoin(
       pool.id,
       tokensIn,
@@ -160,7 +160,8 @@ const testFlow = async (
       signer,
       userAddress,
       to,
-      encodedCall
+      encodedCall,
+      value
     );
 
   console.log('Gas used', gasUsed.toString());

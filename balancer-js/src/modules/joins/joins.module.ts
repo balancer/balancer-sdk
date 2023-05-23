@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber, BigNumberish, parseFixed } from '@ethersproject/bignumber';
 import { AddressZero, WeiPerEther, Zero } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
@@ -16,7 +16,7 @@ import { PoolGraph, Node } from '../graph/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { networkAddresses } from '@/lib/constants/config';
-import { AssetHelpers, isSameAddress } from '@/lib/utils';
+import { AssetHelpers, getEthValue, isSameAddress, replace } from '@/lib/utils';
 import {
   SolidityMaths,
   _computeScalingFactor,
@@ -62,6 +62,7 @@ export class Join {
     expectedOut: string;
     minOut: string;
     priceImpact: string;
+    value: BigNumberish;
   }> {
     if (tokensIn.length != amountsIn.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
@@ -69,7 +70,19 @@ export class Join {
     // Create nodes for each pool/token interaction and order by breadth first
     const orderedNodes = await this.poolGraph.getGraphNodes(true, poolId, []);
 
-    const joinPaths = Join.getJoinPaths(orderedNodes, tokensIn, amountsIn);
+    const nativeAssetIndex = tokensIn.findIndex((t) => t === AddressZero);
+    const isNativeAssetJoin = nativeAssetIndex !== -1;
+    const tokensInWithoutNativeAsset = replace(
+      tokensIn,
+      nativeAssetIndex,
+      this.wrappedNativeAsset.toLowerCase()
+    );
+
+    const joinPaths = Join.getJoinPaths(
+      orderedNodes,
+      tokensInWithoutNativeAsset,
+      amountsIn
+    );
 
     const totalBptZeroPi = Join.totalBptZeroPriceImpact(joinPaths);
     /*
@@ -86,22 +99,29 @@ export class Join {
       multiRequests,
       encodedCall: queryData,
       outputIndexes,
+      deltas: simulationDeltas,
     } = await this.createCalls(
       joinPaths,
       userAddress,
+      isNativeAssetJoin,
       undefined,
       authorisation
     );
+
+    const simulationValue = isNativeAssetJoin
+      ? simulationDeltas[this.wrappedNativeAsset.toLowerCase()]
+      : Zero;
 
     // static call (or V4 special call) to get actual amounts for each root join
     const { amountsOut, totalAmountOut } = await this.amountsOutByJoinPath(
       userAddress,
       multiRequests,
       queryData,
-      tokensIn,
+      tokensInWithoutNativeAsset, // TODO: queryData(encodedCall) still has native asset as input - validate it's ok to pass tokensInWithoutNativeAsset
       outputIndexes,
       signer,
-      simulationType
+      simulationType,
+      simulationValue.toString()
     );
 
     const { minAmountsOut, totalMinAmountOut } = this.minAmountsOutByJoinPath(
@@ -119,11 +139,23 @@ export class Join {
     const { encodedCall, deltas } = await this.createCalls(
       joinPaths,
       userAddress,
+      isNativeAssetJoin,
       minAmountsOut,
       authorisation
     );
 
-    this.assertDeltas(poolId, deltas, tokensIn, amountsIn, totalMinAmountOut);
+    this.assertDeltas(
+      poolId,
+      deltas,
+      tokensInWithoutNativeAsset,
+      amountsIn,
+      totalMinAmountOut
+    );
+
+    const value = isNativeAssetJoin
+      ? deltas[this.wrappedNativeAsset.toLowerCase()]
+      : Zero;
+    console.log('value', value.toString());
 
     return {
       to: this.relayer,
@@ -131,6 +163,7 @@ export class Join {
       expectedOut: totalAmountOut,
       minOut: totalMinAmountOut,
       priceImpact,
+      value,
     };
   }
 
@@ -337,6 +370,7 @@ export class Join {
   private createCalls = async (
     joinPaths: Node[][],
     userAddress: string,
+    isNativeAssetJoin: boolean,
     minAmountsOut?: string[], // one for each joinPath
     authorisation?: string
   ): Promise<{
@@ -347,7 +381,12 @@ export class Join {
   }> => {
     // Create calls for both leaf and non-leaf inputs
     const { multiRequests, encodedCalls, outputIndexes, deltas } =
-      this.createActionCalls(joinPaths, userAddress, minAmountsOut);
+      this.createActionCalls(
+        joinPaths,
+        userAddress,
+        isNativeAssetJoin,
+        minAmountsOut
+      );
 
     if (authorisation) {
       encodedCalls.unshift(this.createSetRelayerApproval(authorisation));
@@ -438,7 +477,8 @@ export class Join {
     tokensIn: string[],
     outputIndexes: number[],
     signer: JsonRpcSigner,
-    simulationType: SimulationType
+    simulationType: SimulationType,
+    value: string
   ): Promise<{ amountsOut: string[]; totalAmountOut: string }> => {
     const amountsOut = await this.simulationService.simulateGeneralisedJoin(
       this.relayer,
@@ -448,7 +488,8 @@ export class Join {
       userAddress,
       tokensIn,
       signer,
-      simulationType
+      simulationType,
+      value
     );
 
     const totalAmountOut = amountsOut
@@ -501,6 +542,7 @@ export class Join {
   private createActionCalls = (
     joinPaths: Node[][],
     userAddress: string,
+    isNativeAssetJoin: boolean,
     minAmountsOut?: string[]
   ): {
     multiRequests: Requests[][];
@@ -559,7 +601,14 @@ export class Join {
           case 'batchSwap':
             {
               const { modelRequest, encodedCall, assets, amounts } =
-                this.createSwap(node, j, minOut, sender, recipient);
+                this.createSwap(
+                  node,
+                  j,
+                  minOut,
+                  sender,
+                  recipient,
+                  isNativeAssetJoin
+                );
               modelRequests.push(modelRequest);
               encodedCalls.push(encodedCall);
               this.updateDeltas(deltas, assets, amounts);
@@ -568,7 +617,14 @@ export class Join {
           case 'joinPool':
             {
               const { modelRequest, encodedCall, assets, amounts, minBptOut } =
-                this.createJoinPool(node, j, minOut, sender, recipient);
+                this.createJoinPool(
+                  node,
+                  j,
+                  minOut,
+                  sender,
+                  recipient,
+                  isNativeAssetJoin
+                );
               modelRequests.push(modelRequest);
               encodedCalls.push(encodedCall);
               this.updateDeltas(
@@ -670,7 +726,8 @@ export class Join {
     joinPathIndex: number,
     expectedOut: string,
     sender: string,
-    recipient: string
+    recipient: string,
+    isNativeAssetJoin: boolean
   ): {
     modelRequest: SwapRequest;
     encodedCall: string;
@@ -687,10 +744,14 @@ export class Join {
     // Swap within generalisedJoin is always exactIn, so use minAmountOut to set limit
     const limit: string = expectedOut;
 
+    const assetIn = isNativeAssetJoin
+      ? this.replaceWrappedNativeAsset([tokenIn])[0]
+      : tokenIn;
+
     const request: SingleSwap = {
       poolId: node.id,
       kind: SwapType.SwapExactIn,
-      assetIn: tokenIn,
+      assetIn,
       assetOut: node.address,
       amount: amountIn.value,
       userData: '0x',
@@ -725,18 +786,31 @@ export class Join {
     //   )`
     // );
 
+    const value = isNativeAssetJoin
+      ? getEthValue([assetIn], [amountIn.value])
+      : Zero;
+
     const call: Swap = {
       request,
       funds,
       limit,
       deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
-      value: '0', // TODO: check if swap with ETH is possible in this case and handle it
+      value,
       outputReference,
     };
 
     const encodedCall = Relayer.encodeSwap(call);
 
-    const modelRequest = VaultModel.mapSwapRequest(call);
+    // in case of nativeAssetJoin vaultCall needs to be updated to use wrapped native asset instead
+    const vaultCall = {
+      ...call,
+      request: {
+        ...request,
+        assetIn: tokenIn,
+      },
+    };
+
+    const modelRequest = VaultModel.mapSwapRequest(vaultCall);
 
     const hasChildInput = node.children.some((c) => c.joinAction === 'input');
     // If node has no child input the swap is part of a chain and token in shouldn't be considered for user deltas
@@ -756,7 +830,8 @@ export class Join {
     joinPathIndex: number,
     minAmountOut: string,
     sender: string,
-    recipient: string
+    recipient: string,
+    isNativeAssetJoin: boolean
   ): {
     modelRequest: JoinPoolModelRequest;
     encodedCall: string;
@@ -819,9 +894,9 @@ export class Join {
       );
     }
 
-    // TODO: add test to join weth/wsteth pool using ETH
-    const ethIndex = sortedTokens.indexOf(AddressZero);
-    const value = ethIndex === -1 ? '0' : sortedAmounts[ethIndex];
+    const value = isNativeAssetJoin
+      ? getEthValue(this.replaceWrappedNativeAsset(sortedTokens), sortedAmounts)
+      : Zero;
 
     const fromInternalBalance = this.allImmediateChildrenSendToInternal(node);
 
@@ -849,13 +924,19 @@ export class Join {
       value,
       outputReference: this.getOutputRefValue(joinPathIndex, node).value,
       joinPoolRequest: {} as JoinPoolRequest,
-      assets: sortedTokens, // Must include BPT token
+      assets: isNativeAssetJoin
+        ? this.replaceWrappedNativeAsset(sortedTokens)
+        : sortedTokens, // Must include BPT token
       maxAmountsIn: sortedAmounts,
       userData,
       fromInternalBalance,
     });
     const encodedCall = Relayer.encodeJoinPool(call);
-    const modelRequest = VaultModel.mapJoinPoolRequest(call);
+    const vaultCall = {
+      ...call,
+      assets: sortedTokens,
+    };
+    const modelRequest = VaultModel.mapJoinPoolRequest(vaultCall);
 
     const userAmountsTokenIn = sortedAmounts.map((a) =>
       Relayer.isChainedReference(a) ? '0' : a
@@ -931,5 +1012,12 @@ export class Join {
       siblings.filter((s) => this.sendsToInternalBalance(s)).length ===
       siblings.length
     );
+  };
+
+  private replaceWrappedNativeAsset = (tokens: string[]): string[] => {
+    const wrappedNativeAssetIndex = tokens.findIndex(
+      (t) => t.toLowerCase() === this.wrappedNativeAsset.toLowerCase()
+    );
+    return replace(tokens, wrappedNativeAssetIndex, AddressZero);
   };
 }
