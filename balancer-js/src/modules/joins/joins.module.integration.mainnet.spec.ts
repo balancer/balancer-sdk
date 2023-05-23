@@ -2,11 +2,23 @@
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 
-import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '@/.';
+import {
+  BalancerSDK,
+  GraphQLQuery,
+  GraphQLArgs,
+  Network,
+  subSlippage,
+  removeItem,
+} from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Contracts } from '@/modules/contracts/contracts.module';
-import { FORK_NODES, accuracy, forkSetup, getBalances } from '@/test/lib/utils';
+import {
+  FORK_NODES,
+  accuracy,
+  forkSetup,
+  sendTransactionGetBalances,
+} from '@/test/lib/utils';
 import { ADDRESSES } from '@/test/lib/constants';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { JsonRpcSigner } from '@ethersproject/providers';
@@ -77,7 +89,7 @@ const sdk = new BalancerSDK({
 });
 const { pools } = sdk;
 const provider = new JsonRpcProvider(rpcUrl, network);
-const signer = provider.getSigner();
+const signer = provider.getSigner(1);
 const { contracts, contractAddresses } = new Contracts(
   network as number,
   provider
@@ -126,62 +138,55 @@ const testFlow = async (
   tokensIn: string[],
   amountsIn: string[],
   authorisation: string | undefined,
-  simulationType = SimulationType.VaultModel
+  simulationType = SimulationType.Tenderly
 ) => {
-  const [bptBalanceBefore, ...tokensInBalanceBefore] = await getBalances(
-    [pool.address, ...tokensIn],
-    signer,
-    userAddress
-  );
-
-  const gasLimit = 8e6;
   const slippage = '10'; // 10 bps = 0.1%
 
-  const query = await pools.generalisedJoin(
-    pool.id,
-    tokensIn,
-    amountsIn,
-    userAddress,
-    slippage,
-    signer,
-    simulationType,
-    authorisation
-  );
+  const { to, encodedCall, minOut, expectedOut, priceImpact } =
+    await pools.generalisedJoin(
+      pool.id,
+      tokensIn,
+      amountsIn,
+      userAddress,
+      slippage,
+      signer,
+      simulationType,
+      authorisation
+    );
 
-  const response = await signer.sendTransaction({
-    to: query.to,
-    data: query.encodedCall,
-    gasLimit,
-  });
+  const { balanceDeltas, transactionReceipt, gasUsed } =
+    await sendTransactionGetBalances(
+      [pool.address, ...tokensIn],
+      signer,
+      userAddress,
+      to,
+      encodedCall
+    );
 
-  const receipt = await response.wait();
-  console.log('Gas used', receipt.gasUsed.toString());
-
-  const [bptBalanceAfter, ...tokensInBalanceAfter] = await getBalances(
-    [pool.address, ...tokensIn],
-    signer,
-    userAddress
-  );
+  console.log('Gas used', gasUsed.toString());
+  console.log('Price impact: ', priceImpact);
 
   console.table({
-    minOut: query.minOut,
-    expectedOut: query.expectedOut,
-    balanceAfter: bptBalanceAfter.toString(),
+    tokens: [pool.address, ...tokensIn],
+    expectedDeltas: [expectedOut, ...amountsIn],
+    balanceDeltas: balanceDeltas.map((d) => d.toString()),
   });
 
-  expect(receipt.status).to.eql(1);
-  expect(BigNumber.from(query.minOut).gte('0')).to.be.true;
-  expect(BigNumber.from(query.expectedOut).gt(query.minOut)).to.be.true;
-  tokensInBalanceAfter.forEach((balanceAfter, i) => {
-    expect(balanceAfter.toString()).to.eq(
-      tokensInBalanceBefore[i].sub(amountsIn[i]).toString()
-    );
-  });
-  expect(bptBalanceBefore.eq(0)).to.be.true;
-  expect(bptBalanceAfter.gte(query.minOut)).to.be.true;
-  expect(
-    accuracy(bptBalanceAfter, BigNumber.from(query.expectedOut))
-  ).to.be.closeTo(1, 1e-2); // inaccuracy should not be over to 1%
+  expect(transactionReceipt.status).to.eq(1);
+  expect(BigInt(expectedOut) > 0).to.be.true;
+  expect(BigNumber.from(expectedOut).gt(minOut)).to.be.true;
+  expect(amountsIn).to.deep.eq(
+    removeItem(balanceDeltas, 0).map((a) => a.toString())
+  );
+  const expectedMinBpt = subSlippage(
+    BigNumber.from(expectedOut),
+    BigNumber.from(slippage)
+  ).toString();
+  expect(expectedMinBpt).to.deep.eq(minOut);
+  expect(accuracy(balanceDeltas[0], BigNumber.from(expectedOut))).to.be.closeTo(
+    1,
+    1e-2
+  ); // inaccuracy should not be over to 1%
 };
 
 describe('generalised join execution', async () => {
@@ -203,7 +208,7 @@ describe('generalised join execution', async () => {
           address: testPool.address,
         },
         tokensIn: [AddressZero],
-        amountsIn: [parseFixed('5', 18).toString()],
+        amountsIn: [parseFixed('0.1', 18).toString()],
         authorisation,
       },
     ]);

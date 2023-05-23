@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { MaxInt256 } from '@ethersproject/constants';
+import { AddressZero, MaxInt256 } from '@ethersproject/constants';
 import { networkAddresses } from '@/lib/constants/config';
 import { BalancerTenderlyConfig } from '@/types';
 
@@ -129,11 +129,15 @@ export default class TenderlyHelper {
     userAddress: string,
     tokens: string[]
   ): Promise<StateOverrides> => {
-    if (tokens.length === 0) return {};
+    const tokensWithoutNativeAsset = tokens.filter(
+      (token) => token !== AddressZero
+    );
+
+    if (tokensWithoutNativeAsset.length === 0) return {};
 
     // Create balances and allowances overrides for each token address provided
     let stateOverrides: StateOverrides = {};
-    tokens.forEach(
+    tokensWithoutNativeAsset.forEach(
       (token) =>
         (stateOverrides = {
           ...stateOverrides,
