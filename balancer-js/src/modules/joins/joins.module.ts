@@ -151,6 +151,11 @@ export class Join {
       authorisation
     );
 
+    const value = isNativeAssetJoin
+      ? deltas[this.wrappedNativeAsset.toLowerCase()]
+      : Zero;
+    console.log('total value', value.toString());
+
     this.assertDeltas(
       poolId,
       deltas,
@@ -158,11 +163,6 @@ export class Join {
       amountsIn,
       totalMinAmountOut
     );
-
-    const value = isNativeAssetJoin
-      ? deltas[this.wrappedNativeAsset.toLowerCase()]
-      : Zero;
-    console.log('value', value.toString());
 
     return {
       to: this.relayer,
@@ -802,9 +802,9 @@ export class Join {
       },
     };
 
-    debugLog(`Swap:`);
+    debugLog(`\nSwap:`);
     debugLog(`${JSON.stringify(call)}`);
-    debugLog(`${JSON.stringify(call.value?.toString())}`);
+    debugLog(`value -> ${JSON.stringify(call.value?.toString())}`);
 
     const modelRequest = VaultModel.mapSwapRequest(vaultCall);
 
@@ -916,8 +916,9 @@ export class Join {
       ...call,
       assets: sortedTokens,
     };
-    debugLog(`Join:`);
-    debugLog(JSON.stringify(vaultCall));
+    debugLog(`\nJoin:`);
+    debugLog(JSON.stringify(call));
+    debugLog(`value -> ${JSON.stringify(call.value?.toString())}`);
     const modelRequest = VaultModel.mapJoinPoolRequest(vaultCall);
 
     const userAmountsTokenIn = sortedAmounts.map((a) =>
