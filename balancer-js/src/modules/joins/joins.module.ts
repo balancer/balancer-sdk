@@ -34,6 +34,13 @@ import { BalancerRelayer__factory } from '@/contracts/factories/BalancerRelayer_
 
 const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
+// Quickly switch useful debug logs on/off
+const DEBUG = true;
+
+function debugLog(log: string) {
+  if (DEBUG) console.log(log);
+}
+
 export class Join {
   private relayer: string;
   private wrappedNativeAsset;
@@ -771,21 +778,6 @@ export class Join {
       this.getOutputRefValue(joinPathIndex, node).value
     );
 
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.joinAction}(
-    //     inputAmt: ${node.children[0].index},
-    //     inputToken: ${node.children[0].address},
-    //     pool: ${node.id},
-    //     outputToken: ${node.address},
-    //     outputRef: ${this.getOutputRefValue(joinPathIndex, node).value},
-    //     sender: ${sender},
-    //     recipient: ${recipient},
-    //     fromInternalBalance: ${fromInternalBalance},
-    //     toInternalBalance: ${toInternalBalance},
-    //   )`
-    // );
-
     const value = isNativeAssetJoin
       ? getEthValue([assetIn], [amountIn.value])
       : Zero;
@@ -809,6 +801,10 @@ export class Join {
         assetIn: tokenIn,
       },
     };
+
+    debugLog(`Swap:`);
+    debugLog(`${JSON.stringify(call)}`);
+    debugLog(`${JSON.stringify(call.value?.toString())}`);
 
     const modelRequest = VaultModel.mapSwapRequest(vaultCall);
 
@@ -900,22 +896,6 @@ export class Join {
 
     const fromInternalBalance = this.allImmediateChildrenSendToInternal(node);
 
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.joinAction}(
-    //     poolId: ${node.id},
-    //     assets: ${sortedTokens.toString()},
-    //     maxAmtsIn: ${sortedAmounts.toString()},
-    //     amountsIn: ${userDataAmounts.toString()},
-    //     minOut: ${minAmountOut},
-    //     outputRef: ${this.getOutputRefValue(joinPathIndex, node).value},
-    //     sender: ${sender},
-    //     recipient: ${recipient},
-    //     fromInternalBalance: ${fromInternalBalance},
-    //     toInternalBalance: false,
-    //   )`
-    // );
-
     const call: EncodeJoinPoolInput = Relayer.formatJoinPoolInput({
       poolId: node.id,
       kind: 0,
@@ -936,6 +916,8 @@ export class Join {
       ...call,
       assets: sortedTokens,
     };
+    debugLog(`Join:`);
+    debugLog(JSON.stringify(vaultCall));
     const modelRequest = VaultModel.mapJoinPoolRequest(vaultCall);
 
     const userAmountsTokenIn = sortedAmounts.map((a) =>
