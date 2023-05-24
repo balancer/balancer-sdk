@@ -96,6 +96,7 @@
     "@ethersproject/contracts": "^5.4.0",
     "@ethersproject/providers": "^5.4.5",
     "axios": "^0.24.0",
+    "bignumber.js": "^9.1.1",
     "graphql": "^15.6.1",
     "graphql-request": "^3.5.0",
     "json-to-graphql-query": "^2.2.4",
