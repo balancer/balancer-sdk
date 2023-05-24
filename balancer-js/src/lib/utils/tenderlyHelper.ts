@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { AddressZero, MaxInt256 } from '@ethersproject/constants';
+import { parseFixed } from '@ethersproject/bignumber';
 
 import { networkAddresses } from '@/lib/constants/config';
 import { BalancerTenderlyConfig } from '@/types';
@@ -73,12 +74,20 @@ export default class TenderlyHelper {
     value: string
   ): Promise<string> => {
     // Map encoded-state response into simulate request body by replacing property names
-    const state_objects = Object.fromEntries(
+    const stateOverrides = Object.fromEntries(
       Object.keys(encodedStateOverrides).map((address) => {
         // Object.fromEntries require format [key, value] instead of {key: value}
         return [address, { storage: encodedStateOverrides[address].value }];
       })
     );
+
+    // Set user balance to 1000 ETH to make sure the simulation doesn't fail due to insufficient balance
+    const state_objects = {
+      ...stateOverrides,
+      [userAddress]: {
+        balance: parseFixed('100', 18).toHexString(),
+      },
+    };
 
     const body = {
       // -- Standard TX fields --
