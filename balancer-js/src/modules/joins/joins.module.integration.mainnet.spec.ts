@@ -191,16 +191,34 @@ const testFlow = async (
 };
 
 describe('generalised join execution', async () => {
-  context('join with ETH', async () => {
+  context('join with wETH vs ETH', async () => {
     if (!TEST_JOIN_WITH_ETH) return true;
     let authorisation: string | undefined;
     const testPool = addresses.swEth_bbaweth;
     beforeEach(async () => {
       // no need to setup ETH balance because test account already has ETH
-      await forkSetup(signer, [], [], [], jsonRpcUrl, blockNumber);
+      await forkSetup(
+        signer,
+        [addresses.WETH.address],
+        [addresses.WETH.slot],
+        [parseFixed('100', 18).toString()],
+        jsonRpcUrl,
+        blockNumber
+      );
     });
 
     await runTests([
+      {
+        signer,
+        description: 'join with wETH',
+        pool: {
+          id: testPool.id,
+          address: testPool.address,
+        },
+        tokensIn: [addresses.WETH.address],
+        amountsIn: [parseFixed('1', 18).toString()],
+        authorisation,
+      },
       {
         signer,
         description: 'join with ETH',
@@ -209,7 +227,7 @@ describe('generalised join execution', async () => {
           address: testPool.address,
         },
         tokensIn: [AddressZero],
-        amountsIn: [parseFixed('0.1', 18).toString()],
+        amountsIn: [parseFixed('1', 18).toString()],
         authorisation,
       },
     ]);
