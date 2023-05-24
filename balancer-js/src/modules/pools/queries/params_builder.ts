@@ -77,7 +77,14 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
     tokenIn,
     fromInternalBalance = false,
   }: PoolQueries.JoinExactOutParams): PoolQueries.queryJoinParams {
-    const tokenIndex = this.pool.tokensList.indexOf(tokenIn);
+    const bptIndex = this.pool.tokensList.findIndex((token) =>
+      this.pool.id.includes(token)
+    );
+    let tokensWithoutBpt = [...this.pool.tokensList];
+    if (bptIndex > -1) {
+      tokensWithoutBpt = removeItem(this.pool.tokensList, bptIndex);
+    }
+    const tokenIndex = tokensWithoutBpt.indexOf(tokenIn);
 
     const userData = this.encoder.joinTokenInForExactBPTOut(bptOut, tokenIndex);
 
@@ -111,7 +118,14 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
     tokenOut,
     toInternalBalance = false,
   }: PoolQueries.ExitToSingleTokenParams): PoolQueries.queryExitParams {
-    const tokenIndex = this.pool.tokensList.indexOf(tokenOut);
+    const bptIndex = this.pool.tokensList.findIndex((token) =>
+      this.pool.id.includes(token)
+    );
+    let tokensWithoutBpt = [...this.pool.tokensList];
+    if (bptIndex > -1) {
+      tokensWithoutBpt = removeItem(this.pool.tokensList, bptIndex);
+    }
+    const tokenIndex = tokensWithoutBpt.indexOf(tokenOut);
 
     const userData = this.encoder.exitExactBPTInForOneTokenOut(
       bptIn,
