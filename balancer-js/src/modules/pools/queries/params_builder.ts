@@ -1,6 +1,7 @@
 import * as PoolQueries from './types';
 import { AddressZero, Zero, MaxUint256 } from '@ethersproject/constants';
 import { getEncoder } from './get_encoder';
+import { removeItem } from '@/lib/utils';
 
 /**
  * Builds parameters quering join / exit liquidity functions in the Balancer Helpers contract.
@@ -35,13 +36,14 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
     );
     const assets = [...this.pool.tokensList];
 
-    // Remove BPT token from amounts
-    if (bptIndex && bptIndex > -1) {
-      maxAmountsIn.splice(bptIndex, 1);
+    let maxInWithoutBpt = [...maxAmountsIn];
+    // Remove BPT token from amounts for user data
+    if (bptIndex > -1) {
+      maxInWithoutBpt = removeItem(maxAmountsIn, bptIndex);
     }
 
     const userData = this.encoder.joinExactTokensInForBPTOut(
-      maxAmountsIn,
+      maxInWithoutBpt,
       minimumBPT
     );
 
@@ -75,7 +77,14 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
     tokenIn,
     fromInternalBalance = false,
   }: PoolQueries.JoinExactOutParams): PoolQueries.queryJoinParams {
-    const tokenIndex = this.pool.tokensList.indexOf(tokenIn);
+    const bptIndex = this.pool.tokensList.findIndex((token) =>
+      this.pool.id.includes(token)
+    );
+    let tokensWithoutBpt = [...this.pool.tokensList];
+    if (bptIndex > -1) {
+      tokensWithoutBpt = removeItem(this.pool.tokensList, bptIndex);
+    }
+    const tokenIndex = tokensWithoutBpt.indexOf(tokenIn);
 
     const userData = this.encoder.joinTokenInForExactBPTOut(bptOut, tokenIndex);
 
@@ -109,7 +118,14 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
     tokenOut,
     toInternalBalance = false,
   }: PoolQueries.ExitToSingleTokenParams): PoolQueries.queryExitParams {
-    const tokenIndex = this.pool.tokensList.indexOf(tokenOut);
+    const bptIndex = this.pool.tokensList.findIndex((token) =>
+      this.pool.id.includes(token)
+    );
+    let tokensWithoutBpt = [...this.pool.tokensList];
+    if (bptIndex > -1) {
+      tokensWithoutBpt = removeItem(this.pool.tokensList, bptIndex);
+    }
+    const tokenIndex = tokensWithoutBpt.indexOf(tokenOut);
 
     const userData = this.encoder.exitExactBPTInForOneTokenOut(
       bptIn,
@@ -183,13 +199,14 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
       this.pool.id.includes(token)
     );
 
+    let minAmountsOutWithoutBpt = [...minAmountsOut];
     // Remove BPT token from amounts
-    if (bptIndex && bptIndex > -1) {
-      minAmountsOut.splice(bptIndex, 1);
+    if (bptIndex > -1) {
+      minAmountsOutWithoutBpt = removeItem(minAmountsOut, bptIndex);
     }
 
     const userData = this.encoder.exitBPTInForExactTokensOut(
-      minAmountsOut,
+      minAmountsOutWithoutBpt,
       maxBptIn
     );
 
