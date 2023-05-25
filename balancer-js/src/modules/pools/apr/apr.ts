@@ -269,10 +269,20 @@ export class PoolApr {
       throw 'Missing BAL price';
     }
 
-    const balPriceUsd = parseFloat(balPrice.usd);
-
-    // Subgraph is returning BAL staking rewards as reward tokens for L2 gauges.
-    if (pool.chainId > 1) {
+    // Handle child chain gauges with inflation_rate
+    if (gauge.balInflationRate) {
+      const reward = await this.rewardTokenApr(bal, {
+        rate: parseEther(String(gauge.balInflationRate)),
+        period_finish: BigNumber.from(
+          Math.round(365 * 24 * 3600 + Date.now() / 1000)
+        ),
+        decimals: 18,
+      });
+      const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
+      const rewardValue = reward.value / totalSupplyUsd;
+      return Math.round(boost * 10000 * rewardValue);
+    } else if (pool.chainId > 1) {
+      // TODO: remove after all gauges are migrated (around 01-07-2023), Subgraph is returning BAL staking rewards as reward tokens for L2 gauges.
       if (!gauge.rewardTokens) {
         return 0;
       }
@@ -283,22 +293,13 @@ export class PoolApr {
         const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
         const rewardValue = reward.value / totalSupplyUsd;
         return Math.round(10000 * rewardValue);
-      } else if (gauge.balInflationRate) {
-        const reward = await this.rewardTokenApr(bal, {
-          rate: parseEther(String(gauge.balInflationRate)),
-          period_finish: BigNumber.from(
-            Math.round(365 * 24 * 3600 + Date.now() / 1000)
-          ),
-          decimals: 18,
-        });
-        const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
-        const rewardValue = reward.value / totalSupplyUsd;
-        return Math.round(boost * 10000 * rewardValue);
       } else {
         return 0;
       }
     }
 
+    // Handle mainnet gauges
+    const balPriceUsd = parseFloat(balPrice.usd);
     const now = Math.round(new Date().getTime() / 1000);
     const totalBalEmissions = (emissions.weekly(now) / 7) * 365;
     const gaugeBalEmissions = totalBalEmissions * gauge.relativeWeight;
