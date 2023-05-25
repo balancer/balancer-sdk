@@ -1,4 +1,4 @@
-import { formatUnits, parseEther } from '@ethersproject/units';
+import { formatUnits } from '@ethersproject/units';
 import * as emissions from '@/modules/data/bal/emissions';
 import type {
   Findable,
@@ -270,16 +270,12 @@ export class PoolApr {
     }
 
     // Handle child chain gauges with inflation_rate
+    // balInflationRate - amount of BAL tokens per second as a float
     if (gauge.balInflationRate) {
-      const reward = await this.rewardTokenApr(bal, {
-        rate: parseEther(String(gauge.balInflationRate)),
-        period_finish: BigNumber.from(
-          Math.round(365 * 24 * 3600 + Date.now() / 1000)
-        ),
-        decimals: 18,
-      });
+      const reward =
+        gauge.balInflationRate * 86400 * 365 * parseFloat(balPrice.usd);
       const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
-      const rewardValue = reward.value / totalSupplyUsd;
+      const rewardValue = reward / totalSupplyUsd;
       return Math.round(boost * 10000 * rewardValue);
     } else if (pool.chainId > 1) {
       // TODO: remove after all gauges are migrated (around 01-07-2023), Subgraph is returning BAL staking rewards as reward tokens for L2 gauges.
