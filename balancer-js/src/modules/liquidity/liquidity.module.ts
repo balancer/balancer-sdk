@@ -3,6 +3,7 @@ import { PoolAttribute } from '../data';
 import { PoolTypeConcerns } from '../pools/pool-type-concerns';
 import { BigNumber } from '@ethersproject/bignumber';
 import { formatFixed, parseFixed } from '@/lib/utils/math';
+import { WeiPerEther } from '@ethersproject/constants';
 
 const SCALE = 18;
 
@@ -90,5 +91,10 @@ export class Liquidity {
     const totalLiquidity = totalSubPoolLiquidity.add(parsedTokenLiquidity);
 
     return formatFixed(totalLiquidity, SCALE);
+  }
+
+  async getBptPrice(pool: Pool): Promise<string> {
+    const liquidity = await this.getLiquidity(pool);
+    return (parseFloat(liquidity) / parseFloat(pool.totalShares)).toString();
   }
 }
