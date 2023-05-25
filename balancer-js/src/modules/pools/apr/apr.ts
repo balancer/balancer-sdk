@@ -1,4 +1,4 @@
-import { formatUnits } from '@ethersproject/units';
+import { formatUnits, parseEther } from '@ethersproject/units';
 import * as emissions from '@/modules/data/bal/emissions';
 import type {
   Findable,
@@ -11,12 +11,13 @@ import type {
   Network,
   PoolToken,
 } from '@/types';
-import { BaseFeeDistributor, RewardData } from '@/modules/data';
+import { BaseFeeDistributor } from '@/modules/data';
 import { ProtocolRevenue } from './protocol-revenue';
 import { Liquidity } from '@/modules/liquidity/liquidity.module';
 import { identity, zipObject, pickBy } from 'lodash';
 import { PoolFees } from '../fees/fees';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { BigNumber } from '@ethersproject/bignumber';
 
 export interface AprBreakdown {
   swapFees: number;
@@ -283,9 +284,16 @@ export class PoolApr {
         const rewardValue = reward.value / totalSupplyUsd;
         return Math.round(10000 * rewardValue);
       } else if (gauge.balInflationRate) {
+        const reward = await this.rewardTokenApr(bal, {
+          rate: parseEther(String(gauge.balInflationRate)),
+          period_finish: BigNumber.from(
+            Math.round(365 * 24 * 3600 + Date.now() / 1000)
+          ),
+          decimals: 18,
+        });
         const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
-        const rewardValue = gauge.balInflationRate * 3600 * 24 * 365;
-        return Math.round(boost * 10000 * rewardValue) / totalSupplyUsd;
+        const rewardValue = reward.value / totalSupplyUsd;
+        return Math.round(boost * 10000 * rewardValue);
       } else {
         return 0;
       }
@@ -488,7 +496,10 @@ export class PoolApr {
     return fee;
   }
 
-  private async rewardTokenApr(tokenAddress: string, rewardData: RewardData) {
+  private async rewardTokenApr(
+    tokenAddress: string,
+    rewardData: { rate: BigNumber; period_finish: BigNumber; decimals?: number }
+  ) {
     if (rewardData.period_finish.toNumber() < Date.now() / 1000) {
       return {
         address: tokenAddress,
