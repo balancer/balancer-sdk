@@ -16,6 +16,7 @@ export enum BalancerErrorCode {
   INVALID_SWAP_FEE_PERCENTAGE = 'INVALID_SWAP_FEE_PERCENTAGE',
   INVALID_WEIGHTS = 'INVALID_WEIGHTS',
   JOIN_DELTA_AMOUNTS = 'JOIN_DELTA_AMOUNTS',
+  JOIN_WITH_ZERO_AMOUNT = 'JOIN_WITH_ZERO_AMOUNT',
   MISSING_AMP = 'MISSING_AMP',
   MISSING_DECIMALS = 'MISSING_DECIMALS',
   MISSING_PRICE_RATE = 'MISSING_PRICE_RATE',
@@ -72,6 +73,8 @@ export class BalancerError extends Error {
         return 'The sum of the weights needs to be equal to 1e18(100%)';
       case BalancerErrorCode.JOIN_DELTA_AMOUNTS:
         return 'Error when checking join call deltas';
+      case BalancerErrorCode.JOIN_WITH_ZERO_AMOUNT:
+        return 'Cant join pool with 0 amount of token in';
       case BalancerErrorCode.MISSING_AMP:
         return 'missing amp';
       case BalancerErrorCode.MISSING_DECIMALS:
