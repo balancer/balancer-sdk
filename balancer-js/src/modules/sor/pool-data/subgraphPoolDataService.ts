@@ -72,6 +72,7 @@ export class SubgraphPoolDataService implements PoolDataService {
   }
 
   public async getPools(): Promise<SubgraphPoolBase[]> {
+    console.log('here');
     const pools = await this.getSubgraphPools();
 
     const filteredPools = pools.filter((p) => {
@@ -101,6 +102,7 @@ export class SubgraphPoolDataService implements PoolDataService {
     const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
       new SubgraphArgsFormatter()
     ) as PoolsQueryVariables;
+    console.log(formattedQuery);
     const { pool0, pool1000, pool2000 } = await this.client.AllPools(
       formattedQuery
     );
