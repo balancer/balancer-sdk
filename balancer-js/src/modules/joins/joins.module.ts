@@ -51,7 +51,7 @@ export class Join {
     if (tokensIn.length === 0)
       throw new BalancerError(BalancerErrorCode.MISSING_TOKENS);
 
-    if (amountsIn.includes('0'))
+    if (amountsIn.every((a) => a === '0'))
       throw new BalancerError(BalancerErrorCode.JOIN_WITH_ZERO_AMOUNT);
 
     if (tokensIn.length != amountsIn.length)
