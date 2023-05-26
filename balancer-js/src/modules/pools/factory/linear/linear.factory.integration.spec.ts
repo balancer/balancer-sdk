@@ -58,9 +58,7 @@ describe('creating linear pool', async () => {
     let transactionReceipt: TransactionReceipt;
     it('should send the create transaction', async () => {
       const txInfo = linearPoolFactory.create(poolParams);
-      transactionReceipt = await (
-        await signer.sendTransaction({ ...txInfo, gasLimit: 30000000 })
-      ).wait();
+      transactionReceipt = await (await signer.sendTransaction(txInfo)).wait();
       expect(transactionReceipt.status).to.eql(1);
     });
     it('should have correct pool info on creation', async () => {

@@ -263,7 +263,7 @@ describe('Migrations', function () {
     );
 
     beforeEach(async () => {
-      await reset('https://rpc.ankr.com/polygon', provider, 41098000);
+      await reset('https://rpc.ankr.com/polygon', provider, 42462957);
       signer = await impersonateAccount(address, provider);
 
       // approve relayer
@@ -274,7 +274,7 @@ describe('Migrations', function () {
 
     context('ComposableStable to ComposableStable', () => {
       before(() => {
-        address = '0x92a0b2c089733bef43ac367d2ce7783526aea590';
+        address = '0xe80a6a7b4fdadf0aa59f3f669a8d394d1d4da86b';
       });
 
       it('should build a migration using exit / join', async () => {

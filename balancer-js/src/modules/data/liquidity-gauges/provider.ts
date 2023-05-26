@@ -8,8 +8,8 @@ import type {
   SubgraphLiquidityGauge,
 } from '@/modules/subgraph/subgraph';
 import type { Findable } from '../types';
-import type { Provider } from '@ethersproject/providers';
 import type { Network } from '@/types';
+import { Multicall } from '@/contracts';
 
 export interface LiquidityGauge {
   id: string;
@@ -22,6 +22,7 @@ export interface LiquidityGauge {
   relativeWeight: number;
   rewardTokens?: { [tokenAddress: string]: RewardData };
   claimableTokens?: { [tokenAddress: string]: BigNumber };
+  balInflationRate?: number;
 }
 
 export class LiquidityGaugeSubgraphRPCProvider
@@ -32,6 +33,7 @@ export class LiquidityGaugeSubgraphRPCProvider
   subgraph: LiquidityGaugesSubgraphRepository;
   workingSupplies: { [gaugeAddress: string]: number } = {};
   relativeWeights: { [gaugeAddress: string]: number } = {};
+  inflationRates: { [gaugeAddress: string]: number } = {};
   rewardData: {
     [gaugeAddress: string]: { [tokenAddress: string]: RewardData };
   } = {};
@@ -39,23 +41,17 @@ export class LiquidityGaugeSubgraphRPCProvider
 
   constructor(
     subgraphUrl: string,
-    multicallAddress: string,
+    multicall: Multicall,
     gaugeControllerAddress: string,
-    private chainId: Network,
-    provider: Provider
+    private chainId: Network
   ) {
     if (gaugeControllerAddress) {
       this.gaugeController = new GaugeControllerMulticallRepository(
-        multicallAddress,
-        gaugeControllerAddress,
-        provider
+        multicall,
+        gaugeControllerAddress
       );
     }
-    this.multicall = new LiquidityGaugesMulticallRepository(
-      multicallAddress,
-      chainId,
-      provider
-    );
+    this.multicall = new LiquidityGaugesMulticallRepository(multicall, chainId);
     this.subgraph = new LiquidityGaugesSubgraphRepository(subgraphUrl);
   }
 
@@ -68,6 +64,26 @@ export class LiquidityGaugeSubgraphRPCProvider
         gaugeAddresses
       );
       console.timeEnd('Fetching multicall.getWorkingSupplies');
+    } else {
+      // Filter out gauges that are not from the factory supporting inflation rate
+      // Safe to remove this once all gauges are migrated to the new factory
+      const newFactories = [
+        '0x22625eedd92c81a219a83e1dc48f88d54786b017', // Polygon
+        '0x6817149cb753bf529565b4d023d7507ed2ff4bc0', // Arbitrum
+        '0x83e443ef4f9963c77bd860f94500075556668cb8', // Gnosis
+      ];
+
+      const childGaugeAddresses = gauges
+        .filter((g) => newFactories.includes(g.factory.id.toLowerCase()))
+        .map((g) => g.id);
+
+      if (childGaugeAddresses.length > 0) {
+        console.time('Fetching multicall.inflationRates');
+        this.inflationRates = await this.multicall.getInflationRates(
+          childGaugeAddresses
+        );
+        console.timeEnd('Fetching multicall.inflationRates');
+      }
     }
     if (this.gaugeController) {
       console.time('Fetching gaugeController.getRelativeWeights');
@@ -156,6 +172,7 @@ export class LiquidityGaugeSubgraphRPCProvider
       workingSupply: this.workingSupplies[subgraphGauge.id],
       relativeWeight: this.relativeWeights[subgraphGauge.id],
       rewardTokens: this.rewardData[subgraphGauge.id],
+      balInflationRate: this.inflationRates[subgraphGauge.id],
     };
   }
 }

@@ -1,7 +1,7 @@
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Network } from '@/lib/constants';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { Multicall } from '@/modules/contracts/implementations/multicall';
+import { Multicall } from '@/contracts';
 import {
   FeeDistributorRepository,
   LiquidityGauge,
@@ -9,8 +9,6 @@ import {
 } from '@/modules/data';
 import { Interface } from '@ethersproject/abi';
 import { BigNumber } from '@ethersproject/bignumber';
-import { Contract } from '@ethersproject/contracts';
-import { Provider } from '@ethersproject/providers';
 import {
   GaugeTokens,
   populateGauges,
@@ -66,7 +64,6 @@ export interface IClaimService {
 
 export class ClaimService implements IClaimService {
   private readonly liquidityGauges: LiquidityGaugeSubgraphRPCProvider;
-  private readonly multicall: Contract;
   private readonly gaugeClaimHelperAddress?: string;
   private readonly balancerMinterAddress?: string;
   private readonly chainId: Network;
@@ -76,8 +73,7 @@ export class ClaimService implements IClaimService {
     liquidityGauges: LiquidityGaugeSubgraphRPCProvider,
     feeDistributor: FeeDistributorRepository | undefined,
     chainId: Network,
-    multicallAddress: string,
-    provider: Provider,
+    private multicall: Multicall,
     gaugeClaimHelperAddress?: string,
     balancerMinterAddress?: string
   ) {
@@ -86,7 +82,6 @@ export class ClaimService implements IClaimService {
     this.chainId = chainId;
     this.gaugeClaimHelperAddress = gaugeClaimHelperAddress;
     this.balancerMinterAddress = balancerMinterAddress;
-    this.multicall = Multicall(multicallAddress, provider);
   }
 
   /**
@@ -283,7 +278,7 @@ export class ClaimService implements IClaimService {
       rewardTokens,
       userAddress
     );
-    const [, res] = await this.multicall.aggregate(payload);
+    const [, res] = await this.multicall.callStatic.aggregate(payload);
     const res0x = res.map((r: string) => (r == '0x' ? '0x0' : r));
     return paths.reduce(reduceClaimableRewards(res0x), {});
   }
@@ -292,7 +287,10 @@ export class ClaimService implements IClaimService {
     gaugeAddresses: string[],
     rewardTokens: { [address: string]: string[] },
     userAddress: string
-  ): { payload: string[][]; paths: { gauge: string; token: string }[] } {
+  ): {
+    payload: { target: string; callData: string }[];
+    paths: { gauge: string; token: string }[];
+  } {
     const payload = [];
     const paths: { gauge: string; token: string }[] = [];
     for (const gaugeAddress of gaugeAddresses) {
@@ -310,28 +308,27 @@ export class ClaimService implements IClaimService {
     userAddress: string,
     gaugeAddress: string,
     tokenAddress: string
-  ): string[] {
+  ): { target: string; callData: string } {
     if (this.chainId === 1 || this.chainId === 5) {
-      return [
-        gaugeAddress,
-        liquidityGaugeV5Interface.encodeFunctionData('claimable_reward', [
-          userAddress,
-          tokenAddress,
-        ]),
-      ];
+      return {
+        target: gaugeAddress,
+        callData: liquidityGaugeV5Interface.encodeFunctionData(
+          'claimable_reward',
+          [userAddress, tokenAddress]
+        ),
+      };
     }
     if (!this.gaugeClaimHelperAddress)
       throw new BalancerError(
         BalancerErrorCode.GAUGES_HELPER_ADDRESS_NOT_PROVIDED
       );
-    return [
-      this.gaugeClaimHelperAddress,
-      gaugeClaimHelperInterface.encodeFunctionData('getPendingRewards', [
-        gaugeAddress,
-        userAddress,
-        tokenAddress,
-      ]),
-    ];
+    return {
+      target: this.gaugeClaimHelperAddress,
+      callData: gaugeClaimHelperInterface.encodeFunctionData(
+        'getPendingRewards',
+        [gaugeAddress, userAddress, tokenAddress]
+      ),
+    };
   }
 
   private async retrieveClaimableTokens(
@@ -341,13 +338,14 @@ export class ClaimService implements IClaimService {
     if (this.chainId === Network.MAINNET || this.chainId === Network.GOERLI) {
       const balAddress = BALANCER_NETWORK_CONFIG[this.chainId].addresses.tokens
         .bal as string;
-      const payload = gaugeAddresses.map((gaugeAddress) => [
-        gaugeAddress,
-        liquidityGaugeV5Interface.encodeFunctionData('claimable_tokens', [
-          userAddress,
-        ]),
-      ]);
-      const [, res] = await this.multicall.aggregate(payload);
+      const payload = gaugeAddresses.map((gaugeAddress) => ({
+        target: gaugeAddress,
+        callData: liquidityGaugeV5Interface.encodeFunctionData(
+          'claimable_tokens',
+          [userAddress]
+        ),
+      }));
+      const [, res] = await this.multicall.callStatic.aggregate(payload);
       const res0x = res.map((r: string) => (r == '0x' ? '0x0' : r));
       return gaugeAddresses.reduce(
         reduceClaimableTokens(res0x, balAddress),

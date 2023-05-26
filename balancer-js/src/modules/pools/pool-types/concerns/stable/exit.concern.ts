@@ -278,7 +278,7 @@ export class StablePoolExit implements ExitConcern {
       );
 
     // Check if there's any relevant stable pool info missing
-    if (pool.tokens.some((token) => !token.decimals))
+    if (pool.tokens.some((token) => token.decimals === undefined))
       throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
     if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
   };
@@ -300,7 +300,7 @@ export class StablePoolExit implements ExitConcern {
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
     }
     // Check if there's any relevant stable pool info missing
-    if (pool.tokens.some((token) => !token.decimals))
+    if (pool.tokens.some((token) => token.decimals === undefined))
       throw new BalancerError(BalancerErrorCode.MISSING_DECIMALS);
     if (!pool.amp) throw new BalancerError(BalancerErrorCode.MISSING_AMP);
   };

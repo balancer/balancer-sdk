@@ -1,29 +1,21 @@
 import { set } from 'lodash';
 import { Fragment, JsonFragment, Interface, Result } from '@ethersproject/abi';
 import { CallOverrides } from '@ethersproject/contracts';
-import { Provider } from '@ethersproject/providers';
 import { BytesLike } from '@ethersproject/bytes';
-import { Multicall } from '@/modules/contracts/implementations/multicall';
+import { Multicall } from '@/contracts';
 
 export class Multicaller {
-  private multiAddress: string;
-  private provider: Provider;
   private interface: Interface;
-  public options: CallOverrides = {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private calls: [string, string, any][] = [];
   private paths: string[] = [];
 
   constructor(
-    multiAddress: string,
-    provider: Provider,
+    private multicall: Multicall,
     abi: string | Array<Fragment | JsonFragment | string>,
-    options = {}
+    private options: CallOverrides = {}
   ) {
-    this.multiAddress = multiAddress;
-    this.provider = provider;
     this.interface = new Interface(abi);
-    this.options = options;
   }
 
   call(
@@ -52,13 +44,11 @@ export class Multicaller {
   }
 
   private async executeMulticall(): Promise<Result[]> {
-    const multi = Multicall(this.multiAddress, this.provider);
-
-    const [, res] = await multi.aggregate(
-      this.calls.map(([address, functionName, params]) => [
-        address,
-        this.interface.encodeFunctionData(functionName, params),
-      ]),
+    const [, res] = await this.multicall.callStatic.aggregate(
+      this.calls.map(([address, functionName, params]) => ({
+        target: address,
+        callData: this.interface.encodeFunctionData(functionName, params),
+      })),
       this.options
     );
 

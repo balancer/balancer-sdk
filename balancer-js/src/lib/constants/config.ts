@@ -43,6 +43,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/blocklytics/ethereum-blocks',
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'ethereum',
+      },
+    },
     pools: {
       wETHwstETH: {
         id: '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080',
@@ -52,9 +58,6 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     poolsToIgnore: [
       '0xbd482ffb3e6e50dc1c437557c3bea2b68f3683ee', // a pool made by an external dev who was playing with a novel rate provider mechanism in production.
       '0x0afbd58beca09545e4fb67772faf3858e610bcd0',
-      '0x2ff1a9dbdacd55297452cfd8a4d94724bc22a5f7',
-      '0xbc0f2372008005471874e426e86ccfae7b4de79d',
-      '0xdba274b4d04097b90a72b62467d828cefd708037',
       '0xf22ff21e17157340575158ad7394e068048dd98b',
       '0xf71d0774b214c4cf51e33eb3d30ef98132e4dbaa',
     ],
@@ -101,6 +104,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: '',
+        platformId: 'polygon-pos',
+      },
+    },
     pools: {},
     poolsToIgnore: [
       '0x600bd01b6526611079e12e1ff93aba7a3e34226f', // This pool has rateProviders with incorrect scaling
@@ -145,6 +154,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-one-blocks',
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'arbitrum-one',
+      },
+    },
     pools: {},
     sorConnectingTokens: [
       {
@@ -175,6 +190,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       gaugesSubgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'ethereum',
+      },
+    },
     pools: {},
   },
   [Network.ROPSTEN]: {
@@ -194,6 +215,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       subgraph: '',
       gaugesSubgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'ethereum',
+      },
     },
     pools: {},
   },
@@ -216,6 +243,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-rinkeby-v2',
       gaugesSubgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'ethereum',
+      },
     },
     pools: {},
   },
@@ -244,6 +277,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/blocklytics/goerli-blocks',
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'ethereum',
+      },
+    },
     pools: {},
     sorConnectingTokens: [
       {
@@ -270,6 +309,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         ...addressesByNetwork[Network.OPTIMISM].tokens,
       },
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'optimism',
+      },
+    },
     urls: {
       subgraph:
         'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-optimism',
@@ -293,6 +338,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: addressesByNetwork[Network.GNOSIS].contracts.weth,
+        bal: addressesByNetwork[Network.GNOSIS].contracts.bal,
         ...addressesByNetwork[Network.GNOSIS].tokens,
       },
     },
@@ -301,6 +347,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
       gaugesSubgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-gnosis-chain',
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'xdai',
+        platformId: 'xdai',
+      },
     },
     pools: {},
     sorConnectingTokens: [
@@ -342,6 +394,12 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/beethovenxfi/fantom-blocks',
     },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'ftm',
+        platformId: 'fantom',
+      },
+    },
     pools: {},
     poolsToIgnore: [],
     sorConnectingTokens: [
@@ -355,7 +413,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     chainId: Network.SEPOLIA, //11155111
     addresses: {
       contracts: {
-        multicall: '',
+        multicall: '0x25eef291876194aefad0d60dff89e268b90754bb',
         ...addressesByNetwork[Network.SEPOLIA].contracts,
       },
       tokens: {
@@ -365,7 +423,55 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
     },
     urls: {
-      subgraph: '',
+      subgraph:
+        'https://api.studio.thegraph.com/proxy/24660/balancer-sepolia-v2/v0.0.1',
+    },
+    thirdParty: {
+      // There is no support for Sepolia Network in coingecko
+      coingecko: {
+        platformId: '',
+        nativeAssetId: '',
+      }
+    },
+    pools: {},
+    poolsToIgnore: [],
+    sorConnectingTokens: [],
+  },
+  [Network.ZKEVM]: {
+    chainId: Network.ZKEVM, //1101
+    addresses: {
+      contracts: {
+        aaveLinearPoolFactory: '0x4b7b369989e613ff2C65768B7Cf930cC927F901E',
+        balancerHelpers: '0x8E9aa87E45e92bad84D5F8DD1bff34Fb92637dE9',
+        balancerMinterAddress: '0x475D18169BE8a89357A9ee3Ab00ca386d20fA229',
+        composableStablePoolFactory:
+          '0x8eA89804145c007e7D226001A96955ad53836087',
+        erc4626LinearPoolFactory: '0x6B1Da720Be2D11d95177ccFc40A917c2688f396c',
+        feeDistributor: '',
+        gaugeController: '',
+        gearboxLinearPoolFactory: '0x687b8C9b41E01Be8B591725fac5d5f52D0564d79',
+        multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
+        protocolFeePercentagesProvider:
+          '0x1802953277FD955f9a254B80Aa0582f193cF1d77',
+        balancerRelayer: '0x4678731DC41142A902a114aC5B2F77b63f4a259D',
+        vault: '0xBA12222222228d8Ba445958a75a0704d566BF2C8',
+        weightedPoolFactory: '0x03F3Fb107e74F2EAC9358862E91ad3c692712054',
+        yearnLinearPoolFactory: '',
+      },
+      tokens: {
+        bal: '0x120eF59b80774F02211563834d8E3b72cb1649d6',
+        wrappedNativeAsset: '0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9',
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.studio.thegraph.com/query/24660/balancer-polygon-zkevm-v2/v0.0.2',
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'polygon-zkevm',
+      },
     },
     pools: {},
     poolsToIgnore: [],

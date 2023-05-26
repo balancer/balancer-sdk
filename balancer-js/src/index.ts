@@ -18,7 +18,7 @@ export {
   someJoinExit,
   buildRelayerCalls,
   canUseJoinExit,
-} from './modules/swaps/joinAndExit';
+} from './modules/swaps/joinExit/joinAndExit';
 export * from './modules/subgraph/subgraph.module';
 export * from './modules/sor/sor.module';
 export * from './modules/pools';

@@ -2,7 +2,13 @@
 import dotenv from 'dotenv';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { parseFixed } from '@ethersproject/bignumber';
-import { BalancerSDK, GraphQLQuery, GraphQLArgs, Network } from '../src/index';
+import {
+  BalancerSDK,
+  GraphQLQuery,
+  GraphQLArgs,
+  Network,
+  truncateAddresses,
+} from '../src/index';
 import { forkSetup, getBalances } from '../src/test/lib/utils';
 import { ADDRESSES } from '../src/test/lib/constants';
 import { Relayer } from '../src/modules/relayer/relayer.module';
@@ -21,72 +27,49 @@ import { SimulationType } from '../src/modules/simulation/simulation.module';
 
 dotenv.config();
 
-// -- Goerli network setup --
-// const network = Network.GOERLI;
-// const jsonRpcUrl = process.env.ALCHEMY_URL_GOERLI;
-// const blockNumber = 8006790;
-// const rpcUrl = 'http://127.0.0.1:8000';
-// const customSubgraphUrl =
-//   'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2-beta';
+const RPC_URLS: Record<number, string> = {
+  [Network.MAINNET]: `http://127.0.0.1:8545`,
+  [Network.GOERLI]: `http://127.0.0.1:8000`,
+  [Network.POLYGON]: `http://127.0.0.1:8137`,
+  [Network.ARBITRUM]: `http://127.0.0.1:8161`,
+};
 
-// -- Mainnet network setup --
+const FORK_NODES: Record<number, string> = {
+  [Network.MAINNET]: `${process.env.ALCHEMY_URL}`,
+  [Network.GOERLI]: `${process.env.ALCHEMY_URL_GOERLI}`,
+  [Network.POLYGON]: `${process.env.ALCHEMY_URL_POLYGON}`,
+  [Network.ARBITRUM]: `${process.env.ALCHEMY_URL_ARBITRUM}`,
+};
+
 const network = Network.MAINNET;
-const jsonRpcUrl = process.env.ALCHEMY_URL;
 const blockNumber = 16940624;
-const rpcUrl = 'http://127.0.0.1:8545';
-const customSubgraphUrl =
-  'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta';
-
 const addresses = ADDRESSES[network];
+const jsonRpcUrl = FORK_NODES[network];
+const rpcUrl = RPC_URLS[network];
 
-// Setup local fork with correct balances/approval to join pool with DAI/USDC/bbaDAI/bbaUSDC
+const slippage = '100'; // 100 bps = 1%
+const poolToJoin = addresses.bbausd2;
+// Here we join with USDC and bbadai
+const tokensIn = [addresses.USDC, addresses.bbadai];
+const amountsIn = [
+  parseFixed('10', tokensIn[0].decimals).toString(),
+  parseFixed('10', tokensIn[1].decimals).toString(),
+];
+
+// Setup local fork with initial balances/approvals for tokens in
 async function setUp(provider: JsonRpcProvider) {
   const signer = provider.getSigner();
 
-  const mainTokens = [addresses.DAI.address, addresses.USDC.address];
-  const mainInitialBalances = [
-    parseFixed('100', addresses.DAI.decimals).toString(),
-    parseFixed('100', addresses.USDC.decimals).toString(),
-  ];
-  const mainSlots = [
-    addresses.DAI.slot as number,
-    addresses.USDC.slot as number,
-  ];
-
-  const linearPoolTokens = [
-    addresses.bbadai?.address as string,
-    addresses.bbausdc?.address as string,
-  ];
-  const linearInitialBalances = [
-    parseFixed('100', addresses.bbadai?.decimals).toString(),
-    parseFixed('100', addresses.bbausdc?.decimals).toString(),
-  ];
-  const linearPoolSlots = [
-    addresses.bbadai?.slot as number,
-    addresses.bbausdc?.slot as number,
-  ];
-
   await forkSetup(
     signer,
-    [...mainTokens, ...linearPoolTokens],
-    [...mainSlots, ...linearPoolSlots],
-    [...mainInitialBalances, ...linearInitialBalances],
+    tokensIn.map((t) => t.address),
+    tokensIn.map((t) => t.slot),
+    amountsIn,
     jsonRpcUrl as string,
     blockNumber
   );
 }
 
-/*
-Example showing how to use the SDK generalisedJoin method.
-This allows joining of a ComposableStable that has nested pools, e.g.:
-                  CS0
-              /        \
-            CS1        CS2
-          /    \      /   \
-         DAI   USDC  USDT  FRAX
-
-Can join with tokens: DAI, USDC, USDT, FRAX, CS1_BPT, CS2_BPT
-*/
 async function join() {
   const provider = new JsonRpcProvider(rpcUrl, network);
   // Local fork setup
@@ -94,20 +77,6 @@ async function join() {
 
   const signer = provider.getSigner();
   const signerAddress = await signer.getAddress();
-  const slippage = '100'; // 100 bps = 1%
-  const bbausd2 = {
-    id: addresses.bbausd2?.id as string,
-    address: addresses.bbausd2?.address as string,
-  };
-  // Here we join with USDC and bbadai
-  const tokensIn = [
-    addresses.USDC.address,
-    addresses.bbadai?.address as string,
-  ];
-  const amountsIn = [
-    parseFixed('10', addresses.USDC.decimals).toString(),
-    parseFixed('10', addresses.bbadai.decimals as number).toString(),
-  ];
 
   /**
    * Example of subgraph query that allows filtering pools.
@@ -139,15 +108,14 @@ async function join() {
   const balancer = new BalancerSDK({
     network,
     rpcUrl,
-    customSubgraphUrl,
     subgraphQuery,
   });
 
   // Use SDK to create join using either Tenderly or VaultModel simulation
   // Note that this does not require authorisation to be defined
   const { expectedOut } = await balancer.pools.generalisedJoin(
-    bbausd2.id,
-    tokensIn,
+    poolToJoin.id,
+    tokensIn.map((t) => t.address),
     amountsIn,
     signerAddress,
     slippage,
@@ -172,8 +140,8 @@ async function join() {
 
   // Use SDK to create join with Static simulation
   const query = await balancer.pools.generalisedJoin(
-    bbausd2.id,
-    tokensIn,
+    poolToJoin.id,
+    tokensIn.map((t) => t.address),
     amountsIn,
     signerAddress,
     slippage,
@@ -184,7 +152,11 @@ async function join() {
 
   // Checking balances before to confirm success
   const tokenBalancesBefore = (
-    await getBalances([bbausd2.address, ...tokensIn], signer, signerAddress)
+    await getBalances(
+      [poolToJoin.address, ...tokensIn.map((t) => t.address)],
+      signer,
+      signerAddress
+    )
   ).map((b) => b.toString());
 
   // Submit join tx
@@ -196,10 +168,18 @@ async function join() {
   // Checking balances after to confirm success
   await transactionResponse.wait();
   const tokenBalancesAfter = (
-    await getBalances([bbausd2.address, ...tokensIn], signer, signerAddress)
+    await getBalances(
+      [poolToJoin.address, ...tokensIn.map((t) => t.address)],
+      signer,
+      signerAddress
+    )
   ).map((b) => b.toString());
 
   console.table({
+    tokens: truncateAddresses([
+      poolToJoin.address,
+      ...tokensIn.map((t) => t.address),
+    ]),
     balancesBefore: tokenBalancesBefore,
     balancesAfter: tokenBalancesAfter,
     expectedBPTOut: [query.expectedOut],

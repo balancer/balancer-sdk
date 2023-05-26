@@ -47,19 +47,21 @@ export class BalancerSDK implements BalancerSDKRoot {
     this.networkConfig = getNetworkConfig(config);
     this.provider = sor.provider as JsonRpcProvider;
 
-    this.data = new Data(
-      this.networkConfig,
-      sor.provider,
-      config.subgraphQuery
-    );
-    this.swaps = new Swaps(this.config);
-    this.relayer = new Relayer();
-    this.pricing = new Pricing(config, this.swaps);
-
     this.balancerContracts = new Contracts(
       this.networkConfig.addresses.contracts,
       sor.provider
     );
+
+    this.data = new Data(
+      this.networkConfig,
+      sor.provider,
+      this.balancerContracts,
+      config.subgraphQuery
+    );
+
+    this.swaps = new Swaps(this.config);
+    this.relayer = new Relayer();
+    this.pricing = new Pricing(config, this.swaps);
 
     this.pools = new Pools(
       this.networkConfig,
@@ -72,8 +74,7 @@ export class BalancerSDK implements BalancerSDKRoot {
         this.data.liquidityGauges,
         this.data.feeDistributor,
         this.networkConfig.chainId,
-        this.networkConfig.addresses.contracts.multicall,
-        this.provider,
+        this.contracts.multicall,
         this.networkConfig.addresses.contracts.gaugeClaimHelper,
         this.networkConfig.addresses.contracts.balancerMinter
       );

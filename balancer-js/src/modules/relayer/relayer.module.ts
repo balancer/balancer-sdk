@@ -7,6 +7,10 @@ import {
   EncodeBatchSwapInput,
   EncodeExitPoolInput,
   EncodeJoinPoolInput,
+  EncodeUnwrapAaveStaticTokenInput,
+  EncodeUnwrapInput,
+  EncodeUnwrapWstETHInput,
+  EncodeWrapAaveDynamicTokenInput,
   ExitPoolData,
   JoinPoolData,
 } from './types';
@@ -114,6 +118,105 @@ export class Relayer {
       params.recipient,
       params.joinPoolRequest,
       params.value,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeWrapAaveDynamicToken(
+    params: EncodeWrapAaveDynamicTokenInput
+  ): string {
+    return relayerLibrary.encodeFunctionData('wrapAaveDynamicToken', [
+      params.staticToken,
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.fromUnderlying,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeUnwrapAaveStaticToken(
+    params: EncodeUnwrapAaveStaticTokenInput
+  ): string {
+    return relayerLibrary.encodeFunctionData('unwrapAaveStaticToken', [
+      params.staticToken,
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.toUnderlying,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeUnwrapWstETH(params: EncodeUnwrapWstETHInput): string {
+    return relayerLibrary.encodeFunctionData('unwrapWstETH', [
+      params.sender,
+      params.recipient,
+      params.amount,
+      params.outputReference,
+    ]);
+  }
+
+  static encodeUnwrap(
+    params: EncodeUnwrapInput,
+    linearPoolType: string
+  ): string {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let unwrapType: any;
+
+    /**
+     * Other unwrap types available on BatchRelayerLibrary that does not seem to
+     * have a respective Linear pool type in the SDK:
+     * - unwrapUnbuttonToken
+     * - unwrapWstETH
+     */
+
+    switch (linearPoolType) {
+      case 'AaveLinear':
+        return this.encodeUnwrapAaveStaticToken({
+          staticToken: params.wrappedToken,
+          sender: params.sender,
+          recipient: params.recipient,
+          amount: params.amount,
+          toUnderlying: true,
+          outputReference: params.outputReference,
+        });
+      case 'BeefyLinear':
+      case 'ERC4626Linear':
+        unwrapType = 'unwrapERC4626';
+        break;
+      case 'EulerLinear':
+        unwrapType = 'unwrapEuler';
+        break;
+      case 'GearboxLinear':
+        unwrapType = 'unwrapGearbox';
+        break;
+      case 'ReaperLinear':
+        unwrapType = 'unwrapReaperVaultToken';
+        break;
+      case 'TetuLinear':
+        unwrapType = 'unwrapTetu';
+        break;
+      case 'YearnLinear':
+        unwrapType = 'unwrapYearn';
+        break;
+      case 'MidasLinear':
+        unwrapType = 'unwrapCompoundV2';
+        break;
+      case 'SiloLinear':
+        unwrapType = 'unwrapShareToken';
+        break;
+      default:
+        throw new Error(
+          'Unwrapping not supported for this pool type: ' + linearPoolType
+        );
+    }
+
+    return relayerLibrary.encodeFunctionData(unwrapType, [
+      params.wrappedToken,
+      params.sender,
+      params.recipient,
+      params.amount,
       params.outputReference,
     ]);
   }

@@ -54,7 +54,7 @@ describe('ComposableStable Factory', async () => {
       amountsIn,
       `${process.env.ALCHEMY_URL}`,
       17040000,
-      false
+      Array(poolTokens.length).fill(false)
     );
     poolParams = {
       name: 'My-Test-Pool-Name',
