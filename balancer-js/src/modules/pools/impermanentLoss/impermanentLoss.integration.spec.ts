@@ -5,7 +5,8 @@
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { ImpermanentLossService } from '@/modules/pools/impermanentLoss/impermanentLossService';
 import { BalancerSDK } from '@/modules/sdk.module';
-import { Network, Pool } from '@/types';
+import { getPoolFromFile } from '@/test/lib/utils';
+import { Network } from '@/types';
 import { expect } from 'chai';
 
 const TEST_DATA: { [key: string]: { poolId: string } } = {
@@ -35,24 +36,15 @@ const service = new ImpermanentLossService(
   sdk.data.tokenHistoricalPrices
 );
 
-const getPool = async (poolId: string): Promise<Pool> => {
-  const pool = await sdk.pools.find(poolId);
-  if (!pool) {
-    throw new Error('poll not found');
-  }
-  return pool;
-};
 /*
  * REALLY MORE A LIST OF USE CASE SCENARIOS THAN AN INTEGRATION TEST.
- *
- * TODO: add stubbing
  */
-describe.skip('ImpermanentLossService', function () {
+describe('ImpermanentLossService', function () {
   this.timeout(60000);
   context('when queried for Composable Stable Pool', () => {
     it('should return an IL gte 0', async () => {
       const testData = TEST_DATA.ComposableStablePool;
-      const pool = await getPool(testData.poolId);
+      const pool = await getPoolFromFile(testData.poolId, network);
       const timestamp = 1666601608;
       const loss = await service.calcImpLoss(timestamp, pool);
       expect(loss).gte(0);
@@ -61,7 +53,7 @@ describe.skip('ImpermanentLossService', function () {
   context('when queried for Weighted Pool', () => {
     it('should return an IL gte 0', async () => {
       const testData = TEST_DATA.WeightedPool;
-      const pool = await getPool(testData.poolId);
+      const pool = await getPoolFromFile(testData.poolId, network);
       const timestamp = 1666601608;
       const loss = await service.calcImpLoss(timestamp, pool);
       expect(loss).gte(0);
@@ -70,7 +62,7 @@ describe.skip('ImpermanentLossService', function () {
   context('when queried for pool Weighted Pool with missing price', () => {
     it('should throw an exception', async () => {
       const testData = TEST_DATA.WeightedPoolWithMissingPrice;
-      const pool = await getPool(testData.poolId);
+      const pool = await getPoolFromFile(testData.poolId, network);
       const timestamp = 1666276501;
       try {
         await service.calcImpLoss(timestamp, pool);
@@ -84,7 +76,7 @@ describe.skip('ImpermanentLossService', function () {
   context('when queried for pool Weighted Pool with missing user data', () => {
     it('should throw an exception', async () => {
       const testData = TEST_DATA.WeightedPoolWithMissingUserData;
-      const pool = await getPool(testData.poolId);
+      const pool = await getPoolFromFile(testData.poolId, network);
       const timestamp = Date.now() + 3600000; //1 hour from now
       try {
         await service.calcImpLoss(timestamp, pool);
