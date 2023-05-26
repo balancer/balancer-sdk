@@ -298,13 +298,23 @@ export class Pools implements Findable<PoolWithMethods> {
   }
 
   /**
-   * Calculates total liquidity of the pool
+   * Calculates total pool liquidity in USD
    *
    * @param pool
-   * @returns
+   * @returns total pool liquidity in USD
    */
   async liquidity(pool: Pool): Promise<string> {
     return this.liquidityService.getLiquidity(pool);
+  }
+
+  /**
+   * Calculates pool's BPT price in USD
+   *
+   * @param pool
+   * @returns pool's BPT price in USD
+   */
+  async bptPrice(pool: Pool): Promise<string> {
+    return this.liquidityService.getBptPrice(pool);
   }
 
   /**
