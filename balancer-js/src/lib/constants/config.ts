@@ -431,7 +431,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       coingecko: {
         platformId: '',
         nativeAssetId: '',
-      }
+      },
     },
     pools: {},
     poolsToIgnore: [],
