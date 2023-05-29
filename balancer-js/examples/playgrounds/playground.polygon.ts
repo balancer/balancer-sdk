@@ -1,22 +1,43 @@
 import { BalancerSDK } from '@/modules/sdk.module';
-import { Network } from '@/types';
+import { GraphQLQuery, Network } from '@/types';
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
+import { GraphQLArgs } from '@/lib/graphql';
+import { parseFixed } from '@ethersproject/bignumber';
 
 const network = Network.POLYGON;
 const rpcUrl = 'http://127.0.0.1:8137';
 const playgroundPolygon = async () => {
+  const subgraphArgs: GraphQLArgs = {
+    where: {
+      poolType: { eq: 'GyroE' },
+      poolTypeVersion: { eq: 2 },
+    },
+    orderBy: 'totalLiquidity',
+    orderDirection: 'desc',
+  };
+  const subgraphQuery: GraphQLQuery = { args: subgraphArgs, attrs: {} };
+  const customSubgraphUrl =
+    'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2-beta';
+
   const balancer = new BalancerSDK({
     network,
     rpcUrl,
+    subgraphQuery,
+    customSubgraphUrl,
   });
-  const pool = await balancer.pools.find(
-    '0xf0ad209e2e969eaaa8c882aac71f02d8a047d5c2000200000000000000000b49'
-  );
-  if (!pool) {
-    throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
-  }
-  const apr = await balancer.pools.aprService.apr(pool);
-  console.log(apr);
+
+  await balancer.data.poolsForSor.getPools();
+
+  const swapInfo = await balancer.swaps.findRouteGivenIn({
+    tokenIn: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    tokenOut: '0xba100000625a3754423978a60c9317c58a424e3d',
+    amount: parseFixed('1', 18),
+    gasPrice: parseFixed('30000000000', 18),
+    maxPools: 200,
+  });
+
+  console.log(swapInfo);
+  return;
 };
 
 playgroundPolygon();

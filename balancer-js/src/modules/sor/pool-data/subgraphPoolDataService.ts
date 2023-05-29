@@ -72,7 +72,6 @@ export class SubgraphPoolDataService implements PoolDataService {
   }
 
   public async getPools(): Promise<SubgraphPoolBase[]> {
-    console.log('here');
     const pools = await this.getSubgraphPools();
 
     const filteredPools = pools.filter((p) => {
