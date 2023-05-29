@@ -23,7 +23,7 @@ describe('Gyro Pools - Calculate Liquidity', () => {
   const rpcUrlLocal = RPC_URLS[network];
   const provider = new JsonRpcProvider(rpcUrlLocal, network);
   const signer = provider.getSigner();
-  const blockNumber = 43015527;
+  const blockNumber = 43180457;
   const sdkConfig = {
     network,
     rpcUrl: rpcUrlLocal,
