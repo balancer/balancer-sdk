@@ -11,12 +11,13 @@ import type {
   Network,
   PoolToken,
 } from '@/types';
-import { BaseFeeDistributor, RewardData } from '@/modules/data';
+import { BaseFeeDistributor } from '@/modules/data';
 import { ProtocolRevenue } from './protocol-revenue';
 import { Liquidity } from '@/modules/liquidity/liquidity.module';
 import { identity, zipObject, pickBy } from 'lodash';
 import { PoolFees } from '../fees/fees';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
+import { BigNumber } from '@ethersproject/bignumber';
 
 export interface AprBreakdown {
   swapFees: number;
@@ -268,10 +269,16 @@ export class PoolApr {
       throw 'Missing BAL price';
     }
 
-    const balPriceUsd = parseFloat(balPrice.usd);
-
-    // Subgraph is returning BAL staking rewards as reward tokens for L2 gauges.
-    if (pool.chainId > 1) {
+    // Handle child chain gauges with inflation_rate
+    // balInflationRate - amount of BAL tokens per second as a float
+    if (gauge.balInflationRate) {
+      const reward =
+        gauge.balInflationRate * 86400 * 365 * parseFloat(balPrice.usd);
+      const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
+      const rewardValue = reward / totalSupplyUsd;
+      return Math.round(boost * 10000 * rewardValue);
+    } else if (pool.chainId > 1) {
+      // TODO: remove after all gauges are migrated (around 01-07-2023), Subgraph is returning BAL staking rewards as reward tokens for L2 gauges.
       if (!gauge.rewardTokens) {
         return 0;
       }
@@ -282,15 +289,13 @@ export class PoolApr {
         const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
         const rewardValue = reward.value / totalSupplyUsd;
         return Math.round(10000 * rewardValue);
-      } else if (gauge.balInflationRate) {
-        const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
-        const rewardValue = gauge.balInflationRate * 3600 * 24 * 365;
-        return Math.round(boost * 10000 * rewardValue) / totalSupplyUsd;
       } else {
         return 0;
       }
     }
 
+    // Handle mainnet gauges
+    const balPriceUsd = parseFloat(balPrice.usd);
     const now = Math.round(new Date().getTime() / 1000);
     const totalBalEmissions = (emissions.weekly(now) / 7) * 365;
     const gaugeBalEmissions = totalBalEmissions * gauge.relativeWeight;
@@ -488,7 +493,10 @@ export class PoolApr {
     return fee;
   }
 
-  private async rewardTokenApr(tokenAddress: string, rewardData: RewardData) {
+  private async rewardTokenApr(
+    tokenAddress: string,
+    rewardData: { rate: BigNumber; period_finish: BigNumber; decimals?: number }
+  ) {
     if (rewardData.period_finish.toNumber() < Date.now() / 1000) {
       return {
         address: tokenAddress,

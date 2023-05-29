@@ -385,6 +385,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         aaveLinearPoolFactory: '0x9da18982a33fd0c7051b19f0d7c76f2d5e7e017c',
       },
       tokens: {
+        bal: '0x7ef541e2a22058048904fe5744f9c7e4c57af717',
         wrappedNativeAsset: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
       },
     },
