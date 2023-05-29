@@ -2128,5 +2128,120 @@
         }
       }
     ]
+  },
+  {
+    "id": "0x97469e6236bd467cd147065f77752b00efadce8a0002000000000000000008c0",
+    "address": "0x97469e6236bd467cd147065f77752b00efadce8a",
+    "poolType": "GyroE",
+    "swapFee": "0.0002",
+    "swapEnabled": true,
+    "totalShares": "40.596445229145468639",
+    "wrappedIndex": null,
+    "mainIndex": null,
+    "tokensList": [
+      "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "0x2e1ad108ff1d8c782fcbbb89aad783ac49586756"
+    ],
+    "totalWeight": "0",
+    "tokens": [
+      {
+        "symbol": "USDC",
+        "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "priceRate": "1",
+        "balance": "34102.225711",
+        "decimals": 6,
+        "name": "USD Coin (PoS)",
+        "weight": null
+      },
+      {
+        "symbol": "TUSD",
+        "address": "0x2e1ad108ff1d8c782fcbbb89aad783ac49586756",
+        "priceRate": "1",
+        "balance": "37736.162739784169759573",
+        "decimals": 18,
+        "name": "TrueUSD (PoS)",
+        "weight": null
+      }
+    ]
+  },
+  {
+    "id": "0xdac42eeb17758daa38caf9a3540c808247527ae3000200000000000000000a2b",
+    "address": "0xdac42eeb17758daa38caf9a3540c808247527ae3",
+    "poolType": "Gyro2",
+    "swapFee": "0.0002",
+    "swapEnabled": true,
+    "totalShares": "38049618.375853629782543414",
+    "wrappedIndex": null,
+    "mainIndex": null,
+    "tokensList": [
+      "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063"
+    ],
+    "totalWeight": "0",
+    "tokens": [
+      {
+        "symbol": "USDC",
+        "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "priceRate": "1",
+        "balance": "46828.653671",
+        "decimals": 6,
+        "name": "USD Coin (PoS)",
+        "weight": null
+      },
+      {
+        "symbol": "DAI",
+        "address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+        "priceRate": "1",
+        "balance": "48302.202516262381709337",
+        "decimals": 18,
+        "name": "(PoS) Dai Stablecoin",
+        "weight": null
+      }
+    ]
+  },
+  {
+    "id": "0x17f1ef81707811ea15d9ee7c741179bbe2a63887000100000000000000000799",
+    "address": "0x17f1ef81707811ea15d9ee7c741179bbe2a63887",
+    "poolType": "Gyro3",
+    "swapFee": "0.0003",
+    "swapEnabled": true,
+    "totalShares": "104288949.713632307202870855",
+    "wrappedIndex": null,
+    "mainIndex": null,
+    "tokensList": [
+      "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "0x9c9e5fd8bbc25984b178fdce6117defa39d2db39",
+      "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
+    ],
+    "totalWeight": "0",
+    "tokens": [
+      {
+        "symbol": "USDC",
+        "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+        "priceRate": "1",
+        "balance": "18048.328677",
+        "decimals": 6,
+        "name": "USD Coin (PoS)",
+        "weight": null
+      },
+      {
+        "symbol": "BUSD",
+        "address": "0x9c9e5fd8bbc25984b178fdce6117defa39d2db39",
+        "priceRate": "1",
+        "balance": "22257.756274589831945899",
+        "decimals": 18,
+        "name": "BUSD Token",
+        "weight": null
+      },
+      {
+        "symbol": "USDT",
+        "address": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f",
+        "priceRate": "1",
+        "balance": "12676.905367",
+        "decimals": 6,
+        "name": "(PoS) Tether USD",
+        "weight": null
+      }
+    ]
   }
 ]

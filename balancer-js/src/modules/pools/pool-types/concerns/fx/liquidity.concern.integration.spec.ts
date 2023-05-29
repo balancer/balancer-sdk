@@ -53,9 +53,6 @@ describe('FX Pool - Calculate Liquidity', () => {
       await poolContract.liquidity()
     ).total_.toBigInt();
     const liquidityBigInt = parseFixed(liquidity, 18).toBigInt();
-    console.log('liquidityBigInt      ', liquidityBigInt);
-    console.log('liquidityFromContract', liquidityFromContract);
-    console.log('totalLiquidity       ', pool.totalLiquidity);
     // expecting 5% of margin error
     expect(
       parseFloat(
