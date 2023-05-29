@@ -30,7 +30,9 @@ const generateAddressesFile = async () => {
     const response = await axios.get(developAddressBookOutputUrl);
     data = response.data;
   } catch (e) {
-    console.log('Error fetching develop address book');
+    console.log(
+      'Error fetching develop address book, will not provide log of changes'
+    );
   }
   const developAddressBook = data;
 
@@ -89,6 +91,7 @@ const generateAddressesFile = async () => {
     JSON.stringify(output),
     (err) => console.error(err)
   );
+  return 'Success! Address file generated on src/lib/constants/addresses.json';
 };
 
 const reduceWithCamelCaseKeyAndLowerCaseAddress = (
@@ -129,6 +132,10 @@ const compareOutputWithDevelop = (
   network: string
 ) => {
   console.log('Comparing Contracts of network: ', network);
+  if (!develop?.contracts) {
+    console.log('New network: ' + network);
+    return;
+  }
   const outputContractsKeys = Object.keys(output.contracts);
   const developContractsKeys = Object.keys(develop.contracts);
   outputContractsKeys.map((key) => {
@@ -169,4 +176,4 @@ const compareOutputWithDevelop = (
   });
 };
 
-generateAddressesFile();
+generateAddressesFile().then((r) => console.log(r));
