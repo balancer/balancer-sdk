@@ -81,29 +81,6 @@ export async function getOnChainBalances<
           'getNormalizedWeights'
         );
         break;
-      case 'AaveLinear':
-      case 'BeefyLinear':
-      case 'EulerLinear':
-      case 'ERC4626Linear':
-      case 'GearboxLinear':
-      case 'MidasLinear':
-      case 'ReaperLinear':
-      case 'SiloLinear':
-      case 'TetuLinear':
-      case 'YearnLinear':
-        multiPool.call(
-          `${pool.id}.virtualSupply`,
-          pool.address,
-          'getVirtualSupply'
-        );
-        multiPool.call(
-          `${pool.id}.swapFee`,
-          pool.address,
-          'getSwapFeePercentage'
-        );
-        multiPool.call(`${pool.id}.targets`, pool.address, 'getTargets');
-        multiPool.call(`${pool.id}.rate`, pool.address, 'getWrappedTokenRate');
-        break;
       case 'StablePhantom':
         multiPool.call(
           `${pool.id}.virtualSupply`,
@@ -193,6 +170,25 @@ export async function getOnChainBalances<
         }
         break;
       default:
+        //Handling all Linear pools
+        if (pool.poolType.toString().includes('Linear')) {
+          multiPool.call(
+            `${pool.id}.virtualSupply`,
+            pool.address,
+            'getVirtualSupply'
+          );
+          multiPool.call(
+            `${pool.id}.swapFee`,
+            pool.address,
+            'getSwapFeePercentage'
+          );
+          multiPool.call(`${pool.id}.targets`, pool.address, 'getTargets');
+          multiPool.call(
+            `${pool.id}.rate`,
+            pool.address,
+            'getWrappedTokenRate'
+          );
+        }
         break;
     }
   });
