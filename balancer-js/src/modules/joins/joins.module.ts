@@ -124,7 +124,7 @@ export class Join {
       userAddress,
       multiRequests,
       queryData,
-      tokensInWithoutNativeAsset, // TODO: queryData(encodedCall) still has native asset as input - validate it's ok to pass tokensInWithoutNativeAsset
+      tokensInWithoutNativeAsset,
       outputIndexes,
       signer,
       simulationType,
