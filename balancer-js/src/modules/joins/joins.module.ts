@@ -35,7 +35,7 @@ import { BalancerRelayer__factory } from '@/contracts/factories/BalancerRelayer_
 const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
 // Quickly switch useful debug logs on/off
-const DEBUG = true;
+const DEBUG = false;
 
 function debugLog(log: string) {
   if (DEBUG) console.log(log);
@@ -106,7 +106,6 @@ export class Join {
       multiRequests,
       encodedCall: queryData,
       outputIndexes,
-      deltas: simulationDeltas,
     } = await this.createCalls(
       joinPaths,
       userAddress,
@@ -115,9 +114,10 @@ export class Join {
       authorisation
     );
 
-    const simulationValue = isNativeAssetJoin
-      ? simulationDeltas[this.wrappedNativeAsset.toLowerCase()]
-      : Zero;
+    // TODO: add this back once relayerV6 is released and we're able to peek while joining with ETH
+    // const simulationValue = isNativeAssetJoin
+    //   ? simulationDeltas[this.wrappedNativeAsset.toLowerCase()]
+    //   : Zero;
 
     // static call (or V4 special call) to get actual amounts for each root join
     const { amountsOut, totalAmountOut } = await this.amountsOutByJoinPath(
@@ -128,7 +128,7 @@ export class Join {
       outputIndexes,
       signer,
       simulationType,
-      simulationValue.toString()
+      '0' // TODO: change to simulationValue.tosString() once relayerV6 is released
     );
 
     const { minAmountsOut, totalMinAmountOut } = this.minAmountsOutByJoinPath(
@@ -560,7 +560,7 @@ export class Join {
     const multiRequests: Requests[][] = [];
     const encodedCalls: string[] = [];
     const outputIndexes: number[] = [];
-    const isPeek = !minAmountsOut;
+    const isSimulation = !minAmountsOut;
     const deltas: Record<string, BigNumber> = {};
 
     joinPaths.forEach((joinPath, j) => {
@@ -614,7 +614,8 @@ export class Join {
                   minOut,
                   sender,
                   recipient,
-                  isNativeAssetJoin
+                  isNativeAssetJoin,
+                  isSimulation
                 );
               modelRequests.push(modelRequest);
               encodedCalls.push(encodedCall);
@@ -630,7 +631,8 @@ export class Join {
                   minOut,
                   sender,
                   recipient,
-                  isNativeAssetJoin
+                  isNativeAssetJoin,
+                  isSimulation
                 );
               modelRequests.push(modelRequest);
               encodedCalls.push(encodedCall);
@@ -645,7 +647,7 @@ export class Join {
             return;
         }
       });
-      if (isPeek) {
+      if (isSimulation) {
         const outputRef = 100 * j;
         const encodedPeekCall = Relayer.encodePeekChainedReferenceValue(
           Relayer.toChainedReference(outputRef, false)
@@ -734,7 +736,8 @@ export class Join {
     expectedOut: string,
     sender: string,
     recipient: string,
-    isNativeAssetJoin: boolean
+    isNativeAssetJoin: boolean,
+    isSimulation: boolean
   ): {
     modelRequest: SwapRequest;
     encodedCall: string;
@@ -778,9 +781,10 @@ export class Join {
       this.getOutputRefValue(joinPathIndex, node).value
     );
 
-    const value = isNativeAssetJoin
-      ? getEthValue([assetIn], [amountIn.value])
-      : Zero;
+    const value =
+      isNativeAssetJoin && !isSimulation
+        ? getEthValue([assetIn], [amountIn.value])
+        : Zero;
 
     const call: Swap = {
       request,
@@ -791,10 +795,8 @@ export class Join {
       outputReference,
     };
 
-    const encodedCall = Relayer.encodeSwap(call);
-
     // in case of nativeAssetJoin vaultCall needs to be updated to use wrapped native asset instead
-    const vaultCall = {
+    const simulationCall = {
       ...call,
       request: {
         ...request,
@@ -802,11 +804,19 @@ export class Join {
       },
     };
 
-    debugLog(`\nSwap:`);
-    debugLog(`${JSON.stringify(call)}`);
-    debugLog(`value -> ${JSON.stringify(call.value?.toString())}`);
+    const encodedCall = Relayer.encodeSwap(
+      isSimulation ? simulationCall : call
+    );
 
-    const modelRequest = VaultModel.mapSwapRequest(vaultCall);
+    debugLog(`\nSwap:`);
+    debugLog(`${JSON.stringify(isSimulation ? simulationCall : call)}`);
+    debugLog(
+      `value -> ${JSON.stringify(
+        (isSimulation ? simulationCall : call).value?.toString()
+      )}`
+    );
+
+    const modelRequest = VaultModel.mapSwapRequest(simulationCall);
 
     const hasChildInput = node.children.some((c) => c.joinAction === 'input');
     // If node has no child input the swap is part of a chain and token in shouldn't be considered for user deltas
@@ -827,7 +837,8 @@ export class Join {
     minAmountOut: string,
     sender: string,
     recipient: string,
-    isNativeAssetJoin: boolean
+    isNativeAssetJoin: boolean,
+    isSimulation: boolean
   ): {
     modelRequest: JoinPoolModelRequest;
     encodedCall: string;
@@ -890,9 +901,13 @@ export class Join {
       );
     }
 
-    const value = isNativeAssetJoin
-      ? getEthValue(this.replaceWrappedNativeAsset(sortedTokens), sortedAmounts)
-      : Zero;
+    const value =
+      isNativeAssetJoin && !isSimulation
+        ? getEthValue(
+            this.replaceWrappedNativeAsset(sortedTokens),
+            sortedAmounts
+          )
+        : Zero;
 
     const fromInternalBalance = this.allImmediateChildrenSendToInternal(node);
 
@@ -911,15 +926,22 @@ export class Join {
       userData,
       fromInternalBalance,
     });
-    const encodedCall = Relayer.encodeJoinPool(call);
-    const vaultCall = {
+    const simulationCall = {
       ...call,
       assets: sortedTokens,
     };
+    const encodedCall = Relayer.encodeJoinPool(
+      isSimulation ? simulationCall : call
+    );
+
     debugLog(`\nJoin:`);
-    debugLog(JSON.stringify(call));
-    debugLog(`value -> ${JSON.stringify(call.value?.toString())}`);
-    const modelRequest = VaultModel.mapJoinPoolRequest(vaultCall);
+    debugLog(JSON.stringify(isSimulation ? simulationCall : call));
+    debugLog(
+      `value -> ${JSON.stringify(
+        (isSimulation ? simulationCall : call).value?.toString()
+      )}`
+    );
+    const modelRequest = VaultModel.mapJoinPoolRequest(simulationCall);
 
     const userAmountsTokenIn = sortedAmounts.map((a) =>
       Relayer.isChainedReference(a) ? '0' : a

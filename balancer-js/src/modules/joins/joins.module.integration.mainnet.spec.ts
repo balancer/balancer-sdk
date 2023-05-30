@@ -138,7 +138,7 @@ const testFlow = async (
   tokensIn: string[],
   amountsIn: string[],
   authorisation: string | undefined,
-  simulationType = SimulationType.Tenderly
+  simulationType = SimulationType.VaultModel
 ) => {
   const slippage = '10'; // 10 bps = 0.1%
 
