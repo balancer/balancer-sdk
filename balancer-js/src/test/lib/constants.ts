@@ -13,6 +13,22 @@ export const PROVIDER_URLS = {
   [Network.SEPOLIA]: `https://sepolia.infura.io/v3/${process.env.INFURA}`,
 };
 
+export type TestAddress = {
+  id?: string;
+  address: string;
+  decimals: number;
+  symbol?: string;
+  slot?: number;
+};
+
+export type TestAddresses = {
+  [key: string]: TestAddress;
+};
+
+// type TestAddressesByNetwork = {
+//   [key in Network]: TestAddresses;
+// };
+
 export const ADDRESSES = {
   [Network.MAINNET]: {
     APE: {

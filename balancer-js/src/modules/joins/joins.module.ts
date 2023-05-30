@@ -154,7 +154,7 @@ export class Join {
     const value = isNativeAssetJoin
       ? deltas[this.wrappedNativeAsset.toLowerCase()]
       : Zero;
-    console.log('total value', value.toString());
+    debugLog(`total value ${value.toString()}`);
 
     this.assertDeltas(
       poolId,
