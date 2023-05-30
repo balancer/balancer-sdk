@@ -499,3 +499,27 @@ export async function findTokenBalanceSlot(
   }
   throw new Error('Balance slot not found!');
 }
+
+export function createSubgraphQuery(
+  pools: string[],
+  blockNo: number
+): GraphQLQuery {
+  const subgraphArgs: GraphQLArgs = {
+    where: {
+      swapEnabled: {
+        eq: true,
+      },
+      totalShares: {
+        gt: 0.000000000001,
+      },
+      address: {
+        in: pools,
+      },
+    },
+    orderBy: 'totalLiquidity',
+    orderDirection: 'desc',
+    block: { number: blockNo },
+  };
+  const subgraphQuery: GraphQLQuery = { args: subgraphArgs, attrs: {} };
+  return subgraphQuery;
+}
