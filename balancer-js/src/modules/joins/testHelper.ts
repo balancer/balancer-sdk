@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { BigNumber } from '@ethersproject/bignumber';
 import { JsonRpcSigner } from '@ethersproject/providers';
 
-import { BalancerSDK, subSlippage, removeItem } from '@/.';
+import { BalancerSDK, subSlippage, removeItem, truncateAddresses } from '@/.';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { accuracy, sendTransactionGetBalances } from '@/test/lib/utils';
 
@@ -76,7 +76,7 @@ export const testGeneralisedJoin = async (
   console.log('Price impact: ', priceImpact);
 
   console.table({
-    tokens: [pool.address, ...tokensIn],
+    tokens: truncateAddresses([pool.address, ...tokensIn]),
     expectedDeltas: [expectedOut, ...amountsIn],
     balanceDeltas: balanceDeltas.map((d) => d.toString()),
   });
