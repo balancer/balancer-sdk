@@ -54,6 +54,17 @@ export class Join {
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
   }
 
+  private checkInputs(tokensIn: string[], amountsIn: string[]) {
+    if (tokensIn.length === 0)
+      throw new BalancerError(BalancerErrorCode.MISSING_TOKENS);
+
+    if (amountsIn.every((a) => a === '0'))
+      throw new BalancerError(BalancerErrorCode.JOIN_WITH_ZERO_AMOUNT);
+
+    if (tokensIn.length != amountsIn.length)
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+  }
+
   async joinPool(
     poolId: string,
     tokensIn: string[],
@@ -71,8 +82,7 @@ export class Join {
     priceImpact: string;
     value: BigNumberish;
   }> {
-    if (tokensIn.length != amountsIn.length)
-      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+    this.checkInputs(tokensIn, amountsIn);
 
     // Create nodes for each pool/token interaction and order by breadth first
     const orderedNodes = await this.poolGraph.getGraphNodes(true, poolId, []);
