@@ -24,7 +24,8 @@ import { testGeneralisedJoin } from './testHelper';
 dotenv.config();
 
 // mainnet
-const TEST_JOIN_WITH_ETH = true;
+const TEST_JOIN_WITH_ETH_SWAP_FIRST = true;
+const TEST_JOIN_WITH_ETH_JOIN_FIRST = true;
 
 // goerli
 const TEST_BOOSTED = true;
@@ -40,8 +41,9 @@ const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 // arbitrum
 const TEST_BBRFUSD = true;
 
-describe('generalised join execution', async () => {
-  const simulationType = SimulationType.Static;
+describe('generalised join execution', async function () {
+  this.timeout(30000);
+  const simulationType = SimulationType.Tenderly;
   let network: Network;
   let blockNumber: number;
   let jsonRpcUrl: string;
@@ -77,7 +79,11 @@ describe('generalised join execution', async () => {
       userAddress = await signer.getAddress();
       addresses = ADDRESSES[network];
       subgraphQuery = createSubgraphQuery(
-        [addresses.swEth_bbaweth.address, addresses.bbaweth.address],
+        [
+          addresses.swEth_bbaweth.address,
+          addresses.bbaweth.address,
+          addresses.bveth.address,
+        ],
         blockNumber
       );
       sdk = new BalancerSDK({
@@ -90,18 +96,24 @@ describe('generalised join execution', async () => {
       });
     });
 
-    context('join with wETH vs ETH', async () => {
-      if (!TEST_JOIN_WITH_ETH) return true;
+    context('join with wETH vs ETH - where first step is a swap', async () => {
+      if (!TEST_JOIN_WITH_ETH_SWAP_FIRST) return true;
 
       before(async () => {
         testPool = addresses.swEth_bbaweth;
-        tokens = [addresses.WETH];
-        balances = [parseFixed('100', addresses.WETH.decimals).toString()];
+        tokens = [addresses.WETH, addresses.swETH];
+        balances = [
+          parseFixed('10', addresses.WETH.decimals).toString(),
+          parseFixed('10', addresses.swETH.decimals).toString(),
+        ];
       });
 
       it('should join with wETH', async () => {
-        const tokensIn = [addresses.WETH.address];
-        const amountsIn = [parseFixed('1', addresses.WETH.decimals).toString()];
+        const tokensIn = [addresses.WETH.address, addresses.swETH.address];
+        const amountsIn = [
+          parseFixed('1', addresses.WETH.decimals).toString(),
+          parseFixed('1', addresses.swETH.decimals).toString(),
+        ];
         await testGeneralisedJoin(
           sdk,
           signer,
@@ -114,8 +126,58 @@ describe('generalised join execution', async () => {
       });
 
       it('should join with ETH', async () => {
-        const tokensIn = [AddressZero];
-        const amountsIn = [parseFixed('1', 18).toString()];
+        const tokensIn = [AddressZero, addresses.swETH.address];
+        const amountsIn = [
+          parseFixed('1', 18).toString(),
+          parseFixed('1', addresses.swETH.decimals).toString(),
+        ];
+        await testGeneralisedJoin(
+          sdk,
+          signer,
+          userAddress,
+          testPool,
+          tokensIn,
+          amountsIn,
+          simulationType
+        );
+      });
+    });
+
+    context('join with wETH vs ETH - where first step is a join', async () => {
+      if (!TEST_JOIN_WITH_ETH_JOIN_FIRST) return true;
+
+      before(async () => {
+        testPool = addresses.bveth;
+        tokens = [addresses.WETH, addresses.vETH];
+        balances = [
+          parseFixed('10', addresses.WETH.decimals).toString(),
+          parseFixed('10', addresses.vETH.decimals).toString(),
+        ];
+      });
+
+      it('should join with wETH', async () => {
+        const tokensIn = [addresses.WETH.address, addresses.vETH.address];
+        const amountsIn = [
+          parseFixed('1', addresses.WETH.decimals).toString(),
+          parseFixed('1', addresses.vETH.decimals).toString(),
+        ];
+        await testGeneralisedJoin(
+          sdk,
+          signer,
+          userAddress,
+          testPool,
+          tokensIn,
+          amountsIn,
+          simulationType
+        );
+      });
+
+      it('should join with ETH', async () => {
+        const tokensIn = [AddressZero, addresses.vETH.address];
+        const amountsIn = [
+          parseFixed('1', 18).toString(),
+          parseFixed('1', addresses.vETH.decimals).toString(),
+        ];
         await testGeneralisedJoin(
           sdk,
           signer,
