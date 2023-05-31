@@ -7,6 +7,7 @@ import { Relayer } from '@/modules/relayer/relayer.module';
 import { accuracy, sendTransactionGetBalances } from '@/test/lib/utils';
 
 import { SimulationType } from '../simulation/simulation.module';
+import { AddressZero, Zero } from '@ethersproject/constants';
 
 export interface Pool {
   id: string;
@@ -62,9 +63,10 @@ export const testGeneralisedJoin = async (
     );
 
   // 4. Sends tx
+  const tokensForBalanceCheck = [pool.address, ...tokensIn];
   const { balanceDeltas, transactionReceipt, gasUsed } =
     await sendTransactionGetBalances(
-      [pool.address, ...tokensIn],
+      tokensForBalanceCheck,
       signer,
       userAddress,
       to,
@@ -76,7 +78,7 @@ export const testGeneralisedJoin = async (
   console.log('Price impact: ', priceImpact);
 
   console.table({
-    tokens: truncateAddresses([pool.address, ...tokensIn]),
+    tokens: truncateAddresses(tokensForBalanceCheck),
     expectedDeltas: [expectedOut, ...amountsIn],
     balanceDeltas: balanceDeltas.map((d) => d.toString()),
   });
@@ -107,4 +109,9 @@ export const testGeneralisedJoin = async (
     1,
     1e-4
   );
+  const nativeAssetIndex = tokensForBalanceCheck.indexOf(AddressZero);
+  const nativeAssetAmount =
+    nativeAssetIndex === -1 ? Zero : balanceDeltas[nativeAssetIndex];
+  expect(value.toString()).to.eq(nativeAssetAmount.toString());
+  // TODO: throw error if tokensIn contain both ETH and WETH -> let FE team know
 };
