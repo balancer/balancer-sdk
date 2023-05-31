@@ -63,6 +63,14 @@ export class Join {
 
     if (tokensIn.length != amountsIn.length)
       throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+
+    if (
+      tokensIn.some((t) => t === AddressZero) &&
+      tokensIn.some(
+        (t) => t.toLowerCase() === this.wrappedNativeAsset.toLowerCase()
+      )
+    )
+      throw new BalancerError(BalancerErrorCode.INPUT_TOKEN_INVALID);
   }
 
   async joinPool(

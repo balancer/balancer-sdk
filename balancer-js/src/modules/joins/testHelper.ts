@@ -113,5 +113,4 @@ export const testGeneralisedJoin = async (
   const nativeAssetAmount =
     nativeAssetIndex === -1 ? Zero : balanceDeltas[nativeAssetIndex];
   expect(value.toString()).to.eq(nativeAssetAmount.toString());
-  // TODO: throw error if tokensIn contain both ETH and WETH -> let FE team know
 };
