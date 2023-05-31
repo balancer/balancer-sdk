@@ -37,6 +37,9 @@ const TEST_BOOSTED_WEIGHTED_META = true;
 const TEST_BOOSTED_WEIGHTED_META_ALT = true;
 const TEST_BOOSTED_WEIGHTED_META_GENERAL = true;
 
+// arbitrum
+const TEST_BBRFUSD = true;
+
 describe('generalised join execution', async () => {
   const simulationType = SimulationType.Static;
   let network: Network;
@@ -1031,8 +1034,8 @@ describe('generalised join execution', async () => {
     /**
      * bbrfusd: ComposableStable
      */
-    context('boosted', async () => {
-      if (!TEST_BOOSTED) return true;
+    context('bbrfusd', async () => {
+      if (!TEST_BBRFUSD) return true;
 
       before(async () => {
         testPool = addresses.bbrfusd;
