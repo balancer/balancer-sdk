@@ -1,3 +1,5 @@
+// yarn test:only ./src/modules/liquidity/liquidity.module.spec.ts
+
 import { PoolsStaticRepository } from '../data';
 import { Pool } from '@/types';
 import { expect } from 'chai';
@@ -146,6 +148,33 @@ describe('Liquidity Module', () => {
       );
       expect(Number(liquidity).toFixed(8).toString()).to.be.eq(
         '17901.40061800'
+      );
+    });
+  });
+
+  context('Gyro pool calculations', () => {
+    it('should calculate liquidity of GyroE pool', async () => {
+      const liquidity = await liquidityProvider.getLiquidity(
+        findPool('0x97469e6236bd467cd147065f77752b00efadce8a')
+      );
+      expect(Number(liquidity).toFixed(8).toString()).to.be.eq(
+        '72556.77233529'
+      );
+    });
+    it('should calculate liquidity of GyroV2 pool', async () => {
+      const liquidity = await liquidityProvider.getLiquidity(
+        findPool('0xdac42eeb17758daa38caf9a3540c808247527ae3')
+      );
+      expect(Number(liquidity).toFixed(8).toString()).to.be.eq(
+        '95599.14272397'
+      );
+    });
+    it('should calculate liquidity of GyroV3 pool', async () => {
+      const liquidity = await liquidityProvider.getLiquidity(
+        findPool('0x17f1ef81707811ea15d9ee7c741179bbe2a63887')
+      );
+      expect(Number(liquidity).toFixed(8).toString()).to.be.eq(
+        '53075.61583572'
       );
     });
   });
