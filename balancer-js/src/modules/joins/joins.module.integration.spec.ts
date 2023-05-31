@@ -53,7 +53,6 @@ describe('generalised join execution', async () => {
   let testPool: TestAddress;
 
   beforeEach(async () => {
-    // no need to setup ETH balance because test account already has ETH
     await forkSetup(
       signer,
       tokens.map((t) => t.address),
@@ -94,12 +93,12 @@ describe('generalised join execution', async () => {
       before(async () => {
         testPool = addresses.swEth_bbaweth;
         tokens = [addresses.WETH];
-        balances = [parseFixed('100', 18).toString()];
+        balances = [parseFixed('100', addresses.WETH.decimals).toString()];
       });
 
       it('should join with wETH', async () => {
         const tokensIn = [addresses.WETH.address];
-        const amountsIn = [parseFixed('1', 18).toString()];
+        const amountsIn = [parseFixed('1', addresses.WETH.decimals).toString()];
         await testGeneralisedJoin(
           sdk,
           signer,
@@ -175,8 +174,8 @@ describe('generalised join execution', async () => {
       it('join with all leaf tokens', async () => {
         const tokensIn = [addresses.MAI.address, addresses.WETH.address];
         const amountsIn = [
-          parseFixed('10', 18).toString(),
-          parseFixed('10', 18).toString(),
+          parseFixed('10', addresses.MAI.decimals).toString(),
+          parseFixed('10', addresses.WETH.decimals).toString(),
         ];
         await testGeneralisedJoin(
           sdk,
@@ -191,7 +190,9 @@ describe('generalised join execution', async () => {
 
       it.skip('join with 1 linear', async () => {
         const tokensIn = [addresses.bbamai.address];
-        const amountsIn = [parseFixed('10', 18).toString()];
+        const amountsIn = [
+          parseFixed('10', addresses.bbamai.decimals).toString(),
+        ];
         await testGeneralisedJoin(
           sdk,
           signer,
@@ -206,8 +207,8 @@ describe('generalised join execution', async () => {
       it.skip('join with 1 leaf and 1 linear', async () => {
         const tokensIn = [addresses.WETH.address, addresses.bbamai.address];
         const amountsIn = [
-          parseFixed('10', 18).toString(),
-          parseFixed('10', 18).toString(),
+          parseFixed('10', addresses.WETH.decimals).toString(),
+          parseFixed('10', addresses.bbamai.decimals).toString(),
         ];
         await testGeneralisedJoin(
           sdk,
@@ -988,6 +989,61 @@ describe('generalised join execution', async () => {
           parseFixed('1', addresses.bbadai.decimals).toString(),
           parseFixed('1', addresses.bbaweth.decimals).toString(),
           parseFixed('1', addresses.bbausd2.decimals).toString(),
+        ];
+        await testGeneralisedJoin(
+          sdk,
+          signer,
+          userAddress,
+          testPool,
+          tokensIn,
+          amountsIn,
+          simulationType
+        );
+      });
+    });
+  });
+
+  // Skipping Arbitrum tests so we don't have to spin up a node for it during github checks
+  context.skip('arbitrum', async () => {
+    before(async () => {
+      network = Network.ARBITRUM;
+      blockNumber = 79069597;
+      jsonRpcUrl = FORK_NODES[network];
+      rpcUrl = RPC_URLS[network];
+      const provider = new JsonRpcProvider(rpcUrl, network);
+      signer = provider.getSigner();
+      userAddress = await signer.getAddress();
+      addresses = ADDRESSES[network];
+      const poolAddresses = Object.values(addresses).map(
+        (address) => address.address
+      );
+      subgraphQuery = createSubgraphQuery(poolAddresses, blockNumber);
+      sdk = new BalancerSDK({
+        network,
+        rpcUrl,
+        tenderly: {
+          blockNumber, // Set tenderly config blockNumber and use default values for other parameters
+        },
+        subgraphQuery,
+      });
+    });
+
+    /**
+     * bbrfusd: ComposableStable
+     */
+    context('boosted', async () => {
+      if (!TEST_BOOSTED) return true;
+
+      before(async () => {
+        testPool = addresses.bbrfusd;
+        tokens = [addresses.USDT];
+        balances = tokens.map((t) => parseFixed('10', t.decimals).toString());
+      });
+
+      it('join with one leaf token', async () => {
+        const tokensIn = [addresses.USDT.address];
+        const amountsIn = [
+          parseFixed('10', addresses.USDT.decimals).toString(),
         ];
         await testGeneralisedJoin(
           sdk,
