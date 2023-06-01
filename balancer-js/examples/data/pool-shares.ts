@@ -1,5 +1,10 @@
-import { Network } from '../../src/index';
-import { BalancerSDK } from '../../src/modules/sdk.module';
+/**
+ * Example of using the poolShares data source
+ * 
+ * Run with:
+ * yarn example ./examples/data/pool-shares.ts
+ */
+import { BalancerSDK, Network } from '@balancer-labs/sdk';
 
 const sdk = new BalancerSDK(
   { 
@@ -36,5 +41,3 @@ const { poolShares } = sdk.data;
   // Balancer subgraph : https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-v2
 
 })();
-
-// npm run examples:run -- ./examples/data/pool-shares.ts

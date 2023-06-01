@@ -1,5 +1,4 @@
-import { Network } from '../../src/index';
-import { BalancerSDK } from '../../src/modules/sdk.module';
+import { BalancerSDK, Network } from '@balancer-labs/sdk';
 
 const sdk = new BalancerSDK({
   network: Network.MAINNET,
@@ -20,4 +19,4 @@ const { poolGauges } = sdk.data;
   }
 })();
 
-// npm run examples:run -- ./examples/data/pool-gauges.ts
+// yarn run example ./examples/data/pool-gauges.ts
