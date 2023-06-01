@@ -83,6 +83,17 @@ export class Simulation {
           data: encodedCall,
           value,
         });
+        const decodedResponse = Buffer.from(
+          staticResult.split('x')[1],
+          'hex'
+        ).toString('utf8');
+        if (decodedResponse.includes('BAL#')) {
+          throw new Error(
+            `Transaction reverted with Error ${
+              'BAL#' + decodedResponse.split('BAL#')[1]
+            } on the static call`
+          );
+        }
         amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
         break;
       }
