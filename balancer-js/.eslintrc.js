@@ -19,6 +19,11 @@ module.exports = {
             message:
               "import from '@ethersproject/*' instead to avoid rollup build issues",
           },
+          {
+            group: ['@balancer/sdk'],
+            message:
+              "import from '@balancer/sdk' allowed only in the examples",
+          },
         ],
       },
     ]
