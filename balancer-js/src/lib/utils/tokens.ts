@@ -69,10 +69,7 @@ export const unwrapToken = (
 };
 
 // filter native asset (e.g. ETH) amounts
-export const getEthValue = (
-  tokens: string[],
-  amounts: string[]
-): BigNumber | undefined => {
+export const getEthValue = (tokens: string[], amounts: string[]): BigNumber => {
   const values = amounts.filter((amount, i) => tokens[i] === AddressZero);
-  return values[0] ? BigNumber.from(values[0]) : undefined;
+  return values[0] ? BigNumber.from(values[0]) : BigNumber.from(0);
 };

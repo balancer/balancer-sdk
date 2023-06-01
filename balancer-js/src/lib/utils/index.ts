@@ -32,7 +32,7 @@ export function insert<T>(arr: T[], index: number, newItem: T): T[] {
 }
 
 /**
- * Replace the item on the specified index with newItem
+ * Returns a new array with item on the specified index replaced by newItem
  * @param arr
  * @param index
  * @param newItem
