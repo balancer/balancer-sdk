@@ -117,7 +117,7 @@ describe('Migrations', function () {
               balance,
             });
             const peekResult = await signer.call({ ...peek, gasLimit: 8e6 });
-            const expectedBptOut = Migrations.getMinBptOut(peekResult);
+            const expectedBptOut = Migrations.getExpectedBptOut(peekResult);
 
             const txParams = await migrations.pool2pool({
               user: address,
@@ -162,7 +162,7 @@ describe('Migrations', function () {
               balance,
             });
             const peekResult = await signer.call({ ...peek, gasLimit: 8e6 });
-            const expectedBptOut = Migrations.getMinBptOut(peekResult);
+            const expectedBptOut = Migrations.getExpectedBptOut(peekResult);
 
             const txParams = await migrations.pool2poolWithGauges({
               user: address,
@@ -203,7 +203,7 @@ describe('Migrations', function () {
             balance,
           });
           const peekResult = await signer.call({ ...peek, gasLimit: 8e6 });
-          const expectedBptOut = Migrations.getMinBptOut(peekResult);
+          const expectedBptOut = Migrations.getExpectedBptOut(peekResult);
 
           // NOTICE: When swapping from Linear Pools, the swap will query for the current wrapped token rate.
           // It is possible that the rate changes between the static call checking for the BPT out
@@ -256,7 +256,7 @@ describe('Migrations', function () {
             balance,
           });
           const peekResult = await signer.call({ ...peek, gasLimit: 8e6 });
-          const expectedBptOut = Migrations.getMinBptOut(peekResult);
+          const expectedBptOut = Migrations.getExpectedBptOut(peekResult);
 
           const txParams = await migrations.pool2pool({
             user: address,
@@ -353,7 +353,7 @@ describe('Migrations', function () {
             balance,
           });
           const peekResult = await signer.call({ ...peek, gasLimit: 8e6 });
-          const expectedBptOut = Migrations.getMinBptOut(peekResult);
+          const expectedBptOut = Migrations.getExpectedBptOut(peekResult);
 
           // NOTICE: When swapping from Linear Pools, the swap will query for the current wrapped token rate.
           // It is possible that the rate changes between the static call checking for the BPT out

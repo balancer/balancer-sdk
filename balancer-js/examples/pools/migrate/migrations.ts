@@ -41,8 +41,8 @@ const main = async () => {
     from: user,
     gasLimit: 8e6,
   });
-  const minBptOut = migrationService.getMinBptOut(peekResult);
-  console.log('expectedBptOut', minBptOut.toString(), 'BPT');
+  const expectedBptOut = migrationService.getExpectedBptOut(peekResult);
+  console.log('expectedBptOut', expectedBptOut.toString(), 'BPT');
 
   // Build the migration with the minimum amount of BPT to receive
   const txParams = await migrationService.pool2pool({
@@ -50,7 +50,7 @@ const main = async () => {
     from,
     to,
     balance,
-    minBptOut,
+    minBptOut: expectedBptOut,
   });
   console.log(txParams.data);
 };

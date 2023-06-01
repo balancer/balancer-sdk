@@ -5,7 +5,6 @@ import { migrationBuilder } from './migrations/builder';
 import {
   balancerRelayerInterface,
   buildMigrationPool,
-  getMinBptOut,
 } from './migrations/helpers';
 import * as actions from '@/modules/relayer/actions';
 
@@ -203,6 +202,26 @@ export class Migrations {
     };
   }
 
-  static getMinBptOut = getMinBptOut;
-  getMinBptOut = getMinBptOut;
+  /**
+   * Decodes the relayer return value to get the expected BPT out.
+   *
+   * @param relayerReturnValue
+   * @returns
+   */
+  static getExpectedBptOut = (relayerReturnValue: string): string => {
+    // Get last two positions of the return value, bptOut is the last one or the second to last one in case there is a gauge deposit
+    // join and gauge deposit are always 0x, so any other value means that's the bptOut
+    const multicallResult = balancerRelayerInterface.decodeFunctionResult(
+      'multicall',
+      relayerReturnValue
+    );
+
+    const expectedBptOut = multicallResult[0]
+      .slice(-2)
+      .filter((v: string) => v !== '0x');
+
+    return String(BigInt(expectedBptOut));
+  };
+
+  getExpectedBptOut = Migrations.getExpectedBptOut;
 }
