@@ -25,10 +25,6 @@ export type TestAddresses = {
   [key: string]: TestAddress;
 };
 
-// type TestAddressesByNetwork = {
-//   [key in Network]: TestAddresses;
-// };
-
 export const ADDRESSES = {
   [Network.MAINNET]: {
     APE: {
