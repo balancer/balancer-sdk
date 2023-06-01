@@ -41,7 +41,7 @@ export interface EncodeJoinPoolInput {
   sender: string;
   recipient: string;
   joinPoolRequest: JoinPoolRequest;
-  value: string;
+  value: BigNumberish;
   outputReference: string;
 }
 

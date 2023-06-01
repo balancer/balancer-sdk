@@ -13,6 +13,18 @@ export const PROVIDER_URLS = {
   [Network.SEPOLIA]: `https://sepolia.infura.io/v3/${process.env.INFURA}`,
 };
 
+export type TestAddress = {
+  id?: string;
+  address: string;
+  decimals: number;
+  symbol?: string;
+  slot?: number;
+};
+
+export type TestAddresses = {
+  [key: string]: TestAddress;
+};
+
 export const ADDRESSES = {
   [Network.MAINNET]: {
     APE: {
@@ -338,6 +350,39 @@ export const ADDRESSES = {
       symbol: 'bb-t-stkAPE',
       slot: 0,
     },
+    swEth_bbaweth: {
+      id: '0x02d928e68d8f10c0358566152677db51e1e2dc8c00000000000000000000051e',
+      address: '0x02d928e68d8f10c0358566152677db51e1e2dc8c',
+      decimals: 18,
+      symbol: 'swETH-bbawETH-BPT',
+      slot: 0,
+    },
+    bbaweth: {
+      id: '0x60d604890feaa0b5460b28a424407c24fe89374a0000000000000000000004fc',
+      address: '0x60d604890feaa0b5460b28a424407c24fe89374a',
+      decimals: 18,
+      symbol: 'bbaweth',
+      slot: 0,
+    },
+    swETH: {
+      address: '0xf951e335afb289353dc249e82926178eac7ded78',
+      decimals: 18,
+      symbol: 'swETH',
+      slot: 98,
+    },
+    vETH: {
+      address: '0x4bc3263eb5bb2ef7ad9ab6fb68be80e43b43801f',
+      decimals: 18,
+      symbol: 'vETH',
+      slot: 0,
+    },
+    bveth: {
+      id: '0x793f2d5cd52dfafe7a1a1b0b3988940ba2d6a63d0000000000000000000004f8',
+      address: '0x793f2d5cd52dfafe7a1a1b0b3988940ba2d6a63d',
+      decimals: 18,
+      symbol: 'bveth',
+      slot: 0,
+    },
   },
   [Network.KOVAN]: {
     // Visit https://balancer-faucet.on.fleek.co/#/faucet for test tokens
@@ -596,6 +641,7 @@ export const ADDRESSES = {
       address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
       decimals: 6,
       symbol: 'USDT',
+      slot: 51,
     },
     STETH: {
       address: '',
