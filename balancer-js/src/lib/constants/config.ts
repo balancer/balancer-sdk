@@ -354,7 +354,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     thirdParty: {
       coingecko: {
         nativeAssetId: 'eth',
-        platformId: 'optimism',
+        platformId: 'optimistic-ethereum',
       },
     },
     urls: {
