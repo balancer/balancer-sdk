@@ -1,6 +1,6 @@
 /**
  * Display token yields
- * Run command: yarn examples:run ./examples/data/token-yields.arbitrum.ts
+ * Run command: yarn example ./examples/data/token-yields.arbitrum.ts
  */
 import { BalancerSDK } from '@/.';
 

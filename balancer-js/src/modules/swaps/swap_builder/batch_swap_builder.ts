@@ -10,7 +10,7 @@ class BatchSwapBuilder {
   private swapInfo: SDKSwapInfo;
   funds?: FundManagement;
   limits?: BigNumberish[];
-  deadline?: BigNumberish;
+  deadline?: string;
   relayer: SwapRelayer;
   readonly functionName = 'batchSwap';
 
@@ -45,7 +45,7 @@ class BatchSwapBuilder {
   /**
    * @param deadline block timestamp
    */
-  setDeadline(deadline: BigNumber): void {
+  setDeadline(deadline: string): void {
     this.deadline = deadline;
   }
 

@@ -25,7 +25,6 @@ import {
   GearboxLinearPoolFactory__factory,
   LidoRelayer,
   LidoRelayer__factory,
-  LiquidityGaugeV5,
   LiquidityGaugeV5__factory,
   Multicall,
   Multicall__factory,
@@ -229,10 +228,5 @@ export class Contracts {
    * @param { Signer | Provider} signerOrProvider Signer or Provider.
    * @returns Contract.
    */
-  getLiquidityGauge(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): LiquidityGaugeV5 {
-    return LiquidityGaugeV5__factory.connect(address, signerOrProvider);
-  }
+  getLiquidityGauge = LiquidityGaugeV5__factory.connect;
 }

@@ -63,27 +63,31 @@ export class PoolsSubgraphOnChainRepository
     const pools = await this.poolsSubgraph.fetch();
     console.timeEnd('fetching pools SG');
     const filteredPools = this.filterPools(pools);
-    console.time('fetching pools onchain');
+    console.time(`fetching onchain ${filteredPools.length} pools`);
     const onchainPools = await getOnChainBalances(
       filteredPools,
       this.multicall,
       this.vault,
       this.provider
     );
-    console.timeEnd('fetching pools onchain');
+    console.timeEnd(`fetching onchain ${filteredPools.length} pools`);
 
     return onchainPools;
   }
 
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
+    console.time('fetching pools SG');
     const pools = await this.poolsSubgraph.fetch(options);
+    console.timeEnd('fetching pools SG');
     const filteredPools = this.filterPools(pools);
+    console.time(`fetching onchain ${filteredPools.length} pools`);
     const onchainPools = await getOnChainBalances(
       filteredPools,
       this.multicall,
       this.vault,
       this.provider
     );
+    console.timeEnd(`fetching onchain ${filteredPools.length} pools`);
     return onchainPools;
   }
 

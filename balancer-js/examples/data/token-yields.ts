@@ -1,6 +1,6 @@
 /**
  * Display token yields
- * Run command: yarn examples:run ./examples/data/token-yields.ts
+ * Run command: yarn example ./examples/data/token-yields.ts
  */
 import { BalancerSDK } from '@/modules/sdk.module';
 import { yieldTokens } from '@/modules/data/token-prices/aave-rates';
