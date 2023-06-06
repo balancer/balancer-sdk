@@ -151,24 +151,3 @@ export const buildMigrationPool = async (
 
 const cmpTokens = (tokenA: MigrationPool, tokenB: MigrationPool): number =>
   tokenA.address.toLowerCase() > tokenB.address.toLowerCase() ? 1 : -1;
-
-/**
- * Decodes the relayer return value to get the minimum BPT out.
- *
- * @param relayerReturnValue
- * @returns
- */
-export const getMinBptOut = (relayerReturnValue: string): string => {
-  // Get last two positions of the return value, bptOut is the last one or the second to last one in case there is a gauge deposit
-  // join and gauge deposit are always 0x, so any other value means that's the bptOut
-  const multicallResult = balancerRelayerInterface.decodeFunctionResult(
-    'multicall',
-    relayerReturnValue
-  );
-
-  const minBptOut = multicallResult[0]
-    .slice(-2)
-    .filter((v: string) => v !== '0x');
-
-  return String(BigInt(minBptOut));
-};

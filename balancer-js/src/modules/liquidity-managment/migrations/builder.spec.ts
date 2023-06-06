@@ -5,7 +5,7 @@ import {
   metaStable,
   bDaiPool,
   composableStable,
-  poolRepository,
+  poolsRepository,
 } from './builder.spec-helpers';
 
 describe('Migrations', () => {
@@ -31,7 +31,7 @@ describe('Migrations', () => {
     it('should build a migrationPool with nested tokens', async () => {
       const migrationPool = await buildMigrationPool(
         composableStable.id,
-        poolRepository
+        poolsRepository
       );
       const tokens = migrationPool.tokens.map(({ address }) => address).flat();
       expect(tokens.length).to.eq(4);

@@ -11,6 +11,13 @@ describe('Relayer actions', () => {
   const poolId =
     '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080';
 
+  describe('.setRelayerApproval', () => {
+    it('should encode', () => {
+      const subject = action.setRelayerApproval(address, true, '0xdeadbeef');
+      expect(subject).to.contain('deadbeef');
+    });
+  });
+
   describe('.gaugeWithdrawal', () => {
     it('should encode', () => {
       const subject = action.gaugeWithdrawal(

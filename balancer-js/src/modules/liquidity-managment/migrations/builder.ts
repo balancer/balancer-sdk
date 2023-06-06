@@ -15,6 +15,7 @@ import { BigNumber } from '@ethersproject/bignumber';
  * @param peek Add a peek call for the expected BPT amount, decodable by the `decodePeak` function
  * @param fromGauge Unstake from gauge before migrating
  * @param toGauge Restake to gauge after migrating
+ * @param authorisation User's authorisation to approve relayer in the vault
  * @returns call data
  */
 export const migrationBuilder = (
@@ -26,7 +27,8 @@ export const migrationBuilder = (
   to: MigrationPool,
   peek = false,
   fromGauge?: string,
-  toGauge?: string
+  toGauge?: string,
+  authorisation?: string
 ): string => {
   if (
     !from.id ||
@@ -78,6 +80,13 @@ export const migrationBuilder = (
 
   if (from.poolType === 'ComposableStable') {
     needsSwap = true;
+  }
+
+  // 0. Set relayer approval
+  if (authorisation) {
+    migrationSteps.push(
+      actions.setRelayerApproval(relayer, true, authorisation)
+    );
   }
 
   // 1. Withdraw from old gauge
