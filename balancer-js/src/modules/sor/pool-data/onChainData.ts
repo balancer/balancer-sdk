@@ -66,85 +66,130 @@ export async function getOnChainBalances<
     ]);
     multiPool.call(`${pool.id}.totalSupply`, pool.address, 'totalSupply');
 
-    // Pools with pre minted BPT
-    if (pool.poolType.includes('Linear') || pool.poolType === 'StablePhantom') {
-      multiPool.call(
-        `${pool.id}.virtualSupply`,
-        pool.address,
-        'getVirtualSupply'
-      );
-    }
-
-    /**
-     * Returns the effective BPT supply.
-     * In other pools, this would be the same as `totalSupply`, but there are two key differences here:
-     *  - this pool pre-mints BPT and holds it in the Vault as a token, and as such we need to subtract the Vault's
-     *    balance to get the total "circulating supply". This is called the 'virtualSupply'.
-     *  - the Pool owes debt to the Protocol in the form of unminted BPT, which will be minted immediately before the
-     *    next join or exit. We need to take these into account since, even if they don't yet exist, they will
-     *    effectively be included in any Pool operation that involves BPT.
-     * In the vast majority of cases, this function should be used instead of `totalSupply()`.
-     */
-    if (pool.poolType === 'ComposableStable')
-      multiPool.call(
-        `${pool.id}.actualSupply`,
-        pool.address,
-        'getActualSupply'
-      );
-
-    // TO DO - Make this part of class to make more flexible?
-    if (
-      pool.poolType === 'Weighted' ||
-      pool.poolType === 'LiquidityBootstrapping' ||
-      pool.poolType === 'Investment'
-    ) {
-      multiPool.call(
-        `${pool.id}.weights`,
-        pool.address,
-        'getNormalizedWeights'
-      );
-      multiPool.call(
-        `${pool.id}.swapFee`,
-        pool.address,
-        'getSwapFeePercentage'
-      );
-    } else if (
-      pool.poolType === 'Stable' ||
-      pool.poolType === 'MetaStable' ||
-      pool.poolType === 'StablePhantom' ||
-      pool.poolType === 'ComposableStable'
-    ) {
-      // MetaStable & StablePhantom is the same as Stable for multicall purposes
-      multiPool.call(
-        `${pool.id}.amp`,
-        pool.address,
-        'getAmplificationParameter'
-      );
-      multiPool.call(
-        `${pool.id}.swapFee`,
-        pool.address,
-        'getSwapFeePercentage'
-      );
-    } else if (pool.poolType === 'Element') {
-      multiPool.call(`${pool.id}.swapFee`, pool.address, 'percentFee');
-    } else if (pool.poolType.toString().includes('Linear')) {
-      multiPool.call(
-        `${pool.id}.swapFee`,
-        pool.address,
-        'getSwapFeePercentage'
-      );
-
-      multiPool.call(`${pool.id}.targets`, pool.address, 'getTargets');
-      multiPool.call(`${pool.id}.rate`, pool.address, 'getWrappedTokenRate');
-    } else if (pool.poolType.toString().includes('Gyro')) {
-      multiPool.call(
-        `${pool.id}.swapFee`,
-        pool.address,
-        'getSwapFeePercentage'
-      );
-    }
-    if (pool.poolType.toString() === 'GyroE' && pool.poolTypeVersion === 2) {
-      multiPool.call(`${pool.id}.tokenRates`, pool.address, 'getTokenRates');
+    switch (pool.poolType) {
+      case 'LiquidityBootstrapping':
+      case 'Investment':
+      case 'Weighted':
+        multiPool.call(
+          `${pool.id}.swapFee`,
+          pool.address,
+          'getSwapFeePercentage'
+        );
+        multiPool.call(
+          `${pool.id}.weights`,
+          pool.address,
+          'getNormalizedWeights'
+        );
+        break;
+      case 'StablePhantom':
+        multiPool.call(
+          `${pool.id}.virtualSupply`,
+          pool.address,
+          'getVirtualSupply'
+        );
+        multiPool.call(
+          `${pool.id}.amp`,
+          pool.address,
+          'getAmplificationParameter'
+        );
+        multiPool.call(
+          `${pool.id}.swapFee`,
+          pool.address,
+          'getSwapFeePercentage'
+        );
+        break;
+      // MetaStable is the same as Stable for multicall purposes
+      case 'MetaStable':
+      case 'Stable':
+        multiPool.call(
+          `${pool.id}.amp`,
+          pool.address,
+          'getAmplificationParameter'
+        );
+        multiPool.call(
+          `${pool.id}.swapFee`,
+          pool.address,
+          'getSwapFeePercentage'
+        );
+        break;
+      case 'ComposableStable':
+        /**
+         * Returns the effective BPT supply.
+         * In other pools, this would be the same as `totalSupply`, but there are two key differences here:
+         *  - this pool pre-mints BPT and holds it in the Vault as a token, and as such we need to subtract the Vault's
+         *    balance to get the total "circulating supply". This is called the 'virtualSupply'.
+         *  - the Pool owes debt to the Protocol in the form of unminted BPT, which will be minted immediately before the
+         *    next join or exit. We need to take these into account since, even if they don't yet exist, they will
+         *    effectively be included in any Pool operation that involves BPT.
+         * In the vast majority of cases, this function should be used instead of `totalSupply()`.
+         */
+        multiPool.call(
+          `${pool.id}.actualSupply`,
+          pool.address,
+          'getActualSupply'
+        );
+        // MetaStable & StablePhantom is the same as Stable for multicall purposes
+        multiPool.call(
+          `${pool.id}.amp`,
+          pool.address,
+          'getAmplificationParameter'
+        );
+        multiPool.call(
+          `${pool.id}.swapFee`,
+          pool.address,
+          'getSwapFeePercentage'
+        );
+        break;
+      case 'Element':
+        multiPool.call(`${pool.id}.swapFee`, pool.address, 'percentFee');
+        break;
+      case 'Gyro2':
+      case 'Gyro3':
+        multiPool.call(`${pool.id}.poolTokens`, vaultAddress, 'getPoolTokens', [
+          pool.id,
+        ]);
+        multiPool.call(`${pool.id}.totalSupply`, pool.address, 'totalSupply');
+        multiPool.call(
+          `${pool.id}.swapFee`,
+          pool.address,
+          'getSwapFeePercentage'
+        );
+        break;
+      case 'GyroE':
+        multiPool.call(
+          `${pool.id}.swapFee`,
+          pool.address,
+          'getSwapFeePercentage'
+        );
+        if (pool.poolTypeVersion && pool.poolTypeVersion === 2) {
+          multiPool.call(
+            `${pool.id}.tokenRates`,
+            pool.address,
+            'getTokenRates'
+          );
+        }
+        break;
+      default:
+        //Handling all Linear pools
+        if (pool.poolType.toString().includes('Linear')) {
+          multiPool.call(
+            `${pool.id}.virtualSupply`,
+            pool.address,
+            'getVirtualSupply'
+          );
+          multiPool.call(
+            `${pool.id}.swapFee`,
+            pool.address,
+            'getSwapFeePercentage'
+          );
+          multiPool.call(`${pool.id}.targets`, pool.address, 'getTargets');
+          multiPool.call(
+            `${pool.id}.rate`,
+            pool.address,
+            'getWrappedTokenRate'
+          );
+        }
+        break;
     }
   });
 
@@ -304,6 +349,5 @@ export async function getOnChainBalances<
       throw new Error(`Issue with pool onchain data: ${err}`);
     }
   });
-
   return onChainPools;
 }
