@@ -2,15 +2,15 @@
  * Shows how to query balancer helper contracts for
  * expected amounts when providing or exiting liquidity from pools
  *
- * yarn examples:run ./examples/pools/queries.ts
+ * yarn example ./examples/pools/queries.ts
  */
 
-import { parseEther, formatEther } from '@ethersproject/units';
-import { BalancerSDK, PoolWithMethods } from '@/.';
+import { BalancerSDK, PoolWithMethods } from '@balancer-labs/sdk'
+import { parseEther, formatEther } from '@ethersproject/units'
 
 const sdk = new BalancerSDK({
   network: 1,
-  rpcUrl: 'https://eth-rpc.gateway.pokt.network',
+  rpcUrl: 'https://rpc.ankr.com/eth',
 });
 
 const {

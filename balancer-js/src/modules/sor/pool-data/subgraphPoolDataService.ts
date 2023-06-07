@@ -41,7 +41,7 @@ export function mapPools(pools: any[]): SubgraphPoolBase[] {
 }
 
 export class SubgraphPoolDataService implements PoolDataService {
-  private readonly query: GraphQLQuery;
+  private readonly defaultArgs: GraphQLArgs;
   constructor(
     private readonly client: SubgraphClient,
     private readonly provider: Provider,
@@ -49,7 +49,8 @@ export class SubgraphPoolDataService implements PoolDataService {
     private readonly sorConfig?: BalancerSdkSorConfig,
     query?: GraphQLQuery
   ) {
-    const defaultArgs: GraphQLArgs = {
+    // Default args can be overwritten by passing in a queryArgs object to .getPools
+    this.defaultArgs = query?.args || {
       orderBy: Pool_OrderBy.TotalLiquidity,
       orderDirection: OrderDirection.Desc,
       where: {
@@ -61,18 +62,16 @@ export class SubgraphPoolDataService implements PoolDataService {
         },
       },
     };
-
-    const args = query?.args || defaultArgs;
-    const attrs = query?.attrs || {};
-
-    this.query = {
-      args,
-      attrs,
-    };
   }
 
-  public async getPools(): Promise<SubgraphPoolBase[]> {
-    const pools = await this.getSubgraphPools();
+  /**
+   * Returns pools from the subgraph filtered by queryArgs with on-chain balances
+   *
+   * @param queryArgs
+   * @returns SubgraphPoolBase[]
+   */
+  async getPools(queryArgs?: GraphQLArgs): Promise<SubgraphPoolBase[]> {
+    const pools = await this.getSubgraphPools(queryArgs);
 
     const filteredPools = pools.filter((p) => {
       if (p.poolType === 'FX') return false;
@@ -89,18 +88,28 @@ export class SubgraphPoolDataService implements PoolDataService {
       return mapped;
     }
 
-    return getOnChainBalances(
+    console.time(`fetching on-chain balances for ${mapped.length} pools`);
+    const onChainBalances = await getOnChainBalances(
       mapped,
       this.network.addresses.contracts.multicall,
       this.network.addresses.contracts.vault,
       this.provider
     );
+    console.timeEnd(`fetching on-chain balances for ${mapped.length} pools`);
+
+    return onChainBalances;
   }
 
-  private async getSubgraphPools() {
-    const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
-      new SubgraphArgsFormatter()
-    ) as PoolsQueryVariables;
+  private async getSubgraphPools(queryArgs?: GraphQLArgs) {
+    const formattedQuery = new GraphQLArgsBuilder(
+      queryArgs || this.defaultArgs
+    ).format(new SubgraphArgsFormatter()) as PoolsQueryVariables;
+
+    if (formattedQuery.first) {
+      const { pools } = await this.client.Pools(formattedQuery);
+      return pools;
+    }
+
     const { pool0, pool1000, pool2000 } = await this.client.AllPools(
       formattedQuery
     );

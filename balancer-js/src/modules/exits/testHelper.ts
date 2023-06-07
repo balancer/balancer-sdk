@@ -1,8 +1,6 @@
 import { expect } from 'chai';
 import {
   BalancerSDK,
-  GraphQLQuery,
-  GraphQLArgs,
   Network,
   truncateAddresses,
   subSlippage,
@@ -17,6 +15,7 @@ import {
   sendTransactionGetBalances,
   FORK_NODES,
   RPC_URLS,
+  createSubgraphQuery,
 } from '@/test/lib/utils';
 import { Relayer } from '@/modules/relayer/relayer.module';
 import { SimulationType } from '../simulation/simulation.module';
@@ -179,25 +178,4 @@ async function setUpForkAndSdk(
     blockNumber
   );
   return { sdk, signer };
-}
-
-function createSubgraphQuery(pools: string[], blockNo: number): GraphQLQuery {
-  const subgraphArgs: GraphQLArgs = {
-    where: {
-      swapEnabled: {
-        eq: true,
-      },
-      totalShares: {
-        gt: 0.000000000001,
-      },
-      address: {
-        in: pools,
-      },
-    },
-    orderBy: 'totalLiquidity',
-    orderDirection: 'desc',
-    block: { number: blockNo },
-  };
-  const subgraphQuery: GraphQLQuery = { args: subgraphArgs, attrs: {} };
-  return subgraphQuery;
 }

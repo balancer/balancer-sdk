@@ -122,9 +122,15 @@ export interface BalancerNetworkConfig {
 }
 
 export interface BalancerDataRepositories {
+  /**
+   * Why do we need 3 different pools repositories?
+   */
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  // Does it need to be different from the pools repository?
   poolsForSor: SubgraphPoolDataService;
+  // Perhaps better to use a function to get upto date balances when needed.
   poolsOnChain: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  // Replace with a swapFeeRepository, we don't need historic pools for any other reason than to get the swap fee
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
   tokenHistoricalPrices: Findable<Price>;
