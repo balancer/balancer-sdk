@@ -15,7 +15,10 @@ import type {
   PoolAttribute,
 } from '@/types';
 
-import { JoinPoolAttributes } from './pool-types/concerns/types';
+import {
+  ExitExactBPTInAttributes,
+  JoinPoolAttributes,
+} from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
@@ -318,6 +321,73 @@ export class Pools implements Findable<PoolWithMethods> {
    */
   async bptPrice(pool: Pool): Promise<string> {
     return this.liquidityService.getBptPrice(pool);
+  }
+
+  /**
+   * Builds join transaction
+   *
+   * @param poolId          Pool id
+   * @param tokensIn        Token addresses
+   * @param amountsIn       Token amounts in EVM scale
+   * @param userAddress     User address
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @returns               Transaction object
+   * @throws                Error if pool type is not implemented
+   */
+  buildJoin({
+    pool,
+    tokensIn,
+    amountsIn,
+    userAddress,
+    slippage,
+  }: {
+    pool: Pool;
+    tokensIn: string[];
+    amountsIn: string[];
+    userAddress: string;
+    slippage: string;
+  }): JoinPoolAttributes {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+
+    if (!concerns)
+      throw `buildJoin for poolType ${pool.poolType} not implemented`;
+
+    return concerns.join.buildJoin({
+      joiner: userAddress,
+      pool,
+      tokensIn,
+      amountsIn,
+      slippage,
+      wrappedNativeAsset:
+        this.networkConfig.addresses.tokens.wrappedNativeAsset,
+    });
+  }
+
+  buildExitExactBPTIn({
+    pool,
+    bptAmount,
+    userAddress,
+    slippage,
+  }: {
+    pool: Pool;
+    bptAmount: string;
+    userAddress: string;
+    slippage: string;
+  }): ExitExactBPTInAttributes {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+    if (!concerns || !concerns.exit.buildExitExactBPTIn)
+      throw `buildExit for poolType ${pool.poolType} not implemented`;
+
+    return concerns.exit.buildExitExactBPTIn({
+      pool,
+      exiter: userAddress,
+      bptIn: bptAmount,
+      slippage,
+      wrappedNativeAsset:
+        this.networkConfig.addresses.tokens.wrappedNativeAsset,
+      shouldUnwrapNativeAsset: false,
+      toInternalBalance: false,
+    });
   }
 
   /**
