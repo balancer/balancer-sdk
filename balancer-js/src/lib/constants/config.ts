@@ -530,6 +530,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     urls: {
       subgraph:
         'https://api.studio.thegraph.com/query/24660/balancer-polygon-zkevm-v2/v0.0.2',
+      gaugesSubgraph:
+        'https://api.studio.thegraph.com/query/24660/balancer-gauges-polygon-zk/version/latest',
     },
     thirdParty: {
       coingecko: {

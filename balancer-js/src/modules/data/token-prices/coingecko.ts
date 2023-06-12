@@ -137,8 +137,14 @@ export class CoingeckoPriceRepository implements Findable<Price> {
         return 'xdai';
       case 137:
         return 'polygon-pos';
+      case 250:
+        return 'fantom';
+      case 1101:
+        return 'polygon-zkevm';
       case 42161:
         return 'arbitrum-one';
+      case 43114:
+        return 'avalanche';
     }
 
     return '2';
