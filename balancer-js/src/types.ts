@@ -95,7 +95,7 @@ export interface BalancerNetworkConfig {
       lbpRaisingTokens?: string[];
       stETH?: string;
       wstETH?: string;
-      bal?: string;
+      bal: string;
       veBal?: string;
       bbaUsd?: string;
     };

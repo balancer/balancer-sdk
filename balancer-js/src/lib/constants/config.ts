@@ -209,6 +209,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+        bal: '',
       },
     },
     urls: {
@@ -236,6 +237,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+        bal: '',
       },
     },
     urls: {
@@ -263,6 +265,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+        bal: '',
       },
     },
     urls: {
@@ -349,6 +352,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
           '0x7f5c764cbc14f9669b88837ca1490cca17c31607', // USDC
           '0x4200000000000000000000000000000000000006', // WETH
         ],
+        bal: '0xfe8b128ba8c78aabc59d4c64cee7ff28e9379921',
       },
     },
     thirdParty: {
