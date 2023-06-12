@@ -11,6 +11,7 @@ export const PROVIDER_URLS = {
   [Network.POLYGON]: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA}`,
   [Network.ARBITRUM]: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA}`,
   [Network.SEPOLIA]: `https://sepolia.infura.io/v3/${process.env.INFURA}`,
+  [Network.GNOSIS]: `https://rpc.gnosis.gateway.fm`,
 };
 
 export type TestAddress = {
@@ -753,6 +754,11 @@ export const ADDRESSES = {
       address: '0xfa57aa7beed63d03aaf85ffd1753f5f6242588fb',
       decimals: 0,
       symbol: 'MPS',
+    },
+    wstETH: {
+      address: '0x6C76971f98945AE98dD7d4DFcA8711ebea946eA6',
+      decimals: 18,
+      symbol: 'wstETH',
     },
   },
   [Network.GOERLI]: {

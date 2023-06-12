@@ -411,6 +411,10 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         symbol: 'weth',
         address: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
       },
+      {
+        symbol: 'wsEth',
+        address: '0x6C76971f98945AE98dD7d4DFcA8711ebea946eA6',
+      },
     ],
   },
   [Network.FANTOM]: {
