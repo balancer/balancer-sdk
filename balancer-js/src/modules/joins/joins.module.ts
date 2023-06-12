@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { BigNumber, BigNumberish, parseFixed } from '@ethersproject/bignumber';
 import { AddressZero, WeiPerEther, Zero } from '@ethersproject/constants';
 
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
@@ -16,7 +16,7 @@ import { PoolGraph, Node } from '../graph/graph';
 
 import { subSlippage } from '@/lib/utils/slippageHelper';
 import { networkAddresses } from '@/lib/constants/config';
-import { AssetHelpers, isSameAddress } from '@/lib/utils';
+import { AssetHelpers, getEthValue, isSameAddress, replace } from '@/lib/utils';
 import {
   SolidityMaths,
   _computeScalingFactor,
@@ -34,6 +34,13 @@ import { BalancerRelayer__factory } from '@/contracts/factories/BalancerRelayer_
 
 const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
+// Quickly switch useful debug logs on/off
+const DEBUG = false;
+
+function debugLog(log: string) {
+  if (DEBUG) console.log(log);
+}
+
 export class Join {
   private relayer: string;
   private wrappedNativeAsset;
@@ -45,6 +52,25 @@ export class Join {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
     this.relayer = contracts.relayer;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
+  }
+
+  private checkInputs(tokensIn: string[], amountsIn: string[]) {
+    if (tokensIn.length === 0)
+      throw new BalancerError(BalancerErrorCode.MISSING_TOKENS);
+
+    if (amountsIn.every((a) => a === '0'))
+      throw new BalancerError(BalancerErrorCode.JOIN_WITH_ZERO_AMOUNT);
+
+    if (tokensIn.length != amountsIn.length)
+      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+
+    if (
+      tokensIn.some((t) => t === AddressZero) &&
+      tokensIn.some(
+        (t) => t.toLowerCase() === this.wrappedNativeAsset.toLowerCase()
+      )
+    )
+      throw new BalancerError(BalancerErrorCode.INPUT_TOKEN_INVALID);
   }
 
   async joinPool(
@@ -62,14 +88,26 @@ export class Join {
     expectedOut: string;
     minOut: string;
     priceImpact: string;
+    value: BigNumberish;
   }> {
-    if (tokensIn.length != amountsIn.length)
-      throw new BalancerError(BalancerErrorCode.INPUT_LENGTH_MISMATCH);
+    this.checkInputs(tokensIn, amountsIn);
 
     // Create nodes for each pool/token interaction and order by breadth first
     const orderedNodes = await this.poolGraph.getGraphNodes(true, poolId, []);
 
-    const joinPaths = Join.getJoinPaths(orderedNodes, tokensIn, amountsIn);
+    const nativeAssetIndex = tokensIn.findIndex((t) => t === AddressZero);
+    const isNativeAssetJoin = nativeAssetIndex !== -1;
+    const tokensInWithoutNativeAsset = replace(
+      tokensIn,
+      nativeAssetIndex,
+      this.wrappedNativeAsset.toLowerCase()
+    );
+
+    const joinPaths = Join.getJoinPaths(
+      orderedNodes,
+      tokensInWithoutNativeAsset,
+      amountsIn
+    );
 
     const totalBptZeroPi = Join.totalBptZeroPriceImpact(joinPaths);
     /*
@@ -82,6 +120,7 @@ export class Join {
     */
     // Create calls with 0 expected for each root join
     // Peek is enabled here so we can static call the returned amounts and use these to set limits
+    debugLog(`\n--- Simulation Calls ---`);
     const {
       multiRequests,
       encodedCall: queryData,
@@ -89,19 +128,26 @@ export class Join {
     } = await this.createCalls(
       joinPaths,
       userAddress,
+      isNativeAssetJoin,
       undefined,
       authorisation
     );
+
+    // TODO: add this back once relayerV6 is released and we're able to peek while joining with ETH
+    // const simulationValue = isNativeAssetJoin
+    //   ? simulationDeltas[this.wrappedNativeAsset.toLowerCase()]
+    //   : Zero;
 
     // static call (or V4 special call) to get actual amounts for each root join
     const { amountsOut, totalAmountOut } = await this.amountsOutByJoinPath(
       userAddress,
       multiRequests,
       queryData,
-      tokensIn,
+      tokensInWithoutNativeAsset,
       outputIndexes,
       signer,
-      simulationType
+      simulationType,
+      '0' // TODO: change to simulationValue.tosString() once relayerV6 is released
     );
 
     const { minAmountsOut, totalMinAmountOut } = this.minAmountsOutByJoinPath(
@@ -116,14 +162,27 @@ export class Join {
     ).toString();
 
     // Create calls with minAmountsOut
+    debugLog(`\n--- Final Calls ---`);
     const { encodedCall, deltas } = await this.createCalls(
       joinPaths,
       userAddress,
+      isNativeAssetJoin,
       minAmountsOut,
       authorisation
     );
 
-    this.assertDeltas(poolId, deltas, tokensIn, amountsIn, totalMinAmountOut);
+    const value = isNativeAssetJoin
+      ? deltas[this.wrappedNativeAsset.toLowerCase()]
+      : Zero;
+    debugLog(`Total value: ${value.toString()}`);
+
+    this.assertDeltas(
+      poolId,
+      deltas,
+      tokensInWithoutNativeAsset,
+      amountsIn,
+      totalMinAmountOut
+    );
 
     return {
       to: this.relayer,
@@ -131,6 +190,7 @@ export class Join {
       expectedOut: totalAmountOut,
       minOut: totalMinAmountOut,
       priceImpact,
+      value,
     };
   }
 
@@ -337,6 +397,7 @@ export class Join {
   private createCalls = async (
     joinPaths: Node[][],
     userAddress: string,
+    isNativeAssetJoin: boolean,
     minAmountsOut?: string[], // one for each joinPath
     authorisation?: string
   ): Promise<{
@@ -347,7 +408,12 @@ export class Join {
   }> => {
     // Create calls for both leaf and non-leaf inputs
     const { multiRequests, encodedCalls, outputIndexes, deltas } =
-      this.createActionCalls(joinPaths, userAddress, minAmountsOut);
+      this.createActionCalls(
+        joinPaths,
+        userAddress,
+        isNativeAssetJoin,
+        minAmountsOut
+      );
 
     if (authorisation) {
       encodedCalls.unshift(this.createSetRelayerApproval(authorisation));
@@ -438,7 +504,8 @@ export class Join {
     tokensIn: string[],
     outputIndexes: number[],
     signer: JsonRpcSigner,
-    simulationType: SimulationType
+    simulationType: SimulationType,
+    value: string
   ): Promise<{ amountsOut: string[]; totalAmountOut: string }> => {
     const amountsOut = await this.simulationService.simulateGeneralisedJoin(
       this.relayer,
@@ -448,7 +515,8 @@ export class Join {
       userAddress,
       tokensIn,
       signer,
-      simulationType
+      simulationType,
+      value
     );
 
     const totalAmountOut = amountsOut
@@ -501,6 +569,7 @@ export class Join {
   private createActionCalls = (
     joinPaths: Node[][],
     userAddress: string,
+    isNativeAssetJoin: boolean,
     minAmountsOut?: string[]
   ): {
     multiRequests: Requests[][];
@@ -511,7 +580,7 @@ export class Join {
     const multiRequests: Requests[][] = [];
     const encodedCalls: string[] = [];
     const outputIndexes: number[] = [];
-    const isPeek = !minAmountsOut;
+    const isSimulation = !minAmountsOut;
     const deltas: Record<string, BigNumber> = {};
 
     joinPaths.forEach((joinPath, j) => {
@@ -559,7 +628,15 @@ export class Join {
           case 'batchSwap':
             {
               const { modelRequest, encodedCall, assets, amounts } =
-                this.createSwap(node, j, minOut, sender, recipient);
+                this.createSwap(
+                  node,
+                  j,
+                  minOut,
+                  sender,
+                  recipient,
+                  isNativeAssetJoin,
+                  isSimulation
+                );
               modelRequests.push(modelRequest);
               encodedCalls.push(encodedCall);
               this.updateDeltas(deltas, assets, amounts);
@@ -568,7 +645,15 @@ export class Join {
           case 'joinPool':
             {
               const { modelRequest, encodedCall, assets, amounts, minBptOut } =
-                this.createJoinPool(node, j, minOut, sender, recipient);
+                this.createJoinPool(
+                  node,
+                  j,
+                  minOut,
+                  sender,
+                  recipient,
+                  isNativeAssetJoin,
+                  isSimulation
+                );
               modelRequests.push(modelRequest);
               encodedCalls.push(encodedCall);
               this.updateDeltas(
@@ -582,7 +667,7 @@ export class Join {
             return;
         }
       });
-      if (isPeek) {
+      if (isSimulation) {
         const outputRef = 100 * j;
         const encodedPeekCall = Relayer.encodePeekChainedReferenceValue(
           Relayer.toChainedReference(outputRef, false)
@@ -670,7 +755,9 @@ export class Join {
     joinPathIndex: number,
     expectedOut: string,
     sender: string,
-    recipient: string
+    recipient: string,
+    isNativeAssetJoin: boolean,
+    isSimulation: boolean
   ): {
     modelRequest: SwapRequest;
     encodedCall: string;
@@ -681,16 +768,20 @@ export class Join {
     if (node.children.length !== 1) throw new Error('Unsupported swap');
     const tokenIn = node.children[0].address;
     const amountIn = this.getOutputRefValue(joinPathIndex, node.children[0]);
-    const assets = [node.address, tokenIn];
 
     // Single swap limits are always positive
     // Swap within generalisedJoin is always exactIn, so use minAmountOut to set limit
     const limit: string = expectedOut;
 
+    const assetIn =
+      isNativeAssetJoin && !isSimulation
+        ? this.replaceWrappedNativeAsset([tokenIn])[0]
+        : tokenIn;
+
     const request: SingleSwap = {
       poolId: node.id,
       kind: SwapType.SwapExactIn,
-      assetIn: tokenIn,
+      assetIn,
       assetOut: node.address,
       amount: amountIn.value,
       userData: '0x',
@@ -710,31 +801,25 @@ export class Join {
       this.getOutputRefValue(joinPathIndex, node).value
     );
 
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.joinAction}(
-    //     inputAmt: ${node.children[0].index},
-    //     inputToken: ${node.children[0].address},
-    //     pool: ${node.id},
-    //     outputToken: ${node.address},
-    //     outputRef: ${this.getOutputRefValue(joinPathIndex, node).value},
-    //     sender: ${sender},
-    //     recipient: ${recipient},
-    //     fromInternalBalance: ${fromInternalBalance},
-    //     toInternalBalance: ${toInternalBalance},
-    //   )`
-    // );
+    const value =
+      isNativeAssetJoin && !isSimulation
+        ? getEthValue([assetIn], [amountIn.value])
+        : Zero;
 
     const call: Swap = {
       request,
       funds,
       limit,
       deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
-      value: '0', // TODO: check if swap with ETH is possible in this case and handle it
+      value,
       outputReference,
     };
 
     const encodedCall = Relayer.encodeSwap(call);
+
+    debugLog(`\nSwap:`);
+    debugLog(`${JSON.stringify(call)}`);
+    debugLog(`Partial value: ${JSON.stringify(call.value?.toString())}`);
 
     const modelRequest = VaultModel.mapSwapRequest(call);
 
@@ -746,6 +831,8 @@ export class Join {
       node.parent != undefined
         ? '0'
         : BigNumber.from(expectedOut).mul(-1).toString(); // needs to be negative because it's handled by the vault model as an amount going out of the vault
+
+    const assets = [node.address, tokenIn];
     const amounts = [userBptOut, userTokenIn];
 
     return { modelRequest, encodedCall, assets, amounts };
@@ -756,7 +843,9 @@ export class Join {
     joinPathIndex: number,
     minAmountOut: string,
     sender: string,
-    recipient: string
+    recipient: string,
+    isNativeAssetJoin: boolean,
+    isSimulation: boolean
   ): {
     modelRequest: JoinPoolModelRequest;
     encodedCall: string;
@@ -819,27 +908,15 @@ export class Join {
       );
     }
 
-    // TODO: add test to join weth/wsteth pool using ETH
-    const ethIndex = sortedTokens.indexOf(AddressZero);
-    const value = ethIndex === -1 ? '0' : sortedAmounts[ethIndex];
+    const value =
+      isNativeAssetJoin && !isSimulation
+        ? getEthValue(
+            this.replaceWrappedNativeAsset(sortedTokens),
+            sortedAmounts
+          )
+        : Zero;
 
     const fromInternalBalance = this.allImmediateChildrenSendToInternal(node);
-
-    // console.log(
-    //   `${node.type} ${node.address} prop: ${node.proportionOfParent.toString()}
-    //   ${node.joinAction}(
-    //     poolId: ${node.id},
-    //     assets: ${sortedTokens.toString()},
-    //     maxAmtsIn: ${sortedAmounts.toString()},
-    //     amountsIn: ${userDataAmounts.toString()},
-    //     minOut: ${minAmountOut},
-    //     outputRef: ${this.getOutputRefValue(joinPathIndex, node).value},
-    //     sender: ${sender},
-    //     recipient: ${recipient},
-    //     fromInternalBalance: ${fromInternalBalance},
-    //     toInternalBalance: false,
-    //   )`
-    // );
 
     const call: EncodeJoinPoolInput = Relayer.formatJoinPoolInput({
       poolId: node.id,
@@ -849,12 +926,19 @@ export class Join {
       value,
       outputReference: this.getOutputRefValue(joinPathIndex, node).value,
       joinPoolRequest: {} as JoinPoolRequest,
-      assets: sortedTokens, // Must include BPT token
+      assets:
+        isNativeAssetJoin && !isSimulation
+          ? this.replaceWrappedNativeAsset(sortedTokens)
+          : sortedTokens, // Must include BPT token
       maxAmountsIn: sortedAmounts,
       userData,
       fromInternalBalance,
     });
     const encodedCall = Relayer.encodeJoinPool(call);
+
+    debugLog(`\nJoin:`);
+    debugLog(JSON.stringify(call));
+    debugLog(`Partial value: ${JSON.stringify(call.value?.toString())}`);
     const modelRequest = VaultModel.mapJoinPoolRequest(call);
 
     const userAmountsTokenIn = sortedAmounts.map((a) =>
@@ -931,5 +1015,12 @@ export class Join {
       siblings.filter((s) => this.sendsToInternalBalance(s)).length ===
       siblings.length
     );
+  };
+
+  private replaceWrappedNativeAsset = (tokens: string[]): string[] => {
+    const wrappedNativeAssetIndex = tokens.findIndex(
+      (t) => t.toLowerCase() === this.wrappedNativeAsset.toLowerCase()
+    );
+    return replace(tokens, wrappedNativeAssetIndex, AddressZero);
   };
 }

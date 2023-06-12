@@ -1,9 +1,11 @@
 import { PoolDataService } from '@balancer-labs/sor';
 import { defaultAbiCoder } from '@ethersproject/abi';
+import { JsonRpcSigner } from '@ethersproject/providers';
+
 import TenderlyHelper from '@/lib/utils/tenderlyHelper';
 import { BalancerNetworkConfig } from '@/types';
+
 import { VaultModel, Requests } from '../vaultModel/vaultModel.module';
-import { JsonRpcSigner } from '@ethersproject/providers';
 
 export enum SimulationType {
   Tenderly,
@@ -53,7 +55,8 @@ export class Simulation {
     userAddress: string,
     tokensIn: string[],
     signer: JsonRpcSigner,
-    simulationType: SimulationType
+    simulationType: SimulationType,
+    value: string
   ): Promise<string[]> => {
     const amountsOut: string[] = [];
     switch (simulationType) {
@@ -62,7 +65,8 @@ export class Simulation {
           to,
           encodedCall,
           userAddress,
-          tokensIn
+          tokensIn,
+          value
         );
         amountsOut.push(...this.decodeResult(simulationResult, outputIndexes));
         break;
@@ -74,12 +78,22 @@ export class Simulation {
         break;
       }
       case SimulationType.Static: {
-        const gasLimit = 8e6;
         const staticResult = await signer.call({
           to,
           data: encodedCall,
-          gasLimit,
+          value,
         });
+        const decodedResponse = Buffer.from(
+          staticResult.split('x')[1],
+          'hex'
+        ).toString('utf8');
+        if (decodedResponse.includes('BAL#')) {
+          throw new Error(
+            `Transaction reverted with Error ${
+              'BAL#' + decodedResponse.split('BAL#')[1]
+            } on the static call`
+          );
+        }
         amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
         break;
       }
@@ -122,6 +136,17 @@ export class Simulation {
           to,
           data: encodedCall,
         });
+        const decodedResponse = Buffer.from(
+          staticResult.split('x')[1],
+          'hex'
+        ).toString('utf8');
+        if (decodedResponse.includes('BAL#')) {
+          throw new Error(
+            `Transaction reverted with Error ${
+              'BAL#' + decodedResponse.split('BAL#')[1]
+            } on the static call`
+          );
+        }
         amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
         break;
       }

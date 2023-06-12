@@ -47,6 +47,7 @@ import { Provider } from '@ethersproject/providers';
 import initialCoingeckoList from '@/modules/data/token-prices/initial-list.json';
 import { SubgraphPriceRepository } from './token-prices/subgraph';
 import { createSubgraphClient } from '../subgraph/subgraph';
+import { Contracts } from '../contracts/contracts.module';
 
 export class Data implements BalancerDataRepositories {
   pools;
@@ -70,6 +71,7 @@ export class Data implements BalancerDataRepositories {
   constructor(
     networkConfig: BalancerNetworkConfig,
     provider: Provider,
+    contracts: Contracts,
     subgraphQuery?: GraphQLQuery
   ) {
     this.pools = new PoolsSubgraphRepository({
@@ -169,8 +171,7 @@ export class Data implements BalancerDataRepositories {
     );
 
     const aaveRates = new AaveRates(
-      networkConfig.addresses.contracts.multicall,
-      provider,
+      contracts.contracts.multicall,
       networkConfig.chainId
     );
 
@@ -193,10 +194,9 @@ export class Data implements BalancerDataRepositories {
     if (networkConfig.urls.gaugesSubgraph) {
       this.liquidityGauges = new LiquidityGaugeSubgraphRPCProvider(
         networkConfig.urls.gaugesSubgraph,
-        networkConfig.addresses.contracts.multicall,
+        contracts.contracts.multicall,
         networkConfig.addresses.contracts.gaugeController || '',
-        networkConfig.chainId,
-        provider
+        networkConfig.chainId
       );
     }
 
@@ -207,7 +207,7 @@ export class Data implements BalancerDataRepositories {
       networkConfig.addresses.tokens.bbaUsd
     ) {
       this.feeDistributor = new FeeDistributorRepository(
-        networkConfig.addresses.contracts.multicall,
+        contracts.contracts.multicall,
         networkConfig.addresses.contracts.feeDistributor,
         networkConfig.addresses.tokens.bal,
         networkConfig.addresses.tokens.veBal,
@@ -223,9 +223,8 @@ export class Data implements BalancerDataRepositories {
 
     if (networkConfig.addresses.contracts.protocolFeePercentagesProvider) {
       this.protocolFees = new ProtocolFeesProvider(
-        networkConfig.addresses.contracts.multicall,
-        networkConfig.addresses.contracts.protocolFeePercentagesProvider,
-        provider
+        contracts.contracts.multicall,
+        networkConfig.addresses.contracts.protocolFeePercentagesProvider
       );
     }
 

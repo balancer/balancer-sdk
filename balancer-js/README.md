@@ -6,9 +6,9 @@ A JavaScript SDK which provides commonly used utilties for interacting with Bala
 
 **In order to run the examples provided, you need to follow the next steps:**
 
-1. git clone https://github.com/balancer-labs/balancer-sdk.git
-2. cd balancer-sdk
-3. cd balancer-js
+1. ```git clone https://github.com/balancer-labs/balancer-sdk.git```
+2. ```cd balancer-sdk```
+3. ```cd balancer-js```
 4. Create a .env file in the balancer-js folder
 5. In the .env file you will need to define and initialize the following variables
 
@@ -24,9 +24,10 @@ A JavaScript SDK which provides commonly used utilties for interacting with Bala
 6. Run 'npm run node', this runs a local Hardhat Network
 7. Open a new terminal
 8. cd to balancer-js
-9. Install ts-node using: npm install ts-node
-10. Install tsconfig-paths using: npm install --save-dev tsconfig-paths
-11. Run one of the provided examples (eg: npm run examples:run -- examples/join.ts)
+9. Install ts-node using: ```npm install ts-node```
+10. Install tsconfig-paths using: ```npm install --save-dev tsconfig-paths```
+11. Generate contracts using: ```npm run typechain:generate```
+12. Run one of the provided examples (eg: npm run examples:run -- examples/join.ts)
 
 ## Installation
 

@@ -2,7 +2,6 @@ import { Contract } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/providers';
 import { Signer } from '@ethersproject/abstract-signer';
 
-import { Multicall } from './implementations/multicall';
 import { BasePool } from './implementations/base-pool';
 import { VeBal } from './implementations/veBAL';
 import { VeBalProxy } from './implementations/veBAL-proxy';
@@ -26,8 +25,9 @@ import {
   GearboxLinearPoolFactory__factory,
   LidoRelayer,
   LidoRelayer__factory,
-  LiquidityGaugeV5,
   LiquidityGaugeV5__factory,
+  Multicall,
+  Multicall__factory,
   Vault,
   Vault__factory,
   WeightedPoolFactory,
@@ -56,7 +56,7 @@ export interface ContractInstances {
   gearboxLinearPoolFactory?: GearboxLinearPoolFactory;
   lidoRelayer?: LidoRelayer;
   liquidityGauge: ContractFactory;
-  multicall: Contract;
+  multicall: Multicall;
   relayer: Contract;
   vault: Vault;
   veBal?: VeBal;
@@ -101,9 +101,7 @@ export class Contracts {
         provider
       );
 
-    // These contracts aren't included in Balancer Typechain but are still useful.
-    // TO DO - Possibly create via Typechain but seems unnecessary?
-    const multicall: Contract = Multicall(
+    const multicall: Multicall = Multicall__factory.connect(
       this.contractAddresses.multicall,
       provider
     );
@@ -113,7 +111,7 @@ export class Contracts {
     );
     let veBal: undefined | VeBal;
     if (this.contractAddresses.veBal) {
-      veBal = new VeBal(this.contractAddresses, provider);
+      veBal = new VeBal(this.contractAddresses.veBal, multicall);
     }
     let veBalProxy: undefined | VeBalProxy;
     if (this.contractAddresses.veBalProxy) {
@@ -230,10 +228,5 @@ export class Contracts {
    * @param { Signer | Provider} signerOrProvider Signer or Provider.
    * @returns Contract.
    */
-  getLiquidityGauge(
-    address: string,
-    signerOrProvider: Signer | Provider
-  ): LiquidityGaugeV5 {
-    return LiquidityGaugeV5__factory.connect(address, signerOrProvider);
-  }
+  getLiquidityGauge = LiquidityGaugeV5__factory.connect;
 }

@@ -11,7 +11,8 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@balancer-labs/sdk": ["src/index.ts"],
     }
   },
   "include": ["./src", "./examples", "src/abi/*.json"],

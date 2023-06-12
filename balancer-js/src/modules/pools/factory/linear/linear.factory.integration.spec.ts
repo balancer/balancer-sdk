@@ -40,7 +40,7 @@ describe('creating linear pool', async () => {
       [],
       [],
       `${process.env.ALCHEMY_URL}`,
-      16720000,
+      17060000,
       false
     );
     poolParams = {

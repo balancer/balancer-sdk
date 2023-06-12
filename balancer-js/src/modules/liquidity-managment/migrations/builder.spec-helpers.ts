@@ -51,7 +51,7 @@ const poolsMap = new Map([
   [vitaDao2.id, vitaDao2 as Pool],
 ]);
 
-export const poolRepository = factories.data.findable<Pool>(poolsMap);
+export const poolsRepository = factories.data.findable<Pool>(poolsMap);
 
 const metaStableGauge = '0xcd4722b7c24c29e0413bdcd9e51404b4539d14ae';
 const composableStableGauge = '0xa6325e799d266632d347e41265a69af111b05403';

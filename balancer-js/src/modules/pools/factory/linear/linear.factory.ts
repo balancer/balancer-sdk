@@ -17,36 +17,21 @@ import {
   YearnLinearPoolFactory__factory,
 } from '@/contracts';
 import { AaveLinearPoolInterface } from '@/contracts/AaveLinearPool';
-import { AaveLinearPoolFactoryInterface } from '@/contracts/AaveLinearPoolFactory';
 import { ERC4626LinearPoolInterface } from '@/contracts/ERC4626LinearPool';
-import { ERC4626LinearPoolFactoryInterface } from '@/contracts/ERC4626LinearPoolFactory';
 import { EulerLinearPoolInterface } from '@/contracts/EulerLinearPool';
 import { EulerLinearPoolFactoryInterface } from '@/contracts/EulerLinearPoolFactory';
 import { GearboxLinearPoolInterface } from '@/contracts/GearboxLinearPool';
-import { GearboxLinearPoolFactoryInterface } from '@/contracts/GearboxLinearPoolFactory';
 import { YearnLinearPoolInterface } from '@/contracts/YearnLinearPool';
-import { YearnLinearPoolFactoryInterface } from '@/contracts/YearnLinearPoolFactory';
 import { ContractInstances } from '@/modules/contracts/contracts.module';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import {
   InitJoinPoolAttributes,
   LinearCreatePoolParameters,
+  LinearPoolFactoryInterface,
   ProtocolId,
 } from '@/modules/pools/factory/types';
 import { PoolType } from '@/types';
-import { findEventInReceiptLogs } from '@/lib/utils';
-
-type LinearPoolFactoryInterface =
-  | AaveLinearPoolFactoryInterface
-  | ERC4626LinearPoolFactoryInterface
-  | EulerLinearPoolFactoryInterface
-  | GearboxLinearPoolFactoryInterface
-  | YearnLinearPoolFactoryInterface;
-
-type LinearPoolFactoryInterfaceWithoutYearn =
-  | AaveLinearPoolFactoryInterface
-  | ERC4626LinearPoolFactoryInterface
-  | EulerLinearPoolFactoryInterface;
+import { findEventInReceiptLogs, getRandomBytes32 } from '@/lib/utils';
 
 type LinearPoolParamsToEncode = [
   string,
@@ -56,10 +41,12 @@ type LinearPoolParamsToEncode = [
   string,
   string,
   string,
-  string
+  string,
+  BytesLike
 ];
 
-type YearnLinearPoolParamsToEncode = [
+type EulerLinearPoolParamsToEncode = [
+  string,
   string,
   string,
   string,
@@ -144,6 +131,7 @@ export class LinearFactory implements PoolFactory {
     swapFeeEvm,
     owner,
     protocolId,
+    salt,
   }: LinearCreatePoolParameters): {
     to?: string;
     data: BytesLike;
@@ -158,6 +146,7 @@ export class LinearFactory implements PoolFactory {
       swapFeeEvm,
       owner,
       protocolId,
+      salt,
     });
     const data = this.encodeCreateFunctionData(params);
     return {
@@ -191,12 +180,12 @@ export class LinearFactory implements PoolFactory {
     swapFeeEvm,
     owner,
     protocolId,
+    salt,
   }: Omit<LinearCreatePoolParameters, 'poolType'>):
     | LinearPoolParamsToEncode
-    | YearnLinearPoolParamsToEncode => {
-    let params: LinearPoolParamsToEncode | YearnLinearPoolParamsToEncode;
-    if (this.poolType !== PoolType.YearnLinear) {
-      params = [
+    | EulerLinearPoolParamsToEncode => {
+    if (this.poolType === PoolType.EulerLinear) {
+      return [
         name,
         symbol,
         mainToken,
@@ -206,9 +195,8 @@ export class LinearFactory implements PoolFactory {
         owner,
         protocolId.toString(),
       ] as [string, string, string, string, string, string, string, string];
-      return params;
     }
-    params = [
+    return [
       name,
       symbol,
       mainToken,
@@ -216,26 +204,40 @@ export class LinearFactory implements PoolFactory {
       upperTargetEvm,
       swapFeeEvm,
       owner,
-    ] as [string, string, string, string, string, string, string];
-    return params;
+      protocolId.toString(),
+      salt || getRandomBytes32(),
+    ] as [
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      string,
+      BytesLike
+    ];
   };
 
   encodeCreateFunctionData = (
-    params: LinearPoolParamsToEncode | YearnLinearPoolParamsToEncode
+    params: LinearPoolParamsToEncode | EulerLinearPoolParamsToEncode
   ): string => {
     const linearPoolInterface: LinearPoolFactoryInterface =
       this.getPoolFactoryInterface();
     const encodedData =
       // YearnLinearPools doesn't have protocolId, the encoding of the params is different
-      this.poolType === PoolType.YearnLinear
+      this.poolType === PoolType.EulerLinear
         ? (
-            linearPoolInterface as YearnLinearPoolFactoryInterface
+            linearPoolInterface as EulerLinearPoolFactoryInterface
           ).encodeFunctionData(
             'create',
-            params as YearnLinearPoolParamsToEncode
+            params as EulerLinearPoolParamsToEncode
           )
         : (
-            linearPoolInterface as LinearPoolFactoryInterfaceWithoutYearn
+            linearPoolInterface as Exclude<
+              LinearPoolFactoryInterface,
+              EulerLinearPoolFactoryInterface
+            >
           ).encodeFunctionData('create', params as LinearPoolParamsToEncode);
     return encodedData;
   };

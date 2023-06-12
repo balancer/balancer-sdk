@@ -10,7 +10,7 @@ class SingleSwapBuilder {
   private swapInfo: SDKSwapInfo;
   funds?: FundManagement;
   limit?: BigNumberish;
-  deadline?: BigNumberish;
+  deadline?: string;
   relayer: SwapRelayer;
   readonly functionName = 'swap';
 
@@ -46,8 +46,8 @@ class SingleSwapBuilder {
   /**
    * @param deadline block timestamp
    */
-  setDeadline(deadline: BigNumber): void {
-    this.deadline = deadline.toString();
+  setDeadline(deadline: string): void {
+    this.deadline = deadline;
   }
 
   get amount(): BigNumber {

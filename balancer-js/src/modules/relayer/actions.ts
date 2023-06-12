@@ -30,6 +30,7 @@ const poolType2PoolKind = (
   }
 };
 
+export const setRelayerApproval = Relayer.encodeSetRelayerApproval;
 export const gaugeWithdrawal = Relayer.encodeGaugeWithdraw;
 export const gaugeDeposit = Relayer.encodeGaugeDeposit;
 export const peekChainedReferenceValue =
