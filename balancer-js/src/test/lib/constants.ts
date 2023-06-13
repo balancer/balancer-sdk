@@ -12,6 +12,7 @@ export const PROVIDER_URLS = {
   [Network.ARBITRUM]: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA}`,
   [Network.SEPOLIA]: `https://sepolia.infura.io/v3/${process.env.INFURA}`,
   [Network.GNOSIS]: `https://rpc.gnosis.gateway.fm`,
+  [Network.ZKEVM]: `https://zkevm-rpc.com`,
 };
 
 export type TestAddress = {
@@ -973,6 +974,23 @@ export const ADDRESSES = {
       address: '0xb19382073c7a0addbb56ac6af1808fa49e377b75',
       decimals: 18,
       symbol: 'BAL',
+    },
+  },
+  [Network.ZKEVM]: {
+    WETH: {
+      address: '0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9',
+      decimals: 18,
+      symbol: 'WETH',
+    },
+    wstETH: {
+      address: '0x5D8cfF95D7A57c0BF50B30b43c7CC0D52825D4a9',
+      decimals: 18,
+      symbol: 'wstETH',
+    },
+    USDC: {
+      address: '0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035',
+      decimals: 6,
+      symbol: 'USDC',
     },
   },
 };
