@@ -541,7 +541,16 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     pools: {},
     poolsToIgnore: [],
-    sorConnectingTokens: [],
+    sorConnectingTokens: [
+      {
+        symbol: 'weth',
+        address: '0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9',
+      },
+      {
+        symbol: 'wsEth',
+        address: '0x5D8cfF95D7A57c0BF50B30b43c7CC0D52825D4a9',
+      },
+    ],
   },
   [Network.AVALANCHE]: {
     chainId: Network.AVALANCHE, //43114
