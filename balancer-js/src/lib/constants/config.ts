@@ -181,6 +181,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+        bal: '',
         ...addressesByNetwork[Network.KOVAN].tokens,
       },
     },
@@ -209,6 +210,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+        bal: '',
       },
     },
     urls: {
@@ -235,6 +237,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
       tokens: {
         wrappedNativeAsset: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+        bal: '',
         ...addressesByNetwork[Network.RINKEBY].tokens,
       },
     },
@@ -300,6 +303,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         ...addressesByNetwork[Network.OPTIMISM].contracts,
       },
       tokens: {
+        bal: '0xfe8b128ba8c78aabc59d4c64cee7ff28e9379921',
         wrappedNativeAsset: addressesByNetwork[Network.OPTIMISM].contracts.weth,
         lbpRaisingTokens: [
           '0xda10009cbd5d07dd0cecc66161fc93d7c9000da1', // DAI
@@ -359,6 +363,10 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       {
         symbol: 'weth',
         address: '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d',
+      },
+      {
+        symbol: 'wsEth',
+        address: '0x6C76971f98945AE98dD7d4DFcA8711ebea946eA6',
       },
     ],
   },
@@ -427,10 +435,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.studio.thegraph.com/proxy/24660/balancer-sepolia-v2/v0.0.1',
     },
     thirdParty: {
-      // There is no support for Sepolia Network in coingecko
       coingecko: {
-        platformId: '',
-        nativeAssetId: '',
+        nativeAssetId: 'eth',
+        platformId: 'ethereum',
       },
     },
     pools: {},
@@ -453,7 +460,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.studio.thegraph.com/query/24660/balancer-polygon-zkevm-v2/v0.0.2',
+        'https://api.studio.thegraph.com/query/24660/balancer-polygon-zk-v2/version/latest',
+      gaugesSubgraph:
+        'https://api.studio.thegraph.com/query/24660/balancer-gauges-polygon-zk/version/latest',
     },
     thirdParty: {
       coingecko: {
@@ -463,7 +472,16 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     pools: {},
     poolsToIgnore: [],
-    sorConnectingTokens: [],
+    sorConnectingTokens: [
+      {
+        symbol: 'weth',
+        address: '0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9',
+      },
+      {
+        symbol: 'wsEth',
+        address: '0x5D8cfF95D7A57c0BF50B30b43c7CC0D52825D4a9',
+      },
+    ],
   },
   [Network.AVALANCHE]: {
     chainId: Network.AVALANCHE, //43114

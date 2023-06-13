@@ -43,7 +43,7 @@ const TEST_BBRFUSD = true;
 
 describe('generalised join execution', async function () {
   this.timeout(30000);
-  const simulationType = SimulationType.Tenderly;
+  const simulationType = SimulationType.VaultModel;
   let network: Network;
   let blockNumber: number;
   let jsonRpcUrl: string;
