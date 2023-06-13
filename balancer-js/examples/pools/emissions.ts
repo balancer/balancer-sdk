@@ -1,8 +1,10 @@
 /**
- * Display weekly BAL emissiosn for a pool
- * Run command: yarn examples:run ./examples/pools/emissions.ts
+ * Display weekly BAL emissions for a pool
+ * 
+ * How to run:
+ * yarn example examples/pools/emissions.ts
  */
-import { BalancerSDK } from '@/.'
+import { BalancerSDK } from '@balancer-labs/sdk'
 
 const sdk = new BalancerSDK({
   network: 1,
@@ -13,7 +15,7 @@ const { pools } = sdk
 
 const main = async () => {
   if (pools.emissionsService) {
-    const emissions = await pools.emissionsService.weekly('0x334c96d792e4b26b841d28f53235281cec1be1f200020000000000000000038a')
+    const emissions = await pools.emissionsService.weekly('0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080')
     console.log(emissions)
   }
 }

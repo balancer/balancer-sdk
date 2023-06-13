@@ -1,13 +1,13 @@
-import { BalancerSDK } from '@/.';
+import { BalancerSDK } from '@balancer-labs/sdk'
 
 const sdk = new BalancerSDK({
   network: 1,
-  rpcUrl: 'https://eth-rpc.gateway.pokt.network',
+  rpcUrl: 'https://rpc.ankr.com/eth',
 });
 
 (() => {
   [
-    '0xa5533a44d06800eaf2daad5aad3f9aa9e1dc36140002000000000000000001b8',
+    '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080',
   ].forEach(async (poolId) => {
     const pool = await sdk.pools.find(poolId);
     if (pool) {
@@ -17,4 +17,4 @@ const sdk = new BalancerSDK({
   })
 })();
 
-// yarn examples:run ./examples/pools/fees.ts
+// yarn example ./examples/pools/fees.ts
