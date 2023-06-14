@@ -46,6 +46,7 @@ export interface JoinExactInParams {
   sender?: string;
   recipient?: string;
   maxAmountsIn: BigNumber[];
+  tokensIn: string[];
   minimumBPT?: BigNumber;
   fromInternalBalance?: boolean;
 }
@@ -53,7 +54,7 @@ export interface JoinExactInParams {
 export interface JoinExactOutParams {
   sender?: string;
   recipient?: string;
-  maxAmountsIn?: BigNumber[];
+  maxAmountIn?: BigNumber;
   bptOut: BigNumber;
   tokenIn: string;
   fromInternalBalance?: boolean;
@@ -62,7 +63,7 @@ export interface JoinExactOutParams {
 export interface ExitToSingleTokenParams {
   sender?: string;
   recipient?: string;
-  minAmountsOut?: BigNumber[];
+  minAmountOut?: BigNumber;
   bptIn: BigNumber;
   tokenOut: string;
   toInternalBalance?: boolean;
@@ -80,6 +81,7 @@ export interface ExitExactOutParams {
   sender?: string;
   recipient?: string;
   minAmountsOut: BigNumber[];
+  tokensOut: string[];
   maxBptIn?: BigNumber;
   toInternalBalance?: boolean;
 }

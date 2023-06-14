@@ -69,11 +69,12 @@ describe('join and exit queries', () => {
       });
 
       it('should joinExactIn', async () => {
-        const maxAmountsIn = Array(pool.tokensList.length).fill(bn(0));
-        maxAmountsIn[1] = bn(1);
+        const maxAmountsIn = [bn(1)];
+        const tokensIn = [pool.tokensList[1]];
 
         const params = queryParams.buildQueryJoinExactIn({
           maxAmountsIn,
+          tokensIn,
         });
         const join = await balancerHelpers.callStatic.queryJoin(...params);
         expect(Number(join.bptOut)).to.be.gt(0);
@@ -116,10 +117,12 @@ describe('join and exit queries', () => {
           pool.id.includes(token)
         );
         const minAmountsOut = Array(pool.tokensList.length).fill(bn(1));
+        const tokensOut = pool.tokensList;
         if (bptIndex > -1) minAmountsOut[bptIndex] = bn(0);
 
         const params = queryParams.buildQueryExitExactOut({
           minAmountsOut,
+          tokensOut,
         });
         const exit = await balancerHelpers.callStatic.queryExit(...params);
         expect(Number(exit.bptIn)).to.be.gt(0);

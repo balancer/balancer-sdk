@@ -2,6 +2,7 @@ import * as PoolQueries from './types';
 import { AddressZero, Zero, MaxUint256 } from '@ethersproject/constants';
 import { getEncoder } from './get_encoder';
 import { removeItem } from '@/lib/utils';
+import { BigNumber } from 'ethers';
 
 /**
  * Builds parameters quering join / exit liquidity functions in the Balancer Helpers contract.
@@ -21,25 +22,42 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
   /**
    * Encodes the query to get expected amount of BPT when joining a Pool with exact token inputs
    *
+   * @param sender
+   * @param recipient
    * @param maxAmountsIn - the amounts each of token to deposit in the pool as liquidity, order needs to match pool.tokensList
+   * @param tokensIn
    * @param minimumBPT - the minimum acceptable BPT to receive in return for deposited tokens
+   * @param fromInternalBalance
    */
   buildQueryJoinExactIn({
     sender = AddressZero,
     recipient = sender,
     maxAmountsIn,
+    tokensIn,
     minimumBPT = Zero,
     fromInternalBalance = false,
   }: PoolQueries.JoinExactInParams): PoolQueries.queryJoinParams {
     const bptIndex = this.pool.tokensList.findIndex((token) =>
       this.pool.id.includes(token)
     );
+    // Sort amounts in by token address
+    const tokenMaxAmountsInByAddress: { [key: string]: BigNumber } =
+      tokensIn.reduce((acc, tokenAddress, index) => {
+        return {
+          ...acc,
+          [tokenAddress]: maxAmountsIn[index],
+        };
+      }, {});
+
     const assets = [...this.pool.tokensList];
 
-    let maxInWithoutBpt = [...maxAmountsIn];
+    let maxInWithoutBpt = this.pool.tokensList.map(
+      (tokenAddress) =>
+        tokenMaxAmountsInByAddress[tokenAddress] ?? BigNumber.from('0')
+    );
     // Remove BPT token from amounts for user data
     if (bptIndex > -1) {
-      maxInWithoutBpt = removeItem(maxAmountsIn, bptIndex);
+      maxInWithoutBpt = removeItem(maxInWithoutBpt, bptIndex);
     }
 
     const userData = this.encoder.joinExactTokensInForBPTOut(
@@ -72,7 +90,7 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
   buildQueryJoinExactOut({
     sender = AddressZero,
     recipient = sender,
-    maxAmountsIn = [],
+    maxAmountIn,
     bptOut,
     tokenIn,
     fromInternalBalance = false,
@@ -87,7 +105,11 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
     const tokenIndex = tokensWithoutBpt.indexOf(tokenIn);
 
     const userData = this.encoder.joinTokenInForExactBPTOut(bptOut, tokenIndex);
-
+    const maxAmountsIn = maxAmountIn
+      ? this.pool.tokensList.map((tokenAddress) =>
+          tokenAddress === tokenIn ? maxAmountIn : '0'
+        )
+      : [];
     const params = [
       this.pool.id,
       sender,
@@ -113,7 +135,7 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
   buildQueryExitToSingleToken({
     sender = AddressZero,
     recipient = sender,
-    minAmountsOut = [],
+    minAmountOut,
     bptIn,
     tokenOut,
     toInternalBalance = false,
@@ -131,7 +153,11 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
       bptIn,
       tokenIndex
     );
-
+    const minAmountsOut = minAmountOut
+      ? this.pool.tokensList.map((tokenAddress) =>
+          tokenAddress === tokenOut ? minAmountOut : '0'
+        )
+      : [];
     const params = [
       this.pool.id,
       sender,
