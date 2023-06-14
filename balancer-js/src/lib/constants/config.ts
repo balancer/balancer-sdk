@@ -540,7 +540,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         platformId: 'polygon-zkevm',
       },
     },
-    averageBlockTime: 5,
+    averageBlockTime: 4,
     pools: {},
     poolsToIgnore: [],
     sorConnectingTokens: [
