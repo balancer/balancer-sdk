@@ -22,7 +22,7 @@ describe('contracts module Mainnet', () => {
       const contracts = new Contracts(sdkConfig.network, provider);
       const vaultContract = contracts.contracts['vault'];
       expect(vaultContract.address).to.eq(
-        '0xBA12222222228d8Ba445958a75a0704d566BF2C8'
+        '0xba12222222228d8ba445958a75a0704d566bf2c8'
       );
       const gaugeClaimHelperContract = contracts.contracts['gaugeClaimHelper'];
       expect(gaugeClaimHelperContract).to.be.undefined;
@@ -32,7 +32,7 @@ describe('contracts module Mainnet', () => {
       const balancer = new BalancerSDK(sdkConfig);
       const vaultContract = balancer.contracts['vault'];
       expect(vaultContract.address).to.eq(
-        '0xBA12222222228d8Ba445958a75a0704d566BF2C8'
+        '0xba12222222228d8ba445958a75a0704d566bf2c8'
       );
       const gaugeClaimHelperContract = balancer.contracts['gaugeClaimHelper'];
       expect(gaugeClaimHelperContract).to.be.undefined;
@@ -54,7 +54,7 @@ describe('contracts module Polygon', () => {
       const contracts = new Contracts(sdkConfig.network as Network, provider);
       const vaultContract = contracts.contracts['vault'];
       expect(vaultContract.address).to.eq(
-        '0xBA12222222228d8Ba445958a75a0704d566BF2C8'
+        '0xba12222222228d8ba445958a75a0704d566bf2c8'
       );
       const gaugeClaimHelperContract = contracts.contracts['gaugeClaimHelper'];
       expect(gaugeClaimHelperContract?.address).to.eq(
@@ -66,7 +66,7 @@ describe('contracts module Polygon', () => {
       const balancer = new BalancerSDK(sdkConfig);
       const vaultContract = balancer.contracts['vault'];
       expect(vaultContract.address).to.eq(
-        '0xBA12222222228d8Ba445958a75a0704d566BF2C8'
+        '0xba12222222228d8ba445958a75a0704d566bf2c8'
       );
 
       const gaugeClaimHelperContract = balancer.contracts['gaugeClaimHelper'];
@@ -91,7 +91,7 @@ describe('contracts module Arbitrum', () => {
       const contracts = new Contracts(sdkConfig.network as Network, provider);
       const vaultContract = contracts.contracts['vault'];
       expect(vaultContract.address).to.eq(
-        '0xBA12222222228d8Ba445958a75a0704d566BF2C8'
+        '0xba12222222228d8ba445958a75a0704d566bf2c8'
       );
 
       const gaugeClaimHelperContract = contracts.contracts['gaugeClaimHelper'];
@@ -104,7 +104,7 @@ describe('contracts module Arbitrum', () => {
       const balancer = new BalancerSDK(sdkConfig);
       const vaultContract = balancer.contracts['vault'];
       expect(vaultContract.address).to.eq(
-        '0xBA12222222228d8Ba445958a75a0704d566BF2C8'
+        '0xba12222222228d8ba445958a75a0704d566bf2c8'
       );
 
       const gaugeClaimHelperContract = balancer.contracts['gaugeClaimHelper'];

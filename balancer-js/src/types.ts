@@ -68,9 +68,9 @@ export interface ContractAddresses {
   multicall: string;
   gaugeClaimHelper?: string;
   balancerHelpers: string;
-  balancerMinterAddress?: string;
+  balancerMinter?: string;
   lidoRelayer?: string;
-  relayer: string;
+  balancerRelayer: string;
   gaugeController?: string;
   feeDistributor?: string;
   veBal?: string;
@@ -84,6 +84,8 @@ export interface ContractAddresses {
   eulerLinearPoolFactory?: string;
   gearboxLinearPoolFactory?: string;
   yearnLinearPoolFactory?: string;
+
+  [key: string]: string | undefined;
 }
 
 export interface BalancerNetworkConfig {
@@ -112,6 +114,7 @@ export interface BalancerNetworkConfig {
       platformId: string;
     };
   };
+  averageBlockTime?: number; // In seconds, used if blockNumberSubgraph not set
   pools: {
     wETHwstETH?: PoolReference;
   };
