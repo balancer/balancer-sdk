@@ -20,6 +20,7 @@
     "dist/"
   ],
   "scripts": {
+    "address-book:generate": "npx ts-node -P tsconfig.testing.json -r tsconfig-paths/register ./src/lib/utils/generate-address-books.ts",
     "build": "rimraf dist && rollup -c",
     "dev": "rollup -c -w",
     "test": "ts-mocha --paths --recursive -p tsconfig.testing.json 'src/**/*.spec.ts' --timeout 20000",
