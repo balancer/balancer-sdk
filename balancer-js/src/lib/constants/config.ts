@@ -405,6 +405,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         platformId: 'xdai',
       },
     },
+    averageBlockTime: 5,
     pools: {},
     sorConnectingTokens: [
       {
@@ -539,6 +540,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         platformId: 'polygon-zkevm',
       },
     },
+    averageBlockTime: 5,
     pools: {},
     poolsToIgnore: [],
     sorConnectingTokens: [

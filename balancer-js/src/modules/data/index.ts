@@ -139,13 +139,11 @@ export class Data implements BalancerDataRepositories {
         blockHeight: blockDayAgo,
         query: subgraphQuery,
       });
-    }
-
-    // Hardcoding gnosis chain block time to 5 sec.
-    if (networkConfig.chainId === 100) {
+    } else if (networkConfig.averageBlockTime) {
       const blockDayAgo = async () => {
         const blockNumber = await provider.getBlockNumber();
-        return blockNumber - 17280;
+        const blocksPerDay = Math.round(86400 / networkConfig.averageBlockTime!);
+        return blockNumber - blocksPerDay;
       };
 
       this.yesterdaysPools = new PoolsSubgraphRepository({
