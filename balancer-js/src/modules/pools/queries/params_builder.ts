@@ -1,8 +1,8 @@
 import * as PoolQueries from './types';
+import { BigNumber } from '@ethersproject/bignumber';
 import { AddressZero, Zero, MaxUint256 } from '@ethersproject/constants';
 import { getEncoder } from './get_encoder';
 import { removeItem } from '@/lib/utils';
-import { BigNumber } from 'ethers';
 
 /**
  * Builds parameters quering join / exit liquidity functions in the Balancer Helpers contract.
