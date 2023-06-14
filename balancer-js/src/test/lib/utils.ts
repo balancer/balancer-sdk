@@ -424,7 +424,6 @@ export async function sendTransactionGetBalances(
     to,
     data,
     value,
-    gasLimit: 30000000,
   });
   const transactionReceipt = await transactionResponse.wait();
   const { gasUsed, effectiveGasPrice } = transactionReceipt;
