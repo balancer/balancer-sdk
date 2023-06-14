@@ -75,86 +75,6 @@ type Pools = {
   Metadata: Record<string, PoolMetadata>;
 };
 
-const POOLS_KOVAN: Pools = {
-  IdsMap: {
-    staBAL:
-      '0xd387dfd3a786e7caa06e6cf0c675352c7ffff30400000000000000000000063e',
-    bbAaveUSD: {
-      v1: '0x8fd162f338b770f7e879030830cde9173367f3010000000000000000000004d8',
-      v2: '',
-    },
-    veBAL: '0xdc2ecfdf2688f92c85064be0b929693acc6dbca6000200000000000000000701',
-  },
-  Pagination: {
-    PerPage: 10,
-    PerPool: 10,
-    PerPoolInitial: 5,
-  },
-  DelegateOwner: '0xba1ba1ba1ba1ba1ba1ba1ba1ba1ba1ba1ba1ba1b',
-  ZeroAddress: '0x0000000000000000000000000000000000000000',
-  DynamicFees: {
-    Gauntlet: [],
-  },
-  BlockList: [
-    '0x22d398c68030ef6b1c55321cca6e0cecc5c93b2f000200000000000000000678',
-    '0xca1eb8624be8e11418f629559321587197557e0c000200000000000000000682',
-    '0xa21da5768186c1bc0f56dd72aa94672d77bdf23e00020000000000000000067a',
-    '0x7f9db0d15eea32e205b7df0fa5184f4a8a905abb000200000000000000000683',
-    '0x72c5a86831f019df6fac146fc14ef60ebe0d5f2600020000000000000000067f',
-    '0x542b9f6fd4500b94d453974d8c70783ef794ff6a00020000000000000000067c',
-    '0x47f9309a8c5a68a93ac27a4cccc0e222cd3adfa2000200000000000000000684',
-    '0x3f3050a0fe84778aeff96906c9218b318f924d22000200000000000000000680',
-    '0x31e61587b5dc148ae42ae323655fb8d7af7bb86600020000000000000000067d',
-    '0x28efa7f86341aa0ad534bdfb033edb4f4ac6adf700020000000000000000067e',
-    '0x10ee90b9ff4b9a44a773107280c0ce083619286800020000000000000000067b',
-  ],
-  ExcludedPoolTypes: ['Element', 'AaveLinear', 'Linear', 'ERC4626Linear', 'FX'],
-  Stable: {
-    AllowList: [
-      '0x6b15a01b5d46a5321b627bd7deef1af57bc629070000000000000000000000d4', // kovan
-      '0xe08590bde837eb9b2d42aa1196469d6e08fe96ec000200000000000000000101', // kovan
-      '0xb4c23af48e79f73e3a7e36c0e54eb38e1ce1755e0002000000000000000000d3', // kovan
-      '0x8fd162f338b770f7e879030830cde9173367f3010000000000000000000004d8', // kovan bb-a-USD,
-      '0xd387dfd3a786e7caa06e6cf0c675352c7ffff30400000000000000000000063e', // kovan staBAL3,
-    ],
-  },
-  Investment: {
-    AllowList: [
-      '0x4fd63966879300cafafbb35d157dc5229278ed23000100000000000000000169', // kovan
-      '0x37a6fc079cad790e556baedda879358e076ef1b3000100000000000000000348', // WSB Kovan
-    ],
-  },
-  Factories: {
-    '0xa5bf2ddf098bb0ef6d120c98217dd6b141c74ee0': 'oracleWeightedPool',
-    '0x8e9aa87e45e92bad84d5f8dd1bff34fb92637de9': 'weightedPool',
-    '0xc66ba2b6595d3613ccab350c886ace23866ede24': 'stablePool',
-    '0x1b57f637ce3408f1f834b0b70f9a595b062daea7': 'liquidityBootstrappingPool',
-    '0x751dfdace1ad995ff13c927f6f761c6604532c79': 'stablePool', // Kovan
-    '0x590e544e7ca956bb878f8c873e82e65550d67d2f': 'stablePool', // Kovan Metastable
-    '0xb08e16cfc07c684daa2f93c70323badb2a6cbfd2': 'managedPool', // Kovan Managed
-    '0x6c7f4d97269ece163fd08d5c2584a21e4a33934c': 'boostedPool', // kovan stablephantom
-    '0x1f47ab83420cd1f818df9acbd6ee68341bb91592': 'stablePool', // stable pool v2
-  },
-  Stakable: {
-    AllowList: [
-      '0xf767f0a3fcf1eafec2180b7de79d0c559d7e7e370001000000000000000003e3',
-      '0xdc2ecfdf2688f92c85064be0b929693acc6dbca6000200000000000000000701',
-      '0x647c1fd457b95b75d0972ff08fe01d7d7bda05df000200000000000000000001',
-      '0x8fd162f338b770f7e879030830cde9173367f3010000000000000000000004d8',
-    ],
-  },
-  Metadata: {
-    '0x8fd162f338b770f7e879030830cde9173367f3010000000000000000000004d8': {
-      name: 'Balancer Boosted Aave USD',
-      hasIcon: false,
-    },
-    '0xd387dfd3a786e7caa06e6cf0c675352c7ffff30400000000000000000000063e': {
-      name: 'Balancer Stable USD',
-      hasIcon: false,
-    },
-  },
-};
-
 const POOLS_GOERLI: Pools = {
   IdsMap: {
     staBAL:
@@ -682,7 +602,6 @@ const POOLS_GENERIC: Pools = {
 };
 
 const POOLS_MAP = {
-  [Network.KOVAN]: POOLS_KOVAN,
   [Network.GOERLI]: POOLS_GOERLI,
   [Network.MAINNET]: POOLS_MAINNET,
   [Network.POLYGON]: POOLS_POLYGON,
