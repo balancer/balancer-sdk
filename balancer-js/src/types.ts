@@ -112,7 +112,7 @@ export interface BalancerNetworkConfig {
       platformId: string;
     };
   };
-  averageBlockTime?: number;  // In seconds, used if blockNumberSubgraph not set
+  averageBlockTime?: number; // In seconds, used if blockNumberSubgraph not set
   pools: {
     wETHwstETH?: PoolReference;
   };

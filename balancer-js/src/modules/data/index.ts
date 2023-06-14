@@ -142,7 +142,9 @@ export class Data implements BalancerDataRepositories {
     } else if (networkConfig.averageBlockTime) {
       const blockDayAgo = async () => {
         const blockNumber = await provider.getBlockNumber();
-        const blocksPerDay = Math.round(86400 / networkConfig.averageBlockTime!);
+        const blocksPerDay = Math.round(
+          86400 / (networkConfig.averageBlockTime || 2)
+        );
         return blockNumber - blocksPerDay;
       };
 
