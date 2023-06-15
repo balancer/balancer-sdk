@@ -42,48 +42,35 @@ export interface Pool {
   tokensList: string[];
 }
 
-export interface JoinExactInParams {
-  sender?: string;
-  recipient?: string;
+export interface JoinExactInParams 
   maxAmountsIn: BigNumber[];
   tokensIn: string[];
   minimumBPT?: BigNumber;
-  fromInternalBalance?: boolean;
 }
 
 export interface JoinExactOutParams {
-  sender?: string;
-  recipient?: string;
   maxAmountIn?: BigNumber;
   bptOut: BigNumber;
   tokenIn: string;
-  fromInternalBalance?: boolean;
 }
 
 export interface ExitToSingleTokenParams {
-  sender?: string;
-  recipient?: string;
   minAmountOut?: BigNumber;
   bptIn: BigNumber;
   tokenOut: string;
-  toInternalBalance?: boolean;
 }
 
 export interface ExitProportionallyParams {
-  sender?: string;
-  recipient?: string;
   minAmountsOut?: BigNumber[];
   bptIn: BigNumber;
-  toInternalBalance?: boolean;
+
 }
 
 export interface ExitExactOutParams {
-  sender?: string;
-  recipient?: string;
   minAmountsOut: BigNumber[];
   tokensOut: string[];
   maxBptIn?: BigNumber;
-  toInternalBalance?: boolean;
+
 }
 
 export type queryJoinParams = [

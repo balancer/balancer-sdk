@@ -21,21 +21,15 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
 
   /**
    * Encodes the query to get expected amount of BPT when joining a Pool with exact token inputs
-   *
-   * @param sender
-   * @param recipient
-   * @param maxAmountsIn - the amounts each of token to deposit in the pool as liquidity, order needs to match pool.tokensList
-   * @param tokensIn
-   * @param minimumBPT - the minimum acceptable BPT to receive in return for deposited tokens
+   * @param maxAmountsIn - the amounts each of token to deposit in the pool as liquidity, doesn't need to be for all tokens, order needs to match tokensIn
+   * @param tokensIn - The token address for each token that will be deposited in the pool, order needs to match maxAmountsIn
+   * @param minimumBPT - the minimum acceptable BPT to receive in return for deposited tokens (optional)
    * @param fromInternalBalance
    */
   buildQueryJoinExactIn({
-    sender = AddressZero,
-    recipient = sender,
     maxAmountsIn,
     tokensIn,
     minimumBPT = Zero,
-    fromInternalBalance = false,
   }: PoolQueries.JoinExactInParams): PoolQueries.queryJoinParams {
     const bptIndex = this.pool.tokensList.findIndex((token) =>
       this.pool.id.includes(token)
@@ -67,13 +61,13 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
 
     const params = [
       this.pool.id,
-      sender,
-      recipient,
+      AddressZero, // sender is ignored on query join, so it can be just address zero
+      AddressZero, // same as sender
       {
         assets,
         maxAmountsIn,
         userData,
-        fromInternalBalance,
+        fromInternalBalance: false, // from internal balance is ignored on query join, can be just false
       },
     ] as PoolQueries.queryJoinParams;
 
@@ -83,17 +77,14 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
   /**
    * Encodes the query to get expected token amount when joining a Pool specifying fixed BPT out.
    *
-   * @param maxAmountsIn - max limits of amounts provided as liquidity, can be set to zero, ordered same as pool.tokensList
+   * @param maxAmountIn - The max expected amount for tokenIn (optional)
    * @param bptOut - the expected BPT for providing liquidity
    * @param tokenIn - address of a token joining the pool
    */
   buildQueryJoinExactOut({
-    sender = AddressZero,
-    recipient = sender,
     maxAmountIn,
     bptOut,
     tokenIn,
-    fromInternalBalance = false,
   }: PoolQueries.JoinExactOutParams): PoolQueries.queryJoinParams {
     const bptIndex = this.pool.tokensList.findIndex((token) =>
       this.pool.id.includes(token)
@@ -112,13 +103,13 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
       : [];
     const params = [
       this.pool.id,
-      sender,
-      recipient,
+      AddressZero, // sender is ignored on query join, so it can be just address zero
+      AddressZero, // same as sender
       {
         assets: this.pool.tokensList,
         maxAmountsIn,
         userData,
-        fromInternalBalance,
+        fromInternalBalance: false, // from internal balance is ignored on query join, can be just false
       },
     ] as PoolQueries.queryJoinParams;
 
@@ -128,17 +119,14 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
   /**
    * Encodes the query for exiting the pool to a single token
    *
-   * @param minAmountsOut - minimum expected amounts, can be set to zero for a query, ordered same as pool.tokensList
+   * @param minAmountOut - minimum expected amount for token out
    * @param bptIn - BPT, shares of the pool liquidity
    * @param tokenOut - address of an exit liquidity token
    */
   buildQueryExitToSingleToken({
-    sender = AddressZero,
-    recipient = sender,
     minAmountOut,
     bptIn,
     tokenOut,
-    toInternalBalance = false,
   }: PoolQueries.ExitToSingleTokenParams): PoolQueries.queryExitParams {
     const bptIndex = this.pool.tokensList.findIndex((token) =>
       this.pool.id.includes(token)
@@ -160,13 +148,13 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
       : [];
     const params = [
       this.pool.id,
-      sender,
-      recipient,
+      AddressZero, // sender is ignored on query join, so it can be just address zero
+      AddressZero, // same as sender
       {
         assets: this.pool.tokensList,
         minAmountsOut,
         userData,
-        toInternalBalance,
+        toInternalBalance: false, // to internal balance is ignored on query join, can be just false
       },
     ] as PoolQueries.queryExitParams;
 
@@ -181,11 +169,8 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
    * @param bptIn - BPT, shares of the pool liquidity
    */
   buildQueryExitProportionally({
-    sender = AddressZero,
-    recipient = sender,
     minAmountsOut = [],
     bptIn,
-    toInternalBalance = false,
   }: PoolQueries.ExitProportionallyParams): PoolQueries.queryExitParams {
     if (!this.encoder.exitExactBPTInForTokensOut) {
       throw 'Proportional exit not implemented';
@@ -195,13 +180,13 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
 
     const params = [
       this.pool.id,
-      sender,
-      recipient,
+      AddressZero, // sender is ignored on query join, so it can be just address zero
+      AddressZero, // same as sender
       {
         assets: this.pool.tokensList,
         minAmountsOut,
         userData,
-        toInternalBalance,
+        toInternalBalance: false,
       },
     ] as PoolQueries.queryExitParams;
 
@@ -215,11 +200,8 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
    * @param maxBptIn - BPT, shares of the pool liquidity, can be set to zero for a query
    */
   buildQueryExitExactOut({
-    sender = AddressZero,
-    recipient = sender,
     minAmountsOut,
     maxBptIn = MaxUint256,
-    toInternalBalance = false,
   }: PoolQueries.ExitExactOutParams): PoolQueries.queryExitParams {
     const bptIndex = this.pool.tokensList.findIndex((token) =>
       this.pool.id.includes(token)
@@ -238,13 +220,13 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
 
     const params = [
       this.pool.id,
-      sender,
-      recipient,
+      AddressZero, // sender is ignored on query join, so it can be just address zero
+      AddressZero, // same as sender
       {
         assets: this.pool.tokensList,
         minAmountsOut,
         userData,
-        toInternalBalance,
+        toInternalBalance: false, // to internal balance is ignored on query join, can be just false
       },
     ] as PoolQueries.queryExitParams;
 
