@@ -1,9 +1,6 @@
 /**
  * Example showing how to query a flash swap to test if it will be profitable.
  *
- * To find pool ids and token adddresses on Kovan:
- * https://thegraph.com/hosted-service/subgraph/balancer-labs/balancer-kovan-v2
- *
  * Gotchas:
 -   Both pools must have both assets (tokens) for swaps to work
 -   No pool token balances can be zero
