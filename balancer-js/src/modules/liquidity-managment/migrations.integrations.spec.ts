@@ -20,7 +20,7 @@ import { Migrations } from './migrations';
 const migrations = (network: 1 | 137) => {
   const {
     addresses: {
-      contracts: { relayer: relayerAddress, vault: vaultAddress },
+      contracts: { balancerRelayer: relayerAddress, vault: vaultAddress },
     },
   } = BALANCER_NETWORK_CONFIG[network];
 

@@ -67,7 +67,7 @@ export class Exit {
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
-    this.relayer = contracts.relayer;
+    this.relayer = contracts.balancerRelayer;
   }
 
   async getExitInfo(

@@ -1,6 +1,6 @@
 {
   "name": "@balancer-labs/sdk",
-  "version": "1.1.1-beta.22",
+  "version": "1.1.2-beta.5",
   "description": "JavaScript SDK for interacting with the Balancer Protocol V2",
   "license": "GPL-3.0-only",
   "homepage": "https://github.com/balancer-labs/balancer-sdk#readme",
@@ -20,6 +20,7 @@
     "dist/"
   ],
   "scripts": {
+    "address-book:generate": "npx ts-node -P tsconfig.testing.json -r tsconfig-paths/register ./src/lib/utils/generate-address-books.ts",
     "build": "rimraf dist && rollup -c",
     "dev": "rollup -c -w",
     "test": "ts-mocha --paths --recursive -p tsconfig.testing.json 'src/**/*.spec.ts' --timeout 20000",

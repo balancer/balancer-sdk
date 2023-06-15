@@ -26,7 +26,7 @@ const main = async () => {
   const gauges = balanceGauges.map((it) => it.address);
   let data = await claimService.buildClaimRewardTokensRequest(gauges.slice(0,1), userAddress);
   console.log(`\nSingle Gauge Claim ( gauge: ${gauges.slice(0,1)})
-    to:                  ${data.to} - BalancerMinter Address ${sdk.networkConfig.addresses.contracts.balancerMinterAddress}
+    to:                  ${data.to} - BalancerMinter Address ${sdk.networkConfig.addresses.contracts.balancerMinter}
     from:                ${data.from} - User Address ${userAddress}
     tokensOut:           ${data.tokensOut}
     expectedTokensValue: ${data.expectedTokensValue}
@@ -35,7 +35,7 @@ const main = async () => {
   `)
   data = await claimService.buildClaimRewardTokensRequest(gauges, userAddress);
   console.log(`\nMultiple Gauges Claim
-    to:                  ${data.to} - BalancerMinter Address ${sdk.networkConfig.addresses.contracts.balancerMinterAddress}
+    to:                  ${data.to} - BalancerMinter Address ${sdk.networkConfig.addresses.contracts.balancerMinter}
     from:                ${data.from} - User Address ${userAddress}
     tokensOut:           ${data.tokensOut}
     expectedTokensValue: ${data.expectedTokensValue}

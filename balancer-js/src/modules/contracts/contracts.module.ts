@@ -106,7 +106,7 @@ export class Contracts {
       provider
     );
     const relayer = BalancerRelayer__factory.connect(
-      this.contractAddresses.relayer,
+      this.contractAddresses.balancerRelayer,
       provider
     );
     let veBal: undefined | VeBal;
