@@ -6,15 +6,19 @@ export interface Encoder {
     amountsIn: BigNumber[],
     minimumBPT: BigNumber
   ): string;
+
   joinTokenInForExactBPTOut(
     bptAmountOut: BigNumber,
     enterTokenIndex: number
   ): string;
+
   exitExactBPTInForOneTokenOut(
     bptAmountIn: BigNumber,
     exitTokenIndex: number
   ): string;
+
   exitExactBPTInForTokensOut?(bptAmountIn: BigNumber): string;
+
   exitBPTInForExactTokensOut(
     amountsOut: BigNumber[],
     maxBPTAmountIn: BigNumber
@@ -23,11 +27,15 @@ export interface Encoder {
 
 export interface ParamsBuilder {
   buildQueryJoinExactIn(params: JoinExactInParams): queryJoinParams;
+
   buildQueryJoinExactOut(params: JoinExactOutParams): queryJoinParams;
+
   buildQueryExitToSingleToken(params: ExitToSingleTokenParams): queryExitParams;
+
   buildQueryExitProportionally(
     params: ExitProportionallyParams
   ): queryExitParams;
+
   buildQueryExitExactOut(params: ExitExactOutParams): queryExitParams;
 }
 
@@ -42,7 +50,7 @@ export interface Pool {
   tokensList: string[];
 }
 
-export interface JoinExactInParams 
+export interface JoinExactInParams {
   maxAmountsIn: BigNumber[];
   tokensIn: string[];
   minimumBPT?: BigNumber;
@@ -63,14 +71,12 @@ export interface ExitToSingleTokenParams {
 export interface ExitProportionallyParams {
   minAmountsOut?: BigNumber[];
   bptIn: BigNumber;
-
 }
 
 export interface ExitExactOutParams {
   minAmountsOut: BigNumber[];
   tokensOut: string[];
   maxBptIn?: BigNumber;
-
 }
 
 export type queryJoinParams = [
