@@ -468,6 +468,33 @@ export class Pools implements Findable<PoolWithMethods> {
   }
 
   /**
+   * Calculates price impact for an action on a pool
+   *
+   * @param pool
+   * @returns percentage as a string in EVM scale
+   */
+  calcPriceImpact({
+    pool,
+    tokenAmounts,
+    bptAmount,
+    isJoin
+  }: {
+    pool: Pool;
+    tokenAmounts: string[];
+    bptAmount: string;
+    isJoin: boolean;
+  }): string {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+    return concerns.priceImpactCalculator.calcPriceImpact(
+      pool,
+      tokenAmounts.map(BigInt),
+      BigInt(bptAmount),
+      isJoin
+    )
+  }
+
+
+  /**
    * Gets info required to build generalised exit transaction
    *
    * @param poolId          Pool id
