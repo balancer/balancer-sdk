@@ -35,19 +35,18 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
       this.pool.id.includes(token)
     );
     // Sort amounts in by token address
-    const tokenMaxAmountsInByAddress: { [key: string]: BigNumber } =
-      tokensIn.reduce((acc, tokenAddress, index) => {
-        return {
-          ...acc,
-          [tokenAddress]: maxAmountsIn[index],
-        };
-      }, {});
+    const tokenMaxAmountsInByAddress: Map<string, BigNumber> = tokensIn.reduce(
+      (acc, tokenAddress, index) => {
+        return acc.set(tokenAddress, maxAmountsIn[index]);
+      },
+      new Map<string, BigNumber>()
+    );
 
     const assets = [...this.pool.tokensList];
 
     let maxInWithoutBpt = this.pool.tokensList.map(
       (tokenAddress) =>
-        tokenMaxAmountsInByAddress[tokenAddress] ?? BigNumber.from('0')
+        tokenMaxAmountsInByAddress.get(tokenAddress) ?? BigNumber.from('0')
     );
     // Remove BPT token from amounts for user data
     if (bptIndex > -1) {
