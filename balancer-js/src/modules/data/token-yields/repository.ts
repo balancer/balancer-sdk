@@ -18,7 +18,7 @@ export class TokenYieldsRepository implements Findable<number> {
         [key: string]: number;
       };
     } catch (error) {
-      console.error('Failed to fetch yield tokens:', error);
+      console.warn('Failed to fetch yield tokens:', error);
     }
 
     return aprs;

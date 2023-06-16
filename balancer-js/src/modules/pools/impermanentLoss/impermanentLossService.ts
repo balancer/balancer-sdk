@@ -213,13 +213,13 @@ export class ImpermanentLossService {
       const price = await this.tokenHistoricalPrices
         .findBy(address, timestamp)
         .catch((reason) => {
-          console.error(
+          console.warn(
             `[ImpermanentLossService][getEntryPrices]Error: ${reason.message}`
           );
           return undefined;
         });
       if (!price?.usd) {
-        console.error(
+        console.warn(
           `[ImpermanentLossService][getEntryPrices]Error: ${BalancerError.getMessage(
             BalancerErrorCode.MISSING_PRICE_RATE
           )}`

@@ -11,16 +11,13 @@ export class TokenPriceProvider implements Findable<Price> {
   async find(address: string): Promise<Price | undefined> {
     let price;
     try {
-      try {
-        price = await this.coingeckoRepository.find(address);
-        if (!price?.usd) {
-          throw new Error('Price not found');
-        }
-      } catch (err) {
-        price = await this.subgraphRepository.find(address);
+      price = await this.coingeckoRepository.find(address);
+      if (!price?.usd) {
+        throw new Error('Price not found');
       }
     } catch (err) {
-      console.error(err);
+      console.warn(err);
+      price = await this.subgraphRepository.find(address);
     }
     const rate = (await this.aaveRates.getRate(address)) || 1;
     if (price && price.usd) {
