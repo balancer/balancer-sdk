@@ -326,7 +326,7 @@ export class Pools implements Findable<PoolWithMethods> {
   /**
    * Builds join transaction
    *
-   * @param poolId          Pool id
+   * @param pool            Pool
    * @param tokensIn        Token addresses
    * @param amountsIn       Token amounts in EVM scale
    * @param userAddress     User address
@@ -359,7 +359,7 @@ export class Pools implements Findable<PoolWithMethods> {
       amountsIn,
       slippage,
       wrappedNativeAsset:
-        this.networkConfig.addresses.tokens.wrappedNativeAsset,
+        this.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase(),
     });
   }
 
@@ -384,7 +384,7 @@ export class Pools implements Findable<PoolWithMethods> {
       bptIn: bptAmount,
       slippage,
       wrappedNativeAsset:
-        this.networkConfig.addresses.tokens.wrappedNativeAsset,
+        this.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase(),
       shouldUnwrapNativeAsset: false,
       toInternalBalance: false,
     });
@@ -477,7 +477,7 @@ export class Pools implements Findable<PoolWithMethods> {
     pool,
     tokenAmounts,
     bptAmount,
-    isJoin
+    isJoin,
   }: {
     pool: Pool;
     tokenAmounts: string[];
@@ -490,9 +490,8 @@ export class Pools implements Findable<PoolWithMethods> {
       tokenAmounts.map(BigInt),
       BigInt(bptAmount),
       isJoin
-    )
+    );
   }
-
 
   /**
    * Gets info required to build generalised exit transaction
