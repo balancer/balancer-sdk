@@ -1,4 +1,4 @@
-import { Findable, Searchable } from '../types';
+import { Cacheable, Findable, Searchable } from '../types';
 import { Provider } from '@ethersproject/providers';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
 import { Pool } from '@/types';
@@ -16,7 +16,7 @@ interface PoolsSubgraphOnChainRepositoryOptions {
  * Access pools using generated subgraph client and multicall.
  */
 export class PoolsSubgraphOnChainRepository
-  implements Findable<Pool, PoolAttribute>, Searchable<Pool>
+  implements Findable<Pool, PoolAttribute>, Searchable<Pool>, Cacheable<Pool>
 {
   private provider: Provider;
   private pools?: Promise<Pool[]>;
@@ -60,7 +60,7 @@ export class PoolsSubgraphOnChainRepository
    */
   private async fetchDefault(): Promise<Pool[]> {
     console.time('fetching pools SG');
-    const pools = await this.poolsSubgraph.fetch();
+    const pools = await this.poolsSubgraph.all();
     console.timeEnd('fetching pools SG');
     const filteredPools = this.filterPools(pools);
     console.time(`fetching onchain ${filteredPools.length} pools`);
@@ -120,5 +120,29 @@ export class PoolsSubgraphOnChainRepository
     }
 
     return (await this.pools).filter(filter);
+  }
+
+  async refresh(pool: Pool): Promise<Pool> {
+    const onchainPool = await getOnChainBalances(
+      [pool],
+      this.multicall,
+      this.vault,
+      this.provider
+    );
+
+    // If the pool is already cached, replace it with the new one
+    if (this.pools) {
+      const index = (await this.pools).findIndex(
+        (p) => p.address === pool.address
+      );
+      if (index !== -1) {
+        this.pools = Promise.resolve([
+          ...(await this.pools).splice(index, 1),
+          onchainPool[0],
+        ]);
+      }
+    }
+
+    return onchainPool[0];
   }
 }
