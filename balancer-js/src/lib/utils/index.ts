@@ -134,7 +134,7 @@ export const findEventInReceiptLogs = ({
       try {
         return contractInterface.parseLog(log);
       } catch (error) {
-        console.error(error);
+        console.warn(error);
         return null;
       }
     })

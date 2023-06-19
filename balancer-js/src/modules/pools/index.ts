@@ -211,7 +211,7 @@ export class Pools implements Findable<PoolWithMethods> {
       };
     } catch (error) {
       if ((error as BalancerError).code != 'UNSUPPORTED_POOL_TYPE') {
-        console.error(error);
+        console.warn(error);
       }
 
       methods = {

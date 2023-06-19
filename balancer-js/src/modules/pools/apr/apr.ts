@@ -458,7 +458,7 @@ export class PoolApr {
       const liquidity = await liquidityService.getLiquidity(pool);
       return liquidity;
     } catch (err) {
-      console.error('Liquidity calculcation failed, falling back to subgraph');
+      console.warn('Liquidity calculcation failed, falling back to subgraph');
       return pool.totalLiquidity;
     }
   }
