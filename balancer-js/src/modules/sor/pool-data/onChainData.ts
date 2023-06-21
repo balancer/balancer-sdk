@@ -1,4 +1,4 @@
-import { formatFixed } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed } from '@ethersproject/bignumber';
 import { Provider } from '@ethersproject/providers';
 import { SubgraphPoolBase, SubgraphToken } from '@balancer-labs/sor';
 import { Multicaller } from '@/lib/utils/multiCaller';
@@ -15,12 +15,315 @@ import {
   StaticATokenRateProvider__factory,
   WeightedPool__factory,
   GyroEV2__factory,
+  BalancerPoolDataQueries__factory,
 } from '@/contracts';
+import { PoolDataQueryConfigStruct } from '@/contracts/BalancerPoolDataQueries';
 import { JsonFragment } from '@ethersproject/abi';
+
+type Tokens = (SubgraphToken | PoolToken)[];
+
+enum PoolQuerySwapFeeType {
+  SWAP_FEE_PERCENTAGE = 0,
+  PERCENT_FEE,
+}
+
+enum PoolQueriesTotalSupplyType {
+  TOTAL_SUPPLY = 0,
+  VIRTUAL_SUPPLY,
+  ACTUAL_SUPPLY,
+}
+
+interface QueryResult {
+  balances: BigNumber[][];
+  totalSupplies: BigNumber[];
+  swapFees: BigNumber[];
+  linearWrappedTokenRates: BigNumber[];
+  linearTargets: BigNumber[][];
+  weights: BigNumber[][];
+  scalingFactors: BigNumber[][];
+  amps: BigNumber[];
+  rates: BigNumber[];
+  ignoreIdxs: BigNumber[];
+}
+
+export async function getOnChainBalancesNew<
+  GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
+    tokens: Tokens;
+  }
+>(
+  subgraphPoolsOriginal: GenericPool[],
+  multiAddress: string,
+  vaultAddress: string,
+  provider: Provider
+): Promise<GenericPool[]> {
+  if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
+
+  const supportedPoolTypes: string[] = Object.values(PoolType);
+  const filteredPools = subgraphPoolsOriginal.filter((p) => {
+    if (!supportedPoolTypes.includes(p.poolType)) {
+      console.warn(`Unknown pool type: ${p.poolType} ${p.id}`);
+      return false;
+    } else return true;
+  });
+  const poolIds = filteredPools.map((p) => p.id);
+  const weightedPoolIdxs: number[] = [];
+  const linearPoolIdxs: number[] = [];
+  const ampPoolIdxs: number[] = [];
+  // scaling factors are used to find token rates
+  const scalingFactorPoolIdxs: number[] = [];
+  // ratePools call .getRate() on pool
+  // const ratePoolIdexes: number[] = [];
+
+  for (const pool of filteredPools) {
+    switch (pool.poolType) {
+      case 'LiquidityBootstrapping':
+      case 'Investment':
+      case 'Weighted':
+        weightedPoolIdxs.push(poolIds.findIndex((id) => id === pool.id));
+        break;
+      case 'Stable':
+        ampPoolIdxs.push(poolIds.findIndex((id) => id === pool.id));
+        break;
+      case 'StablePhantom':
+      case 'MetaStable':
+      case 'ComposableStable':
+        ampPoolIdxs.push(poolIds.findIndex((id) => id === pool.id));
+        // ratePoolIdexes.push(poolIds.findIndex((id) => id === pool.id));
+        scalingFactorPoolIdxs.push(poolIds.findIndex((id) => id === pool.id));
+        break;
+      case 'GyroE':
+        // ratePoolIdexes.push(poolIds.findIndex((id) => id === pool.id));
+        // TODO - Need to get rate somehow?
+        // if (pool.poolTypeVersion && pool.poolTypeVersion === 2)
+        //   scalingFactorPoolIndexes.push(
+        //     poolIds.findIndex((id) => id === pool.id)
+        //   );
+        break;
+      default:
+        //Handling all Linear pools
+        if (pool.poolType.includes('Linear')) {
+          linearPoolIdxs.push(poolIds.findIndex((id) => id === pool.id));
+          // ratePoolIdexes.push(poolIds.findIndex((id) => id === pool.id));
+          scalingFactorPoolIdxs.push(poolIds.findIndex((id) => id === pool.id));
+        }
+        break;
+    }
+  }
+
+  const queryContract = BalancerPoolDataQueries__factory.connect(
+    multiAddress,
+    provider
+  );
+
+  const config: PoolDataQueryConfigStruct = {
+    loadTokenBalanceUpdatesAfterBlock: true,
+    blockNumber: 0, // always get balances from all pools
+    loadAmps: ampPoolIdxs.length > 0,
+    ampPoolIdxs,
+    loadSwapFees: true,
+    swapFeeTypes: Array(poolIds.length).fill(
+      PoolQuerySwapFeeType.SWAP_FEE_PERCENTAGE
+    ),
+    loadTotalSupply: true,
+    totalSupplyTypes: supplyTypes(filteredPools),
+    loadNormalizedWeights: weightedPoolIdxs.length > 0,
+    weightedPoolIdxs,
+    loadLinearTargets: true,
+    loadLinearWrappedTokenRates: linearPoolIdxs.length > 0,
+    linearPoolIdxs,
+    loadRates: false, // We haven't been loading pool rate from onchain previously as not used in SOR
+    ratePoolIdxs: [],
+    loadScalingFactors: scalingFactorPoolIdxs.length > 0,
+    scalingFactorPoolIdxs,
+  };
+
+  const result = await queryContract.getPoolData(poolIds, config);
+  const mapped = mapResultToPool({
+    pools: filteredPools,
+    ampPoolIdxs,
+    weightedPoolIdxs,
+    linearPoolIdxs,
+    scalingFactorPoolIdxs,
+    result,
+  });
+  return mapped;
+}
+
+function mapResultToPool<
+  GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
+    tokens: Tokens;
+  }
+>(
+  input: Pick<
+    PoolDataQueryConfigStruct,
+    | 'ampPoolIdxs'
+    | 'weightedPoolIdxs'
+    | 'linearPoolIdxs'
+    | 'scalingFactorPoolIdxs'
+  > & { pools: GenericPool[]; result: QueryResult }
+): GenericPool[] {
+  const {
+    pools,
+    ampPoolIdxs,
+    weightedPoolIdxs,
+    linearPoolIdxs,
+    scalingFactorPoolIdxs,
+    result,
+  } = input;
+  const mappedPools = pools.map((pool, i) => {
+    if (result.ignoreIdxs.some((index) => index.eq(i))) {
+      console.log('Ignoring: ', pool.id); // TODO - Should we remove these pools?
+      return pool;
+    }
+    // Should be returning in human scale
+    const tokens = mapPoolTokens({
+      pool,
+      poolIndex: i,
+      scalingFactorPoolIdxs,
+      weightedPoolIdxs,
+      linearPoolIdxs,
+      result,
+    });
+    const isLinear = pool.poolType.includes('Linear');
+    return {
+      ...pool,
+      lowerTarget: isLinear
+        ? formatFixed(result.linearTargets[linearPoolIdxs.indexOf(i)][0], 18)
+        : '0',
+      upperTarget: isLinear
+        ? formatFixed(result.linearTargets[linearPoolIdxs.indexOf(i)][1], 18)
+        : '0',
+      tokens,
+      swapFee: formatFixed(result.swapFees[i], 18),
+      // Need to scale amp by precision to match expected Subgraph scale
+      // amp is stored with 3 decimals of precision
+      amp: ampPoolIdxs.includes(i)
+        ? formatFixed(result.amps[ampPoolIdxs.indexOf(i)], 3)
+        : undefined,
+      totalShares: formatFixed(result.totalSupplies[i], 18),
+    };
+  });
+
+  return mappedPools;
+}
+
+function mapPoolTokens<
+  GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
+    tokens: Tokens;
+  }
+>(
+  input: Pick<
+    PoolDataQueryConfigStruct,
+    'weightedPoolIdxs' | 'linearPoolIdxs' | 'scalingFactorPoolIdxs'
+  > & { pool: GenericPool; result: QueryResult; poolIndex: number }
+): Tokens {
+  const {
+    pool,
+    poolIndex,
+    scalingFactorPoolIdxs,
+    weightedPoolIdxs,
+    linearPoolIdxs,
+    result,
+  } = input;
+  const tokens = [...pool.tokens];
+  updateTokens({
+    tokens,
+    result,
+    poolIndex,
+    scalingFactorPoolIdxs,
+    weightedPoolIdxs,
+  });
+
+  if (pool.poolType.includes('Linear'))
+    updateLinearWrapped({
+      tokens,
+      result,
+      poolIndex,
+      wrappedIndex: pool.wrappedIndex,
+      linearPoolIdxs,
+    });
+  return tokens;
+}
+
+function updateTokens(
+  input: Pick<
+    PoolDataQueryConfigStruct,
+    'weightedPoolIdxs' | 'scalingFactorPoolIdxs'
+  > & {
+    tokens: Tokens;
+    result: QueryResult;
+    poolIndex: number;
+  }
+): void {
+  const { tokens, result, scalingFactorPoolIdxs, weightedPoolIdxs, poolIndex } =
+    input;
+  const sfIndex = scalingFactorPoolIdxs.indexOf(poolIndex);
+  const wIndex = weightedPoolIdxs.indexOf(poolIndex);
+  tokens.forEach((t, tokenIndex) => {
+    t.balance = formatFixed(result.balances[poolIndex][tokenIndex], t.decimals);
+    t.weight =
+      wIndex !== -1
+        ? formatFixed(result.weights[wIndex][tokenIndex], 18)
+        : null;
+    if (sfIndex !== -1) {
+      t.priceRate = formatFixed(
+        result.scalingFactors[sfIndex][tokenIndex]
+          .mul(BigNumber.from('10').pow(t.decimals || 18))
+          .div(`1000000000000000000`),
+        18
+      );
+    }
+    if (t.priceRate === '1') t.priceRate = '1.0'; // TODO - Just for compare
+  });
+}
+
+function updateLinearWrapped(
+  input: Pick<PoolDataQueryConfigStruct, 'linearPoolIdxs'> & {
+    tokens: Tokens;
+    result: QueryResult;
+    poolIndex: number;
+    wrappedIndex: number | undefined;
+  }
+): void {
+  const { tokens, result, linearPoolIdxs, poolIndex, wrappedIndex } = input;
+  if (wrappedIndex === undefined) {
+    throw Error(`Linear Pool Missing WrappedIndex or PriceRate`);
+  }
+  const wrappedIndexResult = linearPoolIdxs.indexOf(poolIndex);
+  const rate =
+    wrappedIndexResult === -1
+      ? '1.0'
+      : formatFixed(result.linearWrappedTokenRates[wrappedIndexResult], 18);
+  tokens[wrappedIndex].priceRate = rate;
+}
+
+function supplyTypes<
+  GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
+    tokens: Tokens;
+  }
+>(pools: GenericPool[]): PoolQueriesTotalSupplyType[] {
+  return pools.map((pool) => {
+    if (
+      pool.poolType === 'ComposableStable' ||
+      (pool.poolType === 'Weighted' &&
+        pool.poolTypeVersion &&
+        pool.poolTypeVersion > 1)
+    ) {
+      return PoolQueriesTotalSupplyType.ACTUAL_SUPPLY;
+    } else if (
+      pool.poolType.includes('Linear') ||
+      pool.poolType === 'StablePhantom'
+    ) {
+      return PoolQueriesTotalSupplyType.VIRTUAL_SUPPLY;
+    } else {
+      return PoolQueriesTotalSupplyType.TOTAL_SUPPLY;
+    }
+  });
+}
 
 export async function getOnChainBalances<
   GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
-    tokens: (SubgraphToken | PoolToken)[];
+    tokens: Tokens;
   }
 >(
   subgraphPoolsOriginal: GenericPool[],
@@ -80,6 +383,12 @@ export async function getOnChainBalances<
           pool.address,
           'getNormalizedWeights'
         );
+        if (pool.poolTypeVersion && pool.poolTypeVersion > 1)
+          multiPool.call(
+            `${pool.id}.actualSupply`,
+            pool.address,
+            'getActualSupply'
+          );
         break;
       case 'StablePhantom':
         multiPool.call(
@@ -319,7 +628,11 @@ export async function getOnChainBalances<
           return;
         }
         subgraphPools[index].totalShares = formatFixed(virtualSupply, 18);
-      } else if (subgraphPools[index].poolType === 'ComposableStable') {
+      } else if (
+        subgraphPools[index].poolType === 'ComposableStable' ||
+        (subgraphPools[index].poolType === 'Weighted' &&
+          subgraphPools[index].poolTypeVersion! > 1)
+      ) {
         if (actualSupply === undefined) {
           console.warn(`ComposableStable missing Actual Supply: ${poolId}`);
           return;
@@ -343,6 +656,12 @@ export async function getOnChainBalances<
           formatFixed(rate, 18)
         );
       }
+
+      subgraphPools[index].tokens.forEach((t) => {
+        if (t.priceRate === '1') {
+          t.priceRate = '1.0';
+        }
+      });
 
       onChainPools.push(subgraphPools[index]);
     } catch (err) {
