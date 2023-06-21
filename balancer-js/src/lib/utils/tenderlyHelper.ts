@@ -15,27 +15,17 @@ export default class TenderlyHelper {
   private opts?;
   private blockNumber: number | undefined;
 
-  constructor(
-    private chainId: number,
-    tenderlyConfig?: BalancerTenderlyConfig
-  ) {
+  constructor(private chainId: number, tenderlyConfig: BalancerTenderlyConfig) {
     const { contracts } = networkAddresses(this.chainId);
     this.vaultAddress = contracts.vault as string;
-    if (tenderlyConfig?.user && tenderlyConfig?.project) {
-      this.tenderlyUrl = `https://api.tenderly.co/api/v1/account/${tenderlyConfig.user}/project/${tenderlyConfig.project}/`;
-    } else {
-      this.tenderlyUrl = 'https://api.balancer.fi/tenderly/';
-    }
+    this.tenderlyUrl = `https://api.tenderly.co/api/v1/account/${tenderlyConfig.user}/project/${tenderlyConfig.project}/`;
+    this.opts = {
+      headers: {
+        'X-Access-Key': tenderlyConfig.accessKey,
+      },
+    };
 
-    if (tenderlyConfig?.accessKey) {
-      this.opts = {
-        headers: {
-          'X-Access-Key': tenderlyConfig.accessKey,
-        },
-      };
-    }
-
-    this.blockNumber = tenderlyConfig?.blockNumber;
+    this.blockNumber = tenderlyConfig.blockNumber;
   }
 
   simulateMulticall = async (

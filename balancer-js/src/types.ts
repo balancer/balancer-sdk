@@ -46,9 +46,9 @@ export interface BalancerSdkConfig {
 }
 
 export interface BalancerTenderlyConfig {
-  accessKey?: string;
-  user?: string;
-  project?: string;
+  accessKey: string;
+  user: string;
+  project: string;
   blockNumber?: number;
 }
 
