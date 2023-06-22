@@ -22,7 +22,7 @@ describe('onChainData', async function () {
     const onchain = await getOnChainBalancesNew(
       cloneDeep(pools),
       '0x84813aA3e079A665C0B80F944427eE83cBA63617',
-      '',
+      BALANCER_NETWORK_CONFIG[network].addresses.contracts.multicall,
       provider
     );
     const onchainOri = await getOnChainBalances(

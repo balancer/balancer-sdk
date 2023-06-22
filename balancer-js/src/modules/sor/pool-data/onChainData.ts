@@ -46,14 +46,21 @@ interface QueryResult {
   ignoreIdxs: BigNumber[];
 }
 
+type TokenRates = Record<
+  string,
+  {
+    tokenRates?: string[];
+  }
+>;
+
 export async function getOnChainBalancesNew<
   GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
     tokens: Tokens;
   }
 >(
   subgraphPoolsOriginal: GenericPool[],
-  multiAddress: string,
-  vaultAddress: string,
+  dataQueryAddr: string,
+  multicallAddr: string,
   provider: Provider
 ): Promise<GenericPool[]> {
   if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
@@ -91,14 +98,6 @@ export async function getOnChainBalancesNew<
         // ratePoolIdexes.push(poolIds.findIndex((id) => id === pool.id));
         scalingFactorPoolIdxs.push(poolIds.findIndex((id) => id === pool.id));
         break;
-      case 'GyroE':
-        // ratePoolIdexes.push(poolIds.findIndex((id) => id === pool.id));
-        // TODO - Need to get rate somehow?
-        // if (pool.poolTypeVersion && pool.poolTypeVersion === 2)
-        //   scalingFactorPoolIndexes.push(
-        //     poolIds.findIndex((id) => id === pool.id)
-        //   );
-        break;
       default:
         //Handling all Linear pools
         if (pool.poolType.includes('Linear')) {
@@ -111,7 +110,7 @@ export async function getOnChainBalancesNew<
   }
 
   const queryContract = BalancerPoolDataQueries__factory.connect(
-    multiAddress,
+    dataQueryAddr,
     provider
   );
 
@@ -137,19 +136,63 @@ export async function getOnChainBalancesNew<
     scalingFactorPoolIdxs,
   };
 
-  const result = await queryContract.getPoolData(poolIds, config);
-  const mapped = mapResultToPool({
+  const queryResult = await queryContract.getPoolData(poolIds, config);
+  const updatedPools = mapQueryResultToPools({
     pools: filteredPools,
     ampPoolIdxs,
     weightedPoolIdxs,
     linearPoolIdxs,
     scalingFactorPoolIdxs,
-    result,
+    queryResult,
   });
-  return mapped;
+  // GyroEV2 requires tokenRates onchain update that dataQueries does not provide
+  decorateGyroEv2(updatedPools, multicallAddr, provider);
+  return updatedPools;
 }
 
-function mapResultToPool<
+/**
+ * Update pool tokenRates using mulitcall
+ * @param pools
+ * @param multicallAddr
+ * @param provider
+ */
+async function decorateGyroEv2<
+  GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
+    tokens: Tokens;
+  }
+>(
+  pools: GenericPool[],
+  multicallAddr: string,
+  provider: Provider
+): Promise<void> {
+  const gyroPools = pools.filter((p) => {
+    return (
+      p.poolType === 'GyroE' && p.poolTypeVersion && p.poolTypeVersion === 2
+    );
+  });
+  // Use multicall to get tokenRates for all GyroE V2
+  const gyroTokenRates = await getGyroTokenRates(
+    gyroPools,
+    multicallAddr,
+    provider
+  );
+  gyroPools.forEach((pool) => {
+    if (gyroTokenRates[pool.id]) {
+      pool.tokenRates = gyroTokenRates[pool.id].tokenRates?.map((r) =>
+        formatFixed(r, 18)
+      );
+    } else {
+      console.warn(`GyroE V2 Missing tokenRates: `, pool.id);
+    }
+  });
+}
+
+/**
+ * Map EVM values to Human scale pool.
+ * @param input
+ * @returns Array of pools with human scale values.
+ */
+function mapQueryResultToPools<
   GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
     tokens: Tokens;
   }
@@ -160,7 +203,10 @@ function mapResultToPool<
     | 'weightedPoolIdxs'
     | 'linearPoolIdxs'
     | 'scalingFactorPoolIdxs'
-  > & { pools: GenericPool[]; result: QueryResult }
+  > & {
+    pools: GenericPool[];
+    queryResult: QueryResult;
+  }
 ): GenericPool[] {
   const {
     pools,
@@ -168,39 +214,44 @@ function mapResultToPool<
     weightedPoolIdxs,
     linearPoolIdxs,
     scalingFactorPoolIdxs,
-    result,
+    queryResult,
   } = input;
   const mappedPools = pools.map((pool, i) => {
-    if (result.ignoreIdxs.some((index) => index.eq(i))) {
+    if (queryResult.ignoreIdxs.some((index) => index.eq(i))) {
       console.log('Ignoring: ', pool.id); // TODO - Should we remove these pools?
       return pool;
     }
-    // Should be returning in human scale
     const tokens = mapPoolTokens({
       pool,
       poolIndex: i,
       scalingFactorPoolIdxs,
       weightedPoolIdxs,
       linearPoolIdxs,
-      result,
+      queryResult,
     });
     const isLinear = pool.poolType.includes('Linear');
     return {
       ...pool,
       lowerTarget: isLinear
-        ? formatFixed(result.linearTargets[linearPoolIdxs.indexOf(i)][0], 18)
+        ? formatFixed(
+            queryResult.linearTargets[linearPoolIdxs.indexOf(i)][0],
+            18
+          )
         : '0',
       upperTarget: isLinear
-        ? formatFixed(result.linearTargets[linearPoolIdxs.indexOf(i)][1], 18)
+        ? formatFixed(
+            queryResult.linearTargets[linearPoolIdxs.indexOf(i)][1],
+            18
+          )
         : '0',
       tokens,
-      swapFee: formatFixed(result.swapFees[i], 18),
+      swapFee: formatFixed(queryResult.swapFees[i], 18),
       // Need to scale amp by precision to match expected Subgraph scale
       // amp is stored with 3 decimals of precision
       amp: ampPoolIdxs.includes(i)
-        ? formatFixed(result.amps[ampPoolIdxs.indexOf(i)], 3)
+        ? formatFixed(queryResult.amps[ampPoolIdxs.indexOf(i)], 3)
         : undefined,
-      totalShares: formatFixed(result.totalSupplies[i], 18),
+      totalShares: formatFixed(queryResult.totalSupplies[i], 18),
     };
   });
 
@@ -215,7 +266,7 @@ function mapPoolTokens<
   input: Pick<
     PoolDataQueryConfigStruct,
     'weightedPoolIdxs' | 'linearPoolIdxs' | 'scalingFactorPoolIdxs'
-  > & { pool: GenericPool; result: QueryResult; poolIndex: number }
+  > & { pool: GenericPool; queryResult: QueryResult; poolIndex: number }
 ): Tokens {
   const {
     pool,
@@ -223,12 +274,12 @@ function mapPoolTokens<
     scalingFactorPoolIdxs,
     weightedPoolIdxs,
     linearPoolIdxs,
-    result,
+    queryResult,
   } = input;
   const tokens = [...pool.tokens];
   updateTokens({
     tokens,
-    result,
+    queryResult,
     poolIndex,
     scalingFactorPoolIdxs,
     weightedPoolIdxs,
@@ -237,7 +288,7 @@ function mapPoolTokens<
   if (pool.poolType.includes('Linear'))
     updateLinearWrapped({
       tokens,
-      result,
+      queryResult,
       poolIndex,
       wrappedIndex: pool.wrappedIndex,
       linearPoolIdxs,
@@ -251,23 +302,31 @@ function updateTokens(
     'weightedPoolIdxs' | 'scalingFactorPoolIdxs'
   > & {
     tokens: Tokens;
-    result: QueryResult;
+    queryResult: QueryResult;
     poolIndex: number;
   }
 ): void {
-  const { tokens, result, scalingFactorPoolIdxs, weightedPoolIdxs, poolIndex } =
-    input;
+  const {
+    tokens,
+    queryResult,
+    scalingFactorPoolIdxs,
+    weightedPoolIdxs,
+    poolIndex,
+  } = input;
   const sfIndex = scalingFactorPoolIdxs.indexOf(poolIndex);
   const wIndex = weightedPoolIdxs.indexOf(poolIndex);
   tokens.forEach((t, tokenIndex) => {
-    t.balance = formatFixed(result.balances[poolIndex][tokenIndex], t.decimals);
+    t.balance = formatFixed(
+      queryResult.balances[poolIndex][tokenIndex],
+      t.decimals
+    );
     t.weight =
       wIndex !== -1
-        ? formatFixed(result.weights[wIndex][tokenIndex], 18)
+        ? formatFixed(queryResult.weights[wIndex][tokenIndex], 18)
         : null;
     if (sfIndex !== -1) {
       t.priceRate = formatFixed(
-        result.scalingFactors[sfIndex][tokenIndex]
+        queryResult.scalingFactors[sfIndex][tokenIndex]
           .mul(BigNumber.from('10').pow(t.decimals || 18))
           .div(`1000000000000000000`),
         18
@@ -280,12 +339,13 @@ function updateTokens(
 function updateLinearWrapped(
   input: Pick<PoolDataQueryConfigStruct, 'linearPoolIdxs'> & {
     tokens: Tokens;
-    result: QueryResult;
+    queryResult: QueryResult;
     poolIndex: number;
     wrappedIndex: number | undefined;
   }
 ): void {
-  const { tokens, result, linearPoolIdxs, poolIndex, wrappedIndex } = input;
+  const { tokens, queryResult, linearPoolIdxs, poolIndex, wrappedIndex } =
+    input;
   if (wrappedIndex === undefined) {
     throw Error(`Linear Pool Missing WrappedIndex or PriceRate`);
   }
@@ -293,7 +353,10 @@ function updateLinearWrapped(
   const rate =
     wrappedIndexResult === -1
       ? '1.0'
-      : formatFixed(result.linearWrappedTokenRates[wrappedIndexResult], 18);
+      : formatFixed(
+          queryResult.linearWrappedTokenRates[wrappedIndexResult],
+          18
+        );
   tokens[wrappedIndex].priceRate = rate;
 }
 
@@ -319,6 +382,50 @@ function supplyTypes<
       return PoolQueriesTotalSupplyType.TOTAL_SUPPLY;
     }
   });
+}
+
+async function getGyroTokenRates<
+  GenericPool extends Pick<
+    SubgraphPoolBase | Pool,
+    'poolType' | 'poolTypeVersion' | 'id' | 'address'
+  >
+>(
+  gyroPools: GenericPool[],
+  multiAddress: string,
+  provider: Provider
+): Promise<TokenRates> {
+  if (gyroPools.length === 0) return {} as TokenRates;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const abis: any = Object.values(
+    // Remove duplicate entries using their names
+    Object.fromEntries(
+      [...(GyroEV2__factory.abi as readonly JsonFragment[])].map((row) => [
+        row.name,
+        row,
+      ])
+    )
+  );
+  const multicall = Multicall__factory.connect(multiAddress, provider);
+  const multiPool = new Multicaller(multicall, abis);
+  gyroPools.forEach((pool) => {
+    if (!(pool.poolType === PoolType.GyroE && pool.poolTypeVersion === 2)) {
+      console.warn(
+        `Incorrectly calling tokenRates on pool: ${pool.poolType} ${pool.id}`
+      );
+      return;
+    }
+    multiPool.call(`${pool.id}.tokenRates`, pool.address, 'getTokenRates');
+  });
+
+  let tokenRates = {} as TokenRates;
+  try {
+    tokenRates = (await multiPool.execute()) as TokenRates;
+  } catch (err) {
+    console.log(err);
+    throw new Error(`Issue with multicall execution.`); // TODO
+  }
+  return tokenRates;
 }
 
 export async function getOnChainBalances<
