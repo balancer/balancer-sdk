@@ -10,6 +10,7 @@ import {
   testExactTokensOut,
   testRecoveryExit,
 } from '@/test/lib/exitHelper';
+import { TEST_BLOCK } from '@/test/lib/constants';
 
 dotenv.config();
 
@@ -23,8 +24,7 @@ describe('MetaStablePool - Exit Concern Integration Tests', async () => {
   let pool: PoolWithMethods;
 
   context('regular exit pool functions', async () => {
-    // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
-    const blockNumber = 13309758;
+    const blockNumber = TEST_BLOCK[network];
     const testPoolId =
       '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080';
     beforeEach(async () => {
@@ -80,7 +80,7 @@ describe('MetaStablePool - Exit Concern Integration Tests', async () => {
   // Skipping test because there is no MetaStable pool in recovery mode
   context.skip('Recovery Mode', async () => {
     context('buildRecoveryExit', async () => {
-      const blockNumber = 16819888;
+      const blockNumber = 17473802;
       const poolIdInRecoveryMode =
         '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d';
       beforeEach(async () => {

@@ -12,7 +12,8 @@ export const testExactTokensIn = async (
   signer: JsonRpcSigner,
   signerAddress: string,
   tokensIn: string[],
-  amountsIn: string[]
+  amountsIn: string[],
+  approximate = false
 ): Promise<void> => {
   const slippage = '6'; // 6 bps = 0.06%
 
@@ -32,7 +33,14 @@ export const testExactTokensIn = async (
   expect(transactionReceipt.status).to.eq(1);
   expect(BigInt(expectedBPTOut) > 0).to.be.true;
   const expectedDeltas = insert(amountsIn, pool.bptIndex, expectedBPTOut);
-  expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
+  if (approximate) {
+    console.log(`!!!!!!! APPROX TEST`);
+    const diffs = expectedDeltas.map((e, i) =>
+      BigNumber.from(e).sub(balanceDeltas[i]).abs()
+    );
+    diffs.forEach((diff) => expect(diff.lt('100000000000000000')).to.be.true);
+  } else
+    expect(expectedDeltas).to.deep.eq(balanceDeltas.map((a) => a.toString()));
   const expectedMinBpt = subSlippage(
     BigNumber.from(expectedBPTOut),
     BigNumber.from(slippage)

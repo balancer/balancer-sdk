@@ -12,6 +12,7 @@ import {
 } from '@/.';
 import { forkSetup, getPoolFromFile, updateFromChain } from '@/test/lib/utils';
 import { testExactBptIn, testExactTokensOut } from '@/test/lib/exitHelper';
+import { TEST_BLOCK } from '@/test/lib/constants';
 
 dotenv.config();
 
@@ -20,7 +21,7 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
-const blockNumber = 16649181;
+const blockNumber = TEST_BLOCK[network];
 
 // wstETH-rETH-sfrxETH-BPT
 const testPoolId =

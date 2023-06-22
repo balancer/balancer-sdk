@@ -50,7 +50,7 @@ const tokenOut = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'; // wBTC
 const amount = ethers.utils.parseEther('1');
 const gasPrice = ethers.utils.parseUnits('1', 'gwei'); // not important
 const maxPools = 4;
-const deadline = MaxUint256;
+const deadline = MaxUint256.toString();
 const maxSlippage = 1;
 
 describe('swaps execution', async () => {
