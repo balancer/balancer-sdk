@@ -254,7 +254,6 @@ function updateTokens(
         18
       );
     }
-    if (t.priceRate === '1') t.priceRate = '1.0'; // TODO - Just for compare
   });
 }
 

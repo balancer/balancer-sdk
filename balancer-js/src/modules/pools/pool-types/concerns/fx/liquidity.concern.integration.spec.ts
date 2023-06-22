@@ -1,9 +1,8 @@
 // yarn test:only ./src/modules/pools/pool-types/concerns/fx/liquidity.concern.integration.spec.ts
 import { expect } from 'chai';
 import dotenv from 'dotenv';
-import { formatFixed, parseFixed } from '@ethersproject/bignumber';
+import { parseFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
-import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { BalancerSDK } from '@/modules/sdk.module';
 import {
   FORK_NODES,
