@@ -26,7 +26,7 @@ export type BalancerPool = Omit<SubgraphPoolBase | Pool, 'tokens'> & {
   tokens: Tokens;
 };
 
-export async function getOnChainBalancesNew<GenericPool extends BalancerPool>(
+export async function getOnChainPools<GenericPool extends BalancerPool>(
   subgraphPoolsOriginal: GenericPool[],
   dataQueryAddr: string,
   multicallAddr: string,
