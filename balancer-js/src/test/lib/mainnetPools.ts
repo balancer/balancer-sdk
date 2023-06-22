@@ -1,6 +1,6 @@
 import { SubgraphPoolBase, Network } from '@/.';
 import { getNetworkConfig } from '@/modules/sdk.helpers';
-import { getOnChainBalances } from '@/modules/sor/pool-data/onChainData';
+import { getOnChainPools } from '@/modules/sor/pool-data/onChainData';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { factories } from '../factories';
 
@@ -87,10 +87,10 @@ export const getForkedPools = async (
   const network = getNetworkConfig({ network: Network.MAINNET, rpcUrl: '' });
 
   // btcEthPool from mainnet, balances and total shares are fetched from on chain data
-  const onChainPools = await getOnChainBalances(
+  const onChainPools = await getOnChainPools(
     pools,
+    network.addresses.contracts.poolDataQueries,
     network.addresses.contracts.multicall,
-    network.addresses.contracts.vault,
     provider
   );
 

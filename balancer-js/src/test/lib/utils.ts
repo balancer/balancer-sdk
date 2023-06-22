@@ -10,7 +10,7 @@ import {
 } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
 import { formatBytes32String } from '@ethersproject/strings';
-import { getOnChainBalances } from '@/modules/sor/pool-data/onChainData';
+import { getOnChainPools } from '@/modules/sor/pool-data/onChainData';
 
 import {
   PoolWithMethods,
@@ -392,10 +392,10 @@ export const updateFromChain = async (
   network: Network,
   provider: JsonRpcProvider
 ): Promise<Pool> => {
-  const onChainPool = await getOnChainBalances(
+  const onChainPool = await getOnChainPools(
     [pool],
+    BALANCER_NETWORK_CONFIG[network].addresses.contracts.poolDataQueries,
     BALANCER_NETWORK_CONFIG[network].addresses.contracts.multicall,
-    BALANCER_NETWORK_CONFIG[network].addresses.contracts.vault,
     provider
   );
   return onChainPool[0];
