@@ -1,7 +1,7 @@
 /**
  * Example showing how to manually encode and send a batch swap transaction.
  * Uses local fork of mainnet: $ yarn run node
- * 
+ *
  * Run with:
  * yarn example ./examples/swaps/manual/batchSwap.ts
  */
@@ -13,7 +13,7 @@ import { formatUnits, parseEther } from '@ethersproject/units';
 async function runBatchSwap() {
   const sdk = new BalancerSDK({
     network: Network.MAINNET,
-    rpcUrl: 'http://127.0.0.1:8545'
+    rpcUrl: 'http://127.0.0.1:8545',
   });
 
   const { provider, contracts } = sdk;
@@ -53,7 +53,7 @@ async function runBatchSwap() {
       // USDC
       '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
       // BAL
-      '0xba100000625a3754423978a60c9317c58a424e3d'
+      '0xba100000625a3754423978a60c9317c58a424e3d',
     ],
     funds: {
       fromInternalBalance: false,
@@ -66,8 +66,14 @@ async function runBatchSwap() {
     deadline: '999999999999999999', // Infinity
   });
 
-  const usdc = contracts.ERC20('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', provider);
-  const bal = contracts.ERC20('0xba100000625a3754423978a60c9317c58a424e3d', provider);
+  const usdc = contracts.ERC20(
+    '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    provider
+  );
+  const bal = contracts.ERC20(
+    '0xba100000625a3754423978a60c9317c58a424e3d',
+    provider
+  );
 
   let ethBalance = await signer.getBalance();
   let usdcBalance = await usdc.balanceOf(address);
@@ -81,12 +87,7 @@ async function runBatchSwap() {
   await signer.sendTransaction({
     data: encodedBatchSwapData,
     to: contracts.vault.address,
-    value
-    /**
-     * The following gas inputs are optional,
-     **/
-    // gasPrice: '6000000000',
-    // gasLimit: '2000000',
+    value,
   });
 
   ethBalance = await signer.getBalance();
@@ -96,7 +97,7 @@ async function runBatchSwap() {
   console.log(`Balances after: `);
   console.log(`ETH: ${formatUnits(ethBalance, 18)}`);
   console.log(`USDC: ${formatUnits(usdcBalance, 6)}`);
-  console.log(`BAL: ${formatUnits(balBalance, 18)}`)
+  console.log(`BAL: ${formatUnits(balBalance, 18)}`);
 }
 
 runBatchSwap();

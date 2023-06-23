@@ -34,7 +34,6 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const networkId = Network.MAINNET;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new JsonRpcProvider(rpcUrl, networkId);
-const gasLimit = 8e6;
 let sor: SOR;
 
 const { contracts } = new Contracts(networkId, provider);
@@ -223,7 +222,6 @@ async function testFlow(
       const response = await signer.sendTransaction({
         to: callData.to,
         data: callData.data,
-        gasLimit,
       });
 
       const receipt = await response.wait();

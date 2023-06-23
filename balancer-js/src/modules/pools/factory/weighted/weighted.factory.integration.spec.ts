@@ -54,8 +54,7 @@ describe('creating weighted pool', () => {
         poolTokens.map((p) => p.slot),
         amountsIn,
         `${process.env.ALCHEMY_URL}`,
-        16920000,
-        false
+        16920000
       );
       poolParams = {
         name: 'My-Test-Pool-Name',
@@ -76,7 +75,7 @@ describe('creating weighted pool', () => {
       it('should send creation tx', async () => {
         const txInfo = weightedPoolFactory.create(poolParams);
         transactionReceipt = await (
-          await signer.sendTransaction({ ...txInfo, gasLimit: 30000000 })
+          await signer.sendTransaction({ ...txInfo })
         ).wait();
         expect(transactionReceipt.status).to.eql(1);
       });
