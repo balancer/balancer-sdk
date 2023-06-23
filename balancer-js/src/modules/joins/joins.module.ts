@@ -50,7 +50,7 @@ export class Join {
     private simulationService: Simulation
   ) {
     const { tokens, contracts } = networkAddresses(networkConfig.chainId);
-    this.relayer = contracts.relayer;
+    this.relayer = contracts.balancerRelayer;
     this.wrappedNativeAsset = tokens.wrappedNativeAsset;
   }
 

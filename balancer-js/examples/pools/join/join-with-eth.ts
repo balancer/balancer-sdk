@@ -3,7 +3,7 @@
  * Note: same as join.ts but adding the `value` parameter to the transaction
  *
  * Run with:
- * yarn example ./examples/pools/join/eth-join.ts
+ * yarn example ./examples/pools/join/join-with-eth.ts
  */
 import { BalancerSDK, Network } from '@balancer-labs/sdk';
 import { AddressZero } from '@ethersproject/constants';
@@ -20,12 +20,10 @@ async function join() {
     rpcUrl: 'http://127.0.0.1:8545', // Using local fork for simulation
   });
 
-  const { provider } = balancer;
-  const signer = provider.getSigner();
-  const address = await signer.getAddress();
+  const { poolsOnChain, pools } = balancer.data;
 
   // 50/50 WBTC/WETH Pool
-  const pool = await balancer.pools.find(
+  let pool = await pools.find(
     '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e'
   );
   if (!pool) throw Error('Pool not found');
@@ -42,6 +40,10 @@ async function join() {
 
   const amountsIn = ['10000000', '1000000000000000000'];
 
+  const { provider } = balancer;
+  const signer = provider.getSigner();
+  const address = await signer.getAddress();
+
   // Prepare local fork for simulation
   await reset(provider, 17000000);
   await setTokenBalance(provider, address, tokensIn[0], amountsIn[0], slots[0]);
@@ -57,17 +59,26 @@ async function join() {
     await getTokenBalance(tokensIn[0], address, provider)
   );
 
+  // Refresh pool data from chain before building and sending tx
+  pool = await poolsOnChain.refresh(pool);
+
   // Build join transaction
   const slippage = '100'; // 100 bps = 1%
-  const { to, data, minBPTOut } = pool.buildJoin(
-    address,
+  const { to, data, minBPTOut } = balancer.pools.buildJoin({
+    pool,
+    userAddress: address,
     tokensIn,
     amountsIn,
-    slippage
-  );
+    slippage,
+  });
 
   // Calculate price impact
-  const priceImpact = await pool.calcPriceImpact(amountsIn, minBPTOut, true);
+  const priceImpact = balancer.pools.calcPriceImpact({
+    pool,
+    tokenAmounts: amountsIn,
+    bptAmount: minBPTOut,
+    isJoin: true,
+  });
 
   // Submit join tx
   const transactionResponse = await signer.sendTransaction({

@@ -13,6 +13,7 @@ import type {
   LiquidityGauge,
   PoolAttribute,
   TokenAttribute,
+  Cacheable,
 } from '@/modules/data/types';
 import type {
   BaseFeeDistributor,
@@ -68,9 +69,9 @@ export interface ContractAddresses {
   multicall: string;
   gaugeClaimHelper?: string;
   balancerHelpers: string;
-  balancerMinterAddress?: string;
+  balancerMinter?: string;
   lidoRelayer?: string;
-  relayer: string;
+  balancerRelayer: string;
   gaugeController?: string;
   feeDistributor?: string;
   veBal?: string;
@@ -84,6 +85,8 @@ export interface ContractAddresses {
   eulerLinearPoolFactory?: string;
   gearboxLinearPoolFactory?: string;
   yearnLinearPoolFactory?: string;
+
+  [key: string]: string | undefined;
 }
 
 export interface BalancerNetworkConfig {
@@ -128,7 +131,9 @@ export interface BalancerDataRepositories {
   // Does it need to be different from the pools repository?
   poolsForSor: SubgraphPoolDataService;
   // Perhaps better to use a function to get upto date balances when needed.
-  poolsOnChain: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  poolsOnChain: Findable<Pool, PoolAttribute> &
+    Searchable<Pool> &
+    Cacheable<Pool>;
   // Replace with a swapFeeRepository, we don't need historic pools for any other reason than to get the swap fee
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;

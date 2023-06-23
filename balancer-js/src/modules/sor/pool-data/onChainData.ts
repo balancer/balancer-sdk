@@ -55,7 +55,7 @@ export async function getOnChainBalances<
   const subgraphPools: GenericPool[] = [];
   subgraphPoolsOriginal.forEach((pool) => {
     if (!supportedPoolTypes.includes(pool.poolType)) {
-      console.error(`Unknown pool type: ${pool.poolType} ${pool.id}`);
+      console.warn(`Unknown pool type: ${pool.poolType} ${pool.id}`);
       return;
     }
 
@@ -313,7 +313,7 @@ export async function getOnChainBalances<
         subgraphPools[index].poolType === 'StablePhantom'
       ) {
         if (virtualSupply === undefined) {
-          console.error(
+          console.warn(
             `Pool with pre-minted BPT missing Virtual Supply: ${poolId}`
           );
           return;
@@ -321,7 +321,7 @@ export async function getOnChainBalances<
         subgraphPools[index].totalShares = formatFixed(virtualSupply, 18);
       } else if (subgraphPools[index].poolType === 'ComposableStable') {
         if (actualSupply === undefined) {
-          console.error(`ComposableStable missing Actual Supply: ${poolId}`);
+          console.warn(`ComposableStable missing Actual Supply: ${poolId}`);
           return;
         }
         subgraphPools[index].totalShares = formatFixed(actualSupply, 18);

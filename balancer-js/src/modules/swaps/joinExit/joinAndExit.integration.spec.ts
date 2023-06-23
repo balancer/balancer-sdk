@@ -40,7 +40,7 @@ const { contracts } = new Contracts(networkId, provider);
 
 const signer = provider.getSigner();
 const relayerAddress =
-  BALANCER_NETWORK_CONFIG[networkId].addresses.contracts.relayer;
+  BALANCER_NETWORK_CONFIG[networkId].addresses.contracts.balancerRelayer;
 const wrappedNativeAsset =
   BALANCER_NETWORK_CONFIG[networkId].addresses.tokens.wrappedNativeAsset;
 
