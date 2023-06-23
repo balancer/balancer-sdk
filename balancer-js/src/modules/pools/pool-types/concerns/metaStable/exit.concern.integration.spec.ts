@@ -80,7 +80,7 @@ describe('MetaStablePool - Exit Concern Integration Tests', async () => {
   // Skipping test because there is no MetaStable pool in recovery mode
   context.skip('Recovery Mode', async () => {
     context('buildRecoveryExit', async () => {
-      const blockNumber = 17473802;
+      const blockNumber = TEST_BLOCK[network];
       const poolIdInRecoveryMode =
         '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d';
       beforeEach(async () => {

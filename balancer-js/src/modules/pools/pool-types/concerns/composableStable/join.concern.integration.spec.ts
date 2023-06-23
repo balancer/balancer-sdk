@@ -131,7 +131,7 @@ describe('ComposableStable Pool - Join Functions', async () => {
       signer = provider.getSigner();
       signerAddress = await signer.getAddress();
       jsonRpcUrl = FORK_NODES[network];
-      blockNumber = 17473802;
+      blockNumber = TEST_BLOCK[network];
       testPoolId =
         '0xd61e198e139369a40818fe05f5d5e6e045cd6eaf000000000000000000000540';
       testPool = await getPoolFromFile(testPoolId, network);
