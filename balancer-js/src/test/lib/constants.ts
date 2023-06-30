@@ -7,11 +7,11 @@ dotenv.config();
 export const PROVIDER_URLS = {
   [Network.MAINNET]: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
   [Network.GOERLI]: `https://goerli.infura.io/v3/${process.env.INFURA}`,
-  [Network.KOVAN]: `https://kovan.infura.io/v3/${process.env.INFURA}`,
   [Network.POLYGON]: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA}`,
   [Network.ARBITRUM]: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA}`,
   [Network.SEPOLIA]: `https://sepolia.infura.io/v3/${process.env.INFURA}`,
   [Network.GNOSIS]: `https://rpc.gnosis.gateway.fm`,
+  [Network.ZKEVM]: `https://zkevm-rpc.com`,
 };
 
 export type TestAddress = {
@@ -383,117 +383,6 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'bveth',
       slot: 0,
-    },
-  },
-  [Network.KOVAN]: {
-    // Visit https://balancer-faucet.on.fleek.co/#/faucet for test tokens
-    ETH: {
-      address: AddressZero,
-      decimals: 18,
-      symbol: 'ETH',
-    },
-    BAL: {
-      address: '0x41286Bb1D3E870f3F750eB7E1C25d7E48c8A1Ac7',
-      decimals: 18,
-      symbol: 'BAL',
-    },
-    USDC: {
-      address: '0xc2569dd7d0fd715B054fBf16E75B001E5c0C1115',
-      decimals: 6,
-      symbol: 'USDC',
-    },
-    WBTC: {
-      address: '0x1C8E3Bcb3378a443CC591f154c5CE0EBb4dA9648',
-      decimals: 8,
-      symbol: 'WBTC',
-    },
-    WETH: {
-      address: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
-      decimals: 18,
-      symbol: 'WETH',
-    },
-    DAI: {
-      address: '0x04DF6e4121c27713ED22341E7c7Df330F56f289B',
-      decimals: 18,
-      symbol: 'DAI',
-    },
-    STETH: {
-      address: '0x4803bb90d18a1cb7a2187344fe4feb0e07878d05',
-      decimals: 18,
-      symbol: 'STETH',
-    },
-    wSTETH: {
-      address: '0xa387b91e393cfb9356a460370842bc8dbb2f29af',
-      decimals: 18,
-      symbol: 'wSTETH',
-    },
-    USDT_from_AAVE: {
-      address: '0x13512979ade267ab5100878e2e0f485b568328a4',
-      decimals: 6,
-      symbol: 'USDT_from_AAVE',
-    },
-    USDT: {
-      address: '0x13512979ade267ab5100878e2e0f485b568328a4',
-      decimals: 6,
-      symbol: 'USDT',
-    },
-    aUSDT: {
-      address: '0xe8191aacfcdb32260cda25830dc6c9342142f310',
-      decimals: 6,
-      symbol: 'aUSDT',
-    },
-    bUSDT: {
-      address: '0xe667d48618e71c2a02e4a1b66ed9def1426938b6',
-      decimals: 18,
-      symbol: 'bUSDT',
-    },
-    USDC_from_AAVE: {
-      address: '0xe22da380ee6b445bb8273c81944adeb6e8450422',
-      decimals: 6,
-      symbol: 'USDC_from_AAVE',
-    },
-    aUSDC: {
-      address: '0x0fbddc06a4720408a2f5eb78e62bc31ac6e2a3c4',
-      decimals: 6,
-      symbol: 'aUSDC',
-    },
-    DAI_from_AAVE: {
-      address: '0xff795577d9ac8bd7d90ee22b6c1703490b6512fd',
-      decimals: 18,
-      symbol: 'DAI_from_AAVE',
-    },
-    bDAI: {
-      address: '0xfcccb77a946b6a3bd59d149f083b5bfbb8004d6d',
-      decimals: 18,
-      symbol: 'bDAI',
-    },
-    STABAL3: {
-      address: '0x8fd162f338b770f7e879030830cde9173367f301',
-      decimals: 18,
-      symbol: 'STABAL3',
-    },
-    bbausd: {
-      address: 'N/A',
-      decimals: 18,
-      symbol: 'bbausd',
-    },
-    waDAI: {
-      address: '',
-      decimals: 18,
-      symbol: 'waDAI',
-      slot: 52,
-    },
-    waUSDC: {
-      address: '',
-      decimals: 6,
-      symbol: 'waUSDC',
-      slot: 52,
-    },
-    waUSDT: {
-      address: '',
-      decimals: 6,
-      symbol: 'waUSDT',
-      slot: 52,
     },
   },
   [Network.POLYGON]: {
@@ -973,6 +862,23 @@ export const ADDRESSES = {
       address: '0xb19382073c7a0addbb56ac6af1808fa49e377b75',
       decimals: 18,
       symbol: 'BAL',
+    },
+  },
+  [Network.ZKEVM]: {
+    WETH: {
+      address: '0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9',
+      decimals: 18,
+      symbol: 'WETH',
+    },
+    wstETH: {
+      address: '0x5D8cfF95D7A57c0BF50B30b43c7CC0D52825D4a9',
+      decimals: 18,
+      symbol: 'wstETH',
+    },
+    USDC: {
+      address: '0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035',
+      decimals: 6,
+      symbol: 'USDC',
     },
   },
 };

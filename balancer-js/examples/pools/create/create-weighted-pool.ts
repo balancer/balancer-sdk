@@ -1,13 +1,13 @@
 /**
  * Weighted - Create and do an initial join.
- * 
+ *
  * Run command:
  * yarn example ./examples/pools/create/create-weighted-pool.ts
  */
-import { BalancerSDK, Network, PoolType } from '@balancer-labs/sdk'
-import { reset, setTokenBalance, approveToken } from 'examples/helpers'
-import { AddressZero } from '@ethersproject/constants'
-import { parseFixed } from '@ethersproject/bignumber'
+import { BalancerSDK, Network, PoolType } from '@balancer-labs/sdk';
+import { reset, setTokenBalance, approveToken } from 'examples/helpers';
+import { AddressZero } from '@ethersproject/constants';
+import { parseFixed } from '@ethersproject/bignumber';
 
 async function createAndInitJoinWeightedPool() {
   const balancer = new BalancerSDK({
@@ -16,26 +16,46 @@ async function createAndInitJoinWeightedPool() {
   });
 
   // Setup join parameters
-  const signer = balancer.provider.getSigner()
-  const ownerAddress = await signer.getAddress()
-  const usdc = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'
-  const usdt = '0xdac17f958d2ee523a2206206994597c13d831ec7'
-  const poolTokens = [usdc, usdt]
+  const signer = balancer.provider.getSigner();
+  const ownerAddress = await signer.getAddress();
+  const usdc = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
+  const usdt = '0xdac17f958d2ee523a2206206994597c13d831ec7';
+  const poolTokens = [usdc, usdt];
   const amountsIn = [
     parseFixed('1000000000', 6).toString(),
     parseFixed('1000000000', 6).toString(),
   ];
 
   // Prepare local fork for simulation
-  await reset(balancer.provider, 17347414)
-  await setTokenBalance(balancer.provider, ownerAddress, poolTokens[0], amountsIn[0], 9)
-  await setTokenBalance(balancer.provider, ownerAddress, poolTokens[1], amountsIn[1], 2)
-  await approveToken(poolTokens[0], balancer.contracts.vault.address, amountsIn[0], signer)
-  await approveToken(poolTokens[1], balancer.contracts.vault.address, amountsIn[1], signer)
+  await reset(balancer.provider, 17347414);
+  await setTokenBalance(
+    balancer.provider,
+    ownerAddress,
+    poolTokens[0],
+    amountsIn[0],
+    9
+  );
+  await setTokenBalance(
+    balancer.provider,
+    ownerAddress,
+    poolTokens[1],
+    amountsIn[1],
+    2
+  );
+  await approveToken(
+    poolTokens[0],
+    balancer.contracts.vault.address,
+    amountsIn[0],
+    signer
+  );
+  await approveToken(
+    poolTokens[1],
+    balancer.contracts.vault.address,
+    amountsIn[1],
+    signer
+  );
 
-  const weightedPoolFactory = balancer.pools.poolFactory.of(
-    PoolType.Weighted
-  )
+  const weightedPoolFactory = balancer.pools.poolFactory.of(PoolType.Weighted);
 
   const poolParameters = {
     name: 'My-Test-Pool-Name',
@@ -59,9 +79,8 @@ async function createAndInitJoinWeightedPool() {
       from: ownerAddress,
       to,
       data,
-      gasLimit: 30000000,
     })
-  ).wait()
+  ).wait();
 
   // Check logs of creation receipt to get new pool ID and address
   const { poolAddress, poolId } =
@@ -86,7 +105,6 @@ async function createAndInitJoinWeightedPool() {
   await signer.sendTransaction({
     to: initJoinParams.to,
     data: initJoinParams.data,
-    gasLimit: 30000000,
   });
 
   // Check that pool balances are as expected after join

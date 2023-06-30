@@ -106,7 +106,7 @@ export class PoolsSource {
         const sorPool = ComposableStablePool.fromPool(subgraphPool);
         pool = sorPool as Pool;
       } else {
-        console.error(
+        console.warn(
           `Unknown pool type or type field missing: ${subgraphPool.poolType} ${subgraphPool.id}`
         );
         return undefined;

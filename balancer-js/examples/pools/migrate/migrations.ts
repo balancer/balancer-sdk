@@ -1,10 +1,10 @@
 /**
  * Migrations module contains methods to migrate liquidity between pools
- * 
+ *
  * Run command:
  * yarn example ./examples/pools/migrate/migrations.ts
  */
-import { BalancerSDK } from '@balancer-labs/sdk'
+import { BalancerSDK } from '@balancer-labs/sdk';
 
 const sdk = new BalancerSDK({
   network: 1,
@@ -39,7 +39,6 @@ const main = async () => {
   const peekResult = await provider.call({
     ...peek,
     from: user,
-    gasLimit: 8e6,
   });
   const expectedBptOut = migrationService.getExpectedBptOut(peekResult);
   console.log('expectedBptOut', expectedBptOut.toString(), 'BPT');

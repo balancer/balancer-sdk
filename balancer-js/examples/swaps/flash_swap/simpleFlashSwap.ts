@@ -38,18 +38,12 @@ async function runFlashSwap() {
     const tx = await signer.sendTransaction({
       data: encodedBatchSwapData,
       to: BALANCER_NETWORK_CONFIG[1].addresses.contracts.vault,
-      /**
-       * The following gas inputs are optional,
-       **/
-      // gasPrice: '6000000000',
-      // gasLimit: '2000000',
     });
 
     console.log(tx);
   } catch (err) {
     console.error(err);
   }
-
 }
 
 runFlashSwap();

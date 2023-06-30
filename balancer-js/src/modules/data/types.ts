@@ -18,3 +18,7 @@ export interface Searchable<T> {
   all: () => Promise<T[]>;
   where: (filters: (arg: T) => boolean) => Promise<T[]>;
 }
+
+export interface Cacheable<T> {
+  refresh: (arg: T) => Promise<T>;
+}

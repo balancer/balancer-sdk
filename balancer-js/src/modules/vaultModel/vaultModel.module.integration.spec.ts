@@ -47,14 +47,13 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const networkId = Network.MAINNET;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new JsonRpcProvider(rpcUrl, networkId);
-const gasLimit = 8e6;
 let sor: SOR;
 
 const { contracts } = new Contracts(networkId, provider);
 
 const signer = provider.getSigner();
 const relayerAddress =
-  BALANCER_NETWORK_CONFIG[networkId].addresses.contracts.relayer;
+  BALANCER_NETWORK_CONFIG[networkId].addresses.contracts.balancerRelayer;
 const wrappedNativeAsset =
   BALANCER_NETWORK_CONFIG[networkId].addresses.tokens.wrappedNativeAsset;
 
@@ -251,7 +250,6 @@ async function testFlow(
       await signer.sendTransaction({
         to: callData.to,
         data: callData.data,
-        gasLimit,
       });
 
       const [tokenInBalanceAfter, tokenOutBalanceAfter] = await getBalances(

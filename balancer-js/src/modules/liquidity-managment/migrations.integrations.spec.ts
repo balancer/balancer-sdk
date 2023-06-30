@@ -20,7 +20,7 @@ import { Migrations } from './migrations';
 const migrations = (network: 1 | 137) => {
   const {
     addresses: {
-      contracts: { relayer: relayerAddress, vault: vaultAddress },
+      contracts: { balancerRelayer: relayerAddress, vault: vaultAddress },
     },
   } = BALANCER_NETWORK_CONFIG[network];
 
@@ -111,7 +111,7 @@ const migrations = (network: 1 | 137) => {
       balance: balanceBefore,
     });
 
-    const peekResult = await signer.call({ ...peek, gasLimit: 8e6 });
+    const peekResult = await signer.call({ ...peek });
 
     const expectedBptOut = Migrations.getExpectedBptOut(peekResult);
 
@@ -153,7 +153,7 @@ const migrations = (network: 1 | 137) => {
       to: to.id,
       balance: balanceBefore,
     });
-    const peekResult = await signer.call({ ...peek, gasLimit: 8e6 });
+    const peekResult = await signer.call({ ...peek });
     const expectedBptOut = Migrations.getExpectedBptOut(peekResult);
 
     // NOTICE: When swapping from Linear Pools, the swap will query for the current wrapped token rate.
