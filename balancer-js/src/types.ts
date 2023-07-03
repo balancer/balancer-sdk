@@ -454,3 +454,109 @@ export interface GraphQLQuery {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   attrs: any;
 }
+
+export interface TenderlyRpcTransactionParameters {
+  from?: Address; // hex encoded address "from"
+  to: Address; // hex encoded address "to"
+  gas?: number;
+  maxFeePerGas?: number; // max fee: The maximum total fee per gas the sender is willing to pay (includes the network / base fee and miner / priority fee) in wei
+  maxPriorityFeePerGas?: number; // max priority fee: Maximum fee per gas the sender is willing to pay to miners in wei
+  gasPrice?: number; // The gas price willing to be paid by the sender in wei
+  value?: number;
+  data?: string;
+  accessList?: AccessListTuple[];
+}
+
+export interface AccessListTuple {
+  address: Address; //  hex encoded address
+  storageKeys: string[]; // Array of 32 byte hex encoded storage key
+}
+
+export type TenderlyRpcSimulationBlockNumber =
+  | string // Block Number or...
+  | 'earliest' // Block tag
+  | 'finalized'
+  | 'safe'
+  | 'latest'
+  | 'pending';
+
+export interface TenderlyRpcStateOverridesParameters {
+  [key: Address]: {
+    // the override specification
+    nonce?: string; // hex encoded 8 byte nonce override for the account
+    code?: string; // data of the code override for the account
+    balance?: string; // hex encoded 32 byte balance override for the account in wei
+    stateDiff: {
+      // mapping of storage key to storage value override
+      [key: string]: string; // key: the storage key -- value: the value override for the given storage key
+    };
+  };
+}
+
+export interface TenderlyRpcResponse {
+  id: number | string;
+  jsonrpc: string;
+  result: {
+    status: boolean | number;
+    gasUsed: string;
+    cumulativeGasUsed: string;
+    blockNumber: string;
+    type: string;
+    logsBloom: string;
+    logs: TenderlyRpcLog[];
+    trace: TenderlyRpcTrace[];
+  };
+}
+
+export interface TenderlyRpcLog {
+  name: string;
+  anonymous: boolean | number;
+  input: {
+    name: string;
+    type: string;
+    value?: string;
+  }[];
+  raw: {
+    address: string;
+    topics: string[];
+    data: string;
+  };
+}
+
+export interface TenderlyRpcTrace {
+  type:
+    | string
+    | 'CALL'
+    | 'CALLCODE'
+    | 'STATICCALL'
+    | 'DELEGATECALL'
+    | 'CREATE'
+    | 'CREATE2'
+    | 'SELFDESTRUCT';
+  from: Address;
+  to: Address;
+  gas: string;
+  gasUsed: string;
+  value: string;
+  error: string;
+  errorMessage: string;
+  input: string;
+  method: string | null;
+  decodedInput:
+    | {
+        value: string;
+        type: string;
+        name: string;
+      }[]
+    | null;
+  output: string;
+  decodedOutput:
+    | {
+        value: string;
+        type: string;
+        name: string;
+      }[]
+    | null;
+  subtraces: number;
+  traceAddress: number[];
+}
