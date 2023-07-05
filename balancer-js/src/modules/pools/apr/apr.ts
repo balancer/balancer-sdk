@@ -195,7 +195,8 @@ export class PoolApr {
           const weight = await getWeight(token);
           return Math.round(aprs[idx] * weight);
         } catch (e) {
-          console.log(e);
+          const logger = Logger.getInstance();
+          logger.error(e as string);
           return 0;
         }
       })

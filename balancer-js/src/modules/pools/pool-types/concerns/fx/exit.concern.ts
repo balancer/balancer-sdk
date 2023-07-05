@@ -7,6 +7,7 @@ import {
 } from '@/modules/pools/pool-types/concerns/types';
 
 export class FXExitConcern implements ExitConcern {
+  // eslint-disable-line @typescript-eslint/no-unused-vars
   buildExitExactTokensOut({
     exiter,
     pool,
@@ -15,15 +16,7 @@ export class FXExitConcern implements ExitConcern {
     slippage,
     wrappedNativeAsset,
   }: ExitExactTokensOutParameters): ExitExactTokensOutAttributes {
-    console.log(
-      exiter,
-      pool,
-      tokensOut,
-      amountsOut,
-      slippage,
-      wrappedNativeAsset
-    );
-    throw new Error('Not implemented');
+    throw new Error('FXExitConcern Not implemented');
   }
 
   buildRecoveryExit({

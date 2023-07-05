@@ -13,14 +13,6 @@ export class GyroJoinConcern implements JoinConcern {
     slippage,
     wrappedNativeAsset,
   }: JoinPoolParameters): JoinPoolAttributes {
-    console.log(
-      joiner,
-      pool,
-      tokensIn,
-      amountsIn,
-      slippage,
-      wrappedNativeAsset
-    );
-    throw new Error('Not implemented');
+    throw new Error('GyroJoinConcern Not implemented');
   }
 }
