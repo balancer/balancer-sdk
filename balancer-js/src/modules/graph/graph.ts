@@ -61,14 +61,34 @@ exitActions.set(PoolType.StablePhantom, 'batchSwap');
 exitActions.set(PoolType.Weighted, 'exitPool');
 exitActions.set(PoolType.ComposableStable, 'exitPool');
 
+export interface GraphPool {
+  id: string;
+  address: string;
+  swapFee: string;
+  poolType: PoolType;
+  poolTypeVersion: number;
+  tokensList: string[];
+  totalShares: string;
+  wrappedIndex?: number;
+  mainIndex?: number;
+  tokens: {
+    address: string;
+    balance: string;
+    weight?: string | null;
+    decimals?: number;
+    priceRate?: string;
+  }[];
+}
+
 export class PoolGraph {
   constructor(private pools: Findable<Pool, PoolAttribute>) {}
 
   async buildGraphFromRootPool(
     poolId: string,
-    tokensToUnwrap: string[]
+    tokensToUnwrap: string[],
+    pools?: GraphPool[]
   ): Promise<Node> {
-    const rootPool = await this.pools.find(poolId);
+    const rootPool = await this.findPool({ id: poolId }, pools);
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
     const nodeIndex = 0;
     const rootNode = await this.buildGraphFromPool(
@@ -76,12 +96,13 @@ export class PoolGraph {
       nodeIndex,
       undefined,
       WeiPerEther,
-      tokensToUnwrap
+      tokensToUnwrap,
+      pools
     );
     return rootNode[0];
   }
 
-  getTokenTotal(pool: Pool): BigNumber {
+  getTokenTotal(pool: GraphPool): BigNumber {
     const bptIndex = pool.tokensList.indexOf(pool.address);
     let total = Zero;
     const { balancesEvm } = parsePoolInfo(pool);
@@ -99,9 +120,10 @@ export class PoolGraph {
     nodeIndex: number,
     parent: Node | undefined,
     proportionOfParent: BigNumber,
-    tokensToUnwrap: string[]
+    tokensToUnwrap: string[],
+    pools?: GraphPool[]
   ): Promise<[Node, number]> {
-    const pool = await this.pools.findBy('address', address);
+    const pool = await this.findPool({ address }, pools);
 
     if (!pool) {
       if (!parent) {
@@ -109,10 +131,7 @@ export class PoolGraph {
         throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
       } else {
         // If pool not found by address, but it has parent, assume it's a leaf token and add a leafTokenNode
-        const parentPool = (await this.pools.findBy(
-          'address',
-          parent.address
-        )) as Pool;
+        const parentPool = await this.findPool({ address: parent.address }, pools);
         const tokenIndex = parentPool.tokensList.indexOf(address);
         const leafTokenDecimals = parentPool.tokens[tokenIndex].decimals ?? 18;
         const { balancesEvm } = parsePoolInfo(parentPool);
@@ -204,7 +223,8 @@ export class PoolGraph {
           nodeIndex,
           poolNode,
           finalProportion,
-          tokensToUnwrap
+          tokensToUnwrap,
+          pools
         );
         nodeIndex = childNode[1];
         if (childNode[0]) poolNode.children.push(childNode[0]);
@@ -218,7 +238,7 @@ export class PoolGraph {
    * @param pool
    * @param node
    */
-  updateNodeIfProportionalExit(pool: Pool, node: Node): void {
+  updateNodeIfProportionalExit(pool: GraphPool, node: Node): void {
     if (pool.poolType === PoolType.Weighted) node.isProportionalExit = true;
     else if (
       pool.poolType === PoolType.ComposableStable &&
@@ -230,7 +250,7 @@ export class PoolGraph {
   createLinearNodeChildren(
     linearPoolNode: Node,
     nodeIndex: number,
-    linearPool: Pool,
+    linearPool: GraphPool,
     tokensToUnwrap: string[]
   ): [Node, number] {
     // Main token
@@ -271,7 +291,7 @@ export class PoolGraph {
   }
 
   createWrappedTokenNode(
-    linearPool: Pool,
+    linearPool: GraphPool,
     nodeIndex: number,
     parent: Node | undefined,
     proportionOfParent: BigNumber
@@ -401,16 +421,75 @@ export class PoolGraph {
   getGraphNodes = async (
     isJoin: boolean,
     poolId: string,
-    tokensToUnwrap: string[]
+    tokensToUnwrap: string[],
+    pools?: GraphPool[]
   ): Promise<Node[]> => {
-    const rootPool = await this.pools.find(poolId);
+    const rootPool = await this.findPool({ id: poolId }, pools)
     if (!rootPool) throw new BalancerError(BalancerErrorCode.POOL_DOESNT_EXIST);
 
-    const rootNode = await this.buildGraphFromRootPool(poolId, tokensToUnwrap);
+    const rootNode = await this.buildGraphFromRootPool(poolId, tokensToUnwrap, pools);
 
     if (rootNode.id !== poolId) throw new Error('Error creating graph nodes');
 
     if (isJoin) return PoolGraph.orderByBfs(rootNode).reverse();
     else return PoolGraph.orderByBfs(rootNode);
   };
+
+  /**
+   * Find pools intenally
+   * 
+   * @param params.id pool by id or address
+   * @param params.address pool by id or address
+   * @param pools list of prefetched pools
+   * @returns 
+   */
+  private findPool = async ({ id, address }: { id?: string, address?: string }, pools?: GraphPool[]): Promise<GraphPool> => {
+    let pool: GraphPool | undefined;
+    if (pools && pools.length > 0) {
+      if (id) {
+        pool = pools.find((p) => p.id === id && p.id.includes(p.address.toLowerCase()));
+      } else if (address) {
+        pool = pools.find((p) => p.address === address);
+      }
+    } else {
+      if (id) {
+        pool = await this.pools.find(id);
+      } else if (address) {
+        pool = await this.pools.findBy('address', address);
+      }
+    }
+
+    if (!pool) throw new Error('Pool not found')
+    return pool;
+  }
+
+  /**
+   * Optional fetcher for pools from subgraph to find all the pools needed to build the graph before
+   * starting the graph construction.
+   * 
+   * Makes possible to pass list of pools to the graph constructor instead of tightly coupling it with the subgraph.
+   * 
+   * @param poolId
+   * @returns Pool[]
+   */
+  async findPools(id: string) {
+    const pool = await this.pools.find(id)
+
+    if (!pool) {
+      return []
+    }
+
+    const pools = [pool]
+
+    for (const token of pool.tokens) {
+      if (isSameAddress(token.address, pool.address)) continue
+      const subPool = await this.pools.findBy('address', token.address)
+      if (subPool) {
+        const subPools = await this.findPools(subPool.id)
+        pools.push(...subPools)
+      }
+    }
+
+    return pools
+  }
 }
