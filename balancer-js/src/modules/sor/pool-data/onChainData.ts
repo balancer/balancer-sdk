@@ -5,6 +5,7 @@ import { Multicaller } from '@/lib/utils/multiCaller';
 import { isSameAddress } from '@/lib/utils';
 import { Multicall__factory, Vault__factory } from '@/contracts';
 import { Pool, PoolToken, PoolType } from '@/types';
+import { Logger } from '@/lib/utils/logger';
 
 // TODO: decide whether we want to trim these ABIs down to the relevant functions
 import {
@@ -58,7 +59,8 @@ export async function getOnChainBalances<
       !supportedPoolTypes.includes(pool.poolType) ||
       pool.poolType === 'Managed'
     ) {
-      console.warn(`Unknown pool type: ${pool.poolType} ${pool.id}`);
+      const logger = Logger.getInstance();
+      logger.warn(`Unknown pool type: ${pool.poolType} ${pool.id}`);
       return;
     }
 
@@ -316,7 +318,8 @@ export async function getOnChainBalances<
         subgraphPools[index].poolType === 'StablePhantom'
       ) {
         if (virtualSupply === undefined) {
-          console.warn(
+          const logger = Logger.getInstance();
+          logger.warn(
             `Pool with pre-minted BPT missing Virtual Supply: ${poolId}`
           );
           return;
@@ -324,7 +327,8 @@ export async function getOnChainBalances<
         subgraphPools[index].totalShares = formatFixed(virtualSupply, 18);
       } else if (subgraphPools[index].poolType === 'ComposableStable') {
         if (actualSupply === undefined) {
-          console.warn(`ComposableStable missing Actual Supply: ${poolId}`);
+          const logger = Logger.getInstance();
+          logger.warn(`ComposableStable missing Actual Supply: ${poolId}`);
           return;
         }
         subgraphPools[index].totalShares = formatFixed(actualSupply, 18);
