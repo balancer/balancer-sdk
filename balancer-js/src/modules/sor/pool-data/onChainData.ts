@@ -144,6 +144,7 @@ export async function getOnChainBalances<
         );
         break;
       case 'Element':
+      case 'FX':
         multiPool.call(`${pool.id}.swapFee`, pool.address, 'percentFee');
         break;
       case 'Gyro2':
