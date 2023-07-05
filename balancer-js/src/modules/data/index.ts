@@ -13,6 +13,7 @@ export * from './fee-collector/repository';
 export * from './protocol-fees/provider';
 export * from './token-yields/repository';
 export * from './block-number';
+export * from './nested-pools';
 
 import {
   BalancerNetworkConfig,
