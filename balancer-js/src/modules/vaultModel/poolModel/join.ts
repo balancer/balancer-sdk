@@ -63,7 +63,7 @@ export class JoinModel {
     } else throw new Error('Non supported join data');
   }
 
-  allTokensInForExactBPTOut(encodedUserData: string, pool: Pool): string {
+  allTokensInForExactBPTOut(): string {
     throw new Error('joinAllTokensInForExactBPTOut not supported');
     /*
           We need maths for _calcAllTokensInGivenExactBptOut
@@ -209,10 +209,7 @@ export class JoinModel {
     let amounts: string[] = [];
     if (joinKind === WeightedPoolJoinKind.ALL_TOKENS_IN_FOR_EXACT_BPT_OUT) {
       // Returns amount of tokens in - This isn't currently implemented
-      bptOut = this.allTokensInForExactBPTOut(
-        joinPoolRequest.encodedUserData,
-        pool
-      );
+      bptOut = this.allTokensInForExactBPTOut();
     } else if (joinKind === WeightedPoolJoinKind.EXACT_TOKENS_IN_FOR_BPT_OUT) {
       // Returns amount of BPT out
       [bptOut, tokens, amounts] = this.joinExactTokensInForBPTOut(
