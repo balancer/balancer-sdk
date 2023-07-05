@@ -43,6 +43,7 @@ export interface BalancerSdkConfig {
   //optionally overwrite parts of the standard SOR config
   sor?: Partial<BalancerSdkSorConfig>;
   tenderly?: BalancerTenderlyConfig;
+  enableLogging?: boolean;
 }
 
 export interface BalancerTenderlyConfig {
