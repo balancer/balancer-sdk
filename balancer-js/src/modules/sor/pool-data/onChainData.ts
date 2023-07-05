@@ -15,6 +15,7 @@ import {
   StaticATokenRateProvider__factory,
   WeightedPool__factory,
   GyroEV2__factory,
+  FXPool__factory,
 } from '@/contracts';
 import { JsonFragment } from '@ethersproject/abi';
 
@@ -43,6 +44,7 @@ export async function getOnChainBalances<
         ...(LinearPool__factory.abi as readonly JsonFragment[]),
         ...(ComposableStablePool__factory.abi as readonly JsonFragment[]),
         ...(GyroEV2__factory.abi as readonly JsonFragment[]),
+        ...(FXPool__factory.abi as readonly JsonFragment[]),
       ].map((row) => [row.name, row])
     )
   );
@@ -144,8 +146,14 @@ export async function getOnChainBalances<
         );
         break;
       case 'Element':
-      case 'FX':
         multiPool.call(`${pool.id}.swapFee`, pool.address, 'percentFee');
+        break;
+      case 'FX':
+        multiPool.call(
+          `${pool.id}.swapFee`,
+          pool.address,
+          'protocolPercentFee'
+        );
         break;
       case 'Gyro2':
       case 'Gyro3':
