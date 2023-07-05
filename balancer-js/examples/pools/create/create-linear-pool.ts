@@ -1,6 +1,6 @@
 /**
  * Linear - Create. (Linear Pools are initialized upon creation and can be joined immediately after creation using swaps)
- * 
+ *
  * Run command:
  * yarn example ./examples/pools/create/create-linear-pool.ts
  */
@@ -10,21 +10,21 @@ import {
   Network,
   PoolType,
   ProtocolId,
-} from '@balancer-labs/sdk'
-import { parseEther } from '@ethersproject/units'
+} from '@balancer-labs/sdk';
+import { parseEther } from '@ethersproject/units';
 
 async function createLinearPool() {
   const balancer = new BalancerSDK({
     network: Network.MAINNET,
     rpcUrl: 'http://127.0.0.1:8545', // Using local fork for simulation
-  })
+  });
 
   // Setup join parameters
-  const signer = balancer.provider.getSigner()
-  const ownerAddress = await signer.getAddress()
-  const dai = '0x6b175474e89094c44da98b954eedeac495271d0f'
-  const sape = '0x7966c5bae631294d7cffcea5430b78c2f76db6fa'
-  const poolTokens = [dai, sape]
+  const signer = balancer.provider.getSigner();
+  const ownerAddress = await signer.getAddress();
+  const dai = '0x6b175474e89094c44da98b954eedeac495271d0f';
+  const sape = '0x7966c5bae631294d7cffcea5430b78c2f76db6fa';
+  const poolTokens = [dai, sape];
 
   const poolParameters: LinearCreatePoolParameters = {
     name: 'My-Test-Pool-Name',
@@ -49,9 +49,8 @@ async function createLinearPool() {
     await signer.sendTransaction({
       to,
       data,
-      gasLimit: 30000000,
     })
-  ).wait()
+  ).wait();
 
   // Check logs of creation receipt to get new pool ID and address
   const { poolAddress, poolId } =

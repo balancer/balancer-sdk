@@ -70,19 +70,23 @@ export const printLogs = async (logs: any[]) => {
   };
 
   const printInternalBalanceChanged = (log: any) => {
-    const { user, token, delta } = log.args
-    console.log('\x1b[32m%s\x1b[0m', 'User: ', user)
-    console.log('\x1b[32m%s\x1b[0m', 'Token:', token)
-    console.log('\x1b[32m%s\x1b[0m', 'Delta:', formatEther(delta))
-  }
+    const { user, token, delta } = log.args;
+    console.log('\x1b[32m%s\x1b[0m', 'User: ', user);
+    console.log('\x1b[32m%s\x1b[0m', 'Token:', token);
+    console.log('\x1b[32m%s\x1b[0m', 'Delta:', formatEther(delta));
+  };
 
   const printTransfer = (log: any) => {
     console.log(log.address);
-    const { from, to, value, src, dst, wad, _to, _from, _value } = log.args
-    console.log('\x1b[32m%s\x1b[0m', 'From: ', from || _from || src)
-    console.log('\x1b[32m%s\x1b[0m', 'To:   ', to || _to || dst)
-    console.log('\x1b[32m%s\x1b[0m', 'Value:', formatEther(value || _value || wad))
-  }
+    const { from, to, value, src, dst, wad, _to, _from, _value } = log.args;
+    console.log('\x1b[32m%s\x1b[0m', 'From: ', from || _from || src);
+    console.log('\x1b[32m%s\x1b[0m', 'To:   ', to || _to || dst);
+    console.log(
+      '\x1b[32m%s\x1b[0m',
+      'Value:',
+      formatEther(value || _value || wad)
+    );
+  };
 
   decodedLogs.map((log: any) => {
     console.log('-'.repeat(80));
