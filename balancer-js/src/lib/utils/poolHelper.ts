@@ -1,6 +1,5 @@
 import { parseFixed } from '@ethersproject/bignumber';
 import { AddressZero } from '@ethersproject/constants';
-import { Pool } from '../../types';
 import {
   SolidityMaths,
   _computeScalingFactor,
@@ -31,6 +30,66 @@ type ParsedPoolInfo = {
   totalSharesEvm: bigint;
 };
 
+export const parseBalancesFromPoolTokens = (
+  poolTokens: {
+    balance: string;
+    decimals?: number;
+  }[],
+): bigint[] => {
+  return poolTokens.map((token) => {
+    return parseFixed(token.balance, token.decimals || 18).toBigInt();
+  });
+};
+
+export const parsePriceRatesFromPoolTokens = (
+  poolTokens: {
+    priceRate?: string;
+  }[],
+): bigint[] => {
+  return poolTokens.map((token) => {
+    return parseFixed(token.priceRate ?? '1', 18).toBigInt();
+  });
+};
+
+export const parseScalingFactorsRawFromPoolTokens = (
+  poolTokens: {
+    decimals?: number;
+  }[],
+): bigint[] => {
+  return poolTokens.map((token) => {
+    return _computeScalingFactor(BigInt(token.decimals || 18));
+  });
+};
+
+export const parseScalingFactorsFromPoolTokens = (
+  poolTokens: {
+    decimals?: number;
+    priceRate?: string;
+  }[],
+  scalingFactorsRaw?: bigint[],
+  priceRates?: bigint[]
+): bigint[] => {
+  const sfRaw = scalingFactorsRaw ?? parseScalingFactorsRawFromPoolTokens(poolTokens);
+  const pr = priceRates ?? parsePriceRatesFromPoolTokens(poolTokens);
+  return sfRaw.map((sf, i) =>
+    SolidityMaths.mulDownFixed(sf, pr[i])
+  );
+};
+
+export const parseUpscaledBalancesFromPoolTokens = (
+  poolTokens: {
+    balance: string;
+    decimals?: number;
+    priceRate?: string;
+  }[],
+  scalingFactors?: bigint[],
+  balancesEvm?: bigint[]
+): bigint[] => {
+  const sf = scalingFactors ?? parseScalingFactorsFromPoolTokens(poolTokens);
+  const balEvm = balancesEvm ?? parseBalancesFromPoolTokens(poolTokens);
+  return _upscaleArray(balEvm, sf);
+};
+
 /**
  * Parse pool info into EVM amounts. Sorts by token order if wrappedNativeAsset param passed.
  * @param pool Pool object to be parsed
@@ -39,7 +98,19 @@ type ParsedPoolInfo = {
  * @returns parsed pool info
  */
 export const parsePoolInfo = (
-  pool: Pool,
+  pool: {
+    address: string;
+    swapFee: string;
+    amp?: string;
+    totalShares?: string;
+    tokens: {
+      address: string;
+      balance: string;
+      weight?: string | null;
+      decimals?: number;
+      priceRate?: string;
+    }[];
+  },
   wrappedNativeAsset?: string,
   unwrapNativeAsset?: boolean
 ): ParsedPoolInfo => {
@@ -51,22 +122,16 @@ export const parsePoolInfo = (
   let decimals = pool.tokens.map((token) => {
     return token.decimals ?? 18;
   });
-  let balancesEvm = pool.tokens.map((token) =>
-    parseFixed(token.balance, token.decimals).toBigInt()
-  );
+  let balancesEvm = parseBalancesFromPoolTokens(pool.tokens);
   let weights = pool.tokens.map((token) => {
     return parseFixed(token.weight ?? '1', 18).toBigInt();
   });
-  let priceRates = pool.tokens.map((token) => {
-    return parseFixed(token.priceRate ?? '1', 18).toBigInt();
-  });
-
-  let scalingFactorsRaw = decimals.map((d) => _computeScalingFactor(BigInt(d)));
-  let scalingFactors = scalingFactorsRaw.map((sf, i) =>
-    SolidityMaths.mulDownFixed(sf, priceRates[i])
-  );
+  let priceRates = parsePriceRatesFromPoolTokens(pool.tokens);
+  let scalingFactorsRaw = parseScalingFactorsRawFromPoolTokens(pool.tokens);
+  let scalingFactors = parseScalingFactorsFromPoolTokens(pool.tokens, scalingFactorsRaw, priceRates);
   // This assumes token.balance is in human scale (e.g. from SG)
-  let upScaledBalances = _upscaleArray(balancesEvm, scalingFactors);
+  let upScaledBalances = parseUpscaledBalancesFromPoolTokens(pool.tokens, scalingFactors, balancesEvm);
+
   if (wrappedNativeAsset) {
     const assetHelpers = new AssetHelpers(wrappedNativeAsset);
     [
