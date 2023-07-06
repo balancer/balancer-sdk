@@ -22,6 +22,7 @@ import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { Join } from './actions/join';
 import { Exit } from './actions/exit';
 import { Swap } from './actions/swap';
+import { Logger } from '@/lib/utils/logger';
 
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
@@ -29,7 +30,8 @@ const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 const DEBUG = false;
 
 function debugLog(log: string) {
-  if (DEBUG) console.log(log);
+  const logger = Logger.getInstance();
+  if (DEBUG) logger.info(log);
 }
 
 export function canUseJoinExit(
