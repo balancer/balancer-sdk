@@ -347,7 +347,7 @@ export class Pools implements Findable<PoolWithMethods> {
     encodedCall: string;
     minOut: string;
     expectedOut: string;
-    priceImpact: string;
+    // priceImpact: string;
     value: BigNumberish;
   }> {
     return this.joinService.joinPool(

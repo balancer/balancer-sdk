@@ -322,20 +322,21 @@ export class Exit {
     amountsOut: string[],
     amountBptIn: string
   ): Promise<string> {
-    // Create nodes for each pool/token interaction and order by breadth first
-    const orderedNodesForJoin = await poolGraph.getGraphNodes(true, poolId, []);
-    const joinPaths = Join.getJoinPaths(
-      orderedNodesForJoin,
-      tokensOut,
-      amountsOut
-    );
-    const totalBptZeroPi = Join.totalBptZeroPriceImpact(joinPaths);
-    const priceImpact = calcPriceImpact(
-      BigInt(amountBptIn),
-      totalBptZeroPi.toBigInt(),
-      false
-    ).toString();
-    return priceImpact;
+    return ''
+    // // Create nodes for each pool/token interaction and order by breadth first
+    // const orderedNodesForJoin = await poolGraph.getGraphNodes(true, poolId, []);
+    // const joinPaths = Join.getJoinPaths(
+    //   orderedNodesForJoin,
+    //   tokensOut,
+    //   amountsOut
+    // );
+    // const totalBptZeroPi = Join.totalBptZeroPriceImpact(joinPaths);
+    // const priceImpact = calcPriceImpact(
+    //   BigInt(amountBptIn),
+    //   totalBptZeroPi.toBigInt(),
+    //   false
+    // ).toString();
+    // return priceImpact;
   }
 
   private assertDeltas(

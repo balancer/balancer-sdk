@@ -25,7 +25,7 @@ export interface Node {
   proportionOfParent: BigNumber;
   parent: Node | undefined;
   isLeaf: boolean;
-  spotPrices: SpotPrices;
+  // spotPrices: SpotPrices;
   decimals: number;
   balance: string;
   priceRate: string;
@@ -154,24 +154,23 @@ export class PoolGraph {
       throw new BalancerError(BalancerErrorCode.UNSUPPORTED_POOL_TYPE);
 
     const tokenTotal = this.getTokenTotal(pool);
-    // Spot price service
-    const { spotPriceCalculator } = PoolTypeConcerns.from(pool.poolType);
-    const spotPrices: SpotPrices = {};
-    let decimals = 18;
-    // Spot price of a path is product of the sp of each pool in path. We calculate the sp for each pool token here to use as required later.
-    pool.tokens.forEach((token) => {
-      if (isSameAddress(token.address, pool.address)) {
-        // Updated node with BPT token decimal
-        decimals = token.decimals ? token.decimals : 18;
-        return;
-      }
-      const sp = spotPriceCalculator.calcPoolSpotPrice(
-        token.address,
-        pool.address,
-        pool
-      );
-      spotPrices[token.address] = sp;
-    });
+    const decimals = pool.tokens.find((token) => isSameAddress(token.address, pool.address))?.decimals ?? 18;
+
+    // // Spot price service
+    // const { spotPriceCalculator } = PoolTypeConcerns.from(pool.poolType);
+    // const spotPrices: SpotPrices = {};
+    // // Spot price of a path is product of the sp of each pool in path. We calculate the sp for each pool token here to use as required later.
+    // pool.tokens.forEach((token) => {
+    //   if (isSameAddress(token.address, pool.address)) {
+    //     return;
+    //   }
+    //   const sp = spotPriceCalculator.calcPoolSpotPrice(
+    //     token.address,
+    //     pool.address,
+    //     pool as Pool
+    //   );
+    //   spotPrices[token.address] = sp;
+    // });
 
     let poolNode: Node = {
       address: pool.address,
@@ -186,7 +185,7 @@ export class PoolGraph {
       parent,
       proportionOfParent,
       isLeaf: false,
-      spotPrices,
+      // spotPrices,
       decimals,
       balance: pool.totalShares,
       priceRate: WeiPerEther.toString(),
@@ -318,7 +317,7 @@ export class PoolGraph {
       parent,
       proportionOfParent,
       isLeaf: false,
-      spotPrices: {},
+      // spotPrices: {},
       decimals: 18,
       balance: balancesEvm[linearPool.wrappedIndex].toString(),
       priceRate: priceRates[linearPool.wrappedIndex].toString(),
@@ -372,7 +371,7 @@ export class PoolGraph {
         parent,
         proportionOfParent,
         isLeaf: true,
-        spotPrices: {},
+        // spotPrices: {},
         decimals,
         balance,
         priceRate: WeiPerEther.toString(),

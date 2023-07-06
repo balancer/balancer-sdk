@@ -1,7 +1,7 @@
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { BigNumberish, BigNumber } from '@ethersproject/bignumber';
 import { MaxUint256 } from '@ethersproject/constants';
-import { BatchRelayerLibrary__factory } from '@/contracts';
+import { BalancerRelayer__factory, BatchRelayerLibrary__factory } from '@/contracts';
 import { IVault, Vault } from '@/contracts/Vault';
 import {
   EncodeBatchSwapInput,
@@ -23,6 +23,7 @@ import SingleSwapStruct = IVault.SingleSwapStruct;
 export * from './types';
 
 const relayerLibrary = BatchRelayerLibrary__factory.createInterface();
+const iRelayer = BalancerRelayer__factory.createInterface();
 
 export class Relayer {
   static CHAINED_REFERENCE_TEMP_PREFIX = 'ba10'; // Temporary reference: it is deleted after a read.
@@ -352,4 +353,12 @@ export class Relayer {
 
     return calldata;
   };
+
+  static decodeMulticallResult(result: string) {
+    const decoded = iRelayer.decodeFunctionResult(
+      'multicall',
+      result
+    );
+    return decoded[0];
+  }
 }
