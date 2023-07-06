@@ -335,7 +335,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     chainId: Network.SEPOLIA, //11155111
     addresses: {
       contracts: {
-        multicall: '0x25eef291876194aefad0d60dff89e268b90754bb',
+        multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
         ...addressesByNetwork[Network.SEPOLIA].contracts,
       },
       tokens: {
@@ -346,7 +346,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.studio.thegraph.com/proxy/24660/balancer-sepolia-v2/v0.0.1',
+        'https://api.studio.thegraph.com/query/24660/balancer-sepolia-v2/version/latest',
     },
     thirdParty: {
       coingecko: {
