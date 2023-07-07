@@ -25,7 +25,7 @@ import {
   B_50WBTC_50WETH,
 } from '@/test/lib/mainnetPools';
 import { MockPoolDataService } from '@/test/lib/mockPool';
-import { ADDRESSES } from '@/test/lib/constants';
+import { ADDRESSES, TEST_BLOCK } from '@/test/lib/constants';
 import { Contracts } from '../../contracts/contracts.module';
 import { forkSetup, getBalances } from '@/test/lib/utils';
 dotenv.config();
@@ -34,7 +34,6 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const networkId = Network.MAINNET;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new JsonRpcProvider(rpcUrl, networkId);
-const gasLimit = 8e6;
 let sor: SOR;
 
 const { contracts } = new Contracts(networkId, provider);
@@ -156,7 +155,7 @@ async function testFlow(
     slot: number;
   },
   slippage: string,
-  blockNumber = 16940624
+  blockNumber = TEST_BLOCK[networkId]
 ): Promise<void> {
   context(`${description}`, () => {
     // For now we only support ExactIn case
@@ -223,7 +222,6 @@ async function testFlow(
       const response = await signer.sendTransaction({
         to: callData.to,
         data: callData.data,
-        gasLimit,
       });
 
       const receipt = await response.wait();

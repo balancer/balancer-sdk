@@ -27,16 +27,18 @@ export enum SimulationType {
  */
 
 export class Simulation {
-  private tenderlyHelper: TenderlyHelper;
+  private tenderlyHelper?: TenderlyHelper;
   private vaultModel: VaultModel | undefined;
   constructor(
     networkConfig: BalancerNetworkConfig,
     poolDataService?: PoolDataService
   ) {
-    this.tenderlyHelper = new TenderlyHelper(
-      networkConfig.chainId,
-      networkConfig.tenderly
-    );
+    if (networkConfig.tenderly) {
+      this.tenderlyHelper = new TenderlyHelper(
+        networkConfig.chainId,
+        networkConfig.tenderly
+      );
+    }
     if (!poolDataService) {
       this.vaultModel = undefined;
     } else {
@@ -61,6 +63,9 @@ export class Simulation {
     const amountsOut: string[] = [];
     switch (simulationType) {
       case SimulationType.Tenderly: {
+        if (!this.tenderlyHelper) {
+          throw new Error('Missing Tenderly config');
+        }
         const simulationResult = await this.tenderlyHelper.simulateMulticall(
           to,
           encodedCall,
@@ -116,6 +121,9 @@ export class Simulation {
     const amountsOut: string[] = [];
     switch (simulationType) {
       case SimulationType.Tenderly: {
+        if (!this.tenderlyHelper) {
+          throw new Error('Missing Tenderly config');
+        }
         const simulationResult = await this.tenderlyHelper.simulateMulticall(
           to,
           encodedCall,

@@ -12,6 +12,7 @@ import { Data } from './data';
 import { VaultModel } from './vaultModel/vaultModel.module';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Migrations } from './liquidity-managment/migrations';
+import { Logger } from '@/lib/utils/logger';
 
 export interface BalancerSDKRoot {
   config: BalancerSdkConfig;
@@ -44,6 +45,8 @@ export class BalancerSDK implements BalancerSDKRoot {
     public sor = new Sor(config),
     public subgraph = new Subgraph(config)
   ) {
+    const logger = Logger.getInstance();
+    logger.setLoggingEnabled(!!config.enableLogging);
     this.networkConfig = getNetworkConfig(config);
     this.provider = sor.provider as JsonRpcProvider;
 

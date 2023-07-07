@@ -14,8 +14,12 @@ import type {
   AprBreakdown,
   PoolAttribute,
 } from '@/types';
+import { Logger } from '@/lib/utils/logger';
 
-import { JoinPoolAttributes } from './pool-types/concerns/types';
+import {
+  ExitExactBPTInAttributes,
+  JoinPoolAttributes,
+} from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
@@ -208,7 +212,8 @@ export class Pools implements Findable<PoolWithMethods> {
       };
     } catch (error) {
       if ((error as BalancerError).code != 'UNSUPPORTED_POOL_TYPE') {
-        console.error(error);
+        const logger = Logger.getInstance();
+        logger.warn(error as string);
       }
 
       methods = {
@@ -321,6 +326,73 @@ export class Pools implements Findable<PoolWithMethods> {
   }
 
   /**
+   * Builds join transaction
+   *
+   * @param pool            Pool
+   * @param tokensIn        Token addresses
+   * @param amountsIn       Token amounts in EVM scale
+   * @param userAddress     User address
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @returns               Transaction object
+   * @throws                Error if pool type is not implemented
+   */
+  buildJoin({
+    pool,
+    tokensIn,
+    amountsIn,
+    userAddress,
+    slippage,
+  }: {
+    pool: Pool;
+    tokensIn: string[];
+    amountsIn: string[];
+    userAddress: string;
+    slippage: string;
+  }): JoinPoolAttributes {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+
+    if (!concerns)
+      throw `buildJoin for poolType ${pool.poolType} not implemented`;
+
+    return concerns.join.buildJoin({
+      joiner: userAddress,
+      pool,
+      tokensIn,
+      amountsIn,
+      slippage,
+      wrappedNativeAsset:
+        this.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase(),
+    });
+  }
+
+  buildExitExactBPTIn({
+    pool,
+    bptAmount,
+    userAddress,
+    slippage,
+  }: {
+    pool: Pool;
+    bptAmount: string;
+    userAddress: string;
+    slippage: string;
+  }): ExitExactBPTInAttributes {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+    if (!concerns || !concerns.exit.buildExitExactBPTIn)
+      throw `buildExit for poolType ${pool.poolType} not implemented`;
+
+    return concerns.exit.buildExitExactBPTIn({
+      pool,
+      exiter: userAddress,
+      bptIn: bptAmount,
+      slippage,
+      wrappedNativeAsset:
+        this.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase(),
+      shouldUnwrapNativeAsset: false,
+      toInternalBalance: false,
+    });
+  }
+
+  /**
    * Builds generalised join transaction
    *
    * @param poolId          Pool id
@@ -394,6 +466,32 @@ export class Pools implements Findable<PoolWithMethods> {
       simulationType,
       authorisation,
       tokensToUnwrap
+    );
+  }
+
+  /**
+   * Calculates price impact for an action on a pool
+   *
+   * @param pool
+   * @returns percentage as a string in EVM scale
+   */
+  calcPriceImpact({
+    pool,
+    tokenAmounts,
+    bptAmount,
+    isJoin,
+  }: {
+    pool: Pool;
+    tokenAmounts: string[];
+    bptAmount: string;
+    isJoin: boolean;
+  }): string {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+    return concerns.priceImpactCalculator.calcPriceImpact(
+      pool,
+      tokenAmounts.map(BigInt),
+      BigInt(bptAmount),
+      isJoin
     );
   }
 

@@ -28,7 +28,7 @@ import {
   GRAVI_AURA,
 } from '@/test/lib/mainnetPools';
 import { MockPoolDataService } from '@/test/lib/mockPool';
-import { ADDRESSES } from '@/test/lib/constants';
+import { ADDRESSES, TEST_BLOCK } from '@/test/lib/constants';
 import { Contracts } from '../contracts/contracts.module';
 import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { VaultModel, Requests, ActionType } from './vaultModel.module';
@@ -47,7 +47,6 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const networkId = Network.MAINNET;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new JsonRpcProvider(rpcUrl, networkId);
-const gasLimit = 8e6;
 let sor: SOR;
 
 const { contracts } = new Contracts(networkId, provider);
@@ -162,7 +161,7 @@ async function testFlow(
         slots,
         balances,
         jsonRpcUrl as string,
-        16940624
+        TEST_BLOCK[networkId]
       );
       [sor, vaultModel] = await setUp(networkId, provider, pools);
       await sor.fetchPools();
@@ -251,7 +250,6 @@ async function testFlow(
       await signer.sendTransaction({
         to: callData.to,
         data: callData.data,
-        gasLimit,
       });
 
       const [tokenInBalanceAfter, tokenOutBalanceAfter] = await getBalances(

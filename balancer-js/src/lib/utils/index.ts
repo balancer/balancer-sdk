@@ -2,6 +2,7 @@ import { Address, PoolType } from '@/types';
 import { getAddress } from '@ethersproject/address';
 import { Log, TransactionReceipt } from '@ethersproject/providers';
 import { Interface, LogDescription } from '@ethersproject/abi';
+import { Logger } from '@/lib/utils/logger';
 
 export * from './aaveHelpers';
 export * from './assetHelpers';
@@ -134,7 +135,8 @@ export const findEventInReceiptLogs = ({
       try {
         return contractInterface.parseLog(log);
       } catch (error) {
-        console.error(error);
+        const logger = Logger.getInstance();
+        logger.warn(error as string);
         return null;
       }
     })

@@ -13,6 +13,7 @@ import type {
   LiquidityGauge,
   PoolAttribute,
   TokenAttribute,
+  Cacheable,
 } from '@/modules/data/types';
 import type {
   BaseFeeDistributor,
@@ -42,12 +43,13 @@ export interface BalancerSdkConfig {
   //optionally overwrite parts of the standard SOR config
   sor?: Partial<BalancerSdkSorConfig>;
   tenderly?: BalancerTenderlyConfig;
+  enableLogging?: boolean;
 }
 
 export interface BalancerTenderlyConfig {
-  accessKey?: string;
-  user?: string;
-  project?: string;
+  accessKey: string;
+  user: string;
+  project: string;
   blockNumber?: number;
 }
 
@@ -66,6 +68,7 @@ export interface BalancerSdkSorConfig {
 export interface ContractAddresses {
   vault: string;
   multicall: string;
+  poolDataQueries: string;
   gaugeClaimHelper?: string;
   balancerHelpers: string;
   balancerMinter?: string;
@@ -130,7 +133,9 @@ export interface BalancerDataRepositories {
   // Does it need to be different from the pools repository?
   poolsForSor: SubgraphPoolDataService;
   // Perhaps better to use a function to get upto date balances when needed.
-  poolsOnChain: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  poolsOnChain: Findable<Pool, PoolAttribute> &
+    Searchable<Pool> &
+    Cacheable<Pool>;
   // Replace with a swapFeeRepository, we don't need historic pools for any other reason than to get the swap fee
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;

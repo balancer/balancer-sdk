@@ -18,6 +18,7 @@ import { identity, zipObject, pickBy } from 'lodash';
 import { PoolFees } from '../fees/fees';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { BigNumber } from '@ethersproject/bignumber';
+import { Logger } from '@/lib/utils/logger';
 
 export interface AprBreakdown {
   swapFees: number;
@@ -194,7 +195,8 @@ export class PoolApr {
           const weight = await getWeight(token);
           return Math.round(aprs[idx] * weight);
         } catch (e) {
-          console.log(e);
+          const logger = Logger.getInstance();
+          logger.error(e as string);
           return 0;
         }
       })
@@ -458,7 +460,8 @@ export class PoolApr {
       const liquidity = await liquidityService.getLiquidity(pool);
       return liquidity;
     } catch (err) {
-      console.error('Liquidity calculcation failed, falling back to subgraph');
+      const logger = Logger.getInstance();
+      logger.warn('Liquidity calculcation failed, falling back to subgraph');
       return pool.totalLiquidity;
     }
   }

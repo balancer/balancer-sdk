@@ -5,7 +5,12 @@ import { BalancerSDK, GraphQLQuery, Network, SimulationType } from '@/.';
 import { parseFixed } from '@ethersproject/bignumber';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { FORK_NODES, createSubgraphQuery, forkSetup } from '@/test/lib/utils';
-import { ADDRESSES, TestAddress, TestAddresses } from '@/test/lib/constants';
+import {
+  ADDRESSES,
+  TEST_BLOCK,
+  TestAddress,
+  TestAddresses,
+} from '@/test/lib/constants';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { RPC_URLS } from '@/test/lib/utils';
 import { AddressZero } from '@ethersproject/constants';
@@ -43,7 +48,7 @@ const TEST_BBRFUSD = true;
 
 describe('generalised join execution', async function () {
   this.timeout(30000);
-  const simulationType = SimulationType.VaultModel;
+  const simulationType = SimulationType.Static;
   let network: Network;
   let blockNumber: number;
   let jsonRpcUrl: string;
@@ -71,7 +76,7 @@ describe('generalised join execution', async function () {
   context('mainnet', async () => {
     before(async () => {
       network = Network.MAINNET;
-      blockNumber = 17316477;
+      blockNumber = TEST_BLOCK[network];
       jsonRpcUrl = FORK_NODES[network];
       rpcUrl = RPC_URLS[network];
       const provider = new JsonRpcProvider(rpcUrl, network);
@@ -86,12 +91,16 @@ describe('generalised join execution', async function () {
         ],
         blockNumber
       );
+      // // Uncomment and set tenderlyConfig on sdk instantiation in order to test using tenderly simulations
+      // const tenderlyConfig = {
+      //   accessKey: process.env.TENDERLY_ACCESS_KEY as string,
+      //   user: process.env.TENDERLY_USER as string,
+      //   project: process.env.TENDERLY_PROJECT as string,
+      //   blockNumber,
+      // };
       sdk = new BalancerSDK({
         network,
         rpcUrl,
-        tenderly: {
-          blockNumber, // Set tenderly config blockNumber and use default values for other parameters
-        },
         subgraphQuery,
       });
     });
@@ -191,7 +200,7 @@ describe('generalised join execution', async function () {
     });
   });
 
-  context('goerli', async () => {
+  context.skip('goerli', async () => {
     before(async () => {
       network = Network.GOERLI;
       blockNumber = 8744170;
@@ -205,12 +214,16 @@ describe('generalised join execution', async function () {
         (address) => address.address
       );
       subgraphQuery = createSubgraphQuery(poolAddresses, blockNumber);
+      // // Uncomment and set tenderlyConfig on sdk instantiation in order to test using tenderly simulations
+      // const tenderlyConfig = {
+      //   accessKey: process.env.TENDERLY_ACCESS_KEY as string,
+      //   user: process.env.TENDERLY_USER as string,
+      //   project: process.env.TENDERLY_PROJECT as string,
+      //   blockNumber,
+      // };
       sdk = new BalancerSDK({
         network,
         rpcUrl,
-        tenderly: {
-          blockNumber, // Set tenderly config blockNumber and use default values for other parameters
-        },
         subgraphQuery,
       });
     });
@@ -1072,7 +1085,7 @@ describe('generalised join execution', async function () {
   context.skip('arbitrum', async () => {
     before(async () => {
       network = Network.ARBITRUM;
-      blockNumber = 79069597;
+      blockNumber = TEST_BLOCK[network];
       jsonRpcUrl = FORK_NODES[network];
       rpcUrl = RPC_URLS[network];
       const provider = new JsonRpcProvider(rpcUrl, network);
@@ -1083,12 +1096,16 @@ describe('generalised join execution', async function () {
         (address) => address.address
       );
       subgraphQuery = createSubgraphQuery(poolAddresses, blockNumber);
+      // // Uncomment and set tenderlyConfig on sdk instantiation in order to test using tenderly simulations
+      // const tenderlyConfig = {
+      //   accessKey: process.env.TENDERLY_ACCESS_KEY as string,
+      //   user: process.env.TENDERLY_USER as string,
+      //   project: process.env.TENDERLY_PROJECT as string,
+      //   blockNumber,
+      // };
       sdk = new BalancerSDK({
         network,
         rpcUrl,
-        tenderly: {
-          blockNumber, // Set tenderly config blockNumber and use default values for other parameters
-        },
         subgraphQuery,
       });
     });

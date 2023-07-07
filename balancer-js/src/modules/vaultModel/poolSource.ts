@@ -10,6 +10,7 @@ import {
   PhantomStablePool,
   ComposableStablePool,
 } from '@balancer-labs/sor';
+import { Logger } from '@/lib/utils/logger';
 
 export interface PoolDictionary {
   [poolId: string]: Pool;
@@ -106,7 +107,8 @@ export class PoolsSource {
         const sorPool = ComposableStablePool.fromPool(subgraphPool);
         pool = sorPool as Pool;
       } else {
-        console.error(
+        const logger = Logger.getInstance();
+        logger.warn(
           `Unknown pool type or type field missing: ${subgraphPool.poolType} ${subgraphPool.id}`
         );
         return undefined;

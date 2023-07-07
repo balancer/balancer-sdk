@@ -31,6 +31,7 @@ import { SwapRequest } from '../vaultModel/poolModel/swap';
 import { JoinPoolRequest as JoinPoolModelRequest } from '../vaultModel/poolModel/join';
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { BalancerRelayer__factory } from '@/contracts/factories/BalancerRelayer__factory';
+import { Logger } from '@/lib/utils/logger';
 
 const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
@@ -38,7 +39,8 @@ const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 const DEBUG = false;
 
 function debugLog(log: string) {
-  if (DEBUG) console.log(log);
+  const logger = Logger.getInstance();
+  if (DEBUG) logger.info(log);
 }
 
 export class Join {

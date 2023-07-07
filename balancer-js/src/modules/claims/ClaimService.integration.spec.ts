@@ -164,8 +164,6 @@ describe.skip('join and stake', async () => {
       const approvalTx: TransactionRequest = {
         to: lpToken,
         data: approvalData,
-        gasLimit: 2100000,
-        gasPrice: 8000000000,
       };
       const approvalReceipt = await (
         await signer.sendTransaction(approvalTx)
@@ -180,8 +178,6 @@ describe.skip('join and stake', async () => {
       const depositTx: TransactionRequest = {
         to: gaugeId,
         data: depositData,
-        gasLimit: 2100000,
-        gasPrice: 8000000000,
       };
       const depositReceipt = await (
         await signer.sendTransaction(depositTx)
