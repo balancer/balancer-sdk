@@ -4,6 +4,12 @@ import { AddressZero } from '@ethersproject/constants';
 
 dotenv.config();
 
+export const TEST_BLOCK = {
+  [Network.MAINNET]: 17473802,
+  [Network.POLYGON]: 44145777,
+  [Network.ARBITRUM]: 100899142,
+};
+
 export const PROVIDER_URLS = {
   [Network.MAINNET]: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
   [Network.GOERLI]: `https://goerli.infura.io/v3/${process.env.INFURA}`,

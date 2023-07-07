@@ -2,13 +2,13 @@
 import dotenv from 'dotenv';
 import { parseFixed } from '@ethersproject/bignumber';
 import { Network } from '@/.';
-import { ADDRESSES } from '@/test/lib/constants';
+import { ADDRESSES, TEST_BLOCK } from '@/test/lib/constants';
 import { testFlow, Pool } from './testHelper';
 
 dotenv.config();
 
 const network = Network.MAINNET;
-const blockNumber = 17116836;
+const blockNumber = TEST_BLOCK[network];
 const slippage = '10'; // 10 bps = 0.1%
 const addresses = ADDRESSES[network];
 const poolAddresses = Object.values(addresses).map(

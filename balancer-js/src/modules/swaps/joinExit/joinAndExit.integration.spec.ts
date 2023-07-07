@@ -25,7 +25,7 @@ import {
   B_50WBTC_50WETH,
 } from '@/test/lib/mainnetPools';
 import { MockPoolDataService } from '@/test/lib/mockPool';
-import { ADDRESSES } from '@/test/lib/constants';
+import { ADDRESSES, TEST_BLOCK } from '@/test/lib/constants';
 import { Contracts } from '../../contracts/contracts.module';
 import { forkSetup, getBalances } from '@/test/lib/utils';
 dotenv.config();
@@ -155,7 +155,7 @@ async function testFlow(
     slot: number;
   },
   slippage: string,
-  blockNumber = 16940624
+  blockNumber = TEST_BLOCK[networkId]
 ): Promise<void> {
   context(`${description}`, () => {
     // For now we only support ExactIn case
