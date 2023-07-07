@@ -3,6 +3,7 @@ import { SubgraphPoolBase, SubgraphToken } from '@balancer-labs/sor';
 import { Pool, PoolToken, PoolType } from '@/types';
 import { decorateGyroEv2 } from './multicall/gyroEv2';
 import { getPoolsFromDataQuery } from './poolDataQueries';
+import { Logger } from '@/lib/utils/logger';
 
 export type Tokens = (SubgraphToken | PoolToken)[];
 
