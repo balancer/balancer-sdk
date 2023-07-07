@@ -22,7 +22,8 @@ export async function getOnChainPools<GenericPool extends BalancerPool>(
   const supportedPoolTypes: string[] = Object.values(PoolType);
   const filteredPools = subgraphPoolsOriginal.filter((p) => {
     if (!supportedPoolTypes.includes(p.poolType) || p.poolType === 'Managed') {
-      console.warn(`Unknown pool type: ${p.poolType} ${p.id}`);
+      const logger = Logger.getInstance();
+      logger.warn(`Unknown pool type: ${p.poolType} ${p.id}`);
       return false;
     } else return true;
   });
