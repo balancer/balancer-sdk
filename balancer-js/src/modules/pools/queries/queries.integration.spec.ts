@@ -3,6 +3,8 @@ import { expect } from 'chai';
 import { BalancerSDK, Network, PoolType } from '@/.';
 import { bn } from '@/lib/utils';
 import { ParamsBuilder } from '.';
+import { zipObject } from "lodash";
+import { BigNumber } from "@ethersproject/bignumber";
 
 dotenv.config();
 
@@ -63,18 +65,18 @@ const { balancerHelpers } = contracts;
 describe('join and exit queries', () => {
   // for each poolType test outputs
   pools.forEach((pool) => {
-    context(`${pool.poolType} pool`, () => {
+    context(`${ pool.poolType } pool`, () => {
       before(async () => {
         queryParams = new ParamsBuilder(pool);
       });
 
       it('should joinExactIn', async () => {
-        const maxAmountsIn = [bn(1)];
-        const tokensIn = [pool.tokensList[1]];
+        const maxAmountsInByToken = new Map<string, BigNumber>([
+          [pool.tokensList[1], bn(1)],
+        ]);
 
         const params = queryParams.buildQueryJoinExactIn({
-          maxAmountsIn,
-          tokensIn,
+          maxAmountsInByToken,
         });
         const join = await balancerHelpers.callStatic.queryJoin(...params);
         expect(Number(join.bptOut)).to.be.gt(0);

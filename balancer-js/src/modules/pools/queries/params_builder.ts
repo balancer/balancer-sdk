@@ -21,36 +21,32 @@ export class ParamsBuilder implements PoolQueries.ParamsBuilder {
 
   /**
    * Encodes the query to get expected amount of BPT when joining a Pool with exact token inputs
-   * @param maxAmountsIn - the amounts each of token to deposit in the pool as liquidity, doesn't need to be for all tokens, order needs to match tokensIn
-   * @param tokensIn - The token address for each token that will be deposited in the pool, order needs to match maxAmountsIn
+   * @param maxAmountsInByToken - The amounts each of token, mapped by token address, to deposit in the pool as liquidity,
+   *                       doesn't need to have all tokens, only the ones that will be deposited
    * @param minimumBPT - the minimum acceptable BPT to receive in return for deposited tokens (optional)
-   * @param fromInternalBalance
    */
   buildQueryJoinExactIn({
-    maxAmountsIn,
-    tokensIn,
+    maxAmountsInByToken,
     minimumBPT = Zero,
   }: PoolQueries.JoinExactInParams): PoolQueries.queryJoinParams {
     const bptIndex = this.pool.tokensList.findIndex((token) =>
       this.pool.id.includes(token)
     );
-    // Sort amounts in by token address
-    const tokenMaxAmountsInByAddress: Map<string, BigNumber> = tokensIn.reduce(
-      (acc, tokenAddress, index) => {
-        return acc.set(tokenAddress, maxAmountsIn[index]);
-      },
-      new Map<string, BigNumber>()
-    );
 
     const assets = [...this.pool.tokensList];
 
-    let maxInWithoutBpt = this.pool.tokensList.map(
+    const maxAmountsIn = this.pool.tokensList.map(
       (tokenAddress) =>
-        tokenMaxAmountsInByAddress.get(tokenAddress) ?? BigNumber.from('0')
+        maxAmountsInByToken.get(tokenAddress) ?? BigNumber.from('0')
     );
+
+    let maxInWithoutBpt;
+
     // Remove BPT token from amounts for user data
     if (bptIndex > -1) {
-      maxInWithoutBpt = removeItem(maxInWithoutBpt, bptIndex);
+      maxInWithoutBpt = removeItem(maxAmountsIn, bptIndex);
+    } else {
+      maxInWithoutBpt = maxAmountsIn;
     }
 
     const userData = this.encoder.joinExactTokensInForBPTOut(

@@ -51,8 +51,7 @@ export interface Pool {
 }
 
 export interface JoinExactInParams {
-  maxAmountsIn: BigNumber[];
-  tokensIn: string[];
+  maxAmountsInByToken: Map<string, BigNumber>;
   minimumBPT?: BigNumber;
 }
 
