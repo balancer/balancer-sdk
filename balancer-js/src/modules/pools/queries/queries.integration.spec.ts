@@ -3,9 +3,7 @@ import { expect } from 'chai';
 import { BalancerSDK, Network, PoolType } from '@/.';
 import { bn } from '@/lib/utils';
 import { ParamsBuilder } from '.';
-import { zipObject } from "lodash";
-import { BigNumber } from "@ethersproject/bignumber";
-
+import { BigNumber } from '@ethersproject/bignumber';
 dotenv.config();
 
 const rpcUrl = process.env.ALCHEMY_URL || 'http://127.0.0.1:8545';
@@ -65,7 +63,7 @@ const { balancerHelpers } = contracts;
 describe('join and exit queries', () => {
   // for each poolType test outputs
   pools.forEach((pool) => {
-    context(`${ pool.poolType } pool`, () => {
+    context(`${pool.poolType} pool`, () => {
       before(async () => {
         queryParams = new ParamsBuilder(pool);
       });
