@@ -7,6 +7,7 @@
 
 import { BalancerSDK, PoolWithMethods } from '@balancer-labs/sdk'
 import { parseEther, formatEther } from '@ethersproject/units'
+import { BigNumber } from "@ethersproject/bignumber";
 
 const sdk = new BalancerSDK({
   network: 1,
@@ -21,9 +22,9 @@ const {
 // Joining with a single token
 const queryJoin = async (pool: PoolWithMethods) => {
   const token = pool.tokensList[0];
+  const maxAmountsInByToken = new Map<string,BigNumber>([[token, parseEther('1')]]);
   const joinExactInQuery = pool.buildQueryJoinExactIn({
-    maxAmountsIn: [parseEther('1')],
-    tokensIn: [token]
+    maxAmountsInByToken
   });
 
   const response = await contracts.balancerHelpers.callStatic.queryJoin(
