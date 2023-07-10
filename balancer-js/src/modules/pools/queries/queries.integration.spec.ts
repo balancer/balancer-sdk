@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { BalancerSDK, Network, PoolType } from '@/.';
 import { bn } from '@/lib/utils';
 import { ParamsBuilder } from '.';
-
+import { BigNumber } from '@ethersproject/bignumber';
 dotenv.config();
 
 const rpcUrl = process.env.ALCHEMY_URL || 'http://127.0.0.1:8545';
@@ -69,11 +69,12 @@ describe('join and exit queries', () => {
       });
 
       it('should joinExactIn', async () => {
-        const maxAmountsIn = Array(pool.tokensList.length).fill(bn(0));
-        maxAmountsIn[1] = bn(1);
+        const maxAmountsInByToken = new Map<string, BigNumber>([
+          [pool.tokensList[1], bn(1)],
+        ]);
 
         const params = queryParams.buildQueryJoinExactIn({
-          maxAmountsIn,
+          maxAmountsInByToken,
         });
         const join = await balancerHelpers.callStatic.queryJoin(...params);
         expect(Number(join.bptOut)).to.be.gt(0);
@@ -116,10 +117,12 @@ describe('join and exit queries', () => {
           pool.id.includes(token)
         );
         const minAmountsOut = Array(pool.tokensList.length).fill(bn(1));
+        const tokensOut = pool.tokensList;
         if (bptIndex > -1) minAmountsOut[bptIndex] = bn(0);
 
         const params = queryParams.buildQueryExitExactOut({
           minAmountsOut,
+          tokensOut,
         });
         const exit = await balancerHelpers.callStatic.queryExit(...params);
         expect(Number(exit.bptIn)).to.be.gt(0);

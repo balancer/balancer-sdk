@@ -6,15 +6,19 @@ export interface Encoder {
     amountsIn: BigNumber[],
     minimumBPT: BigNumber
   ): string;
+
   joinTokenInForExactBPTOut(
     bptAmountOut: BigNumber,
     enterTokenIndex: number
   ): string;
+
   exitExactBPTInForOneTokenOut(
     bptAmountIn: BigNumber,
     exitTokenIndex: number
   ): string;
+
   exitExactBPTInForTokensOut?(bptAmountIn: BigNumber): string;
+
   exitBPTInForExactTokensOut(
     amountsOut: BigNumber[],
     maxBPTAmountIn: BigNumber
@@ -23,11 +27,15 @@ export interface Encoder {
 
 export interface ParamsBuilder {
   buildQueryJoinExactIn(params: JoinExactInParams): queryJoinParams;
+
   buildQueryJoinExactOut(params: JoinExactOutParams): queryJoinParams;
+
   buildQueryExitToSingleToken(params: ExitToSingleTokenParams): queryExitParams;
+
   buildQueryExitProportionally(
     params: ExitProportionallyParams
   ): queryExitParams;
+
   buildQueryExitExactOut(params: ExitExactOutParams): queryExitParams;
 }
 
@@ -43,45 +51,31 @@ export interface Pool {
 }
 
 export interface JoinExactInParams {
-  sender?: string;
-  recipient?: string;
-  maxAmountsIn: BigNumber[];
+  maxAmountsInByToken: Map<string, BigNumber>;
   minimumBPT?: BigNumber;
-  fromInternalBalance?: boolean;
 }
 
 export interface JoinExactOutParams {
-  sender?: string;
-  recipient?: string;
-  maxAmountsIn?: BigNumber[];
+  maxAmountIn?: BigNumber;
   bptOut: BigNumber;
   tokenIn: string;
-  fromInternalBalance?: boolean;
 }
 
 export interface ExitToSingleTokenParams {
-  sender?: string;
-  recipient?: string;
-  minAmountsOut?: BigNumber[];
+  minAmountOut?: BigNumber;
   bptIn: BigNumber;
   tokenOut: string;
-  toInternalBalance?: boolean;
 }
 
 export interface ExitProportionallyParams {
-  sender?: string;
-  recipient?: string;
   minAmountsOut?: BigNumber[];
   bptIn: BigNumber;
-  toInternalBalance?: boolean;
 }
 
 export interface ExitExactOutParams {
-  sender?: string;
-  recipient?: string;
   minAmountsOut: BigNumber[];
+  tokensOut: string[];
   maxBptIn?: BigNumber;
-  toInternalBalance?: boolean;
 }
 
 export type queryJoinParams = [
