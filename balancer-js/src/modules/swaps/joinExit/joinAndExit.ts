@@ -22,6 +22,7 @@ import balancerRelayerAbi from '@/lib/abi/BalancerRelayer.json';
 import { Join } from './actions/join';
 import { Exit } from './actions/exit';
 import { Swap } from './actions/swap';
+import { Logger } from '@/lib/utils/logger';
 
 const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 
@@ -29,7 +30,8 @@ const balancerRelayerInterface = new Interface(balancerRelayerAbi);
 const DEBUG = false;
 
 function debugLog(log: string) {
-  if (DEBUG) console.log(log);
+  const logger = Logger.getInstance();
+  if (DEBUG) logger.info(log);
 }
 
 export function canUseJoinExit(
@@ -72,7 +74,12 @@ export function hasJoinExit(
  * @param assets
  * @returns
  */
-export function isJoin(swap: SwapV2, assets: string[]): boolean {
+export function isJoin(
+  swap: SwapV2,
+  assets: string[],
+  poolType: string | undefined
+): boolean {
+  if (poolType !== 'Weighted') return false;
   // token[join]bpt
   const tokenOut = assets[swap.assetOutIndex];
   const poolAddress = getPoolAddress(swap.poolId);
@@ -85,7 +92,12 @@ export function isJoin(swap: SwapV2, assets: string[]): boolean {
  * @param assets
  * @returns
  */
-export function isExit(swap: SwapV2, assets: string[]): boolean {
+export function isExit(
+  swap: SwapV2,
+  assets: string[],
+  poolType: string | undefined
+): boolean {
+  if (poolType !== 'Weighted') return false;
   // bpt[exit]token
   const tokenIn = assets[swap.assetInIndex];
   const poolAddress = getPoolAddress(swap.poolId);
@@ -141,7 +153,8 @@ export function getActions(
   const actions: Actions[] = [];
   let opRefKey = 0;
   for (const swap of swaps) {
-    if (isJoin(swap, assets)) {
+    const poolType = pools.find((p) => p.id === swap.poolId)?.poolType;
+    if (isJoin(swap, assets, poolType)) {
       const newJoin = new Join(
         swap,
         tokenInIndex,
@@ -155,7 +168,7 @@ export function getActions(
       opRefKey = newJoin.nextOpRefKey;
       actions.push(newJoin);
       continue;
-    } else if (isExit(swap, assets)) {
+    } else if (isExit(swap, assets, poolType)) {
       const newExit = new Exit(
         swap,
         tokenInIndex,

@@ -1,5 +1,6 @@
 import type { Findable, Price } from '@/types';
 import { IAaveRates } from './aave-rates';
+import { Logger } from '@/lib/utils/logger';
 
 export class TokenPriceProvider implements Findable<Price> {
   constructor(
@@ -16,7 +17,8 @@ export class TokenPriceProvider implements Findable<Price> {
         throw new Error('Price not found');
       }
     } catch (err) {
-      console.warn(err);
+      const logger = Logger.getInstance();
+      logger.warn(err as string);
       price = await this.subgraphRepository.find(address);
     }
     const rate = (await this.aaveRates.getRate(address)) || 1;

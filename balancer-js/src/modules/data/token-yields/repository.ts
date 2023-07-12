@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Findable } from '@/types';
+import { Logger } from '@/lib/utils/logger';
 
 export class TokenYieldsRepository implements Findable<number> {
   private yields?: Promise<{ [address: string]: number }>;
@@ -18,7 +19,8 @@ export class TokenYieldsRepository implements Findable<number> {
         [key: string]: number;
       };
     } catch (error) {
-      console.warn('Failed to fetch yield tokens:', error);
+      const logger = Logger.getInstance();
+      logger.warn(`Failed to fetch yield tokens: ${error}`);
     }
 
     return aprs;

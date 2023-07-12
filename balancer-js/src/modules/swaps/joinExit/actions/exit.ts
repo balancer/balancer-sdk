@@ -79,7 +79,6 @@ export class Exit extends BaseAction implements Action {
       outputReferences: this.opRef.key ? [this.opRef] : [],
       exitPoolRequest: {} as ExitPoolRequest,
     };
-    // console.log(exitParams);
     const exitPoolInput = Relayer.formatExitPoolInput(params);
     const callData = Relayer.encodeExitPool(exitPoolInput);
     return {

@@ -156,7 +156,6 @@ export class Swap extends BaseAction implements Action {
       value: '0',
       outputReferences: this.opRef,
     };
-    // console.log(batchSwapInput);
 
     const encodedBatchSwap = Relayer.encodeBatchSwap(batchSwapInput);
     calls.push(encodedBatchSwap);

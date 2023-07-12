@@ -14,6 +14,7 @@ import type {
   AprBreakdown,
   PoolAttribute,
 } from '@/types';
+import { Logger } from '@/lib/utils/logger';
 
 import {
   ExitExactBPTInAttributes,
@@ -211,7 +212,8 @@ export class Pools implements Findable<PoolWithMethods> {
       };
     } catch (error) {
       if ((error as BalancerError).code != 'UNSUPPORTED_POOL_TYPE') {
-        console.warn(error);
+        const logger = Logger.getInstance();
+        logger.warn(error as string);
       }
 
       methods = {
