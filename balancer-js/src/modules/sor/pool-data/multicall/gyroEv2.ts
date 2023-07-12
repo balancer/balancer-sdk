@@ -7,6 +7,7 @@ import { Pool, PoolType } from '@/types';
 import { GyroEV2__factory } from '@/contracts';
 import { JsonFragment } from '@ethersproject/abi';
 import { BalancerPool } from '../onChainData';
+import { Logger } from '@/lib/utils/logger';
 
 type TokenRates = Record<
   string,
@@ -74,7 +75,8 @@ async function getGyroTokenRates<
   const multiPool = new Multicaller(multicall, abis);
   gyroPools.forEach((pool) => {
     if (!(pool.poolType === PoolType.GyroE && pool.poolTypeVersion === 2)) {
-      console.warn(
+      const logger = Logger.getInstance();
+      logger.warn(
         `Incorrectly calling tokenRates on pool: ${pool.poolType} ${pool.id}`
       );
       return;
