@@ -177,7 +177,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     addresses: {
       contracts: {
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
-        poolDataQueries: '',
+        poolDataQueries: '0x6d3197d069F8F9f1Fe7e23665Bc64CB77ED8b089',
         veBal: '0x33A99Dcc4C85C014cf12626959111D5898bbCAbF',
         veBalProxy: '0xA1F107D1cD709514AE8A914eCB757E95f9cedB31',
         erc4626LinearPoolFactory: '0xba240c856498e2d7a70af4911aafae0d6b565a5b',
