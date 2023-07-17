@@ -1,7 +1,7 @@
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { BalancerPoolDataQueries__factory } from './contracts';
 
-const provider = new JsonRpcProvider('https://zkevm-rpc.com', 1101);
+const provider = new JsonRpcProvider('http://127.0.0.1:8110', 1101);
 const poolDataQueryConfig = {
   poolIds: [
     '0x1d0a8a31cdb04efac3153237526fb15cc65a252000000000000000000000000f',
