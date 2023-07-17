@@ -2,6 +2,7 @@ import { TokenPriceService } from '@balancer-labs/sor';
 import axios from 'axios';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { Network, BalancerNetworkConfig } from '@/types';
+import { isUndefined } from "lodash";
 
 export class CoingeckoTokenPriceService implements TokenPriceService {
   constructor(private readonly chainId: number) {}
@@ -31,7 +32,10 @@ export class CoingeckoTokenPriceService implements TokenPriceService {
       },
     });
 
-    if (data[tokenAddress.toLowerCase()][this.nativeAssetId] === undefined) {
+    if (
+      isUndefined(data[tokenAddress.toLowerCase()]) ||
+      isUndefined(data[tokenAddress.toLowerCase()][this.nativeAssetId])
+    ) {
       throw Error('No price returned from Coingecko');
     }
 
