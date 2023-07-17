@@ -548,7 +548,7 @@
       "authorizerAdaptor": "0xdae7e32adc5d490a43ccba1f0c736033f2b4efca",
       "authorizerAdaptorEntrypoint": "0x4e7bbd911cf1efa442bc1b2e9ea01ffe785412ec",
       "authorizerWithAdaptorValidation": "0x8df317a729fcaa260306d7de28888932cb579b88",
-      "bal": "0x8239a6b877804206c7799028232a7188da487cec",
+      "bal": "0xe15bcb9e0ea69e6ab9fa080c4c4a5632896298c3",
       "balancerHelpers": "0x8e9aa87e45e92bad84d5f8dd1bff34fb92637de9",
       "balancerQueries": "0xc128468b7ce63ea702c1f104d55a2566b13d3abd",
       "balancerRelayer": "0x03f1ab8b19bce21eb06c364aec9e40322572a1e9",
