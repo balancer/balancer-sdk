@@ -9,11 +9,12 @@ import {
   PoolWithMethods,
 } from '@/.';
 import { TestPoolHelper } from '@/test/lib/utils';
+import { TEST_BLOCK } from '@/test/lib/constants';
 
 const rpcUrl = 'http://127.0.0.1:8545';
 const network = Network.MAINNET;
 // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
-const blockNumber = 13309758;
+const blockNumber = TEST_BLOCK[network];
 const testPoolId =
   '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080'; // Balancer stETH Stable Pool
 

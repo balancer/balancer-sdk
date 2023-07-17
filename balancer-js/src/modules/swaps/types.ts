@@ -2,6 +2,17 @@ import { SwapInfo } from '@balancer-labs/sor';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { Vault } from '@/contracts/Vault';
 
+export interface TokenAmounts {
+  [token: string]: string;
+}
+
+export interface SwapsOptions {
+  maxPools?: number;
+  gasPrice?: string;
+  deadline?: string;
+  maxSlippage?: number;
+}
+
 export enum SwapType {
   SwapExactIn,
   SwapExactOut,
@@ -82,7 +93,7 @@ export interface FindRouteParameters {
   tokenOut: string;
   amount: BigNumber;
   gasPrice: BigNumber;
-  maxPools: number;
+  maxPools?: number;
 }
 
 export interface BuildTransactionParameters {
@@ -90,7 +101,7 @@ export interface BuildTransactionParameters {
   recipient?: string;
   swapInfo: SwapInfo;
   kind: SwapType;
-  deadline: BigNumber;
+  deadline: string;
   maxSlippage: number;
 }
 

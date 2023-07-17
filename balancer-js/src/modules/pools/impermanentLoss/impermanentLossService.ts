@@ -10,6 +10,7 @@
  */
 import { BalancerError, BalancerErrorCode } from '@/balancerErrors';
 import { Findable, Pool, PoolToken, Price } from '@/types';
+import { Logger } from '@/lib/utils/logger';
 
 type Asset = {
   priceDelta: number;
@@ -213,13 +214,15 @@ export class ImpermanentLossService {
       const price = await this.tokenHistoricalPrices
         .findBy(address, timestamp)
         .catch((reason) => {
-          console.error(
+          const logger = Logger.getInstance();
+          logger.warn(
             `[ImpermanentLossService][getEntryPrices]Error: ${reason.message}`
           );
           return undefined;
         });
       if (!price?.usd) {
-        console.error(
+        const logger = Logger.getInstance();
+        logger.warn(
           `[ImpermanentLossService][getEntryPrices]Error: ${BalancerError.getMessage(
             BalancerErrorCode.MISSING_PRICE_RATE
           )}`

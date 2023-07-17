@@ -6,6 +6,7 @@ import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { PoolJoinExitRepository, PoolSharesRepository } from '@/modules/data';
 import {
   BalancerDataRepositories,
+  Cacheable,
   Findable,
   LiquidityGauge,
   Network,
@@ -39,11 +40,12 @@ export const findable = <T, P = string, V = any>(
 
 export const stubbed = <T, P = string, V = any>(
   value: unknown
-): Findable<T, P, V> & Searchable<T> => ({
+): Findable<T, P, V> & Searchable<T> & Cacheable<T> => ({
   find: (id: string) => Promise.resolve(value as T),
   findBy: (param: P, _: V) => Promise.resolve(value as T),
   all: () => Promise.resolve([value as T]),
   where: (filters: (arg: T) => boolean) => Promise.resolve([value as T]),
+  refresh: (obj: T) => Promise.resolve(value as T),
 });
 
 export const aaveRates = {

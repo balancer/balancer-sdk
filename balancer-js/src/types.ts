@@ -13,6 +13,7 @@ import type {
   LiquidityGauge,
   PoolAttribute,
   TokenAttribute,
+  Cacheable,
 } from '@/modules/data/types';
 import type {
   BaseFeeDistributor,
@@ -42,12 +43,13 @@ export interface BalancerSdkConfig {
   //optionally overwrite parts of the standard SOR config
   sor?: Partial<BalancerSdkSorConfig>;
   tenderly?: BalancerTenderlyConfig;
+  enableLogging?: boolean;
 }
 
 export interface BalancerTenderlyConfig {
-  accessKey?: string;
-  user?: string;
-  project?: string;
+  accessKey: string;
+  user: string;
+  project: string;
   blockNumber?: number;
 }
 
@@ -66,11 +68,12 @@ export interface BalancerSdkSorConfig {
 export interface ContractAddresses {
   vault: string;
   multicall: string;
+  poolDataQueries: string;
   gaugeClaimHelper?: string;
   balancerHelpers: string;
-  balancerMinterAddress?: string;
+  balancerMinter?: string;
   lidoRelayer?: string;
-  relayer: string;
+  balancerRelayer: string;
   gaugeController?: string;
   feeDistributor?: string;
   veBal?: string;
@@ -84,6 +87,8 @@ export interface ContractAddresses {
   eulerLinearPoolFactory?: string;
   gearboxLinearPoolFactory?: string;
   yearnLinearPoolFactory?: string;
+
+  [key: string]: string | undefined;
 }
 
 export interface BalancerNetworkConfig {
@@ -95,7 +100,7 @@ export interface BalancerNetworkConfig {
       lbpRaisingTokens?: string[];
       stETH?: string;
       wstETH?: string;
-      bal?: string;
+      bal: string;
       veBal?: string;
       bbaUsd?: string;
     };
@@ -106,6 +111,13 @@ export interface BalancerNetworkConfig {
     gaugesSubgraph?: string;
     blockNumberSubgraph?: string;
   };
+  thirdParty: {
+    coingecko: {
+      nativeAssetId: string;
+      platformId: string;
+    };
+  };
+  averageBlockTime?: number; // In seconds, used if blockNumberSubgraph not set
   pools: {
     wETHwstETH?: PoolReference;
   };
@@ -114,9 +126,17 @@ export interface BalancerNetworkConfig {
 }
 
 export interface BalancerDataRepositories {
+  /**
+   * Why do we need 3 different pools repositories?
+   */
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  // Does it need to be different from the pools repository?
   poolsForSor: SubgraphPoolDataService;
-  poolsOnChain: Findable<Pool, PoolAttribute> & Searchable<Pool>;
+  // Perhaps better to use a function to get upto date balances when needed.
+  poolsOnChain: Findable<Pool, PoolAttribute> &
+    Searchable<Pool> &
+    Cacheable<Pool>;
+  // Replace with a swapFeeRepository, we don't need historic pools for any other reason than to get the swap fee
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   tokenPrices: Findable<Price>;
   tokenHistoricalPrices: Findable<Price>;
@@ -331,6 +351,8 @@ export interface Pool {
   priceRateProviders?: PriceRateProvider[];
   lastPostJoinExitInvariant?: string;
   isInRecoveryMode?: boolean;
+  isPaused?: boolean;
+  tokenRates?: string[];
 }
 
 export interface PriceRateProvider {

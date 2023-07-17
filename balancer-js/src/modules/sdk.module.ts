@@ -12,6 +12,7 @@ import { Data } from './data';
 import { VaultModel } from './vaultModel/vaultModel.module';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Migrations } from './liquidity-managment/migrations';
+import { Logger } from '@/lib/utils/logger';
 
 export interface BalancerSDKRoot {
   config: BalancerSdkConfig;
@@ -44,22 +45,26 @@ export class BalancerSDK implements BalancerSDKRoot {
     public sor = new Sor(config),
     public subgraph = new Subgraph(config)
   ) {
+    const logger = Logger.getInstance();
+    logger.setLoggingEnabled(!!config.enableLogging);
     this.networkConfig = getNetworkConfig(config);
     this.provider = sor.provider as JsonRpcProvider;
-
-    this.data = new Data(
-      this.networkConfig,
-      sor.provider,
-      config.subgraphQuery
-    );
-    this.swaps = new Swaps(this.config);
-    this.relayer = new Relayer();
-    this.pricing = new Pricing(config, this.swaps);
 
     this.balancerContracts = new Contracts(
       this.networkConfig.addresses.contracts,
       sor.provider
     );
+
+    this.data = new Data(
+      this.networkConfig,
+      sor.provider,
+      this.balancerContracts,
+      config.subgraphQuery
+    );
+
+    this.swaps = new Swaps(this.config);
+    this.relayer = new Relayer();
+    this.pricing = new Pricing(config, this.swaps);
 
     this.pools = new Pools(
       this.networkConfig,
@@ -72,17 +77,16 @@ export class BalancerSDK implements BalancerSDKRoot {
         this.data.liquidityGauges,
         this.data.feeDistributor,
         this.networkConfig.chainId,
-        this.networkConfig.addresses.contracts.multicall,
-        this.provider,
+        this.contracts.multicall,
         this.networkConfig.addresses.contracts.gaugeClaimHelper,
-        this.networkConfig.addresses.contracts.balancerMinterAddress
+        this.networkConfig.addresses.contracts.balancerMinter
       );
-      this.migrationService = new Migrations(
-        this.networkConfig.addresses.contracts.relayer,
-        this.data.pools,
-        this.data.liquidityGauges.subgraph,
-        this.provider
-      );
+      this.migrationService = new Migrations({
+        relayerAddress: this.networkConfig.addresses.contracts.balancerRelayer,
+        poolsRepository: this.data.pools,
+        gaugesRepository: this.data.liquidityGauges.subgraph,
+        provider: this.provider,
+      });
     }
     this.vaultModel = new VaultModel(
       this.data.poolsForSor,

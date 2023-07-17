@@ -10,7 +10,7 @@ import {
   Network,
   PoolWithMethods,
 } from '@/.';
-import { ADDRESSES } from '@/test/lib/constants';
+import { ADDRESSES, TEST_BLOCK } from '@/test/lib/constants';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
 import {
   testAttributes,
@@ -28,7 +28,7 @@ const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 const initialBalance = '100000';
 // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
-const blockNumber = 13309758;
+const blockNumber = TEST_BLOCK[network];
 const testPoolId =
   '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063';
 // Slots used to set the account balance for each token through hardhat_setStorageAt

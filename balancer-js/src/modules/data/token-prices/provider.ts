@@ -1,5 +1,6 @@
 import type { Findable, Price } from '@/types';
 import { IAaveRates } from './aave-rates';
+import { Logger } from '@/lib/utils/logger';
 
 export class TokenPriceProvider implements Findable<Price> {
   constructor(
@@ -11,17 +12,14 @@ export class TokenPriceProvider implements Findable<Price> {
   async find(address: string): Promise<Price | undefined> {
     let price;
     try {
-      try {
-        price = await this.coingeckoRepository.find(address);
-        if (!price?.usd) {
-          throw new Error('Price not found');
-        }
-      } catch (err) {
-        console.log(`Coingecko API error: ${err}`);
-        price = await this.subgraphRepository.find(address);
+      price = await this.coingeckoRepository.find(address);
+      if (!price?.usd) {
+        throw new Error('Price not found');
       }
     } catch (err) {
-      console.error(err);
+      const logger = Logger.getInstance();
+      logger.warn(err as string);
+      price = await this.subgraphRepository.find(address);
     }
     const rate = (await this.aaveRates.getRate(address)) || 1;
     if (price && price.usd) {

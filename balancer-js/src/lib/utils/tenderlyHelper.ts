@@ -1,5 +1,7 @@
 import axios from 'axios';
-import { MaxInt256 } from '@ethersproject/constants';
+import { AddressZero, MaxInt256 } from '@ethersproject/constants';
+import { parseFixed } from '@ethersproject/bignumber';
+
 import { networkAddresses } from '@/lib/constants/config';
 import { BalancerTenderlyConfig } from '@/types';
 
@@ -13,34 +15,25 @@ export default class TenderlyHelper {
   private opts?;
   private blockNumber: number | undefined;
 
-  constructor(
-    private chainId: number,
-    tenderlyConfig?: BalancerTenderlyConfig
-  ) {
+  constructor(private chainId: number, tenderlyConfig: BalancerTenderlyConfig) {
     const { contracts } = networkAddresses(this.chainId);
     this.vaultAddress = contracts.vault as string;
-    if (tenderlyConfig?.user && tenderlyConfig?.project) {
-      this.tenderlyUrl = `https://api.tenderly.co/api/v1/account/${tenderlyConfig.user}/project/${tenderlyConfig.project}/`;
-    } else {
-      this.tenderlyUrl = 'https://api.balancer.fi/tenderly/';
-    }
+    this.tenderlyUrl = `https://api.tenderly.co/api/v1/account/${tenderlyConfig.user}/project/${tenderlyConfig.project}/`;
+    this.opts = {
+      headers: {
+        'X-Access-Key': tenderlyConfig.accessKey,
+      },
+    };
 
-    if (tenderlyConfig?.accessKey) {
-      this.opts = {
-        headers: {
-          'X-Access-Key': tenderlyConfig.accessKey,
-        },
-      };
-    }
-
-    this.blockNumber = tenderlyConfig?.blockNumber;
+    this.blockNumber = tenderlyConfig.blockNumber;
   }
 
   simulateMulticall = async (
     to: string,
     data: string,
     userAddress: string,
-    tokens: string[]
+    tokens: string[],
+    value = '0'
   ): Promise<string> => {
     const tokensOverrides = await this.encodeBalanceAndAllowanceOverrides(
       userAddress,
@@ -58,7 +51,8 @@ export default class TenderlyHelper {
       to,
       data,
       userAddress,
-      encodedStateOverrides
+      encodedStateOverrides,
+      value
     );
   };
 
@@ -66,15 +60,24 @@ export default class TenderlyHelper {
     to: string,
     data: string,
     userAddress: string,
-    encodedStateOverrides: StateOverrides
+    encodedStateOverrides: StateOverrides,
+    value: string
   ): Promise<string> => {
     // Map encoded-state response into simulate request body by replacing property names
-    const state_objects = Object.fromEntries(
+    const stateOverrides = Object.fromEntries(
       Object.keys(encodedStateOverrides).map((address) => {
         // Object.fromEntries require format [key, value] instead of {key: value}
         return [address, { storage: encodedStateOverrides[address].value }];
       })
     );
+
+    // Set user balance to 1000 ETH to make sure the simulation doesn't fail due to insufficient balance
+    const state_objects = {
+      ...stateOverrides,
+      [userAddress]: {
+        balance: parseFixed('100', 18).toHexString(),
+      },
+    };
 
     const body = {
       // -- Standard TX fields --
@@ -85,7 +88,7 @@ export default class TenderlyHelper {
       input: data,
       // gas: 8000000,
       // gas_price: '0',
-      // value: '0',
+      value,
       // -- Simulation config (tenderly specific) --
       save_if_fails: true,
       // save: true,
@@ -129,11 +132,15 @@ export default class TenderlyHelper {
     userAddress: string,
     tokens: string[]
   ): Promise<StateOverrides> => {
-    if (tokens.length === 0) return {};
+    const tokensWithoutNativeAsset = tokens.filter(
+      (token) => token !== AddressZero
+    );
+
+    if (tokensWithoutNativeAsset.length === 0) return {};
 
     // Create balances and allowances overrides for each token address provided
     let stateOverrides: StateOverrides = {};
-    tokens.forEach(
+    tokensWithoutNativeAsset.forEach(
       (token) =>
         (stateOverrides = {
           ...stateOverrides,

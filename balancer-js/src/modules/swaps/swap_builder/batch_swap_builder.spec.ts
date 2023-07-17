@@ -5,8 +5,8 @@ import { expect } from 'chai';
 import { BigNumber } from '@ethersproject/bignumber';
 
 describe('SwapBuilder', () => {
-  const swapAmountForSwaps = BigNumber.from('1000');
-  const returnAmountFromSwaps = BigNumber.from('2000');
+  const swapAmountForSwaps = BigNumber.from('10000');
+  const returnAmountFromSwaps = BigNumber.from('10000');
   const swapInfo = factories.swapInfo.build({
     swapAmountForSwaps,
     returnAmountFromSwaps,
@@ -18,14 +18,7 @@ describe('SwapBuilder', () => {
     it('for 1 bsp 0.01%', () => {
       const maxSlippage = 1;
       builder.setLimits(maxSlippage);
-      expect(builder.limits).to.eql([
-        swapAmountForSwaps.toString(),
-        returnAmountFromSwaps
-          .mul(1e3 - maxSlippage)
-          .div(1e3)
-          .mul(-1)
-          .toString(),
-      ]);
+      expect(builder.limits).to.eql(['10000', '-9999']);
     });
   });
 
@@ -35,13 +28,7 @@ describe('SwapBuilder', () => {
     it('for 1 bsp 0.01%', () => {
       const maxSlippage = 1;
       builder.setLimits(maxSlippage);
-      expect(builder.limits).to.eql([
-        returnAmountFromSwaps
-          .mul(1e3 + maxSlippage)
-          .div(1e3)
-          .toString(),
-        swapAmountForSwaps.mul(-1).toString(),
-      ]);
+      expect(builder.limits).to.eql(['10001', '-10000']);
     });
   });
 });

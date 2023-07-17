@@ -6,6 +6,7 @@ import {
   PoolsFallbackRepositoryOptions,
   PoolsRepositoryFetchOptions,
 } from './types';
+import { Logger } from '@/lib/utils/logger';
 
 /**
  * The fallback provider takes multiple PoolRepository's in an array and uses them in order
@@ -73,17 +74,18 @@ export class PoolsFallbackRepository implements Findable<Pool, PoolAttribute> {
     } catch (e: unknown) {
       const message = (e as Error).message;
       if (message === 'timeout') {
-        console.error(
+        const logger = Logger.getInstance();
+        logger.warn(
           'Provider ' +
             this.currentProviderIdx +
             ' timed out, falling back to next provider'
         );
       } else {
-        console.error(
-          'Provider ' + this.currentProviderIdx + ' failed with error: ',
-          message,
-          ', falling back to next provider'
+        const logger = Logger.getInstance();
+        logger.warn(
+          `Provider ${this.currentProviderIdx} failed with error, falling back to next provider.`
         );
+        logger.warn(message);
       }
       this.currentProviderIdx++;
       result = await this.fallbackQuery.call(this, func, args);

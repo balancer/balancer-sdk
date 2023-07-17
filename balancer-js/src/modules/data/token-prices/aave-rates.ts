@@ -1,8 +1,6 @@
 import { Interface } from '@ethersproject/abi';
-import { Contract } from '@ethersproject/contracts';
-import { Provider } from '@ethersproject/providers';
 import { formatUnits } from '@ethersproject/units';
-import { Multicall } from '@/modules/contracts/implementations/multicall';
+import { Multicall } from '@/contracts';
 import { Network } from '@/types';
 
 export const yieldTokens = {
@@ -64,27 +62,20 @@ export interface IAaveRates {
 }
 
 export class AaveRates implements IAaveRates {
-  multicall: Contract;
   rates?: Promise<{ [wrappedATokenAddress: string]: number }>;
 
-  constructor(
-    multicallAddress: string,
-    provider: Provider,
-    private network: Network
-  ) {
-    this.multicall = Multicall(multicallAddress, provider);
-  }
+  constructor(private multicall: Multicall, private network: Network) {}
 
   private async fetch(
     network: Network.MAINNET | Network.POLYGON
   ): Promise<{ [wrappedATokenAddress: string]: number }> {
     console.time('Fetching aave rates');
     const addresses = Object.values(yieldTokens[network]);
-    const payload = addresses.map((wrappedATokenAddress) => [
-      wrappedATokenAddress,
-      wrappedATokenInterface.encodeFunctionData('rate', []),
-    ]);
-    const [, res] = await this.multicall.aggregate(payload);
+    const payload = addresses.map((wrappedATokenAddress) => ({
+      target: wrappedATokenAddress,
+      callData: wrappedATokenInterface.encodeFunctionData('rate', []),
+    }));
+    const [, res] = await this.multicall.callStatic.aggregate(payload);
 
     const rates = addresses.reduce((p: { [key: string]: number }, a, i) => {
       p[a] ||= res[i] == '0x' ? 0 : parseFloat(formatUnits(res[i], 27));

@@ -91,4 +91,9 @@ export class Liquidity {
 
     return formatFixed(totalLiquidity, SCALE);
   }
+
+  async getBptPrice(pool: Pool): Promise<string> {
+    const liquidity = await this.getLiquidity(pool);
+    return (parseFloat(liquidity) / parseFloat(pool.totalShares)).toString();
+  }
 }

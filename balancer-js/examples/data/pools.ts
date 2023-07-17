@@ -1,11 +1,11 @@
-import { Network } from '../../src/index';
-import { BalancerSDK } from '../../src/modules/sdk.module';
+import { BalancerSDK, Network } from '@balancer-labs/sdk';
 
 const sdk = new BalancerSDK({ 
-    network: Network.MAINNET, 
-    rpcUrl: '' 
-  });
-const { pools } = sdk.data;
+  network: Network.MAINNET, 
+  rpcUrl: 'https://rpc.ankr.com/eth'
+});
+
+const { pools, poolsOnChain } = sdk.data;
 
 async function main() {
 
@@ -23,8 +23,16 @@ async function main() {
 
   result = await pools.where(pool => POOL_IDs.includes(pool.id));
   console.log('Filter pools by attributes', result);
+
+  // Fefetch on-chain balances for a given pool
+  const pool = await pools.find(POOL_ID1);
+  for (const idx in pool!.tokens) {
+    pool!.tokens[idx].balance = '0';
+  }
+  const onchain = await poolsOnChain.refresh(pool!);
+  console.log('onchain pool', onchain);
 }
 
 main();
 
-// npm run examples:run -- ./examples/data/pools.ts
+// yarn example ./examples/data/pools.ts

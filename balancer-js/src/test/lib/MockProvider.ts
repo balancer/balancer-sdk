@@ -5,7 +5,7 @@ import { Network } from '../..';
  * This MockProvider serves to prevent/catch external calls the Provider might make.
  */
 export default class MockProvider extends BaseProvider {
-  constructor(network = Network.KOVAN) {
+  constructor(network = Network.SEPOLIA) {
     super(network);
   }
 

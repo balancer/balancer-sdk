@@ -16,6 +16,7 @@ import {
   testExactTokensOut,
   testRecoveryExit,
 } from '@/test/lib/exitHelper';
+import { TEST_BLOCK } from '@/test/lib/constants';
 
 dotenv.config();
 
@@ -24,7 +25,7 @@ const { ALCHEMY_URL: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8545';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
-const blockNumber = 16350000;
+const blockNumber = TEST_BLOCK[network];
 const testPoolId =
   '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d';
 let pool: PoolWithMethods;
@@ -42,7 +43,7 @@ describe('ComposableStableV1 Exits', () => {
     );
 
     let testPool = await getPoolFromFile(testPoolId, network);
-    // Updatate pool info with onchain state from fork block no
+    // Update pool info with onchain state from fork block no
     testPool = await updateFromChain(testPool, network, provider);
 
     pool = Pools.wrap(testPool, BALANCER_NETWORK_CONFIG[network]);

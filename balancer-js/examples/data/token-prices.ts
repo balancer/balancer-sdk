@@ -1,6 +1,6 @@
 /**
  * Display APRs for pool ids hardcoded under `const ids`
- * Run command: yarn examples:run ./examples/data/token-prices.ts
+ * Run command: yarn example ./examples/data/token-prices.ts
  */
 import { BalancerSDK } from '@/.';
 

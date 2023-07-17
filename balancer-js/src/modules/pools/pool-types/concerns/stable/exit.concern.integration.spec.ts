@@ -11,6 +11,7 @@ import {
   testExactTokensOut,
   testRecoveryExit,
 } from '@/test/lib/exitHelper';
+import { TEST_BLOCK } from '@/test/lib/constants';
 
 dotenv.config();
 
@@ -25,7 +26,7 @@ describe('StablePool Exits', async () => {
 
   context('regular exit pool functions', async () => {
     // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
-    const blockNumber = 13309758;
+    const blockNumber = TEST_BLOCK[network];
     const testPoolId =
       '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063';
 

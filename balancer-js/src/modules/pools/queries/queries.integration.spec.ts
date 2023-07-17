@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { BalancerSDK, Network, PoolType } from '@/.';
 import { bn } from '@/lib/utils';
 import { ParamsBuilder } from '.';
-
+import { BigNumber } from '@ethersproject/bignumber';
 dotenv.config();
 
 const rpcUrl = process.env.ALCHEMY_URL || 'http://127.0.0.1:8545';
@@ -40,7 +40,22 @@ const composableStablePool = {
   ],
 };
 
-const pools = [stETHPool, balPool, composableStablePool];
+const composableStablePoolWithTokenAtZero = {
+  id: '0x02d928e68d8f10c0358566152677db51e1e2dc8c00000000000000000000051e',
+  poolType: PoolType.ComposableStable,
+  tokensList: [
+    '0x02d928e68d8f10c0358566152677db51e1e2dc8c',
+    '0x60d604890feaa0b5460b28a424407c24fe89374a',
+    '0xf951e335afb289353dc249e82926178eac7ded78',
+  ],
+};
+
+const pools = [
+  stETHPool,
+  balPool,
+  composableStablePool,
+  composableStablePoolWithTokenAtZero,
+];
 
 let queryParams: ParamsBuilder;
 const { balancerHelpers } = contracts;
@@ -54,13 +69,12 @@ describe('join and exit queries', () => {
       });
 
       it('should joinExactIn', async () => {
-        const maxAmountsIn = [
-          bn(1),
-          ...Array(pool.tokensList.length - 1).fill(bn(0)),
-        ];
+        const maxAmountsInByToken = new Map<string, BigNumber>([
+          [pool.tokensList[1], bn(1)],
+        ]);
 
         const params = queryParams.buildQueryJoinExactIn({
-          maxAmountsIn,
+          maxAmountsInByToken,
         });
         const join = await balancerHelpers.callStatic.queryJoin(...params);
         expect(Number(join.bptOut)).to.be.gt(0);
@@ -69,21 +83,21 @@ describe('join and exit queries', () => {
       it('should joinExactOut', async () => {
         const params = queryParams.buildQueryJoinExactOut({
           bptOut: bn(1),
-          tokenIn: pool.tokensList[0],
+          tokenIn: pool.tokensList[1],
         });
         const join = await balancerHelpers.callStatic.queryJoin(...params);
-        expect(Number(join.amountsIn[0])).to.be.gt(0);
-        expect(Number(join.amountsIn[1])).to.eq(0);
+        expect(Number(join.amountsIn[0])).to.eq(0);
+        expect(Number(join.amountsIn[1])).to.be.gt(0);
       });
 
       it('should exitToSingleToken', async () => {
         const params = queryParams.buildQueryExitToSingleToken({
           bptIn: bn(10),
-          tokenOut: pool.tokensList[0],
+          tokenOut: pool.tokensList[1],
         });
         const exit = await balancerHelpers.callStatic.queryExit(...params);
-        expect(Number(exit.amountsOut[0])).to.be.gt(0);
-        expect(Number(exit.amountsOut[1])).to.eq(0);
+        expect(Number(exit.amountsOut[0])).to.eq(0);
+        expect(Number(exit.amountsOut[1])).to.be.gt(0);
       });
 
       it('should exitProportionally', async function () {
@@ -99,14 +113,23 @@ describe('join and exit queries', () => {
       });
 
       it('should exitExactOut', async () => {
+        const bptIndex = pool.tokensList.findIndex((token) =>
+          pool.id.includes(token)
+        );
         const minAmountsOut = Array(pool.tokensList.length).fill(bn(1));
+        const tokensOut = pool.tokensList;
+        if (bptIndex > -1) minAmountsOut[bptIndex] = bn(0);
 
         const params = queryParams.buildQueryExitExactOut({
           minAmountsOut,
+          tokensOut,
         });
         const exit = await balancerHelpers.callStatic.queryExit(...params);
-        expect(Number(exit.amountsOut[0])).to.be.gt(0);
-        expect(Number(exit.amountsOut[1])).to.be.gt(0);
+        expect(Number(exit.bptIn)).to.be.gt(0);
+        exit.amountsOut.forEach((a, i) => {
+          if (i === bptIndex) expect(a.toString()).to.eq('0');
+          else expect(a.toString()).to.eq(bn(1).toString());
+        });
       });
     });
   });

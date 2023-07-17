@@ -16,6 +16,7 @@ import {
   testExactTokensOut,
   testRecoveryExit,
 } from '@/test/lib/exitHelper';
+import { TEST_BLOCK } from '@/test/lib/constants';
 
 dotenv.config();
 
@@ -26,11 +27,11 @@ const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
 const testPoolId =
   '0x373b347bc87998b151a5e9b6bb6ca692b766648a000000000000000000000923';
-const blockNumber = 40818844;
+const blockNumber = TEST_BLOCK[network];
 let pool: PoolWithMethods;
 
 describe('ComposableStableV2 Exits', () => {
-  // We have to rest the fork between each test as pool value changes after tx is submitted
+  // We have to reset the fork between each test as pool value changes after tx is submitted
   beforeEach(async () => {
     // Setup forked network, set initial token balances and allowances
     await forkSetup(

@@ -8,7 +8,7 @@ import {
   JoinPoolRequestDecodedAttributes,
 } from '@/modules/pools/factory/types';
 import { balancerVault, networkAddresses } from '@/lib/constants/config';
-import { AssetHelpers } from '@/lib/utils';
+import { AssetHelpers, getRandomBytes32 } from '@/lib/utils';
 import { PoolFactory } from '@/modules/pools/factory/pool-factory';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
 import { BalancerNetworkConfig } from '@/types';
@@ -60,6 +60,7 @@ export class ComposableStableFactory implements PoolFactory {
     exemptFromYieldProtocolFeeFlags,
     swapFeeEvm,
     owner,
+    salt,
   }: ComposableStableCreatePoolParameters): { to?: string; data: BytesLike } {
     this.checkCreateInputs({
       rateProviders,
@@ -78,6 +79,7 @@ export class ComposableStableFactory implements PoolFactory {
       exemptFromYieldProtocolFeeFlags,
       swapFeeEvm,
       owner,
+      salt,
     });
     const encodedFunctionData = this.encodeCreateFunctionData(params);
     return {
@@ -122,6 +124,7 @@ export class ComposableStableFactory implements PoolFactory {
     exemptFromYieldProtocolFeeFlags,
     swapFeeEvm,
     owner,
+    salt,
   }: ComposableStableCreatePoolParameters): [
     string,
     string,
@@ -131,7 +134,8 @@ export class ComposableStableFactory implements PoolFactory {
     string[],
     boolean[],
     string,
-    string
+    string,
+    BytesLike
   ] => {
     const assetHelpers = new AssetHelpers(this.wrappedNativeAsset);
     const [
@@ -155,6 +159,7 @@ export class ComposableStableFactory implements PoolFactory {
       sortedExemptFromYieldProtocols,
       swapFeeEvm.toString(),
       owner,
+      salt || getRandomBytes32(),
     ] as [
       string,
       string,
@@ -164,7 +169,8 @@ export class ComposableStableFactory implements PoolFactory {
       string[],
       boolean[],
       string,
-      string
+      string,
+      BytesLike
     ];
     return params;
   };
@@ -179,7 +185,8 @@ export class ComposableStableFactory implements PoolFactory {
       string[],
       boolean[],
       string,
-      string
+      string,
+      BytesLike
     ]
   ): string => {
     const composablePoolFactoryInterface =

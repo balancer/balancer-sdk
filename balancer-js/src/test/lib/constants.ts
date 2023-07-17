@@ -4,12 +4,32 @@ import { AddressZero } from '@ethersproject/constants';
 
 dotenv.config();
 
+export const TEST_BLOCK = {
+  [Network.MAINNET]: 17473802,
+  [Network.POLYGON]: 44145777,
+  [Network.ARBITRUM]: 100899142,
+};
+
 export const PROVIDER_URLS = {
   [Network.MAINNET]: `https://mainnet.infura.io/v3/${process.env.INFURA}`,
   [Network.GOERLI]: `https://goerli.infura.io/v3/${process.env.INFURA}`,
-  [Network.KOVAN]: `https://kovan.infura.io/v3/${process.env.INFURA}`,
   [Network.POLYGON]: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA}`,
   [Network.ARBITRUM]: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA}`,
+  [Network.SEPOLIA]: `https://sepolia.infura.io/v3/${process.env.INFURA}`,
+  [Network.GNOSIS]: `https://rpc.gnosis.gateway.fm`,
+  [Network.ZKEVM]: `https://zkevm-rpc.com`,
+};
+
+export type TestAddress = {
+  id?: string;
+  address: string;
+  decimals: number;
+  symbol?: string;
+  slot?: number;
+};
+
+export type TestAddresses = {
+  [key: string]: TestAddress;
 };
 
 export const ADDRESSES = {
@@ -109,6 +129,13 @@ export const ADDRESSES = {
       symbol: 'bbausd2',
       slot: 0,
     },
+    bbausd3: {
+      id: '0xfebb0bbf162e64fb9d0dfe186e517d84c395f016000000000000000000000502',
+      address: '0xfebb0bbf162e64fb9d0dfe186e517d84c395f016',
+      decimals: 18,
+      symbol: 'bbausd3',
+      slot: 0,
+    },
     bbausdcOld: {
       address: '0x9210F1204b5a24742Eba12f710636D76240dF3d0',
       decimals: 18,
@@ -164,6 +191,23 @@ export const ADDRESSES = {
     },
     bbadai: {
       address: '0xae37D54Ae477268B9997d4161B96b8200755935c'.toLowerCase(),
+      decimals: 18,
+      symbol: 'bbadai',
+      slot: 0,
+    },
+    bbausdc3: {
+      address: '0xcbfa4532d8b2ade2c261d3dd5ef2a2284f792692'.toLowerCase(),
+      decimals: 18,
+      symbol: 'bbausdc',
+      slot: 0,
+    },
+    bbausdt3: {
+      address: '0xa1697f9af0875b63ddc472d6eebada8c1fab8568'.toLowerCase(),
+      decimals: 18,
+      symbol: 'bbausdt',
+    },
+    bbadai3: {
+      address: '0x6667c6fa9f2b3fc1cc8d85320b62703d938e4385'.toLowerCase(),
       decimals: 18,
       symbol: 'bbadai',
       slot: 0,
@@ -286,116 +330,65 @@ export const ADDRESSES = {
       symbol: 'bb-g-DAI',
       slot: 0,
     },
-  },
-  [Network.KOVAN]: {
-    // Visit https://balancer-faucet.on.fleek.co/#/faucet for test tokens
-    ETH: {
-      address: AddressZero,
+    STG_BBAUSD: {
+      id: '0x639883476960a23b38579acfd7d71561a0f408cf000200000000000000000505',
+      address: '0x639883476960a23b38579acfd7d71561a0f408cf',
       decimals: 18,
-      symbol: 'ETH',
+      symbol: 'stg-bbausd',
+      slot: 0,
     },
-    BAL: {
-      address: '0x41286Bb1D3E870f3F750eB7E1C25d7E48c8A1Ac7',
+    STG: {
+      address: '0xAf5191B0De278C7286d6C7CC6ab6BB8A73bA2Cd6'.toLowerCase(),
       decimals: 18,
-      symbol: 'BAL',
+      symbol: 'STG',
+      slot: 0,
     },
-    USDC: {
-      address: '0xc2569dd7d0fd715B054fBf16E75B001E5c0C1115',
-      decimals: 6,
-      symbol: 'USDC',
-    },
-    WBTC: {
-      address: '0x1C8E3Bcb3378a443CC591f154c5CE0EBb4dA9648',
-      decimals: 8,
-      symbol: 'WBTC',
-    },
-    WETH: {
-      address: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
+    wstEthBoostedApe: {
+      id: '0x959216bb492b2efa72b15b7aacea5b5c984c3cca000200000000000000000472',
+      address: '0x959216BB492B2efa72b15B7AAcEa5B5C984c3ccA',
       decimals: 18,
-      symbol: 'WETH',
+      symbol: '50wstETH-50stk-APE',
+      slot: 0,
     },
-    DAI: {
-      address: '0x04DF6e4121c27713ED22341E7c7Df330F56f289B',
+    bbtape: {
+      id: '0x126e7643235ec0ab9c103c507642dc3f4ca23c66000000000000000000000468',
+      address: '0x126e7643235ec0ab9c103c507642dC3F4cA23C66',
       decimals: 18,
-      symbol: 'DAI',
+      symbol: 'bb-t-stkAPE',
+      slot: 0,
     },
-    STETH: {
-      address: '0x4803bb90d18a1cb7a2187344fe4feb0e07878d05',
+    swEth_bbaweth: {
+      id: '0x02d928e68d8f10c0358566152677db51e1e2dc8c00000000000000000000051e',
+      address: '0x02d928e68d8f10c0358566152677db51e1e2dc8c',
       decimals: 18,
-      symbol: 'STETH',
+      symbol: 'swETH-bbawETH-BPT',
+      slot: 0,
     },
-    wSTETH: {
-      address: '0xa387b91e393cfb9356a460370842bc8dbb2f29af',
+    bbaweth: {
+      id: '0x60d604890feaa0b5460b28a424407c24fe89374a0000000000000000000004fc',
+      address: '0x60d604890feaa0b5460b28a424407c24fe89374a',
       decimals: 18,
-      symbol: 'wSTETH',
+      symbol: 'bbaweth',
+      slot: 0,
     },
-    USDT_from_AAVE: {
-      address: '0x13512979ade267ab5100878e2e0f485b568328a4',
-      decimals: 6,
-      symbol: 'USDT_from_AAVE',
-    },
-    USDT: {
-      address: '0x13512979ade267ab5100878e2e0f485b568328a4',
-      decimals: 6,
-      symbol: 'USDT',
-    },
-    aUSDT: {
-      address: '0xe8191aacfcdb32260cda25830dc6c9342142f310',
-      decimals: 6,
-      symbol: 'aUSDT',
-    },
-    bUSDT: {
-      address: '0xe667d48618e71c2a02e4a1b66ed9def1426938b6',
+    swETH: {
+      address: '0xf951e335afb289353dc249e82926178eac7ded78',
       decimals: 18,
-      symbol: 'bUSDT',
+      symbol: 'swETH',
+      slot: 98,
     },
-    USDC_from_AAVE: {
-      address: '0xe22da380ee6b445bb8273c81944adeb6e8450422',
-      decimals: 6,
-      symbol: 'USDC_from_AAVE',
-    },
-    aUSDC: {
-      address: '0x0fbddc06a4720408a2f5eb78e62bc31ac6e2a3c4',
-      decimals: 6,
-      symbol: 'aUSDC',
-    },
-    DAI_from_AAVE: {
-      address: '0xff795577d9ac8bd7d90ee22b6c1703490b6512fd',
+    vETH: {
+      address: '0x4bc3263eb5bb2ef7ad9ab6fb68be80e43b43801f',
       decimals: 18,
-      symbol: 'DAI_from_AAVE',
+      symbol: 'vETH',
+      slot: 0,
     },
-    bDAI: {
-      address: '0xfcccb77a946b6a3bd59d149f083b5bfbb8004d6d',
+    bveth: {
+      id: '0x793f2d5cd52dfafe7a1a1b0b3988940ba2d6a63d0000000000000000000004f8',
+      address: '0x793f2d5cd52dfafe7a1a1b0b3988940ba2d6a63d',
       decimals: 18,
-      symbol: 'bDAI',
-    },
-    STABAL3: {
-      address: '0x8fd162f338b770f7e879030830cde9173367f301',
-      decimals: 18,
-      symbol: 'STABAL3',
-    },
-    bbausd: {
-      address: 'N/A',
-      decimals: 18,
-      symbol: 'bbausd',
-    },
-    waDAI: {
-      address: '',
-      decimals: 18,
-      symbol: 'waDAI',
-      slot: 52,
-    },
-    waUSDC: {
-      address: '',
-      decimals: 6,
-      symbol: 'waUSDC',
-      slot: 52,
-    },
-    waUSDT: {
-      address: '',
-      decimals: 6,
-      symbol: 'waUSDT',
-      slot: 52,
+      symbol: 'bveth',
+      slot: 0,
     },
   },
   [Network.POLYGON]: {
@@ -508,6 +501,16 @@ export const ADDRESSES = {
       decimals: 6,
       symbol: 'XSGD',
     },
+    WMATIC: {
+      address: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270',
+      decimals: 18,
+      symbol: 'WMATIC',
+    },
+    stMATIC: {
+      address: '0x3A58a54C066FdC0f2D55FC9C89F0415C92eBf3C4',
+      decimals: 18,
+      symbol: 'stMATIC',
+    },
   },
   [Network.ARBITRUM]: {
     WETH: {
@@ -534,6 +537,7 @@ export const ADDRESSES = {
       address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
       decimals: 6,
       symbol: 'USDT',
+      slot: 51,
     },
     STETH: {
       address: '',
@@ -588,6 +592,25 @@ export const ADDRESSES = {
       symbol: 'bb-rf-dai',
       slot: 52,
     },
+    bbUSD_PLUS: {
+      id: '0x519cce718fcd11ac09194cff4517f12d263be067000000000000000000000382',
+      address: '0x519cCe718FCD11AC09194CFf4517F12D263BE067',
+      decimals: 18,
+      symbol: 'bbUSD_PLUS',
+      slot: 0,
+    },
+    bbDAI_PLUS: {
+      address: '0x117a3d474976274b37b7b94af5dcade5c90c6e85',
+      decimals: 18,
+      symbol: 'bbDAI_PLUS',
+      slot: 52,
+    },
+    bbUSDC_PLUS: {
+      address: '0x284eb68520c8fa83361c1a3a5910aec7f873c18b',
+      decimals: 18,
+      symbol: 'bbUSDC_PLUS',
+      slot: 52,
+    },
   },
   [Network.GNOSIS]: {
     WETH: {
@@ -608,12 +631,29 @@ export const ADDRESSES = {
     WXDAI: {
       address: '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d',
       decimals: 18,
-      symbol: 'DAI',
+      symbol: 'WXDAI',
+      slot: 3,
     },
     USDT: {
       address: '0x4ECaBa5870353805a9F068101A40E0f32ed605C6',
       decimals: 6,
       symbol: 'USDT',
+    },
+    WXDAI_MPS: {
+      id: '0x4bcf6b48906fa0f68bea1fc255869a41241d4851000200000000000000000021',
+      address: '0x4bcf6b48906fa0f68bea1fc255869a41241d4851',
+      decimals: 18,
+      symbol: 'WXDAI_MPS',
+    },
+    MPS: {
+      address: '0xfa57aa7beed63d03aaf85ffd1753f5f6242588fb',
+      decimals: 0,
+      symbol: 'MPS',
+    },
+    wstETH: {
+      address: '0x6C76971f98945AE98dD7d4DFcA8711ebea946eA6',
+      decimals: 18,
+      symbol: 'wstETH',
     },
   },
   [Network.GOERLI]: {
@@ -816,6 +856,35 @@ export const ADDRESSES = {
       decimals: 18,
       symbol: 'BWMG1',
       slot: 0,
+    },
+  },
+  [Network.SEPOLIA]: {
+    WETH: {
+      address: '0x7b79995e5f793a07bc00c21412e50ecae098e7f9',
+      decimals: 18,
+      symbol: 'WETH',
+    },
+    BAL: {
+      address: '0xb19382073c7a0addbb56ac6af1808fa49e377b75',
+      decimals: 18,
+      symbol: 'BAL',
+    },
+  },
+  [Network.ZKEVM]: {
+    WETH: {
+      address: '0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9',
+      decimals: 18,
+      symbol: 'WETH',
+    },
+    wstETH: {
+      address: '0x5D8cfF95D7A57c0BF50B30b43c7CC0D52825D4a9',
+      decimals: 18,
+      symbol: 'wstETH',
+    },
+    USDC: {
+      address: '0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035',
+      decimals: 6,
+      symbol: 'USDC',
     },
   },
 };

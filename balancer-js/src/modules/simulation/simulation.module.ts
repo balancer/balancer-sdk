@@ -1,9 +1,11 @@
 import { PoolDataService } from '@balancer-labs/sor';
 import { defaultAbiCoder } from '@ethersproject/abi';
+import { JsonRpcSigner } from '@ethersproject/providers';
+
 import TenderlyHelper from '@/lib/utils/tenderlyHelper';
 import { BalancerNetworkConfig } from '@/types';
+
 import { VaultModel, Requests } from '../vaultModel/vaultModel.module';
-import { JsonRpcSigner } from '@ethersproject/providers';
 
 export enum SimulationType {
   Tenderly,
@@ -25,16 +27,18 @@ export enum SimulationType {
  */
 
 export class Simulation {
-  private tenderlyHelper: TenderlyHelper;
+  private tenderlyHelper?: TenderlyHelper;
   private vaultModel: VaultModel | undefined;
   constructor(
     networkConfig: BalancerNetworkConfig,
     poolDataService?: PoolDataService
   ) {
-    this.tenderlyHelper = new TenderlyHelper(
-      networkConfig.chainId,
-      networkConfig.tenderly
-    );
+    if (networkConfig.tenderly) {
+      this.tenderlyHelper = new TenderlyHelper(
+        networkConfig.chainId,
+        networkConfig.tenderly
+      );
+    }
     if (!poolDataService) {
       this.vaultModel = undefined;
     } else {
@@ -53,16 +57,21 @@ export class Simulation {
     userAddress: string,
     tokensIn: string[],
     signer: JsonRpcSigner,
-    simulationType: SimulationType
+    simulationType: SimulationType,
+    value: string
   ): Promise<string[]> => {
     const amountsOut: string[] = [];
     switch (simulationType) {
       case SimulationType.Tenderly: {
+        if (!this.tenderlyHelper) {
+          throw new Error('Missing Tenderly config');
+        }
         const simulationResult = await this.tenderlyHelper.simulateMulticall(
           to,
           encodedCall,
           userAddress,
-          tokensIn
+          tokensIn,
+          value
         );
         amountsOut.push(...this.decodeResult(simulationResult, outputIndexes));
         break;
@@ -74,12 +83,22 @@ export class Simulation {
         break;
       }
       case SimulationType.Static: {
-        const gasLimit = 8e6;
         const staticResult = await signer.call({
           to,
           data: encodedCall,
-          gasLimit,
+          value,
         });
+        const decodedResponse = Buffer.from(
+          staticResult.split('x')[1],
+          'hex'
+        ).toString('utf8');
+        if (decodedResponse.includes('BAL#')) {
+          throw new Error(
+            `Transaction reverted with Error ${
+              'BAL#' + decodedResponse.split('BAL#')[1]
+            } on the static call`
+          );
+        }
         amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
         break;
       }
@@ -102,6 +121,9 @@ export class Simulation {
     const amountsOut: string[] = [];
     switch (simulationType) {
       case SimulationType.Tenderly: {
+        if (!this.tenderlyHelper) {
+          throw new Error('Missing Tenderly config');
+        }
         const simulationResult = await this.tenderlyHelper.simulateMulticall(
           to,
           encodedCall,
@@ -118,12 +140,21 @@ export class Simulation {
         break;
       }
       case SimulationType.Static: {
-        const gasLimit = 8e6;
         const staticResult = await signer.call({
           to,
           data: encodedCall,
-          gasLimit,
         });
+        const decodedResponse = Buffer.from(
+          staticResult.split('x')[1],
+          'hex'
+        ).toString('utf8');
+        if (decodedResponse.includes('BAL#')) {
+          throw new Error(
+            `Transaction reverted with Error ${
+              'BAL#' + decodedResponse.split('BAL#')[1]
+            } on the static call`
+          );
+        }
         amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
         break;
       }

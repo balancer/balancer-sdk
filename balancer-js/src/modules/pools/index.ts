@@ -1,3 +1,8 @@
+import { BigNumberish } from '@ethersproject/bignumber';
+import { JsonRpcSigner } from '@ethersproject/providers';
+
+import { BalancerError } from '@/balancerErrors';
+import { Contracts } from '@/modules/contracts/contracts.module';
 import { ImpermanentLossService } from '@/modules/pools/impermanentLoss/impermanentLossService';
 import type {
   BalancerNetworkConfig,
@@ -9,23 +14,25 @@ import type {
   AprBreakdown,
   PoolAttribute,
 } from '@/types';
-import { JoinPoolAttributes } from './pool-types/concerns/types';
+import { Logger } from '@/lib/utils/logger';
+
+import {
+  ExitExactBPTInAttributes,
+  JoinPoolAttributes,
+} from './pool-types/concerns/types';
 import { PoolTypeConcerns } from './pool-type-concerns';
 import { PoolApr } from './apr/apr';
 import { Liquidity } from '../liquidity/liquidity.module';
 import { Join } from '../joins/joins.module';
-import { Exit } from '../exits/exits.module';
+import { Exit, GeneralisedExitOutput, ExitInfo } from '../exits/exits.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
 import { Simulation, SimulationType } from '../simulation/simulation.module';
 import { PoolGraph } from '../graph/graph';
 import { PoolFactory__factory } from './pool-factory__factory';
 import * as Queries from './queries';
-import { JsonRpcSigner } from '@ethersproject/providers';
-import { BalancerError } from '@/balancerErrors';
 import { EmissionsService } from './emissions';
 import { proportionalAmounts } from './proportional-amounts';
-import { Contracts } from '@/modules/contracts/contracts.module';
 
 const notImplemented = (poolType: string, name: string) => () => {
   throw `${name} for poolType ${poolType} not implemented`;
@@ -205,7 +212,8 @@ export class Pools implements Findable<PoolWithMethods> {
       };
     } catch (error) {
       if ((error as BalancerError).code != 'UNSUPPORTED_POOL_TYPE') {
-        console.error(error);
+        const logger = Logger.getInstance();
+        logger.warn(error as string);
       }
 
       methods = {
@@ -298,13 +306,90 @@ export class Pools implements Findable<PoolWithMethods> {
   }
 
   /**
-   * Calculates total liquidity of the pool
+   * Calculates total pool liquidity in USD
    *
    * @param pool
-   * @returns
+   * @returns total pool liquidity in USD
    */
   async liquidity(pool: Pool): Promise<string> {
     return this.liquidityService.getLiquidity(pool);
+  }
+
+  /**
+   * Calculates pool's BPT price in USD
+   *
+   * @param pool
+   * @returns pool's BPT price in USD
+   */
+  async bptPrice(pool: Pool): Promise<string> {
+    return this.liquidityService.getBptPrice(pool);
+  }
+
+  /**
+   * Builds join transaction
+   *
+   * @param pool            Pool
+   * @param tokensIn        Token addresses
+   * @param amountsIn       Token amounts in EVM scale
+   * @param userAddress     User address
+   * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
+   * @returns               Transaction object
+   * @throws                Error if pool type is not implemented
+   */
+  buildJoin({
+    pool,
+    tokensIn,
+    amountsIn,
+    userAddress,
+    slippage,
+  }: {
+    pool: Pool;
+    tokensIn: string[];
+    amountsIn: string[];
+    userAddress: string;
+    slippage: string;
+  }): JoinPoolAttributes {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+
+    if (!concerns)
+      throw `buildJoin for poolType ${pool.poolType} not implemented`;
+
+    return concerns.join.buildJoin({
+      joiner: userAddress,
+      pool,
+      tokensIn,
+      amountsIn,
+      slippage,
+      wrappedNativeAsset:
+        this.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase(),
+    });
+  }
+
+  buildExitExactBPTIn({
+    pool,
+    bptAmount,
+    userAddress,
+    slippage,
+  }: {
+    pool: Pool;
+    bptAmount: string;
+    userAddress: string;
+    slippage: string;
+  }): ExitExactBPTInAttributes {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+    if (!concerns || !concerns.exit.buildExitExactBPTIn)
+      throw `buildExit for poolType ${pool.poolType} not implemented`;
+
+    return concerns.exit.buildExitExactBPTIn({
+      pool,
+      exiter: userAddress,
+      bptIn: bptAmount,
+      slippage,
+      wrappedNativeAsset:
+        this.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase(),
+      shouldUnwrapNativeAsset: false,
+      toInternalBalance: false,
+    });
   }
 
   /**
@@ -335,6 +420,7 @@ export class Pools implements Findable<PoolWithMethods> {
     minOut: string;
     expectedOut: string;
     priceImpact: string;
+    value: BigNumberish;
   }> {
     return this.joinService.joinPool(
       poolId,
@@ -356,8 +442,9 @@ export class Pools implements Findable<PoolWithMethods> {
    * @param userAddress     User address
    * @param slippage        Maximum slippage tolerance in bps i.e. 50 = 0.5%.
    * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
-   * @param simulationType  Simulation type (VaultModel, Tenderly or Static)
+   * @param simulationType  Simulation type (Tenderly or Static) - VaultModel should not be used to build exit transaction
    * @param authorisation   Optional auhtorisation call to be added to the chained transaction
+   * @param tokensToUnwrap  List all tokens that requires exit by unwrapping - info provided by getExitInfo
    * @returns transaction data ready to be sent to the network along with tokens, min and expected amounts out.
    */
   async generalisedExit(
@@ -366,24 +453,68 @@ export class Pools implements Findable<PoolWithMethods> {
     userAddress: string,
     slippage: string,
     signer: JsonRpcSigner,
-    simulationType: SimulationType,
-    authorisation?: string
-  ): Promise<{
-    to: string;
-    encodedCall: string;
-    tokensOut: string[];
-    expectedAmountsOut: string[];
-    minAmountsOut: string[];
-    priceImpact: string;
-  }> {
-    return this.exitService.exitPool(
+    simulationType: SimulationType.Static | SimulationType.Tenderly,
+    authorisation?: string,
+    tokensToUnwrap?: string[]
+  ): Promise<GeneralisedExitOutput> {
+    return this.exitService.buildExitCall(
       poolId,
       amount,
       userAddress,
       slippage,
       signer,
       simulationType,
-      authorisation
+      authorisation,
+      tokensToUnwrap
+    );
+  }
+
+  /**
+   * Calculates price impact for an action on a pool
+   *
+   * @param pool
+   * @returns percentage as a string in EVM scale
+   */
+  calcPriceImpact({
+    pool,
+    tokenAmounts,
+    bptAmount,
+    isJoin,
+  }: {
+    pool: Pool;
+    tokenAmounts: string[];
+    bptAmount: string;
+    isJoin: boolean;
+  }): string {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+    return concerns.priceImpactCalculator.calcPriceImpact(
+      pool,
+      tokenAmounts.map(BigInt),
+      BigInt(bptAmount),
+      isJoin
+    );
+  }
+
+  /**
+   * Gets info required to build generalised exit transaction
+   *
+   * @param poolId          Pool id
+   * @param amountBptIn     BPT amount in EVM scale
+   * @param userAddress     User address
+   * @param signer          JsonRpcSigner that will sign the staticCall transaction if Static simulation chosen
+   * @returns info required to build a generalised exit transaction including whether tokens need to be unwrapped
+   */
+  async getExitInfo(
+    poolId: string,
+    amountBptIn: string,
+    userAddress: string,
+    signer: JsonRpcSigner
+  ): Promise<ExitInfo> {
+    return this.exitService.getExitInfo(
+      poolId,
+      amountBptIn,
+      userAddress,
+      signer
     );
   }
 
