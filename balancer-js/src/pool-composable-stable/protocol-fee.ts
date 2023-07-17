@@ -2,12 +2,50 @@ import { Pool } from '@/types';
 import { calculateSwapYieldFeePct } from '@/pool-composable-stable/calculate-swap-yield-fee-pct';
 import { SolidityMaths } from '@/lib/utils/solidityMaths';
 import { parsePoolInfo } from '@/lib/utils';
+import { ComposableStablePool__factory } from '@/contracts';
+import { JsonRpcProvider } from '@ethersproject/providers';
 
 export default class ComposableStableProtocolFee {
   static calculateProtocolFees(pool: Pool): bigint {
     const parsedPool = parsePoolInfo(pool);
     const protocolFeeAmount =
       ComposableStableProtocolFee.calDueBPTProtocolFeeAmount(parsedPool);
+    return protocolFeeAmount;
+  }
+
+  static async calculateProtocolFeesV4(
+    pool: Pool,
+    provider: JsonRpcProvider
+  ): Promise<bigint> {
+    if (pool.poolTypeVersion < 4) throw new Error('Pool is not V4 or higher');
+    const parsedPool = parsePoolInfo(pool);
+    const poolContract = ComposableStablePool__factory.connect(
+      pool.address,
+      provider
+    );
+    const priceRateCache: { priceRates: bigint[]; oldPriceRates: bigint[] } = {
+      priceRates: [],
+      oldPriceRates: [],
+    };
+    await Promise.all(
+      pool.tokensList.map(async (tokenAddress) => {
+        const [priceRate, oldPriceRate] = await poolContract.getTokenRateCache(
+          tokenAddress
+        );
+        priceRateCache.priceRates.push(priceRate.toBigInt());
+        priceRateCache.oldPriceRates.push(oldPriceRate.toBigInt());
+      })
+    );
+    const [lastJoinExitAmplification, lastJoinExitInvariant] =
+      await poolContract.getLastJoinExitData();
+    const protocolFeeAmount =
+      ComposableStableProtocolFee.calDueBPTProtocolFeeAmount({
+        ...parsedPool,
+        priceRates: priceRateCache.priceRates,
+        oldPriceRates: priceRateCache.oldPriceRates,
+        lastPostJoinExitInvariant: lastJoinExitInvariant.toBigInt(),
+        ampWithPrecision: lastJoinExitAmplification.toBigInt(),
+      });
     return protocolFeeAmount;
   }
 
@@ -33,20 +71,12 @@ export default class ComposableStableProtocolFee {
     totalSharesEvm: bigint;
   }): bigint => {
     const protocolFeePct = calculateSwapYieldFeePct(
-      BigInt('137829'),
-      [
-        '10114027899187223149028',
-        '8044099761409589443827',
-        '6760384866742710404312',
-      ].map(BigInt),
-      ['1118868797946620780', '1033965969078691411', '1066035430901015801'].map(
-        BigInt
-      ),
+      ampWithPrecision,
+      upScaledBalancesWithoutBpt,
+      priceRates,
       exemptedTokens,
-      BigInt('24916006192749840322600'),
-      ['1118868797946620780', '1033960875886006099', '1066035430901015801'].map(
-        BigInt
-      ),
+      lastPostJoinExitInvariant,
+      oldPriceRates,
       protocolSwapFeePct,
       protocolYieldFeePct
     );
