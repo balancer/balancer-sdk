@@ -12,6 +12,7 @@ import {
   testExactTokensOut,
   testRecoveryExit,
 } from '@/test/lib/exitHelper';
+import { TEST_BLOCK } from '@/test/lib/constants';
 
 dotenv.config();
 
@@ -27,7 +28,7 @@ describe('Weighted Pool - Exit Integration Test', async () => {
   let pool: PoolWithMethods;
   context('Regular Exit Pool Functions', async () => {
     // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
-    const blockNumber = 13309758;
+    const blockNumber = TEST_BLOCK[network];
     const testPoolId =
       '0x96646936b91d6b9d7d0c47c496afbf3d6ec7b6f8000200000000000000000019';
 
@@ -68,7 +69,15 @@ describe('Weighted Pool - Exit Integration Test', async () => {
         const amountsOut = pool.tokens.map((t, i) =>
           parseFixed(((i + 1) * 10).toString(), t.decimals).toString()
         );
-        await testExactTokensOut(pool, signer, tokensOut, amountsOut);
+        // Not testing PI as not neccessarily balanced
+        await testExactTokensOut(
+          pool,
+          signer,
+          tokensOut,
+          amountsOut,
+          false,
+          false
+        );
       });
       it('single token with value', async () => {
         const tokensOut = pool.tokensList;
@@ -93,7 +102,7 @@ describe('Weighted Pool - Exit Integration Test', async () => {
 
   context('Recovery Exit', async () => {
     // This blockNumber is after this pool was paused and set to Recovery Mode to avoid loss of funds
-    const blockNumber = 16819888;
+    const blockNumber = TEST_BLOCK[network];
     const testPoolId =
       '0xa718042e5622099e5f0ace4e7122058ab39e1bbe000200000000000000000475';
 

@@ -15,6 +15,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       //Mainnet deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/mainnet.html
       contracts: {
         multicall: '0xeefba1e63905ef1d7acba5a8513c70307c1ce441',
+        poolDataQueries: '0xf5CDdF6feD9C589f1Be04899F48f9738531daD59',
         lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
         veBal: '0xC128a9954e6c874eA3d62ce62B468bA073093F25',
         veBalProxy: '0x6f5a2eE11E7a772AeB5114A20d0D7c0ff61EB8A0',
@@ -82,6 +83,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       //Polygon deployment addresses: https://docs.balancer.fi/reference/contracts/deployment-addresses/polygon.html
       contracts: {
         multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
+        poolDataQueries: '0x84813aA3e079A665C0B80F944427eE83cBA63617',
         gaugeClaimHelper: '0xaeb406b0e430bf5ea2dc0b9fe62e4e53f74b3a33',
         ...addressesByNetwork[Network.POLYGON].contracts,
       },
@@ -132,6 +134,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     addresses: {
       contracts: {
         multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
+        poolDataQueries: '0x7Ba29fE8E83dd6097A7298075C4AFfdBda3121cC',
         gaugeClaimHelper: '0xa0dabebaad1b243bbb243f933013d560819eb66f',
         ...addressesByNetwork[Network.ARBITRUM].contracts,
       },
@@ -174,6 +177,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     addresses: {
       contracts: {
         multicall: '0x77dCa2C955b15e9dE4dbBCf1246B4B85b651e50e',
+        poolDataQueries: '0x6d3197d069F8F9f1Fe7e23665Bc64CB77ED8b089',
         veBal: '0x33A99Dcc4C85C014cf12626959111D5898bbCAbF',
         veBalProxy: '0xA1F107D1cD709514AE8A914eCB757E95f9cedB31',
         erc4626LinearPoolFactory: '0xba240c856498e2d7a70af4911aafae0d6b565a5b',
@@ -213,6 +217,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     addresses: {
       contracts: {
         multicall: '0x2dc0e2aa608532da689e89e237df582b783e552c',
+        poolDataQueries: '0x6B5dA774890Db7B7b96C6f44e6a4b0F657399E2e',
         ...addressesByNetwork[Network.OPTIMISM].contracts,
       },
       tokens: {
@@ -251,6 +256,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     addresses: {
       contracts: {
         multicall: '0xbb6fab6b627947dae0a75808250d8b2652952cb5',
+        poolDataQueries: '0x3f170631ed9821Ca51A59D996aB095162438DC10',
         ...addressesByNetwork[Network.GNOSIS].contracts,
       },
       tokens: {
@@ -291,6 +297,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         vault: '0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce',
         multicall: '0x66335d7ad8011f6aa3f48aadcb523b62b38ed961',
+        poolDataQueries: '0xb132F1E145DcC085980C531e2dA81f2b84efc14F',
         gaugeClaimHelper: '0x0000000000000000000000000000000000000000', // no guages on fantom
         balancerRelayer: '0x419f7925b8c9e409b6ee8792242556fa210a7a09',
         balancerHelpers: '0xfE18C7C70b0a2c6541bEde0367124278BC345Dc8',
@@ -336,6 +343,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     addresses: {
       contracts: {
         multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
+        poolDataQueries: '0x9805dcfD25e6De36bad8fe9D3Fe2c9b44B764102',
         ...addressesByNetwork[Network.SEPOLIA].contracts,
       },
       tokens: {
@@ -364,6 +372,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         balancerMinter: '0x475D18169BE8a89357A9ee3Ab00ca386d20fA229',
         multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
+        poolDataQueries: '0xF24917fB88261a37Cc57F686eBC831a5c0B9fD39',
         ...addressesByNetwork[Network.ZKEVM].contracts,
       },
       tokens: {
@@ -404,6 +413,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         balancerMinter: '0xEa924b45a3fcDAAdf4E5cFB1665823B8F8F2039B',
         multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
+        poolDataQueries: '0x67af5D428d38C5176a286a2371Df691cDD914Fb8',
         ...addressesByNetwork[Network.AVALANCHE].contracts,
       },
       tokens: {

@@ -28,7 +28,7 @@ import {
   GRAVI_AURA,
 } from '@/test/lib/mainnetPools';
 import { MockPoolDataService } from '@/test/lib/mockPool';
-import { ADDRESSES } from '@/test/lib/constants';
+import { ADDRESSES, TEST_BLOCK } from '@/test/lib/constants';
 import { Contracts } from '../contracts/contracts.module';
 import { accuracy, forkSetup, getBalances } from '@/test/lib/utils';
 import { VaultModel, Requests, ActionType } from './vaultModel.module';
@@ -161,7 +161,7 @@ async function testFlow(
         slots,
         balances,
         jsonRpcUrl as string,
-        16940624
+        TEST_BLOCK[networkId]
       );
       [sor, vaultModel] = await setUp(networkId, provider, pools);
       await sor.fetchPools();

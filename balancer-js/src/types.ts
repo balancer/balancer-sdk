@@ -68,6 +68,7 @@ export interface BalancerSdkSorConfig {
 export interface ContractAddresses {
   vault: string;
   multicall: string;
+  poolDataQueries: string;
   gaugeClaimHelper?: string;
   balancerHelpers: string;
   balancerMinter?: string;

@@ -74,7 +74,12 @@ export function hasJoinExit(
  * @param assets
  * @returns
  */
-export function isJoin(swap: SwapV2, assets: string[]): boolean {
+export function isJoin(
+  swap: SwapV2,
+  assets: string[],
+  poolType: string | undefined
+): boolean {
+  if (poolType !== 'Weighted') return false;
   // token[join]bpt
   const tokenOut = assets[swap.assetOutIndex];
   const poolAddress = getPoolAddress(swap.poolId);
@@ -87,7 +92,12 @@ export function isJoin(swap: SwapV2, assets: string[]): boolean {
  * @param assets
  * @returns
  */
-export function isExit(swap: SwapV2, assets: string[]): boolean {
+export function isExit(
+  swap: SwapV2,
+  assets: string[],
+  poolType: string | undefined
+): boolean {
+  if (poolType !== 'Weighted') return false;
   // bpt[exit]token
   const tokenIn = assets[swap.assetInIndex];
   const poolAddress = getPoolAddress(swap.poolId);
@@ -143,7 +153,8 @@ export function getActions(
   const actions: Actions[] = [];
   let opRefKey = 0;
   for (const swap of swaps) {
-    if (isJoin(swap, assets)) {
+    const poolType = pools.find((p) => p.id === swap.poolId)?.poolType;
+    if (isJoin(swap, assets, poolType)) {
       const newJoin = new Join(
         swap,
         tokenInIndex,
@@ -157,7 +168,7 @@ export function getActions(
       opRefKey = newJoin.nextOpRefKey;
       actions.push(newJoin);
       continue;
-    } else if (isExit(swap, assets)) {
+    } else if (isExit(swap, assets, poolType)) {
       const newExit = new Exit(
         swap,
         tokenInIndex,

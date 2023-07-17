@@ -6,7 +6,7 @@ import hardhat from 'hardhat';
 
 import { Address, BalancerSDK, Network, PoolWithMethods } from '@/.';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
-import { ADDRESSES } from '@/test/lib/constants';
+import { ADDRESSES, TEST_BLOCK } from '@/test/lib/constants';
 import {
   testAttributes,
   testExactTokensIn,
@@ -31,7 +31,7 @@ const slots = [ADDRESSES[network].WBTC.slot, ADDRESSES[network].WETH.slot];
 const initialBalance = '100000';
 const testPoolId =
   '0xa6f548df93de924d73be7d25dc02554c6bd66db500020000000000000000000e'; // B_50WBTC_50WETH
-const blockNumber = 13309758;
+const blockNumber = TEST_BLOCK[network];
 
 describe('Weighted Pool - Join Functions', async () => {
   let pool: PoolWithMethods;

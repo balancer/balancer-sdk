@@ -5,11 +5,12 @@ import { expect } from 'chai';
 import { Network, PoolWithMethods } from '@/.';
 import { TestPoolHelper } from '@/test/lib/utils';
 import { AddressZero } from '@ethersproject/constants';
+import { TEST_BLOCK } from '@/test/lib/constants';
 
 const rpcUrl = 'http://127.0.0.1:8545';
 const network = Network.MAINNET;
 // This blockNumber is before protocol fees were switched on (Oct `21), for blockNos after this tests will fail because results don't 100% match
-const blockNumber = 13309758;
+const blockNumber = TEST_BLOCK[network];
 const testPoolId =
   '0x06df3b2bbb68adc8b0e302443692037ed9f91b42000000000000000000000063';
 
