@@ -4,6 +4,7 @@ import { Pool, PoolToken, PoolType } from '@/types';
 import { decorateGyroEv2 } from './multicall/gyroEv2';
 import { getPoolsFromDataQuery } from './poolDataQueries';
 import { Logger } from '@/lib/utils/logger';
+import { decorateFx } from './multicall/fx';
 
 export type Tokens = (SubgraphToken | PoolToken)[];
 
@@ -34,5 +35,6 @@ export async function getOnChainPools<GenericPool extends BalancerPool>(
   );
   // GyroEV2 requires tokenRates onchain update that dataQueries does not provide
   await decorateGyroEv2(onChainPools, multicallAddr, provider);
+  await decorateFx(onChainPools, multicallAddr, provider);
   return onChainPools;
 }
