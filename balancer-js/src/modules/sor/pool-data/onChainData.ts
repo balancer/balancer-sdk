@@ -35,11 +35,17 @@ export async function getOnChainPools<GenericPool extends BalancerPool>(
   const onChainPools: GenericPool[] = [];
   for (let i = 0; i < filteredPools.length / chunkSize; i += 1) {
     const chunk = filteredPools.slice(i, i + chunkSize);
-    const onChainChunk = await getPoolsFromDataQuery(
-      chunk,
-      dataQueryAddr,
-      provider
-    );
+    let onChainChunk: GenericPool[] = [];
+    try {
+      onChainChunk = await getPoolsFromDataQuery(
+        chunk,
+        dataQueryAddr,
+        provider
+      );
+    } catch (error) {
+      console.warn(`Error fetching Pools from data query, skipping chunk ${i}`);
+      console.warn(error);
+    }
     onChainPools.push(...onChainChunk);
   }
   // GyroEV2 requires tokenRates onchain update that dataQueries does not provide
