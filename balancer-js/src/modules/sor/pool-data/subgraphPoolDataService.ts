@@ -42,6 +42,7 @@ export function mapPools(pools: any[]): SubgraphPoolBase[] {
 
 export class SubgraphPoolDataService implements PoolDataService {
   private readonly defaultArgs: GraphQLArgs;
+
   constructor(
     private readonly client: SubgraphClient,
     private readonly provider: Provider,
@@ -70,9 +71,11 @@ export class SubgraphPoolDataService implements PoolDataService {
    * @param queryArgs
    * @returns SubgraphPoolBase[]
    */
-  async getPools(queryArgs?: GraphQLArgs): Promise<SubgraphPoolBase[]> {
+  async getPools(
+    queryArgs?: GraphQLArgs,
+    chunkSize?: number
+  ): Promise<SubgraphPoolBase[]> {
     const pools = await this.getSubgraphPools(queryArgs);
-
     const filteredPools = pools.filter((p) => {
       if (p.poolType === 'FX') return false;
       if (!this.network.poolsToIgnore) return true;
@@ -81,9 +84,7 @@ export class SubgraphPoolDataService implements PoolDataService {
       );
       return index === -1;
     });
-
     const mapped = mapPools(filteredPools);
-
     if (this.sorConfig && this.sorConfig.fetchOnChainBalances === false) {
       return mapped;
     }
@@ -93,10 +94,10 @@ export class SubgraphPoolDataService implements PoolDataService {
       mapped,
       this.network.addresses.contracts.poolDataQueries,
       this.network.addresses.contracts.multicall,
-      this.provider
+      this.provider,
+      chunkSize
     );
     console.timeEnd(`fetching on-chain balances for ${mapped.length} pools`);
-
     return onChainBalances;
   }
 

@@ -288,8 +288,11 @@ export class Swaps {
    * @returns Boolean indicating whether pools data was fetched correctly (true) or not (false).
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async fetchPools(queryArgs?: GraphQLArgs): Promise<boolean> {
-    return this.sor.fetchPools();
+  async fetchPools(
+    queryArgs?: GraphQLArgs,
+    chunkSize?: number
+  ): Promise<boolean> {
+    return this.sor.fetchPools(queryArgs, chunkSize);
   }
 
   public getPools(): SubgraphPoolBase[] {

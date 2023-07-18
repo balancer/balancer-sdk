@@ -16,7 +16,8 @@ export async function getOnChainPools<GenericPool extends BalancerPool>(
   subgraphPoolsOriginal: GenericPool[],
   dataQueryAddr: string,
   multicallAddr: string,
-  provider: Provider
+  provider: Provider,
+  chunkSize?: number
 ): Promise<GenericPool[]> {
   if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
 
@@ -28,11 +29,19 @@ export async function getOnChainPools<GenericPool extends BalancerPool>(
       return false;
     } else return true;
   });
-  const onChainPools = await getPoolsFromDataQuery(
-    filteredPools,
-    dataQueryAddr,
-    provider
-  );
+  if (!chunkSize) {
+    chunkSize = filteredPools.length;
+  }
+  const onChainPools: GenericPool[] = [];
+  for (let i = 0; i < filteredPools.length / chunkSize; i += 1) {
+    const chunk = filteredPools.slice(i, i + chunkSize);
+    const onChainChunk = await getPoolsFromDataQuery(
+      chunk,
+      dataQueryAddr,
+      provider
+    );
+    onChainPools.push(...onChainChunk);
+  }
   // GyroEV2 requires tokenRates onchain update that dataQueries does not provide
   await decorateGyroEv2(onChainPools, multicallAddr, provider);
   await decorateFx(onChainPools, multicallAddr, provider);
