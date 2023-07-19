@@ -26,7 +26,7 @@ const testPoolId =
   '0x32296969ef14eb0c6d29669c550d4a0449130230000200000000000000000080';
 // Slots used to set the account balance for each token through hardhat_setStorageAt
 // Info fetched using npm package slot20
-const slots = [ADDRESSES[network].wSTETH.slot, ADDRESSES[network].WETH.slot];
+const slots = [ADDRESSES[network].wstETH.slot, ADDRESSES[network].WETH.slot];
 
 describe('MetaStable Pool - Join Functions', async () => {
   let signerAddress: string;

@@ -10,6 +10,7 @@ import {
   BalancerNetworkConfig,
   BalancerSdkConfig,
   BalancerSdkSorConfig,
+  GraphQLQuery,
 } from '@/types';
 import { SubgraphTokenPriceService } from './token-price/subgraphTokenPriceService';
 import { getNetworkConfig } from '@/modules/sdk.helpers';
@@ -29,7 +30,8 @@ export class Sor extends SOR {
       network,
       sorConfig,
       provider,
-      subgraphClient
+      subgraphClient,
+      sdkConfig.subgraphQuery
     );
 
     const tokenPriceService = Sor.getTokenPriceService(
@@ -67,7 +69,8 @@ export class Sor extends SOR {
     network: BalancerNetworkConfig,
     sorConfig: BalancerSdkSorConfig,
     provider: Provider,
-    subgraphClient: SubgraphClient
+    subgraphClient: SubgraphClient,
+    subgraphQuery?: GraphQLQuery
   ) {
     return typeof sorConfig.poolDataService === 'object'
       ? sorConfig.poolDataService
@@ -75,7 +78,8 @@ export class Sor extends SOR {
           subgraphClient,
           provider,
           network,
-          sorConfig
+          sorConfig,
+          subgraphQuery
         );
   }
 

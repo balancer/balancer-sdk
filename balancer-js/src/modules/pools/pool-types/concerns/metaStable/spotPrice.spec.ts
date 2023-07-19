@@ -19,7 +19,7 @@ describe('metaStable pool spot price', () => {
     it('should calculate spot price for pair', () => {
       const spotPrice = spotPriceCalc.calcPoolSpotPrice(
         ADDRESSES[network].WETH.address,
-        ADDRESSES[network].wSTETH.address,
+        ADDRESSES[network].wstETH.address,
         pool
       );
       expect(spotPrice).to.eq('1.070296441642066094033346842555222521');

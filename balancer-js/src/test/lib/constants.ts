@@ -109,10 +109,10 @@ export const ADDRESSES = {
       symbol: 'STETH',
       slot: 0,
     },
-    wSTETH: {
+    wstETH: {
       address: '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
       decimals: 18,
-      symbol: 'wSTETH',
+      symbol: 'wstETH',
       slot: 0,
     },
     bbausd: {
@@ -875,11 +875,13 @@ export const ADDRESSES = {
       address: '0x4F9A0e7FD2Bf6067db6994CF12E4495Df938E6e9',
       decimals: 18,
       symbol: 'WETH',
+      slot: 3,
     },
     wstETH: {
       address: '0x5D8cfF95D7A57c0BF50B30b43c7CC0D52825D4a9',
       decimals: 18,
       symbol: 'wstETH',
+      slot: 0,
     },
     USDC: {
       address: '0xA8CE8aee21bC2A48a5EF670afCc9274C7bbbC035',

@@ -71,7 +71,9 @@ export class SubgraphPoolDataService implements PoolDataService {
    * @returns SubgraphPoolBase[]
    */
   async getPools(queryArgs?: GraphQLArgs): Promise<SubgraphPoolBase[]> {
+    console.time(`Fetch pools from Subgraph (SOR)`);
     const pools = await this.getSubgraphPools(queryArgs);
+    console.timeEnd(`Fetch pools from Subgraph (SOR)`);
 
     const filteredPools = pools.filter((p) => {
       if (p.poolType === 'FX') return false;
@@ -81,6 +83,9 @@ export class SubgraphPoolDataService implements PoolDataService {
       );
       return index === -1;
     });
+    console.log(
+      `SG returned ${pools.length} pools -> filtered to ${filteredPools.length}`
+    );
 
     const mapped = mapPools(filteredPools);
 
