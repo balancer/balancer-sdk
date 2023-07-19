@@ -34,7 +34,7 @@ export async function getOnChainPools<GenericPool extends BalancerPool>(
   }
   const onChainPools: GenericPool[] = [];
   for (let i = 0; i < filteredPools.length / chunkSize; i += 1) {
-    const chunk = filteredPools.slice(i, i + chunkSize);
+    const chunk = filteredPools.slice(i * chunkSize, (i + 1) * chunkSize);
     let onChainChunk: GenericPool[] = [];
     try {
       onChainChunk = await getPoolsFromDataQuery(
