@@ -7,6 +7,7 @@
 import { BalancerSDK, Network } from '@balancer-labs/sdk'
 import { formatFixed } from '@ethersproject/bignumber'
 import { AddressZero } from '@ethersproject/constants'
+import { reset } from 'examples/helpers/forked-utils'
 
 const tokenIn = AddressZero // eth
 const tokenOut = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599' // wBTC
@@ -22,6 +23,8 @@ const { swaps } = sdk
 const erc20Out = sdk.contracts.ERC20(tokenOut, sdk.provider)
 
 async function swap() {
+  await reset(sdk.provider)
+
   const signer = sdk.provider.getSigner()
   const account = await signer.getAddress()
 
