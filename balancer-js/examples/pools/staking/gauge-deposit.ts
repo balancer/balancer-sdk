@@ -6,7 +6,7 @@
  * Note: this example uses a forked mainnet for illustraion purpose.
  * 
  * How to run:
- * npm run example examples/gauge-deposit.ts
+ * yarn example examples/pools/staking/gauge-deposit.ts
  */
 import { BalancerSDK } from '@balancer-labs/sdk';
 import { reset, setTokenBalance } from 'examples/helpers'

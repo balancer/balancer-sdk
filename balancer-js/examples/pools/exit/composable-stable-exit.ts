@@ -74,7 +74,7 @@ const exit = async () => {
   const { provider } = balancer
 
   // Reset the local fork to block 17000000
-  await reset(provider, 17000000)
+  await reset(provider, 17700000)
 
   const signer = provider.getSigner()
   const address = await signer.getAddress();

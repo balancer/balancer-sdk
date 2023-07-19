@@ -26,7 +26,7 @@ async function createAndInitJoinComposableStable() {
   ];
 
   // Prepare local fork for simulation
-  await reset(balancer.provider, 17347414)
+  await reset(balancer.provider, 17700000)
   await setTokenBalance(balancer.provider, ownerAddress, poolTokens[0], amountsIn[0], 9)
   await setTokenBalance(balancer.provider, ownerAddress, poolTokens[1], amountsIn[1], 2)
   await approveToken(poolTokens[0], balancer.contracts.vault.address, amountsIn[0], signer)

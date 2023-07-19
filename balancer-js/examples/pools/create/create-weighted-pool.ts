@@ -27,7 +27,7 @@ async function createAndInitJoinWeightedPool() {
   ];
 
   // Prepare local fork for simulation
-  await reset(balancer.provider, 17347414);
+  await reset(balancer.provider, 17700000);
   await setTokenBalance(
     balancer.provider,
     ownerAddress,

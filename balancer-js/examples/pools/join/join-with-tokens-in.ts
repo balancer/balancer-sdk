@@ -2,7 +2,7 @@
  * Example showing how to use Pools module to join pools.
  *
  * Run with:
- * yarn example ./examples/pools/join/join.ts
+ * yarn example ./examples/pools/join/join-with-tokens-in.ts
  */
 import { BalancerSDK, Network } from '@balancer-labs/sdk';
 import {
@@ -41,7 +41,7 @@ async function join() {
   const amountsIn = ['10000000', '1000000000000000000'];
 
   // Prepare local fork for simulation
-  await reset(provider, 17000000);
+  await reset(provider, 17700000);
   await setTokenBalance(provider, address, tokensIn[0], amountsIn[0], slots[0]);
   await setTokenBalance(provider, address, tokensIn[1], amountsIn[1], slots[1]);
   await approveToken(

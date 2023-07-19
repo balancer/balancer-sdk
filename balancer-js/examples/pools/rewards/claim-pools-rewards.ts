@@ -11,7 +11,7 @@ const userAddress = '0x549c660ce2B988F588769d6AD87BE801695b2be3'
 
 const sdk = new BalancerSDK({
   network: Network.MAINNET,
-  rpcUrl: 'http://localhost:8545',
+  rpcUrl: 'http://127.0.0.1:8545',
 })
 
 const { provider, claimService } = sdk

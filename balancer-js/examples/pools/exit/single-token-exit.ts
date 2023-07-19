@@ -2,7 +2,7 @@
  * Exit a pool with a single token out.
  * 
  * Run command:
- * yarn example ./examples/pools/exit/exit-to-single-token.ts
+ * yarn example ./examples/pools/exit/single-token-exit.ts
  */
 import { Network, BalancerSDK } from '@balancer-labs/sdk'
 import { reset, setTokenBalance, getTokenBalance } from 'examples/helpers'
@@ -27,7 +27,7 @@ async function singleTokenExit() {
   if (!pool) throw Error('Pool not found')
   
   // Prepare local fork for simulation
-  await reset(balancer.provider, 17000000)
+  await reset(balancer.provider, 17700000)
   await setTokenBalance(balancer.provider, address, pool.address, bptIn, 0)
 
   // We are exiting all the BPT to a single token out

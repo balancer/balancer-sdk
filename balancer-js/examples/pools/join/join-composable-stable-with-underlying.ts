@@ -74,7 +74,7 @@ const signer = provider.getSigner();
  * would already have DAI and the vault would already be approved.
  */
 async function setup(address: string) {
-  await reset(provider, 17000000);
+  await reset(provider, 17700000);
   await setTokenBalance(provider, address, dai, amount, 2);
   await approveToken(dai, contracts.vault.address, amount, signer);
 }

@@ -37,7 +37,7 @@ async function recoveryExit() {
   if (!pool) throw 'POOL_DOESNT_EXIST'
 
   // Prepare local fork for simulation
-  await reset(balancer.provider, 16819888)
+  await reset(balancer.provider, 17700000)
   await setTokenBalance(balancer.provider, address, pool.address, bptIn, 0)
 
   // Build transaction
