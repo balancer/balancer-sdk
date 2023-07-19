@@ -93,7 +93,7 @@ export class Data implements BalancerDataRepositories {
       {
         provider: provider,
         multicall: networkConfig.addresses.contracts.multicall,
-        poolDataQueries: networkConfig.addresses.contracts.poolDataQueries,
+        vault: networkConfig.addresses.contracts.vault,
       },
       networkConfig.poolsToIgnore
     );

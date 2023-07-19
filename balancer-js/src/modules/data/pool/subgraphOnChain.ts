@@ -2,14 +2,14 @@ import { Cacheable, Findable, Searchable } from '../types';
 import { Provider } from '@ethersproject/providers';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
 import { Pool } from '@/types';
-import { getOnChainPools } from '../../../modules/sor/pool-data/onChainData';
+import { getOnChainBalances } from '../../../modules/sor/pool-data/onChainData';
 import { PoolsSubgraphRepository } from './subgraph';
 import { isSameAddress } from '@/lib/utils';
 
 interface PoolsSubgraphOnChainRepositoryOptions {
   provider: Provider;
   multicall: string;
-  poolDataQueries: string;
+  vault: string;
 }
 
 /**
@@ -21,14 +21,14 @@ export class PoolsSubgraphOnChainRepository
   private provider: Provider;
   private pools?: Promise<Pool[]>;
   private multicall: string;
-  private poolDataQueries: string;
+  private vault: string;
   public skip = 0;
 
   /**
    * Repository using multicall to get onchain data.
    *
    * @param poolsSubgraph subgraph repository
-   * @param options options containing provider, multicall and poolDataQueries address
+   * @param options options containing provider, multicall and vault addresses
    */
   constructor(
     private poolsSubgraph: PoolsSubgraphRepository,
@@ -37,7 +37,7 @@ export class PoolsSubgraphOnChainRepository
   ) {
     this.provider = options.provider;
     this.multicall = options.multicall;
-    this.poolDataQueries = options.poolDataQueries;
+    this.vault = options.vault;
   }
 
   private filterPools(pools: Pool[]): Pool[] {
@@ -64,10 +64,10 @@ export class PoolsSubgraphOnChainRepository
     console.timeEnd('fetching pools SG');
     const filteredPools = this.filterPools(pools);
     console.time(`fetching onchain ${filteredPools.length} pools`);
-    const onchainPools = await getOnChainPools(
+    const onchainPools = await getOnChainBalances(
       filteredPools,
-      this.poolDataQueries,
       this.multicall,
+      this.vault,
       this.provider
     );
     console.timeEnd(`fetching onchain ${filteredPools.length} pools`);
@@ -81,10 +81,10 @@ export class PoolsSubgraphOnChainRepository
     console.timeEnd('fetching pools SG');
     const filteredPools = this.filterPools(pools);
     console.time(`fetching onchain ${filteredPools.length} pools`);
-    const onchainPools = await getOnChainPools(
+    const onchainPools = await getOnChainBalances(
       filteredPools,
-      this.poolDataQueries,
       this.multicall,
+      this.vault,
       this.provider
     );
     console.timeEnd(`fetching onchain ${filteredPools.length} pools`);
@@ -123,10 +123,10 @@ export class PoolsSubgraphOnChainRepository
   }
 
   async refresh(pool: Pool): Promise<Pool> {
-    const onchainPool = await getOnChainPools(
+    const onchainPool = await getOnChainBalances(
       [pool],
-      this.poolDataQueries,
       this.multicall,
+      this.vault,
       this.provider
     );
 

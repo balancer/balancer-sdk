@@ -6,7 +6,7 @@ import {
   SubgraphClient,
 } from '@/modules/subgraph/subgraph';
 import { parseInt } from 'lodash';
-import { getOnChainPools } from './onChainData';
+import { getOnChainBalances } from './onChainData';
 import { Provider } from '@ethersproject/providers';
 import {
   BalancerNetworkConfig,
@@ -89,10 +89,10 @@ export class SubgraphPoolDataService implements PoolDataService {
     }
 
     console.time(`fetching on-chain balances for ${mapped.length} pools`);
-    const onChainBalances = await getOnChainPools(
+    const onChainBalances = await getOnChainBalances(
       mapped,
-      this.network.addresses.contracts.poolDataQueries,
       this.network.addresses.contracts.multicall,
+      this.network.addresses.contracts.vault,
       this.provider
     );
     console.timeEnd(`fetching on-chain balances for ${mapped.length} pools`);

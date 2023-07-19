@@ -289,7 +289,7 @@ export class Swaps {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async fetchPools(queryArgs?: GraphQLArgs): Promise<boolean> {
-    return this.sor.fetchPools();
+    return this.sor.fetchPools(queryArgs);
   }
 
   public getPools(): SubgraphPoolBase[] {
