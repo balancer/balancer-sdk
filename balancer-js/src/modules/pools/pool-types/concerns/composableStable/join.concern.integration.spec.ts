@@ -64,7 +64,7 @@ describe('ComposableStable Pool - Join Functions', async () => {
           parseFixed('100000', 18).toString()
         ),
         jsonRpcUrl,
-        blockNumber
+        40818844
       );
       testPool = await updateFromChain(testPool, network, provider);
       pool = Pools.wrap(testPool, BALANCER_NETWORK_CONFIG[network]);
