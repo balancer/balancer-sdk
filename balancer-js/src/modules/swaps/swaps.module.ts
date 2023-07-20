@@ -212,7 +212,6 @@ export class Swaps {
       gasPrice: BigNumber.from(opts.gasPrice),
       maxPools: opts.maxPools,
     });
-
     const tx = this.buildSwap({
       userAddress: sender, // sender account
       recipient, // recipient account
@@ -288,8 +287,11 @@ export class Swaps {
    * @returns Boolean indicating whether pools data was fetched correctly (true) or not (false).
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async fetchPools(queryArgs?: GraphQLArgs): Promise<boolean> {
-    return this.sor.fetchPools(queryArgs);
+  async fetchPools(
+    queryArgs?: GraphQLArgs,
+    chunkSize?: number
+  ): Promise<boolean> {
+    return this.sor.fetchPools(queryArgs, chunkSize);
   }
 
   public getPools(): SubgraphPoolBase[] {
