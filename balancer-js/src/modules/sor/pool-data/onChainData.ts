@@ -69,7 +69,7 @@ export async function getOnChainBalances<
 ): Promise<GenericPool[]> {
   if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
 
-  const { multipools, poolsToBeCalledByChunk } = generateMultipools(
+  const { multipools, poolsToBeCalled } = generateMultipools(
     subgraphPoolsOriginal,
     vaultAddress,
     multiAddress,
@@ -77,10 +77,7 @@ export async function getOnChainBalances<
     chunkSize
   );
 
-  const { multicallPools, calledPools } = await executeChunks(
-    multipools,
-    poolsToBeCalledByChunk
-  );
+  const multicallPools = await executeChunks(multipools);
 
   const onChainPools: GenericPool[] = [];
 
@@ -97,10 +94,10 @@ export async function getOnChainBalances<
       } = onchainData;
 
       if (
-        calledPools[index].poolType === 'Stable' ||
-        calledPools[index].poolType === 'MetaStable' ||
-        calledPools[index].poolType === 'StablePhantom' ||
-        calledPools[index].poolType === 'ComposableStable'
+        poolsToBeCalled[index].poolType === 'Stable' ||
+        poolsToBeCalled[index].poolType === 'MetaStable' ||
+        poolsToBeCalled[index].poolType === 'StablePhantom' ||
+        poolsToBeCalled[index].poolType === 'ComposableStable'
       ) {
         if (!onchainData.amp) {
           console.error(`Stable Pool Missing Amp: ${poolId}`);
@@ -108,26 +105,26 @@ export async function getOnChainBalances<
         } else {
           // Need to scale amp by precision to match expected Subgraph scale
           // amp is stored with 3 decimals of precision
-          calledPools[index].amp = formatFixed(onchainData.amp[0], 3);
+          poolsToBeCalled[index].amp = formatFixed(onchainData.amp[0], 3);
         }
       }
 
-      if (calledPools[index].poolType.includes('Linear')) {
+      if (poolsToBeCalled[index].poolType.includes('Linear')) {
         if (!onchainData.targets) {
           console.error(`Linear Pool Missing Targets: ${poolId}`);
           return;
         } else {
-          calledPools[index].lowerTarget = formatFixed(
+          poolsToBeCalled[index].lowerTarget = formatFixed(
             onchainData.targets[0],
             18
           );
-          calledPools[index].upperTarget = formatFixed(
+          poolsToBeCalled[index].upperTarget = formatFixed(
             onchainData.targets[1],
             18
           );
         }
 
-        const wrappedIndex = calledPools[index].wrappedIndex;
+        const wrappedIndex = poolsToBeCalled[index].wrappedIndex;
         if (wrappedIndex === undefined || onchainData.rate === undefined) {
           console.error(
             `Linear Pool Missing WrappedIndex or PriceRate: ${poolId}`
@@ -135,17 +132,17 @@ export async function getOnChainBalances<
           return;
         }
         // Update priceRate of wrappedToken
-        calledPools[index].tokens[wrappedIndex].priceRate = formatFixed(
+        poolsToBeCalled[index].tokens[wrappedIndex].priceRate = formatFixed(
           onchainData.rate,
           18
         );
       }
 
-      if (calledPools[index].poolType !== 'FX')
-        calledPools[index].swapFee = formatFixed(swapFee, 18);
+      if (poolsToBeCalled[index].poolType !== 'FX')
+        poolsToBeCalled[index].swapFee = formatFixed(swapFee, 18);
 
       poolTokens.tokens.forEach((token, i) => {
-        const tokens = calledPools[index].tokens;
+        const tokens = poolsToBeCalled[index].tokens;
         const T = tokens.find((t) => isSameAddress(t.address, token));
         if (!T) throw `Pool Missing Expected Token: ${poolId} ${token}`;
         T.balance = formatFixed(poolTokens.balances[i], T.decimals);
@@ -157,8 +154,8 @@ export async function getOnChainBalances<
 
       // Pools with pre minted BPT
       if (
-        calledPools[index].poolType.includes('Linear') ||
-        calledPools[index].poolType === 'StablePhantom'
+        poolsToBeCalled[index].poolType.includes('Linear') ||
+        poolsToBeCalled[index].poolType === 'StablePhantom'
       ) {
         if (virtualSupply === undefined) {
           const logger = Logger.getInstance();
@@ -167,21 +164,21 @@ export async function getOnChainBalances<
           );
           return;
         }
-        calledPools[index].totalShares = formatFixed(virtualSupply, 18);
-      } else if (calledPools[index].poolType === 'ComposableStable') {
+        poolsToBeCalled[index].totalShares = formatFixed(virtualSupply, 18);
+      } else if (poolsToBeCalled[index].poolType === 'ComposableStable') {
         if (actualSupply === undefined) {
           const logger = Logger.getInstance();
           logger.warn(`ComposableStable missing Actual Supply: ${poolId}`);
           return;
         }
-        calledPools[index].totalShares = formatFixed(actualSupply, 18);
+        poolsToBeCalled[index].totalShares = formatFixed(actualSupply, 18);
       } else {
-        calledPools[index].totalShares = formatFixed(totalSupply, 18);
+        poolsToBeCalled[index].totalShares = formatFixed(totalSupply, 18);
       }
 
       if (
-        calledPools[index].poolType === 'GyroE' &&
-        calledPools[index].poolTypeVersion == 2
+        poolsToBeCalled[index].poolType === 'GyroE' &&
+        poolsToBeCalled[index].poolTypeVersion == 2
       ) {
         if (!Array.isArray(tokenRates) || tokenRates.length !== 2) {
           console.error(
@@ -189,12 +186,12 @@ export async function getOnChainBalances<
           );
           return;
         }
-        calledPools[index].tokenRates = tokenRates.map((rate) =>
+        poolsToBeCalled[index].tokenRates = tokenRates.map((rate) =>
           formatFixed(rate, 18)
         );
       }
 
-      onChainPools.push(calledPools[index]);
+      onChainPools.push(poolsToBeCalled[index]);
     } catch (err) {
       throw new Error(`Issue with pool onchain data: ${err}`);
     }
@@ -210,7 +207,7 @@ const generateMultipools = <GenericPool extends BalancerPool>(
   chunkSize?: number
 ): {
   multipools: Multicaller[];
-  poolsToBeCalledByChunk: GenericPool[][];
+  poolsToBeCalled: GenericPool[];
 } => {
   const abis: JsonFragment[] = _.uniqBy(
     [
@@ -236,7 +233,7 @@ const generateMultipools = <GenericPool extends BalancerPool>(
     const chunk = pools.slice(i * chunkSize, (i + 1) * chunkSize);
     chunks.push(chunk);
   }
-  const poolsToBeCalledByChunk: GenericPool[][] = Array(chunks.length).fill([]);
+  const poolsToBeCalled: GenericPool[] = [];
   const multicallers: Multicaller[] = chunks.map((poolsChunk, chunkIndex) => {
     const multicall = Multicall__factory.connect(multiAddress, provider);
     const multiPool = new Multicaller(multicall, abis);
@@ -250,7 +247,7 @@ const generateMultipools = <GenericPool extends BalancerPool>(
         return;
       }
 
-      poolsToBeCalledByChunk[chunkIndex].push(pool);
+      poolsToBeCalled.push(pool);
 
       multiPool.call(`${pool.id}.poolTokens`, vaultAddress, 'getPoolTokens', [
         pool.id,
@@ -389,39 +386,19 @@ const generateMultipools = <GenericPool extends BalancerPool>(
     return multiPool;
   });
 
-  return { multipools: multicallers, poolsToBeCalledByChunk };
+  return { multipools: multicallers, poolsToBeCalled };
 };
 
 const executeChunks = async <GenericPool extends BalancerPool>(
-  multipools: Multicaller[],
-  poolsToBeCalledByChunk: GenericPool[][]
-): Promise<{
-  multicallPools: Record<string, MulticallPool>;
-  calledPools: GenericPool[];
-}> => {
-  let calledPools: GenericPool[] = [];
-  const acceptedChunks: number[] = [];
+  multipools: Multicaller[]
+): Promise<Record<string, MulticallPool>> => {
   const multicallPools = (
-    (await Promise.all(
-      multipools.map(async (m, i) => {
-        try {
-          const records = await m.execute();
-          acceptedChunks.push(i);
-          return records;
-        } catch (error) {
-          console.log(acceptedChunks);
-          console.warn(`Error in chunk ${i}, discarding chunk`);
-          return {};
-        }
-      })
-    )) as Record<string, MulticallPool>[]
+    (await Promise.all(multipools.map((m, i) => m.execute()))) as Record<
+      string,
+      MulticallPool
+    >[]
   ).reduce((acc, poolsRecord) => {
     return { ...acc, ...poolsRecord };
   }, {});
-  acceptedChunks
-    .sort()
-    .forEach(
-      (i) => (calledPools = [...calledPools, ...poolsToBeCalledByChunk[i]])
-    );
-  return { multicallPools, calledPools };
+  return multicallPools;
 };

@@ -28,7 +28,7 @@ async function swap() {
   // Finding a trading route rely on on-chain data.
   // fetchPools will fetch the current data from the subgraph.
   // Let's fetch just 5 pools with highest liquidity of tokenOut.
-  await swaps.fetchPools(undefined, 30);
+  await swaps.fetchPools(undefined, 200);
 
   // Set exectution deadline to 60 seconds from now
   const deadline = String(Math.ceil(Date.now() / 1000) + 60);
