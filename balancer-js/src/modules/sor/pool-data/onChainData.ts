@@ -234,7 +234,7 @@ const generateMultipools = <GenericPool extends BalancerPool>(
     chunks.push(chunk);
   }
   const poolsToBeCalled: GenericPool[] = [];
-  const multicallers: Multicaller[] = chunks.map((poolsChunk, chunkIndex) => {
+  const multicallers: Multicaller[] = chunks.map((poolsChunk) => {
     const multicall = Multicall__factory.connect(multiAddress, provider);
     const multiPool = new Multicaller(multicall, abis);
     poolsChunk.forEach((pool) => {
@@ -389,11 +389,11 @@ const generateMultipools = <GenericPool extends BalancerPool>(
   return { multipools: multicallers, poolsToBeCalled };
 };
 
-const executeChunks = async <GenericPool extends BalancerPool>(
+const executeChunks = async(
   multipools: Multicaller[]
 ): Promise<Record<string, MulticallPool>> => {
   const multicallPools = (
-    (await Promise.all(multipools.map((m, i) => m.execute()))) as Record<
+    (await Promise.all(multipools.map((m) => m.execute()))) as Record<
       string,
       MulticallPool
     >[]
