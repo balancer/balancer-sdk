@@ -88,18 +88,19 @@ export class Simulation {
           data: encodedCall,
           value,
         });
-        const decodedResponse = Buffer.from(
-          staticResult.split('x')[1],
-          'hex'
-        ).toString('utf8');
-        if (decodedResponse.includes('BAL#')) {
+
+        try {
+          amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
+        } catch (_) {
+          // decoding output failed, so we assume the response contains an error message and try to decode it instead
+          const decodedResponse = Buffer.from(
+            staticResult.split('x')[1],
+            'hex'
+          ).toString('utf8');
           throw new Error(
-            `Transaction reverted with Error ${
-              'BAL#' + decodedResponse.split('BAL#')[1]
-            } on the static call`
+            `Transaction reverted with error: ${decodedResponse}`
           );
         }
-        amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
         break;
       }
       default:
@@ -144,18 +145,18 @@ export class Simulation {
           to,
           data: encodedCall,
         });
-        const decodedResponse = Buffer.from(
-          staticResult.split('x')[1],
-          'hex'
-        ).toString('utf8');
-        if (decodedResponse.includes('BAL#')) {
+        try {
+          amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
+        } catch (_) {
+          // decoding output failed, so we assume the response contains an error message and try to decode it instead
+          const decodedResponse = Buffer.from(
+            staticResult.split('x')[1],
+            'hex'
+          ).toString('utf8');
           throw new Error(
-            `Transaction reverted with Error ${
-              'BAL#' + decodedResponse.split('BAL#')[1]
-            } on the static call`
+            `Transaction reverted with error: ${decodedResponse}`
           );
         }
-        amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
         break;
       }
       default:
