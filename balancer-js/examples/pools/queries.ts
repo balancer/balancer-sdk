@@ -5,9 +5,9 @@
  * yarn example ./examples/pools/queries.ts
  */
 
-import { BalancerSDK, PoolWithMethods } from '@balancer-labs/sdk'
-import { parseEther, formatEther } from '@ethersproject/units'
-import { BigNumber } from "@ethersproject/bignumber";
+import { BalancerSDK, PoolWithMethods } from '@balancer-labs/sdk';
+import { parseEther, formatEther } from '@ethersproject/units';
+import { BigNumber } from '@ethersproject/bignumber';
 
 const sdk = new BalancerSDK({
   network: 1,
@@ -22,18 +22,20 @@ const {
 // Joining with a single token
 const queryJoin = async (pool: PoolWithMethods) => {
   const token = pool.tokensList[0];
-  const maxAmountsInByToken = new Map<string,BigNumber>([[token, parseEther('1')]]);
+  const maxAmountsInByToken = new Map<string, BigNumber>([
+    [token, parseEther('1')],
+  ]);
   const joinExactInQuery = pool.buildQueryJoinExactIn({
-    maxAmountsInByToken
+    maxAmountsInByToken,
   });
 
   const response = await contracts.balancerHelpers.callStatic.queryJoin(
     ...joinExactInQuery
   );
 
-  console.log(`Joining ${ pool.poolType }`);
+  console.log(`Joining ${pool.poolType}`);
   console.table({
-    tokens: pool.tokensList.map((t) => `${ t.slice(0, 6) }...${ t.slice(38, 42) }`),
+    tokens: pool.tokensList.map((t) => `${t.slice(0, 6)}...${t.slice(38, 42)}`),
     amountsIn: response.amountsIn.map(formatEther),
     bptOut: formatEther(response.bptOut),
   });
@@ -50,9 +52,9 @@ const queryExit = async (pool: PoolWithMethods) => {
     ...exitToSingleToken
   );
 
-  console.log(`Exiting ${ pool.poolType }`);
+  console.log(`Exiting ${pool.poolType}`);
   console.table({
-    tokens: pool.tokensList.map((t) => `${ t.slice(0, 6) }...${ t.slice(38, 42) }`),
+    tokens: pool.tokensList.map((t) => `${t.slice(0, 6)}...${t.slice(38, 42)}`),
     amountsOut: response.amountsOut.map(formatEther),
     bptIn: formatEther(response.bptIn),
   });
@@ -70,7 +72,9 @@ const queryExit = async (pool: PoolWithMethods) => {
   );
 
   for (const pool of [composableStable, weighted, metaStable]) {
-    await queryJoin(pool!);
-    await queryExit(pool!);
+    if (pool) {
+      await queryJoin(pool);
+      await queryExit(pool);
+    }
   }
 })();

@@ -1,4 +1,4 @@
-import { BalancerSDK } from '@balancer-labs/sdk'
+import { BalancerSDK } from '@balancer-labs/sdk';
 
 const sdk = new BalancerSDK({
   network: 1,
@@ -14,7 +14,7 @@ const sdk = new BalancerSDK({
       const fees = await sdk.pools.fees(pool);
       console.log(fees);
     }
-  })
+  });
 })();
 
 // yarn example ./examples/pools/fees.ts

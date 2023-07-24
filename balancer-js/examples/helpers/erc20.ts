@@ -1,8 +1,8 @@
-import { hexlify, zeroPad } from '@ethersproject/bytes'
-import { keccak256 } from '@ethersproject/solidity'
-import { BigNumber } from '@ethersproject/bignumber'
-import { Contract } from '@ethersproject/contracts'
-import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers'
+import { hexlify, zeroPad } from '@ethersproject/bytes';
+import { keccak256 } from '@ethersproject/solidity';
+import { BigNumber } from '@ethersproject/bignumber';
+import { Contract } from '@ethersproject/contracts';
+import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers';
 
 /**
  * Set token balance for a given account
@@ -23,14 +23,16 @@ export const setTokenBalance = async (
   isVyperMapping = false
 ): Promise<void> => {
   // Get storage slot index
-  const slotFormat = isVyperMapping ? [slot, account] : [account, slot]
-  const slotValue = keccak256(['uint256', 'uint256'], slotFormat)
+  const slotFormat = isVyperMapping ? [slot, account] : [account, slot];
+  const slotValue = keccak256(['uint256', 'uint256'], slotFormat);
 
   // Manipulate local balance (needs to be bytes32 string)
-  const value = hexlify(zeroPad(BigNumber.from(String(BigInt(balance))).toHexString(), 32))
+  const value = hexlify(
+    zeroPad(BigNumber.from(String(BigInt(balance))).toHexString(), 32)
+  );
 
-  await provider.send('hardhat_setStorageAt', [token, slotValue, value])
-}
+  await provider.send('hardhat_setStorageAt', [token, slotValue, value]);
+};
 
 /**
  * Approve token balance for vault contract
@@ -48,17 +50,15 @@ export const approveToken = async (
 ): Promise<boolean> => {
   const iERC20 = [
     'function approve(address spender, uint256 amount) external returns (bool)',
-  ]
-  const erc20 = new Contract(token, iERC20, signer)
-  const txReceipt = await (
-    await erc20.approve(spender, amount)
-  ).wait()
-  return txReceipt.status === 1
-}
+  ];
+  const erc20 = new Contract(token, iERC20, signer);
+  const txReceipt = await (await erc20.approve(spender, amount)).wait();
+  return txReceipt.status === 1;
+};
 
 /**
  * Get ERC20 token balance for a given account
- * 
+ *
  * @param token Token address to get balance of
  * @param account Account to get balance for
  * @param provider JsonRpcProvider
@@ -71,7 +71,7 @@ export const getTokenBalance = async (
 ): Promise<string> => {
   const iERC20 = [
     'function balanceOf(address account) external view returns (uint256)',
-  ]
-  const erc20 = new Contract(token, iERC20, provider)
-  return erc20.balanceOf(account)
-}
+  ];
+  const erc20 = new Contract(token, iERC20, provider);
+  return erc20.balanceOf(account);
+};
