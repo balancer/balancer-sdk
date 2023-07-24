@@ -61,6 +61,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       '0x0afbd58beca09545e4fb67772faf3858e610bcd0',
       '0xf22ff21e17157340575158ad7394e068048dd98b',
       '0xf71d0774b214c4cf51e33eb3d30ef98132e4dbaa',
+      '0xe0e8ac08de6708603cfd3d23b613d2f80e3b7afb',
     ],
     sorConnectingTokens: [
       {
