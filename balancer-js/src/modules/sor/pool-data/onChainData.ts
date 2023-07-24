@@ -389,7 +389,7 @@ const generateMultipools = <GenericPool extends BalancerPool>(
   return { multipools: multicallers, poolsToBeCalled };
 };
 
-const executeChunks = async(
+const executeChunks = async (
   multipools: Multicaller[]
 ): Promise<Record<string, MulticallPool>> => {
   const multicallPools = (
