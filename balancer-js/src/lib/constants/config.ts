@@ -19,7 +19,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         veBal: '0xC128a9954e6c874eA3d62ce62B468bA073093F25',
         veBalProxy: '0x6f5a2eE11E7a772AeB5114A20d0D7c0ff61EB8A0',
         ...addressesByNetwork[Network.MAINNET].contracts,
-        balancerRelayer: '0x46d4674578a2daBbD0CEAB0500c6c7867999db34' // localhost
+        balancerRelayer: '0xc1EeD9232A0A44c2463ACB83698c162966FBc78d' // localhost
         // balancerRelayer: '0x4ea0be853219be8c9ce27200bdeee36881612ff2' // Tenderly fork
       },
       tokens: {
