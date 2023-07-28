@@ -30,6 +30,7 @@ import { StablePoolEncoder } from '@/pool-stable';
 import { getPoolAddress } from '@/pool-utils';
 import { WeightedPoolEncoder } from '@/pool-weighted';
 import { BalancerNetworkConfig, ExitPoolRequest, PoolType } from '@/types';
+import { Logger } from '@/lib/utils/logger';
 
 const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
@@ -53,7 +54,8 @@ export interface ExitInfo {
 const DEBUG = false;
 
 function debugLog(log: string) {
-  if (DEBUG) console.log(log);
+  const logger = Logger.getInstance();
+  if (DEBUG) logger.info(log);
 }
 
 export class Exit {

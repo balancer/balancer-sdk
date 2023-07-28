@@ -5,8 +5,9 @@
  * yarn example ./examples/pools/queries.ts
  */
 
-import { BalancerSDK, PoolWithMethods } from '@balancer-labs/sdk'
-import { parseEther, formatEther } from '@ethersproject/units'
+import { BalancerSDK, PoolWithMethods } from '@balancer-labs/sdk';
+import { parseEther, formatEther } from '@ethersproject/units';
+import { BigNumber } from '@ethersproject/bignumber';
 
 const sdk = new BalancerSDK({
   network: 1,
@@ -21,10 +22,11 @@ const {
 // Joining with a single token
 const queryJoin = async (pool: PoolWithMethods) => {
   const token = pool.tokensList[0];
+  const maxAmountsInByToken = new Map<string, BigNumber>([
+    [token, parseEther('1')],
+  ]);
   const joinExactInQuery = pool.buildQueryJoinExactIn({
-    maxAmountsIn: pool.tokensList.map((t) =>
-      parseEther(t === token ? '1' : '0')
-    ),
+    maxAmountsInByToken,
   });
 
   const response = await contracts.balancerHelpers.callStatic.queryJoin(
@@ -70,7 +72,9 @@ const queryExit = async (pool: PoolWithMethods) => {
   );
 
   for (const pool of [composableStable, weighted, metaStable]) {
-    await queryJoin(pool!);
-    await queryExit(pool!);
+    if (pool) {
+      await queryJoin(pool);
+      await queryExit(pool);
+    }
   }
 })();

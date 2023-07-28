@@ -1,6 +1,6 @@
 /**
  * Display APRs
- * 
+ *
  * Run command:
  * yarn example ./examples/pools/aprs/aprs.polygon.ts
  */

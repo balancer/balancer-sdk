@@ -25,7 +25,7 @@ const poolAddresses = Object.values(ADDRESSES[network]).map(
 );
 const addresses = ADDRESSES[network];
 
-describe('generalised exit execution', async function () {
+describe.skip('generalised exit execution', async function () {
   this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
 
   /*

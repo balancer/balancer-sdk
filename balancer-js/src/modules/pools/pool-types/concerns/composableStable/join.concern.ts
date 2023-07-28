@@ -107,9 +107,9 @@ export class ComposableStablePoolJoin implements JoinConcern {
      * V2: Reintroduced proportional exits. Has vulnerability.
      * V3: Fixed vulnerability. Functionally the same as V2.
      * V4: Update to use new create method with new salt parameter
+     * V5: Fixed vulnerability. Functionally the same as V4.
      */
-    if (pool.poolTypeVersion <= 4)
-      return this.sortV1(wrappedNativeAsset, tokensIn, amountsIn, pool);
+    return this.sortV1(wrappedNativeAsset, tokensIn, amountsIn, pool);
     // Not release yet and needs tests to confirm
     // else if (values.pool.poolTypeVersion === 5)
     //   sortedValues = this.sortV4(
@@ -117,10 +117,6 @@ export class ComposableStablePoolJoin implements JoinConcern {
     //     values.amountsIn,
     //     values.pool
     //   );
-    else
-      throw new Error(
-        `Unsupported ComposablePool Version ${pool.poolTypeVersion}`
-      );
   }
 
   /**

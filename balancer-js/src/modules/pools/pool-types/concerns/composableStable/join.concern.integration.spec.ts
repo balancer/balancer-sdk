@@ -24,6 +24,7 @@ import {
   testAttributes,
   testSortingInputs,
 } from '@/test/lib/joinHelper';
+import { TEST_BLOCK } from '@/test/lib/constants';
 
 describe('ComposableStable Pool - Join Functions', async () => {
   let signerAddress: string;
@@ -45,7 +46,7 @@ describe('ComposableStable Pool - Join Functions', async () => {
       signer = provider.getSigner();
       signerAddress = await signer.getAddress();
       jsonRpcUrl = FORK_NODES[network];
-      blockNumber = 40818844;
+      blockNumber = TEST_BLOCK[network];
       testPoolId =
         '0x02d2e2d7a89d6c5cb3681cfcb6f7dac02a55eda400000000000000000000088f';
 
@@ -63,25 +64,40 @@ describe('ComposableStable Pool - Join Functions', async () => {
           parseFixed('100000', 18).toString()
         ),
         jsonRpcUrl,
-        blockNumber
+        40818844
       );
       testPool = await updateFromChain(testPool, network, provider);
       pool = Pools.wrap(testPool, BALANCER_NETWORK_CONFIG[network]);
     });
 
+    // The following tests are checking approx values because protocol fees not handled
     it('should join - all tokens have value', async () => {
       const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
       const amountsIn = tokensIn.map((_, i) =>
         parseFixed(((i + 1) * 100).toString(), 18).toString()
       );
-      await testExactTokensIn(pool, signer, signerAddress, tokensIn, amountsIn);
+      await testExactTokensIn(
+        pool,
+        signer,
+        signerAddress,
+        tokensIn,
+        amountsIn,
+        true
+      );
     });
 
     it('should join - single token has value', async () => {
       const tokensIn = removeItem(pool.tokensList, pool.bptIndex);
       const amountsIn = Array(tokensIn.length).fill('0');
       amountsIn[0] = parseFixed('202', 18).toString();
-      await testExactTokensIn(pool, signer, signerAddress, tokensIn, amountsIn);
+      await testExactTokensIn(
+        pool,
+        signer,
+        signerAddress,
+        tokensIn,
+        amountsIn,
+        true
+      );
     });
 
     it('should join - native asset', async () => {
@@ -96,7 +112,14 @@ describe('ComposableStable Pool - Join Functions', async () => {
       );
       const amountsIn = Array(tokensIn.length).fill('0');
       amountsIn[wrappedNativeAssetIndex] = parseFixed('202', 18).toString();
-      await testExactTokensIn(pool, signer, signerAddress, tokensIn, amountsIn);
+      await testExactTokensIn(
+        pool,
+        signer,
+        signerAddress,
+        tokensIn,
+        amountsIn,
+        true
+      );
     });
   });
 
@@ -108,7 +131,7 @@ describe('ComposableStable Pool - Join Functions', async () => {
       signer = provider.getSigner();
       signerAddress = await signer.getAddress();
       jsonRpcUrl = FORK_NODES[network];
-      blockNumber = 17317373;
+      blockNumber = TEST_BLOCK[network];
       testPoolId =
         '0xd61e198e139369a40818fe05f5d5e6e045cd6eaf000000000000000000000540';
       testPool = await getPoolFromFile(testPoolId, network);

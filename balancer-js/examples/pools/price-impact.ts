@@ -1,6 +1,6 @@
 /**
  * Example showing how to use SDK to get price impact for a join or exit operation.
- * 
+ *
  * Run with:
  * yarn example ./examples/pools/price-impact.ts
  */
@@ -9,7 +9,7 @@ import {
   Network,
   BalancerErrorCode,
   BalancerError,
-} from '@balancer-labs/sdk'
+} from '@balancer-labs/sdk';
 
 async function getPriceImpact() {
   const network = Network.MAINNET;

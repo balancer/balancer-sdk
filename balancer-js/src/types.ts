@@ -43,12 +43,13 @@ export interface BalancerSdkConfig {
   //optionally overwrite parts of the standard SOR config
   sor?: Partial<BalancerSdkSorConfig>;
   tenderly?: BalancerTenderlyConfig;
+  enableLogging?: boolean;
 }
 
 export interface BalancerTenderlyConfig {
-  accessKey?: string;
-  user?: string;
-  project?: string;
+  accessKey: string;
+  user: string;
+  project: string;
   blockNumber?: number;
 }
 
@@ -67,6 +68,7 @@ export interface BalancerSdkSorConfig {
 export interface ContractAddresses {
   vault: string;
   multicall: string;
+  poolDataQueries: string;
   gaugeClaimHelper?: string;
   balancerHelpers: string;
   balancerMinter?: string;

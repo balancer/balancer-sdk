@@ -1,22 +1,58 @@
-import { formatFixed } from '@ethersproject/bignumber';
 import { Provider } from '@ethersproject/providers';
 import { SubgraphPoolBase, SubgraphToken } from '@balancer-labs/sor';
-import { Multicaller } from '@/lib/utils/multiCaller';
-import { isSameAddress } from '@/lib/utils';
-import { Multicall__factory, Vault__factory } from '@/contracts';
 import { Pool, PoolToken, PoolType } from '@/types';
-
-// TODO: decide whether we want to trim these ABIs down to the relevant functions
+import { decorateGyroEv2 } from './multicall/gyroEv2';
+import { getPoolsFromDataQuery } from './poolDataQueries';
+import { Logger } from '@/lib/utils/logger';
+import { decorateFx } from './multicall/fx';
+import { formatFixed } from '@ethersproject/bignumber';
 import {
   ComposableStablePool__factory,
   ConvergentCurvePool__factory,
+  GyroEV2__factory,
   LinearPool__factory,
+  Multicall__factory,
   StablePool__factory,
   StaticATokenRateProvider__factory,
+  Vault__factory,
   WeightedPool__factory,
-  GyroEV2__factory,
 } from '@/contracts';
 import { JsonFragment } from '@ethersproject/abi';
+import { Multicaller } from '@/lib/utils/multiCaller';
+import { isSameAddress } from '@/lib/utils';
+
+export type Tokens = (SubgraphToken | PoolToken)[];
+
+export type BalancerPool = Omit<SubgraphPoolBase | Pool, 'tokens'> & {
+  tokens: Tokens;
+};
+
+export async function getOnChainPools<GenericPool extends BalancerPool>(
+  subgraphPoolsOriginal: GenericPool[],
+  dataQueryAddr: string,
+  multicallAddr: string,
+  provider: Provider
+): Promise<GenericPool[]> {
+  if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
+
+  const supportedPoolTypes: string[] = Object.values(PoolType);
+  const filteredPools = subgraphPoolsOriginal.filter((p) => {
+    if (!supportedPoolTypes.includes(p.poolType) || p.poolType === 'Managed') {
+      const logger = Logger.getInstance();
+      logger.warn(`Unknown pool type: ${p.poolType} ${p.id}`);
+      return false;
+    } else return true;
+  });
+  const onChainPools = await getPoolsFromDataQuery(
+    filteredPools,
+    dataQueryAddr,
+    provider
+  );
+  // GyroEV2 requires tokenRates onchain update that dataQueries does not provide
+  await decorateGyroEv2(onChainPools, multicallAddr, provider);
+  await decorateFx(onChainPools, multicallAddr, provider);
+  return onChainPools;
+}
 
 export async function getOnChainBalances<
   GenericPool extends Omit<SubgraphPoolBase | Pool, 'tokens'> & {
@@ -54,8 +90,12 @@ export async function getOnChainBalances<
   const supportedPoolTypes: string[] = Object.values(PoolType);
   const subgraphPools: GenericPool[] = [];
   subgraphPoolsOriginal.forEach((pool) => {
-    if (!supportedPoolTypes.includes(pool.poolType)) {
-      console.warn(`Unknown pool type: ${pool.poolType} ${pool.id}`);
+    if (
+      !supportedPoolTypes.includes(pool.poolType) ||
+      pool.poolType === 'Managed'
+    ) {
+      const logger = Logger.getInstance();
+      logger.warn(`Unknown pool type: ${pool.poolType} ${pool.id}`);
       return;
     }
 
@@ -313,7 +353,8 @@ export async function getOnChainBalances<
         subgraphPools[index].poolType === 'StablePhantom'
       ) {
         if (virtualSupply === undefined) {
-          console.warn(
+          const logger = Logger.getInstance();
+          logger.warn(
             `Pool with pre-minted BPT missing Virtual Supply: ${poolId}`
           );
           return;
@@ -321,7 +362,8 @@ export async function getOnChainBalances<
         subgraphPools[index].totalShares = formatFixed(virtualSupply, 18);
       } else if (subgraphPools[index].poolType === 'ComposableStable') {
         if (actualSupply === undefined) {
-          console.warn(`ComposableStable missing Actual Supply: ${poolId}`);
+          const logger = Logger.getInstance();
+          logger.warn(`ComposableStable missing Actual Supply: ${poolId}`);
           return;
         }
         subgraphPools[index].totalShares = formatFixed(actualSupply, 18);

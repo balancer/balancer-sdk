@@ -1,11 +1,11 @@
 /**
  * Example of how to claim vebal rewards from a gauge
- * 
+ *
  * Run with:
  * yarn example ./examples/pools/rewards/claim-vebal-rewards.ts
  */
-import { BalancerSDK, Network } from '@balancer-labs/sdk'
-import { reset } from 'examples/helpers'
+import { BalancerSDK, Network } from '@balancer-labs/sdk';
+import { reset } from 'examples/helpers';
 
 const userAddress = '0x549c660ce2B988F588769d6AD87BE801695b2be3';
 const claimableTokens: string[] = [
@@ -14,35 +14,44 @@ const claimableTokens: string[] = [
   '0xba100000625a3754423978a60c9317c58a424e3D', // BAL
 ];
 
-const sdk = new BalancerSDK(
-  {
-    network: Network.MAINNET,
-    rpcUrl: 'http://127.0.0.1:8545'
-  })
+const sdk = new BalancerSDK({
+  network: Network.MAINNET,
+  rpcUrl: 'http://127.0.0.1:8545',
+});
 const { provider, claimService } = sdk;
 
 const main = async () => {
-  await reset(provider, 16361617)
+  await reset(provider, 16361617);
 
-  if (!claimService) throw new Error("ClaimService not defined");
+  if (!claimService) throw new Error('ClaimService not defined');
 
-  const balance = await claimService.getClaimableVeBalTokens(userAddress, claimableTokens);
+  const balance = await claimService.getClaimableVeBalTokens(
+    userAddress,
+    claimableTokens
+  );
   console.table(balance);
-  const data = await claimService.buildClaimVeBalTokensRequest(userAddress, claimableTokens);
+  const data = await claimService.buildClaimVeBalTokensRequest(
+    userAddress,
+    claimableTokens
+  );
   console.log(`
-    to:                  ${data.to} - BalancerMinter Address ${sdk.networkConfig.addresses.contracts.feeDistributor}
+    to:                  ${data.to} - BalancerMinter Address ${
+    sdk.networkConfig.addresses.contracts.feeDistributor
+  }
     from:                ${data.from} - User Address ${userAddress}
     tokensOut:           ${data.tokensOut}
     expectedTokensValue: ${data.expectedTokensValue}
     functionName:        ${data.functionName}
-    callData:            ${data.callData.slice(0, 10)}...${data.callData.slice(-5)}
-  `)
+    callData:            ${data.callData.slice(0, 10)}...${data.callData.slice(
+    -5
+  )}
+  `);
 
   console.log(`\n\nfinally:
   
   const tx = { to: data.to', data: callData };
   const receipt = await (await signer.sendTransaction(tx)).wait();
-  `)
-}
+  `);
+};
 
-main()
+main();

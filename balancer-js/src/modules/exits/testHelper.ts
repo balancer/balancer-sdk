@@ -152,10 +152,13 @@ async function setUpForkAndSdk(
   sdk: BalancerSDK;
   signer: JsonRpcSigner;
 }> {
-  // Set tenderly config blockNumber and use default values for other parameters
-  const tenderlyConfig = {
-    blockNumber,
-  };
+  // // Uncomment and set tenderlyConfig on sdk instantiation in order to test using tenderly simulations
+  // const tenderlyConfig = {
+  //   accessKey: process.env.TENDERLY_ACCESS_KEY as string,
+  //   user: process.env.TENDERLY_USER as string,
+  //   project: process.env.TENDERLY_PROJECT as string,
+  //   blockNumber,
+  // };
 
   // Only queries minimal set of addresses
   const subgraphQuery = createSubgraphQuery(pools, blockNumber);
@@ -163,7 +166,6 @@ async function setUpForkAndSdk(
   const sdk = new BalancerSDK({
     network,
     rpcUrl: RPC_URLS[network],
-    tenderly: tenderlyConfig,
     subgraphQuery,
   });
   const provider = new JsonRpcProvider(RPC_URLS[network], network);

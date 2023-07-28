@@ -27,16 +27,18 @@ export enum SimulationType {
  */
 
 export class Simulation {
-  private tenderlyHelper: TenderlyHelper;
+  private tenderlyHelper?: TenderlyHelper;
   private vaultModel: VaultModel | undefined;
   constructor(
     networkConfig: BalancerNetworkConfig,
     poolDataService?: PoolDataService
   ) {
-    this.tenderlyHelper = new TenderlyHelper(
-      networkConfig.chainId,
-      networkConfig.tenderly
-    );
+    if (networkConfig.tenderly) {
+      this.tenderlyHelper = new TenderlyHelper(
+        networkConfig.chainId,
+        networkConfig.tenderly
+      );
+    }
     if (!poolDataService) {
       this.vaultModel = undefined;
     } else {
@@ -61,6 +63,9 @@ export class Simulation {
     const amountsOut: string[] = [];
     switch (simulationType) {
       case SimulationType.Tenderly: {
+        if (!this.tenderlyHelper) {
+          throw new Error('Missing Tenderly config');
+        }
         const simulationResult = await this.tenderlyHelper.simulateMulticall(
           to,
           encodedCall,
@@ -83,18 +88,19 @@ export class Simulation {
           data: encodedCall,
           value,
         });
-        const decodedResponse = Buffer.from(
-          staticResult.split('x')[1],
-          'hex'
-        ).toString('utf8');
-        if (decodedResponse.includes('BAL#')) {
+
+        try {
+          amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
+        } catch (_) {
+          // decoding output failed, so we assume the response contains an error message and try to decode it instead
+          const decodedResponse = Buffer.from(
+            staticResult.split('x')[1],
+            'hex'
+          ).toString('utf8');
           throw new Error(
-            `Transaction reverted with Error ${
-              'BAL#' + decodedResponse.split('BAL#')[1]
-            } on the static call`
+            `Transaction reverted with error: ${decodedResponse}`
           );
         }
-        amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
         break;
       }
       default:
@@ -116,6 +122,9 @@ export class Simulation {
     const amountsOut: string[] = [];
     switch (simulationType) {
       case SimulationType.Tenderly: {
+        if (!this.tenderlyHelper) {
+          throw new Error('Missing Tenderly config');
+        }
         const simulationResult = await this.tenderlyHelper.simulateMulticall(
           to,
           encodedCall,
@@ -136,18 +145,18 @@ export class Simulation {
           to,
           data: encodedCall,
         });
-        const decodedResponse = Buffer.from(
-          staticResult.split('x')[1],
-          'hex'
-        ).toString('utf8');
-        if (decodedResponse.includes('BAL#')) {
+        try {
+          amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
+        } catch (_) {
+          // decoding output failed, so we assume the response contains an error message and try to decode it instead
+          const decodedResponse = Buffer.from(
+            staticResult.split('x')[1],
+            'hex'
+          ).toString('utf8');
           throw new Error(
-            `Transaction reverted with Error ${
-              'BAL#' + decodedResponse.split('BAL#')[1]
-            } on the static call`
+            `Transaction reverted with error: ${decodedResponse}`
           );
         }
-        amountsOut.push(...this.decodeResult(staticResult, outputIndexes));
         break;
       }
       default:

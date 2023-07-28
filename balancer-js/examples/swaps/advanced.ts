@@ -2,7 +2,7 @@
  *  Example showing how to find a swap for a pair using SOR directly
  *  - Path only uses swaps: use queryBatchSwap on Vault to see result
  *  - Path use join/exit: Use SDK functions to build calls to submit tx via Relayer
- * 
+ *
  * Run command:
  * yarn example ./examples/swaps/advanced.ts
  */
@@ -13,10 +13,10 @@ import {
   someJoinExit,
   buildRelayerCalls,
   canUseJoinExit,
-} from '@balancer-labs/sdk'
-import { BigNumber, parseFixed } from '@ethersproject/bignumber'
-import { Wallet } from '@ethersproject/wallet'
-import { AddressZero } from '@ethersproject/constants'
+} from '@balancer-labs/sdk';
+import { BigNumber, parseFixed } from '@ethersproject/bignumber';
+import { Wallet } from '@ethersproject/wallet';
+import { AddressZero } from '@ethersproject/constants';
 
 async function getAndProcessSwaps(
   balancer: BalancerSDK,
@@ -53,7 +53,7 @@ async function getAndProcessSwaps(
     someJoinExit(pools, swapInfo.swaps, swapInfo.tokenAddresses)
   ) {
     console.log(`Swaps with join/exit paths. Must submit via Relayer.`);
-    const key: any = process.env.TRADER_KEY;
+    const key = process.env.TRADER_KEY as string;
     const wallet = new Wallet(key, balancer.sor.provider);
     const slippage = '50'; // 50 bsp = 0.5%
     try {
@@ -75,13 +75,13 @@ async function getAndProcessSwaps(
         ?.connect(wallet)
         .callStatic.multicall(relayerCallData.rawCalls);
       console.log(result);
-    } catch (err: any) {
+    } catch (err: any) { // eslint-disable-line
       // If error we can reprocess without join/exit paths
       console.log(`Error Using Join/Exit Paths`, err.reason);
       await getAndProcessSwaps(
         balancer,
-        tokenIn!,
-        tokenOut!,
+        tokenIn,
+        tokenOut,
         swapType,
         amount,
         false
@@ -126,7 +126,7 @@ async function swapExample() {
   const swapType = SwapTypes.SwapExactIn;
   const amount = parseFixed('20', 18);
   // Currently Relayer only suitable for ExactIn and non-eth swaps
-  const canUseJoinExitPaths = canUseJoinExit(swapType, tokenIn!, tokenOut!);
+  const canUseJoinExitPaths = canUseJoinExit(swapType, tokenIn, tokenOut);
 
   const balancer = new BalancerSDK({
     network,
@@ -138,8 +138,8 @@ async function swapExample() {
 
   await getAndProcessSwaps(
     balancer,
-    tokenIn!,
-    tokenOut!,
+    tokenIn,
+    tokenOut,
     swapType,
     amount,
     canUseJoinExitPaths

@@ -1,14 +1,14 @@
 /**
  * This example shows how to use the FeeDistributor contract to claim rewards
- * 
+ *
  * How to run:
  * yarn example examples/data/fee-distributor.ts
  */
-import { BalancerSDK, Network } from "@balancer-labs/sdk";
+import { BalancerSDK, Network } from '@balancer-labs/sdk';
 
 const sdk = new BalancerSDK({
   network: Network.MAINNET,
-  rpcUrl: 'https://rpc.ankr.com/eth'
+  rpcUrl: 'https://rpc.ankr.com/eth',
 });
 
 const { feeDistributor } = sdk.data;
@@ -22,15 +22,19 @@ const claimableTokens: string[] = [
 const userAddress = '0x549c660ce2B988F588769d6AD87BE801695b2be3';
 
 (async function () {
-  if (!feeDistributor) throw new Error("feeDistributor not defined");
-  const data = await feeDistributor.getClaimableBalances(userAddress, claimableTokens);
+  if (!feeDistributor) throw new Error('feeDistributor not defined');
+  const data = await feeDistributor.getClaimableBalances(
+    userAddress,
+    claimableTokens
+  );
   console.table(data);
 
   const callData = feeDistributor.claimBalances(userAddress, claimableTokens);
-  console.log(`Encoded Callable: ${callData.slice(0, 10)}...${callData.slice(-5)}`);
+  console.log(
+    `Encoded Callable: ${callData.slice(0, 10)}...${callData.slice(-5)}`
+  );
   console.log(`
   const tx = { to: '${sdk.networkConfig.addresses.contracts.feeDistributor}', data: callData };
   const receipt = await (await signer.sendTransaction(tx)).wait();
-  `)
-
+  `);
 })();

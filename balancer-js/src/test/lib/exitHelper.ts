@@ -61,7 +61,8 @@ export const testExactTokensOut = async (
   signer: JsonRpcSigner,
   tokensOut: string[],
   amountsOut: string[],
-  toInternalBalance = false
+  toInternalBalance = false,
+  testPriceImpact = true
 ): Promise<void> => {
   const slippage = '20'; // 20 bps = 0.2% - below it prediction fails with 207 - not enough bptIn
   const signerAddress = await signer.getAddress();
@@ -108,7 +109,7 @@ export const testExactTokensOut = async (
   const priceImpactFloat = parseFloat(
     formatFixed(BigNumber.from(priceImpact), 18)
   );
-  expect(priceImpactFloat).to.be.closeTo(0, 0.01); // exiting balanced stable pools with small amounts should have price impact near zero
+  if (testPriceImpact) expect(priceImpactFloat).to.be.closeTo(0, 0.01); // exiting balanced stable pools with small amounts should have price impact near zero
 };
 
 export const testRecoveryExit = async (

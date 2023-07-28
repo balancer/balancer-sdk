@@ -31,7 +31,10 @@ export class CoingeckoTokenPriceService implements TokenPriceService {
       },
     });
 
-    if (data[tokenAddress.toLowerCase()][this.nativeAssetId] === undefined) {
+    if (
+      data[tokenAddress.toLowerCase()] === undefined ||
+      data[tokenAddress.toLowerCase()][this.nativeAssetId] === undefined
+    ) {
       throw Error('No price returned from Coingecko');
     }
 
