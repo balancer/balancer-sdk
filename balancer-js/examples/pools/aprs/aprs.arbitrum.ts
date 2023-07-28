@@ -1,6 +1,6 @@
 /**
  * Display APRs for pool ids hardcoded under `const ids`
- * 
+ *
  * Run command
  * yarn example ./examples/pools/aprs/aprs.arbitrum.ts
  */

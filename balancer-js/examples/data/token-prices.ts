@@ -15,7 +15,18 @@ const tetuBal = '0x7fc9e0aa043787bfad28e29632ada302c790ce33';
 
 (async () => {
   // It will be just one request to coingecko
-  const ps = [eth, weth, dai, ohm, tetuBal, matic, eth, dai, tetuBal, matic].map((t) => data.tokenPrices.find(t));
+  const ps = [
+    eth,
+    weth,
+    dai,
+    ohm,
+    tetuBal,
+    matic,
+    eth,
+    dai,
+    tetuBal,
+    matic,
+  ].map((t) => data.tokenPrices.find(t));
   const price = await Promise.all(ps);
 
   console.log(price);

@@ -1,7 +1,7 @@
 /**
  * Uses SDK to find spot price for pair in specific pool.
  * Uses SDK to find most liquid path for a pair and calculate spot price.
- * 
+ *
  * Run with:
  * yarn example ./examples/pools/spot-price.ts
  */
