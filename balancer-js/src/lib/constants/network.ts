@@ -6,6 +6,7 @@ export enum Network {
   GNOSIS = 100,
   POLYGON = 137,
   FANTOM = 250,
+  BASE = 8453,
   ZKEVM = 1101,
   ARBITRUM = 42161,
   AVALANCHE = 43114,

@@ -443,6 +443,43 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     poolsToIgnore: [],
     sorConnectingTokens: [],
   },
+  [Network.BASE]: {
+    chainId: Network.BASE, //8453
+    addresses: {
+      contracts: {
+        balancerMinter: '0xc7E5ED1054A24Ef31D827E6F86caA58B3Bc168d7',
+        multicall: '0xcA11bde05977b3631167028862bE2a173976CA11',
+        poolDataQueries: '',
+        ...addressesByNetwork[Network.BASE].contracts,
+      },
+      tokens: {
+        bal: addressesByNetwork[Network.BASE].contracts.bal,
+        wrappedNativeAsset: addressesByNetwork[Network.BASE].contracts.weth,
+        ...addressesByNetwork[Network.BASE].tokens,
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.studio.thegraph.com/query/24660/balancer-base-v2/version/latest',
+      gaugesSubgraph:
+        'https://api.studio.thegraph.com/query/24660/balancer-gauges-base/version/latest',
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'eth',
+        platformId: 'base',
+      },
+    },
+    averageBlockTime: 2,
+    pools: {},
+    poolsToIgnore: [],
+    sorConnectingTokens: [
+      {
+        symbol: 'weth',
+        address: '0x4200000000000000000000000000000000000006',
+      },
+    ],
+  },
 };
 
 export const networkAddresses = (
