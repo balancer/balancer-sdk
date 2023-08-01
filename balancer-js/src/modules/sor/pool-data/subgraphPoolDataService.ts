@@ -74,7 +74,6 @@ export class SubgraphPoolDataService implements PoolDataService {
     const pools = await this.getSubgraphPools(queryArgs);
 
     const filteredPools = pools.filter((p) => {
-      if (p.poolType === 'FX') return false;
       if (!this.network.poolsToIgnore) return true;
       const index = this.network.poolsToIgnore.findIndex((addr) =>
         isSameAddress(addr, p.address)
