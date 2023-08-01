@@ -432,6 +432,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-avalanche-v2',
       gaugesSubgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-avalanche',
+      blockNumberSubgraph:
+        'https://api.thegraph.com/subgraphs/name/iliaazhel/avalanche-blocks',
     },
     thirdParty: {
       coingecko: {
