@@ -421,7 +421,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         ...addressesByNetwork[Network.AVALANCHE].contracts,
       },
       tokens: {
-        bal: addressesByNetwork[Network.AVALANCHE].contracts.bal,
+        bal: '0x8239a6b877804206c7799028232a7188da487cec',
         wrappedNativeAsset:
           addressesByNetwork[Network.AVALANCHE].contracts.weth,
         ...addressesByNetwork[Network.AVALANCHE].tokens,
