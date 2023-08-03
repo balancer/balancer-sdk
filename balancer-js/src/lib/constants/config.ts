@@ -474,6 +474,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.studio.thegraph.com/query/24660/balancer-base-v2/version/latest',
       gaugesSubgraph:
         'https://api.studio.thegraph.com/query/24660/balancer-gauges-base/version/latest',
+      blockNumberSubgraph:
+        'https://api.studio.thegraph.com/query/48427/bleu-base-blocks/version/latest',
     },
     thirdParty: {
       coingecko: {
