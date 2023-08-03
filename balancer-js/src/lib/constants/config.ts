@@ -443,7 +443,16 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     pools: {},
     poolsToIgnore: [],
-    sorConnectingTokens: [],
+    sorConnectingTokens: [
+      {
+        symbol: 'WAVAX',
+        address: '0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7',
+      },
+      {
+        symbol: 'sAVAX',
+        address: '0x2b2c81e08f1af8835a78bb2a90ae924ace0ea4be',
+      },
+    ],
   },
   [Network.BASE]: {
     chainId: Network.BASE, //8453
