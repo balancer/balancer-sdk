@@ -68,7 +68,8 @@ export class Pools implements Findable<PoolWithMethods> {
       this.repositories.feeCollector,
       this.repositories.yesterdaysPools,
       this.repositories.liquidityGauges,
-      this.repositories.feeDistributor
+      this.repositories.feeDistributor,
+      balancerContracts.contracts.gyroConfig
     );
     this.liquidityService = new Liquidity(
       repositories.pools,

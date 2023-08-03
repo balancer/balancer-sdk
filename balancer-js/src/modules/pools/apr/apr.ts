@@ -17,8 +17,12 @@ import { Liquidity } from '@/modules/liquidity/liquidity.module';
 import { identity, zipObject, pickBy } from 'lodash';
 import { PoolFees } from '../fees/fees';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { BigNumber } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed } from '@ethersproject/bignumber';
 import { Logger } from '@/lib/utils/logger';
+import { GyroConfig } from '@/contracts';
+import { keccak256 } from '@ethersproject/solidity';
+import { formatBytes32String } from '@ethersproject/strings';
+import { defaultAbiCoder } from '@ethersproject/abi';
 
 export interface AprBreakdown {
   swapFees: number;
@@ -59,7 +63,8 @@ export class PoolApr {
     private feeCollector: Findable<number>,
     private yesterdaysPools?: Findable<Pool, PoolAttribute>,
     private liquidityGauges?: Findable<LiquidityGauge>,
-    private feeDistributor?: BaseFeeDistributor
+    private feeDistributor?: BaseFeeDistributor,
+    private gyroConfig?: GyroConfig
   ) {}
 
   /**
@@ -110,11 +115,13 @@ export class PoolApr {
       bptFreeTokens.map(async (token) => {
         let apr = 0;
         const tokenYield = await this.tokenYields.find(token.address);
-
         if (tokenYield) {
           // metastable pools incorrectly apply the swap fee to the yield earned.
           // they don't have the concept of a yield fee like the newer pools do.
-          if (pool.poolType === 'MetaStable') {
+          if (
+            pool.poolType === 'MetaStable' ||
+            pool.poolType.includes('Gyro')
+          ) {
             apr =
               tokenYield * (1 - (await this.protocolSwapFeePercentage(pool)));
           } else if (
@@ -487,12 +494,63 @@ export class PoolApr {
       (pool.poolType == 'Weighted' && pool.poolTypeVersion == 2)
     ) {
       fee = 0;
+    } else if (pool.poolType.includes('Gyro') && this.gyroConfig) {
+      const protocolFeePercKey = formatBytes32String('PROTOCOL_SWAP_FEE_PERC');
+
+      const gyroPoolTypeKey = formatBytes32String('E-CLP');
+      const encodedPoolSpecificKey = keccak256(
+        ['bytes'],
+        [
+          defaultAbiCoder.encode(
+            ['bytes32', 'address'],
+            [protocolFeePercKey, pool.address]
+          ),
+        ]
+      );
+
+      const encodedPoolTypeKey = keccak256(
+        ['bytes'],
+        [
+          defaultAbiCoder.encode(
+            ['bytes32', 'bytes32'],
+            [protocolFeePercKey, gyroPoolTypeKey]
+          ),
+        ]
+      );
+      const hasPoolSpecificKey = await this.gyroConfig.hasKey(
+        encodedPoolSpecificKey
+      );
+      const hasPoolTypeKey = await this.gyroConfig.hasKey(encodedPoolTypeKey);
+      const hasDefaultKey = await this.gyroConfig.hasKey(protocolFeePercKey);
+      if (hasPoolSpecificKey) {
+        fee = parseFloat(
+          formatFixed(
+            await this.gyroConfig['getUint(bytes32)'](encodedPoolSpecificKey),
+            18
+          )
+        );
+      } else if (hasPoolTypeKey) {
+        fee = parseFloat(
+          formatFixed(
+            await this.gyroConfig['getUint(bytes32)'](encodedPoolTypeKey),
+            18
+          )
+        );
+      } else if (hasDefaultKey) {
+        fee = parseFloat(
+          formatFixed(
+            await this.gyroConfig['getUint(bytes32)'](protocolFeePercKey),
+            18
+          )
+        );
+      } else {
+        fee = 0;
+      }
     } else if (pool.protocolSwapFeeCache) {
       fee = parseFloat(pool.protocolSwapFeeCache);
     } else {
       fee = (await this.feeCollector.find('')) || 0;
     }
-
     return fee;
   }
 

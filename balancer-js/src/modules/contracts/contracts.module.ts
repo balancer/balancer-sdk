@@ -23,6 +23,8 @@ import {
   GaugeClaimHelper__factory,
   GearboxLinearPoolFactory,
   GearboxLinearPoolFactory__factory,
+  GyroConfig,
+  GyroConfig__factory,
   LidoRelayer,
   LidoRelayer__factory,
   LiquidityGaugeV5__factory,
@@ -54,6 +56,7 @@ export interface ContractInstances {
   eulerLinearPoolFactory?: EulerLinearPoolFactory;
   gaugeClaimHelper?: GaugeClaimHelper;
   gearboxLinearPoolFactory?: GearboxLinearPoolFactory;
+  gyroConfig?: GyroConfig;
   lidoRelayer?: LidoRelayer;
   liquidityGauge: ContractFactory;
   multicall: Multicall;
@@ -173,6 +176,14 @@ export class Contracts {
         provider
       );
     }
+    let gyroConfig: undefined | GyroConfig;
+    if (this.contractAddresses.gyroConfigProxy) {
+      gyroConfig = GyroConfig__factory.connect(
+        this.contractAddresses.gyroConfigProxy,
+        provider
+      );
+    }
+
     this.instances = {
       aaveLinearPoolFactory,
       balancerHelpers,
@@ -183,6 +194,7 @@ export class Contracts {
       eulerLinearPoolFactory,
       gaugeClaimHelper,
       gearboxLinearPoolFactory,
+      gyroConfig,
       liquidityGauge: this.getLiquidityGauge,
       lidoRelayer,
       multicall,

@@ -15,7 +15,7 @@ const { pools } = sdk;
 
 const main = async () => {
   const pool = await pools.find(
-    '0x216690738aac4aa0c4770253ca26a28f0115c595000000000000000000000b2c'
+    '0xf0ad209e2e969eaaa8c882aac71f02d8a047d5c2000200000000000000000b49'
   );
 
   if (pool) {
