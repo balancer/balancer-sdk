@@ -502,7 +502,7 @@ export class PoolApr {
         ['bytes'],
         [
           defaultAbiCoder.encode(
-            ['bytes32', 'address'],
+            ['bytes32', 'uint256'],
             [protocolFeePercKey, pool.address]
           ),
         ]
