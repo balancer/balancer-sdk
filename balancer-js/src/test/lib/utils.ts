@@ -471,7 +471,7 @@ export async function findTokenBalanceSlot(
   const account = await signer.getAddress();
   const probeA = encode(['uint256'], [(Math.random() * 10000).toFixed()]);
   const probeB = encode(['uint256'], [(Math.random() * 10000).toFixed()]);
-  for (let i = 0; i < 200; i++) {
+  for (let i = 0; i < 999; i++) {
     let probedSlot = keccak256(['uint256', 'uint256'], [account, i]);
     // remove padding for JSON RPC
     while (probedSlot.startsWith('0x0'))
