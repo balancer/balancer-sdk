@@ -17,12 +17,9 @@ import { Liquidity } from '@/modules/liquidity/liquidity.module';
 import { identity, zipObject, pickBy } from 'lodash';
 import { PoolFees } from '../fees/fees';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
-import { BigNumber, formatFixed } from '@ethersproject/bignumber';
+import { BigNumber } from '@ethersproject/bignumber';
 import { Logger } from '@/lib/utils/logger';
-import { GyroConfig } from '@/contracts';
-import { keccak256 } from '@ethersproject/solidity';
-import { formatBytes32String } from '@ethersproject/strings';
-import { defaultAbiCoder } from '@ethersproject/abi';
+import { GyroConfigRepository } from '@/modules/data/gyro-config/repository';
 
 export interface AprBreakdown {
   swapFees: number;
@@ -64,7 +61,7 @@ export class PoolApr {
     private yesterdaysPools?: Findable<Pool, PoolAttribute>,
     private liquidityGauges?: Findable<LiquidityGauge>,
     private feeDistributor?: BaseFeeDistributor,
-    private gyroConfig?: GyroConfig
+    private gyroConfigRepository?: GyroConfigRepository
   ) {}
 
   /**
@@ -487,65 +484,14 @@ export class PoolApr {
   }
 
   private async protocolSwapFeePercentage(pool: Pool) {
-    let fee = 0;
-
+    let fee;
     if (
       pool.poolType == 'ComposableStable' ||
       (pool.poolType == 'Weighted' && pool.poolTypeVersion == 2)
     ) {
       fee = 0;
-    } else if (pool.poolType.includes('Gyro') && this.gyroConfig) {
-      const protocolFeePercKey = formatBytes32String('PROTOCOL_SWAP_FEE_PERC');
-
-      const gyroPoolTypeKey = formatBytes32String('E-CLP');
-      const encodedPoolSpecificKey = keccak256(
-        ['bytes'],
-        [
-          defaultAbiCoder.encode(
-            ['bytes32', 'uint256'],
-            [protocolFeePercKey, pool.address]
-          ),
-        ]
-      );
-
-      const encodedPoolTypeKey = keccak256(
-        ['bytes'],
-        [
-          defaultAbiCoder.encode(
-            ['bytes32', 'bytes32'],
-            [protocolFeePercKey, gyroPoolTypeKey]
-          ),
-        ]
-      );
-      const hasPoolSpecificKey = await this.gyroConfig.hasKey(
-        encodedPoolSpecificKey
-      );
-      const hasPoolTypeKey = await this.gyroConfig.hasKey(encodedPoolTypeKey);
-      const hasDefaultKey = await this.gyroConfig.hasKey(protocolFeePercKey);
-      if (hasPoolSpecificKey) {
-        fee = parseFloat(
-          formatFixed(
-            await this.gyroConfig['getUint(bytes32)'](encodedPoolSpecificKey),
-            18
-          )
-        );
-      } else if (hasPoolTypeKey) {
-        fee = parseFloat(
-          formatFixed(
-            await this.gyroConfig['getUint(bytes32)'](encodedPoolTypeKey),
-            18
-          )
-        );
-      } else if (hasDefaultKey) {
-        fee = parseFloat(
-          formatFixed(
-            await this.gyroConfig['getUint(bytes32)'](protocolFeePercKey),
-            18
-          )
-        );
-      } else {
-        fee = 0;
-      }
+    } else if (pool.poolType.includes('Gyro') && this.gyroConfigRepository) {
+      fee = await this.gyroConfigRepository.getGyroProtocolFee(pool.address);
     } else if (pool.protocolSwapFeeCache) {
       fee = parseFloat(pool.protocolSwapFeeCache);
     } else {
