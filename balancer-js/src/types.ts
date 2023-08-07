@@ -27,7 +27,7 @@ import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
 import { SubgraphPoolDataService } from '@/modules/sor/pool-data/subgraphPoolDataService';
 import * as Queries from '@/modules/pools/queries/types';
-import { GyroConfigRepository } from "@/modules/data/gyro-config/repository";
+import { GyroConfigRepository } from '@/modules/data/gyro-config/repository';
 
 export * from '@/modules/data/types';
 export { Network, AprBreakdown };
