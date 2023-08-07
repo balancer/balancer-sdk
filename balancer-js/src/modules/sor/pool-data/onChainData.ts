@@ -9,6 +9,7 @@ import { formatFixed } from '@ethersproject/bignumber';
 import {
   ComposableStablePool__factory,
   ConvergentCurvePool__factory,
+  FXPool__factory,
   GyroEV2__factory,
   LinearPool__factory,
   Multicall__factory,
@@ -79,6 +80,7 @@ export async function getOnChainBalances<
         ...(LinearPool__factory.abi as readonly JsonFragment[]),
         ...(ComposableStablePool__factory.abi as readonly JsonFragment[]),
         ...(GyroEV2__factory.abi as readonly JsonFragment[]),
+        ...(FXPool__factory.abi as readonly JsonFragment[]),
       ].map((row) => [row.name, row])
     )
   );
@@ -182,6 +184,13 @@ export async function getOnChainBalances<
         break;
       case 'Element':
         multiPool.call(`${pool.id}.swapFee`, pool.address, 'percentFee');
+        break;
+      case 'FX':
+        multiPool.call(
+          `${pool.id}.swapFee`,
+          pool.address,
+          'protocolPercentFee'
+        );
         break;
       case 'Gyro2':
       case 'Gyro3':
@@ -333,8 +342,7 @@ export async function getOnChainBalances<
         );
       }
 
-      if (subgraphPools[index].poolType !== 'FX')
-        subgraphPools[index].swapFee = formatFixed(swapFee, 18);
+      subgraphPools[index].swapFee = formatFixed(swapFee, 18);
 
       poolTokens.tokens.forEach((token, i) => {
         const tokens = subgraphPools[index].tokens;
