@@ -127,7 +127,6 @@ export interface BalancerNetworkConfig {
 }
 
 export interface BalancerDataRepositories {
-  // Replace with a swapFeeRepository, we don't need historic pools for any other reason than to get the swap fee
   feeDistributor?: BaseFeeDistributor;
   feeCollector: Findable<number>;
   gaugeShares?: GaugeSharesRepository;
@@ -151,6 +150,7 @@ export interface BalancerDataRepositories {
   tokenMeta: Findable<Token, TokenAttribute>;
   tokenPrices: Findable<Price>;
   tokenYields: Findable<number>;
+  // Replace with a swapFeeRepository, we don't need historic pools for any other reason than to get the swap fee
   yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
 }
 
