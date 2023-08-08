@@ -4,7 +4,6 @@ import { defaultAbiCoder } from '@ethersproject/abi';
 import { formatFixed } from '@ethersproject/bignumber';
 import { Provider } from '@ethersproject/providers';
 import { GyroConfig, GyroConfig__factory, Multicall } from '@/contracts';
-import { getAddress } from '@ethersproject/address';
 import { GyroConfigInterface } from '@/contracts/GyroConfig';
 
 export interface GyroConfigRepository {

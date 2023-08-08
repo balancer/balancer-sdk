@@ -237,7 +237,7 @@ export class Data implements BalancerDataRepositories {
       this.gyroConfigRepository = new GyroConfigRepositoryImpl(
         networkConfig.addresses.contracts.gyroConfigProxy,
         contracts.contracts.multicall,
-        provider,
+        provider
       );
     }
   }
