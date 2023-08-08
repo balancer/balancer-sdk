@@ -70,16 +70,17 @@ export class GyroConfigRepositoryImpl implements GyroConfigRepository {
     const [, [hasSpecificKey, hasPoolTypeKey, hasDefaultKey]] =
       await this.multicall.callStatic.aggregate(payload);
 
-    const keyToBeUsed = hasSpecificKey
-      ? encodedPoolSpecificKey
-      : hasPoolTypeKey
-      ? encodedPoolTypeKey
-      : hasDefaultKey
-      ? protocolFeePercKey
-      : undefined;
-    if (keyToBeUsed) {
+    if (hasSpecificKey) {
       fee = parseFloat(
-        formatFixed(await this.gyroConfig.getUint(keyToBeUsed), 18)
+        formatFixed(await this.gyroConfig.getUint(encodedPoolSpecificKey), 18)
+      );
+    } else if (hasPoolTypeKey) {
+      fee = parseFloat(
+        formatFixed(await this.gyroConfig.getUint(encodedPoolTypeKey), 18)
+      );
+    } else if (hasDefaultKey) {
+      fee = parseFloat(
+        formatFixed(await this.gyroConfig.getUint(protocolFeePercKey), 18)
       );
     } else {
       fee = 0;
