@@ -12,6 +12,15 @@ export interface GyroConfigRepository {
 
 const protocolFeePercKey = formatBytes32String('PROTOCOL_SWAP_FEE_PERC');
 const gyroPoolTypeKey = formatBytes32String('E-CLP');
+const encodedPoolTypeKey = keccak256(
+  ['bytes'],
+  [
+    defaultAbiCoder.encode(
+      ['bytes32', 'bytes32'],
+      [protocolFeePercKey, gyroPoolTypeKey]
+    ),
+  ]
+);
 
 export class GyroConfigRepositoryImpl implements GyroConfigRepository {
   gyroConfigInterface: GyroConfigInterface;
@@ -20,7 +29,7 @@ export class GyroConfigRepositoryImpl implements GyroConfigRepository {
   constructor(
     private gyroConfigAddress: string,
     private multicall: Multicall,
-    private provider: Provider
+    provider: Provider
   ) {
     this.gyroConfigInterface = GyroConfig__factory.createInterface();
     this.gyroConfig = GyroConfig__factory.connect(gyroConfigAddress, provider);
@@ -34,16 +43,6 @@ export class GyroConfigRepositoryImpl implements GyroConfigRepository {
         defaultAbiCoder.encode(
           ['bytes32', 'uint256'],
           [protocolFeePercKey, poolAddress]
-        ),
-      ]
-    );
-
-    const encodedPoolTypeKey = keccak256(
-      ['bytes'],
-      [
-        defaultAbiCoder.encode(
-          ['bytes32', 'bytes32'],
-          [protocolFeePercKey, gyroPoolTypeKey]
         ),
       ]
     );
