@@ -1,3 +1,5 @@
+import { GyroConfigRepositoryImpl } from '@/modules/data/gyro-config/repository';
+
 export * as balEmissions from './bal/emissions';
 export * from './gauge-controller/multicall';
 export * from './gauge-shares';
@@ -67,6 +69,7 @@ export class Data implements BalancerDataRepositories {
   tokenYields;
   blockNumbers;
   poolJoinExits;
+  gyroConfigRepository;
 
   constructor(
     networkConfig: BalancerNetworkConfig,
@@ -229,5 +232,13 @@ export class Data implements BalancerDataRepositories {
     }
 
     this.tokenYields = new TokenYieldsRepository();
+
+    if (networkConfig.addresses.contracts.gyroConfigProxy) {
+      this.gyroConfigRepository = new GyroConfigRepositoryImpl(
+        networkConfig.addresses.contracts.gyroConfigProxy,
+        contracts.contracts.multicall,
+        provider
+      );
+    }
   }
 }

@@ -19,6 +19,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
         veBal: '0xC128a9954e6c874eA3d62ce62B468bA073093F25',
         veBalProxy: '0x6f5a2eE11E7a772AeB5114A20d0D7c0ff61EB8A0',
+        gyroConfigProxy: '0xac89cc9d78bbad7eb3a02601b4d65daa1f908aa6',
         ...addressesByNetwork[Network.MAINNET].contracts,
       },
       tokens: {
@@ -86,6 +87,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         multicall: '0xa1B2b503959aedD81512C37e9dce48164ec6a94d',
         poolDataQueries: '0x84813aA3e079A665C0B80F944427eE83cBA63617',
         gaugeClaimHelper: '0xaeb406b0e430bf5ea2dc0b9fe62e4e53f74b3a33',
+        gyroConfigProxy: '0xfdc2e9e03f515804744a40d0f8d25c16e93fbe67',
         ...addressesByNetwork[Network.POLYGON].contracts,
       },
       tokens: {
@@ -219,6 +221,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       contracts: {
         multicall: '0x2dc0e2aa608532da689e89e237df582b783e552c',
         poolDataQueries: '0x6B5dA774890Db7B7b96C6f44e6a4b0F657399E2e',
+        gyroConfigProxy: '0x32acb44fc929339b9f16f0449525cc590d2a23f3',
         ...addressesByNetwork[Network.OPTIMISM].contracts,
       },
       tokens: {
