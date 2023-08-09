@@ -495,6 +495,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         address: '0x4200000000000000000000000000000000000006',
       },
     ],
+    sorTriPathMidPoolIds: [
+      '0x2db50a0e0310723ef0c2a165cb9a9f80d772ba2f00020000000000000000000d', // weth/staBal
+    ],
   },
 };
 
