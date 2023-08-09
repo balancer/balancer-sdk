@@ -8,6 +8,7 @@ import { accuracy, sendTransactionGetBalances } from '@/test/lib/utils';
 
 import { SimulationType } from '../simulation/simulation.module';
 import { AddressZero, Zero } from '@ethersproject/constants';
+import { formatEther } from '@ethersproject/units';
 
 export interface Pool {
   id: string;
@@ -23,7 +24,7 @@ export const testGeneralisedJoin = async (
   tokensIn: string[],
   amountsIn: string[],
   simulationType: SimulationType.Static | SimulationType.Tenderly
-): Promise<void> => {
+): Promise<{ expectedOut: string; proportions: string[] }> => {
   const slippage = '10'; // 10 bps = 0.1%
 
   // Replicating UI user flow:
@@ -50,21 +51,28 @@ export const testGeneralisedJoin = async (
 
   // 3. Get call data and expected/min amount out
   //    - Uses a Static/Tenderly call to simulate tx then applies slippage
-  const { to, encodedCall, minOut, expectedOut, priceImpact, value } =
-    await sdk.pools.generalisedJoin(
-      pool.id as string,
-      tokensIn,
-      amountsIn,
-      userAddress,
-      slippage,
-      signer,
-      simulationType,
-      authorisation
-    );
+  const {
+    to,
+    encodedCall,
+    minOut,
+    expectedOut,
+    priceImpact,
+    value,
+    inputNodes,
+  } = await sdk.pools.generalisedJoin(
+    pool.id as string,
+    tokensIn,
+    amountsIn,
+    userAddress,
+    slippage,
+    signer,
+    simulationType,
+    authorisation
+  );
 
   // 4. Sends tx
   const tokensForBalanceCheck = [pool.address, ...tokensIn];
-  const { balanceDeltas, transactionReceipt, gasUsed } =
+  const { balanceDeltas, transactionReceipt } =
     await sendTransactionGetBalances(
       tokensForBalanceCheck,
       signer,
@@ -74,8 +82,19 @@ export const testGeneralisedJoin = async (
       value
     );
 
-  console.log('Gas used', gasUsed.toString());
-  console.log('Price impact: ', priceImpact);
+  console.log(
+    '\nPrice impact (based on spot price): ',
+    formatEther(priceImpact)
+  );
+  const proportions = inputNodes.map((n) => n.proportionOfParent);
+  console.log(
+    '\nPorportions: ',
+    proportions.map((p) => formatEther(p))
+  );
+  console.log(
+    'Sum of proportions (should be 1): ',
+    parseFloat(formatEther(proportions[0].add(proportions[1])))
+  );
 
   console.table({
     tokens: truncateAddresses(tokensForBalanceCheck),
@@ -113,4 +132,9 @@ export const testGeneralisedJoin = async (
   const nativeAssetAmount =
     nativeAssetIndex === -1 ? Zero : balanceDeltas[nativeAssetIndex];
   expect(value.toString()).to.eq(nativeAssetAmount.toString());
+
+  return {
+    expectedOut,
+    proportions: proportions.map((p) => p.toString()),
+  };
 };

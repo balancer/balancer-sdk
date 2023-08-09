@@ -32,6 +32,7 @@ import { JoinPoolRequest as JoinPoolModelRequest } from '../vaultModel/poolModel
 import { JsonRpcSigner } from '@ethersproject/providers';
 import { BalancerRelayer__factory } from '@/contracts/factories/BalancerRelayer__factory';
 import { Logger } from '@/lib/utils/logger';
+import { formatEther } from '@ethersproject/units';
 
 const balancerRelayerInterface = BalancerRelayer__factory.createInterface();
 
@@ -91,6 +92,7 @@ export class Join {
     minOut: string;
     priceImpact: string;
     value: BigNumberish;
+    inputNodes: Node[];
   }> {
     this.checkInputs(tokensIn, amountsIn);
 
@@ -112,6 +114,8 @@ export class Join {
     );
 
     const totalBptZeroPi = Join.totalBptZeroPriceImpact(joinPaths);
+    console.log('\ntotalBptZeroPi', formatEther(totalBptZeroPi));
+
     /*
     - Create calls with 0 min bpt for each root join
     - static call (or V4 special call) to get actual amounts for each root join
@@ -193,6 +197,7 @@ export class Join {
       minOut: totalMinAmountOut,
       priceImpact,
       value,
+      inputNodes: joinPaths.flat().filter((n) => n.joinAction === 'input'),
     };
   }
 

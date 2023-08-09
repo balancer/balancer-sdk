@@ -15,7 +15,7 @@ function calcPriceImpactJoin(
 ): bigint {
   // 1 - (bptAmount/bptZeroPI)
   const pi = ONE - SolidityMaths.divDownFixed(bptAmount, bptZeroPriceImpact);
-  return pi < 0 ? BigInt(0) : pi;
+  return pi;
 }
 function calcPriceImpactExit(
   bptAmount: bigint,

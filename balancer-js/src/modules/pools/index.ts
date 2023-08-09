@@ -28,7 +28,7 @@ import { Exit, GeneralisedExitOutput, ExitInfo } from '../exits/exits.module';
 import { PoolVolume } from './volume/volume';
 import { PoolFees } from './fees/fees';
 import { Simulation, SimulationType } from '../simulation/simulation.module';
-import { PoolGraph } from '../graph/graph';
+import { Node, PoolGraph } from '../graph/graph';
 import { PoolFactory__factory } from './pool-factory__factory';
 import * as Queries from './queries';
 import { EmissionsService } from './emissions';
@@ -448,6 +448,7 @@ export class Pools implements Findable<PoolWithMethods> {
     expectedOut: string;
     priceImpact: string;
     value: BigNumberish;
+    inputNodes: Node[];
   }> {
     return this.joinService.joinPool(
       poolId,
