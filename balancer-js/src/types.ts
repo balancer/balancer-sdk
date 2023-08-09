@@ -124,6 +124,7 @@ export interface BalancerNetworkConfig {
   };
   poolsToIgnore?: string[];
   sorConnectingTokens?: { symbol: string; address: string }[];
+  sorTriPathMidPoolIds?: string[];
 }
 
 export interface BalancerDataRepositories {
