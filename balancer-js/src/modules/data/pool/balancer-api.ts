@@ -67,7 +67,6 @@ export class PoolsBalancerAPIRepository
     const skip = options?.skip || DEFAULT_SKIP;
 
     const pools = this.pools.slice(skip, first + skip);
-    this.skip = skip + first;
     return pools;
   }
 
@@ -77,7 +76,10 @@ export class PoolsBalancerAPIRepository
       this.pools.length >
         (options?.first || DEFAULT_FIRST) + (options?.skip || DEFAULT_SKIP)
     ) {
-      return this.fetchFromCache(options);
+      const cachedPools = this.fetchFromCache(options);
+      this.skip =
+        (options?.first || DEFAULT_FIRST) + (options?.skip || DEFAULT_SKIP);
+      return cachedPools;
     }
 
     if (this.nextToken) {
