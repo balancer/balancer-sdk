@@ -8,7 +8,8 @@ describe('Gauge controller', () => {
   const { contracts } = new Contracts(1, provider);
   const fetcher = new GaugeControllerMulticallRepository(
     contracts.multicall,
-    '0xc128468b7ce63ea702c1f104d55a2566b13d3abd'
+    '0xc128468b7ce63ea702c1f104d55a2566b13d3abd',
+    '0x8e5698dc4897dc12243c8642e77b4f21349db97c'
   );
 
   it('is fetching relative weights for current period', async () => {
