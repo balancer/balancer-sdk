@@ -24,7 +24,7 @@ export class GaugeControllerMulticallRepository {
   ): Promise<{ [gaugeAddress: string]: number }> {
     const payload = gaugeAddresses.map((gaugeAddress) => {
       // The checkpointer only exists for mainnet, if the network is a testnet, it'll use the regular gauge controller
-      if (this.gaugeControllerCheckpointerAddress) {
+      if (this.gaugeControllerCheckpointerAddress && !timestamp) {
         return {
           target: this.gaugeControllerCheckpointerAddress,
           callData: gaugeControllerCheckpointerInterface.encodeFunctionData(
