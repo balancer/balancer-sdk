@@ -93,8 +93,6 @@ export class PoolsBalancerAPIRepository
     this.isFetching = true;
     this.hasFetched = true;
 
-    console.log('Doing fetch all');
-
     if (this.nextToken) {
       this.query.args.nextToken = this.nextToken;
     }
@@ -130,13 +128,10 @@ export class PoolsBalancerAPIRepository
   // background, while fetch returns the first results to the user quickly.
   async awaitEnoughPoolsFetched(first: number, skip: number): Promise<void> {
     for (let totalChecks = 0; totalChecks < MAX_CHECKS; totalChecks++) {
-      console.log('Performing check ', totalChecks);
       if (this.pools.length > first + skip) {
-        console.log('Have enough pools, returning');
         return;
       }
       if (!this.isFetching) {
-        console.log('No longer fetching, returning');
         return;
       }
       await timeout(CHECK_INTERVAL_MS);
