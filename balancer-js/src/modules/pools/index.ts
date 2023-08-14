@@ -393,6 +393,30 @@ export class Pools implements Findable<PoolWithMethods> {
     });
   }
 
+  buildRecoveryExit({
+    pool,
+    bptAmount,
+    userAddress,
+    slippage,
+  }: {
+    pool: Pool;
+    bptAmount: string;
+    userAddress: string;
+    slippage: string;
+  }): ExitExactBPTInAttributes {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+    if (!concerns || !concerns.exit.buildRecoveryExit)
+      throw `buildRecoveryExit for poolType ${pool.poolType} not implemented`;
+
+    return concerns.exit.buildRecoveryExit({
+      exiter: userAddress,
+      pool,
+      bptIn: bptAmount,
+      slippage,
+      toInternalBalance: false,
+    });
+  }
+
   /**
    * Builds generalised join transaction
    *
