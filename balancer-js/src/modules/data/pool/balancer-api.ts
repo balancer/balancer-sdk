@@ -14,8 +14,16 @@ interface PoolsBalancerAPIOptions {
   query?: GraphQLQuery;
 }
 
+const MAX_POOLS_PER_REQUEST = 1000;
 const DEFAULT_SKIP = 0;
 const DEFAULT_FIRST = 10;
+const CHECK_TIMEOUT_SECONDS = 10;
+const CHECK_INTERVAL_MS = 10;
+const MAX_CHECKS = (CHECK_TIMEOUT_SECONDS * 1000) / CHECK_INTERVAL_MS;
+
+function timeout(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /**
  * Access pools using the Balancer GraphQL Api.
@@ -30,6 +38,8 @@ export class PoolsBalancerAPIRepository
   public skip = 0; // Keep track of how many pools to skip on next fetch, so this functions similar to subgraph repository.
   public nextToken: string | undefined | null; // A token to pass to the next query to retrieve the next page of results. Undefined initially, null when there are no more results.
   private query: GraphQLQuery;
+  private hasFetched = false;
+  private isFetching = false;
 
   constructor(options: PoolsBalancerAPIOptions) {
     this.client = new BalancerAPIClient(options.url, options.apiKey);
@@ -62,36 +72,34 @@ export class PoolsBalancerAPIRepository
     delete this.query.args.skip;
   }
 
-  private fetchFromCache(options?: PoolsRepositoryFetchOptions): Pool[] {
-    const first = options?.first || DEFAULT_FIRST;
-    const skip = options?.skip || DEFAULT_SKIP;
-
+  private fetchFromCache(first: number, skip: number): Pool[] {
     const pools = this.pools.slice(skip, first + skip);
     return pools;
   }
 
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
-    if (
-      this.nextToken === null ||
-      this.pools.length >
-        (options?.first || DEFAULT_FIRST) + (options?.skip || DEFAULT_SKIP)
-    ) {
-      const cachedPools = this.fetchFromCache(options);
-      this.skip =
-        (options?.first || DEFAULT_FIRST) + (options?.skip || DEFAULT_SKIP);
-      return cachedPools;
+    const first = options?.first || DEFAULT_FIRST;
+    const skip = options?.skip || DEFAULT_SKIP;
+
+    if (!this.hasFetched) {
+      this.fetchAll(options);
     }
+    await this.awaitEnoughPoolsFetched(first, skip);
+    return this.fetchFromCache(first, skip);
+  }
+
+  // Fetches all pools from the API in a loop and saves them to the cache.
+  async fetchAll(options?: PoolsRepositoryFetchOptions): Promise<void> {
+    this.isFetching = true;
+    this.hasFetched = true;
+
+    console.log('Doing fetch all');
 
     if (this.nextToken) {
       this.query.args.nextToken = this.nextToken;
     }
 
-    if (options?.first) {
-      // We need to request more than they specified because filtering is done post limit
-      // e.g. if we ask for 10 we may get 7 because 3 were filtered out.
-      this.query.args.first = options.first * 2;
-    }
-
+    this.query.args.first = MAX_POOLS_PER_REQUEST;
     const formattedArgs = new GraphQLArgsBuilder(this.query.args).format(
       new BalancerAPIArgsFormatter()
     );
@@ -111,9 +119,30 @@ export class PoolsBalancerAPIRepository
 
     this.nextToken = apiResponseData.nextToken;
     this.pools = this.pools.concat(apiResponseData.pools.map(this.format));
-    this.skip = this.pools.length;
 
-    return this.fetchFromCache(options);
+    if (this.nextToken) return await this.fetchAll(options);
+
+    this.isFetching = false;
+  }
+
+  // A function that waits until enough pools have been loaded into the cache
+  // or fetching has finished. Used so that all pools can be fetched in the
+  // background, while fetch returns the first results to the user quickly.
+  async awaitEnoughPoolsFetched(first: number, skip: number): Promise<void> {
+    for (let totalChecks = 0; totalChecks < MAX_CHECKS; totalChecks++) {
+      console.log('Performing check ', totalChecks);
+      if (this.pools.length > first + skip) {
+        console.log('Have enough pools, returning');
+        return;
+      }
+      if (!this.isFetching) {
+        console.log('No longer fetching, returning');
+        return;
+      }
+      await timeout(CHECK_INTERVAL_MS);
+    }
+
+    return;
   }
 
   async find(id: string): Promise<Pool | undefined> {
