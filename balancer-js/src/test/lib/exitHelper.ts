@@ -126,15 +126,22 @@ export const testRecoveryExit = async (
 
   const { transactionReceipt, balanceDeltas, internalBalanceDeltas } =
     await sendTransactionGetBalances(
-      pool.tokensList,
+      pool.bptIndex === -1
+        ? [...pool.tokensList, pool.address]
+        : pool.tokensList,
       signer,
       signerAddress,
       to,
       data
     );
+  expectedAmountsOut.forEach((amount) => expect(BigNumber.from(amount).gt(0)));
 
   expect(transactionReceipt.status).to.eq(1);
-  const expectedDeltas = insert(expectedAmountsOut, pool.bptIndex, bptIn);
+  const expectedDeltas =
+    pool.bptIndex === -1
+      ? [...expectedAmountsOut, bptIn]
+      : insert(expectedAmountsOut, pool.bptIndex, bptIn);
+
   // Allow for rounding errors - this has to be fixed on the SOR side in order to be 100% accurate
   expectedDeltas.forEach((expectedDelta, i) => {
     const balanceDelta = toInternalBalance
