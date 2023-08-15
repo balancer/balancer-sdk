@@ -199,7 +199,8 @@ export class Data implements BalancerDataRepositories {
         networkConfig.urls.gaugesSubgraph,
         contracts.contracts.multicall,
         networkConfig.addresses.contracts.gaugeController || '',
-        networkConfig.chainId
+        networkConfig.chainId,
+        networkConfig.addresses.contracts.gaugeControllerCheckpointer
       );
     }
 

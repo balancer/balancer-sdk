@@ -43,12 +43,14 @@ export class LiquidityGaugeSubgraphRPCProvider
     subgraphUrl: string,
     multicall: Multicall,
     gaugeControllerAddress: string,
-    private chainId: Network
+    private chainId: Network,
+    gaugeControllerCheckpointerAddress?: string
   ) {
     if (gaugeControllerAddress) {
       this.gaugeController = new GaugeControllerMulticallRepository(
         multicall,
-        gaugeControllerAddress
+        gaugeControllerAddress,
+        gaugeControllerCheckpointerAddress
       );
     }
     this.multicall = new LiquidityGaugesMulticallRepository(multicall, chainId);

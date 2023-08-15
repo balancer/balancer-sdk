@@ -18,6 +18,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         poolDataQueries: '0xf5CDdF6feD9C589f1Be04899F48f9738531daD59',
         lidoRelayer: '0xdcdbf71A870cc60C6F9B621E28a7D3Ffd6Dd4965',
         veBal: '0xC128a9954e6c874eA3d62ce62B468bA073093F25',
+        gaugeControllerCheckpointer:
+          '0x8e5698dc4897dc12243c8642e77b4f21349db97c',
         veBalProxy: '0x6f5a2eE11E7a772AeB5114A20d0D7c0ff61EB8A0',
         gyroConfigProxy: '0xac89cc9d78bbad7eb3a02601b4d65daa1f908aa6',
         ...addressesByNetwork[Network.MAINNET].contracts,
