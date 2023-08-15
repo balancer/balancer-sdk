@@ -27,7 +27,7 @@ const testPoolId =
 const blockNumber = TEST_BLOCK[network];
 let pool: PoolWithMethods | undefined;
 
-describe('recovery', () => {
+describe('Weighted - recovery', () => {
   // We have to reset the fork between each test as pool value changes after tx is submitted
   beforeEach(async () => {
     // Setup forked network, set initial token balances and allowances
@@ -58,7 +58,7 @@ describe('recovery', () => {
     pool = await balancer.pools.find(testPoolId);
   });
 
-  context('buildRecoveryExit - no rate issues', async () => {
+  context('buildRecoveryExit', async () => {
     it('should recovery exit', async () => {
       if (!pool) throw Error('Pool not found');
       const bptIn = parseFixed('1.34', 18).toString();

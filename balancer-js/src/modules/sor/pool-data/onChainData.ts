@@ -232,11 +232,6 @@ export async function getOnChainBalances<
             'getSwapFeePercentage'
           );
           multiPool.call(`${pool.id}.targets`, pool.address, 'getTargets');
-          multiPool.call(
-            `${pool.id}.rate`,
-            pool.address,
-            'getWrappedTokenRate'
-          );
         }
         break;
     }
@@ -327,19 +322,6 @@ export async function getOnChainBalances<
             18
           );
         }
-
-        const wrappedIndex = subgraphPools[index].wrappedIndex;
-        if (wrappedIndex === undefined || onchainData.rate === undefined) {
-          console.error(
-            `Linear Pool Missing WrappedIndex or PriceRate: ${poolId}`
-          );
-          return;
-        }
-        // Update priceRate of wrappedToken
-        subgraphPools[index].tokens[wrappedIndex].priceRate = formatFixed(
-          onchainData.rate,
-          18
-        );
       }
 
       subgraphPools[index].swapFee = formatFixed(swapFee, 18);

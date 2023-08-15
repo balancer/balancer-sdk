@@ -13,10 +13,11 @@ const TEST_BBAUSD3 = true;
 
 const blockNo = TEST_BLOCK[Network.MAINNET];
 
+// These tests are skipped as can't be used when Linear Wrapped Token rate is borked
 describe('generalised exit execution', async function () {
   this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
 
-  context('ERC4626 - bbausd3', async () => {
+  context.skip('ERC4626 - bbausd3', async () => {
     if (!TEST_BBAUSD3) return true;
     const network = Network.MAINNET;
     const pool = ADDRESSES[network].bbausd3;
@@ -84,7 +85,7 @@ describe('generalised exit execution', async function () {
     });
   });
 
-  context('GearboxLinear - bbgusd', async () => {
+  context.skip('GearboxLinear - bbgusd', async () => {
     const network = Network.MAINNET;
     const pool = ADDRESSES[network].bbgusd;
     const slippage = '10'; // 10 bps = 0.1%
@@ -151,7 +152,7 @@ describe('generalised exit execution', async function () {
     });
   });
 
-  context('AaveLinear - bbausd', async () => {
+  context.skip('AaveLinear - bbausd', async () => {
     const network = Network.MAINNET;
     const pool = ADDRESSES[network].bbausd2;
     const slippage = '10'; // 10 bps = 0.1%
