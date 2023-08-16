@@ -123,6 +123,7 @@ export const testRecoveryExit = async (
 
   const { to, data, minAmountsOut, expectedAmountsOut, priceImpact } =
     pool.buildRecoveryExit(signerAddress, bptIn, slippage, toInternalBalance);
+  console.log(expectedAmountsOut.toString());
 
   const { transactionReceipt, balanceDeltas, internalBalanceDeltas } =
     await sendTransactionGetBalances(
