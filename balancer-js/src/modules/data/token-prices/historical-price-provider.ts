@@ -25,7 +25,8 @@ export class HistoricalPriceProvider implements Findable<Price> {
    */
   async findBy(address: string, timestamp: number): Promise<Price | undefined> {
     const price = await this.coingeckoRepository.findBy(address, timestamp);
-    const rate = (await this.aaveRates.getRate(address)) || 1;
+    // const rate = (await this.aaveRates.getRate(address)) || 1;
+    const rate = 1;
     if (price && price.usd) {
       return {
         ...price,
