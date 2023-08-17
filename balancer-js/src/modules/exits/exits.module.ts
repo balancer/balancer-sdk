@@ -676,35 +676,18 @@ export class Exit {
             break;
           }
           case 'batchSwap': {
-            if (node.children.length === 1) {
-              const { modelRequest, encodedCall, assets, amounts } =
-                this.createSwap(
-                  node,
-                  exitChild as Node,
-                  i,
-                  minAmountOut,
-                  sender,
-                  recipient
-                );
-              modelRequests.push(modelRequest);
-              calls.push(encodedCall);
-              this.updateDeltas(deltas, assets, amounts);
-            } else {
-              const exitChildren = node.children.map((n) => n);
-              // TODO - is it correct to use minAmountsOutProportional?
-              const { modelRequest, encodedCall, assets, amounts } =
-                this.createBatchSwap(
-                  node,
-                  exitChildren,
-                  i,
-                  minAmountsOutProportional,
-                  sender,
-                  recipient
-                );
-              modelRequests.push(modelRequest);
-              calls.push(encodedCall);
-              this.updateDeltas(deltas, assets, amounts);
-            }
+            const { modelRequest, encodedCall, assets, amounts } =
+              this.createSwap(
+                node,
+                exitChild as Node,
+                i,
+                minAmountOut,
+                sender,
+                recipient
+              );
+            modelRequests.push(modelRequest);
+            calls.push(encodedCall);
+            this.updateDeltas(deltas, assets, amounts);
             break;
           }
           case 'exitPool': {
