@@ -1,48 +1,97 @@
 // yarn test:only ./src/modules/exits/exits.module.integration-mainnet.spec.ts
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { Network } from '@/.';
+import { BalancerSDK, Network, PoolWithMethods } from '@/.';
 import { BigNumber, parseFixed } from '@ethersproject/bignumber';
 import { accuracy } from '@/test/lib/utils';
 import { ADDRESSES, TEST_BLOCK } from '@/test/lib/constants';
-import { testFlow } from './testHelper';
+import { setUpForkAndSdk, testFlow } from './testHelper';
+import { JsonRpcSigner } from '@ethersproject/providers';
 
 dotenv.config();
 
-const TEST_BBAUSD3 = true;
-
-const blockNo = TEST_BLOCK[Network.MAINNET];
-
 describe('generalised exit execution', async function () {
-  this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
-  context('aaveLinear V1 - bbausd', async () => {
-    const network = Network.MAINNET;
-    const pool = ADDRESSES[network].bbausd;
-    const slippage = '10'; // 10 bps = 0.1%
-    let unwrappingTokensAmountsOut: string[];
-    let unwrappingTokensGasUsed: BigNumber;
-    let mainTokensAmountsOut: string[];
-    let mainTokensGasUsed: BigNumber;
-    const poolAddresses = Object.values(ADDRESSES[network]).map(
-      (address) => address.address
-    );
+  let unwrappingTokensAmountsOut: string[];
+  let unwrappingTokensGasUsed: BigNumber;
+  let mainTokensAmountsOut: string[];
+  let mainTokensGasUsed: BigNumber;
+  let pool: { id: string; address: string; slot: number; decimals: number };
+  let unwrapExitAmount: BigNumber;
+  let mainExitAmount: BigNumber;
+  let amountRatio: number;
+  let sdk: BalancerSDK;
+  let signer: JsonRpcSigner;
 
-    const amountRatio = 10;
-    // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
-    const unwrapExitAmount = parseFixed('1273000', pool.decimals);
-    // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
-    const mainExitAmount = unwrapExitAmount.div(amountRatio);
+  const network = Network.MAINNET;
+  const blockNo = TEST_BLOCK[Network.MAINNET];
+  const poolAddresses = Object.values(ADDRESSES[network]).map(
+    (address) => address.address
+  );
+  const slippage = '10'; // 10 bps = 0.1%
+
+  beforeEach(async () => {
+    const setup = await setUpForkAndSdk(
+      network,
+      blockNo,
+      poolAddresses,
+      [pool.address],
+      [pool.slot],
+      [parseFixed('120000000', 18).toString()]
+    );
+    sdk = setup.sdk;
+    signer = setup.signer;
+  });
+
+  this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
+  context.only('aaveLinear V1 - bbausd', async () => {
+    before(async () => {
+      pool = ADDRESSES[network].bbausd;
+      amountRatio = 2;
+      // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
+      unwrapExitAmount = parseFixed('2000', pool.decimals);
+      // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
+      mainExitAmount = unwrapExitAmount.div(amountRatio);
+    });
+
+    beforeEach(async () => {
+      // prepare pool to have more wrapped than main tokens
+      await testFlow(
+        pool,
+        slippage,
+        parseFixed('1270000', 18).toString(),
+        [],
+        sdk,
+        signer
+      );
+    });
 
     context('exit by unwrapping tokens', async () => {
       it('should exit via unwrapping', async () => {
+        const parentPool = (await sdk.pools.find(pool.id)) as PoolWithMethods;
+        const childPool0 = (await sdk.pools.findBy(
+          'address',
+          parentPool.tokensList[0]
+        )) as PoolWithMethods;
+        const childPool1 = (await sdk.pools.findBy(
+          'address',
+          parentPool.tokensList[1]
+        )) as PoolWithMethods;
+        const childPool2 = (await sdk.pools.findBy(
+          'address',
+          parentPool.tokensList[2]
+        )) as PoolWithMethods;
+        // log pool state to see if it's persisting between tests
+        console.log('childPool0', childPool0.tokens);
+        console.log('childPool1', childPool1.tokens);
+        console.log('childPool2', childPool2.tokens);
+
         const { expectedAmountsOut, gasUsed } = await testFlow(
           pool,
           slippage,
           unwrapExitAmount.toString(),
           [ADDRESSES[network].DAI.address],
-          network,
-          blockNo,
-          poolAddresses
+          sdk,
+          signer
         );
         unwrappingTokensAmountsOut = expectedAmountsOut;
         unwrappingTokensGasUsed = gasUsed;
@@ -56,9 +105,8 @@ describe('generalised exit execution', async function () {
           slippage,
           mainExitAmount.toString(),
           [],
-          network,
-          blockNo,
-          poolAddresses
+          sdk,
+          signer
         );
         mainTokensAmountsOut = expectedAmountsOut;
         mainTokensGasUsed = gasUsed;
@@ -83,23 +131,14 @@ describe('generalised exit execution', async function () {
   });
 
   context('ERC4626 - bbausd3', async () => {
-    if (!TEST_BBAUSD3) return true;
-    const network = Network.MAINNET;
-    const pool = ADDRESSES[network].bbausd3;
-    const slippage = '10'; // 10 bps = 0.1%
-    let unwrappingTokensAmountsOut: string[];
-    let unwrappingTokensGasUsed: BigNumber;
-    let mainTokensAmountsOut: string[];
-    let mainTokensGasUsed: BigNumber;
-    const poolAddresses = Object.values(ADDRESSES[network]).map(
-      (address) => address.address
-    );
-
-    const amountRatio = 10;
-    // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
-    const unwrapExitAmount = parseFixed('10000000', pool.decimals);
-    // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
-    const mainExitAmount = unwrapExitAmount.div(amountRatio);
+    before(async () => {
+      pool = ADDRESSES[network].bbausd3;
+      amountRatio = 10;
+      // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
+      unwrapExitAmount = parseFixed('10000000', pool.decimals);
+      // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
+      mainExitAmount = unwrapExitAmount.div(amountRatio);
+    });
 
     context('exit by unwrapping tokens', async () => {
       it('should exit via unwrapping', async () => {
@@ -108,9 +147,8 @@ describe('generalised exit execution', async function () {
           slippage,
           unwrapExitAmount.toString(),
           [ADDRESSES[network].DAI.address],
-          network,
-          blockNo,
-          poolAddresses
+          sdk,
+          signer
         );
         unwrappingTokensAmountsOut = expectedAmountsOut;
         unwrappingTokensGasUsed = gasUsed;
@@ -124,9 +162,8 @@ describe('generalised exit execution', async function () {
           slippage,
           mainExitAmount.toString(),
           [],
-          network,
-          blockNo,
-          poolAddresses
+          sdk,
+          signer
         );
         mainTokensAmountsOut = expectedAmountsOut;
         mainTokensGasUsed = gasUsed;
@@ -151,22 +188,15 @@ describe('generalised exit execution', async function () {
   });
 
   context('GearboxLinear - bbgusd', async () => {
-    const network = Network.MAINNET;
-    const pool = ADDRESSES[network].bbgusd;
-    const slippage = '10'; // 10 bps = 0.1%
-    let unwrappingTokensAmountsOut: string[];
-    let unwrappingTokensGasUsed: BigNumber;
-    let mainTokensAmountsOut: string[];
-    let mainTokensGasUsed: BigNumber;
-    const poolAddresses = Object.values(ADDRESSES[network]).map(
-      (address) => address.address
-    );
+    before(async () => {
+      pool = ADDRESSES[network].bbgusd;
 
-    const amountRatio = 100000;
-    // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
-    const unwrapExitAmount = parseFixed('1000000', pool.decimals);
-    // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
-    const mainExitAmount = unwrapExitAmount.div(amountRatio);
+      amountRatio = 100000;
+      // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
+      unwrapExitAmount = parseFixed('1000000', pool.decimals);
+      // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
+      mainExitAmount = unwrapExitAmount.div(amountRatio);
+    });
 
     context('exit by unwrapping tokens', async () => {
       it('should exit via unwrapping', async () => {
@@ -175,9 +205,8 @@ describe('generalised exit execution', async function () {
           slippage,
           unwrapExitAmount.toString(),
           [ADDRESSES[network].USDC.address],
-          network,
-          blockNo,
-          poolAddresses
+          sdk,
+          signer
         );
         unwrappingTokensAmountsOut = expectedAmountsOut;
         unwrappingTokensGasUsed = gasUsed;
@@ -191,9 +220,8 @@ describe('generalised exit execution', async function () {
           slippage,
           mainExitAmount.toString(),
           [],
-          network,
-          blockNo,
-          poolAddresses
+          sdk,
+          signer
         );
         mainTokensAmountsOut = expectedAmountsOut;
         mainTokensGasUsed = gasUsed;
@@ -217,23 +245,16 @@ describe('generalised exit execution', async function () {
     });
   });
 
-  context('AaveLinear - bbausd', async () => {
-    const network = Network.MAINNET;
-    const pool = ADDRESSES[network].bbausd2;
-    const slippage = '10'; // 10 bps = 0.1%
-    let unwrappingTokensAmountsOut: string[];
-    let unwrappingTokensGasUsed: BigNumber;
-    let mainTokensAmountsOut: string[];
-    let mainTokensGasUsed: BigNumber;
-    const poolAddresses = Object.values(ADDRESSES[network]).map(
-      (address) => address.address
-    );
+  context('AaveLinear - bbausd2', async () => {
+    before(async () => {
+      pool = ADDRESSES[network].bbausd2;
 
-    const amountRatio = 1000;
-    // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
-    const unwrapExitAmount = parseFixed('3000000', pool.decimals);
-    // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
-    const mainExitAmount = unwrapExitAmount.div(amountRatio);
+      amountRatio = 1000;
+      // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
+      unwrapExitAmount = parseFixed('3000000', pool.decimals);
+      // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
+      mainExitAmount = unwrapExitAmount.div(amountRatio);
+    });
 
     context('exit by unwrapping tokens', async () => {
       it('should exit via unwrapping', async () => {
@@ -242,9 +263,8 @@ describe('generalised exit execution', async function () {
           slippage,
           unwrapExitAmount.toString(),
           [ADDRESSES[network].DAI.address],
-          network,
-          blockNo,
-          poolAddresses
+          sdk,
+          signer
         );
         unwrappingTokensAmountsOut = expectedAmountsOut;
         unwrappingTokensGasUsed = gasUsed;
@@ -258,9 +278,8 @@ describe('generalised exit execution', async function () {
           slippage,
           mainExitAmount.toString(),
           [],
-          network,
-          blockNo,
-          poolAddresses
+          sdk,
+          signer
         );
         mainTokensAmountsOut = expectedAmountsOut;
         mainTokensGasUsed = gasUsed;

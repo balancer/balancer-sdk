@@ -32,21 +32,12 @@ export const testFlow = async (
   slippage: string,
   exitAmount: string,
   expectToUnwrap: string[],
-  network: Network,
-  blockNumber: number,
-  poolAddressesToConsider: string[]
+  sdk: BalancerSDK,
+  signer: JsonRpcSigner
 ): Promise<{
   expectedAmountsOut: string[];
   gasUsed: BigNumber;
 }> => {
-  const { sdk, signer } = await setUpForkAndSdk(
-    network,
-    blockNumber,
-    poolAddressesToConsider,
-    [pool.address],
-    [pool.slot],
-    [exitAmount]
-  );
   // Follows similar flow to a front end implementation
   const { exitOutput, txResult, exitInfo } = await userFlow(
     pool,
@@ -141,7 +132,7 @@ async function userFlow(
   };
 }
 
-async function setUpForkAndSdk(
+export async function setUpForkAndSdk(
   network: Network,
   blockNumber: number,
   pools: string[],
