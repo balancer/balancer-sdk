@@ -10,7 +10,12 @@ import { AssetHelpers, subSlippage } from '@/lib/utils';
 import { PoolGraph, Node } from '@/modules/graph/graph';
 import { Join } from '@/modules/joins/joins.module';
 import { calcPriceImpact } from '@/modules/pricing/priceImpact';
-import { EncodeUnwrapInput, Relayer } from '@/modules/relayer/relayer.module';
+import {
+  EncodeUnwrapInput,
+  OutputReference,
+  Relayer,
+  EncodeBatchSwapInput,
+} from '@/modules/relayer/relayer.module';
 import {
   Simulation,
   SimulationType,
@@ -20,9 +25,13 @@ import {
   SingleSwap,
   Swap,
   SwapType,
+  BatchSwapStep,
 } from '@/modules/swaps/types';
 import { ExitPoolRequest as ExitPoolModelRequest } from '@/modules/vaultModel/poolModel/exit';
-import { SwapRequest } from '@/modules/vaultModel/poolModel/swap';
+import {
+  BatchSwapRequest,
+  SwapRequest,
+} from '@/modules/vaultModel/poolModel/swap';
 import { UnwrapRequest } from '@/modules/vaultModel/poolModel/unwrap';
 import { Requests, VaultModel } from '@/modules/vaultModel/vaultModel.module';
 import { ComposableStablePoolEncoder } from '@/pool-composable-stable';
@@ -667,18 +676,35 @@ export class Exit {
             break;
           }
           case 'batchSwap': {
-            const { modelRequest, encodedCall, assets, amounts } =
-              this.createSwap(
-                node,
-                exitChild as Node,
-                i,
-                minAmountOut,
-                sender,
-                recipient
-              );
-            modelRequests.push(modelRequest);
-            calls.push(encodedCall);
-            this.updateDeltas(deltas, assets, amounts);
+            if (node.children.length === 1) {
+              const { modelRequest, encodedCall, assets, amounts } =
+                this.createSwap(
+                  node,
+                  exitChild as Node,
+                  i,
+                  minAmountOut,
+                  sender,
+                  recipient
+                );
+              modelRequests.push(modelRequest);
+              calls.push(encodedCall);
+              this.updateDeltas(deltas, assets, amounts);
+            } else {
+              const exitChildren = node.children.map((n) => n);
+              // TODO - is it correct to use minAmountsOutProportional?
+              const { modelRequest, encodedCall, assets, amounts } =
+                this.createBatchSwap(
+                  node,
+                  exitChildren,
+                  i,
+                  minAmountsOutProportional,
+                  sender,
+                  recipient
+                );
+              modelRequests.push(modelRequest);
+              calls.push(encodedCall);
+              this.updateDeltas(deltas, assets, amounts);
+            }
             break;
           }
           case 'exitPool': {
@@ -854,6 +880,104 @@ export class Exit {
         ? '0'
         : BigNumber.from(minAmountOut).mul(-1).toString(); // needs to be negative because it's handled by the vault model as an amount going out of the vault
     const amounts = [userTokenOutAmount, bptIn];
+
+    return { modelRequest, encodedCall, assets, amounts };
+  }
+
+  private createBatchSwap(
+    node: Node,
+    exitChildren: Node[],
+    exitPathIndex: number,
+    minAmountsOut: string[],
+    sender: string,
+    recipient: string
+  ): {
+    modelRequest: BatchSwapRequest;
+    encodedCall: string;
+    assets: string[];
+    amounts: string[];
+  } {
+    const isRootNode = !node.parent;
+    const amountIn = isRootNode
+      ? node.index
+      : Relayer.toChainedReference(
+          this.getOutputRef(exitPathIndex, node.index)
+        ).toString();
+
+    const tokensOut = exitChildren.map((n) => n.address);
+    const assets = [...tokensOut, node.address];
+    // TODO - setting these right?
+    const limits = [...minAmountsOut];
+    limits.push(amountIn);
+    const batchSwapSteps: BatchSwapStep[] = [];
+    const outputReferences: OutputReference[] = [];
+    exitChildren.forEach((child, i) => {
+      // TODO - Is this correct?
+      const amount = child.proportionOfParent
+        .mul(amountIn)
+        .div(WeiPerEther)
+        .toString();
+      const swapStep: BatchSwapStep = {
+        poolId: node.id,
+        assetInIndex: assets.length - 1,
+        assetOutIndex: i,
+        amount,
+        userData: '0x',
+      };
+      batchSwapSteps.push(swapStep);
+      // TODO - Is this right?
+      outputReferences.push({
+        index: i,
+        key: Relayer.toChainedReference(this.getOutputRef(0, child.index)),
+      });
+    });
+
+    const total = batchSwapSteps.reduce((acc, swap) => {
+      return acc.add(swap.amount);
+    }, BigNumber.from(0));
+    const dust = BigNumber.from(amountIn).sub(total);
+    batchSwapSteps[0].amount = dust.add(batchSwapSteps[0].amount).toString();
+
+    const fromInternalBalance = this.receivesFromInternal(node);
+    // TODO - This is assuming that all exit to same, is this right?
+    const toInternalBalance = this.receivesFromInternal(exitChildren[0]);
+
+    const funds: FundManagement = {
+      sender,
+      recipient,
+      fromInternalBalance,
+      toInternalBalance,
+    };
+
+    const call: EncodeBatchSwapInput = {
+      swapType: SwapType.SwapExactIn,
+      swaps: batchSwapSteps,
+      assets,
+      funds,
+      limits,
+      deadline: BigNumber.from(Math.ceil(Date.now() / 1000) + 3600), // 1 hour from now
+      value: '0', // TODO: check if swap with ETH is possible in this case and handle it
+      outputReferences,
+    };
+    debugLog('\nBatchSwap:');
+    debugLog(JSON.stringify(call));
+
+    const encodedCall = Relayer.encodeBatchSwap(call);
+
+    const modelRequest = VaultModel.mapBatchSwapRequest(call);
+
+    // If node isn't rootNode, the swap is part of a chain and shouldn't be considered for user deltas
+    const bptIn = !isRootNode ? '0' : amountIn;
+    // If child exit action is not output, the swap is part of a chain and shouldn't be considered for user deltas
+    const userTokensOut = exitChildren.map((child, i) => {
+      const userTokenOutAmount =
+        child.exitAction !== 'output'
+          ? '0'
+          : BigNumber.from(minAmountsOut[i]).mul(-1).toString(); // needs to be negative because it's handled by the vault model as an amount going out of the vault
+      return userTokenOutAmount;
+    });
+
+    const amounts = [...userTokensOut, bptIn];
 
     return { modelRequest, encodedCall, assets, amounts };
   }
