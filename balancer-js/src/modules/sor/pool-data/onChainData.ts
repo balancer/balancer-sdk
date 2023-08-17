@@ -232,6 +232,14 @@ export async function getOnChainBalances<
             'getSwapFeePercentage'
           );
           multiPool.call(`${pool.id}.targets`, pool.address, 'getTargets');
+          // AaveLinear pools with version === 1 rates will still work
+          if (pool.poolType === 'AaveLinear' && pool.poolTypeVersion === 1) {
+            multiPool.call(
+              `${pool.id}.rate`,
+              pool.address,
+              'getWrappedTokenRate'
+            );
+          }
         }
         break;
     }
@@ -319,6 +327,24 @@ export async function getOnChainBalances<
           );
           subgraphPools[index].upperTarget = formatFixed(
             onchainData.targets[1],
+            18
+          );
+        }
+
+        if (
+          subgraphPools[index].poolType === 'AaveLinear' &&
+          subgraphPools[index].poolTypeVersion === 1
+        ) {
+          const wrappedIndex = subgraphPools[index].wrappedIndex;
+          if (wrappedIndex === undefined || onchainData.rate === undefined) {
+            console.error(
+              `Linear Pool Missing WrappedIndex or PriceRate: ${poolId}`
+            );
+            return;
+          }
+          // Update priceRate of wrappedToken
+          subgraphPools[index].tokens[wrappedIndex].priceRate = formatFixed(
+            onchainData.rate,
             18
           );
         }

@@ -13,11 +13,11 @@ const TEST_BBAUSD3 = true;
 
 const blockNo = TEST_BLOCK[Network.MAINNET];
 
-// These tests are skipped as can't be used when Linear Wrapped Token rate is borked
+// The tests that are skipped are because wrappedToken rate can no longer be fetched onchain
 describe('generalised exit execution', async function () {
   this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
 
-  context.skip('ERC4626 - bbausd3', async () => {
+  context('ERC4626 - bbausd3', async () => {
     if (!TEST_BBAUSD3) return true;
     const network = Network.MAINNET;
     const pool = ADDRESSES[network].bbausd3;
@@ -37,7 +37,7 @@ describe('generalised exit execution', async function () {
     const mainExitAmount = unwrapExitAmount.div(amountRatio);
 
     context('exit by unwrapping tokens', async () => {
-      it('should exit via unwrapping', async () => {
+      it.skip('should exit via unwrapping', async () => {
         const { expectedAmountsOut, gasUsed } = await testFlow(
           pool,
           slippage,
@@ -68,7 +68,7 @@ describe('generalised exit execution', async function () {
       });
     });
 
-    context('exit by unwrapping vs exit to main tokens', async () => {
+    context.skip('exit by unwrapping vs exit to main tokens', async () => {
       it('should return similar amounts (proportional to the input)', async () => {
         mainTokensAmountsOut.forEach((amount, i) => {
           const unwrappedAmount = BigNumber.from(
@@ -85,7 +85,7 @@ describe('generalised exit execution', async function () {
     });
   });
 
-  context.skip('GearboxLinear - bbgusd', async () => {
+  context('GearboxLinear - bbgusd', async () => {
     const network = Network.MAINNET;
     const pool = ADDRESSES[network].bbgusd;
     const slippage = '10'; // 10 bps = 0.1%
@@ -103,7 +103,7 @@ describe('generalised exit execution', async function () {
     // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
     const mainExitAmount = unwrapExitAmount.div(amountRatio);
 
-    context('exit by unwrapping tokens', async () => {
+    context.skip('exit by unwrapping tokens', async () => {
       it('should exit via unwrapping', async () => {
         const { expectedAmountsOut, gasUsed } = await testFlow(
           pool,
@@ -135,7 +135,7 @@ describe('generalised exit execution', async function () {
       });
     });
 
-    context('exit by unwrapping vs exit to main tokens', async () => {
+    context.skip('exit by unwrapping vs exit to main tokens', async () => {
       it('should return similar amounts (proportional to the input)', async () => {
         mainTokensAmountsOut.forEach((amount, i) => {
           const unwrappedAmount = BigNumber.from(
@@ -152,7 +152,7 @@ describe('generalised exit execution', async function () {
     });
   });
 
-  context.skip('AaveLinear - bbausd', async () => {
+  context('AaveLinear - bbausd2', async () => {
     const network = Network.MAINNET;
     const pool = ADDRESSES[network].bbausd2;
     const slippage = '10'; // 10 bps = 0.1%
@@ -170,7 +170,7 @@ describe('generalised exit execution', async function () {
     // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
     const mainExitAmount = unwrapExitAmount.div(amountRatio);
 
-    context('exit by unwrapping tokens', async () => {
+    context.skip('exit by unwrapping tokens', async () => {
       it('should exit via unwrapping', async () => {
         const { expectedAmountsOut, gasUsed } = await testFlow(
           pool,
@@ -202,7 +202,7 @@ describe('generalised exit execution', async function () {
       });
     });
 
-    context('exit by unwrapping vs exit to main tokens', async () => {
+    context.skip('exit by unwrapping vs exit to main tokens', async () => {
       it('should return similar amounts (proportional to the input)', async () => {
         mainTokensAmountsOut.forEach((amount, i) => {
           const unwrappedAmount = BigNumber.from(
