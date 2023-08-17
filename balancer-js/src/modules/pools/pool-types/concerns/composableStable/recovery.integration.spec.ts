@@ -23,7 +23,7 @@ const signer = provider.getSigner();
 // This pool has active rates which is needed for tests
 const testPoolId =
   '0x02d2e2d7a89d6c5cb3681cfcb6f7dac02a55eda400000000000000000000088f';
-const blockNumber = 46244955;
+const blockNumber = 46417427;
 let pool: PoolWithMethods | undefined;
 
 describe('ComposableStable - recovery', () => {
