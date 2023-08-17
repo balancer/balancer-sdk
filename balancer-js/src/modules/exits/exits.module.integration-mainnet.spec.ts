@@ -29,7 +29,7 @@ describe('generalised exit execution', async function () {
 
     const amountRatio = 10;
     // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
-    const unwrapExitAmount = parseFixed('10000', pool.decimals);
+    const unwrapExitAmount = parseFixed('1273000', pool.decimals);
     // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
     const mainExitAmount = unwrapExitAmount.div(amountRatio);
 
