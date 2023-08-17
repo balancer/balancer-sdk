@@ -398,11 +398,13 @@ export class Pools implements Findable<PoolWithMethods> {
     bptAmount,
     userAddress,
     slippage,
+    toInternalBalance,
   }: {
     pool: Pool;
     bptAmount: string;
     userAddress: string;
     slippage: string;
+    toInternalBalance?: boolean;
   }): ExitExactBPTInAttributes {
     const concerns = PoolTypeConcerns.from(pool.poolType);
     if (!concerns || !concerns.exit.buildRecoveryExit)
@@ -413,7 +415,7 @@ export class Pools implements Findable<PoolWithMethods> {
       pool,
       bptIn: bptAmount,
       slippage,
-      toInternalBalance: false,
+      toInternalBalance: !!toInternalBalance,
     });
   }
 
