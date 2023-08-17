@@ -15,6 +15,72 @@ const blockNo = TEST_BLOCK[Network.MAINNET];
 
 describe('generalised exit execution', async function () {
   this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
+  context('aaveLinear V1 - bbausd', async () => {
+    const network = Network.MAINNET;
+    const pool = ADDRESSES[network].bbausd;
+    const slippage = '10'; // 10 bps = 0.1%
+    let unwrappingTokensAmountsOut: string[];
+    let unwrappingTokensGasUsed: BigNumber;
+    let mainTokensAmountsOut: string[];
+    let mainTokensGasUsed: BigNumber;
+    const poolAddresses = Object.values(ADDRESSES[network]).map(
+      (address) => address.address
+    );
+
+    const amountRatio = 10;
+    // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
+    const unwrapExitAmount = parseFixed('10000', pool.decimals);
+    // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
+    const mainExitAmount = unwrapExitAmount.div(amountRatio);
+
+    context('exit by unwrapping tokens', async () => {
+      it('should exit via unwrapping', async () => {
+        const { expectedAmountsOut, gasUsed } = await testFlow(
+          pool,
+          slippage,
+          unwrapExitAmount.toString(),
+          [ADDRESSES[network].DAI.address],
+          network,
+          blockNo,
+          poolAddresses
+        );
+        unwrappingTokensAmountsOut = expectedAmountsOut;
+        unwrappingTokensGasUsed = gasUsed;
+      });
+    });
+
+    context('exit to main tokens directly', async () => {
+      it('should exit to main tokens directly', async () => {
+        const { expectedAmountsOut, gasUsed } = await testFlow(
+          pool,
+          slippage,
+          mainExitAmount.toString(),
+          [],
+          network,
+          blockNo,
+          poolAddresses
+        );
+        mainTokensAmountsOut = expectedAmountsOut;
+        mainTokensGasUsed = gasUsed;
+      });
+    });
+
+    context('exit by unwrapping vs exit to main tokens', async () => {
+      it('should return similar amounts (proportional to the input)', async () => {
+        mainTokensAmountsOut.forEach((amount, i) => {
+          const unwrappedAmount = BigNumber.from(
+            unwrappingTokensAmountsOut[i]
+          ).div(amountRatio);
+          expect(
+            accuracy(unwrappedAmount, BigNumber.from(amount))
+          ).to.be.closeTo(1, 1e-4); // inaccuracy should not be over 1 bps
+        });
+      });
+      it('should spend more gas when unwrapping tokens', async () => {
+        expect(unwrappingTokensGasUsed.gt(mainTokensGasUsed)).to.be.true;
+      });
+    });
+  });
 
   context('ERC4626 - bbausd3', async () => {
     if (!TEST_BBAUSD3) return true;
