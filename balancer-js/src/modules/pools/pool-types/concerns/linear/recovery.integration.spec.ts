@@ -6,14 +6,13 @@ import {
   BalancerSDK,
   getPoolAddress,
   Network,
-  PoolWithMethods,
   GraphQLArgs,
   GraphQLQuery,
   ERC4626LinearPool__factory,
   Authoriser__factory,
 } from '@/.';
 import { forkSetup } from '@/test/lib/utils';
-import { testRecoveryExit } from '@/test/lib/exitHelper';
+import { testRecoveryExit, assertRecoveryExit } from '@/test/lib/exitHelper';
 
 dotenv.config();
 
@@ -26,25 +25,76 @@ const signer = provider.getSigner();
 
 describe('Linear - recovery exits', () => {
   context('buildRecoveryExit', async () => {
-    it('ERC4626 - should recovery exit', async () => {
-      const poolId =
-        '0xcbfa4532d8b2ade2c261d3dd5ef2a2284f7926920000000000000000000004fa';
-      // Setup forked network, set initial token balances and allowances
-      await forkSetup(
-        signer,
-        [getPoolAddress(poolId)],
-        [0],
-        [parseFixed('1000000', 18).toString()],
-        jsonRpcUrl as string,
-        blockNumber
-      );
-      const pool = await getPool(poolId, blockNumber);
-      // enableRecoveryMode() role (see deployments repo for confirmation)
-      const actionId =
-        '0x650376aebfe02b35334f3ae96d46b9e5659baa84220d58312d9d2e2920ec9f1d';
-      await setRecovery(pool.address, actionId);
-      const bptIn = parseFixed('1000000', 18).toString();
-      await testRecoveryExit(pool, signer, bptIn);
+    context('ERC4626', async () => {
+      context('PoolWithMethods', async () => {
+        it('should recovery exit', async () => {
+          const bptIn = parseFixed('1000000', 18).toString();
+          const poolId =
+            '0xcbfa4532d8b2ade2c261d3dd5ef2a2284f7926920000000000000000000004fa';
+          // Setup forked network, set initial token balances and allowances
+          await forkSetup(
+            signer,
+            [getPoolAddress(poolId)],
+            [0],
+            [bptIn],
+            jsonRpcUrl as string,
+            blockNumber
+          );
+          const balancer = await setupSDK(poolId, blockNumber);
+          const pool = await balancer.pools.find(poolId);
+          if (!pool) throw Error('Pool not found');
+          // enableRecoveryMode() role (see deployments repo for confirmation)
+          const actionId =
+            '0x650376aebfe02b35334f3ae96d46b9e5659baa84220d58312d9d2e2920ec9f1d';
+          await setRecovery(pool.address, actionId);
+          await testRecoveryExit(pool, signer, bptIn);
+        });
+      });
+      context('Pool & refresh', async () => {
+        it('should recovery exit', async () => {
+          const bptIn = parseFixed('1000000', 18).toString();
+          const poolId =
+            '0xcbfa4532d8b2ade2c261d3dd5ef2a2284f7926920000000000000000000004fa';
+          // Setup forked network, set initial token balances and allowances
+          await forkSetup(
+            signer,
+            [getPoolAddress(poolId)],
+            [0],
+            [bptIn],
+            jsonRpcUrl as string,
+            blockNumber
+          );
+          const balancer = await setupSDK(poolId, blockNumber);
+          const slippage = '10'; // 10 bps = 0.1%
+          let pool = await balancer.data.pools.find(poolId);
+          if (!pool) throw Error('Pool not found');
+          // enableRecoveryMode() role (see deployments repo for confirmation)
+          const actionId =
+            '0x650376aebfe02b35334f3ae96d46b9e5659baa84220d58312d9d2e2920ec9f1d';
+          await setRecovery(pool.address, actionId);
+          const signerAddr = await signer.getAddress();
+          pool = await balancer.data.poolsOnChain.refresh(pool);
+          const { to, data, expectedAmountsOut, minAmountsOut, priceImpact } =
+            balancer.pools.buildRecoveryExit({
+              pool,
+              bptAmount: bptIn,
+              userAddress: signerAddr,
+              slippage,
+            });
+          await assertRecoveryExit(
+            signerAddr,
+            slippage,
+            to,
+            data,
+            minAmountsOut,
+            expectedAmountsOut,
+            priceImpact,
+            pool,
+            signer,
+            bptIn
+          );
+        });
+      });
     });
     it.skip('AaveLinear V1 - should recovery exit', async () => {
       // These don't seem to have recovery exit?
@@ -59,7 +109,9 @@ describe('Linear - recovery exits', () => {
         jsonRpcUrl as string,
         blockNumber
       );
-      const pool = await getPool(poolId, blockNumber);
+      const balancer = await setupSDK(poolId, blockNumber);
+      const pool = await balancer.pools.find(poolId);
+      if (!pool) throw Error('Pool not found');
       const actionId =
         '0x650376aebfe02b35334f3ae96d46b9e5659baa84220d58312d9d2e2920ec9f1d';
       await setRecovery(pool.address, actionId);
@@ -78,7 +130,9 @@ describe('Linear - recovery exits', () => {
         jsonRpcUrl as string,
         blockNumber
       );
-      const pool = await getPool(poolId, blockNumber);
+      const balancer = await setupSDK(poolId, blockNumber);
+      const pool = await balancer.pools.find(poolId);
+      if (!pool) throw Error('Pool not found');
       const actionId =
         '0xd6a9f64d81e7c22127c3fb002e0a42508528898232c353fc3d33cd259ea1de7b';
       await setRecovery(pool.address, actionId);
@@ -98,7 +152,9 @@ describe('Linear - recovery exits', () => {
         jsonRpcUrl as string,
         blockNumber
       );
-      const pool = await getPool(poolId, blockNumber);
+      const balancer = await setupSDK(poolId, blockNumber);
+      const pool = await balancer.pools.find(poolId);
+      if (!pool) throw Error('Pool not found');
       const actionId =
         '0xa32a74d0340eda2bd1a7c5ec04d47e7a95f472e66d159ecf6e21d957a5a003a9';
       await setRecovery(pool.address, actionId);
@@ -108,10 +164,10 @@ describe('Linear - recovery exits', () => {
   });
 });
 
-async function getPool(
+async function setupSDK(
   poolId: string,
   blockNumber: number
-): Promise<PoolWithMethods> {
+): Promise<BalancerSDK> {
   const subgraphArgs: GraphQLArgs = {
     where: {
       id: {
@@ -128,9 +184,7 @@ async function getPool(
     subgraphQuery,
   });
 
-  const pool = await balancer.pools.find(poolId);
-  if (!pool) throw Error('Pool not found');
-  return pool;
+  return balancer;
 }
 
 async function setRecovery(poolAddr: string, role: string) {

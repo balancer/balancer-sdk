@@ -5,7 +5,7 @@ import { expect } from 'chai';
 
 import { insert, addSlippage, subSlippage } from '@/lib/utils';
 import { accuracy, sendTransactionGetBalances } from '@/test/lib/utils';
-import { PoolWithMethods } from '@/types';
+import { PoolWithMethods, Pool } from '@/types';
 
 export const testExactBptIn = async (
   pool: PoolWithMethods,
@@ -142,6 +142,55 @@ export const testRecoveryExit = async (
     pool.bptIndex === -1
       ? [...expectedAmountsOut, bptIn]
       : insert(expectedAmountsOut, pool.bptIndex, bptIn);
+
+  // Allow for rounding errors - this has to be fixed on the SOR side in order to be 100% accurate
+  expectedDeltas.forEach((expectedDelta, i) => {
+    const balanceDelta = toInternalBalance
+      ? balanceDeltas[i].add(internalBalanceDeltas[i])
+      : balanceDeltas[i];
+    const delta = balanceDelta.sub(expectedDelta).toNumber();
+    expect(delta).to.be.closeTo(0, 1);
+  });
+  const expectedMins = expectedAmountsOut.map((a) =>
+    subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
+  );
+  expect(expectedMins).to.deep.eq(minAmountsOut);
+  const priceImpactFloat = parseFloat(
+    formatFixed(BigNumber.from(priceImpact), 18)
+  );
+  expect(priceImpactFloat).to.be.closeTo(0, 0.01); // exiting proportionally should have price impact near zero
+};
+
+export const assertRecoveryExit = async (
+  signerAddress: string,
+  slippage: string,
+  to: string,
+  data: string,
+  minAmountsOut: string[],
+  expectedAmountsOut: string[],
+  priceImpact: string,
+  pool: Pool,
+  signer: JsonRpcSigner,
+  bptIn: string,
+  toInternalBalance = false
+): Promise<void> => {
+  console.log(expectedAmountsOut.toString());
+  const bptIndex = pool.tokensList.indexOf(pool.address);
+  const { transactionReceipt, balanceDeltas, internalBalanceDeltas } =
+    await sendTransactionGetBalances(
+      bptIndex === -1 ? [...pool.tokensList, pool.address] : pool.tokensList,
+      signer,
+      signerAddress,
+      to,
+      data
+    );
+  expectedAmountsOut.forEach((amount) => expect(BigNumber.from(amount).gt(0)));
+
+  expect(transactionReceipt.status).to.eq(1);
+  const expectedDeltas =
+    bptIndex === -1
+      ? [...expectedAmountsOut, bptIn]
+      : insert(expectedAmountsOut, bptIndex, bptIn);
 
   // Allow for rounding errors - this has to be fixed on the SOR side in order to be 100% accurate
   expectedDeltas.forEach((expectedDelta, i) => {
