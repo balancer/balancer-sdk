@@ -86,8 +86,10 @@ export class AaveRates implements IAaveRates {
     return rates;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getRate(wrappedAToken: string): Promise<number> {
-    if (this.network != Network.MAINNET && this.network != Network.POLYGON) {
+    //To prevent bricked linear pools from effecting this call
+    /*if (this.network != Network.MAINNET && this.network != Network.POLYGON) {
       return 1;
     }
     if (!Object.values(yieldTokens[this.network]).includes(wrappedAToken)) {
@@ -97,6 +99,8 @@ export class AaveRates implements IAaveRates {
       this.rates = this.fetch(this.network);
     }
 
-    return (await this.rates)[wrappedAToken];
+    return (await this.rates)[wrappedAToken];*/
+
+    return 1;
   }
 }

@@ -21,8 +21,7 @@ export class TokenPriceProvider implements Findable<Price> {
       logger.warn(err as string);
       price = await this.subgraphRepository.find(address);
     }
-    // const rate = (await this.aaveRates.getRate(address)) || 1;
-    const rate = 1;
+    const rate = (await this.aaveRates.getRate(address)) || 1;
     if (price && price.usd) {
       return {
         ...price,
