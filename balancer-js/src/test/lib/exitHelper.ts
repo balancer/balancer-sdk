@@ -123,42 +123,19 @@ export const testRecoveryExit = async (
 
   const { to, data, minAmountsOut, expectedAmountsOut, priceImpact } =
     pool.buildRecoveryExit(signerAddress, bptIn, slippage, toInternalBalance);
-  console.log(expectedAmountsOut.toString());
 
-  const { transactionReceipt, balanceDeltas, internalBalanceDeltas } =
-    await sendTransactionGetBalances(
-      pool.bptIndex === -1
-        ? [...pool.tokensList, pool.address]
-        : pool.tokensList,
-      signer,
-      signerAddress,
-      to,
-      data
-    );
-  expectedAmountsOut.forEach((amount) => expect(BigNumber.from(amount).gt(0)));
-
-  expect(transactionReceipt.status).to.eq(1);
-  const expectedDeltas =
-    pool.bptIndex === -1
-      ? [...expectedAmountsOut, bptIn]
-      : insert(expectedAmountsOut, pool.bptIndex, bptIn);
-
-  // Allow for rounding errors - this has to be fixed on the SOR side in order to be 100% accurate
-  expectedDeltas.forEach((expectedDelta, i) => {
-    const balanceDelta = toInternalBalance
-      ? balanceDeltas[i].add(internalBalanceDeltas[i])
-      : balanceDeltas[i];
-    const delta = balanceDelta.sub(expectedDelta).toNumber();
-    expect(delta).to.be.closeTo(0, 1);
-  });
-  const expectedMins = expectedAmountsOut.map((a) =>
-    subSlippage(BigNumber.from(a), BigNumber.from(slippage)).toString()
+  await assertRecoveryExit(
+    signerAddress,
+    slippage,
+    to,
+    data,
+    minAmountsOut,
+    expectedAmountsOut,
+    priceImpact,
+    pool,
+    signer,
+    bptIn
   );
-  expect(expectedMins).to.deep.eq(minAmountsOut);
-  const priceImpactFloat = parseFloat(
-    formatFixed(BigNumber.from(priceImpact), 18)
-  );
-  expect(priceImpactFloat).to.be.closeTo(0, 0.01); // exiting proportionally should have price impact near zero
 };
 
 export const assertRecoveryExit = async (
