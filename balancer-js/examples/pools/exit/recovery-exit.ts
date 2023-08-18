@@ -4,6 +4,7 @@
  * Run command:
  * yarn example ./examples/pools/exit/recovery-exit.ts
  */
+import { FORK_NODES } from '@/test/lib/utils';
 import {
   BalancerSDK,
   removeItem,
@@ -13,7 +14,42 @@ import {
 import { parseEther } from '@ethersproject/units';
 import { getTokenBalance, reset, setTokenBalance } from 'examples/helpers';
 
-async function recoveryExit() {
+async function recoveryExitLive() {
+  const network = Network.MAINNET;
+  const rpcUrl = FORK_NODES[network];
+  const poolId =
+    '0x20b156776114e8a801e9767d90c6ccccc8adf398000000000000000000000499';
+  const userAddress = '0x0000000000000000000000000000000000000000';
+  const bptAmount = String(parseEther('1'));
+  const slippage = '1'; // 1 bps = 0.1%
+
+  const balancer = new BalancerSDK({
+    network,
+    rpcUrl,
+  });
+  const { poolsOnChain, pools } = balancer.data;
+
+  // Use SDK to find pool info
+  let pool = await pools.find(poolId);
+  if (!pool) throw 'POOL_DOESNT_EXIST';
+
+  // Refresh pool data from chain before building and sending tx
+  pool = await poolsOnChain.refresh(pool);
+
+  // Build transaction
+  const { expectedAmountsOut, minAmountsOut } =
+    balancer.pools.buildRecoveryExit({
+      pool,
+      bptAmount,
+      userAddress,
+      slippage,
+    });
+
+  console.log(expectedAmountsOut.toString());
+  console.log(minAmountsOut.toString());
+}
+
+async function recoveryExitFork() {
   const poolId =
     '0x20b156776114e8a801e9767d90c6ccccc8adf398000000000000000000000499';
   const blockNo = 17700000;
@@ -85,4 +121,5 @@ async function recoveryExit() {
   console.log(`BPT Balance: `, balances[balances.length - 1].toString());
 }
 
-recoveryExit();
+// recoveryExitFork();
+recoveryExitLive();
