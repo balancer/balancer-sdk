@@ -15,6 +15,7 @@ import { GraphQLQuery, Pool } from '@/types';
 import { Network } from '@/lib/constants/network';
 import { PoolsQueryVariables } from '../../subgraph/subgraph';
 import { mapType } from './subgraph-helpers';
+import { Logger } from '@/lib/utils/logger';
 
 interface PoolsSubgraphRepositoryOptions {
   url: string;
@@ -76,7 +77,8 @@ export class PoolsSubgraphRepository
    * @returns Promise resolving to pools list
    */
   private async fetchAllPools(): Promise<Pool[]> {
-    console.time('fetching pools');
+    const logger = Logger.getInstance();
+    logger.time('fetching pools');
 
     if (this.blockHeight) {
       this.query.args.block = { number: await this.blockHeight() };
@@ -88,7 +90,7 @@ export class PoolsSubgraphRepository
     const { pool0, pool1000, pool2000 } = await this.client.AllPools(
       formattedQuery
     );
-    console.timeEnd('fetching pools');
+    logger.timeEnd('fetching pools');
 
     return [...pool0, ...pool1000, ...pool2000].map((pool) =>
       mapType(pool, this.chainId)
@@ -96,6 +98,8 @@ export class PoolsSubgraphRepository
   }
 
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
+    const logger = Logger.getInstance();
+    logger.time('fetching pools');
     if (options?.skip) {
       this.query.args.skip = options.skip;
     }
@@ -112,6 +116,7 @@ export class PoolsSubgraphRepository
     const { pools } = await this.client.Pools(formattedQuery);
 
     this.skip = (options?.skip || 0) + pools.length;
+    logger.timeEnd('fetching pools');
 
     return pools.map((pool) => mapType(pool, this.chainId));
   }

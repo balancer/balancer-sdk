@@ -122,6 +122,24 @@ export const ADDRESSES = {
       symbol: 'bbausd',
       slot: 0,
     },
+    bbausdcV1: {
+      address: '0x9210F1204b5a24742Eba12f710636D76240dF3d0',
+      decimals: 18,
+      symbol: 'bbausdc',
+      slot: 0,
+    },
+    bbausdtV1: {
+      address: '0x2BBf681cC4eb09218BEe85EA2a5d3D13Fa40fC0C',
+      decimals: 18,
+      symbol: 'bbausdt',
+      slot: 0,
+    },
+    bbadaiV1: {
+      address: '0x804CdB9116a10bB78768D3252355a1b18067bF8f',
+      decimals: 18,
+      symbol: 'bbadai',
+      slot: 0,
+    },
     bbausd2: {
       id: '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d',
       address: '0xa13a9247ea42d743238089903570127dda72fe44',
