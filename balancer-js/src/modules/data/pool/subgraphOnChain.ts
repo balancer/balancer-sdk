@@ -5,6 +5,7 @@ import { Pool } from '@/types';
 import { getOnChainBalances } from '../../../modules/sor/pool-data/onChainData';
 import { PoolsSubgraphRepository } from './subgraph';
 import { isSameAddress } from '@/lib/utils';
+import { Logger } from '@/lib/utils/logger';
 
 interface PoolsSubgraphOnChainRepositoryOptions {
   provider: Provider;
@@ -59,35 +60,40 @@ export class PoolsSubgraphOnChainRepository
    * @returns Promise resolving to pools list
    */
   private async fetchDefault(): Promise<Pool[]> {
-    console.time('fetching pools SG');
     const pools = await this.poolsSubgraph.all();
-    console.timeEnd('fetching pools SG');
     const filteredPools = this.filterPools(pools);
-    console.time(`fetching onchain ${filteredPools.length} pools`);
+
+    const logger = Logger.getInstance();
+    logger.time(`fetching onchain ${filteredPools.length} pools`);
+
     const onchainPools = await getOnChainBalances(
       filteredPools,
       this.multicall,
       this.vault,
       this.provider
     );
-    console.timeEnd(`fetching onchain ${filteredPools.length} pools`);
+
+    logger.timeEnd(`fetching onchain ${filteredPools.length} pools`);
 
     return onchainPools;
   }
 
   async fetch(options?: PoolsRepositoryFetchOptions): Promise<Pool[]> {
-    console.time('fetching pools SG');
     const pools = await this.poolsSubgraph.fetch(options);
-    console.timeEnd('fetching pools SG');
     const filteredPools = this.filterPools(pools);
-    console.time(`fetching onchain ${filteredPools.length} pools`);
+
+    const logger = Logger.getInstance();
+    logger.time(`fetching onchain ${filteredPools.length} pools`);
+
     const onchainPools = await getOnChainBalances(
       filteredPools,
       this.multicall,
       this.vault,
       this.provider
     );
-    console.timeEnd(`fetching onchain ${filteredPools.length} pools`);
+
+    logger.timeEnd(`fetching onchain ${filteredPools.length} pools`);
+
     return onchainPools;
   }
 

@@ -392,7 +392,7 @@ export class PoolGraph {
    */
   static isProportionalPools(nodes: Node[]): boolean {
     return nodes.every((node) => {
-      if (node.exitAction === 'exitPool') return node.isProportionalExit;
+      if (node.children.length > 1) return node.isProportionalExit;
       else return true;
     });
   }
