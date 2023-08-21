@@ -20,6 +20,7 @@ import {
 } from '@/lib/graphql/args-builder';
 
 import { isSameAddress } from '@/lib/utils';
+import { Logger } from '@/lib/utils/logger';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapPools(pools: any[]): SubgraphPoolBase[] {
@@ -87,14 +88,17 @@ export class SubgraphPoolDataService implements PoolDataService {
       return mapped;
     }
 
-    console.time(`fetching on-chain balances for ${mapped.length} pools`);
+    const logger = Logger.getInstance();
+    logger.time(`fetching on-chain balances for ${mapped.length} pools`);
+
     const onChainBalances = await getOnChainBalances(
       mapped,
       this.network.addresses.contracts.multicall,
       this.network.addresses.contracts.vault,
       this.provider
     );
-    console.timeEnd(`fetching on-chain balances for ${mapped.length} pools`);
+
+    logger.timeEnd(`fetching on-chain balances for ${mapped.length} pools`);
 
     return onChainBalances;
   }

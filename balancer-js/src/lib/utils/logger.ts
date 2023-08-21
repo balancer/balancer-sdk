@@ -35,4 +35,16 @@ export class Logger {
       console.error(`[ERROR] ${message}`);
     }
   }
+
+  time(message: string): void {
+    if (this.enableLogging) {
+      console.time(`[TIME] ${message}`);
+    }
+  }
+
+  timeEnd(message: string): void {
+    if (this.enableLogging) {
+      console.timeEnd(`[TIME] ${message}`);
+    }
+  }
 }

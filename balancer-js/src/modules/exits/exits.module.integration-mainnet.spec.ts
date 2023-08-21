@@ -15,6 +15,34 @@ const blockNo = TEST_BLOCK[Network.MAINNET];
 
 describe('generalised exit execution', async function () {
   this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
+  context('aaveLinear V1 - bbausd', async () => {
+    const network = Network.MAINNET;
+    const pool = ADDRESSES[network].bbausd;
+    const slippage = '10'; // 10 bps = 0.1%
+    const poolAddresses = Object.values(ADDRESSES[network]).map(
+      (address) => address.address
+    );
+
+    const amountRatio = 10;
+    // Amount greater than the underlying main token balance, which will cause the exit to be unwrapped
+    const unwrapExitAmount = parseFixed('1273000', pool.decimals);
+    // Amount smaller than the underlying main token balance, which will cause the exit to be done directly
+    const mainExitAmount = unwrapExitAmount.div(amountRatio);
+
+    context('exit to main tokens directly', async () => {
+      it('should exit to main tokens directly', async () => {
+        await testFlow(
+          pool,
+          slippage,
+          mainExitAmount.toString(),
+          [],
+          network,
+          blockNo,
+          poolAddresses
+        );
+      });
+    });
+  });
 
   context('ERC4626 - bbausd3', async () => {
     if (!TEST_BBAUSD3) return true;
