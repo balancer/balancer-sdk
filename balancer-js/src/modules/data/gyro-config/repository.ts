@@ -1,7 +1,7 @@
 import { formatBytes32String } from '@ethersproject/strings';
 import { keccak256 } from '@ethersproject/solidity';
 import { defaultAbiCoder } from '@ethersproject/abi';
-import { formatFixed } from '@ethersproject/bignumber';
+import { BigNumber, formatFixed } from '@ethersproject/bignumber';
 import { Provider } from '@ethersproject/providers';
 import { GyroConfig, GyroConfig__factory, Multicall } from '@/contracts';
 import { GyroConfigInterface } from '@/contracts/GyroConfig';
@@ -66,9 +66,11 @@ export class GyroConfigRepositoryImpl implements GyroConfigRepository {
         ]),
       },
     ];
-    const [, [hasSpecificKey, hasPoolTypeKey, hasDefaultKey]] =
+    const [, [hasSpecificKeyHex, hasPoolTypeKeyHex, hasDefaultKeyHex]] =
       await this.multicall.callStatic.aggregate(payload);
-
+    const hasSpecificKey = BigNumber.from(hasSpecificKeyHex).eq(1);
+    const hasPoolTypeKey = BigNumber.from(hasPoolTypeKeyHex).eq(1);
+    const hasDefaultKey = BigNumber.from(hasDefaultKeyHex).eq(1);
     if (hasSpecificKey) {
       fee = parseFloat(
         formatFixed(await this.gyroConfig.getUint(encodedPoolSpecificKey), 18)
