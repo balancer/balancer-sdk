@@ -134,7 +134,8 @@ export const testRecoveryExit = async (
     priceImpact,
     pool,
     signer,
-    bptIn
+    bptIn,
+    toInternalBalance
   );
 };
 
