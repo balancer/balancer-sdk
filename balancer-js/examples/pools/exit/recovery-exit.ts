@@ -15,10 +15,10 @@ import { parseEther } from '@ethersproject/units';
 import { getTokenBalance, reset, setTokenBalance } from 'examples/helpers';
 
 async function recoveryExitLive() {
-  const network = Network.MAINNET;
+  const network = Network.OPTIMISM;
   const rpcUrl = FORK_NODES[network];
   const poolId =
-    '0x20b156776114e8a801e9767d90c6ccccc8adf398000000000000000000000499';
+    '0x62cf35db540152e94936de63efc90d880d4e241b0000000000000000000000ef';
   const userAddress = '0x0000000000000000000000000000000000000000';
   const bptAmount = String(parseEther('1'));
   const slippage = '1'; // 1 bps = 0.1%
@@ -37,7 +37,7 @@ async function recoveryExitLive() {
   pool = await poolsOnChain.refresh(pool);
 
   // Build transaction
-  const { expectedAmountsOut, minAmountsOut } =
+  const { expectedAmountsOut, minAmountsOut, attributes } =
     balancer.pools.buildRecoveryExit({
       pool,
       bptAmount,
@@ -47,6 +47,8 @@ async function recoveryExitLive() {
 
   console.log(expectedAmountsOut.toString());
   console.log(minAmountsOut.toString());
+  console.log(attributes.poolId);
+  console.log(attributes.exitPoolRequest);
 }
 
 async function recoveryExitFork() {
