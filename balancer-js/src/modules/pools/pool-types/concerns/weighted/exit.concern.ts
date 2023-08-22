@@ -207,6 +207,8 @@ export class WeightedPoolExit implements ExitConcern {
       pool,
       shouldUnwrapNativeAsset: false,
     });
+    // Recovery exits don't use rates. We use them as part of scalingFactor so default to 1 incase of issues
+    pool.tokens.forEach((t) => (t.priceRate = '1'));
     const sortedValues = parsePoolInfo(pool);
     const { minAmountsOut, expectedAmountsOut } =
       this.calcTokensOutGivenExactBptIn({
