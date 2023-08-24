@@ -63,7 +63,8 @@ export async function getOnChainBalances<
   subgraphPoolsOriginal: GenericPool[],
   multiAddress: string,
   vaultAddress: string,
-  provider: Provider
+  provider: Provider,
+  blockNumber?: number
 ): Promise<GenericPool[]> {
   if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
 
@@ -87,7 +88,9 @@ export async function getOnChainBalances<
 
   const multicall = Multicall__factory.connect(multiAddress, provider);
 
-  const multiPool = new Multicaller(multicall, abis);
+  const multiPool = blockNumber
+    ? new Multicaller(multicall, abis, { blockTag: blockNumber })
+    : new Multicaller(multicall, abis);
 
   const supportedPoolTypes: string[] = Object.values(PoolType);
   const subgraphPools: GenericPool[] = [];

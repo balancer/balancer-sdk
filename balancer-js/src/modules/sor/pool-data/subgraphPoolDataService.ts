@@ -95,7 +95,8 @@ export class SubgraphPoolDataService implements PoolDataService {
       mapped,
       this.network.addresses.contracts.multicall,
       this.network.addresses.contracts.vault,
-      this.provider
+      this.provider,
+      queryArgs?.block?.number
     );
 
     logger.timeEnd(`fetching on-chain balances for ${mapped.length} pools`);
