@@ -6,7 +6,7 @@ import {
   SubgraphClient,
 } from '@/modules/subgraph/subgraph';
 import { parseInt } from 'lodash';
-import { getOnChainBalances } from './onChainData';
+import { getOnChainBalances } from './onChainData3';
 import { Provider } from '@ethersproject/providers';
 import {
   BalancerNetworkConfig,
