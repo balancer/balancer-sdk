@@ -5,28 +5,35 @@ import { getOnChainBalances } from '@/modules/sor/pool-data/onChainData'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import _ from 'lodash'
 
+const network = Network.MAINNET;
+
+const urls: Record<number, string> = {
+  [Network.MAINNET]:
+    'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2',
+  [Network.POLYGON]:
+    'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2',
+  [Network.ARBITRUM]:
+    'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-arbitrum-v2',
+  [Network.OPTIMISM]:
+    'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-optimism-v2',
+  [Network.GNOSIS]:
+    'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
+  [Network.AVALANCHE]:
+    'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-avalanche-v2',
+  [Network.BASE]:
+    'https://api.studio.thegraph.com/query/24660/balancer-base-v2/version/latest',
+  [Network.FANTOM]:
+    'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-v2-fantom',
+  [Network.ZKEVM]:
+    'https://api.studio.thegraph.com/query/24660/balancer-polygon-zk-v2/version/latest',
+};
+
 const pools = new PoolsSubgraphRepository({
-  // url: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2',
-  // chainId: 1,
-  // url: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2',
-  // chainId: 137,
-  // url: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-arbitrum-v2',
-  // chainId: 42161,
-  // url: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-optimism-v2',
-  // chainId: 10,
-  // url: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
-  // chainId: 100,
-  // url: 'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-avalanche-v2',
-  // chainId: 43114,
-  url: 'https://api.studio.thegraph.com/query/24660/balancer-base-v2/version/latest',
-  chainId: 8453,
-  // url: 'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-v2-fantom',
-  // chainId: 250,
-  // url: 'https://api.studio.thegraph.com/query/24660/balancer-polygon-zk-v2/version/latest',
-  // chainId: 1101,
+  url: urls[network],
+  chainId: network,
   query: {
     args: {
-      first: 1000,
+      first: 10,
       skip: 0,
       orderBy: 'totalLiquidity',
       orderDirection: 'desc',
@@ -38,16 +45,19 @@ const pools = new PoolsSubgraphRepository({
     },
     attrs: {},
   },
-})
+});
 
-// const provider = new JsonRpcProvider('https://rpc.ankr.com/eth')
-// const provider = new JsonRpcProvider('https://rpc.ankr.com/polygon')
-// const provider = new JsonRpcProvider('https://rpc.ankr.com/arbitrum')
-// const provider = new JsonRpcProvider('https://rpc.ankr.com/optimism')
-const provider = new JsonRpcProvider('https://rpc.ankr.com/base')
-// const provider = new JsonRpcProvider('https://rpc.ankr.com/fantom')
-// const provider = new JsonRpcProvider('http://127.0.0.1:8545')
-// const provider = new JsonRpcProvider('https://rpc.ankr.com/polygon_zkevm')
+const providers: Record<number, JsonRpcProvider> = {
+  [Network.MAINNET]: new JsonRpcProvider('https://rpc.ankr.com/eth'),
+  [Network.POLYGON]: new JsonRpcProvider('https://rpc.ankr.com/polygon'),
+  [Network.ARBITRUM]: new JsonRpcProvider('https://rpc.ankr.com/arbitrum'),
+  [Network.OPTIMISM]: new JsonRpcProvider('https://rpc.ankr.com/optimism'),
+  [Network.BASE]: new JsonRpcProvider('https://rpc.ankr.com/base'),
+  [Network.FANTOM]: new JsonRpcProvider('https://rpc.ankr.com/fantom'),
+  [Network.ZKEVM]: new JsonRpcProvider('https://rpc.ankr.com/polygon_zkevm'),
+};
+
+const provider = providers[network];
 
 function findNestedValueDifferences(object1: any, object2: any, path = ''): any {
   const allKeys = _.union(Object.keys(object1), Object.keys(object2))
