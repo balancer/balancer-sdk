@@ -9,6 +9,7 @@ import { formatFixed } from '@ethersproject/bignumber';
 import {
   ComposableStablePool__factory,
   ConvergentCurvePool__factory,
+  FXPool__factory,
   GyroEV2__factory,
   LinearPool__factory,
   Multicall__factory,
@@ -79,6 +80,7 @@ export async function getOnChainBalances<
         ...(LinearPool__factory.abi as readonly JsonFragment[]),
         ...(ComposableStablePool__factory.abi as readonly JsonFragment[]),
         ...(GyroEV2__factory.abi as readonly JsonFragment[]),
+        ...(FXPool__factory.abi as readonly JsonFragment[]),
       ].map((row) => [row.name, row])
     )
   );
@@ -183,6 +185,13 @@ export async function getOnChainBalances<
       case 'Element':
         multiPool.call(`${pool.id}.swapFee`, pool.address, 'percentFee');
         break;
+      case 'FX':
+        multiPool.call(
+          `${pool.id}.swapFee`,
+          pool.address,
+          'protocolPercentFee'
+        );
+        break;
       case 'Gyro2':
       case 'Gyro3':
         multiPool.call(`${pool.id}.poolTokens`, vaultAddress, 'getPoolTokens', [
@@ -223,11 +232,14 @@ export async function getOnChainBalances<
             'getSwapFeePercentage'
           );
           multiPool.call(`${pool.id}.targets`, pool.address, 'getTargets');
-          multiPool.call(
-            `${pool.id}.rate`,
-            pool.address,
-            'getWrappedTokenRate'
-          );
+          // AaveLinear pools with version === 1 rates will still work
+          if (pool.poolType === 'AaveLinear' && pool.poolTypeVersion === 1) {
+            multiPool.call(
+              `${pool.id}.rate`,
+              pool.address,
+              'getWrappedTokenRate'
+            );
+          }
         }
         break;
     }
@@ -319,22 +331,26 @@ export async function getOnChainBalances<
           );
         }
 
-        const wrappedIndex = subgraphPools[index].wrappedIndex;
-        if (wrappedIndex === undefined || onchainData.rate === undefined) {
-          console.error(
-            `Linear Pool Missing WrappedIndex or PriceRate: ${poolId}`
+        if (
+          subgraphPools[index].poolType === 'AaveLinear' &&
+          subgraphPools[index].poolTypeVersion === 1
+        ) {
+          const wrappedIndex = subgraphPools[index].wrappedIndex;
+          if (wrappedIndex === undefined || onchainData.rate === undefined) {
+            console.error(
+              `Linear Pool Missing WrappedIndex or PriceRate: ${poolId}`
+            );
+            return;
+          }
+          // Update priceRate of wrappedToken
+          subgraphPools[index].tokens[wrappedIndex].priceRate = formatFixed(
+            onchainData.rate,
+            18
           );
-          return;
         }
-        // Update priceRate of wrappedToken
-        subgraphPools[index].tokens[wrappedIndex].priceRate = formatFixed(
-          onchainData.rate,
-          18
-        );
       }
 
-      if (subgraphPools[index].poolType !== 'FX')
-        subgraphPools[index].swapFee = formatFixed(swapFee, 18);
+      subgraphPools[index].swapFee = formatFixed(swapFee, 18);
 
       poolTokens.tokens.forEach((token, i) => {
         const tokens = subgraphPools[index].tokens;

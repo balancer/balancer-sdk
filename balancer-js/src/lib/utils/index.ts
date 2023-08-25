@@ -4,7 +4,6 @@ import { Log, TransactionReceipt } from '@ethersproject/providers';
 import { Interface, LogDescription } from '@ethersproject/abi';
 import { Logger } from '@/lib/utils/logger';
 
-export * from './aaveHelpers';
 export * from './assetHelpers';
 export * from './errors';
 export * from './permit';

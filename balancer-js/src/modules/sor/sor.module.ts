@@ -60,6 +60,7 @@ export class Sor extends SOR {
       lbpRaisingTokens: network.addresses.tokens?.lbpRaisingTokens,
       wETHwstETH: network.pools.wETHwstETH,
       connectingTokens: network.sorConnectingTokens,
+      triPathMidPoolIds: network.sorTriPathMidPoolIds,
     };
   }
 

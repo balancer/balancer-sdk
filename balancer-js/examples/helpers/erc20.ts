@@ -75,3 +75,12 @@ export const getTokenBalance = async (
   const erc20 = new Contract(token, iERC20, provider);
   return erc20.balanceOf(account);
 };
+
+export const getNativeAssetBalance = async (
+  account: string,
+  provider: JsonRpcProvider
+): Promise<string> => {
+  return BigNumber.from(
+    await provider.send('eth_getBalance', [account, 'latest'])
+  ).toString();
+};

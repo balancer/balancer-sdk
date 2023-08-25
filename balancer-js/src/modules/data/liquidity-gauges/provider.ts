@@ -43,12 +43,14 @@ export class LiquidityGaugeSubgraphRPCProvider
     subgraphUrl: string,
     multicall: Multicall,
     gaugeControllerAddress: string,
-    private chainId: Network
+    private chainId: Network,
+    gaugeControllerCheckpointerAddress?: string
   ) {
     if (gaugeControllerAddress) {
       this.gaugeController = new GaugeControllerMulticallRepository(
         multicall,
-        gaugeControllerAddress
+        gaugeControllerAddress,
+        gaugeControllerCheckpointerAddress
       );
     }
     this.multicall = new LiquidityGaugesMulticallRepository(multicall, chainId);
@@ -71,6 +73,7 @@ export class LiquidityGaugeSubgraphRPCProvider
         '0x22625eedd92c81a219a83e1dc48f88d54786b017', // Polygon
         '0x6817149cb753bf529565b4d023d7507ed2ff4bc0', // Arbitrum
         '0x83e443ef4f9963c77bd860f94500075556668cb8', // Gnosis
+        '0x2498a2b0d6462d2260eac50ae1c3e03f4829ba95', // zkEVM
       ];
 
       const childGaugeAddresses = gauges

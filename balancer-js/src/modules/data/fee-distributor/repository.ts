@@ -35,9 +35,9 @@ const veBalInterface = new Interface([
   'function totalSupply() view returns (uint)',
 ]);
 
-const bbAUsdInterface = new Interface([
-  'function getRate() view returns (uint)',
-]);
+// const bbAUsdInterface = new Interface([
+//   'function getRate() view returns (uint)',
+// ]);
 
 export class FeeDistributorRepository implements BaseFeeDistributor {
   feeDistributor: Contract;
@@ -75,10 +75,11 @@ export class FeeDistributorRepository implements BaseFeeDistributor {
         target: this.veBalAddress,
         callData: veBalInterface.encodeFunctionData('totalSupply', []),
       },
-      {
-        target: this.bbAUsdAddress,
-        callData: bbAUsdInterface.encodeFunctionData('getRate', []),
-      },
+      // Removed while wrappers are broken
+      // {
+      //   target: this.bbAUsdAddress,
+      //   callData: bbAUsdInterface.encodeFunctionData('getRate', []),
+      // },
     ];
     const [, res] = await this.multicall.callStatic.aggregate(payload);
 
@@ -86,7 +87,8 @@ export class FeeDistributorRepository implements BaseFeeDistributor {
       balAmount: parseFloat(formatUnits(res[0], 18)),
       bbAUsdAmount: parseFloat(formatUnits(res[1], 18)),
       veBalSupply: parseFloat(formatUnits(res[2], 18)),
-      bbAUsdPrice: parseFloat(formatUnits(res[3], 18)),
+      // bbAUsdPrice: parseFloat(formatUnits(res[3], 18)),
+      bbAUsdPrice: parseFloat('1.0'),
       balAddress: this.balAddress,
     };
 

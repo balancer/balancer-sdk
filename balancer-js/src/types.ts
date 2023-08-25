@@ -27,6 +27,7 @@ import type { GraphQLArgs } from './lib/graphql';
 import type { AprBreakdown } from '@/modules/pools/apr/apr';
 import { SubgraphPoolDataService } from '@/modules/sor/pool-data/subgraphPoolDataService';
 import * as Queries from '@/modules/pools/queries/types';
+import { GyroConfigRepository } from '@/modules/data/gyro-config/repository';
 
 export * from '@/modules/data/types';
 export { Network, AprBreakdown };
@@ -123,33 +124,35 @@ export interface BalancerNetworkConfig {
   };
   poolsToIgnore?: string[];
   sorConnectingTokens?: { symbol: string; address: string }[];
+  sorTriPathMidPoolIds?: string[];
 }
 
 export interface BalancerDataRepositories {
+  feeDistributor?: BaseFeeDistributor;
+  feeCollector: Findable<number>;
+  gaugeShares?: GaugeSharesRepository;
+  gyroConfigRepository?: GyroConfigRepository;
+  liquidityGauges?: Findable<LiquidityGauge>;
+  protocolFees?: ProtocolFeesProvider;
   /**
    * Why do we need 3 different pools repositories?
    */
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   // Does it need to be different from the pools repository?
   poolsForSor: SubgraphPoolDataService;
+  poolGauges?: PoolGaugesRepository;
+  poolJoinExits: PoolJoinExitRepository;
   // Perhaps better to use a function to get upto date balances when needed.
   poolsOnChain: Findable<Pool, PoolAttribute> &
     Searchable<Pool> &
     Cacheable<Pool>;
-  // Replace with a swapFeeRepository, we don't need historic pools for any other reason than to get the swap fee
-  yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
-  tokenPrices: Findable<Price>;
+  poolShares: PoolSharesRepository;
   tokenHistoricalPrices: Findable<Price>;
   tokenMeta: Findable<Token, TokenAttribute>;
-  liquidityGauges?: Findable<LiquidityGauge>;
-  feeDistributor?: BaseFeeDistributor;
-  feeCollector: Findable<number>;
-  protocolFees?: ProtocolFeesProvider;
+  tokenPrices: Findable<Price>;
   tokenYields: Findable<number>;
-  poolShares: PoolSharesRepository;
-  poolGauges?: PoolGaugesRepository;
-  poolJoinExits: PoolJoinExitRepository;
-  gaugeShares?: GaugeSharesRepository;
+  // Replace with a swapFeeRepository, we don't need historic pools for any other reason than to get the swap fee
+  yesterdaysPools?: Findable<Pool, PoolAttribute> & Searchable<Pool>;
 }
 
 export type PoolReference = {

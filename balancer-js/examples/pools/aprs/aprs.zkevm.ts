@@ -8,14 +8,14 @@ import { BalancerSDK } from '@balancer-labs/sdk';
 
 const sdk = new BalancerSDK({
   network: 1101,
-  rpcUrl: 'https://rpc.ankr.com/polygon_zkevm',
+  rpcUrl: 'https://zkevm-rpc.com',
 });
 
 const { pools } = sdk;
 
 const main = async () => {
   const pool = await pools.find(
-    '0xe1f2c039a68a216de6dd427be6c60decf405762a00000000000000000000000e'
+    '0x1d0a8a31cdb04efac3153237526fb15cc65a252000000000000000000000000f'
   );
 
   if (pool) {

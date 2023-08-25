@@ -68,7 +68,8 @@ export class Pools implements Findable<PoolWithMethods> {
       this.repositories.feeCollector,
       this.repositories.yesterdaysPools,
       this.repositories.liquidityGauges,
-      this.repositories.feeDistributor
+      this.repositories.feeDistributor,
+      this.repositories.gyroConfigRepository
     );
     this.liquidityService = new Liquidity(
       repositories.pools,
@@ -389,6 +390,32 @@ export class Pools implements Findable<PoolWithMethods> {
         this.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase(),
       shouldUnwrapNativeAsset: false,
       toInternalBalance: false,
+    });
+  }
+
+  buildRecoveryExit({
+    pool,
+    bptAmount,
+    userAddress,
+    slippage,
+    toInternalBalance,
+  }: {
+    pool: Pool;
+    bptAmount: string;
+    userAddress: string;
+    slippage: string;
+    toInternalBalance?: boolean;
+  }): ExitExactBPTInAttributes {
+    const concerns = PoolTypeConcerns.from(pool.poolType);
+    if (!concerns || !concerns.exit.buildRecoveryExit)
+      throw `buildRecoveryExit for poolType ${pool.poolType} not implemented`;
+
+    return concerns.exit.buildRecoveryExit({
+      exiter: userAddress,
+      pool,
+      bptIn: bptAmount,
+      slippage,
+      toInternalBalance: !!toInternalBalance,
     });
   }
 
