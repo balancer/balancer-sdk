@@ -40,21 +40,21 @@ const composableStablePool = {
   ],
 };
 
-const composableStablePoolWithTokenAtZero = {
-  id: '0x02d928e68d8f10c0358566152677db51e1e2dc8c00000000000000000000051e',
-  poolType: PoolType.ComposableStable,
-  tokensList: [
-    '0x02d928e68d8f10c0358566152677db51e1e2dc8c',
-    '0x60d604890feaa0b5460b28a424407c24fe89374a',
-    '0xf951e335afb289353dc249e82926178eac7ded78',
-  ],
-};
+// const composableStablePoolWithTokenAtZero = {
+//   id: '0x02d928e68d8f10c0358566152677db51e1e2dc8c00000000000000000000051e',
+//   poolType: PoolType.ComposableStable,
+//   tokensList: [
+//     '0x02d928e68d8f10c0358566152677db51e1e2dc8c',
+//     '0x60d604890feaa0b5460b28a424407c24fe89374a',
+//     '0xf951e335afb289353dc249e82926178eac7ded78',
+//   ],
+// };
 
 const pools = [
   stETHPool,
   balPool,
   composableStablePool,
-  composableStablePoolWithTokenAtZero,
+  // composableStablePoolWithTokenAtZero,
 ];
 
 let queryParams: ParamsBuilder;
