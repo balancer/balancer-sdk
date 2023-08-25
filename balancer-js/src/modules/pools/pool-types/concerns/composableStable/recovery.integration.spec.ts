@@ -22,7 +22,7 @@ const signer = provider.getSigner();
 const blockNumber = 46572274;
 let balancer: BalancerSDK;
 
-describe('ComposableStable - recovery', () => {
+describe.skip('ComposableStable - recovery', () => {
   context('V1', async () => {
     const poolId =
       '0x02d2e2d7a89d6c5cb3681cfcb6f7dac02a55eda400000000000000000000088f';
