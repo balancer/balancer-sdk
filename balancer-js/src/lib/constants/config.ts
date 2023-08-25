@@ -215,6 +215,10 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         address: '0xdFCeA9088c8A88A76FF74892C1457C17dfeef9C1',
       },
     ],
+    sorTriPathMidPoolIds: [
+      '0x178e029173417b1f9c8bc16dcec6f697bc323746000200000000000000000158', // wstEth/USDC.e to open up auraBAL/USDC
+      '0x0052688295413b32626d226a205b95cdb337de860002000000000000000003d1', // arb/USDC.e to open up aura/USDC
+    ],
   },
   [Network.OPTIMISM]: {
     chainId: Network.OPTIMISM, //10
