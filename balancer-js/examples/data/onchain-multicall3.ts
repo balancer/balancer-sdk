@@ -1,11 +1,11 @@
 import { PoolsSubgraphRepository } from '@/modules/data/pool/subgraph'
 import { getOnChainBalances as getOnChainBalances3 } from '@/modules/sor/pool-data/onChainData3'
-import { SubgraphPoolBase } from '@/.'
+import { SubgraphPoolBase, Network } from '@/.'
 import { getOnChainBalances } from '@/modules/sor/pool-data/onChainData'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import _ from 'lodash'
 
-const network = Network.MAINNET;
+const network = Network.POLYGON;
 
 const urls: Record<number, string> = {
   [Network.MAINNET]:
@@ -37,11 +37,11 @@ const pools = new PoolsSubgraphRepository({
       skip: 0,
       orderBy: 'totalLiquidity',
       orderDirection: 'desc',
-      // where: {
-      //   poolType: {
-      //     eq: "MetaStable"
-      //   },
-      // },
+      where: {
+        poolType: {
+          eq: "GyroE"
+        },
+      },
     },
     attrs: {},
   },
@@ -85,6 +85,7 @@ async function main() {
   const subgraph = await pools.fetch() as SubgraphPoolBase[];
   const onchain3 = await getOnChainBalances3(subgraph, '', '0xBA12222222228d8Ba445958a75a0704d566BF2C8', provider);
   console.log(onchain3.length)
+  console.log(JSON.stringify(onchain3, null, 2));
   // const onchain = await getOnChainBalances(subgraph, '0xeefba1e63905ef1d7acba5a8513c70307c1ce441', '0xBA12222222228d8Ba445958a75a0704d566BF2C8', provider);
   // console.log(onchain.length)
   // for(const i in subgraph) {

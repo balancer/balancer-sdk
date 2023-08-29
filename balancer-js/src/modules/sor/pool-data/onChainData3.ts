@@ -58,11 +58,6 @@ interface OnchainData {
   tokenRates?: [string, string];
 }
 
-type GenericPool = SubgraphPoolBase;
-//  Omit<SubgraphPoolBase | Pool, 'tokens'> & {
-//   tokens: (SubgraphToken | PoolToken)[];
-// };
-
 const defaultCalls = (
   id: string,
   address: string,
@@ -73,6 +68,7 @@ const defaultCalls = (
   multicaller.call(`${id}.poolTokens`, vaultAddress, 'getPoolTokens', [id]);
   multicaller.call(`${id}.totalShares`, address, getTotalSupplyFn(poolType));
   multicaller.call(`${id}.swapFee`, address, getSwapFeeFn(poolType));
+  // Following where added to the pools query contract, however legacy onchain data didn't have them.
   // multicaller.call(`${id}.isPaused`, address, 'getPausedState');
   // multicaller.call(`${id}.inRecoveryMode`, address, 'inRecoveryMode');
   // multicaller.call(`${id}.rate`, address, 'getRate');
@@ -108,7 +104,8 @@ const gyroECalls = (id: string, address: string, multicaller: Multicaller3) => {
   multicaller.call(`${id}.tokenRates`, address, 'getTokenRates');
 };
 
-const poolTypeCalls = (poolType: string) => {
+const poolTypeCalls = (poolType: string, poolTypeVersion = 1) => {
+  const do_nothing = () => ({});
   switch (poolType) {
     case 'Weighted':
     case 'LiquidityBootstrapping':
@@ -120,17 +117,21 @@ const poolTypeCalls = (poolType: string) => {
     case 'ComposableStable':
       return stableCalls;
     case 'GyroE':
-      return gyroECalls;
+      if (poolTypeVersion > 1) {
+        return gyroECalls;
+      } else {
+        return do_nothing;
+      }
     default:
       if (poolType.includes('Linear')) {
         return linearCalls;
       } else {
-        return () => ({}); // do nothing
+        return do_nothing;
       }
   }
 };
 
-const merge = (pool: GenericPool, result: OnchainData) => ({
+const merge = (pool: SubgraphPoolBase, result: OnchainData) => ({
   ...pool,
   tokens: pool.tokens.map((token) => {
     const idx = result.poolTokens[0]
@@ -180,6 +181,7 @@ export const fetchOnChainPoolData = async (
     id: string;
     address: string;
     poolType: string;
+    poolTypeVersion?: number;
   }[],
   vaultAddress: string,
   provider: Provider
@@ -190,9 +192,9 @@ export const fetchOnChainPoolData = async (
 
   const multicaller = new Multicaller3(abi, provider);
 
-  pools.forEach(({ id, address, poolType }) => {
+  pools.forEach(({ id, address, poolType, poolTypeVersion }) => {
     defaultCalls(id, address, vaultAddress, poolType, multicaller);
-    poolTypeCalls(poolType)(id, address, multicaller);
+    poolTypeCalls(poolType, poolTypeVersion)(id, address, multicaller);
   });
 
   // ZkEVM needs a smaller batch size
@@ -204,14 +206,14 @@ export const fetchOnChainPoolData = async (
 };
 
 export async function getOnChainBalances(
-  subgraphPoolsOriginal: GenericPool[],
+  subgraphPoolsOriginal: SubgraphPoolBase[],
   _multiAddress: string,
   vaultAddress: string,
   provider: Provider
-): Promise<GenericPool[]> {
+): Promise<SubgraphPoolBase[]> {
   if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
 
-  const poolsWithOnchainData: GenericPool[] = [];
+  const poolsWithOnchainData: SubgraphPoolBase[] = [];
 
   const onchainData = (await fetchOnChainPoolData(
     subgraphPoolsOriginal,

@@ -93,6 +93,7 @@ export class Multicaller3 {
             results[callIndex] = [];
           }
         } else {
+          console.error('Failed request in multicall', this.paths[callIndex]);
           results[callIndex] = [];
         }
       }
