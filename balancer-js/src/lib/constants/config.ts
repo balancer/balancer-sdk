@@ -65,7 +65,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       '0xf22ff21e17157340575158ad7394e068048dd98b',
       '0xf71d0774b214c4cf51e33eb3d30ef98132e4dbaa',
       '0xe0e8ac08de6708603cfd3d23b613d2f80e3b7afb',
-      '0xf01b0684c98cd7ada480bfdf6e43876422fa1fc1',
+      '0xf01b0684c98cd7ada480bfdf6e43876422fa1fc1', // GyroE incorrect version
+      '0xe0e8ac08de6708603cfd3d23b613d2f80e3b7afb', // GyroE incorrect version
+      '0xf7a826d47c8e02835d94fb0aa40f0cc9505cb134', // GyroE incorrect version
     ],
     sorConnectingTokens: [
       {

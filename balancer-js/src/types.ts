@@ -139,7 +139,7 @@ export interface BalancerDataRepositories {
    */
   pools: Findable<Pool, PoolAttribute> & Searchable<Pool>;
   // Does it need to be different from the pools repository?
-  poolsForSor: SubgraphPoolDataService;
+  poolsForSimulations: SubgraphPoolDataService;
   poolGauges?: PoolGaugesRepository;
   poolJoinExits: PoolJoinExitRepository;
   // Perhaps better to use a function to get upto date balances when needed.
