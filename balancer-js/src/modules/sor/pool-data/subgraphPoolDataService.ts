@@ -21,6 +21,7 @@ import {
 
 import { isSameAddress } from '@/lib/utils';
 import { Logger } from '@/lib/utils/logger';
+import { poolsToIgnore } from '@/lib/constants/poolsToIgnore';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapPools(pools: any[]): SubgraphPoolBase[] {
@@ -76,9 +77,11 @@ export class SubgraphPoolDataService implements PoolDataService {
 
     const filteredPools = pools.filter((p) => {
       if (!this.network.poolsToIgnore) return true;
-      const index = this.network.poolsToIgnore.findIndex((addr) =>
+      let index = this.network.poolsToIgnore.findIndex((addr) =>
         isSameAddress(addr, p.address)
       );
+      if (index !== -1) return false;
+      index = poolsToIgnore.findIndex((id) => id === p.id);
       return index === -1;
     });
 
