@@ -40,6 +40,7 @@ const composableStablePool = {
   ],
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const composableStablePoolWithTokenAtZero = {
   id: '0x02d928e68d8f10c0358566152677db51e1e2dc8c00000000000000000000051e',
   poolType: PoolType.ComposableStable,
