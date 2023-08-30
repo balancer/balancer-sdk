@@ -96,7 +96,7 @@ export const repositores = ({
   ),
 }): BalancerDataRepositories => ({
   pools,
-  poolsForSor: {} as SubgraphPoolDataService,
+  poolsForSimulations: {} as SubgraphPoolDataService,
   poolsOnChain,
   yesterdaysPools,
   tokenPrices,
