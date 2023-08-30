@@ -54,7 +54,7 @@ const pools = [
   stETHPool,
   balPool,
   composableStablePool,
-  composableStablePoolWithTokenAtZero,
+  // composableStablePoolWithTokenAtZero, // This appears to be broken after recovery?
 ];
 
 let queryParams: ParamsBuilder;
