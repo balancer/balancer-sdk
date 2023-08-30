@@ -53,7 +53,7 @@ import { Contracts } from '../contracts/contracts.module';
 
 export class Data implements BalancerDataRepositories {
   pools;
-  poolsForSor;
+  poolsForSimulations;
   poolsOnChain;
   yesterdaysPools;
   poolShares;
@@ -83,7 +83,8 @@ export class Data implements BalancerDataRepositories {
       query: subgraphQuery,
     });
 
-    this.poolsForSor = new SubgraphPoolDataService(
+    // Used for VaultModel and Simulations
+    this.poolsForSimulations = new SubgraphPoolDataService(
       createSubgraphClient(networkConfig.urls.subgraph),
       provider,
       networkConfig,

@@ -19,7 +19,7 @@ const { ALCHEMY_URL_POLYGON: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8137';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
-const blockNumber = 46572274;
+const blockNumber = 46939238;
 let balancer: BalancerSDK;
 
 describe('ComposableStable - recovery', () => {
@@ -229,7 +229,7 @@ describe('ComposableStable - recovery', () => {
     context('buildRecoveryExit', async () => {
       context('PoolWithMethods', async () => {
         it('should recovery exit', async () => {
-          const bptAmount = parseFixed('1.34', 18).toString();
+          const bptAmount = parseFixed('0.001', 18).toString();
           const slippage = '10'; // 10 bps = 0.1%
           const pool = await balancer.pools.find(poolId);
           if (!pool) throw Error('Pool not found');
@@ -252,7 +252,7 @@ describe('ComposableStable - recovery', () => {
       });
       context('Pool & refresh', async () => {
         it('should recovery exit', async () => {
-          const bptAmount = parseFixed('1.34', 18).toString();
+          const bptAmount = parseFixed('0.00001', 18).toString();
           const slippage = '10'; // 10 bps = 0.1%
           let pool = await balancer.data.pools.find(poolId);
           if (!pool) throw Error('Pool not found');

@@ -13,6 +13,8 @@ import {
 } from '@/types';
 import { SubgraphTokenPriceService } from './token-price/subgraphTokenPriceService';
 import { getNetworkConfig } from '@/modules/sdk.helpers';
+import { poolsToIgnore } from '@/lib/constants/poolsToIgnore';
+import { getPoolAddress } from '@/pool-utils';
 
 export class Sor extends SOR {
   constructor(sdkConfig: BalancerSdkConfig) {
@@ -70,12 +72,17 @@ export class Sor extends SOR {
     provider: Provider,
     subgraphClient: SubgraphClient
   ) {
+    const poolsToIgnoreAddr = poolsToIgnore.map((id) => getPoolAddress(id));
+    // For SOR we want to ignore all configured pools (for Vault/Simulation we don't)
+    const allPoolsToIgnore = network.poolsToIgnore
+      ? [...network.poolsToIgnore, ...poolsToIgnoreAddr]
+      : poolsToIgnoreAddr;
     return typeof sorConfig.poolDataService === 'object'
       ? sorConfig.poolDataService
       : new SubgraphPoolDataService(
           subgraphClient,
           provider,
-          network,
+          { ...network, poolsToIgnore: allPoolsToIgnore },
           sorConfig
         );
   }
