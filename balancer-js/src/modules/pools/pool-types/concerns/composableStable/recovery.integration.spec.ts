@@ -19,7 +19,7 @@ const { ALCHEMY_URL_POLYGON: jsonRpcUrl } = process.env;
 const rpcUrl = 'http://127.0.0.1:8137';
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, network);
 const signer = provider.getSigner();
-const blockNumber = 46572274;
+const blockNumber = 46939238;
 let balancer: BalancerSDK;
 
 describe('ComposableStable - recovery', () => {
