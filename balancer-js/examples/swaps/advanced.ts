@@ -119,12 +119,13 @@ async function getAndProcessSwaps(
 }
 
 async function swapExample() {
-  const network = Network.POLYGON;
-  const rpcUrl = 'https://rpc.ankr.com/polygon';
-  const tokenIn = '0x3A58a54C066FdC0f2D55FC9C89F0415C92eBf3C4'; // stMatic
-  const tokenOut = AddressZero; // Matic
+  const network = Network.MAINNET;
+  const rpcUrl =
+    'https://eth-mainnet.alchemyapi.io/v2/jlO5Azkh0eRPDXDXGgIZONS3wRkI1haM';
+  const tokenIn = AddressZero; // stMatic
+  const tokenOut = '0x6B175474E89094C44Da98b954EedeAC495271d0F'; // Matic
   const swapType = SwapTypes.SwapExactIn;
-  const amount = parseFixed('20', 18);
+  const amount = parseFixed('1', 18);
   // Currently Relayer only suitable for ExactIn and non-eth swaps
   const canUseJoinExitPaths = canUseJoinExit(swapType, tokenIn, tokenOut);
 
