@@ -122,10 +122,13 @@ const poolTypeCalls = (poolType: string, poolTypeVersion = 1) => {
       } else {
         return do_nothing;
       }
-    default:
-      if (poolType.includes('Linear')) {
+    case 'AaveLinear':
+      if (poolTypeVersion === 1) {
         return linearCalls;
+      } else {
+        return do_nothing;
       }
+    default:
       return do_nothing;
   }
 };
@@ -160,15 +163,15 @@ const merge = (pool: SubgraphPoolBase, result: OnchainData) => ({
     (result.amp &&
       result.amp[0] &&
       formatFixed(result.amp[0], String(result.amp[2]).length - 1)) ||
-    undefined,
+    pool.amp,
   lowerTarget:
-    (result.targets && formatFixed(result.targets[0], 18)) || undefined,
+    (result.targets && formatFixed(result.targets[0], 18)) || pool.lowerTarget,
   upperTarget:
-    (result.targets && formatFixed(result.targets[1], 18)) || undefined,
+    (result.targets && formatFixed(result.targets[1], 18)) || pool.upperTarget,
   tokenRates:
     (result.tokenRates &&
       result.tokenRates.map((rate) => formatFixed(rate, 18))) ||
-    undefined,
+    pool.tokenRates,
   // rate: result.rate,
   // isPaused: result.isPaused,
   // inRecoveryMode: result.inRecoveryMode,
