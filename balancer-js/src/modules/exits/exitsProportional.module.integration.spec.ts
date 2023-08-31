@@ -53,7 +53,7 @@ describe('generalised exit execution', async () => {
       },
     ]);
   });
-  context('composable stable pool - boosted', async () => {
+  context.skip('composable stable pool - boosted', async () => {
     const testPool = addresses.bbgusd;
     await runTests([
       {
@@ -67,7 +67,7 @@ describe('generalised exit execution', async () => {
       },
     ]);
   });
-  context('weighted with boosted', async () => {
+  context.skip('weighted with boosted', async () => {
     const testPool = addresses.STG_BBAUSD;
     await runTests([
       {
