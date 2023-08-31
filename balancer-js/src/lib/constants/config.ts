@@ -305,6 +305,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         address: '0x6C76971f98945AE98dD7d4DFcA8711ebea946eA6',
       },
     ],
+    sorTriPathMidPoolIds: [
+      '0xeb30c85cc528537f5350cf5684ce6a4538e13394000200000000000000000059', // 3POOL_BPT/wstETH
+    ],
   },
   [Network.FANTOM]: {
     chainId: Network.FANTOM, //250

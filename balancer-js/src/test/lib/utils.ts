@@ -73,6 +73,7 @@ export const FORK_NODES: Record<number, string> = {
   [Network.POLYGON]: `${process.env.ALCHEMY_URL_POLYGON}`,
   [Network.ARBITRUM]: `${process.env.ALCHEMY_URL_ARBITRUM}`,
   [Network.ZKEVM]: `${process.env.ALCHEMY_URL_ZKEVM}`,
+  [Network.GNOSIS]: `${process.env.RPC_URL_GNOSIS}`,
 };
 
 /**
