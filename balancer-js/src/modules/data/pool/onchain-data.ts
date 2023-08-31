@@ -122,13 +122,10 @@ const poolTypeCalls = (poolType: string, poolTypeVersion = 1) => {
       } else {
         return do_nothing;
       }
-    case 'AaveLinear':
-      if (poolTypeVersion === 1) {
-        return linearCalls;
-      } else {
-        return do_nothing;
-      }
     default:
+      if (poolType.includes('Linear')) {
+        return linearCalls;
+      }
       return do_nothing;
   }
 };

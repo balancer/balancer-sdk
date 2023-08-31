@@ -25,7 +25,7 @@ const poolAddresses = Object.values(ADDRESSES[network]).map(
 );
 const addresses = ADDRESSES[network];
 
-describe.skip('generalised exit execution', async function () {
+describe('generalised exit execution', async function () {
   this.timeout(120000); // Sets timeout for all tests within this scope to 2 minutes
 
   /*
@@ -224,7 +224,7 @@ describe.skip('generalised exit execution', async function () {
   b-a-weth: Linear, aWeth/Weth
   b-a-usd2: ComposableStable, b-a-usdt/b-a-usdc/b-a-dai
   */
-  context.skip('boostedWeightedMetaGeneral', async () => {
+  context('boostedWeightedMetaGeneral', async () => {
     if (!TEST_BOOSTED_WEIGHTED_META_GENERAL) return true;
     const pool = addresses.boostedWeightedMetaGeneral1;
     const amount = parseFixed('0.05', pool.decimals).toString();

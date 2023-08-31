@@ -45,7 +45,7 @@ describe('generalised exit execution', async function () {
     });
   });
 
-  context.skip('ERC4626 - bbausd3', async () => {
+  context('ERC4626 - bbausd3', async () => {
     if (!TEST_BBAUSD3) return true;
     const network = Network.MAINNET;
     const pool = ADDRESSES[network].bbausd3;
@@ -113,7 +113,7 @@ describe('generalised exit execution', async function () {
     });
   });
 
-  context.skip('GearboxLinear - bbgusd', async () => {
+  context('GearboxLinear - bbgusd', async () => {
     const network = Network.MAINNET;
     const pool = ADDRESSES[network].bbgusd;
     const slippage = '10'; // 10 bps = 0.1%
@@ -180,7 +180,7 @@ describe('generalised exit execution', async function () {
     });
   });
 
-  context.skip('AaveLinear - bbausd2', async () => {
+  context('AaveLinear - bbausd2', async () => {
     const network = Network.MAINNET;
     const pool = ADDRESSES[network].bbausd2;
     const slippage = '10'; // 10 bps = 0.1%

@@ -105,55 +105,52 @@ describe('generalised join execution', async function () {
       });
     });
 
-    context.skip(
-      'join with wETH vs ETH - where first step is a swap',
-      async () => {
-        if (!TEST_JOIN_WITH_ETH_SWAP_FIRST) return true;
+    context('join with wETH vs ETH - where first step is a swap', async () => {
+      if (!TEST_JOIN_WITH_ETH_SWAP_FIRST) return true;
 
-        before(async () => {
-          testPool = addresses.swEth_bbaweth;
-          tokens = [addresses.WETH, addresses.swETH];
-          balances = [
-            parseFixed('10', addresses.WETH.decimals).toString(),
-            parseFixed('10', addresses.swETH.decimals).toString(),
-          ];
-        });
+      before(async () => {
+        testPool = addresses.swEth_bbaweth;
+        tokens = [addresses.WETH, addresses.swETH];
+        balances = [
+          parseFixed('10', addresses.WETH.decimals).toString(),
+          parseFixed('10', addresses.swETH.decimals).toString(),
+        ];
+      });
 
-        it('should join with wETH', async () => {
-          const tokensIn = [addresses.WETH.address, addresses.swETH.address];
-          const amountsIn = [
-            parseFixed('1', addresses.WETH.decimals).toString(),
-            parseFixed('1', addresses.swETH.decimals).toString(),
-          ];
-          await testGeneralisedJoin(
-            sdk,
-            signer,
-            userAddress,
-            testPool,
-            tokensIn,
-            amountsIn,
-            simulationType
-          );
-        });
+      it('should join with wETH', async () => {
+        const tokensIn = [addresses.WETH.address, addresses.swETH.address];
+        const amountsIn = [
+          parseFixed('1', addresses.WETH.decimals).toString(),
+          parseFixed('1', addresses.swETH.decimals).toString(),
+        ];
+        await testGeneralisedJoin(
+          sdk,
+          signer,
+          userAddress,
+          testPool,
+          tokensIn,
+          amountsIn,
+          simulationType
+        );
+      });
 
-        it('should join with ETH', async () => {
-          const tokensIn = [AddressZero, addresses.swETH.address];
-          const amountsIn = [
-            parseFixed('1', 18).toString(),
-            parseFixed('1', addresses.swETH.decimals).toString(),
-          ];
-          await testGeneralisedJoin(
-            sdk,
-            signer,
-            userAddress,
-            testPool,
-            tokensIn,
-            amountsIn,
-            simulationType
-          );
-        });
-      }
-    );
+      it('should join with ETH', async () => {
+        const tokensIn = [AddressZero, addresses.swETH.address];
+        const amountsIn = [
+          parseFixed('1', 18).toString(),
+          parseFixed('1', addresses.swETH.decimals).toString(),
+        ];
+        await testGeneralisedJoin(
+          sdk,
+          signer,
+          userAddress,
+          testPool,
+          tokensIn,
+          amountsIn,
+          simulationType
+        );
+      });
+    });
 
     context('join with wETH vs ETH - where first step is a join', async () => {
       if (!TEST_JOIN_WITH_ETH_JOIN_FIRST) return true;
