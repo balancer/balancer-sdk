@@ -107,7 +107,7 @@ export class PoolsSubgraphRepository
       this.query.args.block = { number: await this.blockHeight() };
     }
 
-    this.query.args.first = options?.first || 1000;
+    this.query.args.first = options?.first || this.query.args.first || 1000;
 
     const formattedQuery = new GraphQLArgsBuilder(this.query.args).format(
       new SubgraphArgsFormatter()
