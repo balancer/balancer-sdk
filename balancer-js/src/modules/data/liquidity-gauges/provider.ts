@@ -69,16 +69,15 @@ export class LiquidityGaugeSubgraphRPCProvider
     } else {
       // Filter out gauges that are not from the factory supporting inflation rate
       // Safe to remove this once all gauges are migrated to the new factory
-      const newFactories = [
-        '0x22625eedd92c81a219a83e1dc48f88d54786b017', // Polygon
-        '0x6817149cb753bf529565b4d023d7507ed2ff4bc0', // Arbitrum
-        '0x83e443ef4f9963c77bd860f94500075556668cb8', // Gnosis
-        '0x2498a2b0d6462d2260eac50ae1c3e03f4829ba95', // zkEVM
-        '0xf23b4db826dba14c0e857029dff076b1c0264843', // Avalanche
+      const oldFactories = [
+        '0x3b8ca519122cdd8efb272b0d3085453404b25bd0', // Polygon
+        '0xb08e16cfc07c684daa2f93c70323badb2a6cbfd2', // Arbitrum
+        '0x2e96068b3d5b5bae3d7515da4a1d2e52d08a2647', // Optimism
+        '0x809b79b53f18e9bc08a961ed4678b901ac93213a', // Gnosis
       ];
 
       const childGaugeAddresses = gauges
-        .filter((g) => newFactories.includes(g.factory.id.toLowerCase()))
+        .filter((g) => !oldFactories.includes(g.factory.id.toLowerCase()))
         .map((g) => g.id);
 
       if (childGaugeAddresses.length > 0) {
