@@ -74,6 +74,7 @@ export class LiquidityGaugeSubgraphRPCProvider
         '0x6817149cb753bf529565b4d023d7507ed2ff4bc0', // Arbitrum
         '0x83e443ef4f9963c77bd860f94500075556668cb8', // Gnosis
         '0x2498a2b0d6462d2260eac50ae1c3e03f4829ba95', // zkEVM
+        '0xf23b4db826dba14c0e857029dff076b1c0264843', // Avalanche
       ];
 
       const childGaugeAddresses = gauges
