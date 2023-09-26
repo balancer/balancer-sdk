@@ -64,7 +64,6 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       '0x0afbd58beca09545e4fb67772faf3858e610bcd0',
       '0xf22ff21e17157340575158ad7394e068048dd98b',
       '0xf71d0774b214c4cf51e33eb3d30ef98132e4dbaa',
-      '0xe0e8ac08de6708603cfd3d23b613d2f80e3b7afb',
     ],
     sorConnectingTokens: [
       {
@@ -301,6 +300,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         symbol: 'wsEth',
         address: '0x6C76971f98945AE98dD7d4DFcA8711ebea946eA6',
       },
+    ],
+    sorTriPathMidPoolIds: [
+      '0xeb30c85cc528537f5350cf5684ce6a4538e13394000200000000000000000059', // 3POOL_BPT/wstETH
     ],
   },
   [Network.FANTOM]: {

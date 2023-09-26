@@ -89,7 +89,7 @@ export class BalancerSDK implements BalancerSDKRoot {
       });
     }
     this.vaultModel = new VaultModel(
-      this.data.poolsForSor,
+      this.data.poolsForSimulations,
       this.networkConfig.addresses.tokens.wrappedNativeAsset
     );
   }

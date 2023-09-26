@@ -77,7 +77,7 @@ export class Pools implements Findable<PoolWithMethods> {
     );
     this.simulationService = new Simulation(
       networkConfig,
-      this.repositories.poolsForSor
+      this.repositories.poolsForSimulations
     );
     this.graphService = new PoolGraph(this.repositories.poolsOnChain);
     this.joinService = new Join(
@@ -371,11 +371,15 @@ export class Pools implements Findable<PoolWithMethods> {
     bptAmount,
     userAddress,
     slippage,
+    shouldUnwrapNativeAsset,
+    singleTokenOut,
   }: {
     pool: Pool;
     bptAmount: string;
     userAddress: string;
     slippage: string;
+    shouldUnwrapNativeAsset?: boolean;
+    singleTokenOut?: string;
   }): ExitExactBPTInAttributes {
     const concerns = PoolTypeConcerns.from(pool.poolType);
     if (!concerns || !concerns.exit.buildExitExactBPTIn)
@@ -388,7 +392,8 @@ export class Pools implements Findable<PoolWithMethods> {
       slippage,
       wrappedNativeAsset:
         this.networkConfig.addresses.tokens.wrappedNativeAsset.toLowerCase(),
-      shouldUnwrapNativeAsset: false,
+      shouldUnwrapNativeAsset: shouldUnwrapNativeAsset ?? false,
+      singleTokenOut: singleTokenOut ?? undefined,
       toInternalBalance: false,
     });
   }

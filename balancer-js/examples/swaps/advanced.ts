@@ -6,6 +6,7 @@
  * Run command:
  * yarn example ./examples/swaps/advanced.ts
  */
+import { FORK_NODES } from '@/test/lib/utils';
 import {
   BalancerSDK,
   Network,
@@ -119,12 +120,12 @@ async function getAndProcessSwaps(
 }
 
 async function swapExample() {
-  const network = Network.POLYGON;
-  const rpcUrl = 'https://rpc.ankr.com/polygon';
-  const tokenIn = '0x3A58a54C066FdC0f2D55FC9C89F0415C92eBf3C4'; // stMatic
-  const tokenOut = AddressZero; // Matic
+  const network = Network.GNOSIS;
+  const rpcUrl = FORK_NODES[network];
+  const tokenIn = '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d';
+  const tokenOut = '0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1';
   const swapType = SwapTypes.SwapExactIn;
-  const amount = parseFixed('20', 18);
+  const amount = parseFixed('20000', 18);
   // Currently Relayer only suitable for ExactIn and non-eth swaps
   const canUseJoinExitPaths = canUseJoinExit(swapType, tokenIn, tokenOut);
 

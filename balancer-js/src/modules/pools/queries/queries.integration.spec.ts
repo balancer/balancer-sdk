@@ -30,31 +30,30 @@ const balPool = {
 };
 
 const composableStablePool = {
-  id: '0xa13a9247ea42d743238089903570127dda72fe4400000000000000000000035d',
+  id: '0x4edcb2b46377530bc18bb4d2c7fe46a992c73e100000000000000000000003ec',
   poolType: PoolType.ComposableStable,
   tokensList: [
-    '0x2f4eb100552ef93840d5adc30560e5513dfffacb',
-    '0x82698aecc9e28e9bb27608bd52cf57f704bd1b83',
-    '0xa13a9247ea42d743238089903570127dda72fe44',
-    '0xae37d54ae477268b9997d4161b96b8200755935c',
+    '0x4edcb2b46377530bc18bb4d2c7fe46a992c73e10',
+    '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
+    '0xbe9895146f7af43049ca1c1ae358b0541ea49704',
   ],
 };
 
-const composableStablePoolWithTokenAtZero = {
-  id: '0x02d928e68d8f10c0358566152677db51e1e2dc8c00000000000000000000051e',
-  poolType: PoolType.ComposableStable,
-  tokensList: [
-    '0x02d928e68d8f10c0358566152677db51e1e2dc8c',
-    '0x60d604890feaa0b5460b28a424407c24fe89374a',
-    '0xf951e335afb289353dc249e82926178eac7ded78',
-  ],
-};
+// const composableStablePoolWithTokenAtZero = {
+//   id: '0x02d928e68d8f10c0358566152677db51e1e2dc8c00000000000000000000051e',
+//   poolType: PoolType.ComposableStable,
+//   tokensList: [
+//     '0x02d928e68d8f10c0358566152677db51e1e2dc8c',
+//     '0x60d604890feaa0b5460b28a424407c24fe89374a',
+//     '0xf951e335afb289353dc249e82926178eac7ded78',
+//   ],
+// };
 
 const pools = [
   stETHPool,
   balPool,
   composableStablePool,
-  composableStablePoolWithTokenAtZero,
+  // composableStablePoolWithTokenAtZero,
 ];
 
 let queryParams: ParamsBuilder;
