@@ -504,18 +504,13 @@ export class PoolApr {
   }
 
   private async protocolSwapFeePercentage(pool: Pool) {
-    let fee;
-    if (
-      pool.poolType == 'ComposableStable' ||
-      (pool.poolType == 'Weighted' && pool.poolTypeVersion == 2)
-    ) {
-      fee = 0;
-    } else if (pool.poolType.includes('Gyro') && this.gyroConfigRepository) {
+    let fee = 0.5;
+    if (pool.poolType.includes('Gyro') && this.gyroConfigRepository) {
       fee = await this.gyroConfigRepository.getGyroProtocolFee(pool.address);
     } else if (pool.protocolSwapFeeCache) {
       fee = parseFloat(pool.protocolSwapFeeCache);
     } else {
-      fee = (await this.feeCollector.find('')) || 0;
+      fee = (await this.feeCollector.find('')) || 0.5;
     }
     return fee;
   }
