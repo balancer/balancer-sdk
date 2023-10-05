@@ -276,14 +276,15 @@ export class PoolApr {
       throw 'Missing BAL price';
     }
 
+    const gaugeSupply = (gauge.workingSupply + 0.4) / 0.4; // Only 40% of LP token staked accrue emissions, totalSupply = workingSupply * 2.5
+    const gaugeSupplyUsd = gaugeSupply * bptPriceUsd;
+
     // Handle child chain gauges with inflation_rate
     // balInflationRate - amount of BAL tokens per second as a float
     if (gauge.balInflationRate) {
       const reward =
         gauge.balInflationRate * 86400 * 365 * parseFloat(balPrice.usd);
-      const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
-      const rewardValue = reward / totalSupplyUsd;
-      return Math.round(boost * 10000 * rewardValue);
+      return Math.round((boost * 10000 * reward) / gaugeSupplyUsd);
     } else if (pool.chainId > 1) {
       // TODO: remove after all gauges are migrated (around 01-07-2023), Subgraph is returning BAL staking rewards as reward tokens for L2 gauges.
       if (!gauge.rewardTokens) {
@@ -307,8 +308,6 @@ export class PoolApr {
     const totalBalEmissions = (emissions.weekly(now) / 7) * 365;
     const gaugeBalEmissions = totalBalEmissions * gauge.relativeWeight;
     const gaugeBalEmissionsUsd = gaugeBalEmissions * balPriceUsd;
-    const gaugeSupply = (gauge.workingSupply + 0.4) / 0.4; // Only 40% of LP token staked accrue emissions, totalSupply = workingSupply * 2.5
-    const gaugeSupplyUsd = gaugeSupply * bptPriceUsd;
     const gaugeBalAprBps = Math.round(
       (boost * 10000 * gaugeBalEmissionsUsd) / gaugeSupplyUsd
     );
