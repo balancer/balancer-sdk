@@ -135,30 +135,32 @@ const poolTypeCalls = (poolType: string, poolTypeVersion = 1) => {
 
 const merge = (pool: SubgraphPoolBase, result: OnchainData) => ({
   ...pool,
-  tokens: pool.tokens.map((token) => {
-    const idx = result.poolTokens[0]
-      .map((t) => t.toLowerCase())
-      .indexOf(token.address);
-    const wrappedToken =
-      pool.wrappedIndex && pool.tokensList[pool.wrappedIndex];
-    return {
-      ...token,
-      balance: formatFixed(result.poolTokens[1][idx], token.decimals || 18),
-      weight:
-        (result.weights && formatFixed(result.weights[idx], 18)) ||
-        token.weight,
-      priceRate:
-        (result.wrappedTokenRate &&
-          wrappedToken &&
-          wrappedToken.toLowerCase() === token.address.toLowerCase() &&
-          formatFixed(result.wrappedTokenRate, 18)) ||
-        token.priceRate,
-    } as SubgraphToken;
-  }),
+  tokens: result.poolTokens
+    ? pool.tokens.map((token) => {
+        const idx = result.poolTokens[0]
+          .map((t) => t.toLowerCase())
+          .indexOf(token.address);
+        const wrappedToken =
+          pool.wrappedIndex && pool.tokensList[pool.wrappedIndex];
+        return {
+          ...token,
+          balance: formatFixed(result.poolTokens[1][idx], token.decimals || 18),
+          weight:
+            (result.weights && formatFixed(result.weights[idx], 18)) ||
+            token.weight,
+          priceRate:
+            (result.wrappedTokenRate &&
+              wrappedToken &&
+              wrappedToken.toLowerCase() === token.address.toLowerCase() &&
+              formatFixed(result.wrappedTokenRate, 18)) ||
+            token.priceRate,
+        } as SubgraphToken;
+      })
+    : pool.tokens,
   totalShares: result.totalShares
     ? formatFixed(result.totalShares, 18)
     : pool.totalShares,
-  swapFee: formatFixed(result.swapFee, 18),
+  swapFee: result.swapFee ? formatFixed(result.swapFee, 18) : pool.swapFee,
   amp:
     (result.amp &&
       result.amp[0] &&

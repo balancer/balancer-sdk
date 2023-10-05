@@ -141,6 +141,8 @@ export class CoingeckoPriceRepository implements Findable<Price> {
         return 'fantom';
       case 1101:
         return 'polygon-zkevm';
+      case 8453:
+        return 'base';
       case 42161:
         return 'arbitrum-one';
       case 43114:
