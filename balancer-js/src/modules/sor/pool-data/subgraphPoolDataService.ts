@@ -95,7 +95,10 @@ export class SubgraphPoolDataService implements PoolDataService {
       mapped,
       this.network.addresses.contracts.multicall,
       this.network.addresses.contracts.vault,
-      this.provider
+      this.provider,
+      // if the queryArgs for TheGraph specify a blocknumber,
+      // we must also get the onChainData at this bocknumber
+      queryArgs?.block?.number
     );
 
     logger.timeEnd(`fetching on-chain balances for ${mapped.length} pools`);
