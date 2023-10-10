@@ -301,29 +301,29 @@ describe('Migrations', function () {
         });
       });
     });
+  });
 
-    context('polygon', () => {
-      const { approveRelayer, impersonate, runPool2Pool } = migrations(
-        Network.POLYGON
-      );
+  context('polygon', () => {
+    const { approveRelayer, impersonate, runPool2Pool } = migrations(
+      Network.POLYGON
+    );
 
-      beforeEach(() => approveRelayer());
+    beforeEach(() => approveRelayer());
 
-      context('ComposableStable to ComposableStable', () => {
-        before(() => impersonate('0xe80a6a7b4fdadf0aa59f3f669a8d394d1d4da86b'));
+    context('ComposableStable to ComposableStable', () => {
+      before(() => impersonate('0xe80a6a7b4fdadf0aa59f3f669a8d394d1d4da86b'));
 
-        it('should build a migration using exit / join', async () => {
-          const { balanceAfter, minBptOut } = await runPool2Pool(
-            polygonComposableStable,
-            polygonComposableStable
-          );
+      it('should build a migration using exit / join', async () => {
+        const { balanceAfter, minBptOut } = await runPool2Pool(
+          polygonComposableStable,
+          polygonComposableStable
+        );
 
-          // NOTICE: We don't know the exact amount of BPT that will be minted,
-          // because swaps from the linear pool are not deterministic due to external rates
-          expect(BigInt(balanceAfter)).to.satisfy(
-            (v: bigint) => v > BigInt(minBptOut)
-          );
-        });
+        // NOTICE: We don't know the exact amount of BPT that will be minted,
+        // because swaps from the linear pool are not deterministic due to external rates
+        expect(BigInt(balanceAfter)).to.satisfy(
+          (v: bigint) => v > BigInt(minBptOut)
+        );
       });
     });
   });

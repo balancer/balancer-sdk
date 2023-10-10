@@ -409,6 +409,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
     },
     averageBlockTime: 4,
+    multicallBatchSize: 128,
     pools: {},
     poolsToIgnore: [],
     sorConnectingTokens: [
