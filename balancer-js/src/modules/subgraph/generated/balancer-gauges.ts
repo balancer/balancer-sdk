@@ -16,6 +16,7 @@ export type Scalars = {
   BigDecimal: string;
   BigInt: string;
   Bytes: string;
+  Int8: any;
 };
 
 export type BlockChangedFilter = {
@@ -30,9 +31,12 @@ export type Block_Height = {
 
 export enum Chain {
   Arbitrum = 'Arbitrum',
+  Avalanche = 'Avalanche',
+  Base = 'Base',
   Gnosis = 'Gnosis',
   Optimism = 'Optimism',
-  Polygon = 'Polygon'
+  Polygon = 'Polygon',
+  PolygonZkEvm = 'PolygonZkEvm'
 }
 
 export type Gauge = {
@@ -482,6 +486,8 @@ export type LiquidityGauge = {
   poolId?: Maybe<Scalars['Bytes']>;
   /**  Relative weight cap of the gauge (0.01 = 1%) - V2 factories only  */
   relativeWeightCap?: Maybe<Scalars['BigDecimal']>;
+  /**  List of reward tokens depositted in the gauge - ChildChainLiquidityGauge only  */
+  rewardTokensList?: Maybe<Array<Scalars['Bytes']>>;
   /**  List of user shares  */
   shares?: Maybe<Array<GaugeShare>>;
   /**  Address of the contract that streams reward tokens to the gauge - ChildChainLiquidityGauge only  */
@@ -624,6 +630,12 @@ export type LiquidityGauge_Filter = {
   relativeWeightCap_lte?: InputMaybe<Scalars['BigDecimal']>;
   relativeWeightCap_not?: InputMaybe<Scalars['BigDecimal']>;
   relativeWeightCap_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  rewardTokensList?: InputMaybe<Array<Scalars['Bytes']>>;
+  rewardTokensList_contains?: InputMaybe<Array<Scalars['Bytes']>>;
+  rewardTokensList_contains_nocase?: InputMaybe<Array<Scalars['Bytes']>>;
+  rewardTokensList_not?: InputMaybe<Array<Scalars['Bytes']>>;
+  rewardTokensList_not_contains?: InputMaybe<Array<Scalars['Bytes']>>;
+  rewardTokensList_not_contains_nocase?: InputMaybe<Array<Scalars['Bytes']>>;
   shares_?: InputMaybe<GaugeShare_Filter>;
   streamer?: InputMaybe<Scalars['Bytes']>;
   streamer_contains?: InputMaybe<Scalars['Bytes']>;
@@ -684,11 +696,228 @@ export enum LiquidityGauge_OrderBy {
   pool__id = 'pool__id',
   pool__poolId = 'pool__poolId',
   relativeWeightCap = 'relativeWeightCap',
+  rewardTokensList = 'rewardTokensList',
   shares = 'shares',
   streamer = 'streamer',
   symbol = 'symbol',
   tokens = 'tokens',
   totalSupply = 'totalSupply'
+}
+
+export type LockSnapshot = {
+  __typename?: 'LockSnapshot';
+  /**  veBAL balance at the moment user locks  */
+  bias: Scalars['BigDecimal'];
+  /**  Equal to <userAddress>-<timestamp>  */
+  id: Scalars['ID'];
+  /**  veBAL decay rate (per second)  */
+  slope: Scalars['BigDecimal'];
+  /**  Timestamp at which the snapshot was taken [seconds]  */
+  timestamp: Scalars['Int'];
+  /**  Reference to User entity  */
+  user: User;
+};
+
+export type LockSnapshot_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<LockSnapshot_Filter>>>;
+  bias?: InputMaybe<Scalars['BigDecimal']>;
+  bias_gt?: InputMaybe<Scalars['BigDecimal']>;
+  bias_gte?: InputMaybe<Scalars['BigDecimal']>;
+  bias_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  bias_lt?: InputMaybe<Scalars['BigDecimal']>;
+  bias_lte?: InputMaybe<Scalars['BigDecimal']>;
+  bias_not?: InputMaybe<Scalars['BigDecimal']>;
+  bias_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  id?: InputMaybe<Scalars['ID']>;
+  id_gt?: InputMaybe<Scalars['ID']>;
+  id_gte?: InputMaybe<Scalars['ID']>;
+  id_in?: InputMaybe<Array<Scalars['ID']>>;
+  id_lt?: InputMaybe<Scalars['ID']>;
+  id_lte?: InputMaybe<Scalars['ID']>;
+  id_not?: InputMaybe<Scalars['ID']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<LockSnapshot_Filter>>>;
+  slope?: InputMaybe<Scalars['BigDecimal']>;
+  slope_gt?: InputMaybe<Scalars['BigDecimal']>;
+  slope_gte?: InputMaybe<Scalars['BigDecimal']>;
+  slope_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  slope_lt?: InputMaybe<Scalars['BigDecimal']>;
+  slope_lte?: InputMaybe<Scalars['BigDecimal']>;
+  slope_not?: InputMaybe<Scalars['BigDecimal']>;
+  slope_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  timestamp?: InputMaybe<Scalars['Int']>;
+  timestamp_gt?: InputMaybe<Scalars['Int']>;
+  timestamp_gte?: InputMaybe<Scalars['Int']>;
+  timestamp_in?: InputMaybe<Array<Scalars['Int']>>;
+  timestamp_lt?: InputMaybe<Scalars['Int']>;
+  timestamp_lte?: InputMaybe<Scalars['Int']>;
+  timestamp_not?: InputMaybe<Scalars['Int']>;
+  timestamp_not_in?: InputMaybe<Array<Scalars['Int']>>;
+  user?: InputMaybe<Scalars['String']>;
+  user_?: InputMaybe<User_Filter>;
+  user_contains?: InputMaybe<Scalars['String']>;
+  user_contains_nocase?: InputMaybe<Scalars['String']>;
+  user_ends_with?: InputMaybe<Scalars['String']>;
+  user_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  user_gt?: InputMaybe<Scalars['String']>;
+  user_gte?: InputMaybe<Scalars['String']>;
+  user_in?: InputMaybe<Array<Scalars['String']>>;
+  user_lt?: InputMaybe<Scalars['String']>;
+  user_lte?: InputMaybe<Scalars['String']>;
+  user_not?: InputMaybe<Scalars['String']>;
+  user_not_contains?: InputMaybe<Scalars['String']>;
+  user_not_contains_nocase?: InputMaybe<Scalars['String']>;
+  user_not_ends_with?: InputMaybe<Scalars['String']>;
+  user_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  user_not_in?: InputMaybe<Array<Scalars['String']>>;
+  user_not_starts_with?: InputMaybe<Scalars['String']>;
+  user_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  user_starts_with?: InputMaybe<Scalars['String']>;
+  user_starts_with_nocase?: InputMaybe<Scalars['String']>;
+};
+
+export enum LockSnapshot_OrderBy {
+  bias = 'bias',
+  id = 'id',
+  slope = 'slope',
+  timestamp = 'timestamp',
+  user = 'user',
+  user__id = 'user__id'
+}
+
+export type OmniVotingEscrowLock = {
+  __typename?: 'OmniVotingEscrowLock';
+  /**  veBAL balance at the moment user locks  */
+  bias: Scalars['BigDecimal'];
+  /**  Chain where the lock was bridged to  */
+  dstChainId: Scalars['Int'];
+  /**  Equal to: <userAdress>-<omniVotingEscrow>  */
+  id: Scalars['ID'];
+  /**  User on the local chain (reference to User entity)  */
+  localUser: User;
+  /**  User address on the remote chain  */
+  remoteUser: Scalars['Bytes'];
+  /**  veBAL decay rate (per second)  */
+  slope: Scalars['BigDecimal'];
+  /**  Timestamp the lock was created [seconds]  */
+  timestamp: Scalars['Int'];
+  /**  Reference to VotingEscrow entity  */
+  votingEscrowID: VotingEscrow;
+};
+
+export type OmniVotingEscrowLock_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<OmniVotingEscrowLock_Filter>>>;
+  bias?: InputMaybe<Scalars['BigDecimal']>;
+  bias_gt?: InputMaybe<Scalars['BigDecimal']>;
+  bias_gte?: InputMaybe<Scalars['BigDecimal']>;
+  bias_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  bias_lt?: InputMaybe<Scalars['BigDecimal']>;
+  bias_lte?: InputMaybe<Scalars['BigDecimal']>;
+  bias_not?: InputMaybe<Scalars['BigDecimal']>;
+  bias_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  dstChainId?: InputMaybe<Scalars['Int']>;
+  dstChainId_gt?: InputMaybe<Scalars['Int']>;
+  dstChainId_gte?: InputMaybe<Scalars['Int']>;
+  dstChainId_in?: InputMaybe<Array<Scalars['Int']>>;
+  dstChainId_lt?: InputMaybe<Scalars['Int']>;
+  dstChainId_lte?: InputMaybe<Scalars['Int']>;
+  dstChainId_not?: InputMaybe<Scalars['Int']>;
+  dstChainId_not_in?: InputMaybe<Array<Scalars['Int']>>;
+  id?: InputMaybe<Scalars['ID']>;
+  id_gt?: InputMaybe<Scalars['ID']>;
+  id_gte?: InputMaybe<Scalars['ID']>;
+  id_in?: InputMaybe<Array<Scalars['ID']>>;
+  id_lt?: InputMaybe<Scalars['ID']>;
+  id_lte?: InputMaybe<Scalars['ID']>;
+  id_not?: InputMaybe<Scalars['ID']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  localUser?: InputMaybe<Scalars['String']>;
+  localUser_?: InputMaybe<User_Filter>;
+  localUser_contains?: InputMaybe<Scalars['String']>;
+  localUser_contains_nocase?: InputMaybe<Scalars['String']>;
+  localUser_ends_with?: InputMaybe<Scalars['String']>;
+  localUser_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  localUser_gt?: InputMaybe<Scalars['String']>;
+  localUser_gte?: InputMaybe<Scalars['String']>;
+  localUser_in?: InputMaybe<Array<Scalars['String']>>;
+  localUser_lt?: InputMaybe<Scalars['String']>;
+  localUser_lte?: InputMaybe<Scalars['String']>;
+  localUser_not?: InputMaybe<Scalars['String']>;
+  localUser_not_contains?: InputMaybe<Scalars['String']>;
+  localUser_not_contains_nocase?: InputMaybe<Scalars['String']>;
+  localUser_not_ends_with?: InputMaybe<Scalars['String']>;
+  localUser_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  localUser_not_in?: InputMaybe<Array<Scalars['String']>>;
+  localUser_not_starts_with?: InputMaybe<Scalars['String']>;
+  localUser_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  localUser_starts_with?: InputMaybe<Scalars['String']>;
+  localUser_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  or?: InputMaybe<Array<InputMaybe<OmniVotingEscrowLock_Filter>>>;
+  remoteUser?: InputMaybe<Scalars['Bytes']>;
+  remoteUser_contains?: InputMaybe<Scalars['Bytes']>;
+  remoteUser_gt?: InputMaybe<Scalars['Bytes']>;
+  remoteUser_gte?: InputMaybe<Scalars['Bytes']>;
+  remoteUser_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  remoteUser_lt?: InputMaybe<Scalars['Bytes']>;
+  remoteUser_lte?: InputMaybe<Scalars['Bytes']>;
+  remoteUser_not?: InputMaybe<Scalars['Bytes']>;
+  remoteUser_not_contains?: InputMaybe<Scalars['Bytes']>;
+  remoteUser_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  slope?: InputMaybe<Scalars['BigDecimal']>;
+  slope_gt?: InputMaybe<Scalars['BigDecimal']>;
+  slope_gte?: InputMaybe<Scalars['BigDecimal']>;
+  slope_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  slope_lt?: InputMaybe<Scalars['BigDecimal']>;
+  slope_lte?: InputMaybe<Scalars['BigDecimal']>;
+  slope_not?: InputMaybe<Scalars['BigDecimal']>;
+  slope_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  timestamp?: InputMaybe<Scalars['Int']>;
+  timestamp_gt?: InputMaybe<Scalars['Int']>;
+  timestamp_gte?: InputMaybe<Scalars['Int']>;
+  timestamp_in?: InputMaybe<Array<Scalars['Int']>>;
+  timestamp_lt?: InputMaybe<Scalars['Int']>;
+  timestamp_lte?: InputMaybe<Scalars['Int']>;
+  timestamp_not?: InputMaybe<Scalars['Int']>;
+  timestamp_not_in?: InputMaybe<Array<Scalars['Int']>>;
+  votingEscrowID?: InputMaybe<Scalars['String']>;
+  votingEscrowID_?: InputMaybe<VotingEscrow_Filter>;
+  votingEscrowID_contains?: InputMaybe<Scalars['String']>;
+  votingEscrowID_contains_nocase?: InputMaybe<Scalars['String']>;
+  votingEscrowID_ends_with?: InputMaybe<Scalars['String']>;
+  votingEscrowID_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  votingEscrowID_gt?: InputMaybe<Scalars['String']>;
+  votingEscrowID_gte?: InputMaybe<Scalars['String']>;
+  votingEscrowID_in?: InputMaybe<Array<Scalars['String']>>;
+  votingEscrowID_lt?: InputMaybe<Scalars['String']>;
+  votingEscrowID_lte?: InputMaybe<Scalars['String']>;
+  votingEscrowID_not?: InputMaybe<Scalars['String']>;
+  votingEscrowID_not_contains?: InputMaybe<Scalars['String']>;
+  votingEscrowID_not_contains_nocase?: InputMaybe<Scalars['String']>;
+  votingEscrowID_not_ends_with?: InputMaybe<Scalars['String']>;
+  votingEscrowID_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  votingEscrowID_not_in?: InputMaybe<Array<Scalars['String']>>;
+  votingEscrowID_not_starts_with?: InputMaybe<Scalars['String']>;
+  votingEscrowID_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  votingEscrowID_starts_with?: InputMaybe<Scalars['String']>;
+  votingEscrowID_starts_with_nocase?: InputMaybe<Scalars['String']>;
+};
+
+export enum OmniVotingEscrowLock_OrderBy {
+  bias = 'bias',
+  dstChainId = 'dstChainId',
+  id = 'id',
+  localUser = 'localUser',
+  localUser__id = 'localUser__id',
+  remoteUser = 'remoteUser',
+  slope = 'slope',
+  timestamp = 'timestamp',
+  votingEscrowID = 'votingEscrowID',
+  votingEscrowID__id = 'votingEscrowID__id',
+  votingEscrowID__stakedSupply = 'votingEscrowID__stakedSupply'
 }
 
 /** Defines the order direction, either ascending or descending */
@@ -819,12 +1048,18 @@ export type Query = {
   gauges: Array<Gauge>;
   liquidityGauge?: Maybe<LiquidityGauge>;
   liquidityGauges: Array<LiquidityGauge>;
+  lockSnapshot?: Maybe<LockSnapshot>;
+  lockSnapshots: Array<LockSnapshot>;
+  omniVotingEscrowLock?: Maybe<OmniVotingEscrowLock>;
+  omniVotingEscrowLocks: Array<OmniVotingEscrowLock>;
   pool?: Maybe<Pool>;
   pools: Array<Pool>;
   rewardToken?: Maybe<RewardToken>;
   rewardTokens: Array<RewardToken>;
   rootGauge?: Maybe<RootGauge>;
   rootGauges: Array<RootGauge>;
+  singleRecipientGauge?: Maybe<SingleRecipientGauge>;
+  singleRecipientGauges: Array<SingleRecipientGauge>;
   user?: Maybe<User>;
   users: Array<User>;
   votingEscrow?: Maybe<VotingEscrow>;
@@ -947,6 +1182,42 @@ export type QueryLiquidityGaugesArgs = {
 };
 
 
+export type QueryLockSnapshotArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryLockSnapshotsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<LockSnapshot_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<LockSnapshot_Filter>;
+};
+
+
+export type QueryOmniVotingEscrowLockArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryOmniVotingEscrowLocksArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<OmniVotingEscrowLock_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<OmniVotingEscrowLock_Filter>;
+};
+
+
 export type QueryPoolArgs = {
   block?: InputMaybe<Block_Height>;
   id: Scalars['ID'];
@@ -998,6 +1269,24 @@ export type QueryRootGaugesArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   subgraphError?: _SubgraphErrorPolicy_;
   where?: InputMaybe<RootGauge_Filter>;
+};
+
+
+export type QuerySingleRecipientGaugeArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QuerySingleRecipientGaugesArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<SingleRecipientGauge_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<SingleRecipientGauge_Filter>;
 };
 
 
@@ -1295,6 +1584,115 @@ export enum RootGauge_OrderBy {
   relativeWeightCap = 'relativeWeightCap'
 }
 
+export type SingleRecipientGauge = {
+  __typename?: 'SingleRecipientGauge';
+  /**  Factory contract address  */
+  factory: GaugeFactory;
+  /**  Reference to Gauge entity - created when SingleRecipientGauge is added to GaugeController */
+  gauge?: Maybe<Gauge>;
+  /**  SingleRecipientGauge contract address */
+  id: Scalars['ID'];
+  /**  Whether Balancer DAO killed the gauge  */
+  isKilled: Scalars['Boolean'];
+  /**  Address where emissions for this gauge will be sent to  */
+  recipient: Scalars['Bytes'];
+  /**  Relative weight cap of the gauge (0.01 = 1%) - V2 factories only  */
+  relativeWeightCap?: Maybe<Scalars['BigDecimal']>;
+};
+
+export type SingleRecipientGauge_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<SingleRecipientGauge_Filter>>>;
+  factory?: InputMaybe<Scalars['String']>;
+  factory_?: InputMaybe<GaugeFactory_Filter>;
+  factory_contains?: InputMaybe<Scalars['String']>;
+  factory_contains_nocase?: InputMaybe<Scalars['String']>;
+  factory_ends_with?: InputMaybe<Scalars['String']>;
+  factory_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  factory_gt?: InputMaybe<Scalars['String']>;
+  factory_gte?: InputMaybe<Scalars['String']>;
+  factory_in?: InputMaybe<Array<Scalars['String']>>;
+  factory_lt?: InputMaybe<Scalars['String']>;
+  factory_lte?: InputMaybe<Scalars['String']>;
+  factory_not?: InputMaybe<Scalars['String']>;
+  factory_not_contains?: InputMaybe<Scalars['String']>;
+  factory_not_contains_nocase?: InputMaybe<Scalars['String']>;
+  factory_not_ends_with?: InputMaybe<Scalars['String']>;
+  factory_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  factory_not_in?: InputMaybe<Array<Scalars['String']>>;
+  factory_not_starts_with?: InputMaybe<Scalars['String']>;
+  factory_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  factory_starts_with?: InputMaybe<Scalars['String']>;
+  factory_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  gauge?: InputMaybe<Scalars['String']>;
+  gauge_?: InputMaybe<Gauge_Filter>;
+  gauge_contains?: InputMaybe<Scalars['String']>;
+  gauge_contains_nocase?: InputMaybe<Scalars['String']>;
+  gauge_ends_with?: InputMaybe<Scalars['String']>;
+  gauge_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  gauge_gt?: InputMaybe<Scalars['String']>;
+  gauge_gte?: InputMaybe<Scalars['String']>;
+  gauge_in?: InputMaybe<Array<Scalars['String']>>;
+  gauge_lt?: InputMaybe<Scalars['String']>;
+  gauge_lte?: InputMaybe<Scalars['String']>;
+  gauge_not?: InputMaybe<Scalars['String']>;
+  gauge_not_contains?: InputMaybe<Scalars['String']>;
+  gauge_not_contains_nocase?: InputMaybe<Scalars['String']>;
+  gauge_not_ends_with?: InputMaybe<Scalars['String']>;
+  gauge_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  gauge_not_in?: InputMaybe<Array<Scalars['String']>>;
+  gauge_not_starts_with?: InputMaybe<Scalars['String']>;
+  gauge_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  gauge_starts_with?: InputMaybe<Scalars['String']>;
+  gauge_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars['ID']>;
+  id_gt?: InputMaybe<Scalars['ID']>;
+  id_gte?: InputMaybe<Scalars['ID']>;
+  id_in?: InputMaybe<Array<Scalars['ID']>>;
+  id_lt?: InputMaybe<Scalars['ID']>;
+  id_lte?: InputMaybe<Scalars['ID']>;
+  id_not?: InputMaybe<Scalars['ID']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  isKilled?: InputMaybe<Scalars['Boolean']>;
+  isKilled_in?: InputMaybe<Array<Scalars['Boolean']>>;
+  isKilled_not?: InputMaybe<Scalars['Boolean']>;
+  isKilled_not_in?: InputMaybe<Array<Scalars['Boolean']>>;
+  or?: InputMaybe<Array<InputMaybe<SingleRecipientGauge_Filter>>>;
+  recipient?: InputMaybe<Scalars['Bytes']>;
+  recipient_contains?: InputMaybe<Scalars['Bytes']>;
+  recipient_gt?: InputMaybe<Scalars['Bytes']>;
+  recipient_gte?: InputMaybe<Scalars['Bytes']>;
+  recipient_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  recipient_lt?: InputMaybe<Scalars['Bytes']>;
+  recipient_lte?: InputMaybe<Scalars['Bytes']>;
+  recipient_not?: InputMaybe<Scalars['Bytes']>;
+  recipient_not_contains?: InputMaybe<Scalars['Bytes']>;
+  recipient_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  relativeWeightCap?: InputMaybe<Scalars['BigDecimal']>;
+  relativeWeightCap_gt?: InputMaybe<Scalars['BigDecimal']>;
+  relativeWeightCap_gte?: InputMaybe<Scalars['BigDecimal']>;
+  relativeWeightCap_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  relativeWeightCap_lt?: InputMaybe<Scalars['BigDecimal']>;
+  relativeWeightCap_lte?: InputMaybe<Scalars['BigDecimal']>;
+  relativeWeightCap_not?: InputMaybe<Scalars['BigDecimal']>;
+  relativeWeightCap_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+};
+
+export enum SingleRecipientGauge_OrderBy {
+  factory = 'factory',
+  factory__id = 'factory__id',
+  factory__numGauges = 'factory__numGauges',
+  gauge = 'gauge',
+  gauge__addedTimestamp = 'gauge__addedTimestamp',
+  gauge__address = 'gauge__address',
+  gauge__id = 'gauge__id',
+  id = 'id',
+  isKilled = 'isKilled',
+  recipient = 'recipient',
+  relativeWeightCap = 'relativeWeightCap'
+}
+
 export type Subscription = {
   __typename?: 'Subscription';
   /** Access to subgraph metadata */
@@ -1311,12 +1709,18 @@ export type Subscription = {
   gauges: Array<Gauge>;
   liquidityGauge?: Maybe<LiquidityGauge>;
   liquidityGauges: Array<LiquidityGauge>;
+  lockSnapshot?: Maybe<LockSnapshot>;
+  lockSnapshots: Array<LockSnapshot>;
+  omniVotingEscrowLock?: Maybe<OmniVotingEscrowLock>;
+  omniVotingEscrowLocks: Array<OmniVotingEscrowLock>;
   pool?: Maybe<Pool>;
   pools: Array<Pool>;
   rewardToken?: Maybe<RewardToken>;
   rewardTokens: Array<RewardToken>;
   rootGauge?: Maybe<RootGauge>;
   rootGauges: Array<RootGauge>;
+  singleRecipientGauge?: Maybe<SingleRecipientGauge>;
+  singleRecipientGauges: Array<SingleRecipientGauge>;
   user?: Maybe<User>;
   users: Array<User>;
   votingEscrow?: Maybe<VotingEscrow>;
@@ -1439,6 +1843,42 @@ export type SubscriptionLiquidityGaugesArgs = {
 };
 
 
+export type SubscriptionLockSnapshotArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionLockSnapshotsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<LockSnapshot_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<LockSnapshot_Filter>;
+};
+
+
+export type SubscriptionOmniVotingEscrowLockArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionOmniVotingEscrowLocksArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<OmniVotingEscrowLock_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<OmniVotingEscrowLock_Filter>;
+};
+
+
 export type SubscriptionPoolArgs = {
   block?: InputMaybe<Block_Height>;
   id: Scalars['ID'];
@@ -1490,6 +1930,24 @@ export type SubscriptionRootGaugesArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   subgraphError?: _SubgraphErrorPolicy_;
   where?: InputMaybe<RootGauge_Filter>;
+};
+
+
+export type SubscriptionSingleRecipientGaugeArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionSingleRecipientGaugesArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<SingleRecipientGauge_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<SingleRecipientGauge_Filter>;
 };
 
 
@@ -1554,6 +2012,8 @@ export type User = {
   gaugeVotes?: Maybe<Array<GaugeVote>>;
   /**  User address  */
   id: Scalars['ID'];
+  /**  List of omni locks the user created  */
+  omniVotingLocks?: Maybe<Array<OmniVotingEscrowLock>>;
   /**  List of locks the user created  */
   votingLocks?: Maybe<Array<VotingEscrowLock>>;
 };
@@ -1574,6 +2034,15 @@ export type UserGaugeVotesArgs = {
   orderDirection?: InputMaybe<OrderDirection>;
   skip?: InputMaybe<Scalars['Int']>;
   where?: InputMaybe<GaugeVote_Filter>;
+};
+
+
+export type UserOmniVotingLocksArgs = {
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<OmniVotingEscrowLock_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  where?: InputMaybe<OmniVotingEscrowLock_Filter>;
 };
 
 
@@ -1599,6 +2068,7 @@ export type User_Filter = {
   id_lte?: InputMaybe<Scalars['ID']>;
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  omniVotingLocks_?: InputMaybe<OmniVotingEscrowLock_Filter>;
   or?: InputMaybe<Array<InputMaybe<User_Filter>>>;
   votingLocks_?: InputMaybe<VotingEscrowLock_Filter>;
 };
@@ -1607,6 +2077,7 @@ export enum User_OrderBy {
   gaugeShares = 'gaugeShares',
   gaugeVotes = 'gaugeVotes',
   id = 'id',
+  omniVotingLocks = 'omniVotingLocks',
   votingLocks = 'votingLocks'
 }
 
@@ -1616,8 +2087,10 @@ export type VotingEscrow = {
   id: Scalars['ID'];
   /**  List of veBAL locks created  */
   locks?: Maybe<Array<VotingEscrowLock>>;
-  /**  Amount of B-80BAL-20WETH BPT locked  */
-  stakedSupply: Scalars['BigDecimal'];
+  /**  List of veBAL locks created  */
+  omniLocks?: Maybe<Array<OmniVotingEscrowLock>>;
+  /**  Amount of B-80BAL-20WETH BPT locked, only applies on mainnet  */
+  stakedSupply?: Maybe<Scalars['BigDecimal']>;
 };
 
 
@@ -1629,14 +2102,30 @@ export type VotingEscrowLocksArgs = {
   where?: InputMaybe<VotingEscrowLock_Filter>;
 };
 
+
+export type VotingEscrowOmniLocksArgs = {
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<OmniVotingEscrowLock_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  where?: InputMaybe<OmniVotingEscrowLock_Filter>;
+};
+
 export type VotingEscrowLock = {
   __typename?: 'VotingEscrowLock';
+  /**  veBAL balance at the moment user locks  */
+  bias: Scalars['BigDecimal'];
   /**  Equal to: <userAdress>-<votingEscrow>  */
   id: Scalars['ID'];
   /**  Amount of B-80BAL-20WETH BPT the user has locked  */
   lockedBalance: Scalars['BigDecimal'];
+  /**  veBAL decay rate (per second)  */
+  slope: Scalars['BigDecimal'];
+  /**  Timestamp at which the lock was created [seconds]  */
+  timestamp: Scalars['Int'];
   /**  Timestamp at which B-80BAL-20WETH BPT can be unlocked by user [seconds]  */
-  unlockTime?: Maybe<Scalars['BigInt']>;
+  unlockTime: Scalars['BigInt'];
+  /**  Timestamp at which the lcok was created [seconds]. Same as timestamp  */
   updatedAt: Scalars['Int'];
   /**  Reference to User entity  */
   user: User;
@@ -1648,6 +2137,14 @@ export type VotingEscrowLock_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
   and?: InputMaybe<Array<InputMaybe<VotingEscrowLock_Filter>>>;
+  bias?: InputMaybe<Scalars['BigDecimal']>;
+  bias_gt?: InputMaybe<Scalars['BigDecimal']>;
+  bias_gte?: InputMaybe<Scalars['BigDecimal']>;
+  bias_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  bias_lt?: InputMaybe<Scalars['BigDecimal']>;
+  bias_lte?: InputMaybe<Scalars['BigDecimal']>;
+  bias_not?: InputMaybe<Scalars['BigDecimal']>;
+  bias_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -1665,6 +2162,22 @@ export type VotingEscrowLock_Filter = {
   lockedBalance_not?: InputMaybe<Scalars['BigDecimal']>;
   lockedBalance_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
   or?: InputMaybe<Array<InputMaybe<VotingEscrowLock_Filter>>>;
+  slope?: InputMaybe<Scalars['BigDecimal']>;
+  slope_gt?: InputMaybe<Scalars['BigDecimal']>;
+  slope_gte?: InputMaybe<Scalars['BigDecimal']>;
+  slope_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  slope_lt?: InputMaybe<Scalars['BigDecimal']>;
+  slope_lte?: InputMaybe<Scalars['BigDecimal']>;
+  slope_not?: InputMaybe<Scalars['BigDecimal']>;
+  slope_not_in?: InputMaybe<Array<Scalars['BigDecimal']>>;
+  timestamp?: InputMaybe<Scalars['Int']>;
+  timestamp_gt?: InputMaybe<Scalars['Int']>;
+  timestamp_gte?: InputMaybe<Scalars['Int']>;
+  timestamp_in?: InputMaybe<Array<Scalars['Int']>>;
+  timestamp_lt?: InputMaybe<Scalars['Int']>;
+  timestamp_lte?: InputMaybe<Scalars['Int']>;
+  timestamp_not?: InputMaybe<Scalars['Int']>;
+  timestamp_not_in?: InputMaybe<Array<Scalars['Int']>>;
   unlockTime?: InputMaybe<Scalars['BigInt']>;
   unlockTime_gt?: InputMaybe<Scalars['BigInt']>;
   unlockTime_gte?: InputMaybe<Scalars['BigInt']>;
@@ -1726,8 +2239,11 @@ export type VotingEscrowLock_Filter = {
 };
 
 export enum VotingEscrowLock_OrderBy {
+  bias = 'bias',
   id = 'id',
   lockedBalance = 'lockedBalance',
+  slope = 'slope',
+  timestamp = 'timestamp',
   unlockTime = 'unlockTime',
   updatedAt = 'updatedAt',
   user = 'user',
@@ -1750,6 +2266,7 @@ export type VotingEscrow_Filter = {
   id_not?: InputMaybe<Scalars['ID']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']>>;
   locks_?: InputMaybe<VotingEscrowLock_Filter>;
+  omniLocks_?: InputMaybe<OmniVotingEscrowLock_Filter>;
   or?: InputMaybe<Array<InputMaybe<VotingEscrow_Filter>>>;
   stakedSupply?: InputMaybe<Scalars['BigDecimal']>;
   stakedSupply_gt?: InputMaybe<Scalars['BigDecimal']>;
@@ -1764,6 +2281,7 @@ export type VotingEscrow_Filter = {
 export enum VotingEscrow_OrderBy {
   id = 'id',
   locks = 'locks',
+  omniLocks = 'omniLocks',
   stakedSupply = 'stakedSupply'
 }
 

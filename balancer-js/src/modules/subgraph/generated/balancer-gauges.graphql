@@ -29,9 +29,12 @@ scalar Bytes
 
 enum Chain {
   Arbitrum
+  Avalanche
+  Base
   Gnosis
   Optimism
   Polygon
+  PolygonZkEvm
 }
 
 type Gauge {
@@ -463,6 +466,12 @@ enum Gauge_orderBy {
   type__name
 }
 
+"""
+8 bytes signed integer
+
+"""
+scalar Int8
+
 type LiquidityGauge {
   """ Factory contract address """
   factory: GaugeFactory!
@@ -492,6 +501,10 @@ type LiquidityGauge {
 
   """ Relative weight cap of the gauge (0.01 = 1%) - V2 factories only """
   relativeWeightCap: BigDecimal
+
+  """ List of reward tokens depositted in the gauge - ChildChainLiquidityGauge only 
+  """
+  rewardTokensList: [Bytes!]
 
   """ List of user shares """
   shares(first: Int = 100, orderBy: GaugeShare_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: GaugeShare_filter): [GaugeShare!]
@@ -622,6 +635,12 @@ input LiquidityGauge_filter {
   relativeWeightCap_lte: BigDecimal
   relativeWeightCap_not: BigDecimal
   relativeWeightCap_not_in: [BigDecimal!]
+  rewardTokensList: [Bytes!]
+  rewardTokensList_contains: [Bytes!]
+  rewardTokensList_contains_nocase: [Bytes!]
+  rewardTokensList_not: [Bytes!]
+  rewardTokensList_not_contains: [Bytes!]
+  rewardTokensList_not_contains_nocase: [Bytes!]
   shares_: GaugeShare_filter
   streamer: Bytes
   streamer_contains: Bytes
@@ -682,11 +701,237 @@ enum LiquidityGauge_orderBy {
   pool__id
   pool__poolId
   relativeWeightCap
+  rewardTokensList
   shares
   streamer
   symbol
   tokens
   totalSupply
+}
+
+type LockSnapshot {
+  """ veBAL balance at the moment user locks """
+  bias: BigDecimal!
+
+  """ Equal to <userAddress>-<timestamp> """
+  id: ID!
+
+  """ veBAL decay rate (per second) """
+  slope: BigDecimal!
+
+  """ Timestamp at which the snapshot was taken [seconds] """
+  timestamp: Int!
+
+  """ Reference to User entity """
+  user: User!
+}
+
+input LockSnapshot_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [LockSnapshot_filter]
+  bias: BigDecimal
+  bias_gt: BigDecimal
+  bias_gte: BigDecimal
+  bias_in: [BigDecimal!]
+  bias_lt: BigDecimal
+  bias_lte: BigDecimal
+  bias_not: BigDecimal
+  bias_not_in: [BigDecimal!]
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  or: [LockSnapshot_filter]
+  slope: BigDecimal
+  slope_gt: BigDecimal
+  slope_gte: BigDecimal
+  slope_in: [BigDecimal!]
+  slope_lt: BigDecimal
+  slope_lte: BigDecimal
+  slope_not: BigDecimal
+  slope_not_in: [BigDecimal!]
+  timestamp: Int
+  timestamp_gt: Int
+  timestamp_gte: Int
+  timestamp_in: [Int!]
+  timestamp_lt: Int
+  timestamp_lte: Int
+  timestamp_not: Int
+  timestamp_not_in: [Int!]
+  user: String
+  user_: User_filter
+  user_contains: String
+  user_contains_nocase: String
+  user_ends_with: String
+  user_ends_with_nocase: String
+  user_gt: String
+  user_gte: String
+  user_in: [String!]
+  user_lt: String
+  user_lte: String
+  user_not: String
+  user_not_contains: String
+  user_not_contains_nocase: String
+  user_not_ends_with: String
+  user_not_ends_with_nocase: String
+  user_not_in: [String!]
+  user_not_starts_with: String
+  user_not_starts_with_nocase: String
+  user_starts_with: String
+  user_starts_with_nocase: String
+}
+
+enum LockSnapshot_orderBy {
+  bias
+  id
+  slope
+  timestamp
+  user
+  user__id
+}
+
+type OmniVotingEscrowLock {
+  """ veBAL balance at the moment user locks """
+  bias: BigDecimal!
+
+  """ Chain where the lock was bridged to """
+  dstChainId: Int!
+
+  """ Equal to: <userAdress>-<omniVotingEscrow> """
+  id: ID!
+
+  """ User on the local chain (reference to User entity) """
+  localUser: User!
+
+  """ User address on the remote chain """
+  remoteUser: Bytes!
+
+  """ veBAL decay rate (per second) """
+  slope: BigDecimal!
+
+  """ Timestamp the lock was created [seconds] """
+  timestamp: Int!
+
+  """ Reference to VotingEscrow entity """
+  votingEscrowID: VotingEscrow!
+}
+
+input OmniVotingEscrowLock_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [OmniVotingEscrowLock_filter]
+  bias: BigDecimal
+  bias_gt: BigDecimal
+  bias_gte: BigDecimal
+  bias_in: [BigDecimal!]
+  bias_lt: BigDecimal
+  bias_lte: BigDecimal
+  bias_not: BigDecimal
+  bias_not_in: [BigDecimal!]
+  dstChainId: Int
+  dstChainId_gt: Int
+  dstChainId_gte: Int
+  dstChainId_in: [Int!]
+  dstChainId_lt: Int
+  dstChainId_lte: Int
+  dstChainId_not: Int
+  dstChainId_not_in: [Int!]
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  localUser: String
+  localUser_: User_filter
+  localUser_contains: String
+  localUser_contains_nocase: String
+  localUser_ends_with: String
+  localUser_ends_with_nocase: String
+  localUser_gt: String
+  localUser_gte: String
+  localUser_in: [String!]
+  localUser_lt: String
+  localUser_lte: String
+  localUser_not: String
+  localUser_not_contains: String
+  localUser_not_contains_nocase: String
+  localUser_not_ends_with: String
+  localUser_not_ends_with_nocase: String
+  localUser_not_in: [String!]
+  localUser_not_starts_with: String
+  localUser_not_starts_with_nocase: String
+  localUser_starts_with: String
+  localUser_starts_with_nocase: String
+  or: [OmniVotingEscrowLock_filter]
+  remoteUser: Bytes
+  remoteUser_contains: Bytes
+  remoteUser_gt: Bytes
+  remoteUser_gte: Bytes
+  remoteUser_in: [Bytes!]
+  remoteUser_lt: Bytes
+  remoteUser_lte: Bytes
+  remoteUser_not: Bytes
+  remoteUser_not_contains: Bytes
+  remoteUser_not_in: [Bytes!]
+  slope: BigDecimal
+  slope_gt: BigDecimal
+  slope_gte: BigDecimal
+  slope_in: [BigDecimal!]
+  slope_lt: BigDecimal
+  slope_lte: BigDecimal
+  slope_not: BigDecimal
+  slope_not_in: [BigDecimal!]
+  timestamp: Int
+  timestamp_gt: Int
+  timestamp_gte: Int
+  timestamp_in: [Int!]
+  timestamp_lt: Int
+  timestamp_lte: Int
+  timestamp_not: Int
+  timestamp_not_in: [Int!]
+  votingEscrowID: String
+  votingEscrowID_: VotingEscrow_filter
+  votingEscrowID_contains: String
+  votingEscrowID_contains_nocase: String
+  votingEscrowID_ends_with: String
+  votingEscrowID_ends_with_nocase: String
+  votingEscrowID_gt: String
+  votingEscrowID_gte: String
+  votingEscrowID_in: [String!]
+  votingEscrowID_lt: String
+  votingEscrowID_lte: String
+  votingEscrowID_not: String
+  votingEscrowID_not_contains: String
+  votingEscrowID_not_contains_nocase: String
+  votingEscrowID_not_ends_with: String
+  votingEscrowID_not_ends_with_nocase: String
+  votingEscrowID_not_in: [String!]
+  votingEscrowID_not_starts_with: String
+  votingEscrowID_not_starts_with_nocase: String
+  votingEscrowID_starts_with: String
+  votingEscrowID_starts_with_nocase: String
+}
+
+enum OmniVotingEscrowLock_orderBy {
+  bias
+  dstChainId
+  id
+  localUser
+  localUser__id
+  remoteUser
+  slope
+  timestamp
+  votingEscrowID
+  votingEscrowID__id
+  votingEscrowID__stakedSupply
 }
 
 """Defines the order direction, either ascending or descending"""
@@ -967,6 +1212,62 @@ type Query {
     subgraphError: _SubgraphErrorPolicy_! = deny
     where: LiquidityGauge_filter
   ): [LiquidityGauge!]!
+  lockSnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): LockSnapshot
+  lockSnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: LockSnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: LockSnapshot_filter
+  ): [LockSnapshot!]!
+  omniVotingEscrowLock(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): OmniVotingEscrowLock
+  omniVotingEscrowLocks(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: OmniVotingEscrowLock_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: OmniVotingEscrowLock_filter
+  ): [OmniVotingEscrowLock!]!
   pool(
     """
     The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
@@ -1051,6 +1352,34 @@ type Query {
     subgraphError: _SubgraphErrorPolicy_! = deny
     where: RootGauge_filter
   ): [RootGauge!]!
+  singleRecipientGauge(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): SingleRecipientGauge
+  singleRecipientGauges(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: SingleRecipientGauge_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: SingleRecipientGauge_filter
+  ): [SingleRecipientGauge!]!
   user(
     """
     The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
@@ -1389,6 +1718,120 @@ enum RootGauge_orderBy {
   relativeWeightCap
 }
 
+type SingleRecipientGauge {
+  """ Factory contract address """
+  factory: GaugeFactory!
+
+  """ Reference to Gauge entity - created when SingleRecipientGauge is added to GaugeController
+  """
+  gauge: Gauge
+
+  """ SingleRecipientGauge contract address"""
+  id: ID!
+
+  """ Whether Balancer DAO killed the gauge """
+  isKilled: Boolean!
+
+  """ Address where emissions for this gauge will be sent to """
+  recipient: Bytes!
+
+  """ Relative weight cap of the gauge (0.01 = 1%) - V2 factories only """
+  relativeWeightCap: BigDecimal
+}
+
+input SingleRecipientGauge_filter {
+  """Filter for the block changed event."""
+  _change_block: BlockChangedFilter
+  and: [SingleRecipientGauge_filter]
+  factory: String
+  factory_: GaugeFactory_filter
+  factory_contains: String
+  factory_contains_nocase: String
+  factory_ends_with: String
+  factory_ends_with_nocase: String
+  factory_gt: String
+  factory_gte: String
+  factory_in: [String!]
+  factory_lt: String
+  factory_lte: String
+  factory_not: String
+  factory_not_contains: String
+  factory_not_contains_nocase: String
+  factory_not_ends_with: String
+  factory_not_ends_with_nocase: String
+  factory_not_in: [String!]
+  factory_not_starts_with: String
+  factory_not_starts_with_nocase: String
+  factory_starts_with: String
+  factory_starts_with_nocase: String
+  gauge: String
+  gauge_: Gauge_filter
+  gauge_contains: String
+  gauge_contains_nocase: String
+  gauge_ends_with: String
+  gauge_ends_with_nocase: String
+  gauge_gt: String
+  gauge_gte: String
+  gauge_in: [String!]
+  gauge_lt: String
+  gauge_lte: String
+  gauge_not: String
+  gauge_not_contains: String
+  gauge_not_contains_nocase: String
+  gauge_not_ends_with: String
+  gauge_not_ends_with_nocase: String
+  gauge_not_in: [String!]
+  gauge_not_starts_with: String
+  gauge_not_starts_with_nocase: String
+  gauge_starts_with: String
+  gauge_starts_with_nocase: String
+  id: ID
+  id_gt: ID
+  id_gte: ID
+  id_in: [ID!]
+  id_lt: ID
+  id_lte: ID
+  id_not: ID
+  id_not_in: [ID!]
+  isKilled: Boolean
+  isKilled_in: [Boolean!]
+  isKilled_not: Boolean
+  isKilled_not_in: [Boolean!]
+  or: [SingleRecipientGauge_filter]
+  recipient: Bytes
+  recipient_contains: Bytes
+  recipient_gt: Bytes
+  recipient_gte: Bytes
+  recipient_in: [Bytes!]
+  recipient_lt: Bytes
+  recipient_lte: Bytes
+  recipient_not: Bytes
+  recipient_not_contains: Bytes
+  recipient_not_in: [Bytes!]
+  relativeWeightCap: BigDecimal
+  relativeWeightCap_gt: BigDecimal
+  relativeWeightCap_gte: BigDecimal
+  relativeWeightCap_in: [BigDecimal!]
+  relativeWeightCap_lt: BigDecimal
+  relativeWeightCap_lte: BigDecimal
+  relativeWeightCap_not: BigDecimal
+  relativeWeightCap_not_in: [BigDecimal!]
+}
+
+enum SingleRecipientGauge_orderBy {
+  factory
+  factory__id
+  factory__numGauges
+  gauge
+  gauge__addedTimestamp
+  gauge__address
+  gauge__id
+  id
+  isKilled
+  recipient
+  relativeWeightCap
+}
+
 type Subscription {
   """Access to subgraph metadata"""
   _meta(block: Block_height): _Meta_
@@ -1560,6 +2003,62 @@ type Subscription {
     subgraphError: _SubgraphErrorPolicy_! = deny
     where: LiquidityGauge_filter
   ): [LiquidityGauge!]!
+  lockSnapshot(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): LockSnapshot
+  lockSnapshots(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: LockSnapshot_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: LockSnapshot_filter
+  ): [LockSnapshot!]!
+  omniVotingEscrowLock(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): OmniVotingEscrowLock
+  omniVotingEscrowLocks(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: OmniVotingEscrowLock_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: OmniVotingEscrowLock_filter
+  ): [OmniVotingEscrowLock!]!
   pool(
     """
     The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
@@ -1644,6 +2143,34 @@ type Subscription {
     subgraphError: _SubgraphErrorPolicy_! = deny
     where: RootGauge_filter
   ): [RootGauge!]!
+  singleRecipientGauge(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    id: ID!
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+  ): SingleRecipientGauge
+  singleRecipientGauges(
+    """
+    The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
+    """
+    block: Block_height
+    first: Int = 100
+    orderBy: SingleRecipientGauge_orderBy
+    orderDirection: OrderDirection
+    skip: Int = 0
+
+    """
+    Set to `allow` to receive data even if the subgraph has skipped over errors while syncing.
+    """
+    subgraphError: _SubgraphErrorPolicy_! = deny
+    where: SingleRecipientGauge_filter
+  ): [SingleRecipientGauge!]!
   user(
     """
     The block at which the query should be executed. Can either be a `{ hash: Bytes }` value containing a block hash, a `{ number: Int }` containing the block number, or a `{ number_gte: Int }` containing the minimum block number. In the case of `number_gte`, the query will be executed on the latest block only if the subgraph has progressed to or past the minimum block number. Defaults to the latest block when omitted.
@@ -1740,6 +2267,9 @@ type User {
   """ User address """
   id: ID!
 
+  """ List of omni locks the user created """
+  omniVotingLocks(first: Int = 100, orderBy: OmniVotingEscrowLock_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: OmniVotingEscrowLock_filter): [OmniVotingEscrowLock!]
+
   """ List of locks the user created """
   votingLocks(first: Int = 100, orderBy: VotingEscrowLock_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: VotingEscrowLock_filter): [VotingEscrowLock!]
 }
@@ -1758,6 +2288,7 @@ input User_filter {
   id_lte: ID
   id_not: ID
   id_not_in: [ID!]
+  omniVotingLocks_: OmniVotingEscrowLock_filter
   or: [User_filter]
   votingLocks_: VotingEscrowLock_filter
 }
@@ -1766,6 +2297,7 @@ enum User_orderBy {
   gaugeShares
   gaugeVotes
   id
+  omniVotingLocks
   votingLocks
 }
 
@@ -1776,20 +2308,34 @@ type VotingEscrow {
   """ List of veBAL locks created """
   locks(first: Int = 100, orderBy: VotingEscrowLock_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: VotingEscrowLock_filter): [VotingEscrowLock!]
 
-  """ Amount of B-80BAL-20WETH BPT locked """
-  stakedSupply: BigDecimal!
+  """ List of veBAL locks created """
+  omniLocks(first: Int = 100, orderBy: OmniVotingEscrowLock_orderBy, orderDirection: OrderDirection, skip: Int = 0, where: OmniVotingEscrowLock_filter): [OmniVotingEscrowLock!]
+
+  """ Amount of B-80BAL-20WETH BPT locked, only applies on mainnet """
+  stakedSupply: BigDecimal
 }
 
 type VotingEscrowLock {
+  """ veBAL balance at the moment user locks """
+  bias: BigDecimal!
+
   """ Equal to: <userAdress>-<votingEscrow> """
   id: ID!
 
   """ Amount of B-80BAL-20WETH BPT the user has locked """
   lockedBalance: BigDecimal!
 
+  """ veBAL decay rate (per second) """
+  slope: BigDecimal!
+
+  """ Timestamp at which the lock was created [seconds] """
+  timestamp: Int!
+
   """ Timestamp at which B-80BAL-20WETH BPT can be unlocked by user [seconds] 
   """
-  unlockTime: BigInt
+  unlockTime: BigInt!
+
+  """ Timestamp at which the lcok was created [seconds]. Same as timestamp """
   updatedAt: Int!
 
   """ Reference to User entity """
@@ -1803,6 +2349,14 @@ input VotingEscrowLock_filter {
   """Filter for the block changed event."""
   _change_block: BlockChangedFilter
   and: [VotingEscrowLock_filter]
+  bias: BigDecimal
+  bias_gt: BigDecimal
+  bias_gte: BigDecimal
+  bias_in: [BigDecimal!]
+  bias_lt: BigDecimal
+  bias_lte: BigDecimal
+  bias_not: BigDecimal
+  bias_not_in: [BigDecimal!]
   id: ID
   id_gt: ID
   id_gte: ID
@@ -1820,6 +2374,22 @@ input VotingEscrowLock_filter {
   lockedBalance_not: BigDecimal
   lockedBalance_not_in: [BigDecimal!]
   or: [VotingEscrowLock_filter]
+  slope: BigDecimal
+  slope_gt: BigDecimal
+  slope_gte: BigDecimal
+  slope_in: [BigDecimal!]
+  slope_lt: BigDecimal
+  slope_lte: BigDecimal
+  slope_not: BigDecimal
+  slope_not_in: [BigDecimal!]
+  timestamp: Int
+  timestamp_gt: Int
+  timestamp_gte: Int
+  timestamp_in: [Int!]
+  timestamp_lt: Int
+  timestamp_lte: Int
+  timestamp_not: Int
+  timestamp_not_in: [Int!]
   unlockTime: BigInt
   unlockTime_gt: BigInt
   unlockTime_gte: BigInt
@@ -1881,8 +2451,11 @@ input VotingEscrowLock_filter {
 }
 
 enum VotingEscrowLock_orderBy {
+  bias
   id
   lockedBalance
+  slope
+  timestamp
   unlockTime
   updatedAt
   user
@@ -1905,6 +2478,7 @@ input VotingEscrow_filter {
   id_not: ID
   id_not_in: [ID!]
   locks_: VotingEscrowLock_filter
+  omniLocks_: OmniVotingEscrowLock_filter
   or: [VotingEscrow_filter]
   stakedSupply: BigDecimal
   stakedSupply_gt: BigDecimal
@@ -1919,6 +2493,7 @@ input VotingEscrow_filter {
 enum VotingEscrow_orderBy {
   id
   locks
+  omniLocks
   stakedSupply
 }
 
