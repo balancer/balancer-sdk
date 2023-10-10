@@ -99,7 +99,8 @@ export class Data implements BalancerDataRepositories {
         multicall: networkConfig.addresses.contracts.multicall,
         vault: networkConfig.addresses.contracts.vault,
       },
-      networkConfig.poolsToIgnore
+      networkConfig.poolsToIgnore,
+      networkConfig.multicallBatchSize
     );
 
     this.poolShares = new PoolSharesRepository(

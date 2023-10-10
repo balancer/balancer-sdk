@@ -119,6 +119,7 @@ export interface BalancerNetworkConfig {
     };
   };
   averageBlockTime?: number; // In seconds, used if blockNumberSubgraph not set
+  multicallBatchSize?: number; // Only zkEVM needs a smaller batch size of 128, defaults to 1024
   pools: {
     wETHwstETH?: PoolReference;
   };
