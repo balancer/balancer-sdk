@@ -3,6 +3,7 @@ import { SubgraphPoolBase } from '@/.';
 import { Provider } from '@ethersproject/providers';
 import { formatFixed } from '@ethersproject/bignumber';
 import { SubgraphToken } from '@balancer-labs/sor';
+import { PoolToken, Pool } from '@/types';
 
 const abi = [
   'function getSwapFeePercentage() view returns (uint256)',
@@ -41,6 +42,11 @@ const getSwapFeeFn = (poolType: string) => {
   } else {
     return 'getSwapFeePercentage';
   }
+};
+
+type GenericToken = SubgraphToken | PoolToken;
+type GenericPool = Omit<SubgraphPoolBase | Pool, 'tokens'> & {
+  tokens: GenericToken[];
 };
 
 interface OnchainData {
@@ -133,7 +139,7 @@ const poolTypeCalls = (poolType: string, poolTypeVersion = 1) => {
   }
 };
 
-const merge = (pool: SubgraphPoolBase, result: OnchainData) => ({
+const merge = <T extends GenericPool>(pool: T, result: OnchainData) => ({
   ...pool,
   tokens: result.poolTokens
     ? pool.tokens.map((token) => {
@@ -209,8 +215,8 @@ export const fetchOnChainPoolData = async (
   return results;
 };
 
-export async function getOnChainBalances(
-  subgraphPoolsOriginal: SubgraphPoolBase[],
+export async function getOnChainBalances<T extends GenericPool>(
+  subgraphPoolsOriginal: T[],
   _multiAddress: string,
   vaultAddress: string,
   provider: Provider,
@@ -218,7 +224,7 @@ export async function getOnChainBalances(
 ): Promise<T[]> {
   if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
 
-  const poolsWithOnchainData: SubgraphPoolBase[] = [];
+  const poolsWithOnchainData: T[] = [];
 
   const onchainData = (await fetchOnChainPoolData(
     subgraphPoolsOriginal,
