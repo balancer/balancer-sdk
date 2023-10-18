@@ -148,9 +148,11 @@ const merge = <T extends GenericPool>(pool: T, result: OnchainData) => ({
           .indexOf(token.address);
         const wrappedToken =
           pool.wrappedIndex && pool.tokensList[pool.wrappedIndex];
+        const tokenDecimals =
+          token.decimals === undefined ? 18 : token.decimals;
         return {
           ...token,
-          balance: formatFixed(result.poolTokens[1][idx], token.decimals || 18),
+          balance: formatFixed(result.poolTokens[1][idx], tokenDecimals),
           weight:
             (result.weights && formatFixed(result.weights[idx], 18)) ||
             token.weight,
