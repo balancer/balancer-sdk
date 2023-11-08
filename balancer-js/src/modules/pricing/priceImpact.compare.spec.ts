@@ -1,4 +1,4 @@
-// yarn test:only ./src/modules/pricing/picompare.integration.spec.ts
+// yarn test:only ./src/modules/pricing/priceImpact.compare.spec.ts
 import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
 import dotenv from 'dotenv';
 import hardhat from 'hardhat';
@@ -9,6 +9,7 @@ import {
   Network,
   PoolToken,
   PoolWithMethods,
+  SubgraphPoolBase,
   SwapType,
 } from '@/.';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
@@ -23,7 +24,7 @@ const { ethers } = hardhat;
 const rpcUrl = 'http://127.0.0.1:8545';
 const network = Network.MAINNET;
 const sdk = new BalancerSDK({ network, rpcUrl });
-const { contracts } = sdk;
+const { contracts, pricing } = sdk;
 const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
 const { balancerHelpers, vault } = contracts;
@@ -37,7 +38,7 @@ const testPoolId =
 const blockNumber = TEST_BLOCK[network];
 const slippage = '0'; // does not affect result
 
-describe('Weighted Pool - Join Functions', async () => {
+describe('Price impact comparison tests', async () => {
   let pool: PoolWithMethods;
   let signerAddress: Address;
   let testPoolHelper: TestPoolHelper;
@@ -53,7 +54,7 @@ describe('Weighted Pool - Join Functions', async () => {
     pool = await testPoolHelper.getPool();
   });
 
-  context('Integration Tests', async () => {
+  context('Price impact comparison tests', async () => {
     // Setup chain
     beforeEach(async function () {
       const balances = pool.tokens.map((token) =>
@@ -70,7 +71,106 @@ describe('Weighted Pool - Join Functions', async () => {
       pool = await testPoolHelper.getPool(); // update the pool after the forkSetup;
     });
 
-    context('single token join', async () => {
+    context('swap', async () => {
+      const assetInIndex = 0;
+      const assetOutIndex = 1;
+      let swapAmount: BigNumber;
+
+      before(() => {
+        swapAmount = parseFixed('2', pool.tokens[assetInIndex].decimals); // 200 WETH
+      });
+
+      it('should calculate price impact - spot price method', async () => {
+        const swapAmounts = await queryBatchSwap(
+          vault,
+          SwapType.SwapExactIn,
+          [
+            {
+              poolId: pool.id,
+              assetInIndex,
+              assetOutIndex,
+              amount: swapAmount.toString(),
+              userData: '0x',
+            },
+          ],
+          pool.tokensList
+        );
+
+        const amountIn = parseFloat(
+          formatFixed(
+            swapAmounts[assetInIndex],
+            pool.tokens[assetInIndex].decimals
+          )
+        );
+        console.log(`amountIn: ${amountIn}`);
+
+        const amountOut =
+          -1 *
+          parseFloat(
+            formatFixed(
+              swapAmounts[assetOutIndex],
+              pool.tokens[assetOutIndex].decimals
+            )
+          );
+        console.log(`amountOut: ${amountOut}`);
+
+        const effectivePrice = amountIn / amountOut;
+        console.log(`effectivePrice: ${effectivePrice}`);
+
+        const subgraphPool: SubgraphPoolBase = pool as SubgraphPoolBase;
+
+        const spotPrice = await pricing.getSpotPrice(
+          pool.tokensList[assetInIndex],
+          pool.tokensList[assetOutIndex],
+          [subgraphPool]
+        );
+        console.log(`spotPrice: ${spotPrice}`);
+
+        const priceRatio = parseFloat(spotPrice) / effectivePrice;
+        const priceImpact = 1 - priceRatio;
+        console.log(`priceImpact: ${priceImpact}`);
+      });
+
+      it('should calculate price impact - spot price method', async () => {
+        const swapAmounts = await queryBatchSwap(
+          vault,
+          SwapType.SwapExactIn,
+          [
+            {
+              poolId: pool.id,
+              assetInIndex,
+              assetOutIndex,
+              amount: swapAmount.toString(),
+              userData: '0x',
+            },
+            {
+              poolId: pool.id,
+              assetInIndex: assetOutIndex,
+              assetOutIndex: assetInIndex,
+              amount: '0',
+              userData: '0x',
+            },
+          ],
+          pool.tokensList
+        );
+        const diff = parseFloat(
+          formatFixed(
+            swapAmounts[assetInIndex],
+            pool.tokens[assetInIndex].decimals
+          )
+        );
+        console.log(`diff lost by price impact: ${diff}`);
+
+        const initialA = parseFloat(
+          formatFixed(swapAmount, pool.tokens[assetInIndex].decimals)
+        );
+        console.log(`initialA: ${initialA}`);
+
+        const priceImpactABA = diff / initialA / 2;
+        console.log(`priceImpactABA  : ${priceImpactABA}`);
+      });
+    });
+
       let tokenIn: PoolToken;
       let amountIn: BigNumber;
 
