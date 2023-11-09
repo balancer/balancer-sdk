@@ -13,7 +13,6 @@ import {
   SwapType,
 } from '@/.';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
-import { TEST_BLOCK } from '@/test/lib/constants';
 import { queryBatchSwap } from '../swaps/queryBatchSwap';
 
 dotenv.config();
@@ -28,21 +27,25 @@ const provider = new JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
 const { balancerHelpers, vault } = contracts;
 
-const blockNumber = TEST_BLOCK[network];
+const blockNumber = 18536155;
 const testPoolId =
-  '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014'; // 80BAL/20WETH
+  '0x93d199263632a4ef4bb438f1feb99e57b4b5f0bd0000000000000000000005c2'; // 80BAL/20WETH
+
+/**
+ * When testing pools with phantom BPT (e.g. ComposableStable), indexes should consider pool tokens with BPT
+ */
 
 // swap config
-const swapAmountFloat = '2';
-const assetInIndex = 1;
-const assetOutIndex = 0;
+const swapAmountFloat = '200';
+const assetInIndex = 0;
+const assetOutIndex = 2;
 
 // single token join config
 const joinAmountFloat = '1000';
 const tokenInIndex = 0;
 
 // unbalanced join config
-const amountsInFloat = ['1000', '1000'];
+const amountsInFloat = ['10', '0', '1000']; // should add value for BPT if present
 
 describe('Price impact comparison tests', async () => {
   let pool: PoolWithMethods;
@@ -180,12 +183,20 @@ describe('Price impact comparison tests', async () => {
     });
 
     it('should calculate price impact - spot price method', async () => {
+      const tokensIn = [...pool.tokensList];
       const amountsIn = Array(pool.tokensList.length).fill('0');
-      amountsIn[pool.tokensList.indexOf(tokenIn.address)] = amountIn.toString();
+
+      amountsIn[tokenInIndex] = amountIn.toString();
+
+      const bptIndex = tokensIn.findIndex((t) => t === pool.address);
+      if (bptIndex > -1) {
+        tokensIn.splice(bptIndex, 1);
+        amountsIn.splice(bptIndex, 1);
+      }
 
       const { priceImpact } = pool.buildJoin(
         signerAddress,
-        pool.tokensList,
+        tokensIn,
         amountsIn,
         '0' // slippage
       );
@@ -228,18 +239,26 @@ describe('Price impact comparison tests', async () => {
   });
 
   context('unbalanced join - 2 tokens', async () => {
+    let tokensIn: string[];
     let amountsIn: BigNumber[];
 
-    before(() => {
+    beforeEach(() => {
+      tokensIn = [...pool.tokensList];
       amountsIn = pool.tokens.map((token, i) =>
         parseFixed(amountsInFloat[i], token.decimals)
       );
     });
 
     it('should calculate price impact - spot price method', async () => {
+      const bptIndex = tokensIn.findIndex((t) => t === pool.address);
+      if (bptIndex > -1) {
+        tokensIn.splice(bptIndex, 1);
+        amountsIn.splice(bptIndex, 1);
+      }
+
       const { priceImpact } = pool.buildJoin(
         signerAddress,
-        pool.tokensList,
+        tokensIn,
         amountsIn.map((amount) => amount.toString()),
         '0' // slippage
       );
@@ -252,7 +271,7 @@ describe('Price impact comparison tests', async () => {
 
     it('should calculate price impact - ABA method', async () => {
       const maxAmountsInByToken = new Map<string, BigNumber>(
-        amountsIn.map((a, i) => [pool.tokensList[i], a])
+        amountsIn.map((a, i) => [tokensIn[i], a])
       );
 
       // query unbalanced join
@@ -271,11 +290,11 @@ describe('Price impact comparison tests', async () => {
 
       // diff between unbalanced and proportional amounts for token 1
       const diffs = amountsOut.map((a, i) => a.sub(amountsIn[i]));
-      const excessIndex = diffs.findIndex((a) => a.gt(0));
+      const excessIndex = diffs.findIndex((a) => a.gt(0)); // token index that has excess amount on proportional compared to unbalanced
       const otherIndex = diffs.findIndex((a) => a.lt(0));
-      const diff1 = amountsOut[excessIndex].sub(amountsIn[excessIndex]);
+      const diffExcess = amountsOut[excessIndex].sub(amountsIn[excessIndex]);
 
-      // swap that diff to token 0
+      // swap that diff to token other (non-excess)
       const returnAmounts = await queryBatchSwap(
         vault,
         SwapType.SwapExactIn,
@@ -284,24 +303,24 @@ describe('Price impact comparison tests', async () => {
             poolId: pool.id,
             assetInIndex: excessIndex,
             assetOutIndex: otherIndex,
-            amount: diff1.toString(),
+            amount: diffExcess.toString(),
             userData: '0x',
           },
         ],
         pool.tokensList
       );
 
-      // calculate final token 0 amount (using sub because returnAmounts[0] is negative)
-      const token0Final = amountsOut[otherIndex].sub(
+      // calculate final other token amount (using sub because returnAmounts[0] is negative)
+      const otherTokenFinal = amountsOut[otherIndex].sub(
         BigNumber.from(returnAmounts[otherIndex])
       );
 
       // diff between unbalanced and proportional amounts for token 0
-      const diff0 = amountsIn[otherIndex].sub(token0Final);
+      const diffOther = amountsIn[otherIndex].sub(otherTokenFinal);
 
-      // query join with diff0 in order to get BPT difference between unbalanced and proportional
+      // query join with diffOther in order to get BPT difference between unbalanced and proportional
       const diffAmounts = new Map<string, BigNumber>([
-        [pool.tokensList[otherIndex], diff0],
+        [pool.tokensList[otherIndex], diffOther],
       ]);
 
       const { bptOut: bptOutDiff } = await balancerHelpers.callStatic.queryJoin(
@@ -310,13 +329,10 @@ describe('Price impact comparison tests', async () => {
         })
       );
 
-      const initialA = parseFloat(
-        formatFixed(bptOut, pool.tokens[otherIndex].decimals)
-      );
-      const finalA = parseFloat(
-        formatFixed(bptOut.sub(bptOutDiff), pool.tokens[otherIndex].decimals)
-      );
-      const priceImpactABA = (initialA - finalA) / initialA / 2;
+      const initialBPT = parseFloat(formatFixed(bptOut, 18));
+      const finalBPT = parseFloat(formatFixed(bptOut.sub(bptOutDiff), 18));
+
+      const priceImpactABA = (initialBPT - finalBPT) / initialBPT / 2;
       console.log(`priceImpactABA      : ${priceImpactABA}`);
     });
   });
