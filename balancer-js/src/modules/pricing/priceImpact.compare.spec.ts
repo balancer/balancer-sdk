@@ -171,6 +171,7 @@ describe('Price impact comparison tests', async () => {
       });
     });
 
+    context('single token join', async () => {
       let tokenIn: PoolToken;
       let amountIn: BigNumber;
 
