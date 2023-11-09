@@ -1,7 +1,7 @@
 // yarn test:only ./src/modules/pricing/priceImpact.compare.spec.ts
 import { BigNumber, formatFixed, parseFixed } from '@ethersproject/bignumber';
+import { JsonRpcProvider } from '@ethersproject/providers';
 import dotenv from 'dotenv';
-import hardhat from 'hardhat';
 
 import {
   Address,
@@ -13,30 +13,36 @@ import {
   SwapType,
 } from '@/.';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
-import { ADDRESSES, TEST_BLOCK } from '@/test/lib/constants';
+import { TEST_BLOCK } from '@/test/lib/constants';
 import { queryBatchSwap } from '../swaps/queryBatchSwap';
 
 dotenv.config();
 
 const { ALCHEMY_URL: jsonRpcUrl } = process.env;
-const { ethers } = hardhat;
 
 const rpcUrl = 'http://127.0.0.1:8545';
 const network = Network.MAINNET;
 const sdk = new BalancerSDK({ network, rpcUrl });
 const { contracts, pricing } = sdk;
-const provider = new ethers.providers.JsonRpcProvider(rpcUrl, 1);
+const provider = new JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
 const { balancerHelpers, vault } = contracts;
 
-// Slots used to set the account balance for each token through hardhat_setStorageAt
-// Info fetched using npm package slot20
-const slots = [ADDRESSES[network].WBTC.slot, ADDRESSES[network].WETH.slot];
-const initialBalance = '100000';
-const testPoolId =
-  '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014'; // B_50WBTC_50WETH
 const blockNumber = TEST_BLOCK[network];
-const slippage = '0'; // does not affect result
+const testPoolId =
+  '0x5c6ee304399dbdb9c8ef030ab642b10820db8f56000200000000000000000014'; // 80BAL/20WETH
+
+// swap config
+const swapAmountFloat = '2';
+const assetInIndex = 1;
+const assetOutIndex = 0;
+
+// single token join config
+const joinAmountFloat = '1000';
+const tokenInIndex = 0;
+
+// unbalanced join config
+const amountsInFloat = ['1000', '1000'];
 
 describe('Price impact comparison tests', async () => {
   let pool: PoolWithMethods;
@@ -56,27 +62,18 @@ describe('Price impact comparison tests', async () => {
 
   // Setup chain
   beforeEach(async function () {
-    const balances = pool.tokens.map((token) =>
-      parseFixed(initialBalance, token.decimals).toString()
-    );
-    await forkSetup(
-      signer,
-      pool.tokensList,
-      slots,
-      balances,
-      jsonRpcUrl as string,
-      blockNumber
-    );
+    await forkSetup(signer, [], [], [], jsonRpcUrl as string, blockNumber);
     pool = await testPoolHelper.getPool(); // update the pool after the forkSetup;
   });
 
   context('swap', async () => {
-    const assetInIndex = 1;
-    const assetOutIndex = 0;
     let swapAmount: BigNumber;
 
     before(() => {
-      swapAmount = parseFixed('200', pool.tokens[assetInIndex].decimals); // 200 WETH
+      swapAmount = parseFixed(
+        swapAmountFloat,
+        pool.tokens[assetInIndex].decimals
+      );
     });
 
     it('should calculate price impact - spot price method', async () => {
@@ -122,7 +119,7 @@ describe('Price impact comparison tests', async () => {
       );
 
       const priceRatio = parseFloat(spotPrice) / effectivePrice;
-      const priceImpact = 1 - priceRatio;
+      const priceImpact = 1 - priceRatio + parseFloat(pool.swapFee); // remove swapFee to have results similar to the UI
       console.log(`priceImpactSpotPrice: ${priceImpact}`);
     });
 
@@ -168,8 +165,7 @@ describe('Price impact comparison tests', async () => {
         formatFixed(swapAmount, pool.tokens[assetInIndex].decimals)
       );
 
-      const priceImpactABA =
-        (initialA - finalA) / initialA / 2 - parseFloat(pool.swapFee);
+      const priceImpactABA = (initialA - finalA) / initialA / 2;
       console.log(`priceImpactABA      : ${priceImpactABA}`);
     });
   });
@@ -179,8 +175,8 @@ describe('Price impact comparison tests', async () => {
     let amountIn: BigNumber;
 
     before(() => {
-      tokenIn = pool.tokens[0];
-      amountIn = parseFixed('10', tokenIn.decimals);
+      tokenIn = pool.tokens[tokenInIndex];
+      amountIn = parseFixed(joinAmountFloat, tokenIn.decimals);
     });
 
     it('should calculate price impact - spot price method', async () => {
@@ -191,7 +187,7 @@ describe('Price impact comparison tests', async () => {
         signerAddress,
         pool.tokensList,
         amountsIn,
-        slippage
+        '0' // slippage
       );
 
       const priceImpactFloat = parseFloat(
@@ -233,8 +229,8 @@ describe('Price impact comparison tests', async () => {
     let amountsIn: BigNumber[];
 
     before(() => {
-      amountsIn = pool.tokens.map((token) =>
-        parseFixed('10000', token.decimals)
+      amountsIn = pool.tokens.map((token, i) =>
+        parseFixed(amountsInFloat[i], token.decimals)
       );
     });
 
@@ -243,7 +239,7 @@ describe('Price impact comparison tests', async () => {
         signerAddress,
         pool.tokensList,
         amountsIn.map((amount) => amount.toString()),
-        slippage
+        '0' // slippage
       );
 
       const priceImpactFloat = parseFloat(
