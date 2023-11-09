@@ -76,7 +76,7 @@ export const exit = (
     );
   } else {
     const encoder = isComposable
-      ? ComposableStablePoolEncoder.exitExactBPTInForAllTokensOut
+      ? ComposableStablePoolEncoder.exitExactBPTInForTokensOut
       : StablePoolEncoder.exitExactBPTInForTokensOut;
     userData = encoder(amount);
   }
