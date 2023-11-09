@@ -218,8 +218,10 @@ describe('Price impact comparison tests', async () => {
         ...exitParams
       );
 
-      const initialA = parseFloat(formatFixed(amountIn, 8));
-      const finalA = parseFloat(formatFixed(amountsOut[0], 8));
+      const initialA = parseFloat(formatFixed(amountIn, tokenIn.decimals));
+      const finalA = parseFloat(
+        formatFixed(amountsOut[tokenInIndex], tokenIn.decimals)
+      );
       const priceImpactABA = (initialA - finalA) / initialA / 2;
       console.log(`priceImpactABA      : ${priceImpactABA}`);
     });
