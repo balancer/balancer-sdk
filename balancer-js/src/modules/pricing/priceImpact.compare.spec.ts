@@ -27,10 +27,13 @@ const { contracts, pricing } = sdk;
 const provider = new JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
 const { balancerHelpers, vault } = contracts;
-const csvFilePath = 'results.csv';
+const csvFilePath = 'results2.csv';
 // Write the header to the CSV file
-const csvLine = 'action,test,spot price,ABA,error abs,error rel\n';
+const csvLine = 'action,test,spot price,ABA,error abs,error rel,\n';
 fs.writeFileSync(csvFilePath, csvLine, { flag: 'w' });
+const writeNewTable = (header: string) => {
+  fs.writeFileSync(csvFilePath, `${header}\n`, { flag: 'a' });
+};
 
 const blockNumber = 18559730;
 const testPoolId =
@@ -110,13 +113,30 @@ describe('Price impact comparison tests', async () => {
         );
       });
 
-      after(() => {
+      after(async () => {
         const csvLine = `swap,${
           index + 1
         },${priceImpactSpot},${priceImpactABA},${
           priceImpactABA - priceImpactSpot
         },${(priceImpactABA - priceImpactSpot) / priceImpactSpot}\n`;
         fs.writeFileSync(csvFilePath, csvLine, { flag: 'a' });
+
+        writeNewTable('Swap Summary');
+
+        // Query and write the token balances
+        for (let i = 0; i < pool.tokensList.length; i++) {
+          const token = pool.tokensList[i];
+          const amount =
+            i === assetInIndex ? swapAmountFloats[index].toString() : '0';
+          const balance = await pool.tokens[i].balance;
+          const relativeValue = (Number(amount) / Number(balance)).toString();
+          fs.writeFileSync(
+            csvFilePath,
+            `${token},${amount},${balance.toString()},${relativeValue}\n`,
+            { flag: 'a' }
+          );
+        }
+        fs.writeFileSync(csvFilePath, '\n', { flag: 'a' });
       });
 
       it(`should calculate price impact - spot price method - Test ${
@@ -228,13 +248,34 @@ describe('Price impact comparison tests', async () => {
         amountIn = parseFixed(test.amountFloat, tokenIn.decimals);
       });
 
-      after(() => {
+      after(async () => {
         const csvLine = `single token join,${
           index + 1
         },${priceImpactSpot},${priceImpactABA},${
           priceImpactABA - priceImpactSpot
         },${(priceImpactABA - priceImpactSpot) / priceImpactSpot}\n`;
         fs.writeFileSync(csvFilePath, csvLine, { flag: 'a' });
+
+        writeNewTable('Single-Sided Join Summary');
+
+        // Query and write the token balances for single-sided join summary
+        for (let i = 0; i < pool.tokensList.length; i++) {
+          const token = pool.tokensList[i];
+          const amount =
+            i === singleTokenJoinTests[i].tokenIndex
+              ? singleTokenJoinTests[index].amountFloat
+              : '0';
+          const balance = await pool.tokens[i].balance;
+          const relativeValue = (Number(amount) / Number(balance)).toString();
+          fs.writeFileSync(
+            csvFilePath,
+            `${token},${amount},${balance.toString()},${relativeValue}\n`,
+            { flag: 'a' }
+          );
+        }
+
+        // Write an empty line after single-sided join summary
+        fs.writeFileSync(csvFilePath, '\n', { flag: 'a' });
       });
 
       it('should calculate price impact - spot price method', async () => {
@@ -306,13 +347,32 @@ describe('Price impact comparison tests', async () => {
         );
       });
 
-      after(() => {
+      after(async () => {
         const csvLine = `unbalanced join,${
           index + 1
         },${priceImpactSpot},${priceImpactABA},${
           priceImpactABA - priceImpactSpot
         },${(priceImpactABA - priceImpactSpot) / priceImpactSpot}\n`;
         fs.writeFileSync(csvFilePath, csvLine, { flag: 'a' });
+
+        // Write unbalanced join summary table
+        writeNewTable('Unbalanced Join Summary');
+
+        // Query and write the token balances for unbalanced join summary
+        for (let i = 0; i < pool.tokensList.length; i++) {
+          const token = pool.tokensList[i];
+          const amount = unbalancedJoinTests[index].amountsInFloat[i];
+          const balance = await pool.tokens[i].balance;
+          const relativeValue = (Number(amount) / Number(balance)).toString();
+          fs.writeFileSync(
+            csvFilePath,
+            `${token},${amount},${balance.toString()},${relativeValue}\n`,
+            { flag: 'a' }
+          );
+        }
+
+        // Write an empty line after unbalanced join summary
+        fs.writeFileSync(csvFilePath, '\n', { flag: 'a' });
       });
 
       it('should calculate price impact - spot price method', async () => {
