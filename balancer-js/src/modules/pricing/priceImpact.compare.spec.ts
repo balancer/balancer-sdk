@@ -37,7 +37,7 @@ const writeNewTable = (header: string) => {
 
 const blockNumber = 18559730;
 const testPoolId =
-  '0x42ed016f826165c2e5976fe5bc3df540c5ad0af700000000000000000000058b'; // 80BAL/20WETH
+  '0x93d199263632a4ef4bb438f1feb99e57b4b5f0bd0000000000000000000005c2'; // 80BAL/20WETH
 
 /**
  * When testing pools with phantom BPT (e.g. ComposableStable), indexes should consider pool tokens with BPT
@@ -54,27 +54,28 @@ const swapAmountFloats = [
   String(Number(swapAmountFloat) * 50),
   String(Number(swapAmountFloat) * 100),
 ];
-const assetInIndex = 1;
+const assetInIndex = 0;
 const assetOutIndex = 2;
 
 // single token join config
 const joinAmountFloat = '10';
-// const tokenInIndex = 1;
+const tokenIndex = 0;
 const singleTokenJoinTests = [
-  { amountFloat: joinAmountFloat, tokenIndex: 1 },
-  { amountFloat: String(Number(joinAmountFloat) * 2), tokenIndex: 1 },
-  { amountFloat: String(Number(joinAmountFloat) * 5), tokenIndex: 1 },
-  { amountFloat: String(Number(joinAmountFloat) * 10), tokenIndex: 1 },
-  { amountFloat: String(Number(joinAmountFloat) * 25), tokenIndex: 1 },
-  { amountFloat: String(Number(joinAmountFloat) * 50), tokenIndex: 1 },
-  { amountFloat: String(Number(joinAmountFloat) * 100), tokenIndex: 1 },
+  { amountFloat: joinAmountFloat, tokenIndex },
+  { amountFloat: String(Number(joinAmountFloat) * 2), tokenIndex },
+  { amountFloat: String(Number(joinAmountFloat) * 5), tokenIndex },
+  { amountFloat: String(Number(joinAmountFloat) * 10), tokenIndex },
+  { amountFloat: String(Number(joinAmountFloat) * 25), tokenIndex },
+  { amountFloat: String(Number(joinAmountFloat) * 50), tokenIndex },
+  { amountFloat: String(Number(joinAmountFloat) * 100), tokenIndex },
 ];
 
 // unbalanced join config
 // const amountsInFloat = ['0', '200', '100', '10']; // should add value for BPT if present
 const unbalancedJoinTests = [
-  { amountsInFloat: ['0', '200', '100', '10'] },
-  { amountsInFloat: ['0', '2000', '100', '10'] },
+  { amountsInFloat: ['200', '0', '10'] },
+  { amountsInFloat: ['2000', '0', '10'] },
+  { amountsInFloat: ['4000', '0', '10'] },
   // Add more test scenarios as needed
 ];
 
