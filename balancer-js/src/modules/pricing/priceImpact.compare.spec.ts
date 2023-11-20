@@ -27,7 +27,7 @@ const { contracts, pricing } = sdk;
 const provider = new JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
 const { balancerHelpers, vault } = contracts;
-const csvFilePath = 'results2.csv';
+const csvFilePath = '50COIL50USDC_USDC.csv';
 // Write the header to the CSV file
 const csvLine = 'action,test,spot price,ABA,error abs,error rel,\n';
 fs.writeFileSync(csvFilePath, csvLine, { flag: 'w' });
@@ -37,14 +37,14 @@ const writeNewTable = (header: string) => {
 
 const blockNumber = 18559730;
 const testPoolId =
-  '0x93d199263632a4ef4bb438f1feb99e57b4b5f0bd0000000000000000000005c2'; // 80BAL/20WETH
+  '0x42fbd9f666aacc0026ca1b88c94259519e03dd67000200000000000000000507'; // 80BAL/20WETH
 
 /**
  * When testing pools with phantom BPT (e.g. ComposableStable), indexes should consider pool tokens with BPT
  */
 
 // swap config
-const swapAmountFloat = '10';
+const swapAmountFloat = '500';
 const swapAmountFloats = [
   swapAmountFloat,
   String(Number(swapAmountFloat) * 2),
@@ -54,12 +54,12 @@ const swapAmountFloats = [
   String(Number(swapAmountFloat) * 50),
   String(Number(swapAmountFloat) * 100),
 ];
-const assetInIndex = 0;
-const assetOutIndex = 2;
+const assetInIndex = 1;
+const assetOutIndex = 0;
 
 // single token join config
-const joinAmountFloat = '10';
-const tokenIndex = 0;
+const joinAmountFloat = '500';
+const tokenIndex = 1;
 const singleTokenJoinTests = [
   { amountFloat: joinAmountFloat, tokenIndex },
   { amountFloat: String(Number(joinAmountFloat) * 2), tokenIndex },
@@ -73,9 +73,11 @@ const singleTokenJoinTests = [
 // unbalanced join config
 // const amountsInFloat = ['0', '200', '100', '10']; // should add value for BPT if present
 const unbalancedJoinTests = [
-  { amountsInFloat: ['200', '0', '10'] },
-  { amountsInFloat: ['2000', '0', '10'] },
-  { amountsInFloat: ['4000', '0', '10'] },
+  { amountsInFloat: ['10', '10'] },
+  { amountsInFloat: ['10', '100'] },
+  { amountsInFloat: ['10', '1000'] },
+  { amountsInFloat: ['10', '10000'] },
+  { amountsInFloat: ['10', '100000'] },
   // Add more test scenarios as needed
 ];
 
