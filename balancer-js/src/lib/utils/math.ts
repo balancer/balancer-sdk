@@ -50,3 +50,9 @@ export function formatFromBigInt18(value: bigint): string {
  * Like parseEther but for numbers. Converts floating point to BigNumber using 18 decimals
  */
 export const bn = (value: number): BigNumber => _parseFixed(`${value}`, 18);
+
+export const min = (values: BigNumber[]): BigNumber =>
+  values.reduce((a, b) => (a.lt(b) ? a : b));
+
+export const max = (values: BigNumber[]): BigNumber =>
+  values.reduce((a, b) => (a.gt(b) ? a : b));

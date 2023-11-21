@@ -7,14 +7,18 @@ import * as fs from 'fs';
 import {
   Address,
   BalancerSDK,
+  BatchSwapStep,
   Network,
   PoolToken,
   PoolWithMethods,
   SubgraphPoolBase,
   SwapType,
+  max,
+  min,
 } from '@/.';
 import { forkSetup, TestPoolHelper } from '@/test/lib/utils';
 import { queryBatchSwap } from '../swaps/queryBatchSwap';
+import { Zero } from '@ethersproject/constants';
 
 dotenv.config();
 
@@ -27,7 +31,7 @@ const { contracts, pricing } = sdk;
 const provider = new JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
 const { balancerHelpers, vault } = contracts;
-const csvFilePath = '50COIL50USDC_USDC.csv';
+const csvFilePath = 'wstETH-rETH-sfrxETH.csv';
 // Write the header to the CSV file
 const csvLine = 'action,test,spot price,ABA,error abs,error rel,\n';
 fs.writeFileSync(csvFilePath, csvLine, { flag: 'w' });
@@ -37,14 +41,14 @@ const writeNewTable = (header: string) => {
 
 const blockNumber = 18559730;
 const testPoolId =
-  '0x42fbd9f666aacc0026ca1b88c94259519e03dd67000200000000000000000507'; // 80BAL/20WETH
+  '0x42ed016f826165c2e5976fe5bc3df540c5ad0af700000000000000000000058b'; // 80BAL/20WETH
 
 /**
  * When testing pools with phantom BPT (e.g. ComposableStable), indexes should consider pool tokens with BPT
  */
 
 // swap config
-const swapAmountFloat = '500';
+const swapAmountFloat = '10';
 const swapAmountFloats = [
   swapAmountFloat,
   String(Number(swapAmountFloat) * 2),
@@ -55,10 +59,10 @@ const swapAmountFloats = [
   String(Number(swapAmountFloat) * 100),
 ];
 const assetInIndex = 1;
-const assetOutIndex = 0;
+const assetOutIndex = 2;
 
 // single token join config
-const joinAmountFloat = '500';
+const joinAmountFloat = '10';
 const tokenIndex = 1;
 const singleTokenJoinTests = [
   { amountFloat: joinAmountFloat, tokenIndex },
@@ -73,11 +77,9 @@ const singleTokenJoinTests = [
 // unbalanced join config
 // const amountsInFloat = ['0', '200', '100', '10']; // should add value for BPT if present
 const unbalancedJoinTests = [
-  { amountsInFloat: ['10', '10'] },
-  { amountsInFloat: ['10', '100'] },
-  { amountsInFloat: ['10', '1000'] },
-  { amountsInFloat: ['10', '10000'] },
-  { amountsInFloat: ['10', '100000'] },
+  { amountsInFloat: ['0', '10', '100', '1000'] },
+  { amountsInFloat: ['0', '100', '1000', '10'] },
+  { amountsInFloat: ['0', '1000', '100', '10'] },
   // Add more test scenarios as needed
 ];
 
@@ -339,7 +341,7 @@ describe('Price impact comparison tests', async () => {
   });
 
   unbalancedJoinTests.forEach((test, index) => {
-    context('unbalanced join - 2 tokens', async () => {
+    context('unbalanced join - generalized (multi-token)', async () => {
       let tokensIn: string[];
       let amountsIn: BigNumber[];
 
@@ -398,7 +400,7 @@ describe('Price impact comparison tests', async () => {
         console.log(`priceImpactSpotPrice: ${priceImpactSpot}`);
       });
 
-      it('should calculate price impact - ABA method', async () => {
+      it('should calculate price impact - ABA method - generalized (multi-token)', async () => {
         const maxAmountsInByToken = new Map<string, BigNumber>(
           amountsIn.map((a, i) => [tokensIn[i], a])
         );
@@ -419,50 +421,113 @@ describe('Price impact comparison tests', async () => {
 
         // diff between unbalanced and proportional amounts for token 1
         const diffs = amountsOut.map((a, i) => a.sub(amountsIn[i]));
-        const excessIndex = diffs.findIndex((a) => a.gt(0)); // token index that has excess amount on proportional compared to unbalanced
-        const otherIndex = diffs.findIndex((a) => a.lt(0));
-        const diffExcess = amountsOut[excessIndex].sub(amountsIn[excessIndex]);
 
-        // swap that diff to token other (non-excess)
-        const returnAmounts = await queryBatchSwap(
-          vault,
-          SwapType.SwapExactIn,
-          [
-            {
-              poolId: pool.id,
-              assetInIndex: excessIndex,
-              assetOutIndex: otherIndex,
-              amount: diffExcess.toString(),
-              userData: '0x',
-            },
-          ],
-          pool.tokensList
-        );
+        const diffBPTs: BigNumber[] = [];
+        for (let i = 0; i < diffs.length; i++) {
+          if (diffs[i].eq(Zero)) {
+            diffBPTs.push(Zero);
+          } else {
+            const diffQuery = await balancerHelpers.callStatic.queryJoin(
+              ...pool.buildQueryJoinExactIn({
+                maxAmountsInByToken: new Map<string, BigNumber>([
+                  [tokensIn[i], diffs[i].abs()],
+                ]),
+              })
+            );
+            const diffBPT = diffQuery.bptOut.mul(diffs[i].gte(0) ? 1 : -1);
+            diffBPTs.push(diffBPT);
+          }
+        }
+        let minPositiveDiffIndex = 0;
+        let minNegativeDiffIndex = 1;
 
-        // calculate final other token amount (using sub because returnAmounts[0] is negative)
-        const otherTokenFinal = amountsOut[otherIndex].sub(
-          BigNumber.from(returnAmounts[otherIndex])
-        );
-
-        // diff between unbalanced and proportional amounts for token 0
-        const diffOther = amountsIn[otherIndex].sub(otherTokenFinal);
-
-        // query join with diffOther in order to get BPT difference between unbalanced and proportional
-        const diffAmounts = new Map<string, BigNumber>([
-          [pool.tokensList[otherIndex], diffOther],
-        ]);
-
-        const { bptOut: bptOutDiff } =
-          await balancerHelpers.callStatic.queryJoin(
-            ...pool.buildQueryJoinExactIn({
-              maxAmountsInByToken: diffAmounts,
-            })
+        const nonZeroDiffs = diffs.filter((a) => !a.eq(Zero));
+        for (let i = 0; i < nonZeroDiffs.length - 1; i++) {
+          minPositiveDiffIndex = diffBPTs.findIndex((diffBPT) =>
+            diffBPT.eq(min(diffBPTs.filter((a) => a.gt(0))))
+          );
+          minNegativeDiffIndex = diffBPTs.findIndex((diffBPT) =>
+            diffBPT.eq(max(diffBPTs.filter((a) => a.lt(0))))
           );
 
-        const initialBPT = parseFloat(formatFixed(bptOut, 18));
-        const finalBPT = parseFloat(formatFixed(bptOut.sub(bptOutDiff), 18));
+          let returnAmounts: string[];
+          if (
+            diffBPTs[minPositiveDiffIndex] <
+            diffBPTs[minNegativeDiffIndex].abs()
+          ) {
+            // swap that diff to token other (non-excess)
+            returnAmounts = await queryBatchSwap(
+              vault,
+              SwapType.SwapExactIn,
+              [
+                {
+                  poolId: pool.id,
+                  assetInIndex: minPositiveDiffIndex,
+                  assetOutIndex: minNegativeDiffIndex,
+                  amount: diffs[minPositiveDiffIndex].toString(),
+                  userData: '0x',
+                },
+              ],
+              pool.tokensList
+            );
+            diffs[minPositiveDiffIndex] = Zero;
+            diffBPTs[minPositiveDiffIndex] = Zero;
+            diffs[minNegativeDiffIndex] = diffs[minNegativeDiffIndex].sub(
+              BigNumber.from(returnAmounts[minNegativeDiffIndex])
+            );
+            const diffQuery = await balancerHelpers.callStatic.queryJoin(
+              ...pool.buildQueryJoinExactIn({
+                maxAmountsInByToken: new Map<string, BigNumber>([
+                  [
+                    tokensIn[minNegativeDiffIndex],
+                    diffs[minNegativeDiffIndex].abs(),
+                  ],
+                ]),
+              })
+            );
+            diffBPTs[minNegativeDiffIndex] = diffQuery.bptOut.mul(-1);
+          } else {
+            returnAmounts = await queryBatchSwap(
+              vault,
+              SwapType.SwapExactOut,
+              [
+                {
+                  poolId: pool.id,
+                  assetInIndex: minPositiveDiffIndex,
+                  assetOutIndex: minNegativeDiffIndex,
+                  amount: diffs[minNegativeDiffIndex].abs().toString(),
+                  userData: '0x',
+                },
+              ],
+              pool.tokensList
+            );
+            diffs[minNegativeDiffIndex] = Zero;
+            diffBPTs[minNegativeDiffIndex] = Zero;
+            diffs[minPositiveDiffIndex] = diffs[minPositiveDiffIndex].add(
+              BigNumber.from(returnAmounts[minPositiveDiffIndex])
+            );
+            const diffQuery = await balancerHelpers.callStatic.queryJoin(
+              ...pool.buildQueryJoinExactIn({
+                maxAmountsInByToken: new Map<string, BigNumber>([
+                  [
+                    tokensIn[minPositiveDiffIndex],
+                    diffs[minPositiveDiffIndex].abs(),
+                  ],
+                ]),
+              })
+            );
+            diffBPTs[minPositiveDiffIndex] = diffQuery.bptOut;
+          }
+        }
 
-        priceImpactABA = (initialBPT - finalBPT) / initialBPT / 2;
+        const amountInitial = parseFloat(
+          amountsIn[minNegativeDiffIndex].toString()
+        );
+        const amountDiff = parseFloat(
+          diffs[minNegativeDiffIndex].abs().toString()
+        );
+
+        priceImpactABA = amountDiff / amountInitial / 2;
         console.log(`priceImpactABA      : ${priceImpactABA}`);
       });
     });
