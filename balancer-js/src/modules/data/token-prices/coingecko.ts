@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { Price, Findable, TokenPrices, Network } from '@/types';
-import axios from 'axios';
+import { Findable, Network, Price, TokenPrices } from '@/types';
+import axios, { AxiosError } from 'axios';
 import { TOKENS } from '@/lib/constants/tokens';
 import { Debouncer, tokenAddressForPricing } from '@/lib/utils';
 
@@ -25,30 +25,51 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     );
   }
 
-  private fetch(
+  private async fetch(
     addresses: string[],
     { signal }: { signal?: AbortSignal } = {}
   ): Promise<TokenPrices> {
-    console.time(`fetching coingecko for ${addresses.length} tokens`);
-    return axios
-      .get<TokenPrices>(this.url(addresses), { signal })
-      .then(({ data }) => {
-        return data;
-      })
-      .catch((error) => {
-        const message = ['Error fetching token prices from coingecko'];
-        if (error.isAxiosError) {
-          if (error.response?.status) {
-            message.push(`with status ${error.response.status}`);
-          }
-        } else {
-          message.push(error);
-        }
-        return Promise.reject(message.join(' '));
-      })
-      .finally(() => {
-        console.timeEnd(`fetching coingecko for ${addresses.length} tokens`);
+    const promises = [];
+    const maxAddressesAllowedByCoingecko = 10; // Coingecko is only allowing 10 tokens per time
+
+    const fetchChunk = async (chunk: string[]): Promise<TokenPrices> => {
+      const { data } = await axios.get<TokenPrices>(this.url(chunk), {
+        signal,
       });
+      return data;
+    };
+
+    if (addresses.length > maxAddressesAllowedByCoingecko) {
+      for (let i = 0; i < maxAddressesAllowedByCoingecko; i += 1) {
+        promises.push(
+          fetchChunk(
+            addresses.slice(
+              i * maxAddressesAllowedByCoingecko,
+              (i + 1) * maxAddressesAllowedByCoingecko
+            )
+          )
+        );
+      }
+    }
+    let tokenPrices: TokenPrices = {};
+    try {
+      console.time(`fetching coingecko for ${addresses.length} tokens`);
+      tokenPrices = (await Promise.all(promises)).reduce((acc, cur) => {
+        return { ...acc, ...cur };
+      }, {});
+      console.timeEnd(`fetching coingecko for ${addresses.length} tokens`);
+      return tokenPrices;
+    } catch (error: any) {
+      const message = ['Error fetching token prices from coingecko'];
+      if (error.isAxiosError) {
+        if (error.response?.status) {
+          message.push(`with status ${error.response.status}`);
+        }
+      } else {
+        message.push(error as string);
+      }
+      return Promise.reject(message.join(' '));
+    }
   }
 
   private fetchNative({
