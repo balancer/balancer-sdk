@@ -59,11 +59,11 @@ export class CoingeckoPriceRepository implements Findable<Price> {
       }, {});
       console.timeEnd(`fetching coingecko for ${addresses.length} tokens`);
       return tokenPrices;
-    } catch (error: any) {
+    } catch (error) {
       const message = ['Error fetching token prices from coingecko'];
-      if (error.isAxiosError) {
-        if (error.response?.status) {
-          message.push(`with status ${error.response.status}`);
+      if ((error as AxiosError).isAxiosError) {
+        if ((error as AxiosError).response?.status !== undefined) {
+          message.push(`with status ${(error as AxiosError).response?.status}`);
         }
       } else {
         message.push(error as string);
