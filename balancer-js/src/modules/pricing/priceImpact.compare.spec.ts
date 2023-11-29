@@ -31,7 +31,7 @@ const { contracts, pricing } = sdk;
 const provider = new JsonRpcProvider(rpcUrl, 1);
 const signer = provider.getSigner();
 const { balancerHelpers, vault } = contracts;
-const csvFilePath = 'wstETH-rETH-sfrxETH.csv';
+const csvFilePath = 'OATH_GRAIN_USDC_WETH_3.csv';
 // Write the header to the CSV file
 const csvLine = 'action,test,spot price,ABA,error abs,error rel,\n';
 fs.writeFileSync(csvFilePath, csvLine, { flag: 'w' });
@@ -41,14 +41,14 @@ const writeNewTable = (header: string) => {
 
 const blockNumber = 18559730;
 const testPoolId =
-  '0x42ed016f826165c2e5976fe5bc3df540c5ad0af700000000000000000000058b'; // 80BAL/20WETH
+  '0x67f117350eab45983374f4f83d275d8a5d62b1bf0001000000000000000004f2'; // 80BAL/20WETH
 
 /**
  * When testing pools with phantom BPT (e.g. ComposableStable), indexes should consider pool tokens with BPT
  */
 
 // swap config
-const swapAmountFloat = '10';
+const swapAmountFloat = '500';
 const swapAmountFloats = [
   swapAmountFloat,
   String(Number(swapAmountFloat) * 2),
@@ -58,12 +58,12 @@ const swapAmountFloats = [
   String(Number(swapAmountFloat) * 50),
   String(Number(swapAmountFloat) * 100),
 ];
-const assetInIndex = 1;
-const assetOutIndex = 2;
+const assetInIndex = 3;
+const assetOutIndex = 1;
 
 // single token join config
-const joinAmountFloat = '10';
-const tokenIndex = 1;
+const joinAmountFloat = '500';
+const tokenIndex = 3;
 const singleTokenJoinTests = [
   { amountFloat: joinAmountFloat, tokenIndex },
   { amountFloat: String(Number(joinAmountFloat) * 2), tokenIndex },
@@ -77,9 +77,11 @@ const singleTokenJoinTests = [
 // unbalanced join config
 // const amountsInFloat = ['0', '200', '100', '10']; // should add value for BPT if present
 const unbalancedJoinTests = [
-  { amountsInFloat: ['0', '10', '100', '1000'] },
-  { amountsInFloat: ['0', '100', '1000', '10'] },
-  { amountsInFloat: ['0', '1000', '100', '10'] },
+  { amountsInFloat: ['1', '1', '1', '10'] },
+  { amountsInFloat: ['1', '1', '1', '100'] },
+  { amountsInFloat: ['1', '1', '1', '1000'] },
+  { amountsInFloat: ['1', '1', '1', '10000'] },
+  { amountsInFloat: ['1', '1', '1', '200000'] },
   // Add more test scenarios as needed
 ];
 
