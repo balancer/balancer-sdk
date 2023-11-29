@@ -85,6 +85,19 @@ const unbalancedJoinTests = [
   // Add more test scenarios as needed
 ];
 
+const exitAmountFloat = '10';
+const tokenOutIndex = 1;
+const singleTokenExitTests = [
+  { amountFloat: exitAmountFloat, tokenOutIndex },
+  { amountFloat: String(Number(exitAmountFloat) * 2), tokenOutIndex },
+  { amountFloat: String(Number(exitAmountFloat) * 5), tokenOutIndex },
+  { amountFloat: String(Number(exitAmountFloat) * 10), tokenOutIndex },
+  { amountFloat: String(Number(exitAmountFloat) * 25), tokenOutIndex },
+  { amountFloat: String(Number(exitAmountFloat) * 50), tokenOutIndex },
+  { amountFloat: String(Number(exitAmountFloat) * 100), tokenOutIndex },
+  // Add more test scenarios as needed
+];
+
 describe('Price impact comparison tests', async () => {
   let pool: PoolWithMethods;
   let signerAddress: Address;
@@ -530,6 +543,93 @@ describe('Price impact comparison tests', async () => {
         );
 
         priceImpactABA = amountDiff / amountInitial / 2;
+        console.log(`priceImpactABA      : ${priceImpactABA}`);
+      });
+    });
+  });
+
+  singleTokenExitTests.forEach((test, index) => {
+    context('single token exit', async () => {
+      let tokenOut: PoolToken;
+      let amountIn: BigNumber;
+
+      before(() => {
+        tokenOut = pool.tokens[test.tokenOutIndex];
+        amountIn = parseFixed(test.amountFloat, 18);
+      });
+
+      after(async () => {
+        const csvLine = `single token exit,${
+          index + 1
+        },${priceImpactSpot},${priceImpactABA},${
+          priceImpactABA - priceImpactSpot
+        },${(priceImpactABA - priceImpactSpot) / priceImpactSpot}\n`;
+        fs.writeFileSync(csvFilePath, csvLine, { flag: 'a' });
+
+        writeNewTable('Single-Sided Exit Summary');
+
+        // Query and write the token balances for single-sided exit summary
+        for (let i = 0; i < pool.tokensList.length; i++) {
+          const token = pool.tokensList[i];
+          const amount =
+            i === singleTokenExitTests[i].tokenOutIndex
+              ? singleTokenExitTests[index].amountFloat
+              : '0';
+          const balance = await pool.tokens[i].balance;
+          const relativeValue = (Number(amount) / Number(balance)).toString();
+          fs.writeFileSync(
+            csvFilePath,
+            `${token},${amount},${balance.toString()},${relativeValue}\n`,
+            { flag: 'a' }
+          );
+        }
+
+        // Write an empty line after single-sided join summary
+        fs.writeFileSync(csvFilePath, '\n', { flag: 'a' });
+      });
+
+      it('should calculate price impact - spot price method', async () => {
+        const { priceImpact } = pool.buildExitExactBPTIn(
+          signerAddress,
+          amountIn.toString(),
+          '0',
+          false,
+          tokenOut.address
+        );
+
+        priceImpactSpot = parseFloat(
+          formatFixed(BigNumber.from(priceImpact), 18)
+        );
+        console.log(`priceImpactSpotPrice: ${priceImpactSpot}`);
+      });
+
+      it('should calculate price impact - ABA method', async () => {
+        const exitParams = pool.buildQueryExitToSingleToken({
+          bptIn: amountIn,
+          tokenOut: tokenOut.address,
+        });
+
+        const { amountsOut } = await balancerHelpers.callStatic.queryExit(
+          ...exitParams
+        );
+
+        const tokensOut = [...pool.tokensList];
+
+        const maxAmountsInByToken = new Map<string, BigNumber>(
+          amountsOut.map((a, i) => [tokensOut[i], a])
+        );
+
+        const joinParams = pool.buildQueryJoinExactIn({
+          maxAmountsInByToken,
+        });
+
+        const { bptOut } = await balancerHelpers.callStatic.queryJoin(
+          ...joinParams
+        );
+
+        const initialA = parseFloat(formatFixed(amountIn, 18));
+        const finalA = parseFloat(formatFixed(bptOut, 18));
+        priceImpactABA = (initialA - finalA) / initialA / 2;
         console.log(`priceImpactABA      : ${priceImpactABA}`);
       });
     });
