@@ -39,17 +39,19 @@ export class CoingeckoPriceRepository implements Findable<Price> {
       return data;
     };
 
-    if (addresses.length > maxAddressesAllowedByCoingecko) {
-      for (let i = 0; i < maxAddressesAllowedByCoingecko; i += 1) {
-        promises.push(
-          fetchChunk(
-            addresses.slice(
-              i * maxAddressesAllowedByCoingecko,
-              (i + 1) * maxAddressesAllowedByCoingecko
-            )
+    for (
+      let i = 0;
+      i < addresses.length / maxAddressesAllowedByCoingecko;
+      i += 1
+    ) {
+      promises.push(
+        fetchChunk(
+          addresses.slice(
+            i * maxAddressesAllowedByCoingecko,
+            (i + 1) * maxAddressesAllowedByCoingecko
           )
-        );
-      }
+        )
+      );
     }
     let tokenPrices: TokenPrices = {};
     try {
