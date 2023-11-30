@@ -21,7 +21,8 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     )}?vs_currencies=usd,eth`;
     this.debouncer = new Debouncer<TokenPrices, string>(
       this.fetch.bind(this),
-      200
+      200,
+      10
     );
   }
 
@@ -29,38 +30,11 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     addresses: string[],
     { signal }: { signal?: AbortSignal } = {}
   ): Promise<TokenPrices> {
-    const promises = [];
-    const maxAddressesAllowedByCoingecko = 10; // Coingecko is only allowing 10 tokens per time
-
-    const fetchChunk = async (chunk: string[]): Promise<TokenPrices> => {
-      const { data } = await axios.get<TokenPrices>(this.url(chunk), {
+    try {
+      const { data } = await axios.get<TokenPrices>(this.url(addresses), {
         signal,
       });
       return data;
-    };
-
-    for (
-      let i = 0;
-      i < addresses.length / maxAddressesAllowedByCoingecko;
-      i += 1
-    ) {
-      promises.push(
-        fetchChunk(
-          addresses.slice(
-            i * maxAddressesAllowedByCoingecko,
-            (i + 1) * maxAddressesAllowedByCoingecko
-          )
-        )
-      );
-    }
-    let tokenPrices: TokenPrices = {};
-    try {
-      console.time(`fetching coingecko for ${addresses.length} tokens`);
-      tokenPrices = (await Promise.all(promises)).reduce((acc, cur) => {
-        return { ...acc, ...cur };
-      }, {});
-      console.timeEnd(`fetching coingecko for ${addresses.length} tokens`);
-      return tokenPrices;
     } catch (error) {
       const message = ['Error fetching token prices from coingecko'];
       if ((error as AxiosError).isAxiosError) {
