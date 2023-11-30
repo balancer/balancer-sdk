@@ -6,7 +6,7 @@ import {
   Network,
   HistoricalPrices,
 } from '@/types';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { tokenAddressForPricing } from '@/lib/utils';
 
 const HOUR = 60 * 60;
@@ -25,34 +25,30 @@ export class CoingeckoHistoricalPriceRepository implements Findable<Price> {
     )}/contract/%TOKEN_ADDRESS%/market_chart/range?vs_currency=usd`;
   }
 
-  private fetch(
+  private async fetch(
     address: string,
     timestamp: number,
     { signal }: { signal?: AbortSignal } = {}
   ): Promise<HistoricalPrices> {
-    console.time(`fetching coingecko historical for ${address}`);
     const url = this.urlRange(address, timestamp);
-    return axios
-      .get<HistoricalPrices>(url, { signal })
-      .then(({ data }) => {
-        return data;
-      })
-      .catch((error) => {
-        const message = [
-          'Error fetching historical token prices from coingecko',
-        ];
-        if (error.isAxiosError) {
-          if (error.response?.status) {
-            message.push(`with status ${error.response.status}`);
-          }
-        } else {
-          message.push(error);
-        }
-        return Promise.reject(message.join(' '));
-      })
-      .finally(() => {
-        console.timeEnd(`fetching coingecko historical for ${address}`);
-      });
+    console.time(`fetching coingecko historical for ${address}`);
+    try {
+      const { data } = await axios.get<HistoricalPrices>(url, { signal });
+      console.timeEnd(`fetching coingecko historical for ${address}`);
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.timeEnd(`fetching coingecko historical for ${address}`);
+      if ((error as AxiosError).isAxiosError) {
+        throw new Error(
+          'Error fetching historical token prices from coingecko - ' +
+            (error as AxiosError).message +
+            ' - ' +
+            (error as AxiosError).response?.statusText
+        );
+      }
+      throw new Error('Unknown Error: ' + error);
+    }
   }
 
   /* eslint-disable @typescript-eslint/no-unused-vars */

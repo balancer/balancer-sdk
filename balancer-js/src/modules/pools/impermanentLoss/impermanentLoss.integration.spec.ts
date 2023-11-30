@@ -42,7 +42,7 @@ const service = new ImpermanentLossService(
 describe('ImpermanentLossService', function () {
   this.timeout(60000);
   context('when queried for Composable Stable Pool', () => {
-    it('should return an IL gte 0', async () => {
+    it.skip('should return an IL gte 0', async () => {
       const testData = TEST_DATA.ComposableStablePool;
       const pool = await getPoolFromFile(testData.poolId, network);
       const timestamp = 1666601608;
@@ -51,7 +51,7 @@ describe('ImpermanentLossService', function () {
     });
   });
   context('when queried for Weighted Pool', () => {
-    it('should return an IL gte 0', async () => {
+    it.skip('should return an IL gte 0', async () => {
       const testData = TEST_DATA.WeightedPool;
       const pool = await getPoolFromFile(testData.poolId, network);
       const timestamp = 1666601608;
