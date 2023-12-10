@@ -23,6 +23,7 @@ export class LiquidityGaugesSubgraphRepository
   async fetch(): Promise<SubgraphLiquidityGauge[]> {
     console.time('fetching liquidity gauges');
     const queryResult = await this.client.Pools({
+      first: 1000,
       where: {
         preferentialGauge_not: null,
       },
