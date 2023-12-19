@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { Findable, Network, Price, TokenPrices } from '@/types';
+import {
+  CoingeckoConfig,
+  Findable,
+  Network,
+  Price,
+  TokenPrices,
+} from '@/types';
 import axios, { AxiosError } from 'axios';
 import { TOKENS } from '@/lib/constants/tokens';
 import { Debouncer, tokenAddressForPricing } from '@/lib/utils';
@@ -13,16 +19,22 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   urlBase: string;
   baseTokenAddresses: string[];
   debouncer: Debouncer<TokenPrices, string>;
+  apiKey?: string;
 
-  constructor(tokenAddresses: string[], private chainId: Network = 1) {
+  constructor(
+    tokenAddresses: string[],
+    private chainId: Network = 1,
+    coingecko?: CoingeckoConfig
+  ) {
     this.baseTokenAddresses = tokenAddresses.map(tokenAddressForPricing);
     this.urlBase = `https://api.coingecko.com/api/v3/simple/token_price/${this.platform(
       chainId
     )}?vs_currencies=usd,eth`;
+    this.apiKey = coingecko?.coingeckoApiKey;
     this.debouncer = new Debouncer<TokenPrices, string>(
       this.fetch.bind(this),
       200,
-      10
+      coingecko?.tokensPerPriceRequest ?? 10
     );
   }
 
@@ -33,6 +45,7 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     try {
       const { data } = await axios.get<TokenPrices>(this.url(addresses), {
         signal,
+        headers: { ApiKey: this.apiKey ?? '' },
       });
       return data;
     } catch (error) {
