@@ -1,5 +1,11 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { CoingeckoConfig, Findable, Network, Price, TokenPrices } from '@/types';
+import {
+  CoingeckoConfig,
+  Findable,
+  Network,
+  Price,
+  TokenPrices,
+} from '@/types';
 import axios, { AxiosError } from 'axios';
 import { TOKENS } from '@/lib/constants/tokens';
 import { Debouncer, tokenAddressForPricing } from '@/lib/utils';
