@@ -3,6 +3,10 @@ import { BalancerSDK } from '@balancer-labs/sdk';
 const sdk = new BalancerSDK({
   network: 1,
   rpcUrl: 'https://rpc.ankr.com/eth',
+  coingecko: {
+    coingeckoApiKey: 'CG-ViHyrfvtLz2WSCJzm59TfGow',
+    isDemoApiKey: true,
+  },
 });
 
 const bptPriceExample = async () => {

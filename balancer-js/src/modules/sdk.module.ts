@@ -59,7 +59,8 @@ export class BalancerSDK implements BalancerSDKRoot {
       this.networkConfig,
       sor.provider,
       this.balancerContracts,
-      config.subgraphQuery
+      config.subgraphQuery,
+      config.coingecko
     );
 
     this.swaps = new Swaps(this.config);

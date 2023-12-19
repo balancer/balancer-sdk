@@ -45,6 +45,7 @@ export interface BalancerSdkConfig {
   sor?: Partial<BalancerSdkSorConfig>;
   tenderly?: BalancerTenderlyConfig;
   enableLogging?: boolean;
+  coingecko?: CoingeckoConfig;
 }
 
 export interface BalancerTenderlyConfig {
@@ -460,3 +461,9 @@ export interface GraphQLQuery {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   attrs: any;
 }
+
+export type CoingeckoConfig = {
+  coingeckoApiKey: string;
+  tokensPerPriceRequest?: number;
+  isDemoApiKey?: boolean;
+};
