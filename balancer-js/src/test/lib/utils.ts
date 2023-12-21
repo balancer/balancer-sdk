@@ -68,7 +68,7 @@ export const RPC_URLS: Record<number, string> = {
 };
 
 export const FORK_NODES: Record<number, string> = {
-  [Network.MAINNET]: `${process.env.RPC_URL_MAINNET}`,
+  [Network.MAINNET]: `${process.env.ALCHEMY_URL}`,
   [Network.GOERLI]: `${process.env.ALCHEMY_URL_GOERLI}`,
   [Network.POLYGON]: `${process.env.ALCHEMY_URL_POLYGON}`,
   [Network.ARBITRUM]: `${process.env.ALCHEMY_URL_ARBITRUM}`,
