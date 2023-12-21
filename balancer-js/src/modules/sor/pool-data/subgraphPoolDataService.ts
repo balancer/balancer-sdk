@@ -19,7 +19,6 @@ import {
   SubgraphArgsFormatter,
 } from '@/lib/graphql/args-builder';
 
-import { isSameAddress } from '@/lib/utils';
 import { Logger } from '@/lib/utils/logger';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
