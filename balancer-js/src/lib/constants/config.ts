@@ -60,10 +60,10 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       },
     },
     poolsToIgnore: [
-      '0xbd482ffb3e6e50dc1c437557c3bea2b68f3683ee', // a pool made by an external dev who was playing with a novel rate provider mechanism in production.
-      '0x0afbd58beca09545e4fb67772faf3858e610bcd0',
-      '0xf22ff21e17157340575158ad7394e068048dd98b',
-      '0xf71d0774b214c4cf51e33eb3d30ef98132e4dbaa',
+      '0xbd482ffb3e6e50dc1c437557c3bea2b68f3683ee0000000000000000000003c6', // a pool made by an external dev who was playing with a novel rate provider mechanism in production.
+      '0x0afbd58beca09545e4fb67772faf3858e610bcd00000000000000000000004b9',
+      '0xf22ff21e17157340575158ad7394e068048dd98b0000000000000000000004b8',
+      '0xf71d0774b214c4cf51e33eb3d30ef98132e4dbaa00000000000000000000046e',
     ],
     sorConnectingTokens: [
       {
@@ -118,8 +118,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     pools: {},
     poolsToIgnore: [
-      '0x600bd01b6526611079e12e1ff93aba7a3e34226f', // This pool has rateProviders with incorrect scaling
-      '0xc31a37105b94ab4efca1954a14f059af11fcd9bb', // Stable pool with Convergence issues
+      '0x600bd01b6526611079e12e1ff93aba7a3e34226f0000000000000000000009e4', // This pool has rateProviders with incorrect scaling
+      '0xc31a37105b94ab4efca1954a14f059af11fcd9bb000000000000000000000455', // Stable pool with Convergence issues
     ],
     sorConnectingTokens: [
       {
