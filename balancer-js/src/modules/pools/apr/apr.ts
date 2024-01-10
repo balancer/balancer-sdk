@@ -20,7 +20,7 @@ import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { BigNumber } from '@ethersproject/bignumber';
 import { Logger } from '@/lib/utils/logger';
 import { GyroConfigRepository } from '@/modules/data/gyro-config/repository';
-import { poolsToIgnore } from '@/lib/constants/poolsToIgnore';
+import { POOLS_TO_IGNORE } from '@/lib/constants/poolsToIgnore';
 
 export interface AprBreakdown {
   swapFees: number;
@@ -412,7 +412,7 @@ export class PoolApr {
    * @returns pool APR split [bsp]
    */
   async apr(pool: Pool): Promise<AprBreakdown> {
-    if (poolsToIgnore.includes(pool.id)) {
+    if (POOLS_TO_IGNORE.includes(pool.id)) {
       return {
         swapFees: 0,
         tokenAprs: {
