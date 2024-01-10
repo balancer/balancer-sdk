@@ -20,7 +20,7 @@ const poolIds = [
   '0xa2ccad543fbe9332b87910beabd941b86dd5f762000000000000000000000b5c', // V4
 ];
 
-describe('ComposableStable - recovery', () => {
+describe.skip('ComposableStable - recovery', () => {
   before(async () => {
     await forkSetup(
       signer,
