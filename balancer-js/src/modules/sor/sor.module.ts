@@ -1,7 +1,6 @@
 import { SOR, SorConfig, TokenPriceService } from '@balancer-labs/sor';
 import { Provider, JsonRpcProvider } from '@ethersproject/providers';
 import { SubgraphPoolDataService } from './pool-data/subgraphPoolDataService';
-import { CoingeckoTokenPriceService } from './token-price/coingeckoTokenPriceService';
 import {
   SubgraphClient,
   createSubgraphClient,
@@ -14,6 +13,7 @@ import {
 import { SubgraphTokenPriceService } from './token-price/subgraphTokenPriceService';
 import { getNetworkConfig } from '@/modules/sdk.helpers';
 import { POOLS_TO_IGNORE } from '@/lib/constants/poolsToIgnore';
+import { ApiTokenPriceService } from '@/modules/sor/token-price/apiTokenPriceService';
 
 export class Sor extends SOR {
   constructor(sdkConfig: BalancerSdkConfig) {
@@ -99,7 +99,6 @@ export class Sor extends SOR {
         network.addresses.tokens.wrappedNativeAsset
       );
     }
-
-    return new CoingeckoTokenPriceService(network.chainId);
+    return new ApiTokenPriceService(network.chainId);
   }
 }
