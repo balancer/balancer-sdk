@@ -17,6 +17,7 @@ export class CoingeckoPriceRepository implements Findable<Price> {
   prices: { [key: string]: Promise<Price> } = {};
   nativePrice?: Promise<Price>;
   urlBase: string;
+  urlBaseNative: string;
   baseTokenAddresses: string[];
   debouncer: Debouncer<TokenPrices, string>;
   apiKey?: string;
@@ -27,9 +28,14 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     coingecko?: CoingeckoConfig
   ) {
     this.baseTokenAddresses = tokenAddresses.map(tokenAddressForPricing);
-    this.urlBase = `https://api.coingecko.com/api/v3/simple/token_price/${this.platform(
+    this.urlBase = `https://${
+      coingecko?.coingeckoApiKey && !coingecko.isDemoApiKey ? 'pro-' : ''
+    }api.coingecko.com/api/v3/simple/token_price/${this.platform(
       chainId
     )}?vs_currencies=usd,eth`;
+    this.urlBaseNative = `https://${
+      coingecko?.coingeckoApiKey && !coingecko.isDemoApiKey ? 'pro-' : ''
+    }api.coingecko.com/api/v3/simple/price/?vs_currencies=eth,usd&ids=`;
     this.apiKey = coingecko?.coingeckoApiKey;
     this.debouncer = new Debouncer<TokenPrices, string>(
       this.fetch.bind(this),
@@ -45,7 +51,7 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     try {
       const { data } = await axios.get<TokenPrices>(this.url(addresses), {
         signal,
-        headers: { ApiKey: this.apiKey ?? '' },
+        headers: { 'x-cg-pro-api-key': this.apiKey ?? '' },
       });
       return data;
     } catch (error) {
@@ -74,10 +80,10 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     if (this.chainId === 137) assetId = Assets.MATIC;
     if (this.chainId === 100) assetId = Assets.XDAI;
     return axios
-      .get<{ [key in Assets]: Price }>(
-        `https://api.coingecko.com/api/v3/simple/price/?vs_currencies=eth,usd&ids=${assetId}`,
-        { signal }
-      )
+      .get<{ [key in Assets]: Price }>(`${this.urlBaseNative}${assetId}`, {
+        signal,
+        headers: { 'x-cg-pro-api-key': this.apiKey ?? '' },
+      })
       .then(({ data }) => {
         return data[assetId];
       })

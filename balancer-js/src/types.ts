@@ -58,7 +58,7 @@ export interface BalancerTenderlyConfig {
 export interface BalancerSdkSorConfig {
   //use a built-in service or provide a custom implementation of a TokenPriceService
   //defaults to coingecko
-  tokenPriceService: 'coingecko' | 'subgraph' | TokenPriceService;
+  tokenPriceService: 'api' | 'coingecko' | 'subgraph' | TokenPriceService;
   //use a built-in service or provide a custom implementation of a PoolDataService
   //defaults to subgraph
   poolDataService: 'subgraph' | PoolDataService;
