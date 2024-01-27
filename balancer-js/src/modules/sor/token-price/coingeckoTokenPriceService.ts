@@ -2,16 +2,24 @@ import { TokenPriceService } from '@balancer-labs/sor';
 import axios from 'axios';
 import { BALANCER_NETWORK_CONFIG } from '@/lib/constants/config';
 import { Network, BalancerNetworkConfig, CoingeckoConfig } from '@/types';
+import {
+  getCoingeckoApiBaseUrl,
+  getCoingeckoApiKeyHeaderName,
+} from '@/lib/utils/coingecko-api';
 
 export class CoingeckoTokenPriceService implements TokenPriceService {
-  private urlBase: string;
-  private apiKey: string;
+  private readonly urlBase: string;
+  private readonly apiKey: string;
+  private readonly coingeckoApiKeyHeaderName: string;
   constructor(private readonly chainId: number, coingecko: CoingeckoConfig) {
-    this.urlBase = `https://${
-      coingecko?.coingeckoApiKey && !coingecko.isDemoApiKey ? 'pro-' : ''
-    }api.coingecko.com/api/v3/simple/token_price/${
-      this.platformId
-    }?vs_currencies=${this.nativeAssetId}`;
+    this.urlBase = `${getCoingeckoApiBaseUrl(
+      coingecko?.isDemoApiKey
+    )}simple/token_price/${this.platformId}?vs_currencies=${
+      this.nativeAssetId
+    }`;
+    this.coingeckoApiKeyHeaderName = getCoingeckoApiKeyHeaderName(
+      coingecko?.isDemoApiKey
+    );
     this.apiKey = coingecko.coingeckoApiKey;
   }
 
@@ -37,7 +45,7 @@ export class CoingeckoTokenPriceService implements TokenPriceService {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        'x-cg-pro-api-key': this.apiKey ?? '',
+        [this.coingeckoApiKeyHeaderName]: this.apiKey ?? '',
       },
     });
 
