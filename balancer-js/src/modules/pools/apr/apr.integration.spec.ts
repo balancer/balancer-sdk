@@ -65,7 +65,6 @@ describe('APR tests', () => {
       const pool = await pools.find(auraBALveBAL);
       if (pool) {
         const apr = await pools.apr(pool);
-        console.log(apr);
         expect(apr.tokenAprs.total).to.be.greaterThan(1);
       } else {
         throw 'no pool found';
