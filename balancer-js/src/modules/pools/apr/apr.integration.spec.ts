@@ -53,7 +53,7 @@ describe('APR tests', () => {
       const pool = await pools.find(veBalId);
       if (pool) {
         const apr = await pools.apr(pool);
-        expect(apr.protocolApr).to.be.greaterThanOrEqual(1);
+        expect(apr.protocolApr).to.be.greaterThan(1);
       } else {
         throw 'no pool found';
       }
@@ -65,7 +65,7 @@ describe('APR tests', () => {
       const pool = await pools.find(auraBALveBAL);
       if (pool) {
         const apr = await pools.apr(pool);
-        expect(apr.tokenAprs.total).to.be.greaterThanOrEqual(1);
+        expect(apr.tokenAprs.total).to.be.greaterThan(1);
       } else {
         throw 'no pool found';
       }
