@@ -1,7 +1,6 @@
 import { SOR, SorConfig, TokenPriceService } from '@balancer-labs/sor';
 import { Provider, JsonRpcProvider } from '@ethersproject/providers';
 import { SubgraphPoolDataService } from './pool-data/subgraphPoolDataService';
-import { CoingeckoTokenPriceService } from './token-price/coingeckoTokenPriceService';
 import {
   SubgraphClient,
   createSubgraphClient,
@@ -10,10 +9,13 @@ import {
   BalancerNetworkConfig,
   BalancerSdkConfig,
   BalancerSdkSorConfig,
+  CoingeckoConfig,
 } from '@/types';
 import { SubgraphTokenPriceService } from './token-price/subgraphTokenPriceService';
 import { getNetworkConfig } from '@/modules/sdk.helpers';
 import { POOLS_TO_IGNORE } from '@/lib/constants/poolsToIgnore';
+import { ApiTokenPriceService } from '@/modules/sor/token-price/apiTokenPriceService';
+import { CoingeckoTokenPriceService } from '@/modules/sor/token-price/coingeckoTokenPriceService';
 
 export class Sor extends SOR {
   constructor(sdkConfig: BalancerSdkConfig) {
@@ -36,7 +38,8 @@ export class Sor extends SOR {
     const tokenPriceService = Sor.getTokenPriceService(
       network,
       sorConfig,
-      subgraphClient
+      subgraphClient,
+      sdkConfig.coingecko
     );
 
     super(provider, sorNetworkConfig, poolDataService, tokenPriceService);
@@ -44,7 +47,7 @@ export class Sor extends SOR {
 
   private static getSorConfig(config: BalancerSdkConfig): BalancerSdkSorConfig {
     return {
-      tokenPriceService: 'coingecko',
+      tokenPriceService: 'api',
       poolDataService: 'subgraph',
       fetchOnChainBalances: true,
       ...config.sor,
@@ -89,17 +92,20 @@ export class Sor extends SOR {
   private static getTokenPriceService(
     network: BalancerNetworkConfig,
     sorConfig: BalancerSdkSorConfig,
-    subgraphClient: SubgraphClient
+    subgraphClient: SubgraphClient,
+    coingeckoConfig?: CoingeckoConfig
   ): TokenPriceService {
+    if (sorConfig.tokenPriceService === 'coingecko' && coingeckoConfig) {
+      return new CoingeckoTokenPriceService(network.chainId, coingeckoConfig);
+    }
     if (typeof sorConfig.tokenPriceService === 'object') {
       return sorConfig.tokenPriceService;
     } else if (sorConfig.tokenPriceService === 'subgraph') {
-      new SubgraphTokenPriceService(
+      return new SubgraphTokenPriceService(
         subgraphClient,
         network.addresses.tokens.wrappedNativeAsset
       );
     }
-
-    return new CoingeckoTokenPriceService(network.chainId);
+    return new ApiTokenPriceService(network.chainId);
   }
 }

@@ -9,6 +9,10 @@ import {
 import axios, { AxiosError } from 'axios';
 import { TOKENS } from '@/lib/constants/tokens';
 import { Debouncer, tokenAddressForPricing } from '@/lib/utils';
+import {
+  getCoingeckoApiBaseUrl,
+  getCoingeckoApiKeyHeaderName,
+} from '@/lib/utils/coingecko-api';
 
 /**
  * Simple coingecko price source implementation. Configurable by network and token addresses.
@@ -16,7 +20,9 @@ import { Debouncer, tokenAddressForPricing } from '@/lib/utils';
 export class CoingeckoPriceRepository implements Findable<Price> {
   prices: { [key: string]: Promise<Price> } = {};
   nativePrice?: Promise<Price>;
-  urlBase: string;
+  private readonly url: string;
+  private readonly urlNative: string;
+  private readonly coingeckoApiKeyHeaderName: string;
   baseTokenAddresses: string[];
   debouncer: Debouncer<TokenPrices, string>;
   apiKey?: string;
@@ -27,9 +33,15 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     coingecko?: CoingeckoConfig
   ) {
     this.baseTokenAddresses = tokenAddresses.map(tokenAddressForPricing);
-    this.urlBase = `https://api.coingecko.com/api/v3/simple/token_price/${this.platform(
-      chainId
-    )}?vs_currencies=usd,eth`;
+    this.url = `${getCoingeckoApiBaseUrl(
+      coingecko?.isDemoApiKey
+    )}simple/token_price/${this.platform(chainId)}?vs_currencies=usd,eth`;
+    this.urlNative = `${getCoingeckoApiBaseUrl(
+      coingecko?.isDemoApiKey
+    )}simple/price/?vs_currencies=eth,usd&ids=`;
+    this.coingeckoApiKeyHeaderName = getCoingeckoApiKeyHeaderName(
+      coingecko?.isDemoApiKey
+    );
     this.apiKey = coingecko?.coingeckoApiKey;
     this.debouncer = new Debouncer<TokenPrices, string>(
       this.fetch.bind(this),
@@ -43,10 +55,15 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     { signal }: { signal?: AbortSignal } = {}
   ): Promise<TokenPrices> {
     try {
-      const { data } = await axios.get<TokenPrices>(this.url(addresses), {
-        signal,
-        headers: { ApiKey: this.apiKey ?? '' },
-      });
+      const { data } = await axios.get<TokenPrices>(
+        `${this.url}&contract_addresses=${addresses.join(',')}`,
+        {
+          signal,
+          headers: {
+            [this.coingeckoApiKeyHeaderName]: this.apiKey ?? '',
+          },
+        }
+      );
       return data;
     } catch (error) {
       const message = ['Error fetching token prices from coingecko'];
@@ -74,10 +91,12 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     if (this.chainId === 137) assetId = Assets.MATIC;
     if (this.chainId === 100) assetId = Assets.XDAI;
     return axios
-      .get<{ [key in Assets]: Price }>(
-        `https://api.coingecko.com/api/v3/simple/price/?vs_currencies=eth,usd&ids=${assetId}`,
-        { signal }
-      )
+      .get<{ [key in Assets]: Price }>(`${this.urlNative}${assetId}`, {
+        signal,
+        headers: {
+          [this.coingeckoApiKeyHeaderName]: this.apiKey ?? '',
+        },
+      })
       .then(({ data }) => {
         return data[assetId];
       })
@@ -160,9 +179,5 @@ export class CoingeckoPriceRepository implements Findable<Price> {
     }
 
     return '2';
-  }
-
-  private url(addresses: string[]): string {
-    return `${this.urlBase}&contract_addresses=${addresses.join(',')}`;
   }
 }

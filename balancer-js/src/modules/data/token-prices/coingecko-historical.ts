@@ -9,6 +9,10 @@ import {
 } from '@/types';
 import axios, { AxiosError } from 'axios';
 import { tokenAddressForPricing } from '@/lib/utils';
+import {
+  getCoingeckoApiBaseUrl,
+  getCoingeckoApiKeyHeaderName,
+} from '@/lib/utils/coingecko-api';
 
 const HOUR = 60 * 60;
 
@@ -18,16 +22,19 @@ const HOUR = 60 * 60;
 export class CoingeckoHistoricalPriceRepository implements Findable<Price> {
   prices: TokenPrices = {};
   nativePrice?: Promise<Price>;
-  urlBase: string;
-  apiKey?: string;
-
+  private readonly urlBase: string;
+  private readonly apiKey?: string;
+  private readonly coingeckoApiKeyHeaderName: string;
   constructor(private chainId: Network = 1, coingecko?: CoingeckoConfig) {
-    this.urlBase = `https://${
-      coingecko?.coingeckoApiKey && !coingecko.isDemoApiKey ? 'pro-' : ''
-    }api.coingecko.com/api/v3/coins/${this.platform(
+    this.urlBase = `${getCoingeckoApiBaseUrl(
+      coingecko?.isDemoApiKey
+    )}coins/${this.platform(
       chainId
     )}/contract/%TOKEN_ADDRESS%/market_chart/range?vs_currency=usd`;
     this.apiKey = coingecko?.coingeckoApiKey;
+    this.coingeckoApiKeyHeaderName = getCoingeckoApiKeyHeaderName(
+      coingecko?.isDemoApiKey
+    );
   }
 
   private async fetch(
@@ -40,7 +47,7 @@ export class CoingeckoHistoricalPriceRepository implements Findable<Price> {
     try {
       const { data } = await axios.get<HistoricalPrices>(url, {
         signal,
-        headers: { 'x-cg-pro-api-key': this.apiKey ?? '' },
+        headers: { [this.coingeckoApiKeyHeaderName]: this.apiKey ?? '' },
       });
       console.timeEnd(`fetching coingecko historical for ${address}`);
       console.log(data);
