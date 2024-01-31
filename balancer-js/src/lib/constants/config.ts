@@ -83,7 +83,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         address: '0xae78736cd615f374d3085123a210448e74fc6393',
       },
       {
-        symbol: 'ethX',
+        symbol: 'ETHx',
         address: '0xa35b1b31ce002fbf2058d22f30f95d405200a15b',
       },
     ],
