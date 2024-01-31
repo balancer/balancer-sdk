@@ -78,6 +78,17 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         symbol: 'DOLA',
         address: '0x865377367054516e17014CcdED1e7d814EDC9ce4',
       },
+      {
+        symbol: 'rEth',
+        address: '0xae78736cd615f374d3085123a210448e74fc6393',
+      },
+      {
+        symbol: 'ETHx',
+        address: '0xa35b1b31ce002fbf2058d22f30f95d405200a15b',
+      },
+    ],
+    sorTriPathMidPoolIds: [
+      '0x1e19cf2d73a72ef1332c882f20534b6519be0276000200000000000000000112', // rETH/WETH
     ],
   },
   [Network.POLYGON]: {
