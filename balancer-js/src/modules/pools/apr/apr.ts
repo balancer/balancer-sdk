@@ -293,10 +293,15 @@ export class PoolApr {
 
       const balReward = bal && gauge.rewardTokens[bal];
       if (balReward) {
-        const reward = await this.rewardTokenApr(bal, balReward);
-        const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
-        const rewardValue = reward.value / totalSupplyUsd;
-        return Math.round(10000 * rewardValue);
+        let reward: { address: string; value: number };
+        try {
+          reward = await this.rewardTokenApr(bal, balReward);
+          const totalSupplyUsd = gauge.totalSupply * bptPriceUsd;
+          const rewardValue = reward.value / totalSupplyUsd;
+          return Math.round(10000 * rewardValue);
+        } catch (e) {
+          return 0;
+        }
       } else {
         return 0;
       }
@@ -347,7 +352,12 @@ export class PoolApr {
     const rewards = rewardTokenAddresses.map(async (tAddress) => {
       /* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */
       const data = gauge!.rewardTokens![tAddress];
-      return this.rewardTokenApr(tAddress, data);
+      try {
+        const reward = await this.rewardTokenApr(tAddress, data);
+        return reward;
+      } catch (e) {
+        return { address: tAddress, value: 0 };
+      }
     });
 
     // Get the gauge totalSupplyUsd
