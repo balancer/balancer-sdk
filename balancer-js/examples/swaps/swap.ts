@@ -4,18 +4,21 @@
  * How to run:
  * yarn example examples/swaps/swap.ts
  */
+import { FORK_NODES, RPC_URLS } from '@/test/lib/utils';
 import { BalancerSDK, Network } from '@balancer-labs/sdk';
-import { formatFixed } from '@ethersproject/bignumber';
-import { AddressZero } from '@ethersproject/constants';
+import { formatFixed, parseFixed } from '@ethersproject/bignumber';
 import { reset } from 'examples/helpers/forked-utils';
 
-const tokenIn = AddressZero; // eth
-const tokenOut = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'; // wBTC
-const amount = String(BigInt(100e18)); // 100 eth
+const tokenIn = '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9';
+const tokenInDecimals = 6;
+const tokenOut = '0x95ab45875cffdba1e5f451b950bc2e42c0053f39';
+const tokenOutDecimals = 18;
+const amount = parseFixed('100', tokenInDecimals).toString();
 
+const network = Network.ARBITRUM;
 const sdk = new BalancerSDK({
-  network: Network.MAINNET,
-  rpcUrl: `http://127.0.0.1:8545`, // Uses a local fork for simulating transaction sending.
+  network,
+  rpcUrl: RPC_URLS[network],
 });
 
 const { swaps } = sdk;
@@ -23,27 +26,18 @@ const { swaps } = sdk;
 const erc20Out = sdk.contracts.ERC20(tokenOut, sdk.provider);
 
 async function swap() {
-  await reset(sdk.provider);
+  await reset(sdk.provider, undefined, FORK_NODES[network]);
 
   const signer = sdk.provider.getSigner();
   const account = await signer.getAddress();
 
   // Finding a trading route rely on on-chain data.
   // fetchPools will fetch the current data from the subgraph.
-  // Let's fetch just 5 pools with highest liquidity of tokenOut.
-  await swaps.fetchPools({
-    first: 5,
-    where: {
-      swapEnabled: {
-        eq: true,
-      },
-      tokensList: {
-        contains: [tokenOut],
-      },
-    },
-    orderBy: 'totalLiquidity',
-    orderDirection: 'desc',
-  });
+  const poolsFetched = await swaps.fetchPools();
+  console.log('Pools fetched:', poolsFetched);
+
+  const pools = swaps.getPools();
+  console.log('Pools:', pools);
 
   // Set exectution deadline to 60 seconds from now
   const deadline = String(Math.ceil(Date.now() / 1000) + 60);
@@ -83,9 +77,9 @@ async function swap() {
     const balanceAfter = await erc20Out.balanceOf(account);
 
     console.log(
-      `Amount of BTC received: ${formatFixed(
+      `Amount of token out received: ${formatFixed(
         balanceAfter.sub(balanceBefore),
-        8
+        tokenOutDecimals
       )}`
     );
   } catch (err) {
