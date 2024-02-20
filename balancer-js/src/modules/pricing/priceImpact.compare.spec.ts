@@ -7,7 +7,6 @@ import * as fs from 'fs';
 import {
   Address,
   BalancerSDK,
-  BatchSwapStep,
   Network,
   PoolToken,
   PoolWithMethods,
