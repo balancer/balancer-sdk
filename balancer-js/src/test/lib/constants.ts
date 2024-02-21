@@ -408,6 +408,13 @@ export const ADDRESSES = {
       symbol: 'bveth',
       slot: 0,
     },
+    WETH_3POOL: {
+      id: '0x08775ccb6674d6bdceb0797c364c2653ed84f3840002000000000000000004f0',
+      address: '0x08775ccb6674d6bdceb0797c364c2653ed84f384',
+      decimals: 18,
+      symbol: 'weth_3pool',
+      slot: 0,
+    },
   },
   [Network.POLYGON]: {
     MATIC: {

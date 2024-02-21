@@ -123,7 +123,7 @@ export class ComposableStablePoolExit implements ExitConcern {
             bptIn,
             sortedValues.singleTokenOutIndexWithoutBpt
           )
-        : ComposableStablePoolEncoder.exitExactBPTInForAllTokensOut(bptIn);
+        : ComposableStablePoolEncoder.exitExactBPTInForTokensOut(bptIn);
 
     // MinAmounts needs a value for BPT for encoding
     const minAmountsOutWithBpt = insert(

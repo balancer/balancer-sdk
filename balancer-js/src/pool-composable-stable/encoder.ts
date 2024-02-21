@@ -99,7 +99,7 @@ export class ComposableStablePoolEncoder {
    * Encodes the userData parameter for exiting a StablePool by removing tokens in return for an exact amount of BPT
    * @param bptAmountIn - the amount of BPT to be burned
    */
-  static exitExactBPTInForAllTokensOut = (bptAmountIn: BigNumberish): string =>
+  static exitExactBPTInForTokensOut = (bptAmountIn: BigNumberish): string =>
     defaultAbiCoder.encode(
       ['uint256', 'uint256'],
       [
