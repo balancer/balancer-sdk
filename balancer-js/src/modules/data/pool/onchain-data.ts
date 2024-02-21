@@ -128,6 +128,13 @@ const poolTypeCalls = (poolType: string, poolTypeVersion = 1) => {
       } else {
         return do_nothing;
       }
+    case 'Gyro2':
+      if (poolTypeVersion === 2) {
+        // Gyro2 V2 has tokenRates same as GyroE V2
+        return gyroECalls;
+      } else {
+        return do_nothing;
+      }
     case 'AaveLinear':
       if (poolTypeVersion === 1) {
         return linearCalls;
