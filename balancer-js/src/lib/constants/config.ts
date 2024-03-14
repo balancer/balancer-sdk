@@ -151,6 +151,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         multicall: '0x269ff446d9892c9e19082564df3f5e8741e190a1',
         poolDataQueries: '0x7Ba29fE8E83dd6097A7298075C4AFfdBda3121cC',
         gaugeClaimHelper: '0xa0dabebaad1b243bbb243f933013d560819eb66f',
+        gyroConfigProxy: '0x9b683ca24b0e013512e2566b68704dbe9677413c',
         ...addressesByNetwork[Network.ARBITRUM].contracts,
       },
       tokens: {
