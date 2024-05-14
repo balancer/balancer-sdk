@@ -30,8 +30,8 @@ const migrations = (network: 1 | 137) => {
   };
 
   const remoteRpcUrls = {
-    [Network.MAINNET]: 'https://rpc.ankr.com/eth',
-    [Network.POLYGON]: 'https://rpc.ankr.com/polygon',
+    [Network.MAINNET]: process.env.ALCHEMY_URL,
+    [Network.POLYGON]: process.env.ALCHEMY_URL_POLYGON,
   };
 
   const blockNumbers = {
