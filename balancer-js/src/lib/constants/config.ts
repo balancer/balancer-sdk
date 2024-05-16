@@ -222,6 +222,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       '0x178e029173417b1f9c8bc16dcec6f697bc323746000200000000000000000158', // wstEth/USDC.e to open up auraBAL/USDC
       '0x0052688295413b32626d226a205b95cdb337de860002000000000000000003d1', // arb/USDC.e to open up aura/USDC
       '0xa1a8bf131571a2139feb79401aa4a2e9482df6270002000000000000000004b4', // wstEth/Stable4Pool
+      '0x125bc5a031b2db6733bfa35d914ffa428095978b000200000000000000000514', // Gyro Rehype aUSDC/aUSDT
     ],
   },
   [Network.GOERLI]: {
