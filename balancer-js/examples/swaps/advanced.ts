@@ -42,8 +42,8 @@ async function getAndProcessSwaps(
     console.log('No Swap');
     return;
   }
-  // console.log(swapInfo.swaps);
-  // console.log(swapInfo.tokenAddresses);
+  console.log(swapInfo.swaps);
+  console.log(swapInfo.tokenAddresses);
   console.log(`Return amount: `, swapInfo.returnAmount.toString());
 
   const pools = balancer.swaps.sor.getPools();
@@ -120,15 +120,16 @@ async function getAndProcessSwaps(
 }
 
 async function swapExample() {
-  const network = Network.GNOSIS;
+  const network = Network.ARBITRUM;
   const rpcUrl = FORK_NODES[network];
-  const tokenIn = '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d';
-  const tokenOut = '0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1';
+  const tokenIn = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831';
+  const tokenOut = '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9';
   const swapType = SwapTypes.SwapExactIn;
-  const amount = parseFixed('20000', 18);
+  const amount = parseFixed('200000', 6);
   // Currently Relayer only suitable for ExactIn and non-eth swaps
   const canUseJoinExitPaths = canUseJoinExit(swapType, tokenIn, tokenOut);
 
+  console.log(rpcUrl);
   const balancer = new BalancerSDK({
     network,
     rpcUrl,
