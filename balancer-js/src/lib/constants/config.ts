@@ -619,6 +619,94 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       '0x2db50a0e0310723ef0c2a165cb9a9f80d772ba2f00020000000000000000000d', // weth/staBal
     ],
   },
+  [Network.FRAXTAL]: {
+    chainId: Network.FRAXTAL, // 252
+    addresses: {
+      contracts: {
+        vault: '0xba12222222228d8ba445958a75a0704d566bf2c8',
+        balancerMinter: '0x9805dcfd25e6de36bad8fe9d3fe2c9b44b764102',
+        multicall: '0xca11bde05977b3631167028862be2a173976ca11',
+        poolDataQueries: '0x5dbad78818d4c8958eff2d5b95b28385a22113cd',
+        balancerHelpers: '0x8e9aa87e45e92bad84d5f8dd1bff34fb92637de9',
+        balancerRelayer: '0xb541765f540447646a9545e0a4800a0bacf9e13d',
+        protocolFeePercentagesProvider:
+          '0xf23b4db826dba14c0e857029dff076b1c0264843',
+        weightedPoolFactory: '0x9da18982a33fd0c7051b19f0d7c76f2d5e7e017c',
+        composableStablePoolFactory:
+          '0x4bdcc2fb18aeb9e2d281b0278d946445070eada7',
+        aaveLinearPoolFactory: '',
+        erc4626LinearPoolFactory: '',
+        yearnLinearPoolFactory: '',
+      },
+      tokens: {
+        bal: '0x2fc7447f6cf71f9aa9e7ff8814b37e55b268ec91',
+        wrappedNativeAsset: '0xfc00000000000000000000000000000000000006',
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.goldsky.com/api/public/project_clwhu1vopoigi01wmbn514m1z/subgraphs/balancer-fraxtal-v2/1.0.0/gn',
+      gaugesSubgraph:
+        'https://api.goldsky.com/api/public/project_clwhu1vopoigi01wmbn514m1z/subgraphs/balancer-gauges-fraxtal/1.0.0/gn',
+      blockNumberSubgraph:
+        'https://api.goldsky.com/api/public/project_clwhu1vopoigi01wmbn514m1z/subgraphs/fraxtal-blocks/1.0.0/gn',
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'fraxtal',
+        platformId: 'fraxtal',
+      },
+    },
+    averageBlockTime: 2,
+    pools: {},
+    poolsToIgnore: [],
+    sorConnectingTokens: [],
+    sorTriPathMidPoolIds: [],
+  },
+  [Network.MODE]: {
+    chainId: Network.MODE, // 34443
+    addresses: {
+      contracts: {
+        vault: '0xba12222222228d8ba445958a75a0704d566bf2c8',
+        balancerMinter: '0x5cf4928a3205728bd12830e1840f7db85c62a4b9',
+        multicall: '0xca11bde05977b3631167028862be2a173976ca11',
+        poolDataQueries: '0x7a2535f5fb47b8e44c02ef5d9990588313fe8f05',
+        balancerHelpers: '0x8e9aa87e45e92bad84d5f8dd1bff34fb92637de9',
+        balancerRelayer: '0xb541765f540447646a9545e0a4800a0bacf9e13d',
+        protocolFeePercentagesProvider:
+          '0x85a80afee867adf27b50bdb7b76da70f1e853062',
+        weightedPoolFactory: '0xc3ccace87f6d3a81724075adcb5ddd85a8a1bb68',
+        composableStablePoolFactory:
+          '0x5dbad78818d4c8958eff2d5b95b28385a22113cd',
+        aaveLinearPoolFactory: '',
+        erc4626LinearPoolFactory: '',
+        yearnLinearPoolFactory: '',
+      },
+      tokens: {
+        bal: '0xd08a2917653d4e460893203471f0000826fb4034',
+        wrappedNativeAsset: '0x4200000000000000000000000000000000000006',
+      },
+    },
+    urls: {
+      subgraph:
+        'https://api.studio.thegraph.com/query/75376/balancer-mode-v2/version/latest',
+      gaugesSubgraph:
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges-mode/version/latest',
+      blockNumberSubgraph:
+        'https://api.studio.thegraph.com/query/48427/bleu-mode-blocks/version/latest',
+    },
+    thirdParty: {
+      coingecko: {
+        nativeAssetId: 'mode',
+        platformId: 'mode',
+      },
+    },
+    averageBlockTime: 2,
+    pools: {},
+    poolsToIgnore: [],
+    sorConnectingTokens: [],
+    sorTriPathMidPoolIds: [],
+  },
 };
 
 export const networkAddresses = (
