@@ -407,7 +407,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-v2-fantom',
+        'https://api.studio.thegraph.com/query/73674/beethovenx-v2-fantom/version/latest',
       gaugesSubgraph: '', // no guages on fantom
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/beethovenxfi/fantom-blocks',
