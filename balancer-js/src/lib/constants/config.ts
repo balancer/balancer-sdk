@@ -58,7 +58,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       gaugesSubgraph:
         'https://api.studio.thegraph.com/query/75376/balancer-gauges/version/latest',
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/blocklytics/ethereum-blocks', // TODO: check if this is still being used and if we have a new endpoint for those
+        'https://api.studio.thegraph.com/query/48427/ethereum-blocks/version/latest⁠',
     },
     thirdParty: {
       coingecko: {
@@ -142,7 +142,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       gaugesSubgraph:
         'https://api.studio.thegraph.com/query/75376/balancer-gauges-polygon/version/latest',
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks', // TODO: same
+        'https://api.studio.thegraph.com/query/48427/polygon-blocks/version/latest',
     },
     thirdParty: {
       coingecko: {
@@ -203,7 +203,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       gaugesSubgraph:
         'https://api.studio.thegraph.com/query/75376/balancer-gauges-arbitrum/version/latest',
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-one-blocks',
+        'https://api.studio.thegraph.com/query/48427/arbitrum-blocks/version/latest',
     },
     thirdParty: {
       coingecko: {
@@ -316,7 +316,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       gaugesSubgraph:
         'https://api.studio.thegraph.com/query/75376/balancer-gauges-optimism/version/latest',
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/lyra-finance/optimism-mainnet-blocks',
+        'https://api.studio.thegraph.com/query/48427/optimism-blocks/version/latest',
     },
     pools: {},
     sorConnectingTokens: [
@@ -355,6 +355,8 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.studio.thegraph.com/query/75376/balancer-gnosis-chain-v2/version/latest',
       gaugesSubgraph:
         'https://api.studio.thegraph.com/query/75376/balancer-gauges-gnosis-chain/version/latest',
+      blockNumberSubgraph:
+        'https://api.studio.thegraph.com/query/48427/gnosis-blocks/version/latest',
     },
     thirdParty: {
       coingecko: {
@@ -547,7 +549,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
       gaugesSubgraph:
         'https://api.studio.thegraph.com/query/75376/balancer-gauges-avalanche/version/latest',
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/iliaazhel/avalanche-blocks',
+        'https://api.studio.thegraph.com/query/48427/avalanche-blocks/version/latest',
     },
     thirdParty: {
       coingecko: {
