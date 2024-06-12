@@ -412,7 +412,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
         'https://api.studio.thegraph.com/query/73674/beethovenx-v2-fantom/version/latest',
       gaugesSubgraph: '', // no guages on fantom
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/beethovenxfi/fantom-blocks',
+        'https://api.studio.thegraph.com/query/48427/fantom-blocks/version/latest',
     },
     thirdParty: {
       coingecko: {
