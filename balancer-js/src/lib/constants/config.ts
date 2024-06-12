@@ -54,11 +54,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2',
+        'https://api.studio.thegraph.com/query/75376/balancer-v2/version/latest',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges/version/latest',
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/blocklytics/ethereum-blocks',
+        'https://api.thegraph.com/subgraphs/name/blocklytics/ethereum-blocks', // TODO: check if this is still being used and if we have a new endpoint for those
     },
     thirdParty: {
       coingecko: {
@@ -138,11 +138,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-prune-v2',
+        'https://api.studio.thegraph.com/query/75376/balancer-polygon-v2/version/latest',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-polygon',
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges-polygon/version/latest',
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
+        'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks', // TODO: same
     },
     thirdParty: {
       coingecko: {
@@ -199,9 +199,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-arbitrum-v2',
+        'https://api.studio.thegraph.com/query/75376/balancer-arbitrum-v2/version/latest',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-arbitrum',
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges-arbitrum/version/latest',
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-one-blocks',
     },
@@ -254,7 +254,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2',
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2', // TODO: there's no new subgraph for Goerli - should we drop support and remove it entirely?
       gaugesSubgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-goerli',
       blockNumberSubgraph:
@@ -312,9 +312,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-optimism',
+        'https://api.studio.thegraph.com/query/75376/balancer-optimism-v2/version/latest',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-optimism',
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges-optimism/version/latest',
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/lyra-finance/optimism-mainnet-blocks',
     },
@@ -352,9 +352,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
+        'https://api.studio.thegraph.com/query/75376/balancer-gnosis-chain-v2/version/latest',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-gnosis-chain',
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges-gnosis-chain/version/latest',
     },
     thirdParty: {
       coingecko: {
@@ -543,9 +543,9 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-avalanche-v2',
+        'https://api.studio.thegraph.com/query/75376/balancer-avalanche-v2/version/latest',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-avalanche',
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges-avalanche/version/latest',
       blockNumberSubgraph:
         'https://api.thegraph.com/subgraphs/name/iliaazhel/avalanche-blocks',
     },
