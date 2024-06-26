@@ -54,11 +54,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2',
+        'https://api.studio.thegraph.com/query/75376/balancer-v2/version/latest',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges',
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges/version/latest',
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/blocklytics/ethereum-blocks',
+        'https://api.studio.thegraph.com/query/48427/ethereum-blocks/version/latest⁠',
     },
     thirdParty: {
       coingecko: {
@@ -138,11 +138,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-prune-v2',
+        'https://api.studio.thegraph.com/query/75376/balancer-polygon-v2/version/latest',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-polygon',
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges-polygon/version/latest',
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/ianlapham/polygon-blocks',
+        'https://api.studio.thegraph.com/query/48427/polygon-blocks/version/latest',
     },
     thirdParty: {
       coingecko: {
@@ -199,11 +199,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-arbitrum-v2',
+        'https://api.studio.thegraph.com/query/75376/balancer-arbitrum-v2/version/latest',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-arbitrum',
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges-arbitrum/version/latest',
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/ianlapham/arbitrum-one-blocks',
+        'https://api.studio.thegraph.com/query/48427/arbitrum-blocks/version/latest',
     },
     thirdParty: {
       coingecko: {
@@ -254,7 +254,7 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2',
+        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-goerli-v2', // TODO: there's no new subgraph for Goerli - should we drop support and remove it entirely?
       gaugesSubgraph:
         'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-goerli',
       blockNumberSubgraph:
@@ -312,11 +312,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-optimism',
+        'https://api.studio.thegraph.com/query/75376/balancer-optimism-v2/version/latest',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-optimism',
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges-optimism/version/latest',
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/lyra-finance/optimism-mainnet-blocks',
+        'https://api.studio.thegraph.com/query/48427/optimism-blocks/version/latest',
     },
     pools: {},
     sorConnectingTokens: [
@@ -352,9 +352,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gnosis-chain-v2',
+        'https://api.studio.thegraph.com/query/75376/balancer-gnosis-chain-v2/version/latest',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-gnosis-chain',
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges-gnosis-chain/version/latest',
+      blockNumberSubgraph:
+        'https://api.studio.thegraph.com/query/48427/gnosis-blocks/version/latest',
     },
     thirdParty: {
       coingecko: {
@@ -407,10 +409,10 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/beethovenxfi/beethovenx-v2-fantom',
+        'https://api.studio.thegraph.com/query/73674/beethovenx-v2-fantom/version/latest',
       gaugesSubgraph: '', // no guages on fantom
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/beethovenxfi/fantom-blocks',
+        'https://api.studio.thegraph.com/query/48427/fantom-blocks/version/latest',
     },
     thirdParty: {
       coingecko: {
@@ -543,11 +545,11 @@ export const BALANCER_NETWORK_CONFIG: Record<Network, BalancerNetworkConfig> = {
     },
     urls: {
       subgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-avalanche-v2',
+        'https://api.studio.thegraph.com/query/75376/balancer-avalanche-v2/version/latest',
       gaugesSubgraph:
-        'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges-avalanche',
+        'https://api.studio.thegraph.com/query/75376/balancer-gauges-avalanche/version/latest',
       blockNumberSubgraph:
-        'https://api.thegraph.com/subgraphs/name/iliaazhel/avalanche-blocks',
+        'https://api.studio.thegraph.com/query/48427/avalanche-blocks/version/latest',
     },
     thirdParty: {
       coingecko: {
