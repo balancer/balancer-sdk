@@ -10,7 +10,7 @@ export * from './pool-shares/types';
 export * from './gauge-shares/types';
 
 export interface Findable<T, P = string, V = any> {
-  find: (id: string) => Promise<T | undefined>;
+  find: (id: string, refresh?: boolean) => Promise<T | undefined>;
   findBy: (attribute: P, value: V) => Promise<T | undefined>;
 }
 

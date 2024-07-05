@@ -1,7 +1,7 @@
 overwrite: true
 generates:
     src/modules/subgraph/generated/balancer-subgraph-types.ts:
-        schema: ${BALANCER_SUBGRAPH_URL:https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2}
+        schema: ${BALANCER_SUBGRAPH_URL:https://api.studio.thegraph.com/query/75376/balancer-v2/version/latest}
         documents: 'src/modules/subgraph/balancer-v2/**/*.graphql'
         plugins:
             - typescript
@@ -13,11 +13,11 @@ generates:
                 Bytes: string
                 BigDecimal: string
     src/modules/subgraph/generated/balancer-subgraph-schema.graphql:
-        schema: ${BALANCER_SUBGRAPH_URL:https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2}
+        schema: ${BALANCER_SUBGRAPH_URL:https://api.studio.thegraph.com/query/75376/balancer-v2/version/latest}
         plugins:
             - schema-ast
     src/modules/subgraph/generated/balancer-gauges.ts:
-        schema: ${BALANCER_GAUGES_URL:https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges}
+        schema: ${BALANCER_GAUGES_URL:https://api.studio.thegraph.com/query/75376/balancer-gauges/version/latest}
         documents: 'src/modules/subgraph/balancer-gauges/**/*.graphql'
         plugins:
             - typescript
@@ -31,7 +31,7 @@ generates:
             namingConvention:
                 enumValues: keep
     src/modules/subgraph/generated/balancer-gauges.graphql:
-        schema: ${BALANCER_GAUGES_URL:https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges}
+        schema: ${BALANCER_GAUGES_URL:https://api.studio.thegraph.com/query/75376/balancer-gauges/version/latest}
         plugins:
             - schema-ast
 hooks:

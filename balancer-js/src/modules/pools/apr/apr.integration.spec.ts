@@ -23,7 +23,8 @@ const usdStable =
 const auraBALveBAL =
   '0x3dd0843a028c86e0b760b1a76929d1c5ef93a2dd000200000000000000000249';
 
-describe('APR tests', () => {
+// APRs are offered via API now
+describe.skip('APR tests', () => {
   describe('pool with yield tokens', () => {
     it('has tokenAprs', async () => {
       const pool = await pools.find(ethStEth);

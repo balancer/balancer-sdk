@@ -1,3 +1,4 @@
+// yarn test:only ./src/modules/data/liquidity-gauges/multicall.spec.ts
 import { expect } from 'chai';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Zero } from '@ethersproject/constants';
@@ -65,7 +66,7 @@ describe('Liquidity gauge multicall', () => {
     const fetcher = new LiquidityGaugesMulticallRepository(multicall, 1);
 
     const gauges = new LiquidityGaugesSubgraphRepository(
-      'https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-gauges'
+      'https://api.studio.thegraph.com/query/75376/balancer-gauges/version/latest'
     );
 
     let gaugeAddresses: string[];
