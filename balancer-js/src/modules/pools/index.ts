@@ -286,6 +286,18 @@ export class Pools implements Findable<PoolWithMethods> {
   }
 
   /**
+   * Fetches new data from subgraph for pool
+   * (Will update PoolsSubgraphRepository cache)
+   * @param pool
+   * @returns
+   */
+  async refresh(poolId: string): Promise<PoolWithMethods | undefined> {
+    const poolRefreshed = await this.repositories.pools.find(poolId, true);
+    if (!poolRefreshed) return poolRefreshed;
+    return Pools.wrap(poolRefreshed, this.networkConfig);
+  }
+
+  /**
    * Calculates APR on any pool data
    *
    * @param pool

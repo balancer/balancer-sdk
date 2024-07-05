@@ -121,8 +121,42 @@ export class PoolsSubgraphRepository
     return pools.map((pool) => mapType(pool, this.chainId));
   }
 
-  async find(id: string): Promise<Pool | undefined> {
-    return await this.findBy('id', id);
+  /**
+   * Find pool data for id
+   * @param id
+   * @param refresh If true will refetch from SG and update cache
+   * @returns
+   */
+  async find(id: string, refresh = false): Promise<Pool | undefined> {
+    // If we're not refreshing and the pool exists in caches then return
+    if (!refresh && this.pools) {
+      const cachedPool = (await this.pools).find((pool) => pool.id === id);
+      if (cachedPool) return cachedPool;
+    }
+
+    // Fetch pool data from SG, update cache and return
+    const logger = Logger.getInstance();
+
+    // SG fetch
+    logger.time(`fetching pool ${id}`);
+    const poolQuery = await this.client.Pool({ id });
+    logger.timeEnd(`fetching pool ${id}`);
+
+    if (!poolQuery.pool) return undefined;
+
+    const pool = mapType(poolQuery.pool, this.chainId);
+    // If the pool is already cached, replace it with the new one
+    logger.time(`updating cache`);
+    const pools = await this.pools;
+    if (pools) {
+      const index = pools.findIndex((p) => p.address === pool.address);
+      if (index !== -1) {
+        this.pools = Promise.resolve([...pools.splice(index, 1), pool]);
+      } else this.pools = Promise.resolve([...pools, pool]);
+    } else this.pools = Promise.resolve([pool]);
+    logger.timeEnd(`updating cache`);
+
+    return pool;
   }
 
   async findBy(param: PoolAttribute, value: string): Promise<Pool | undefined> {
