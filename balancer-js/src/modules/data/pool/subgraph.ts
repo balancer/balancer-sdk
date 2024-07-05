@@ -38,6 +38,7 @@ export class PoolsSubgraphRepository
   public skip = 0;
   private blockHeight: undefined | (() => Promise<number | undefined>);
   private query: GraphQLQuery;
+  private isCustomQuery: boolean;
 
   /**
    * Repository with optional lazy loaded blockHeight
@@ -60,7 +61,7 @@ export class PoolsSubgraphRepository
         },
       },
     };
-
+    this.isCustomQuery = !!options.query;
     const args = Object.assign({}, options.query?.args || defaultArgs);
     const attrs = Object.assign({}, options.query?.attrs || {});
 
@@ -128,6 +129,8 @@ export class PoolsSubgraphRepository
    * @returns
    */
   async find(id: string, refresh = false): Promise<Pool | undefined> {
+    if(this.isCustomQuery)
+      return await this.findBy('id', id);
     // If we're not refreshing and the pool exists in caches then return
     if (!refresh && this.pools) {
       const cachedPool = (await this.pools).find((pool) => pool.id === id);
