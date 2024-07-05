@@ -129,8 +129,7 @@ export class PoolsSubgraphRepository
    * @returns
    */
   async find(id: string, refresh = false): Promise<Pool | undefined> {
-    if(this.isCustomQuery)
-      return await this.findBy('id', id);
+    if (this.isCustomQuery) return await this.findBy('id', id);
     // If we're not refreshing and the pool exists in caches then return
     if (!refresh && this.pools) {
       const cachedPool = (await this.pools).find((pool) => pool.id === id);
