@@ -17,7 +17,13 @@ export type Scalars = {
   BigInt: string;
   Bytes: string;
   Int8: any;
+  Timestamp: any;
 };
+
+export enum Aggregation_Interval {
+  Day = 'day',
+  Hour = 'hour'
+}
 
 export type AmpUpdate = {
   __typename?: 'AmpUpdate';
@@ -189,6 +195,7 @@ export type Balancer = {
   poolCount: Scalars['Int'];
   pools?: Maybe<Array<Pool>>;
   protocolFeesCollector?: Maybe<Scalars['Bytes']>;
+  snapshots?: Maybe<Array<BalancerSnapshot>>;
   totalLiquidity: Scalars['BigDecimal'];
   totalProtocolFee?: Maybe<Scalars['BigDecimal']>;
   totalSwapCount: Scalars['BigInt'];
@@ -203,6 +210,15 @@ export type BalancerPoolsArgs = {
   orderDirection?: InputMaybe<OrderDirection>;
   skip?: InputMaybe<Scalars['Int']>;
   where?: InputMaybe<Pool_Filter>;
+};
+
+
+export type BalancerSnapshotsArgs = {
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<BalancerSnapshot_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  where?: InputMaybe<BalancerSnapshot_Filter>;
 };
 
 export type BalancerSnapshot = {
@@ -362,6 +378,7 @@ export type Balancer_Filter = {
   protocolFeesCollector_not?: InputMaybe<Scalars['Bytes']>;
   protocolFeesCollector_not_contains?: InputMaybe<Scalars['Bytes']>;
   protocolFeesCollector_not_in?: InputMaybe<Array<Scalars['Bytes']>>;
+  snapshots_?: InputMaybe<BalancerSnapshot_Filter>;
   totalLiquidity?: InputMaybe<Scalars['BigDecimal']>;
   totalLiquidity_gt?: InputMaybe<Scalars['BigDecimal']>;
   totalLiquidity_gte?: InputMaybe<Scalars['BigDecimal']>;
@@ -409,6 +426,7 @@ export enum Balancer_OrderBy {
   PoolCount = 'poolCount',
   Pools = 'pools',
   ProtocolFeesCollector = 'protocolFeesCollector',
+  Snapshots = 'snapshots',
   TotalLiquidity = 'totalLiquidity',
   TotalProtocolFee = 'totalProtocolFee',
   TotalSwapCount = 'totalSwapCount',
@@ -608,6 +626,70 @@ export enum CircuitBreaker_OrderBy {
   UpperBoundPercentage = 'upperBoundPercentage'
 }
 
+export type FxOracle = {
+  __typename?: 'FXOracle';
+  decimals?: Maybe<Scalars['Int']>;
+  divisor?: Maybe<Scalars['String']>;
+  id: Scalars['ID'];
+  tokens: Array<Scalars['Bytes']>;
+};
+
+export type FxOracle_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<FxOracle_Filter>>>;
+  decimals?: InputMaybe<Scalars['Int']>;
+  decimals_gt?: InputMaybe<Scalars['Int']>;
+  decimals_gte?: InputMaybe<Scalars['Int']>;
+  decimals_in?: InputMaybe<Array<Scalars['Int']>>;
+  decimals_lt?: InputMaybe<Scalars['Int']>;
+  decimals_lte?: InputMaybe<Scalars['Int']>;
+  decimals_not?: InputMaybe<Scalars['Int']>;
+  decimals_not_in?: InputMaybe<Array<Scalars['Int']>>;
+  divisor?: InputMaybe<Scalars['String']>;
+  divisor_contains?: InputMaybe<Scalars['String']>;
+  divisor_contains_nocase?: InputMaybe<Scalars['String']>;
+  divisor_ends_with?: InputMaybe<Scalars['String']>;
+  divisor_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  divisor_gt?: InputMaybe<Scalars['String']>;
+  divisor_gte?: InputMaybe<Scalars['String']>;
+  divisor_in?: InputMaybe<Array<Scalars['String']>>;
+  divisor_lt?: InputMaybe<Scalars['String']>;
+  divisor_lte?: InputMaybe<Scalars['String']>;
+  divisor_not?: InputMaybe<Scalars['String']>;
+  divisor_not_contains?: InputMaybe<Scalars['String']>;
+  divisor_not_contains_nocase?: InputMaybe<Scalars['String']>;
+  divisor_not_ends_with?: InputMaybe<Scalars['String']>;
+  divisor_not_ends_with_nocase?: InputMaybe<Scalars['String']>;
+  divisor_not_in?: InputMaybe<Array<Scalars['String']>>;
+  divisor_not_starts_with?: InputMaybe<Scalars['String']>;
+  divisor_not_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  divisor_starts_with?: InputMaybe<Scalars['String']>;
+  divisor_starts_with_nocase?: InputMaybe<Scalars['String']>;
+  id?: InputMaybe<Scalars['ID']>;
+  id_gt?: InputMaybe<Scalars['ID']>;
+  id_gte?: InputMaybe<Scalars['ID']>;
+  id_in?: InputMaybe<Array<Scalars['ID']>>;
+  id_lt?: InputMaybe<Scalars['ID']>;
+  id_lte?: InputMaybe<Scalars['ID']>;
+  id_not?: InputMaybe<Scalars['ID']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']>>;
+  or?: InputMaybe<Array<InputMaybe<FxOracle_Filter>>>;
+  tokens?: InputMaybe<Array<Scalars['Bytes']>>;
+  tokens_contains?: InputMaybe<Array<Scalars['Bytes']>>;
+  tokens_contains_nocase?: InputMaybe<Array<Scalars['Bytes']>>;
+  tokens_not?: InputMaybe<Array<Scalars['Bytes']>>;
+  tokens_not_contains?: InputMaybe<Array<Scalars['Bytes']>>;
+  tokens_not_contains_nocase?: InputMaybe<Array<Scalars['Bytes']>>;
+};
+
+export enum FxOracle_OrderBy {
+  Decimals = 'decimals',
+  Divisor = 'divisor',
+  Id = 'id',
+  Tokens = 'tokens'
+}
+
 export type GradualWeightUpdate = {
   __typename?: 'GradualWeightUpdate';
   endTimestamp: Scalars['BigInt'];
@@ -776,6 +858,7 @@ export enum InvestType {
 export type JoinExit = {
   __typename?: 'JoinExit';
   amounts: Array<Scalars['BigDecimal']>;
+  block?: Maybe<Scalars['BigInt']>;
   id: Scalars['ID'];
   pool: Pool;
   sender: Scalars['Bytes'];
@@ -796,6 +879,14 @@ export type JoinExit_Filter = {
   amounts_not_contains?: InputMaybe<Array<Scalars['BigDecimal']>>;
   amounts_not_contains_nocase?: InputMaybe<Array<Scalars['BigDecimal']>>;
   and?: InputMaybe<Array<InputMaybe<JoinExit_Filter>>>;
+  block?: InputMaybe<Scalars['BigInt']>;
+  block_gt?: InputMaybe<Scalars['BigInt']>;
+  block_gte?: InputMaybe<Scalars['BigInt']>;
+  block_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  block_lt?: InputMaybe<Scalars['BigInt']>;
+  block_lte?: InputMaybe<Scalars['BigInt']>;
+  block_not?: InputMaybe<Scalars['BigInt']>;
+  block_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
   id?: InputMaybe<Scalars['ID']>;
   id_gt?: InputMaybe<Scalars['ID']>;
   id_gte?: InputMaybe<Scalars['ID']>;
@@ -891,6 +982,7 @@ export type JoinExit_Filter = {
 
 export enum JoinExit_OrderBy {
   Amounts = 'amounts',
+  Block = 'block',
   Id = 'id',
   Pool = 'pool',
   PoolAddress = 'pool__address',
@@ -1259,6 +1351,7 @@ export type Pool = {
   isInRecoveryMode?: Maybe<Scalars['Boolean']>;
   isPaused?: Maybe<Scalars['Boolean']>;
   joinExitEnabled?: Maybe<Scalars['Boolean']>;
+  joinsExits?: Maybe<Array<JoinExit>>;
   lambda?: Maybe<Scalars['BigDecimal']>;
   lastJoinExitAmp?: Maybe<Scalars['BigInt']>;
   lastPostJoinExitInvariant?: Maybe<Scalars['BigDecimal']>;
@@ -1349,6 +1442,15 @@ export type PoolHistoricalValuesArgs = {
   orderDirection?: InputMaybe<OrderDirection>;
   skip?: InputMaybe<Scalars['Int']>;
   where?: InputMaybe<PoolHistoricalLiquidity_Filter>;
+};
+
+
+export type PoolJoinsExitsArgs = {
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<JoinExit_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  where?: InputMaybe<JoinExit_Filter>;
 };
 
 
@@ -2536,6 +2638,7 @@ export type Pool_Filter = {
   joinExitEnabled_in?: InputMaybe<Array<Scalars['Boolean']>>;
   joinExitEnabled_not?: InputMaybe<Scalars['Boolean']>;
   joinExitEnabled_not_in?: InputMaybe<Array<Scalars['Boolean']>>;
+  joinsExits_?: InputMaybe<JoinExit_Filter>;
   lambda?: InputMaybe<Scalars['BigDecimal']>;
   lambda_gt?: InputMaybe<Scalars['BigDecimal']>;
   lambda_gte?: InputMaybe<Scalars['BigDecimal']>;
@@ -3057,6 +3160,7 @@ export enum Pool_OrderBy {
   IsInRecoveryMode = 'isInRecoveryMode',
   IsPaused = 'isPaused',
   JoinExitEnabled = 'joinExitEnabled',
+  JoinsExits = 'joinsExits',
   Lambda = 'lambda',
   LastJoinExitAmp = 'lastJoinExitAmp',
   LastPostJoinExitInvariant = 'lastPostJoinExitInvariant',
@@ -3397,6 +3501,8 @@ export type Query = {
   balancers: Array<Balancer>;
   circuitBreaker?: Maybe<CircuitBreaker>;
   circuitBreakers: Array<CircuitBreaker>;
+  fxoracle?: Maybe<FxOracle>;
+  fxoracles: Array<FxOracle>;
   gradualWeightUpdate?: Maybe<GradualWeightUpdate>;
   gradualWeightUpdates: Array<GradualWeightUpdate>;
   joinExit?: Maybe<JoinExit>;
@@ -3516,6 +3622,24 @@ export type QueryCircuitBreakersArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   subgraphError?: _SubgraphErrorPolicy_;
   where?: InputMaybe<CircuitBreaker_Filter>;
+};
+
+
+export type QueryFxoracleArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryFxoraclesArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<FxOracle_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<FxOracle_Filter>;
 };
 
 
@@ -3908,6 +4032,8 @@ export type Subscription = {
   balancers: Array<Balancer>;
   circuitBreaker?: Maybe<CircuitBreaker>;
   circuitBreakers: Array<CircuitBreaker>;
+  fxoracle?: Maybe<FxOracle>;
+  fxoracles: Array<FxOracle>;
   gradualWeightUpdate?: Maybe<GradualWeightUpdate>;
   gradualWeightUpdates: Array<GradualWeightUpdate>;
   joinExit?: Maybe<JoinExit>;
@@ -4027,6 +4153,24 @@ export type SubscriptionCircuitBreakersArgs = {
   skip?: InputMaybe<Scalars['Int']>;
   subgraphError?: _SubgraphErrorPolicy_;
   where?: InputMaybe<CircuitBreaker_Filter>;
+};
+
+
+export type SubscriptionFxoracleArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionFxoraclesArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']>;
+  orderBy?: InputMaybe<FxOracle_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<FxOracle_Filter>;
 };
 
 
@@ -4409,6 +4553,7 @@ export type SubscriptionUsersArgs = {
 
 export type Swap = {
   __typename?: 'Swap';
+  block?: Maybe<Scalars['BigInt']>;
   caller: Scalars['Bytes'];
   id: Scalars['ID'];
   poolId: Pool;
@@ -4592,6 +4737,14 @@ export type Swap_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
   and?: InputMaybe<Array<InputMaybe<Swap_Filter>>>;
+  block?: InputMaybe<Scalars['BigInt']>;
+  block_gt?: InputMaybe<Scalars['BigInt']>;
+  block_gte?: InputMaybe<Scalars['BigInt']>;
+  block_in?: InputMaybe<Array<Scalars['BigInt']>>;
+  block_lt?: InputMaybe<Scalars['BigInt']>;
+  block_lte?: InputMaybe<Scalars['BigInt']>;
+  block_not?: InputMaybe<Scalars['BigInt']>;
+  block_not_in?: InputMaybe<Array<Scalars['BigInt']>>;
   caller?: InputMaybe<Scalars['Bytes']>;
   caller_contains?: InputMaybe<Scalars['Bytes']>;
   caller_gt?: InputMaybe<Scalars['Bytes']>;
@@ -4758,6 +4911,7 @@ export type Swap_Filter = {
 };
 
 export enum Swap_OrderBy {
+  Block = 'block',
   Caller = 'caller',
   Id = 'id',
   PoolId = 'poolId',
@@ -5820,6 +5974,8 @@ export type _Block_ = {
   hash?: Maybe<Scalars['Bytes']>;
   /** The block number */
   number: Scalars['Int'];
+  /** The hash of the parent block */
+  parentHash?: Maybe<Scalars['Bytes']>;
   /** Integer representation of the timestamp stored in blocks for the chain */
   timestamp?: Maybe<Scalars['Int']>;
 };
