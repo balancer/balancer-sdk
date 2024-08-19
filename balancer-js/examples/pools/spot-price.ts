@@ -16,6 +16,7 @@ import {
 const config: BalancerSdkConfig = {
   network: Network.MAINNET,
   rpcUrl: 'https://rpc.ankr.com/eth',
+  enableLogging: true
 };
 
 const dai = '0x6b175474e89094c44da98b954eedeac495271d0f';
@@ -55,5 +56,23 @@ async function getSpotPriceMostLiquid() {
   console.log('spotPriceBalDai', spotPriceBalDai.toString());
 }
 
-getSpotPricePool();
-getSpotPriceMostLiquid();
+async function test() {
+let pool = await balancer.pools.find('0xb9debddf1d894c79d2b2d09f819ff9b856fca55200000000000000000000062a');
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Every 5 seconds, log rate weWETH / WETH
+// eslint-disable-next-line no-constant-condition
+while (true) {
+  await sleep(5_000);
+  // Refresh pool
+  if (!pool) throw new Error('Pool not found');
+  pool = await balancer.pools.refresh(pool.id);
+  if (!pool) throw new Error('Pool not found');
+  const res = pool.calcSpotPrice('0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', '0xcd5fe23c85820f7b72d0926fc9b05b43e359b7ee');
+  console.log(`timestamp: ${Date.now()} | rate = ${res}`);
+}
+}
+
+test();
+// getSpotPricePool();
+// getSpotPriceMostLiquid();
