@@ -39,6 +39,7 @@ export enum Chain {
   Arbitrum = 'Arbitrum',
   Avalanche = 'Avalanche',
   Base = 'Base',
+  Fraxtal = 'Fraxtal',
   Gnosis = 'Gnosis',
   Optimism = 'Optimism',
   Polygon = 'Polygon',
