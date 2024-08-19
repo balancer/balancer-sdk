@@ -2,9 +2,8 @@ import { Cacheable, Findable, Searchable } from '../types';
 import { Provider } from '@ethersproject/providers';
 import { PoolAttribute, PoolsRepositoryFetchOptions } from './types';
 import { Pool } from '@/types';
-import { getOnChainBalances } from '../../../modules/sor/pool-data/onChainData';
+import { getOnChainBalances } from '../../../modules/sor/pool-data/onChainData3';
 import { PoolsSubgraphRepository } from './subgraph';
-import { isSameAddress } from '@/lib/utils';
 import { Logger } from '@/lib/utils/logger';
 
 interface PoolsSubgraphOnChainRepositoryOptions {
@@ -34,7 +33,8 @@ export class PoolsSubgraphOnChainRepository
   constructor(
     private poolsSubgraph: PoolsSubgraphRepository,
     options: PoolsSubgraphOnChainRepositoryOptions,
-    private readonly poolsToIgnore: string[] | undefined
+    private readonly poolsToIgnore: string[] | undefined,
+    private batchSize?: number
   ) {
     this.provider = options.provider;
     this.multicall = options.multicall;
@@ -45,8 +45,8 @@ export class PoolsSubgraphOnChainRepository
     const filteredPools = pools.filter((p) => {
       if (p.swapEnabled === false) return false;
       if (!this.poolsToIgnore) return true;
-      const index = this.poolsToIgnore.findIndex((addr) =>
-        isSameAddress(addr, p.address)
+      const index = this.poolsToIgnore.findIndex(
+        (id) => id.toLowerCase() === p.id.toLowerCase()
       );
       return index === -1;
     });
@@ -70,7 +70,8 @@ export class PoolsSubgraphOnChainRepository
       filteredPools,
       this.multicall,
       this.vault,
-      this.provider
+      this.provider,
+      this.batchSize
     );
 
     logger.timeEnd(`fetching onchain ${filteredPools.length} pools`);
@@ -89,7 +90,8 @@ export class PoolsSubgraphOnChainRepository
       filteredPools,
       this.multicall,
       this.vault,
-      this.provider
+      this.provider,
+      this.batchSize
     );
 
     logger.timeEnd(`fetching onchain ${filteredPools.length} pools`);

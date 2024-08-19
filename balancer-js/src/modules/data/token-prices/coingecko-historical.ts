@@ -5,9 +5,14 @@ import {
   TokenPrices,
   Network,
   HistoricalPrices,
+  CoingeckoConfig,
 } from '@/types';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { tokenAddressForPricing } from '@/lib/utils';
+import {
+  getCoingeckoApiBaseUrl,
+  getCoingeckoApiKeyHeaderName,
+} from '@/lib/utils/coingecko-api';
 
 const HOUR = 60 * 60;
 
@@ -17,42 +22,48 @@ const HOUR = 60 * 60;
 export class CoingeckoHistoricalPriceRepository implements Findable<Price> {
   prices: TokenPrices = {};
   nativePrice?: Promise<Price>;
-  urlBase: string;
-
-  constructor(private chainId: Network = 1) {
-    this.urlBase = `https://api.coingecko.com/api/v3/coins/${this.platform(
+  private readonly urlBase: string;
+  private readonly apiKey?: string;
+  private readonly coingeckoApiKeyHeaderName: string;
+  constructor(private chainId: Network = 1, coingecko?: CoingeckoConfig) {
+    this.urlBase = `${getCoingeckoApiBaseUrl(
+      coingecko?.isDemoApiKey
+    )}coins/${this.platform(
       chainId
     )}/contract/%TOKEN_ADDRESS%/market_chart/range?vs_currency=usd`;
+    this.apiKey = coingecko?.coingeckoApiKey;
+    this.coingeckoApiKeyHeaderName = getCoingeckoApiKeyHeaderName(
+      coingecko?.isDemoApiKey
+    );
   }
 
-  private fetch(
+  private async fetch(
     address: string,
     timestamp: number,
     { signal }: { signal?: AbortSignal } = {}
   ): Promise<HistoricalPrices> {
-    console.time(`fetching coingecko historical for ${address}`);
     const url = this.urlRange(address, timestamp);
-    return axios
-      .get<HistoricalPrices>(url, { signal })
-      .then(({ data }) => {
-        return data;
-      })
-      .catch((error) => {
-        const message = [
-          'Error fetching historical token prices from coingecko',
-        ];
-        if (error.isAxiosError) {
-          if (error.response?.status) {
-            message.push(`with status ${error.response.status}`);
-          }
-        } else {
-          message.push(error);
-        }
-        return Promise.reject(message.join(' '));
-      })
-      .finally(() => {
-        console.timeEnd(`fetching coingecko historical for ${address}`);
+    console.time(`fetching coingecko historical for ${address}`);
+    try {
+      const { data } = await axios.get<HistoricalPrices>(url, {
+        signal,
+        headers: { [this.coingeckoApiKeyHeaderName]: this.apiKey ?? '' },
       });
+      console.timeEnd(`fetching coingecko historical for ${address}`);
+      console.log(data);
+      return data;
+    } catch (error) {
+      console.timeEnd(`fetching coingecko historical for ${address}`);
+      if ((error as AxiosError).isAxiosError) {
+        throw new Error(
+          'Error fetching historical token prices from coingecko - ' +
+            (error as AxiosError).message +
+            ' - ' +
+            (error as AxiosError).response?.statusText
+        );
+      }
+      throw new Error('Unknown Error: ' + error);
+    }
   }
 
   /* eslint-disable @typescript-eslint/no-unused-vars */

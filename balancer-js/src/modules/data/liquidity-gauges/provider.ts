@@ -86,6 +86,11 @@ export class LiquidityGaugeSubgraphRPCProvider
           childGaugeAddresses
         );
         console.timeEnd('Fetching multicall.inflationRates');
+        console.time('Fetching multicall.getWorkingSupplies');
+        this.workingSupplies = await this.multicall.getWorkingSupplies(
+          childGaugeAddresses
+        );
+        console.timeEnd('Fetching multicall.getWorkingSupplies');
       }
     }
     if (this.gaugeController) {

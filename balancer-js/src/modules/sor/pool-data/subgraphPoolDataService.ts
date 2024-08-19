@@ -19,7 +19,6 @@ import {
   SubgraphArgsFormatter,
 } from '@/lib/graphql/args-builder';
 
-import { isSameAddress } from '@/lib/utils';
 import { Logger } from '@/lib/utils/logger';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,8 +75,8 @@ export class SubgraphPoolDataService implements PoolDataService {
 
     const filteredPools = pools.filter((p) => {
       if (!this.network.poolsToIgnore) return true;
-      const index = this.network.poolsToIgnore.findIndex((addr) =>
-        isSameAddress(addr, p.address)
+      const index = this.network.poolsToIgnore.findIndex(
+        (id) => id.toLowerCase() === p.id.toLowerCase()
       );
       return index === -1;
     });
@@ -95,7 +94,8 @@ export class SubgraphPoolDataService implements PoolDataService {
       mapped,
       this.network.addresses.contracts.multicall,
       this.network.addresses.contracts.vault,
-      this.provider
+      this.provider,
+      this.network.multicallBatchSize
     );
 
     logger.timeEnd(`fetching on-chain balances for ${mapped.length} pools`);

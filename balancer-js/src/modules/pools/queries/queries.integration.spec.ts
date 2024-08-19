@@ -30,12 +30,12 @@ const balPool = {
 };
 
 const composableStablePool = {
-  id: '0x4edcb2b46377530bc18bb4d2c7fe46a992c73e100000000000000000000003ec',
+  id: '0x05ff47afada98a98982113758878f9a8b9fdda0a000000000000000000000645',
   poolType: PoolType.ComposableStable,
   tokensList: [
-    '0x4edcb2b46377530bc18bb4d2c7fe46a992c73e10',
-    '0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0',
-    '0xbe9895146f7af43049ca1c1ae358b0541ea49704',
+    '0x05ff47afada98a98982113758878f9a8b9fdda0a',
+    '0xae78736cd615f374d3085123a210448e74fc6393',
+    '0xcd5fe23c85820f7b72d0926fc9b05b43e359b7ee',
   ],
 };
 

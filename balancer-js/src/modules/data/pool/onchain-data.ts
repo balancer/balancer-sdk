@@ -3,6 +3,7 @@ import { SubgraphPoolBase } from '@/.';
 import { Provider } from '@ethersproject/providers';
 import { formatFixed } from '@ethersproject/bignumber';
 import { SubgraphToken } from '@balancer-labs/sor';
+import { PoolToken, Pool } from '@/types';
 
 const abi = [
   'function getSwapFeePercentage() view returns (uint256)',
@@ -41,6 +42,11 @@ const getSwapFeeFn = (poolType: string) => {
   } else {
     return 'getSwapFeePercentage';
   }
+};
+
+type GenericToken = SubgraphToken | PoolToken;
+type GenericPool = Omit<SubgraphPoolBase | Pool, 'tokens'> & {
+  tokens: GenericToken[];
 };
 
 interface OnchainData {
@@ -122,6 +128,13 @@ const poolTypeCalls = (poolType: string, poolTypeVersion = 1) => {
       } else {
         return do_nothing;
       }
+    case 'Gyro2':
+      if (poolTypeVersion === 2) {
+        // Gyro2 V2 has tokenRates same as GyroE V2
+        return gyroECalls;
+      } else {
+        return do_nothing;
+      }
     case 'AaveLinear':
       if (poolTypeVersion === 1) {
         return linearCalls;
@@ -133,32 +146,36 @@ const poolTypeCalls = (poolType: string, poolTypeVersion = 1) => {
   }
 };
 
-const merge = (pool: SubgraphPoolBase, result: OnchainData) => ({
+const merge = <T extends GenericPool>(pool: T, result: OnchainData) => ({
   ...pool,
-  tokens: pool.tokens.map((token) => {
-    const idx = result.poolTokens[0]
-      .map((t) => t.toLowerCase())
-      .indexOf(token.address);
-    const wrappedToken =
-      pool.wrappedIndex && pool.tokensList[pool.wrappedIndex];
-    return {
-      ...token,
-      balance: formatFixed(result.poolTokens[1][idx], token.decimals || 18),
-      weight:
-        (result.weights && formatFixed(result.weights[idx], 18)) ||
-        token.weight,
-      priceRate:
-        (result.wrappedTokenRate &&
-          wrappedToken &&
-          wrappedToken.toLowerCase() === token.address.toLowerCase() &&
-          formatFixed(result.wrappedTokenRate, 18)) ||
-        token.priceRate,
-    } as SubgraphToken;
-  }),
+  tokens: result.poolTokens
+    ? pool.tokens.map((token) => {
+        const idx = result.poolTokens[0]
+          .map((t) => t.toLowerCase())
+          .indexOf(token.address);
+        const wrappedToken =
+          pool.wrappedIndex && pool.tokensList[pool.wrappedIndex];
+        const tokenDecimals =
+          token.decimals === undefined ? 18 : token.decimals;
+        return {
+          ...token,
+          balance: formatFixed(result.poolTokens[1][idx], tokenDecimals),
+          weight:
+            (result.weights && formatFixed(result.weights[idx], 18)) ||
+            token.weight,
+          priceRate:
+            (result.wrappedTokenRate &&
+              wrappedToken &&
+              wrappedToken.toLowerCase() === token.address.toLowerCase() &&
+              formatFixed(result.wrappedTokenRate, 18)) ||
+            token.priceRate,
+        } as SubgraphToken;
+      })
+    : pool.tokens,
   totalShares: result.totalShares
     ? formatFixed(result.totalShares, 18)
     : pool.totalShares,
-  swapFee: formatFixed(result.swapFee, 18),
+  swapFee: result.swapFee ? formatFixed(result.swapFee, 18) : pool.swapFee,
   amp:
     (result.amp &&
       result.amp[0] &&
@@ -186,7 +203,8 @@ export const fetchOnChainPoolData = async (
     poolTypeVersion?: number;
   }[],
   vaultAddress: string,
-  provider: Provider
+  provider: Provider,
+  batchSize = 1024
 ): Promise<{ [id: string]: OnchainData }> => {
   if (pools.length === 0) {
     return {};
@@ -199,28 +217,29 @@ export const fetchOnChainPoolData = async (
     poolTypeCalls(poolType, poolTypeVersion)(id, address, multicaller);
   });
 
-  // ZkEVM needs a smaller batch size
-  const results = (await multicaller.execute({}, 128)) as {
+  const results = (await multicaller.execute({}, batchSize)) as {
     [id: string]: OnchainData;
   };
 
   return results;
 };
 
-export async function getOnChainBalances(
-  subgraphPoolsOriginal: SubgraphPoolBase[],
+export async function getOnChainBalances<T extends GenericPool>(
+  subgraphPoolsOriginal: T[],
   _multiAddress: string,
   vaultAddress: string,
-  provider: Provider
-): Promise<SubgraphPoolBase[]> {
+  provider: Provider,
+  batchSize = 1024
+): Promise<T[]> {
   if (subgraphPoolsOriginal.length === 0) return subgraphPoolsOriginal;
 
-  const poolsWithOnchainData: SubgraphPoolBase[] = [];
+  const poolsWithOnchainData: T[] = [];
 
   const onchainData = (await fetchOnChainPoolData(
     subgraphPoolsOriginal,
     vaultAddress,
-    provider
+    provider,
+    batchSize
   )) as { [id: string]: OnchainData };
 
   subgraphPoolsOriginal.forEach((pool) => {

@@ -40,7 +40,7 @@ jobs:
           echo -n "$SIGNING_KEY" | base64 --decode | gpg --import
           git config --global user.name "johngrantuk"
           git config --global user.email "4797222+johngrantuk@users.noreply.github.com"
-          git config user.signingkey 0B86E3F46D321811DC4330D1376AF1CD2A15D127
+          git config user.signingkey 5D1644BB7D087635E36B06C1ABCBFFAEE5EAEE77
           git config gpg.program /usr/bin/gpg
           yarn version --prerelease --preid beta --no-git-tag-version
           export NEW_VERSION=$(jq -r '.version' package.json)

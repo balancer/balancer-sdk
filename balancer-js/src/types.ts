@@ -45,6 +45,7 @@ export interface BalancerSdkConfig {
   sor?: Partial<BalancerSdkSorConfig>;
   tenderly?: BalancerTenderlyConfig;
   enableLogging?: boolean;
+  coingecko?: CoingeckoConfig;
 }
 
 export interface BalancerTenderlyConfig {
@@ -57,7 +58,7 @@ export interface BalancerTenderlyConfig {
 export interface BalancerSdkSorConfig {
   //use a built-in service or provide a custom implementation of a TokenPriceService
   //defaults to coingecko
-  tokenPriceService: 'coingecko' | 'subgraph' | TokenPriceService;
+  tokenPriceService: 'api' | 'coingecko' | 'subgraph' | TokenPriceService;
   //use a built-in service or provide a custom implementation of a PoolDataService
   //defaults to subgraph
   poolDataService: 'subgraph' | PoolDataService;
@@ -119,6 +120,7 @@ export interface BalancerNetworkConfig {
     };
   };
   averageBlockTime?: number; // In seconds, used if blockNumberSubgraph not set
+  multicallBatchSize?: number; // Only zkEVM needs a smaller batch size of 128, defaults to 1024
   pools: {
     wETHwstETH?: PoolReference;
   };
@@ -459,3 +461,9 @@ export interface GraphQLQuery {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   attrs: any;
 }
+
+export type CoingeckoConfig = {
+  coingeckoApiKey: string;
+  tokensPerPriceRequest?: number;
+  isDemoApiKey?: boolean;
+};

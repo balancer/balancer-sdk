@@ -20,6 +20,7 @@ import {
   BalancerNetworkConfig,
   BalancerDataRepositories,
   GraphQLQuery,
+  CoingeckoConfig,
 } from '@/types';
 import { PoolsSubgraphRepository } from './pool/subgraph';
 import { SubgraphPoolDataService } from '../sor/pool-data/subgraphPoolDataService';
@@ -75,7 +76,8 @@ export class Data implements BalancerDataRepositories {
     networkConfig: BalancerNetworkConfig,
     provider: Provider,
     contracts: Contracts,
-    subgraphQuery?: GraphQLQuery
+    subgraphQuery?: GraphQLQuery,
+    coingecko?: CoingeckoConfig
   ) {
     this.pools = new PoolsSubgraphRepository({
       url: networkConfig.urls.subgraph,
@@ -99,7 +101,8 @@ export class Data implements BalancerDataRepositories {
         multicall: networkConfig.addresses.contracts.multicall,
         vault: networkConfig.addresses.contracts.vault,
       },
-      networkConfig.poolsToIgnore
+      networkConfig.poolsToIgnore,
+      networkConfig.multicallBatchSize
     );
 
     this.poolShares = new PoolSharesRepository(
@@ -166,7 +169,8 @@ export class Data implements BalancerDataRepositories {
 
     const coingeckoRepository = new CoingeckoPriceRepository(
       tokenAddresses,
-      networkConfig.chainId
+      networkConfig.chainId,
+      coingecko
     );
 
     const subgraphPriceRepository = new SubgraphPriceRepository(
@@ -186,7 +190,7 @@ export class Data implements BalancerDataRepositories {
     );
 
     const coingeckoHistoricalRepository =
-      new CoingeckoHistoricalPriceRepository(networkConfig.chainId);
+      new CoingeckoHistoricalPriceRepository(networkConfig.chainId, coingecko);
 
     this.tokenHistoricalPrices = new HistoricalPriceProvider(
       coingeckoHistoricalRepository,
