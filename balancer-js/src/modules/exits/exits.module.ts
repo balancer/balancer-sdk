@@ -1132,7 +1132,7 @@ export class Exit {
       userData = WeightedPoolEncoder.exitExactBPTInForTokensOut(amountIn);
     } else if (node.type === PoolType.ComposableStable) {
       userData =
-        ComposableStablePoolEncoder.exitExactBPTInForAllTokensOut(amountIn);
+        ComposableStablePoolEncoder.exitExactBPTInForTokensOut(amountIn);
     } else {
       // TODO: double check if it's ok to set the Stable Pool Encoder as the default/else case
       userData = StablePoolEncoder.exitExactBPTInForTokensOut(amountIn);
