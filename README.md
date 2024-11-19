@@ -1,3 +1,17 @@
+# **Deprecation Notice** #
+
+This package/library is being deprecated in favor of our new and improved version located at [repo](https://github.com/balancer/b-sdk)/[package](https://www.npmjs.com/package/@balancer/sdk).
+
+We recommend migrating to the new repository to access the latest features (including V3 support), bug fixes, and security patches. For more information about this change, please check out the examples and documentation pages:
+
+* [Documentation Pages](https://docs-v3.balancer.fi/developer-reference/sdk/)
+* [Examples](https://github.com/balancer/b-sdk/tree/main/examples)
+* [API] (https://docs-v3.balancer.fi/data-and-analytics/data-and-analytics/balancer-api/balancer-api.html)
+
+If you have any questions or need assistance with migrating to the new repository, feel free to reach out via the Dev channel on [Discord](https://discord.balancer.fi/).
+
+Thank you for your understanding, and we hope to see you in our new repository!
+
 ## Balancer SDK
 
 Balancer is a community-driven protocol, automated portfolio manager, liquidity provider, and price sensor that empowers decentralized exchange and the automated portfolio management of tokens on the Ethereum blockchain and other EVM compatible systems.
