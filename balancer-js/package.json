@@ -28,7 +28,7 @@
     "lint:fix": "eslint ./src --ext .ts --max-warnings 0 --fix",
     "subgraph:generate": "graphql-codegen --config src/modules/subgraph/codegen.yml -r dotenv/config",
     "example": "npx ts-node -P tsconfig.examples.json -r tsconfig-paths/register",
-    "node": "npx hardhat node --tsconfig tsconfig.testing.json --fork $(. ./.env && echo $ALCHEMY_URL)",
+    "mainnet": "npx hardhat node --tsconfig tsconfig.testing.json --fork $(. ./.env && echo $ALCHEMY_URL)",
     "node:goerli": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.goerli.ts node --fork $(. ./.env && echo $ALCHEMY_URL_GOERLI) --port 8000",
     "node:polygon": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.polygon.ts node --fork $(. ./.env && echo $ALCHEMY_URL_POLYGON) --port 8137",
     "node:arbitrum": "npx hardhat --tsconfig tsconfig.testing.json --config hardhat.config.arbitrum.ts node --fork $(. ./.env && echo $ALCHEMY_URL_ARBITRUM) --port 8161",
@@ -81,7 +81,7 @@
     "tiny-invariant": "^1.1.0",
     "ts-mocha": "^9.0.2",
     "ts-node": "^10.9.1",
-    "tsconfig-paths": "^3.14.1",
+    "tsconfig-paths": "^4.2.0",
     "typechain": "^8.1.1",
     "typescript": "^4.0.2"
   },
